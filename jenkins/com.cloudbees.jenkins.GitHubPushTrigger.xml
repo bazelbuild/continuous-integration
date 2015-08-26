@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<com.cloudbees.jenkins.GitHubPushTrigger_-DescriptorImpl plugin="github@1.11.3">
+  <manageHook>false</manageHook>
+  <credentials/>
+</com.cloudbees.jenkins.GitHubPushTrigger_-DescriptorImpl>
