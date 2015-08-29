@@ -145,7 +145,8 @@ JENKINS_PLUGINS_VERSIONS = {("%%{JENKINS_PLUGIN_%s}" % plugin[0]): ("%s@%s" % (
     plugin[1],
 )) for plugin in JENKINS_PLUGINS}
 
-GITHUB_URL = "https://github.com/google/bazel"
+GITHUB_PROJECT = "google/bazel"
+GITHUB_URL = "https://github.com/" + GITHUB_PROJECT
 
 PLATFORMS = ["linux-x86_64"]  # TODO(dmarting): add darwin-x86_64
 
@@ -485,6 +486,7 @@ jenkins_node(
 #
 JOBS_SUBSTITUTIONS = JENKINS_PLUGINS_VERSIONS + {
     "%{GITHUB_URL}": GITHUB_URL,
+    "%{GITHUB_PROJECT}": GITHUB_PROJECT,
     "%{PLATFORMS}": "".join(["<string>%s</string>" % p for p in PLATFORMS]),
     "%{BAZEL_BUILD_RECIPIENT}": "bazel-dev+builds@googlegroups.com",
     "%{BAZEL_RELEASE_RECIPIENT}": "bazel-discuss+release@googlegroups.com",
@@ -495,6 +497,7 @@ JOBS = [
     "Bazel-Release",
     "Bazel-Release-Trigger",
     "Bazel-Incremental",
+    "Github-Trigger",
 ]
 
 [jenkins_job(

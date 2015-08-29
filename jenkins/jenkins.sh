@@ -17,12 +17,32 @@
 # Script to run Jenkins from the Docker image
 set -eux
 
+# Take file $1 and copy it to file $2, replacing all instance of
+# the string '##SECRET:filename##' by the content of the file
+# 'filename' for each file in /opt/secrets
+function replace_secrets() {
+  if [ "${1##*.}" = "xml" ]; then
+    # Only do replacement for xml files
+    local content="$(cat $1)"
+    for i in /opt/secrets/*; do
+      local bi="$(basename $i)"
+      if echo -n "${content}" | grep -qF "##SECRET:${bi}##"; then
+        content="$(echo -n "${content}" | sed "s|##SECRET:${bi}##|$(cat $i)|g")"
+      fi
+    done
+    echo -n "${content}" >$2
+  else
+    cp $1 $2
+  fi
+}
+export -f replace_secrets
+
 # Copy the configuration files provided in the docker image
 (cd /usr/share/jenkins/ref && \
     find ./ -type f -exec bash -c \
     "mkdir -p /var/jenkins_home/\$(dirname '{}'); \
      rm -f '/var/jenkins_home/{}'; \
-     cp '/usr/share/jenkins/ref/{}' '/var/jenkins_home/{}'" \;)
+     replace_secrets '/usr/share/jenkins/ref/{}' '/var/jenkins_home/{}'" \;)
 
 # Execute Jenkins
 exec java ${JAVA_OPTS-} -jar /usr/share/jenkins/jenkins.war ${JENKINS_OPTS-} "$@"

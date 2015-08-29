@@ -11,6 +11,9 @@ spec:
         - name: jenkins-home
           mountPath: /var/jenkins_home
           readOnly: false
+        - name: secrets
+          mountPath: /opt/secrets
+          readOnly: true
       ports:
         - name: www
           containerPort: 8080

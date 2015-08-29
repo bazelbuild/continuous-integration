@@ -133,6 +133,7 @@ def jenkins_build(name, plugins = [], base = "jenkins-base.tar", configs = []):
           "/bin/bash",
           "/usr/local/bin/jenkins.sh",
       ],
+      volumes = ["/opt/secrets"],
       directory = "/usr/local/bin",
   )
   ### FINAL IMAGE ###
