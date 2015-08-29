@@ -114,7 +114,7 @@ echo &quot;Content: ${RELEASE_EMAIL_CONTENT}&quot;</command>
       <presendScript>$DEFAULT_PRESEND_SCRIPT</presendScript>
       <attachBuildLog>false</attachBuildLog>
       <compressBuildLog>false</compressBuildLog>
-      <replyTo>noreply@google.com</replyTo>
+      <replyTo>${SENDER_EMAIL}</replyTo>
       <saveOutput>false</saveOutput>
       <disabled>true</disabled>
     </hudson.plugins.emailext.ExtendedEmailPublisher>

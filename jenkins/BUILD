@@ -490,6 +490,7 @@ JOBS_SUBSTITUTIONS = JENKINS_PLUGINS_VERSIONS + {
     "%{PLATFORMS}": "".join(["<string>%s</string>" % p for p in PLATFORMS]),
     "%{BAZEL_BUILD_RECIPIENT}": "bazel-dev+builds@googlegroups.com",
     "%{BAZEL_RELEASE_RECIPIENT}": "bazel-discuss+release@googlegroups.com",
+    "%{SENDER_EMAIL}": "noreply@bazel.io",
 }
 
 JOBS = [
@@ -512,12 +513,16 @@ JOBS = [
 jenkins_build(
     name = "jenkins",
     configs = glob([
-        "*.xml",
-        "secrets/*",
-    ]) + [
+            "*.xml",
+            "*.xml.tpl",
+            "secrets/*",
+        ],
+        exclude = ["jobs-*.xml.tpl"],
+    ) + [
         ":ubuntu_14.10-x86_64",
         ":darwin-x86_64",
         ":deploy",
     ] + JOBS,
+    substitutions = JOBS_SUBSTITUTIONS,
     plugins = [plugin[0] for plugin in JENKINS_PLUGINS],
 )

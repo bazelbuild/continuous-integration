@@ -95,7 +95,8 @@ def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1,
         ],
         )
 
-def jenkins_build(name, plugins = [], base = "jenkins-base.tar", configs = []):
+def jenkins_build(name, plugins = [], base = "jenkins-base.tar", configs = [],
+                  substitutions = {}):
   """Build the docker image for the Jenkins instance."""
   ### BASE IMAGE ###
   # We don't have docker_pull yet, so the easiest way to do it:
@@ -136,10 +137,24 @@ def jenkins_build(name, plugins = [], base = "jenkins-base.tar", configs = []):
       volumes = ["/opt/secrets"],
       directory = "/usr/local/bin",
   )
+  # Expands .tpl files
+  confs = []
+  for conf in configs:
+    ext = conf.rsplit(".", 1)
+    if len(ext) == 2 and ext[1] == 'tpl':
+      expand_template(
+          name = conf + "-template",
+          out = ext[0],
+          template = conf,
+          substitutions = substitutions,
+      )
+      confs += [ext[0]]
+    else:
+      confs += [conf]
   ### FINAL IMAGE ###
   docker_build(
       name = name,
-      files = configs,
+      files = confs,
       base = "%s-jenkins-base" % name,
       directory = "/usr/share/jenkins/ref"
   )
