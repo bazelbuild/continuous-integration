@@ -63,6 +63,11 @@ token for the CI System:
     where `TOKEN` is the same string as the content of the
     `github_trigger_auth_token`. This webhook should send its data in
     the `x-www-form-urlencoded` format.
+ - `google.oauth.clientid` and `google.oauth.secret` are the client id
+    and client secret generated from the
+    [Google Developers Console](https://console.developers.google.com)
+    (APIs & Auth > Credentials > New Client ID > Web Application,
+    authorize `http://ci.bazel.io/securityRealm/finishLogin`).
 
 If you wish to test out new configuration, you can change the security
 settings in the `config.xml` file before building the docker
