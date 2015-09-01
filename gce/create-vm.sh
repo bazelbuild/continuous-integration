@@ -28,9 +28,9 @@ gcloud compute instances create jenkins --tags jenkins \
     --address ci --disk name=jenkins-volumes,device-name=volumes
 
 # The ubuntu slave.
-gcloud compute instances create ubuntu-14-10-slave \
+gcloud compute instances create ubuntu-14-04-slave \
     --zone us-central1-a --machine-type n1-standard-8 \
-    --image ubuntu-14-10 \
-    --metadata-from-file startup-script=ubuntu-14-10-slave.sh \
+    --image ubuntu-14-04 \
+    --metadata-from-file startup-script=ubuntu-14-04-slave.sh \
     --boot-disk-type pd-ssd --boot-disk-size 80GB
 

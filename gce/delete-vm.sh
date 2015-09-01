@@ -16,4 +16,4 @@
 # persistent disk. Use this script after calling shutdown on Jenkins to
 # avoid racing with ongoing Job.
 gcloud compute instances delete --zone=us-central1-a jenkins
-gcloud compute instances delete --zone=us-central1-a ubuntu-14-10-slave
+gcloud compute instances delete --zone=us-central1-a ubuntu-14-04-slave

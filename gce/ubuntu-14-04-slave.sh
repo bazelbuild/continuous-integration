@@ -18,13 +18,13 @@
 # a lot of memory, CPU and disk, we use a standalone VM instead of
 # a docker image.
 
+echo y | add-apt-repository ppa:webupd8team/java
 apt-get update
-apt-get install -y zip g++ zlib1g-dev openjdk-8-jdk openjdk-8-source wget git \
+apt-get install -y zip g++ zlib1g-dev wget git \ 
   unzip python python3 curl
-
-# Ubuntu machine does provide a dead symlink, we should resolve the underlying
-# bug, but until this is resolve, let's fix it.
-rm /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/security/cacerts
+# TODO(dmarting): Find a way to do that without someone to accept
+# the licence:
+# apt-get install -y oracle-java8-installer
 
 # Create the Jenkins user
 adduser --system --home /home/ci --uid 5000 ci
@@ -38,7 +38,7 @@ while (( $retry != 0 )); do
   retry=0
   rm -f slave.jar slave-agent.jnlp
   wget -nc http://jenkins/jnlpJars/slave.jar || retry=1
-  wget -nc http://jenkins/computer/ubuntu_14.10-x86_64/slave-agent.jnlp || retry=1
+  wget -nc http://jenkins/computer/ubuntu_14.04-x86_64/slave-agent.jnlp || retry=1
   sleep 5
 done
 
