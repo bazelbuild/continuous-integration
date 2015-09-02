@@ -26,6 +26,9 @@ apt-get install -y zip g++ zlib1g-dev wget git \
 # the licence:
 # apt-get install -y oracle-java8-installer
 
+# TODO(dmarting): Find a correct way to setup the Android SDK too
+export ANDROID_SDK_PATH=/usr/local/android-sdk-linux
+
 # Create the Jenkins user
 adduser --system --home /home/ci --uid 5000 ci
 cd /home/ci

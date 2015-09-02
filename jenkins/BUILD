@@ -499,6 +499,7 @@ JOBS = [
     "Bazel-Release-Trigger",
     "Bazel-Incremental",
     "Github-Trigger",
+    "Tutorial",
 ]
 
 [jenkins_job(

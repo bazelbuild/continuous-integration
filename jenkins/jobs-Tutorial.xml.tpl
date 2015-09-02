@@ -1,26 +1,19 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <matrix-project plugin="%{JENKINS_PLUGIN_matrix-project}">
   <actions/>
-  <description>Run the full test suite of Bazel.&#xd;
-&#xd;
-To be run on head and for release branch/tags only</description>
+  <description>Test the Tutorial project still build with Bazel at head.</description>
   <keepDependencies>false</keepDependencies>
   <properties>
     <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="%{JENKINS_PLUGIN_github}">
-      <projectUrl>%{GITHUB_URL}</projectUrl>
+      <projectUrl>https://github.com/bazelbuild/examples/</projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
-        <net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition plugin="%{JENKINS_PLUGIN_git-parameter}">
+        <hudson.model.StringParameterDefinition>
           <name>REF_SPEC</name>
-          <description>The branch / tag to build</description>
-          <uuid>1ba7864c-b4fb-44b4-8268-31b304798afa</uuid>
-          <type>PT_BRANCH_TAG</type>
-          <branch></branch>
-          <tagFilter>*</tagFilter>
-          <sortMode>NONE</sortMode>
+          <description>Git branch/tag to build for downstream project (to be passed from upstream project)</description>
           <defaultValue>origin/master</defaultValue>
-        </net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition>
+        </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
@@ -28,13 +21,13 @@ To be run on head and for release branch/tags only</description>
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
-        <refspec>+refs/heads/*:refs/remotes/origin/* +refs/notes/*:refs/notes/*</refspec>
-        <url>%{GITHUB_URL}</url>
+        <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
+        <url>https://github.com/bazelbuild/examples</url>
       </hudson.plugins.git.UserRemoteConfig>
     </userRemoteConfigs>
     <branches>
       <hudson.plugins.git.BranchSpec>
-        <name>${REF_SPEC}</name>
+        <name>*/master</name>
       </hudson.plugins.git.BranchSpec>
     </branches>
     <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
@@ -43,11 +36,16 @@ To be run on head and for release branch/tags only</description>
       <hudson.plugins.git.extensions.impl.CleanBeforeCheckout/>
     </extensions>
   </scm>
-  <assignedNode>deploy</assignedNode>
+  <quietPeriod>5</quietPeriod>
   <canRoam>true</canRoam>
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers>
+    <com.cloudbees.jenkins.GitHubPushTrigger plugin="%{JENKINS_PLUGIN_github}">
+      <spec></spec>
+    </com.cloudbees.jenkins.GitHubPushTrigger>
+  </triggers>
   <concurrentBuild>false</concurrentBuild>
   <axes>
     <hudson.matrix.LabelAxis>
@@ -56,38 +54,38 @@ To be run on head and for release branch/tags only</description>
     </hudson.matrix.LabelAxis>
   </axes>
   <builders>
+    <hudson.plugins.copyartifact.CopyArtifact plugin="%{JENKINS_PLUGIN_copyartifact}">
+      <project>Bazel</project>
+      <filter>**/ci/*installer*.sh</filter>
+      <target>bazel-installer</target>
+      <excludes></excludes>
+      <selector class="hudson.plugins.copyartifact.TriggeredBuildSelector">
+        <fallbackToLastSuccessful>true</fallbackToLastSuccessful>
+        <upstreamFilterStrategy>UseGlobalSetting</upstreamFilterStrategy>
+      </selector>
+      <doNotFingerprintArtifacts>false</doNotFingerprintArtifacts>
+    </hudson.plugins.copyartifact.CopyArtifact>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
+export BAZEL_INSTALLER=$(find $PWD/bazel-installer -name *.sh | \
+    fgrep "PLATFORM_NAME=${PLATFORM_NAME}" | head -1)
 
-source scripts/ci/build.sh
-
-export BUILD_BY=&quot;Jenkins&quot;
-export BUILD_LOG=&quot;${BUILD_URL}&quot;
-export GIT_REPOSITORY_URL=&quot;${GIT_URL}&quot;
-
-bazel_build output/ci</command>
+./tutorial/ci/build.sh</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
-    <hudson.tasks.ArtifactArchiver>
-      <artifacts>output/ci/**</artifacts>
-      <allowEmptyArchive>false</allowEmptyArchive>
-      <onlyIfSuccessful>false</onlyIfSuccessful>
-      <fingerprint>false</fingerprint>
-      <defaultExcludes>true</defaultExcludes>
-    </hudson.tasks.ArtifactArchiver>
     <hudson.tasks.Mailer plugin="%{JENKINS_PLUGIN_mailer}">
-      <recipients>%{BAZEL_BUILD_RECIPIENT}</recipients>
+      <recipients>bazel-dev+builds@googlegroups.com</recipients>
       <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
       <sendToIndividuals>false</sendToIndividuals>
     </hudson.tasks.Mailer>
-    <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="%{JENKINS_PLUGIN_parametrized-trigger}">
+    <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="%{JENKINS_PLUGIN_parameterized-trigger}">
       <configs>
         <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
           <configs>
             <hudson.plugins.parameterizedtrigger.CurrentBuildParameters/>
           </configs>
-          <projects>Tutorial</projects>
+          <projects>Bazel-Release-Trigger</projects>
           <condition>SUCCESS</condition>
           <triggerWithNoParameters>false</triggerWithNoParameters>
         </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
