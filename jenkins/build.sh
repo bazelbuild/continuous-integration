@@ -19,7 +19,7 @@
 
 # Images to pull from docker hub in form "image_name=tar_file"
 PULL_IMAGES=(
-    "jenkins:1.609.1=jenkins-base.tar"
+    "jenkins:1.609.2=jenkins-base.tar"
     "ubuntu:utopic=ubuntu-utopic-base.tar"
 )
 # Image to push to GCR in the form "bazel-target=image_name"

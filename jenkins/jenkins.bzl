@@ -100,8 +100,8 @@ def jenkins_build(name, plugins = [], base = "jenkins-base.tar", configs = [],
   """Build the docker image for the Jenkins instance."""
   ### BASE IMAGE ###
   # We don't have docker_pull yet, so the easiest way to do it:
-  #   docker pull jenkins:1.609.1
-  #   docker save jenkins:1.609.1 >jenkins-base.tar
+  #   docker pull jenkins:1.609.2
+  #   docker save jenkins:1.609.2 >jenkins-base.tar
   # We cannot perform it in a genrule because it needs access to the docker
   # environment variables.
   docker_build(

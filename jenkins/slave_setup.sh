@@ -39,4 +39,4 @@ done
 
 # Run the slaves
 wget %{JENKINS_SERVER}/jnlpJars/slave.jar
-su ci -c "/usr/local/bin/java -jar slave.jar -jnlpUrl %{JENKINS_SERVER}/computer/%{NODE_NAME}/slave-agent.jnlp"
+su ci -c "/usr/local/bin/java -jar slave.jar -jnlpUrl %{JENKINS_SERVER}/computer/%{NODE_NAME}/slave-agent.jnlp -noReconnect"

@@ -46,7 +46,7 @@ chmod a+r slave-agent.jnlp
 sed -i.bak -E "s|http://ci\.bazel\.io/|http://jenkins/|g" slave-agent.jnlp
 
 while true; do
-  sudo -u ci $(which java) -jar slave.jar -jnlpUrl file:///home/ci/slave-agent.jnlp
-  # The jenkins server is down, sleep and retries in 5 minutes
-  sleep 300
+  sudo -u ci $(which java) -jar slave.jar -jnlpUrl file:///home/ci/slave-agent.jnlp -noReconnect
+  # The jenkins server is down, sleep and retries in 1 minute
+  sleep 60
 done
