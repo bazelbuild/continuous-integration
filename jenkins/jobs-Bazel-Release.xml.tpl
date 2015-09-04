@@ -79,18 +79,20 @@ done
 
 bazel_release &quot;${args[@]}&quot;
 
-export RELEASE_EMAIL_RECIPIENT=%{BAZEL_RELEASE_RECIPIENT}
-
+mkdir -p output/ci
+echo &quot;${RELEASE_EMAIL_RECIPIENT}&quot; &gt; output/ci/recipient
+echo &quot;${RELEASE_EMAIL_SUBJECT}&quot; &gt; output/ci/subject
+echo &quot;${RELEASE_EMAIL_CONTENT}&quot; &gt; output/ci/content
 echo &quot;To: ${RELEASE_EMAIL_RECIPIENT}&quot;
 echo &quot;Subject: ${RELEASE_EMAIL_SUBJECT}&quot;
 echo &quot;Content: ${RELEASE_EMAIL_CONTENT}&quot;</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
-    <hudson.plugins.emailext.ExtendedEmailPublisher plugin="%{JENKINS_PLUGIN_email-ext}">
-      <recipientList>${ENV, var=&quot;RELEASE_EMAIL_RECIPIENT&quot;}</recipientList>
+    <hudson.plugins.emailext.ExtendedEmailPublisher plugin="%{JENKINS_PLUGIN_email-ex">
+      <recipientList>${FILE, path=&quot;output/ci/recipient&quot;}</recipientList>
       <configuredTriggers>
-        <hudson.plugins.emailext.plugins.trigger.ScriptTrigger>
+        <hudson.plugins.emailext.plugins.trigger.SuccessTrigger>
           <email>
             <recipientList></recipientList>
             <subject>$PROJECT_DEFAULT_SUBJECT</subject>
@@ -104,19 +106,18 @@ echo &quot;Content: ${RELEASE_EMAIL_CONTENT}&quot;</command>
             <replyTo>$PROJECT_DEFAULT_REPLYTO</replyTo>
             <contentType>project</contentType>
           </email>
-          <triggerScript>!build.getEnvironment(listener).get(&apos;RELEASE_EMAIL&apos;).isEmpty()</triggerScript>
-        </hudson.plugins.emailext.plugins.trigger.ScriptTrigger>
+        </hudson.plugins.emailext.plugins.trigger.SuccessTrigger>
       </configuredTriggers>
       <contentType>default</contentType>
-      <defaultSubject>${ENV, var=&quot;RELEASE_EMAIL_SUBJECT&quot;}</defaultSubject>
-      <defaultContent>${ENV, var=&quot;RELEASE_EMAIL_CONTENT&quot;}</defaultContent>
+      <defaultSubject>${FILE, path=&quot;output/ci/subject&quot;}</defaultSubject>
+      <defaultContent>${FILE, path=&quot;output/ci/content&quot;}</defaultContent>
       <attachmentsPattern></attachmentsPattern>
-      <presendScript>$DEFAULT_PRESEND_SCRIPT</presendScript>
+      <presendScript></presendScript>
       <attachBuildLog>false</attachBuildLog>
       <compressBuildLog>false</compressBuildLog>
       <replyTo>${SENDER_EMAIL}</replyTo>
       <saveOutput>false</saveOutput>
-      <disabled>true</disabled>
+      <disabled>false</disabled>
     </hudson.plugins.emailext.ExtendedEmailPublisher>
   </publishers>
   <buildWrappers/>
