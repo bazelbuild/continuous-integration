@@ -26,8 +26,14 @@ apt-get install -y zip g++ zlib1g-dev wget git \
 # the licence:
 # apt-get install -y oracle-java8-installer
 
+# Android support
 # TODO(dmarting): Find a correct way to setup the Android SDK too
 export ANDROID_SDK_PATH=/usr/local/android-sdk-linux
+export ANDROID_NDK_PATH=/usr/local/android-sdk-linux/android-ndk-r10e
+# Android SDK requires 32-bits libraries
+sudo dpkg --add-architecture i386
+sudo apt-get -qqy update
+sudo apt-get -qqy install libncurses5:i386 libstdc++6:i386 zlib1g:i386
 
 # Create the Jenkins user
 adduser --system --home /home/ci --uid 5000 ci
@@ -49,7 +55,11 @@ chmod a+r slave-agent.jnlp
 sed -i.bak -E "s|http://ci\.bazel\.io/|http://jenkins/|g" slave-agent.jnlp
 
 while true; do
-  sudo -u ci $(which java) -jar slave.jar -jnlpUrl file:///home/ci/slave-agent.jnlp -noReconnect
+  sudo -u ci \
+      ANDROID_SDK_PATH=$ANDROID_SDK_PATH \
+      ANDROID_SDK_BUILD_TOOLS_VERSION=$(ls $ANDROID_SDK_PATH/build-tools | head -1) \
+      ANDROID_NDK_PATH=$ANDROID_NDK_PATH \
+      $(which java) -jar slave.jar -jnlpUrl file:///home/ci/slave-agent.jnlp -noReconnect
   # The jenkins server is down, sleep and retries in 1 minute
   sleep 60
 done
