@@ -68,6 +68,9 @@ token for the CI System:
     [Google Developers Console](https://console.developers.google.com)
     (APIs & Auth > Credentials > New Client ID > Web Application,
     authorize `http://ci.bazel.io/securityRealm/finishLogin`).
+ - `smtp.auth.username` and `smtp.auth.password` are the SMTP username
+    and password. We currently use a jenkins-only identifier to send
+    through [SendGrid](https://sendgrid.com).
 
 If you wish to test out new configuration, you can change the security
 settings in the `config.xml` file before building the docker

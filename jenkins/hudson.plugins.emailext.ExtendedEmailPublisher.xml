@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<hudson.plugins.emailext.ExtendedEmailPublisherDescriptor plugin="email-ext@2.40.5">
+  <defaultSuffix>@google.com</defaultSuffix>
+  <smtpAuthUsername>##SECRET:smtp.auth.username##</smtpAuthUsername>
+  <smtpAuthPassword>##SECRET:smtp.auth.password##</smtpAuthPassword>
+  <smtpHost>smtp.sendgrid.net</smtpHost>
+  <useSsl>false</useSsl>
+  <smtpPort>2525</smtpPort>
+  <charset>UTF-8</charset>
+  <defaultContentType>text/plain</defaultContentType>
+  <defaultSubject>$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!</defaultSubject>
+  <defaultBody>$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS:&#xd;
+&#xd;
+Check console output at $BUILD_URL to view the results.</defaultBody>
+  <defaultPresendScript></defaultPresendScript>
+  <defaultClasspath/>
+  <defaultTriggerIds>
+    <string>hudson.plugins.emailext.plugins.trigger.FailureTrigger</string>
+  </defaultTriggerIds>
+  <maxAttachmentSize>-1</maxAttachmentSize>
+  <recipientList></recipientList>
+  <defaultReplyTo></defaultReplyTo>
+  <excludedCommitters></excludedCommitters>
+  <overrideGlobalSettings>true</overrideGlobalSettings>
+  <precedenceBulk>false</precedenceBulk>
+  <debugMode>false</debugMode>
+  <enableSecurity>false</enableSecurity>
+  <requireAdminForTemplateTesting>false</requireAdminForTemplateTesting>
+  <enableWatching>false</enableWatching>
+</hudson.plugins.emailext.ExtendedEmailPublisherDescriptor>
