@@ -109,3 +109,21 @@ console to make the project work:
      the `jenkins` tag). Also allow the public IP `ci` and any
      external slaves you might need to add,
    - Allow HTTP traffic (tcp 80) to `jenkins` tags.
+
+## Adding the OS X slave
+
+For licensing reasons, the OS X slave has to be set-up manually.
+
+First install [Xcode](https://developer.apple.com/xcode/downloads/)
+and [JDK 8](https://jdk8.java.net/download.html). Then create a "ci"
+user and just download the `mac/setup_mac.sh` script and run it under
+that user (the user should have `sudo` right). This can be
+done with a one-liner:
+
+```
+curl https://bazel.googlesource.com/continuous-integration/+/master/mac/setup_mac.sh | bash
+```
+
+Now the machine should connect automatically to jenkins if the
+firewall rule `jenkins` is set to allow the IP address of the machine.
+
