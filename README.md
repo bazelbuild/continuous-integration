@@ -71,6 +71,13 @@ token for the CI System:
  - `smtp.auth.username` and `smtp.auth.password` are the SMTP username
     and password. We currently use a jenkins-only identifier to send
     through [SendGrid](https://sendgrid.com).
+ - `github_id_rsa` should contain the private key for pushing to
+   github for syncing the gerrit repository and the GitHub
+   repository. You can generate it by SSH into the jenkins slave and
+   typing `ssh-keygen -t rsa -b 4096 -C "noreply@bazel.io"
+   -N '' -f /volumes/secrets/github_id_rsa`. You must add the public
+   key to the list of deploy keys of all repositories to sync (i.e.,
+   for Bazel at `https://github.com/bazelbuild/bazel/settings/keys`).
 
 If you wish to test out new configuration, you can change the security
 settings in the `config.xml` file before building the docker

@@ -402,6 +402,7 @@ docker_build(
         "JAVA_HOME": "/usr/lib/jvm/java-8-openjdk-amd64",
     },
     symlinks = {"/usr/local/bin/java": "/usr/lib/jvm/java-8-openjdk-amd64/bin/java"},
+    visibility = ["//visibility:public"],
 )
 
 # OS X machine are not docker images

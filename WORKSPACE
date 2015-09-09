@@ -1344,6 +1344,59 @@ DEBS_ubuntu_utopic_amd64_golang = [
     url = "http://se.archive.ubuntu.com/ubuntu/%s" % deb[1],
 ) for deb in DEBS_ubuntu_utopic_amd64_golang]
 
+
+#
+# .deb from create_debs_repositories.sh docker:ubuntu:utopic ubuntu-utopic-amd64-ssh\
+#       ubuntu-utopic-amd64 ssh \
+#       > gen_debs
+# Then list curated by hand to remove duplicate from ubuntu-utopic-amd64
+DEBS_ubuntu_utopic_amd64_ssh = [
+    ["adduser", "pool/main/a/adduser/adduser_3.113+nmu3ubuntu3_all.deb", "1461ce364a68db36190a6981ad9e3889c8a5286e809e45c6e34a720905de46a4"],
+    ["cdebconf", "pool/main/c/cdebconf/cdebconf_0.191ubuntu1_amd64.deb", "4e827775ac80484736c1443cb5eb585bd818635845aa55b331702131874d95c3"],
+    ["debianutils", "pool/main/d/debianutils/debianutils_4.4_amd64.deb", "8fd5c5b04cf668d39605f2d2165bdf33928b69580cdb8fb0e6d4f90849e396f6"],
+    ["init-system-helpers", "pool/main/i/init-system-helpers/init-system-helpers_1.20ubuntu3_all.deb", "27f6de389c4edf389ffef931d1d9ea03144288e03f6514e28a055d04f280dc48"],
+    ["initscripts", "pool/main/s/sysvinit/initscripts_2.88dsf-41ubuntu18_amd64.deb", "3bd3412bcf0ac9ac1ca3bf274c1e97bac3496bcdb2324083628b0e7eda093ce7"],
+    ["insserv", "pool/main/i/insserv/insserv_1.14.0-5ubuntu2_amd64.deb", "c645ec87fe839f2a1f120d838bdff9a30e46fecd4b21c8293d2f6e4d5cd6fec2"],
+    ["libaudit-common", "pool/main/a/audit/libaudit-common_2.3.7-1ubuntu1_all.deb", "1e984786759a95217280d2e54fcb5627eec4f189876deca67dd05600513b56de"],
+    ["libaudit1", "pool/main/a/audit/libaudit1_2.3.7-1ubuntu1_amd64.deb", "0bf47b11f9978a6cc3d29f1b75ef3a27e34c2e4820f666f13a4b015f16abf7d8"],
+    ["libblkid1", "pool/main/u/util-linux/libblkid1_2.25.1-3ubuntu4.1_amd64.deb", "607252beb8b0004deeb753ede583bb74296a5069ebb7450922e337f40780be7e"],
+    ["libck-connector0", "pool/main/c/consolekit/libck-connector0_0.4.6-5_amd64.deb", "bdf0c9d4acc5ac58df2d6ee3b51a45df7227ade9c46283ababc74ffa63f18cf0"],
+    ["libcomerr2", "pool/main/e/e2fsprogs/libcomerr2_1.42.10-1.1ubuntu1.2_amd64.deb", "d57037dfebbfe0bc9f25e2150a538f338d34a18e4824f25725fff5ffc8100cd4"],
+    ["libdebian-installer4", "pool/main/libd/libdebian-installer/libdebian-installer4_0.88ubuntu6.1_amd64.deb", "2e69dcb4fcaee19b597541a9acc5afb145e33e610b1579cec5f4a7e4214fd713"],
+    ["libmount1", "pool/main/u/util-linux/libmount1_2.25.1-3ubuntu4.1_amd64.deb", "8780891145422f67259f4ad4a89c8d7fdbd9b9bed22ff3c3a0aaaef42105c8bc"],
+    ["libncurses5", "pool/main/n/ncurses/libncurses5_5.9+20140712-2ubuntu1_amd64.deb", "994848d456eb83f288d37bd0177c559f6f7f80d5d8b214c6fcaf24e52a76dd78"],
+    ["libpam-modules", "pool/main/p/pam/libpam-modules_1.1.8-3ubuntu4_amd64.deb", "26ef39d6b5386cea1440a84bda35553943af3f343590623aeecbd1abf73278bc"],
+    ["libpam-modules-bin", "pool/main/p/pam/libpam-modules-bin_1.1.8-3ubuntu4_amd64.deb", "3c0c3a72774603e8bd72074f3d45095684769c2d18b877c9133c8d2e7d5a9ecd"],
+    ["libpam-runtime", "pool/main/p/pam/libpam-runtime_1.1.8-3ubuntu4_all.deb", "96fa4213b67dc4c885cb29e75b969281a0c1a5c12ad919f8154709dc89a8c6f6"],
+    ["libpam0g", "pool/main/p/pam/libpam0g_1.1.8-3ubuntu4_amd64.deb", "3ed382b2e266f5a25026cc6b4ceb7844ec7a4ba4bd83c9d776b657f17703ea4c"],
+    ["libprocps3", "pool/main/p/procps/libprocps3_3.3.9-1ubuntu5.2_amd64.deb", "c39c2a11cdba6a240ed40ecabc443951b140402532e75083428c8faa9b55c23f"],
+    ["libsemanage-common", "pool/main/libs/libsemanage/libsemanage-common_2.3-1_all.deb", "9a14f812107fe6ece8052d68feffb1e900b79e79a0959f1e973275a5b87e32d9"],
+    ["libsemanage1", "pool/main/libs/libsemanage/libsemanage1_2.3-1_amd64.deb", "289a248e82bdac77f801878ea3058062861c423ad6f9c3583711d44a411d59e8"],
+    ["libsepol1", "pool/main/libs/libsepol/libsepol1_2.3-2_amd64.deb", "dcbfff4cacf3666df7cb9dc1a25309de97190efd4c56ed505db6317fa560a9a9"],
+    ["libslang2", "pool/main/s/slang2/libslang2_2.2.4-17ubuntu1_amd64.deb", "77799ec112d549eccc20b05e58aae081e2786e5549acc3a05a0b788cc5487104"],
+    ["libsmartcols1", "pool/main/u/util-linux/libsmartcols1_2.25.1-3ubuntu4.1_amd64.deb", "fbc65582cfe021bbc02ad73ccefc4a4749d8d660778e811840029e542c41eaab"],
+    ["libtextwrap1", "pool/main/libt/libtextwrap/libtextwrap1_0.1-14_amd64.deb", "e75d07d4048b7fe4a09853bb08a9f50f6266adec7d5697ba83a9416bec878514"],
+    ["libustr-1.0-1", "pool/main/u/ustr/libustr-1.0-1_1.0.4-3ubuntu2_amd64.deb", "bb42b2a96741b182ff97d4d708131787e4ee242eca03a04667d4955ea71901de"],
+    ["mount", "pool/main/u/util-linux/mount_2.25.1-3ubuntu4.1_amd64.deb", "632fd31ff1476c72cdf296207e7bbcdbe482b6f64732712a2ddf183935d7743f"],
+    ["openssh-client", "pool/main/o/openssh/openssh-client_6.6p1-8_amd64.deb", "fa2eee05e6d1780712e9d1d835b3ee9fdae306b59c154a5a0fdc2d512b656d95"],
+    ["openssh-server", "pool/main/o/openssh/openssh-server_6.6p1-8_amd64.deb", "69df8484ed2d18d80f645c2e7ed035a419983d6cdf1f91dee2d3b4a37098615b"],
+    ["openssh-sftp-server", "pool/main/o/openssh/openssh-sftp-server_6.6p1-8_amd64.deb", "de6e81c6e570cca5a32a3c18102a10532f44020785c29be24f64b045a194e8f5"],
+    ["passwd", "pool/main/s/shadow/passwd_4.1.5.1-1.1ubuntu2_amd64.deb", "835ceb5c725d724e69983fd7fce3195b4fd243a0d5c9ff916ae2e53b59dbd5dc"],
+    ["procps", "pool/main/p/procps/procps_3.3.9-1ubuntu5.2_amd64.deb", "375102f048956ef8e7fd4100aec2bd242f7b6704d261c06dcad276905d88884d"],
+    ["sensible-utils", "pool/main/s/sensible-utils/sensible-utils_0.0.9_all.deb", "de75c4690051dfb43c8faa8f37afe276f78d41dc89d9258fa080e6a7a450c826"],
+    ["ssh", "pool/main/o/openssh/ssh_6.6p1-8_all.deb", "c1e71133620146c499dc6141ac8b5e56378ea3f0fc6c0d9ec7e39946dabd73a2"],
+    ["sysv-rc", "pool/main/s/sysvinit/sysv-rc_2.88dsf-41ubuntu18_all.deb", "75e65b9a9134ba14a3e7e91f123f7b608c216c6b3553b3d39d41ce7fcf3b775a"],
+    ["sysvinit-utils", "pool/main/s/sysvinit/sysvinit-utils_2.88dsf-41ubuntu18_amd64.deb", "582eeff514f300e775e4314106846a96d88fb820b0c131044ece3e58318be18b"],
+]
+
+
+[http_file(
+    name = "deb-ubuntu-utopic-amd64-ssh-%s" % deb[0],
+    sha256 = deb[2],
+    url = "http://se.archive.ubuntu.com/ubuntu/%s" % deb[1],
+) for deb in DEBS_ubuntu_utopic_amd64_ssh]
+
+
 # Releases stuff
 http_file(
     name = "hoedown",
