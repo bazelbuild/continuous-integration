@@ -148,7 +148,7 @@ JENKINS_PLUGINS_VERSIONS = {("%%{JENKINS_PLUGIN_%s}" % plugin[0]): ("%s@%s" % (
 GITHUB_PROJECT = "bazelbuild/bazel"
 GITHUB_URL = "https://github.com/" + GITHUB_PROJECT
 
-PLATFORMS = ["linux-x86_64", "darwin-x86_64"]  # TODO(dmarting): add darwin-x86_64
+PLATFORMS = ["linux-x86_64", "darwin-x86_64"]
 
 #
 # Nodes
@@ -409,7 +409,10 @@ docker_build(
 jenkins_node(
     name = "darwin-x86_64",
     remote_fs = "/Users/ci",
-    labels = ["safe"],
+    labels = [
+        "darwin-x86_64",
+        "safe",
+    ],
 )
 
 jenkins_node(
