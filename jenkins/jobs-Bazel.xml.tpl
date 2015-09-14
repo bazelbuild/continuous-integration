@@ -54,6 +54,13 @@ To be run on head and for release branch/tags only</description>
       <name>PLATFORM_NAME</name>
       <values>%{PLATFORMS}</values>
     </hudson.matrix.LabelAxis>
+    <hudson.matrix.TextAxis>
+      <name>JAVA_VERSION</name>
+      <values>
+        <string>1.7</string>
+        <string>1.8</string>
+      </values>
+    </hudson.matrix.TextAxis>
   </axes>
   <builders>
     <hudson.tasks.Shell>

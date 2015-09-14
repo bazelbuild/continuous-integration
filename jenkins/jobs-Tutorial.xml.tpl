@@ -68,7 +68,7 @@
     <hudson.tasks.Shell>
       <command>#!/bin/bash
 export BAZEL_INSTALLER=$(find $PWD/bazel-installer -name *.sh | \
-    fgrep "PLATFORM_NAME=${PLATFORM_NAME}" | head -1)
+    fgrep "PLATFORM_NAME=${PLATFORM_NAME}" | fgrep -v jdk7 | head -1)
 
 ./tutorial/ci/build.sh</command>
     </hudson.tasks.Shell>
