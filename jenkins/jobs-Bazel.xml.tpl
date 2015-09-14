@@ -72,13 +72,17 @@ export BUILD_BY=&quot;Jenkins&quot;
 export BUILD_LOG=&quot;${BUILD_URL}&quot;
 export GIT_REPOSITORY_URL=&quot;${GIT_URL}&quot;
 
-bazel_build output/ci</command>
+if [[ &quot;${NODE_LABELS}&quot; =~ &quot;no-release&quot; ]]; then
+  bazel_build
+else
+  bazel_build output/ci
+fi</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
     <hudson.tasks.ArtifactArchiver>
       <artifacts>output/ci/**</artifacts>
-      <allowEmptyArchive>false</allowEmptyArchive>
+      <allowEmptyArchive>true</allowEmptyArchive>
       <onlyIfSuccessful>false</onlyIfSuccessful>
       <fingerprint>false</fingerprint>
       <defaultExcludes>true</defaultExcludes>
