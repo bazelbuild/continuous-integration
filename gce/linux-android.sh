@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 # Copyright 2015 Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Delete all VM. This won't lose the Jenkins state as it goes into a
-# persistent disk. Use this script after calling shutdown on Jenkins to
-# avoid racing with ongoing Job.
-gcloud compute instances delete --zone=us-central1-a jenkins
-gcloud compute instances delete --zone=us-central1-a ubuntu-14-04-slave
+# Android support
+# NDK
+mkdir -p /home/ci/android
+cd /home/ci/android
+curl -o android-ndk.bin http://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin
+chmod +x android-ndk.bin
+./android-ndk.bin >/dev/null
+# Android SDK
+curl -o android-sdk.tgz http://dl.google.com/android/android-sdk_r24.3.4-linux.tgz
+tar zxf android-sdk.tgz
+(cd android-sdk-linux && tools/android update sdk --no-ui)
+

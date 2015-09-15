@@ -26,11 +26,11 @@ sudo git
 # Get the various sdk
 cd $HOME
 # Android NDK
-curl -qo android-ndk.bin http://dl.google.com/android/ndk/android-ndk-r10e-darwin-x86_64.bin
+curl -so android-ndk.bin http://dl.google.com/android/ndk/android-ndk-r10e-darwin-x86_64.bin
 chmod +x android-ndk.bin
 ./android-ndk.bin
 # Android SDK
-curl -qo android-sdk.zip http://dl.google.com/android/android-sdk_r24.3.4-macosx.zip
+curl -so android-sdk.zip http://dl.google.com/android/android-sdk_r24.3.4-macosx.zip
 unzip android-sdk.zip
 (cd android-sdk-macosx && tools/android update sdk --no-ui)
 

@@ -14,11 +14,11 @@ run in that VM in dedicated Docker instances. Each slave is
 controlled by the Jenkins instance and might be either Docker
 instance (in which case the docker image is built by Bazel, see
 `jenkins/BUILD`), GCE virtual machine (in which case the
-`gce/create-vm.sh` should create it and the corresponding
-`jenkins_node` should be added to `jenkins/BUILD`) or an actual machine
-(in which case the corresponding `jenkins_node` should be created, the
-firewall rules adapted, and the setup of the machine documented in
-that README.md).
+`gce/vm.sh` should create it and the corresponding `jenkins_node`
+should be added to `jenkins/BUILD`) or an actual machine (in which
+case the corresponding `jenkins_node` should be created, the firewall
+rules adapted, and the setup of the machine documented in that
+README.md).
 
 ## Deploying to GCR
 
@@ -90,15 +90,11 @@ and `jenkins/build.sh`.
 ## Running the VM on GCE
 
 We spawn these images on servers on GCE in the `bazel-public` project.
-2 scripts are available to handle the VM in GCE:
-
- - `gce/create-vm.sh` creates the corresponding virtual machines on
-   GCE.
- - `gce/delete-vm.sh` deletes the virtual machines from the GCE
-   project. Be careful when doing that. It should not cause any loss
-   of data as we use a permanent disk for storing Jenkins build but it
-   might cause some corruption if you do it during a build. Please
-   prepare Jenkins for shutdown before deleting virtual machines.
+A script is available to handle the VM in GCE: `gce/vm.sh`. It takes
+one mandatory arguments that is the command (`create` to create the
+VMs, `delete` to delete them and `reimage` to reimage, i.e. to delete
+then create them). An optional argument selects which VM to
+create/delete. By default it acts on all known VMs.
 
 The following additional set up needs to be performed in the cloud
 console to make the project work:
