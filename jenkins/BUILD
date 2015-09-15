@@ -148,7 +148,7 @@ JENKINS_PLUGINS_VERSIONS = {("%%{JENKINS_PLUGIN_%s}" % plugin[0]): ("%s@%s" % (
 GITHUB_PROJECT = "bazelbuild/bazel"
 GITHUB_URL = "https://github.com/" + GITHUB_PROJECT
 
-PLATFORMS = ["linux-x86_64", "darwin-x86_64"]
+PLATFORMS = ["linux-x86_64", "darwin-x86_64", "ubuntu_14.10-x86_64"]
 
 #
 # Nodes
@@ -426,6 +426,15 @@ jenkins_node(
     # base = "ubuntu-utopic-amd64"
 )
 
+# Non-release nodes
+jenkins_node(
+    name = "ubuntu_14.10-x86_64",
+    labels = [
+        "no-release",
+        "safe",
+    ],
+)
+
 # Image support golang and make
 docker_build(
     name = "ubuntu-utopic-amd64-golang",
@@ -525,6 +534,7 @@ jenkins_build(
         exclude = ["jobs-*.xml.tpl"],
     ) + [
         ":ubuntu_14.04-x86_64",
+        ":ubuntu_14.10-x86_64",
         ":darwin-x86_64",
         ":deploy",
     ] + JOBS,

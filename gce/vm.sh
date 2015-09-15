@@ -30,6 +30,7 @@ set -eu
 #                of the jenkins node.
 SLAVES=(
     "ubuntu-14-04-slave ubuntu-14-04 ubuntu_14.04-x86_64 ubuntu-14-04-slave.sh linux-android.sh"
+    "ubuntu-14-10-slave ubuntu-14-10 ubuntu_14.10-x86_64 ubuntu-14-10-slave.sh linux-android.sh"
 )
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
