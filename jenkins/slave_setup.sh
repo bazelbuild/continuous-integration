@@ -38,5 +38,7 @@ for i in /opt/run/*.{,ba}sh; do
 done
 
 # Run the slaves
-wget %{JENKINS_SERVER}/jnlpJars/slave.jar
-su ci -c "/usr/local/bin/java -jar slave.jar -jnlpUrl %{JENKINS_SERVER}/computer/%{NODE_NAME}/slave-agent.jnlp -noReconnect"
+wget -nc %{JENKINS_SERVER}/jnlpJars/slave.jar || exit 1
+wget -nc %{JENKINS_SERVER}/computer/%{NODE_NAME}/slave-agent.jnlp || exit 1
+chmod a+r slave-agent.jnlp
+su ci -c "/usr/local/bin/java -jar slave.jar -jnlpUrl file://$PWD/slave-agent.jnlp -noReconnect"
