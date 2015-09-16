@@ -81,7 +81,7 @@ bazel_build output/ci</command>
       <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
       <sendToIndividuals>false</sendToIndividuals>
     </hudson.tasks.Mailer>
-    <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="%{JENKINS_PLUGIN_parametrized-trigger}">
+    <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="%{JENKINS_PLUGIN_parameterized-trigger}">
       <configs>
         <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
           <configs>
