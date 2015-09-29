@@ -45,6 +45,20 @@ function run() {
   fi
 }
 
+function config() {
+  if [ ! -f "config.bzl" ]; then
+    echo "The admin list file does not exists!" >&2
+    echo -n "Enter a comma separated list of admin emails:"
+    read emails
+    if [ -z "$emails" ]; then
+      echo "ADMIN_USERS = []" > config.bzl
+    else
+      echo "ADMIN_USERS = [\"$(echo "${emails}" | sed 's/ *, */", "/g')\"]" \
+           >config.bzl
+    fi
+  fi
+}
+
 # Pull an image from docker hub and save it to a tar file if the tar file does
 # not exist
 function pull() {
@@ -100,6 +114,8 @@ command="${1-}"
 if [[ "$command" =~ dry-(.*) ]]; then
   DRY_RUN=1
   command=${BASH_REMATCH[1]}
+else
+  config
 fi
 
 case "$command" in
