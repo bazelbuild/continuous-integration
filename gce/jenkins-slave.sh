@@ -27,15 +27,15 @@ NODE_NAME=$(cat /home/ci/node_name)
 
 cd /home/ci
 # Setup the various android paths
-export ANDROID_SDK_PATH=$(echo /home/ci/android-sdk-*)
-export ANDROID_NDK_PATH=$(echo /home/ci/android-ndk-*)
-if [ -f "${ANDROID_SDK_PATH}" ]; then
+export ANDROID_SDK_PATH=$(echo /home/ci/android/android-sdk-*)
+export ANDROID_NDK_PATH=$(echo /home/ci/android/android-ndk-*)
+if [ -d "${ANDROID_SDK_PATH}" ]; then
   export ANDROID_SDK_BUILD_TOOLS_VERSION=$(ls $ANDROID_SDK_PATH/build-tools | sort -n | tail -1)
   export ANDROID_SDK_API_LEVEL=$(ls $ANDROID_SDK_PATH/platforms | cut -d '-' -f 2 | sort -n | tail -1)
 else
   unset ANDROID_SDK_PATH
 fi
-if [ -f "${ANDROID_NDK_PATH}" ]; then
+if [ -d "${ANDROID_NDK_PATH}" ]; then
   export ANDROID_NDK_API_LEVEL=$(ls $ANDROID_NDK_PATH/platforms | cut -d '-' -f 2 | sort -n | tail -1)
 else
   unset ANDROID_NDK_PATH
