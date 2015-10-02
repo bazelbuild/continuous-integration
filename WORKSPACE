@@ -133,6 +133,11 @@ PLUGINS = [
         "1.1",
         "6be817f78f40048aa8802edba9f0070599397c0305a43f5ac6156ef0dedccdd3",
     ],
+    [
+        "fail-the-build-plugin",
+        "1.0",
+        "c97db02dc6fef269780b77d2001a9bfb49bcdc9ac2ee242cd10445709bb7d09e",
+    ],
 ]
 
 [http_file(

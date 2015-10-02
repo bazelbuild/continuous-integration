@@ -91,8 +91,23 @@ if [[ &quot;${NODE_LABELS}&quot; =~ &quot;no-release&quot; ]]; then
   bazel_build
 else
   bazel_build output/ci
-fi</command>
+fi
+[ -n &quot;${BUILD_UNSTABLE-}&quot; ] &amp;&amp; echo 1 &gt;unstable</command>
     </hudson.tasks.Shell>
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="%{JENKINS_PLUGIN_conditional-buildstep}">
+      <condition class="org.jenkins_ci.plugins.run_condition.core.FileExistsCondition" plugin="%{JENKINS_PLUGIN_run-condition}">
+        <file>unstable</file>
+        <baseDir class="org.jenkins_ci.plugins.run_condition.common.BaseDirectory$Workspace"/>
+      </condition>
+      <buildStep class="org.jenkins_ci.plugins.fail_the_build.FixResultBuilder" plugin="%{JENKINS_PLUGIN_fail-the-build-plugin}">
+        <defaultResultName>UNSTABLE</defaultResultName>
+        <success></success>
+        <unstable></unstable>
+        <failure></failure>
+        <aborted></aborted>
+      </buildStep>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Unstable" plugin="%{JENKINS_PLUGIN_run-condition}"/>
+    </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
   </builders>
   <publishers>
     <hudson.tasks.ArtifactArchiver>
@@ -114,7 +129,7 @@ fi</command>
             <hudson.plugins.parameterizedtrigger.CurrentBuildParameters/>
           </configs>
           <projects>Tutorial</projects>
-          <condition>SUCCESS</condition>
+          <condition>UNSTABLE_OR_BETTER</condition>
           <triggerWithNoParameters>false</triggerWithNoParameters>
         </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
       </configs>

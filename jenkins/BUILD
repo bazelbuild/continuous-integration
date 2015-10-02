@@ -138,6 +138,11 @@ JENKINS_PLUGINS = [
         "1.1",
         "6be817f78f40048aa8802edba9f0070599397c0305a43f5ac6156ef0dedccdd3",
     ],
+    [
+        "fail-the-build-plugin",
+        "1.0",
+        "",
+    ],
 ]
 
 JENKINS_PLUGINS_VERSIONS = {("%%{JENKINS_PLUGIN_%s}" % plugin[0]): ("%s@%s" % (
