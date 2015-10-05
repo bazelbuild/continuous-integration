@@ -92,7 +92,7 @@ if [[ &quot;${NODE_LABELS}&quot; =~ &quot;no-release&quot; ]]; then
 else
   bazel_build output/ci
 fi
-[ -n &quot;${BUILD_UNSTABLE-}&quot; ] &amp;&amp; echo 1 &gt;unstable</command>
+[ -z &quot;${BUILD_UNSTABLE-}&quot; ] || echo 1 &gt;unstable</command>
     </hudson.tasks.Shell>
     <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="%{JENKINS_PLUGIN_conditional-buildstep}">
       <condition class="org.jenkins_ci.plugins.run_condition.core.FileExistsCondition" plugin="%{JENKINS_PLUGIN_run-condition}">
