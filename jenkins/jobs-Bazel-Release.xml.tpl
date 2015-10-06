@@ -70,8 +70,9 @@
       <filter>**/ci/*</filter>
       <target>input</target>
       <excludes>**/ci/bazel</excludes>
-      <selector class="hudson.plugins.copyartifact.StatusBuildSelector">
-        <stable>true</stable>
+      <selector class="hudson.plugins.copyartifact.TriggeredBuildSelector">
+        <fallbackToLastSuccessful>true</fallbackToLastSuccessful>
+        <upstreamFilterStrategy>UseGlobalSetting</upstreamFilterStrategy>
       </selector>
       <flatten>true</flatten>
       <doNotFingerprintArtifacts>false</doNotFingerprintArtifacts>
@@ -89,7 +90,7 @@ source scripts/ci/build.sh
 
 args=()
 for i in input/*; do
-  args+=(&quot;$(echo $i | cut -d &quot;=&quot; -f 2)&quot; &quot;$i&quot;)
+  args+=(&quot;$(echo $i | cut -d &quot;=&quot; -f 3)&quot; &quot;$i&quot;)
 done
 
 bazel_release &quot;${args[@]}&quot;
