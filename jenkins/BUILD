@@ -157,7 +157,7 @@ GITHUB_URL = "https://github.com/" + GITHUB_PROJECT
 PLATFORMS = [
     "linux-x86_64",
     "darwin-x86_64",
-    "ubuntu_14.10-x86_64",
+    "ubuntu_15.10-x86_64",
 ]
 
 #
@@ -186,7 +186,7 @@ jenkins_node(
 
 # Non-release nodes
 jenkins_node(
-    name = "ubuntu_14.10-x86_64",
+    name = "ubuntu_15.10-x86_64",
     labels = [
         "no-release",
         "safe",
@@ -333,7 +333,7 @@ jenkins_build(
         exclude = ["jobs-*.xml.tpl"],
     ) + [
         ":ubuntu_14.04-x86_64",
-        ":ubuntu_14.10-x86_64",
+        ":ubuntu_15.10-x86_64",
         ":darwin-x86_64",
         ":deploy",
     ] + JOBS,

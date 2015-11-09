@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Setup scripts for Ubuntu 14.10
+# Setup scripts for Ubuntu 15.10
 
 apt-get update
 apt-get install -y zip g++ zlib1g-dev wget git unzip python python3 curl \
