@@ -26,6 +26,7 @@ PULL_IMAGES=(
 PUSH_IMAGES=(
     "//jenkins:jenkins=jenkins-master"
     "//jenkins:deploy.docker=deploy-slave"
+    "//gerrit-github-sync:gerrit-github-sync=sync-gerrit-github"
 )
 
 BAZEL_GCR_PROJECT="bazel-public"
