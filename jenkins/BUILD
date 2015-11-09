@@ -329,6 +329,7 @@ jenkins_build(
             "*.xml",
             "*.xml.tpl",
             "secrets/*",
+            "init.groovy.d/*",
         ],
         exclude = ["jobs-*.xml.tpl"],
     ) + [
