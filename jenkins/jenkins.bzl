@@ -67,6 +67,7 @@ def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1,
   <label>%s</label>
   <nodeProperties/>
 </slave>
+EOF
 """ % (name, remote_fs, num_executors, " ".join([name] + labels)),
       outs = ["nodes/%s/config.xml" % name],
       )
@@ -89,6 +90,7 @@ def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1,
         base = base,
         volumes = [remote_fs],
         files = [":%s.docker-launcher.sh" % name],
+        data_path = ".",
         entrypoint = [
             "/bin/bash",
             "/%s.docker-launcher.sh" % name,
@@ -122,6 +124,7 @@ def jenkins_build(name, plugins = [], base = "jenkins-base.tar", configs = [],
       name = "%s-plugins-base" % name,
       base = "%s-docker-base" % name,
       files = [":%s-%s.jpi" % (name, plugin) for plugin in plugins],
+      data_path = ".",
       directory = "/usr/share/jenkins/ref/plugins"
   )
   # We ovewrite jenkins.sh because configuration files are to be replaced,
@@ -134,6 +137,7 @@ def jenkins_build(name, plugins = [], base = "jenkins-base.tar", configs = [],
           "/bin/bash",
           "/usr/local/bin/jenkins.sh",
       ],
+      data_path = ".",
       volumes = ["/opt/secrets"],
       directory = "/usr/local/bin",
   )
@@ -155,6 +159,7 @@ def jenkins_build(name, plugins = [], base = "jenkins-base.tar", configs = [],
   docker_build(
       name = name,
       files = confs,
+      data_path = ".",
       base = "%s-jenkins-base" % name,
       directory = "/usr/share/jenkins/ref"
   )
