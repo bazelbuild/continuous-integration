@@ -1,3 +1,4 @@
 /bazel-*
+/base/*.tar
 /jenkins/*.tar
 /jenkins/config.bzl

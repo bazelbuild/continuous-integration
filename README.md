@@ -26,7 +26,7 @@ We do not support docker pull yet so you have to do that manually.
 Fortunately a simple shell script can do that for you:
 
 ```
-./jenkins/build.sh push
+./build.sh push
 ```
 
 This will build your docker image for you and upload them to GCR. If
@@ -38,7 +38,7 @@ should be needed to update the configuration.
  1. First, make sure the DNS "jenkins" resolves to the host machine of
     the docker installation or update the information at the top of
     the `jenkins.bzl` file.
- 2. Load the docker images with `./jenkins/build.sh build`
+ 2. Load the docker images with `./build.sh build`
  3. Launch the various images in your image by mapping the
     necessary folders:
 
@@ -85,7 +85,7 @@ image. You can then access all the configuration of Jenkins. The
 configuration deployed to GCR are in the various `.xml` files in the
 `jenkins` package. You can set-up the ubuntu slave in the same way by
 uncomenting the part for building the docker image in `jenkins/BUILD`
-and `jenkins/build.sh`.
+and `build.sh`.
 
 ## Running the VM on GCE
 

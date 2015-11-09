@@ -19,14 +19,13 @@
 
 # Images to pull from docker hub in form "image_name=tar_file"
 PULL_IMAGES=(
-    "jenkins:1.609.2=jenkins-base.tar"
-    "ubuntu:utopic=ubuntu-utopic-base.tar"
+    "jenkins:1.609.2=jenkins/jenkins-base.tar"
+    "ubuntu:wily=base/ubuntu-wily-base.tar"
 )
 # Image to push to GCR in the form "bazel-target=image_name"
 PUSH_IMAGES=(
-    "jenkins=jenkins-master"
-#    "ubuntu_14.10-x86_64.docker=ubuntu_14.10-x86_64"
-    "deploy.docker=deploy-slave"
+    "//jenkins:jenkins=jenkins-master"
+    "//jenkins:deploy.docker=deploy-slave"
 )
 
 BAZEL_GCR_PROJECT="bazel-public"
@@ -46,15 +45,15 @@ function run() {
 }
 
 function config() {
-  if [ ! -f "config.bzl" ]; then
+  if [ ! -f "jenkins/config.bzl" ]; then
     echo "The admin list file does not exists!" >&2
     echo -n "Enter a comma separated list of admin emails:"
     read emails
     if [ -z "$emails" ]; then
-      echo "ADMIN_USERS = []" > config.bzl
+      echo "ADMIN_USERS = []" > jenkins/config.bzl
     else
       echo "ADMIN_USERS = [\"$(echo "${emails}" | sed 's/ *, */", "/g')\"]" \
-           >config.bzl
+           >jenkins/config.bzl
     fi
   fi
 }
@@ -77,7 +76,7 @@ function pull() {
 function build() {
   local bazel_target="$(echo "$i" | cut -d "=" -f 1)"
   local docker_tag="$(echo "$i" | cut -d "=" -f 2)"
-  run bazel run ":${bazel_target}" "gcr.io/${BAZEL_GCR_PROJECT}/${docker_tag}"
+  run bazel run "${bazel_target}" "gcr.io/${BAZEL_GCR_PROJECT}/${docker_tag}"
 }
 
 # Push to GCR
