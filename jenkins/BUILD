@@ -256,6 +256,7 @@ JOBS = [
     "Bazel-Incremental",
     "Github-Trigger",
     "Tutorial",
+    "TensorFlow",
 ]
 
 [jenkins_job(
