@@ -24,3 +24,6 @@ apt-get install -y zip g++ zlib1g-dev wget git unzip python python3 curl \
 sudo dpkg --add-architecture i386
 sudo apt-get -qqy update
 sudo apt-get -qqy install libncurses5:i386 libstdc++6:i386 zlib1g:i386
+
+# Dependencies for TensorFlow
+sudo apt-get install python-numpy swig python-dev
