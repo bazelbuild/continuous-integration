@@ -64,6 +64,13 @@
       <name>PLATFORM_NAME</name>
       <values>%{PLATFORMS}</values>
     </hudson.matrix.LabelAxis>
+    <hudson.matrix.TextAxis>
+      <name>BAZEL_VERSION</name>
+      <values>
+        <string>HEAD</string>
+        <string>latest</string>
+      </values>
+    </hudson.matrix.TextAxis>
   </axes>
   <builders>
     <hudson.plugins.copyartifact.CopyArtifact plugin="%{JENKINS_PLUGIN_copyartifact}">
@@ -79,17 +86,29 @@
     </hudson.plugins.copyartifact.CopyArtifact>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
-INSTALLER_PLATFORM=$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)
-export BAZEL_INSTALLER=$(find $PWD/bazel-installer -name *.sh | \
-    fgrep "PLATFORM_NAME=${INSTALLER_PLATFORM}" | fgrep -v jdk7 | head -1)
-BASE="$(dirname "${PWD}")/bazel-install"
-bash "${BAZEL_INSTALLER}" \
-  --base="${BASE}" \
-  --bazelrc="$PWD/binary/bazel.bazelrc" \
-  --bin="${BASE}/binary"
-
-BAZEL="${BASE}/binary/bazel"
-
+set -x
+INSTALLER_PLATFORM=$(uname -s | tr &apos;[:upper:]&apos; &apos;[:lower:]&apos;)-$(uname -m)
+if [ &quot;$BAZEL_VERSION&quot; = &quot;HEAD&quot; ]; then
+  export BAZEL_INSTALLER=$(find $PWD/bazel-installer -name *.sh | \
+      fgrep &quot;PLATFORM_NAME=${INSTALLER_PLATFORM}&quot; | fgrep -v jdk7 | head -1)
+else
+  if [ &quot;$BAZEL_VERSION&quot; = &quot;latest&quot; ]; then
+    URL=$(curl -L https://github.com/bazelbuild/bazel/releases/latest | \
+      grep -o &apos;&quot;/.*/bazel-.*-installer-&apos;${INSTALLER_PLATFORM}&apos;.sh&quot;&apos; | grep -v jdk7 | 
+sed &apos;s/&quot;//g&apos;)
+  else
+    URL=https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-installer-${I
+NSTALLER_PLATFORM}.sh
+  fi
+  export BAZEL_INSTALLER=${PWD}/bazel-installer/install.sh
+  curl -L -o ${BAZEL_INSTALLER} https://github.com${URL}
+fi
+BASE=&quot;$(dirname &quot;${PWD}&quot;)/bazel-install&quot;
+bash &quot;${BAZEL_INSTALLER}&quot; \
+  --base=&quot;${BASE}&quot; \
+  --bazelrc=&quot;$PWD/binary/bazel.bazelrc&quot; \
+  --bin=&quot;${BASE}/binary&quot;
+BAZEL=&quot;${BASE}/binary/bazel&quot;
 ${BAZEL} build -c opt //tensorflow/...</command>
     </hudson.tasks.Shell>
   </builders>
