@@ -41,6 +41,11 @@
     <extensions>
       <hudson.plugins.git.extensions.impl.CleanBeforeCheckout/>
       <hudson.plugins.git.extensions.impl.AuthorInChangelog/>
+      <hudson.plugins.git.extensions.impl.SubmoduleOption>
+        <disableSubmodules>false</disableSubmodules>
+        <recursiveSubmodules>true</recursiveSubmodules>
+        <trackingSubmodules>false</trackingSubmodules>
+      </hudson.plugins.git.extensions.impl.SubmoduleOption>
     </extensions>
   </scm>
   <quietPeriod>5</quietPeriod>
