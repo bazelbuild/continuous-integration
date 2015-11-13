@@ -56,6 +56,7 @@ To be run on head and for release branch/tags only</description>
     <submoduleCfg class="list"/>
     <extensions>
       <hudson.plugins.git.extensions.impl.CleanBeforeCheckout/>
+      <hudson.plugins.git.extensions.impl.AuthorInChangelog/>
     </extensions>
   </scm>
   <assignedNode>deploy</assignedNode>

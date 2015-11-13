@@ -40,6 +40,7 @@
     <submoduleCfg class="list"/>
     <extensions>
       <hudson.plugins.git.extensions.impl.CleanBeforeCheckout/>
+      <hudson.plugins.git.extensions.impl.AuthorInChangelog/>
     </extensions>
   </scm>
   <quietPeriod>5</quietPeriod>
