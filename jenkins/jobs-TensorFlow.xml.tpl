@@ -103,12 +103,17 @@ NSTALLER_PLATFORM}.sh
   export BAZEL_INSTALLER=${PWD}/bazel-installer/install.sh
   curl -L -o ${BAZEL_INSTALLER} https://github.com${URL}
 fi
-BASE=&quot;$(dirname &quot;${PWD}&quot;)/bazel-install&quot;
+BASE=&quot;${PWD}/bazel-install&quot;
+mkdir -p &quot;${BASE}/binary&quot;
+
 bash &quot;${BAZEL_INSTALLER}&quot; \
   --base=&quot;${BASE}&quot; \
-  --bazelrc=&quot;$PWD/binary/bazel.bazelrc&quot; \
+  --bazelrc=&quot;${BASE}/bin/bazel.bazelrc&quot; \
   --bin=&quot;${BASE}/binary&quot;
-BAZEL=&quot;${BASE}/binary/bazel&quot;
+# Put the bazelrc here because aparently 0.1.1 have problem with master rc files
+# TODO(bazel-team): remove once 0.1.2 is released
+BAZEL=&quot;${BASE}/binary/bazel --bazelrc=${BASE}/bin/bazel.bazelrc&quot;
+
 ${BAZEL} build -c opt //tensorflow/...</command>
     </hudson.tasks.Shell>
   </builders>
