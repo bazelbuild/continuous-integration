@@ -154,11 +154,14 @@ GITHUB_PROJECT = "bazelbuild/bazel"
 
 GITHUB_URL = "https://github.com/" + GITHUB_PROJECT
 
-PLATFORMS = [
+LINUX_PLATFORMS = [
     "linux-x86_64",
-    "darwin-x86_64",
     "ubuntu_15.10-x86_64",
 ]
+
+DARWIN_PLATFORMS = ["darwin-x86_64"]
+
+PLATFORMS = LINUX_PLATFORMS + DARWIN_PLATFORMS
 
 #
 # Nodes
@@ -243,10 +246,21 @@ jenkins_node(
 JOBS_SUBSTITUTIONS = JENKINS_PLUGINS_VERSIONS + {
     "%{GITHUB_URL}": GITHUB_URL,
     "%{GITHUB_PROJECT}": GITHUB_PROJECT,
-    "%{PLATFORMS}": "".join(["<string>%s</string>" % p for p in PLATFORMS]),
     "%{BAZEL_BUILD_RECIPIENT}": "bazel-ci@googlegroups.com",
     "%{BAZEL_RELEASE_RECIPIENT}": "bazel-discuss+release@googlegroups.com",
     "%{SENDER_EMAIL}": "noreply@bazel.io",
+}
+
+PLATFORM_SUBSTITUTIONS = { 
+    "%{PLATFORMS}": "".join(["<string>%s</string>" % p for p in PLATFORMS]),
+}
+
+LINUX_PLATFORM_SUBSTITUTIONS = { 
+    "%{PLATFORMS}": "".join(["<string>%s</string>" % p for p in LINUX_PLATFORMS]),
+}
+
+DARWIN_PLATFORM_SUBSTITUTIONS = { 
+    "%{PLATFORMS}": "".join(["<string>%s</string>" % p for p in DARWIN_PLATFORMS]),
 }
 
 JOBS = [
@@ -256,14 +270,21 @@ JOBS = [
     "Bazel-Incremental",
     "Github-Trigger",
     "Tutorial",
-    "TensorFlow",
+#    "TensorFlow",
 ]
 
 [jenkins_job(
     name = job,
     config = "jobs-%s.xml.tpl" % job,
-    substitutions = JOBS_SUBSTITUTIONS,
+    substitutions = JOBS_SUBSTITUTIONS + PLATFORM_SUBSTITUTIONS,
 ) for job in JOBS]
+
+# TODO(dmarting): activate Tensorflow on mac (missing dependencies)
+jenkins_job(
+    name = "TensorFlow",
+    config = "jobs-TensorFlow.xml.tpl",
+    substitutions = JOBS_SUBSTITUTIONS + LINUX_PLATFORM_SUBSTITUTIONS,
+)
 
 # Jenkins permissions
 # Public permissions
