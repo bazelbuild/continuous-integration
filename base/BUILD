@@ -33,7 +33,7 @@ docker_build(
     name = "ubuntu-wily-amd64-golang",
     base = ":ubuntu-wily-amd64",
     debs = ["@deb-ubuntu-wily-amd64-golang-%s//file" % package[0].replace("+", "p") for package in DEBS_ubuntu_wily_amd64_golang],
-    symlinks = {"/usr/local/bin/go": "/usr/bin/golang-go"},
+    symlinks = {"/usr/local/bin/go": "/usr/lib/go/bin/go"},
 )
 
 # Support SSH for gerrit deployment
