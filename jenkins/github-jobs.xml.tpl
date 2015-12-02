@@ -16,11 +16,11 @@
 -->
 <matrix-project plugin="%{JENKINS_PLUGIN_matrix-project}">
   <actions/>
-  <description>Test the Tutorial project still build with Bazel at head.</description>
+  <description>Test the %{PROJECT_NAME} project still build with Bazel at head and latest release.</description>
   <keepDependencies>false</keepDependencies>
   <properties>
     <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="%{JENKINS_PLUGIN_github}">
-      <projectUrl>https://tensorflow.org</projectUrl>
+      <projectUrl>%{GITHUB_PROJECT}</projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
   </properties>
   <scm class="hudson.plugins.git.GitSCM" plugin="%{JENKINS_PLUGIN_git}">
@@ -28,12 +28,12 @@
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
         <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
-        <url>https://github.com/tensorflow/tensorflow</url>
+        <url>%{GITHUB_URL}</url>
       </hudson.plugins.git.UserRemoteConfig>
     </userRemoteConfigs>
     <branches>
       <hudson.plugins.git.BranchSpec>
-        <name>*/master</name>
+        <name>*/%{BRANCH}</name>
       </hudson.plugins.git.BranchSpec>
     </branches>
     <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
@@ -94,11 +94,9 @@ if [ &quot;$BAZEL_VERSION&quot; = &quot;HEAD&quot; ]; then
 else
   if [ &quot;$BAZEL_VERSION&quot; = &quot;latest&quot; ]; then
     URL=$(curl -L https://github.com/bazelbuild/bazel/releases/latest | \
-      grep -o &apos;&quot;/.*/bazel-.*-installer-&apos;${INSTALLER_PLATFORM}&apos;.sh&quot;&apos; | grep -v jdk7 | 
-sed &apos;s/&quot;//g&apos;)
+      grep -o &apos;&quot;/.*/bazel-.*-installer-&apos;${INSTALLER_PLATFORM}&apos;.sh&quot;&apos; | grep -v jdk7 | sed &apos;s/&quot;//g&apos;)
   else
-    URL=https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-installer-${I
-NSTALLER_PLATFORM}.sh
+    URL=https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-installer-${INSTALLER_PLATFORM}.sh
   fi
   export BAZEL_INSTALLER=${PWD}/bazel-installer/install.sh
   curl -L -o ${BAZEL_INSTALLER} https://github.com${URL}
@@ -112,9 +110,10 @@ bash &quot;${BAZEL_INSTALLER}&quot; \
   --bin=&quot;${BASE}/binary&quot;
 # Put the bazelrc here because aparently 0.1.1 have problem with master rc files
 # TODO(bazel-team): remove once 0.1.2 is released
+cd %{WORKSPACE}
 BAZEL=&quot;${BASE}/binary/bazel --bazelrc=${BASE}/bin/bazel.bazelrc&quot;
 
-${BAZEL} build -c opt //tensorflow/...</command>
+${BAZEL} %{BUILD}</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>

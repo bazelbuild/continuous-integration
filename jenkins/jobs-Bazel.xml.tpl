@@ -129,7 +129,7 @@ fi
           <configs>
             <hudson.plugins.parameterizedtrigger.CurrentBuildParameters/>
           </configs>
-          <projects>Tutorial, TensorFlow</projects>
+          <projects>Tutorial, %{BAZEL_JOBS}</projects>
           <condition>UNSTABLE_OR_BETTER</condition>
           <triggerWithNoParameters>false</triggerWithNoParameters>
         </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>

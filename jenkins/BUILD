@@ -14,8 +14,7 @@
 
 # Configuration for our Jenkins instance
 load("/tools/build_defs/docker/docker", "docker_build")
-load("plugins", "JENKINS_PLUGINS", "JENKINS_PLUGINS_VERSIONS")
-load("jenkins", "jenkins_job", "jenkins_node", "jenkins_build")
+load("jenkins", "jenkins_job", "jenkins_node", "jenkins_build", "bazel_github_job")
 
 #
 # Common definitions
@@ -113,48 +112,55 @@ jenkins_node(
 #
 # Jobs
 #
-JOBS_SUBSTITUTIONS = JENKINS_PLUGINS_VERSIONS + {
-    "%{GITHUB_URL}": GITHUB_URL,
-    "%{GITHUB_PROJECT}": GITHUB_PROJECT,
-    "%{BAZEL_BUILD_RECIPIENT}": "bazel-ci@googlegroups.com",
-    "%{BAZEL_RELEASE_RECIPIENT}": "bazel-discuss+release@googlegroups.com",
-    "%{SENDER_EMAIL}": "noreply@bazel.io",
-}
+GITHUB_JOBS = [
+    "TensorFlow",
+    "re2",
+    "protobuf",
+]
 
-PLATFORM_SUBSTITUTIONS = { 
-    "%{PLATFORMS}": "".join(["<string>%s</string>" % p for p in PLATFORMS]),
-}
-
-LINUX_PLATFORM_SUBSTITUTIONS = { 
-    "%{PLATFORMS}": "".join(["<string>%s</string>" % p for p in LINUX_PLATFORMS]),
-}
-
-DARWIN_PLATFORM_SUBSTITUTIONS = { 
-    "%{PLATFORMS}": "".join(["<string>%s</string>" % p for p in DARWIN_PLATFORMS]),
-}
-
-JOBS = [
+BAZEL_JOBS = [
     "Bazel",
     "Bazel-Release",
     "Bazel-Release-Trigger",
     "Bazel-Incremental",
     "Github-Trigger",
     "Tutorial",
-#    "TensorFlow",
 ]
+
+JOBS = BAZEL_JOBS + GITHUB_JOBS
+
+JOBS_SUBSTITUTIONS = {
+    "%{BAZEL_BUILD_RECIPIENT}": "bazel-ci@googlegroups.com",
+    "%{BAZEL_RELEASE_RECIPIENT}": "bazel-discuss+release@googlegroups.com",
+    "%{SENDER_EMAIL}": "noreply@bazel.io",
+    "%{BAZEL_JOBS}": ", ".join(GITHUB_JOBS),
+}
 
 [jenkins_job(
     name = job,
     config = "jobs-%s.xml.tpl" % job,
-    substitutions = JOBS_SUBSTITUTIONS + PLATFORM_SUBSTITUTIONS,
-) for job in JOBS]
+    platforms = PLATFORMS,
+    project_url = "http://bazel.io",
+    substitutions = JOBS_SUBSTITUTIONS,
+) for job in BAZEL_JOBS]
 
 # TODO(dmarting): activate Tensorflow on mac (missing dependencies)
-jenkins_job(
+bazel_github_job(
     name = "TensorFlow",
-    config = "jobs-TensorFlow.xml.tpl",
-    substitutions = JOBS_SUBSTITUTIONS + LINUX_PLATFORM_SUBSTITUTIONS,
+    build = "build -c opt //tensorflow/...",
+    org = "tensorflow",
+    platforms = LINUX_PLATFORMS,
+    project_url = "https://tensorflow.org",
 )
+
+[bazel_github_job(
+    name = n,
+    build = "test :all",
+    platforms = PLATFORMS,
+) for n in [
+    "re2",
+    "protobuf",
+]]
 
 # Jenkins permissions
 # Public permissions
@@ -230,6 +236,5 @@ jenkins_build(
         ":darwin-x86_64",
         ":deploy",
     ] + JOBS,
-    plugins = [plugin[0] for plugin in JENKINS_PLUGINS],
     substitutions = JOBS_SUBSTITUTIONS + JENKINS_PERMISSIONS,
 )

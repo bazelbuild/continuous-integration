@@ -15,6 +15,7 @@
 # Some definition to setup jenkins and build the corresponding docker images
 
 load("/tools/build_defs/docker/docker", "docker_build")
+load("plugins", "JENKINS_PLUGINS", "JENKINS_PLUGINS_VERSIONS")
 
 JENKINS_PORT = 80
 JENKINS_HOST = "jenkins"
@@ -40,14 +41,35 @@ expand_template = rule(
         },
     )
 
-def jenkins_job(name, config, substitutions = {}):
+def jenkins_job(name, config, substitutions = {},
+                project='bazel', org='bazelbuild', project_url=None,
+                platforms=[]):
   """Create a job configuration on Jenkins."""
+  if not project_url:
+    project_url = "https://github.com/%s/%s" % (org, project.lower())
+  substitutions = substitutions + JENKINS_PLUGINS_VERSIONS + {
+      "%{GITHUB_URL}": "https://github.com/%s/%s" % (org, project.lower()),
+      "%{GITHUB_PROJECT}": project_url,
+      "%{PLATFORMS}": "".join(["<string>%s</string>" % p for p in platforms]),
+      }
   expand_template(
       name = name,
       template = config,
       out = "jobs/%s/config.xml" % name,
-      substitutions = substitutions,
+      substitutions = JENKINS_PLUGINS_VERSIONS + substitutions,
     )
+
+def bazel_github_job(name, platforms=[], branch="master", project=None, org="google",
+                     project_url=None, workspace=".", build="test :all", substitutions={}):
+  """Create a generic github job configuration to build against Bazel head."""
+  if not project:
+    project = name
+  substitutions["%{WORKSPACE}"] = workspace
+  substitutions["%{PROJECT_NAME}"] = project
+  substitutions["%{BRANCH}"] = branch
+  substitutions["%{BUILD}"] = build
+  jenkins_job(name, "github-jobs.xml.tpl", substitutions=substitutions, project=project,
+              org=org, project_url=project_url, platforms=platforms)
 
 def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1,
                 labels = [], base = None):
@@ -97,9 +119,11 @@ EOF
         ],
         )
 
-def jenkins_build(name, plugins = [], base = "jenkins-base.tar", configs = [],
+def jenkins_build(name, plugins = None, base = "jenkins-base.tar", configs = [],
                   substitutions = {}):
   """Build the docker image for the Jenkins instance."""
+  if not plugins:
+    plugins = [p[0] for p in JENKINS_PLUGINS]
   ### BASE IMAGE ###
   # We don't have docker_pull yet, so the easiest way to do it:
   #   docker pull jenkins:1.609.2
