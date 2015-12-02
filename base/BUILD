@@ -14,25 +14,24 @@
 package(default_visibility = ["//visibility:public"])
 
 load("/tools/build_defs/docker/docker", "docker_build")
-load("generated", "DEBS_ubuntu_wily_amd64", "DEBS_ubuntu_wily_amd64_golang", "DEBS_ubuntu_wily_amd64_ssh")
+load("debs", "DEB_NAMES")
 
-# Base ubunty
+# Base ubuntu
 docker_build(
     name = "ubuntu-wily-amd64",
     base = "ubuntu-wily-base.tar",
-    debs = ["@deb-ubuntu-wily-amd64-%s//file" % package[0].replace("+", "p") for package in DEBS_ubuntu_wily_amd64],
+    debs = DEB_NAMES["ubuntu-wily-amd64"],
     env = {
         "JAVA_HOME": "/usr/lib/jvm/java-8-openjdk-amd64",
     },
     symlinks = {"/usr/local/bin/java": "/usr/lib/jvm/java-8-openjdk-amd64/bin/java"},
-    visibility = ["//visibility:public"],
 )
 
 # Image support golang and make
 docker_build(
     name = "ubuntu-wily-amd64-golang",
     base = ":ubuntu-wily-amd64",
-    debs = ["@deb-ubuntu-wily-amd64-golang-%s//file" % package[0].replace("+", "p") for package in DEBS_ubuntu_wily_amd64_golang],
+    debs = DEB_NAMES["ubuntu-wily-amd64-golang"],
     symlinks = {"/usr/local/bin/go": "/usr/lib/go/bin/go"},
 )
 
@@ -40,5 +39,5 @@ docker_build(
 docker_build(
     name = "ubuntu-wily-amd64-ssh",
     base = ":ubuntu-wily-amd64",
-    debs = ["@deb-ubuntu-wily-amd64-ssh-%s//file" % package[0].replace("+", "p") for package in DEBS_ubuntu_wily_amd64_ssh],
+    debs = DEB_NAMES["ubuntu-wily-amd64-ssh"],
 )

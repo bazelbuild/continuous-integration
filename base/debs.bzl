@@ -12,23 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Jenkins plugins
-load("/jenkins/plugins", "jenkins_plugins")
-jenkins_plugins()
+# Generate debs list for specific image from the generated file
+load("generated", "DEBS")
 
-# Docker debian deps
-load("/base/debs", "docker_debs_repositories")
-docker_debs_repositories()
+DEB_NAMES = {
+    k: ["@deb-%s-%s//file" % (k, deb[0].replace("+", "p")) for deb in DEBS[k]]
+    for k in DEBS
+    }
 
-# Releases stuff
-http_file(
-    name = "hoedown",
-    sha256 = "779b75397043f6f6cf2ca8c8a716da58bb03ac42b1a21b83ff66b69bc60c016c",
-    url = "https://github.com/hoedown/hoedown/archive/3.0.4.tar.gz",
-)
+DEB_URL="http://se.archive.ubuntu.com/ubuntu/%s"
 
-http_file(
-    name = "github-release",
-    sha256 = "d6994f8a43aaa7c5a7c8c867fe69cfe302cd8eda0df3d371d0e69413999c83d8",
-    url = "https://github.com/c4milo/github-release/archive/v1.0.7.tar.gz",
-)
+def docker_debs_repositories():
+  [[native.http_file(
+      name = "deb-%s-%s" % (k, deb[0].replace("+", "p")),
+      sha256 = deb[2],
+      url = DEB_URL % deb[1],
+      ) for deb in DEBS[k]]
+   for k in DEBS]
