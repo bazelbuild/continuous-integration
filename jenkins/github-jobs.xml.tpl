@@ -89,7 +89,7 @@
 set -x
 INSTALLER_PLATFORM=$(uname -s | tr &apos;[:upper:]&apos; &apos;[:lower:]&apos;)-$(uname -m)
 if [ &quot;$BAZEL_VERSION&quot; = &quot;HEAD&quot; ]; then
-  export BAZEL_INSTALLER=$(find $PWD/bazel-installer -name *.sh | \
+  export BAZEL_INSTALLER=$(find $PWD/bazel-installer -name '*.sh' | \
       fgrep &quot;PLATFORM_NAME=${INSTALLER_PLATFORM}&quot; | fgrep -v jdk7 | head -1)
 else
   if [ &quot;$BAZEL_VERSION&quot; = &quot;latest&quot; ]; then
