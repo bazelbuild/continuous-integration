@@ -113,7 +113,7 @@ bash &quot;${BAZEL_INSTALLER}&quot; \
 cd %{WORKSPACE}
 BAZEL=&quot;${BASE}/binary/bazel --bazelrc=${BASE}/bin/bazel.bazelrc&quot;
 
-${BAZEL} %{BUILD}</command>
+%{BUILD}</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
