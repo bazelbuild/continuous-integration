@@ -108,13 +108,37 @@ bash &quot;${BAZEL_INSTALLER}&quot; \
   --base=&quot;${BASE}&quot; \
   --bazelrc=&quot;${BASE}/bin/bazel.bazelrc&quot; \
   --bin=&quot;${BASE}/binary&quot;
-# Put the bazelrc here because aparently 0.1.1 have problem with master rc files
-# TODO(bazel-team): remove once 0.1.2 is released
+ROOT="${PWD}"
+rm -f .unstable
 cd %{WORKSPACE}
-BAZEL=&quot;${BASE}/binary/bazel --bazelrc=${BASE}/bin/bazel.bazelrc&quot;
+function bazel() {
+  local retCode=0
+  # Put the bazelrc here because aparently 0.1.1 have problem with master rc files
+  # TODO(bazel-team): remove once 0.1.2 is released
+  ${BASE}/binary/bazel --bazelrc=${BASE}/bin/bazel.bazelrc "$@" || retCode=$?
+  if (( $retCode == 3 )); then
+    echo 1 >"${ROOT}/.unstable"
+  elif (( $retCode != 0 )); then
+    exit $retCode
+  fi
+}
 
 %{BUILD}</command>
     </hudson.tasks.Shell>
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="%{JENKINS_PLUGIN_conditional-buildstep}">
+      <condition class="org.jenkins_ci.plugins.run_condition.core.FileExistsCondition" plugin="%{JENKINS_PLUGIN_run-condition}">
+        <file>.unstable</file>
+        <baseDir class="org.jenkins_ci.plugins.run_condition.common.BaseDirectory$Workspace"/>
+      </condition>
+      <buildStep class="org.jenkins_ci.plugins.fail_the_build.FixResultBuilder" plugin="%{JENKINS_PLUGIN_fail-the-build-plugin}">
+        <defaultResultName>UNSTABLE</defaultResultName>
+        <success></success>
+        <unstable></unstable>
+        <failure></failure>
+        <aborted></aborted>
+      </buildStep>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Unstable" plugin="%{JENKINS_PLUGIN_run-condition}"/>
+    </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
   </builders>
   <publishers>
     <hudson.tasks.Mailer plugin="%{JENKINS_PLUGIN_mailer}">

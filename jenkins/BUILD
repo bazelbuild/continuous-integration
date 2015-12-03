@@ -147,7 +147,7 @@ JOBS_SUBSTITUTIONS = {
 # TODO(dmarting): activate Tensorflow on mac (missing dependencies)
 bazel_github_job(
     name = "TensorFlow",
-    build = "./configure &amp;&amp; ${BAZEL} test -c opt //tensorflow/...",
+    build = "./configure &amp;&amp; bazel test -c opt //tensorflow/...",
     org = "tensorflow",
     platforms = LINUX_PLATFORMS,
     project_url = "https://tensorflow.org",
@@ -155,7 +155,8 @@ bazel_github_job(
 
 [bazel_github_job(
     name = n,
-    build = "${BAZEL} test :all",
+    # on Linux protobuf tries to build objc target so filter by test only
+    build = "bazel test $(bazel query 'kind(test, :all)')",
     platforms = PLATFORMS,
 ) for n in [
     "re2",
