@@ -36,34 +36,44 @@ PLATFORMS = LINUX_PLATFORMS + DARWIN_PLATFORMS
 # Nodes
 #
 
-# OS X machine are not docker images
-jenkins_node(
-    name = "darwin-x86_64",
+# Physical machines
+[jenkins_node(
+    name = "darwin-x86_64" + ext,
     labels = [
         "darwin-x86_64",
         "safe",
     ],
     remote_fs = "/Users/ci",
-)
+) for ext in [
+    "",
+    "-2",
+]]
 
-jenkins_node(
-    name = "ubuntu_14.04-x86_64",
+# GCE machines
+[jenkins_node(
+    name = "ubuntu_14.04-x86_64" + ext,
     labels = [
+        "ubuntu_14.04-x86_64",
         "linux-x86_64",
         "safe",
     ],
-    # We don't use docker for this image, Bazel tests are too resource
-    # consuming, we run them in a standalone VM.
-)
+) for ext in [
+    "",
+    "-2",
+]]
 
 # Non-release nodes
-jenkins_node(
-    name = "ubuntu_15.10-x86_64",
+[jenkins_node(
+    name = "ubuntu_15.10-x86_64" + ext,
     labels = [
+        "ubuntu_15.10-x86_64",
         "no-release",
         "safe",
     ],
-)
+) for ext in [
+    "",
+    "-2",
+]]
 
 # A little hack to remove path consideration
 DEPLOY_FILES = [
@@ -235,6 +245,9 @@ jenkins_build(
         ":ubuntu_14.04-x86_64",
         ":ubuntu_15.10-x86_64",
         ":darwin-x86_64",
+        ":ubuntu_14.04-x86_64-2",
+        ":ubuntu_15.10-x86_64-2",
+        ":darwin-x86_64-2",
         ":deploy",
     ] + JOBS,
     substitutions = JOBS_SUBSTITUTIONS + JENKINS_PERMISSIONS,

@@ -23,6 +23,9 @@
 # Try to accept Xcode license
 sudo git
 
+# Write the node name
+echo -n ${1:-darwin-x86_64} >$HOME/node_name
+
 # Get the various sdk
 cd $HOME
 # Android NDK
@@ -44,7 +47,7 @@ while (( $retry != 0 )); do
   retry=0
   rm -f slave.jar slave-agent.jnlp
   curl -qo slave.jar http://ci.bazel.io/jnlpJars/slave.jar || retry=1
-  curl -qo slave-agent.jnlp http://ci.bazel.io/computer/darwin-x86_64/slave-agent.jnlp || retry=1
+  curl -qo slave-agent.jnlp http://ci.bazel.io/computer/$(cat $HOME/node_name)/slave-agent.jnlp || retry=1
   sleep 5
 done
 
