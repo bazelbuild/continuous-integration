@@ -157,7 +157,12 @@ JOBS_SUBSTITUTIONS = {
 # TODO(dmarting): activate Tensorflow on mac (missing dependencies)
 bazel_github_job(
     name = "TensorFlow",
-    build = "./configure &amp;&amp; bazel test -c opt //tensorflow/...",
+    build = "\n".join([
+        "./configure",
+        "TESTS=&quot;$(bazel query &apos;filter(&quot;:(lib|platform)_.*&quot;, kind(test, //tensorflow/core:all))&apos;)&quot;",
+        "bazel build -c opt //tensorflow/...",
+        "bazel test -c opt --test_timeout=1800 ${TESTS}",
+    ]),
     org = "tensorflow",
     platforms = LINUX_PLATFORMS,
     project_url = "https://tensorflow.org",
