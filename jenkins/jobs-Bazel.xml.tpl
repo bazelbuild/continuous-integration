@@ -92,25 +92,15 @@ if [[ &quot;${NODE_LABELS}&quot; =~ &quot;no-release&quot; ]]; then
   bazel_build
 else
   bazel_build output/ci
-fi
-[ -z &quot;${BUILD_UNSTABLE-}&quot; ] || echo 1 &gt;unstable</command>
+fi</command>
     </hudson.tasks.Shell>
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="%{JENKINS_PLUGIN_conditional-buildstep}">
-      <condition class="org.jenkins_ci.plugins.run_condition.core.FileExistsCondition" plugin="%{JENKINS_PLUGIN_run-condition}">
-        <file>unstable</file>
-        <baseDir class="org.jenkins_ci.plugins.run_condition.common.BaseDirectory$Workspace"/>
-      </condition>
-      <buildStep class="org.jenkins_ci.plugins.fail_the_build.FixResultBuilder" plugin="%{JENKINS_PLUGIN_fail-the-build-plugin}">
-        <defaultResultName>UNSTABLE</defaultResultName>
-        <success></success>
-        <unstable></unstable>
-        <failure></failure>
-        <aborted></aborted>
-      </buildStep>
-      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Unstable" plugin="%{JENKINS_PLUGIN_run-condition}"/>
-    </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
   </builders>
   <publishers>
+    <hudson.tasks.junit.JUnitResultArchiver plugin="%{JENKINS_PLUGIN_junit}">
+      <testResults>bazel-testlogs/**/*.xml</testResults>
+      <keepLongStdio>false</keepLongStdio>
+      <healthScaleFactor>1.0</healthScaleFactor>
+    </hudson.tasks.junit.JUnitResultArchiver>
     <hudson.tasks.ArtifactArchiver>
       <artifacts>output/ci/**</artifacts>
       <allowEmptyArchive>true</allowEmptyArchive>
