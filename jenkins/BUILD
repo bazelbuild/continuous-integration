@@ -19,10 +19,6 @@ load("jenkins", "jenkins_job", "jenkins_node", "jenkins_build", "bazel_github_jo
 #
 # Common definitions
 #
-GITHUB_PROJECT = "bazelbuild/bazel"
-
-GITHUB_URL = "https://github.com/" + GITHUB_PROJECT
-
 LINUX_PLATFORMS = [
     "linux-x86_64",
     "ubuntu_15.10-x86_64",

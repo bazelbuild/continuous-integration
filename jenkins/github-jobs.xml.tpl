@@ -20,7 +20,7 @@
   <keepDependencies>false</keepDependencies>
   <properties>
     <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="%{JENKINS_PLUGIN_github}">
-      <projectUrl>%{GITHUB_PROJECT}</projectUrl>
+      <projectUrl>%{PROJECT_URL}</projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
   </properties>
   <scm class="hudson.plugins.git.GitSCM" plugin="%{JENKINS_PLUGIN_git}">

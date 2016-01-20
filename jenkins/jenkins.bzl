@@ -49,7 +49,8 @@ def jenkins_job(name, config, substitutions = {},
     project_url = "https://github.com/%s/%s" % (org, project.lower())
   substitutions = substitutions + JENKINS_PLUGINS_VERSIONS + {
       "%{GITHUB_URL}": "https://github.com/%s/%s" % (org, project.lower()),
-      "%{GITHUB_PROJECT}": project_url,
+      "%{GITHUB_PROJECT}": "%s/%s" % (org, project.lower()),
+      "%{PROJECT_URL}": project_url,
       "%{PLATFORMS}": "".join(["<string>%s</string>" % p for p in platforms]),
       }
   expand_template(
