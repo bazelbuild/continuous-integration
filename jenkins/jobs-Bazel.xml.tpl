@@ -100,6 +100,7 @@ fi</command>
       <testResults>bazel-testlogs/**/*.xml</testResults>
       <keepLongStdio>false</keepLongStdio>
       <healthScaleFactor>1.0</healthScaleFactor>
+      <allowEmptyResults>true</allowEmptyResults>
     </hudson.tasks.junit.JUnitResultArchiver>
     <hudson.tasks.ArtifactArchiver>
       <artifacts>output/ci/**</artifacts>

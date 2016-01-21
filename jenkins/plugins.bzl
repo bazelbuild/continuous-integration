@@ -68,8 +68,8 @@ JENKINS_PLUGINS = [
     ],
     [
         "junit",
-        "1.2",
-        "3d288600ab6a5d8117d427813c7693a1ccbe7a0ccd6a58b536e896471c3378dc",
+        "1.10",
+        "62e355223a8acc3035e3c7e21a0ab8d61091fe2d1620a8f04bc313b7af643bf3",
     ],
     [
         "credentials",
