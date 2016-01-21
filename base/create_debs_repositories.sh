@@ -78,7 +78,8 @@ fi
 if [[ "$1" =~ ^docker:(.*)$ ]]; then
   # Run inside docker
   shift 1
-  docker run "${BASH_REMATCH[1]}" /bin/bash -c "$(cat ${BASH_SOURCE[0]})" "$0" "$@"
+  script_dir="$(cd $(dirname ${BASH_SOURCE[0]}) && pwd -P)"
+  docker run --rm -v "${script_dir}":/opt "${BASH_REMATCH[1]}" /bin/bash "/opt/$(basename "${BASH_SOURCE[0]}")" "$@"
   exit $?
 fi
 
