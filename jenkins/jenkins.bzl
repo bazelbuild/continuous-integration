@@ -73,7 +73,7 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
               org=org, project_url=project_url, platforms=platforms)
 
 def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1,
-                labels = [], base = None):
+                labels = [], base = None, preference = 1):
   """Create a node configuration on Jenkins, with possible docker image."""
   native.genrule(
       name = name,
@@ -88,10 +88,14 @@ def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1,
   <retentionStrategy class="hudson.slaves.RetentionStrategy$$Always"/>
   <launcher class="hudson.slaves.JNLPLauncher"/>
   <label>%s</label>
-  <nodeProperties/>
+  <nodeProperties>
+    <jp.ikedam.jenkins.plugins.scoringloadbalancer.preferences.BuildPreferenceNodeProperty plugin="scoring-load-balancer@1.0.1">
+      <preference>%s</preference>
+    </jp.ikedam.jenkins.plugins.scoringloadbalancer.preferences.BuildPreferenceNodeProperty>
+  </nodeProperties>
 </slave>
 EOF
-""" % (name, remote_fs, num_executors, " ".join([name] + labels)),
+""" % (name, remote_fs, num_executors, " ".join([name] + labels), preference),
       outs = ["nodes/%s/config.xml" % name],
       )
   if base:

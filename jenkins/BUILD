@@ -49,6 +49,7 @@ jenkins_node(
         "safe",
     ],
     num_executors = 3,
+    preference = 4,
     remote_fs = "/Users/ci",
 )
 

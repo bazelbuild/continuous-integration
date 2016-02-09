@@ -136,6 +136,11 @@ JENKINS_PLUGINS = [
         "1.0",
         "c97db02dc6fef269780b77d2001a9bfb49bcdc9ac2ee242cd10445709bb7d09e",
     ],
+    [
+        "scoring-load-balancer",
+        "1.0.1",
+        "a7229d2945e347afb472d3c45e83ea3c4409c8710c4168912601eb46684dd3a3",
+    ],
 ]
 
 def jenkins_plugins():
