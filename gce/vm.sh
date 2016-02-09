@@ -33,6 +33,10 @@ SLAVES=(
     "ubuntu-15-10-slave https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64 ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
     "ubuntu-14-04-slave-2 ubuntu-14-04 ubuntu_14.04-x86_64-2 ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
     "ubuntu-15-10-slave-2 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-2 ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-3 ubuntu-14-04 ubuntu_14.04-x86_64-3 ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-15-10-slave-3 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-3 ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-4 ubuntu-14-04 ubuntu_14.04-x86_64-4 ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-15-10-slave-4 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-4 ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
 )
 
 cd "$(dirname "${BASH_SOURCE[0]}")"

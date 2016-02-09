@@ -33,17 +33,24 @@ PLATFORMS = LINUX_PLATFORMS + DARWIN_PLATFORMS
 #
 
 # Physical machines
-[jenkins_node(
-    name = "darwin-x86_64" + ext,
+jenkins_node(
+    name = "darwin-x86_64",
     labels = [
         "darwin-x86_64",
         "safe",
     ],
     remote_fs = "/Users/ci",
-) for ext in [
-    "",
-    "-2",
-]]
+)
+
+jenkins_node(
+    name = "darwin-x86_64-2",
+    labels = [
+        "darwin-x86_64",
+        "safe",
+    ],
+    num_executors = 3,
+    remote_fs = "/Users/ci",
+)
 
 # GCE machines
 [jenkins_node(
@@ -56,6 +63,8 @@ PLATFORMS = LINUX_PLATFORMS + DARWIN_PLATFORMS
 ) for ext in [
     "",
     "-2",
+    "-3",
+    "-4",
 ]]
 
 # Non-release nodes
@@ -69,6 +78,8 @@ PLATFORMS = LINUX_PLATFORMS + DARWIN_PLATFORMS
 ) for ext in [
     "",
     "-2",
+    "-3",
+    "-4",
 ]]
 
 # A little hack to remove path consideration
@@ -249,6 +260,10 @@ jenkins_build(
         ":ubuntu_14.04-x86_64-2",
         ":ubuntu_15.10-x86_64-2",
         ":darwin-x86_64-2",
+        ":ubuntu_14.04-x86_64-3",
+        ":ubuntu_15.10-x86_64-3",
+        ":ubuntu_14.04-x86_64-4",
+        ":ubuntu_15.10-x86_64-4",
         ":deploy",
     ] + JOBS,
     substitutions = JOBS_SUBSTITUTIONS + JENKINS_PERMISSIONS,
