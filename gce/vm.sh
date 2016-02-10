@@ -71,7 +71,7 @@ function create_slave() {
          --zone $LOCATION --machine-type n1-standard-8 \
          --image $IMAGE \
          --metadata-from-file startup-script=jenkins-slave.sh \
-         --boot-disk-type pd-ssd --boot-disk-size 80GB
+         --boot-disk-type pd-ssd --boot-disk-size 160GB
   sleep 1  # Wait a bit for the VM to fully start
   # Create the Jenkins user
   gcloud compute ssh --zone=$LOCATION \
