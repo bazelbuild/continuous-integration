@@ -132,6 +132,7 @@ jenkins_node(
 #
 GITHUB_JOBS = [
     "TensorFlow",
+    "TensorFlow_Serving",
     "re2",
     "protobuf",
 ]
@@ -174,6 +175,17 @@ bazel_github_job(
     org = "tensorflow",
     platforms = LINUX_PLATFORMS,
     project_url = "https://tensorflow.org",
+)
+
+bazel_github_job(
+    name = "TensorFlow_Serving",
+    build = "\n".join([
+        "(cd tensorflow &amp;&amp; ./configure)",
+        "bazel test tensorflow_serving/...",
+    ]),
+    org = "tensorflow",
+    project = "serving",
+    platforms = LINUX_PLATFORMS,
 )
 
 [bazel_github_job(
