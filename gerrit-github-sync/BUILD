@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # A slave for polling and syncing gerrit and github
-load("/tools/build_defs/docker/docker", "docker_build")
+load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
 
 docker_build(
     name = "gerrit-github-sync",

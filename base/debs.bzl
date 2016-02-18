@@ -13,10 +13,13 @@
 # limitations under the License.
 
 # Generate debs list for specific image from the generated file
-load("generated", "DEBS")
+load(":generated.bzl", "DEBS")
+
+def deb_repo_name(distrib, package):
+  return "deb_%s_%s" % (distrib.replace("-", "_"), package.replace("+", "p").replace("-", "_").replace(".", "_"))
 
 DEB_NAMES = {
-    k: ["@deb-%s-%s//file" % (k, deb[0].replace("+", "p")) for deb in DEBS[k]]
+    k: ["@%s//file" % deb_repo_name(k, deb[0]) for deb in DEBS[k]]
     for k in DEBS
     }
 
@@ -24,7 +27,7 @@ DEB_URL="http://se.archive.ubuntu.com/ubuntu/%s"
 
 def docker_debs_repositories():
   [[native.http_file(
-      name = "deb-%s-%s" % (k, deb[0].replace("+", "p")),
+      name = deb_repo_name(k, deb[0]),
       sha256 = deb[2],
       url = DEB_URL % deb[1],
       ) for deb in DEBS[k]]

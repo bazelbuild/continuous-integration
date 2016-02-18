@@ -145,7 +145,7 @@ JENKINS_PLUGINS = [
 
 def jenkins_plugins():
   [native.http_file(
-      name = "jenkins-plugin-%s" % plugin[0],
+      name = "jenkins_plugin_%s" % plugin[0].replace("-", "_"),
       sha256 = plugin[2],
       url = JENKINS_PLUGINS_URL % (
           plugin[0],

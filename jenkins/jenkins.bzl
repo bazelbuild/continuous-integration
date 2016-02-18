@@ -14,8 +14,8 @@
 
 # Some definition to setup jenkins and build the corresponding docker images
 
-load("/tools/build_defs/docker/docker", "docker_build")
-load("plugins", "JENKINS_PLUGINS", "JENKINS_PLUGINS_VERSIONS")
+load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
+load(":plugins.bzl", "JENKINS_PLUGINS", "JENKINS_PLUGINS_VERSIONS")
 
 JENKINS_PORT = 80
 JENKINS_HOST = "jenkins"
@@ -145,7 +145,7 @@ def jenkins_build(name, plugins = None, base = "jenkins-base.tar", configs = [],
   # directly?
   [native.genrule(
       name = "%s-plugin-%s-rename" % (name, plugin),
-      srcs = ["@jenkins-plugin-%s//file" % plugin],
+      srcs = ["@jenkins_plugin_%s//file" % plugin.replace("-", "_")],
       cmd = "cp $< $@",
       outs = ["%s-%s.jpi" % (name, plugin)],
   ) for plugin in plugins]

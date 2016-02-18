@@ -13,8 +13,8 @@
 # limitations under the License.
 package(default_visibility = ["//visibility:public"])
 
-load("/tools/build_defs/docker/docker", "docker_build")
-load("debs", "DEB_NAMES")
+load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
+load(":debs.bzl", "DEB_NAMES")
 
 # Base ubuntu
 docker_build(

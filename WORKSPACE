@@ -13,11 +13,11 @@
 # limitations under the License.
 
 # Jenkins plugins
-load("/jenkins/plugins", "jenkins_plugins")
+load("//jenkins:plugins.bzl", "jenkins_plugins")
 jenkins_plugins()
 
 # Docker debian deps
-load("/base/debs", "docker_debs_repositories")
+load("//base:debs.bzl", "docker_debs_repositories")
 docker_debs_repositories()
 
 # Releases stuff
@@ -28,7 +28,7 @@ http_file(
 )
 
 http_file(
-    name = "github-release",
+    name = "github_release",
     sha256 = "d6994f8a43aaa7c5a7c8c867fe69cfe302cd8eda0df3d371d0e69413999c83d8",
     url = "https://github.com/c4milo/github-release/archive/v1.0.7.tar.gz",
 )
