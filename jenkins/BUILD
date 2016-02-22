@@ -54,6 +54,17 @@ jenkins_node(
 )
 
 # GCE machines
+jenkins_node(
+    name = "windows-x86_64",
+    labels = [
+        "windows-x86_64",
+        "safe",
+    ],
+    num_executors = 1,
+    preference = 1,
+    remote_fs = "c:\\bazel_ci",
+)
+
 [jenkins_node(
     name = "ubuntu_14.04-x86_64" + ext,
     labels = [
@@ -184,8 +195,8 @@ bazel_github_job(
         "bazel test tensorflow_serving/...",
     ]),
     org = "tensorflow",
-    project = "serving",
     platforms = LINUX_PLATFORMS,
+    project = "serving",
 )
 
 [bazel_github_job(
@@ -277,6 +288,7 @@ jenkins_build(
         ":ubuntu_15.10-x86_64-3",
         ":ubuntu_14.04-x86_64-4",
         ":ubuntu_15.10-x86_64-4",
+        ":windows-x86_64",
         ":deploy",
     ] + JOBS,
     substitutions = JOBS_SUBSTITUTIONS + JENKINS_PERMISSIONS,

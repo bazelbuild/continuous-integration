@@ -18,26 +18,29 @@
 set -eu
 
 # List of slaves in the following format:
-#   GCE-VM-NAME GCE-BASE-IMAGE JENKINS-NODE LOCATION SETUP-SCRIPTS
+#   GCE-VM-NAME GCE-BASE-IMAGE JENKINS-NODE LOCATION STARTUP-METADATA SETUP-SCRIPTS
 # Where
 #   GCE-VM-NAME is the VM name on GCE
 #   GCE-BASE-IMAGE is the name of the base image in GCE
 #                  (see `gcloud compute images list`)
 #   JENKINS-NODE is the name of the node in Jenkins
 #   LOCATION is the location in GCE (e.g. us-central1-a)
+#   STARTUP-METADATA is the metadata argument to gcloud to launch the right
+#                    startup script.
 #   SETUP-SCRIPTS is a list of shell scripts to adapt the slave. It should
 #                create a ci user with its home in /home/ci
 #                and ends with writing to /home/ci/node_name the name
 #                of the jenkins node.
 SLAVES=(
-    "ubuntu-14-04-slave ubuntu-14-04 ubuntu_14.04-x86_64 us-central1-a ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-15-10-slave https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64 asia-east1-c ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-14-04-slave-2 ubuntu-14-04 ubuntu_14.04-x86_64-2 us-central1-a ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-15-10-slave-2 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-2 asia-east1-c ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-14-04-slave-3 ubuntu-14-04 ubuntu_14.04-x86_64-3 us-east1-c ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-15-10-slave-3 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-3 us-east1-c ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-14-04-slave-4 ubuntu-14-04 ubuntu_14.04-x86_64-4 europe-west1-c ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-15-10-slave-4 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-4 europe-west1-c ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave ubuntu-14-04 ubuntu_14.04-x86_64 us-central1-a startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-15-10-slave https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64 asia-east1-c startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-2 ubuntu-14-04 ubuntu_14.04-x86_64-2 us-central1-a startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-15-10-slave-2 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-2 asia-east1-c startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-3 ubuntu-14-04 ubuntu_14.04-x86_64-3 us-east1-c startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-15-10-slave-3 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-3 us-east1-c startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-4 ubuntu-14-04 ubuntu_14.04-x86_64-4 europe-west1-c startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-15-10-slave-4 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-4 europe-west1-c startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
+    "windows-slave https://www.googleapis.com/compute/v1/projects/windows-cloud/global/images/windows-server-2012-r2-dc-v20160112 windows-x86_64 europe-west1-c windows-startup-script-ps1=jenkins-slave-windows.ps1"
 )
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
@@ -66,28 +69,38 @@ function create_slave() {
   local IMAGE="$2"
   local JENKINS_NODE="$3"
   local LOCATION="$4"
-  shift 4
-  gcloud compute instances create $TAG \
-         --zone $LOCATION --machine-type n1-standard-8 \
-         --image $IMAGE \
-         --metadata-from-file startup-script=jenkins-slave.sh \
-         --boot-disk-type pd-ssd --boot-disk-size 160GB
+  local STARTUP_METADATA="$5"
+  shift 5
+  gcloud compute instances create "$TAG" \
+         --zone "$LOCATION" --machine-type n1-standard-8 \
+         --image "$IMAGE" \
+         --metadata jenkins_node="$JENKINS_NODE" \
+         --metadata-from-file "$STARTUP_METADATA" \
+         --boot-disk-type pd-ssd --boot-disk-size 200GB
   sleep 1  # Wait a bit for the VM to fully start
-  # Create the Jenkins user
-  gcloud compute ssh --zone=$LOCATION \
-         --command "sudo adduser --system --home /home/ci ci" $TAG
-  # Runs additional set-up scripts
-  for i in "$@"; do
-    cat $i | gcloud compute ssh --zone=$LOCATION \
-                    --command "cat >/tmp/setup.sh" $TAG
-    gcloud compute ssh --zone=$LOCATION \
-           --command "sudo bash /tmp/setup.sh" $TAG
-  done
-  # Finally mark the install process as finished
-  echo "$JENKINS_NODE" | \
+
+  case "$TAG" in
+    windows-*)  # Windows
+      ;;
+
+    *)  # Linux
+      # Create the Jenkins user
       gcloud compute ssh --zone=$LOCATION \
-             --command "sudo su ci -s /bin/bash -c 'cat >/home/ci/node_name'" \
-             $TAG
+             --command "sudo adduser --system --home /home/ci ci" $TAG
+      # Runs additional set-up scripts
+      for i in "$@"; do
+        cat $i | gcloud compute ssh --zone=$LOCATION \
+                        --command "cat >/tmp/setup.sh" $TAG
+        gcloud compute ssh --zone=$LOCATION \
+               --command "sudo bash /tmp/setup.sh" $TAG
+      done
+      # Finally mark the install process as finished
+      echo "$JENKINS_NODE" | \
+          gcloud compute ssh --zone=$LOCATION \
+                 --command "sudo su ci -s /bin/bash -c 'cat >/home/ci/node_name'" \
+                 $TAG
+      ;;
+  esac
 }
 
 function get_slave_by_name() {

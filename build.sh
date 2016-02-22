@@ -29,6 +29,8 @@ PUSH_IMAGES=(
     "//gerrit-github-sync:gerrit-github-sync=sync-gerrit-github"
 )
 
+BAZEL=${BAZEL:-bazel}
+
 BAZEL_GCR_PROJECT="bazel-public"
 
 cd "$(dirname ${BASH_SOURCE[0]})"
@@ -77,7 +79,7 @@ function pull() {
 function build() {
   local bazel_target="$(echo "$i" | cut -d "=" -f 1)"
   local docker_tag="$(echo "$i" | cut -d "=" -f 2)"
-  run bazel run "${bazel_target}" "gcr.io/${BAZEL_GCR_PROJECT}/${docker_tag}"
+  run ${BAZEL} run "${bazel_target}" "gcr.io/${BAZEL_GCR_PROJECT}/${docker_tag}"
 }
 
 # Push to GCR
