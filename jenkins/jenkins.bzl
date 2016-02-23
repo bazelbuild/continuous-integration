@@ -18,7 +18,6 @@ load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
 load(":plugins.bzl", "JENKINS_PLUGINS", "JENKINS_PLUGINS_VERSIONS")
 
 JENKINS_PORT = 80
-
 JENKINS_HOST = "jenkins"
 
 def expand_template_impl(ctx):
@@ -31,18 +30,16 @@ def expand_template_impl(ctx):
       )
 
 expand_template = rule(
-    attrs = {
-        "template": attr.label(
-            mandatory = True,
-            allow_files = True,
-            single_file = True,
-        ),
-        "substitutions": attr.string_dict(mandatory = True),
-        "out": attr.output(mandatory = True),
-        "executable": attr.bool(default = True),
-    },
     implementation = expand_template_impl,
-)
+    attrs = {
+        "template": attr.label(mandatory=True,
+                               allow_files=True,
+                               single_file=True),
+        "substitutions": attr.string_dict(mandatory=True),
+        "out": attr.output(mandatory=True),
+        "executable": attr.bool(default=True),
+        },
+    )
 
 def jenkins_job(name, config, substitutions = {},
                 project='bazel', org='bazelbuild', project_url=None,
@@ -130,10 +127,6 @@ EOF
 def jenkins_build(name, plugins = None, base = "jenkins-base.tar", configs = [],
                   substitutions = {}):
   """Build the docker image for the Jenkins instance."""
-  substitutions = substitutions + {
-    "%{JENKINS_SERVER}": "http://%s:%s" % (JENKINS_HOST, JENKINS_PORT)
-  }
-
   if not plugins:
     plugins = [p[0] for p in JENKINS_PLUGINS]
   ### BASE IMAGE ###
