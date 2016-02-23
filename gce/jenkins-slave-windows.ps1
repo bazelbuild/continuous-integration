@@ -55,7 +55,10 @@ $agent_script=@"
 `$env:path="`$env:path;c:\tools\msys64\usr\bin"
 cd c:\bazel_ci
 # A path name with c:\ in the JNLP URL makes Java hang. I don't know why.
-& "$java\bin\java" -jar c:\bazel_ci\slave.jar -jnlpUrl file:///bazel_ci/slave-agent.jnlp
+# Jenkins tries to reconnect to the wrong port if the server is restarted.
+# -noReconnect makes the agent die, and it is then subsequently restarted by
+# Windows because it is a service, and then all is well.
+& "$java\bin\java" -jar c:\bazel_ci\slave.jar -jnlpUrl file:///bazel_ci/slave-agent.jnlp -noReconnect
 "@
 Write-Output $agent_script | Out-File -Encoding ascii agent_script.ps1
 
