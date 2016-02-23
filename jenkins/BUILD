@@ -146,6 +146,7 @@ GITHUB_JOBS = [
     "TensorFlow_Serving",
     "re2",
     "protobuf",
+    "rules_scala",
 ]
 
 BAZEL_JOBS = [
@@ -197,6 +198,13 @@ bazel_github_job(
     org = "tensorflow",
     platforms = LINUX_PLATFORMS,
     project = "serving",
+)
+
+bazel_github_job(
+    name = "rules_scala",
+    build = "bazel test //...",
+    org = "bazelbuild",
+    platforms = PLATFORMS,
 )
 
 [bazel_github_job(
