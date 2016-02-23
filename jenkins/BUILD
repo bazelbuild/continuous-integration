@@ -119,7 +119,7 @@ docker_build(
         "BOTO_CONFIG": "/opt/secrets/boto_config",
         "GITHUB_TOKEN_FILE": "/opt/secrets/github_token",
         "GSUTIL": "/opt/data/gsutil/gsutil",
-        "GITHUB_RELEASE": "/opt/data/github_release/github-release",
+        "GITHUB_RELEASE": "/opt/data/github-release/github-release",
         "HOEDOWN": "/opt/data/hoedown/hoedown",
     },
     files = [":deploy-files"],

@@ -25,7 +25,7 @@ pushd /opt/data
 wget https://storage.googleapis.com/pub/gsutil.tar.gz
 
 tar zxf hoedown.tar.gz
-tar zxf github-release.tar.gz
+tar zxf github_release.tar.gz
 tar zxf gsutil.tar.gz
 
 mv hoedown-3.0.4 hoedown
