@@ -26,7 +26,7 @@ LINUX_PLATFORMS = [
 
 DARWIN_PLATFORMS = ["darwin-x86_64"]
 
-PLATFORMS = LINUX_PLATFORMS + DARWIN_PLATFORMS
+UNIX_PLATFORMS = LINUX_PLATFORMS + DARWIN_PLATFORMS
 
 #
 # Nodes
@@ -62,7 +62,7 @@ jenkins_node(
     ],
     num_executors = 1,
     preference = 1,
-    remote_fs = "c:\\bazel_ci",
+    remote_fs = "c:\\jenkins",
 )
 
 [jenkins_node(
@@ -149,16 +149,16 @@ GITHUB_JOBS = [
     "rules_scala",
 ]
 
-BAZEL_JOBS = [
-    "Bazel",
-    "Bazel-Release",
-    "Bazel-Release-Trigger",
-    "Bazel-Incremental",
-    "Github-Trigger",
-    "Tutorial",
-]
+BAZEL_JOBS = {
+    "Bazel": UNIX_PLATFORMS + ["windows-x86_64"],
+    "Bazel-Release": UNIX_PLATFORMS,
+    "Bazel-Release-Trigger": UNIX_PLATFORMS,
+    "Bazel-Incremental": UNIX_PLATFORMS,
+    "Github-Trigger": UNIX_PLATFORMS,
+    "Tutorial": UNIX_PLATFORMS,
+}
 
-JOBS = BAZEL_JOBS + GITHUB_JOBS
+JOBS = BAZEL_JOBS.keys() + GITHUB_JOBS
 
 JOBS_SUBSTITUTIONS = {
     "%{BAZEL_BUILD_RECIPIENT}": "bazel-ci@googlegroups.com",
@@ -170,10 +170,10 @@ JOBS_SUBSTITUTIONS = {
 [jenkins_job(
     name = job,
     config = "jobs-%s.xml.tpl" % job,
-    platforms = PLATFORMS,
+    platforms = BAZEL_JOBS[job],
     project_url = "http://bazel.io",
     substitutions = JOBS_SUBSTITUTIONS,
-) for job in BAZEL_JOBS]
+) for job in BAZEL_JOBS.keys()]
 
 # TODO(dmarting): activate Tensorflow on mac (missing dependencies)
 bazel_github_job(
@@ -204,14 +204,14 @@ bazel_github_job(
     name = "rules_scala",
     build = "bazel test //...",
     org = "bazelbuild",
-    platforms = PLATFORMS,
+    platforms = UNIX_PLATFORMS,
 )
 
 [bazel_github_job(
     name = n,
     # on Linux protobuf tries to build objc target so filter by test only
     build = "bazel test $(bazel query 'kind(test, :all)')",
-    platforms = PLATFORMS,
+    platforms = UNIX_PLATFORMS,
 ) for n in [
     "re2",
     "protobuf",
@@ -286,6 +286,7 @@ jenkins_build(
         ],
         exclude = ["jobs-*.xml.tpl"],
     ) + [
+        ":windows-x86_64",
         ":ubuntu_14.04-x86_64",
         ":ubuntu_15.10-x86_64",
         ":darwin-x86_64",
@@ -296,7 +297,6 @@ jenkins_build(
         ":ubuntu_15.10-x86_64-3",
         ":ubuntu_14.04-x86_64-4",
         ":ubuntu_15.10-x86_64-4",
-        ":windows-x86_64",
         ":deploy",
     ] + JOBS,
     substitutions = JOBS_SUBSTITUTIONS + JENKINS_PERMISSIONS,

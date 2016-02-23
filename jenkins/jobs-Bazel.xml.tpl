@@ -1,13 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!--
   Copyright 2015 The Bazel Authors. All rights reserved.
- 
+
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
   You may obtain a copy of the License at
- 
+
      http://www.apache.org/licenses/LICENSE-2.0
- 
+
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -79,8 +79,13 @@ To be run on head and for release branch/tags only</description>
     </hudson.matrix.TextAxis>
   </axes>
   <builders>
-    <hudson.tasks.Shell>
-      <command>#!/bin/bash
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="%{JENKINS_PLUGIN_conditional-buildstep}">
+      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="%{JENKINS_PLUGIN_run-condition}">
+        <expression>(darwin|linux|ubuntu).*</expression>
+        <label>${PLATFORM_NAME}</label>
+      </condition>
+      <buildStep class="hudson.tasks.Shell">
+        <command>#!/bin/bash
 
 source scripts/ci/build.sh
 
@@ -92,8 +97,21 @@ if [[ &quot;${NODE_LABELS}&quot; =~ &quot;no-release&quot; ]]; then
   bazel_build
 else
   bazel_build output/ci
-fi</command>
-    </hudson.tasks.Shell>
+fi
+</command>
+      </buildStep>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="%{JENKINS_PLUGIN_run-condition}"/>
+    </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="%{JENKINS_PLUGIN_conditional-buildstep}">
+      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="%{JENKINS_PLUGIN_run-condition}">
+        <expression>windows.*</expression>
+        <label>${PLATFORM_NAME}</label>
+      </condition>
+      <buildStep class="hudson.tasks.BatchFile">
+        <command>scripts\ci\windows\compile_windows.bat</command>
+      </buildStep>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="%{JENKINS_PLUGIN_run-condition}"/>
+    </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
   </builders>
   <publishers>
     <hudson.tasks.junit.JUnitResultArchiver plugin="%{JENKINS_PLUGIN_junit}">

@@ -18,6 +18,7 @@ load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
 load(":plugins.bzl", "JENKINS_PLUGINS", "JENKINS_PLUGINS_VERSIONS")
 
 JENKINS_PORT = 80
+
 JENKINS_HOST = "jenkins"
 
 def expand_template_impl(ctx):
@@ -30,16 +31,18 @@ def expand_template_impl(ctx):
       )
 
 expand_template = rule(
-    implementation = expand_template_impl,
     attrs = {
-        "template": attr.label(mandatory=True,
-                               allow_files=True,
-                               single_file=True),
-        "substitutions": attr.string_dict(mandatory=True),
-        "out": attr.output(mandatory=True),
-        "executable": attr.bool(default=True),
-        },
-    )
+        "template": attr.label(
+            mandatory = True,
+            allow_files = True,
+            single_file = True,
+        ),
+        "substitutions": attr.string_dict(mandatory = True),
+        "out": attr.output(mandatory = True),
+        "executable": attr.bool(default = True),
+    },
+    implementation = expand_template_impl,
+)
 
 def jenkins_job(name, config, substitutions = {},
                 project='bazel', org='bazelbuild', project_url=None,
@@ -65,10 +68,13 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
   """Create a generic github job configuration to build against Bazel head."""
   if not project:
     project = name
-  substitutions["%{WORKSPACE}"] = workspace
-  substitutions["%{PROJECT_NAME}"] = project
-  substitutions["%{BRANCH}"] = branch
-  substitutions["%{BUILD}"] = build
+  substitutions = substitutions + {
+    "%{WORKSPACE}": workspace,
+    "%{PROJECT_NAME}": project,
+    "%{BRANCH}": branch,
+    "%{BUILD}": build
+  }
+
   jenkins_job(name, "github-jobs.xml.tpl", substitutions=substitutions, project=project,
               org=org, project_url=project_url, platforms=platforms)
 
