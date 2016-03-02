@@ -147,6 +147,7 @@ GITHUB_JOBS = [
     "re2",
     "protobuf",
     "rules_scala",
+    "dash",
 ]
 
 BAZEL_JOBS = {
@@ -203,6 +204,13 @@ bazel_github_job(
 bazel_github_job(
     name = "rules_scala",
     build = "bazel test //...",
+    org = "bazelbuild",
+    platforms = UNIX_PLATFORMS,
+)
+
+bazel_github_job(
+    name = "dash",
+    build = "bazel build //...; bazel test //...",
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
 )
