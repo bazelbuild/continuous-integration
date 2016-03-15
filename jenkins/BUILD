@@ -138,6 +138,17 @@ jenkins_node(
     base = "deploy-full",
 )
 
+RULES = [
+    "rules_appengine",
+    "rules_closure",
+    "rules_d",
+    "rules_dotnet",
+    "rules_go",
+    "rules_rust",
+    "rules_sass",
+    "rules_scala",
+]
+
 #
 # Jobs
 #
@@ -146,9 +157,8 @@ GITHUB_JOBS = [
     "TensorFlow_Serving",
     "re2",
     "protobuf",
-    "rules_scala",
     "dash",
-]
+] + RULES
 
 BAZEL_JOBS = {
     "Bazel": UNIX_PLATFORMS + ["windows-x86_64"],
@@ -201,16 +211,16 @@ bazel_github_job(
     project = "serving",
 )
 
-bazel_github_job(
-    name = "rules_scala",
-    build = "bazel test //...",
+[bazel_github_job(
+    name = job,
+    build = "bazel build //...; bazel test --test_output=errors //...",
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
-)
+) for job in RULES]
 
 bazel_github_job(
     name = "dash",
-    build = "bazel build //...; bazel test //...",
+    build = "bazel build //...; bazel test --test_output=errors //...",
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
 )
