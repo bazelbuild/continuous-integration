@@ -164,7 +164,6 @@ BAZEL_JOBS = {
     "Bazel": UNIX_PLATFORMS + ["windows-x86_64"],
     "Bazel-Release": UNIX_PLATFORMS,
     "Bazel-Release-Trigger": UNIX_PLATFORMS,
-    "Bazel-Incremental": UNIX_PLATFORMS,
     "Github-Trigger": UNIX_PLATFORMS,
     "Tutorial": UNIX_PLATFORMS,
 }
