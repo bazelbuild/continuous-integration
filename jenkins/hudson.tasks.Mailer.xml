@@ -4,7 +4,7 @@
   <hudsonUrl>http://ci.bazel.io/</hudsonUrl>
   <smtpAuthUsername>##SECRET:smtp.auth.username##</smtpAuthUsername>
   <smtpAuthPassword>##SECRET:smtp.auth.password##</smtpAuthPassword>
-  <replyToAddress>noreply@bazel.io</replyToAddress>
+  <replyToAddress>bazel-ci@googlegroups.com</replyToAddress>
   <smtpHost>smtp.sendgrid.net</smtpHost>
   <useSsl>false</useSsl>
   <smtpPort>2525</smtpPort>

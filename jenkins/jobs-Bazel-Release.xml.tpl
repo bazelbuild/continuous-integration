@@ -132,7 +132,7 @@ echo &quot;Content: ${RELEASE_EMAIL_CONTENT}&quot;</command>
       <presendScript></presendScript>
       <attachBuildLog>false</attachBuildLog>
       <compressBuildLog>false</compressBuildLog>
-      <replyTo>%{SENDER_EMAIL}</replyTo>
+      <replyTo>bazel-ci@googlegroups.com</replyTo>
       <saveOutput>false</saveOutput>
       <disabled>false</disabled>
     </hudson.plugins.emailext.ExtendedEmailPublisher>
