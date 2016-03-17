@@ -125,6 +125,22 @@ function bazel() {
 
 %{BUILD}</command>
     </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+# Avoid failing because absence of log files
+if [ ! -e "%{WORKSPACE}/bazel-testlogs" ]; then
+  # Remove dangling symlink if present.
+  rm -f "%{WORKSPACE}/bazel-testlogs"
+  mkdir -p "%{WORKSPACE}/bazel-testlogs"
+fi
+cat &lt;&lt;EOF &gt;%{WORKSPACE}/bazel-testlogs/dummy.xml
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;testsuites&gt;
+  &lt;testsuite name="dummy" tests="0" failures="0" errors="0"/&gt;
+&lt;/testsuites&gt;
+EOF
+</command>
+    </hudson.tasks.Shell>
     <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="%{JENKINS_PLUGIN_conditional-buildstep}">
       <condition class="org.jenkins_ci.plugins.run_condition.core.FileExistsCondition" plugin="%{JENKINS_PLUGIN_run-condition}">
         <file>.unstable</file>
@@ -141,6 +157,12 @@ function bazel() {
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
   </builders>
   <publishers>
+    <hudson.tasks.junit.JUnitResultArchiver plugin="%{JENKINS_PLUGIN_junit}">
+      <testResults>bazel-testlogs/**/*.xml</testResults>
+      <keepLongStdio>false</keepLongStdio>
+      <healthScaleFactor>1.0</healthScaleFactor>
+      <allowEmptyResults>true</allowEmptyResults>
+    </hudson.tasks.junit.JUnitResultArchiver>
     <hudson.tasks.Mailer plugin="%{JENKINS_PLUGIN_mailer}">
       <recipients>bazel-ci@googlegroups.com</recipients>
       <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
