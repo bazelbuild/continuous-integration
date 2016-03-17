@@ -21,6 +21,12 @@ JENKINS_PORT = 80
 
 JENKINS_HOST = "jenkins"
 
+def _xml_escape(s):
+  """Replace XML special characters."""
+  s = s.replace("&", "&amp;").replace("'", "&apos;").replace('"', "&quot;")
+  s = s.replace("<", "&lt;").replace(">", "&gt;")
+  return s
+
 def expand_template_impl(ctx):
   """Simply spawm the template_action in a rule."""
   ctx.template_action(
@@ -72,7 +78,7 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
     "%{WORKSPACE}": workspace,
     "%{PROJECT_NAME}": project,
     "%{BRANCH}": branch,
-    "%{BUILD}": build
+    "%{BUILD}": _xml_escape(build)
   }
 
   jenkins_job(name, "github-jobs.xml.tpl", substitutions=substitutions, project=project,

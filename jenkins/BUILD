@@ -191,7 +191,7 @@ bazel_github_job(
     name = "TensorFlow",
     build = "\n".join([
         "./configure",
-        "TESTS=&quot;$(bazel query &apos;filter(&quot;:(lib|platform)_.*&quot;, kind(test, //tensorflow/core:all))&apos;)&quot;",
+        "TESTS=\"$(bazel query 'filter(\":(lib|platform)_.*\", kind(test, //tensorflow/core:all))')\"",
         "bazel build -c opt //tensorflow/...",
         "bazel test -c opt --test_timeout=1800 ${TESTS}",
     ]),
@@ -203,7 +203,7 @@ bazel_github_job(
 bazel_github_job(
     name = "TensorFlow_Serving",
     build = "\n".join([
-        "(cd tensorflow &amp;&amp; ./configure)",
+        "(cd tensorflow && ./configure)",
         "bazel test tensorflow_serving/...",
     ]),
     org = "tensorflow",
