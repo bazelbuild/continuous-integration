@@ -16,6 +16,8 @@
 load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
 load(":jenkins.bzl", "jenkins_job", "jenkins_node", "jenkins_build", "bazel_github_job")
 
+exports_files(["github-jobs.xml.tpl"])
+
 #
 # Common definitions
 #
@@ -312,6 +314,7 @@ jenkins_build(
         ":ubuntu_14.04-x86_64-4",
         ":ubuntu_15.10-x86_64-4",
         ":deploy",
-    ] + JOBS,
-    substitutions = JOBS_SUBSTITUTIONS + JENKINS_PERMISSIONS,
+    ],
+    jobs = JOBS,
+    substitutions = JENKINS_PERMISSIONS,
 )

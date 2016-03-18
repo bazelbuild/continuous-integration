@@ -15,6 +15,7 @@
 # Some definition to setup jenkins and build the corresponding docker images
 
 load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
+load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
 load(":plugins.bzl", "JENKINS_PLUGINS", "JENKINS_PLUGINS_VERSIONS")
 
 JENKINS_PORT = 80
@@ -50,6 +51,39 @@ expand_template = rule(
     implementation = expand_template_impl,
 )
 
+def merge_jobs_impl(ctx):
+  """Merge a list of jenkins jobs in a tar ball with the correct layout."""
+  output = ctx.outputs.out
+  build_tar = ctx.executable._build_tar
+  args = [
+      "--output=" + output.path,
+      "--directory=" + ctx.attr.directory,
+      "--mode=0644",
+      ]
+  args += ["--file=%s=jobs/%s/config.xml" % (f.path, f.basename[:-4])
+           for f in ctx.files.srcs]
+  ctx.action(
+      executable = build_tar,
+      arguments = args,
+      inputs = ctx.files.srcs,
+      outputs = [output],
+      mnemonic="MergeJobs"
+      )
+
+merge_jobs = rule(
+    attrs = {
+        "srcs": attr.label_list(allow_files=FileType([".xml"])),
+        "directory": attr.string(default="/"),
+        "_build_tar": attr.label(
+            default=Label("@bazel_tools//tools/build_defs/pkg:build_tar"),
+            cfg=HOST_CFG,
+            executable=True,
+            allow_files=True),
+    },
+    outputs = {"out": "%{name}.tar"},
+    implementation = merge_jobs_impl,
+)
+
 def jenkins_job(name, config, substitutions = {},
                 project='bazel', org='bazelbuild', project_url=None,
                 platforms=[]):
@@ -65,7 +99,7 @@ def jenkins_job(name, config, substitutions = {},
   expand_template(
       name = name,
       template = config,
-      out = "jobs/%s/config.xml" % name,
+      out = "%s.xml" % name,
       substitutions = JENKINS_PLUGINS_VERSIONS + substitutions,
     )
 
@@ -88,8 +122,14 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
     "%{BUILDS}": _xml_escape(" ".join(targets))
   }
 
-  jenkins_job(name, "github-jobs.xml.tpl", substitutions=substitutions, project=project,
-              org=org, project_url=project_url, platforms=platforms)
+  jenkins_job(
+      name = name,
+      config = "//jenkins:github-jobs.xml.tpl",
+      substitutions=substitutions,
+      project=project,
+      org=org,
+      project_url=project_url,
+      platforms=platforms)
 
 def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1,
                 labels = [], base = None, preference = 1):
@@ -143,8 +183,20 @@ EOF
         ],
         )
 
+def _basename(f):
+  i1 = f.rfind(":")
+  i2 = f.rfind("/")
+  if i1 > i2:
+    f = f[i1:]
+  elif i2 > 0:
+    f = f[i2:]
+  idx = f.rfind(".")
+  if idx > 0:
+    return f[:idx]
+  return f
+
 def jenkins_build(name, plugins = None, base = "jenkins-base.tar", configs = [],
-                  substitutions = {}):
+                  jobs = [], substitutions = {}):
   """Build the docker image for the Jenkins instance."""
   if not plugins:
     plugins = [p[0] for p in JENKINS_PLUGINS]
@@ -203,10 +255,17 @@ def jenkins_build(name, plugins = None, base = "jenkins-base.tar", configs = [],
       confs += [ext[0]]
     else:
       confs += [conf]
+  # Create the structures for jobs
+  merge_jobs(
+      name = "%s-jobs" % name,
+      srcs = jobs,
+      directory = "/",
+  )
   ### FINAL IMAGE ###
   docker_build(
       name = name,
       files = confs,
+      tars = [":%s-jobs" % name],
       data_path = ".",
       base = "%s-jenkins-base" % name,
       directory = "/usr/share/jenkins/ref"
