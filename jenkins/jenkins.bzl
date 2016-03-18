@@ -22,6 +22,12 @@ JENKINS_PORT = 80
 
 JENKINS_HOST = "jenkins"
 
+MAILS_SUBSTITUTIONS = {
+    "%{BAZEL_BUILD_RECIPIENT}": "bazel-ci@googlegroups.com",
+    "%{BAZEL_RELEASE_RECIPIENT}": "bazel-discuss+release@googlegroups.com",
+    "%{SENDER_EMAIL}": "noreply@bazel.io",
+}
+
 def _xml_escape(s):
   """Replace XML special characters."""
   s = s.replace("&", "&amp;").replace("'", "&apos;").replace('"', "&quot;")
@@ -95,7 +101,7 @@ def jenkins_job(name, config, substitutions = {},
       "%{GITHUB_PROJECT}": "%s/%s" % (org, project.lower()),
       "%{PROJECT_URL}": project_url,
       "%{PLATFORMS}": "".join(["<string>%s</string>" % p for p in platforms]),
-      }
+      } + MAILS_SUBSTITUTIONS
   expand_template(
       name = name,
       template = config,
@@ -200,6 +206,7 @@ def jenkins_build(name, plugins = None, base = "jenkins-base.tar", configs = [],
   """Build the docker image for the Jenkins instance."""
   if not plugins:
     plugins = [p[0] for p in JENKINS_PLUGINS]
+  substitutions = substitutions + MAILS_SUBSTITUTIONS
   ### BASE IMAGE ###
   # We don't have docker_pull yet, so the easiest way to do it:
   #   docker pull jenkins:1.609.2
