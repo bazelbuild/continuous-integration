@@ -106,24 +106,31 @@ mkdir -p &quot;${BASE}/binary&quot;
 
 bash &quot;${BAZEL_INSTALLER}&quot; \
   --base=&quot;${BASE}&quot; \
-  --bazelrc=&quot;${BASE}/bin/bazel.bazelrc&quot; \
+  --bazelrc=&quot;${BASE}/binary/bazel.bazelrc&quot; \
   --bin=&quot;${BASE}/binary&quot;
+
+cat &gt;&gt;${BASE}/bazel.bazelrc &lt;&lt;EOF
+build %{BUILD_OPTS}
+test %{TEST_OPTS}
+EOF
+
 ROOT="${PWD}"
 rm -f .unstable
 cd %{WORKSPACE}
 function bazel() {
   local retCode=0
-  # Put the bazelrc here because aparently 0.1.1 have problem with master rc files
-  # TODO(bazel-team): remove once 0.1.2 is released
-  ${BASE}/binary/bazel --bazelrc=${BASE}/bin/bazel.bazelrc "$@" || retCode=$?
+  ${BASE}/binary/bazel --bazelrc=${BASE}/bazel.bazelrc "$@" || retCode=$?
   if (( $retCode == 3 )); then
     echo 1 >"${ROOT}/.unstable"
   elif (( $retCode != 0 )); then
     exit $retCode
   fi
 }
-
-%{BUILD}</command>
+%{CONFIGURE}
+TESTS="$(bazel query 'tests(%{TESTS})')"
+[ -z "%{BUILDS}" ] || bazel build %{BUILDS}
+[ -z "${TESTS}" ] || bazel test ${TESTS}
+</command>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
       <command>#!/bin/bash

@@ -188,47 +188,44 @@ JOBS_SUBSTITUTIONS = {
 # TODO(dmarting): activate Tensorflow on mac (missing dependencies)
 bazel_github_job(
     name = "TensorFlow",
-    build = "\n".join([
-        "./configure",
-        "TESTS=\"$(bazel query 'filter(\":(lib|platform)_.*\", kind(test, //tensorflow/core:all))')\"",
-        "bazel build -c opt //tensorflow/...",
-        "bazel test -c opt --test_timeout=1800 ${TESTS}",
-    ]),
+    build_opts = ["-c opt"],
+    configure = ["./configure"],
     org = "tensorflow",
     platforms = LINUX_PLATFORMS,
     project_url = "https://tensorflow.org",
+    targets = [],
+    test_opts = ["--test_timeout=1800"],
+    tests = ["filter(\":(lib|platform)_.*\", kind(test, //tensorflow/core:all))"],
 )
 
 bazel_github_job(
     name = "TensorFlow_Serving",
-    build = "\n".join([
-        "(cd tensorflow && ./configure)",
-        "bazel test tensorflow_serving/...",
-    ]),
+    configure = ["(cd tensorflow && ./configure)"],
     org = "tensorflow",
     platforms = LINUX_PLATFORMS,
     project = "serving",
+    targets = [],
+    tests = ["tensorflow_serving/..."],
 )
 
 [bazel_github_job(
     name = job,
-    build = "bazel build //...; bazel test --test_output=errors //...",
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
 ) for job in RULES]
 
 bazel_github_job(
     name = "dash",
-    build = "bazel build //...; bazel test --test_output=errors //...",
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
 )
 
 [bazel_github_job(
     name = n,
-    # on Linux protobuf tries to build objc target so filter by test only
-    build = "bazel test $(bazel query 'kind(test, :all)')",
     platforms = UNIX_PLATFORMS,
+    # on Linux protobuf tries to build objc target so filter by test only
+    targets = [],
+    tests = [":all"],
 ) for n in [
     "re2",
     "protobuf",

@@ -70,7 +70,10 @@ def jenkins_job(name, config, substitutions = {},
     )
 
 def bazel_github_job(name, platforms=[], branch="master", project=None, org="google",
-                     project_url=None, workspace=".", build="test :all", substitutions={}):
+                     project_url=None, workspace=".", configure=[],
+                     tests=["//..."], targets=["//..."], substitutions={},
+                     test_opts=["--test_output=errors", "--test_tag_filters -noci"],
+                     build_opts=["--verbose_failures"]):
   """Create a generic github job configuration to build against Bazel head."""
   if not project:
     project = name
@@ -78,7 +81,11 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
     "%{WORKSPACE}": workspace,
     "%{PROJECT_NAME}": project,
     "%{BRANCH}": branch,
-    "%{BUILD}": _xml_escape(build)
+    "%{CONFIGURE}": _xml_escape("\n".join(configure)),
+    "%{TEST_OPTS}": _xml_escape(" ".join(test_opts)),
+    "%{BUILD_OPTS}":_xml_escape(" ".join(build_opts)),
+    "%{TESTS}": _xml_escape(" ".join(tests)),
+    "%{BUILDS}": _xml_escape(" ".join(targets))
   }
 
   jenkins_job(name, "github-jobs.xml.tpl", substitutions=substitutions, project=project,
