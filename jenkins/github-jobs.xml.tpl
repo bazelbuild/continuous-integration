@@ -171,7 +171,7 @@ EOF
       <allowEmptyResults>true</allowEmptyResults>
     </hudson.tasks.junit.JUnitResultArchiver>
     <hudson.tasks.Mailer plugin="%{JENKINS_PLUGIN_mailer}">
-      <recipients>bazel-ci@googlegroups.com</recipients>
+      <recipients>%{BAZEL_BUILD_RECIPIENT}</recipients>
       <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
       <sendToIndividuals>false</sendToIndividuals>
     </hudson.tasks.Mailer>
