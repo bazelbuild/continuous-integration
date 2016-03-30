@@ -22,6 +22,7 @@
 REPOSITORIES=(
     "https://bazel.googlesource.com/bazel git@github.com:bazelbuild/bazel.git bazel master gh-pages"
     "https://bazel.googlesource.com/continuous-integration git@github.com:bazelbuild/continuous-integration.git continuous-integration master"
+    "https://bazel.googlesource.com/skydoc git@github.com:bazelbuild/skydoc.git master"
 )
 
 # Install certificates
