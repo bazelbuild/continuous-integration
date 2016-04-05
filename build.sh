@@ -19,7 +19,7 @@
 
 # Images to pull from docker hub in form "image_name=tar_file"
 PULL_IMAGES=(
-    "jenkins:1.609.2=jenkins/jenkins-base.tar"
+    "jenkins:1.642.4=jenkins/jenkins-base.tar"
     "ubuntu:wily=base/ubuntu-wily-base.tar"
 )
 # Image to push to GCR in the form "bazel-target=image_name"
