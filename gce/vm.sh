@@ -76,7 +76,7 @@ function create_slave() {
          --image "$IMAGE" \
          --metadata jenkins_node="$JENKINS_NODE" \
          --metadata-from-file "$STARTUP_METADATA" \
-         --boot-disk-type pd-ssd --boot-disk-size 200GB
+         --boot-disk-type pd-ssd --boot-disk-size 500GB
   sleep 1  # Wait a bit for the VM to fully start
 
   case "$TAG" in
