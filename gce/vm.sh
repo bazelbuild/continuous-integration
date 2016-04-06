@@ -60,6 +60,23 @@ function create_master() {
          --address ci --disk name=jenkins-volumes,device-name=volumes
 }
 
+# Wait for a VM $1 in zone $2 to be up and running using ssh.
+# This function will wait for at most $3 seconds.
+function wait_vm() {
+  local vm="$1"
+  local zone="$2"
+  local timeout="${3-60}"  # Wait for 1 minute maximum by default
+  local starttime="$(date +%s)"
+  while (( "$(date +%s)" - "$starttime" < "$timeout" )); do
+    # gcloud compute ssh forward the return code of the executed command.
+    if gcloud compute ssh --zone="$zone" --command /bin/true "$vm" &>/dev/null
+    then
+      return 0
+    fi
+  done
+  return 1
+}
+
 # Create a slave named $1 whose image is $2 (see `gcloud compute image list`)
 # and whose jenkins node name is $3. The other arguments are a list of setup
 # scripts to run as root on instance creation. The `jenkins-slave.sh` script
@@ -77,13 +94,13 @@ function create_slave() {
          --metadata jenkins_node="$JENKINS_NODE" \
          --metadata-from-file "$STARTUP_METADATA" \
          --boot-disk-type pd-ssd --boot-disk-size 500GB
-  sleep 1  # Wait a bit for the VM to fully start
 
   case "$TAG" in
     windows-*)  # Windows
       ;;
 
     *)  # Linux
+      wait_vm "$TAG" "$LOCATION"  # Wait a bit for the VM to fully start
       # Create the Jenkins user
       gcloud compute ssh --zone=$LOCATION \
              --command "sudo adduser --system --home /home/ci ci" $TAG
