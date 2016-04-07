@@ -20,18 +20,12 @@ case the corresponding `jenkins_node` should be created, the firewall
 rules adapted, and the setup of the machine documented in that
 README.md).
 
-## Deploying to GCR
+## Deploying to [Google Cloud Registry](https://gcr.io)
 
-We do not support docker pull yet so you have to do that manually.
-Fortunately a simple shell script can do that for you:
-
+Run the `//gcr:deploy` target:
 ```
-./build.sh push
+bazel run //gcr:deploy
 ```
-
-This will build your docker image for you and upload them to GCR. If
-you have only modified stuff in the jenkins folder that's all that
-should be needed to update the configuration.
 
 ## Setting up for local testing
 

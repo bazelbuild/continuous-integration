@@ -143,6 +143,7 @@ docker_build(
 jenkins_node(
     name = "deploy",
     base = "deploy-full",
+    visibility = ["//visibility:public"],
 )
 
 #
@@ -224,4 +225,5 @@ jenkins_build(
     ],
     jobs = ["//jenkins/jobs"],
     substitutions = JENKINS_PERMISSIONS,
+    visibility = ["//visibility:public"],
 )

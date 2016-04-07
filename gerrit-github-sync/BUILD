@@ -23,5 +23,6 @@ docker_build(
         "/gerrit-github-sync.sh",
     ],
     files = ["gerrit-github-sync.sh"],
+    visibility = ["//visibility:public"],
     volumes = ["/opt/secrets"],
 )

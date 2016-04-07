@@ -138,7 +138,7 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
       platforms=platforms)
 
 def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1,
-                labels = [], base = None, preference = 1):
+                 labels = [], base = None, preference = 1, visibility=None):
   """Create a node configuration on Jenkins, with possible docker image."""
   native.genrule(
       name = name,
@@ -162,6 +162,7 @@ def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1,
 EOF
 """ % (name, remote_fs, num_executors, " ".join([name] + labels), preference),
       outs = ["nodes/%s/config.xml" % name],
+      visibility = visibility,
       )
   if base:
     # Generate docker image startup script
@@ -187,6 +188,7 @@ EOF
             "/bin/bash",
             "/%s.docker-launcher.sh" % name,
         ],
+        visibility = visibility,
         )
 
 def _basename(f):
@@ -229,7 +231,7 @@ def _expand_configs(configs, substitutions):
   return confs
 
 def jenkins_build(name, plugins = None, base = "jenkins-base.tar", configs = [],
-                  jobs = [], substitutions = {}):
+                  jobs = [], substitutions = {}, visibility = None):
   """Build the docker image for the Jenkins instance."""
   if not plugins:
     plugins = [p[0] for p in JENKINS_PLUGINS]
@@ -281,5 +283,6 @@ def jenkins_build(name, plugins = None, base = "jenkins-base.tar", configs = [],
       tars = [":%s-jobs" % name],
       data_path = ".",
       base = "%s-jenkins-base" % name,
-      directory = "/usr/share/jenkins/ref"
+      directory = "/usr/share/jenkins/ref",
+      visibility = visibility,
   )
