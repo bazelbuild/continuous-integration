@@ -19,7 +19,7 @@ load(":debs.bzl", "DEB_NAMES")
 # Base ubuntu
 docker_build(
     name = "ubuntu-wily-amd64",
-    base = "ubuntu-wily-base.tar",
+    base = "@ubuntu-wily//:image",
     debs = DEB_NAMES["ubuntu-wily-amd64"],
     env = {
         "JAVA_HOME": "/usr/lib/jvm/java-8-openjdk-amd64",

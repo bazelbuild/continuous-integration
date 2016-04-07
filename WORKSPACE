@@ -16,6 +16,18 @@
 load("//jenkins:plugins.bzl", "jenkins_plugins")
 jenkins_plugins()
 
+# Docker base images
+load("//base:docker_pull.bzl", "docker_pull")
+docker_pull(
+    name = "ubuntu-wily",
+    tag = "ubuntu:wily",
+)
+
+docker_pull(
+    name = "jenkins",
+    tag = "jenkins:1.642.4",
+)
+
 # Docker debian deps
 load("//base:debs.bzl", "docker_debs_repositories")
 docker_debs_repositories()

@@ -17,11 +17,6 @@
 # Pull dependencies from docker hub, build the docker images and push them
 # to GCR.
 
-# Images to pull from docker hub in form "image_name=tar_file"
-PULL_IMAGES=(
-    "jenkins:1.642.4=jenkins/jenkins-base.tar"
-    "ubuntu:wily=base/ubuntu-wily-base.tar"
-)
 # Image to push to GCR in the form "bazel-target=image_name"
 PUSH_IMAGES=(
     "//jenkins:jenkins=jenkins-master"
@@ -61,20 +56,6 @@ function config() {
   fi
 }
 
-# Pull an image from docker hub and save it to a tar file if the tar file does
-# not exist
-function pull() {
-  local docker_image="$(echo "$i" | cut -d "=" -f 1)"
-  local tar_image="$(echo "$i" | cut -d "=" -f 2)"
-  if [ ! -f "${tar_image}" ]; then
-    echo "Pulling ${docker_image}..."
-    run docker pull "${docker_image}"
-    run docker save "${docker_image}" >"${tar_image}"
-  else
-    echo "${tar_image} already here, skipping pulling ${docker_image}"
-  fi
-}
-
 # Build an image and load it in the local docker registry
 function build() {
   local bazel_target="$(echo "$i" | cut -d "=" -f 1)"
@@ -86,12 +67,6 @@ function build() {
 function push() {
   local docker_tag="$(echo "$i" | cut -d "=" -f 2)"
   run gcloud docker push "gcr.io/${BAZEL_GCR_PROJECT}/${docker_tag}"
-}
-
-function pull_all() {
-  for i in "${PULL_IMAGES[@]}"; do
-    pull "$i"
-  done
 }
 
 function build_all() {
@@ -107,7 +82,6 @@ function push_all() {
 }
 
 function do_push() {
-  pull_all
   build_all
   push_all
 }
@@ -124,15 +98,11 @@ case "$command" in
   "push")
       do_push
       ;;
-  "pull")
-      pull_all
-      ;;
   "build")
-      pull_all
       build_all
       ;;
   *)
-      echo "Usage: $0 [dry-](push|pull|build)" >&2
+      echo "Usage: $0 [dry-](push|build)" >&2
       exit 1
       ;;
 esac

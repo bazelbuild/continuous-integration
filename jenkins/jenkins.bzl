@@ -234,16 +234,6 @@ def jenkins_build(name, plugins = None, base = "jenkins-base.tar", configs = [],
   if not plugins:
     plugins = [p[0] for p in JENKINS_PLUGINS]
   substitutions = substitutions + MAILS_SUBSTITUTIONS
-  ### BASE IMAGE ###
-  # We don't have docker_pull yet, so the easiest way to do it:
-  #   docker pull jenkins:1.609.2
-  #   docker save jenkins:1.609.2 >jenkins-base.tar
-  # We cannot perform it in a genrule because it needs access to the docker
-  # environment variables.
-  docker_build(
-    name = "%s-docker-base" % name,
-    base = base,
-  )
   ### ADD JENKINS PLUGINS ###
   # TODO(dmarting): combine it with remote repositories.
   # TODO(dmarting): maybe we should make that possible from the docker rules
@@ -265,7 +255,7 @@ def jenkins_build(name, plugins = None, base = "jenkins-base.tar", configs = [],
   # they are not a "reference setup".
   docker_build(
       name = "%s-jenkins-base" % name,
-      base = "%s-plugins-base" % name,
+      base = "@jenkins//:image",
       files = ["jenkins.sh"],
       entrypoint = [
           "/bin/bash",
