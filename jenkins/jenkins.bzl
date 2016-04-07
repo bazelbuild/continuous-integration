@@ -201,6 +201,33 @@ def _basename(f):
     return f[:idx]
   return f
 
+def _expand_configs(configs, substitutions):
+  """Expand tpl files and create them with the good path, stripping config/."""
+  confs = []
+  for conf in configs:
+    ext = conf.rsplit(".", 1)
+    if len(ext) == 2 and ext[1] == 'tpl':
+      out = ext[0][7:] if ext[0].startswith("config/") else ext[0]
+      expand_template(
+          name = conf + "-template",
+          out = out,
+          template = conf,
+          substitutions = substitutions,
+      )
+      confs += [out]
+    elif conf.startswith("config/"):
+      out = conf[7:]
+      native.genrule(
+          name = conf + "-template",
+          outs = [out],
+          srcs = [conf],
+          cmd = "cp $< $@",
+      )
+      confs += [out]
+    else:
+      confs += [conf]
+  return confs
+
 def jenkins_build(name, plugins = None, base = "jenkins-base.tar", configs = [],
                   jobs = [], substitutions = {}):
   """Build the docker image for the Jenkins instance."""
@@ -249,19 +276,8 @@ def jenkins_build(name, plugins = None, base = "jenkins-base.tar", configs = [],
       directory = "/usr/local/bin",
   )
   # Expands .tpl files
-  confs = []
-  for conf in configs:
-    ext = conf.rsplit(".", 1)
-    if len(ext) == 2 and ext[1] == 'tpl':
-      expand_template(
-          name = conf + "-template",
-          out = ext[0],
-          template = conf,
-          substitutions = substitutions,
-      )
-      confs += [ext[0]]
-    else:
-      confs += [conf]
+  confs = _expand_configs(configs, substitutions)
+
   # Create the structures for jobs
   merge_jobs(
       name = "%s-jobs" % name,

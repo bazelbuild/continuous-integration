@@ -208,15 +208,7 @@ JENKINS_PERMISSIONS = {
 #
 jenkins_build(
     name = "jenkins",
-    configs = glob(
-        [
-            "*.xml",
-            "*.xml.tpl",
-            "secrets/*",
-            "init.groovy.d/*",
-        ],
-        exclude = ["jobs-*.xml.tpl"],
-    ) + [
+    configs = glob(["config/**"]) + [
         ":windows-x86_64",
         ":ubuntu_14.04-x86_64",
         ":ubuntu_15.10-x86_64",
