@@ -57,29 +57,78 @@ expand_template = rule(
     implementation = expand_template_impl,
 )
 
-def merge_jobs_impl(ctx):
-  """Merge a list of jenkins jobs in a tar ball with the correct layout."""
+def _dest_path(f, strip_prefixes):
+  """Returns the short path of f, stripped of strip_prefix."""
+  for strip_prefix in strip_prefixes:
+    if f.short_path.startswith(strip_prefix):
+      return f.short_path[len(strip_prefix):]
+  return f.short_path
+
+def _format_path(path_format, path):
+  dirsep = path.rfind("/")
+  dirname = path[:dirsep] if dirsep > 0 else ""
+  basename = path[dirsep+1:] if dirsep > 0 else path
+  extsep = basename.rfind(".")
+  extension = basename[extsep+1:] if extsep > 0 else ""
+  basename = basename[:extsep] if extsep > 0 else basename
+  flavor = ""
+  if basename.endswith("-test"):
+    basename = basename[:-5]
+    flavor = "test"
+  return path_format.format(
+      path=path,
+      dirname=dirname,
+      basename=basename,
+      flavor=flavor,
+      extension=extension
+  )
+
+def _append_inputs(args, inputs, f, path, path_format):
+  args.append("--file=%s=%s" % (
+      f.path,
+      _format_path(path_format, path)
+  ))
+  inputs.append(f)
+
+def _merge_files_impl(ctx):
+  """Merge a list of config files in a tar ball with the correct layout."""
   output = ctx.outputs.out
   build_tar = ctx.executable._build_tar
+  inputs = []
   args = [
       "--output=" + output.path,
       "--directory=" + ctx.attr.directory,
       "--mode=0644",
       ]
-  args += ["--file=%s=jobs/%s/config.xml" % (f.path, f.basename[:-4])
-           for f in ctx.files.srcs]
+  for f in ctx.files.srcs:
+    path = _dest_path(f, ctx.attr.strip_prefixes)
+    if path.endswith(".tpl"):
+      path = path[:-4]
+      f2 = ctx.new_file(ctx.label.name + "/" + path)
+      ctx.template_action(
+          template = f,
+          output = f2,
+          substitutions = ctx.attr.substitutions,
+      )
+      _append_inputs(args, inputs, f2, path, ctx.attr.path_format)
+    else:
+      _append_inputs(args, inputs, f, path, ctx.attr.path_format)
   ctx.action(
       executable = build_tar,
       arguments = args,
-      inputs = ctx.files.srcs,
+      inputs = inputs,
       outputs = [output],
-      mnemonic="MergeJobs"
+      mnemonic="MergeFiles"
       )
 
-merge_jobs = rule(
+_merge_files = rule(
     attrs = {
-        "srcs": attr.label_list(allow_files=FileType([".xml"])),
+        "srcs": attr.label_list(allow_files=True),
+        "template_extension": attr.string(default=".tpl"),
         "directory": attr.string(default="/"),
+        "strip_prefixes": attr.string_list(default=[]),
+        "substitutions": attr.string_dict(default={}),
+        "path_format": attr.string(default="{path}"),
         "_build_tar": attr.label(
             default=Label("@bazel_tools//tools/build_defs/pkg:build_tar"),
             cfg=HOST_CFG,
@@ -87,12 +136,12 @@ merge_jobs = rule(
             allow_files=True),
     },
     outputs = {"out": "%{name}.tar"},
-    implementation = merge_jobs_impl,
+    implementation = _merge_files_impl,
 )
 
 def jenkins_job(name, config, substitutions = {},
                 project='bazel', org='bazelbuild', project_url=None,
-                platforms=[]):
+                platforms=[], test_platforms=["linux-x86_64"]):
   """Create a job configuration on Jenkins."""
   if not project_url:
     project_url = "https://github.com/%s/%s" % (org, project.lower())
@@ -108,12 +157,21 @@ def jenkins_job(name, config, substitutions = {},
       out = "%s.xml" % name,
       substitutions = JENKINS_PLUGINS_VERSIONS + substitutions,
     )
+  if test_platforms:
+    substitutions["%{PLATFORMS}"] = "".join(["<string>%s</string>" % p for p in test_platforms])
+    expand_template(
+      name = name + "-test",
+      template = config,
+      out = "%s-test.xml" % name,
+      substitutions = JENKINS_PLUGINS_VERSIONS + substitutions,
+    )
 
 def bazel_github_job(name, platforms=[], branch="master", project=None, org="google",
                      project_url=None, workspace=".", configure=[],
                      tests=["//..."], targets=["//..."], substitutions={},
                      test_opts=["--test_output=errors", "--test_tag_filters -noci"],
-                     build_opts=["--verbose_failures"]):
+                     build_opts=["--verbose_failures"],
+                     test_platforms=["linux-x86_64"]):
   """Create a generic github job configuration to build against Bazel head."""
   if not project:
     project = name
@@ -135,7 +193,8 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
       project=project,
       org=org,
       project_url=project_url,
-      platforms=platforms)
+      platforms=platforms,
+      test_platforms=test_platforms)
 
 def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1,
                  labels = [], base = None, preference = 1, visibility=None):
@@ -191,45 +250,6 @@ EOF
         visibility = visibility,
         )
 
-def _basename(f):
-  i1 = f.rfind(":")
-  i2 = f.rfind("/")
-  if i1 > i2:
-    f = f[i1:]
-  elif i2 > 0:
-    f = f[i2:]
-  idx = f.rfind(".")
-  if idx > 0:
-    return f[:idx]
-  return f
-
-def _expand_configs(configs, substitutions):
-  """Expand tpl files and create them with the good path, stripping config/."""
-  confs = []
-  for conf in configs:
-    ext = conf.rsplit(".", 1)
-    if len(ext) == 2 and ext[1] == 'tpl':
-      out = ext[0][7:] if ext[0].startswith("config/") else ext[0]
-      expand_template(
-          name = conf + "-template",
-          out = out,
-          template = conf,
-          substitutions = substitutions,
-      )
-      confs += [out]
-    elif conf.startswith("config/"):
-      out = conf[7:]
-      native.genrule(
-          name = conf + "-template",
-          outs = [out],
-          srcs = [conf],
-          cmd = "cp $< $@",
-      )
-      confs += [out]
-    else:
-      confs += [conf]
-  return confs
-
 def jenkins_build(name, plugins = None, base = "jenkins-base.tar", configs = [],
                   jobs = [], substitutions = {}, visibility = None):
   """Build the docker image for the Jenkins instance."""
@@ -267,22 +287,32 @@ def jenkins_build(name, plugins = None, base = "jenkins-base.tar", configs = [],
       volumes = ["/opt/secrets"],
       directory = "/usr/local/bin",
   )
-  # Expands .tpl files
-  confs = _expand_configs(configs, substitutions)
+  # Expands config files in a tar ball
+  _merge_files(
+      name = "%s-configs" % name,
+      srcs = configs,
+      directory = "/usr/share/jenkins/ref",
+      strip_prefixes = [
+          "jenkins/config",
+          "jenkins",
+      ],
+      substitutions = substitutions)
 
   # Create the structures for jobs
-  merge_jobs(
+  _merge_files(
       name = "%s-jobs" % name,
       srcs = jobs,
-      directory = "/",
+      path_format = "jobs/{basename}/config.xml",
+      directory = "/usr/share/jenkins/ref",
   )
   ### FINAL IMAGE ###
   docker_build(
       name = name,
-      files = confs,
-      tars = [":%s-jobs" % name],
-      data_path = ".",
+      tars = [
+          ":%s-jobs" % name,
+          ":%s-configs" % name,
+      ],
       base = "%s-jenkins-base" % name,
-      directory = "/usr/share/jenkins/ref",
+      directory = "/",
       visibility = visibility,
   )

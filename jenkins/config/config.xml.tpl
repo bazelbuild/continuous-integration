@@ -6,17 +6,7 @@
   <version>1.609.2</version>
   <numExecutors>0</numExecutors>
   <mode>NORMAL</mode>
-  <!-- For testing without security, set "useSecurity" to false -->
-  <useSecurity>true</useSecurity>
-  <authorizationStrategy class="hudson.security.GlobalMatrixAuthorizationStrategy">
-    %{JENKINS_PERMISSIONS}
-  </authorizationStrategy>
-  <securityRealm class="org.jenkinsci.plugins.googlelogin.GoogleOAuth2SecurityRealm" plugin="google-login@1.1">
-    <clientId>##SECRET:google.oauth.clientid##</clientId>
-    <clientSecret>##SECRET:google.oauth.secret##</clientSecret>
-    <domain>google.com</domain>
-  </securityRealm>
-  <!-- end of security settings-->
+  %{SECURITY_CONFIG}
   <disableRememberMe>false</disableRememberMe>
   <projectNamingStrategy class="jenkins.model.ProjectNamingStrategy$DefaultProjectNamingStrategy"/>
   <workspaceDir>${JENKINS_HOME}/workspace/${ITEM_FULLNAME}</workspaceDir>

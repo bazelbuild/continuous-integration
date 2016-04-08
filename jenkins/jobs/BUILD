@@ -104,3 +104,9 @@ filegroup(
     srcs = JOBS,
     visibility = ["//jenkins:__pkg__"],
 )
+
+filegroup(
+    name = "test-jobs",
+    srcs = [j + "-test" for j in JOBS],
+    visibility = ["//jenkins:__pkg__"],
+)

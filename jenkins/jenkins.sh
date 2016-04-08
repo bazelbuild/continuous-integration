@@ -30,6 +30,13 @@ function replace_secrets() {
         content="$(echo -n "${content}" | sed "s|##SECRET:${bi}##|$(cat $i)|g")"
       fi
     done
+    # Environment
+    for i in $(printenv | cut -d "-" -f 1); do
+      if echo -n "${content}" | grep -qF "##ENV:${i}##"; then
+        local var="$(printenv "$i")"
+        content="$(echo -n "${content}" | sed "s|##ENV:${i}##|${var}|g")"
+      fi
+    done
     echo -n "${content}" >$2
   else
     cp $1 $2

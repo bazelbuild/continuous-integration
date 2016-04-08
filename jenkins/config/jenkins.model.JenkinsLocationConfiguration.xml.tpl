@@ -16,5 +16,5 @@
 -->
 <jenkins.model.JenkinsLocationConfiguration>
   <adminAddress>Bazel Jenkins CI server &lt;%{SENDER_EMAIL}&gt;</adminAddress>
-  <jenkinsUrl>http://ci.bazel.io/</jenkinsUrl>
+  <jenkinsUrl>%{PUBLIC_JENKINS_URL}</jenkinsUrl>
 </jenkins.model.JenkinsLocationConfiguration>

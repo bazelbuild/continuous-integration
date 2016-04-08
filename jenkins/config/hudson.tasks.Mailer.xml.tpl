@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <hudson.tasks.Mailer_-DescriptorImpl plugin="mailer@1.15">
   <defaultSuffix>@google.com</defaultSuffix>
-  <hudsonUrl>http://ci.bazel.io/</hudsonUrl>
+  <hudsonUrl>%{PUBLIC_JENKINS_URL}</hudsonUrl>
   <smtpAuthUsername>##SECRET:smtp.auth.username##</smtpAuthUsername>
   <smtpAuthPassword>##SECRET:smtp.auth.password##</smtpAuthPassword>
   <replyToAddress>bazel-ci@googlegroups.com</replyToAddress>
