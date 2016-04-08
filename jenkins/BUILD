@@ -262,3 +262,12 @@ jenkins_build(
         "%{PUBLIC_JENKINS_URL}": "##ENV:JENKINS_SERVER##",
     },
 )
+
+sh_binary(
+    name = "test",
+    srcs = ["test-runner.sh"],
+    data = [
+        ":jenkins-test",
+        ":ubuntu-docker.docker",
+    ],
+)

@@ -201,7 +201,7 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
       test_platforms=test_platforms)
 
 def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1,
-                 labels = [], base = None, preference = 1, visibility=None):
+                 labels = [], base = None, preference = 1, visibility = None):
   """Create a node configuration on Jenkins, with possible docker image."""
   native.genrule(
       name = name,
