@@ -12,10 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Jenkins plugins
-load("//jenkins:plugins.bzl", "jenkins_plugins")
-jenkins_plugins()
-
 # Docker base images
 load("//base:docker_pull.bzl", "docker_pull")
 docker_pull(
@@ -23,9 +19,15 @@ docker_pull(
     tag = "ubuntu:wily",
 )
 
-docker_pull(
+# Jenkins
+load("//jenkins/base:plugins.bzl", "JENKINS_PLUGINS")
+load("//jenkins/base:jenkins_base.bzl", "jenkins_base")
+
+jenkins_base(
     name = "jenkins",
-    tag = "jenkins:1.642.4",
+    version = "1.642.4",
+    plugins = JENKINS_PLUGINS,
+    volumes = ["/opt/secrets"],
 )
 
 # Docker debian deps

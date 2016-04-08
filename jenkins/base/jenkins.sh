@@ -31,7 +31,7 @@ function replace_secrets() {
       fi
     done
     # Environment
-    for i in $(printenv | cut -d "-" -f 1); do
+    for i in $(compgen -v); do
       if echo -n "${content}" | grep -qF "##ENV:${i}##"; then
         local var="$(printenv "$i")"
         content="$(echo -n "${content}" | sed "s|##ENV:${i}##|${var}|g")"

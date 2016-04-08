@@ -16,10 +16,14 @@
 
 load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
-load(":plugins.bzl", "JENKINS_PLUGINS", "JENKINS_PLUGINS_VERSIONS")
+load("//jenkins/base:plugins.bzl", "JENKINS_PLUGINS")
+
+JENKINS_PLUGINS_VERSIONS = {("%%{JENKINS_PLUGIN_%s}" % plugin): ("%s@%s" % (
+    plugin,
+    JENKINS_PLUGINS[plugin][0],
+)) for plugin in JENKINS_PLUGINS}
 
 JENKINS_PORT = 80
-
 JENKINS_HOST = "jenkins"
 
 MAILS_SUBSTITUTIONS = {
@@ -250,43 +254,10 @@ EOF
         visibility = visibility,
         )
 
-def jenkins_build(name, plugins = None, base = "jenkins-base.tar", configs = [],
+def jenkins_build(name, plugins = None, base = "//jenkins/base", configs = [],
                   jobs = [], substitutions = {}, visibility = None):
   """Build the docker image for the Jenkins instance."""
-  if not plugins:
-    plugins = [p[0] for p in JENKINS_PLUGINS]
   substitutions = substitutions + MAILS_SUBSTITUTIONS
-  ### ADD JENKINS PLUGINS ###
-  # TODO(dmarting): combine it with remote repositories.
-  # TODO(dmarting): maybe we should make that possible from the docker rules
-  # directly?
-  [native.genrule(
-      name = "%s-plugin-%s-rename" % (name, plugin),
-      srcs = ["@jenkins_plugin_%s//file" % plugin.replace("-", "_")],
-      cmd = "cp $< $@",
-      outs = ["%s-%s.jpi" % (name, plugin)],
-  ) for plugin in plugins]
-  docker_build(
-      name = "%s-plugins-base" % name,
-      base = "%s-docker-base" % name,
-      files = [":%s-%s.jpi" % (name, plugin) for plugin in plugins],
-      data_path = ".",
-      directory = "/usr/share/jenkins/ref/plugins"
-  )
-  # We ovewrite jenkins.sh because configuration files are to be replaced,
-  # they are not a "reference setup".
-  docker_build(
-      name = "%s-jenkins-base" % name,
-      base = "@jenkins//:image",
-      files = ["jenkins.sh"],
-      entrypoint = [
-          "/bin/bash",
-          "/usr/local/bin/jenkins.sh",
-      ],
-      data_path = ".",
-      volumes = ["/opt/secrets"],
-      directory = "/usr/local/bin",
-  )
   # Expands config files in a tar ball
   _merge_files(
       name = "%s-configs" % name,
@@ -312,7 +283,7 @@ def jenkins_build(name, plugins = None, base = "jenkins-base.tar", configs = [],
           ":%s-jobs" % name,
           ":%s-configs" % name,
       ],
-      base = "%s-jenkins-base" % name,
+      base = base,
       directory = "/",
       visibility = visibility,
   )
