@@ -18,33 +18,36 @@ load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
 load("//jenkins/base:plugins.bzl", "JENKINS_PLUGINS")
 
-JENKINS_PLUGINS_VERSIONS = {("%%{JENKINS_PLUGIN_%s}" % plugin): ("%s@%s" % (
-    plugin,
-    JENKINS_PLUGINS[plugin][0],
+JENKINS_PLUGINS_VERSIONS = {
+    ("JENKINS_PLUGIN_%s" % plugin.replace("-", "_")): ("%s@%s" % (
+        plugin,
+        JENKINS_PLUGINS[plugin][0],
 )) for plugin in JENKINS_PLUGINS}
 
 JENKINS_PORT = 80
 JENKINS_HOST = "jenkins"
 
 MAILS_SUBSTITUTIONS = {
-    "%{BAZEL_BUILD_RECIPIENT}": "bazel-ci@googlegroups.com",
-    "%{BAZEL_RELEASE_RECIPIENT}": "bazel-discuss+release@googlegroups.com",
-    "%{SENDER_EMAIL}": "noreply@bazel.io",
+    "BAZEL_BUILD_RECIPIENT": "bazel-ci@googlegroups.com",
+    "BAZEL_RELEASE_RECIPIENT": "bazel-discuss+release@googlegroups.com",
+    "SENDER_EMAIL": "noreply@bazel.io",
 }
 
-def _xml_escape(s):
-  """Replace XML special characters."""
-  s = s.replace("&", "&amp;").replace("'", "&apos;").replace('"', "&quot;")
-  s = s.replace("<", "&lt;").replace(">", "&gt;")
-  return s
-
 def expand_template_impl(ctx):
-  """Simply spawm the template_action in a rule."""
-  ctx.template_action(
-      template = ctx.file.template,
-      output = ctx.outputs.out,
-      substitutions = ctx.attr.substitutions,
-      executable = ctx.attr.executable,
+  """Simply spawn the template-engine in a rule."""
+  variables = [
+      "--variable=%s=%s" % (k, ctx.attr.substitutions[k])
+      for k in ctx.attr.substitutions
+  ]
+  ctx.action(
+      executable = ctx.executable._engine,
+      arguments = [
+        "--executable" if ctx.attr.executable else "--noexecutable",
+        "--template=%s" % ctx.file.template.path,
+        "--output=%s" % ctx.outputs.out.path,
+      ] + variables,
+      inputs = [ctx.file.template],
+      outputs = [ctx.outputs.out],
       )
 
 expand_template = rule(
@@ -57,6 +60,9 @@ expand_template = rule(
         "substitutions": attr.string_dict(mandatory = True),
         "out": attr.output(mandatory = True),
         "executable": attr.bool(default = True),
+        "_engine": attr.label(
+            default = Label("//templating:template_engine"),
+            executable = True),
     },
     implementation = expand_template_impl,
 )
@@ -104,15 +110,24 @@ def _merge_files_impl(ctx):
       "--directory=" + ctx.attr.directory,
       "--mode=0644",
       ]
+  variables = [
+      "--variable=%s=%s" % (k, ctx.attr.substitutions[k])
+      for k in ctx.attr.substitutions
+  ]
   for f in ctx.files.srcs:
     path = _dest_path(f, ctx.attr.strip_prefixes)
     if path.endswith(".tpl"):
       path = path[:-4]
       f2 = ctx.new_file(ctx.label.name + "/" + path)
-      ctx.template_action(
-          template = f,
-          output = f2,
-          substitutions = ctx.attr.substitutions,
+      ctx.action(
+          executable = ctx.executable._engine,
+          arguments = [
+            "--template=%s" % f.path,
+            "--output=%s" % f2.path,
+            "--noescape_xml",
+          ] + variables,
+          inputs = [f],
+          outputs = [f2],
       )
       _append_inputs(args, inputs, f2, path, ctx.attr.path_format)
     else:
@@ -138,6 +153,9 @@ _merge_files = rule(
             cfg=HOST_CFG,
             executable=True,
             allow_files=True),
+        "_engine": attr.label(
+            default = Label("//templating:template_engine"),
+            executable = True),
     },
     outputs = {"out": "%{name}.tar"},
     implementation = _merge_files_impl,
@@ -150,10 +168,10 @@ def jenkins_job(name, config, substitutions = {},
   if not project_url:
     project_url = "https://github.com/%s/%s" % (org, project.lower())
   substitutions = substitutions + JENKINS_PLUGINS_VERSIONS + {
-      "%{GITHUB_URL}": "https://github.com/%s/%s" % (org, project.lower()),
-      "%{GITHUB_PROJECT}": "%s/%s" % (org, project.lower()),
-      "%{PROJECT_URL}": project_url,
-      "%{PLATFORMS}": "".join(["<string>%s</string>" % p for p in platforms]),
+      "GITHUB_URL": "https://github.com/%s/%s" % (org, project.lower()),
+      "GITHUB_PROJECT": "%s/%s" % (org, project.lower()),
+      "PROJECT_URL": project_url,
+      "PLATFORMS": "\n".join(platforms),
       } + MAILS_SUBSTITUTIONS
   expand_template(
       name = name,
@@ -162,7 +180,7 @@ def jenkins_job(name, config, substitutions = {},
       substitutions = JENKINS_PLUGINS_VERSIONS + substitutions,
     )
   if test_platforms:
-    substitutions["%{PLATFORMS}"] = "".join(["<string>%s</string>" % p for p in test_platforms])
+    substitutions["PLATFORMS"] = "\n".join(test_platforms)
     expand_template(
       name = name + "-test",
       template = config,
@@ -180,14 +198,14 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
   if not project:
     project = name
   substitutions = substitutions + {
-    "%{WORKSPACE}": workspace,
-    "%{PROJECT_NAME}": project,
-    "%{BRANCH}": branch,
-    "%{CONFIGURE}": _xml_escape("\n".join(configure)),
-    "%{TEST_OPTS}": _xml_escape(" ".join(test_opts)),
-    "%{BUILD_OPTS}":_xml_escape(" ".join(build_opts)),
-    "%{TESTS}": _xml_escape(" ".join(tests)),
-    "%{BUILDS}": _xml_escape(" ".join(targets))
+    "WORKSPACE": workspace,
+    "PROJECT_NAME": project,
+    "BRANCH": branch,
+    "CONFIGURE": "\n".join(configure),
+    "TEST_OPTS": " ".join(test_opts),
+    "BUILD_OPTS": " ".join(build_opts),
+    "TESTS": " ".join(tests),
+    "BUILDS": " ".join(targets)
   }
 
   jenkins_job(
@@ -234,9 +252,9 @@ EOF
         out = name + ".docker-launcher.sh",
         template = "slave_setup.sh",
         substitutions = {
-            "%{NODE_NAME}": name,
-            "%{HOME_FS}": remote_fs,
-            "%{JENKINS_SERVER}": "http://%s:%s" % (JENKINS_HOST, JENKINS_PORT),
+            "NODE_NAME": name,
+            "HOME_FS": remote_fs,
+            "JENKINS_SERVER": "http://%s:%s" % (JENKINS_HOST, JENKINS_PORT),
             },
         executable = True,
         )

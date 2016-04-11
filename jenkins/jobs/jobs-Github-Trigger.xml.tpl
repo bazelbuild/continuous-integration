@@ -45,8 +45,8 @@
   <triggers/>
   <concurrentBuild>false</concurrentBuild>
   <builders>
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="%{JENKINS_PLUGIN_conditional-buildstep}">
-      <condition class="org.jenkins_ci.plugins.run_condition.contributed.ShellCondition" plugin="%{JENKINS_PLUGIN_run-condition}">
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
+      <condition class="org.jenkins_ci.plugins.run_condition.contributed.ShellCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
         <command>#!/bin/bash
 
 # We should use jq, but installing it just for that is a bit overkill, we use regexp instead.
@@ -59,7 +59,7 @@ export ref=$(extract_value ref)
 echo &quot;Got push to $repository on ref $ref&quot;
 
 # Execute &apos;Bazel&apos; for master branch, releases branches and tags
-if [ &quot;$repository&quot; = &quot;%{GITHUB_PROJECT}&quot; ]; then
+if [ &quot;$repository&quot; = &quot;{{ variables.GITHUB_PROJECT }}&quot; ]; then
   echo &quot;REF_SPEC=$ref&quot;&gt;REF_SPEC
   [ &quot;$ref&quot; = refs/heads/master ] &amp;&amp; exit 0
   [[ &quot;$ref&quot; =~ ^refs/heads/release-.*$ ]] &amp;&amp; exit 0
@@ -67,7 +67,7 @@ if [ &quot;$repository&quot; = &quot;%{GITHUB_PROJECT}&quot; ]; then
 fi
 exit 1</command>
       </condition>
-      <buildStep class="hudson.plugins.parameterizedtrigger.TriggerBuilder" plugin="%{JENKINS_PLUGIN_parameterized-trigge">
+      <buildStep class="hudson.plugins.parameterizedtrigger.TriggerBuilder" plugin="{{ variables.JENKINS_PLUGIN_parameterized_trigger }}">
         <configs>
           <hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
             <configs>
@@ -85,7 +85,7 @@ exit 1</command>
           </hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
         </configs>
       </buildStep>
-      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="%{JENKINS_PLUGIN_run-condition}"/>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
   </builders>
   <publishers/>

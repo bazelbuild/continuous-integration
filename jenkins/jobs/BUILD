@@ -42,7 +42,7 @@ BAZEL_JOBS = {
 JOBS = BAZEL_JOBS.keys() + GITHUB_JOBS
 
 JOBS_SUBSTITUTIONS = {
-    "%{BAZEL_JOBS}": ", ".join(GITHUB_JOBS),
+    "BAZEL_JOBS": ", ".join(GITHUB_JOBS),
 }
 
 [jenkins_job(

@@ -16,8 +16,8 @@
 
 # Scripts to configure a slave in a docker image.
 
-# %{HOME_FS} is replaced by the template engine.
-HOME_FS=%{HOME_FS}
+# {{ variables.HOME_FS }} is replaced by the template engine.
+HOME_FS={{ variables.HOME_FS }}
 
 # Install certificates
 (cd /usr/share/ca-certificates && find -type f -name '*.crt' \
@@ -38,8 +38,9 @@ for i in /opt/run/*.{,ba}sh; do
 done
 
 # Run the slaves
-JENKINS_SERVER=${JENKINS_SERVER:-%{JENKINS_SERVER}}
+JENKINS_SERVER=${JENKINS_SERVER:-{{ variables.JENKINS_SERVER }}}
 wget -nc ${JENKINS_SERVER}/jnlpJars/slave.jar || exit 1
-wget -nc ${JENKINS_SERVER}/computer/%{NODE_NAME}/slave-agent.jnlp || exit 1
+wget -nc ${JENKINS_SERVER}/computer/{{ variables.NODE_NAME }}/slave-agent.jnlp || exit 1
 chmod a+r slave-agent.jnlp
 su ci -c "/usr/local/bin/java -jar slave.jar -jnlpUrl file://$PWD/slave-agent.jnlp -noReconnect"
+

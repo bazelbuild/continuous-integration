@@ -46,3 +46,54 @@ http_file(
     sha256 = "d6994f8a43aaa7c5a7c8c867fe69cfe302cd8eda0df3d371d0e69413999c83d8",
     url = "https://github.com/c4milo/github-release/archive/v1.0.7.tar.gz",
 )
+
+# Use Jinja for templating our files
+new_http_archive(
+    name = "markupsafe_archive",
+    url = "https://pypi.python.org/packages/source/M/MarkupSafe/MarkupSafe-0.23.tar.gz#md5=f5ab3deee4c37cd6a922fb81e730da6e",
+    sha256 = "a4ec1aff59b95a14b45eb2e23761a0179e98319da5a7eb76b56ea8cdc7b871c3",
+    build_file_content = """
+py_library(
+    name = "markupsafe",
+    srcs = glob(["markupsafe/*.py"]),
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+)
+""",
+    strip_prefix = "MarkupSafe-0.23",
+)
+
+new_http_archive(
+    name = "jinja2",
+    url = "https://pypi.python.org/packages/source/J/Jinja2/Jinja2-2.8.tar.gz#md5=edb51693fe22c53cee5403775c71a99e",
+    sha256 = "bc1ff2ff88dbfacefde4ddde471d1417d3b304e8df103a7a9437d47269201bf4",
+    build_file_content = """
+py_library(
+    name = "jinja2",
+    srcs = glob(["jinja2/*.py"]),
+    srcs_version = "PY2AND3",
+    deps = [
+        "@markupsafe_archive//:markupsafe",
+    ],
+    visibility = ["//visibility:public"],
+)
+""",
+    strip_prefix = "Jinja2-2.8",
+)
+
+# Our template engine use gflags
+new_git_repository(
+    name = "gflags",
+    remote = "https://github.com/google/python-gflags",
+    tag = "python-gflags-2.0",
+    build_file_content = """
+py_library(
+    name = "gflags",
+    srcs = [
+        "gflags.py",
+        "gflags_validators.py",
+    ],
+    visibility = ["//visibility:public"],
+)
+""",
+)

@@ -6,7 +6,7 @@
   <version>1.609.2</version>
   <numExecutors>0</numExecutors>
   <mode>NORMAL</mode>
-  %{SECURITY_CONFIG}
+  {{ variables.SECURITY_CONFIG }}
   <disableRememberMe>false</disableRememberMe>
   <projectNamingStrategy class="jenkins.model.ProjectNamingStrategy$DefaultProjectNamingStrategy"/>
   <workspaceDir>${JENKINS_HOME}/workspace/${ITEM_FULLNAME}</workspaceDir>

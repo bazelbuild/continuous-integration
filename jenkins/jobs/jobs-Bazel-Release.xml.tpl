@@ -19,12 +19,12 @@
   <description>Do the Github release of a Bazel binary</description>
   <keepDependencies>false</keepDependencies>
   <properties>
-    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="%{JENKINS_PLUGIN_github}">
-      <projectUrl>%{GITHUB_URL}</projectUrl>
+    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="{{ variables.JENKINS_PLUGIN_github }}">
+      <projectUrl>{{ variables.GITHUB_URL }}</projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
-        <net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition plugin="%{JENKINS_PLUGIN_git-parameter}">
+        <net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition plugin="{{ variables.JENKINS_PLUGIN_git_parameter }}">
           <name>REF_SPEC</name>
           <description></description>
           <uuid>ca709303-ae93-4be2-b9b8-5ab0c19672d1</uuid>
@@ -37,12 +37,12 @@
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
-  <scm class="hudson.plugins.git.GitSCM" plugin="%{JENKINS_PLUGIN_git}2.3.5">
+  <scm class="hudson.plugins.git.GitSCM" plugin="{{ variables.JENKINS_PLUGIN_git }}">
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
         <refspec>+refs/heads/*:refs/remotes/origin/* +refs/notes/*:refs/notes/*</refspec>
-        <url>%{GITHUB_URL}</url>
+        <url>{{ variables.GITHUB_URL }}</url>
       </hudson.plugins.git.UserRemoteConfig>
     </userRemoteConfigs>
     <branches>
@@ -66,7 +66,7 @@
   <triggers/>
   <concurrentBuild>false</concurrentBuild>
   <builders>
-    <hudson.plugins.copyartifact.CopyArtifact plugin="%{JENKINS_PLUGIN_copyartifact}">
+    <hudson.plugins.copyartifact.CopyArtifact plugin="{{ variables.JENKINS_PLUGIN_copyartifact }}">
       <project>Bazel</project>
       <filter>**/ci/*</filter>
       <target>input</target>
@@ -85,7 +85,7 @@ export GITHUB_TOKEN=$(cat $GITHUB_TOKEN_FILE)
 export GCS_BUCKET=bazel
 
 # URLs
-export GIT_REPOSITORY_URL=&quot;%{GITHUB_URL}&quot;
+export GIT_REPOSITORY_URL=&quot;{{ variables.GITHUB_URL }}&quot;
 
 source scripts/ci/build.sh
 
@@ -106,7 +106,7 @@ echo &quot;Content: ${RELEASE_EMAIL_CONTENT}&quot;</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
-    <hudson.plugins.emailext.ExtendedEmailPublisher plugin="%{JENKINS_PLUGIN_email-ex">
+    <hudson.plugins.emailext.ExtendedEmailPublisher plugin="{{ variables.JENKINS_PLUGIN_email_ext }}">
       <recipientList>${FILE, path=&quot;output/ci/recipient&quot;}</recipientList>
       <configuredTriggers>
         <hudson.plugins.emailext.plugins.trigger.SuccessTrigger>

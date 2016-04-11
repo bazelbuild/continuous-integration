@@ -14,12 +14,12 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<matrix-project plugin="%{JENKINS_PLUGIN_matrix-project}">
+<matrix-project plugin="{{ variables.JENKINS_PLUGIN_matrix_project }}">
   <actions/>
   <description>Test the Tutorial project still build with Bazel at head.</description>
   <keepDependencies>false</keepDependencies>
   <properties>
-    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="%{JENKINS_PLUGIN_github}">
+    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="{{ variables.JENKINS_PLUGIN_github }}">
       <projectUrl>https://github.com/bazelbuild/examples/</projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
     <hudson.model.ParametersDefinitionProperty>
@@ -32,7 +32,7 @@
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
-  <scm class="hudson.plugins.git.GitSCM" plugin="%{JENKINS_PLUGIN_git}">
+  <scm class="hudson.plugins.git.GitSCM" plugin="{{ variables.JENKINS_PLUGIN_git }}">
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
@@ -58,7 +58,7 @@
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
   <triggers>
-    <com.cloudbees.jenkins.GitHubPushTrigger plugin="%{JENKINS_PLUGIN_github}">
+    <com.cloudbees.jenkins.GitHubPushTrigger plugin="{{ variables.JENKINS_PLUGIN_github }}">
       <spec></spec>
     </com.cloudbees.jenkins.GitHubPushTrigger>
   </triggers>
@@ -66,11 +66,11 @@
   <axes>
     <hudson.matrix.LabelAxis>
       <name>PLATFORM_NAME</name>
-      <values>%{PLATFORMS}</values>
+      <values>{% for v in variables.PLATFORMS.split("\n") %}<string>{{ v }}</string>{% endfor %}</values>
     </hudson.matrix.LabelAxis>
   </axes>
   <builders>
-    <hudson.plugins.copyartifact.CopyArtifact plugin="%{JENKINS_PLUGIN_copyartifact}">
+    <hudson.plugins.copyartifact.CopyArtifact plugin="{{ variables.JENKINS_PLUGIN_copyartifact }}">
       <project>Bazel</project>
       <filter>**/ci/*installer*.sh</filter>
       <target>bazel-installer</target>
@@ -91,12 +91,12 @@ export BAZEL_INSTALLER=$(find $PWD/bazel-installer -name *.sh | \
     </hudson.tasks.Shell>
   </builders>
   <publishers>
-    <hudson.tasks.Mailer plugin="%{JENKINS_PLUGIN_mailer}">
+    <hudson.tasks.Mailer plugin="{{ variables.JENKINS_PLUGIN_mailer }}">
       <recipients>bazel-ci@googlegroups.com</recipients>
       <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
       <sendToIndividuals>false</sendToIndividuals>
     </hudson.tasks.Mailer>
-    <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="%{JENKINS_PLUGIN_parameterized-trigger}">
+    <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="{{ variables.JENKINS_PLUGIN_parameterized_trigger }}">
       <configs>
         <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
           <configs>

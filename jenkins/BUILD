@@ -243,8 +243,8 @@ jenkins_build(
     ],
     jobs = ["//jenkins/jobs"],
     substitutions = {
-        "%{SECURITY_CONFIG}": SECURITY_CONFIG,
-        "%{PUBLIC_JENKINS_URL}": "http://ci.bazel.io/",
+        "SECURITY_CONFIG": SECURITY_CONFIG,
+        "PUBLIC_JENKINS_URL": "http://ci.bazel.io/",
     },
     visibility = ["//visibility:public"],
 )
@@ -258,8 +258,8 @@ jenkins_build(
     ],
     jobs = ["//jenkins/jobs:test-jobs"],
     substitutions = {
-        "%{SECURITY_CONFIG}": "<useSecurity>false</useSecurity>",
-        "%{PUBLIC_JENKINS_URL}": "##ENV:JENKINS_SERVER##",
+        "SECURITY_CONFIG": "<useSecurity>false</useSecurity>",
+        "PUBLIC_JENKINS_URL": "##ENV:JENKINS_SERVER##",
     },
 )
 

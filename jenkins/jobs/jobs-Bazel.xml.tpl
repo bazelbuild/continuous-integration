@@ -14,19 +14,19 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<matrix-project plugin="%{JENKINS_PLUGIN_matrix-project}">
+<matrix-project plugin="{{ variables.JENKINS_PLUGIN_matrix_project }}">
   <actions/>
   <description>Run the full test suite of Bazel.&#xd;
 &#xd;
 To be run on head and for release branch/tags only</description>
   <keepDependencies>false</keepDependencies>
   <properties>
-    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="%{JENKINS_PLUGIN_github}">
-      <projectUrl>%{GITHUB_URL}</projectUrl>
+    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="{{ variables.JENKINS_PLUGIN_github }}">
+      <projectUrl>{{ variables.GITHUB_URL }}</projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
-        <net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition plugin="%{JENKINS_PLUGIN_git-parameter}">
+        <net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition plugin="{{ variables.JENKINS_PLUGIN_git_parameter }}">
           <name>REF_SPEC</name>
           <description>The branch / tag to build</description>
           <uuid>1ba7864c-b4fb-44b4-8268-31b304798afa</uuid>
@@ -39,12 +39,12 @@ To be run on head and for release branch/tags only</description>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
-  <scm class="hudson.plugins.git.GitSCM" plugin="%{JENKINS_PLUGIN_git}">
+  <scm class="hudson.plugins.git.GitSCM" plugin="{{ variables.JENKINS_PLUGIN_git }}">
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
         <refspec>+refs/heads/*:refs/remotes/origin/* +refs/notes/*:refs/notes/*</refspec>
-        <url>%{GITHUB_URL}</url>
+        <url>{{ variables.GITHUB_URL }}</url>
       </hudson.plugins.git.UserRemoteConfig>
     </userRemoteConfigs>
     <branches>
@@ -68,7 +68,7 @@ To be run on head and for release branch/tags only</description>
   <axes>
     <hudson.matrix.LabelAxis>
       <name>PLATFORM_NAME</name>
-      <values>%{PLATFORMS}</values>
+      <values>{% for v in variables.PLATFORMS.split("\n") %}<string>{{ v }}</string>{% endfor %}</values>
     </hudson.matrix.LabelAxis>
     <hudson.matrix.TextAxis>
       <name>JAVA_VERSION</name>
@@ -79,8 +79,8 @@ To be run on head and for release branch/tags only</description>
     </hudson.matrix.TextAxis>
   </axes>
   <builders>
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="%{JENKINS_PLUGIN_conditional-buildstep}">
-      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="%{JENKINS_PLUGIN_run-condition}">
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
+      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
         <expression>(darwin|linux|ubuntu).*</expression>
         <label>${PLATFORM_NAME}</label>
       </condition>
@@ -100,21 +100,21 @@ else
 fi
 </command>
       </buildStep>
-      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="%{JENKINS_PLUGIN_run-condition}"/>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="%{JENKINS_PLUGIN_conditional-buildstep}">
-      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="%{JENKINS_PLUGIN_run-condition}">
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
+      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
         <expression>windows.*</expression>
         <label>${PLATFORM_NAME}</label>
       </condition>
       <buildStep class="hudson.tasks.BatchFile">
         <command>scripts\ci\windows\compile_windows.bat</command>
       </buildStep>
-      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="%{JENKINS_PLUGIN_run-condition}"/>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
   </builders>
   <publishers>
-    <hudson.tasks.junit.JUnitResultArchiver plugin="%{JENKINS_PLUGIN_junit}">
+    <hudson.tasks.junit.JUnitResultArchiver plugin="{{ variables.JENKINS_PLUGIN_junit }}">
       <testResults>bazel-testlogs/**/*.xml</testResults>
       <keepLongStdio>false</keepLongStdio>
       <healthScaleFactor>1.0</healthScaleFactor>
@@ -127,18 +127,18 @@ fi
       <fingerprint>false</fingerprint>
       <defaultExcludes>true</defaultExcludes>
     </hudson.tasks.ArtifactArchiver>
-    <hudson.tasks.Mailer plugin="%{JENKINS_PLUGIN_mailer}">
-      <recipients>%{BAZEL_BUILD_RECIPIENT}</recipients>
+    <hudson.tasks.Mailer plugin="{{ variables.JENKINS_PLUGIN_mailer }}">
+      <recipients>{{ variables.BAZEL_BUILD_RECIPIENT }}</recipients>
       <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
       <sendToIndividuals>false</sendToIndividuals>
     </hudson.tasks.Mailer>
-    <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="%{JENKINS_PLUGIN_parameterized-trigger}">
+    <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="{{ variables.JENKINS_PLUGIN_parameterized_trigger }}">
       <configs>
         <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
           <configs>
             <hudson.plugins.parameterizedtrigger.CurrentBuildParameters/>
           </configs>
-          <projects>Tutorial, %{BAZEL_JOBS}</projects>
+          <projects>Tutorial, {{ variables.BAZEL_JOBS }}</projects>
           <condition>UNSTABLE_OR_BETTER</condition>
           <triggerWithNoParameters>false</triggerWithNoParameters>
         </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>

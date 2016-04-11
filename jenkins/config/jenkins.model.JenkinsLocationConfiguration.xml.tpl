@@ -15,6 +15,6 @@
   limitations under the License.
 -->
 <jenkins.model.JenkinsLocationConfiguration>
-  <adminAddress>Bazel Jenkins CI server &lt;%{SENDER_EMAIL}&gt;</adminAddress>
-  <jenkinsUrl>%{PUBLIC_JENKINS_URL}</jenkinsUrl>
+  <adminAddress>Bazel Jenkins CI server &lt;{{ variables.SENDER_EMAIL }}&gt;</adminAddress>
+  <jenkinsUrl>{{ variables.PUBLIC_JENKINS_URL }}</jenkinsUrl>
 </jenkins.model.JenkinsLocationConfiguration>

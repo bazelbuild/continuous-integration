@@ -14,26 +14,26 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<matrix-project plugin="%{JENKINS_PLUGIN_matrix-project}">
+<matrix-project plugin="{{ variables.JENKINS_PLUGIN_matrix_project }}">
   <actions/>
-  <description>Test the %{PROJECT_NAME} project still build with Bazel at head and latest release.</description>
+  <description>Test the {{ variables.PROJECT_NAME }} project still build with Bazel at head and latest release.</description>
   <keepDependencies>false</keepDependencies>
   <properties>
-    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="%{JENKINS_PLUGIN_github}">
-      <projectUrl>%{PROJECT_URL}</projectUrl>
+    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="{{ variables.JENKINS_PLUGIN_github }}">
+      <projectUrl>{{ variables.PROJECT_URL }}</projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
   </properties>
-  <scm class="hudson.plugins.git.GitSCM" plugin="%{JENKINS_PLUGIN_git}">
+  <scm class="hudson.plugins.git.GitSCM" plugin="{{ variables.JENKINS_PLUGIN_git }}">
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
         <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
-        <url>%{GITHUB_URL}</url>
+        <url>{{ variables.GITHUB_URL }}</url>
       </hudson.plugins.git.UserRemoteConfig>
     </userRemoteConfigs>
     <branches>
       <hudson.plugins.git.BranchSpec>
-        <name>*/%{BRANCH}</name>
+        <name>*/{{ variables.BRANCH }}</name>
       </hudson.plugins.git.BranchSpec>
     </branches>
     <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
@@ -54,7 +54,7 @@
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
   <triggers>
-    <com.cloudbees.jenkins.GitHubPushTrigger plugin="%{JENKINS_PLUGIN_github}">
+    <com.cloudbees.jenkins.GitHubPushTrigger plugin="{{ variables.JENKINS_PLUGIN_github }}">
       <spec></spec>
     </com.cloudbees.jenkins.GitHubPushTrigger>
   </triggers>
@@ -62,7 +62,7 @@
   <axes>
     <hudson.matrix.LabelAxis>
       <name>PLATFORM_NAME</name>
-      <values>%{PLATFORMS}</values>
+      <values>{% for v in variables.PLATFORMS.split("\n") %}<string>{{ v }}</string>{% endfor %}</values>
     </hudson.matrix.LabelAxis>
     <hudson.matrix.TextAxis>
       <name>BAZEL_VERSION</name>
@@ -73,7 +73,7 @@
     </hudson.matrix.TextAxis>
   </axes>
   <builders>
-    <hudson.plugins.copyartifact.CopyArtifact plugin="%{JENKINS_PLUGIN_copyartifact}">
+    <hudson.plugins.copyartifact.CopyArtifact plugin="{{ variables.JENKINS_PLUGIN_copyartifact }}">
       <project>Bazel</project>
       <filter>**/ci/*installer*.sh</filter>
       <target>bazel-installer</target>
@@ -110,13 +110,13 @@ bash &quot;${BAZEL_INSTALLER}&quot; \
   --bin=&quot;${BASE}/binary&quot;
 
 cat &gt;&gt;${BASE}/bazel.bazelrc &lt;&lt;EOF
-build %{BUILD_OPTS}
-test %{TEST_OPTS}
+build {{ variables.BUILD_OPTS }}
+test {{ variables.TEST_OPTS }}
 EOF
 
 ROOT="${PWD}"
 rm -f .unstable
-cd %{WORKSPACE}
+cd {{ variables.WORKSPACE }}
 function bazel() {
   local retCode=0
   ${BASE}/binary/bazel --bazelrc=${BASE}/bazel.bazelrc "$@" || retCode=$?
@@ -126,21 +126,21 @@ function bazel() {
     exit $retCode
   fi
 }
-%{CONFIGURE}
-TESTS="$(bazel query 'tests(%{TESTS})')"
-[ -z "%{BUILDS}" ] || bazel build %{BUILDS}
+{{ variables.CONFIGURE }}
+TESTS="$(bazel query 'tests({{ variables.TESTS }})')"
+[ -z "{{ variables.BUILDS }}" ] || bazel build {{ variables.BUILDS }}
 [ -z "${TESTS}" ] || bazel test ${TESTS}
 </command>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
 # Avoid failing because absence of log files
-if [ ! -e "%{WORKSPACE}/bazel-testlogs" ]; then
+if [ ! -e "{{ variables.WORKSPACE }}/bazel-testlogs" ]; then
   # Remove dangling symlink if present.
-  rm -f "%{WORKSPACE}/bazel-testlogs"
-  mkdir -p "%{WORKSPACE}/bazel-testlogs"
+  rm -f "{{ variables.WORKSPACE }}/bazel-testlogs"
+  mkdir -p "{{ variables.WORKSPACE }}/bazel-testlogs"
 fi
-cat &lt;&lt;EOF &gt;%{WORKSPACE}/bazel-testlogs/dummy.xml
+cat &lt;&lt;EOF &gt;{{ variables.WORKSPACE }}/bazel-testlogs/dummy.xml
 &lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;testsuites&gt;
   &lt;testsuite name="dummy" tests="0" failures="0" errors="0"/&gt;
@@ -148,30 +148,30 @@ cat &lt;&lt;EOF &gt;%{WORKSPACE}/bazel-testlogs/dummy.xml
 EOF
 </command>
     </hudson.tasks.Shell>
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="%{JENKINS_PLUGIN_conditional-buildstep}">
-      <condition class="org.jenkins_ci.plugins.run_condition.core.FileExistsCondition" plugin="%{JENKINS_PLUGIN_run-condition}">
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
+      <condition class="org.jenkins_ci.plugins.run_condition.core.FileExistsCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
         <file>.unstable</file>
         <baseDir class="org.jenkins_ci.plugins.run_condition.common.BaseDirectory$Workspace"/>
       </condition>
-      <buildStep class="org.jenkins_ci.plugins.fail_the_build.FixResultBuilder" plugin="%{JENKINS_PLUGIN_fail-the-build-plugin}">
+      <buildStep class="org.jenkins_ci.plugins.fail_the_build.FixResultBuilder" plugin="{{ variables.JENKINS_PLUGIN_fail_the_build_plugin }}">
         <defaultResultName>UNSTABLE</defaultResultName>
         <success></success>
         <unstable></unstable>
         <failure></failure>
         <aborted></aborted>
       </buildStep>
-      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Unstable" plugin="%{JENKINS_PLUGIN_run-condition}"/>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Unstable" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
   </builders>
   <publishers>
-    <hudson.tasks.junit.JUnitResultArchiver plugin="%{JENKINS_PLUGIN_junit}">
+    <hudson.tasks.junit.JUnitResultArchiver plugin="{{ variables.JENKINS_PLUGIN_junit }}">
       <testResults>bazel-testlogs/**/*.xml</testResults>
       <keepLongStdio>false</keepLongStdio>
       <healthScaleFactor>1.0</healthScaleFactor>
       <allowEmptyResults>true</allowEmptyResults>
     </hudson.tasks.junit.JUnitResultArchiver>
-    <hudson.tasks.Mailer plugin="%{JENKINS_PLUGIN_mailer}">
-      <recipients>%{BAZEL_BUILD_RECIPIENT}</recipients>
+    <hudson.tasks.Mailer plugin="{{ variables.JENKINS_PLUGIN_mailer }}">
+      <recipients>{{ variables.BAZEL_BUILD_RECIPIENT }}</recipients>
       <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
       <sendToIndividuals>false</sendToIndividuals>
     </hudson.tasks.Mailer>
@@ -181,3 +181,4 @@ EOF
     <runSequentially>false</runSequentially>
   </executionStrategy>
 </matrix-project>
+
