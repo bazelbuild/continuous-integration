@@ -16,7 +16,7 @@
 load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
 load(":jenkins.bzl", "jenkins_node", "jenkins_build")
 
-exports_files(["github-jobs.xml.tpl"])
+exports_files(glob(["github-jobs.*.tpl"]))
 
 #
 # Common definitions

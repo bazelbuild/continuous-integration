@@ -39,14 +39,18 @@ def expand_template_impl(ctx):
       "--variable=%s=%s" % (k, ctx.attr.substitutions[k])
       for k in ctx.attr.substitutions
   ]
+  imports = [
+      "--imports=%s=%s" % (ctx.attr.deps[i].label, ctx.files.deps[i].path)
+      for i in range(0, len(ctx.attr.deps))
+  ]
   ctx.action(
       executable = ctx.executable._engine,
       arguments = [
         "--executable" if ctx.attr.executable else "--noexecutable",
         "--template=%s" % ctx.file.template.path,
         "--output=%s" % ctx.outputs.out.path,
-      ] + variables,
-      inputs = [ctx.file.template],
+      ] + variables + imports,
+      inputs = [ctx.file.template] + ctx.files.deps,
       outputs = [ctx.outputs.out],
       )
 
@@ -57,6 +61,7 @@ expand_template = rule(
             allow_files = True,
             single_file = True,
         ),
+        "deps": attr.label_list(default = [], allow_files = True),
         "substitutions": attr.string_dict(mandatory = True),
         "out": attr.output(mandatory = True),
         "executable": attr.bool(default = True),
@@ -161,7 +166,7 @@ _merge_files = rule(
     implementation = _merge_files_impl,
 )
 
-def jenkins_job(name, config, substitutions = {},
+def jenkins_job(name, config, substitutions = {}, deps = [],
                 project='bazel', org='bazelbuild', project_url=None,
                 platforms=[], test_platforms=["linux-x86_64"]):
   """Create a job configuration on Jenkins."""
@@ -177,6 +182,7 @@ def jenkins_job(name, config, substitutions = {},
       name = name,
       template = config,
       out = "%s.xml" % name,
+      deps = deps,
       substitutions = JENKINS_PLUGINS_VERSIONS + substitutions,
     )
   if test_platforms:
@@ -185,6 +191,7 @@ def jenkins_job(name, config, substitutions = {},
       name = name + "-test",
       template = config,
       out = "%s-test.xml" % name,
+      deps = deps,
       substitutions = JENKINS_PLUGINS_VERSIONS + substitutions,
     )
 
@@ -211,6 +218,10 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
   jenkins_job(
       name = name,
       config = "//jenkins:github-jobs.xml.tpl",
+      deps = [
+          "//jenkins:github-jobs.sh.tpl",
+          "//jenkins:github-jobs.test-logs.sh.tpl",
+      ],
       substitutions=substitutions,
       project=project,
       org=org,

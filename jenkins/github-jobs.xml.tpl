@@ -85,68 +85,10 @@
       <doNotFingerprintArtifacts>false</doNotFingerprintArtifacts>
     </hudson.plugins.copyartifact.CopyArtifact>
     <hudson.tasks.Shell>
-      <command>#!/bin/bash
-set -x
-INSTALLER_PLATFORM=$(uname -s | tr &apos;[:upper:]&apos; &apos;[:lower:]&apos;)-$(uname -m)
-if [ &quot;$BAZEL_VERSION&quot; = &quot;HEAD&quot; ]; then
-  export BAZEL_INSTALLER=$(find $PWD/bazel-installer -name '*.sh' | \
-      fgrep &quot;PLATFORM_NAME=${INSTALLER_PLATFORM}&quot; | fgrep -v jdk7 | head -1)
-else
-  if [ &quot;$BAZEL_VERSION&quot; = &quot;latest&quot; ]; then
-    URL=$(curl -L https://github.com/bazelbuild/bazel/releases/latest | \
-      grep -o &apos;&quot;/.*/bazel-.*-installer-&apos;${INSTALLER_PLATFORM}&apos;.sh&quot;&apos; | grep -v jdk7 | sed &apos;s/&quot;//g&apos;)
-  else
-    URL=https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-installer-${INSTALLER_PLATFORM}.sh
-  fi
-  export BAZEL_INSTALLER=${PWD}/bazel-installer/install.sh
-  curl -L -o ${BAZEL_INSTALLER} https://github.com${URL}
-fi
-BASE=&quot;${PWD}/bazel-install&quot;
-mkdir -p &quot;${BASE}/binary&quot;
-
-bash &quot;${BAZEL_INSTALLER}&quot; \
-  --base=&quot;${BASE}&quot; \
-  --bazelrc=&quot;${BASE}/binary/bazel.bazelrc&quot; \
-  --bin=&quot;${BASE}/binary&quot;
-
-cat &gt;&gt;${BASE}/bazel.bazelrc &lt;&lt;EOF
-build {{ variables.BUILD_OPTS }}
-test {{ variables.TEST_OPTS }}
-EOF
-
-ROOT="${PWD}"
-rm -f .unstable
-cd {{ variables.WORKSPACE }}
-function bazel() {
-  local retCode=0
-  ${BASE}/binary/bazel --bazelrc=${BASE}/bazel.bazelrc "$@" || retCode=$?
-  if (( $retCode == 3 )); then
-    echo 1 >"${ROOT}/.unstable"
-  elif (( $retCode != 0 )); then
-    exit $retCode
-  fi
-}
-{{ variables.CONFIGURE }}
-TESTS="$(bazel query 'tests({{ variables.TESTS }})')"
-[ -z "{{ variables.BUILDS }}" ] || bazel build {{ variables.BUILDS }}
-[ -z "${TESTS}" ] || bazel test ${TESTS}
-</command>
+      <command>{{ imports['//jenkins:github-jobs.sh.tpl'] }}</command>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
-      <command>#!/bin/bash
-# Avoid failing because absence of log files
-if [ ! -e "{{ variables.WORKSPACE }}/bazel-testlogs" ]; then
-  # Remove dangling symlink if present.
-  rm -f "{{ variables.WORKSPACE }}/bazel-testlogs"
-  mkdir -p "{{ variables.WORKSPACE }}/bazel-testlogs"
-fi
-cat &lt;&lt;EOF &gt;{{ variables.WORKSPACE }}/bazel-testlogs/dummy.xml
-&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;testsuites&gt;
-  &lt;testsuite name="dummy" tests="0" failures="0" errors="0"/&gt;
-&lt;/testsuites&gt;
-EOF
-</command>
+      <command>{{ imports['//jenkins:github-jobs.test-logs.sh.tpl'] }}</command>
     </hudson.tasks.Shell>
     <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
       <condition class="org.jenkins_ci.plugins.run_condition.core.FileExistsCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
