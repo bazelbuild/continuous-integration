@@ -21,11 +21,17 @@ def _get_runfile_path(ctx, f):
   else:
     return f.short_path
 
+def _reverse(lst):
+  result = []
+  for el in lst:
+    result = [el] + result
+  return result
+
 def _generate_load_statement(ctx, tag, file):
   return ("echo 'Image %s'\n" % tag) + "\n".join([
       "incr_load '%s' '%s'" %  (_get_runfile_path(ctx, l["name"]),
                                 _get_runfile_path(ctx, l["layer"]))
-      for l in file.docker_layers
+      for l in _reverse(file.docker_layers)
   ]) + ("\ntag_last_load '%s'" % tag)
 
 # TODO(dmarting): replace with proper docker_push using the docker library.

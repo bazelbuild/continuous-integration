@@ -43,7 +43,7 @@ function incr_load() {
 function tag_last_load() {
   # Tag the last layer.
   if [ -n "${name}" ]; then
-    TAG="%{repository}:$1"
+    TAG="%{repository}/$1"
     echo "Tagging ${name} as ${TAG}"
     "${DOCKER}" tag -f ${name} ${TAG}
   fi
@@ -55,5 +55,5 @@ function tag_last_load() {
 %{load_statements}
 
 for tag in %{tags}; do
-  "${GCLOUD}" docker push "%{repository}:${tag}"
+  "${GCLOUD}" docker push "%{repository}/${tag}"
 done
