@@ -18,6 +18,8 @@ RULES = [
     "rules_rust",
     "rules_sass",
     "rules_scala",
+    # This is not really a rule, but it is simpler to put here.
+    "skydoc",
 ]
 
 #
