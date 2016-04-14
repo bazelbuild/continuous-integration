@@ -38,7 +38,7 @@ bash "${BAZEL_INSTALLER}" \
   --bazelrc="${BASE}/binary/bazel.bazelrc" \
   --bin="${BASE}/binary"
 
-cat >>${BASE}/bazel.bazelrc &lt;&lt;EOF
+cat >>${BASE}/bazel.bazelrc <<EOF
 build {{ variables.BUILD_OPTS }}
 test {{ variables.TEST_OPTS }}
 EOF
