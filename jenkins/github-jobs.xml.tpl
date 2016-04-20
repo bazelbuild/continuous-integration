@@ -52,7 +52,7 @@
   <canRoam>true</canRoam>
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
-  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>true</blockBuildWhenUpstreamBuilding>
   <triggers>
     <com.cloudbees.jenkins.GitHubPushTrigger plugin="{{ variables.JENKINS_PLUGIN_github }}">
       <spec></spec>
@@ -73,17 +73,6 @@
     </hudson.matrix.TextAxis>
   </axes>
   <builders>
-    <hudson.plugins.copyartifact.CopyArtifact plugin="{{ variables.JENKINS_PLUGIN_copyartifact }}">
-      <project>Bazel</project>
-      <filter>**/ci/*installer*.sh</filter>
-      <target>bazel-installer</target>
-      <excludes></excludes>
-      <selector class="hudson.plugins.copyartifact.TriggeredBuildSelector">
-        <fallbackToLastSuccessful>true</fallbackToLastSuccessful>
-        <upstreamFilterStrategy>UseGlobalSetting</upstreamFilterStrategy>
-      </selector>
-      <doNotFingerprintArtifacts>false</doNotFingerprintArtifacts>
-    </hudson.plugins.copyartifact.CopyArtifact>
     <hudson.tasks.Shell>
       <command>{{ imports['//jenkins:github-jobs.sh.tpl'] }}</command>
     </hudson.tasks.Shell>

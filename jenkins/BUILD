@@ -39,6 +39,7 @@ jenkins_node(
     name = "darwin-x86_64",
     labels = [
         "darwin-x86_64",
+        "install-bazel",
         "safe",
     ],
     remote_fs = "/Users/ci",
@@ -48,6 +49,7 @@ jenkins_node(
     name = "darwin-x86_64-2",
     labels = [
         "darwin-x86_64",
+        "install-bazel",
         "safe",
     ],
     num_executors = 3,
@@ -60,6 +62,7 @@ jenkins_node(
     name = "windows-x86_64",
     labels = [
         "windows-x86_64",
+        "install-bazel",
         "safe",
     ],
     num_executors = 1,
@@ -72,6 +75,7 @@ jenkins_node(
     labels = [
         "ubuntu_14.04-x86_64",
         "linux-x86_64",
+        "install-bazel",
         "safe",
     ],
 ) for ext in [
@@ -87,6 +91,7 @@ jenkins_node(
     labels = [
         "ubuntu_15.10-x86_64",
         "no-release",
+        "install-bazel",
         "safe",
     ],
 ) for ext in [
@@ -151,8 +156,8 @@ jenkins_node(
     base = "//base:ubuntu-wily-amd64-golang",
     labels = [
         "linux-x86_64",
+        "install-bazel",
         "safe",
-        "deploy",
     ],
 )
 
@@ -255,6 +260,7 @@ jenkins_build(
     name = "jenkins-test",
     configs = glob(["config/**"]) + [
         ":ubuntu-docker",
+        ":deploy",
     ],
     jobs = ["//jenkins/jobs:test-jobs"],
     substitutions = {
@@ -269,5 +275,6 @@ sh_binary(
     data = [
         ":jenkins-test",
         ":ubuntu-docker.docker",
+        ":deploy.docker",
     ],
 )

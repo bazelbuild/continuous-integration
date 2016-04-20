@@ -40,6 +40,7 @@ done
 
 # Load all images.
 ./jenkins/ubuntu-docker.docker bazel:test-ubuntu-slave
+./jenkins/deploy.docker bazel:test-deploy-slave
 ./jenkins/jenkins-test bazel:jenkins-test
 
 # Run main container, serving jenkins on port provided by the first argument,
@@ -73,13 +74,17 @@ done
 echo " ok."
 
 # Run slave, in priviledged mode for Bazel.
-container="$(docker run -d --privileged=true \
+container1="$(docker run -d --privileged=true \
                 --link jenkins:jenkins --env JENKINS_SERVER=http://jenkins:${PORT} \
                 bazel:test-ubuntu-slave)"
+container2="$(docker run -d --privileged=true \
+                --link jenkins:jenkins --env JENKINS_SERVER=http://jenkins:${PORT} \
+                bazel:test-deploy-slave)"
 
 # Connect to the master container, until the user quit.
 docker attach jenkins
 
 # Kill slave and remove containers.
-docker rm -f "${container}" > /dev/null
+docker rm -f "${container1}" > /dev/null
+docker rm -f "${container2}" > /dev/null
 docker rm -f jenkins > /dev/null

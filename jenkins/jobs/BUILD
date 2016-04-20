@@ -39,6 +39,8 @@ BAZEL_JOBS = {
     "Bazel-Release-Trigger": UNIX_PLATFORMS,
     "Github-Trigger": UNIX_PLATFORMS,
     "Tutorial": UNIX_PLATFORMS,
+    "Bazel-Install": [],
+    "Bazel-Install-Trigger": [],
 }
 
 JOBS = BAZEL_JOBS.keys() + GITHUB_JOBS
@@ -50,6 +52,7 @@ JOBS_SUBSTITUTIONS = {
 [jenkins_job(
     name = job,
     config = "jobs-%s.xml.tpl" % job,
+    deps = glob(["%s.sh.tpl" % job]),
     platforms = BAZEL_JOBS[job],
     project_url = "http://bazel.io",
     substitutions = JOBS_SUBSTITUTIONS,
