@@ -50,7 +50,7 @@
   </scm>
   <quietPeriod>5</quietPeriod>
   <canRoam>true</canRoam>
-  <disabled>false</disabled>
+  <disabled>{{ variables.disabled }}</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>true</blockBuildWhenUpstreamBuilding>
   <triggers>

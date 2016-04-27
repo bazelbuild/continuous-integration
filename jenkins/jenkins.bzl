@@ -200,7 +200,8 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
                      tests=["//..."], targets=["//..."], substitutions={},
                      test_opts=["--test_output=errors", "--test_tag_filters -noci", "--build_tests_only"],
                      build_opts=["--verbose_failures"],
-                     test_platforms=["linux-x86_64"]):
+                     test_platforms=["linux-x86_64"],
+                     enabled=True):
   """Create a generic github job configuration to build against Bazel head."""
   if not project:
     project = name
@@ -212,7 +213,8 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
     "TEST_OPTS": " ".join(test_opts),
     "BUILD_OPTS": " ".join(build_opts),
     "TESTS": " ".join(tests),
-    "BUILDS": " ".join(targets)
+    "BUILDS": " ".join(targets),
+    "disabled": str(not enabled).lower()
   }
 
   jenkins_job(

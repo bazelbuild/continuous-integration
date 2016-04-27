@@ -13,13 +13,17 @@ RULES = [
     "rules_appengine",
     "rules_closure",
     "rules_d",
-    "rules_dotnet",
     "rules_go",
     "rules_rust",
     "rules_sass",
     "rules_scala",
     # This is not really a rule, but it is simpler to put here.
     "skydoc",
+]
+
+DISABLED_RULES = [
+    # rules_dotnet is disabled until bazelbuild/rules_dotnet#13 is fixed.
+    "rules_dotnet",
 ]
 
 #
@@ -31,7 +35,7 @@ GITHUB_JOBS = [
     "re2",
     "protobuf",
     "dash",
-] + RULES
+] + RULES + DISABLED_RULES
 
 BAZEL_JOBS = {
     "Bazel": UNIX_PLATFORMS + ["windows-x86_64"],
@@ -52,10 +56,10 @@ JOBS_SUBSTITUTIONS = {
 [jenkins_job(
     name = job,
     config = "jobs-%s.xml.tpl" % job,
-    deps = glob(["%s.sh.tpl" % job]),
     platforms = BAZEL_JOBS[job],
     project_url = "http://bazel.io",
     substitutions = JOBS_SUBSTITUTIONS,
+    deps = glob(["%s.sh.tpl" % job]),
 ) for job in BAZEL_JOBS.keys()]
 
 # TODO(dmarting): activate Tensorflow on mac (missing dependencies)
@@ -86,6 +90,13 @@ bazel_github_job(
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
 ) for job in RULES]
+
+[bazel_github_job(
+    name = job,
+    enabled = False,
+    org = "bazelbuild",
+    platforms = UNIX_PLATFORMS,
+) for job in DISABLED_RULES]
 
 bazel_github_job(
     name = "dash",
