@@ -66,10 +66,7 @@
     </hudson.matrix.LabelAxis>
     <hudson.matrix.TextAxis>
       <name>BAZEL_VERSION</name>
-      <values>
-        <string>HEAD</string>
-        <string>latest</string>
-      </values>
+       <values>{% for v in variables.BAZEL_VERSIONS.split("\n") %}<string>{{ v }}</string>{% endfor %}</values>
     </hudson.matrix.TextAxis>
   </axes>
   <builders>

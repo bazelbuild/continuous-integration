@@ -92,6 +92,7 @@ source scripts/ci/build.sh
 export BUILD_BY=&quot;Jenkins&quot;
 export BUILD_LOG=&quot;${BUILD_URL}&quot;
 export GIT_REPOSITORY_URL=&quot;${GIT_URL}&quot;
+export BAZEL_COMPILE_TARGET=&quot;compile,determinism&quot;
 
 if [[ &quot;${NODE_LABELS}&quot; =~ &quot;no-release&quot; ]]; then
   bazel_build
@@ -114,12 +115,6 @@ fi
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
   </builders>
   <publishers>
-    <hudson.tasks.junit.JUnitResultArchiver plugin="{{ variables.JENKINS_PLUGIN_junit }}">
-      <testResults>bazel-testlogs/**/*.xml</testResults>
-      <keepLongStdio>false</keepLongStdio>
-      <healthScaleFactor>1.0</healthScaleFactor>
-      <allowEmptyResults>true</allowEmptyResults>
-    </hudson.tasks.junit.JUnitResultArchiver>
     <hudson.tasks.ArtifactArchiver>
       <artifacts>output/ci/**</artifacts>
       <allowEmptyArchive>true</allowEmptyArchive>

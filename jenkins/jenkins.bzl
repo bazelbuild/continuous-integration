@@ -197,8 +197,10 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
 
 def bazel_github_job(name, platforms=[], branch="master", project=None, org="google",
                      project_url=None, workspace=".", configure=[],
+                     bazel_versions=["HEAD", "latest"],
                      tests=["//..."], targets=["//..."], substitutions={},
-                     test_opts=["--test_output=errors", "--test_tag_filters -noci", "--build_tests_only"],
+                     test_opts=["--test_output=errors", "--build_tests_only"],
+                     test_tag_filters=["-noci"],
                      build_opts=["--verbose_failures"],
                      test_platforms=["linux-x86_64"],
                      enabled=True):
@@ -211,9 +213,11 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
     "BRANCH": branch,
     "CONFIGURE": "\n".join(configure),
     "TEST_OPTS": " ".join(test_opts),
+    "TEST_TAG_FILTERS": ",".join(test_tag_filters),
     "BUILD_OPTS": " ".join(build_opts),
-    "TESTS": " ".join(tests),
+    "TESTS": " + ".join(tests),
     "BUILDS": " ".join(targets),
+    "BAZEL_VERSIONS": "\n".join(bazel_versions),
     "disabled": str(not enabled).lower()
   }
 

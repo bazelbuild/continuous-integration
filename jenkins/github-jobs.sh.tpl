@@ -20,10 +20,30 @@ BAZEL=~/.bazel/${BAZEL_VERSION}/bin/bazel
 
 ROOT="${PWD}"
 
-cat >>${ROOT}/bazel.bazelrc <<EOF
+TEST_TAG_FILTERS="{{ variables.TEST_TAG_FILTERS }}"
+JAVA_VERSION="1.8"
+if [[ "${BAZEL_VERSION}" =~ -jdk7$ ]]; then
+  JAVA_VERSION="1.7"
+  if [ -n "${TEST_TAG_FILTERS}" ]; then
+    TEST_TAG_FILTERS="${TEST_TAG_FILTERS},-jdk8"
+  else
+    TEST_TAG_FILTERS="-jdk8"
+  fi
+fi
+
+cat >${ROOT}/bazel.bazelrc <<EOF
 build {{ variables.BUILD_OPTS }}
 test {{ variables.TEST_OPTS }}
+test --test_tag_filters ${TEST_TAG_FILTERS}
+test --define JAVA_VERSION=${JAVA_VERSION}
 EOF
+
+if [[ "${PLATFORM_NAME}" =~ .*darwin.* ]] && \
+      xcodebuild -showsdks 2> /dev/null | grep -q '\-sdk iphonesimulator'; then
+  cat >>${ROOT}/bazel.bazelrc <<EOF
+build --define IPHONE_SDK=1
+EOF
+fi
 
 rm -f .unstable
 cd {{ variables.WORKSPACE }}

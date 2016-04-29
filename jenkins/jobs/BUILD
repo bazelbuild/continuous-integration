@@ -36,6 +36,7 @@ GITHUB_JOBS = [
     "re2",
     "protobuf",
     "dash",
+    "bazel-tests",
 ] + RULES + DISABLED_RULES
 
 BAZEL_JOBS = {
@@ -72,7 +73,10 @@ bazel_github_job(
     platforms = LINUX_PLATFORMS,
     project_url = "https://tensorflow.org",
     targets = [],
-    test_opts = ["--test_timeout=1800"],
+    test_opts = [
+        "--test_timeout=1800",
+        "--test_output=errors",
+    ],
     tests = ["filter(\":(lib|platform)_.*\", kind(test, //tensorflow/core:all))"],
 )
 
@@ -84,6 +88,33 @@ bazel_github_job(
     project = "serving",
     targets = [],
     tests = ["tensorflow_serving/..."],
+)
+
+bazel_github_job(
+    name = "bazel-tests",
+    bazel_versions = [
+        "HEAD",
+        "HEAD-jdk7",
+        # HEAD is incompatible with 0.2.2, we should disallow that in the future.
+        # "latest",
+        # "latest-jdk7",
+    ],
+    configure = [
+        "source scripts/ci/build.sh",
+        "setup_android_repositories",
+    ],
+    project = "bazel",
+    test_opts = [
+        "-k",
+        "--test_output=errors",
+        "--build_tests_only",
+    ],
+    targets = [],
+    tests = [
+        "//scripts/...",
+        "//src/...",
+        "//third_party/ijar/...",
+    ],
 )
 
 [bazel_github_job(
