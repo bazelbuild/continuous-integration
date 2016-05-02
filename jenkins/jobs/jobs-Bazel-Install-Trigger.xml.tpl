@@ -80,7 +80,7 @@
           <configs>
             <hudson.plugins.parameterizedtrigger.CurrentBuildParameters/>
           </configs>
-          <projects>Tutorial, {{ variables.BAZEL_JOBS }}</projects>
+          <projects>Tutorial, {{ variables.GITHUB_JOBS }}</projects>
           <condition>UNSTABLE_OR_BETTER</condition>
           <triggerWithNoParameters>false</triggerWithNoParameters>
         </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>

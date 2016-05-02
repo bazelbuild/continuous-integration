@@ -19,15 +19,51 @@
   <quietPeriod>5</quietPeriod>
   <scmCheckoutRetryCount>0</scmCheckoutRetryCount>
   <views>
-    <hudson.model.AllView>
+    <listView>
       <owner class="hudson" reference="../../.."/>
-      <name>All</name>
+      <name>Projects</name>
+      <description>All projects</description>
       <filterExecutors>false</filterExecutors>
       <filterQueue>false</filterQueue>
       <properties class="hudson.model.View$PropertyList"/>
-    </hudson.model.AllView>
+      <jobNames>
+        {% for v in variables.GITHUB_JOBS.split(", ") %}<string>{{ v }}</string>{% endfor %}
+      </jobNames>
+      <jobFilters/>
+      <columns>
+        <hudson.views.StatusColumn/>
+        <hudson.views.WeatherColumn/>
+        <hudson.views.JobColumn/>
+        <hudson.views.LastSuccessColumn/>
+        <hudson.views.LastFailureColumn/>
+        <hudson.views.LastDurationColumn/>
+        <hudson.views.BuildButtonColumn/>
+      </columns>
+      <recurse>false</recurse>
+    </listView>
+    <listView>
+      <owner class="hudson" reference="../../.."/>
+      <name>Bazel bootstrap and maintenance</name>
+      <filterExecutors>false</filterExecutors>
+      <filterQueue>false</filterQueue>
+      <properties class="hudson.model.View$PropertyList"/>
+      <jobNames>
+        {% for v in variables.BAZEL_JOBS.split(", ") %}<string>{{ v }}</string>{% endfor %}
+      </jobNames>
+      <jobFilters/>
+      <columns>
+        <hudson.views.StatusColumn/>
+        <hudson.views.WeatherColumn/>
+        <hudson.views.JobColumn/>
+        <hudson.views.LastSuccessColumn/>
+        <hudson.views.LastFailureColumn/>
+        <hudson.views.LastDurationColumn/>
+        <hudson.views.BuildButtonColumn/>
+      </columns>
+      <recurse>false</recurse>
+    </listView>
   </views>
-  <primaryView>All</primaryView>
+  <primaryView>Projects</primaryView>
   <nodeProperties/>
   <globalNodeProperties/>
 </hudson>

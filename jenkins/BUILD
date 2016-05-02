@@ -15,20 +15,9 @@
 # Configuration for our Jenkins instance
 load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
 load(":jenkins.bzl", "jenkins_node", "jenkins_build")
+load("//jenkins/jobs:jobs.bzl", "JOBS_SUBSTITUTIONS")
 
 exports_files(glob(["github-jobs.*.tpl"]))
-
-#
-# Common definitions
-#
-LINUX_PLATFORMS = [
-    "linux-x86_64",
-    "ubuntu_15.10-x86_64",
-]
-
-DARWIN_PLATFORMS = ["darwin-x86_64"]
-
-UNIX_PLATFORMS = LINUX_PLATFORMS + DARWIN_PLATFORMS
 
 #
 # Nodes
@@ -250,7 +239,7 @@ jenkins_build(
     substitutions = {
         "SECURITY_CONFIG": SECURITY_CONFIG,
         "PUBLIC_JENKINS_URL": "http://ci.bazel.io/",
-    },
+    } + JOBS_SUBSTITUTIONS,
     visibility = ["//visibility:public"],
 )
 
@@ -266,7 +255,7 @@ jenkins_build(
     substitutions = {
         "SECURITY_CONFIG": "<useSecurity>false</useSecurity>",
         "PUBLIC_JENKINS_URL": "##ENV:JENKINS_SERVER##",
-    },
+    } + JOBS_SUBSTITUTIONS,
 )
 
 sh_binary(
