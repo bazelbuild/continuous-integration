@@ -24,7 +24,7 @@
 sudo git
 
 # Write the node name
-echo -n ${1:-darwin-x86_64} >$HOME/node_name
+echo -n ${1:-darwin-x86_64-1} >$HOME/node_name
 
 # Get the various sdk
 cd $HOME

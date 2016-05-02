@@ -36,7 +36,7 @@ UNIX_PLATFORMS = LINUX_PLATFORMS + DARWIN_PLATFORMS
 
 # Physical machines
 jenkins_node(
-    name = "darwin-x86_64",
+    name = "darwin-x86_64-1",
     labels = [
         "darwin-x86_64",
         "install-bazel",
@@ -79,7 +79,7 @@ jenkins_node(
         "safe",
     ],
 ) for ext in [
-    "",
+    "-1",
     "-2",
     "-3",
     "-4",
@@ -95,7 +95,7 @@ jenkins_node(
         "safe",
     ],
 ) for ext in [
-    "",
+    "-1",
     "-2",
     "-3",
     "-4",
@@ -234,9 +234,9 @@ jenkins_build(
     name = "jenkins",
     configs = glob(["config/**"]) + [
         ":windows-x86_64",
-        ":ubuntu_14.04-x86_64",
-        ":ubuntu_15.10-x86_64",
-        ":darwin-x86_64",
+        ":ubuntu_14.04-x86_64-1",
+        ":ubuntu_15.10-x86_64-1",
+        ":darwin-x86_64-1",
         ":ubuntu_14.04-x86_64-2",
         ":ubuntu_15.10-x86_64-2",
         ":darwin-x86_64-2",
