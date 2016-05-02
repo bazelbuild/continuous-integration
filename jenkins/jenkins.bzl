@@ -198,7 +198,7 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
 def bazel_github_job(name, platforms=[], branch="master", project=None, org="google",
                      project_url=None, workspace=".", configure=[],
                      tests=["//..."], targets=["//..."], substitutions={},
-                     test_opts=["--test_output=errors", "--test_tag_filters -noci"],
+                     test_opts=["--test_output=errors", "--test_tag_filters -noci", "--build_tests_only"],
                      build_opts=["--verbose_failures"],
                      test_platforms=["linux-x86_64"]):
   """Create a generic github job configuration to build against Bazel head."""
