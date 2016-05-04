@@ -16,7 +16,6 @@ RULES = [
     "rules_go",
     "rules_rust",
     "rules_sass",
-    "rules_scala",
     # This is not really a rule, but it is simpler to put here.
     "skydoc",
 ]
@@ -24,6 +23,8 @@ RULES = [
 DISABLED_RULES = [
     # rules_dotnet is disabled until bazelbuild/rules_dotnet#13 is fixed.
     "rules_dotnet",
+    # rules_scala is disabled until bazelbuild/rules_scala#49 is fixed.
+    "rules_scala",
 ]
 
 #
