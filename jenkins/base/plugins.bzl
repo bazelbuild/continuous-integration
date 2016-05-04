@@ -114,4 +114,8 @@ JENKINS_PLUGINS = {
         "1.0.1",
         "a7229d2945e347afb472d3c45e83ea3c4409c8710c4168912601eb46684dd3a3",
     ],
+    "greenballs": [
+        "1.15",
+        "6c3722fb9ce2a446f0266e1911d87ef50898a10f38890bb6963e7e1e1c4296fb",
+    ],
 }
