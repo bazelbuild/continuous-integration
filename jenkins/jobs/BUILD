@@ -49,7 +49,9 @@ bazel_github_job(
         "source scripts/ci/build.sh",
         "setup_android_repositories",
     ],
+    platforms = UNIX_PLATFORMS,
     project = "bazel",
+    org = "bazelbuild",
     targets = [],
     test_opts = [
         "-k",
