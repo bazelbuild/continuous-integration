@@ -7,20 +7,20 @@ DARWIN_PLATFORMS = ["darwin-x86_64"]
 
 UNIX_PLATFORMS = LINUX_PLATFORMS + DARWIN_PLATFORMS
 
-RULES = [
-    "rules_appengine",
-    "rules_closure",
-    "rules_d",
-    "rules_go",
-    "rules_rust",
-    "rules_sass",
+RULES = {
+    "rules_appengine": UNIX_PLATFORMS,
+    "rules_closure": UNIX_PLATFORMS,
+    "rules_d": UNIX_PLATFORMS,
+    # rules_dotnet is disabled on Linux until bazelbuild/rules_dotnet#13 is fixed.
+    "rules_dotnet": DARWIN_PLATFORMS,
+    "rules_go": UNIX_PLATFORMS,
+    "rules_rust": UNIX_PLATFORMS,
+    "rules_sass": UNIX_PLATFORMS,
     # This is not really a rule, but it is simpler to put here.
-    "skydoc",
-]
+    "skydoc": UNIX_PLATFORMS,
+}
 
 DISABLED_RULES = [
-    # rules_dotnet is disabled until bazelbuild/rules_dotnet#13 is fixed.
-    "rules_dotnet",
     # rules_scala is disabled until bazelbuild/rules_scala#49 is fixed.
     "rules_scala",
 ]
@@ -32,7 +32,7 @@ GITHUB_JOBS = [
     "protobuf",
     "dash",
     "bazel-tests",
-] + RULES + DISABLED_RULES
+] + RULES.keys() + DISABLED_RULES
 
 BAZEL_JOBS = {
     "Bazel": UNIX_PLATFORMS + ["windows-x86_64"],

@@ -66,8 +66,8 @@ bazel_github_job(
 [bazel_github_job(
     name = job,
     org = "bazelbuild",
-    platforms = UNIX_PLATFORMS,
-) for job in RULES]
+    platforms = RULES[job],
+) for job in RULES.keys()]
 
 [bazel_github_job(
     name = job,
