@@ -59,16 +59,16 @@ JENKINS_PLUGINS = {
         "62e355223a8acc3035e3c7e21a0ab8d61091fe2d1620a8f04bc313b7af643bf3",
     ],
     "credentials": [
-        "1.22",
-        "5b5529ecc40121863aadb94b7bd066a682ba817a351deaec4cdf40a1715330c6",
+        "1.28",
+        "17467c6289b07b375b5055961f54e61b04172f76638bb972f05d0724fd963540",
     ],
     "git-parameter": [
         "0.4.0",
         "4450c2bdb4e161e6fb25515439254f702054994401c92367f26ad6821e418899",
     ],
     "github-api": [
-        "1.67",
-        "bd9d0af9d3cd43db7dbff5d4f2fc79036771bab0fa33624ff78227b76101ad01",
+        "1.72.1",
+        "e20cf68bcc64a031ff4791de3217fca2e6b1fe5e9f1bc6e5311b3d25c5160792",
     ],
     "git-client": [
         "1.18.0",
@@ -117,5 +117,25 @@ JENKINS_PLUGINS = {
     "greenballs": [
         "1.15",
         "6c3722fb9ce2a446f0266e1911d87ef50898a10f38890bb6963e7e1e1c4296fb",
+    ],
+    "plain-credentials": [
+        "1.1",
+        "570bdbb092e6518b5efb679281d1e9dadd2a5ad232484e00581523ef0899ff7f",
+    ],
+    "ssh-agent": [
+        "1.3",
+        "cb41df7a0bff73025db46e33398adc16fa38a8141d5d00459660ddc71283b3b4",
+    ],
+    "workflow-step-api": [
+        "1.9",
+        "8e969f0919b06ec625d4f6089bf765aded02a8b44599273aa2d02650d2bab61e",
+    ],
+    "icon-shim": [
+        "2.0.2",
+        "81213eca7029c8a327e0eb6addf13692630d396912db6994b7a6506252115d52",
+    ],
+    "ghprb": [
+        "1.31.4",
+        "",
     ],
 }

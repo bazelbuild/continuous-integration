@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<org.jenkinsci.plugins.ghprb.GhprbTrigger_-DescriptorImpl plugin="ghprb@1.24.1">
+<org.jenkinsci.plugins.ghprb.GhprbTrigger_-DescriptorImpl>
   <configVersion>1</configVersion>
   <whitelistPhrase>.*add\W+to\W+whitelist.*</whitelistPhrase>
   <okToTestPhrase>.*ok\W+to\W+test.*</okToTestPhrase>
@@ -14,6 +14,7 @@
   <githubAuth>
     <org.jenkinsci.plugins.ghprb.GhprbGitHubAuth>
       <serverAPIUrl>https://api.github.com</serverAPIUrl>
+      <credentialsId>3b53d1b7-9c6b-4822-b2d0-82022ade718f</credentialsId>
       <id>0182cdc4-ebe9-4d40-9b60-b66809f141cc</id>
       <description>Anonymous connection</description>
       <secret></secret>

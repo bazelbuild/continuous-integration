@@ -44,7 +44,7 @@ BAZEL_JOBS = {
     "Bazel-Install-Trigger": [],
 }
 
-JOBS = BAZEL_JOBS.keys() + GITHUB_JOBS
+JOBS = BAZEL_JOBS.keys() + GITHUB_JOBS + ["PR-" + k for k in GITHUB_JOBS]
 
 JOBS_SUBSTITUTIONS = {
     "GITHUB_JOBS": ", ".join(GITHUB_JOBS),
