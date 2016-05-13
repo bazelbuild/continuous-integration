@@ -52,6 +52,7 @@ bazel_github_job(
     platforms = UNIX_PLATFORMS,
     project = "bazel",
     org = "bazelbuild",
+    enable_trigger = False,
     targets = [],
     test_opts = [
         "-k",

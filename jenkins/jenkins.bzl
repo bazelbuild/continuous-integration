@@ -203,6 +203,7 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
                      test_tag_filters=["-noci"],
                      build_opts=["--verbose_failures"],
                      test_platforms=["linux-x86_64"],
+                     enable_trigger=True,
                      enabled=True):
   """Create a generic github job configuration to build against Bazel head."""
   if not project:
@@ -218,7 +219,8 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
     "TESTS": " + ".join(tests),
     "BUILDS": " ".join(targets),
     "BAZEL_VERSIONS": "\n".join(bazel_versions),
-    "disabled": str(not enabled).lower()
+    "disabled": str(not enabled).lower(),
+    "enable_trigger": str(enable_trigger).lower(),
   }
 
   jenkins_job(

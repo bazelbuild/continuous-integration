@@ -53,11 +53,13 @@
   <disabled>{{ variables.disabled }}</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>true</blockBuildWhenUpstreamBuilding>
+  {% if variables.enable_trigger == "true" %}
   <triggers>
     <com.cloudbees.jenkins.GitHubPushTrigger plugin="{{ variables.JENKINS_PLUGIN_github }}">
       <spec></spec>
     </com.cloudbees.jenkins.GitHubPushTrigger>
   </triggers>
+  {% endif %}
   <concurrentBuild>false</concurrentBuild>
   <axes>
     <hudson.matrix.LabelAxis>
