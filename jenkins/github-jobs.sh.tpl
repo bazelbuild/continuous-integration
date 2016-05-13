@@ -15,7 +15,7 @@
 
 # Shell script containing the main build phase for all bazel_github_job-s
 
-set -x
+set +x
 BAZEL=~/.bazel/${BAZEL_VERSION}/bin/bazel
 
 ROOT="${PWD}"
@@ -56,6 +56,14 @@ function bazel() {
     exit $retCode
   fi
 }
+
+echo "==== bazel version ===="
+bazel version
+echo
+echo
+
+set -x
+
 {{ variables.CONFIGURE }}
 TESTS="$(bazel query 'tests({{ variables.TESTS }})')"
 [ -z "{{ variables.BUILDS }}" ] || bazel build {{ variables.BUILDS }}
