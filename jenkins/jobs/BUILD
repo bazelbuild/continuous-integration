@@ -41,9 +41,8 @@ bazel_github_job(
     bazel_versions = [
         "HEAD",
         "HEAD-jdk7",
-        # HEAD is incompatible with 0.2.2, we should disallow that in the future.
-        # "latest",
-        # "latest-jdk7",
+        "latest",
+        "latest-jdk7",
     ],
     configure = [
         "source scripts/ci/build.sh",
