@@ -78,7 +78,7 @@
       <triggerPhrase></triggerPhrase>
       <extensions>
         <org.jenkinsci.plugins.ghprb.extensions.status.GhprbSimpleStatus>
-          <commitStatusContext></commitStatusContext>
+          <commitStatusContext>ci.bazel.io</commitStatusContext>
           <triggeredStatus></triggeredStatus>
           <startedStatus></startedStatus>
           <statusUrl></statusUrl>
