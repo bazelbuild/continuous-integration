@@ -15,7 +15,9 @@
 
 # Shell script containing the main build phase for all bazel_github_job-s
 
+set -e
 set +x
+
 BAZEL=~/.bazel/${BAZEL_VERSION}/bin/bazel
 
 ROOT="${PWD}"
