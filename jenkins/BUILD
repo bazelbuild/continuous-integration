@@ -47,8 +47,8 @@ jenkins_node(
 )
 
 # GCE machines
-jenkins_node(
-    name = "windows-x86_64",
+[jenkins_node(
+    name = "windows-x86_64" + ext,
     labels = [
         "windows-x86_64",
         "install-bazel",
@@ -57,7 +57,10 @@ jenkins_node(
     num_executors = 1,
     preference = 1,
     remote_fs = "c:\\jenkins",
-)
+) for ext in [
+    "-1",
+    "-2",
+]]
 
 [jenkins_node(
     name = "ubuntu_14.04-x86_64" + ext,
@@ -222,7 +225,8 @@ SECURITY_CONFIG = """
 jenkins_build(
     name = "jenkins",
     configs = glob(["config/**"]) + [
-        ":windows-x86_64",
+        ":windows-x86_64-1",
+        ":windows-x86_64-2",
         ":ubuntu_14.04-x86_64-1",
         ":ubuntu_15.10-x86_64-1",
         ":darwin-x86_64-1",
@@ -262,8 +266,8 @@ sh_binary(
     name = "test",
     srcs = ["test-runner.sh"],
     data = [
+        ":deploy.docker",
         ":jenkins-test",
         ":ubuntu-docker.docker",
-        ":deploy.docker",
     ],
 )
