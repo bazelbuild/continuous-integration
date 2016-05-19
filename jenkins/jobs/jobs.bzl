@@ -16,14 +16,12 @@ RULES = {
     "rules_go": UNIX_PLATFORMS,
     "rules_rust": UNIX_PLATFORMS,
     "rules_sass": UNIX_PLATFORMS,
+    "rules_scala": UNIX_PLATFORMS,
     # This is not really a rule, but it is simpler to put here.
     "skydoc": UNIX_PLATFORMS,
 }
 
-DISABLED_RULES = [
-    # rules_scala is disabled until bazelbuild/rules_scala#49 is fixed.
-    "rules_scala",
-]
+DISABLED_RULES = []
 
 GITHUB_JOBS = [
     "TensorFlow",
