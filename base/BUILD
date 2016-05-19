@@ -14,30 +14,21 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
-load(":debs.bzl", "DEB_NAMES")
 
 # Base ubuntu
 docker_build(
     name = "ubuntu-wily-amd64",
-    base = "@ubuntu-wily//:image",
-    debs = DEB_NAMES["ubuntu-wily-amd64"],
-    env = {
-        "JAVA_HOME": "/usr/lib/jvm/java-8-openjdk-amd64",
-    },
-    symlinks = {"/usr/local/bin/java": "/usr/lib/jvm/java-8-openjdk-amd64/bin/java"},
+    base = "@ubuntu-wily-amd64//:image",
 )
 
 # Image support golang and make
 docker_build(
     name = "ubuntu-wily-amd64-golang",
-    base = ":ubuntu-wily-amd64",
-    debs = DEB_NAMES["ubuntu-wily-amd64-golang"],
-    symlinks = {"/usr/local/bin/go": "/usr/lib/go/bin/go"},
+    base = "@ubuntu-wily-amd64-golang//:image",
 )
 
 # Support SSH for gerrit deployment
 docker_build(
     name = "ubuntu-wily-amd64-ssh",
-    base = ":ubuntu-wily-amd64",
-    debs = DEB_NAMES["ubuntu-wily-amd64-ssh"],
+    base = "@ubuntu-wily-amd64-ssh//:image",
 )

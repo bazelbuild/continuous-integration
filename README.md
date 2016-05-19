@@ -45,6 +45,9 @@ for other platforms. This does not enable to test:
   - Adding execution nodes,
   - Interaction with Github or Gerrit.
 
+**Note:** the first build is going to stall for some time while 
+building the base images on docker without any output due to
+[bazelbuild/bazel#1289](https://github.com/bazelbuild/bazel/issues/1289).
 
 ## Running the VM on GCE
 

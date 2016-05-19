@@ -25,7 +25,19 @@ docker_build(
 )
 """)
   tag = repository_ctx.attr.tag
-  result = repository_ctx.execute(["docker", "pull", tag])
+  if repository_ctx.attr.dockerfile:
+    result = repository_ctx.execute([
+        "docker",
+        "build",
+        "-q",
+        "-t",
+        tag,
+        "-f",
+        repository_ctx.path(repository_ctx.attr.dockerfile),
+        "."
+    ])
+  else:
+    result = repository_ctx.execute(["docker", "pull", tag])
   if result.return_code:
     fail("docker pull failed with error code %s:\n%s" % (
         result.return_code,
@@ -41,5 +53,6 @@ docker_pull = repository_rule(
     implementation = _impl,
     attrs = {
         "tag": attr.string(mandatory=True),
+        "dockerfile": attr.label(default=None),
     },
 )

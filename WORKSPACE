@@ -14,10 +14,16 @@
 
 # Docker base images
 load("//base:docker_pull.bzl", "docker_pull")
-docker_pull(
-    name = "ubuntu-wily",
-    tag = "ubuntu:wily",
-)
+
+[docker_pull(
+    name = "ubuntu-wily-amd64" + ext,
+    dockerfile = "//base:Dockerfile.ubuntu-wily-amd64" + ext,
+    tag = "local:ubuntu-wily-amd64" + ext,
+) for ext in [
+    "",
+    "-golang",
+    "-ssh",
+]]
 
 # Jenkins
 load("//jenkins/base:plugins.bzl", "JENKINS_PLUGINS")
@@ -25,14 +31,10 @@ load("//jenkins/base:jenkins_base.bzl", "jenkins_base")
 
 jenkins_base(
     name = "jenkins",
-    version = "1.642.4",
     plugins = JENKINS_PLUGINS,
+    version = "1.642.4",
     volumes = ["/opt/secrets"],
 )
-
-# Docker debian deps
-load("//base:debs.bzl", "docker_debs_repositories")
-docker_debs_repositories()
 
 # Releases stuff
 http_file(
@@ -50,8 +52,6 @@ http_file(
 # Use Jinja for templating our files
 new_http_archive(
     name = "markupsafe_archive",
-    url = "https://pypi.python.org/packages/source/M/MarkupSafe/MarkupSafe-0.23.tar.gz#md5=f5ab3deee4c37cd6a922fb81e730da6e",
-    sha256 = "a4ec1aff59b95a14b45eb2e23761a0179e98319da5a7eb76b56ea8cdc7b871c3",
     build_file_content = """
 py_library(
     name = "markupsafe",
@@ -60,13 +60,13 @@ py_library(
     visibility = ["//visibility:public"],
 )
 """,
+    sha256 = "a4ec1aff59b95a14b45eb2e23761a0179e98319da5a7eb76b56ea8cdc7b871c3",
     strip_prefix = "MarkupSafe-0.23",
+    url = "https://pypi.python.org/packages/source/M/MarkupSafe/MarkupSafe-0.23.tar.gz#md5=f5ab3deee4c37cd6a922fb81e730da6e",
 )
 
 new_http_archive(
     name = "jinja2",
-    url = "https://pypi.python.org/packages/source/J/Jinja2/Jinja2-2.8.tar.gz#md5=edb51693fe22c53cee5403775c71a99e",
-    sha256 = "bc1ff2ff88dbfacefde4ddde471d1417d3b304e8df103a7a9437d47269201bf4",
     build_file_content = """
 py_library(
     name = "jinja2",
@@ -78,14 +78,14 @@ py_library(
     visibility = ["//visibility:public"],
 )
 """,
+    sha256 = "bc1ff2ff88dbfacefde4ddde471d1417d3b304e8df103a7a9437d47269201bf4",
     strip_prefix = "Jinja2-2.8",
+    url = "https://pypi.python.org/packages/source/J/Jinja2/Jinja2-2.8.tar.gz#md5=edb51693fe22c53cee5403775c71a99e",
 )
 
 # Our template engine use gflags
 new_git_repository(
     name = "gflags",
-    remote = "https://github.com/google/python-gflags",
-    tag = "python-gflags-2.0",
     build_file_content = """
 py_library(
     name = "gflags",
@@ -96,4 +96,6 @@ py_library(
     visibility = ["//visibility:public"],
 )
 """,
+    remote = "https://github.com/google/python-gflags",
+    tag = "python-gflags-2.0",
 )
