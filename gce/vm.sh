@@ -79,6 +79,28 @@ function wait_vm() {
   return 1
 }
 
+function ssh_command() {
+  local TAG="$1"
+  local LOCATION="$2"
+  local tmpdir="${TMPDIR:-/tmp}"
+  local tmp="$(mktemp ${tmpdir%%/}/vm-ssh.XXXXXXXX)"
+  trap "rm -f ${tmp}" EXIT
+  shift 2
+  echo -n >"${tmp}"
+  for i in "$@"; do
+    if [ -f "$i" ]; then
+      cat "$i" >>"${tmp}"
+    else
+      echo "$i" >>"${tmp}"
+    fi
+  done
+  cat "${tmp}" | gcloud compute ssh --zone="${LOCATION}" \
+      --command "cat >/tmp/s.sh; sudo bash /tmp/s.sh; rm /tmp/s.sh" \
+      "${TAG}"
+  rm -f "${tmp}"
+  trap - EXIT
+}
+
 # Create a slave named $1 whose image is $2 (see `gcloud compute image list`)
 # and whose jenkins node name is $3. The other arguments are a list of setup
 # scripts to run as root on instance creation. The `jenkins-slave.sh` script
@@ -103,21 +125,12 @@ function create_slave() {
 
     *)  # Linux
       wait_vm "$TAG" "$LOCATION"  # Wait a bit for the VM to fully start
-      # Create the Jenkins user
-      gcloud compute ssh --zone=$LOCATION \
-             --command "sudo adduser --system --home /home/ci ci" $TAG
-      # Runs additional set-up scripts
-      for i in "$@"; do
-        cat $i | gcloud compute ssh --zone=$LOCATION \
-                        --command "cat >/tmp/setup.sh" $TAG
-        gcloud compute ssh --zone=$LOCATION \
-               --command "sudo bash /tmp/setup.sh" $TAG
-      done
-      # Finally mark the install process as finished
-      echo "$JENKINS_NODE" | \
-          gcloud compute ssh --zone=$LOCATION \
-                 --command "sudo su ci -s /bin/bash -c 'cat >/home/ci/node_name'" \
-                 $TAG
+      # Create the jenkins user, run additional set-up scripts and mark
+      # the install process as finished.
+      ssh_command "$TAG" "$LOCATION" \
+          "sudo adduser --system --home /home/ci ci" \
+          "$@" \
+          "su ci -s /bin/bash -c \"echo -n '$JENKINS_NODE' >/home/ci/node_name\""
       ;;
   esac
 }

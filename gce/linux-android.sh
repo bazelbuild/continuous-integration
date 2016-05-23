@@ -1,5 +1,3 @@
-#!/bin/bash
-#
 # Copyright 2015 The Bazel Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,5 +22,5 @@ chmod +x android-ndk.bin
 # Android SDK
 curl -o android-sdk.tgz http://dl.google.com/android/android-sdk_r24.3.4-linux.tgz
 tar zxf android-sdk.tgz
-(cd android-sdk-linux && tools/android update sdk --no-ui)
+echo y | (cd android-sdk-linux && tools/android update sdk --no-ui -t tools,platform,platform-tool)
 chown -R ci /home/ci/android
