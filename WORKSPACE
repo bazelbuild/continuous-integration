@@ -66,7 +66,7 @@ py_library(
 )
 
 new_http_archive(
-    name = "jinja2",
+    name = "org_pocoo_jinja_jinja2",
     build_file_content = """
 py_library(
     name = "jinja2",
@@ -85,7 +85,7 @@ py_library(
 
 # Our template engine use gflags
 new_git_repository(
-    name = "gflags",
+    name = "com_github_google_python_gflags",
     build_file_content = """
 py_library(
     name = "gflags",
