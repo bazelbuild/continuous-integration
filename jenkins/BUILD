@@ -77,6 +77,14 @@ jenkins_node(
     "-4",
 ]]
 
+jenkins_node(
+    name = "ubuntu_15.10-x86_64-docker-1",
+    labels = [
+        "install-bazel",
+        "docker",
+    ],
+)
+
 # Non-release nodes
 [jenkins_node(
     name = "ubuntu_15.10-x86_64" + ext,
@@ -227,16 +235,17 @@ jenkins_build(
     configs = glob(["config/**"]) + [
         ":windows-x86_64-1",
         ":windows-x86_64-2",
-        ":ubuntu_14.04-x86_64-1",
-        ":ubuntu_15.10-x86_64-1",
         ":darwin-x86_64-1",
-        ":ubuntu_14.04-x86_64-2",
-        ":ubuntu_15.10-x86_64-2",
         ":darwin-x86_64-2",
+        ":ubuntu_14.04-x86_64-1",
+        ":ubuntu_14.04-x86_64-2",
         ":ubuntu_14.04-x86_64-3",
-        ":ubuntu_15.10-x86_64-3",
         ":ubuntu_14.04-x86_64-4",
+        ":ubuntu_15.10-x86_64-1",
+        ":ubuntu_15.10-x86_64-2",
+        ":ubuntu_15.10-x86_64-3",
         ":ubuntu_15.10-x86_64-4",
+        ":ubuntu_15.10-x86_64-docker-1",
         ":deploy",
     ],
     jobs = ["//jenkins/jobs"],
