@@ -124,7 +124,7 @@ genrule(
 
 docker_build(
     name = "deploy-base",
-    base = "//base:ubuntu-wily-amd64-golang",
+    base = "//base:ubuntu-wily-amd64-deploy",
     directory = "/opt/data",
     env = {
         # We have to put those files on some secrets volume.
@@ -153,7 +153,7 @@ jenkins_node(
 
 jenkins_node(
     name = "ubuntu-docker",
-    base = "//base:ubuntu-wily-amd64-golang",
+    base = "//base:ubuntu-wily-amd64-deploy",
     labels = [
         "linux-x86_64",
         "install-bazel",
