@@ -39,9 +39,9 @@ while getopts ":p:" opt; do
 done
 
 # Load all images.
-./jenkins/ubuntu-docker.docker bazel:test-ubuntu-slave
-./jenkins/deploy.docker bazel:test-deploy-slave
-./jenkins/jenkins-test bazel:jenkins-test
+./io_bazel_ci/jenkins/ubuntu-docker.docker bazel:test-ubuntu-slave
+./io_bazel_ci/jenkins/deploy.docker bazel:test-deploy-slave
+./io_bazel_ci/jenkins/jenkins-test bazel:jenkins-test
 
 # Run main container, serving jenkins on port provided by the first argument,
 # defaulting to 8080.
