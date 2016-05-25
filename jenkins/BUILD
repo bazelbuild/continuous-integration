@@ -133,7 +133,7 @@ docker_build(
         "GSUTIL": "/opt/data/gsutil/gsutil",
         "GITHUB_RELEASE": "/opt/data/github-release/github-release",
         "HOEDOWN": "/opt/data/hoedown/hoedown",
-        "APT_GPG_KEY_NAME": "/opt/secrets/apt-key.sec.gpg",
+        "APT_GPG_KEY_PATH": "/opt/secrets/apt-key.sec.gpg",
         "APT_GPG_KEY_ID_FILE": "/opt/secrets/apt-key.id",
     },
     files = [":deploy-files"],
