@@ -83,6 +83,7 @@
 
 export GITHUB_TOKEN=$(cat $GITHUB_TOKEN_FILE)
 export GCS_BUCKET=bazel
+export APT_GPG_KEY_ID=$(cat "${APT_GPG_KEY_ID_FILE}")
 
 # URLs
 export GIT_REPOSITORY_URL=&quot;{{ variables.GITHUB_URL }}&quot;
