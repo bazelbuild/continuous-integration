@@ -5,3 +5,4 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 RUN apt-get install -y golang make
 RUN apt-get update
 RUN apt-get install -y jekyll
+RUN apt-get install -y reprepro
