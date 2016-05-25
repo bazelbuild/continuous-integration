@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+workspace(name = "io_bazel_ci")
 
 # Docker base images
 load("//base:docker_pull.bzl", "docker_pull")
@@ -21,7 +22,7 @@ load("//base:docker_pull.bzl", "docker_pull")
     tag = "local:ubuntu-wily-amd64" + ext,
 ) for ext in [
     "",
-    "-golang",
+    "-deploy",
     "-ssh",
 ]]
 
@@ -66,7 +67,7 @@ py_library(
 )
 
 new_http_archive(
-    name = "jinja2",
+    name = "org_pocoo_jinja_jinja2",
     build_file_content = """
 py_library(
     name = "jinja2",
@@ -85,7 +86,7 @@ py_library(
 
 # Our template engine use gflags
 new_git_repository(
-    name = "gflags",
+    name = "com_github_google_python_gflags",
     build_file_content = """
 py_library(
     name = "gflags",

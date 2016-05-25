@@ -4,8 +4,8 @@ py_binary(
     main = "main.py",
     visibility = ["//visibility:public"],
     deps = [
-        "@gflags//:gflags",
-        "@jinja2//:jinja2",
+        "@com_github_google_python_gflags//:gflags",
+        "@org_pocoo_jinja_jinja2//:jinja2",
     ],
 )
 

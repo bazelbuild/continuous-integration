@@ -40,6 +40,7 @@ BAZEL_JOBS = {
     "Tutorial": UNIX_PLATFORMS,
     "Bazel-Install": [],
     "Bazel-Install-Trigger": [],
+    "Bazel-Publish-Site": [],
 }
 
 JOBS = BAZEL_JOBS.keys() + GITHUB_JOBS + ["PR-" + k for k in GITHUB_JOBS]

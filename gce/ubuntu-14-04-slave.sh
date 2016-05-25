@@ -1,5 +1,3 @@
-#!/bin/bash
-#
 # Copyright 2015 The Bazel Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +19,7 @@ apt-get update
 apt-get install -y zip g++ zlib1g-dev wget git unzip python python3 curl realpath
 
 # Should accept the licence:
-apt-get install -y oracle-java8-installer
+yes | apt-get install -y oracle-java8-installer
 
 # Android SDK requires 32-bits libraries
 sudo dpkg --add-architecture i386

@@ -77,6 +77,14 @@ jenkins_node(
     "-4",
 ]]
 
+jenkins_node(
+    name = "ubuntu_15.10-x86_64-docker-1",
+    labels = [
+        "install-bazel",
+        "docker",
+    ],
+)
+
 # Non-release nodes
 [jenkins_node(
     name = "ubuntu_15.10-x86_64" + ext,
@@ -116,7 +124,7 @@ genrule(
 
 docker_build(
     name = "deploy-base",
-    base = "//base:ubuntu-wily-amd64-golang",
+    base = "//base:ubuntu-wily-amd64-deploy",
     directory = "/opt/data",
     env = {
         # We have to put those files on some secrets volume.
@@ -147,7 +155,7 @@ jenkins_node(
 
 jenkins_node(
     name = "ubuntu-docker",
-    base = "//base:ubuntu-wily-amd64-golang",
+    base = "//base:ubuntu-wily-amd64-deploy",
     labels = [
         "linux-x86_64",
         "install-bazel",
@@ -229,16 +237,17 @@ jenkins_build(
     configs = glob(["config/**"]) + [
         ":windows-x86_64-1",
         ":windows-x86_64-2",
-        ":ubuntu_14.04-x86_64-1",
-        ":ubuntu_15.10-x86_64-1",
         ":darwin-x86_64-1",
-        ":ubuntu_14.04-x86_64-2",
-        ":ubuntu_15.10-x86_64-2",
         ":darwin-x86_64-2",
+        ":ubuntu_14.04-x86_64-1",
+        ":ubuntu_14.04-x86_64-2",
         ":ubuntu_14.04-x86_64-3",
-        ":ubuntu_15.10-x86_64-3",
         ":ubuntu_14.04-x86_64-4",
+        ":ubuntu_15.10-x86_64-1",
+        ":ubuntu_15.10-x86_64-2",
+        ":ubuntu_15.10-x86_64-3",
         ":ubuntu_15.10-x86_64-4",
+        ":ubuntu_15.10-x86_64-docker-1",
         ":deploy",
     ],
     jobs = ["//jenkins/jobs"],

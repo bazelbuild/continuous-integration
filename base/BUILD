@@ -23,8 +23,8 @@ docker_build(
 
 # Image support golang and make
 docker_build(
-    name = "ubuntu-wily-amd64-golang",
-    base = "@ubuntu-wily-amd64-golang//:image",
+    name = "ubuntu-wily-amd64-deploy",
+    base = "@ubuntu-wily-amd64-deploy//:image",
 )
 
 # Support SSH for gerrit deployment

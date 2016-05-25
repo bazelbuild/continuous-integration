@@ -68,9 +68,9 @@
   <builders>
     <hudson.plugins.copyartifact.CopyArtifact plugin="{{ variables.JENKINS_PLUGIN_copyartifact }}">
       <project>Bazel</project>
-      <filter>**/ci/*</filter>
+      <filter>**/ci/*.bazel.io.tar</filter>
       <target>input</target>
-      <excludes>**/ci/bazel,**/*.bazel.io.tar</excludes>
+      <excludes/>
       <selector class="hudson.plugins.copyartifact.TriggeredBuildSelector">
         <fallbackToLastSuccessful>true</fallbackToLastSuccessful>
         <upstreamFilterStrategy>UseGlobalSetting</upstreamFilterStrategy>
@@ -80,63 +80,21 @@
     </hudson.plugins.copyartifact.CopyArtifact>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
-
-export GITHUB_TOKEN=$(cat $GITHUB_TOKEN_FILE)
-export GCS_BUCKET=bazel
-export APT_GPG_KEY_ID=$(cat "${APT_GPG_KEY_ID_FILE}")
-
-# URLs
-export GIT_REPOSITORY_URL=&quot;{{ variables.GITHUB_URL }}&quot;
-
 source scripts/ci/build.sh
 
+mkdir sites
 args=()
-for i in input/*; do
-  args+=(&quot;$(echo $i | cut -d &quot;=&quot; -f 3)&quot; &quot;$i&quot;)
+for i in $(find input -name '*.bazel.io.tar'); do
+  site=&quot;$(basename $i .tar)&quot;
+  if [ ! -f &quot;sites/${site}&quot; ]; then
+    touch &quot;sites/${site}&quot;
+    build_and_publish_site &quot;$i&quot; &quot;${site}&quot;
+  fi
 done
 
-bazel_release &quot;${args[@]}&quot;
-
-mkdir -p output/ci
-echo &quot;${RELEASE_EMAIL_RECIPIENT}&quot; &gt; output/ci/recipient
-echo &quot;${RELEASE_EMAIL_SUBJECT}&quot; &gt; output/ci/subject
-echo &quot;${RELEASE_EMAIL_CONTENT}&quot; &gt; output/ci/content
-echo &quot;To: ${RELEASE_EMAIL_RECIPIENT}&quot;
-echo &quot;Subject: ${RELEASE_EMAIL_SUBJECT}&quot;
-echo &quot;Content: ${RELEASE_EMAIL_CONTENT}&quot;</command>
+</command>
     </hudson.tasks.Shell>
   </builders>
-  <publishers>
-    <hudson.plugins.emailext.ExtendedEmailPublisher plugin="{{ variables.JENKINS_PLUGIN_email_ext }}">
-      <recipientList>${FILE, path=&quot;output/ci/recipient&quot;}</recipientList>
-      <configuredTriggers>
-        <hudson.plugins.emailext.plugins.trigger.SuccessTrigger>
-          <email>
-            <recipientList></recipientList>
-            <subject>$PROJECT_DEFAULT_SUBJECT</subject>
-            <body>$PROJECT_DEFAULT_CONTENT</body>
-            <recipientProviders>
-              <hudson.plugins.emailext.plugins.recipients.ListRecipientProvider/>
-            </recipientProviders>
-            <attachmentsPattern></attachmentsPattern>
-            <attachBuildLog>false</attachBuildLog>
-            <compressBuildLog>false</compressBuildLog>
-            <replyTo>$PROJECT_DEFAULT_REPLYTO</replyTo>
-            <contentType>project</contentType>
-          </email>
-        </hudson.plugins.emailext.plugins.trigger.SuccessTrigger>
-      </configuredTriggers>
-      <contentType>default</contentType>
-      <defaultSubject>${FILE, path=&quot;output/ci/subject&quot;}</defaultSubject>
-      <defaultContent>${FILE, path=&quot;output/ci/content&quot;}</defaultContent>
-      <attachmentsPattern></attachmentsPattern>
-      <presendScript></presendScript>
-      <attachBuildLog>false</attachBuildLog>
-      <compressBuildLog>false</compressBuildLog>
-      <replyTo>bazel-ci@googlegroups.com</replyTo>
-      <saveOutput>false</saveOutput>
-      <disabled>false</disabled>
-    </hudson.plugins.emailext.ExtendedEmailPublisher>
-  </publishers>
+  <publishers/>
   <buildWrappers/>
 </project>

@@ -133,7 +133,7 @@ fi
           <configs>
             <hudson.plugins.parameterizedtrigger.CurrentBuildParameters/>
           </configs>
-          <projects>Bazel-Install-Trigger</projects>
+          <projects>Bazel-Install-Trigger, Bazel-Publish-Site</projects>
           <condition>UNSTABLE_OR_BETTER</condition>
           <triggerWithNoParameters>false</triggerWithNoParameters>
         </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
