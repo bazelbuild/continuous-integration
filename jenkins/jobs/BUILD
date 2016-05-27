@@ -37,6 +37,30 @@ bazel_github_job(
 )
 
 bazel_github_job(
+    name = "bazel-docker-tests",
+    bazel_versions = [
+        "HEAD",
+        "latest",
+    ],
+    platforms = ["docker"],
+    project = "bazel",
+    org = "bazelbuild",
+    enable_trigger = False,
+    targets = [],
+    tests = ["//tools/cpp/test/..."],
+)
+
+bazel_github_job(
+    name = "continuous-integration",
+    bazel_versions = [
+        "HEAD",
+        "latest",
+    ],
+    platforms = ["docker"],
+    org = "bazelbuild",
+)
+
+bazel_github_job(
     name = "bazel-tests",
     bazel_versions = [
         "HEAD",

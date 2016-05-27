@@ -30,6 +30,8 @@ GITHUB_JOBS = [
     "protobuf",
     "dash",
     "bazel-tests",
+    "bazel-docker-tests",
+    "continuous-integration",
 ] + RULES.keys() + DISABLED_RULES
 
 BAZEL_JOBS = {

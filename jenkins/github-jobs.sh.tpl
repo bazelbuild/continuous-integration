@@ -67,6 +67,7 @@ echo
 set -x
 
 {{ variables.CONFIGURE }}
-TESTS="$(bazel query 'tests({{ variables.TESTS }})')"
+TESTS='{{ variables.TESTS }}'
+[ -z "${TESTS}" ] || TESTS="$(bazel query "tests(${TESTS})")"
 [ -z "{{ variables.BUILDS }}" ] || bazel build {{ variables.BUILDS }}
 [ -z "${TESTS}" ] || bazel test ${TESTS}
