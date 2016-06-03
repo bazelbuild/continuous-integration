@@ -26,6 +26,7 @@ docker_build(
 """)
   tag = repository_ctx.attr.tag
   if repository_ctx.attr.dockerfile:
+    dockerfile = repository_ctx.path(repository_ctx.attr.dockerfile)
     result = repository_ctx.execute([
         "docker",
         "build",
@@ -33,8 +34,8 @@ docker_build(
         "-t",
         tag,
         "-f",
-        repository_ctx.path(repository_ctx.attr.dockerfile),
-        "."
+        dockerfile,
+        dockerfile.dirname,
     ])
   else:
     result = repository_ctx.execute(["docker", "pull", tag])
