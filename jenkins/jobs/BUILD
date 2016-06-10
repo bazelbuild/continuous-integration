@@ -18,7 +18,7 @@ bazel_github_job(
     org = "tensorflow",
     platforms = LINUX_PLATFORMS,
     project_url = "https://tensorflow.org",
-    targets = [],
+    targets = ["//tensorflow/tools/pip_package:build_pip_package"],
     test_opts = [
         "--test_timeout=1800",
         "--test_output=errors",
