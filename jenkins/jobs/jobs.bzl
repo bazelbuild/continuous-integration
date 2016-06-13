@@ -17,8 +17,9 @@ RULES = {
     "rules_rust": UNIX_PLATFORMS,
     "rules_sass": UNIX_PLATFORMS,
     "rules_scala": UNIX_PLATFORMS,
-    # This is not really a rule, but it is simpler to put here.
+    # These are not really rules, but it is simpler to put here.
     "skydoc": UNIX_PLATFORMS,
+    "buildifier": UNIX_PLATFORMS,
 }
 
 DISABLED_RULES = []
