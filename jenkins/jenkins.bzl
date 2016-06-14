@@ -200,7 +200,7 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
                      bazel_versions=["HEAD", "latest"],
                      tests=["//..."], targets=["//..."], substitutions={},
                      test_opts=["--test_output=errors", "--build_tests_only"],
-                     test_tag_filters=["-noci"],
+                     test_tag_filters=["-noci", "-manual"],
                      build_opts=["--verbose_failures"],
                      test_platforms=["linux-x86_64"],
                      enable_trigger=True,
