@@ -136,6 +136,10 @@ JENKINS_PLUGINS = {
     ],
     "ghprb": [
         "1.31.4",
-        "",
+        "6085e0e3e19a817920087dc3a63cfcd2e9aa96f81b0dce339ef85093bed60e35",
+    ],
+    "build-flow-plugin": [
+        "0.19",
+        "4e26bb0335f5c86155e6b72304a35ccabf464f764976ed21a3f24288f993fb03",
     ],
 }

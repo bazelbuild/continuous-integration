@@ -24,16 +24,19 @@ RULES = {
 
 DISABLED_RULES = []
 
+GERRIT_JOBS = [
+    "bazel-tests",
+    "bazel-docker-tests",
+    "continuous-integration",
+]
+
 GITHUB_JOBS = [
     "TensorFlow",
     "TensorFlow_Serving",
     "re2",
     "protobuf",
     "dash",
-    "bazel-tests",
-    "bazel-docker-tests",
-    "continuous-integration",
-] + RULES.keys() + DISABLED_RULES
+] + GERRIT_JOBS + RULES.keys() + DISABLED_RULES
 
 BAZEL_JOBS = {
     "Bazel": UNIX_PLATFORMS + ["windows-x86_64"],
@@ -46,7 +49,9 @@ BAZEL_JOBS = {
     "Bazel-Publish-Site": [],
 }
 
-JOBS = BAZEL_JOBS.keys() + GITHUB_JOBS + ["PR-" + k for k in GITHUB_JOBS]
+JOBS = BAZEL_JOBS.keys() + GITHUB_JOBS + [
+    "PR-" + k for k in GITHUB_JOBS] + [
+        "Gerrit-" + j for j in GERRIT_JOBS]
 
 JOBS_SUBSTITUTIONS = {
     "GITHUB_JOBS": ", ".join(GITHUB_JOBS),

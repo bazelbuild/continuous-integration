@@ -42,10 +42,11 @@ bazel_github_job(
         "HEAD",
         "latest",
     ],
+    enable_trigger = False,
+    gerrit_project = "bazel",
+    org = "bazelbuild",
     platforms = ["docker"],
     project = "bazel",
-    org = "bazelbuild",
-    enable_trigger = False,
     targets = [],
     tests = ["//tools/cpp/test/..."],
 )
@@ -56,8 +57,9 @@ bazel_github_job(
         "HEAD",
         "latest",
     ],
-    platforms = ["docker"],
+    gerrit_project = "continuous-integration",
     org = "bazelbuild",
+    platforms = ["docker"],
 )
 
 bazel_github_job(
@@ -72,10 +74,11 @@ bazel_github_job(
         "source scripts/ci/build.sh",
         "setup_android_repositories",
     ],
+    enable_trigger = False,
+    gerrit_project = "bazel",
+    org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
     project = "bazel",
-    org = "bazelbuild",
-    enable_trigger = False,
     targets = [],
     test_opts = [
         "-k",
@@ -127,6 +130,7 @@ filegroup(
 
 filegroup(
     name = "test-jobs",
-    srcs = [j + "-test" for j in JOBS],
+    # We include all test but the docker ones (they needs access to the docker server).
+    srcs = [j + "-test" for j in JOBS if not "docker" in j],
     visibility = ["//jenkins:__pkg__"],
 )

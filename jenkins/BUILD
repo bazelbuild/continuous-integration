@@ -14,7 +14,7 @@
 
 # Configuration for our Jenkins instance
 load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
-load(":jenkins.bzl", "jenkins_node", "jenkins_build")
+load(":jenkins.bzl", "jenkins_node", "jenkins_build", "jenkins_job")
 load("//jenkins/jobs:jobs.bzl", "JOBS_SUBSTITUTIONS")
 
 exports_files(glob(["github-jobs*.tpl"]))
@@ -150,6 +150,7 @@ docker_build(
 jenkins_node(
     name = "deploy",
     base = "deploy-full",
+    num_executors = 2,
     visibility = ["//visibility:public"],
 )
 
@@ -161,6 +162,14 @@ jenkins_node(
         "install-bazel",
         "safe",
     ],
+)
+
+# Jenkins job for Gerrit vetting
+jenkins_job(
+    name = "gerrit-verifier-flow",
+    config = "gerrit-verifier-flow.xml.tpl",
+    project_url = "https://bazel-review.googlesource.com",
+    deps = ["gerrit-verifier-flow.groovy"],
 )
 
 #
@@ -250,7 +259,10 @@ jenkins_build(
         ":ubuntu_15.10-x86_64-docker-1",
         ":deploy",
     ],
-    jobs = ["//jenkins/jobs"],
+    jobs = [
+        "//jenkins/jobs",
+        ":gerrit-verifier-flow",
+    ],
     substitutions = {
         "SECURITY_CONFIG": SECURITY_CONFIG,
         "PUBLIC_JENKINS_URL": "http://ci.bazel.io/",
@@ -266,7 +278,10 @@ jenkins_build(
         ":ubuntu-docker",
         ":deploy",
     ],
-    jobs = ["//jenkins/jobs:test-jobs"],
+    jobs = [
+        "//jenkins/jobs:test-jobs",
+        ":gerrit-verifier-flow",
+    ],
     substitutions = {
         "SECURITY_CONFIG": "<useSecurity>false</useSecurity>",
         "PUBLIC_JENKINS_URL": "##ENV:JENKINS_SERVER##",

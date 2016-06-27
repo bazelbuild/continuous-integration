@@ -204,6 +204,7 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
                      build_opts=["--verbose_failures"],
                      test_platforms=["linux-x86_64"],
                      enable_trigger=True,
+                     gerrit_project=None,
                      enabled=True):
   """Create a generic github job configuration to build against Bazel head."""
   if not project:
@@ -221,6 +222,7 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
     "BAZEL_VERSIONS": "\n".join(bazel_versions),
     "disabled": str(not enabled).lower(),
     "enable_trigger": str(enable_trigger).lower(),
+    "GERRIT_PROJECT": str(gerrit_project),
   }
 
   jenkins_job(
@@ -249,6 +251,21 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
       project_url=project_url,
       platforms=platforms,
       test_platforms=test_platforms)
+  if gerrit_project != None:
+    jenkins_job(
+        name = "Gerrit-" + name,
+        config = "//jenkins:github-jobs-Gerrit.xml.tpl",
+        deps = [
+            "//jenkins:github-jobs.sh.tpl",
+            "//jenkins:github-jobs.test-logs.sh.tpl",
+        ],
+        substitutions=substitutions,
+        project=project,
+        org=org,
+        project_url=project_url,
+        platforms=platforms,
+        test_platforms=test_platforms)
+
 
 def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1,
                  labels = [], base = None, preference = 1, visibility = None):
