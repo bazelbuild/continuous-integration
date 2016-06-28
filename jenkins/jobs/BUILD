@@ -42,8 +42,8 @@ bazel_github_job(
         "HEAD",
         "latest",
     ],
+    pr_enabled = False,  # Do not vet PR because those tests are slow.
     enable_trigger = False,
-    gerrit_project = "bazel",
     org = "bazelbuild",
     platforms = ["docker"],
     project = "bazel",

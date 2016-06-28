@@ -205,7 +205,8 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
                      test_platforms=["linux-x86_64"],
                      enable_trigger=True,
                      gerrit_project=None,
-                     enabled=True):
+                     enabled=True,
+                     pr_enabled=True):
   """Create a generic github job configuration to build against Bazel head."""
   if not project:
     project = name
@@ -238,19 +239,20 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
       project_url=project_url,
       platforms=platforms,
       test_platforms=test_platforms)
-  jenkins_job(
-      name = "PR-" + name,
-      config = "//jenkins:github-jobs-PR.xml.tpl",
-      deps = [
-          "//jenkins:github-jobs.sh.tpl",
-          "//jenkins:github-jobs.test-logs.sh.tpl",
-      ],
-      substitutions=substitutions,
-      project=project,
-      org=org,
-      project_url=project_url,
-      platforms=platforms,
-      test_platforms=test_platforms)
+  if pr_enabled:
+    jenkins_job(
+        name = "PR-" + name,
+        config = "//jenkins:github-jobs-PR.xml.tpl",
+        deps = [
+            "//jenkins:github-jobs.sh.tpl",
+            "//jenkins:github-jobs.test-logs.sh.tpl",
+        ],
+        substitutions=substitutions,
+        project=project,
+        org=org,
+        project_url=project_url,
+        platforms=platforms,
+        test_platforms=test_platforms)
   if gerrit_project != None:
     jenkins_job(
         name = "Gerrit-" + name,

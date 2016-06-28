@@ -44,6 +44,11 @@ function replace_secrets() {
 }
 export -f replace_secrets
 
+# Remove existing jobs configuration so we delete jobs
+rm -f /var/jenkins_home/jobs/*/config.xml
+# Same for nodes
+rm -rf /var/jenkins_home/nodes
+
 # Copy the configuration files provided in the docker image
 (cd /usr/share/jenkins/ref && \
     find ./ -type f -exec bash -c \
