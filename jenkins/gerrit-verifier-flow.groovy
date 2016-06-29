@@ -125,6 +125,7 @@ def getVerified(result) {
     case Result.SUCCESS:
       return +1;
     case Result.FAILURE:
+    case Result.UNSTABLE:
       return -1;
     default:
       return 0;
