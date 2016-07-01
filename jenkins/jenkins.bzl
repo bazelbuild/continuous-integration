@@ -239,6 +239,8 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
       project_url=project_url,
       platforms=platforms,
       test_platforms=test_platforms)
+  substitutions["BAZEL_VERSIONS"] = "\n".join([
+      v for v in bazel_versions if not v.startswith("HEAD")])
   if pr_enabled:
     jenkins_job(
         name = "PR-" + name,
