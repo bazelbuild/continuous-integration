@@ -92,7 +92,7 @@ source scripts/ci/build.sh
 export BUILD_BY=&quot;Jenkins&quot;
 export BUILD_LOG=&quot;${BUILD_URL}&quot;
 export GIT_REPOSITORY_URL=&quot;${GIT_URL}&quot;
-export BAZEL_COMPILE_TARGET=&quot;compile,determinism&quot;
+export BAZEL_COMPILE_TARGET=&quot;compile,srcs,determinism&quot;
 
 if [[ &quot;${NODE_LABELS}&quot; =~ &quot;no-release&quot; ]]; then
   bazel_build
