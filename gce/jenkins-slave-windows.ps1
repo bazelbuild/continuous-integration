@@ -10,12 +10,26 @@ Set-Location c:\bazel_ci
 # Install Chocolatey
 Invoke-Expression ((New-Object Net.WebClient).DownloadString("https://chocolatey.org/install.ps1"))
 
+# Initialize msys
+$msysRoot='c:\tools\msys64\'
+
+# Finally initialize and upgrade MSYS2 according to https://msys2.github.io
+Write-Host "Initializing MSYS2..."
+$msysShell = Join-Path $msysRoot msys2_shell.bat
+Start-Process -Wait $msysShell -ArgumentList '-c', exit
+
+$command = 'pacman --noconfirm --needed -Sy bash pacman pacman-mirrors msys2-runtime'
+Write-Host "Updating system packages with '$command'..."
+Start-Process -Wait $msysShell -ArgumentList '-c', "'$command'"
+
+$command = 'pacman --noconfirm -Su'
+Write-Host "Upgrading full system with '$command'..."
+Start-Process -Wait $msysShell -ArgumentList '-c', "'$command'"
+
 # Install all the Windows software we need:
-#   - msys2 because Bazel currently depends on it
-#   - JDK, because, well, Bazel is written in Java
+#   - JDK, because, Bazel is written in Java
 #   - NSSM, because that's the easiest way to create services
 #   - Chrome, because the default IE setup is way too crippled by security measures
-& choco install msys2 -y
 & choco install nssm -y
 & choco install jdk8 -y
 & choco install googlechrome -y

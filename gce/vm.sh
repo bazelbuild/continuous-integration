@@ -42,8 +42,8 @@ SLAVES=(
     "ubuntu-15-10-slave-4 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-4 europe-west1-c startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
     "ubuntu-docker-slave-1 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-docker-1 us-east1-c startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh ubuntu-15-10-docker.sh linux-android.sh cleanup-install.sh"
     # Fow Windows, we use a custom image with pre-installed MSVC.
-    "windows-slave-1 /bazel-public/windows-server-2012-r2-dc-v20160112-vs2015-cpp-python windows-x86_64-1 europe-west1-c windows-startup-script-ps1=jenkins-slave-windows.ps1"
-    "windows-slave-2 /bazel-public/windows-server-2012-r2-dc-v20160112-vs2015-cpp-python windows-x86_64-2 europe-west1-c windows-startup-script-ps1=jenkins-slave-windows.ps1"
+    "windows-slave-1 /bazel-public/windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-1 europe-west1-c windows-startup-script-ps1=jenkins-slave-windows.ps1"
+    "windows-slave-2 /bazel-public/windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-2 europe-west1-c windows-startup-script-ps1=jenkins-slave-windows.ps1"
 )
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
