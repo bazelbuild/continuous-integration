@@ -26,6 +26,13 @@ $command = 'pacman --noconfirm -Su'
 Write-Host "Upgrading full system with '$command'..."
 Start-Process -Wait $msysShell -ArgumentList '-c', "'$command'"
 
+# Download and install Python
+New-Item c:\temp -type directory
+(New-Object Net.WebClient).DownloadFile("https://www.python.org/ftp/python/2.7.11/python-2.7.11.amd64.msi",
+                                        "c:\temp\python-2.7.11.amd64.msi")
+& msiexec /qn TARGETDIR=c:\python_27_amd64\files\ /i c:\temp\python-2.7.11.amd64.msi
+
+
 # Install all the Windows software we need:
 #   - JDK, because, Bazel is written in Java
 #   - NSSM, because that's the easiest way to create services
