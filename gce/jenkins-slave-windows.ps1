@@ -32,6 +32,8 @@ New-Item c:\temp -type directory
                                         "c:\temp\python-2.7.11.amd64.msi")
 & msiexec /qn TARGETDIR=c:\python_27_amd64\files\ /i c:\temp\python-2.7.11.amd64.msi
 
+[Environment]::SetEnvironmentVariable("Path", $env:Path + ";c:\python_27_amd64\files",
+                                      [System.EnvironmentVariableTarget]::Machine)
 
 # Install all the Windows software we need:
 #   - JDK, because, Bazel is written in Java
