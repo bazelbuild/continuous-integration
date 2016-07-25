@@ -42,10 +42,10 @@ bazel_github_job(
         "HEAD",
         "latest",
     ],
+    pr_enabled = False,  # Do not vet PR because those tests are slow.
     enable_trigger = False,
     org = "bazelbuild",
     platforms = ["docker"],
-    pr_enabled = False,  # Do not vet PR because those tests are slow.
     project = "bazel",
     targets = [],
     tests = ["//tools/cpp/test/..."],
@@ -67,6 +67,8 @@ bazel_github_job(
     bazel_versions = [
         "HEAD",
         "HEAD-jdk7",
+        "latest",
+        "latest-jdk7",
     ],
     configure = [
         "source scripts/ci/build.sh",

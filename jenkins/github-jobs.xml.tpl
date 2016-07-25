@@ -16,7 +16,7 @@
 -->
 <matrix-project plugin="{{ variables.JENKINS_PLUGIN_matrix_project }}">
   <actions/>
-  <description>Test the {{ variables.PROJECT_NAME }} project still build and pass tests.</description>
+  <description>Test the {{ variables.PROJECT_NAME }} project still build with Bazel at head and latest release.</description>
   <keepDependencies>false</keepDependencies>
   <properties>
     <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="{{ variables.JENKINS_PLUGIN_github }}">
@@ -111,3 +111,4 @@
     <runSequentially>false</runSequentially>
   </executionStrategy>
 </matrix-project>
+
