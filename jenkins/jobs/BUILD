@@ -7,7 +7,7 @@ load(":jobs.bzl", "LINUX_PLATFORMS", "UNIX_PLATFORMS", "RULES", "DISABLED_RULES"
     platforms = BAZEL_JOBS[job],
     project_url = "http://bazel.io",
     substitutions = JOBS_SUBSTITUTIONS,
-    deps = glob(["%s.sh.tpl" % job]),
+    deps = glob(["%s.*.tpl" % job]),
 ) for job in BAZEL_JOBS.keys()]
 
 # TODO(dmarting): activate Tensorflow on mac (missing dependencies)

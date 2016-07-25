@@ -38,7 +38,7 @@
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
     <hudson.plugins.copyartifact.CopyArtifact plugin="{{ variables.JENKINS_PLUGIN_copyartifact }}">
       <project>Bazel</project>
-      <filter>**/ci/*installer*.sh</filter>
+      <filter>**/ci/*installer*.sh,**/ci/bazel.exe</filter>
       <target>bazel-installer</target>
       <excludes></excludes>
       <selector class="hudson.plugins.copyartifact.TriggeredBuildSelector">
@@ -63,8 +63,7 @@
         <label>${PLATFORM_NAME}</label>
       </condition>
       <buildStep class="hudson.tasks.BatchFile">
-	<!-- TODO(dmarting): We should install correctly on windows too. -->
-        <command></command>
+        <command>{{ imports['//jenkins/jobs:Bazel-Install.bat.tpl'] }}</command>
       </buildStep>
       <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
