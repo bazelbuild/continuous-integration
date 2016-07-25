@@ -59,23 +59,10 @@ function bazel() {
   fi
 }
 
-OUTPUT_BASE=$(bazel info output_base)
-INSTALL_BASE=$(bazel info install_base)
-
-echo "Output base: ${OUTPUT_BASE}"
-echo "Install base: ${INSTALL_BASE}"
-echo "Bazel version:"
+echo "==== bazel version ===="
 bazel version
 echo
 echo
-
-function cleanup() {
-  if [[ "${OUTPUT_BASE}" != "" ]]; then
-    rm -fr "${OUTPUT_BASE}";
-  fi
-}
-
-trap cleanup EXIT
 
 set -x
 
