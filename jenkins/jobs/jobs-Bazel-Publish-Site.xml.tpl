@@ -78,8 +78,13 @@
       <flatten>true</flatten>
       <doNotFingerprintArtifacts>false</doNotFingerprintArtifacts>
     </hudson.plugins.copyartifact.CopyArtifact>
-    <hudson.tasks.Shell>
-      <command>#!/bin/bash
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
+      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
+        <expression>origin/master</expression>
+        <label>${REF_SPEC}</label>
+      </condition>
+      <buildStep class="hudson.tasks.Shell">
+        <command>#!/bin/bash
 source scripts/ci/build.sh
 
 mkdir sites
@@ -92,8 +97,9 @@ for i in $(find input -name '*.bazel.io.tar'); do
   fi
 done
 
-</command>
-    </hudson.tasks.Shell>
+        </command>
+      </buildStep>
+    </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
   </builders>
   <publishers/>
   <buildWrappers/>
