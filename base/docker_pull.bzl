@@ -40,9 +40,9 @@ docker_build(
   else:
     result = repository_ctx.execute(["docker", "pull", tag])
   if result.return_code:
-    fail("docker pull failed with error code %s:\n%s" % (
+    fail("docker build failed with error code %s:\n%s" % (
         result.return_code,
-        result.stderr))
+        result.stdout + result.stderr))
   result = repository_ctx.execute([
       "docker", "save", "-o", repository_ctx.path("base.tar"), tag])
   if result.return_code:
