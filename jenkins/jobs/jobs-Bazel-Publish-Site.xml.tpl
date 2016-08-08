@@ -96,9 +96,9 @@ for i in $(find input -name '*.bazel.io.tar'); do
     build_and_publish_site &quot;$i&quot; &quot;${site}&quot;
   fi
 done
-
         </command>
       </buildStep>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
   </builders>
   <publishers/>
