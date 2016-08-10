@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: jenkins-staging
+spec:
+  containers:
+    - name: jenkins-master-staging
+      image: gcr.io/bazel-public/jenkins-master-staging
+      imagePullPolicy: Always
+      volumeMounts:
+        - name: jenkins-home
+          mountPath: /var/jenkins_home
+          readOnly: false
+        - name: secrets
+          mountPath: /opt/secrets
+          readOnly: true
+      ports:
+        - name: www
+          containerPort: 8080
+          hostPort: 80
+          protocol: TCP
+        - name: jenkins-slave
+          containerPort: 50000
+          hostPort: 50000
+          protocol: TCP
+    - name: sync-gerrit-github
+      image: gcr.io/bazel-public/sync-gerrit-github
+      imagePullPolicy: Always
+      volumeMounts:
+        - name: secrets
+          mountPath: /opt/secrets
+          readOnly: true
+  restartPolicy: Always
+  dnsPolicy: Default
+  volumes:
+    - name: jenkins-home
+      hostPath:
+        path: /volumes/jenkins_home
+    - name: secrets
+      hostPath:
+        path: /volumes/secrets
