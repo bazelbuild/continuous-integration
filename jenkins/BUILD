@@ -101,6 +101,17 @@ jenkins_node(
     "-4",
 ]]
 
+
+jenkins_node(
+    name = "ubuntu_15.10-x86_64-staging",
+    labels = [
+        "ubuntu_15.10-x86_64",
+        "no-release",
+        "install-bazel",
+        "safe",
+    ],
+)
+
 #
 # A deploy slave used for release work and syncing
 # our repositories.
@@ -243,7 +254,8 @@ SECURITY_CONFIG = """
 #
 jenkins_build(
     name = "jenkins",
-    configs = glob(["config/**"]) + [
+    configs = [
+        ":jenkins-common-configs",
         ":windows-x86_64-1",
         ":windows-x86_64-2",
         ":darwin-x86_64-1",
@@ -270,11 +282,28 @@ jenkins_build(
     visibility = ["//visibility:public"],
 )
 
+jenkins_build(
+    name = "jenkins-staging",
+    configs = [
+        ":jenkins-common-configs",
+        ":ubuntu_15.10-x86_64-staging",
+    ],
+    jobs = [
+        "//jenkins/jobs:staging-jobs",
+    ],
+    substitutions = {
+        "SECURITY_CONFIG": SECURITY_CONFIG,
+        "PUBLIC_JENKINS_URL": "http://ci-staging.bazel.io/",
+    } + JOBS_SUBSTITUTIONS,
+    visibility = ["//gcr:__pkg__"],
+)
+
 #
 # A jenkins image for testing purpose
 jenkins_build(
     name = "jenkins-test",
-    configs = glob(["config/**"]) + [
+    configs = [
+        ":jenkins-common-configs",
         ":ubuntu-docker",
         ":deploy",
     ],
@@ -286,6 +315,11 @@ jenkins_build(
         "SECURITY_CONFIG": "<useSecurity>false</useSecurity>",
         "PUBLIC_JENKINS_URL": "##ENV:JENKINS_SERVER##",
     } + JOBS_SUBSTITUTIONS,
+)
+
+filegroup(
+    name = "jenkins-common-configs",
+    srcs = glob(["config/**"]),
 )
 
 sh_binary(
