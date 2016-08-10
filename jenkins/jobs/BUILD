@@ -1,5 +1,7 @@
 load("//jenkins:jenkins.bzl", "jenkins_job", "bazel_github_job")
-load(":jobs.bzl", "LINUX_PLATFORMS", "UNIX_PLATFORMS", "RULES", "DISABLED_RULES", "BAZEL_JOBS", "JOBS", "JOBS_SUBSTITUTIONS")
+load(":jobs.bzl", "LINUX_PLATFORMS", "UNIX_PLATFORMS", "RULES",
+     "DISABLED_RULES", "BAZEL_JOBS", "JOBS", "JOBS_SUBSTITUTIONS",
+     "STAGING_JOBS")
 
 [jenkins_job(
     name = job,
@@ -125,6 +127,12 @@ bazel_github_job(
 filegroup(
     name = "jobs",
     srcs = JOBS,
+    visibility = ["//jenkins:__pkg__"],
+)
+
+filegroup(
+    name = "staging-jobs",
+    srcs = STAGING_JOBS,
     visibility = ["//jenkins:__pkg__"],
 )
 

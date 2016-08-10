@@ -58,3 +58,5 @@ JOBS_SUBSTITUTIONS = {
     "GITHUB_JOBS": ", ".join(GITHUB_JOBS + NO_PR_JOBS),
     "BAZEL_JOBS": ", ".join(BAZEL_JOBS.keys()),
 }
+
+STAGING_JOBS = BAZEL_JOBS.keys()
