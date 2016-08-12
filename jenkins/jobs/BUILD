@@ -16,7 +16,7 @@ load(":jobs.bzl", "LINUX_PLATFORMS", "UNIX_PLATFORMS", "RULES",
 bazel_github_job(
     name = "TensorFlow",
     build_opts = ["-c opt"],
-    configure = ["./configure"],
+    configure = ["./tensorflow/tools/ci_build/builds/configured CPU"],
     org = "tensorflow",
     platforms = LINUX_PLATFORMS,
     project_url = "https://tensorflow.org",
@@ -30,7 +30,7 @@ bazel_github_job(
 
 bazel_github_job(
     name = "TensorFlow_Serving",
-    configure = ["(cd tensorflow && ./configure)"],
+    configure = ["(cd tensorflow && ./tensorflow/tools/ci_build/builds/configured CPU)"],
     org = "tensorflow",
     platforms = LINUX_PLATFORMS,
     project = "serving",
