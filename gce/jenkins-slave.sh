@@ -49,7 +49,7 @@ function get_slave_agent() {
   wget -nc http://jenkins/jnlpJars/slave.jar || return 1
   wget -nc http://jenkins/computer/${NODE_NAME}/slave-agent.jnlp || return 1
   chmod a+r slave-agent.jnlp
-  sed -i.bak -E "s|http://ci(-staging?)\.bazel\.io/|http://jenkins/|g" slave-agent.jnlp
+  sed -i.bak "s|http://ci\(-staging\)\?\.bazel\.io/|http://jenkins/|g" slave-agent.jnlp
 }
 
 # Run jenkins slave agent
