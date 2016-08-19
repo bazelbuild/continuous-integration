@@ -39,9 +39,9 @@ New-Item c:\temp -type directory
 #   - JDK, because, Bazel is written in Java
 #   - NSSM, because that's the easiest way to create services
 #   - Chrome, because the default IE setup is way too crippled by security measures
-& choco install nssm -y
-& choco install jdk8 -y
-& choco install googlechrome -y
+& choco install nssm -y --allow-empty-checksums
+& choco install jdk8 -y --allow-empty-checksums
+& choco install googlechrome -y --allow-empty-checksums
 
 # Save the Jenkins slave.jar to a suitable location
 Invoke-WebRequest http://jenkins/jnlpJars/slave.jar -OutFile slave.jar
