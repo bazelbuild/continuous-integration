@@ -46,6 +46,10 @@ SLAVES=(
     "windows-slave-2 /bazel-public/windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-2 europe-west1-c windows-startup-script-ps1=jenkins-slave-windows.ps1"
 )
 
+MASTER_NAME=jenkins
+MASTER_LOCATION=us-central1-a
+MASTER_METADATA="google-container-manifest=jenkins.yml,startup-script=mount-volumes.sh"
+
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 # Test whether $1 is the name of an existing instance on GCE
@@ -55,10 +59,10 @@ function test_vm() {
 
 # Create the container engine VM containing the jenkins instance.
 function create_master() {
-  gcloud compute instances create jenkins --tags jenkins \
-         --zone us-central1-a --machine-type n1-standard-4 \
+  gcloud compute instances create $MASTER_NAME --tags $MASTER_NAME \
+         --zone $MASTER_LOCATION --machine-type n1-standard-4 \
          --image container-vm \
-         --metadata-from-file google-container-manifest=jenkins.yml,startup-script=mount-volumes.sh \
+         --metadata-from-file $MASTER_METADATA \
          --boot-disk-type pd-ssd --boot-disk-size 40GB \
          --address ci --disk name=jenkins-volumes,device-name=volumes
 }
@@ -136,6 +140,37 @@ function create_slave() {
   esac
 }
 
+# Updates the --metadata and --metadata-from-file values of an existing VM.
+#
+# Primary purpose is to propagate changes to the startup scripts (e.g.
+# mount-volumes.sh for master, jenkins-slave.sh for Ubuntu slaves, etc.) without
+# recreating the VM. The update needs a VM reboot to take effect.
+#
+# The gcloud command takes a few moments to complete so it is started as a
+# background job. Wait on its PID or job number (or %?gcloud) before exiting
+# this script.
+function update_metadata() {
+  local tag=$MASTER_NAME
+  local metadata_flag=""
+  local location=$MASTER_LOCATION
+  local startup_metadata=$MASTER_METADATA
+
+  if [ ! "$1" = "jenkins" ]; then
+    local args="$(get_slave_by_name "$1")"
+    [ -n "$args" ] || (echo "Unknown vm $1" >&2; exit 1)
+
+    tag="$(echo $args | cut -d' ' -f1)"
+    metadata_flag="--metadata jenkins_node=$(echo $args | cut -d' ' -f3)"
+    location="$(echo $args | cut -d' ' -f4)"
+    startup_metadata="$(echo $args | cut -d' ' -f5)"
+  fi
+
+  gcloud compute instances add-metadata "$tag" \
+      --zone "$location" \
+      $metadata_flag \
+      --metadata-from-file "$startup_metadata" &
+}
+
 function get_slave_by_name() {
   for i in "${SLAVES[@]}"; do
     if [[ "$i" =~ ^"$1 " ]]; then
@@ -167,6 +202,7 @@ function action() {
       $action "$i"
     done
   fi
+  wait %?gcloud 2>/dev/null
 }
 
 function delete_vm() {
@@ -191,8 +227,11 @@ case "${command}" in
     action delete_vm "$@"
     action create_vm "$@"
     ;;
+  "update_metadata")
+    action update_metadata "$@"
+    ;;
   *)
-    echo "Usage: $0 (create|delete|reimage) [vm ... vm]" >&2
+    echo "Usage: $0 (create|delete|reimage|update_metadata) [vm ... vm]" >&2
     exit 1
     ;;
 esac
