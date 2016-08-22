@@ -80,7 +80,7 @@
     </hudson.plugins.copyartifact.CopyArtifact>
     <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
       <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
-        <expression>origin/master</expression>
+        <expression>.*/master$</expression>
         <label>${REF_SPEC}</label>
       </condition>
       <buildStep class="hudson.tasks.Shell">
