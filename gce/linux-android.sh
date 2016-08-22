@@ -22,5 +22,12 @@ chmod +x android-ndk.bin
 # Android SDK
 curl -o android-sdk.tgz http://dl.google.com/android/android-sdk_r24.3.4-linux.tgz
 tar zxf android-sdk.tgz
-echo y | (cd android-sdk-linux && tools/android update sdk --no-ui --all -t tools,platform,platform-tool)
+expect -c '
+set timeout -1;
+spawn /home/ci/android/android-sdk-linux/tools/android update sdk --no-ui;
+expect {
+    "Do you accept the license" { exp_send "y\r" ; exp_continue }
+    eof
+}
+'
 chown -R ci /home/ci/android
