@@ -59,4 +59,4 @@ JOBS_SUBSTITUTIONS = {
     "BAZEL_JOBS": ", ".join(BAZEL_JOBS.keys()),
 }
 
-STAGING_JOBS = BAZEL_JOBS.keys()
+STAGING_JOBS = BAZEL_JOBS.keys() + GERRIT_JOBS + ["TensorFlow"]
