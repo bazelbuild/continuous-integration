@@ -28,5 +28,5 @@ sudo apt-get -qqy install libncurses5:i386 libstdc++6:i386 zlib1g:i386
 sudo apt-get -y install expect  # Needed to 'yes' the SDK licenses.
 
 # Dependencies for TensorFlow
-sudo apt-get -y install python-numpy swig python-dev python-pip
+sudo apt-get -y install python-numpy swig python-dev python-pip libcurl3-dev
 sudo pip install mock
