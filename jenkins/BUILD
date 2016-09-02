@@ -24,25 +24,25 @@ exports_files(glob(["github-jobs*.tpl"]))
 #
 
 # Physical machines
-jenkins_node(
-    name = "darwin-x86_64-1",
+[jenkins_node(
+    name = "darwin-x86_64-%s" % k,
     labels = [
         "darwin-x86_64",
         "install-bazel",
         "safe",
     ],
+    num_executors = 4,
+    preference = 4,
     remote_fs = "/Users/ci",
-)
+) for k in ["1", "2"]]
 
 jenkins_node(
-    name = "darwin-x86_64-2",
+    name = "darwin-x86_64-staging",
     labels = [
         "darwin-x86_64",
         "install-bazel",
         "safe",
     ],
-    num_executors = 3,
-    preference = 4,
     remote_fs = "/Users/ci",
 )
 
@@ -60,6 +60,7 @@ jenkins_node(
 ) for ext in [
     "-1",
     "-2",
+    "-staging",
 ]]
 
 [jenkins_node(
@@ -75,15 +76,19 @@ jenkins_node(
     "-2",
     "-3",
     "-4",
+    "-staging",
 ]]
 
-jenkins_node(
-    name = "ubuntu_15.10-x86_64-docker-1",
+[jenkins_node(
+    name = "ubuntu_15.10-x86_64-docker" + ext,
     labels = [
         "install-bazel",
         "docker",
     ],
-)
+) for ext in [
+    "-1",
+    "-staging",
+]]
 
 # Non-release nodes
 [jenkins_node(
@@ -99,18 +104,8 @@ jenkins_node(
     "-2",
     "-3",
     "-4",
+    "-staging",
 ]]
-
-
-jenkins_node(
-    name = "ubuntu_15.10-x86_64-staging",
-    labels = [
-        "ubuntu_15.10-x86_64",
-        "no-release",
-        "install-bazel",
-        "safe",
-    ],
-)
 
 #
 # A deploy slave used for release work and syncing
@@ -286,7 +281,11 @@ jenkins_build(
     name = "jenkins-staging",
     configs = [
         ":jenkins-common-configs",
+        ":windows-x86_64-staging",
+        ":darwin-x86_64-staging",
+        ":ubuntu_14.04-x86_64-staging",
         ":ubuntu_15.10-x86_64-staging",
+        ":ubuntu_15.10-x86_64-docker-staging",
     ],
     jobs = [
         "//jenkins/jobs:staging-jobs",

@@ -43,8 +43,15 @@ New-Item c:\temp -type directory
 & choco install jdk8 -y --allow-empty-checksums
 & choco install googlechrome -y --allow-empty-checksums
 
+# Fetch the instance ID from GCE
+$webclient=(New-Object Net.WebClient)
+$webclient.Headers.Add("Metadata-Flavor", "Google")
+$jenkins_node=$webclient.DownloadString("http://metadata/computeMetadata/v1/instance/attributes/jenkins_node")
+if ($jenkins_node -match '.*-staging$') {$jenkins_master='jenkins-staging'}
+else {$jenkins_master='jenkins'}
+
 # Save the Jenkins slave.jar to a suitable location
-Invoke-WebRequest http://jenkins/jnlpJars/slave.jar -OutFile slave.jar
+Invoke-WebRequest http://${jenkins_master}/jnlpJars/slave.jar -OutFile slave.jar
 
 # Install the necessary packages in msys2
 $bash_installer=@'
@@ -58,16 +65,11 @@ Write-Output $bash_installer | Out-File -Encoding ascii install.sh
 # Find the JDK. The path changes frequently, so hardcoding it is not enough.
 $java=Get-ChildItem "c:\Program Files\Java\jdk*" | Select-Object -Index 0 | foreach { $_.FullName }
 
-# Fetch the instance ID from GCE
-$webclient=(New-Object Net.WebClient)
-$webclient.Headers.Add("Metadata-Flavor", "Google")
-$jenkins_node=$webclient.DownloadString("http://metadata/computeMetadata/v1/instance/attributes/jenkins_node")
-Write-Output $jenkins_node | Out-File -Encoding ascii jenkins_node.txt
-
 # Replace the host name in the JNLP file, because Jenkins, in its infinite
 # wisdom, does not let us change that separately from its external hostname.
-$jnlp=((New-Object Net.WebClient).DownloadString("http://jenkins/computer/${jenkins_node}/slave-agent.jnlp"))
-$internal_jnlp=$jnlp -replace "http://ci.bazel.io", "http://jenkins"
+$jnlp=((New-Object Net.WebClient).DownloadString("http://${jenkins_master}/computer/${jenkins_node}/slave-agent.jnlp"))
+$internal_jnlp=$jnlp -replace "http://ci.bazel.io", "http://${jenkins_master}"
+$internal_jnlp=$jnlp -replace "http://ci-staging.bazel.io", "http://${jenkins_master}"
 Write-Output $internal_jnlp | Out-File -Encoding ascii slave-agent.jnlp
 
 # Create the service that runs the Jenkins slave

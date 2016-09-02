@@ -25,30 +25,68 @@ set -eu
 #                  (see `gcloud compute images list`)
 #   JENKINS-NODE is the name of the node in Jenkins
 #   LOCATION is the location in GCE (e.g. us-central1-a)
+#   NETWORK is the GCE network the instance has to be created on.
 #   STARTUP-METADATA is the metadata argument to gcloud to launch the right
 #                    startup script.
 #   SETUP-SCRIPTS is a list of shell scripts to adapt the slave. It should
 #                create a ci user with its home in /home/ci
 #                and ends with writing to /home/ci/node_name the name
 #                of the jenkins node.
+
+# Slaves or ci.bazel.io
 SLAVES=(
-    "ubuntu-14-04-slave ubuntu-14-04 ubuntu_14.04-x86_64-1 us-central1-a startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-15-10-slave https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-1 asia-east1-c startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-14-04-slave-2 ubuntu-14-04 ubuntu_14.04-x86_64-2 us-central1-a startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-15-10-slave-2 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-2 asia-east1-c startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-14-04-slave-3 ubuntu-14-04 ubuntu_14.04-x86_64-3 us-east1-c startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-15-10-slave-3 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-3 us-east1-c startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-14-04-slave-4 ubuntu-14-04 ubuntu_14.04-x86_64-4 europe-west1-c startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-15-10-slave-4 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-4 europe-west1-c startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-docker-slave-1 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-docker-1 us-east1-c startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh ubuntu-15-10-docker.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave ubuntu-14-04 ubuntu_14.04-x86_64-1 us-central1-a default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-15-10-slave https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-1 asia-east1-c default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-2 ubuntu-14-04 ubuntu_14.04-x86_64-2 us-central1-a default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-15-10-slave-2 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-2 default asia-east1-c default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-3 ubuntu-14-04 ubuntu_14.04-x86_64-3 us-east1-c default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-15-10-slave-3 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-3 us-east1-c default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-4 ubuntu-14-04 ubuntu_14.04-x86_64-4 europe-west1-c default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-15-10-slave-4 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-4 europe-west1-c default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-docker-slave-1 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-docker-1 us-east1-c default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh ubuntu-15-10-docker.sh linux-android.sh cleanup-install.sh"
     # Fow Windows, we use a custom image with pre-installed MSVC.
-    "windows-slave-1 /bazel-public/windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-1 europe-west1-c windows-startup-script-ps1=jenkins-slave-windows.ps1"
-    "windows-slave-2 /bazel-public/windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-2 europe-west1-c windows-startup-script-ps1=jenkins-slave-windows.ps1"
+    "windows-slave-1 /bazel-public/windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-1 europe-west1-c default windows-startup-script-ps1=jenkins-slave-windows.ps1"
+    "windows-slave-2 /bazel-public/windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-2 europe-west1-c default windows-startup-script-ps1=jenkins-slave-windows.ps1"
 )
 
-MASTER_NAME=jenkins
-MASTER_LOCATION=us-central1-a
-MASTER_METADATA="google-container-manifest=jenkins.yml,startup-script=mount-volumes.sh"
+# Master for ci.bazel.io
+MASTER=(
+    # VM name
+    "jenkins"
+    # Zone
+    "us-central1-a"
+    # Metadata specification
+    "google-container-manifest=jenkins,startup-script=mount-volumes.sh"
+    # Disk specification
+    "name=jenkins-volumes,device-name=volumes"
+    # Address name
+    "ci"
+    # Network name
+    "default"
+)
+
+# Slaves for ci-staging.bazel.io
+STAGING_SLAVES=(
+    "ubuntu-14-04-slave-staging ubuntu-14-04 ubuntu_14.04-x86_64-staging europe-west1-c staging startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-15-10-slave-staging https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-staging europe-west1-c staging startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-docker-slave-staging https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-docker-staging europe-west1-c staging startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh ubuntu-15-10-docker.sh linux-android.sh cleanup-install.sh"
+    # Fow Windows, we use a custom image with pre-installed MSVC.
+    "windows-slave-staging /bazel-public/windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-staging europe-west1-c staging windows-startup-script-ps1=jenkins-slave-windows.ps1"
+)
+STAGING_MASTER=(
+    # VM name
+    "jenkins-staging"
+    # Zone
+    "europe-west1-c"
+    # Metadata specification
+    "google-container-manifest=jenkins-staging.yml,startup-script=mount-volumes.sh"
+    # Disk specification
+    "name=jenkins-volumes-staging,device-name=volumes"
+    # Address name
+    "ci-staging"
+    # Network name
+    "staging"
+)
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
@@ -59,12 +97,20 @@ function test_vm() {
 
 # Create the container engine VM containing the jenkins instance.
 function create_master() {
-  gcloud compute instances create $MASTER_NAME --tags $MASTER_NAME \
-         --zone $MASTER_LOCATION --machine-type n1-standard-4 \
+  local flavour="${1:-}"
+  local name="$1"
+  local location="$2"
+  local metadata="$3"
+  local disk="$4"
+  local address="$5"
+  local network="$6"
+  gcloud compute instances create "$name" --tags jenkins \
+         --zone "$location" --machine-type n1-standard-4 \
          --image container-vm \
-         --metadata-from-file $MASTER_METADATA \
+         --metadata-from-file "$metadata" \
          --boot-disk-type pd-ssd --boot-disk-size 40GB \
-         --address ci --disk name=jenkins-volumes,device-name=volumes
+         --network "$network" \
+         --address "$address" --disk "$disk"
 }
 
 # Wait for a VM $1 in zone $2 to be up and running using ssh.
@@ -115,10 +161,12 @@ function create_slave() {
   local IMAGE="$2"
   local JENKINS_NODE="$3"
   local LOCATION="$4"
-  local STARTUP_METADATA="$5"
-  shift 5
+  local NETWORK="$5"
+  local STARTUP_METADATA="$6"
+  shift 6
   gcloud compute instances create "$TAG" \
          --zone "$LOCATION" --machine-type n1-standard-8 \
+         --network "$NETWORK" \
          --image "$IMAGE" \
          --metadata jenkins_node="$JENKINS_NODE" \
          --metadata-from-file "$STARTUP_METADATA" \
@@ -150,19 +198,24 @@ function create_slave() {
 # background job. Wait on its PID or job number (or %?gcloud) before exiting
 # this script.
 function update_metadata() {
-  local tag=$MASTER_NAME
+  local tag="${MASTER[0]}"
   local metadata_flag=""
-  local location=$MASTER_LOCATION
-  local startup_metadata=$MASTER_METADATA
+  local location="${MASTER[1]}"
+  local startup_metadata="${MASTER[2]}"
 
-  if [ ! "$1" = "jenkins" ]; then
+  if [ "$1" = "jenkins-staging" ]; then
+    tag="${STAGING_MASTER[0]}"
+    metadata_flag=""
+    location="${STAGING_MASTER[1]}"
+    startup_metadata="${STAGING_MASTER[2]}"
+  elif [ ! "$1" = jenkins ]; then
     local args="$(get_slave_by_name "$1")"
     [ -n "$args" ] || (echo "Unknown vm $1" >&2; exit 1)
 
     tag="$(echo $args | cut -d' ' -f1)"
     metadata_flag="--metadata jenkins_node=$(echo $args | cut -d' ' -f3)"
     location="$(echo $args | cut -d' ' -f4)"
-    startup_metadata="$(echo $args | cut -d' ' -f5)"
+    startup_metadata="$(echo $args | cut -d' ' -f6)"
   fi
 
   gcloud compute instances add-metadata "$tag" \
@@ -172,7 +225,7 @@ function update_metadata() {
 }
 
 function get_slave_by_name() {
-  for i in "${SLAVES[@]}"; do
+  for i in "${SLAVES[@]}" "${STAGING_SLAVES[@]}"; do
     if [[ "$i" =~ ^"$1 " ]]; then
       echo "$i"
     fi
@@ -181,7 +234,9 @@ function get_slave_by_name() {
 
 function create_vm() {
   if [ "$1" = "jenkins" ]; then
-    create_master
+    create_master "${MASTER[@]}"
+  elif [ "$1" = "jenkins-staging" ]; then
+    create_master "${STAGING_MASTER[@]}"
   else
     local args="$(get_slave_by_name "$1")"
     [ -n "$args" ] || (echo "Unknown vm $1" >&2; exit 1)
@@ -194,7 +249,18 @@ function action() {
   shift
   if (( $# == 0 )); then
     $action jenkins
-    for i in "${SLAVES[@]}"; do
+    $action jenkins-staging
+    for i in "${SLAVES[@]}" "${STAGING_SLAVES[@]}"; do
+      $action "${i%% *}"
+    done
+  elif (( $# == 1 )) && [ "$1" = "prod" ]; then
+    $action jenkins-staging
+    for i in "${STAGING[@]}"; do
+      $action "${i%% *}"
+    done
+  elif (( $# == 1 )) && [ "$1" = "staging" ]; then
+    $action jenkins-staging
+    for i in "${STAGING_SLAVES[@]}"; do
       $action "${i%% *}"
     done
   else
@@ -202,13 +268,20 @@ function action() {
       $action "$i"
     done
   fi
-  wait %?gcloud 2>/dev/null
+  wait %?gcloud 2>/dev/null || true  # wait fails if the job already finished.
 }
 
 function delete_vm() {
   local TAG=$1
+  local location
   if test_vm $TAG; then
-    local location="$(get_slave_by_name "$TAG" | cut -d " " -f 4)"
+    if [ "$TAG" = "${MASTER[0]}" ]; then
+      location="${MASTER[1]}"
+    elif [ "$TAG" =  "${STAGING_MASTER[0]}" ]; then
+      location="${STAGING_MASTER[1]}"
+    else
+      local location="$(get_slave_by_name "$TAG" | cut -d " " -f 4)"
+    fi
     gcloud compute instances delete --zone=$location $TAG
   fi
 }
@@ -231,7 +304,7 @@ case "${command}" in
     action update_metadata "$@"
     ;;
   *)
-    echo "Usage: $0 (create|delete|reimage|update_metadata) [vm ... vm]" >&2
+    echo "Usage: $0 (create|delete|reimage|update_metadata) ([vm ... vm]|staging|prod)" >&2
     exit 1
     ;;
 esac

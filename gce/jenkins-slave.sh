@@ -24,6 +24,10 @@ while ! (id ci >&/dev/null) || [ ! -f /home/ci/node_name ]; do
   sleep 60
 done
 NODE_NAME=$(cat /home/ci/node_name)
+MASTER=jenkins
+if [[ "$NODE_NAME" =~ .*-staging$ ]]; then
+  MASTER=jenkins-staging
+fi
 
 cd /home/ci
 # Setup the various android paths
@@ -46,10 +50,10 @@ fi
 # and running
 function get_slave_agent() {
   rm -f slave.jar slave-agent.jnlp
-  wget -nc http://jenkins/jnlpJars/slave.jar || return 1
-  wget -nc http://jenkins/computer/${NODE_NAME}/slave-agent.jnlp || return 1
+  wget -nc http://${MASTER}/jnlpJars/slave.jar || return 1
+  wget -nc http://${MASTER}/computer/${NODE_NAME}/slave-agent.jnlp || return 1
   chmod a+r slave-agent.jnlp
-  sed -i.bak "s|http://ci\(-staging\)\?\.bazel\.io/|http://jenkins/|g" slave-agent.jnlp
+  sed -i.bak "s|http://ci\(-staging\)\?\.bazel\.io/|http://${MASTER}/|g" slave-agent.jnlp
 }
 
 # Run jenkins slave agent
