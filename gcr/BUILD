@@ -14,7 +14,6 @@ docker_push(
     name = "deploy-staging",
     images = {
         "//jenkins:jenkins-staging": "jenkins-master-staging",
-        "//gerrit-github-sync:gerrit-github-sync": "sync-gerrit-github",
     },
     repository = "gcr.io/bazel-public",
 )

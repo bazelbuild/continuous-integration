@@ -23,13 +23,6 @@ spec:
           containerPort: 50000
           hostPort: 50000
           protocol: TCP
-    - name: sync-gerrit-github
-      image: gcr.io/bazel-public/sync-gerrit-github
-      imagePullPolicy: Always
-      volumeMounts:
-        - name: secrets
-          mountPath: /opt/secrets
-          readOnly: true
   restartPolicy: Always
   dnsPolicy: Default
   volumes:
