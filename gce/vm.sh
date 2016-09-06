@@ -271,8 +271,9 @@ function action() {
   wait %?gcloud 2>/dev/null || true  # wait fails if the job already finished.
 }
 
-function delete_vm() {
-  local TAG=$1
+function vm_command() {
+  local command=$1
+  local TAG=$2
   local location
   if test_vm $TAG; then
     if [ "$TAG" = "${MASTER[0]}" ]; then
@@ -282,14 +283,32 @@ function delete_vm() {
     else
       local location="$(get_slave_by_name "$TAG" | cut -d " " -f 4)"
     fi
-    gcloud compute instances delete --zone=$location $TAG
+    gcloud compute instances $command --zone=$location $TAG
   fi
+}
+
+function delete_vm() {
+  vm_command delete "$@"
+}
+
+function stop_vm() {
+  vm_command stop "$@"
+}
+
+function start_vm() {
+  vm_command start "$@"
 }
 
 command="${1-}"
 shift || true
 
 case "${command}" in
+  "stop")
+    action stop_vm "$@"
+    ;;
+  "start")
+    action start_vm "$@"
+    ;;
   "create")
     action create_vm "$@"
     ;;
