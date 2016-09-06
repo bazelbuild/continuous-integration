@@ -90,10 +90,7 @@ STAGING_MASTER=(
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-# Test whether $1 is the name of an existing instance on GCE
-function test_vm() {
-  (( $(gcloud compute instances list "$1" | wc -l) > 1 ))
-}
+source utils/commands.sh
 
 # Create the container engine VM containing the jenkins instance.
 function create_master() {
@@ -111,45 +108,6 @@ function create_master() {
          --boot-disk-type pd-ssd --boot-disk-size 40GB \
          --network "$network" \
          --address "$address" --disk "$disk"
-}
-
-# Wait for a VM $1 in zone $2 to be up and running using ssh.
-# This function will wait for at most $3 seconds.
-function wait_vm() {
-  local vm="$1"
-  local zone="$2"
-  local timeout="${3-60}"  # Wait for 1 minute maximum by default
-  local starttime="$(date +%s)"
-  while (( "$(date +%s)" - "$starttime" < "$timeout" )); do
-    # gcloud compute ssh forward the return code of the executed command.
-    if gcloud compute ssh --zone="$zone" --command /bin/true "$vm" &>/dev/null
-    then
-      return 0
-    fi
-  done
-  return 1
-}
-
-function ssh_command() {
-  local TAG="$1"
-  local LOCATION="$2"
-  local tmpdir="${TMPDIR:-/tmp}"
-  local tmp="$(mktemp ${tmpdir%%/}/vm-ssh.XXXXXXXX)"
-  trap "rm -f ${tmp}" EXIT
-  shift 2
-  echo -n >"${tmp}"
-  for i in "$@"; do
-    if [ -f "$i" ]; then
-      cat "$i" >>"${tmp}"
-    else
-      echo "$i" >>"${tmp}"
-    fi
-  done
-  cat "${tmp}" | gcloud compute ssh --zone="${LOCATION}" \
-      --command "cat >/tmp/s.sh; sudo bash /tmp/s.sh; rm /tmp/s.sh" \
-      "${TAG}"
-  rm -f "${tmp}"
-  trap - EXIT
 }
 
 # Create a slave named $1 whose image is $2 (see `gcloud compute image list`)
