@@ -35,7 +35,7 @@ function setup_firewall() {
   shift 1 || true
   local restrict_ips=("${@}")
   if (( $# == 0 )); then
-    restrict_ips=("0.0.0.0/24")
+    restrict_ips=("0.0.0.0/0")  # Allow everybody
   fi
   log "Removing all existing rules from network ${network}"
   local rules="$(gcloud compute firewall-rules list \
@@ -66,17 +66,17 @@ function setup_firewall() {
       --network="${network}" \
       --allow=tcp:80,tcp:443 \
       --target-tags='jenkins' \
-      --source-ranges=0.0.0.0/24 \
+      --source-ranges=0.0.0.0/0 \
       --description='Allow HTTP(S) connection to Jenkins web interface'
   fi
 
-  log "Enabling incoming SSH traffic to VMs for network ${network}"
+  log "Enabling incoming SSH and slaves traffic to VMs for network ${network}"
   counter=0
   for i in "${restrict_ips[@]}"; do
     counter=$(($counter+1))
     gcloud compute firewall-rules create "${network}-allow-ssh-${counter}" \
       --network="${network}" \
-      --allow=tcp:22 \
+      --allow=tcp:22,tcp:50000 \
       --source-ranges=$i \
       --description='Allow SSH connections'
   done
