@@ -22,7 +22,7 @@ function _log() {
   echo "[$(basename "$0"):${FUNCNAME[2]}:${BASH_LINENO[1]}]" "$@"
 }
 function log() {
-  if [ "$VERBOSE" = yes ]; then
+  if [ "${VERBOSE-}" = yes ]; then
     echo -n "INFO: "
     _log "$@"
   fi

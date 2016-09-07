@@ -48,12 +48,12 @@ function action() {
       $action $i
     done
   else
-    for i in "$@"; do
-      for j in "${SYSTEMS[@]}"; do
-        if test_name "$i" $j; then
-          $action $j
-        fi
-      done
+    local name="$1"
+    shift
+    for j in "${SYSTEMS[@]}"; do
+      if test_name "$name" $j; then
+        $action $j "$@"
+      fi
     done
   fi
 }
@@ -88,6 +88,15 @@ function reset_firewall() {
   setup_firewall "${network}" "${restrict_http}" "${@}"
 }
 
+function usage() {
+  echo "Usage: $0 (init|firewall) (staging|prod) [restricted_ip_ranges]" >&2
+  exit 1
+}
+
+if (( $# < 2 )); then
+  usage
+fi
+
 command="${1-}"
 shift || true
 
@@ -105,7 +114,6 @@ case "${command}" in
     action reset_firewall "$@"
     ;;
   *)
-    echo "Usage: $0 (init|firewall) [(staging|prod) restricted_ip_ranges]" >&2
-    exit 1
+    usage
     ;;
 esac

@@ -32,16 +32,14 @@ function setup_firewall() {
   local network="$1"
   shift 1
   local restrict_http="${1:-false}"
-  if (( $# > 0 )); then
-    shift 1
-  fi
+  shift 1 || true
   local restrict_ips=("${@}")
   if (( $# == 0 )); then
     restrict_ips=("0.0.0.0/24")
   fi
-  log "Removing all existing rule from network ${network}"
+  log "Removing all existing rules from network ${network}"
   local rules="$(gcloud compute firewall-rules list \
-                | awk '$2 ~ /"${network}"/ {print $1}')"
+                | awk '$2 ~ /'"${network}"'/ {print $1}')"
   if [ -n "${rules}" ]; then
     gcloud compute firewall-rules delete ${rules}
   fi
