@@ -23,6 +23,16 @@ spec:
           containerPort: 50000
           hostPort: 50000
           protocol: TCP
+    - name: deploy-slave-staging
+      image: gcr.io/bazel-public/deploy-slave-staging
+      imagePullPolicy: Always
+      env:
+       - name: JENKINS_SERVER
+         value: jenkins-staging
+      volumeMounts:
+        - name: secrets
+          mountPath: /opt/secrets
+          readOnly: true
   restartPolicy: Always
   dnsPolicy: Default
   volumes:

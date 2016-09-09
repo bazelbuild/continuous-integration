@@ -161,6 +161,14 @@ jenkins_node(
 )
 
 jenkins_node(
+    name = "deploy-staging",
+    base = "deploy-full",
+    labels = ["deploy"],
+    num_executors = 2,
+    visibility = ["//visibility:public"],
+)
+
+jenkins_node(
     name = "ubuntu-docker",
     base = "//base:ubuntu-wily-amd64-deploy",
     labels = [
@@ -286,6 +294,7 @@ jenkins_build(
         ":ubuntu_14.04-x86_64-staging",
         ":ubuntu_15.10-x86_64-staging",
         ":ubuntu_15.10-x86_64-docker-staging",
+        ":deploy-staging",
     ],
     jobs = [
         "//jenkins/jobs:staging-jobs",
