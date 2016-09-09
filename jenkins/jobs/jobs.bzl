@@ -19,6 +19,8 @@ RULES = {
     "rules_scala": UNIX_PLATFORMS,
     "rules_gwt": UNIX_PLATFORMS,
     "rules_groovy": UNIX_PLATFORMS,
+    # rules_web is disabled on Darwin for now.
+    "rules_web": LINUX_PLATFORMS,
     # These are not really rules, but it is simpler to put here.
     "skydoc": UNIX_PLATFORMS,
     "buildifier": UNIX_PLATFORMS,
