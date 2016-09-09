@@ -76,7 +76,7 @@ function setup_firewall() {
     counter=$(($counter+1))
     gcloud compute firewall-rules create "${network}-allow-ssh-${counter}" \
       --network="${network}" \
-      --allow=tcp:22,tcp:50000 \
+      --allow=tcp:22,tcp:50000,tcp:3389 \
       --source-ranges=$i \
       --description='Allow SSH connections'
   done
