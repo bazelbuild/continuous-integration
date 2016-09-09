@@ -132,7 +132,7 @@ filegroup(
 
 filegroup(
     name = "staging-jobs",
-    srcs = STAGING_JOBS,
+    srcs = [j + "-staging" for j in STAGING_JOBS],
     visibility = ["//jenkins:__pkg__"],
 )
 

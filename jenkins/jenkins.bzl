@@ -87,7 +87,10 @@ def _format_path(path_format, path):
   extension = basename[extsep+1:] if extsep > 0 else ""
   basename = basename[:extsep] if extsep > 0 else basename
   flavor = ""
-  if basename.endswith("-test"):
+  if basename.endswith("-staging"):
+    basename = basename[:-8]
+    flavor = "staging"
+  elif basename.endswith("-test"):
     basename = basename[:-5]
     flavor = "test"
   return path_format.format(
@@ -178,6 +181,7 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
       "PROJECT_URL": project_url,
       "PLATFORMS": "\n".join(platforms),
       } + MAILS_SUBSTITUTIONS
+  substitutions["SEND_MAIL"] = "1"
   expand_template(
       name = name,
       template = config,
@@ -185,6 +189,15 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
       deps = deps,
       substitutions = JENKINS_PLUGINS_VERSIONS + substitutions,
     )
+  substitutions["SEND_MAIL"] = "0"
+  expand_template(
+      name = name + "-staging",
+      template = config,
+      out = "%s-staging.xml" % name,
+      deps = deps,
+      substitutions = JENKINS_PLUGINS_VERSIONS + substitutions,
+    )
+
   if test_platforms:
     substitutions["PLATFORMS"] = "\n".join(test_platforms)
     expand_template(

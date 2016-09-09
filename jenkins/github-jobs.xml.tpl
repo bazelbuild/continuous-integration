@@ -100,11 +100,13 @@
       <healthScaleFactor>1.0</healthScaleFactor>
       <allowEmptyResults>true</allowEmptyResults>
     </hudson.tasks.junit.JUnitResultArchiver>
+    {% if variables.SEND_EMAIL == "1" %}
     <hudson.tasks.Mailer plugin="{{ variables.JENKINS_PLUGIN_mailer }}">
       <recipients>{{ variables.BAZEL_BUILD_RECIPIENT }}</recipients>
       <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
       <sendToIndividuals>false</sendToIndividuals>
     </hudson.tasks.Mailer>
+    {% endif %}
   </publishers>
   <buildWrappers/>
   <executionStrategy class="hudson.matrix.DefaultMatrixExecutionStrategyImpl">
