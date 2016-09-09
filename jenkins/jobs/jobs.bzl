@@ -17,6 +17,8 @@ RULES = {
     "rules_rust": UNIX_PLATFORMS,
     "rules_sass": UNIX_PLATFORMS,
     "rules_scala": UNIX_PLATFORMS,
+    "rules_gwt": UNIX_PLATFORMS,
+    "rules_groovy": UNIX_PLATFORMS,
     # These are not really rules, but it is simpler to put here.
     "skydoc": UNIX_PLATFORMS,
     "buildifier": UNIX_PLATFORMS,
