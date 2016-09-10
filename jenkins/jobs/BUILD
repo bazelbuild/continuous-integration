@@ -1,7 +1,15 @@
 load("//jenkins:jenkins.bzl", "jenkins_job", "bazel_github_job")
-load(":jobs.bzl", "LINUX_PLATFORMS", "UNIX_PLATFORMS", "RULES",
-     "DISABLED_RULES", "BAZEL_JOBS", "JOBS", "JOBS_SUBSTITUTIONS",
-     "STAGING_JOBS")
+load(
+    ":jobs.bzl",
+    "LINUX_PLATFORMS",
+    "UNIX_PLATFORMS",
+    "RULES",
+    "DISABLED_RULES",
+    "BAZEL_JOBS",
+    "JOBS",
+    "JOBS_SUBSTITUTIONS",
+    "STAGING_JOBS",
+)
 
 [jenkins_job(
     name = job,
@@ -39,15 +47,26 @@ bazel_github_job(
 )
 
 bazel_github_job(
+    name = "Tutorial",
+    configure = ["source ./ci/setup_android_repositories.sh"],
+    org = "bazelbuild",
+    platforms =  UNIX_PLATFORMS,
+    project = "examples",
+    targets = ["//:all"],
+    tests = [],
+    workspace = "tutorial",
+)
+
+bazel_github_job(
     name = "bazel-docker-tests",
     bazel_versions = [
         "HEAD",
         "latest",
     ],
-    pr_enabled = False,  # Do not vet PR because those tests are slow.
     enable_trigger = False,
     org = "bazelbuild",
     platforms = ["docker"],
+    pr_enabled = False,  # Do not vet PR because those tests are slow.
     project = "bazel",
     targets = [],
     tests = ["//tools/cpp/test/..."],

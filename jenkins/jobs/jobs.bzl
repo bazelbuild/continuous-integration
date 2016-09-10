@@ -34,6 +34,7 @@ GERRIT_JOBS = [
 GITHUB_JOBS = [
     "TensorFlow",
     "TensorFlow_Serving",
+    "Tutorial",
     "re2",
     "protobuf",
     "dash",
@@ -44,7 +45,6 @@ NO_PR_JOBS = ["bazel-docker-tests"]
 BAZEL_STAGING_JOBS = {
     "Bazel": UNIX_PLATFORMS + ["windows-x86_64"],
     "Github-Trigger": UNIX_PLATFORMS,
-    "Tutorial": UNIX_PLATFORMS,
     "Bazel-Install": [],
     "Bazel-Install-Trigger": [],
 }
@@ -64,4 +64,4 @@ JOBS_SUBSTITUTIONS = {
     "BAZEL_JOBS": ", ".join(BAZEL_JOBS.keys()),
 }
 
-STAGING_JOBS = BAZEL_STAGING_JOBS.keys() + GERRIT_JOBS + ["TensorFlow"]
+STAGING_JOBS = BAZEL_STAGING_JOBS.keys() + GERRIT_JOBS + ["TensorFlow", "Tutorial"]
