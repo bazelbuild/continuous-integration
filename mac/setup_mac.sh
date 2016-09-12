@@ -29,11 +29,11 @@ echo -n ${1:-darwin-x86_64-1} >$HOME/node_name
 # Get the various sdk
 cd $HOME
 # Android NDK
-curl -so android-ndk.bin http://dl.google.com/android/ndk/android-ndk-r10e-darwin-x86_64.bin
+curl -so android-ndk.bin https://dl.google.com/android/repository/android-ndk-r11c-darwin-x86_64.zip
 chmod +x android-ndk.bin
 ./android-ndk.bin
 # Android SDK
-curl -so android-sdk.zip http://dl.google.com/android/android-sdk_r24.3.4-macosx.zip
+curl -so android-sdk.zip https://dl.google.com/android/android-sdk_r24.4.1-macosx.zip
 unzip android-sdk.zip
 (cd android-sdk-macosx && tools/android update sdk --no-ui)
 
