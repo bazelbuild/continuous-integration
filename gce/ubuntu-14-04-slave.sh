@@ -16,7 +16,7 @@
 
 echo y | add-apt-repository ppa:webupd8team/java
 apt-get update
-apt-get install -y zip g++ zlib1g-dev wget git unzip python python3 curl realpath xfvb
+apt-get install -y zip g++ zlib1g-dev wget git unzip python python3 curl realpath xvfb
 
 # Should accept the licence:
 yes | apt-get install -y oracle-java8-installer

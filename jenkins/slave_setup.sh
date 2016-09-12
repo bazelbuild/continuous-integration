@@ -41,6 +41,7 @@ done
 JENKINS_SERVER=${JENKINS_SERVER:-{{ variables.JENKINS_SERVER }}}
 wget -nc ${JENKINS_SERVER}/jnlpJars/slave.jar || exit 1
 wget -nc ${JENKINS_SERVER}/computer/{{ variables.NODE_NAME }}/slave-agent.jnlp || exit 1
+sed -E -i "s|ci(-staging)?\.bazel\.io|${JENKINS_SERVER}|g" slave-agent.jnlp
 chmod a+r slave-agent.jnlp
 su ci -c "${JAVA_HOME}/bin/java -jar slave.jar -jnlpUrl file://$PWD/slave-agent.jnlp -noReconnect"
 

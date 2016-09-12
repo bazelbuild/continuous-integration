@@ -16,7 +16,7 @@
 
 apt-get update
 apt-get install -y zip g++ zlib1g-dev wget git unzip python python3 curl \
-        openjdk-8-jdk openjdk-8-source ca-certificates-java xfvb
+        openjdk-8-jdk openjdk-8-source ca-certificates-java xvfb
 
 # Android SDK requires 32-bits libraries
 sudo dpkg --add-architecture i386
