@@ -15,26 +15,39 @@
 # limitations under the License.
 
 # Script to configure a mac machine.
+#
 # Before running this script install the JDK 8 and Xcode. Launch this script
 # as the "ci" user.
+#
 # You should answer yes to all license requests and type your password
 # when requested.
 
-# Try to accept Xcode license
-sudo git
+set -eu
+
+# Command-line parameters
+if [ ! $# -eq 1 ]; then
+  echo "Usage: setup_mac.sh <nodename>"
+  exit 1
+fi
+node_name=$1
+
+cd $HOME
 
 # Write the node name
-echo -n ${1:-darwin-x86_64-1} >$HOME/node_name
+echo -n ${node_name} > $HOME/node_name
 
-# Get the various sdk
-cd $HOME
-# Android NDK
-curl -so android-ndk.bin https://dl.google.com/android/repository/android-ndk-r11c-darwin-x86_64.zip
-chmod +x android-ndk.bin
-./android-ndk.bin
-# Android SDK
+# Try to accept Xcode license
+sudo git version
+
+# Install the Android NDK
+curl -so android-ndk.zip https://dl.google.com/android/repository/android-ndk-r11c-darwin-x86_64.zip
+unzip android-ndk.zip
+rm android-ndk.zip
+
+# Install the Android SDK
 curl -so android-sdk.zip https://dl.google.com/android/android-sdk_r24.4.1-macosx.zip
 unzip android-sdk.zip
+rm android-sdk.zip
 (cd android-sdk-macosx && tools/android update sdk --no-ui)
 
 # Now configure the service
@@ -71,7 +84,7 @@ done
 EOF
 chmod +x launch.sh
 
-sudo cat >/System/Library/LaunchDaemons/jenkins.plist <<EOF
+cat <<EOF | sudo tee /Library/LaunchDaemons/jenkins.plist
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0 //EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -96,4 +109,4 @@ sudo cat >/System/Library/LaunchDaemons/jenkins.plist <<EOF
 </plist>
 EOF
 
-launchctl load /System/Library/LaunchDaemons/jenkins.plist
+sudo launchctl load /Library/LaunchDaemons/jenkins.plist
