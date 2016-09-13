@@ -181,7 +181,7 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
       "PROJECT_URL": project_url,
       "PLATFORMS": "\n".join(platforms),
       } + MAILS_SUBSTITUTIONS
-  substitutions["SEND_MAIL"] = "1"
+  substitutions["SEND_EMAIL"] = "1"
   expand_template(
       name = name,
       template = config,
@@ -189,7 +189,7 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
       deps = deps,
       substitutions = JENKINS_PLUGINS_VERSIONS + substitutions,
     )
-  substitutions["SEND_MAIL"] = "0"
+  substitutions["SEND_EMAIL"] = "0"
   expand_template(
       name = name + "-staging",
       template = config,
