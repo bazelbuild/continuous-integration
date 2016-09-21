@@ -43,7 +43,8 @@ install_bazel() {
   rm -fr "${destination}"
   "${installer}" \
     --base="${destination}" \
-    --bin="${destination}/binary"
+    --bin="${destination}/binary" \
+    --bazelrc="${destination}/binary/bazel-real.bazelrc"
 }
 
 # Get the version of latest BAZEL
