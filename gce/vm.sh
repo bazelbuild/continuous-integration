@@ -281,7 +281,7 @@ case "${command}" in
     action update_metadata "$@"
     ;;
   *)
-    echo "Usage: $0 (create|delete|reimage|update_metadata) ([vm ... vm]|staging|prod)" >&2
+    echo "Usage: $0 (create|delete|reimage|update_metadata|start|stop) ([vm ... vm]|staging|prod)" >&2
     exit 1
     ;;
 esac
