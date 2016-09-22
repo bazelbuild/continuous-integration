@@ -56,16 +56,25 @@ EOF
 fi
 
 rm -f .unstable
+mkdir -p .bin
+cat <<EOF >.bin/bazel
+#!/bin/bash
+retCode=0
+${BAZEL} --bazelrc=${ROOT}/bazel.bazelrc "\$@" || retCode=\$?
+# Bazel returns 3 if there was test failures but no breakge
+if (( \$retCode == 3 )); then
+  # Write 1 in the .unstable file so the following step in Jenkins
+  # know that it is a test failure.
+  echo 1 >"${ROOT}/.unstable"
+elif (( $retCode != 0 )); then
+  # Else simply fails the job by exiting with a non null return code
+  exit \$retCode
+fi
+EOF
+chmod +x .bin/bazel
+export PATH="${PWD}/.bin:${PATH}"
+
 cd {{ variables.WORKSPACE }}
-function bazel() {
-  local retCode=0
-  ${BAZEL} --bazelrc=${ROOT}/bazel.bazelrc "$@" || retCode=$?
-  if (( $retCode == 3 )); then
-    echo 1 >"${ROOT}/.unstable"
-  elif (( $retCode != 0 )); then
-    exit $retCode
-  fi
-}
 
 echo "==== bazel version ===="
 bazel version
