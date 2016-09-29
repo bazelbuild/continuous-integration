@@ -40,12 +40,6 @@ test --test_tag_filters ${TEST_TAG_FILTERS}
 test --define JAVA_VERSION=${JAVA_VERSION}
 EOF
 
-if [[ "${PLATFORM_NAME}" =~ .*darwin.* ]]; then
-  cat >>${ROOT}/bazel.bazelrc <<EOF
-test --spawn_strategy=standalone
-EOF
-fi
-
 if [[ "${PLATFORM_NAME}" =~ .*darwin.* ]] && \
       xcodebuild -showsdks 2> /dev/null | grep -q '\-sdk iphonesimulator'; then
   cat >>${ROOT}/bazel.bazelrc <<EOF
