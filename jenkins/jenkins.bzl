@@ -67,7 +67,8 @@ expand_template = rule(
         "executable": attr.bool(default = True),
         "_engine": attr.label(
             default = Label("//templating:template_engine"),
-            executable = True),
+            executable = True,
+            cfg="host"),
     },
     implementation = expand_template_impl,
 )
@@ -158,10 +159,11 @@ _merge_files = rule(
         "path_format": attr.string(default="{path}"),
         "_build_tar": attr.label(
             default=Label("@bazel_tools//tools/build_defs/pkg:build_tar"),
-            cfg=HOST_CFG,
+            cfg="host",
             executable=True,
             allow_files=True),
         "_engine": attr.label(
+            cfg="host",
             default = Label("//templating:template_engine"),
             executable = True),
     },
