@@ -62,12 +62,11 @@ jenkins_image_ = repository_rule(
 
 def jenkins_base(name, plugins, volumes=[], version="1.642.4"):
   base = "jenkins_" + version.replace(".", "_")
-  # Blocked by bazelbuild/bazel#1277 being in a release
-  # if not native.existing_rule(base):
-  docker_pull(
-      name = base,
-      tag = "jenkins:" + version,
-  )
+  if not native.existing_rule(base):
+    docker_pull(
+        name = base,
+        tag = "jenkins:" + version,
+    )
   jenkins_image_(
       name=name,
       plugins=plugins,
