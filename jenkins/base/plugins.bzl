@@ -142,4 +142,8 @@ JENKINS_PLUGINS = {
         "0.19",
         "4e26bb0335f5c86155e6b72304a35ccabf464f764976ed21a3f24288f993fb03",
     ],
+    "embeddable-build-status": [
+        "1.9",
+        "9d950ce4bfdcb67e1b1198ea2b54e18de95ec3214b1cf1135141b5b54a62edb2",
+    ],
 }
