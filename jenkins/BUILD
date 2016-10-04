@@ -200,14 +200,12 @@ PUBLIC_PERMS = [
 ]
 
 # Permissions for @google.com emails
-AUTHENTICATED_PERMS = PUBLIC_PERMS + [
-    # Special permissions
-    "Item.Build",  # Launch a build
-    "Item.Cancel",  # Cancel a build
-]
+AUTHENTICATED_PERMS = PUBLIC_PERMS
 
 # Permissions for admin users (Beware it is dangerous)
 ADMIN_PERMS = AUTHENTICATED_PERMS + [
+    "Item.Build",  # Launch a build
+    "Item.Cancel",  # Cancel a build
     "Run.Delete",  # Delete one build's information
     "Run.Update",  # Run one build's information
     "View.Configure",  # Configure views
