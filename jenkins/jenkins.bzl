@@ -287,8 +287,22 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
 
 
 def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1,
-                 labels = [], base = None, preference = 1, visibility = None):
-  """Create a node configuration on Jenkins, with possible docker image."""
+                 labels = [], docker_base = None, preference = 1,
+                 visibility = None):
+  """Create a node configuration on Jenkins, with possible docker image.
+
+  Args:
+    name: Name of the node on Jenkins.
+    remote_fs: path to the home of the Jenkins user.
+    num_executors: number of executors (i.e. concurrent build) this machine can have.
+    labels: list of Jenkins labels for this node (the node name is always added).
+    docker_base: base for the corresponding docker image to create if we should create one
+      (if docker_base is not specified, then a corresponding machine should be configured
+      to connect to the Jenkins master).
+    preference: A preference factor, if a node as a factor of 1 and another a factor of
+      4, then the second one will be scheduled 4 time more jobs than the first one.
+    visibility: rule visibility.
+  """
   native.genrule(
       name = name,
       cmd = """cat >$@ <<'EOF'
@@ -313,7 +327,7 @@ EOF
       outs = ["nodes/%s/config.xml" % name],
       visibility = visibility,
       )
-  if base:
+  if docker_base:
     # Generate docker image startup script
     expand_template(
         name = name + ".docker-launcher",
@@ -329,7 +343,7 @@ EOF
     # Generate docker image
     docker_build(
         name = name + ".docker",
-        base = base,
+        base = docker_base,
         volumes = [remote_fs],
         files = [":%s.docker-launcher.sh" % name],
         data_path = ".",

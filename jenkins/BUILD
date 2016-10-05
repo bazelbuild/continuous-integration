@@ -15,6 +15,7 @@
 # Configuration for our Jenkins instance
 load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
 load(":jenkins.bzl", "jenkins_node", "jenkins_build", "jenkins_job")
+load(":nodes.bzl", "jenkins_nodes", "jenkins_node_names")
 load("//jenkins/jobs:jobs.bzl", "JOBS_SUBSTITUTIONS")
 
 exports_files(glob(["github-jobs*.tpl"]))
@@ -23,89 +24,63 @@ exports_files(glob(["github-jobs*.tpl"]))
 # Nodes
 #
 
-# Physical machines
-[jenkins_node(
-    name = "darwin-x86_64-%s" % k,
-    labels = [
-        "darwin-x86_64",
-        "install-bazel",
-        "safe",
-    ],
-    num_executors = 4,
-    preference = 4,
-    remote_fs = "/Users/ci",
-) for k in ["1", "2"]]
+DARWIN_PREFIX = "darwin-x86_64"
 
-jenkins_node(
-    name = "darwin-x86_64-staging",
-    labels = [
-        "darwin-x86_64",
-        "install-bazel",
-        "safe",
-    ],
+DARWIN_COUNT = 2
+
+WINDOWS_PREFIX = "windows-x86_64"
+
+WINDOWS_COUNT = 4
+
+UBUNTU_1404_PREFIX = "ubuntu_14.04-x86_64"
+
+UBUNTU_1404_COUNT = 8
+
+UBUNTU_1510_PREFIX = "ubuntu_15.10-x86_64"
+
+UBUNTU_1510_COUNT = 8
+
+UBUNTU_DOCKER_PREFIX = "ubuntu_15.10-x86_64-docker"
+
+UBUNTU_DOCKER_COUNT = 2
+
+# Physical machines
+jenkins_nodes(
+    DARWIN_PREFIX,
+    DARWIN_COUNT,
+    prod_args = {
+        "num_executors": 4,
+    },
     remote_fs = "/Users/ci",
 )
 
 # GCE machines
-[jenkins_node(
-    name = "windows-x86_64" + ext,
-    labels = [
-        "windows-x86_64",
-        "install-bazel",
-        "safe",
-    ],
+jenkins_nodes(
+    WINDOWS_PREFIX,
+    WINDOWS_COUNT,
     num_executors = 1,
     preference = 1,
     remote_fs = "c:\\jenkins",
-) for ext in [
-    "-1",
-    "-2",
-    "-staging",
-]]
+)
 
-[jenkins_node(
-    name = "ubuntu_14.04-x86_64" + ext,
-    labels = [
-        "ubuntu_14.04-x86_64",
-        "linux-x86_64",
-        "install-bazel",
-        "safe",
-    ],
-) for ext in [
-    "-1",
-    "-2",
-    "-3",
-    "-4",
-    "-staging",
-]]
+jenkins_nodes(
+    UBUNTU_1404_PREFIX,
+    UBUNTU_1404_COUNT,
+    labels = ["linux-x86_64"],
+)
 
-[jenkins_node(
-    name = "ubuntu_15.10-x86_64-docker" + ext,
-    labels = [
-        "install-bazel",
-        "docker",
-    ],
-) for ext in [
-    "-1",
-    "-staging",
-]]
+jenkins_nodes(
+    UBUNTU_DOCKER_PREFIX,
+    UBUNTU_DOCKER_COUNT,
+    labels = ["docker"],
+)
 
 # Non-release nodes
-[jenkins_node(
-    name = "ubuntu_15.10-x86_64" + ext,
-    labels = [
-        "ubuntu_15.10-x86_64",
-        "no-release",
-        "install-bazel",
-        "safe",
-    ],
-) for ext in [
-    "-1",
-    "-2",
-    "-3",
-    "-4",
-    "-staging",
-]]
+jenkins_nodes(
+    UBUNTU_1510_PREFIX,
+    UBUNTU_1510_COUNT,
+    labels = ["no-release"],
+)
 
 #
 # A deploy slave used for release work and syncing
@@ -155,14 +130,14 @@ docker_build(
 
 jenkins_node(
     name = "deploy",
-    base = "deploy-full",
+    docker_base = "deploy-full",
     num_executors = 2,
     visibility = ["//visibility:public"],
 )
 
 jenkins_node(
     name = "deploy-staging",
-    base = "deploy-full",
+    docker_base = "deploy-full",
     labels = ["deploy"],
     num_executors = 2,
     visibility = ["//visibility:public"],
@@ -170,11 +145,10 @@ jenkins_node(
 
 jenkins_node(
     name = "ubuntu-docker",
-    base = "//base:ubuntu-wily-amd64-deploy",
+    docker_base = "//base:ubuntu-wily-amd64-deploy",
     labels = [
         "linux-x86_64",
         "install-bazel",
-        "safe",
     ],
 )
 
@@ -256,22 +230,13 @@ SECURITY_CONFIG = """
 jenkins_build(
     name = "jenkins",
     configs = [
-        ":jenkins-common-configs",
-        ":windows-x86_64-1",
-        ":windows-x86_64-2",
-        ":darwin-x86_64-1",
-        ":darwin-x86_64-2",
-        ":ubuntu_14.04-x86_64-1",
-        ":ubuntu_14.04-x86_64-2",
-        ":ubuntu_14.04-x86_64-3",
-        ":ubuntu_14.04-x86_64-4",
-        ":ubuntu_15.10-x86_64-1",
-        ":ubuntu_15.10-x86_64-2",
-        ":ubuntu_15.10-x86_64-3",
-        ":ubuntu_15.10-x86_64-4",
-        ":ubuntu_15.10-x86_64-docker-1",
-        ":deploy",
-    ],
+                  ":deploy",
+                  ":jenkins-common-configs",
+              ] + jenkins_node_names(DARWIN_PREFIX, DARWIN_COUNT) +
+              jenkins_node_names(WINDOWS_PREFIX, WINDOWS_COUNT) +
+              jenkins_node_names(UBUNTU_DOCKER_PREFIX, UBUNTU_DOCKER_COUNT) +
+              jenkins_node_names(UBUNTU_1404_PREFIX, UBUNTU_1404_COUNT) +
+              jenkins_node_names(UBUNTU_1510_PREFIX, UBUNTU_1510_COUNT),
     jobs = [
         "//jenkins/jobs",
         ":gerrit-verifier-flow",
@@ -286,13 +251,13 @@ jenkins_build(
 jenkins_build(
     name = "jenkins-staging",
     configs = [
-        ":jenkins-common-configs",
-        ":windows-x86_64-staging",
         ":darwin-x86_64-staging",
-        ":ubuntu_14.04-x86_64-staging",
-        ":ubuntu_15.10-x86_64-staging",
-        ":ubuntu_15.10-x86_64-docker-staging",
         ":deploy-staging",
+        ":jenkins-common-configs",
+        ":ubuntu_14.04-x86_64-staging",
+        ":ubuntu_15.10-x86_64-docker-staging",
+        ":ubuntu_15.10-x86_64-staging",
+        ":windows-x86_64-staging",
     ],
     jobs = [
         "//jenkins/jobs:staging-jobs",
@@ -309,9 +274,9 @@ jenkins_build(
 jenkins_build(
     name = "jenkins-test",
     configs = [
+        ":deploy",
         ":jenkins-common-configs",
         ":ubuntu-docker",
-        ":deploy",
     ],
     jobs = [
         "//jenkins/jobs:test-jobs",
