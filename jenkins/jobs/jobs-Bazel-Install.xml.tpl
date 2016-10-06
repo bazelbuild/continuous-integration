@@ -38,7 +38,7 @@
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
     <hudson.plugins.copyartifact.CopyArtifact plugin="{{ variables.JENKINS_PLUGIN_copyartifact }}">
       <project>Bazel</project>
-      <filter>**/ci/*installer*.sh,**/ci/bazel.exe</filter>
+      <filter>**/ci/*installer*.sh,**/ci/bazel*.exe</filter>
       <target>bazel-installer</target>
       <excludes></excludes>
       <selector class="hudson.plugins.copyartifact.TriggeredBuildSelector">
