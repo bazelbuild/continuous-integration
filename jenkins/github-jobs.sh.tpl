@@ -43,8 +43,8 @@ EOF
 #enable sandbox
 if [[ "${PLATFORM_NAME}" =~ .*darwin.* ]]; then
   cat >>${ROOT}/bazel.bazelrc <<EOF
-test --spawn_strategy=sandboxed
-test --genrule_strategy=sandboxed
+test --spawn_strategy=remote
+test --genrule_strategy=remote
 test --local_test_jobs=3
 EOF
 fi
