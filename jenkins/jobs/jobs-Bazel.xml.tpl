@@ -104,9 +104,22 @@ fi
       <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
     <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
-      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
-        <expression>windows.*</expression>
-        <label>${PLATFORM_NAME}</label>
+      <condition class="org.jenkins_ci.plugins.run_condition.logic.And" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
+        <conditions>
+          <org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
+            <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition">
+              <expression>windows.*</expression>
+              <label>${PLATFORM_NAME}</label>
+            </condition>
+          </org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
+          <org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
+            <condition class="org.jenkins_ci.plugins.run_condition.core.StringsMatchCondition">
+              <arg1>1.8</arg1>
+              <arg2>${JAVA_VERSION}</arg2>
+              <ignoreCase>false</ignoreCase>
+            </condition>
+          </org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
+        </conditions>
       </condition>
       <buildStep class="hudson.tasks.BatchFile">
         <command>scripts\ci\windows\compile_windows.bat</command>
