@@ -40,11 +40,8 @@ test --test_tag_filters ${TEST_TAG_FILTERS}
 test --define JAVA_VERSION=${JAVA_VERSION}
 EOF
 
-#enable sandbox
 if [[ "${PLATFORM_NAME}" =~ .*darwin.* ]]; then
   cat >>${ROOT}/bazel.bazelrc <<EOF
-test --spawn_strategy=remote
-test --genrule_strategy=remote
 test --local_test_jobs=3
 EOF
 fi
