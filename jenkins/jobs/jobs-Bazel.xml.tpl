@@ -93,7 +93,12 @@ export BUILD_BY=&quot;Jenkins&quot;
 export BUILD_LOG=&quot;${BUILD_URL}&quot;
 export GIT_REPOSITORY_URL=&quot;${GIT_URL}&quot;
 export BAZEL_COMPILE_TARGET=&quot;compile,srcs,determinism&quot;
-export BOOTSTRAP_BAZEL=&quot;${HOME}/.bazel/latest/binary/bazel&quot;
+if [ &quot;${JAVA_VERSION}&quot; = &quot;1.7&quot; ]
+then
+  export BOOTSTRAP_BAZEL=&quot;${HOME}/.bazel/latest-jdk7/binary/bazel&quot;
+else
+  export BOOTSTRAP_BAZEL=&quot;${HOME}/.bazel/latest/binary/bazel&quot;
+fi
 
 if [[ &quot;${NODE_LABELS}&quot; =~ &quot;no-release&quot; ]]; then
   bazel_build
