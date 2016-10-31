@@ -70,7 +70,7 @@
       <project>Bazel</project>
       <filter>**/ci/*</filter>
       <target>input</target>
-      <excludes>**/ci/bazel,**/*.bazel.io.tar</excludes>
+      <excludes>**/ci/bazel,**/*.bazel.build.tar</excludes>
       <selector class="hudson.plugins.copyartifact.TriggeredBuildSelector">
         <fallbackToLastSuccessful>true</fallbackToLastSuccessful>
         <upstreamFilterStrategy>UseGlobalSetting</upstreamFilterStrategy>

@@ -68,7 +68,7 @@
   <builders>
     <hudson.plugins.copyartifact.CopyArtifact plugin="{{ variables.JENKINS_PLUGIN_copyartifact }}">
       <project>Bazel</project>
-      <filter>**/ci/*.bazel.io.tar</filter>
+      <filter>**/ci/*.bazel.build.tar</filter>
       <target>input</target>
       <excludes/>
       <selector class="hudson.plugins.copyartifact.TriggeredBuildSelector">
@@ -89,7 +89,7 @@ source scripts/ci/build.sh
 
 mkdir sites
 args=()
-for i in $(find input -name '*.bazel.io.tar'); do
+for i in $(find input -name '*.bazel.build.tar'); do
   site=&quot;$(basename $i .tar)&quot;
   if [ ! -f &quot;sites/${site}&quot; ]; then
     touch &quot;sites/${site}&quot;
