@@ -150,4 +150,8 @@ JENKINS_PLUGINS = {
         "1.17.1",
         "bd4265488037847917bc56f046e54c7769c20474c70c1b5431e8e87383c55ccf",
     ],
+    "build-monitor-plugin": [
+        "1.10+build.201610041454",
+        "d415688ca679835c3a4db3fdad82fd1f977f9ffd22947ab9076074f116ee3a54",
+    ],
 }

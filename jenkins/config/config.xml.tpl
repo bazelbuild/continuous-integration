@@ -62,6 +62,28 @@
       </columns>
       <recurse>false</recurse>
     </listView>
+    <com.smartcodeltd.jenkinsci.plugins.buildmonitor.BuildMonitorView>
+      <owner class="hudson" reference="../../.."/>
+      <name>Dashboard</name>
+      <filterExecutors>false</filterExecutors>
+      <filterQueue>false</filterQueue>
+      <properties class="hudson.model.View$PropertyList"/>
+      <jobNames>
+        <comparator class="hudson.util.CaseInsensitiveComparator"/>
+        <string>Bazel</string>
+        <string>Bazel-Install-Trigger</string>
+        <string>Bazel-Publish-Site</string>
+        {% for v in variables.GITHUB_JOBS.split(", ") %}<string>{{ v }}</string>{% endfor %}
+      </jobNames>
+      <jobFilters/>
+      <columns/>
+      <recurse>true</recurse>
+      <title>Dashboard</title>
+      <config>
+        <displayCommitters>false</displayCommitters>
+        <order class="com.smartcodeltd.jenkinsci.plugins.buildmonitor.order.ByName"/>
+      </config>
+    </com.smartcodeltd.jenkinsci.plugins.buildmonitor.BuildMonitorView>
   </views>
   <primaryView>Projects</primaryView>
   <nodeProperties/>
