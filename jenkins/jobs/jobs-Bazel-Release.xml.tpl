@@ -98,9 +98,13 @@ done
 bazel_release &quot;${args[@]}&quot;
 
 mkdir -p output/ci
-echo &quot;${RELEASE_EMAIL_RECIPIENT}&quot; &gt; output/ci/recipient
-echo &quot;${RELEASE_EMAIL_SUBJECT}&quot; &gt; output/ci/subject
-echo &quot;${RELEASE_EMAIL_CONTENT}&quot; &gt; output/ci/content
+if [[ ! $(get_release_name) =~ .*test.* ]]; then
+  echo &quot;${RELEASE_EMAIL_RECIPIENT}&quot; &gt; output/ci/recipient
+  echo &quot;${RELEASE_EMAIL_SUBJECT}&quot; &gt; output/ci/subject
+  echo &quot;${RELEASE_EMAIL_CONTENT}&quot; &gt; output/ci/content
+else
+  echo &quot;Test release, skiping sending mail...&quot;
+fi
 echo &quot;To: ${RELEASE_EMAIL_RECIPIENT}&quot;
 echo &quot;Subject: ${RELEASE_EMAIL_SUBJECT}&quot;
 echo &quot;Content: ${RELEASE_EMAIL_CONTENT}&quot;</command>
