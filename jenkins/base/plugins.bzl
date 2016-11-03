@@ -146,4 +146,8 @@ JENKINS_PLUGINS = {
         "1.9",
         "9d950ce4bfdcb67e1b1198ea2b54e18de95ec3214b1cf1135141b5b54a62edb2",
     ],
+    "build-timeout": [
+        "1.17.1",
+        "bd4265488037847917bc56f046e54c7769c20474c70c1b5431e8e87383c55ccf",
+    ],
 }

@@ -35,7 +35,19 @@
   </triggers>
   <concurrentBuild>false</concurrentBuild>
   <builders/>
-  <buildWrappers/>
+  <buildWrappers>
+    <hudson.plugins.build__timeout.BuildTimeoutWrapper>
+      <strategy class="hudson.plugins.build_timeout.impl.AbsoluteTimeOutStrategy">
+        <timeoutMinutes>240</timeoutMinutes>
+      </strategy>
+      <operationList>
+        <hudson.plugins.build__timeout.operations.FailOperation/>
+        <hudson.plugins.build__timeout.operations.WriteDescriptionOperation>
+          <description>Timed out</description>
+        </hudson.plugins.build__timeout.operations.WriteDescriptionOperation>
+      </operationList>
+    </hudson.plugins.build__timeout.BuildTimeoutWrapper>
+  </buildWrappers>
   <icon/>
   <dsl>{{ imports['//jenkins:gerrit-verifier-flow.groovy'] }}</dsl>
   <buildNeedsWorkspace>false</buildNeedsWorkspace>
