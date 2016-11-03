@@ -4,6 +4,10 @@ if (Test-Path "c:\bazel_ci\install_completed.txt") {
   Exit
 }
 
+# Stop on action error.
+# TODO(dmarting): for executable, we need to check for $LastExitCode each time.
+$ErrorActionPreference = "Stop"
+
 New-Item c:\bazel_ci -type directory
 Set-Location c:\bazel_ci
 
