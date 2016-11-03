@@ -31,6 +31,12 @@ if [ ! $# -eq 1 ]; then
 fi
 node_name=$1
 
+# Test that we can sudo
+if ! sudo /usr/bin/true; then
+  echo "The CI user must have sudo right"
+  exit
+fi
+
 cd $HOME
 
 # Write the node name
@@ -39,74 +45,20 @@ echo -n ${node_name} > $HOME/node_name
 # Try to accept Xcode license
 sudo git version
 
-# Install the Android NDK
-curl -so android-ndk.zip https://dl.google.com/android/repository/android-ndk-r11c-darwin-x86_64.zip
-unzip android-ndk.zip
-rm android-ndk.zip
+# Set the machine to never sleep
+sudo systemsetup -setcomputersleep Never
 
-# Install the Android SDK
-curl -so android-sdk.zip https://dl.google.com/android/android-sdk_r24.4.1-macosx.zip
-unzip android-sdk.zip
-rm android-sdk.zip
-(cd android-sdk-macosx && tools/android update sdk --no-ui)
+# Url to fetch other scripts
+# We use script from HEAD, ideally we would use the same commit hash
+# than this script but it is not really easy and we generally do not
+# want to run that script from something else than HEAD.
+MAC_SETUP_BASE_URL="${MAC_SETUP_BASE_URL-https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/}"
 
-# Now configure the service
-cat >launch.sh <<'EOF'
-#!/bin/bash
+# Install Bazel
+curl "${MAC_SETUP_BASE_URL}/gce/bootstrap-bazel.sh" | bash
 
-cd $HOME
-staging=
-if [[ "$(cat $HOME/node_name)" =~ .*-staging$ ]]; then
-  staging='-staging'
-fi
+# Install Android SDK
+curl "${MAC_SETUP_BASE_URL}/mac/mac-android.sh" | bash
 
-retry=1
-while (( $retry != 0 )); do
-  retry=0
-  rm -f slave.jar slave-agent.jnlp
-  curl -qo slave.jar http://ci${staging}.bazel.io/jnlpJars/slave.jar || retry=1
-  curl -qo slave-agent.jnlp http://ci${staging}.bazel.io/computer/$(cat $HOME/node_name)/slave-agent.jnlp || retry=1
-  sleep 5
-done
-
-export ANDROID_SDK_PATH=$(echo $HOME/android-sdk-*)
-export ANDROID_NDK_PATH=$(echo $HOME/android-ndk-*)
-export ANDROID_SDK_BUILD_TOOLS_VERSION=$(ls $ANDROID_SDK_PATH/build-tools | sort -n | tail -1)
-export ANDROID_SDK_API_LEVEL=$(ls $ANDROID_SDK_PATH/platforms | cut -d '-' -f 2 | sort -n | tail -1)
-export ANDROID_NDK_API_LEVEL=$(ls $ANDROID_NDK_PATH/platforms | cut -d '-' -f 2 | sort -n | tail -1)
-chmod a+r slave-agent.jnlp
-
-while true; do
-  $(which java) -jar slave.jar -jnlpUrl file:///$HOME/slave-agent.jnlp -noReconnect
-  # The jenkins server is probably down, sleep and retry in 1 minute
-  sleep 60
-done
-EOF
-chmod +x launch.sh
-
-cat <<EOF | sudo tee /Library/LaunchDaemons/jenkins.plist
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0 //EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>io.bazel.ci.jenkins.slave</string>
-    <key>ProgramArguments</key>
-    <array></array>
-    <key>UserName</key>
-    <string>$USER</string>
-    <key>Program</key>
-    <string>$HOME/launch.sh</string>
-    <key>StandardOutputPath</key>
-    <string>$HOME/jenkins.slave.out.log</string>
-    <key>StandardErrorPath</key>
-    <string>$HOME/jenkins.slave.err.log</string>
-    <key>KeepAlive</key>
-    <true/>
-    <key>RunAtLoad</key>
-    <true/>
-</dict>
-</plist>
-EOF
-
-sudo launchctl load /Library/LaunchDaemons/jenkins.plist
+# Install the service
+curl "${MAC_SETUP_BASE_URL}/mac/mac-service.sh" | bash

@@ -51,7 +51,6 @@ have to be set up manually.
 2. Create a "ci" user with "sudo" right, download the
   `mac/setup_mac.sh` script, and run it as that user:
 ```
-$ curl https://bazel.googlesource.com/continuous-integration/+/master/mac/setup_mac.sh
-$ sudo su ci mac/setup_mac.sh
+$ curl -o setup_mac.sh "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/mac/setup_mac.sh"
+$ sudo su ci -c "/bin/bash setup_mac.sh <node_name>"
 ```
-3. Make sure the energy preferences of the machines is set to __never sleep__.
