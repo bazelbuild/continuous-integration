@@ -51,7 +51,7 @@ bazel_github_job(
     name = "Tutorial",
     configure = ["source ./ci/setup_android_repositories.sh"],
     org = "bazelbuild",
-    platforms =  UNIX_PLATFORMS,
+    platforms = UNIX_PLATFORMS,
     project = "examples",
     targets = ["//:all"],
     tests = [],
@@ -169,6 +169,40 @@ bazel_github_job(
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
 ) for job in DISABLED_RULES]
+
+bazel_github_job(
+    name = "intellij",
+    org = "bazelbuild",
+    platforms = UNIX_PLATFORMS,
+    project = "intellij",
+    project_url = "https://ij.bazel.io",
+    targets = ["ijwb:ijwb_bazel"],
+    tests = [":ijwb_tests"],
+)
+
+bazel_github_job(
+    name = "intellij-android-studio",
+    build_opts = ["--define=ij_product=android-studio-latest"],
+    org = "bazelbuild",
+    platforms = UNIX_PLATFORMS,
+    project = "intellij",
+    project_url = "https://ij.bazel.io",
+    targets = ["aswb:aswb_bazel"],
+    test_opts = ["--define=ij_product=android-studio-latest"],
+    tests = [":aswb_tests"],
+)
+
+bazel_github_job(
+    name = "intellij-clion",
+    build_opts = ["--define=ij_product=clion-latest"],
+    org = "bazelbuild",
+    platforms = UNIX_PLATFORMS,
+    project = "intellij",
+    project_url = "https://ij.bazel.io",
+    targets = ["clwb:clwb_bazel"],
+    test_opts = ["--define=ij_product=clion-latest"],
+    tests = [":clwb_tests"],
+)
 
 bazel_github_job(
     name = "dash",

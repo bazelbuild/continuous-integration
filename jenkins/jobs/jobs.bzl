@@ -46,6 +46,9 @@ GITHUB_JOBS = [
     # rules_web was renamed to rules_webtesting, keep the legacy name
     # for the job to keep history but use the new project name.
     "rules_web",
+    "intellij",
+    "intellij-android-studio",
+    "intellij-clion",
 ] + GERRIT_JOBS + RULES.keys() + DISABLED_RULES
 
 NO_PR_JOBS = ["bazel-docker-tests"]
