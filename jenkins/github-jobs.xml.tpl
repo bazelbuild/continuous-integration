@@ -18,17 +18,19 @@
   <actions/>
   <description>Test the {{ variables.PROJECT_NAME }} project still build with Bazel at head and latest release.</description>
   <keepDependencies>false</keepDependencies>
+  {% if variables.github == "true" %}
   <properties>
     <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="{{ variables.JENKINS_PLUGIN_github }}">
-      <projectUrl>{{ variables.PROJECT_URL }}</projectUrl>
+      <projectUrl>{{ variables.GITHUB_URL }}</projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
   </properties>
+  {% endif %}
   <scm class="hudson.plugins.git.GitSCM" plugin="{{ variables.JENKINS_PLUGIN_git }}">
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
         <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
-        <url>{{ variables.GITHUB_URL }}</url>
+        <url>{{ variables.GIT_URL }}</url>
       </hudson.plugins.git.UserRemoteConfig>
     </userRemoteConfigs>
     <branches>

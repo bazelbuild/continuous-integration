@@ -172,14 +172,33 @@ _merge_files = rule(
 )
 
 def jenkins_job(name, config, substitutions = {}, deps = [],
-                project='bazel', org='bazelbuild', project_url=None,
+                project='bazel', org='bazelbuild', git_url=None, project_url=None,
                 platforms=[], test_platforms=["linux-x86_64"]):
-  """Create a job configuration on Jenkins."""
+  """Create a job configuration on Jenkins.
+
+  Args:
+     name: the name of the job to create
+     config: the configuration file for the job
+     substitutions: additional substitutions to pass to the template generation
+     deps: list of dependencies (templates included by the config file)
+     project: the project name on github
+     org: the project organization on github, default 'bazelbuild'
+     git_url: the URL to the git project, defaulted to the Github URL
+     project_url: the project url, defaulted to the Git URL
+     platforms: platforms on which to run that job, default None,
+     test_platforms: platforms on which to run that job when inside of a
+       dockerized test, by default only 'linux-x86_64'
+  """
+  github_project =  "%s/%s" % (org, project.lower())
+  github_url = "https://github.com/" + github_project
+  if not git_url:
+    git_url = github_url
   if not project_url:
-    project_url = "https://github.com/%s/%s" % (org, project.lower())
+    project_url = git_url
   substitutions = substitutions + JENKINS_PLUGINS_VERSIONS + {
-      "GITHUB_URL": "https://github.com/%s/%s" % (org, project.lower()),
-      "GITHUB_PROJECT": "%s/%s" % (org, project.lower()),
+      "GITHUB_URL": github_url,
+      "GIT_URL": git_url,
+      "GITHUB_PROJECT": github_project,
       "PROJECT_URL": project_url,
       "PLATFORMS": "\n".join(platforms),
       } + MAILS_SUBSTITUTIONS
@@ -210,8 +229,17 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
       substitutions = JENKINS_PLUGINS_VERSIONS + substitutions,
     )
 
+def bazel_git_job(**kwargs):
+  """Override bazel_github_job to test a project that is not on GitHub."""
+  kwargs["github_enabled"] = False
+  if not "git_url" in kwargs:
+    if not "project_url" in kwargs:
+      fail("Neither project_url nor git_url was specified")
+    kwargs["git_url"] = kwargs
+  bazel_github_job(**kwargs)
+
 def bazel_github_job(name, platforms=[], branch="master", project=None, org="google",
-                     project_url=None, workspace=".", configure=[],
+                     project_url=None, workspace=".", configure=[], git_url=None,
                      bazel_versions=["HEAD", "latest"],
                      tests=["//..."], targets=["//..."], substitutions={},
                      test_opts=["--test_output=errors", "--build_tests_only"],
@@ -221,7 +249,8 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
                      enable_trigger=True,
                      gerrit_project=None,
                      enabled=True,
-                     pr_enabled=True):
+                     pr_enabled=True,
+                     github_enabled=True):
   """Create a generic github job configuration to build against Bazel head."""
   if not project:
     project = name
@@ -237,7 +266,8 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
     "BUILDS": " ".join(targets),
     "BAZEL_VERSIONS": "\n".join(bazel_versions),
     "disabled": str(not enabled).lower(),
-    "enable_trigger": str(enable_trigger).lower(),
+    "enable_trigger": str(enable_trigger and github_enabled).lower(),
+    "github": str(github_enabled),
     "GERRIT_PROJECT": str(gerrit_project),
   }
 
@@ -249,6 +279,7 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
           "//jenkins:github-jobs.test-logs.sh.tpl",
       ],
       substitutions=substitutions,
+      git_url=git_url,
       project=project,
       org=org,
       project_url=project_url,
