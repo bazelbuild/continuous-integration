@@ -16,7 +16,7 @@
 load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
 load(":jenkins.bzl", "jenkins_node", "jenkins_build", "jenkins_job")
 load(":nodes.bzl", "jenkins_nodes", "jenkins_node_names")
-load("//jenkins/jobs:jobs.bzl", "JOBS_SUBSTITUTIONS")
+load("//jenkins/jobs:jobs.bzl", "JOBS_SUBSTITUTIONS", "STAGING_JOBS_SUBSTITUTIONS")
 
 exports_files(glob(["github-jobs*.tpl"]))
 
@@ -265,7 +265,7 @@ jenkins_build(
     substitutions = {
         "SECURITY_CONFIG": SECURITY_CONFIG,
         "PUBLIC_JENKINS_URL": "http://ci-staging.bazel.io/",
-    } + JOBS_SUBSTITUTIONS,
+    } + STAGING_JOBS_SUBSTITUTIONS,
     visibility = ["//gcr:__pkg__"],
 )
 

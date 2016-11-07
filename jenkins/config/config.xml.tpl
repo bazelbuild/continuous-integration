@@ -69,16 +69,13 @@
       <filterQueue>false</filterQueue>
       <properties class="hudson.model.View$PropertyList"/>
       <jobNames>
-        <comparator class="hudson.util.CaseInsensitiveComparator"/>
-        <string>Bazel</string>
-        <string>Bazel-Install-Trigger</string>
-        <string>Bazel-Publish-Site</string>
-        {% for v in variables.GITHUB_JOBS.split(", ") %}<string>{{ v }}</string>{% endfor %}
+        <comparator class="hudson.util.CaseInsensitiveComparator"/>{% for v in variables.IMPORTANT_JOBS.split(", ")|sort %}
+        <string>{{ v }}</string>{% endfor %}
       </jobNames>
       <jobFilters/>
       <columns/>
       <recurse>true</recurse>
-      <title>Dashboard</title>
+      <title>Bazel Tests</title>
       <config>
         <displayCommitters>false</displayCommitters>
         <order class="com.smartcodeltd.jenkinsci.plugins.buildmonitor.order.ByName"/>

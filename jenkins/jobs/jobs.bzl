@@ -67,6 +67,13 @@ JOBS = BAZEL_JOBS.keys() + GITHUB_JOBS + NO_PR_JOBS + [
 JOBS_SUBSTITUTIONS = {
     "GITHUB_JOBS": ", ".join(GITHUB_JOBS + NO_PR_JOBS),
     "BAZEL_JOBS": ", ".join(BAZEL_JOBS.keys()),
+    "IMPORTANT_JOBS": ", ".join(GITHUB_JOBS + NO_PR_JOBS + ["Bazel", "Bazel-Publish-Site", "Bazel-Install-Trigger"])
 }
 
-STAGING_JOBS = BAZEL_STAGING_JOBS.keys() + GERRIT_JOBS + ["TensorFlow", "Tutorial"]
+STAGING_GITHUB_JOBS = GERRIT_JOBS + ["TensorFlow", "Tutorial"]
+STAGING_JOBS = BAZEL_STAGING_JOBS.keys() + STAGING_GITHUB_JOBS
+STAGING_JOBS_SUBSTITUTIONS = {
+    "GITHUB_JOBS": ", ".join(STAGING_GITHUB_JOBS),
+    "BAZEL_JOBS": ", ".join(BAZEL_STAGING_JOBS.keys()),
+    "IMPORTANT_JOBS": ", ".join(STAGING_GITHUB_JOBS + ["Bazel", "Bazel-Publish-Site", "Bazel-Install-Trigger"])
+}
