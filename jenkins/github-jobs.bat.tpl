@@ -37,11 +37,11 @@ echo test --define JAVA_VERSION=1.8 >> %BAZELRC%
 del .unstable
 
 if not "{{ variables.WINDOWS_BUILDS }}" == "" (
-	call:bazel build {{ variables.WINDOWS_BUILDS }}
+  call:bazel build {{ variables.WINDOWS_BUILDS }}
 )
 
 if not "{{ variables.WINDOWS_TESTS }}" == "" (
-	call:bazel test {{ variables.WINDOWS_TESTS }}
+  call:bazel test {{ variables.WINDOWS_TESTS }}
 )
 
 exit %errorlevel%
@@ -50,13 +50,13 @@ exit %errorlevel%
 %BAZEL% --bazelrc=%BAZELRC% %*
 set retCode=%errorlevel%
 if %retCode%==3 (
-	:: Write 1 in the .unstable file so the following step in Jenkins
+  :: Write 1 in the .unstable file so the following step in Jenkins
   :: know that it is a test failure.
   echo 1 > %ROOT%\.unstable
 ) else (
   if not %retCode%==0 (
-		:: Else simply fails the job by exiting with a non null return code
-	  exit /b %retCode%
+    :: Else simply fails the job by exiting with a non null return code
+    exit /b %retCode%
   )
 )
 exit /b 0

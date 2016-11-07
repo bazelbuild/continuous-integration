@@ -22,13 +22,14 @@ echo $res = $req.getresponse(); >> get_latest_bazel_version.ps1
 echo $res.Close(); >> get_latest_bazel_version.ps1
 echo $res.ResponseUri.AbsolutePath.TrimStart("/bazelbuild/bazel/releases/tag/") >> get_latest_bazel_version.ps1
 for /F %%i in ('powershell -file get_latest_bazel_version.ps1') do set BAZEL_VERSION=%%i
+del get_latest_bazel_version.ps1
 
 echo %BAZEL_VERSION%
 
 :: Download the latest bazel release
 set folder=c:\bazel_ci\installs\%BAZEL_VERSION%
-if not exist %folder% (
-  set url='https://github.com/bazelbuild/bazel/releases/download/%BAZEL_VERSION%/bazel-%BAZEL_VERSION%-windows-x86_64.exe'
+set url='https://github.com/bazelbuild/bazel/releases/download/%BAZEL_VERSION%/bazel-%BAZEL_VERSION%-windows-x86_64.exe'
+if not exist %folder%\bazel.exe (
   md %folder%
   powershell -Command "(New-Object Net.WebClient).DownloadFile(%url%, '%folder%\bazel.exe')"
 )
@@ -40,3 +41,11 @@ mklink /J c:\bazel_ci\installs\latest %folder%
 :: Install Bazel built at HEAD
 md c:\bazel_ci\installs\HEAD
 echo F | xcopy /y "bazel-installer\JAVA_VERSION=1.8,PLATFORM_NAME=windows-x86_64\output\ci\bazel*.exe" c:\bazel_ci\installs\HEAD\bazel.exe
+
+:: check if installation is successfuly
+if not exist c:\bazel_ci\installs\latest\bazel.exe (
+  exit 1
+)
+if not exist c:\bazel_ci\installs\HEAD\bazel.exe (
+  exit 1
+)
