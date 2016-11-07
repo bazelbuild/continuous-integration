@@ -3,6 +3,7 @@ load(
     ":jobs.bzl",
     "LINUX_PLATFORMS",
     "UNIX_PLATFORMS",
+    "ALL_PLATFORMS",
     "RULES",
     "DISABLED_RULES",
     "BAZEL_JOBS",
@@ -98,9 +99,10 @@ bazel_github_job(
     enable_trigger = False,
     gerrit_project = "bazel",
     org = "bazelbuild",
-    platforms = UNIX_PLATFORMS,
+    platforms = ALL_PLATFORMS,
     project = "bazel",
     targets = [],
+    windows_targets = [],
     test_opts = [
         "-k",
         "--test_output=errors",
@@ -110,6 +112,10 @@ bazel_github_job(
         "//scripts/...",
         "//src/...",
         "//third_party/ijar/...",
+    ],
+    windows_tests = [
+        "//src/test/java/...",
+        "//src/test/shell/bazel:bazel_windows_example_test",
     ],
 )
 

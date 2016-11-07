@@ -87,12 +87,50 @@ This job for testing changes submitted to the Gerrit project: {{ variables.GERRI
     </hudson.matrix.TextAxis>
   </axes>
   <builders>
+    <org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder plugin="conditional-buildstep@1.3.3">
+    <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="run-condition@1.0"/>
+    <runCondition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="run-condition@1.0">
+      <expression>(darwin|linux|ubuntu).*</expression>
+      <label>${PLATFORM_NAME}</label>
+    </runCondition>
+    <conditionalbuilders>
     <hudson.tasks.Shell>
       <command>{{ imports['//jenkins:github-jobs.sh.tpl'] }}</command>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
       <command>{{ imports['//jenkins:github-jobs.test-logs.sh.tpl'] }}</command>
     </hudson.tasks.Shell>
+    </conditionalbuilders>
+    </org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder>
+
+    <org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder plugin="conditional-buildstep@1.3.3">
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="run-condition@1.0"/>
+      <runCondition class="org.jenkins_ci.plugins.run_condition.logic.And" plugin="run-condition@1.0">
+        <conditions>
+          <org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
+            <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition">
+              <expression>windows.*</expression>
+              <label>${PLATFORM_NAME}</label>
+            </condition>
+          </org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
+          <org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
+            <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition">
+              <expression>^((?!jdk7).)*$</expression>
+              <label>${BAZEL_VERSION}</label>
+            </condition>
+          </org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
+        </conditions>
+      </runCondition>
+      <conditionalbuilders>
+        <hudson.tasks.BatchFile>
+          <command>{{ imports['//jenkins:github-jobs.bat.tpl'] }}</command>
+        </hudson.tasks.BatchFile>
+        <hudson.tasks.BatchFile>
+          <command>{{ imports['//jenkins:github-jobs.test-logs.bat.tpl'] }}</command>
+        </hudson.tasks.BatchFile>
+      </conditionalbuilders>
+    </org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder>
+
     <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
       <condition class="org.jenkins_ci.plugins.run_condition.core.FileExistsCondition">
         <file>.unstable</file>

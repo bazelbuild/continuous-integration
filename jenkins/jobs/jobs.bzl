@@ -5,7 +5,11 @@ LINUX_PLATFORMS = [
 
 DARWIN_PLATFORMS = ["darwin-x86_64"]
 
+WINDOWS_PLATFORMS = ["windows-x86_64"]
+
 UNIX_PLATFORMS = LINUX_PLATFORMS + DARWIN_PLATFORMS
+
+ALL_PLATFORMS = UNIX_PLATFORMS + WINDOWS_PLATFORMS
 
 RULES = {
     "rules_appengine": UNIX_PLATFORMS,
@@ -44,7 +48,7 @@ GITHUB_JOBS = [
 NO_PR_JOBS = ["bazel-docker-tests"]
 
 BAZEL_STAGING_JOBS = {
-    "Bazel": UNIX_PLATFORMS + ["windows-x86_64"],
+    "Bazel": ALL_PLATFORMS,
     "Github-Trigger": UNIX_PLATFORMS,
     "Bazel-Install": [],
     "Bazel-Install-Trigger": [],
