@@ -1,4 +1,4 @@
-load("//jenkins:jenkins.bzl", "jenkins_job", "bazel_github_job")
+load("//jenkins:jenkins.bzl", "jenkins_job", "bazel_github_job", "bazel_git_job")
 load(
     ":jobs.bzl",
     "LINUX_PLATFORMS",
@@ -58,6 +58,35 @@ bazel_github_job(
     workspace = "tutorial",
 )
 
+bazel_git_job(
+    name = "gerrit",
+    configure = ["""
+# Gerrit needs nodejs to be installed on the platform
+if [[ "${PLATFORM_NAME}" =~ .*darwin.* ]]; then
+  node_dir="node-v6.9.1-darwin-x64"
+else
+  node_dir="node-v6.9.1-linux-x64"
+fi
+if [ ! -d "${HOME}/node" ]; then
+  mkdir -p "${HOME}/node"
+  (cd "${HOME}/node" && curl "https://nodejs.org/dist/v6.9.1/${node_dir}.tar.gz" | tar zx)
+fi
+export PATH="${HOME}/node/${node_dir}/bin:${PATH}"
+# This is because bazel 0.4 has a bug, normally --action_env=PATH should be enough.
+# TODO(dmarting): Remove when bazel 0.4.1 get released.
+cat >>${ROOT}/bazel.bazelrc <<EOF
+build --action_env=PATH=${PATH}
+EOF
+"""],
+    git_url = "https://gerrit.googlesource.com/gerrit",
+    org = "GerritCodeReview",
+    platforms = UNIX_PLATFORMS,
+    project = "gerrit",
+    project_url = "https://www.gerritcodereview.com",
+    targets = ["//:release"],
+    tests = ["//..."],
+)
+
 bazel_github_job(
     name = "bazel-docker-tests",
     bazel_versions = [
@@ -102,7 +131,6 @@ bazel_github_job(
     platforms = ALL_PLATFORMS,
     project = "bazel",
     targets = [],
-    windows_targets = [],
     test_opts = [
         "-k",
         "--test_output=errors",
@@ -113,6 +141,7 @@ bazel_github_job(
         "//src/...",
         "//third_party/ijar/...",
     ],
+    windows_targets = [],
     windows_tests = [
         "//src/test/java/...",
         "//src/test/shell/bazel:bazel_windows_example_test",

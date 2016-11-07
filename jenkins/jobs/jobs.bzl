@@ -43,6 +43,7 @@ GITHUB_JOBS = [
     "re2",
     "protobuf",
     "dash",
+    "gerrit",
 ] + GERRIT_JOBS + RULES.keys() + DISABLED_RULES
 
 NO_PR_JOBS = ["bazel-docker-tests"]
