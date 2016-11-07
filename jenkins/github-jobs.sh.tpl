@@ -50,8 +50,6 @@ if [[ "${PLATFORM_NAME}" =~ .*darwin.* ]] && \
       xcodebuild -showsdks 2> /dev/null | grep -q '\-sdk iphonesimulator'; then
   cat >>${ROOT}/bazel.bazelrc <<EOF
 build --define IPHONE_SDK=1
-# TODO(dmarting): remove next line after september 2016 release of Bazel
-build --ios_sdk_version=$(xcrun --sdk iphoneos --show-sdk-version)
 EOF
 fi
 
