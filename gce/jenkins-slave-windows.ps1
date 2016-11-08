@@ -69,6 +69,22 @@ Write-Output $bash_installer | Out-File -Encoding ascii install.sh
 # Find the JDK. The path changes frequently, so hardcoding it is not enough.
 $java=Get-ChildItem "c:\Program Files\Java\jdk*" | Select-Object -Index 0 | foreach { $_.FullName }
 
+# Get the latest release version number of Bazel
+$url = "https://github.com/bazelbuild/bazel/releases/latest"
+$req=[system.Net.HttpWebRequest]::Create($url);
+$res = $req.getresponse();
+$res.Close();
+$bazel_version=$res.ResponseUri.AbsolutePath.TrimStart("/bazelbuild/bazel/releases/tag/")
+
+# Download the latest bazel
+$folder="c:\bazel_ci\installs\${BAZEL_VERSION}"
+$url="https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-windows-x86_64.exe"
+New-Item $folder -type directory -force
+(New-Object Net.WebClient).DownloadFile("${url}", "${folder}\bazel.exe")
+
+# Create a junction to the latest release
+New-Item -ItemType Junction -Path c:\bazel_ci\installs\latest -Value $folder
+
 # Replace the host name in the JNLP file, because Jenkins, in its infinite
 # wisdom, does not let us change that separately from its external hostname.
 $jnlp=((New-Object Net.WebClient).DownloadString("http://${jenkins_master}/computer/${jenkins_node}/slave-agent.jnlp"))
