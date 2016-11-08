@@ -44,6 +44,8 @@ if not "{{ variables.WINDOWS_TESTS }}" == "" (
 	call:bazel test {{ variables.WINDOWS_TESTS }}
 )
 
+exit %errorlevel%
+
 :bazel
 %BAZEL% --bazelrc=%BAZELRC% %*
 set retCode=%errorlevel%
