@@ -85,27 +85,7 @@ To be run on head and for release branch/tags only</description>
         <label>${PLATFORM_NAME}</label>
       </condition>
       <buildStep class="hudson.tasks.Shell">
-        <command>#!/bin/bash
-
-source scripts/ci/build.sh
-
-export BUILD_BY=&quot;Jenkins&quot;
-export BUILD_LOG=&quot;${BUILD_URL}&quot;
-export GIT_REPOSITORY_URL=&quot;${GIT_URL}&quot;
-export BAZEL_COMPILE_TARGET=&quot;compile,srcs,determinism&quot;
-if [ &quot;${JAVA_VERSION}&quot; = &quot;1.7&quot; ]
-then
-  export BOOTSTRAP_BAZEL=&quot;${HOME}/.bazel/latest-jdk7/binary/bazel&quot;
-else
-  export BOOTSTRAP_BAZEL=&quot;${HOME}/.bazel/latest/binary/bazel&quot;
-fi
-
-if [[ &quot;${NODE_LABELS}&quot; =~ &quot;no-release&quot; ]]; then
-  bazel_build
-else
-  bazel_build output/ci
-fi
-</command>
+        <command>{{ imports['//jenkins/jobs:Bazel.unix.sh.tpl'] }}</command>
       </buildStep>
       <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
@@ -127,8 +107,8 @@ fi
           </org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
         </conditions>
       </condition>
-      <buildStep class="hudson.tasks.BatchFile">
-        <command>scripts\ci\windows\compile_windows.bat</command>
+      <buildStep class="hudson.tasks.Shell">
+        <command>{{ imports['//jenkins/jobs:Bazel.win.sh.tpl'] }}</command>
       </buildStep>
       <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
