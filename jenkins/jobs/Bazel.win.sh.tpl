@@ -24,7 +24,7 @@ echo 'export BOOTSTRAP_BAZEL="/c/bazel_ci/installs/latest/bazel.exe"' >env.sh
 # Various set-up for the slave
 echo 'export TMPDIR="${TMPDIR:-/c/bazel_ci/temp}"' >>env.sh
 echo 'mkdir -p "${TMPDIR}"' >>env.sh
-echo 'export PATH="$PATH;/c/python_27_amd64/files"' >>env.sh
+echo 'export PATH="$PATH:/c/python_27_amd64/files"' >>env.sh
 
 # Get java home
 echo "export JAVA_HOME='$(dirname "$(dirname "$(which java)")")'" >>env.sh
