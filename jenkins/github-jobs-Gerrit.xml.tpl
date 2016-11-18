@@ -90,7 +90,7 @@ This job for testing changes submitted to the Gerrit project: {{ variables.GERRI
     <org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder plugin="conditional-buildstep@1.3.3">
     <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="run-condition@1.0"/>
     <runCondition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="run-condition@1.0">
-      <expression>(darwin|linux|ubuntu).*</expression>
+      <expression>^((?!windows).)*$</expression>
       <label>${PLATFORM_NAME}</label>
     </runCondition>
     <conditionalbuilders>
