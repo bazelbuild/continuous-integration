@@ -67,7 +67,7 @@ MASTER=(
     # Zone
     "us-central1-a"
     # Metadata specification
-    "google-container-manifest=jenkins,startup-script=mount-volumes.sh"
+    "google-container-manifest=jenkins.yml,startup-script=mount-volumes.sh"
     # Disk specification
     "name=jenkins-volumes,device-name=volumes"
     # Address name
@@ -223,7 +223,7 @@ function action() {
       $action "${i%% *}"
     done
   elif (( $# == 1 )) && [ "$1" = "prod" ]; then
-    $action jenkins-staging
+    $action jenkins
     for i in "${STAGING[@]}"; do
       $action "${i%% *}"
     done

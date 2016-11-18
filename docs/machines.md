@@ -35,6 +35,11 @@ This script needs access to `gcloud` and assumes your default GCE project is poi
 CI project. You can install `gcloud` from https://cloud.google.com/sdk/ and set it
 up so the default project is "bazel-public".
 
+```
+$ gcloud config set project bazel-public
+$ gcloud auth login
+```
+
 ## Physical machines administration
 
 The physical machines needs to be in a network allowed for port 50000, see the list of IP
