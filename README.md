@@ -6,7 +6,7 @@ system of Bazel. This setup is based on docker images built by bazel.
 Make sure you have a Bazel installed with a recent enough version of
 it. Also make sure [gcloud](https://cloud.google.com/sdk/) and
 [docker](https://www.docker.com) are correctly configured on your
-machine.
+machine. Only docker version 1.10 or later is supported.
 
 More documentation:
 

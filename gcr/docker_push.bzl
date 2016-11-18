@@ -29,7 +29,7 @@ def _reverse(lst):
 
 def _generate_load_statement(ctx, tag, file):
   return ("echo 'Image %s'\n" % tag) + "\n".join([
-      "incr_load '%s' '%s'" %  (_get_runfile_path(ctx, l["name"]),
+      "incr_load '%s' '%s'" %  (_get_runfile_path(ctx, l["id"]),
                                 _get_runfile_path(ctx, l["layer"]))
       for l in _reverse(file.docker_layers)
   ]) + ("\ntag_last_load '%s'" % tag)
@@ -57,7 +57,7 @@ def _impl(ctx):
   for s in ctx.attr.images:
     for l in s.docker_layers:
       runfiles.append(l["layer"])
-      runfiles.append(l["name"])
+      runfiles.append(l["id"])
 
   return struct(runfiles = ctx.runfiles(files = runfiles))
 

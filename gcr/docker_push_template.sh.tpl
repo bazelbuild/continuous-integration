@@ -45,7 +45,7 @@ function tag_last_load() {
   if [ -n "${name}" ]; then
     TAG="%{repository}/$1"
     echo "Tagging ${name} as ${TAG}"
-    "${DOCKER}" tag -f ${name} ${TAG}
+    "${DOCKER}" tag ${name} ${TAG}
   fi
 }
 
