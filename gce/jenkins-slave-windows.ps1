@@ -83,7 +83,9 @@ New-Item $folder -type directory -force
 (New-Object Net.WebClient).DownloadFile("${url}", "${folder}\bazel.exe")
 
 # Create a junction to the latest release
-New-Item -ItemType Junction -Path c:\bazel_ci\installs\latest -Value $folder
+# The CI machines have Powershell 4 installed, so we cannot use New-Item to
+# create a junction, so shell out to mklink.
+cmd.exe /C mklink /j C:\bazel_ci\installs\latest $folder
 
 # Replace the host name in the JNLP file, because Jenkins, in its infinite
 # wisdom, does not let us change that separately from its external hostname.
