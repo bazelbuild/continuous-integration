@@ -23,7 +23,6 @@ RULES = {
     "rules_scala": UNIX_PLATFORMS,
     "rules_gwt": UNIX_PLATFORMS,
     "rules_groovy": UNIX_PLATFORMS,
-    "rules_web": UNIX_PLATFORMS,
     # These are not really rules, but it is simpler to put here.
     "skydoc": UNIX_PLATFORMS,
     "buildifier": UNIX_PLATFORMS,
@@ -44,6 +43,8 @@ GITHUB_JOBS = [
     "protobuf",
     "dash",
     "gerrit",
+    # rules_web was renamed to rules_webtesting so special-case it
+    "rules_web",
 ] + GERRIT_JOBS + RULES.keys() + DISABLED_RULES
 
 NO_PR_JOBS = ["bazel-docker-tests"]

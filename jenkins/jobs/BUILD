@@ -154,6 +154,14 @@ bazel_github_job(
     platforms = RULES[job],
 ) for job in RULES.keys()]
 
+# rules_web was renamed, special case
+bazel_github_job(
+    name = "rules_web",
+    org = "bazelbuild",
+    project = "rules_webtesting",
+    platforms = UNIX_PLATFORMS,
+)
+
 [bazel_github_job(
     name = job,
     enabled = False,
