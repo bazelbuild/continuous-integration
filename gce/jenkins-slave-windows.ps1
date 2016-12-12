@@ -8,7 +8,9 @@ if (Test-Path "c:\bazel_ci\install_completed.txt") {
 # TODO(dmarting): for executable, we need to check for $LastExitCode each time.
 $ErrorActionPreference = "Stop"
 
-New-Item c:\bazel_ci -type directory
+if (-Not (Test-Path c:\bazel_ci)) {
+  New-Item c:\bazel_ci -type directory
+}
 Set-Location c:\bazel_ci
 
 # Install Chocolatey
