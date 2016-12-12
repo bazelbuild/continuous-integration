@@ -22,9 +22,11 @@ This job for testing changes submitted to the Gerrit project: {{ variables.GERRI
 </description>
   <keepDependencies>false</keepDependencies>
   <properties>
+  {% if variables.github == "True" %}
     <com.coravy.hudson.plugins.github.GithubProjectProperty>
-      <projectUrl>{{ variables.PROJECT_URL }}</projectUrl>
+      <projectUrl>{{ variables.GITHUB_URL }}</projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
+  {% endif %}
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
         <hudson.model.StringParameterDefinition>

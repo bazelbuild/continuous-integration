@@ -20,7 +20,7 @@
   <keepDependencies>false</keepDependencies>
   <properties>
     <com.coravy.hudson.plugins.github.GithubProjectProperty>
-      <projectUrl>{{ variables.PROJECT_URL }}</projectUrl>
+      <projectUrl>{{ variables.GITHUB_URL }}</projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
   </properties>
   <scm class="hudson.plugins.git.GitSCM">

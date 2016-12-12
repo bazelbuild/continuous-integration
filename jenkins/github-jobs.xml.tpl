@@ -18,7 +18,7 @@
   <actions/>
   <description>Test the {{ variables.PROJECT_NAME }} project still build with Bazel at head and latest release.</description>
   <keepDependencies>false</keepDependencies>
-  {% if variables.github == "true" %}
+  {% if variables.github == "True" %}
   <properties>
     <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="{{ variables.JENKINS_PLUGIN_github }}">
       <projectUrl>{{ variables.GITHUB_URL }}</projectUrl>
