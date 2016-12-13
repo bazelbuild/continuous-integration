@@ -154,7 +154,8 @@ bazel_github_job(
     platforms = RULES[job],
 ) for job in RULES.keys()]
 
-# rules_web was renamed, special case
+# rules_web was renamed to rules_webtesting, keep the legacy name
+# for the job to keep history but use the new project name.
 bazel_github_job(
     name = "rules_web",
     org = "bazelbuild",

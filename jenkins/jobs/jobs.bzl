@@ -43,7 +43,8 @@ GITHUB_JOBS = [
     "protobuf",
     "dash",
     "gerrit",
-    # rules_web was renamed to rules_webtesting so special-case it
+    # rules_web was renamed to rules_webtesting, keep the legacy name
+    # for the job to keep history but use the new project name.
     "rules_web",
 ] + GERRIT_JOBS + RULES.keys() + DISABLED_RULES
 
