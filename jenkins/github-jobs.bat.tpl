@@ -17,6 +17,7 @@
 set BAZEL_SH=c:\tools\msys64\usr\bin\bash.exe
 
 set BAZEL=c:\bazel_ci\installs\%BAZEL_VERSION%\bazel.exe
+set TMPDIR=c:\bazel_ci\temp
 
 :: In src/main/native/build_windows_jni.sh, we use `sort --version-sort`
 :: So we need to make sure find the msys sort instead of windows sort.
