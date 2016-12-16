@@ -264,7 +264,7 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
     "TEST_TAG_FILTERS": ",".join(test_tag_filters),
     "BUILD_OPTS": " ".join(build_opts),
     "TESTS": " + ".join(tests),
-    "WINDOWS_TESTS": " + ".join(windows_tests),
+    "WINDOWS_TESTS": " ".join(windows_tests),
     "BUILDS": " ".join(targets),
     "WINDOWS_BUILDS": " ".join(windows_targets),
     "BAZEL_VERSIONS": "\n".join(bazel_versions),
