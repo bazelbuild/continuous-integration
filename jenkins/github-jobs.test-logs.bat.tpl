@@ -14,7 +14,7 @@
 
 :: Batch to avoid failing bazel_github_job because of the absence of log files
 
-if EXIST "{{ variables.WORKSPACE }}/bazel-testlogs" (
+if NOT EXIST "{{ variables.WORKSPACE }}/bazel-testlogs/*" (
   rmdir /q "{{ variables.WORKSPACE }}/bazel-testlogs"
   md "{{ variables.WORKSPACE }}/bazel-testlogs"
 )
