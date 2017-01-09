@@ -160,7 +160,7 @@
   </builders>
   <publishers>
     <hudson.tasks.junit.JUnitResultArchiver>
-      <testResults>bazel-testlogs/**/*.xml</testResults>
+      <testResults>bazel-testlogs/**/test.xml</testResults>
       <keepLongStdio>false</keepLongStdio>
       <healthScaleFactor>1.0</healthScaleFactor>
       <allowEmptyResults>true</allowEmptyResults>
