@@ -37,6 +37,8 @@ echo test --define JAVA_VERSION=1.8 >> %BAZELRC%
 
 del .unstable
 
+{{ variables.WINDOWS_CONFIGURE }}
+
 if not "{{ variables.WINDOWS_BUILDS }}" == "" (
   call:bazel build {{ variables.WINDOWS_BUILDS }}
 )

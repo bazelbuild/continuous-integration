@@ -3,6 +3,7 @@ load(
     ":jobs.bzl",
     "LINUX_PLATFORMS",
     "UNIX_PLATFORMS",
+    "WINDOWS_PLATFORMS",
     "ALL_PLATFORMS",
     "RULES",
     "DISABLED_RULES",
@@ -27,7 +28,7 @@ bazel_github_job(
     build_opts = ["-c opt"],
     configure = ["./tensorflow/tools/ci_build/builds/configured CPU"],
     org = "tensorflow",
-    platforms = LINUX_PLATFORMS,
+    platforms = LINUX_PLATFORMS + WINDOWS_PLATFORMS,
     project_url = "https://tensorflow.org",
     targets = ["//tensorflow/tools/pip_package:build_pip_package"],
     test_opts = [
@@ -35,6 +36,16 @@ bazel_github_job(
         "--test_output=errors",
     ],
     tests = ["filter(\":(lib|platform)_.*\", kind(test, //tensorflow/core:all))"],
+    windows_configure = [
+        # run.bat invokes msys bash to run the shell script for building TF,
+        # But msys bash doesn't inherit PATH from cmd.exe, so we make bazel avaiable by
+        # copying it to c:\\tools\\msys64\\usr\\bin\\bazel.exe
+        "del c:\\tools\\msys64\\usr\\bin\\bazel.exe",
+        "copy %BAZEL% c:\\tools\\msys64\\usr\\bin\\bazel.exe",
+        ".\\tensorflow\\tools\\ci_build\\windows\\cpu\\pip\\run.bat",
+    ],
+    windows_targets = [],
+    windows_tests = [],
 )
 
 bazel_github_job(
