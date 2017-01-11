@@ -41,6 +41,13 @@ New-Item c:\temp -type directory
 [Environment]::SetEnvironmentVariable("Path", $env:Path + ";c:\python_27_amd64\files",
                                       [System.EnvironmentVariableTarget]::Machine)
 
+# Download and install Anaconda3, because python3 is required by TensorFlow on Windows
+$anaconda3_tmp_folder = "c:\temp\anaconda3"
+New-Item $anaconda3_tmp_folder -type directory -force
+$anaconda3_installer = $anaconda3_tmp_folder + "\Anaconda3-4.2.0-Windows-x86_64.exe"
+(New-Object Net.WebClient).DownloadFile("https://repo.continuum.io/archive/Anaconda3-4.2.0-Windows-x86_64.exe", $anaconda3_installer)
+& $anaconda3_installer /AddToPath=0? /InstallationType=AllUsers /S /D='C:\Program Files\Anaconda3'
+
 # Install all the Windows software we need:
 #   - JDK, because, Bazel is written in Java
 #   - NSSM, because that's the easiest way to create services
