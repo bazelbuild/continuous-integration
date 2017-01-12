@@ -23,6 +23,7 @@ BAZEL=~/.bazel/${BAZEL_VERSION}/bin/bazel
 ROOT="${PWD}"
 
 TEST_TAG_FILTERS="{{ variables.TEST_TAG_FILTERS }}"
+BUILD_TAG_FILTERS=""
 JAVA_VERSION="1.8"
 if [[ "${BAZEL_VERSION}" =~ -jdk7$ ]]; then
   JAVA_VERSION="1.7"
@@ -31,6 +32,7 @@ if [[ "${BAZEL_VERSION}" =~ -jdk7$ ]]; then
   else
     TEST_TAG_FILTERS="-jdk8"
   fi
+  BUILD_TAG_FILTERS="-jdk8"
 fi
 
 cat >${ROOT}/bazel.bazelrc <<EOF
@@ -39,6 +41,11 @@ test {{ variables.TEST_OPTS }}
 test --test_tag_filters ${TEST_TAG_FILTERS}
 test --define JAVA_VERSION=${JAVA_VERSION}
 EOF
+
+if [[ ! -z "${BUILD_TAG_FILTERS}" ]];
+then
+  echo "build --build_tag_filters ${BUILD_TAG_FILTERS}" >> ${ROOT}/bazel.bazelrc
+fi
 
 if [[ "${PLATFORM_NAME}" =~ .*darwin.* ]]; then
   cat >>${ROOT}/bazel.bazelrc <<EOF
