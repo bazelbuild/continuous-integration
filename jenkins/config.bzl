@@ -10,4 +10,5 @@ ADMIN_USERS = [
     "aehlig@google.com",
     "elenairina@google.com",
     "hlopko@google.com",
+    "vladmos@google.com",
 ]
