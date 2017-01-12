@@ -150,7 +150,7 @@ This job for testing changes submitted to the Gerrit project: {{ variables.GERRI
   </builders>
   <publishers>
     <hudson.tasks.junit.JUnitResultArchiver>
-      <testResults>bazel-testlogs/**/test.xml</testResults>
+      <testResults>bazel-testlogs/**/test.xml, bazel-testlogs/**/dummy.xml</testResults>
       <keepLongStdio>false</keepLongStdio>
       <healthScaleFactor>1.0</healthScaleFactor>
       <allowEmptyResults>true</allowEmptyResults>
