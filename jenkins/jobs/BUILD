@@ -183,11 +183,13 @@ bazel_github_job(
 
 bazel_github_job(
     name = "intellij",
+    build_opts = ["--define=ij_product=intellij-latest"],
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
     project = "intellij",
     project_url = "https://ij.bazel.io",
     targets = ["ijwb:ijwb_bazel"],
+    test_opts = ["--define=ij_product=intellij-latest"],
     tests = [":ijwb_tests"],
 )
 
