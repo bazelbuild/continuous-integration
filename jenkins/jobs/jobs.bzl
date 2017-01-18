@@ -3,6 +3,8 @@ LINUX_PLATFORMS = [
     "ubuntu_15.10-x86_64",
 ]
 
+BSD_PLATFORMS = ["freebsd-11"]
+
 DARWIN_PLATFORMS = ["darwin-x86_64"]
 
 WINDOWS_PLATFORMS = ["windows-x86_64"]
@@ -54,7 +56,7 @@ GITHUB_JOBS = [
 NO_PR_JOBS = ["bazel-docker-tests"]
 
 BAZEL_STAGING_JOBS = {
-    "Bazel": ALL_PLATFORMS,
+    "Bazel": ALL_PLATFORMS + BSD_PLATFORMS,
     "Github-Trigger": UNIX_PLATFORMS,
     "Bazel-Install": [],
     "Bazel-Install-Trigger": [],

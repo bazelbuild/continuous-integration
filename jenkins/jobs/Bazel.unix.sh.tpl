@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2016 The Bazel Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,10 @@ export BAZEL_COMPILE_TARGET="compile,srcs,determinism"
 if [ "${JAVA_VERSION}" = "1.7" ]
 then
   export BOOTSTRAP_BAZEL="${HOME}/.bazel/latest-jdk7/binary/bazel"
+  if [[ "${PLATFORM_NAME}" =~ "freebsd" ]] ; then
+      echo "Skipping building bazel of freebsd with java 7"
+      exit 0
+  fi
 else
   export BOOTSTRAP_BAZEL="${HOME}/.bazel/latest/binary/bazel"
 fi

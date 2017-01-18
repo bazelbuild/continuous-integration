@@ -53,6 +53,7 @@ SLAVES=(
     "ubuntu-15-10-slave-8 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-8 europe-west1-c default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-docker-slave-1 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-docker-1 us-east1-c default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh ubuntu-15-10-docker.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-docker-slave-2 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-docker-2 us-east1-c default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh ubuntu-15-10-docker.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "freebsd-11-slave https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-0-stable-amd64-2017-01-06 freebsd-11-staging europe-west1-c staging startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
     # Fow Windows, we use a custom image with pre-installed MSVC.
     "windows-slave-1 /bazel-public/windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-1 europe-west1-c default windows-startup-script-ps1=jenkins-slave-windows.ps1"
     "windows-slave-2 /bazel-public/windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-2 europe-west1-c default windows-startup-script-ps1=jenkins-slave-windows.ps1"
@@ -81,6 +82,7 @@ STAGING_SLAVES=(
     "ubuntu-14-04-slave-staging ubuntu-14-04 ubuntu_14.04-x86_64-staging europe-west1-c staging startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-15-10-slave-staging https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-staging europe-west1-c staging startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-docker-slave-staging https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-docker-staging europe-west1-c staging startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh ubuntu-15-10-docker.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "freebsd-11-slave-staging https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-0-stable-amd64-2017-01-06 freebsd-11-staging europe-west1-c staging startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
     # Fow Windows, we use a custom image with pre-installed MSVC.
     "windows-slave-staging /bazel-public/windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-staging europe-west1-c staging windows-startup-script-ps1=jenkins-slave-windows.ps1"
 )
@@ -143,6 +145,17 @@ function create_slave() {
 
   case "$TAG" in
     windows-*)  # Windows
+      ;;
+
+    freebsd*) # FreeBSD
+      # Wait a bit for the VM to fully start
+      wait_vm "$TAG" "$LOCATION" 120 /usr/bin/true
+      # Create the jenkins user, run additional set-up scripts and mark
+      # the install process as finished.
+      ssh_command "$TAG" "$LOCATION" \
+          "pw useradd -n ci -s /usr/local/bin/bash -d /home/ci -m -w no" \
+          "$@" \
+          "echo \"echo -n '$JENKINS_NODE' >/home/ci/node_name\" | su -m ci"
       ;;
 
     *)  # Linux

@@ -39,10 +39,11 @@ function wait_vm() {
   local vm="$1"
   local zone="$2"
   local timeout="${3-60}"  # Wait for 1 minute maximum by default
+  local cmd="${4-/bin/true}"
   local starttime="$(date +%s)"
   while (( "$(date +%s)" - "$starttime" < "$timeout" )); do
     # gcloud compute ssh forward the return code of the executed command.
-    if gcloud compute ssh --zone="$zone" --command /bin/true "$vm" &>/dev/null
+    if gcloud compute ssh --zone="$zone" --command "${cmd}" "$vm" &>/dev/null
     then
       return 0
     fi
