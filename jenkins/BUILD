@@ -53,7 +53,7 @@ jenkins_nodes(
     DARWIN_PREFIX,
     DARWIN_COUNT,
     prod_args = {
-        "num_executors": 4,
+        "num_executors": 2,
     },
     remote_fs = "/Users/ci",
 )
