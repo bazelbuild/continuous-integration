@@ -47,6 +47,14 @@ if not "{{ variables.WINDOWS_TESTS }}" == "" (
   call:bazel test {{ variables.WINDOWS_TESTS }}
 )
 
+if not "{{ variables.WINDOWS_BUILDS_MSVC }}" == "" (
+  call:bazel build --cpu=x64_windows_msvc {{ variables.WINDOWS_BUILDS_MSVC }}
+)
+
+if not "{{ variables.WINDOWS_TESTS_MSVC }}" == "" (
+  call:bazel test --cpu=x64_windows_msvc {{ variables.WINDOWS_TESTS_MSVC }}
+)
+
 exit %errorlevel%
 
 :bazel
