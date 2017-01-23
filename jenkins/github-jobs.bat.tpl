@@ -12,12 +12,33 @@
 :: See the License for the specific language governing permissions and
 :: limitations under the License.
 
+:: ATTENTION: This file is auto-generated from a template.
+:: See https://github.com/bazelbuild/continuous-integration/blob/master/jenkins/github-jobs.bat.tpl
+
 :: Batch script containing the main build phase for windows bazel_github_job-s
 @echo on
 set BAZEL_SH=c:\tools\msys64\usr\bin\bash.exe
 
 set BAZEL=c:\bazel_ci\installs\%BAZEL_VERSION%\bazel.exe
 set TMPDIR=c:\bazel_ci\temp
+
+:: Verify that BAZEL_VERSION is not empty and BAZEL exists.
+echo CI info: BAZEL_VERSION=(%BAZEL_VERSION%)
+echo CI info: BAZEL=(%BAZEL%)
+
+:: Check BAZEL_VERSION, it should be defined by Jenkins.
+if "%BAZEL_VERSION%" == "" (
+  echo ERROR: BAZEL_VERSION is empty
+  exit /b 1
+)
+
+:: Check if BAZEL exists.
+if exists "%BAZEL%" (
+  echo CI info: BAZEL binary found
+) else (
+  echo CI ERROR: BAZEL not found
+  exit /b 1
+)
 
 :: In src/main/native/build_windows_jni.sh, we use `sort --version-sort`
 :: So we need to make sure find the msys sort instead of windows sort.
@@ -37,20 +58,25 @@ echo test --define JAVA_VERSION=1.8 >> %BAZELRC%
 
 del .unstable
 
+:: Expand variables.WINDOWS_CONFIGURE
 {{ variables.WINDOWS_CONFIGURE }}
 
+:: Check variables.WINDOWS_BUILDS
 if not "{{ variables.WINDOWS_BUILDS }}" == "" (
   call:bazel build {{ variables.WINDOWS_BUILDS }}
 )
 
+:: Check variables.WINDOWS_TESTS
 if not "{{ variables.WINDOWS_TESTS }}" == "" (
   call:bazel test {{ variables.WINDOWS_TESTS }}
 )
 
+:: Check variables.WINDOWS_BUILDS_MSVC
 if not "{{ variables.WINDOWS_BUILDS_MSVC }}" == "" (
   call:bazel build --cpu=x64_windows_msvc {{ variables.WINDOWS_BUILDS_MSVC }}
 )
 
+:: Check variables.WINDOWS_TESTS_MSVC
 if not "{{ variables.WINDOWS_TESTS_MSVC }}" == "" (
   call:bazel test --cpu=x64_windows_msvc {{ variables.WINDOWS_TESTS_MSVC }}
 )
@@ -62,11 +88,11 @@ exit %errorlevel%
 set retCode=%errorlevel%
 if %retCode%==3 (
   :: Write 1 in the .unstable file so the following step in Jenkins
-  :: know that it is a test failure.
+  :: knows that it is a test failure.
   echo 1 > %ROOT%\.unstable
 ) else (
   if not %retCode%==0 (
-    :: Else simply fails the job by exiting with a non null return code
+    :: Else simply fail the job by exiting with a non-null return code.
     exit /b %retCode%
   )
 )
