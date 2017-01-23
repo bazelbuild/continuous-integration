@@ -33,7 +33,7 @@ if "%BAZEL_VERSION%" == "" (
 )
 
 :: Check if BAZEL exists.
-if exists "%BAZEL%" (
+if exist "%BAZEL%" (
   echo CI info: BAZEL binary found
 ) else (
   echo CI ERROR: BAZEL not found
