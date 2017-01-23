@@ -48,7 +48,7 @@ set PATH=c:\tools\msys64\usr\bin;%PATH%
 
 set ROOT=%cd%
 set BAZELRC=%ROOT%\.bazelrc
-rm -f %BAZELRC%
+del /q /f %BAZELRC%
 echo build {{ variables.BUILD_OPTS }} >> %BAZELRC%
 echo test {{ variables.TEST_OPTS }} >> %BAZELRC%
 echo test --test_tag_filters {{ variables.TEST_TAG_FILTERS }},-no_windows >> %BAZELRC%
@@ -56,7 +56,7 @@ echo test --define JAVA_VERSION=1.8 >> %BAZELRC%
 
 call:bazel version
 
-del .unstable
+del /q /f .unstable
 
 :: Expand variables.WINDOWS_CONFIGURE
 {{ variables.WINDOWS_CONFIGURE }}
