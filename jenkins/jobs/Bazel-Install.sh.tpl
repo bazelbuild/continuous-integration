@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2016 The Bazel Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,16 @@ set -eux
 
 # Get the platform we are running on
 PLATFORM=$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)
+
+# The test suite has not yet been fully adapted to work on FreeBSD. Additonally,
+# the installation on FreeBSD is different, as we do not provide binary packages
+# with installer scripts (but the devel/bazel port and the respective packages
+# built by FreeBSD can be used). So skip it for now.
+if [[ "${PLATFORM_NAME}" =~ "freebsd" ]] ; then
+  echo "Not installing on FreeBSD; only testing the build"
+  exit 0
+fi
+
 
 # Create the URL to download a specific version of bazel for current platform
 create_url() {
