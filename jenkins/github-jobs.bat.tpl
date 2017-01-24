@@ -54,7 +54,7 @@ echo test {{ variables.TEST_OPTS }} >> %BAZELRC%
 echo test --test_tag_filters {{ variables.TEST_TAG_FILTERS }},-no_windows >> %BAZELRC%
 echo test --define JAVA_VERSION=1.8 >> %BAZELRC%
 
-%BAZEL% version
+call:bazel version
 
 del .unstable
 
