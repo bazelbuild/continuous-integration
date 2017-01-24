@@ -93,7 +93,7 @@ if %retCode%==3 (
 ) else (
   if not %retCode%==0 (
     :: Else simply fail the job by exiting with a non-null return code.
-    exit /b %retCode%
+    exit %retCode%
   )
 )
 exit /b 0
