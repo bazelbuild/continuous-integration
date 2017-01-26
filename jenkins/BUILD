@@ -48,6 +48,10 @@ FREEBSD_11_PREFIX = "freebsd-11"
 
 FREEBSD_11_COUNT = 1
 
+FREEBSD_12_PREFIX = "freebsd-12"
+
+FREEBSD_12_COUNT = 1
+
 # Physical machines
 jenkins_nodes(
     DARWIN_PREFIX,
@@ -89,6 +93,12 @@ jenkins_nodes(
 jenkins_nodes(
     FREEBSD_11_PREFIX,
     FREEBSD_11_COUNT,
+    labels = ["no-release"],
+)
+
+jenkins_nodes(
+    FREEBSD_12_PREFIX,
+    FREEBSD_12_COUNT,
     labels = ["no-release"],
 )
 
@@ -247,7 +257,8 @@ jenkins_build(
               jenkins_node_names(UBUNTU_DOCKER_PREFIX, UBUNTU_DOCKER_COUNT) +
               jenkins_node_names(UBUNTU_1404_PREFIX, UBUNTU_1404_COUNT) +
               jenkins_node_names(UBUNTU_1510_PREFIX, UBUNTU_1510_COUNT) +
-              jenkins_node_names(FREEBSD_11_PREFIX, FREEBSD_11_COUNT),
+              jenkins_node_names(FREEBSD_11_PREFIX, FREEBSD_11_COUNT) +
+              jenkins_node_names(FREEBSD_12_PREFIX, FREEBSD_12_COUNT),
     jobs = [
         "//jenkins/jobs",
         ":gerrit-verifier-flow",
@@ -269,6 +280,7 @@ jenkins_build(
         ":ubuntu_15.10-x86_64-docker-staging",
         ":ubuntu_15.10-x86_64-staging",
         ":freebsd-11-staging",
+        ":freebsd-12-staging",
         ":windows-x86_64-staging",
     ],
     jobs = [

@@ -3,7 +3,7 @@ LINUX_PLATFORMS = [
     "ubuntu_15.10-x86_64",
 ]
 
-BSD_PLATFORMS = ["freebsd-11"]
+BSD_PLATFORMS = ["freebsd-11", "freebsd-12"]
 
 DARWIN_PLATFORMS = ["darwin-x86_64"]
 

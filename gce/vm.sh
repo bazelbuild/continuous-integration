@@ -54,6 +54,7 @@ SLAVES=(
     "ubuntu-docker-slave-1 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-docker-1 us-east1-c default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh ubuntu-15-10-docker.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-docker-slave-2 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-docker-2 us-east1-c default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh ubuntu-15-10-docker.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "freebsd-11-slave https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-0-stable-amd64-2017-01-06 freebsd-11-1 europe-west1-c default startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
+    "freebsd-12-slave https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-12-0-current-amd64-2017-01-06 freebsd-12-1 europe-west1-c default startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
     # Fow Windows, we use a custom image with pre-installed MSVC.
     "windows-slave-1 /bazel-public/windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-1 europe-west1-c default windows-startup-script-ps1=jenkins-slave-windows.ps1"
     "windows-slave-2 /bazel-public/windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-2 europe-west1-c default windows-startup-script-ps1=jenkins-slave-windows.ps1"
@@ -83,6 +84,7 @@ STAGING_SLAVES=(
     "ubuntu-15-10-slave-staging https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-staging europe-west1-c staging startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-docker-slave-staging https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-docker-staging europe-west1-c staging startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh ubuntu-15-10-docker.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "freebsd-11-slave-staging https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-0-stable-amd64-2017-01-06 freebsd-11-staging europe-west1-c staging startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
+    "freebsd-12-slave-staging https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-12-0-current-amd64-2017-01-06 freebsd-12-staging europe-west1-c staging startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
     # Fow Windows, we use a custom image with pre-installed MSVC.
     "windows-slave-staging /bazel-public/windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-staging europe-west1-c staging windows-startup-script-ps1=jenkins-slave-windows.ps1"
 )
