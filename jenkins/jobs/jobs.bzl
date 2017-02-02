@@ -27,7 +27,6 @@ RULES = {
     "rules_groovy": UNIX_PLATFORMS,
     # These are not really rules, but it is simpler to put here.
     "skydoc": UNIX_PLATFORMS,
-    "buildifier": UNIX_PLATFORMS,
 }
 
 DISABLED_RULES = []
@@ -51,6 +50,7 @@ GITHUB_JOBS = [
     "intellij",
     "intellij-android-studio",
     "intellij-clion",
+    "buildifier",
 ] + GERRIT_JOBS + RULES.keys() + DISABLED_RULES
 
 NO_PR_JOBS = ["bazel-docker-tests"]

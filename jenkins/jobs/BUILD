@@ -196,6 +196,14 @@ bazel_github_job(
     ],
 )
 
+bazel_github_job(
+    name = "buildifier",
+    org = "bazelbuild",
+    platforms = UNIX_PLATFORMS,
+    targets = [],
+    tests = [":tests"],
+)
+
 [bazel_github_job(
     name = job,
     org = "bazelbuild",
