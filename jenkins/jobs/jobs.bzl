@@ -22,7 +22,6 @@ RULES = {
     "rules_go": UNIX_PLATFORMS,
     "rules_rust": UNIX_PLATFORMS,
     "rules_sass": UNIX_PLATFORMS,
-    "rules_scala": UNIX_PLATFORMS,
     "rules_gwt": UNIX_PLATFORMS,
     "rules_groovy": UNIX_PLATFORMS,
     # These are not really rules, but it is simpler to put here.
@@ -51,6 +50,7 @@ GITHUB_JOBS = [
     "intellij-android-studio",
     "intellij-clion",
     "buildifier",
+    "rules_scala",
 ] + GERRIT_JOBS + RULES.keys() + DISABLED_RULES
 
 NO_PR_JOBS = ["bazel-docker-tests"]

@@ -175,6 +175,14 @@ bazel_github_job(
     tests = [":tests"],
 )
 
+bazel_github_job(
+    name = "rules_scala",
+    org = "bazelbuild",
+    platforms = UNIX_PLATFORMS,
+    targets = ["//test/..."],
+    tests = ["//test/..."],
+)
+
 [bazel_github_job(
     name = job,
     org = "bazelbuild",
