@@ -30,12 +30,13 @@ pkg_tar(
 )
 """)
   for plugin in repository_ctx.attr.plugins:
+    config = repository_ctx.attr.plugins[plugin]
+    dest = "plugins/" + plugin + ".jpi"
     repository_ctx.download(
-        JENKINS_PLUGINS_URL.format(
-            name=plugin,
-            version=repository_ctx.attr.plugins[plugin][0]),
-        "plugins/" + plugin + ".jpi",
-        repository_ctx.attr.plugins[plugin][1])
+        JENKINS_PLUGINS_URL.format(name=plugin, version=config[0]), dest,
+        config[1])
+    if len(config) >= 3 and config[2] == "pinned":
+      repository_ctx.file(dest + ".pinned", "")
   repository_ctx.file("BUILD", """
 load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
 

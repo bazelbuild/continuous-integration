@@ -252,7 +252,9 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
                      gerrit_project=None,
                      enabled=True,
                      pr_enabled=True,
-                     github_enabled=True):
+                     github_enabled=True,
+                     run_sequential=False,
+                     sauce_enabled=False):
   """Create a generic github job configuration to build against Bazel head."""
   if not project:
     project = name
@@ -274,6 +276,8 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
     "enable_trigger": str(enable_trigger and github_enabled).lower(),
     "github": str(github_enabled),
     "GERRIT_PROJECT": str(gerrit_project),
+    "RUN_SEQUENTIAL": str(run_sequential).lower(),    
+    "SAUCE_ENABLED": str(sauce_enabled).lower(),
   }
 
   jenkins_job(

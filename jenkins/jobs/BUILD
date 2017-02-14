@@ -194,8 +194,10 @@ bazel_github_job(
 bazel_github_job(
     name = "rules_web",
     org = "bazelbuild",
-    project = "rules_webtesting",
     platforms = UNIX_PLATFORMS,
+    project = "rules_webtesting",
+    run_sequential = True,
+    sauce_enabled = True,
 )
 
 [bazel_github_job(

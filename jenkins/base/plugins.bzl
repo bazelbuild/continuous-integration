@@ -23,8 +23,8 @@ JENKINS_PLUGINS = {
         "cd2efb569827d66565483eec00877b0897941aee8334ad945c310d7b3b5815af",
     ],
     "scm-api": [
-        "0.2",
-        "cc856d8dc8b951cf9a195baa2bf7bbff0d12368534a6b973e43e2909141eff3f",
+        "2.0.3",
+        "cf7b460fad1f5da7ab5edf850d262bb801eae4513691d930d7e35b15b7e89b3e",
     ],
     "ssh-credentials": [
         "1.11",
@@ -39,28 +39,29 @@ JENKINS_PLUGINS = {
         "0d0143318487ffa61d6c159a0157dcdcbf66a71e3aa17eb4bac7707fc6ae512a",
     ],
     "mailer": [
-        "1.15",
-        "1633a780e8ffd8bc3deea0892253587ace67aec76bfc6933c392116095d9a6f5",
+        "1.19",
+        "24d99cc0f9ec2f1954604cacc8d7d1d4ffbfc9d4610d9fcc559e1ce83945e74d",
     ],
     "run-condition": [
         "1.0",
         "4e55ebf4bde1202784404d856f98f7de85470ed145cde06feb45f641891780fb",
     ],
     "script-security": [
-        "1.13",
-        "3bc90fb65369d47c89f67fd55dac55f8c5da27da4fdccf6c234aab39ebbd5d4c",
+        "1.26",
+        "bb16f2d7592ac05e24deead4e9bbb79b63ba3e7a674209e83a1506c55297c216",
     ],
     "matrix-project": [
         "1.6",
         "3c6fd1c5807f197fe7649449661b2c1a103efb1f88c39fc330391e7d372877dd",
     ],
     "junit": [
-        "1.10",
-        "62e355223a8acc3035e3c7e21a0ab8d61091fe2d1620a8f04bc313b7af643bf3",
+        "1.20",
+        "be0c9079c1ed7e3bc9d7157e30d0e8fdd733a83cba11ab184ddb48cea1a579c3",
     ],
     "credentials": [
-        "1.28",
-        "17467c6289b07b375b5055961f54e61b04172f76638bb972f05d0724fd963540",
+        "2.1.11",
+        "e3746124c923b20c7c6136ed54eb3c7734ee729756c11f10957fde0714f5d42c",
+        "pinned",
     ],
     "git-parameter": [
         "0.4.0",
@@ -127,8 +128,8 @@ JENKINS_PLUGINS = {
         "cb41df7a0bff73025db46e33398adc16fa38a8141d5d00459660ddc71283b3b4",
     ],
     "workflow-step-api": [
-        "1.9",
-        "8e969f0919b06ec625d4f6089bf765aded02a8b44599273aa2d02650d2bab61e",
+        "2.9",
+        "c28cc0ecd0f707980c941b7b0c27cb55894b8caa5320e0bf7beebe10a0ae067b",
     ],
     "icon-shim": [
         "2.0.2",
@@ -153,5 +154,49 @@ JENKINS_PLUGINS = {
     "build-monitor-plugin": [
         "1.10+build.201610041454",
         "d415688ca679835c3a4db3fdad82fd1f977f9ffd22947ab9076074f116ee3a54",
+    ],
+    "ace-editor": [
+        "1.1",
+        "abc97028893c8a71581a5f559ea48e8e1f1a65164faee96dabfed9e95e9abad2",
+    ],
+    "display-url-api": [
+        "1.1.1",
+        "d9c3266898caa82965bb08242da91cbc75bebe724744686d48ec676b511e5765",
+    ],
+    "jquery-detached": [
+        "1.2.1",
+        "a05273cd20c11557ffcb7dcb75150f21d35dc8be28355548b831c2960d7f11c0",
+    ],
+    "sauce-ondemand": [
+        "1.160",
+        "f9870027aed534614157955a6b50e28efb8129d75ab0d98aa8b98e7b56400aa4",
+    ],
+    "structs": [
+        "1.5",
+        "5a739bb59d68bfb0fb94a5f99962e9f25e2b4ea5c218e782be4c7ee54a6752ef",
+    ],
+    "workflow-api": [
+        "2.10",
+        "bc4e14291be70c1e1e89377a441dc0dec7f1ccee414f193c38bcddcb066e70e6",
+    ],
+    "workflow-basic-steps": [
+        "2.4",
+        "c57d5308a01df1990a7f491ddb6dfc7aab5b7b713ad9cfc458cbef76d27fdbab",
+    ],
+    "workflow-cps": [
+        "2.26",
+        "a4b71cb15293e6a534fbeac3af74bbdd83b241e3888529c85f7d5b4d88b12118",
+    ],
+    "workflow-job": [
+        "2.10",
+        "fd5d5a68270fae99a4514eac6cc2b58ebc37673f5e535f778286a4d36d94405a",
+    ],
+    "workflow-scm-step": [
+        "2.3",
+        "877605775959dcc9cfddbe0819318fe96edf6ebea9afced53f2180cb21b5748e",
+    ],
+    "workflow-support": [
+        "2.13",
+        "7e1d547757b8dedc824f3595701c88d06204e07565f99d488cb5a110421fb7e9",
     ],
 }

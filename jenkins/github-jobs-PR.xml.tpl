@@ -181,8 +181,15 @@
         </hudson.plugins.build__timeout.operations.WriteDescriptionOperation>
       </operationList>
     </hudson.plugins.build__timeout.BuildTimeoutWrapper>
+    {% if variables.SAUCE_ENABLED == "true" %}
+    <hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper>
+      <enableSauceConnect>true</enableSauceConnect>
+      <credentialId>61b4846b-279d-4369-ae20-31e9d8b9bc66</credentialId>
+      <useGeneratedTunnelIdentifier>true</useGeneratedTunnelIdentifier>
+    </hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper>
+    {% endif %}
   </buildWrappers>
   <executionStrategy class="hudson.matrix.DefaultMatrixExecutionStrategyImpl">
-    <runSequentially>false</runSequentially>
+    <runSequentially>{{ variables.RUN_SEQUENTIAL }}</runSequentially>
   </executionStrategy>
 </matrix-project>
