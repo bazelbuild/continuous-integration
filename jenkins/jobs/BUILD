@@ -163,7 +163,7 @@ bazel_github_job(
         "//src/test/cpp/util:logging_test",
         "//src/test/cpp/util:md5_test",
         "//src/test/cpp/util:file_test",
-        "//src/test/native:windows_util_test",
+        "//src/test/native:windows_jni_test",
     ],
 )
 
