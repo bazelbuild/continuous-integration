@@ -93,7 +93,7 @@ for i in $(find input -name '*.bazel.build.tar'); do
   site=&quot;$(basename $i .tar)&quot;
   if [ ! -f &quot;sites/${site}&quot; ]; then
     touch &quot;sites/${site}&quot;
-    build_and_publish_site &quot;$i&quot; &quot;${site}&quot;
+    build_and_publish_site &quot;$i&quot; &quot;${site}&quot; &quot;build&quot;
   fi
 done
 for i in $(find input -name '*.bazel.build.tar.nobuild'); do
