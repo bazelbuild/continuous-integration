@@ -186,6 +186,7 @@
       <enableSauceConnect>true</enableSauceConnect>
       <credentialId>61b4846b-279d-4369-ae20-31e9d8b9bc66</credentialId>
       <useGeneratedTunnelIdentifier>true</useGeneratedTunnelIdentifier>
+      <launchSauceConnectOnSlave>true</launchSauceConnectOnSlave>
     </hudson.plugins.sauce_ondemand.SauceOnDemandBuildWrapper>
     {% endif %}
   </buildWrappers>
