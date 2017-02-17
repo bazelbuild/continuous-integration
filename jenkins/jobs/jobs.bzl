@@ -66,6 +66,7 @@ BAZEL_JOBS = BAZEL_STAGING_JOBS + {
     "Bazel-Release": UNIX_PLATFORMS,
     "Bazel-Release-Trigger": UNIX_PLATFORMS,
     "Bazel-Publish-Site": [],
+    "Bazel-Push-Benchmark-Output": [],
 }
 
 JOBS = BAZEL_JOBS.keys() + GITHUB_JOBS + NO_PR_JOBS + [
