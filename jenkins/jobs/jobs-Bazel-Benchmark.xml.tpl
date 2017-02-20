@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!--
-  Copyright 2015 The Bazel Authors. All rights reserved.
+  Copyright 2017 The Bazel Authors. All rights reserved.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -14,11 +14,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<matrix-project plugin="{{ variables.JENKINS_PLUGIN_matrix_project }}">
+<project>
   <actions/>
-  <description>Run the full test suite of Bazel.&#xd;
-&#xd;
-To be run on head and for release branch/tags only</description>
+  <description>Run Bazel benchmark for new changes</description>
   <keepDependencies>false</keepDependencies>
   <properties>
     <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="{{ variables.JENKINS_PLUGIN_github }}">
@@ -28,13 +26,13 @@ To be run on head and for release branch/tags only</description>
       <parameterDefinitions>
         <net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition plugin="{{ variables.JENKINS_PLUGIN_git_parameter }}">
           <name>REF_SPEC</name>
-          <description>The branch / tag to build</description>
-          <uuid>1ba7864c-b4fb-44b4-8268-31b304798afa</uuid>
+          <description></description>
+          <uuid>ca709303-ae93-4be2-b9b8-5ab0c19672d1</uuid>
           <type>PT_BRANCH_TAG</type>
           <branch></branch>
           <tagFilter>*</tagFilter>
           <sortMode>NONE</sortMode>
-          <defaultValue>origin/master</defaultValue>
+          <defaultValue></defaultValue>
         </net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
@@ -59,96 +57,83 @@ To be run on head and for release branch/tags only</description>
       <hudson.plugins.git.extensions.impl.AuthorInChangelog/>
     </extensions>
   </scm>
-  <assignedNode>deploy</assignedNode>
-  <canRoam>true</canRoam>
+  <quietPeriod>5</quietPeriod>
+  <assignedNode>benchmark</assignedNode>
+  <canRoam>false</canRoam>
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
   <concurrentBuild>false</concurrentBuild>
-  <axes>
-    <hudson.matrix.LabelAxis>
-      <name>PLATFORM_NAME</name>
-      <values>{% for v in variables.PLATFORMS.split("\n") %}<string>{{ v }}</string>{% endfor %}</values>
-    </hudson.matrix.LabelAxis>
-    <hudson.matrix.TextAxis>
-      <name>JAVA_VERSION</name>
-      <values>
-        <string>1.7</string>
-        <string>1.8</string>
-      </values>
-    </hudson.matrix.TextAxis>
-  </axes>
   <builders>
+    <hudson.plugins.copyartifact.CopyArtifact plugin="{{ variables.JENKINS_PLUGIN_copyartifact }}">
+      <project>Bazel/JAVA_VERSION=1.8,PLATFORM_NAME=linux-x86_64</project>
+      <filter>**/ci/bazel</filter>
+      <target>input</target>
+      <excludes/>
+      <selector class="hudson.plugins.copyartifact.TriggeredBuildSelector">
+        <fallbackToLastSuccessful>true</fallbackToLastSuccessful>
+        <upstreamFilterStrategy>UseGlobalSetting</upstreamFilterStrategy>
+      </selector>
+      <flatten>true</flatten>
+      <doNotFingerprintArtifacts>false</doNotFingerprintArtifacts>
+    </hudson.plugins.copyartifact.CopyArtifact>
     <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
-     <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
-        <expression>^((?!windows).)*$</expression>
-        <label>${PLATFORM_NAME}</label>
+      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
+        <expression>.*/master$</expression>
+        <label>${REF_SPEC}</label>
       </condition>
       <buildStep class="hudson.tasks.Shell">
-        <command>{{ imports['//jenkins/jobs:Bazel.unix.sh.tpl'] }}</command>
+        <command>#!/bin/bash
+echo &quot;Getting all the changes...&quot;
+curl &quot;http://ci.bazel.io/view/Bazel%20bootstrap%20and%20maintenance/job/Bazel-Benchmark/$BUILD_NUMBER/api/xml?wrapper=changes&amp;xpath=//changeSet//commitId&quot; &gt; change.log
+sed change.log -i -e &quot;s/&lt;\/commitId&gt;/\n/g; s/&lt;commitId&gt;//g; s/&lt;changes&gt;//g; s/&lt;\/changes&gt;//g&quot;
+if [ ! -s change.log ]; then
+  echo &quot;No new changes. Exit.&quot;
+  exit 0
+fi
+
+# Add input (containing bazel) to PATH
+PATH=$PATH:${WORKSPACE}/input
+
+# build benchmark
+echo "Building benchmark..."
+bazel build src/tools/benchmark/java/com/google/devtools/build/benchmark \
+    --spawn_strategy=standalone --genrule_strategy=standalone
+
+# run benchmark
+filename=&quot;build_$BUILD_NUMBER.json&quot;
+version_string=&quot;&quot;
+while read line
+do
+  version_string+=&quot; --versions=${line}&quot;
+done &lt; change.log
+
+mkdir output
+bazel-bin/src/tools/benchmark/java/com/google/devtools/build/benchmark/benchmark \
+    --workspace=${WORKSPACE}/benchmark_workspace \
+    --output=${WORKSPACE}/output/${filename} \
+    ${version_string}
+        </command>
       </buildStep>
       <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
-    </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
-      <condition class="org.jenkins_ci.plugins.run_condition.logic.And" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
-        <conditions>
-          <org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
-            <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition">
-              <expression>windows.*</expression>
-              <label>${PLATFORM_NAME}</label>
-            </condition>
-          </org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
-          <org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
-            <condition class="org.jenkins_ci.plugins.run_condition.core.StringsMatchCondition">
-              <arg1>1.8</arg1>
-              <arg2>${JAVA_VERSION}</arg2>
-              <ignoreCase>false</ignoreCase>
-            </condition>
-          </org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
-        </conditions>
-      </condition>
-      <buildStep class="hudson.tasks.Shell">
-        <command>{{ imports['//jenkins/jobs:Bazel.win.sh.tpl'] }}</command>
-      </buildStep>
-      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
-    </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
-      <condition class="org.jenkins_ci.plugins.run_condition.core.FileExistsCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
-        <file>.unstable</file>
-        <baseDir class="org.jenkins_ci.plugins.run_condition.common.BaseDirectory$Workspace"/>
-      </condition>
-      <buildStep class="org.jenkins_ci.plugins.fail_the_build.FixResultBuilder" plugin="{{ variables.JENKINS_PLUGIN_fail_the_build_plugin }}">
-        <defaultResultName>UNSTABLE</defaultResultName>
-        <success></success>
-        <unstable></unstable>
-        <failure></failure>
-        <aborted></aborted>
-      </buildStep>
-      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Unstable" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
   </builders>
   <publishers>
     <hudson.tasks.ArtifactArchiver>
-      <artifacts>output/ci/**</artifacts>
+      <artifacts>output/*.json</artifacts>
       <allowEmptyArchive>true</allowEmptyArchive>
       <onlyIfSuccessful>false</onlyIfSuccessful>
       <fingerprint>false</fingerprint>
       <defaultExcludes>true</defaultExcludes>
     </hudson.tasks.ArtifactArchiver>
-    {% if variables.SEND_EMAIL == "1" %}
-    <hudson.tasks.Mailer plugin="{{ variables.JENKINS_PLUGIN_mailer }}">
-      <recipients>{{ variables.BAZEL_BUILD_RECIPIENT }}</recipients>
-      <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
-      <sendToIndividuals>false</sendToIndividuals>
-    </hudson.tasks.Mailer>
-    {% endif %}
     <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="{{ variables.JENKINS_PLUGIN_parameterized_trigger }}">
       <configs>
         <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
           <configs>
             <hudson.plugins.parameterizedtrigger.CurrentBuildParameters/>
           </configs>
-          <projects>Bazel-Install-Trigger, Bazel-Publish-Site, Bazel-Release-Trigger, Bazel-Benchmark</projects>
+          <projects>Bazel-Push-Benchmark-Output</projects>
           <condition>UNSTABLE_OR_BETTER</condition>
           <triggerWithNoParameters>false</triggerWithNoParameters>
         </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
@@ -168,7 +153,4 @@ To be run on head and for release branch/tags only</description>
       </operationList>
     </hudson.plugins.build__timeout.BuildTimeoutWrapper>
   </buildWrappers>
-  <executionStrategy class="hudson.matrix.DefaultMatrixExecutionStrategyImpl">
-    <runSequentially>false</runSequentially>
-  </executionStrategy>
-</matrix-project>
+</project>

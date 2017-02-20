@@ -60,6 +60,8 @@ SLAVES=(
     "windows-slave-2 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-2 europe-west1-c default windows-startup-script-ps1=jenkins-slave-windows.ps1"
     "windows-slave-3 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-3 europe-west1-c default windows-startup-script-ps1=jenkins-slave-windows.ps1"
     "windows-slave-4 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-4 europe-west1-c default windows-startup-script-ps1=jenkins-slave-windows.ps1"
+    # For benchmark
+    "ubuntu-14-04-benchmark-slave ubuntu-14-04 ubuntu_14.04-x86_64-benchmark-1 us-east1-c default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
 )
 
 # Master for ci.bazel.io

@@ -67,6 +67,7 @@ BAZEL_JOBS = BAZEL_STAGING_JOBS + {
     "Bazel-Release": UNIX_PLATFORMS,
     "Bazel-Release-Trigger": UNIX_PLATFORMS,
     "Bazel-Publish-Site": [],
+    "Bazel-Benchmark": [],
     "Bazel-Push-Benchmark-Output": [],
 }
 

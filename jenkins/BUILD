@@ -36,6 +36,10 @@ UBUNTU_1404_PREFIX = "ubuntu_14.04-x86_64"
 
 UBUNTU_1404_COUNT = 8
 
+UBUNTU_1404_BENCHMARK_PREFIX = "ubuntu_14.04-x86_64-benchmark"
+
+UBUNTU_1404_BENCHMARK_COUNT = 1
+
 UBUNTU_1510_PREFIX = "ubuntu_15.10-x86_64"
 
 UBUNTU_1510_COUNT = 8
@@ -75,6 +79,12 @@ jenkins_nodes(
     UBUNTU_1404_PREFIX,
     UBUNTU_1404_COUNT,
     labels = ["linux-x86_64"],
+)
+
+jenkins_nodes(
+    UBUNTU_1404_BENCHMARK_PREFIX,
+    UBUNTU_1404_BENCHMARK_COUNT,
+    labels = ["benchmark"],
 )
 
 jenkins_nodes(
@@ -256,6 +266,7 @@ jenkins_build(
               jenkins_node_names(WINDOWS_PREFIX, WINDOWS_COUNT) +
               jenkins_node_names(UBUNTU_DOCKER_PREFIX, UBUNTU_DOCKER_COUNT) +
               jenkins_node_names(UBUNTU_1404_PREFIX, UBUNTU_1404_COUNT) +
+              jenkins_node_names(UBUNTU_1404_BENCHMARK_PREFIX, UBUNTU_1404_BENCHMARK_COUNT) +
               jenkins_node_names(UBUNTU_1510_PREFIX, UBUNTU_1510_COUNT) +
               jenkins_node_names(FREEBSD_11_PREFIX, FREEBSD_11_COUNT) +
               jenkins_node_names(FREEBSD_12_PREFIX, FREEBSD_12_COUNT),
