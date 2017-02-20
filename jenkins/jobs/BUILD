@@ -158,12 +158,9 @@ bazel_github_job(
     windows_tests = [
         "//src/test/java/...",
         "//src/test/shell/bazel:bazel_windows_example_test",
-        "//src/test/cpp/util:strings_test",
-        "//src/test/cpp/util:numbers_test",
-        "//src/test/cpp/util:logging_test",
-        "//src/test/cpp/util:md5_test",
-        "//src/test/cpp/util:file_test",
-        "//src/test/native:windows_jni_test",
+        "//src/test/shell/bazel:bazel_bootstrap_distfile_test",
+        "//src/test/cpp/...",
+        "//src/test/native:all_tests,"
     ],
 )
 
