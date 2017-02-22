@@ -160,7 +160,7 @@ bazel_github_job(
         "//src/test/shell/bazel:bazel_windows_example_test",
         "//src/test/shell/bazel:bazel_bootstrap_distfile_test",
         "//src/test/cpp/...",
-        "//src/test/native:all_tests,"
+        "//src/test/native:all_tests",
     ],
 )
 
