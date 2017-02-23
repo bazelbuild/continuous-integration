@@ -39,6 +39,7 @@ GERRIT_JOBS = [
 GITHUB_JOBS = [
     "TensorFlow",
     "TensorFlow_Serving",
+    "tf_models_syntaxnet",
     "Tutorial",
     "re2",
     "protobuf",

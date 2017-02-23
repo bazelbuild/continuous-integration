@@ -59,6 +59,20 @@ bazel_github_job(
 )
 
 bazel_github_job(
+    name = "tf_models_syntaxnet",
+    configure = ["(cd tensorflow && ./tensorflow/tools/ci_build/builds/configured CPU)"],
+    org = "tensorflow",
+    platforms = LINUX_PLATFORMS,
+    project = "models",
+    targets = [],
+    tests = [
+        "syntaxnet/...",
+        "util/utf8/...",
+    ],
+    workspace = "syntaxnet",
+)
+
+bazel_github_job(
     name = "Tutorial",
     configure = ["source ./ci/setup_android_repositories.sh"],
     org = "bazelbuild",
