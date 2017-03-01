@@ -73,7 +73,7 @@ Invoke-WebRequest http://${jenkins_master}/jnlpJars/slave.jar -OutFile slave.jar
 # Install the necessary packages in msys2
 $bash_installer=@'
 pacman -Syyu --noconfirm
-pacman -S --noconfirm git curl gcc zip unzip zlib-devel isl
+pacman -S --noconfirm git curl gcc zip unzip zlib-devel isl tar
 '@
 Write-Output $bash_installer | Out-File -Encoding ascii install.sh
 # -l is required so that PATH in bash is set properly
