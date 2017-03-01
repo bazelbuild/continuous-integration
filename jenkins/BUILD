@@ -85,6 +85,7 @@ jenkins_nodes(
     UBUNTU_1404_BENCHMARK_PREFIX,
     UBUNTU_1404_BENCHMARK_COUNT,
     labels = ["benchmark"],
+    mode = "EXCLUSIVE",
 )
 
 jenkins_nodes(

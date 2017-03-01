@@ -336,7 +336,7 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
         test_platforms=test_platforms)
 
 
-def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1,
+def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1, mode = "NORMAL",
                  labels = [], docker_base = None, preference = 1,
                  visibility = None):
   """Create a node configuration on Jenkins, with possible docker image.
@@ -345,6 +345,8 @@ def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1,
     name: Name of the node on Jenkins.
     remote_fs: path to the home of the Jenkins user.
     num_executors: number of executors (i.e. concurrent build) this machine can have.
+    mode: NORMAL for "Utilize this node as much as possible"
+      EXCLUSIVE for "Only build jobs with label restrictions matching this node"
     labels: list of Jenkins labels for this node (the node name is always added).
     docker_base: base for the corresponding docker image to create if we should create one
       (if docker_base is not specified, then a corresponding machine should be configured
@@ -362,7 +364,7 @@ def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1,
   <description></description>
   <remoteFS>%s</remoteFS>
   <numExecutors>%s</numExecutors>
-  <mode>NORMAL</mode>
+  <mode>%s</mode>
   <retentionStrategy class="hudson.slaves.RetentionStrategy$$Always"/>
   <launcher class="hudson.slaves.JNLPLauncher"/>
   <label>%s</label>
@@ -373,7 +375,7 @@ def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1,
   </nodeProperties>
 </slave>
 EOF
-""" % (name, remote_fs, num_executors, " ".join([name] + labels), preference),
+""" % (name, remote_fs, num_executors, mode, " ".join([name] + labels), preference),
       outs = ["nodes/%s/config.xml" % name],
       visibility = visibility,
       )
