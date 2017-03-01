@@ -244,6 +244,7 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
                      tests=["//..."], targets=["//..."], substitutions={},
                      windows_configure=[],
                      windows_tests=["//..."], windows_targets=["//..."],
+                     windows_tests_msvc=["//..."], windows_targets_msvc=["//..."],
                      test_opts=["--test_output=errors", "--build_tests_only"],
                      test_tag_filters=["-noci", "-manual"],
                      build_opts=["--verbose_failures"],
@@ -269,14 +270,17 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
     "BUILD_OPTS": " ".join(build_opts),
     "TESTS": " + ".join(tests),
     "WINDOWS_TESTS": " ".join(windows_tests),
+    # TODO(pcloudy): remove *_MSVC attributes after msys-less bazel works
+    "WINDOWS_TESTS_MSVC": " ".join(windows_tests_msvc),
     "BUILDS": " ".join(targets),
     "WINDOWS_BUILDS": " ".join(windows_targets),
+    "WINDOWS_BUILDS_MSVC": " ".join(windows_targets_msvc),
     "BAZEL_VERSIONS": "\n".join(bazel_versions),
     "disabled": str(not enabled).lower(),
     "enable_trigger": str(enable_trigger and github_enabled).lower(),
     "github": str(github_enabled),
     "GERRIT_PROJECT": str(gerrit_project),
-    "RUN_SEQUENTIAL": str(run_sequential).lower(),    
+    "RUN_SEQUENTIAL": str(run_sequential).lower(),
     "SAUCE_ENABLED": str(sauce_enabled).lower(),
   }
 

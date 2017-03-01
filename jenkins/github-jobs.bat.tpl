@@ -50,7 +50,7 @@ set ROOT=%cd%
 set BAZELRC=%ROOT%\.bazelrc
 del /q /f %BAZELRC%
 echo build {{ variables.BUILD_OPTS }} >> %BAZELRC%
-echo build --copt=/w --cpu=x64_windows_msvc >> %BAZELRC%
+echo build --copt=/w >> %BAZELRC%
 echo test {{ variables.TEST_OPTS }} >> %BAZELRC%
 echo test --test_tag_filters {{ variables.TEST_TAG_FILTERS }},-no_windows >> %BAZELRC%
 echo test --define JAVA_VERSION=1.8 >> %BAZELRC%
@@ -70,6 +70,16 @@ if not "{{ variables.WINDOWS_BUILDS }}" == "" (
 :: Check variables.WINDOWS_TESTS
 if not "{{ variables.WINDOWS_TESTS }}" == "" (
   call:bazel test {{ variables.WINDOWS_TESTS }}
+)
+
+:: Check variables.WINDOWS_BUILDS_MSVC
+if not "{{ variables.WINDOWS_BUILDS_MSVC }}" == "" (
+  call:bazel build --cpu=x64_windows_msvc {{ variables.WINDOWS_BUILDS_MSVC }}
+)
+
+:: Check variables.WINDOWS_TESTS_MSVC
+if not "{{ variables.WINDOWS_TESTS_MSVC }}" == "" (
+  call:bazel test --cpu=x64_windows_msvc {{ variables.WINDOWS_TESTS_MSVC }}
 )
 
 exit %errorlevel%
