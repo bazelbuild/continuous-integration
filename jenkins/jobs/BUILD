@@ -166,18 +166,19 @@ bazel_github_job(
         "//src/...",
         "//third_party/ijar/...",
     ],
-    windows_targets = [],
-    windows_tests = [
-        "//src/test/shell/bazel:bazel_windows_example_test",
-    ],
-    windows_targets_msvc = [
+    windows_targets = [
         "//src:bazel",
     ],
-    windows_tests_msvc = [
+    windows_tests = [
         "//src/test/java/...",
-        "//src/test/shell/bazel:bazel_bootstrap_distfile_test",
         "//src/test/cpp/...",
         "//src/test/native:all_tests",
+        "//src/test/shell/bazel:bazel_bootstrap_distfile_test",
+    ],
+    windows_targets_msys = [
+    ],
+    windows_tests_msys = [
+        "//src/test/shell/bazel:bazel_windows_example_test",
     ],
 )
 

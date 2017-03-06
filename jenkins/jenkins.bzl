@@ -244,7 +244,7 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
                      tests=["//..."], targets=["//..."], substitutions={},
                      windows_configure=[],
                      windows_tests=["//..."], windows_targets=["//..."],
-                     windows_tests_msvc=["//..."], windows_targets_msvc=["//..."],
+                     windows_tests_msys=["//..."], windows_targets_msys=["//..."],
                      test_opts=["--test_output=errors", "--build_tests_only"],
                      test_tag_filters=["-noci", "-manual"],
                      build_opts=["--verbose_failures"],
@@ -270,11 +270,11 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
     "BUILD_OPTS": " ".join(build_opts),
     "TESTS": " + ".join(tests),
     "WINDOWS_TESTS": " ".join(windows_tests),
-    # TODO(pcloudy): remove *_MSVC attributes after msys-less bazel works
-    "WINDOWS_TESTS_MSVC": " ".join(windows_tests_msvc),
+    # TODO(pcloudy): remove *_MSYS attributes when we don't need MSYS anymore
+    "WINDOWS_TESTS_MSYS": " ".join(windows_tests_msys),
     "BUILDS": " ".join(targets),
     "WINDOWS_BUILDS": " ".join(windows_targets),
-    "WINDOWS_BUILDS_MSVC": " ".join(windows_targets_msvc),
+    "WINDOWS_BUILDS_MSYS": " ".join(windows_targets_msys),
     "BAZEL_VERSIONS": "\n".join(bazel_versions),
     "disabled": str(not enabled).lower(),
     "enable_trigger": str(enable_trigger and github_enabled).lower(),

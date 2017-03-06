@@ -50,6 +50,11 @@ set ROOT=%cd%
 set BAZELRC=%ROOT%\.bazelrc
 del /q /f %BAZELRC%
 echo build {{ variables.BUILD_OPTS }} >> %BAZELRC%
+:: Host C++ toolchain still needs to be MSYS because protoc.exe built with MSVC is broken.
+:: TODO(pcloudy): Remove following after fixing https://github.com/bazelbuild/bazel/issues/2634
+if "%BAZEL_VERSION%" == "HEAD" (
+  echo build --host_cpu=x64_windows_msys >> %BAZELRC%
+)
 echo test {{ variables.TEST_OPTS }} >> %BAZELRC%
 echo test --test_tag_filters {{ variables.TEST_TAG_FILTERS }},-no_windows >> %BAZELRC%
 echo test --define JAVA_VERSION=1.8 >> %BAZELRC%
@@ -63,22 +68,26 @@ del /q /f .unstable
 
 :: Check variables.WINDOWS_BUILDS
 if not "{{ variables.WINDOWS_BUILDS }}" == "" (
-  call:bazel build {{ variables.WINDOWS_BUILDS }}
+  call:bazel build --copt=/w --cpu=x64_windows_msvc {{ variables.WINDOWS_BUILDS }}
 )
 
 :: Check variables.WINDOWS_TESTS
 if not "{{ variables.WINDOWS_TESTS }}" == "" (
-  call:bazel test {{ variables.WINDOWS_TESTS }}
+  call:bazel test --copt=/w --cpu=x64_windows_msvc {{ variables.WINDOWS_TESTS }}
 )
 
-:: Check variables.WINDOWS_BUILDS_MSVC
-if not "{{ variables.WINDOWS_BUILDS_MSVC }}" == "" (
-  call:bazel build --copt=/w --cpu=x64_windows_msvc {{ variables.WINDOWS_BUILDS_MSVC }}
+if "%BAZEL_VERSION%" == "HEAD" (
+  set EXTRA_CPU_OPTION=--cpu=x64_windows_msys
 )
 
-:: Check variables.WINDOWS_TESTS_MSVC
-if not "{{ variables.WINDOWS_TESTS_MSVC }}" == "" (
-  call:bazel test --copt=/w --cpu=x64_windows_msvc {{ variables.WINDOWS_TESTS_MSVC }}
+:: Check variables.WINDOWS_BUILDS_MSYS
+if not "{{ variables.WINDOWS_BUILDS_MSYS }}" == "" (
+  call:bazel build %EXTRA_CPU_OPTION% {{ variables.WINDOWS_BUILDS_MSYS }}
+)
+
+:: Check variables.WINDOWS_TESTS_MSYS
+if not "{{ variables.WINDOWS_TESTS_MSYS }}" == "" (
+  call:bazel test %EXTRA_CPU_OPTION%  {{ variables.WINDOWS_TESTS_MSYS }}
 )
 
 exit %errorlevel%
