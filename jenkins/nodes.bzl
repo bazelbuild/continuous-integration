@@ -33,6 +33,7 @@ def jenkins_nodes(name,
                   labels=None,
                   prod_args=None,
                   staging_args=None,
+                  install_bazel=True,
                   **kwargs):
   """Create a set of Jenkins nodes on the system.
 
@@ -53,11 +54,11 @@ def jenkins_nodes(name,
       nodes that will be passed to `jenkins_node`.
     staging_args: dictionary of aditional arguments for staging only
       nodes that will be passed to `jenkins_node`.
+    install_bazel: if the "install-bazel" label should be added to labels.
     **kwargs: other arguments to be passed verbatim to `jenkins_node`.
   """
   labels = [
-      name,
-      "install-bazel"] + (labels if labels else [])
+      name] + (["install-bazel"] if install_bazel else []) + (labels if labels else [])
   prod_kwargs = _extend_kwargs(kwargs, prod_args)
   [jenkins_node(
       name = n,
