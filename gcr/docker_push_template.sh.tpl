@@ -55,5 +55,5 @@ function tag_last_load() {
 %{load_statements}
 
 for tag in %{tags}; do
-  "${GCLOUD}" docker push "%{repository}/${tag}"
+  "${GCLOUD}" docker -- push "%{repository}/${tag}"
 done
