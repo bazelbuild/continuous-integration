@@ -15,28 +15,28 @@
 # Plugins for Jenkins
 JENKINS_PLUGINS = {
     "conditional-buildstep": [
-        "1.3.3",
-        "1bc0999a164ec666779fa604dd4018ab812c1ffa2cac1b69da9dbd9584973b5c",
+        "1.3.5",
+        "bb505823eef199eef3b67bff5d7826d075329ce93c64784ae72d22fff88110d9",
     ],
     "javadoc": [
-        "1.3",
-        "cd2efb569827d66565483eec00877b0897941aee8334ad945c310d7b3b5815af",
+        "1.4",
+        "2236e563d057a98b1bb2e56975756a008986289aa01a61c4655a31b62c760a22",
     ],
     "scm-api": [
-        "2.0.3",
-        "cf7b460fad1f5da7ab5edf850d262bb801eae4513691d930d7e35b15b7e89b3e",
+        "2.1.0",
+        "cbabbab916a631112157161b3e4858baf928b6a507963166193d923a5065c7d2",
     ],
     "ssh-credentials": [
-        "1.11",
-        "e80f36af0162794d80164ae479d7cc36077174f50d57d04f2d814b4bbe4eab18",
+        "1.13",
+        "d4f979223cc543dfd9bf72a1177471bb08748d2c79e1115d7bb12198bbbf2010",
     ],
     "parameterized-trigger": [
-        "2.27",
-        "81fc5111dd2c62a6a87d6e4234fabad0ebac4ef053357e8fb89be357feb38a0a",
+        "2.33",
+        "7fcba38e47b556ae9f34e5a8051ce935df7dd37ca12d871d18676292a27fb6bf",
     ],
     "copyartifact": [
-        "1.35.2",
-        "0d0143318487ffa61d6c159a0157dcdcbf66a71e3aa17eb4bac7707fc6ae512a",
+        "1.38.1",
+        "0171f402f064615a14b0adca348c2d49ee338cd49d54539793105a191d941501",
     ],
     "mailer": [
         "1.19",
@@ -47,65 +47,65 @@ JENKINS_PLUGINS = {
         "4e55ebf4bde1202784404d856f98f7de85470ed145cde06feb45f641891780fb",
     ],
     "script-security": [
-        "1.26",
-        "bb16f2d7592ac05e24deead4e9bbb79b63ba3e7a674209e83a1506c55297c216",
+        "1.27",
+        "7f9def9f7347d0a0bf5ab8899ff2365b19d3b6a34a711adbc51a088f75eb587e",
     ],
     "matrix-project": [
-        "1.6",
-        "3c6fd1c5807f197fe7649449661b2c1a103efb1f88c39fc330391e7d372877dd",
+        "1.8",
+        "47fc1ffaa6516508b9415b23f2ef27ef8899e3511a7934fa1956a6a0f1e59bf0",
     ],
     "junit": [
         "1.20",
         "be0c9079c1ed7e3bc9d7157e30d0e8fdd733a83cba11ab184ddb48cea1a579c3",
     ],
     "credentials": [
-        "2.1.11",
-        "e3746124c923b20c7c6136ed54eb3c7734ee729756c11f10957fde0714f5d42c",
+        "2.1.13",
+        "e793895fb727b59d83a9e395984243cfee9abdf4d56238fb6f2594948b0487e5",
         "pinned",
     ],
     "git-parameter": [
-        "0.4.0",
-        "4450c2bdb4e161e6fb25515439254f702054994401c92367f26ad6821e418899",
+        "0.8.0",
+        "c7251742e90110a0c6345a47373a20f8d97e0562bf543f04e6d2e7c9313e6ef1",
     ],
     "github-api": [
-        "1.72.1",
-        "e20cf68bcc64a031ff4791de3217fca2e6b1fe5e9f1bc6e5311b3d25c5160792",
+        "1.85",
+        "e340c7d2719cd7569fd039c940df87154750a291918bcb982462575b775275b7",
     ],
     "git-client": [
-        "1.18.0",
-        "2179d7a4e9dacd707cec9c4475b08f5c0285c3e02e80a58ff4f6a132a3641b4d",
+        "2.3.0",
+        "6a39048745815c6ed8e04fbbe26978d8457d77529b4448bf02cf357ae39d0af0",
     ],
     "github": [
-        "1.12.0",
-        "f880fb8085070eee7277d50fe9afeb39a7b6bae00ecd502b8aa692f9b5068a55",
+        "1.26.1",
+        "a2930570df3a30601c1d201eac2ae9a622a1b6dda03d740ee4a3bcfdfc4885c8",
     ],
     "maven-plugin": [
-        "2.10",
-        "ad227ae45f68608795958fad758d1e062862169ab91671f6efd4f9b89935c3c8",
+        "2.15.1",
+        "61aeb7d787e312702b438c75ffd752394bbcaaf2b6d212a4fc169b3f28651c6e",
     ],
     "git": [
-        "2.4.0",
-        "742bb27aee23c43f0371340fe5e2a389db64805747718573ef3ab3c84f17ed62",
+        "3.1.0",
+        "7ee0473a61a39c250dfc1acab15462cc6a4f936c39a0456a0352df9c622f3fe4",
     ],
     "token-macro": [
-        "1.10",
-        "bf4fe99beb72044242260336ffcd8fe4632eb897b60eba5483690ddf56dc83dc",
+        "2.0",
+        "9e0909ec9a37d0de9311f507cc24634edf5f7f191dc7643d19ba835bdfaa1454",
     ],
     "nodelabelparameter": [
-        "1.5.1",
-        "ec9a56993e16bdcc37d592bed0cb48ed8f3231ef46569632061fe066fdd2b7ed",
+        "1.7.2",
+        "0f556ae48573db6bae28b24eae561121ed9931e8b1bc31ac4e586bc8d3238edf",
     ],
     "jquery": [
         "1.11.2-0",
         "acf4940bd5a0d918d781b51a6f42f7a0cb9381ede8235582c629a5d347495029",
     ],
     "email-ext": [
-        "2.40.5",
-        "85d6d5323b346c40ba18ecc4265d141f5fef416d174b1ceed8404b90e9e69815",
+        "2.57",
+        "aee1e1a1d4e842a6e4827f97f71dfff307a3e97af0fc8f4c481415e8d11487be",
     ],
     "google-login": [
-        "1.1",
-        "6be817f78f40048aa8802edba9f0070599397c0305a43f5ac6156ef0dedccdd3",
+        "1.3",
+        "4b1482347ddd0a2a54c1fdedfe46a519cc2ada60dfc774d2435f554287c52d25",
     ],
     "fail-the-build-plugin": [
         "1.0",
@@ -120,40 +120,40 @@ JENKINS_PLUGINS = {
         "6c3722fb9ce2a446f0266e1911d87ef50898a10f38890bb6963e7e1e1c4296fb",
     ],
     "plain-credentials": [
-        "1.1",
-        "570bdbb092e6518b5efb679281d1e9dadd2a5ad232484e00581523ef0899ff7f",
+        "1.4",
+        "4f1834f99ffd7f2a7db1972fe46ee42d06af819b27297193ac89eb33a14292d8",
     ],
     "ssh-agent": [
-        "1.3",
-        "cb41df7a0bff73025db46e33398adc16fa38a8141d5d00459660ddc71283b3b4",
+        "1.14",
+        "08f67bcdbc7a1f1205376c508c1e5ed8b92f0834770352d2060252d6899102b7",
     ],
     "workflow-step-api": [
         "2.9",
         "c28cc0ecd0f707980c941b7b0c27cb55894b8caa5320e0bf7beebe10a0ae067b",
     ],
     "icon-shim": [
-        "2.0.2",
-        "81213eca7029c8a327e0eb6addf13692630d396912db6994b7a6506252115d52",
+        "2.0.3",
+        "8ab2f1617b68561a7f0254fb27578840aa9b7e158d0bd8c51628dbc64e8ab0ca",
     ],
     "ghprb": [
-        "1.31.4",
-        "6085e0e3e19a817920087dc3a63cfcd2e9aa96f81b0dce339ef85093bed60e35",
+        "1.35.0",
+        "e33212e46f9af4c02379ae6c8c37bf4df74f594da1597ec611921f5099c1e9d2",
     ],
     "build-flow-plugin": [
-        "0.19",
-        "4e26bb0335f5c86155e6b72304a35ccabf464f764976ed21a3f24288f993fb03",
+        "0.20",
+        "7ce4746b7d59e543da340c98f3eaf0f559581d2fdd7f39d787152f45554a2966",
     ],
     "embeddable-build-status": [
         "1.9",
         "9d950ce4bfdcb67e1b1198ea2b54e18de95ec3214b1cf1135141b5b54a62edb2",
     ],
     "build-timeout": [
-        "1.17.1",
-        "bd4265488037847917bc56f046e54c7769c20474c70c1b5431e8e87383c55ccf",
+        "1.18",
+        "6ea3eaa31d13314af1bcd7576fb07ee4a007c84ae56639eabc03e503de485dba",
     ],
     "build-monitor-plugin": [
-        "1.10+build.201610041454",
-        "d415688ca679835c3a4db3fdad82fd1f977f9ffd22947ab9076074f116ee3a54",
+        "1.11+build.201701152243",
+        "4e8d5e0a00410f06e07a05cf1011563df7cd169e1961d3f334fc159a55b6a29b",
     ],
     "ace-editor": [
         "1.1",
@@ -168,35 +168,75 @@ JENKINS_PLUGINS = {
         "a05273cd20c11557ffcb7dcb75150f21d35dc8be28355548b831c2960d7f11c0",
     ],
     "sauce-ondemand": [
-        "1.160",
-        "f9870027aed534614157955a6b50e28efb8129d75ab0d98aa8b98e7b56400aa4",
+        "1.161",
+        "40f3ed7ce6eaf1ff3e1e3ecf2e6b8392bb3996abc708ba5db7eb7163d125cad1",
     ],
     "structs": [
-        "1.5",
-        "5a739bb59d68bfb0fb94a5f99962e9f25e2b4ea5c218e782be4c7ee54a6752ef",
+        "1.6",
+        "faad3252e325e9a672b3e2732711b4a673997ac3d35a501a43ccb47ae9536ca8",
     ],
     "workflow-api": [
-        "2.10",
-        "bc4e14291be70c1e1e89377a441dc0dec7f1ccee414f193c38bcddcb066e70e6",
+        "2.12",
+        "d83e61b9189ee0de6bb4c394cd07cd830e9cc7876205cd7d03d6b2a601cc0271",
     ],
     "workflow-basic-steps": [
         "2.4",
         "c57d5308a01df1990a7f491ddb6dfc7aab5b7b713ad9cfc458cbef76d27fdbab",
     ],
     "workflow-cps": [
-        "2.26",
-        "a4b71cb15293e6a534fbeac3af74bbdd83b241e3888529c85f7d5b4d88b12118",
+        "2.29",
+        "f511afb06bba24ee9a4521703e2c8a638a2f1525f7f2772bb13cf5daad43dbe7",
     ],
     "workflow-job": [
         "2.10",
         "fd5d5a68270fae99a4514eac6cc2b58ebc37673f5e535f778286a4d36d94405a",
     ],
     "workflow-scm-step": [
-        "2.3",
-        "877605775959dcc9cfddbe0819318fe96edf6ebea9afced53f2180cb21b5748e",
+        "2.4",
+        "69d58ceb58111663e82928c8db367ba8e857c29aaee9c4264aeb4100fc459e22",
     ],
     "workflow-support": [
         "2.13",
         "7e1d547757b8dedc824f3595701c88d06204e07565f99d488cb5a110421fb7e9",
+    ],
+    "ldap": [
+        "1.14",
+        "f424cbcb06e29879d58bf21bea365e4f9b055aae9e9ddd1b5f61dcb140128dcb",
+    ],
+    "matrix-auth": [
+        "1.4",
+        "366aa6c4c50b256cb38d5e5c30195d79d634b56cca24d3db190aa5bc01142408",
+    ],
+    "antisamy-markup-formatter": [
+        "1.5",
+        "8e8e3e917d76b0432ab3c32a000e824f4ef32011ba5e77dd8b6b476310df8f1a",
+    ],
+    "pam-auth": [
+        "1.3",
+        "1b1d32dca618f43f6c06786f3fde6cc0e0fa0c805cbb735fafd464cf2cfcf1e3",
+    ],
+    "ssh-slaves": [
+        "1.13",
+        "e860c90540bfa667cf215d90bfb1a607ba4fb0af7be039b3fdcfcd33cb71d777",
+    ],
+    "subversion": [
+        "2.7.2",
+        "ff56a46ccca9b89ab907f1da7ef5b0ea46106eba918678cd53101d2896a961ea",
+    ],
+    "windows-slaves": [
+        "1.3.1",
+        "4364f88286745a48962b86b53df3739a6978886e72ec83289a3cfc750f1adcc6",
+    ],
+    "translation": [
+        "1.15",
+        "11a0dd4aaa66d506d1bfc32d367e9c1f28b957296b5729ae9bf0947f5f1301ce",
+    ],
+    "bouncycastle-api": [
+        "2.16.0",
+        "8aed85e3d479da76406eedf609696e3b4393afb4ba8f060656b311388a1e5e20",
+    ],
+    "mapdb-api": [
+        "1.0.9.0",
+        "072c11a34cf21f87f9c44bf01b430c5ea77e8096d077e8533de654ef00f3f871",
     ],
 }

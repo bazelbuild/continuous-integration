@@ -48,6 +48,8 @@ export -f replace_secrets
 rm -f /var/jenkins_home/jobs/*/config.xml
 # Same for nodes
 rm -rf /var/jenkins_home/nodes
+# Remove existing plugins to ensure update of plugins
+rm -fr /var/jenkins_home/plugins
 
 # Copy the configuration files provided in the docker image
 (cd /usr/share/jenkins/ref && \

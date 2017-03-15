@@ -18,6 +18,17 @@
   <actions/>
   <description>Install Bazel on all the slaves</description>
   <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>PLATFORM_NAME</name>
+          <description></description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
   <quietPeriod>0</quietPeriod>
   <canRoam>true</canRoam>
   <disabled>false</disabled>
