@@ -18,12 +18,13 @@
 # in sync check.
 
 # Format of each entry is:
-#   origin destination local-name branch1 ... branchN
+#   origin destination local-name bidirectional branch1 ... branchN
 REPOSITORIES=(
-    "https://bazel.googlesource.com/bazel git@github.com:bazelbuild/bazel.git bazel master"
-    "https://bazel.googlesource.com/tulsi git@github.com:bazelbuild/tulsi.git tulsi master"
-    "https://bazel.googlesource.com/continuous-integration git@github.com:bazelbuild/continuous-integration.git continuous-integration master"
-    "https://bazel.googlesource.com/devtools git@github.com:bazelbuild/devtools.git devtools master"
+    "https://bazel.googlesource.com/bazel git@github.com:bazelbuild/bazel.git bazel false master"
+    "https://bazel.googlesource.com/tulsi git@github.com:bazelbuild/tulsi.git tulsi false master"
+    "https://bazel.googlesource.com/continuous-integration git@github.com:bazelbuild/continuous-integration.git continuous-integration false master"
+    "https://bazel.googlesource.com/devtools git@github.com:bazelbuild/devtools.git devtools false master"
+    "https://bazel.googlesource.com/eclipse git@github.com:bazelbuild/eclipse.git eclipse true master"
 )
 
 # Install certificates
@@ -42,6 +43,8 @@ Host               github.com
     StrictHostKeyChecking no
 EOF
 
+git config --global http.cookiefile /opt/secrets/gerritcookies
+
 set -eux
 
 cd /tmp
@@ -53,13 +56,40 @@ function clone() {
   popd
 }
 
+function sync_branch() {
+  local branch="$1"
+  local bidirectional="$2"
+  git checkout origin/${branch} -B ${branch} || {
+    echo "Failed to checkout ${branch}, aborting sync..."
+    return 1
+  }
+
+  if $bidirectional; then
+    git rebase destination/${branch} || {
+      echo "Failed to rebase ${branch} from destination, aborting sync..."
+      git rebase --abort &>/dev/null || true
+      return 1
+    }
+    git push -f origin ${branch} || {
+      echo "Failed to force pushed to origin, aborting sync..."
+      return 1
+    }
+  fi
+
+  git push destination ${branch} || {
+    echo "Failed to push to destination..."
+    return 1
+  }
+}
+
 function sync() {
+  local bidirectional="$4"
   pushd $3
-  shift 3
+  shift 4
   git fetch origin
   git fetch destination
   for branch in "$@"; do
-    git checkout origin/${branch} -B ${branch} && git push destination ${branch}
+    sync_branch "${branch}" "${bidirectional}" || true
   done
   popd
 }
