@@ -19,7 +19,7 @@ set -eux
 
 # We have to strip the environment or the windows env will override the 
 # Bazel latest to bootstrap bazel
-echo 'export BOOTSTRAP_BAZEL="/c/bazel_ci/installs/latest/bazel.exe"' >env.sh
+echo 'export BOOTSTRAP_BAZEL="/c/bazel_ci/installs/bootstrap/bazel.exe"' >env.sh
 
 # Pass PLATFORM_NAME to Windows bootstrap script for building a MSVC Bazel
 echo "export PLATFORM_NAME=\"${PLATFORM_NAME}\"" >>env.sh

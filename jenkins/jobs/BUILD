@@ -4,6 +4,7 @@ load(
     "LINUX_PLATFORMS",
     "UNIX_PLATFORMS",
     "WINDOWS_PLATFORMS",
+    "WINDOWS_MSVC_PLATFORMS",
     "ALL_PLATFORMS",
     "RULES",
     "DISABLED_RULES",
@@ -28,7 +29,7 @@ bazel_github_job(
     build_opts = ["-c opt"],
     configure = ["./tensorflow/tools/ci_build/builds/configured CPU"],
     org = "tensorflow",
-    platforms = LINUX_PLATFORMS + WINDOWS_PLATFORMS,
+    platforms = LINUX_PLATFORMS + WINDOWS_PLATFORMS + WINDOWS_MSVC_PLATFORMS,
     project_url = "https://tensorflow.org",
     targets = ["//tensorflow/tools/pip_package:build_pip_package"],
     test_opts = [

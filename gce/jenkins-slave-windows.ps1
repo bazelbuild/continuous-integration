@@ -90,15 +90,35 @@ $res.Close();
 $bazel_version=$res.ResponseUri.AbsolutePath.TrimStart("/bazelbuild/bazel/releases/tag/")
 
 # Download the latest bazel
+
+# This will be replaced in vm.sh with $MSVC_LABEL='-msvc' for Windows MSVC slaves
+$MSVC_LABEL=''
 $folder="c:\bazel_ci\installs\${BAZEL_VERSION}"
-$url="https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-windows-x86_64.exe"
+$url="https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel${MSVC_LABEL}-${BAZEL_VERSION}-windows-x86_64.exe"
 New-Item $folder -type directory -force
+
+# Continue if MSVC Bazel download fails due to not releasing yet
+# TODO(pcloudy): Remove this after MSVC Bazel is released
+if ($MSVC_LABEL -eq '-msvc') { $ErrorActionPreference = 'Continue' }
 (New-Object Net.WebClient).DownloadFile("${url}", "${folder}\bazel.exe")
+if ($MSVC_LABEL -eq '-msvc') { $ErrorActionPreference = 'Stop' }
 
 # Create a junction to the latest release
 # The CI machines have Powershell 4 installed, so we cannot use New-Item to
 # create a junction, so shell out to mklink.
 cmd.exe /C mklink /j C:\bazel_ci\installs\latest $folder
+
+# On MSVC slaves, we still need to download a Bazel for bootstrap.
+# TODO(pcloudy): Refactor this after MSVC Bazel is released.
+if ($MSVC_LABEL -eq '-msvc') {
+  $folder="c:\bazel_ci\installs\bootstrap"
+  $url="https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-windows-x86_64.exe"
+  New-Item $folder -type directory -force
+  (New-Object Net.WebClient).DownloadFile("${url}", "${folder}\bazel.exe")
+} else {
+  cmd.exe /C mklink /j C:\bazel_ci\installs\bootstrap $folder
+}
+
 
 # Replace the host name in the JNLP file, because Jenkins, in its infinite
 # wisdom, does not let us change that separately from its external hostname.
@@ -113,7 +133,7 @@ Write-Output $jnlp | Out-File -Encoding ascii slave-agent.jnlp
 # The path change is needed because Jenkins cannot execute a different git
 # binary on different slaves, so we need to simply use "git"
 $agent_script=@"
-`$env:path="`$env:path;c:\tools\msys64\usr\bin"
+`$env:path="c:\tools\msys64\usr\bin;`$env:path"
 cd c:\bazel_ci
 # A path name with c:\ in the JNLP URL makes Java hang. I don't know why.
 # Jenkins tries to reconnect to the wrong port if the server is restarted.

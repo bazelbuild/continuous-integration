@@ -32,6 +32,10 @@ WINDOWS_PREFIX = "windows-x86_64"
 
 WINDOWS_COUNT = 4
 
+WINDOWS_MSVC_PREFIX = "windows-msvc-x86_64"
+
+WINDOWS_MSVC_COUNT = 4
+
 UBUNTU_1404_PREFIX = "ubuntu_14.04-x86_64"
 
 UBUNTU_1404_COUNT = 8
@@ -70,6 +74,14 @@ jenkins_nodes(
 jenkins_nodes(
     WINDOWS_PREFIX,
     WINDOWS_COUNT,
+    num_executors = 1,
+    preference = 1,
+    remote_fs = "c:\\jenkins",
+)
+
+jenkins_nodes(
+    WINDOWS_MSVC_PREFIX,
+    WINDOWS_MSVC_COUNT,
     num_executors = 1,
     preference = 1,
     remote_fs = "c:\\jenkins",
@@ -266,6 +278,7 @@ jenkins_build(
                   ":jenkins-common-configs",
               ] + jenkins_node_names(DARWIN_PREFIX, DARWIN_COUNT) +
               jenkins_node_names(WINDOWS_PREFIX, WINDOWS_COUNT) +
+              jenkins_node_names(WINDOWS_MSVC_PREFIX, WINDOWS_MSVC_COUNT) +
               jenkins_node_names(UBUNTU_DOCKER_PREFIX, UBUNTU_DOCKER_COUNT) +
               jenkins_node_names(UBUNTU_1404_PREFIX, UBUNTU_1404_COUNT) +
               jenkins_node_names(UBUNTU_1404_BENCHMARK_PREFIX, UBUNTU_1404_BENCHMARK_COUNT) +
@@ -295,6 +308,7 @@ jenkins_build(
         ":freebsd-11-staging",
         ":freebsd-12-staging",
         ":windows-x86_64-staging",
+        ":windows-msvc-x86_64-staging",
     ],
     jobs = [
         "//jenkins/jobs:staging-jobs",
