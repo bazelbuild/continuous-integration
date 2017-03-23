@@ -28,7 +28,15 @@ echo %BAZEL_VERSION%
 
 :: Download the latest bazel release
 set folder=c:\bazel_ci\installs\%BAZEL_VERSION%
-set url='https://github.com/bazelbuild/bazel/releases/download/%BAZEL_VERSION%/bazel-%BAZEL_VERSION%-windows-x86_64.exe'
+
+if "%PLATFORM_NAME:~0,12%" == "windows-msvc" (
+:: Download MSVC version Bazel, this will fail before MSVC Bazel is released
+  set url='https://github.com/bazelbuild/bazel/releases/download/%BAZEL_VERSION%/bazel-msvc-%BAZEL_VERSION%-windows-x86_64.exe'
+) else (
+:: Download MSYS version Bazel
+  set url='https://github.com/bazelbuild/bazel/releases/download/%BAZEL_VERSION%/bazel-%BAZEL_VERSION%-windows-x86_64.exe'
+)
+
 if not exist %folder%\bazel.exe (
   md %folder%
   powershell -Command "(New-Object Net.WebClient).DownloadFile(%url%, '%folder%\bazel.exe')"
@@ -40,11 +48,22 @@ mklink /J c:\bazel_ci\installs\latest %folder%
 
 :: Install Bazel built at HEAD
 md c:\bazel_ci\installs\HEAD
-echo F | xcopy /y "bazel-installer\JAVA_VERSION=1.8,PLATFORM_NAME=windows-x86_64\output\ci\bazel*.exe" c:\bazel_ci\installs\HEAD\bazel.exe
+if "%PLATFORM_NAME:~0,12%" == "windows-msvc" (
+  echo F | xcopy /y "bazel-installer\JAVA_VERSION=1.8,PLATFORM_NAME=windows-msvc-x86_64\output\ci\bazel*.exe" c:\bazel_ci\installs\HEAD\bazel.exe
+) else (
+  echo F | xcopy /y "bazel-installer\JAVA_VERSION=1.8,PLATFORM_NAME=windows-x86_64\output\ci\bazel*.exe" c:\bazel_ci\installs\HEAD\bazel.exe
+)
+
 
 :: check if installation is successfuly
+:: Ignore the failure, if latest MSVC Bazel is not installed.
+:: TODO(pcloudy): Remove this after MSVC Bazel is released.
 if not exist c:\bazel_ci\installs\latest\bazel.exe (
-  exit 1
+  if "%PLATFORM_NAME:~0,12%" == "windows-msvc" (
+    exit 0
+  ) else (
+    exit 1
+  )
 )
 if not exist c:\bazel_ci\installs\HEAD\bazel.exe (
   exit 1

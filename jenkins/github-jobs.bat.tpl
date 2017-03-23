@@ -32,6 +32,12 @@ if "%BAZEL_VERSION%" == "" (
   exit /b 1
 )
 
+:: Skip if latest MSVC Bazel is not installed
+if not exist "%BAZEL%" if "%BAZEL_VERSION%" == "latest" if "%PLATFORM_NAME:~0,12%" == "windows-msvc" (
+  echo "CI WARNING: Latest MSVC Bazel not found, not yet released? Ignore for now."
+  exit /b 0
+)
+
 :: Check if BAZEL exists.
 if exist "%BAZEL%" (
   echo CI info: BAZEL binary found
@@ -40,21 +46,14 @@ if exist "%BAZEL%" (
   exit /b 1
 )
 
-:: In src/main/native/build_windows_jni.sh, we use `sort --version-sort`
-:: So we need to make sure find the msys sort instead of windows sort.
-:: TODO(pcloudy): remove this after MSVC toolchain becomes default, because
-:: at that time we can build dll by cc_binary for `bazel build src:bazel`.
-set PATH=c:\tools\msys64\usr\bin;%PATH%
+:: Remove MSYS path on Windows MSVC platform, the MSYS path
+:: was originally added by jenkins-slave-windows.ps1
+if "%PLATFORM_NAME:~0,12%" == "windows-msvc" set PATH=%PATH:c:\tools\msys64\usr\bin;=%
 
 set ROOT=%cd%
 set BAZELRC=%ROOT%\.bazelrc
 del /q /f %BAZELRC%
 echo build {{ variables.BUILD_OPTS }} >> %BAZELRC%
-:: Host C++ toolchain still needs to be MSYS because protoc.exe built with MSVC is broken.
-:: TODO(pcloudy): Remove following after fixing https://github.com/bazelbuild/bazel/issues/2634
-if "%BAZEL_VERSION%" == "HEAD" (
-  echo build --host_cpu=x64_windows_msys >> %BAZELRC%
-)
 echo test {{ variables.TEST_OPTS }} >> %BAZELRC%
 echo test --test_tag_filters {{ variables.TEST_TAG_FILTERS }},-no_windows >> %BAZELRC%
 echo test --define JAVA_VERSION=1.8 >> %BAZELRC%
@@ -68,16 +67,16 @@ del /q /f .unstable
 
 :: Check variables.WINDOWS_BUILDS
 if not "{{ variables.WINDOWS_BUILDS }}" == "" (
-  call:bazel build --copt=/w --cpu=x64_windows_msvc {{ variables.WINDOWS_BUILDS }}
+  call:bazel build --copt=-w --cpu=x64_windows_msvc --host_copt=-w {{ variables.WINDOWS_BUILDS }}
 )
 
 :: Check variables.WINDOWS_TESTS
 if not "{{ variables.WINDOWS_TESTS }}" == "" (
-  call:bazel test --copt=/w --cpu=x64_windows_msvc {{ variables.WINDOWS_TESTS }}
+  call:bazel test --copt=-w --cpu=x64_windows_msvc --host_copt=-w {{ variables.WINDOWS_TESTS }}
 )
 
 if "%BAZEL_VERSION%" == "HEAD" (
-  set EXTRA_CPU_OPTION=--cpu=x64_windows_msys
+  set EXTRA_CPU_OPTION=--cpu=x64_windows_msys --host_cpu=x64_windows_msys
 )
 
 :: Check variables.WINDOWS_BUILDS_MSYS
