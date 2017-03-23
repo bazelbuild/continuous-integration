@@ -21,6 +21,9 @@ set -eux
 # Bazel latest to bootstrap bazel
 echo 'export BOOTSTRAP_BAZEL="/c/bazel_ci/installs/latest/bazel.exe"' >env.sh
 
+# Pass PLATFORM_NAME to Windows bootstrap script for building a MSVC Bazel
+echo 'export PLATFORM_NAME="${PLATFORM_NAME}"' >>env.sh
+
 # Various set-up for the slave
 echo 'export TMPDIR="${TMPDIR:-/c/bazel_ci/temp}"' >>env.sh
 echo 'mkdir -p "${TMPDIR}"' >>env.sh
