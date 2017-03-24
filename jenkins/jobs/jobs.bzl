@@ -20,7 +20,6 @@ RULES = {
     # rules_dotnet is disabled on Linux until bazelbuild/rules_dotnet#13 is fixed.
     "rules_dotnet": DARWIN_PLATFORMS,
     "rules_go": UNIX_PLATFORMS,
-    "rules_rust": UNIX_PLATFORMS,
     "rules_sass": UNIX_PLATFORMS,
     "rules_gwt": UNIX_PLATFORMS,
     "rules_groovy": UNIX_PLATFORMS,
@@ -52,6 +51,7 @@ GITHUB_JOBS = [
     "intellij-android-studio",
     "intellij-clion",
     "buildifier",
+    "rules_rust",
     "rules_scala",
 ] + GERRIT_JOBS + RULES.keys() + DISABLED_RULES
 

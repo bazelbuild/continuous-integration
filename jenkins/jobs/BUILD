@@ -199,6 +199,14 @@ bazel_github_job(
     tests = ["//test/..."],
 )
 
+bazel_github_job(
+    name = "rules_rust",
+    org = "bazelbuild",
+    platforms = UNIX_PLATFORMS,
+    targets = ["//...", "@examples//..."],
+    tests = ["//...", "@examples//..."],
+)
+
 [bazel_github_job(
     name = job,
     org = "bazelbuild",
