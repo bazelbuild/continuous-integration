@@ -170,14 +170,14 @@ bazel_github_job(
     windows_targets = [
         "//src:bazel",
     ],
+    windows_targets_msys = [
+    ],
     windows_tests = [
         "//src/test/java/...",
         "//src/test/cpp/...",
         "//src/test/native:all_tests",
         # TODO(pcloudy): Re-enable this test when 0.5 is released.
         #"//src/test/shell/bazel:bazel_bootstrap_distfile_test",
-    ],
-    windows_targets_msys = [
     ],
     windows_tests_msys = [
         "//src/test/shell/bazel:bazel_windows_example_test",
@@ -198,6 +198,20 @@ bazel_github_job(
     platforms = UNIX_PLATFORMS,
     targets = ["//test/..."],
     tests = ["//test/..."],
+)
+
+bazel_github_job(
+    name = "rules_rust",
+    org = "bazelbuild",
+    platforms = UNIX_PLATFORMS,
+    targets = [
+        "//...",
+        "@examples//...",
+    ],
+    tests = [
+        "//...",
+        "@examples//...",
+    ],
 )
 
 [bazel_github_job(
