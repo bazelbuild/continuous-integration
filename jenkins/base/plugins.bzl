@@ -23,8 +23,8 @@ JENKINS_PLUGINS = {
         "2236e563d057a98b1bb2e56975756a008986289aa01a61c4655a31b62c760a22",
     ],
     "scm-api": [
-        "2.1.0",
-        "cbabbab916a631112157161b3e4858baf928b6a507963166193d923a5065c7d2",
+        "2.1.1",
+        "cc93174abe2f28f8c3f0e572d718129dffe4e45685bcb82cf99c4ebce756dbe9",
     ],
     "ssh-credentials": [
         "1.13",
@@ -39,8 +39,8 @@ JENKINS_PLUGINS = {
         "0171f402f064615a14b0adca348c2d49ee338cd49d54539793105a191d941501",
     ],
     "mailer": [
-        "1.19",
-        "24d99cc0f9ec2f1954604cacc8d7d1d4ffbfc9d4610d9fcc559e1ce83945e74d",
+        "1.20",
+        "e78b7bb32957d11dcf58e57f2d7b60903bf31ace7858d19febb3b11a374a1187",
     ],
     "run-condition": [
         "1.0",
@@ -51,8 +51,8 @@ JENKINS_PLUGINS = {
         "7f9def9f7347d0a0bf5ab8899ff2365b19d3b6a34a711adbc51a088f75eb587e",
     ],
     "matrix-project": [
-        "1.8",
-        "47fc1ffaa6516508b9415b23f2ef27ef8899e3511a7934fa1956a6a0f1e59bf0",
+        "1.9",
+        "a2c675486ad3c474478d92138fd30b50d74d94e7855e63b130ff88b61e728287",
     ],
     "junit": [
         "1.20",
@@ -72,8 +72,8 @@ JENKINS_PLUGINS = {
         "e340c7d2719cd7569fd039c940df87154750a291918bcb982462575b775275b7",
     ],
     "git-client": [
-        "2.3.0",
-        "6a39048745815c6ed8e04fbbe26978d8457d77529b4448bf02cf357ae39d0af0",
+        "2.4.0",
+        "a1c27d5d5f69d2675a20ac6e8ed8fdb6fd60008fd4b4cb3fa56102fba7a58236",
     ],
     "github": [
         "1.26.1",
@@ -100,8 +100,8 @@ JENKINS_PLUGINS = {
         "acf4940bd5a0d918d781b51a6f42f7a0cb9381ede8235582c629a5d347495029",
     ],
     "email-ext": [
-        "2.57",
-        "aee1e1a1d4e842a6e4827f97f71dfff307a3e97af0fc8f4c481415e8d11487be",
+        "2.57.1",
+        "4d3cd61bcd040a8a36c39aea429dcbaf3b600122c9a319e083f3ab5f61b53cdd",
     ],
     "google-login": [
         "1.3",
@@ -216,8 +216,8 @@ JENKINS_PLUGINS = {
         "1b1d32dca618f43f6c06786f3fde6cc0e0fa0c805cbb735fafd464cf2cfcf1e3",
     ],
     "ssh-slaves": [
-        "1.13",
-        "e860c90540bfa667cf215d90bfb1a607ba4fb0af7be039b3fdcfcd33cb71d777",
+        "1.16",
+        "6641040f192518cf4033d462cabddd2faa68afbcaebcf8e68c0e2b952c49fd36",
     ],
     "subversion": [
         "2.7.2",
