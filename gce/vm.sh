@@ -35,7 +35,7 @@ set -eu
 
 # Slaves or ci.bazel.io
 SLAVES=(
-    "ubuntu-14-04-slave ubuntu-14-04 ubuntu_14.04-x86_64-1 us-central1-a default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-1 ubuntu-14-04 ubuntu_14.04-x86_64-1 us-central1-a default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-14-04-slave-2 ubuntu-14-04 ubuntu_14.04-x86_64-2 us-central1-a default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-14-04-slave-3 ubuntu-14-04 ubuntu_14.04-x86_64-3 us-east1-c default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-14-04-slave-4 ubuntu-14-04 ubuntu_14.04-x86_64-4 europe-west1-c default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
@@ -43,7 +43,7 @@ SLAVES=(
     "ubuntu-14-04-slave-6 ubuntu-14-04 ubuntu_14.04-x86_64-6 us-central1-a default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-14-04-slave-7 ubuntu-14-04 ubuntu_14.04-x86_64-7 us-east1-c default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-14-04-slave-8 ubuntu-14-04 ubuntu_14.04-x86_64-8 europe-west1-c default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-15-10-slave https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-1 asia-east1-c default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-15-10-slave-1 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-1 asia-east1-c default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-15-10-slave-2 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-2 asia-east1-c default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-15-10-slave-3 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-3 us-east1-c default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-15-10-slave-4 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-4 europe-west1-c default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
