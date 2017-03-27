@@ -21,14 +21,29 @@ docker_build(
     base = "@ubuntu-wily-amd64//:image",
 )
 
+docker_build(
+    name = "ubuntu-xenial-amd64",
+    base = "@ubuntu-xenial-amd64//:image",
+)
+
 # Image support golang and make
 docker_build(
     name = "ubuntu-wily-amd64-deploy",
     base = "@ubuntu-wily-amd64-deploy//:image",
 )
 
+docker_build(
+    name = "ubuntu-xenial-amd64-deploy",
+    base = "@ubuntu-xenial-amd64-deploy//:image",
+)
+
 # Support SSH for gerrit deployment
 docker_build(
     name = "ubuntu-wily-amd64-ssh",
     base = "@ubuntu-wily-amd64-ssh//:image",
+)
+
+docker_build(
+    name = "ubuntu-xenial-amd64-ssh",
+    base = "@ubuntu-xenial-amd64-ssh//:image",
 )

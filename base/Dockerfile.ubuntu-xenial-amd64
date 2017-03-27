@@ -1,0 +1,4 @@
+FROM ubuntu:xenial
+RUN apt-get update
+RUN apt-get install -y zip g++ openjdk-8-jdk openjdk-8-source wget git unzip python python3 curl dpkg-dev
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64

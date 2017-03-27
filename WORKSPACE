@@ -16,11 +16,14 @@ workspace(name = "io_bazel_ci")
 # Docker base images
 load("//base:docker_pull.bzl", "docker_pull")
 
-[docker_pull(
-    name = "ubuntu-wily-amd64" + ext,
-    dockerfile = "//base:Dockerfile.ubuntu-wily-amd64" + ext,
-    tag = "local:ubuntu-wily-amd64" + ext,
-) for ext in [
+[[docker_pull(
+    name = "ubuntu-%s-amd64%s" % (ubuntu_version, ext),
+    dockerfile = "//base:Dockerfile.ubuntu-%s-amd64%s" % (ubuntu_version, ext),
+    tag = "local:ubuntu-%s-amd64%s" % (ubuntu_version, ext),
+) for ubuntu_version in [
+    "wily",
+    "xenial",
+]] for ext in [
     "",
     "-deploy",
     "-ssh",
