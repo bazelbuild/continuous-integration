@@ -24,7 +24,7 @@ set -eu
 #   GCE-BASE-IMAGE is the name of the base image in GCE
 #                  (see `gcloud compute images list`)
 #   JENKINS-NODE is the name of the node in Jenkins
-#   LOCATION is the location in GCE (e.g. us-west1-a)
+#   LOCATION is the location in GCE (e.g. europe-west1-d)
 #   NETWORK is the GCE network the instance has to be created on.
 #   STARTUP-METADATA is the metadata argument to gcloud to launch the right
 #                    startup script.
@@ -35,24 +35,24 @@ set -eu
 
 # Slaves or ci.bazel.io
 SLAVES=(
-    "ubuntu-14-04-slave-1 ubuntu-14-04 ubuntu_14.04-x86_64-1 us-west1-a default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-14-04-slave-2 ubuntu-14-04 ubuntu_14.04-x86_64-2 us-west1-b default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-14-04-slave-3 ubuntu-14-04 ubuntu_14.04-x86_64-3 us-west1-a default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-14-04-slave-4 ubuntu-14-04 ubuntu_14.04-x86_64-4 us-west1-b default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-14-04-slave-5 ubuntu-14-04 ubuntu_14.04-x86_64-5 us-west1-a default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-14-04-slave-6 ubuntu-14-04 ubuntu_14.04-x86_64-6 us-west1-b default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-14-04-slave-7 ubuntu-14-04 ubuntu_14.04-x86_64-7 us-west1-a default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-14-04-slave-8 ubuntu-14-04 ubuntu_14.04-x86_64-8 us-west1-b default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-16-04-slave-1 ubuntu-16-04 ubuntu_16.04-x86_64-1 us-west1-a default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-16-04-slave-2 ubuntu-16-04 ubuntu_16.04-x86_64-2 us-west1-b default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-16-04-slave-3 ubuntu-16-04 ubuntu_16.04-x86_64-3 us-west1-a default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-16-04-slave-4 ubuntu-16-04 ubuntu_16.04-x86_64-4 us-west1-b default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-16-04-slave-5 ubuntu-16-04 ubuntu_16.04-x86_64-5 us-west1-a default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-16-04-slave-6 ubuntu-16-04 ubuntu_16.04-x86_64-6 us-west1-b default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-16-04-slave-7 ubuntu-16-04 ubuntu_16.04-x86_64-7 us-west1-a default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-16-04-slave-8 ubuntu-16-04 ubuntu_16.04-x86_64-8 us-west1-b default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-docker-slave-1 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-docker-1 us-west1-a default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh ubuntu-15-10-docker.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-docker-slave-2 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-docker-2 us-west1-b default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh ubuntu-15-10-docker.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-1 ubuntu-1404-lts ubuntu_14.04-x86_64-1 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-2 ubuntu-1404-lts ubuntu_14.04-x86_64-2 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-3 ubuntu-1404-lts ubuntu_14.04-x86_64-3 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-4 ubuntu-1404-lts ubuntu_14.04-x86_64-4 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-5 ubuntu-1404-lts ubuntu_14.04-x86_64-5 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-6 ubuntu-1404-lts ubuntu_14.04-x86_64-6 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-7 ubuntu-1404-lts ubuntu_14.04-x86_64-7 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-8 ubuntu-1404-lts ubuntu_14.04-x86_64-8 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-16-04-slave-1 ubuntu-1604-lts ubuntu_16.04-x86_64-1 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-16-04-slave-2 ubuntu-1604-lts ubuntu_16.04-x86_64-2 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-16-04-slave-3 ubuntu-1604-lts ubuntu_16.04-x86_64-3 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-16-04-slave-4 ubuntu-1604-lts ubuntu_16.04-x86_64-4 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-16-04-slave-5 ubuntu-1604-lts ubuntu_16.04-x86_64-5 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-16-04-slave-6 ubuntu-1604-lts ubuntu_16.04-x86_64-6 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-16-04-slave-7 ubuntu-1604-lts ubuntu_16.04-x86_64-7 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-16-04-slave-8 ubuntu-1604-lts ubuntu_16.04-x86_64-8 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-docker-slave-1 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-docker-1 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh ubuntu-15-10-docker.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-docker-slave-2 https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-docker-2 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh ubuntu-15-10-docker.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "freebsd-11-slave https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-0-stable-amd64-2017-01-06 freebsd-11-1 europe-west1-d default startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
     "freebsd-12-slave https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-12-0-current-amd64-2017-01-06 freebsd-12-1 europe-west1-d default startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
     # Fow Windows, we use a custom image with pre-installed MSVC.
@@ -65,7 +65,7 @@ SLAVES=(
     "windows-msvc-slave-3 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-msvc-x86_64-3 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows-msvc.ps1"
     "windows-msvc-slave-4 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-msvc-x86_64-4 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows-msvc.ps1"
     # For benchmark
-    "ubuntu-14-04-benchmark-slave ubuntu-14-04 ubuntu_14.04-x86_64-benchmark-1 us-west1-a default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-benchmark-slave ubuntu-1404-lts ubuntu_14.04-x86_64-benchmark-1 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
 )
 
 # Master for ci.bazel.io
@@ -73,7 +73,7 @@ MASTER=(
     # VM name
     "jenkins"
     # Zone
-    "us-west1-a"
+    "europe-west1-d"
     # Metadata specification
     "google-container-manifest=jenkins.yml,startup-script=mount-volumes.sh"
     # Disk specification
@@ -86,8 +86,8 @@ MASTER=(
 
 # Slaves for ci-staging.bazel.io
 STAGING_SLAVES=(
-    "ubuntu-14-04-slave-staging ubuntu-14-04 ubuntu_14.04-x86_64-staging europe-west1-d staging startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-16-04-slave-staging ubuntu-16-04 ubuntu_16.04-x86_64-staging europe-west1-d staging startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-14-04-slave-staging ubuntu-1404-lts ubuntu_14.04-x86_64-staging europe-west1-d staging startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-16-04-slave-staging ubuntu-1604-lts ubuntu_16.04-x86_64-staging europe-west1-d staging startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-docker-slave-staging https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1510-wily-v20151026 ubuntu_15.10-x86_64-docker-staging europe-west1-d staging startup-script=jenkins-slave.sh ubuntu-15-10-slave.sh ubuntu-15-10-docker.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "freebsd-11-slave-staging https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-0-stable-amd64-2017-01-06 freebsd-11-staging europe-west1-d staging startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
     "freebsd-12-slave-staging https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-12-0-current-amd64-2017-01-06 freebsd-12-staging europe-west1-d staging startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
@@ -149,13 +149,13 @@ function create_slave() {
     sed -e "s/MSVC_LABEL=''/MSVC_LABEL='-msvc'/g" jenkins-slave-windows.ps1 > jenkins-slave-windows-msvc.ps1
   fi
   gcloud compute instances create "$TAG" \
-         --zone "$LOCATION" --machine-type n1-standard-8 \
+         --zone "$LOCATION" --machine-type n1-standard-16 \
          --network "$NETWORK" \
          --image "$IMAGE" \
          --metadata jenkins_node="$JENKINS_NODE" \
          --metadata-from-file "$STARTUP_METADATA" \
          --boot-disk-type pd-ssd --boot-disk-size 500GB
-  # Deleted the genereated start-up script for Windows MSVC slaves
+  # Delete the generated start-up script for Windows MSVC slaves.
   if [[ $TAG == windows-msvc* ]]; then
     rm jenkins-slave-windows-msvc.ps1
   fi
