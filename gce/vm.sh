@@ -148,10 +148,17 @@ function create_slave() {
   if [[ $TAG == windows-msvc* ]]; then
     sed -e "s/MSVC_LABEL=''/MSVC_LABEL='-msvc'/g" jenkins-slave-windows.ps1 > jenkins-slave-windows-msvc.ps1
   fi
+
+  if [[ $IMAGE == ubuntu-* ]]; then
+    IMAGE_FLAG="--image-project=ubuntu-os-cloud --image-family=$IMAGE"
+  else
+    IMAGE_FLAG="--image $IMAGE"
+  fi
+
   gcloud compute instances create "$TAG" \
          --zone "$LOCATION" --machine-type n1-standard-16 \
          --network "$NETWORK" \
-         --image "$IMAGE" \
+         $IMAGE_FLAG \
          --metadata jenkins_node="$JENKINS_NODE" \
          --metadata-from-file "$STARTUP_METADATA" \
          --boot-disk-type pd-ssd --boot-disk-size 500GB
@@ -253,7 +260,7 @@ function action() {
     done
   elif (( $# == 1 )) && [ "$1" = "prod" ]; then
     $action jenkins
-    for i in "${STAGING[@]}"; do
+    for i in "${SLAVES[@]}"; do
       $action "${i%% *}"
     done
   elif (( $# == 1 )) && [ "$1" = "staging" ]; then
@@ -281,7 +288,7 @@ function vm_command() {
     else
       local location="$(get_slave_by_name "$TAG" | cut -d " " -f 4)"
     fi
-    gcloud compute instances $command --zone=$location $TAG
+    gcloud compute instances $command --quiet --zone=$location $TAG
   fi
 }
 

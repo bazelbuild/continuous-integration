@@ -19,11 +19,11 @@ apt-get install -y zip g++ zlib1g-dev wget git unzip python python3 curl \
         openjdk-8-jdk openjdk-8-source ca-certificates-java xvfb
 
 # Android SDK requires 32-bits libraries
-sudo dpkg --add-architecture i386
-sudo apt-get -qqy update
-sudo apt-get -qqy install libncurses5:i386 libstdc++6:i386 zlib1g:i386
-sudo apt-get -y install expect  # Needed to 'yes' the SDK licenses.
+dpkg --add-architecture i386
+apt-get -qqy update
+apt-get -qqy install libncurses5:i386 libstdc++6:i386 zlib1g:i386
+apt-get -y install expect  # Needed to 'yes' the SDK licenses.
 
 # Dependencies for TensorFlow
-sudo apt-get -y install python-numpy swig python-dev python-pip libcurl3-dev
-sudo pip install mock
+apt-get -y install python-numpy swig python-dev python-pip libcurl3-dev
+pip install mock

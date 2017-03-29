@@ -1,6 +1,6 @@
 LINUX_PLATFORMS = [
     "linux-x86_64",
-    "ubuntu_15.10-x86_64",
+    "ubuntu_16.04-x86_64",
 ]
 
 BSD_PLATFORMS = ["freebsd-11", "freebsd-12"]

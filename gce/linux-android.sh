@@ -13,12 +13,14 @@
 # limitations under the License.
 
 # Android support
+
 # NDK
 mkdir -p /home/ci/android
 cd /home/ci/android
 curl -o android-ndk.bin http://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin
 chmod +x android-ndk.bin
 ./android-ndk.bin >/dev/null
+
 # Android SDK
 curl -o android-sdk.tgz http://dl.google.com/android/android-sdk_r24.3.4-linux.tgz
 tar zxf android-sdk.tgz

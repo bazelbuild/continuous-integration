@@ -14,19 +14,22 @@
 
 # Setup scripts for Ubuntu 14.04
 
+# Android SDK requires 32-bits libraries.
+dpkg --add-architecture i386
+apt-get -y update
+apt-get -y dist-upgrade
+
 echo y | add-apt-repository ppa:webupd8team/java
-apt-get update
-apt-get install -y zip g++ zlib1g-dev wget git unzip python python3 curl realpath xvfb
+apt-get -y update
+apt-get -y install zip g++ zlib1g-dev wget git unzip python python3 curl realpath xvfb
 
 # Should accept the licence:
-yes | apt-get install -y oracle-java8-installer
+yes | apt-get -y install oracle-java8-installer
 
 # Android SDK requires 32-bits libraries
-sudo dpkg --add-architecture i386
-sudo apt-get -qqy update
-sudo apt-get -qqy install libncurses5:i386 libstdc++6:i386 zlib1g:i386
-sudo apt-get -y install expect  # Needed to 'yes' the SDK licenses.
+apt-get -y install libncurses5:i386 libstdc++6:i386 zlib1g:i386
+apt-get -y install expect  # Needed to 'yes' the SDK licenses.
 
 # Dependencies for TensorFlow
-sudo apt-get -y install python-numpy swig python-dev python-pip libcurl3-dev
-sudo pip install mock
+apt-get -y install python-numpy swig python-dev python-pip libcurl3-dev
+pip install mock

@@ -23,6 +23,12 @@
 while ! (id ci >&/dev/null) || [ ! -f /home/ci/node_name ]; do
   sleep 60
 done
+
+# Reboot if required, before going into operation.
+if [ -f /var/run/reboot-required ]; then
+  reboot
+fi
+
 NODE_NAME=$(cat /home/ci/node_name)
 MASTER=jenkins
 if [[ "$NODE_NAME" =~ .*-staging$ ]]; then
