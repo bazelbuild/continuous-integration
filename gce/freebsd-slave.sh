@@ -20,7 +20,7 @@ pkg install -y bazel
 ## procfs and fddescfs
 mount -t fdescfs fdesc /dev/fd
 mount -t procfs proc /proc
-cat > /etc/fstab <<EOF
+cat >> /etc/fstab <<EOF
 fdesc   /dev/fd         fdescfs         rw      0       0
 proc    /proc           procfs          rw      0       0
 EOF
