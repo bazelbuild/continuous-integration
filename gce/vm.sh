@@ -156,12 +156,11 @@ function create_slave() {
   fi
 
   gcloud compute instances create "$TAG" \
-         --zone "$LOCATION" --machine-type n1-standard-16 \
-         --network "$NETWORK" \
-         $IMAGE_FLAG \
-         --metadata jenkins_node="$JENKINS_NODE" \
-         --metadata-from-file "$STARTUP_METADATA" \
-         --boot-disk-type pd-ssd --boot-disk-size 500GB
+      --zone "$LOCATION" --machine-type n1-standard-16 \
+      --network "$NETWORK" \
+      $IMAGE_FLAG \
+      --metadata jenkins_node="$JENKINS_NODE" \
+      --boot-disk-type pd-ssd --boot-disk-size 500GB
   # Delete the generated start-up script for Windows MSVC slaves.
   if [[ $TAG == windows-msvc* ]]; then
     rm jenkins-slave-windows-msvc.ps1
@@ -177,8 +176,8 @@ function create_slave() {
       # the install process as finished.
       ssh_command "$TAG" "$LOCATION" \
           "pw useradd -n ci -s /usr/local/bin/bash -d /home/ci -m -w no" \
-          "$@" \
-          "echo \"echo -n '$JENKINS_NODE' >/home/ci/node_name\" | su -m ci"
+          "echo \"echo -n '$JENKINS_NODE' >/home/ci/node_name\" | su -m ci" \
+          "$@"
       ;;
 
     *)  # Linux
@@ -187,10 +186,20 @@ function create_slave() {
       # the install process as finished.
       ssh_command "$TAG" "$LOCATION" \
           "sudo adduser --system --home /home/ci ci" \
-          "$@" \
-          "su ci -s /bin/bash -c \"echo -n '$JENKINS_NODE' >/home/ci/node_name\""
+          "su ci -s /bin/bash -c \"echo -n '$JENKINS_NODE' >/home/ci/node_name\"" \
+          "$@"
       ;;
   esac
+
+  gcloud compute instances stop "$TAG" \
+      --zone "$LOCATION"
+
+  gcloud compute instances add-metadata "$TAG" \
+      --zone "$LOCATION" \
+      --metadata-from-file "$STARTUP_METADATA"
+
+  gcloud compute instances start "$TAG" \
+      --zone "$LOCATION"
 }
 
 # Updates the --metadata and --metadata-from-file values of an existing VM.
