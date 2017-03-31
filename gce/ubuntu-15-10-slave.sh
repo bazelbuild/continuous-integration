@@ -14,16 +14,47 @@
 
 # Setup scripts for Ubuntu 15.10
 
-apt-get update
-apt-get install -y zip g++ zlib1g-dev wget git unzip python python3 curl \
-        openjdk-8-jdk openjdk-8-source ca-certificates-java xvfb
-
-# Android SDK requires 32-bits libraries
+# Android SDK requires 32-bits libraries.
 dpkg --add-architecture i386
-apt-get -qqy update
-apt-get -qqy install libncurses5:i386 libstdc++6:i386 zlib1g:i386
-apt-get -y install expect  # Needed to 'yes' the SDK licenses.
+apt-get -y update
+apt-get -y dist-upgrade
 
-# Dependencies for TensorFlow
-apt-get -y install python-numpy swig python-dev python-pip libcurl3-dev
+# Explicitly install the OpenJDK 8 before anything else to prevent
+# Ubuntu from pulling in OpenJDK 9.
+apt-get -y install \
+  openjdk-8-jdk \
+  openjdk-8-source
+
+packages=(
+  # Bazel dependencies.
+  build-essential
+  curl
+  git
+  python
+  python3
+  unzip
+  wget
+  xvfb
+  zip
+  zlib1g-dev
+
+  # Dependencies for Android SDK.
+  # https://developer.android.com/studio/troubleshoot.html#linux-libraries
+  # https://code.google.com/p/android/issues/detail?id=207212
+  expect
+  libbz2-1.0:i386
+  libncurses5:i386
+  libstdc++6:i386
+  libz1:i386
+
+  # Dependencies for TensorFlow.
+  libcurl3-dev
+  python-dev
+  python-numpy
+  python-pip
+  python-wheel
+  swig
+)
+apt-get -y install "${packages[@]}"
+
 pip install mock
