@@ -14,22 +14,29 @@
 
 # Android support
 
+set -eu
+
 # NDK
 mkdir -p /home/ci/android
 cd /home/ci/android
 curl -o android-ndk.bin http://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin
 chmod +x android-ndk.bin
 ./android-ndk.bin >/dev/null
+rm android-ndk.bin
 
 # Android SDK
-curl -o android-sdk.tgz http://dl.google.com/android/android-sdk_r24.3.4-linux.tgz
-tar zxf android-sdk.tgz
+mkdir -p /home/ci/android/android-sdk-linux
+cd /home/ci/android/android-sdk-linux
+curl -o tools.zip https://dl.google.com/android/repository/tools_r25.2.3-linux.zip
+unzip tools.zip
+rm tools.zip
 expect -c '
 set timeout -1;
-spawn /home/ci/android/android-sdk-linux/tools/android update sdk --no-ui;
+spawn /home/ci/android/android-sdk-linux/tools/bin/sdkmanager --update
 expect {
-    "Do you accept the license" { exp_send "y\r" ; exp_continue }
+    "Accept? (y/N)" { exp_send "y\r" ; exp_continue }
     eof
 }
 '
+tools/bin/sdkmanager "platforms;android-24" "platform-tools" "build-tools;24.0.3" "add-ons;addon-google_apis-google-24" "extras;android;m2repository"
 chown -R ci /home/ci/android
