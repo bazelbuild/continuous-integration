@@ -144,10 +144,6 @@ function create_slave() {
   local NETWORK="$5"
   local STARTUP_METADATA="$6"
   shift 6
-  # Genereating the start-up script for Windows MSVC slaves
-  if [[ $TAG == windows-msvc* ]]; then
-    sed -e "s/MSVC_LABEL=''/MSVC_LABEL='-msvc'/g" jenkins-slave-windows.ps1 > jenkins-slave-windows-msvc.ps1
-  fi
 
   if [[ $IMAGE == ubuntu-* ]]; then
     IMAGE_FLAG="--image-project=ubuntu-os-cloud --image-family=$IMAGE"
@@ -161,10 +157,6 @@ function create_slave() {
       $IMAGE_FLAG \
       --metadata jenkins_node="$JENKINS_NODE" \
       --boot-disk-type pd-ssd --boot-disk-size 500GB
-  # Delete the generated start-up script for Windows MSVC slaves.
-  if [[ $TAG == windows-msvc* ]]; then
-    rm jenkins-slave-windows-msvc.ps1
-  fi
   case "$TAG" in
     windows-*)  # Windows
       ;;
@@ -194,9 +186,17 @@ function create_slave() {
   gcloud compute instances stop "$TAG" \
       --zone "$LOCATION"
 
+  # Generating the start-up script for Windows MSVC slaves.
+  if [[ $TAG == windows-msvc* ]]; then
+    sed -e "s/MSVC_LABEL=''/MSVC_LABEL='-msvc'/g" jenkins-slave-windows.ps1 > jenkins-slave-windows-msvc.ps1
+  fi
   gcloud compute instances add-metadata "$TAG" \
       --zone "$LOCATION" \
       --metadata-from-file "$STARTUP_METADATA"
+  # Delete the generated start-up script for Windows MSVC slaves.
+  if [[ $TAG == windows-msvc* ]]; then
+    rm jenkins-slave-windows-msvc.ps1
+  fi
 
   gcloud compute instances start "$TAG" \
       --zone "$LOCATION"
