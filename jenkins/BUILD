@@ -187,9 +187,17 @@ jenkins_node(
     visibility = ["//visibility:public"],
 )
 
+docker_build(
+    name = "ubuntu-with-bazel-installer",
+    base = "//base:ubuntu-wily-amd64-deploy",
+    files = ["//gce:bootstrap-bazel.sh"],
+    data_path = "/gce",
+    directory = "/opt/run",
+)
+
 jenkins_node(
     name = "ubuntu-docker",
-    docker_base = "//base:ubuntu-wily-amd64-deploy",
+    docker_base = ":ubuntu-with-bazel-installer",
     labels = [
         "linux-x86_64",
         "install-bazel",
