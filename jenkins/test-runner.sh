@@ -26,6 +26,9 @@ PYTHON_RUNFILES="${PWD}"
 # Port to serve Jenkins on, default is 8080.
 PORT="${1:-8080}"
 
+# Machine on which the docker daemon is running, default is localhost.
+: ${DOCKER_SERVER:=localhost}
+
 while getopts ":p:" opt; do
   case "${opt}" in
     p)
@@ -61,7 +64,7 @@ test_http() {
 echo -n "*** Waiting for jenkins server to be up and running"
 timeout=180
 ts="$(date +%s)"
-while ! [[ "$(curl -sI  "http://localhost:${PORT}/jnlpJars/slave.jar")" =~ ^HTTP/[0-9.]+\ 2 ]]
+while ! [[ "$(curl -sI  "http://$DOCKER_SERVER:${PORT}/jnlpJars/slave.jar")" =~ ^HTTP/[0-9.]+\ 2 ]]
 do
   echo -n "."
   sleep 1
