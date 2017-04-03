@@ -72,20 +72,20 @@ JENKINS_PLUGINS = {
         "e340c7d2719cd7569fd039c940df87154750a291918bcb982462575b775275b7",
     ],
     "git-client": [
-        "2.4.0",
-        "a1c27d5d5f69d2675a20ac6e8ed8fdb6fd60008fd4b4cb3fa56102fba7a58236",
+        "2.4.1",
+        "a1d608b739f221b4f7ca6810fba078eb2e06a6d82683820de337c829f7c8e763",
     ],
     "github": [
-        "1.26.1",
-        "a2930570df3a30601c1d201eac2ae9a622a1b6dda03d740ee4a3bcfdfc4885c8",
+        "1.26.2",
+        "25feed9d0d4e8120c4d7dd7921e3227fd9ef66f94614c0f74ee5e923e3b82759",
     ],
     "maven-plugin": [
         "2.15.1",
         "61aeb7d787e312702b438c75ffd752394bbcaaf2b6d212a4fc169b3f28651c6e",
     ],
     "git": [
-        "3.1.0",
-        "7ee0473a61a39c250dfc1acab15462cc6a4f936c39a0456a0352df9c622f3fe4",
+        "3.2.0",
+        "3784ff5bc38c93d8b55935507900c1f6b7205ab14195c21440c6a80a3307abdf",
     ],
     "token-macro": [
         "2.0",
@@ -196,8 +196,8 @@ JENKINS_PLUGINS = {
         "69d58ceb58111663e82928c8db367ba8e857c29aaee9c4264aeb4100fc459e22",
     ],
     "workflow-support": [
-        "2.13",
-        "7e1d547757b8dedc824f3595701c88d06204e07565f99d488cb5a110421fb7e9",
+        "2.14",
+        "49bf65953ad684e5d4f0f0750dce6f5efed9e67f5d0de26da405945bbd46f01d",
     ],
     "ldap": [
         "1.14",
@@ -238,5 +238,61 @@ JENKINS_PLUGINS = {
     "mapdb-api": [
         "1.0.9.0",
         "072c11a34cf21f87f9c44bf01b430c5ea77e8096d077e8533de654ef00f3f871",
+    ],
+    "pipeline-stage-step": [
+        "2.2",
+        "08f077bc8cd98fbf6cb7383d8bcfe3db69796f89cedcfb6f13c8c9375b2a11c8",
+    ],
+    "pipeline-stage-view": [
+        "2.6",
+        "e4b82a523fe8151a117c150073c8a0cad65277651ed6565150b6b058111d4c98",
+    ],
+    "handlebars": [
+        "1.1.1",
+        "bc5cc7b3eca17ba6cec0a8def94f3aa78ad7a19387a19aa3a56f857a18966afa",
+    ],
+    "pipeline-rest-api": [
+        "2.6",
+        "4ecc8c111f86902a86860943390e1b98463437a33116df4feb888226daf42aaa",
+    ],
+    "momentjs": [
+        "1.1.1",
+        "ca3c2d264cff55f71e900dc7de1f13c0bfbffdb9b3419b854dce175bcb8a4848",
+    ],
+    "workflow-durable-task-step": [
+        "2.10",
+        "5a676c894d4deb5b9163d2f34cecfe187130710a6158f5721179b8a4cb5ae250",
+    ],
+    "durable-task": [
+        "1.13",
+        "e242f459b6662b84f3ab99f51cdbdb048d7a2bb1f1a27ffafb5f0c4bd6d5735c",
+    ],
+    "pipeline-graph-analysis": [
+        "1.3",
+        "bb3235a0b5a62cd7be3983bfd40a202c582757c9633d23858aaa38af88ee61ea",
+    ],
+    "pipeline-input-step": [
+        "2.5",
+        "ff62f1b3b48d2a660de55379f565be0948559fd722ff0345d0fb47bf81e537e3",
+    ],
+    "ansicolor": [
+        "0.5.0",
+        "4fd5b38959812712b62576ce98d0302f799bd950f5a6f777a8c0d862df336526",
+    ],
+    "workflow-cps-global-lib": [
+        "2.7",
+        "bfd2ed77b12dc15f50eed4d0a4cdd8126890697ba947048dc43f29b36cf8592e",
+    ],
+    "cloudbees-folder": [
+        "6.0.3",
+        "f8697c7e28a25501458115ed49f0146c7e40c4b0c342a0299593ac03f036ca6c",
+    ],
+    "git-server": [
+        "1.7",
+        "1a5dc733495681a6d1a6adce07e614e50f4e5d22580e6fafbd5ca260aa4367fc",
+    ],
+    "pipeline-build-step": [
+        "2.5",
+        "1df734b64a3297ec134f484546c3dbcec3e227e806502ee827d023c395b7e07a",
     ],
 }
