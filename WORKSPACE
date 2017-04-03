@@ -36,7 +36,7 @@ load("//jenkins/base:jenkins_base.bzl", "jenkins_base")
 jenkins_base(
     name = "jenkins",
     plugins = JENKINS_PLUGINS,
-    version = "2.32.3",
+    version = "2.46.1",
     volumes = ["/opt/secrets"],
 )
 

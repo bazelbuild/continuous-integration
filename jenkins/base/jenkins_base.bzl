@@ -66,7 +66,7 @@ def jenkins_base(name, plugins, volumes=[], version="1.642.4"):
   if not native.existing_rule(base):
     docker_pull(
         name = base,
-        tag = "jenkins:" + version,
+        tag = "jenkinsci/jenkins:" + version,
     )
   jenkins_image_(
       name=name,
