@@ -187,6 +187,8 @@ bazel_github_job(
 bazel_github_job(
     name = "buildifier",
     org = "bazelbuild",
+    # Repository was renamed
+    project = "buildtools",
     platforms = UNIX_PLATFORMS,
     targets = [],
     tests = [":tests"],
