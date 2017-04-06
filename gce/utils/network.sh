@@ -37,47 +37,49 @@ function setup_firewall() {
   if (( $# == 0 )); then
     restrict_ips=("0.0.0.0/0")  # Allow everybody
   fi
+
   log "Removing all existing rules from network ${network}"
   local rules="$(gcloud compute firewall-rules list \
                 | awk '$2 ~ /'"${network}"'/ {print $1}')"
   if [ -n "${rules}" ]; then
     gcloud compute firewall-rules delete ${rules}
   fi
-  log "Allowing internal traffic inside network ${network}"
+
+  log "Allowing internal TCP, UDP and ICMP traffic inside network ${network}"
   gcloud compute firewall-rules create "${network}-allow-internal" \
-    --network="${network}" --allow=tcp:0-65535,udp:0-65535,icmp \
+    --network="${network}" --allow="tcp,udp,icmp" \
     --source-ranges="192.168.0.0/16,172.16.0.0/12,10.0.0.0/8" \
     --description="Allow all TCP, UDP and ICMP traffic between machines on the '${network}' network"
 
-  log "Enabling incoming HTTP traffic to the jenkins master for network ${network}"
+  log "Enabling incoming HTTP(S) and ICMP traffic to the Jenkins master for network ${network}"
   local counter=0
   if $restrict_http; then
     for i in "${restrict_ips[@]}"; do
       counter=$(($counter+1))
-      gcloud compute firewall-rules create "${network}-allow-http-${counter}" \
+      gcloud compute firewall-rules create "${network}-allow-http-https-icmp-${counter}" \
         --network="${network}" \
-        --allow=tcp:80,tcp:443 \
-        --target-tags='jenkins' \
-        --source-ranges=$i \
-        --description='Allow HTTP(S) connection to Jenkins web interface'
+        --allow="tcp:80,udp:80,tcp:443,udp:443,icmp" \
+        --target-tags="jenkins" \
+        --source-ranges="$i" \
+        --description="Allow HTTP(S) connections and ICMP to Jenkins web interface"
     done
   else
-    gcloud compute firewall-rules create "${network}-allow-http" \
+    gcloud compute firewall-rules create "${network}-allow-http-https-icmp" \
       --network="${network}" \
-      --allow=tcp:80,tcp:443 \
-      --target-tags='jenkins' \
+      --allow="tcp:80,udp:80,tcp:443,udp:443,icmp" \
+      --target-tags="jenkins" \
       --source-ranges=0.0.0.0/0 \
-      --description='Allow HTTP(S) connection to Jenkins web interface'
+      --description="Allow HTTP(S) connections and ICMP to Jenkins web interface"
   fi
 
-  log "Enabling incoming SSH and slaves traffic to VMs for network ${network}"
+  log "Enabling incoming SSH, RDP, Jenkins-API and ICMP traffic to VMs for network ${network}"
   counter=0
   for i in "${restrict_ips[@]}"; do
     counter=$(($counter+1))
-    gcloud compute firewall-rules create "${network}-allow-ssh-${counter}" \
+    gcloud compute firewall-rules create "${network}-allow-ssh-rdp-jenkins-icmp-${counter}" \
       --network="${network}" \
-      --allow=tcp:22,tcp:50000,tcp:3389 \
+      --allow=tcp:22,tcp:3389,tcp:50000,icmp \
       --source-ranges=$i \
-      --description='Allow SSH connections'
+      --description="Allow SSH, RDP, Jenkins-API and ICMP"
   done
 }
