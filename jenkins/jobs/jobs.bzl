@@ -53,6 +53,7 @@ GITHUB_JOBS = [
     "intellij-android-studio",
     "intellij-clion",
     "buildifier",
+    "rules_jsonnet",
     "rules_rust",
     "rules_scala",
 ] + GERRIT_JOBS + RULES.keys() + DISABLED_RULES

@@ -227,6 +227,20 @@ bazel_github_job(
     ],
 )
 
+bazel_github_job(
+    name = "rules_jsonnet",
+    org = "bazelbuild",
+    platforms = UNIX_PLATFORMS,
+    targets = [
+        "//...",
+        "@examples//...",
+    ],
+    tests = [
+        "//...",
+        "@examples//...",
+    ],
+)
+
 [bazel_github_job(
     name = job,
     org = "bazelbuild",
