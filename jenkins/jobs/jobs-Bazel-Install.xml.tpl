@@ -36,8 +36,8 @@
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
   <concurrentBuild>true</concurrentBuild>
   <builders>
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
-      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
+      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition">
         <expression>^((?!windows).)*$</expression>
         <label>${PLATFORM_NAME}</label>
       </condition>
@@ -45,19 +45,19 @@
         <!-- Files copied are read-only, and jobs might fails because of that, clean-up. -->
         <command>rm -fr bazel-installer</command>
       </buildStep>
-      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
-      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
+      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition">
         <expression>windows.*</expression>
         <label>${PLATFORM_NAME}</label>
       </condition>
       <buildStep class="hudson.tasks.BatchFile">
         <command>rmdir /q /s bazel-installer</command>
       </buildStep>
-      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
-    <hudson.plugins.copyartifact.CopyArtifact plugin="{{ variables.JENKINS_PLUGIN_copyartifact }}">
+    <hudson.plugins.copyartifact.CopyArtifact>
       <project>Bazel</project>
       <filter>**/ci/*installer*.sh,**/ci/bazel*.exe</filter>
       <target>bazel-installer</target>
@@ -68,25 +68,25 @@
       </selector>
       <doNotFingerprintArtifacts>false</doNotFingerprintArtifacts>
     </hudson.plugins.copyartifact.CopyArtifact>
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
-      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
+      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition">
         <expression>^((?!windows).)*$</expression>
         <label>${PLATFORM_NAME}</label>
       </condition>
       <buildStep class="hudson.tasks.Shell">
 	<command>{{ imports['//jenkins/jobs:Bazel-Install.sh.tpl'] }}</command>
       </buildStep>
-      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
-      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
+      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition">
         <expression>windows.*</expression>
         <label>${PLATFORM_NAME}</label>
       </condition>
       <buildStep class="hudson.tasks.BatchFile">
         <command>{{ imports['//jenkins/jobs:Bazel-Install.bat.tpl'] }}</command>
       </buildStep>
-      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
   </builders>
   <publishers/>

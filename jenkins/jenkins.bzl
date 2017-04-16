@@ -16,13 +16,6 @@
 
 load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
-load("//jenkins/base:plugins.bzl", "JENKINS_PLUGINS")
-
-JENKINS_PLUGINS_VERSIONS = {
-    ("JENKINS_PLUGIN_%s" % plugin.replace("-", "_")): ("%s@%s" % (
-        plugin,
-        JENKINS_PLUGINS[plugin][0],
-)) for plugin in JENKINS_PLUGINS}
 
 JENKINS_PORT = 80
 JENKINS_HOST = "jenkins"
@@ -195,7 +188,7 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
     git_url = github_url
   if not project_url:
     project_url = git_url
-  substitutions = substitutions + JENKINS_PLUGINS_VERSIONS + {
+  substitutions = substitutions + {
       "GITHUB_URL": github_url,
       "GIT_URL": git_url,
       "GITHUB_PROJECT": github_project,
@@ -208,7 +201,7 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
       template = config,
       out = "%s.xml" % name,
       deps = deps,
-      substitutions = JENKINS_PLUGINS_VERSIONS + substitutions,
+      substitutions = substitutions,
     )
   substitutions["SEND_EMAIL"] = "0"
   expand_template(
@@ -216,7 +209,7 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
       template = config,
       out = "%s-staging.xml" % name,
       deps = deps,
-      substitutions = JENKINS_PLUGINS_VERSIONS + substitutions,
+      substitutions = substitutions,
     )
 
   if test_platforms:
@@ -226,7 +219,7 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
       template = config,
       out = "%s-test.xml" % name,
       deps = deps,
-      substitutions = JENKINS_PLUGINS_VERSIONS + substitutions,
+      substitutions = substitutions,
     )
 
 def bazel_git_job(**kwargs):

@@ -70,13 +70,13 @@
   </builders>
   <publishers>
     {% if variables.SEND_EMAIL == "1" %}
-    <hudson.tasks.Mailer plugin="{{ variables.JENKINS_PLUGIN_mailer }}">
+    <hudson.tasks.Mailer>
       <recipients>{{ variables.BAZEL_BUILD_RECIPIENT }}</recipients>
       <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
       <sendToIndividuals>false</sendToIndividuals>
     </hudson.tasks.Mailer>
     {% endif %}
-    <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="{{ variables.JENKINS_PLUGIN_parameterized_trigger }}">
+    <hudson.plugins.parameterizedtrigger.BuildTrigger>
       <configs>
         <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
           <configs>

@@ -45,8 +45,8 @@
   <triggers/>
   <concurrentBuild>false</concurrentBuild>
   <builders>
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
-      <condition class="org.jenkins_ci.plugins.run_condition.contributed.ShellCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
+      <condition class="org.jenkins_ci.plugins.run_condition.contributed.ShellCondition">
         <command>#!/bin/bash
 
 # We should use jq, but installing it just for that is a bit overkill, we use regexp instead.
@@ -67,7 +67,7 @@ if [ &quot;$repository&quot; = &quot;{{ variables.GITHUB_PROJECT }}&quot; ]; the
 fi
 exit 1</command>
       </condition>
-      <buildStep class="hudson.plugins.parameterizedtrigger.TriggerBuilder" plugin="{{ variables.JENKINS_PLUGIN_parameterized_trigger }}">
+      <buildStep class="hudson.plugins.parameterizedtrigger.TriggerBuilder">
         <configs>
           <hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
             <configs>
@@ -85,7 +85,7 @@ exit 1</command>
           </hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
         </configs>
       </buildStep>
-      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
   </builders>
   <publishers/>

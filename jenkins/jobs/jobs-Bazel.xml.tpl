@@ -14,19 +14,19 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<matrix-project plugin="{{ variables.JENKINS_PLUGIN_matrix_project }}">
+<matrix-project>
   <actions/>
   <description>Run the full test suite of Bazel.&#xd;
 &#xd;
 To be run on head and for release branch/tags only</description>
   <keepDependencies>false</keepDependencies>
   <properties>
-    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="{{ variables.JENKINS_PLUGIN_github }}">
+    <com.coravy.hudson.plugins.github.GithubProjectProperty>
       <projectUrl>{{ variables.GITHUB_URL }}</projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
-        <net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition plugin="{{ variables.JENKINS_PLUGIN_git_parameter }}">
+        <net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition>
           <name>REF_SPEC</name>
           <description>The branch / tag to build</description>
           <uuid>1ba7864c-b4fb-44b4-8268-31b304798afa</uuid>
@@ -39,7 +39,7 @@ To be run on head and for release branch/tags only</description>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
-  <scm class="hudson.plugins.git.GitSCM" plugin="{{ variables.JENKINS_PLUGIN_git }}">
+  <scm class="hudson.plugins.git.GitSCM">
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
@@ -79,18 +79,18 @@ To be run on head and for release branch/tags only</description>
     </hudson.matrix.TextAxis>
   </axes>
   <builders>
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
-     <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
+     <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition">
         <expression>^((?!windows).)*$</expression>
         <label>${PLATFORM_NAME}</label>
       </condition>
       <buildStep class="hudson.tasks.Shell">
         <command>{{ imports['//jenkins/jobs:Bazel.unix.sh.tpl'] }}</command>
       </buildStep>
-      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
-      <condition class="org.jenkins_ci.plugins.run_condition.logic.And" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
+      <condition class="org.jenkins_ci.plugins.run_condition.logic.And">
         <conditions>
           <org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
             <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition">
@@ -110,21 +110,21 @@ To be run on head and for release branch/tags only</description>
       <buildStep class="hudson.tasks.Shell">
         <command>{{ imports['//jenkins/jobs:Bazel.win.sh.tpl'] }}</command>
       </buildStep>
-      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
-      <condition class="org.jenkins_ci.plugins.run_condition.core.FileExistsCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
+      <condition class="org.jenkins_ci.plugins.run_condition.core.FileExistsCondition">
         <file>.unstable</file>
         <baseDir class="org.jenkins_ci.plugins.run_condition.common.BaseDirectory$Workspace"/>
       </condition>
-      <buildStep class="org.jenkins_ci.plugins.fail_the_build.FixResultBuilder" plugin="{{ variables.JENKINS_PLUGIN_fail_the_build_plugin }}">
+      <buildStep class="org.jenkins_ci.plugins.fail_the_build.FixResultBuilder">
         <defaultResultName>UNSTABLE</defaultResultName>
         <success></success>
         <unstable></unstable>
         <failure></failure>
         <aborted></aborted>
       </buildStep>
-      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Unstable" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Unstable"/>
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
   </builders>
   <publishers>
@@ -136,13 +136,13 @@ To be run on head and for release branch/tags only</description>
       <defaultExcludes>true</defaultExcludes>
     </hudson.tasks.ArtifactArchiver>
     {% if variables.SEND_EMAIL == "1" %}
-    <hudson.tasks.Mailer plugin="{{ variables.JENKINS_PLUGIN_mailer }}">
+    <hudson.tasks.Mailer>
       <recipients>{{ variables.BAZEL_BUILD_RECIPIENT }}</recipients>
       <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
       <sendToIndividuals>false</sendToIndividuals>
     </hudson.tasks.Mailer>
     {% endif %}
-    <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="{{ variables.JENKINS_PLUGIN_parameterized_trigger }}">
+    <hudson.plugins.parameterizedtrigger.BuildTrigger>
       <configs>
         <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
           <configs>

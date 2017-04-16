@@ -19,12 +19,12 @@
   <description>Do the Github release of a Bazel binary</description>
   <keepDependencies>false</keepDependencies>
   <properties>
-    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="{{ variables.JENKINS_PLUGIN_github }}">
+    <com.coravy.hudson.plugins.github.GithubProjectProperty>
       <projectUrl>{{ variables.GITHUB_URL }}</projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
-        <net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition plugin="{{ variables.JENKINS_PLUGIN_git_parameter }}">
+        <net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition>
           <name>REF_SPEC</name>
           <description></description>
           <uuid>ca709303-ae93-4be2-b9b8-5ab0c19672d1</uuid>
@@ -37,7 +37,7 @@
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
-  <scm class="hudson.plugins.git.GitSCM" plugin="{{ variables.JENKINS_PLUGIN_git }}">
+  <scm class="hudson.plugins.git.GitSCM">
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
@@ -66,7 +66,7 @@
   <triggers/>
   <concurrentBuild>false</concurrentBuild>
   <builders>
-    <hudson.plugins.copyartifact.CopyArtifact plugin="{{ variables.JENKINS_PLUGIN_copyartifact }}">
+    <hudson.plugins.copyartifact.CopyArtifact>
       <project>Bazel</project>
       <filter>**/ci/*</filter>
       <target>input</target>
@@ -111,7 +111,7 @@ echo &quot;Content: ${RELEASE_EMAIL_CONTENT}&quot;</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
-    <hudson.plugins.emailext.ExtendedEmailPublisher plugin="{{ variables.JENKINS_PLUGIN_email_ext }}">
+    <hudson.plugins.emailext.ExtendedEmailPublisher>
       <recipientList>${FILE, path=&quot;output/ci/recipient&quot;}</recipientList>
       <configuredTriggers>
         <hudson.plugins.emailext.plugins.trigger.SuccessTrigger>

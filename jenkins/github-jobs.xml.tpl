@@ -14,18 +14,18 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<matrix-project plugin="{{ variables.JENKINS_PLUGIN_matrix_project }}">
+<matrix-project >
   <actions/>
   <description>Test the {{ variables.PROJECT_NAME }} project still build with Bazel at head and latest release.</description>
   <keepDependencies>false</keepDependencies>
   {% if variables.github == "True" %}
   <properties>
-    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="{{ variables.JENKINS_PLUGIN_github }}">
+    <com.coravy.hudson.plugins.github.GithubProjectProperty >
       <projectUrl>{{ variables.GITHUB_URL }}</projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
   </properties>
   {% endif %}
-  <scm class="hudson.plugins.git.GitSCM" plugin="{{ variables.JENKINS_PLUGIN_git }}">
+  <scm class="hudson.plugins.git.GitSCM" >
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
@@ -57,7 +57,7 @@
   <blockBuildWhenUpstreamBuilding>true</blockBuildWhenUpstreamBuilding>
   {% if variables.enable_trigger == "true" %}
   <triggers>
-    <com.cloudbees.jenkins.GitHubPushTrigger plugin="{{ variables.JENKINS_PLUGIN_github }}">
+    <com.cloudbees.jenkins.GitHubPushTrigger >
       <spec></spec>
     </com.cloudbees.jenkins.GitHubPushTrigger>
   </triggers>
@@ -119,30 +119,30 @@
     </org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder>
 
 
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="{{ variables.JENKINS_PLUGIN_conditional_buildstep }}">
-      <condition class="org.jenkins_ci.plugins.run_condition.core.FileExistsCondition" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}">
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder >
+      <condition class="org.jenkins_ci.plugins.run_condition.core.FileExistsCondition" >
         <file>.unstable</file>
         <baseDir class="org.jenkins_ci.plugins.run_condition.common.BaseDirectory$Workspace"/>
       </condition>
-      <buildStep class="org.jenkins_ci.plugins.fail_the_build.FixResultBuilder" plugin="{{ variables.JENKINS_PLUGIN_fail_the_build_plugin }}">
+      <buildStep class="org.jenkins_ci.plugins.fail_the_build.FixResultBuilder" >
         <defaultResultName>UNSTABLE</defaultResultName>
         <success></success>
         <unstable></unstable>
         <failure></failure>
         <aborted></aborted>
       </buildStep>
-      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Unstable" plugin="{{ variables.JENKINS_PLUGIN_run_condition }}"/>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Unstable" />
     </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
   </builders>
   <publishers>
-    <hudson.tasks.junit.JUnitResultArchiver plugin="{{ variables.JENKINS_PLUGIN_junit }}">
+    <hudson.tasks.junit.JUnitResultArchiver >
       <testResults>bazel-testlogs/**/test.xml, bazel-testlogs/**/dummy.xml</testResults>
       <keepLongStdio>false</keepLongStdio>
       <healthScaleFactor>1.0</healthScaleFactor>
       <allowEmptyResults>true</allowEmptyResults>
     </hudson.tasks.junit.JUnitResultArchiver>
     {% if variables.SEND_EMAIL == "1" %}
-    <hudson.tasks.Mailer plugin="{{ variables.JENKINS_PLUGIN_mailer }}">
+    <hudson.tasks.Mailer >
       <recipients>{{ variables.BAZEL_BUILD_RECIPIENT }}</recipients>
       <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
       <sendToIndividuals>false</sendToIndividuals>
