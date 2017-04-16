@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Macros to ease the creation of machines
-load(":jenkins.bzl", "jenkins_node")
+load(":jenkins_node.bzl", "jenkins_node")
 
 def jenkins_node_names(name, count):
   """Returns the names for `count` production jenkins node prefixed by `name`."""

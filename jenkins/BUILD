@@ -14,11 +14,8 @@
 
 # Configuration for our Jenkins instance
 load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
-load(":jenkins.bzl", "jenkins_node", "jenkins_build", "jenkins_job")
-load(":nodes.bzl", "jenkins_nodes", "jenkins_node_names")
+load("//jenkins/build_defs:jenkins.bzl", "jenkins_node", "jenkins_docker_build", "jenkins_job", "jenkins_nodes", "jenkins_node_names")
 load("//jenkins/jobs:jobs.bzl", "JOBS_SUBSTITUTIONS", "STAGING_JOBS_SUBSTITUTIONS")
-
-exports_files(glob(["github-jobs*.tpl"]))
 
 #
 # Nodes
@@ -279,7 +276,7 @@ SECURITY_CONFIG = """
 #
 # Finally the Jenkins image
 #
-jenkins_build(
+jenkins_docker_build(
     name = "jenkins",
     configs = [
                   ":deploy",
@@ -305,7 +302,7 @@ jenkins_build(
     visibility = ["//visibility:public"],
 )
 
-jenkins_build(
+jenkins_docker_build(
     name = "jenkins-staging",
     configs = [
         ":darwin-x86_64-staging",
@@ -332,7 +329,7 @@ jenkins_build(
 
 #
 # A jenkins image for testing purpose
-jenkins_build(
+jenkins_docker_build(
     name = "jenkins-test",
     configs = [
         ":deploy",

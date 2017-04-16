@@ -1,4 +1,4 @@
-load("//jenkins:jenkins.bzl", "jenkins_job", "bazel_github_job", "bazel_git_job")
+load("//jenkins/build_defs:jenkins.bzl", "jenkins_job", "bazel_github_job", "bazel_git_job")
 load(
     ":jobs.bzl",
     "LINUX_PLATFORMS",
