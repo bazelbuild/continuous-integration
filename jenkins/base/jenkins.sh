@@ -45,7 +45,8 @@ function replace_secrets() {
 export -f replace_secrets
 
 # Remove existing jobs configuration so we delete jobs
-rm -f /var/jenkins_home/jobs/*/config.xml
+find /var/jenkins_home/jobs -regex '.*/jobs/[^/]*/config.xml' -delete || true
+
 # Same for nodes
 rm -rf /var/jenkins_home/nodes
 # Remove existing plugins to ensure update of plugins

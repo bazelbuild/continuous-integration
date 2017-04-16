@@ -71,13 +71,13 @@ Args:
   executable: mark the result as excutable if set to True.
 """
 
-def _strip_prefix(path, prefixes):
+def strip_prefix(path, prefixes):
   for prefix in prefixes:
     if path.startswith(prefix):
       return path[len(prefix):]
   return path
 
-def _strip_suffix(path, suffixes):
+def strip_suffix(path, suffixes):
   for suffix in suffixes:
     if path.endswith(suffix):
       return path[:-len(suffix)]
@@ -85,7 +85,7 @@ def _strip_suffix(path, suffixes):
 
 def _dest_path(f, strip_prefixes, strip_suffixes):
   """Returns the short path of f, stripped of strip_prefixes and strip_suffixes."""
-  return _strip_suffix(_strip_prefix(f.short_path, strip_prefixes), strip_suffixes)
+  return strip_suffix(strip_prefix(f.short_path, strip_prefixes), strip_suffixes)
 
 def _format_path(path_format, path):
   dirsep = path.rfind("/")
