@@ -19,7 +19,8 @@ load(":vars.bzl", "MAIL_SUBSTITUTIONS")
 
 def jenkins_job(name, config, substitutions = {}, deps = [],
                 project='bazel', org='bazelbuild', git_url=None, project_url=None,
-                folder=None, platforms=[], test_platforms=["linux-x86_64"]):
+                folder=None, platforms=[], test_platforms=["linux-x86_64"],
+                create_filegroups=True):
   """Create a job configuration on Jenkins.
 
   Args:
@@ -34,6 +35,11 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
      platforms: platforms on which to run that job, default None,
      test_platforms: platforms on which to run that job when inside of a
        dockerized test, by default only 'linux-x86_64'
+     create_filegroups: create filegroups named <name>/all, <name>/staging
+       and <name>/test that contains the files needed to be included
+       to include that job respectively for the production service, the
+       staging service and the docker test version. This is to be set
+       to false is the calling macros already creates those filegroups.
   """
   github_project =  "%s/%s" % (org, project.lower())
   github_url = "https://github.com/" + github_project
@@ -56,6 +62,8 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
       deps = deps,
       substitutions = substitutions,
     )
+  if create_filegroups:
+    native.filegroup(name = name + "/all", srcs = [name])
   substitutions["SEND_EMAIL"] = "0"
   expand_template(
       name = name + "-staging",
@@ -64,6 +72,8 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
       deps = deps,
       substitutions = substitutions,
     )
+  if create_filegroups:
+    native.filegroup(name = name + "/staging", srcs = [name + "-staging"])
 
   if test_platforms:
     substitutions["PLATFORMS"] = "\n".join(test_platforms)
@@ -74,6 +84,8 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
       deps = deps,
       substitutions = substitutions,
     )
+    if create_filegroups:
+      native.filegroup(name = name + "/test", srcs = [name + "-test"])
 
 def bazel_git_job(**kwargs):
   """Override bazel_github_job to test a project that is not on GitHub."""
@@ -130,6 +142,10 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
     "SAUCE_ENABLED": str(sauce_enabled).lower(),
   }
 
+  all_files = [name + ".xml"]
+  test_files = [name + "-test.xml"]
+  staging_files = [name + "-staging.xml"]
+
   jenkins_job(
       name = name,
       config = "//jenkins/build_defs:github-jobs.xml.tpl",
@@ -145,7 +161,9 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
       org=org,
       project_url=project_url,
       platforms=platforms,
-      test_platforms=test_platforms)
+      test_platforms = test_platforms,
+      create_filegroups=False)
+
   substitutions["BAZEL_VERSIONS"] = "\n".join([
       v for v in bazel_versions if not v.startswith("HEAD")])
   if pr_enabled:
@@ -163,7 +181,12 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
         org=org,
         project_url=project_url,
         platforms=platforms,
-        test_platforms=test_platforms)
+        test_platforms=test_platforms,
+        create_filegroups=False)
+    all_files.append("PR-%s.xml" % name)
+    test_files.append("PR-%s-test.xml" % name)
+    staging_files.append("PR-%s-staging.xml" % name)
+
   if gerrit_project != None:
     jenkins_job(
         name = "Gerrit-" + name,
@@ -180,3 +203,11 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
         project_url=project_url,
         platforms=platforms,
         test_platforms=test_platforms)
+    all_files.append("Gerrit-%s.xml" % name)
+    test_files.append("Gerrit-%s-test.xml" % name)
+    staging_files.append("Gerrit-%s-staging.xml" % name)
+
+  native.filegroup(name = "%s/all" % name, srcs = all_files)
+  if test_platforms:
+    native.filegroup(name = "%s/test" % name, srcs = test_files)
+  native.filegroup(name = "%s/staging" % name, srcs = staging_files)

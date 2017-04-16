@@ -77,9 +77,7 @@ BAZEL_JOBS = BAZEL_STAGING_JOBS + {
     "Bazel-Push-Benchmark-Output": [],
 }
 
-JOBS = BAZEL_JOBS.keys() + GITHUB_JOBS + NO_PR_JOBS + [
-    "PR-" + k for k in GITHUB_JOBS] + [
-        "Gerrit-" + j for j in GERRIT_JOBS]
+JOBS = BAZEL_JOBS.keys() + GITHUB_JOBS + NO_PR_JOBS
 
 JOBS_SUBSTITUTIONS = {
     "GITHUB_JOBS": ", ".join(GITHUB_JOBS + NO_PR_JOBS),

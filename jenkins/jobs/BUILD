@@ -322,19 +322,19 @@ bazel_github_job(
 
 filegroup(
     name = "jobs",
-    srcs = JOBS,
+    srcs = ["%s/all" % j for j in JOBS],
     visibility = ["//jenkins:__pkg__"],
 )
 
 filegroup(
     name = "staging-jobs",
-    srcs = [j + "-staging" for j in STAGING_JOBS],
+    srcs = ["%s/staging" % j for j in STAGING_JOBS],
     visibility = ["//jenkins:__pkg__"],
 )
 
 filegroup(
     name = "test-jobs",
     # We include all test but the docker ones (they needs access to the docker server).
-    srcs = [j + "-test" for j in JOBS if not "docker" in j],
+    srcs = ["%s/test" % j for j in JOBS if not "docker" in j],
     visibility = ["//jenkins:__pkg__"],
 )
