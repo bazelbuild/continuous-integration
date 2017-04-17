@@ -14,6 +14,12 @@ load(
     "STAGING_JOBS",
 )
 
+load("//jenkins/lib:def.bzl", "bazel_job_configuration_test")
+[bazel_job_configuration_test(
+    name = s + "-test",
+    configs = [s],
+) for s in glob(["configs/*.json"])]
+
 [jenkins_job(
     name = job,
     config = "jobs-%s.xml.tpl" % job,

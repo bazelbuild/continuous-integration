@@ -21,6 +21,14 @@ groovy_library(
     ],
 )
 
+groovy_library(
+    name = "BazelConfigurationParsingTest",
+    srcs = [
+        "src/build/bazel/ci/BazelConfiguration.groovy",
+        "tests/build/bazel/ci/BazelConfigurationParsingTest.groovy",
+    ],
+)
+
 java_test(
     name = "BazelConfigurationTests-test",
     size = "small",
