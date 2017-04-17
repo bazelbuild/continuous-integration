@@ -168,7 +168,7 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
       v for v in bazel_versions if not v.startswith("HEAD")])
   if pr_enabled:
     jenkins_job(
-        name = "PR-" + name,
+        name = "PR/" + name,
         config = "//jenkins/build_defs:github-jobs-PR.xml.tpl",
         deps = [
             "//jenkins/build_defs:github-jobs.sh.tpl",
@@ -183,13 +183,13 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
         platforms=platforms,
         test_platforms=test_platforms,
         create_filegroups=False)
-    all_files.append("PR-%s.xml" % name)
-    test_files.append("PR-%s-test.xml" % name)
-    staging_files.append("PR-%s-staging.xml" % name)
+    all_files.append("PR/%s.xml" % name)
+    test_files.append("PR/%s-test.xml" % name)
+    staging_files.append("PR/%s-staging.xml" % name)
 
   if gerrit_project != None:
     jenkins_job(
-        name = "Gerrit-" + name,
+        name = "CR/" + name,
         config = "//jenkins/build_defs:github-jobs-Gerrit.xml.tpl",
         deps = [
             "//jenkins/build_defs:github-jobs.sh.tpl",
@@ -203,9 +203,9 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
         project_url=project_url,
         platforms=platforms,
         test_platforms=test_platforms)
-    all_files.append("Gerrit-%s.xml" % name)
-    test_files.append("Gerrit-%s-test.xml" % name)
-    staging_files.append("Gerrit-%s-staging.xml" % name)
+    all_files.append("CR/%s.xml" % name)
+    test_files.append("CR/%s-test.xml" % name)
+    staging_files.append("CR/%s-staging.xml" % name)
 
   native.filegroup(name = "%s/all" % name, srcs = all_files)
   if test_platforms:

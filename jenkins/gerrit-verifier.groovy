@@ -23,7 +23,7 @@ GerritUtils gerrit = new GerritUtils(
 // Build the jobs associated to a given change.
 def buildChange(gerrit, change) {
   def refspec = "+" + change.ref + ":" + change.ref.replaceAll('ref/', 'ref/remotes/origin/')
-  def jobs = JenkinsUtils.jobsWithDescription(null, "Gerrit project: " + change.project + ".")
+  def jobs = JenkinsUtils.jobsWithDescription("CR", "Gerrit project: " + change.project + ".")
   def changeUrl = gerrit.url(change.number, change.patchNumber)
   if (jobs != null && !jobs.empty) {
     gerrit.addReviewer(change.number)
