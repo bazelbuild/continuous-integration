@@ -301,6 +301,7 @@ jenkins_build(
         "SECURITY_CONFIG": SECURITY_CONFIG,
         "PUBLIC_JENKINS_URL": "http://ci.bazel.io/",
     } + JOBS_SUBSTITUTIONS,
+    tars = ["//jenkins/lib"],
     visibility = ["//visibility:public"],
 )
 
@@ -325,6 +326,7 @@ jenkins_build(
         "SECURITY_CONFIG": SECURITY_CONFIG,
         "PUBLIC_JENKINS_URL": "http://ci-staging.bazel.io/",
     } + STAGING_JOBS_SUBSTITUTIONS,
+    tars = ["//jenkins/lib"],
     visibility = ["//gcr:__pkg__"],
 )
 
@@ -345,6 +347,7 @@ jenkins_build(
         "SECURITY_CONFIG": "<useSecurity>false</useSecurity>",
         "PUBLIC_JENKINS_URL": "##ENV:JENKINS_SERVER##",
     } + JOBS_SUBSTITUTIONS,
+    tars = ["//jenkins/lib"],
 )
 
 filegroup(

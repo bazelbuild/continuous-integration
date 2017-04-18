@@ -103,3 +103,29 @@ py_library(
     remote = "https://github.com/google/python-gflags",
     tag = "python-gflags-2.0",
 )
+
+# Testing Jenkins pipeline library
+# TODO(dmarting): the groovy support is really rudimentary we should fix it:
+#   - Need for adding more dependency
+#   - Groovy test absolutely want you to declare a specific structure
+#   - The release is not working with latest bazel
+#   - Repository overrely on bind() and does not respect naming conventions
+http_archive(
+    name = "io_bazel_rules_groovy",
+    url = "https://github.com/bazelbuild/rules_groovy/archive/1256063915da0e46c229ce93489175f0d084f0cb.zip",
+    sha256 = "0e7a425e3ebcc649c4fac9876ebbfdb3948bf97c47954ffda3e15b32a5bf4b6e",
+    strip_prefix = "rules_groovy-1256063915da0e46c229ce93489175f0d084f0cb",
+)
+load("@io_bazel_rules_groovy//groovy:groovy.bzl", "groovy_repositories")
+groovy_repositories()
+
+# For groovy tests
+maven_jar(
+    name = "org_codehaus_groovy_all",
+    artifact = "org.codehaus.groovy:groovy-all:jar:2.4.4",
+)
+
+maven_jar(
+    name = "org_hamcrest",
+    artifact = "org.hamcrest:hamcrest-all:jar:1.3",
+)

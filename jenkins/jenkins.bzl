@@ -400,7 +400,7 @@ EOF
         )
 
 def jenkins_build(name, plugins = None, base = "//jenkins/base", configs = [],
-                  jobs = [], substitutions = {}, visibility = None):
+                  jobs = [], substitutions = {}, visibility = None, tars = []):
   """Build the docker image for the Jenkins instance."""
   substitutions = substitutions + MAILS_SUBSTITUTIONS
   # Expands config files in a tar ball
@@ -422,22 +422,13 @@ def jenkins_build(name, plugins = None, base = "//jenkins/base", configs = [],
       directory = "/usr/share/jenkins/ref",
   )
 
-  # Create a tar of the library files
-  pkg_tar(
-     name = "%s-lib" % name,
-     files = native.glob(["lib/**"]),
-     strip_prefix = "lib",
-     package_dir = "/opt/lib",
-  )
-
   ### FINAL IMAGE ###
   docker_build(
       name = name,
       tars = [
           ":%s-jobs" % name,
           ":%s-configs" % name,
-          ":%s-lib" % name,
-      ],
+      ] + tars,
       # Workaround no way to specify owner in pkg_tar
       # TODO(dmarting): use https://cr.bazel.build/10255 when it hits a release.
       user = "root",
