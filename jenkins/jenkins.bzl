@@ -421,13 +421,34 @@ def jenkins_build(name, plugins = None, base = "//jenkins/base", configs = [],
       path_format = "jobs/{basename}/config.xml",
       directory = "/usr/share/jenkins/ref",
   )
+
+  # Create a tar of the library files
+  pkg_tar(
+     name = "%s-lib" % name,
+     files = native.glob(["lib/**"]),
+     strip_prefix = "lib",
+     package_dir = "/opt/lib",
+  )
+
   ### FINAL IMAGE ###
   docker_build(
       name = name,
       tars = [
           ":%s-jobs" % name,
           ":%s-configs" % name,
+          ":%s-lib" % name,
       ],
+      # Workaround no way to specify owner in pkg_tar
+      # TODO(dmarting): use https://cr.bazel.build/10255 when it hits a release.
+      user = "root",
+      entrypoint = [
+          "/bin/tini",
+          "--",
+          "/bin/bash",
+          "-c",
+          "[ -d /opt/lib ] && chown -R jenkins /opt/lib; su jenkins -c /usr/local/bin/jenkins.sh",
+      ],
+      # End of workaround
       base = base,
       directory = "/",
       visibility = visibility,

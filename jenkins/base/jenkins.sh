@@ -58,5 +58,16 @@ rm -fr /var/jenkins_home/plugins
      rm -f '/var/jenkins_home/{}'; \
      replace_secrets '/usr/share/jenkins/ref/{}' '/var/jenkins_home/{}'" \;)
 
+# Transform /opt/lib to a git repository if exists to be used
+# as a pipeline library (GitSCM).
+if [ -d "/opt/lib" ]; then
+  (cd /opt/lib && \
+      git init && \
+      git config user.email "nobody@nowhere.local" && \
+      git config user.name "Nobody" && \
+      git add . && \
+      git commit -m "Dummy")
+fi
+
 # Execute Jenkins
 exec java ${JAVA_OPTS-} -jar /usr/share/jenkins/jenkins.war ${JENKINS_OPTS-} "$@"
