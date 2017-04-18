@@ -129,6 +129,17 @@ bazel_github_job(
 )
 
 bazel_github_job(
+    name = "eclipse",
+    bazel_versions = [
+        "HEAD",
+        "latest",
+    ],
+    gerrit_project = "eclipse",
+    org = "bazelbuild",
+    platforms = UNIX_PLATFORMS,
+)
+
+bazel_github_job(
     name = "continuous-integration",
     bazel_versions = [
         "HEAD",

@@ -28,7 +28,6 @@ RULES = {
     "rules_perl": UNIX_PLATFORMS,
     # These are not really rules, but it is simpler to put here.
     "skydoc": UNIX_PLATFORMS,
-    "eclipse": UNIX_PLATFORMS,
 }
 
 DISABLED_RULES = []
@@ -36,6 +35,7 @@ DISABLED_RULES = []
 GERRIT_JOBS = [
     "bazel-tests",
     "continuous-integration",
+    "eclipse",
 ]
 
 GITHUB_JOBS = [
