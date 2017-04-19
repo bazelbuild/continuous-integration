@@ -45,7 +45,6 @@ GITHUB_JOBS = [
     "Tutorial",
     "re2",
     "protobuf",
-    "dash",
     "gerrit",
     # rules_web was renamed to rules_webtesting, keep the legacy name
     # for the job to keep history but use the new project name.
