@@ -17,7 +17,8 @@
 # A simple utility that copies the content of the groovy library to the test
 # jenkins docker container to test modification to the lib.
 
-: "${CONTAINER_NAME:=$(docker ps | grep "bazel:jenkins-test" | cut -f 1 -d " ")}"
+: "${IMAGE_NAME:=bazel:jenkins-test}"
+: "${CONTAINER_NAME:=$(docker ps | grep "${IMAGE_NAME}" | cut -f 1 -d " ")}"
 
 LIB_DIR="$(cd "$(dirname "$0")" && pwd -P)/lib"
 
