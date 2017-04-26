@@ -35,7 +35,9 @@ if [[ "${BAZEL_VERSION}" =~ -jdk7$ ]]; then
   BUILD_TAG_FILTERS="-jdk8"
 fi
 
+touch .bazelrc
 cat >${ROOT}/bazel.bazelrc <<EOF
+import %workspace%/.bazelrc
 build {{ variables.BUILD_OPTS }}
 test {{ variables.TEST_OPTS }}
 test --test_tag_filters ${TEST_TAG_FILTERS}
