@@ -51,8 +51,8 @@ JENKINS_PLUGINS = {
         "7f9def9f7347d0a0bf5ab8899ff2365b19d3b6a34a711adbc51a088f75eb587e",
     ],
     "matrix-project": [
-        "1.9",
-        "a2c675486ad3c474478d92138fd30b50d74d94e7855e63b130ff88b61e728287",
+        "1.10",
+        "dd09d0c70ed566ac61accbf5afd4b9db3cd21c8bb4372d0d302df9052c6258dd",
     ],
     "junit": [
         "1.20",
@@ -61,7 +61,6 @@ JENKINS_PLUGINS = {
     "credentials": [
         "2.1.13",
         "e793895fb727b59d83a9e395984243cfee9abdf4d56238fb6f2594948b0487e5",
-        "pinned",
     ],
     "git-parameter": [
         "0.8.0",
@@ -72,24 +71,24 @@ JENKINS_PLUGINS = {
         "e340c7d2719cd7569fd039c940df87154750a291918bcb982462575b775275b7",
     ],
     "git-client": [
-        "2.4.1",
-        "a1d608b739f221b4f7ca6810fba078eb2e06a6d82683820de337c829f7c8e763",
+        "2.4.5",
+        "f8116820c5edebaa32d7e241a03d3aee1ce13cbebf830016621c849698a4f87a",
     ],
     "github": [
-        "1.26.2",
-        "25feed9d0d4e8120c4d7dd7921e3227fd9ef66f94614c0f74ee5e923e3b82759",
+        "1.27.0",
+        "11038b94997b698b6b7898dc68fcc7e28202c308ba6af927fc22c7bba8cbfef0",
     ],
     "maven-plugin": [
         "2.15.1",
         "61aeb7d787e312702b438c75ffd752394bbcaaf2b6d212a4fc169b3f28651c6e",
     ],
     "git": [
-        "3.2.0",
-        "3784ff5bc38c93d8b55935507900c1f6b7205ab14195c21440c6a80a3307abdf",
+        "3.3.0",
+        "0093443ce6293112a16e24d6d46171e98fa869f0089654c517b95f01cbdc24b4",
     ],
     "token-macro": [
-        "2.0",
-        "9e0909ec9a37d0de9311f507cc24634edf5f7f191dc7643d19ba835bdfaa1454",
+        "2.1",
+        "a7e4a70beefb64aa715ba8679cd0a2d41eec0446e65d6d89311a92b63edfed2d",
     ],
     "nodelabelparameter": [
         "1.7.2",
@@ -100,8 +99,8 @@ JENKINS_PLUGINS = {
         "acf4940bd5a0d918d781b51a6f42f7a0cb9381ede8235582c629a5d347495029",
     ],
     "email-ext": [
-        "2.57.1",
-        "4d3cd61bcd040a8a36c39aea429dcbaf3b600122c9a319e083f3ab5f61b53cdd",
+        "2.57.2",
+        "b576b6c2cd69a159699341fe07f32ac824a02c309ec175902b7eba843d4c31e4",
     ],
     "google-login": [
         "1.3",
@@ -124,8 +123,8 @@ JENKINS_PLUGINS = {
         "4f1834f99ffd7f2a7db1972fe46ee42d06af819b27297193ac89eb33a14292d8",
     ],
     "ssh-agent": [
-        "1.14",
-        "08f67bcdbc7a1f1205376c508c1e5ed8b92f0834770352d2060252d6899102b7",
+        "1.15",
+        "d1c955b883a3e82522a1b97ff044812193bc325c5eb095e23ba8673c2b16e181",
     ],
     "workflow-step-api": [
         "2.9",
@@ -136,8 +135,8 @@ JENKINS_PLUGINS = {
         "8ab2f1617b68561a7f0254fb27578840aa9b7e158d0bd8c51628dbc64e8ab0ca",
     ],
     "ghprb": [
-        "1.35.0",
-        "e33212e46f9af4c02379ae6c8c37bf4df74f594da1597ec611921f5099c1e9d2",
+        "1.36.2",
+        "ecf7cd881136e60e48e220172bd0ddedb77c50129bc9dac271b32c715be38541",
     ],
     "build-flow-plugin": [
         "0.20",
@@ -160,32 +159,32 @@ JENKINS_PLUGINS = {
         "abc97028893c8a71581a5f559ea48e8e1f1a65164faee96dabfed9e95e9abad2",
     ],
     "display-url-api": [
-        "1.1.1",
-        "d9c3266898caa82965bb08242da91cbc75bebe724744686d48ec676b511e5765",
+        "2.0",
+        "4e438996e2b262075e5c4ec0d1dd93a767456205bca735e80db633ac392fd21f",
     ],
     "jquery-detached": [
         "1.2.1",
         "a05273cd20c11557ffcb7dcb75150f21d35dc8be28355548b831c2960d7f11c0",
     ],
     "sauce-ondemand": [
-        "1.161",
-        "40f3ed7ce6eaf1ff3e1e3ecf2e6b8392bb3996abc708ba5db7eb7163d125cad1",
+        "1.164",
+        "48649855b80bc30dad03ced7a4ba76ef3aa5daa939f0521720e5aec5b5d1d949",
     ],
     "structs": [
         "1.6",
         "faad3252e325e9a672b3e2732711b4a673997ac3d35a501a43ccb47ae9536ca8",
     ],
     "workflow-api": [
-        "2.12",
-        "d83e61b9189ee0de6bb4c394cd07cd830e9cc7876205cd7d03d6b2a601cc0271",
+        "2.13",
+        "8e5f6c19237a3d8b050330e35719485df66d78f0ce8c881de9e1addbc2f3044e",
     ],
     "workflow-basic-steps": [
         "2.4",
         "c57d5308a01df1990a7f491ddb6dfc7aab5b7b713ad9cfc458cbef76d27fdbab",
     ],
     "workflow-cps": [
-        "2.29",
-        "f511afb06bba24ee9a4521703e2c8a638a2f1525f7f2772bb13cf5daad43dbe7",
+        "2.30",
+        "92a51d144b2d08608c09c3bbfa803f3fd2193bda47b28af6099123301db6951a",
     ],
     "workflow-job": [
         "2.10",
@@ -200,12 +199,12 @@ JENKINS_PLUGINS = {
         "49bf65953ad684e5d4f0f0750dce6f5efed9e67f5d0de26da405945bbd46f01d",
     ],
     "ldap": [
-        "1.14",
-        "f424cbcb06e29879d58bf21bea365e4f9b055aae9e9ddd1b5f61dcb140128dcb",
+        "1.15",
+        "2ace1e160dab885680d0eee1b543d456fa97328c4befc911c2c531bf7697dbe6",
     ],
     "matrix-auth": [
-        "1.4",
-        "366aa6c4c50b256cb38d5e5c30195d79d634b56cca24d3db190aa5bc01142408",
+        "1.5",
+        "ac31e6736f8e6aed26064d00c6aad7f4b39bfc49d80d32be757b035d4224863b",
     ],
     "antisamy-markup-formatter": [
         "1.5",
@@ -216,8 +215,8 @@ JENKINS_PLUGINS = {
         "1b1d32dca618f43f6c06786f3fde6cc0e0fa0c805cbb735fafd464cf2cfcf1e3",
     ],
     "ssh-slaves": [
-        "1.16",
-        "6641040f192518cf4033d462cabddd2faa68afbcaebcf8e68c0e2b952c49fd36",
+        "1.17",
+        "5120c316190a160c85e6c77f97529f93a5a602658eeb18a4d527cf89a9d838df",
     ],
     "subversion": [
         "2.7.2",
@@ -232,8 +231,8 @@ JENKINS_PLUGINS = {
         "11a0dd4aaa66d506d1bfc32d367e9c1f28b957296b5729ae9bf0947f5f1301ce",
     ],
     "bouncycastle-api": [
-        "2.16.0",
-        "8aed85e3d479da76406eedf609696e3b4393afb4ba8f060656b311388a1e5e20",
+        "2.16.1",
+        "87bbc7e1f385524d6c5f5f49365c1f7e1cce7a1aee908ddd3ac0884d6b9055fc",
     ],
     "mapdb-api": [
         "1.0.9.0",
@@ -260,8 +259,8 @@ JENKINS_PLUGINS = {
         "ca3c2d264cff55f71e900dc7de1f13c0bfbffdb9b3419b854dce175bcb8a4848",
     ],
     "workflow-durable-task-step": [
-        "2.10",
-        "5a676c894d4deb5b9163d2f34cecfe187130710a6158f5721179b8a4cb5ae250",
+        "2.11",
+        "8783a0717d4ab67aaecde4b6c12c77a90784a2f604b75e1ac98506b407c3c5c8",
     ],
     "durable-task": [
         "1.13",
@@ -272,20 +271,20 @@ JENKINS_PLUGINS = {
         "bb3235a0b5a62cd7be3983bfd40a202c582757c9633d23858aaa38af88ee61ea",
     ],
     "pipeline-input-step": [
-        "2.5",
-        "ff62f1b3b48d2a660de55379f565be0948559fd722ff0345d0fb47bf81e537e3",
+        "2.7",
+        "a51e7a6b9668262bbd11369c8d7a4401938d00a740f0208524b0badac1fa7668",
     ],
     "ansicolor": [
         "0.5.0",
         "4fd5b38959812712b62576ce98d0302f799bd950f5a6f777a8c0d862df336526",
     ],
     "workflow-cps-global-lib": [
-        "2.7",
-        "bfd2ed77b12dc15f50eed4d0a4cdd8126890697ba947048dc43f29b36cf8592e",
+        "2.8",
+        "0f09eb5ea402141769d8d923519101d51baaa0e187ecdd3efe275483e4b0ca79",
     ],
     "cloudbees-folder": [
-        "6.0.3",
-        "f8697c7e28a25501458115ed49f0146c7e40c4b0c342a0299593ac03f036ca6c",
+        "6.0.4",
+        "4372996561c5118cfdf2ca801d7436ca6f4131da99b47dee3c7d9cc099da8c32",
     ],
     "git-server": [
         "1.7",
@@ -313,88 +312,88 @@ JENKINS_PLUGINS = {
         "823986f18fc02508d9edae9c9876d0fa08e0b4f4b785707e224eab01bda9f018",
     ],
     "blueocean-web": [
-        "1.0.0",
-        "4c52d43c88f66a371c884f3e36c5b1c4507f19481f26bca7911e6d8ffe851103",
+        "1.0.1",
+        "d01a05eef13621d82197ca7ca3936642526e17c257c33b553b8f7e6cc472e137",
     ],
     "blueocean-autofavorite": [
-        "0.6",
-        "0a52677edb4d6bf3de5808f98c0159db11812854662fa35a041c78d23664e03d",
+        "0.7",
+        "b84adbfaf9ae428f2d4167fdc065702a440bd5423edef3f2cb07605a972087f8",
     ],
     "blueocean-dashboard": [
-        "1.0.0",
-        "31379171594214692c1fdf10462383bd10762da624fee71f045ed362ab49353c",
+        "1.0.1",
+        "ef06a00dff71ad05dbd4515d2592dd681529b7f05a984551a7472c756dffac80",
     ],
     "branch-api": [
-        "2.0.8",
-        "eb794fac3846f64840abf6bae0ed163c2c17a6a5fad13cbd4dd450744d79ee0d",
+        "2.0.9",
+        "f54cf77dc09d1d92ef2ec5ad6d04cb79fce7ac1d251dab7cb085c2ef398f2863",
     ],
     "blueocean-commons": [
-        "1.0.0",
-        "ac4ac5a94b17efa752d2e39209c28ae337c7be7df15f1a2dc18921be4313f938",
+        "1.0.1",
+        "d1dcabc2c2eafe23e622b0d8fb73e52814ebe665aac48cc0e14b1b5172b0d2c2",
     ],
     "pipeline-model-api": [
-        "1.1.2",
-        "05f9ddcc19123f62f4aef0f004a5d544c6341f149ea3b34e21b794c9a9327d39",
+        "1.1.3",
+        "9e5928fdf9005a64decaa38ad13d4f7fd3792cdec487da096fd07016d8f50e5f",
     ],
     "pipeline-model-definition": [
-        "1.1.1",
-        "46c1e15b14256a3c7f38e4327fd60c2a3e54182d21f0416e5687cfe5fbe5edec",
+        "1.1.3",
+        "160cfdb95ed826114306663f4bf651da47c3d7c46be77a6e650b50ffc0fa4a98",
     ],
     "blueocean": [
-        "1.0.0",
-        "339e78362f8143f9fc76852ef2d9c2d97f8376ca06568d1dd49771709d97c63f",
+        "1.0.1",
+        "fd3164a334f1624bd2feca004b2329e81f32ab0c7871fb37c97d9843c70fedc2",
     ],
     "variant": [
         "1.1",
         "971893fb05da213631b8ea977a32a5d4953f1cb7ab6fbdec9020d503550275ff",
     ],
     "blueocean-rest": [
-        "1.0.0",
-        "7432a080de3a63c40b0904ee71c2b3c8f58574438aee8a3f0a7fd996e5d721d4",
+        "1.0.1",
+        "479886fef9736dae3f7787ceb8c2b016337f588ad32f6501315cd69a2be24170",
     ],
     "favorite": [
         "2.0.4",
         "d3c8fd1a13277316010b68f602181d78be32b89f2a8cbf4ab079d4a2f7832418",
     ],
     "blueocean-display-url": [
-        "1.5.1",
-        "85ebd9fccd1c13d532fd93087826bf992ff881fe325282b2d68db4a69f3ce29d",
+        "2.0",
+        "ce46e5d2a0476cff482f7033ba2e8731fd5c4de010ba8fb7572f68ed22bbfb13",
     ],
     "blueocean-personalization": [
-        "1.0.0",
-        "b5df9d9c82d8a5fca1c93785fc8c705ae08daf77f6fc6c9d04a99e9e0bb872f7",
+        "1.0.1",
+        "3c31051e67b8d630bedd53c52ff90c6bbfd15caf8aa59f33f9a131adbb1b7d78",
     ],
     "blueocean-pipeline-api-impl": [
-        "1.0.0",
-        "cf860a117c683c4d0da4d423498ba0a9f6ad957195bda0db4720896fd6c85c6d",
+        "1.0.1",
+        "b405ce843c91186272f384f83b2277c3e83ddf7e869b9e44f9b707a0bca1d8e4",
     ],
     "blueocean-jwt": [
-        "1.0.0",
-        "90e7d4899328ee4ae30f8dac0ce56f3e1945135e25f5135759601e3f1e64d236",
+        "1.0.1",
+        "daf9d1ad8b332398d68c0323179659a9a7e5958aaca7f6cbd6d0ae62cbaacc76",
     ],
     "blueocean-events": [
-        "1.0.0",
-        "b4d880001fed2a0c2a183102670c1bdfa00fa292f5ae4c2837d1e57f556c8030",
+        "1.0.1",
+        "fe9dfeae01c075023ea449c5fa0913d8a77c7256c535b7950bd79f4c86759054",
     ],
     "github-branch-source": [
-        "2.0.4",
-        "828b1a04106cf5194be73d13edeb155a0a1f625ed0b42fead34af6be7b456bcd",
+        "2.0.5",
+        "b53cd5f7c524c165b557fa9084dbf3baf8238ce0cb35ea9c1ab2a4286601388b",
     ],
     "blueocean-i18n": [
-        "1.0.0",
-        "e423624adbf70fed06ccf15a1435a3c0c521064128e4bc5b77c6a55d3774386a",
+        "1.0.1",
+        "a377ddce01d1b24d059e876578c4e53fc1df1a957f18c3a44b87ecac514eddd3",
     ],
     "blueocean-config": [
-        "1.0.0",
-        "f57058d91b8ab0909fcf2494cdb5bf0d6ac1c5737fecb4c5fd35c3a346f2a0d6",
+        "1.0.1",
+        "a19c65d5460c86ff3e5db38b0e16501ce7f7fe0ff3be1ad9b15b67b2e19693e6",
     ],
     "blueocean-git-pipeline": [
-        "1.0.0",
-        "e2d177bf3f63bee248f76c0d243405ff37010213ba1ab462b2977295a94117de",
+        "1.0.1",
+        "9da6dd755ad4699bbb0b7121e515d965d57816be76339b30c1ed2c5114eec2ee",
     ],
     "pipeline-stage-tags-metadata": [
-        "1.1.2",
-        "bea00844cbebdb0c7d12b074369c69b20b4eac36330a968b96676b9afae30282",
+        "1.1.3",
+        "5b651f66108dd90a1ec0392334eb0e4449234c0bbff1ef097979aa578dcb42e9",
     ],
     "blueocean-pipeline-editor": [
         "0.2.0",
@@ -405,16 +404,16 @@ JENKINS_PLUGINS = {
         "56b19b7a48f646dc8269bae4aca41ec11f71756d618d302b1f8b9d688441850f",
     ],
     "blueocean-github-pipeline": [
-        "1.0.0",
-        "1e6490d3e06e6fcdbe11c30ed9464c17820cf1ec571576ecb7245820ee8f4cf9",
+        "1.0.1",
+        "e2666375a1325d90d28377a8d29b5a09ae34fdaf2a6f1d4a5b15605b19ec8dbf",
     ],
     "jackson2-api": [
         "2.7.3",
         "6dfa1ba3db32ae47630b239399c3fc8d9102ff0b523a5c33dd32bc88d9874837",
     ],
     "pipeline-model-extensions": [
-        "1.1.1",
-        "a4daea2176299ba5d36556e5a308ec46c1a6d240088272b36ef1185d5fec53fa",
+        "1.1.3",
+        "851625e8d1e8756ab71d5ad374e33495edab23dbc463cc8717f2b6888e73d191",
     ],
     "metrics": [
         "3.1.2.9",
@@ -425,8 +424,8 @@ JENKINS_PLUGINS = {
         "d5540c3973bf5f568910f93b3a002c413148b9d3dd4211ce5faf4a2a1214d4ef",
     ],
     "blueocean-rest-impl": [
-        "1.0.0",
-        "2d230acad399eb9d750e7142eb9687c58d74393011e3c778b7511ebb8e217937",
+        "1.0.1",
+        "b35f9e608245e74a700cc2242b04c8ddbe00cb9340472338f2ae2329f4056b17",
     ],
     "docker-commons": [
         "1.6",
