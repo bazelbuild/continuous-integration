@@ -198,9 +198,9 @@ bazel_github_job(
 bazel_github_job(
     name = "buildifier",
     org = "bazelbuild",
+    platforms = UNIX_PLATFORMS,
     # Repository was renamed
     project = "buildtools",
-    platforms = UNIX_PLATFORMS,
     targets = [],
     tests = [":tests"],
 )
@@ -280,6 +280,7 @@ bazel_github_job(
 bazel_github_job(
     name = "intellij-android-studio",
     build_opts = ["--define=ij_product=android-studio-latest"],
+    enabled = False,
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
     project = "intellij",
