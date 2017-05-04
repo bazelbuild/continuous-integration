@@ -51,7 +51,7 @@ bazel_github_job(
 
 bazel_github_job(
     name = "TensorFlow_Serving",
-    configure = ["(cd tensorflow && ./tensorflow/tools/ci_build/builds/configured CPU)"],
+    configure = ["(cd tensorflow && ln -s ../.bazelrc && ./tensorflow/tools/ci_build/builds/configured CPU)"],
     org = "tensorflow",
     platforms = LINUX_PLATFORMS,
     project = "serving",
@@ -61,7 +61,7 @@ bazel_github_job(
 
 bazel_github_job(
     name = "tf_models_syntaxnet",
-    configure = ["(cd tensorflow && ./tensorflow/tools/ci_build/builds/configured CPU)"],
+    configure = ["(cd tensorflow && ln -s ../.bazelrc && ./tensorflow/tools/ci_build/builds/configured CPU)"],
     org = "tensorflow",
     platforms = LINUX_PLATFORMS,
     project = "models",

@@ -35,7 +35,6 @@ if [[ "${BAZEL_VERSION}" =~ -jdk7$ ]]; then
   BUILD_TAG_FILTERS="-jdk8"
 fi
 
-touch .bazelrc
 cat >${ROOT}/bazel.bazelrc <<EOF
 import %workspace%/.bazelrc
 build {{ variables.BUILD_OPTS }}
@@ -82,6 +81,8 @@ chmod +x .bin/bazel
 export PATH="${PWD}/.bin:${PATH}"
 
 cd {{ variables.WORKSPACE }}
+
+touch .bazelrc
 
 echo "==== bazel version ===="
 bazel version
