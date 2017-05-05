@@ -29,6 +29,9 @@ then
       echo "Skipping building bazel of freebsd with java 7"
       exit 0
   fi
+  # Workaround for bazelbuild/bazel#2941
+  # TODO(dmarting): remove once 0.5.0 is released
+  "${BOOTSTRAP_BAZEL}" clean
 else
   export BOOTSTRAP_BAZEL="${HOME}/.bazel/latest/binary/bazel"
 fi

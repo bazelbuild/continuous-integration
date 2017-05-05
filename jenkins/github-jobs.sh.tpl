@@ -89,6 +89,12 @@ bazel version
 echo
 echo
 
+# Workaround for bazelbuild/bazel#2941
+# TODO(dmarting): Remove once 0.5.0 is released
+if [ "$JAVA_VERSION" = "1.7" ]; then
+  bazel clean
+fi
+
 set -x
 
 {{ variables.CONFIGURE }}
