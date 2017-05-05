@@ -17,7 +17,7 @@
 # Script to easily re-image the various vms on GCE
 set -eu
 
-# List of slaves in the following format:
+# List of executor nodes in the following format:
 #   GCE-VM-NAME GCE-BASE-IMAGE JENKINS-NODE LOCATION STARTUP-METADATA SETUP-SCRIPTS
 # Where
 #   GCE-VM-NAME is the VM name on GCE
@@ -28,12 +28,12 @@ set -eu
 #   NETWORK is the GCE network the instance has to be created on.
 #   STARTUP-METADATA is the metadata argument to gcloud to launch the right
 #                    startup script.
-#   SETUP-SCRIPTS is a list of shell scripts to adapt the slave. It should
+#   SETUP-SCRIPTS is a list of shell scripts to adapt the executor node. It should
 #                create a ci user with its home in /home/ci
 #                and ends with writing to /home/ci/node_name the name
 #                of the jenkins node.
 
-# Slaves or ci.bazel.io
+# Executor nodes for ci.bazel.io
 SLAVES=(
     "ubuntu-14-04-slave-1 ubuntu-1404-lts ubuntu_14.04-x86_64-1 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-14-04-slave-2 ubuntu-1404-lts ubuntu_14.04-x86_64-2 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
@@ -68,7 +68,7 @@ SLAVES=(
     "ubuntu-14-04-benchmark-slave ubuntu-1404-lts ubuntu_14.04-x86_64-benchmark-1 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
 )
 
-# Master for ci.bazel.io
+# Jenkins controller for ci.bazel.io
 MASTER=(
     # VM name
     "jenkins"
@@ -84,7 +84,7 @@ MASTER=(
     "default"
 )
 
-# Slaves for ci-staging.bazel.io
+# Executor nodes for ci-staging.bazel.io
 STAGING_SLAVES=(
     "ubuntu-14-04-slave-staging ubuntu-1404-lts ubuntu_14.04-x86_64-staging europe-west1-d staging startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-16-04-slave-staging ubuntu-1604-lts ubuntu_16.04-x86_64-staging europe-west1-d staging startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
@@ -132,7 +132,7 @@ function create_master() {
          --address "$address" --disk "$disk"
 }
 
-# Create a slave named $1 whose image is $2 (see `gcloud compute image list`)
+# Create a node named $1 whose image is $2 (see `gcloud compute image list`)
 # and whose jenkins node name is $3. The other arguments are a list of setup
 # scripts to run as root on instance creation. The `jenkins-slave.sh` script
 # will be used as the startup script for the instance.
@@ -186,14 +186,14 @@ function create_slave() {
   gcloud compute instances stop "$TAG" \
       --zone "$LOCATION"
 
-  # Generating the start-up script for Windows MSVC slaves.
+  # Generating the start-up script for Windows MSVC nodes.
   if [[ $TAG == windows-msvc* ]]; then
     sed -e "s/MSVC_LABEL=''/MSVC_LABEL='-msvc'/g" jenkins-slave-windows.ps1 > jenkins-slave-windows-msvc.ps1
   fi
   gcloud compute instances add-metadata "$TAG" \
       --zone "$LOCATION" \
       --metadata-from-file "$STARTUP_METADATA"
-  # Delete the generated start-up script for Windows MSVC slaves.
+  # Delete the generated start-up script for Windows MSVC nodes.
   if [[ $TAG == windows-msvc* ]]; then
     rm jenkins-slave-windows-msvc.ps1
   fi
@@ -205,8 +205,8 @@ function create_slave() {
 # Updates the --metadata and --metadata-from-file values of an existing VM.
 #
 # Primary purpose is to propagate changes to the startup scripts (e.g.
-# mount-volumes.sh for master, jenkins-slave.sh for Ubuntu slaves, etc.) without
-# recreating the VM. The update needs a VM reboot to take effect.
+# mount-volumes.sh for the jenkins controller, jenkins-slave.sh for Ubuntu nodes,
+# etc.) without recreating the VM. The update needs a VM reboot to take effect.
 #
 # The gcloud command takes a few moments to complete so it is started as a
 # background job. Wait on its PID or job number (or %?gcloud) before exiting

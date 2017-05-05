@@ -222,7 +222,7 @@ PUBLIC_PERMS = [
     "Item.Read",  # Read the result of a build
     "Item.Workspace",  # Read a job workspace
     "View.Read",  # Read views
-    "Computer.Connect",  # Connect a new slave, needed by slaves
+    "Computer.Connect",  # Connect a new node, needed by the node themselves
 ]
 
 # Permissions for @google.com emails
@@ -237,11 +237,11 @@ ADMIN_PERMS = AUTHENTICATED_PERMS + [
     "View.Configure",  # Configure views
     "View.Create",  # Create a new view
     "View.Delete",  # Delete existing view
-    # Dangerous area: touch to slaves
-    "Computer.Disconnect",  # Disconnect a slave, normally never needed
-    "Computer.Configure",  # Configure a slave, normally never needed
-    "Computer.Delete",  # Delete a slave, almost never needed
-    "Computer.Build",  # Build on a slave, needed for debugging
+    # Dangerous area: touch to nodes 
+    "Computer.Disconnect",  # Disconnect a node, normally never needed
+    "Computer.Configure",  # Configure a node, normally never needed
+    "Computer.Delete",  # Delete a node, almost never needed
+    "Computer.Build",  # Build on a node, needed for debugging
     # Very dangerous area, administer jenkins
     "Hudson.Administer",  # Only used for restarting jenkins.
 ]

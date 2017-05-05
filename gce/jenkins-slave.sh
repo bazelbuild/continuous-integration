@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Startup script for our various *nix slaves.
+# Startup script for our various *nix executor nodes.
 # This is just setting up a slave to run.
 
 # We ignore errors on this script as we want to retry on errors.

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Scripts to configure a slave in a docker image.
+# Scripts to configure a Jenkins executor node in a docker image.
 
 # {{ variables.HOME_FS }} is replaced by the template engine.
 HOME_FS={{ variables.HOME_FS }}
@@ -37,7 +37,7 @@ for i in /opt/run/*.{,ba}sh; do
   fi
 done
 
-# Run the slaves
+# Run the jenkins agent
 JENKINS_SERVER=${JENKINS_SERVER:-{{ variables.JENKINS_SERVER }}}
 wget -nc ${JENKINS_SERVER}/jnlpJars/slave.jar || exit 1
 wget -nc ${JENKINS_SERVER}/computer/{{ variables.NODE_NAME }}/slave-agent.jnlp || exit 1

@@ -10,16 +10,16 @@ It will create the network and set-up the firewall rules correctly. If you needs
 regenerate those network rules, you can do `./gce/init.sh firewall prod` (respectively
 `./gce/init.sh firewall staging` for the staging instance).
 
-After this command, you can populate the `/volumes` drive of the Jenkins masters.
+After this command, you can populate the `/volumes` drive of the Jenkins controllers.
 
 # Volumes persistent disk
 
-The Jenkins master is connected to a persistent disk that is not erased between each build.
-This disk is mounted under `/volumes` on the master and has two folder:
+The Jenkins controller is connected to a persistent disk that is not erased between each build.
+This disk is mounted under `/volumes` on the controller and has two folder:
 
 * `secrets` for storing the various credentials needed for ci.
-* `jenkins_home` store permanent files for the jenkins master so we keep history even after
-   reimaging the slave.
+* `jenkins_home` store permanent files for the jenkins controller so we keep history
+   even after reimaging the controller.
 
 This drive is encrypted. It is created automatically by the `init.sh` script.
 
@@ -97,7 +97,7 @@ This drive is encrypted. It is created automatically by the `init.sh` script.
 
       Private and public SSH keys for pushing to github for syncing
       the gerrit repository and the GitHub repository. You can
-      generate it by SSH into the jenkins slave and typing
+      generate it by SSH into the node and typing
       `ssh-keygen -t rsa -b 4096 -C "noreply@bazel.io" -N ''
       -f /volumes/secrets/github_id_rsa`. You must add the public
       key to the list of deploy keys of all repositories to sync (i.e.,
@@ -105,7 +105,7 @@ This drive is encrypted. It is created automatically by the `init.sh` script.
 
    * `github_token`
 
-      The Jenkins master uses this to push Bazel releases to GitHub.
+      The Jenkins controller uses this to push Bazel releases to GitHub.
       This is the "Bazel Release Token" of the "Personal access tokens" of the
       "ci.bazel" user on GitHub.
 
@@ -114,7 +114,7 @@ This drive is encrypted. It is created automatically by the `init.sh` script.
 
    * `github_trigger_auth_token`
 
-      The Jenkins master uses this to post comments on GitHub pull
+      The Jenkins controller uses this to post comments on GitHub pull
       requests, e.g. "All tests passed". This is the "Jenkins GitHub Pull
       Request Builder" of the "Personal access tokens" of the "ci.bazel" user on
       GitHub.
@@ -131,4 +131,4 @@ This drive is encrypted. It is created automatically by the `init.sh` script.
 # Next
 
 You can now use the [`vm.sh` script to manipulate the Virtual Machines and
-the `setup_mac.sh` script to setup mac slaves](machines.md).
+the `setup_mac.sh` script to setup mac nodes](machines.md).

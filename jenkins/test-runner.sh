@@ -76,7 +76,7 @@ do
 done
 echo " ok."
 
-# Run slave, in priviledged mode for Bazel.
+# Run the executor nodes, in priviledged mode for Bazel.
 container1="$(docker run -d --privileged=true \
                 --link jenkins:jenkins --env JENKINS_SERVER=http://jenkins:${PORT} \
                 bazel:test-ubuntu-slave)"
@@ -87,7 +87,7 @@ container2="$(docker run -d --privileged=true \
 # Connect to the master container, until the user quit.
 docker attach jenkins
 
-# Kill slave and remove containers.
+# Kill the executor nodes and remove containers.
 docker rm -f "${container1}" > /dev/null
 docker rm -f "${container2}" > /dev/null
 docker rm -f jenkins > /dev/null

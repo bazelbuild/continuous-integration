@@ -1,6 +1,6 @@
 # Workflow
 
-**Note:** the first bazel build is going to stall for some time while 
+**Note:** the first bazel build is going to stall for some time while
 building the base images on docker without any output due to
 [bazelbuild/bazel#1289](https://github.com/bazelbuild/bazel/issues/1289).
 
@@ -26,13 +26,15 @@ change on ci-staging.bazel.io, so a complete cycle would looks like:
 
 ## Setting up for local testing
 
-There is a way to run a local jenkins instance with a docker slave, by running
+There is a way to run a local jenkins instance with a docker executor node,
+by running
+
 ```
 bazel run //jenkins:test [-- -p port]
 ```
 
 It will setup a Jenkins instance without security on port `port`
-(8080 by default) and one slave running Ubuntu Wily in Docker. This
+(8080 by default) and one node running Ubuntu Wily in Docker. This
 should be enough for local testing. To stop the instance, goes to
 `http://localhost:8080/safeExit` and this will shutdown cleanly.
 

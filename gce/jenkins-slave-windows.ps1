@@ -91,7 +91,7 @@ $bazel_version=$res.ResponseUri.AbsolutePath.TrimStart("/bazelbuild/bazel/releas
 
 # Download the latest bazel
 
-# This will be replaced in vm.sh with $MSVC_LABEL='-msvc' for Windows MSVC slaves
+# This will be replaced in vm.sh with $MSVC_LABEL='-msvc' for Windows MSVC nodes 
 $MSVC_LABEL=''
 $folder="c:\bazel_ci\installs\${BAZEL_VERSION}"
 $url="https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel${MSVC_LABEL}-${BAZEL_VERSION}-windows-x86_64.exe"
@@ -108,7 +108,7 @@ if ($MSVC_LABEL -eq '-msvc') { $ErrorActionPreference = 'Stop' }
 # create a junction, so shell out to mklink.
 cmd.exe /C mklink /j C:\bazel_ci\installs\latest $folder
 
-# On MSVC slaves, we still need to download a Bazel for bootstrap.
+# On MSVC nodes, we still need to download a Bazel for bootstrap.
 # TODO(pcloudy): Refactor this after MSVC Bazel is released.
 if ($MSVC_LABEL -eq '-msvc') {
   $folder="c:\bazel_ci\installs\bootstrap"
@@ -131,7 +131,7 @@ Write-Output $jnlp | Out-File -Encoding ascii slave-agent.jnlp
 # We can't execute Java directly because then it mysteriously fails with
 # "Sockets error: 10106: create", so we redirect through Powershell
 # The path change is needed because Jenkins cannot execute a different git
-# binary on different slaves, so we need to simply use "git"
+# binary on different nodes, so we need to simply use "git"
 $agent_script=@"
 `$env:path="c:\tools\msys64\usr\bin;`$env:path"
 cd c:\bazel_ci

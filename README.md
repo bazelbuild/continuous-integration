@@ -15,7 +15,7 @@ More documentation:
   care.
 * [`vm.sh`](docs/machines.md): lets you control the machines
   (e.g. start/stop them, create/delete/reimage them), including
-  the Jenkins master and the Jenkins slaves
+  the Jenkins controller and the executor nodes.
 * [workflow](docs/workflow.md): explains the CI workflow, and
   how you can test local changes with jenkins-staging
 * [jobs](docs/jobs.md): explains what jobs are running on the CI

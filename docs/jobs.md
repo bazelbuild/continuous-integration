@@ -9,8 +9,8 @@ Two categories of job run on ci.bazel.io: bootstrap/maintenance and projects.
 * `Github-Trigger`: a control job, launched by a Github webhook, that triggers the `Bazel` job
   if there is push to the master branch, to a release branch or to a release tag.
 * `Bazel`: bootstraps Bazel and triggers `Bazel-Install-Trigger`.
-* `Bazel-Install` installs Bazel on the slave it is running on.
-* `Bazel-Install-Trigger` triggers the `Bazel-Install` on all slaves
+* `Bazel-Install` installs Bazel on the nodes it is running on.
+* `Bazel-Install-Trigger` triggers the `Bazel-Install` on all nodes
   then trigger all the projects job.
 * `Bazel-Publish-Site`: build and publish the bazel.io site to GCS
   when the master branch is pushed. It is triggered by the `Bazel` job.
