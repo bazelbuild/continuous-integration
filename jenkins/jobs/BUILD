@@ -177,6 +177,7 @@ bazel_github_job(
         "//scripts/...",
         "//src/...",
         "//third_party/ijar/...",
+        "//tools/android/...",
     ],
     windows_targets = [
         "//src:bazel",
