@@ -26,7 +26,7 @@ exports_files(glob(["github-jobs*.tpl"]))
 
 DARWIN_PREFIX = "darwin-x86_64"
 
-DARWIN_COUNT = 2
+DARWIN_COUNT = 4
 
 WINDOWS_PREFIX = "windows-x86_64"
 
