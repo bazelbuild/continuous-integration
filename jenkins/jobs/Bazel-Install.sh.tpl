@@ -64,10 +64,10 @@ fi
 
 # Install bazel from HEAD
 install_bazel "$(find $PWD/bazel-installer -name '*.sh' | \
-  grep -F "PLATFORM_NAME=${PLATFORM}" | grep -Fv jdk7 | head -1)" \
+  grep -F "PLATFORM_NAME=${PLATFORM}" | grep -Fv jdk7 | grep -F without-jdk | head -1)" \
   ~/.bazel/HEAD
 install_bazel "$(find $PWD/bazel-installer -name '*.sh' | \
-  grep -F "PLATFORM_NAME=${PLATFORM}" | grep -F jdk7 | head -1)" \
+  grep -F "PLATFORM_NAME=${PLATFORM}" | grep -F jdk7 | grep -F without-jdk | head -1)" \
   ~/.bazel/HEAD-jdk7
 
 # Install latest Bazel if not yet installed
