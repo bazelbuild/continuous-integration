@@ -30,7 +30,17 @@ unzip android-ndk.zip
 rm android-ndk.zip
 
 # Install the Android SDK
-curl -so android-sdk.zip https://dl.google.com/android/android-sdk_r24.4.1-macosx.zip
-unzip android-sdk.zip
-rm android-sdk.zip
-(cd android-sdk-macosx && tools/android update sdk --no-ui)
+mkdir -p ~/android-sdk-macosx
+cd ~/android-sdk-macosx
+curl -o tools.zip https://dl.google.com/android/repository/sdk-tools-darwin-3859397.zip
+unzip tools.zip
+rm tools.zip
+expect -c '
+set timeout -1;
+spawn /Users/ci/android-sdk-macosx/tools/bin/sdkmanager --update
+expect {
+    "Accept? (y/N)" { exp_send "y\r" ; exp_continue }
+    eof
+}
+'
+tools/bin/sdkmanager "platforms;android-24" "platform-tools" "build-tools;24.0.3" "add-ons;addon-google_apis-google-24" "extras;android;m2repository"
