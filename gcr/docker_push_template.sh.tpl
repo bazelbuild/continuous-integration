@@ -15,6 +15,7 @@
 # limitations under the License.
 
 # This is a generated files that loads all docker layer built by "docker_push".
+set -eu
 
 RUNFILES="${PYTHON_RUNFILES:-${BASH_SOURCE[0]}.runfiles}"
 
@@ -57,3 +58,5 @@ function tag_last_load() {
 for tag in %{tags}; do
   "${GCLOUD}" docker -- push "%{repository}/${tag}"
 done
+
+echo "Successfully pushed."

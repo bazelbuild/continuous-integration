@@ -4,6 +4,26 @@
 building the base images on docker without any output due to
 [bazelbuild/bazel#1289](https://github.com/bazelbuild/bazel/issues/1289).
 
+## Prerequisites
+
+Docker:
+
+* You will need [at least 25GB](https://github.com/bazelbuild/continuous-integration/issues/73)
+  of free disk space.
+* Follow the instructions on [Ask Ubuntu](https://askubuntu.com/a/477554/671928)
+  for adding your user to the "docker" group.
+
+Gcloud:
+
+* You may need to authenticate and set the current project. To do so, run:
+
+```
+gcloud auth login
+gcloud set project bazel-public
+```
+
+## Pushing
+
 The classical worflow when modfiying ci.bazel.io is to first test the
 change on ci-staging.bazel.io, so a complete cycle would looks like:
 
@@ -22,7 +42,8 @@ change on ci-staging.bazel.io, so a complete cycle would looks like:
 8. Send the change to review, reverting the change in 3.
 9. Once LGTM, deploy to production with `bazel run //gcr:deploy`.
 10. Finally, restart the prod jenkins instance by going to
-   [http://ci.bazel.io/safeExit](http://ci.bazel.io/safeExit).
+   [http://ci.bazel.io/safeExit](http://ci.bazel.io/safeExit). If you are not
+   logged in, you may get a stack trace. Log in and try again.
 
 ## Setting up for local testing
 
