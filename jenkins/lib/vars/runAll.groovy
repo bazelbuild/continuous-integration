@@ -24,6 +24,7 @@ def call(params = [:]) {
   def statusOnUnstable = params.get("statusOnUnstable", "SUCCESS")
   def jobs = JenkinsUtils.jobs(folder).toArray()
   def toRun = [:]
+  def report = [:]
   for (int k = 0; k < jobs.length; k++) {
     def jobName = jobs[k]
     if (!(jobName in excludes)) {
@@ -35,6 +36,7 @@ def call(params = [:]) {
           } else if (r.result == "UNSTABLE") {
             currentBuild.result = statusOnUnstable
           }
+          report.put(jobName, r)
         } catch(error) {
           if (catchError) {
             echo "Catched ${error} from upstream job ${jobName}"
@@ -48,4 +50,6 @@ def call(params = [:]) {
   }
   jobs = null
   parallel(toRun)
+
+  return report
 }

@@ -117,9 +117,10 @@ echo "${RELEASE_EMAIL_CONTENT}" | tee output/ci/content
   // TODO(dmarting): trigger bazel install everywhere in case of release.
 }
 
-// Then we run all the job in the Global folder but myself
+// Then we run all jobs in the Global folder except the global pipeline job (the current job). 
+report = null
 stage("Test downstream jobs") {
-  runAll(folder: "Global",
+  report = runAll(folder: "Global",
          parameters: [
            [$class: 'TextParameterValue',
             name: 'EXTRA_BAZELRC',
@@ -131,4 +132,8 @@ stage("Test downstream jobs") {
             name: 'REFSPEC',
             value: "${params.REFSPEC}"]
          ])
+}
+
+stage("Publish report") {
+  reportAB report: report, name: "Downstream projects"
 }
