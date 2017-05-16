@@ -435,4 +435,8 @@ JENKINS_PLUGINS = {
         "1.3",
         "f05736bc7da0df3bba5ceb4d893089706812ced3134adb2edc9ae341467f1ae3",
     ],
+    "test-results-analyzer": [
+        "0.3.4",
+        "b3aa8c11d59a5c1ac007f86a054a259766bc64ee0ad91be0c2dd1981bce3c6f8",
+    ],
 }
