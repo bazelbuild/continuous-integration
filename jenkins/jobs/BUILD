@@ -101,24 +101,6 @@ bazel_github_job(
 
 bazel_git_job(
     name = "gerrit",
-    configure = ["""
-# Gerrit needs nodejs to be installed on the platform
-if [[ "${PLATFORM_NAME}" =~ .*darwin.* ]]; then
-  node_dir="node-v6.9.1-darwin-x64"
-else
-  node_dir="node-v6.9.1-linux-x64"
-fi
-if [ ! -d "${HOME}/node" ]; then
-  mkdir -p "${HOME}/node"
-  (cd "${HOME}/node" && curl "https://nodejs.org/dist/v6.9.1/${node_dir}.tar.gz" | tar zx)
-fi
-export PATH="${HOME}/node/${node_dir}/bin:${PATH}"
-# This is because bazel 0.4 has a bug, normally --action_env=PATH should be enough.
-# TODO(dmarting): Remove when bazel 0.4.1 get released.
-cat >>${ROOT}/bazel.bazelrc <<EOF
-build --action_env=PATH=${PATH}
-EOF
-"""],
     git_url = "https://gerrit.googlesource.com/gerrit",
     org = "GerritCodeReview",
     platforms = UNIX_PLATFORMS,

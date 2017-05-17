@@ -38,6 +38,8 @@ export ANDROID_NDK_PATH=$(echo $HOME/android-ndk-*)
 export ANDROID_SDK_BUILD_TOOLS_VERSION=$(ls $ANDROID_SDK_PATH/build-tools | sort -n | tail -1)
 export ANDROID_SDK_API_LEVEL=$(ls $ANDROID_SDK_PATH/platforms | cut -d '-' -f 2 | sort -n | tail -1)
 export ANDROID_NDK_API_LEVEL=$(ls $ANDROID_NDK_PATH/platforms | cut -d '-' -f 2 | sort -n | tail -1)
+export PATH=/Users/ci/node/node-v6.9.1-darwin-x64:$PATH
+
 chmod a+r slave-agent.jnlp
 
 while true; do

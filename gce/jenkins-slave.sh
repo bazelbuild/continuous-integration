@@ -35,7 +35,14 @@ if [[ "$NODE_NAME" =~ .*-staging$ ]]; then
   MASTER=jenkins-staging
 fi
 
+# Setup NodeJS
+if [ ! -d /home/ci/node ]; then
+  mkdir -p /home/ci/node
+  (cd /home/ci/node && curl "https://nodejs.org/dist/v6.9.1/node-v6.9.1-linux-x64.tar.gz" | tar zx)
+fi
+
 cd /home/ci
+
 # Setup the various android paths
 export ANDROID_SDK_PATH=$(echo /home/ci/android/android-sdk-*)
 export ANDROID_NDK_PATH=$(echo /home/ci/android/android-ndk-*)
@@ -74,6 +81,7 @@ function run_agent() {
       ANDROID_SDK_API_LEVEL=$ANDROID_SDK_API_LEVEL \
       ANDROID_NDK_PATH=$ANDROID_NDK_PATH \
       ANDROID_NDK_API_LEVEL=$ANDROID_NDK_API_LEVEL \
+      PATH=/home/ci/node/node-v6.9.1-linux-x64:$PATH \
       $(which java) -jar slave.jar -jnlpUrl file:///home/ci/slave-agent.jnlp -noReconnect
 }
 

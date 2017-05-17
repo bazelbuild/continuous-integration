@@ -60,5 +60,8 @@ curl "${MAC_SETUP_BASE_URL}/gce/bootstrap-bazel.sh" | bash
 # Install Android SDK
 curl "${MAC_SETUP_BASE_URL}/mac/mac-android.sh" | bash
 
+# Install Node JS
+curl "${MAC_SETUP_BASE_URL}/mac/mac-nodejs.sh" | bash
+
 # Install the service
 curl "${MAC_SETUP_BASE_URL}/mac/mac-service.sh" | bash
