@@ -1,0 +1,10 @@
+[
+    {
+        "node": "docker",
+        "variation": "",
+        "parameters": {
+            "targets": [],
+            "tests": ["//tools/cpp/test/..."]
+        }
+    }
+]

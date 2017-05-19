@@ -1,0 +1,15 @@
+[
+    {
+        "configurations": [
+            {
+                "variation": "",
+                "configurations": [
+                    // rules_dotnet is disabled on Linux until bazelbuild/rules_dotnet#13 is fixed.
+                    // {"node": "linux-x86_64"},
+                    // {"node": "ubuntu_16.04-x86_64"},
+                    {"node": "darwin-x86_64"}
+                ]
+            }
+        ]
+    }
+]

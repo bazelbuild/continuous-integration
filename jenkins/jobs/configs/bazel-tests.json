@@ -1,0 +1,129 @@
+// This is a relaxed JSON format, you can have comment in it.
+// This is a list of configuration for the bazel-tests job.
+[
+    {
+        // This is a configuration that have 3 subconfigurations: linux, ubuntu and darwin
+        // Each of those configurations have 4 bazel variations: HEAD, HEAD-jdk7, latest,
+        // and latest-jdk7
+        // A job configuration special keys are:
+        //   node -> indicate a node label to run the configuration on
+        //   variation -> an extra content to the bazel version
+        "configurations": [
+            {
+                "node": "linux-x86_64",
+                "configurations": [
+                    {"variation": ""},
+                    {"variation": "-jdk7"}
+                ]
+            },
+            {
+                "node": "ubuntu_16.04-x86_64",
+                "configurations": [
+                    {"variation": ""},
+                    {"variation": "-jdk7"}
+                ]
+            }
+        ],
+        // And specify the parameters for these configurations, which can be:
+        //   configure: list of configuration step to run before bazel
+        //   tests: tests to execute, default to ["//..."]
+        //   targets: targets to build, default to ["//..."]
+        //   test_tag_filters: tag to filter test (-noci and -manual are automatically added)
+        //   build_tag_filters: tag to filter target to build
+        //   test_opts: test options
+        //   build_opts: build options
+        "parameters": {
+            "configure": [
+                "echo >>WORKSPACE",
+                "cat >>WORKSPACE <<EOF",
+                "android_sdk_repository(",
+                "    name = \"androidsdk\",",
+                "    path = \"${ANDROID_SDK_PATH}\",",
+                ")",
+                "android_ndk_repository(",
+                "    name = \"androidndk\",",
+                "    path = \"${ANDROID_NDK_PATH}\",",
+                ")",
+                "EOF"
+          ],
+            "test_opts": ["-k", "--build_tests_only"],
+            "tests": [
+                "//scripts/...",
+                "//src/...",
+                "//third_party/ijar/...",
+                "//tools/android/..."
+            ],
+            "targets": []
+        }
+    }, {
+        "node": "darwin-x86_64",
+        "configurations": [
+            {"variation": ""},
+            {"variation": "-jdk7"}
+        ],
+        "parameters": {
+            "configure": [
+                "echo >>WORKSPACE",
+                "cat >>WORKSPACE <<EOF",
+                "android_sdk_repository(",
+                "    name = \"androidsdk\",",
+                "    path = \"${ANDROID_SDK_PATH}\",",
+              ")",
+                "android_ndk_repository(",
+                "    name = \"androidndk\",",
+                "    path = \"${ANDROID_NDK_PATH}\",",
+                ")",
+                "EOF"
+            ],
+            "build_opts": ["--define IPHONE_SDK=1"],
+            "test_opts": ["-k", "--build_tests_only"],
+            "tests": [
+                "//scripts/...",
+                "//src/...",
+                "//third_party/ijar/...",
+                "//tools/android/..."
+            ],
+            "targets": []
+        }
+    }, {
+        "toolchain": "msvc",
+        "configurations": [{
+            // TODO(dmarting): MSVC is a misnommer, it should have been called win32
+            // (for win32 native binary).
+            // TODO(dmarting): really MSVC/Win32 should be a bazel variation, not part of
+            // the node.
+            "node": "windows-msvc-x86_64",
+            "variation": ""
+        }, {
+            "node": "windows-x86_64",
+            "variation": ""
+        }],
+        "parameters": {
+            "test_opts": ["-k", "--build_tests_only"],
+            "tests": [
+                "//src/test/java/...",
+                "//src/test/cpp/...",
+                "//src/test/native:all_tests"
+            ],
+            "targets": ["//src:bazel"]
+        }
+    }, {
+        "toolchain": "msys",
+        "configurations": [{
+            // TODO(dmarting): MSVC is a misnommer, it should have been called win32
+            // (for win32 native binary).
+            // TODO(dmarting): really MSVC/Win32 should be a bazel variation, not part of
+            // the node.
+            "node": "windows-msvc-x86_64",
+            "variation": ""
+        }, {
+            "node": "windows-x86_64",
+            "variation": ""
+        }],
+        "parameters": {
+            "test_opts": ["-k", "--build_tests_only"],
+            "tests": ["//src/tst/shell/bazel:bazel_windows_example_test"],
+            "targets": []
+        }
+    }
+]

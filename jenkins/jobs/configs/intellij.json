@@ -1,0 +1,60 @@
+[
+    {
+        "product": "intellij",
+        "configurations": [
+            {
+                "variation": "",
+                "configurations": [
+                    {"node": "linux-x86_64"},
+                    {"node": "ubuntu_16.04-x86_64"},
+                    {"node": "darwin-x86_64"}
+                ]
+            }
+        ],
+        "parameters": {
+            "targets": ["ijwb:ijwb_bazel"],
+            "test_opts": ["--define=ij_product=intellij-latest"],
+            "build_opts": ["--define=ij_product=intellij-latest"],
+            "tests": [":ijwb_tests"]
+        }
+    },
+    {
+        "product": "clion",
+        "configurations": [
+            {
+                "variation": "",
+                "configurations": [
+                    {"node": "linux-x86_64"},
+                    {"node": "ubuntu_16.04-x86_64"},
+                    {"node": "darwin-x86_64"}
+                ]
+            }
+        ],
+        "parameters": {
+            "targets": ["clwb:clwb_bazel"],
+            "test_opts": ["--define=ij_product=clion-latest"],
+            "build_opts": ["--define=ij_product=clion-latest"],
+            "tests": [":clwb_tests"]
+        }
+    }//,
+    // TODO(dmarting): Reenable android-studio when upstream is fixed
+    // {
+    //     "name": "android-studio",
+    //     "configurations": [
+    //         {
+    //             "variation": "",
+    //             "configurations": [
+    //                 {"node": "linux-x86_64"},
+    //                 {"node": "ubuntu_16.04-x86_64"},
+    //                 {"node": "darwin-x86_64"}
+    //             ]
+    //         }
+    //     ],
+    //     "parameters": {
+    //         "targets": ["aswb:aswb_bazel"],
+    //         "test_opts": ["--define=ij_product=android-studio-latest"],
+    //         "build_opts": ["--define=ij_product=android-studio-latest"],
+    //         "tests": [":aswb_tests"]
+    //     }
+    // }
+]

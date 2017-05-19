@@ -1,0 +1,20 @@
+[
+    {
+        "configurations": [
+            {
+                "variation": "",
+                "configurations": [
+                    {"node": "linux-x86_64"},
+                    {"node": "ubuntu_16.04-x86_64"}
+                ]
+            }
+        ],
+        "parameters": {
+            "configure": [
+                "(cd tensorflow && ./tensorflow/tools/ci_build/builds/configured CPU)"
+            ],
+            "tests": ["tensorflow_serving/..."],
+            "targets": []
+        }
+    }
+]

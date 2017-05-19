@@ -1,0 +1,31 @@
+[
+    {
+        "configurations": [
+            {
+                "variation": "",
+                "configurations": [
+                    {"node": "linux-x86_64"},
+                    {"node": "ubuntu_16.04-x86_64"},
+                    {"node": "darwin-x86_64"}
+                ]
+            }
+        ],
+        "parameters": {
+            "configure": [
+                "echo >>WORKSPACE",
+                "cat >>WORKSPACE <<EOF",
+                "android_sdk_repository(",
+                "    name = \"androidsdk\",",
+                "    path = \"${ANDROID_SDK_PATH}\",",
+                ")",
+                "android_ndk_repository(",
+                "    name = \"androidndk\",",
+                "    path = \"${ANDROID_NDK_PATH}\",",
+                ")",
+                "EOF"
+            ],
+            "targets": ["//:all"],
+            "tests": []
+        }
+    }
+]
