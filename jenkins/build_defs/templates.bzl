@@ -20,10 +20,11 @@ def _expand_template_impl(ctx):
       "--variable=%s=%s" % (k, ctx.attr.substitutions[k])
       for k in ctx.attr.substitutions
   ]
-  imports = [
-      "--imports=%s=%s" % (ctx.attr.deps[i].label, ctx.files.deps[i].path)
-      for i in range(0, len(ctx.attr.deps))
-  ]
+  d = {str(ctx.attr.deps[i].label): ctx.files.deps[i].path
+       for i in range(0, len(ctx.attr.deps))}
+  imports = ["--imports=%s=%s" % (k, d[k]) for k in d]
+  imports += ["--imports=%s=%s" % (k, d[str(ctx.label.relative(ctx.attr.deps_aliases[k]))])
+              for k in ctx.attr.deps_aliases]
   ctx.action(
       executable = ctx.executable._engine,
       arguments = [
@@ -43,6 +44,7 @@ expand_template = rule(
             single_file = True,
         ),
         "deps": attr.label_list(default = [], allow_files = True),
+        "deps_aliases": attr.string_dict(default = {}),
         "substitutions": attr.string_dict(mandatory = True),
         "out": attr.output(mandatory = True),
         "executable": attr.bool(default = True),

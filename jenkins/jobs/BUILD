@@ -3,6 +3,7 @@ load(
     ":jobs.bzl",
     "LINUX_PLATFORMS",
     "UNIX_PLATFORMS",
+    "DARWIN_PLATFORMS",
     "WINDOWS_PLATFORMS",
     "WINDOWS_MSVC_PLATFORMS",
     "ALL_PLATFORMS",
@@ -42,6 +43,7 @@ jenkins_job(
 bazel_github_job(
     name = "TensorFlow",
     build_opts = ["-c opt"],
+    config = ":configs/tensorflow.json",
     configure = ["./tensorflow/tools/ci_build/builds/configured CPU"],
     org = "tensorflow",
     platforms = LINUX_PLATFORMS + WINDOWS_PLATFORMS + WINDOWS_MSVC_PLATFORMS,
@@ -66,6 +68,7 @@ bazel_github_job(
 
 bazel_github_job(
     name = "TensorFlow_Serving",
+    config = ":configs/tensorflow_serving.json",
     configure = ["(cd tensorflow && ln -s ../.bazelrc && ./tensorflow/tools/ci_build/builds/configured CPU)"],
     org = "tensorflow",
     platforms = LINUX_PLATFORMS,
@@ -76,6 +79,7 @@ bazel_github_job(
 
 bazel_github_job(
     name = "tf_models_syntaxnet",
+    config = ":configs/tf_models_syntaxnet.json",
     configure = ["(cd tensorflow && ln -s ../.bazelrc && ./tensorflow/tools/ci_build/builds/configured CPU)"],
     org = "tensorflow",
     platforms = LINUX_PLATFORMS,
@@ -90,6 +94,7 @@ bazel_github_job(
 
 bazel_github_job(
     name = "Tutorial",
+    config = ":configs/tutorial.json",
     configure = ["source ./ci/setup_android_repositories.sh"],
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
@@ -101,6 +106,7 @@ bazel_github_job(
 
 bazel_git_job(
     name = "gerrit",
+    config = ":configs/gerrit.json",
     git_url = "https://gerrit.googlesource.com/gerrit",
     org = "GerritCodeReview",
     platforms = UNIX_PLATFORMS,
@@ -116,6 +122,7 @@ bazel_github_job(
         "HEAD",
         "latest",
     ],
+    config = ":configs/bazel-docker-tests.json",
     enable_trigger = False,
     org = "bazelbuild",
     platforms = ["docker"],
@@ -123,6 +130,7 @@ bazel_github_job(
     project = "bazel",
     targets = [],
     tests = ["//tools/cpp/test/..."],
+    substitutions = {"GLOBAL_USE_UPSTREAM_BRANCH": "True"},
 )
 
 bazel_github_job(
@@ -142,6 +150,7 @@ bazel_github_job(
         "HEAD",
         "latest",
     ],
+    config = ":configs/continuous-integration.json",
     gerrit_project = "continuous-integration",
     org = "bazelbuild",
     platforms = ["docker"],
@@ -155,6 +164,7 @@ bazel_github_job(
         "latest",
         "latest-jdk7",
     ],
+    config = ":configs/bazel-tests.json",
     configure = [
         "source scripts/ci/build.sh",
         "setup_android_repositories",
@@ -191,10 +201,12 @@ bazel_github_job(
     windows_tests_msys = [
         "//src/test/shell/bazel:bazel_windows_example_test",
     ],
+    substitutions = {"GLOBAL_USE_UPSTREAM_BRANCH": "True"},
 )
 
 bazel_github_job(
     name = "buildifier",
+    config = ":configs/buildifier.json",
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
     # Repository was renamed
@@ -205,6 +217,7 @@ bazel_github_job(
 
 bazel_github_job(
     name = "rules_scala",
+    config = ":configs/rules_scala.json",
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
     targets = ["//test/..."],
@@ -213,6 +226,7 @@ bazel_github_job(
 
 bazel_github_job(
     name = "rules_rust",
+    config = ":configs/rules_rust.json",
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
     targets = [
@@ -225,8 +239,17 @@ bazel_github_job(
     ],
 )
 
+# Special case rules_dotnet that runs only on darwin platforms
+bazel_github_job(
+    name = "rules_dotnet",
+    config = ":configs/rules_dotnet.json",
+    org = "bazelbuild",
+    platforms = DARWIN_PLATFORMS,
+)
+
 bazel_github_job(
     name = "rules_jsonnet",
+    config = ":configs/rules_jsonnet.json",
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
     targets = [
@@ -242,8 +265,8 @@ bazel_github_job(
 [bazel_github_job(
     name = job,
     org = "bazelbuild",
-    platforms = RULES[job],
-) for job in RULES.keys()]
+    platforms = UNIX_PLATFORMS,
+) for job in RULES]
 
 # rules_web was renamed to rules_webtesting, keep the legacy name
 # for the job to keep history but use the new project name.
@@ -266,6 +289,7 @@ bazel_github_job(
 bazel_github_job(
     name = "intellij",
     build_opts = ["--define=ij_product=intellij-latest"],
+    config = ":configs/intellij.json",
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
     project = "intellij",
@@ -278,6 +302,8 @@ bazel_github_job(
 bazel_github_job(
     name = "intellij-android-studio",
     build_opts = ["--define=ij_product=android-studio-latest"],
+    # All config of Intellij are tested by the intellij job now
+    config = "",
     enabled = False,
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
@@ -291,6 +317,8 @@ bazel_github_job(
 bazel_github_job(
     name = "intellij-clion",
     build_opts = ["--define=ij_product=clion-latest"],
+    # All config of Intellij are tested by the intellij job now
+    config = "",
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
     project = "intellij",
@@ -308,7 +336,9 @@ bazel_github_job(
 
 [bazel_github_job(
     name = n,
+    config = ":configs/%s.json" % n,
     platforms = UNIX_PLATFORMS,
+    org = "google",
     # on Linux protobuf tries to build objc target so filter by test only
     targets = [],
     tests = [":all"],

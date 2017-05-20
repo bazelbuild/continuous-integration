@@ -17,7 +17,10 @@
 load(":templates.bzl", "expand_template")
 load(":vars.bzl", "MAIL_SUBSTITUTIONS")
 
-def jenkins_job(name, config, substitutions = {}, deps = [],
+def _to_groovy_list(lst):
+  return "[%s]" % (",".join(['"%s"' % e for e in lst]))
+
+def jenkins_job(name, config, substitutions = {}, deps = [], deps_aliases = {},
                 project='bazel', org='bazelbuild', git_url=None, project_url=None,
                 folder=None, platforms=[], test_platforms=["linux-x86_64"],
                 create_filegroups=True):
@@ -47,6 +50,7 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
     git_url = github_url
   if not project_url:
     project_url = git_url
+  deps += [deps_aliases[k] for k in deps_aliases]
   substitutions = substitutions + {
       "GITHUB_URL": github_url,
       "GIT_URL": git_url,
@@ -55,21 +59,28 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
       "PLATFORMS": "\n".join(platforms),
       } + MAIL_SUBSTITUTIONS
   substitutions["SEND_EMAIL"] = "1"
+  # RESTRICT_CONFIGURATION can be use to restrict configuration of the groovy jobs
+  if (not "RESTRICT_CONFIGURATION" in substitutions) or (
+      not substitutions["RESTRICT_CONFIGURATION"]):
+    substitutions["RESTRICT_CONFIGURATION"] = "[:]"
   expand_template(
       name = name,
       template = config,
       out = "%s.xml" % name,
       deps = deps,
+      deps_aliases = deps_aliases,
       substitutions = substitutions,
     )
   if create_filegroups:
     native.filegroup(name = name + "/all", srcs = [name])
   substitutions["SEND_EMAIL"] = "0"
+  substitutions["BAZEL_BUILD_RECIPIENT"] = ""
   expand_template(
       name = name + "-staging",
       template = config,
       out = "%s-staging.xml" % name,
       deps = deps,
+      deps_aliases = deps_aliases,
       substitutions = substitutions,
     )
   if create_filegroups:
@@ -77,11 +88,13 @@ def jenkins_job(name, config, substitutions = {}, deps = [],
 
   if test_platforms:
     substitutions["PLATFORMS"] = "\n".join(test_platforms)
+    substitutions["RESTRICT_CONFIGURATION"] += " + [node:%s]" % _to_groovy_list(test_platforms)
     expand_template(
       name = name + "-test",
       template = config,
       out = "%s-test.xml" % name,
       deps = deps,
+      deps_aliases = deps_aliases,
       substitutions = substitutions,
     )
     if create_filegroups:
@@ -106,6 +119,7 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
                      test_opts=["--test_output=errors", "--build_tests_only"],
                      test_tag_filters=["-noci", "-manual"],
                      build_opts=["--verbose_failures"],
+                     config="//jenkins/build_defs:default.json",
                      test_platforms=["linux-x86_64"],
                      enable_trigger=True,
                      gerrit_project=None,
@@ -117,10 +131,12 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
   """Create a generic github job configuration to build against Bazel head."""
   if not project:
     project = name
+
   substitutions = substitutions + {
     "WORKSPACE": workspace,
     "PROJECT_NAME": project,
     "BRANCH": branch,
+    "NAME": name,
     "CONFIGURE": "\n".join(configure),
     "WINDOWS_CONFIGURE": "\n".join(windows_configure),
     "TEST_OPTS": " ".join(test_opts),
@@ -166,6 +182,25 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
 
   substitutions["BAZEL_VERSIONS"] = "\n".join([
       v for v in bazel_versions if not v.startswith("HEAD")])
+
+  if enabled and config:
+    jenkins_job(
+        name = "Global/" + name,
+        config = "//jenkins/build_defs:bazel-job-Global.xml.tpl",
+        deps_aliases = {
+          "JSON_CONFIGURATION": config,
+        },
+        substitutions=substitutions,
+        project=project,
+        org=org,
+        project_url=project_url,
+        platforms=platforms,
+        test_platforms=test_platforms,
+        create_filegroups=False)
+    all_files.append("Global/%s.xml" % name)
+    test_files.append("Global/%s-test.xml" % name)
+    staging_files.append("Global/%s-staging.xml" % name)
+
   if pr_enabled:
     jenkins_job(
         name = "PR/" + name,

@@ -15,22 +15,20 @@ UNIX_PLATFORMS = LINUX_PLATFORMS + DARWIN_PLATFORMS
 
 ALL_PLATFORMS = UNIX_PLATFORMS + WINDOWS_PLATFORMS + WINDOWS_MSVC_PLATFORMS
 
-RULES = {
-    "rules_appengine": UNIX_PLATFORMS,
-    "rules_closure": UNIX_PLATFORMS,
-    "rules_d": UNIX_PLATFORMS,
-    # rules_dotnet is disabled on Linux until bazelbuild/rules_dotnet#13 is fixed.
-    "rules_dotnet": DARWIN_PLATFORMS,
-    "rules_go": UNIX_PLATFORMS,
-    "rules_sass": UNIX_PLATFORMS,
-    "rules_gwt": UNIX_PLATFORMS,
-    "rules_groovy": UNIX_PLATFORMS,
-    "rules_perl": UNIX_PLATFORMS,
-    "rules_docker": UNIX_PLATFORMS,
+RULES = [
+    "rules_appengine",
+    "rules_closure",
+    "rules_d",
+    "rules_go",
+    "rules_sass",
+    "rules_gwt",
+    "rules_groovy",
+    "rules_perl",
+    "rules_docker",
     # These are not really rules, but it is simpler to put here.
-    "skydoc": UNIX_PLATFORMS,
-    "bazel-watcher": UNIX_PLATFORMS,
-}
+    "skydoc",
+    "bazel-watcher",
+]
 
 DISABLED_RULES = []
 
@@ -48,6 +46,8 @@ GITHUB_JOBS = [
     "re2",
     "protobuf",
     "gerrit",
+    # rules_dotnet is disabled on Linux until bazelbuild/rules_dotnet#13 is fixed.
+    "rules_dotnet",
     # rules_web was renamed to rules_webtesting, keep the legacy name
     # for the job to keep history but use the new project name.
     "rules_web",
@@ -58,7 +58,7 @@ GITHUB_JOBS = [
     "rules_jsonnet",
     "rules_rust",
     "rules_scala",
-] + GERRIT_JOBS + RULES.keys() + DISABLED_RULES
+] + GERRIT_JOBS + RULES + DISABLED_RULES
 
 NO_PR_JOBS = ["bazel-docker-tests"]
 
