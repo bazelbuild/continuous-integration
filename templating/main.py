@@ -68,11 +68,13 @@ class OneFileLoader(jinja2.BaseLoader):
     return source, self.path, lambda: mtime == os.path.getmtime(self.path)
 
 
-def expand_template(template, variables, imports):
+def expand_template(template, variables, imports, raw_imports=None):
   """Expand a template."""
+  if raw_imports is None:
+    raw_imports = imports
   env = jinja2.Environment(loader=OneFileLoader(template))
   template = env.get_template(template)
-  return template.render(imports=imports, variables=variables)
+  return template.render(imports=imports, variables=variables, raw_imports=raw_imports)
 
 def quote_xml(d):
   """Returns a copy of d where all values where escaped for XML."""
@@ -99,10 +101,11 @@ def main(flags, unused_argv):
       sys.exit(-1)
     variables[kv[0]] = kv[1]
   imports = construct_imports(variables, flags.imports)
+  raw_imports = imports
   if flags.escape_xml:
     imports = quote_xml(imports)
     variables = quote_xml(variables)
-  result = expand_template(flags.template, variables, imports)
+  result = expand_template(flags.template, variables, imports, raw_imports)
   with open(flags.output, "w") as f:
     f.write(result)
   if flags.executable:

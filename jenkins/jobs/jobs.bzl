@@ -65,6 +65,7 @@ NO_PR_JOBS = ["bazel-docker-tests"]
 BAZEL_STAGING_JOBS = {
     "Bazel": ALL_PLATFORMS + BSD_PLATFORMS,
     "Github-Trigger": UNIX_PLATFORMS,
+    "Global/pipeline": [],
     "Bazel-Install": [],
     "Bazel-Install-Trigger": [],
 }
