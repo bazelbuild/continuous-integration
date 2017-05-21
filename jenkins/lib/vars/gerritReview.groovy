@@ -33,9 +33,10 @@ def call(String server, String cookiesFile, String reviewer, changeNum, branch, 
     body.delegate = config
     body()
   } finally {
-    def verified = config.gerritBuild.result == "SUCCESS" ? "+" : "-"
-    echo "Setting ${verified}Verified to change ${url} after build returned ${config.gerritBuild.result}"
-    gerrit.review(changeNum, branch, config.gerritBuild.result == "SUCCESS" ? 1 : -1,
-                  "Build ${config.gerritBuild.getAbsoluteUrl()} finished with status ${config.gerritBuild.result}")
+    def result = config.gerritBuild.result == null ? "SUCCESS" : config.gerritBuild.result
+    def verified = result == "SUCCESS" ? "+" : "-"
+    echo "Setting ${verified}Verified to change ${url} after build returned ${result}"
+    gerrit.review(changeNum, branch, result == "SUCCESS" ? 1 : -1,
+                  "Build ${config.gerritBuild.getAbsoluteUrl()} finished with status ${result}")
   }
 }

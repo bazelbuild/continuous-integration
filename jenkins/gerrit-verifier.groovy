@@ -24,23 +24,19 @@ GerritUtils gerrit = new GerritUtils(
 def buildChange(gerrit, change) {
   def refspec = "+" + change.ref + ":" + change.ref.replaceAll('ref/', 'ref/remotes/origin/')
   def jobs = JenkinsUtils.jobsWithDescription("CR", "Gerrit project: " + change.project + ".")
-  def changeUrl = gerrit.url(change.number, change.patchNumber)
+
   if (jobs != null && !jobs.empty) {
     gerrit.addReviewer(change.number)
     for(job in jobs) {
-      gerritReview(gerrit.server, "/opt/secrets/gerritcookies", gerrit.reviewer, change.number, change.sha1) {
-        // gerritBuild is a trick to propagate the result, the gerritReview step should live in the side of
-        // the child job.
-        delegate.gerritBuild = build job: job, propagate: false, parameters: [
-          [$class: 'StringParameterValue', name: 'REFSPEC', value: refspec],
-          [$class: 'StringParameterValue', name: 'BRANCH', value: change.sha1],
-          [$class: 'StringParameterValue', name: 'CHANGE_URL', value: changeUrl]]
-      }
+      build job: job, propagate: false, wait: false, parameters: [
+        [$class: 'StringParameterValue', name: 'REFSPEC', value: refspec],
+        [$class: 'StringParameterValue', name: 'BRANCH', value: change.sha1],
+        [$class: 'StringParameterValue', name: 'CHANGE_NUMBER', value: change.number.toString()]]
     }
   }
 }
 
-timeout(240) {
+timeout(2) {
   def changes = [:]
   // Get open gerrit changes that were verified but not yet processed
   stage("Get changes") {

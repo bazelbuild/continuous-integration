@@ -226,13 +226,10 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
   if gerrit_project != None:
     jenkins_job(
         name = "CR/" + name,
-        config = "//jenkins/build_defs:github-jobs-Gerrit.xml.tpl",
-        deps = [
-            "//jenkins/build_defs:github-jobs.sh.tpl",
-            "//jenkins/build_defs:github-jobs.bat.tpl",
-            "//jenkins/build_defs:github-jobs.test-logs.sh.tpl",
-            "//jenkins/build_defs:github-jobs.test-logs.bat.tpl",
-        ],
+        config = "//jenkins/build_defs:bazel-job-Gerrit.xml.tpl",
+        deps_aliases = {
+          "JSON_CONFIGURATION": config,
+        },
         substitutions=substitutions,
         project=project,
         org=org,
