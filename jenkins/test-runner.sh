@@ -42,9 +42,9 @@ while getopts ":p:" opt; do
 done
 
 # Load all images.
-./io_bazel_ci/jenkins/ubuntu-docker.docker bazel:test-ubuntu-slave
-./io_bazel_ci/jenkins/deploy.docker bazel:test-deploy-slave
-./io_bazel_ci/jenkins/jenkins-test bazel:jenkins-test
+./io_bazel_ci/jenkins/ubuntu-docker.docker
+./io_bazel_ci/jenkins/deploy.docker
+./io_bazel_ci/jenkins/jenkins-test
 
 # Run main container, serving jenkins on port provided by the first argument,
 # defaulting to 8080.
@@ -54,7 +54,7 @@ docker run -d \
   --name jenkins \
   -p "${PORT}:8080" \
   -p 50000:50000 \
-  bazel:jenkins-test >/dev/null
+  bazel/jenkins:jenkins-test >/dev/null
 
 test_http() {
   return [[ "$(curl -sI "$1")" =~ ^HTTP/[0-9.]+\ 2 ]]
@@ -79,10 +79,10 @@ echo " ok."
 # Run the executor nodes, in priviledged mode for Bazel.
 container1="$(docker run -d --privileged=true \
                 --link jenkins:jenkins --env JENKINS_SERVER=http://jenkins:${PORT} \
-                bazel:test-ubuntu-slave)"
+                bazel/jenkins:ubuntu-docker.docker)"
 container2="$(docker run -d --privileged=true \
                 --link jenkins:jenkins --env JENKINS_SERVER=http://jenkins:${PORT} \
-                bazel:test-deploy-slave)"
+                bazel/jenkins:deploy.docker)"
 
 # Connect to the master container, until the user quit.
 docker attach jenkins
