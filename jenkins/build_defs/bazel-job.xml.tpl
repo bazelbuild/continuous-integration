@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job">
+  <actions/>
+  <description>Test the {{ variables.PROJECT_NAME }} project located at {{ variables.GIT_URL }}.</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    {% if variables.RUN_SEQUENTIAL == "true" %}
+    <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty/>
+    {% endif %}
+    {% if variables.github == "True" %}
+    <com.coravy.hudson.plugins.github.GithubProjectProperty>
+      <projectUrl>{{ variables.GITHUB_URL }}</projectUrl>
+    </com.coravy.hudson.plugins.github.GithubProjectProperty>
+    {% endif %}
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers>
+        {% if variables.enable_trigger == "true" %}
+        <com.cloudbees.jenkins.GitHubPushTrigger>
+          <spec></spec>
+        </com.cloudbees.jenkins.GitHubPushTrigger>
+        {% endif %}
+      </triggers>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
+    <script><![CDATA[
+bazelCiConfiguredJob(
+    repository: "{{ variables.GIT_URL }}",
+    branch: "{{ variables.BRANCH }}",
+    bazel_version: "latest",
+    configuration: '''{{ raw_imports['JSON_CONFIGURATION'].replace('\\', '\\\\').replace("'", "\\'") }}''',
+    workspace: "{{ variables.WORKSPACE }}",
+    mail_recipient: "{{ variables.BAZEL_BUILD_RECIPIENT }}",
+    {% if variables.SAUCE_ENABLED == "true" %}
+    sauce: "61b4846b-279d-4369-ae20-31e9d8b9bc66",
+    {% endif %}
+    run_sequentially: {{ variables.RUN_SEQUENTIAL }},
+    restrict_configuration: {{ variables.RESTRICT_CONFIGURATION }}
+)
+    ]]></script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <quietPeriod>5</quietPeriod>
+</flow-definition>

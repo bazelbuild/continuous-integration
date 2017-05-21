@@ -166,13 +166,10 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
 
   jenkins_job(
       name = name,
-      config = "//jenkins/build_defs:github-jobs.xml.tpl",
-      deps = [
-          "//jenkins/build_defs:github-jobs.sh.tpl",
-          "//jenkins/build_defs:github-jobs.bat.tpl",
-          "//jenkins/build_defs:github-jobs.test-logs.sh.tpl",
-          "//jenkins/build_defs:github-jobs.test-logs.bat.tpl",
-      ],
+      config = "//jenkins/build_defs:bazel-job.xml.tpl",
+      deps_aliases = {
+        "JSON_CONFIGURATION": config,
+      },
       substitutions=substitutions,
       git_url=git_url,
       project=project,

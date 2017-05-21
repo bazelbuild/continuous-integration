@@ -50,8 +50,6 @@ GITHUB_JOBS = [
     # for the job to keep history but use the new project name.
     "rules_web",
     "intellij",
-    "intellij-android-studio",
-    "intellij-clion",
     "buildifier",
     "rules_jsonnet",
     "rules_rust",

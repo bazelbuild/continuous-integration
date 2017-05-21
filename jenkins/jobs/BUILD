@@ -324,35 +324,6 @@ bazel_github_job(
 )
 
 bazel_github_job(
-    name = "intellij-android-studio",
-    build_opts = ["--define=ij_product=android-studio-latest"],
-    # All config of Intellij are tested by the intellij job now
-    config = "",
-    enabled = False,
-    org = "bazelbuild",
-    platforms = UNIX_PLATFORMS,
-    project = "intellij",
-    project_url = "https://ij.bazel.io",
-    targets = ["aswb:aswb_bazel"],
-    test_opts = ["--define=ij_product=android-studio-latest"],
-    tests = [":aswb_tests"],
-)
-
-bazel_github_job(
-    name = "intellij-clion",
-    build_opts = ["--define=ij_product=clion-latest"],
-    # All config of Intellij are tested by the intellij job now
-    config = "",
-    org = "bazelbuild",
-    platforms = UNIX_PLATFORMS,
-    project = "intellij",
-    project_url = "https://ij.bazel.io",
-    targets = ["clwb:clwb_bazel"],
-    test_opts = ["--define=ij_product=clion-latest"],
-    tests = [":clwb_tests"],
-)
-
-bazel_github_job(
     name = "migration-tooling",
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
