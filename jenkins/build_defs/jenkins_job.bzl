@@ -202,16 +202,13 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
     test_files.append("Global/%s-test.xml" % name)
     staging_files.append("Global/%s-staging.xml" % name)
 
-  if pr_enabled:
+  if pr_enabled and config:
     jenkins_job(
         name = "PR/" + name,
-        config = "//jenkins/build_defs:github-jobs-PR.xml.tpl",
-        deps = [
-            "//jenkins/build_defs:github-jobs.sh.tpl",
-            "//jenkins/build_defs:github-jobs.bat.tpl",
-            "//jenkins/build_defs:github-jobs.test-logs.sh.tpl",
-            "//jenkins/build_defs:github-jobs.test-logs.bat.tpl",
-        ],
+        config = "//jenkins/build_defs:bazel-job-PR.xml.tpl",
+        deps_aliases = {
+          "JSON_CONFIGURATION": config,
+        },
         substitutions=substitutions,
         project=project,
         org=org,
@@ -223,7 +220,7 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
     test_files.append("PR/%s-test.xml" % name)
     staging_files.append("PR/%s-staging.xml" % name)
 
-  if gerrit_project != None:
+  if gerrit_project:
     jenkins_job(
         name = "CR/" + name,
         config = "//jenkins/build_defs:bazel-job-Gerrit.xml.tpl",

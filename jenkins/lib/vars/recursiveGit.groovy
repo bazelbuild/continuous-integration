@@ -29,7 +29,7 @@ def call(config = [:]) {
   if (!("repository" in config)) {
     error("recursiveGit needs a repository parameter")
   }
-  def branch = config.branch.matches('^[a-f0-9]+$') ? config.branch : ("*/" + config.branch)
+  def branch = config.branch.matches('^([a-f0-9]+|origin/.*)$') ? config.branch : ("*/" + config.branch)
   checkout(scm: [$class: 'GitSCM',
                  branches: [[name: branch]],
                  doGenerateSubmoduleConfigurations: false,
