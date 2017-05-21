@@ -22,20 +22,6 @@
     <com.coravy.hudson.plugins.github.GithubProjectProperty>
       <projectUrl>{{ variables.GITHUB_URL }}</projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
-    <hudson.model.ParametersDefinitionProperty>
-      <parameterDefinitions>
-        <net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition>
-          <name>REF_SPEC</name>
-          <description></description>
-          <uuid>ca709303-ae93-4be2-b9b8-5ab0c19672d1</uuid>
-          <type>PT_BRANCH_TAG</type>
-          <branch></branch>
-          <tagFilter>*</tagFilter>
-          <sortMode>NONE</sortMode>
-          <defaultValue></defaultValue>
-        </net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition>
-      </parameterDefinitions>
-    </hudson.model.ParametersDefinitionProperty>
   </properties>
   <scm class="hudson.plugins.git.GitSCM">
     <configVersion>2</configVersion>
@@ -47,7 +33,7 @@
     </userRemoteConfigs>
     <branches>
       <hudson.plugins.git.BranchSpec>
-        <name>${REF_SPEC}</name>
+        <name>master</name>
       </hudson.plugins.git.BranchSpec>
     </branches>
     <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
@@ -63,27 +49,14 @@
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <triggers/>
+  <triggers>
+    <hudson.triggers.TimerTrigger>
+      <spec>H H * * *</spec>
+    </hudson.triggers.TimerTrigger>
+  </triggers>
   <concurrentBuild>false</concurrentBuild>
   <builders>
-    <hudson.plugins.copyartifact.CopyArtifact>
-      <project>Bazel/JAVA_VERSION=1.8,PLATFORM_NAME=linux-x86_64</project>
-      <filter>**/ci/bazel</filter>
-      <target>input</target>
-      <excludes/>
-      <selector class="hudson.plugins.copyartifact.TriggeredBuildSelector">
-        <fallbackToLastSuccessful>true</fallbackToLastSuccessful>
-        <upstreamFilterStrategy>UseGlobalSetting</upstreamFilterStrategy>
-      </selector>
-      <flatten>true</flatten>
-      <doNotFingerprintArtifacts>false</doNotFingerprintArtifacts>
-    </hudson.plugins.copyartifact.CopyArtifact>
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
-      <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition">
-        <expression>.*/master$</expression>
-        <label>${REF_SPEC}</label>
-      </condition>
-      <buildStep class="hudson.tasks.Shell">
+    <hudson.tasks.Shell>
         <command>#!/bin/bash
 echo &quot;Getting all the changes...&quot;
 curl &quot;http://ci.bazel.io/view/Bazel%20bootstrap%20and%20maintenance/job/Bazel-Benchmark/$BUILD_NUMBER/api/xml?wrapper=changes&amp;xpath=//changeSet//commitId&quot; &gt; change.log
@@ -93,8 +66,8 @@ if [ ! -s change.log ]; then
   exit 0
 fi
 
-# Add input (containing bazel) to PATH
-PATH=$PATH:${WORKSPACE}/input
+# Add bazel to the PATH
+PATH=$PATH:$HOME/.bazel/latest/bin
 
 # build benchmark
 echo "Building benchmark..."
@@ -115,9 +88,7 @@ bazel-bin/src/tools/benchmark/java/com/google/devtools/build/benchmark/benchmark
     --output=${WORKSPACE}/output/${filename} \
     ${version_string}
         </command>
-      </buildStep>
-      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail"/>
-    </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
+    </hudson.tasks.Shell>
   </builders>
   <publishers>
     <hudson.tasks.ArtifactArchiver>
@@ -143,7 +114,7 @@ bazel-bin/src/tools/benchmark/java/com/google/devtools/build/benchmark/benchmark
   <buildWrappers>
     <hudson.plugins.build__timeout.BuildTimeoutWrapper>
       <strategy class="hudson.plugins.build_timeout.impl.AbsoluteTimeOutStrategy">
-        <timeoutMinutes>240</timeoutMinutes>
+        <timeoutMinutes>1200</timeoutMinutes>
       </strategy>
       <operationList>
         <hudson.plugins.build__timeout.operations.FailOperation/>

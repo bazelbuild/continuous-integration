@@ -22,20 +22,6 @@
     <com.coravy.hudson.plugins.github.GithubProjectProperty>
       <projectUrl>{{ variables.GITHUB_URL }}</projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
-    <hudson.model.ParametersDefinitionProperty>
-      <parameterDefinitions>
-        <net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition>
-          <name>REF_SPEC</name>
-          <description></description>
-          <uuid>ca709303-ae93-4be2-b9b8-5ab0c19672d1</uuid>
-          <type>PT_BRANCH_TAG</type>
-          <branch></branch>
-          <tagFilter>*</tagFilter>
-          <sortMode>NONE</sortMode>
-          <defaultValue></defaultValue>
-        </net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition>
-      </parameterDefinitions>
-    </hudson.model.ParametersDefinitionProperty>
   </properties>
   <scm class="hudson.plugins.git.GitSCM">
     <configVersion>2</configVersion>

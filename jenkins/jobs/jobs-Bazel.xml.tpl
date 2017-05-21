@@ -148,7 +148,7 @@ To be run on head and for release branch/tags only</description>
           <configs>
             <hudson.plugins.parameterizedtrigger.CurrentBuildParameters/>
           </configs>
-          <projects>Bazel-Install-Trigger, Bazel-Publish-Site, Bazel-Release-Trigger, Bazel-Benchmark</projects>
+          <projects>Bazel-Install-Trigger, Bazel-Publish-Site, Bazel-Release-Trigger</projects>
           <condition>UNSTABLE_OR_BETTER</condition>
           <triggerWithNoParameters>false</triggerWithNoParameters>
         </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
