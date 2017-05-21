@@ -20,15 +20,17 @@ load("//jenkins/lib:def.bzl", "bazel_job_configuration_test")
     configs = [s],
 ) for s in glob(["configs/*.json"])]
 
+jenkins_job(
+    name = "Github-Trigger",
+    config = "jobs-Github-Trigger.xml.tpl",
+    project_url = "http://bazel.io",
+)
+
 [jenkins_job(
     name = job,
     config = "jobs-%s.xml.tpl" % job,
-    platforms = BAZEL_JOBS[job],
     project_url = "http://bazel.io",
-    substitutions = JOBS_SUBSTITUTIONS,
-    deps = glob(["%s.*.tpl" % job]),
-) for job in BAZEL_JOBS.keys()
-  if job not in ["install-bazel", "Global/pipeline", "CR/global-verifier"]]
+) for job in ["Bazel-Benchmark", "Bazel-Push-Benchmark-Output"]]
 
 jenkins_job(
     name = "Global/pipeline",

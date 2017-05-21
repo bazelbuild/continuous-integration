@@ -60,8 +60,10 @@ echo &quot;Got push to $repository on ref $ref&quot;
 
 # Execute &apos;Bazel&apos; for master branch, releases branches and tags
 if [ &quot;$repository&quot; = &quot;{{ variables.GITHUB_PROJECT }}&quot; ]; then
-  echo &quot;REF_SPEC=$ref&quot;&gt;REF_SPEC
+  echo &quot;BRANCH=$ref&quot; &gt;BRANCH
+  echo 'REPOSITORY={{ variables.GITHUB_URL }}' &gt;&gt;BRANCH
   [ &quot;$ref&quot; = refs/heads/master ] &amp;&amp; exit 0
+  echo 'REFSPEC=+refs/heads/*:refs/remotes/origin/* +refs/notes/*:refs/notes/*' &gt;&gt;BRANCH
   [[ &quot;$ref&quot; =~ ^refs/heads/release-.*$ ]] &amp;&amp; exit 0
   [[ &quot;$ref&quot; =~ ^refs/tags/.*$ ]] &amp;&amp; exit 0
 fi
@@ -72,13 +74,13 @@ exit 1</command>
           <hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig>
             <configs>
               <hudson.plugins.parameterizedtrigger.FileBuildParameters>
-                <propertiesFile>REF_SPEC</propertiesFile>
+                <propertiesFile>BRANCH</propertiesFile>
                 <failTriggerOnMissing>true</failTriggerOnMissing>
                 <useMatrixChild>false</useMatrixChild>
                 <onlyExactRuns>false</onlyExactRuns>
               </hudson.plugins.parameterizedtrigger.FileBuildParameters>
             </configs>
-            <projects>Bazel</projects>
+            <projects>Global/pipeline</projects>
             <condition>ALWAYS</condition>
             <triggerWithNoParameters>false</triggerWithNoParameters>
             <buildAllNodesWithLabel>false</buildAllNodesWithLabel>

@@ -59,34 +59,30 @@ GITHUB_JOBS = [
 
 NO_PR_JOBS = ["bazel-docker-tests"]
 
-BAZEL_STAGING_JOBS = {
-    "Bazel": ALL_PLATFORMS + BSD_PLATFORMS,
-    "Github-Trigger": UNIX_PLATFORMS,
-    "Global/pipeline": [],
-    "CR/global-verifier": [],
-    "install-bazel": [],
-}
+BAZEL_STAGING_JOBS = [
+    "Github-Trigger",
+    "Global/pipeline",
+    "CR/global-verifier",
+    "install-bazel",
+]
 
-BAZEL_JOBS = BAZEL_STAGING_JOBS + {
-    "Bazel-Release": UNIX_PLATFORMS,
-    "Bazel-Release-Trigger": UNIX_PLATFORMS,
-    "Bazel-Publish-Site": [],
-    "Bazel-Benchmark": [],
-    "Bazel-Push-Benchmark-Output": [],
-}
+BAZEL_JOBS = BAZEL_STAGING_JOBS + [
+    "Bazel-Benchmark",
+    "Bazel-Push-Benchmark-Output",
+]
 
-JOBS = BAZEL_JOBS.keys() + GITHUB_JOBS + NO_PR_JOBS
+JOBS = BAZEL_JOBS + GITHUB_JOBS + NO_PR_JOBS
 
 JOBS_SUBSTITUTIONS = {
     "GITHUB_JOBS": ", ".join(GITHUB_JOBS + NO_PR_JOBS),
-    "BAZEL_JOBS": ", ".join(BAZEL_JOBS.keys()),
+    "BAZEL_JOBS": ", ".join(BAZEL_JOBS),
     "IMPORTANT_JOBS": ", ".join(GITHUB_JOBS + NO_PR_JOBS + ["Bazel", "Bazel-Publish-Site", "Bazel-Install-Trigger"])
 }
 
 STAGING_GITHUB_JOBS = GERRIT_JOBS + ["TensorFlow", "Tutorial"]
-STAGING_JOBS = BAZEL_STAGING_JOBS.keys() + STAGING_GITHUB_JOBS
+STAGING_JOBS = BAZEL_STAGING_JOBS + STAGING_GITHUB_JOBS
 STAGING_JOBS_SUBSTITUTIONS = {
     "GITHUB_JOBS": ", ".join(STAGING_GITHUB_JOBS),
-    "BAZEL_JOBS": ", ".join(BAZEL_STAGING_JOBS.keys()),
+    "BAZEL_JOBS": ", ".join(BAZEL_STAGING_JOBS),
     "IMPORTANT_JOBS": ", ".join(STAGING_GITHUB_JOBS + ["Bazel", "Bazel-Publish-Site", "Bazel-Install-Trigger"])
 }
