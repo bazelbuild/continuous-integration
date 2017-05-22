@@ -41,10 +41,14 @@ class JenkinsUtils {
     return node_label
   }
 
-  /** Returns the list of all slave' names */
+  /** Returns the list of all slave' names (optionally filtering by label) */
   @NonCPS
-  static def nodeNames() {
-    return jenkins.model.Jenkins.instance.nodes.collect { node -> node.name }
+  static def nodeNames(label = null) {
+    def nodes = jenkins.model.Jenkins.instance.nodes
+    if (label != null) {
+      nodes = nodes.findAll { node -> label in node.labelString.split() }
+    }
+    return nodes.collect { node -> node.name }
   }
 
   /** Returns the list of job in the folder `folderName` (empty or null for top folder). */

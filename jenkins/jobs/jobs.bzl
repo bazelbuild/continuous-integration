@@ -64,8 +64,7 @@ BAZEL_STAGING_JOBS = {
     "Github-Trigger": UNIX_PLATFORMS,
     "Global/pipeline": [],
     "CR/global-verifier": [],
-    "Bazel-Install": [],
-    "Bazel-Install-Trigger": [],
+    "install-bazel": [],
 }
 
 BAZEL_JOBS = BAZEL_STAGING_JOBS + {

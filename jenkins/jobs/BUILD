@@ -27,7 +27,8 @@ load("//jenkins/lib:def.bzl", "bazel_job_configuration_test")
     project_url = "http://bazel.io",
     substitutions = JOBS_SUBSTITUTIONS,
     deps = glob(["%s.*.tpl" % job]),
-) for job in BAZEL_JOBS.keys() if job != "Global/pipeline" and job != "CR/global-verifier"]
+) for job in BAZEL_JOBS.keys()
+  if job not in ["install-bazel", "Global/pipeline", "CR/global-verifier"]]
 
 jenkins_job(
     name = "Global/pipeline",
@@ -45,6 +46,12 @@ jenkins_job(
         ":configs/bootstrap.json",
         ":global.groovy",
     ],
+)
+
+jenkins_job(
+    name = "install-bazel",
+    config = "install-bazel.xml.tpl",
+    deps = [":install-bazel.groovy"],
 )
 
 # TODO(dmarting): activate Tensorflow on mac (missing dependencies)

@@ -75,7 +75,11 @@ done
                       configuration: json_config,
                       restrict_configuration: restrict_configuration,
                       excludes: ["**/*.bazel.build.tar*", "**/bazel", "**/bazel.exe"])
-          // TODO(dmarting): trigger bazel install everywhere in case of release.
+          if (is_release) {
+            stage("Install new release on all nodes") {
+              build(job: "install-bazel", wait: false, propagate: false)
+            }
+          }
         }
       }
     }
