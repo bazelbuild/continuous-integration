@@ -48,9 +48,9 @@ $anaconda3_installer = $anaconda3_tmp_folder + "\Anaconda3-4.2.0-Windows-x86_64.
 (New-Object Net.WebClient).DownloadFile("https://repo.continuum.io/archive/Anaconda3-4.2.0-Windows-x86_64.exe", $anaconda3_installer)
 Start-Process -Wait $anaconda3_installer -ArgumentList "/AddToPath=0? /InstallationType=AllUsers /S /D='C:\Program Files\Anaconda3'"
 
-# Install pyreadline (Windows-compatible Python GNU readline library).
+# Install pyreadline (Windows-compatible Python GNU readline library) and portpicker.
 # Required by TensorFlow Python tests (tfdbg).
-& "C:\Program Files\Anaconda3\Scripts\pip.exe" install pyreadline
+& "C:\Program Files\Anaconda3\Scripts\pip.exe" install pyreadline portpicker
 
 # Install all the Windows software we need:
 #   - JDK, because, Bazel is written in Java
