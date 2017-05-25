@@ -52,6 +52,7 @@ class JenkinsUtils {
     def items = jenkins.model.Jenkins.instance.items
     def jobs = folderJobs(folder)
     return jobs.findAll {
-      job -> job.description.contains(descr) }.collect { job -> job.name }
+      job -> job.description != null && job.description.contains(descr) }.collect {
+      job -> job.name }
   }
 }
