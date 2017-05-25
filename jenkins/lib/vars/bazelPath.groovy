@@ -21,10 +21,6 @@ import build.bazel.ci.JenkinsUtils
  * known location.
  */
 def call(String bazel_version, String node_label) {
-  def bazel = node_label.startsWith("windows") ?
-              "c:\\bazel_ci\\installs\\${bazel_version}\\bazel.exe" :
-              "${env.HOME}/.bazel/${bazel_version}/bin/bazel"
-
   // Grab bazel
   if (bazel_version.startsWith("custom")) {
     // A custom version can be completed with a variation, e.g. custom-jdk7, extract it
@@ -50,10 +46,12 @@ def call(String bazel_version, String node_label) {
           selector: [$class: 'SpecificBuildSelector',
                      buildNumber: "${cause.upstreamBuild}"],
           target: targetPath])
-    bazel = targetPath + "/" + cause.artifactName
+    return targetPath + "/" + cause.artifactName
   } else {
+    def bazel = node_label.startsWith("windows") ?
+                "c:\\bazel_ci\\installs\\${bazel_version}\\bazel.exe" :
+                "${env.HOME}/.bazel/${bazel_version}/bin/bazel"
     echo "Using released version of Bazel at ${bazel}"
+    return bazel
   }
-
-  return bazel
 }
