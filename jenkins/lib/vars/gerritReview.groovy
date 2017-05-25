@@ -30,13 +30,12 @@ def call(String server, String cookiesFile, String reviewer, changeNum, branch, 
   }
   def config = [gerritBuild: currentBuild]
   try {
-    body.resolveStrategy = Closure.DELEGATE_FIRST
     body.delegate = config
     body()
   } finally {
     def verified = config.gerritBuild.result == "SUCCESS" ? "+" : "-"
     echo "Setting ${verified}Verified to change ${url} after build returned ${config.gerritBuild.result}"
-    gerrit.review(changeNum, branch, gerritBuild.result == "SUCCESS" ? 1 : -1,
+    gerrit.review(changeNum, branch, config.gerritBuild.result == "SUCCESS" ? 1 : -1,
                   "Build ${config.gerritBuild.getAbsoluteUrl()} finished with status ${config.gerritBuild.result}")
   }
 }

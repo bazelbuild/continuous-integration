@@ -28,17 +28,13 @@ def buildChange(gerrit, change) {
   if (jobs != null && !jobs.empty) {
     gerrit.addReviewer(change.number)
     for(job in jobs) {
-      try {
-        gerritReview(gerrit.server, "/opt/secrets/gerritcookies", gerrit.reviewer, change.number, change.sha1) {
-          r = build job: job, propagate: false, parameters: [
-            [$class: 'StringParameterValue', name: 'REFSPEC', value: refspec],
-            [$class: 'StringParameterValue', name: 'BRANCH', value: change.sha1],
-            [$class: 'StringParameterValue', name: 'CHANGE_URL', value: changeUrl]]
-          // Trick to propagate the result, the gerritReview step should live in the side of the child job.
-          gerritBuild = r
-        }
-      } catch(err) {
-        // swallow exception to avoid failing the build for a downstream failure
+      gerritReview(gerrit.server, "/opt/secrets/gerritcookies", gerrit.reviewer, change.number, change.sha1) {
+        // gerritBuild is a trick to propagate the result, the gerritReview step should live in the side of
+        // the child job.
+        delegate.gerritBuild = build job: job, propagate: false, parameters: [
+          [$class: 'StringParameterValue', name: 'REFSPEC', value: refspec],
+          [$class: 'StringParameterValue', name: 'BRANCH', value: change.sha1],
+          [$class: 'StringParameterValue', name: 'CHANGE_URL', value: changeUrl]]
       }
     }
   }
@@ -51,8 +47,9 @@ timeout(240) {
     def acceptedChanges = gerrit.getVerifiedChanges()
     if (acceptedChanges) {
       echo "Gerrit has " + acceptedChanges.size() + " change(s) to be verified"
-      acceptedChanges.each {
-        changes[it.number] = { -> buildChange(gerrit, it) }
+      for (int i = 0; i < acceptedChanges.size(); i++) {
+        def change = acceptedChanges[i]
+        changes[change.number] = { -> buildChange(gerrit, change) }
       }
     } else {
       echo "No change to be verified"
