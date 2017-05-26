@@ -45,7 +45,18 @@ function replace_secrets() {
 export -f replace_secrets
 
 # Remove existing jobs configuration so we delete jobs
-find /var/jenkins_home/jobs -regex '.*/jobs/[^/]*/config.xml' -delete || true
+# We do not use find because it goes too deep, use a function instead
+delete_jobs() {
+  for i in "$1/jobs/"*; do
+    if [ -d "$i" ]; then
+      if [ -f "$i/config.xml" ]; then
+        rm -f "$i/config.xml"
+      fi
+      delete_jobs "$i"
+    fi
+  done
+}
+delete_jobs /var/jenkins_home
 
 # Same for nodes
 rm -rf /var/jenkins_home/nodes
