@@ -65,3 +65,13 @@ for other platforms. This does not enable to test:
   - Synchronization between Gerrit and Github,
   - Adding execution nodes,
   - Interaction with Github or Gerrit.
+
+## Faster testing cycle
+
+If the only modification needed are to Groovy code under
+`jenkins/lib`, they can be updated in the running container, without
+restarting jenkins. The script `jenkins/transfer-lib.sh` will transfer
+the lib folder to the running container started by
+`bazel run //jenkins:test`. The wrapper around that script
+`jenkins/transfer-lib-to-staging.sh` will do the same but transfer in
+the container running on the jenkins controller for the staging instance.

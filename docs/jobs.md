@@ -4,22 +4,15 @@ Two categories of job run on ci.bazel.io: bootstrap/maintenance and projects.
 
 ## Bootstrap and maintenance
 
-7 jobs control the bootstrap and maintenance of Bazel:
+3 jobs control the bootstrap and maintenance of Bazel:
 
-* `Github-Trigger`: a control job, launched by a Github webhook, that triggers the `Bazel` job
+* `Github-Trigger`: a control job, launched by a Github webhook, that triggers the `Global/pipeline` job
   if there is push to the master branch, to a release branch or to a release tag.
-* `Bazel`: bootstraps Bazel and triggers `Bazel-Install-Trigger`.
-* `Bazel-Install` installs Bazel on the nodes it is running on.
-* `Bazel-Install-Trigger` triggers the `Bazel-Install` on all nodes
-  then trigger all the projects job.
-* `Bazel-Publish-Site`: build and publish the bazel.io site to GCS
-  when the master branch is pushed. It is triggered by the `Bazel` job.
-* `Bazel-Release-Trigger`: `Bazel-Release-Trigger`, triggered by the
-  `Bazel` job, determines if the current build is from a release
-  branch or tag. If so, it triggers the `Bazel-Release` job.
-* `Bazel-Release` uploads the releases and sends out announcement mails.
+* `Bazel-Bechmark` and `Bazel-Push-Benchmark-Output`: are job running
+  continously to
+* `Global/pipeline` handles the global tests as well as the release process
 
-All those jobs have custom configuration files that can be found in `jenkins/jobs/jobs-_Job-Name_.xml.tpl`.
+All those jobs have custom configuration files that can be found in `jenkins/jobs/*.xml.tpl`.
 
 ## Projects
 
@@ -35,9 +28,9 @@ which is a strip down version of the `JOBS` definition.
 
 In addition to those jobs, some more "hidden jobs" exists on the ci:
 
-* `gerrit-verifier-flow` is a custom job to detect pending reviews on gerrit that
-  need validation (that have been marked as `Verified`).
-* `PR-_project_` is a copy of the job for _project_ that validates a Github Pull
+* `CR/gerrit-verifier` is a custom job to detect pending reviews on gerrit that
+  need validation (that have been marked as `Presubmit-Ready`).
+* `PR/_project_` is a copy of the job for _project_ that validates a Github Pull
   Request on _project_ with the latest release of Bazel. A pull request
   is validated when an pull request admin comments __test this please__
   or __retest this please__. It also auto-triggers this job when an
@@ -50,5 +43,7 @@ In addition to those jobs, some more "hidden jobs" exists on the ci:
     page](https://github.com/orgs/bazelbuild/people) (or the
     [Google organization page](https://github.com/orgs/google/people) respectively),
     look for the person's name, and change their visibility to public.
-* `Gerrit-_project_` is the same as `PR-_project_` but for validating Gerrit
+* `CR/_project_` is the same as `PR-_project_` but for validating Gerrit
   review request.
+* `Global/_project_` is another copy of the job but for use by the
+  global presubmit test.
