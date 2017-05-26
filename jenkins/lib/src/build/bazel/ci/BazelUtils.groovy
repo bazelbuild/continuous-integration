@@ -28,9 +28,11 @@ class BazelUtils implements Serializable {
   def setBazel(value) {
     bazel = value
   }
+
   def getBazel() {
     bazel
   }
+
   def setScript(value) {
     script = value
     ws = script.pwd()
@@ -41,9 +43,12 @@ class BazelUtils implements Serializable {
       envs = ["BAZEL_SH=${bazel_sh}"]
     }
   }
+
   def getScript() {
     script
   }
+
+  // Actual method
 
   private def execute(script, returnStatus = false, returnStdout = false) {
     if (isWindows) {
@@ -62,7 +67,6 @@ class BazelUtils implements Serializable {
     }
   }
 
-  // Actual method
 
   // Write a RC file to consume by the other step
   def writeRc(build_opts = [],

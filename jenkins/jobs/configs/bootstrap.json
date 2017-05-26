@@ -11,7 +11,8 @@
         "parameters": {
             "archive": {
                 "bazel-bin/src/bazel": "bazel",
-                "bazel-bin/scripts/packages/install.sh": "bazel-%{release_name}-installer.sh",
+                "bazel-bin/scripts/packages/with-jdk/install.sh": "bazel-%{release_name}-installer.sh",
+                "bazel-bin/scripts/packages/without-jdk/install.sh": "bazel-%{release_name}-without-jdk-installer.sh",
                 "bazel-bin/scripts/packages/debian/bazel-debian.deb": "bazel_%{release_name}.deb",
                 "bazel-genfiles/bazel-distfile.zip": "bazel-%{release_name}-dist.zip"
             },
@@ -46,7 +47,8 @@
         "parameters": {
             "archive": {
                 "bazel-bin/src/bazel": "bazel",
-                "bazel-bin/scripts/packages/install.sh": "bazel-%{release_name}-installer.sh"
+                "bazel-bin/scripts/packages/with-jdk/install.sh": "bazel-%{release_name}-installer.sh",
+                "bazel-bin/scripts/packages/without-jdk/install.sh": "bazel-%{release_name}-installer.sh"
             },
             "targets": [
                 "//scripts/packages"
@@ -90,7 +92,7 @@
         "parameters": {
             "archive": {
                 "bazel-bin/src/bazel": "bazel",
-                "bazel-bin/scripts/packages/install.sh": "bazel-%{release_name}-installer.sh",
+                "bazel-bin/scripts/packages/without-jdk/install.sh": "bazel-%{release_name}-installer.sh",
                 "bazel-bin/scripts/packages/debian/bazel-debian.deb": "bazel_%{release_name}.deb"
             },
             "stash": {
@@ -112,7 +114,7 @@
         "parameters": {
             "archive": {
                 "bazel-bin/src/bazel": "bazel",
-                "bazel-bin/scripts/packages/install.sh": "bazel-%{release_name}-installer.sh"
+                "bazel-bin/scripts/packages/without-jdk/install.sh": "bazel-%{release_name}-installer.sh"
             },
             "targets": [
                 "//scripts/packages"

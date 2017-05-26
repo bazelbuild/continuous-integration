@@ -31,7 +31,6 @@ def call(config = [:]) {
   def branch = config.get("branch", "master")
   def refspec = config.get("refspec", "+refs/heads/*:refs/remotes/origin/*")
   def targets = config.get("targets", [])
-  def opts = config.get("opts", [])
 
   node(config.node) {
     def utils = new BazelUtils()

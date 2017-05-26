@@ -50,7 +50,7 @@ def call(String bazel_version, String node_label) {
   } else {
     def bazel = node_label.startsWith("windows") ?
                 "c:\\bazel_ci\\installs\\${bazel_version}\\bazel.exe" :
-                "${env.HOME}/.bazel/${bazel_version}/bin/bazel"
+                "${env.HOME}/.bazel/${bazel_version}/binary/bazel"
     echo "Using released version of Bazel at ${bazel}"
     return bazel
   }

@@ -56,9 +56,6 @@ def call(config = [:]) {
     }
   }
 
-  // Avoid serialization
-  entrySet = null
-
   // The actual job
   parallel jobs
 }
