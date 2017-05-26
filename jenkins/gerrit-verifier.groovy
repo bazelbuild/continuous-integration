@@ -36,18 +36,37 @@ def buildChange(gerrit, change) {
   }
 }
 
+// Run the global presubmit job for a given change
+def globalPresubmit(gerrit, change) {
+  def refspec = "+" + change.ref + ":" + change.ref.replaceAll('ref/', 'ref/remotes/origin/')
+  gerrit.addReviewer(change.number)
+  build job: "CR/global-verifier", propagate: false, wait: false, parameters: [
+    [$class: 'StringParameterValue', name: 'REFSPEC', value: refspec],
+    [$class: 'StringParameterValue', name: 'BRANCH', value: change.sha1],
+    [$class: 'StringParameterValue', name: 'CHANGE_NUMBER', value: change.number.toString()]]
+}
+
 timeout(2) {
   def changes = [:]
   // Get open gerrit changes that were verified but not yet processed
   stage("Get changes") {
     def acceptedChanges = gerrit.getVerifiedChanges()
+    def changesForGlobalPresubmit = gerrit.getVerifiedChanges("project:bazel", 2)
     if (acceptedChanges) {
       echo "Gerrit has " + acceptedChanges.size() + " change(s) to be verified"
       for (int i = 0; i < acceptedChanges.size(); i++) {
         def change = acceptedChanges[i]
         changes[change.number] = { -> buildChange(gerrit, change) }
       }
-    } else {
+    }
+    if (changesForGlobalPresubmit) {
+      echo "Gerrit has " + changesForGlobalPresubmit.size() + " change(s) waiting for global presubmit"
+      for (int i = 0; i < changesForGlobalPresubmit.size(); i++) {
+        def change = changesForGlobalPresubmit[i]
+        changes[change.number] = { -> globalPresubmit(gerrit, change) }
+      }
+    }
+    if (!changes && !changesForGlobalPresubmit) {
       echo "No change to be verified"
     }
   }

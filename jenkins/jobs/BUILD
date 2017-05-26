@@ -28,11 +28,20 @@ load("//jenkins/lib:def.bzl", "bazel_job_configuration_test")
     project_url = "http://bazel.io",
     substitutions = JOBS_SUBSTITUTIONS,
     deps = glob(["%s.*.tpl" % job]),
-) for job in BAZEL_JOBS.keys() if job != "Global/pipeline"]
+) for job in BAZEL_JOBS.keys() if job != "Global/pipeline" and job != "CR/global-verifier"]
 
 jenkins_job(
     name = "Global/pipeline",
     config = "global.xml.tpl",
+    deps = [
+        ":configs/bootstrap.json",
+        ":global.groovy",
+    ],
+)
+
+jenkins_job(
+    name = "CR/global-verifier",
+    config = "CR-global.xml.tpl",
     deps = [
         ":configs/bootstrap.json",
         ":global.groovy",
@@ -166,6 +175,12 @@ bazel_github_job(
         "HEAD",
         "latest",
     ],
+    build_opts = [
+        "--verbose_failures",
+        # TODO(pcloudy): This is only for Windows.
+        # Remove it after wrapper-less CROSSTOOL becomes default
+        "--action_env=NO_MSVC_WRAPPER=1",
+    ],
     config = ":configs/bazel-tests.json",
     configure = [
         "source scripts/ci/build.sh",
@@ -179,20 +194,14 @@ bazel_github_job(
     project = "bazel",
     substitutions = {"GLOBAL_USE_UPSTREAM_BRANCH": "True"},
     targets = [],
-    build_opts = [
-        "--verbose_failures",
-        # TODO(pcloudy): This is only for Windows.
-        # Remove it after wrapper-less CROSSTOOL becomes default
-        "--action_env=NO_MSVC_WRAPPER=1",
-    ],
     test_opts = [
         "-k",
         "--test_output=errors",
         "--build_tests_only",
     ],
     tests = [
-        "//scripts/...",
         "filter(\"^(?!//src/test/docker).*$\", //src/test/...)",
+        "//scripts/...",
         "//third_party/ijar/...",
         "//tools/android/...",
     ],

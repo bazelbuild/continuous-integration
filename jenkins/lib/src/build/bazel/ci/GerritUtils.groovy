@@ -175,9 +175,9 @@ class GerritUtils implements java.io.Serializable {
   @NonCPS
   def getVerifiedChanges(filter = "", verifiedLevel = 1, maxChanges = 0) {
     def changesJson = query("status:open -reviewer:${reviewerEmail} ${filter}",
-			    maxChanges).findAll { change ->
-        def verified = change.labels.Verified
-        return (verified != null) && verified.all.any({ it.value >= verifiedLevel })
+                            maxChanges).findAll { change ->
+        def verified = change.labels.get("Presubmit-Ready", [])
+        return verified.all.any({ it.value == verifiedLevel })
     }.collect {
       it ->
         def sha1 = it.current_revision
