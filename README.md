@@ -19,3 +19,5 @@ More documentation:
 * [workflow](docs/workflow.md): explains the CI workflow, and
   how you can test local changes with jenkins-staging
 * [jobs](docs/jobs.md): explains what jobs are running on the CI
+* [user](docs/user.md): explains how to use the CI system for a Bazel
+  contributor.
