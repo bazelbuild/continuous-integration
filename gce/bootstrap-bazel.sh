@@ -22,9 +22,9 @@ CI_HOME="$(echo ~ci)"
 mkdir -p "${CI_HOME}/bootstrap-bazel"
 cd "${CI_HOME}/bootstrap-bazel"
 
-for flavour in '' '-jdk7'
+for flavour in '-without-jdk' '-jdk7'
 do
-    installer="https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}${flavour}-installer-${PLATFORM}.sh"
+    installer="https://releases.bazel.build/${BAZEL_VERSION}/release/bazel-${BAZEL_VERSION}${flavour}-installer-${PLATFORM}.sh"
     destination="${CI_HOME}/.bazel/${BAZEL_VERSION}${flavour}"
     curl -L -o install.sh "${installer}"
     chmod 0755 ./install.sh
@@ -32,8 +32,7 @@ do
     mkdir -p "${destination}"
     ./install.sh \
         --base="${destination}" \
-        --bin="${destination}/binary" \
-        --bazelrc="${destination}/binary/bazel-real.bazelrc"
+        --bin="${destination}/binary"
     ln -s "${destination}" "${CI_HOME}/.bazel/latest${flavour}"
 done
 

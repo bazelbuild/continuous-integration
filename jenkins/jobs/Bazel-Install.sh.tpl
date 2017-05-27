@@ -37,7 +37,7 @@ create_url() {
   if [ -n "${flavour}" ]; then
     flavour="-${2}"
   fi
-  echo "https://github.com/bazelbuild/bazel/releases/download/${version}/bazel-${version}${flavour}-installer-${PLATFORM}.sh"
+  echo "https://releases.bazel.build/${version}/release/bazel-${version}${flavour}-installer-${PLATFORM}.sh"
 }
 
 # Install bazel using the specified installer
@@ -71,7 +71,7 @@ install_bazel "$(find $PWD/bazel-installer -name '*.sh' | \
 
 # Install latest Bazel if not yet installed
 if [ ! -d ~/.bazel/${BAZEL_VERSION} ]; then
-  install_bazel "$(create_url ${BAZEL_VERSION})" \
+  install_bazel "$(create_url ${BAZEL_VERSION} without-jdk)" \
     ~/.bazel/${BAZEL_VERSION}
 fi
 if [ ! -d ~/.bazel/${BAZEL_VERSION}-jdk7 ]; then
