@@ -11,7 +11,7 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
+ See the License for the specific language governing permissions and
 # limitations under the License.
 
 # Configure the service
@@ -38,7 +38,7 @@ export ANDROID_NDK_PATH=$(echo $HOME/android-ndk-*)
 export ANDROID_SDK_BUILD_TOOLS_VERSION=$(ls $ANDROID_SDK_PATH/build-tools | sort -n | tail -1)
 export ANDROID_SDK_API_LEVEL=$(ls $ANDROID_SDK_PATH/platforms | cut -d '-' -f 2 | sort -n | tail -1)
 export ANDROID_NDK_API_LEVEL=$(ls $ANDROID_NDK_PATH/platforms | cut -d '-' -f 2 | sort -n | tail -1)
-export PATH=/Users/ci/node/node-v6.9.1-darwin-x64:$PATH
+export PATH=/Users/ci/node/node-v6.9.1-darwin-x64/bin:$PATH
 
 chmod a+r slave-agent.jnlp
 

@@ -81,7 +81,7 @@ function run_agent() {
       ANDROID_SDK_API_LEVEL=$ANDROID_SDK_API_LEVEL \
       ANDROID_NDK_PATH=$ANDROID_NDK_PATH \
       ANDROID_NDK_API_LEVEL=$ANDROID_NDK_API_LEVEL \
-      PATH=/home/ci/node/node-v6.9.1-linux-x64:$PATH \
+      PATH=/home/ci/node/node-v6.9.1-linux-x64/bin:$PATH \
       $(which java) -jar slave.jar -jnlpUrl file:///home/ci/slave-agent.jnlp -noReconnect
 }
 
