@@ -22,9 +22,13 @@ CI_HOME="$(echo ~ci)"
 mkdir -p "${CI_HOME}/bootstrap-bazel"
 cd "${CI_HOME}/bootstrap-bazel"
 
-for flavour in '-without-jdk' '-jdk7'
+for flavour in '' '-jdk7'
 do
-    installer="https://releases.bazel.build/${BAZEL_VERSION}/release/bazel-${BAZEL_VERSION}${flavour}-installer-${PLATFORM}.sh"
+    jdk=
+    if [ "$flavour" = "" ]; then
+      jdk="-without-jdk"
+    fi
+    installer="https://releases.bazel.build/${BAZEL_VERSION}/release/bazel-${BAZEL_VERSION}${flavour}${jdk}-installer-${PLATFORM}.sh"
     destination="${CI_HOME}/.bazel/${BAZEL_VERSION}${flavour}"
     curl -L -o install.sh "${installer}"
     chmod 0755 ./install.sh
