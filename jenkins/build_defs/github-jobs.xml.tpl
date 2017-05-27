@@ -82,10 +82,10 @@
     </runCondition>
     <conditionalbuilders>
     <hudson.tasks.Shell>
-      <command>{{ imports['//jenkins:github-jobs.sh.tpl'] }}</command>
+      <command>{{ imports['//jenkins/build_defs:github-jobs.sh.tpl'] }}</command>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
-      <command>{{ imports['//jenkins:github-jobs.test-logs.sh.tpl'] }}</command>
+      <command>{{ imports['//jenkins/build_defs:github-jobs.test-logs.sh.tpl'] }}</command>
     </hudson.tasks.Shell>
     </conditionalbuilders>
     </org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder>
