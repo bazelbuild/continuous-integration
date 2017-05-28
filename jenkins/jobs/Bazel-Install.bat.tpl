@@ -31,10 +31,10 @@ set folder=c:\bazel_ci\installs\%BAZEL_VERSION%
 
 if "%PLATFORM_NAME:~0,12%" == "windows-msvc" (
 :: Download MSVC version Bazel, this will fail before MSVC Bazel is released
-  set url='https://github.com/bazelbuild/bazel/releases/download/%BAZEL_VERSION%/bazel-msvc-%BAZEL_VERSION%-windows-x86_64.exe'
+  set url='https://releases.bazel.build/%BAZEL_VERSION%/release/bazel-msvc-%BAZEL_VERSION%-windows-msvc-x86_64.exe'
 ) else (
 :: Download MSYS version Bazel
-  set url='https://github.com/bazelbuild/bazel/releases/download/%BAZEL_VERSION%/bazel-%BAZEL_VERSION%-windows-x86_64.exe'
+  set url='https://releases.bazel.build/releases/%BAZEL_VERSION%/release/bazel-%BAZEL_VERSION%-windows-x86_64.exe'
 )
 
 if not exist %folder%\bazel.exe (

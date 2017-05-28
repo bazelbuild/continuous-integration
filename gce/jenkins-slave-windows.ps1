@@ -94,30 +94,19 @@ $bazel_version=$res.ResponseUri.AbsolutePath.TrimStart("/bazelbuild/bazel/releas
 # This will be replaced in vm.sh with $MSVC_LABEL='-msvc' for Windows MSVC nodes 
 $MSVC_LABEL=''
 $folder="c:\bazel_ci\installs\${BAZEL_VERSION}"
-$url="https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel${MSVC_LABEL}-${BAZEL_VERSION}-windows-x86_64.exe"
+$url="https://releases.bazel.build/${BAZEL_VERSION}/release/bazel${MSVC_LABEL}-${BAZEL_VERSION}-windows${MSVC_LABEL}-x86_64.exe"
 New-Item $folder -type directory -force
 
 # Continue if MSVC Bazel download fails due to not releasing yet
-# TODO(pcloudy): Remove this after MSVC Bazel is released
-if ($MSVC_LABEL -eq '-msvc') { $ErrorActionPreference = 'Continue' }
 (New-Object Net.WebClient).DownloadFile("${url}", "${folder}\bazel.exe")
-if ($MSVC_LABEL -eq '-msvc') { $ErrorActionPreference = 'Stop' }
 
 # Create a junction to the latest release
 # The CI machines have Powershell 4 installed, so we cannot use New-Item to
 # create a junction, so shell out to mklink.
 cmd.exe /C mklink /j C:\bazel_ci\installs\latest $folder
 
-# On MSVC nodes, we still need to download a Bazel for bootstrap.
-# TODO(pcloudy): Refactor this after MSVC Bazel is released.
-if ($MSVC_LABEL -eq '-msvc') {
-  $folder="c:\bazel_ci\installs\bootstrap"
-  $url="https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-windows-x86_64.exe"
-  New-Item $folder -type directory -force
-  (New-Object Net.WebClient).DownloadFile("${url}", "${folder}\bazel.exe")
-} else {
-  cmd.exe /C mklink /j C:\bazel_ci\installs\bootstrap $folder
-}
+# Also use the latest release for bootstrapping
+cmd.exe /C mklink /j C:\bazel_ci\installs\bootstrap $folder
 
 
 # Replace the host name in the JNLP file, because Jenkins, in its infinite
