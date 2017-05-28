@@ -159,6 +159,7 @@ bazel_github_job(
     "rules_rust",
     "rules_dotnet",
     "rules_jsonnet",
+    "rules_typescript",
 ]]
 
 # Jobs from the bazelbuild org using the default configuration
