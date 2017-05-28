@@ -110,10 +110,10 @@
       </runCondition>
       <conditionalbuilders>
         <hudson.tasks.BatchFile>
-          <command>{{ imports['//jenkins:github-jobs.bat.tpl'] }}</command>
+          <command>{{ imports['//jenkins/build_defs:github-jobs.bat.tpl'] }}</command>
         </hudson.tasks.BatchFile>
         <hudson.tasks.BatchFile>
-          <command>{{ imports['//jenkins:github-jobs.test-logs.bat.tpl'] }}</command>
+          <command>{{ imports['//jenkins/build_defs:github-jobs.test-logs.bat.tpl'] }}</command>
         </hudson.tasks.BatchFile>
       </conditionalbuilders>
     </org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder>
