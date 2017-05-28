@@ -34,7 +34,7 @@ notifyStatus(mail_recipient) {
   // Some basic tests
   // TODO(dmarting): maybe we want to run it in parallel of other jobs?
   stage("Test that all sources are in the //:srcs filegroup") {
-    node("linux-x86_64") {
+    machine("linux-x86_64") {
       recursiveGit(repository: "https://bazel.googlesource.com/bazel",
                    refspec: params.REFSPEC,
                    branch: params.BRANCH)
@@ -48,7 +48,7 @@ notifyStatus(mail_recipient) {
 // Deployment steps
 if(params.BRANCH.matches('^(.*/)master$')) {
   stage("Push website") {
-    node("deploy") {
+    machine("deploy") {
       recursiveGit(repository: "https://bazel.googlesource.com/bazel",
                    refspec: params.REFSPEC,
                    branch: params.BRANCH)
@@ -66,7 +66,7 @@ done
   }
 } else if(params.BRANCH.matches('^refs/((heads/release-)|(tags/)).*$')) {
   def r_name = ""
-  node("deploy") {
+  machine("deploy") {
     r_name = sh(script: "bash -c 'source scripts/release/common.sh; get_full_release_name'",
                 returnStdout: true)
     if (!r_name.isEmpty()) {

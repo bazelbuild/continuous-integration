@@ -69,7 +69,7 @@ def call(config = [:]) {
     "--build_tests_only",
     "-k"
   ]
-  node(config.node_label) {
+  machine(config.node_label) {
     ws("workspace/${currentBuild.fullProjectName}-" +
        config.get("name", config.node_label + "-" + config.bazel_version)) {
       maybeSauce(config.sauce) {

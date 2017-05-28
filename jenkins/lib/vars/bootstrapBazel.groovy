@@ -32,7 +32,7 @@ def call(config = [:]) {
   def refspec = config.get("refspec", "+refs/heads/*:refs/remotes/origin/*")
   def targets = config.get("targets", [])
 
-  node(config.node) {
+  machine(config.node) {
     def utils = new BazelUtils()
     def release_name = ""
     def isWindows = !isUnix()
