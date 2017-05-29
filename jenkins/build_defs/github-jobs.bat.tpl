@@ -75,18 +75,16 @@ if not "{{ variables.WINDOWS_TESTS }}" == "" (
   call:bazel test --copt=-w --cpu=x64_windows_msvc --host_copt=-w {{ variables.WINDOWS_TESTS }}
 )
 
-if "%BAZEL_VERSION%" == "HEAD" (
-  set EXTRA_CPU_OPTION=--cpu=x64_windows_msys --host_cpu=x64_windows_msys
-)
+set MSYS_OPTION=--cpu=x64_windows_msys --host_cpu=x64_windows_msys
 
 :: Check variables.WINDOWS_BUILDS_MSYS
 if not "{{ variables.WINDOWS_BUILDS_MSYS }}" == "" (
-  call:bazel build %EXTRA_CPU_OPTION% {{ variables.WINDOWS_BUILDS_MSYS }}
+  call:bazel build %MSYS_OPTION% {{ variables.WINDOWS_BUILDS_MSYS }}
 )
 
 :: Check variables.WINDOWS_TESTS_MSYS
 if not "{{ variables.WINDOWS_TESTS_MSYS }}" == "" (
-  call:bazel test %EXTRA_CPU_OPTION%  {{ variables.WINDOWS_TESTS_MSYS }}
+  call:bazel test %MSYS_OPTION%  {{ variables.WINDOWS_TESTS_MSYS }}
 )
 
 exit %errorlevel%
