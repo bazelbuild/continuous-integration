@@ -25,6 +25,10 @@ load(
 )
 docker_repositories()
 
+# For testing with docker
+load("//jenkins/test:docker_repository.bzl", "docker_repository")
+docker_repository()
+
 # Docker base images
 load("//base:docker_pull.bzl", "docker_pull")
 

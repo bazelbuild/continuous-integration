@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+package(default_visibility = ["//jenkins:__subpackages__"])
+
 # Configuration for our Jenkins instance
 load("@io_bazel_rules_docker//docker:docker.bzl", "docker_build")
 load("//jenkins/build_defs:jenkins.bzl", "jenkins_node", "jenkins_docker_build", "jenkins_job", "jenkins_nodes", "jenkins_node_names")
@@ -352,12 +354,7 @@ filegroup(
     srcs = glob(["config/**"]),
 )
 
-sh_binary(
+alias(
     name = "test",
-    srcs = ["test-runner.sh"],
-    data = [
-        ":deploy.docker",
-        ":jenkins-test",
-        ":ubuntu-docker.docker",
-    ],
+    actual = "//jenkins/test",
 )
