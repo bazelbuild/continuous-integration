@@ -95,9 +95,9 @@ jenkins_nodes(
 jenkins_nodes(
     UBUNTU_1404_BENCHMARK_PREFIX,
     UBUNTU_1404_BENCHMARK_COUNT,
+    install_bazel = False,
     labels = ["benchmark"],
     mode = "EXCLUSIVE",
-    install_bazel = False,
 )
 
 jenkins_nodes(
@@ -189,9 +189,9 @@ jenkins_node(
 docker_build(
     name = "ubuntu-with-bazel-installer",
     base = "//base:ubuntu-wily-amd64-deploy",
-    files = ["//gce:bootstrap-bazel.sh"],
     data_path = "/gce",
     directory = "/opt/run",
+    files = ["//gce:bootstrap-bazel.sh"],
 )
 
 jenkins_node(
@@ -236,7 +236,7 @@ ADMIN_PERMS = AUTHENTICATED_PERMS + [
     "View.Configure",  # Configure views
     "View.Create",  # Create a new view
     "View.Delete",  # Delete existing view
-    # Dangerous area: touch to nodes 
+    # Dangerous area: touch to nodes
     "Computer.Disconnect",  # Disconnect a node, normally never needed
     "Computer.Configure",  # Configure a node, normally never needed
     "Computer.Delete",  # Delete a node, almost never needed
@@ -283,6 +283,7 @@ jenkins_docker_build(
     configs = [
                   ":deploy",
                   ":jenkins-common-configs",
+                  ":config/org.jenkinsci.plugins.ghprb.GhprbTrigger.xml",
               ] + jenkins_node_names(DARWIN_PREFIX, DARWIN_COUNT) +
               jenkins_node_names(WINDOWS_PREFIX, WINDOWS_COUNT) +
               jenkins_node_names(WINDOWS_MSVC_PREFIX, WINDOWS_MSVC_COUNT) +
@@ -309,17 +310,18 @@ jenkins_docker_build(
     configs = [
         ":darwin-x86_64-staging",
         ":deploy-staging",
+        ":freebsd-11-staging",
+        ":freebsd-12-staging",
         ":jenkins-common-configs",
         ":ubuntu_14.04-x86_64-staging",
         ":ubuntu_15.10-x86_64-docker-staging",
         ":ubuntu_16.04-x86_64-staging",
-        ":freebsd-11-staging",
-        ":freebsd-12-staging",
-        ":windows-x86_64-staging",
         ":windows-msvc-x86_64-staging",
+        ":windows-x86_64-staging",
     ],
     jobs = [
         "//jenkins/jobs:staging-jobs",
+        ":CR/gerrit-verifier/staging",
     ],
     substitutions = {
         "SECURITY_CONFIG": SECURITY_CONFIG,
@@ -340,7 +342,7 @@ jenkins_docker_build(
     ],
     jobs = [
         "//jenkins/jobs:test-jobs",
-        ":CR/gerrit-verifier",
+        ":CR/gerrit-verifier/test",
     ],
     substitutions = {
         "SECURITY_CONFIG": "<useSecurity>false</useSecurity>",
@@ -351,7 +353,10 @@ jenkins_docker_build(
 
 filegroup(
     name = "jenkins-common-configs",
-    srcs = glob(["config/**"]),
+    srcs = glob(
+        ["config/**"],
+        exclude = ["config/org.jenkinsci.plugins.ghprb.GhprbTrigger.xml"],
+    ),
 )
 
 alias(

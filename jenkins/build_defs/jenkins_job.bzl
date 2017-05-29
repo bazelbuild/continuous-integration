@@ -57,6 +57,7 @@ def jenkins_job(name, config, substitutions = {}, deps = [], deps_aliases = {},
       "GITHUB_PROJECT": github_project,
       "PROJECT_URL": project_url,
       "PLATFORMS": "\n".join(platforms),
+      "production": "true",
       } + MAIL_SUBSTITUTIONS
   substitutions["SEND_EMAIL"] = "1"
   # RESTRICT_CONFIGURATION can be use to restrict configuration of the groovy jobs
@@ -75,6 +76,7 @@ def jenkins_job(name, config, substitutions = {}, deps = [], deps_aliases = {},
     native.filegroup(name = name + "/all", srcs = [name])
   substitutions["SEND_EMAIL"] = "0"
   substitutions["BAZEL_BUILD_RECIPIENT"] = ""
+  substitutions["production"] = "false"
   expand_template(
       name = name + "-staging",
       template = config,
