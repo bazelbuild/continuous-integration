@@ -16,7 +16,7 @@
             ],
             "test_opts": ["--test_timeout=1800"],
             "build_opts": ["-c opt"],
-            "tests": ["filter(\":(lib|platform)_.*\", kind(test, //tensorflow/core:all))"],
+            "tests": ["filter(':(lib|platform)_.*', kind(test, //tensorflow/core:all))"],
             "targets": ["//tensorflow/tools/pip_package:build_pip_package"]
         }
     }, {

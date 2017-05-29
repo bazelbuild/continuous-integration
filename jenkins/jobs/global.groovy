@@ -38,7 +38,7 @@ notifyStatus(mail_recipient) {
       recursiveGit(repository: "https://bazel.googlesource.com/bazel",
                    refspec: params.REFSPEC,
                    branch: params.BRANCH)
-      def bazel = fetchBazel("latest", "linux-x86_64")
+      def bazel = bazelPath("latest", "linux-x86_64")
       sh(script: "./compile.sh srcs ${bazel}")
     }
   }

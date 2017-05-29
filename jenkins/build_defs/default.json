@@ -11,9 +11,6 @@
                     {"node": "darwin-x86_64"}
                 ]
             }
-        ],
-        "parameters": {
-            "test_opts": ["--build_tests_only"]
-        }
+        ]
     }
 ]

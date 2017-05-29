@@ -14,8 +14,8 @@ load(
     "JOBS_SUBSTITUTIONS",
     "STAGING_JOBS",
 )
-
 load("//jenkins/lib:def.bzl", "bazel_job_configuration_test")
+
 [bazel_job_configuration_test(
     name = s + "-test",
     configs = [s],
@@ -34,8 +34,8 @@ jenkins_job(
     name = "Global/pipeline",
     config = "global.xml.tpl",
     deps = [
-         ":global.groovy",
-         ":configs/bootstrap.json",
+        ":configs/bootstrap.json",
+        ":global.groovy",
     ],
 )
 
@@ -124,13 +124,14 @@ bazel_github_job(
     ],
     config = ":configs/bazel-docker-tests.json",
     enable_trigger = False,
+    git_url = "https://bazel.googlesource.com/bazel",
     org = "bazelbuild",
     platforms = ["docker"],
     pr_enabled = False,  # Do not vet PR because those tests are slow.
     project = "bazel",
+    substitutions = {"GLOBAL_USE_UPSTREAM_BRANCH": "True"},
     targets = [],
     tests = ["//tools/cpp/test/..."],
-    substitutions = {"GLOBAL_USE_UPSTREAM_BRANCH": "True"},
 )
 
 bazel_github_job(
@@ -171,9 +172,11 @@ bazel_github_job(
     ],
     enable_trigger = False,
     gerrit_project = "bazel",
+    git_url = "https://bazel.googlesource.com/bazel",
     org = "bazelbuild",
     platforms = ALL_PLATFORMS,
     project = "bazel",
+    substitutions = {"GLOBAL_USE_UPSTREAM_BRANCH": "True"},
     targets = [],
     test_opts = [
         "-k",
@@ -200,7 +203,6 @@ bazel_github_job(
     windows_tests_msys = [
         "//src/test/shell/bazel:bazel_windows_example_test",
     ],
-    substitutions = {"GLOBAL_USE_UPSTREAM_BRANCH": "True"},
 )
 
 bazel_github_job(
@@ -336,8 +338,8 @@ bazel_github_job(
 [bazel_github_job(
     name = n,
     config = ":configs/%s.json" % n,
-    platforms = UNIX_PLATFORMS,
     org = "google",
+    platforms = UNIX_PLATFORMS,
     # on Linux protobuf tries to build objc target so filter by test only
     targets = [],
     tests = [":all"],

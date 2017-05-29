@@ -52,7 +52,13 @@ class BazelUtils implements Serializable {
 
   private def execute(script, returnStatus = false, returnStdout = false) {
     if (isWindows) {
-      return this.script.bat(script: script, returnStatus: returnStatus, returnStdout: returnStdout)
+      if (returnStdout) {
+        // @ removes the command lines from the output
+        script = "@${script}"
+      }
+      // exit /b !ERRORLEVEL! actually returns the exit code
+      return this.script.bat(script: "${script}\r\n@exit /b %ERRORLEVEL%",
+                             returnStatus: returnStatus, returnStdout: returnStdout)
     } else {
       return this.script.sh(script: script, returnStatus: returnStatus, returnStdout: returnStdout)
     }
@@ -61,7 +67,7 @@ class BazelUtils implements Serializable {
   def bazelCommand(String args, returnStatus = false, returnStdout = false) {
     script.withEnv(envs + ["BAZEL=" + this.bazel]) {
       owner.script.ansiColor("xterm") {
-        return execute("${this.bazel} --bazelrc=${this.ws}/bazel.bazelrc --nomaster_bazelrc ${args}",
+        return execute("${this.bazel} --bazelrc=${this.ws}/bazel.bazelrc ${args}",
                        returnStatus, returnStdout)
       }
     }
@@ -92,17 +98,20 @@ class BazelUtils implements Serializable {
   // Execute a bazel tests
   def test(tests = ["//..."]) {
     if (!tests.isEmpty()) {
-      def filteredTests = bazelCommand("query 'tests(${tests.join ' + '})'", false, true)
-      def status = bazelCommand("test ${filteredTests.replaceAll("\n", " ")}", true)
-      if (status == 3) {
-        // Bazel returns 3 if there was a test failures but no breakage, that is unstable
-        script.currentBuild.result = "UNSTABLE"
-      } else if (status != 0) {
-        script.currentBuild.result = "FAILURE"
-        // TODO(dmarting): capturing the output mark the wrong step at failure, there is
-        // no good way to do so, it would probably better to have better output in the failing
-        // step
-        script.error("`bazel test` returned status ${status}")
+      def filteredTests = bazelCommand("query \"tests(${tests.join ' + '})\"", false, true)
+      if (filteredTests.isEmpty()) {
+        script.echo "Skipped tests (no tests found)"
+      } else {
+        def status = bazelCommand("test ${filteredTests.replaceAll("\n", " ")}", true)
+        if (status == 3) {
+          // Bazel returns 3 if there was a test failures but no breakage, that is unstable
+          script.currentBuild.result = "UNSTABLE"
+        } else if (status != 0) {
+          // TODO(dmarting): capturing the output mark the wrong step at failure, there is
+          // no good way to do so, it would probably better to have better output in the failing
+          // step
+          script.error("`bazel test` returned status ${status}")
+        }
       }
     }
   }

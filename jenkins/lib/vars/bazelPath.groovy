@@ -34,8 +34,6 @@ def call(String bazel_version, String node_label) {
       error("Failed to find upstream cause while asked to build with custom Bazel")
     }
 
-    def ws = pwd()
-    def targetPath = "${ws}/.bazel"
     echo "Using Bazel binary from upstream project ${cause.upstreamProject} build #${cause.upstreamBuild} at path ${cause.artifactPath}"
     dir(".bazel") { deleteDir() }
     step([$class: 'CopyArtifact',
@@ -45,8 +43,10 @@ def call(String bazel_version, String node_label) {
           projectName: cause.upstreamProject,
           selector: [$class: 'SpecificBuildSelector',
                      buildNumber: "${cause.upstreamBuild}"],
-          target: targetPath])
-    return targetPath + "/" + cause.artifactName
+          target: ".bazel/"])
+    return node_label.startsWith("windows") ?
+        "${pwd()}\\.bazel\\${cause.artifactName}" :
+        "${pwd()}/.bazel/${cause.artifactName}"
   } else {
     def bazel = node_label.startsWith("windows") ?
                 "c:\\bazel_ci\\installs\\${bazel_version}\\bazel.exe" :

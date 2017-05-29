@@ -65,14 +65,14 @@ def call(config = [:]) {
     "--build_tag_filters=${config.build_tag_filters.join ','}"
   ]
   def test_options = config.test_opts + [
-    "--test_tag_filters=${config.test_tag_filters.join ','}"
+    "--test_tag_filters=${config.test_tag_filters.join ','}",
+    "--build_tests_only",
+    "-k"
   ]
   node(config.node_label) {
-    ws(currentBuild.projectName + "-" +
+    ws("workspace/${currentBuild.fullProjectName}-" +
        config.get("name", config.node_label + "-" + config.bazel_version)) {
       maybeSauce(config.sauce) {
-        def bazel = bazelPath(config.bazel_version, config.node_label)
-
         // Checkout the code
         echo "Checkout ${config.repository}"
         recursiveGit(repository: config.repository,
@@ -82,6 +82,8 @@ def call(config = [:]) {
         // And build
         withEnv(["JAVA_VERSION=${java_version}"]) {
           maybeDir(config.workspace) {
+            def bazel = bazelPath(config.bazel_version, config.node_label)
+
             bazelJob(binary: bazel,
                      build_opts: build_options,
                      test_opts: test_options,

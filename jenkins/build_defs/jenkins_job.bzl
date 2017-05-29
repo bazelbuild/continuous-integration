@@ -191,6 +191,7 @@ def bazel_github_job(name, platforms=[], branch="master", project=None, org="goo
           "JSON_CONFIGURATION": config,
         },
         substitutions=substitutions,
+        git_url=git_url,
         project=project,
         org=org,
         project_url=project_url,

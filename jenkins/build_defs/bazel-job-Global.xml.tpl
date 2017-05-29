@@ -52,7 +52,7 @@ bazelCiConfiguredJob(
     branch: "{{ variables.BRANCH }}",
 {% endif %}
     extra_bazelrc: params.EXTRA_BAZELRC,
-    configuration: '''{{ imports['JSON_CONFIGURATION'].replace('\\', '\\\\').replace("'", "\\'") }}''',
+    configuration: '''{{ raw_imports['JSON_CONFIGURATION'].replace('\\', '\\\\').replace("'", "\\'") }}''',
     workspace: "{{ variables.WORKSPACE }}",
     mail_recipient: "",
     {% if variables.SAUCE_ENABLED == "true" %}

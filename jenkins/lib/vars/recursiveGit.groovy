@@ -38,9 +38,9 @@ def call(config = [:]) {
                                parentCredentials: false,
                                recursiveSubmodules: true,
                                reference: "",
-                               trackingSubmodules: false]],
+                               trackingSubmodules: false],
+                              [$class: 'CleanCheckout']],
                  submoduleCfg: [],
                  userRemoteConfigs: [[url: config.repository, refspec: config.refspec]]],
            poll: config.poll)
 }
-

@@ -45,8 +45,7 @@
                 "    path = \"${ANDROID_NDK_PATH}\",",
                 ")",
                 "EOF"
-          ],
-            "test_opts": ["-k", "--build_tests_only"],
+            ],
             "tests": [
                 "//scripts/...",
                 "//src/...",
@@ -76,7 +75,6 @@
                 "EOF"
             ],
             "build_opts": ["--define IPHONE_SDK=1"],
-            "test_opts": ["-k", "--build_tests_only"],
             "tests": [
                 "//scripts/...",
                 "//src/...",
@@ -99,7 +97,6 @@
             "variation": ""
         }],
         "parameters": {
-            "test_opts": ["-k", "--build_tests_only"],
             "tests": [
                 "//src/test/java/...",
                 "//src/test/cpp/...",
@@ -121,8 +118,7 @@
             "variation": ""
         }],
         "parameters": {
-            "test_opts": ["-k", "--build_tests_only"],
-            "tests": ["//src/tst/shell/bazel:bazel_windows_example_test"],
+            "tests": ["//src/test/shell/bazel:bazel_windows_example_test"],
             "targets": []
         }
     }

@@ -22,7 +22,7 @@ def call(String id, Closure body) {
     body()
   } else {
     sauce(id) {
-      sauceConnect(useGeneratedTunnelIdentifier: true) {
+      sauceconnect(useGeneratedTunnelIdentifier: true) {
         body()
       }
     }
