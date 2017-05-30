@@ -195,8 +195,7 @@ bazel_github_job(
         "//src/test/java/...",
         "//src/test/cpp/...",
         "//src/test/native:all_tests",
-        # TODO(pcloudy): Re-enable this test when 0.5 is released.
-        #"//src/test/shell/bazel:bazel_bootstrap_distfile_test",
+        "//src/test/shell/bazel:bazel_bootstrap_distfile_test",
     ],
     windows_tests_msys = [
         "//src/test/shell/bazel:bazel_windows_example_test",
