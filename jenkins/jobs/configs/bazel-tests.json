@@ -99,6 +99,7 @@
             "variation": ""
         }],
         "parameters": {
+            "build_opts": ["--copt=-w", "--host_copt=-w"],
             "test_opts": ["-k", "--build_tests_only"],
             "tests": [
                 "//src/test/java/...",
@@ -121,6 +122,7 @@
             "variation": ""
         }],
         "parameters": {
+            "build_opts": ["--cpu=x64_windows_msys", "--host_cpu=x64_windows_msys"],
             "test_opts": ["-k", "--build_tests_only"],
             "tests": ["//src/tst/shell/bazel:bazel_windows_example_test"],
             "targets": []
