@@ -24,7 +24,11 @@ echo $res.ResponseUri.AbsolutePath.TrimStart("/bazelbuild/bazel/releases/tag/") 
 for /F %%i in ('powershell -file get_latest_bazel_version.ps1') do set BAZEL_VERSION=%%i
 del get_latest_bazel_version.ps1
 
-echo %BAZEL_VERSION%
+echo BAZEL_VERSION=(%BAZEL_VERSION%)
+if "%BAZEL_VERSION%" == "" (
+  echo ERROR: Could not parse BAZEL_VERSION from https://github.com/bazelbuild/bazel/releases/latest
+  exit 1
+)
 
 :: Download the latest bazel release
 set folder=c:\bazel_ci\installs\%BAZEL_VERSION%
