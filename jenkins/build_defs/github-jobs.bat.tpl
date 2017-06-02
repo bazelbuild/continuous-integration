@@ -67,12 +67,12 @@ del /q /f .unstable
 
 :: Check variables.WINDOWS_BUILDS
 if not "{{ variables.WINDOWS_BUILDS }}" == "" (
-  call:bazel build --copt=-w --host_copt=-w {{ variables.WINDOWS_BUILDS }}
+  call:bazel build --copt=-w --cpu=x64_windows_msvc --host_copt=-w {{ variables.WINDOWS_BUILDS }}
 )
 
 :: Check variables.WINDOWS_TESTS
 if not "{{ variables.WINDOWS_TESTS }}" == "" (
-  call:bazel test --copt=-w --host_copt=-w {{ variables.WINDOWS_TESTS }}
+  call:bazel test --copt=-w --cpu=x64_windows_msvc --host_copt=-w {{ variables.WINDOWS_TESTS }}
 )
 
 set MSYS_OPTION=--cpu=x64_windows_msys --host_cpu=x64_windows_msys
