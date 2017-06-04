@@ -14,6 +14,61 @@
 
 import build.bazel.ci.JenkinsUtils
 
+@NonCPS
+private def pruneIfOlderThan(file, timestamp) throws IOException {
+  if (file.isDirectory()) {
+    boolean empty = true
+    for (child in file.listFiles()) {
+      if (!pruneIfOlderThan(child, timestamp)) {
+        empty = false
+      }
+    }
+    if (empty) {
+      if (file.delete()) {
+        return true
+      }
+    }
+  } else if (file.lastModified() < timestamp) {
+    if (file.delete()) {
+      return true
+    }
+  }
+  return false
+}
+
+@NonCPS
+private def pruneOldCustomBazel(node_label) {
+  try {
+    def dir = new File(getBazelInstallPath(node_label, "custom")).parentFile
+    pruneIfOlderThan(dir,
+                     System.currentTimeMillis() - 172800000 /* 2 days */)
+  } catch(IOException ex) {
+    // Several error can occurs, we ignore them all as this step
+    // is just for convenience, not critical.
+  }
+}
+
+private def getBazelInstallPath(node_label, String... segments) {
+  return node_label.startsWith("windows") ?
+      "c:\\bazel_ci\\installs\\${segments.join '\\'}\\bazel.exe" :
+      "${env.HOME}/.bazel/${segments.join '/'}/binary/bazel"
+}
+
+@NonCPS
+private def touchFileIfExists(path) {
+  // Touch a file anywhere on the FS
+  def f = new File(path)
+  def r = f.exists()
+  if (r) {
+    try {
+      f.setLastModified(System.currentTimeMillis())
+    } catch(IOException ex) {
+      // The file might be busy, especially on windows, swallowing exception
+    }
+  }
+  return r
+}
+
 /**
  * A step that returns the path of a specific version of the bazel binary. If that version is
  * set to "custom", it will for look for the bazel binary in the list of artifacts transmitted
@@ -35,22 +90,36 @@ def call(String bazel_version, String node_label) {
     }
 
     echo "Using Bazel binary from upstream project ${cause.upstreamProject} build #${cause.upstreamBuild} at path ${cause.artifactPath}"
-    dir(".bazel") { deleteDir() }
-    step([$class: 'CopyArtifact',
-          filter: cause.artifactPath,
-          fingerprintArtifacts: true,
-          flatten: true,
-          projectName: cause.upstreamProject,
-          selector: [$class: 'SpecificBuildSelector',
-                     buildNumber: "${cause.upstreamBuild}"],
-          target: ".bazel/"])
-    return node_label.startsWith("windows") ?
-        "${pwd()}\\.bazel\\${cause.artifactName}" :
-        "${pwd()}/.bazel/${cause.artifactName}"
+    def bazel = getBazelInstallPath(
+      node_label,
+      "custom",
+      cause.upstreamProject.toString().replaceAll("/", "_"),
+      cause.upstreamBuild.toString(),
+      "variation_${variation}")
+    if (!touchFileIfExists(bazel)) {
+      dir(".bazel") { deleteDir() }
+      step([$class: 'CopyArtifact',
+            filter: cause.artifactPath,
+            fingerprintArtifacts: true,
+            flatten: true,
+            projectName: cause.upstreamProject,
+            selector: [$class: 'SpecificBuildSelector',
+                       buildNumber: "${cause.upstreamBuild}"],
+            target: ".bazel/"])
+      if (node_label.startsWith("windows")) {
+        // File.parent is null, use custom substring
+        def bazelDir = bazel.substring(0, bazel.lastIndexOf("\\"))
+        bat "mkdir ${bazelDir}\r\nmove /Y ${pwd()}\\.bazel\\bazel.exe ${bazel}"
+      } else {
+        def bazelDir = bazel.substring(0, bazel.lastIndexOf("/"))
+        sh "mkdir -p ${bazelDir}; mv .bazel/bazel ${bazel}"
+      }
+    }
+    pruneOldCustomBazel(node_label)
+    echo "Using custom version of Bazel at ${bazel}"
+    return bazel
   } else {
-    def bazel = node_label.startsWith("windows") ?
-                "c:\\bazel_ci\\installs\\${bazel_version}\\bazel.exe" :
-                "${env.HOME}/.bazel/${bazel_version}/binary/bazel"
+    def bazel = getBazelInstallPath(node_label, bazel_version)
     echo "Using released version of Bazel at ${bazel}"
     return bazel
   }
