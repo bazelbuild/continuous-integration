@@ -8,6 +8,10 @@ Bazel CI is testing both on presubmit (on a pending change) or on
 postsubmit (on the master branch). It also handles the release project
 of Bazel and the performance benchmarks.
 
+If you wish to add or modify a configuration for one of the project
+tested on Bazel CI, go see the
+[project owner documentation](owner.md).
+
 ## Postsubmit
 
 Every project that runs on Bazel CI is run on postsubmit. It is done

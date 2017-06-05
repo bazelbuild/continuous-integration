@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import build.bazel.ci.BazelConfiguration
 
 // Work around https://issues.jenkins-ci.org/browse/JENKINS-27421
 @NonCPS
@@ -25,10 +24,15 @@ def descriptorToString(descriptor) {
 
 def createJobsFromConfiguration(config, configNames, script) {
   def cfgs = []
-  def flattenConfigurations = BazelConfiguration.flattenConfigurations(
-    BazelConfiguration.parse(config.configuration), config.restrict_configuration)
-  def entrySet = flattenConfigurations.entrySet().toArray();
-  flattenConfiguration = null
+  def name = currentBuild.projectName
+  // Convert to an array to avoid serialization issue with Jenkins
+  def entrySet = readConfiguration(files: [".ci/${name}.json", "scripts/ci/${name}.json"],
+                                   repository: config.repository,
+                                   branch: config.branch,
+                                   refspec: config.refspec,
+                                   default_configuration: config.configuration,
+                                   restrict_configuration: config.restrict_configuration
+                                  ).entrySet().toArray()
   for (int k = 0; k < entrySet.length; k++) {
     def params = entrySet[k].value
     def conf = entrySet[k].key

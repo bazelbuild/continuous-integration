@@ -10,8 +10,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import build.bazel.ci.BazelConfiguration
-
 // A step to bootstrap bazel on several platforms
 def call(config = [:]) {
   def variation = config.get("variation", "")
@@ -22,11 +20,14 @@ def call(config = [:]) {
   def restrict_configuration = config.get("restrict_configuration", [:])
 
   def jobs = [:]
-  def flattenConfigurations = BazelConfiguration.flattenConfigurations(
-    BazelConfiguration.parse(config.configuration), config.restrict_configuration)
-
-  // Avoid serialization
-  def entrySet = flattenConfigurations.entrySet().toArray()
+  // Convert to an array to avoid serialization issue with Jenkins
+  def entrySet = readConfiguration(files: ["scripts/ci/bootstrap.json"],
+                                   repository: config.repository,
+                                   branch: config.branch,
+                                   refspec: config.refspec,
+                                   default_configuration: config.get("configuration", null),
+                                   restrict_configuration: config.restrict_configuration
+                                  ).entrySet().toArray()
   def values = []
   def keys = []
   for (int k = 0; k < entrySet.length; k++) {
