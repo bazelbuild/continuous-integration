@@ -3,7 +3,9 @@ LINUX_PLATFORMS = [
     "ubuntu_16.04-x86_64",
 ]
 
-BSD_PLATFORMS = ["freebsd-11", "freebsd-12"]
+# TODO(#77): renable freebsd-12 when it works properly.
+#BSD_PLATFORMS = ["freebsd-11", "freebsd-12"]
+BSD_PLATFORMS = ["freebsd-11"]
 
 DARWIN_PLATFORMS = ["darwin-x86_64"]
 
