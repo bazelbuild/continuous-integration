@@ -19,6 +19,8 @@
 
 # We ignore errors on this script as we want to retry on errors.
 
+cat > /root/jenkins-startup <<'EOF'
+
 # Wait until the machine is set-up on creation
 while ! (id ci >&/dev/null) || [ ! -f /home/ci/node_name ]; do
   sleep 60
@@ -90,3 +92,8 @@ while true; do
   # The jenkins server is down, sleep and retries in 1 minute
   sleep 60
 done
+
+EOF
+
+# Start the actual jenkins daemon
+echo bash /root/jenkins-startup | batch
