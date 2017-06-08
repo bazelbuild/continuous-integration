@@ -81,8 +81,8 @@
                 "bazel-bin/src/bazel": ["bazel.exe", "bazel-msvc-%{release_name}.exe"]
             },
             "opts": [
-                "--cpu=x64_windows_msvc",
-                "--copt=/w"
+                "--copt=-w",
+                "--host_copt=-w"
             ]
         }
     },
