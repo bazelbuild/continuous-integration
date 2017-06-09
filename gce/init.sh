@@ -107,7 +107,7 @@ case "${command}" in
     echo "checking for its existence. It will also overwrite the firewall rules."
     echo -n "Are you sure you want to do that? [y/N] "
     read ans
-    [ "$ans" = "y" -o "$ans" = "Y" ] || exit 1
+    [ "$ans" = "y" ] || [ "$ans" = "Y" ] || exit 1
     action create "$@"
     ;;
   "firewall")
