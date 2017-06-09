@@ -55,7 +55,7 @@ function setup_firewall() {
   local counter=0
   if $restrict_http; then
     for i in "${restrict_ips[@]}"; do
-      counter=$(($counter+1))
+      counter=$((counter+1))
       gcloud compute firewall-rules create "${network}-allow-http-https-icmp-${counter}" \
         --network="${network}" \
         --allow="tcp:80,udp:80,tcp:443,udp:443,icmp" \
@@ -75,7 +75,7 @@ function setup_firewall() {
   log "Enabling incoming SSH, RDP, Jenkins-API and ICMP traffic to VMs for network ${network}"
   counter=0
   for i in "${restrict_ips[@]}"; do
-    counter=$(($counter+1))
+    counter=$((counter+1))
     gcloud compute firewall-rules create "${network}-allow-ssh-rdp-jenkins-icmp-${counter}" \
       --network="${network}" \
       --allow=tcp:22,tcp:3389,tcp:50000,icmp \
