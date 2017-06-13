@@ -58,6 +58,7 @@ GITHUB_JOBS = [
     "rules_jsonnet",
     "rules_rust",
     "rules_scala",
+    "migration-tooling",
 ] + GERRIT_JOBS + RULES + DISABLED_RULES
 
 NO_PR_JOBS = ["bazel-docker-tests"]
