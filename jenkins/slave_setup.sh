@@ -20,7 +20,7 @@
 HOME_FS={{ variables.HOME_FS }}
 
 # Install certificates
-(cd /usr/share/ca-certificates && find -type f -name '*.crt' \
+(cd /usr/share/ca-certificates && find . -type f -name '*.crt' \
     | sed -e 's|^\./||') > /etc/ca-certificates.conf
 update-ca-certificates
 
