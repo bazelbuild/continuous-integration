@@ -330,7 +330,7 @@ bazel_github_job(
 )
 
 bazel_github_job(
-    name = "dash",
+    name = "migration-tooling",
     org = "bazelbuild",
     platforms = UNIX_PLATFORMS,
 )
