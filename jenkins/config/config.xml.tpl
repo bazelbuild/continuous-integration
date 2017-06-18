@@ -26,9 +26,7 @@
       <filterExecutors>false</filterExecutors>
       <filterQueue>false</filterQueue>
       <properties class="hudson.model.View$PropertyList"/>
-      <jobNames>
-        {% for v in variables.GITHUB_JOBS.split(", ") %}<string>{{ v }}</string>{% endfor %}
-      </jobNames>
+      <jobNames/>
       <jobFilters/>
       <columns>
         <hudson.views.StatusColumn/>
@@ -40,6 +38,8 @@
         <hudson.views.BuildButtonColumn/>
       </columns>
       <recurse>false</recurse>
+      <includeRegex>(?!(install-bazel|Github-Trigger|PR|CR|Global|.*-Benchmark).*).*</includeRegex>
+      <statusFilter>true</statusFilter>
     </listView>
     <listView>
       <owner class="hudson" reference="../../.."/>
@@ -47,9 +47,7 @@
       <filterExecutors>false</filterExecutors>
       <filterQueue>false</filterQueue>
       <properties class="hudson.model.View$PropertyList"/>
-      <jobNames>
-        {% for v in variables.BAZEL_JOBS.split(", ") %}<string>{{ v }}</string>{% endfor %}
-      </jobNames>
+      <jobNames/>
       <jobFilters/>
       <columns>
         <hudson.views.StatusColumn/>
@@ -60,7 +58,9 @@
         <hudson.views.LastDurationColumn/>
         <hudson.views.BuildButtonColumn/>
       </columns>
+      <includeRegex>(install-bazel|Github-Trigger|PR|CR|Global|.*-Benchmark.*)</includeRegex>
       <recurse>false</recurse>
+      <statusFilter>true</statusFilter>
     </listView>
     <com.smartcodeltd.jenkinsci.plugins.buildmonitor.BuildMonitorView>
       <owner class="hudson" reference="../../.."/>
@@ -68,18 +68,17 @@
       <filterExecutors>false</filterExecutors>
       <filterQueue>false</filterQueue>
       <properties class="hudson.model.View$PropertyList"/>
-      <jobNames>
-        <comparator class="hudson.util.CaseInsensitiveComparator"/>{% for v in variables.IMPORTANT_JOBS.split(", ")|sort %}
-        <string>{{ v }}</string>{% endfor %}
-      </jobNames>
+      <jobNames/>
       <jobFilters/>
       <columns/>
-      <recurse>true</recurse>
       <title>Bazel Tests</title>
       <config>
         <displayCommitters>false</displayCommitters>
         <order class="com.smartcodeltd.jenkinsci.plugins.buildmonitor.order.ByName"/>
       </config>
+      <includeRegex>Global.*</includeRegex>
+      <recurse>true</recurse>
+      <statusFilter>true</statusFilter>
     </com.smartcodeltd.jenkinsci.plugins.buildmonitor.BuildMonitorView>
   </views>
   <primaryView>Projects</primaryView>

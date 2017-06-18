@@ -1,88 +1,39 @@
-LINUX_PLATFORMS = [
-    "linux-x86_64",
-    "ubuntu_16.04-x86_64",
-]
+def _is_staging(job):
+  job_desc = native.existing_rule(job + "-staging")
+  job_subs = job_desc["substitutions"]
+  is_bazel = "PROJECT_NAME" in job_subs
+  is_gerrit = "GERRIT_PROJECT" in job_subs and job_subs["GERRIT_PROJECT"] != ""
+  # Take job with Gerrit review, or jobs that are not bazel jovbs
+  is_gerrit_or_not_bazel = is_gerrit or not is_bazel
+  # Exclude Benchmark jobs
+  is_not_benchmark = "-Benchmark" not in job
+  # Gold jobs are some bazel job that we include for testing
+  is_gold = job in ["TensorFlow", "Tutorial"]
+  return (is_gold or is_gerrit_or_not_bazel) and is_not_benchmark
 
-BSD_PLATFORMS = ["freebsd-11", "freebsd-12"]
 
-DARWIN_PLATFORMS = ["darwin-x86_64"]
+def _is_testing(job):
+  # We include all test but the docker ones (they needs access to the docker server).
+  return not "docker" in job and job != "continuous-integration"
 
-WINDOWS_PLATFORMS = ["windows-x86_64"]
 
-UNIX_PLATFORMS = LINUX_PLATFORMS + DARWIN_PLATFORMS
+def job_lists(name = "jobs", visibility = None):
+  jobs = native.existing_rules()
 
-ALL_PLATFORMS = UNIX_PLATFORMS + WINDOWS_PLATFORMS
+  native.filegroup(
+    name = name,
+    srcs = [j for j in jobs if j.endswith("/all")],
+    visibility = visibility,
+  )
 
-RULES = [
-    "rules_appengine",
-    "rules_closure",
-    "rules_d",
-    "rules_go",
-    "rules_sass",
-    "rules_gwt",
-    "rules_groovy",
-    "rules_perl",
-    "rules_docker",
-    # These are not really rules, but it is simpler to put here.
-    "skydoc",
-    "bazel-watcher",
-]
+  native.filegroup(
+    name = "staging-" + name,
+    srcs = [j for j in jobs if j.endswith("/staging") and _is_staging(j[:-8])],
+    visibility = visibility,
+  )
 
-DISABLED_RULES = []
-
-GERRIT_JOBS = [
-    "bazel-tests",
-    "continuous-integration",
-    "eclipse",
-]
-
-GITHUB_JOBS = [
-    "TensorFlow",
-    "TensorFlow_Serving",
-    "tf_models_syntaxnet",
-    "Tutorial",
-    "re2",
-    "protobuf",
-    "gerrit",
-    # rules_dotnet is disabled on Linux until bazelbuild/rules_dotnet#13 is fixed.
-    "rules_dotnet",
-    # rules_web was renamed to rules_webtesting, keep the legacy name
-    # for the job to keep history but use the new project name.
-    "rules_web",
-    "intellij",
-    "buildifier",
-    "rules_jsonnet",
-    "rules_rust",
-    "rules_scala",
-    "migration-tooling",
-] + GERRIT_JOBS + RULES + DISABLED_RULES
-
-NO_PR_JOBS = ["bazel-docker-tests"]
-
-BAZEL_STAGING_JOBS = [
-    "Github-Trigger",
-    "Global/pipeline",
-    "CR/global-verifier",
-    "install-bazel",
-]
-
-BAZEL_JOBS = BAZEL_STAGING_JOBS + [
-    "Bazel-Benchmark",
-    "Bazel-Push-Benchmark-Output",
-]
-
-JOBS = BAZEL_JOBS + GITHUB_JOBS + NO_PR_JOBS
-
-JOBS_SUBSTITUTIONS = {
-    "GITHUB_JOBS": ", ".join(GITHUB_JOBS + NO_PR_JOBS),
-    "BAZEL_JOBS": ", ".join(BAZEL_JOBS),
-    "IMPORTANT_JOBS": ", ".join(GITHUB_JOBS + NO_PR_JOBS + ["Bazel", "Bazel-Publish-Site", "Bazel-Install-Trigger"])
-}
-
-STAGING_GITHUB_JOBS = GERRIT_JOBS + ["TensorFlow", "Tutorial"]
-STAGING_JOBS = BAZEL_STAGING_JOBS + STAGING_GITHUB_JOBS
-STAGING_JOBS_SUBSTITUTIONS = {
-    "GITHUB_JOBS": ", ".join(STAGING_GITHUB_JOBS),
-    "BAZEL_JOBS": ", ".join(BAZEL_STAGING_JOBS),
-    "IMPORTANT_JOBS": ", ".join(STAGING_GITHUB_JOBS + ["Bazel", "Bazel-Publish-Site", "Bazel-Install-Trigger"])
-}
+  native.filegroup(
+    name = "test-" + name,
+    srcs = [j for j in jobs if j.endswith("/test") and _is_testing(j[:-5])],
+    visibility = visibility,
+  )

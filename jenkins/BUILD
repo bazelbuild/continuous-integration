@@ -17,7 +17,6 @@ package(default_visibility = ["//jenkins:__subpackages__"])
 # Configuration for our Jenkins instance
 load("@io_bazel_rules_docker//docker:docker.bzl", "docker_build")
 load("//jenkins/build_defs:jenkins.bzl", "jenkins_node", "jenkins_docker_build", "jenkins_job", "jenkins_nodes", "jenkins_node_names")
-load("//jenkins/jobs:jobs.bzl", "JOBS_SUBSTITUTIONS", "STAGING_JOBS_SUBSTITUTIONS")
 
 #
 # Nodes
@@ -285,7 +284,7 @@ jenkins_docker_build(
     substitutions = {
         "SECURITY_CONFIG": SECURITY_CONFIG,
         "PUBLIC_JENKINS_URL": "http://ci.bazel.io/",
-    } + JOBS_SUBSTITUTIONS,
+    },
     tars = ["//jenkins/lib"],
     visibility = ["//visibility:public"],
 )
@@ -310,7 +309,7 @@ jenkins_docker_build(
     substitutions = {
         "SECURITY_CONFIG": SECURITY_CONFIG,
         "PUBLIC_JENKINS_URL": "http://ci-staging.bazel.io/",
-    } + STAGING_JOBS_SUBSTITUTIONS,
+    },
     tars = ["//jenkins/lib"],
     visibility = ["//gcr:__pkg__"],
 )
@@ -331,7 +330,7 @@ jenkins_docker_build(
     substitutions = {
         "SECURITY_CONFIG": "<useSecurity>false</useSecurity>",
         "PUBLIC_JENKINS_URL": "##ENV:JENKINS_SERVER##",
-    } + JOBS_SUBSTITUTIONS,
+    },
     tars = ["//jenkins/lib"],
 )
 
