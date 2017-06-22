@@ -38,7 +38,7 @@ pkg_tar(
     if len(config) >= 3 and config[2] == "pinned":
       repository_ctx.file(dest + ".pinned", "")
   repository_ctx.file("BUILD", """
-load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
+load("@io_bazel_rules_docker//docker:docker.bzl", "docker_build")
 
 docker_build(
   name = "image",

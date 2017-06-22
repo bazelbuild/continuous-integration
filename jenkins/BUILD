@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Configuration for our Jenkins instance
-load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
+load("@io_bazel_rules_docker//docker:docker.bzl", "docker_build")
 load("//jenkins/build_defs:jenkins.bzl", "jenkins_node", "jenkins_docker_build", "jenkins_job", "jenkins_nodes", "jenkins_node_names")
 load("//jenkins/jobs:jobs.bzl", "JOBS_SUBSTITUTIONS", "STAGING_JOBS_SUBSTITUTIONS")
 
