@@ -14,7 +14,7 @@
 
 # Setup jenkins and build the corresponding docker images
 
-load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
+load("@io_bazel_rules_docker//docker:docker.bzl", "docker_build")
 load(":templates.bzl", "expand_template")
 
 JENKINS_SERVER = "http://jenkins:80"
