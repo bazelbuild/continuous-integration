@@ -50,6 +50,10 @@ if not exist %folder%\bazel.exe (
 rmdir /q c:\bazel_ci\installs\latest
 mklink /J c:\bazel_ci\installs\latest %folder%
 
+:: Also update bootstrap Bazel to the latest release
+rmdir /q c:\bazel_ci\installs\bootstrap
+mklink /J c:\bazel_ci\installs\bootstrap %folder%
+
 :: Install Bazel built at HEAD
 md c:\bazel_ci\installs\HEAD
 if "%PLATFORM_NAME:~0,12%" == "windows-msvc" (
