@@ -16,7 +16,7 @@
 
 def _impl(repository_ctx):
   repository_ctx.file("BUILD", """
-load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
+load("@io_bazel_rules_docker//docker:docker.bzl", "docker_build")
 
 docker_build(
     name = "image",

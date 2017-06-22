@@ -13,6 +13,18 @@
 # limitations under the License.
 workspace(name = "io_bazel_ci")
 
+git_repository(
+    name = "io_bazel_rules_docker",
+    remote = "https://github.com/bazelbuild/rules_docker.git",
+    commit = "e770f81cef4165828df955f37b827874a884a1de",
+)
+
+load(
+  "@io_bazel_rules_docker//docker:docker.bzl",
+  "docker_repositories"
+)
+docker_repositories()
+
 # Docker base images
 load("//base:docker_pull.bzl", "docker_pull")
 

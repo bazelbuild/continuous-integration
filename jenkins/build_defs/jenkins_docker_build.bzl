@@ -14,7 +14,7 @@
 
 # Creation of the docker container for the jenkins master.
 
-load("@bazel_tools//tools/build_defs/docker:docker.bzl", "docker_build")
+load("@io_bazel_rules_docker//docker:docker.bzl", "docker_build")
 load(":templates.bzl", "merge_files", "strip_suffix")
 load(":vars.bzl", "MAIL_SUBSTITUTIONS")
 
