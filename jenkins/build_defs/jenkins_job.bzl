@@ -113,6 +113,7 @@ def bazel_github_job(name, branch="master", project=None, org="bazelbuild",
                      config="//jenkins/build_defs:default.json",
                      test_platforms=["linux-x86_64"],
                      enable_trigger=True,
+                     poll=None,
                      gerrit_project=None,
                      enabled=True,
                      pr_enabled=True,
@@ -121,6 +122,8 @@ def bazel_github_job(name, branch="master", project=None, org="bazelbuild",
                      sauce_enabled=False,
                      use_upstream_branch=False):
   """Create a generic github job configuration to build against Bazel head."""
+  if poll == None:
+    poll = org != "bazelbuild"
   if not project:
     project = name
 
@@ -131,6 +134,7 @@ def bazel_github_job(name, branch="master", project=None, org="bazelbuild",
     "NAME": name,
     "disabled": str(not enabled).lower(),
     "enable_trigger": str(enable_trigger and github_enabled).lower(),
+    "poll": str(poll).lower(),
     "github": str(github_enabled),
     "GERRIT_PROJECT": str(gerrit_project) if gerrit_project else "",
     "RUN_SEQUENTIAL": str(run_sequential).lower(),

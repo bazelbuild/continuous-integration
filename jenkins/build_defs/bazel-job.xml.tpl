@@ -22,10 +22,21 @@
     {% endif %}
     <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
       <triggers>
+        {% if variables.production == "true" %}
         {% if variables.enable_trigger == "true" %}
         <com.cloudbees.jenkins.GitHubPushTrigger>
           <spec></spec>
         </com.cloudbees.jenkins.GitHubPushTrigger>
+        {% endif %}
+        {% if variables.poll == "true" %}
+        <hudson.triggers.SCMTrigger>
+          <spec>0 * * * *
+15 * * * *
+30 * * * *
+45 * * * *</spec>
+          <ignorePostCommitHooks>false</ignorePostCommitHooks>
+        </hudson.triggers.SCMTrigger>
+        {% endif %}
         {% endif %}
       </triggers>
     </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>

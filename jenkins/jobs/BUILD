@@ -179,14 +179,18 @@ bazel_github_job(
 ]]
 
 # Jobs from the google org
-[bazel_github_job(
-    name = n,
-    config = ":configs/%s.json" % n,
+bazel_github_job(
+    name = "re2",
+    config = ":configs/re2.json",
     org = "google",
-) for n in [
-    "re2",
-    "protobuf",
-]]
+)
+
+bazel_github_job(
+    name = "protobuf",
+    config = ":configs/protobuf.json",
+    org = "google",
+    poll = False,  # protobuf had added the robots
+)
 
 # End of project list
 job_lists(visibility = ["//jenkins:__pkg__"])

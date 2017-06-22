@@ -30,6 +30,9 @@ takes the following parameters:
   it is no longer needed since the configuration can be changed using a
   file in the repository (see next section).
 * `enable_trigger` enable postsubmit test (enabled by default).
+* `poll` use polling to trigger post-submit test instead of waiting
+  for GitHub API to notify. Set to `True` by default if the
+  organization is not `bazelbuild`.
 * `gerrit_project` specifies a project on the
   [Bazel Gerrit server](https://bazel-review.googlesource.com) that
   mirrors the GitHub project and will be used to trigger presubmit from
