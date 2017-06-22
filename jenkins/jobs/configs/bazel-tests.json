@@ -99,6 +99,7 @@
         "parameters": {
             "build_opts": ["--copt=-w", "--host_copt=-w"],
             "tests": [
+                "//src/test/py/...",
                 "//src/test/java/...",
                 "//src/test/cpp/...",
                 "//src/test/native:all_tests"

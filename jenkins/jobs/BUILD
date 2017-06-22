@@ -195,6 +195,7 @@ bazel_github_job(
     windows_targets_msys = [
     ],
     windows_tests = [
+        "//src/test/py/...",
         "//src/test/java/...",
         "//src/test/cpp/...",
         "//src/test/native:all_tests",
