@@ -19,8 +19,11 @@ def formatRun(run) {
   if (run == null) {
     return "unkown status"
   }
+  def consoleUrl = "${run.absoluteUrl}console"
+  def name = java.net.URLEncoder.encode(run.fullProjectName, "UTF-8")
+  def runUrl = "/blue/organizations/jenkins/${name}/detail/${run.projectName}/${run.number}/pipeline/"
   def resultImg = "${Jenkins.RESOURCE_PATH}/images/16x16/${run.rawBuild.getIconColor()}.png"
-  return "<a href=\"${run.absoluteUrl}console\"><img src=\"${resultImg}\"/></a> <a href=\"${run.absoluteUrl}\">#${run.number}</a>"
+  return "<a href=\"${consoleUrl}\"><img src=\"${resultImg}\"/></a> <a href=\"${runUrl}\">#${run.number}</a>"
 }
 
 @NonCPS
