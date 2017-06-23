@@ -28,9 +28,9 @@ def call(String server, String cookiesFile, String reviewer, changeNum, branch, 
     echo "Reviewing change ${url} (${branch})"
     gerrit.addReviewer(changeNum)
     gerrit.comment(changeNum, branch,
-		   "Starting build at ${JenkinsUtils.getBlueOceanUrl(currentBuild)}")
+                   "Starting build at ${JenkinsUtils.getBlueOceanUrl(currentBuild)}")
   }
-  def config = [gerritBuild: currentBuild]
+  def config = [gerritBuild: currentBuild, gerrit: gerrit]
   def result = null
   try {
     body.delegate = config
