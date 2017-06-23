@@ -9,7 +9,7 @@ echo "deb https://apt.dockerproject.org/repo ubuntu-wily main" >/etc/apt/sources
 apt-get -y update
 # Installing docker might fails because the docker socket is masked.
 # See https://github.com/docker/docker/issues/22847
-apt-get -y install docker-engine=1.9.* \
+apt-get -y install docker-engine \
   || (systemctl unmask docker.socket; service docker start; apt-get install -f)
 
 # Docker group
