@@ -13,12 +13,18 @@
 // limitations under the License.
 
 import build.bazel.ci.JenkinsUtils
+import hudson.FilePath
+import hudson.remoting.Channel
 
 @NonCPS
+private def getFilePath(String path) {
+  return new FilePath(Channel.current(), path)
+}
+
 private def pruneIfOlderThan(file, timestamp) throws IOException {
   if (file.isDirectory()) {
     boolean empty = true
-    for (child in file.listFiles()) {
+    for (child in file.list()) {
       if (!pruneIfOlderThan(child, timestamp)) {
         empty = false
       }
@@ -36,37 +42,46 @@ private def pruneIfOlderThan(file, timestamp) throws IOException {
   return false
 }
 
-@NonCPS
 private def pruneOldCustomBazel(node_label) {
+  def file = getFilePath(getBazelInstallBase(node_label) +  "custom")
   try {
-    def dir = new File(getBazelInstallPath(node_label, "custom")).parentFile
-    pruneIfOlderThan(dir,
-                     System.currentTimeMillis() - 172800000 /* 2 days */)
+    // TODO(dmarting): unfortunately, this will trigger a RPC per file operation
+    // but using FilePath.act needs a class that can be shiped to the client, so
+    // needs to be in the client classpath. If the number of RPC became a problem,
+    // maybe we can use a Jenkins plugins.
+    pruneIfOlderThan(file, System.currentTimeMillis() - 172800000 /* 2 days */)
   } catch(IOException ex) {
     // Several error can occurs, we ignore them all as this step
     // is just for convenience, not critical.
   }
 }
 
-private def getBazelInstallPath(node_label, String... segments) {
+private def getBazelInstallBase(node_label) {
   return node_label.startsWith("windows") ?
-      "c:\\bazel_ci\\installs\\${segments.join '\\'}\\bazel.exe" :
-      "${env.HOME}/.bazel/${segments.join '/'}/binary/bazel"
+      "c:\\bazel_ci\\installs\\" :
+      "${env.HOME}/.bazel/"
+}
+
+private def getBazelInstallPath(node_label, String... segments) {
+  def lastPart = node_label.startsWith("windows") ?
+      "${segments.join '\\'}\\bazel.exe" :
+      "${segments.join '/'}/binary/bazel"
+  return getBazelInstallBase(node_label) + lastPart
 }
 
 @NonCPS
 private def touchFileIfExists(path) {
   // Touch a file anywhere on the FS
-  def f = new File(path)
+  FilePath f = getFilePath(path)
   def r = f.exists()
   if (r) {
     try {
-      f.setLastModified(System.currentTimeMillis())
+      f.touch(System.currentTimeMillis())
     } catch(IOException ex) {
       // The file might be busy, especially on windows, swallowing exception
     }
   }
-  return r
+  return r;
 }
 
 /**
@@ -112,7 +127,7 @@ def call(String bazel_version, String node_label) {
         bat "mkdir ${bazelDir}\r\nmove /Y ${pwd()}\\.bazel\\bazel.exe ${bazel}"
       } else {
         def bazelDir = bazel.substring(0, bazel.lastIndexOf("/"))
-        sh "mkdir -p ${bazelDir}; mv .bazel/bazel ${bazel}"
+        sh "mkdir -p ${bazelDir}; mv -f .bazel/bazel ${bazel}"
       }
     }
     pruneOldCustomBazel(node_label)
