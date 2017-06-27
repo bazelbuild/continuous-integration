@@ -14,10 +14,14 @@
 
 package build.bazel.ci
 
+import groovy.json.JsonSlurper
+
 /**
  * A set of utility methods to call Bazel inside Jenkins
  */
 class BazelUtils implements Serializable {
+  private static final TEST_EVENTS_FILE = "bazel-events-test.json"
+  private static final BUILD_EVENTS_FILE = "bazel-events-build.json"
   private String bazel;
   private String ws;
   private def script;
@@ -78,14 +82,26 @@ class BazelUtils implements Serializable {
   def writeRc(build_opts = [],
               test_opts = [],
               extra_bazelrc = "") {
-    def rc_file_content = "common --color=yes\ntest --test_output=errors\nbuild --verbose_failures"
+    def rc_file_content = [
+      "common --color=yes",
+      "test --test_output=errors",
+      "build --verbose_failures"
+    ]
+    rc_file_content.addAll(build_opts.collect { "build ${it}" })
+    rc_file_content.addAll(test_opts.collect { "test ${it}" })
     for(opt in build_opts) {
       rc_file_content += "\nbuild ${opt}"
     }
     for(opt in test_opts) {
       rc_file_content += "\ntest ${opt}"
     }
-    script.writeFile file: "${ws}/bazel.bazelrc", text: rc_file_content + "\n${extra_bazelrc}"
+    // Store the BEP events on a json file.
+    // TODO(dmarting): We should archive it and generate a good HTML report instead of
+    // the hard to read jenkins dashboard.
+    rc_file_content.add("build --experimental_build_event_json_file=${BUILD_EVENTS_FILE}")
+    rc_file_content.add("test --experimental_build_event_json_file=${TEST_EVENTS_FILE}")
+    script.writeFile(file: "${ws}/bazel.bazelrc",
+                     text: rc_file_content.join("\n") + "\n${extra_bazelrc}")
   }
 
   // Execute a bazel build
@@ -116,12 +132,49 @@ class BazelUtils implements Serializable {
     }
   }
 
+  private def parseEventsFile(String fileName) {
+    // We requires that weirdness because the format of the events are not one JSON object
+    // but a sequence of JSON Object.
+    if (script.fileExists(fileName)) {
+      def content = script.readFile(fileName).replaceAll('\n}(?!\\s*$)', '\n},')
+      return new JsonSlurper().parseText("[${content}]")
+    }
+    // The file does not exists (probably because empty set of targets / tests), just return
+    // an empty list.
+    return []
+  }
+
+  def buildEvents() {
+    return parseEventsFile("${this.ws}/${BUILD_EVENTS_FILE}")
+  }
+
+  def testEvents() {
+    return parseEventsFile("${this.ws}/${TEST_EVENTS_FILE}")
+  }
+
+  @NonCPS
+  def generateTestLogsCopy(events, test_folder) {
+    // To avoid looking at all the files, including the stalled output log, we parse the events
+    // from the build.
+    // This is NonCPS because lambdas
+    def cp_lines = []
+    events.each { event ->
+      if("testResult" in event) {
+        def uri = URI.create(event.testResult.testActionOutput.find { it.name == "test.xml" }.uri)
+        def relativePath = uri.path.substring(uri.path.indexOf("/testlogs/") + 10)
+        cp_lines.add("mkdir -p \$(dirname '${test_folder}/${relativePath}')")
+        cp_lines.add("cp -r '${uri.path}' '${test_folder}/${relativePath}'")
+      }
+    }
+    return cp_lines.join('\n')
+  }
+
   // Archive test results
   def testlogs(test_folder) {
     // JUnit test result does not look at test result if they are "old", copying them to a new
     // location, unique accross configurations.
     def res = script.sh(
-      script: "rm -fr ${test_folder}; mkdir -p ${test_folder}; cp -r bazel-testlogs/* ${test_folder}",
+      script: "rm -fr ${test_folder}\n" + generateTestLogsCopy(testEvents(), test_folder),
       returnStatus: true)
     if (res == 0) {
       script.junit testResults: "${test_folder}/**/test.xml", allowEmptyResults: true
