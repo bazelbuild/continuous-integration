@@ -48,7 +48,7 @@
             ],
             "tests": [
                 "//scripts/...",
-                "//src/...",
+                "filter(\"^(?!//src/test/docker).*$\", //src/test/...)",
                 "//third_party/ijar/...",
                 "//tools/android/..."
             ],
@@ -77,7 +77,7 @@
             "build_opts": ["--define IPHONE_SDK=1"],
             "tests": [
                 "//scripts/...",
-                "//src/...",
+                "filter(\"^(?!//src/test/docker).*$\", //src/test/...)",
                 "//third_party/ijar/...",
                 "//tools/android/..."
             ],

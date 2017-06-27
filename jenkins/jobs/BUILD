@@ -131,7 +131,10 @@ bazel_github_job(
     project = "bazel",
     substitutions = {"GLOBAL_USE_UPSTREAM_BRANCH": "True"},
     targets = [],
-    tests = ["//tools/cpp/test/..."],
+    tests = [
+        "filter(\"^//src/test/docker/\", //src/test/...)",
+        "//tools/cpp/...",
+    ],
 )
 
 bazel_github_job(
@@ -185,7 +188,7 @@ bazel_github_job(
     ],
     tests = [
         "//scripts/...",
-        "//src/...",
+        "filter(\"^(?!//src/test/docker).*$\", //src/test/...)",
         "//third_party/ijar/...",
         "//tools/android/...",
     ],

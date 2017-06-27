@@ -4,7 +4,10 @@
         "variation": "",
         "parameters": {
             "targets": [],
-            "tests": ["//tools/cpp/test/..."]
+            "tests": [
+                "//tools/cpp/...",
+                "filter(\"^//src/test/docker\", //src/test/...)",
+            ]
         }
     }
 ]
