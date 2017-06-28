@@ -24,23 +24,12 @@ ROOT="${PWD}"
 
 TEST_TAG_FILTERS="{{ variables.TEST_TAG_FILTERS }}"
 BUILD_TAG_FILTERS=""
-JAVA_VERSION="1.8"
-if [[ "${BAZEL_VERSION}" =~ -jdk7$ ]]; then
-  JAVA_VERSION="1.7"
-  if [ -n "${TEST_TAG_FILTERS}" ]; then
-    TEST_TAG_FILTERS="${TEST_TAG_FILTERS},-jdk8"
-  else
-    TEST_TAG_FILTERS="-jdk8"
-  fi
-  BUILD_TAG_FILTERS="-jdk8"
-fi
 
 cat >${ROOT}/bazel.bazelrc <<EOF
 import %workspace%/.bazelrc
 build {{ variables.BUILD_OPTS }}
 test {{ variables.TEST_OPTS }}
 test --test_tag_filters ${TEST_TAG_FILTERS}
-test --define JAVA_VERSION=${JAVA_VERSION}
 EOF
 
 if [[ ! -z "${BUILD_TAG_FILTERS}" ]];
@@ -88,12 +77,6 @@ echo "==== bazel version ===="
 bazel version
 echo
 echo
-
-# Workaround for bazelbuild/bazel#2941
-# TODO(dmarting): Remove once 0.5.0 is released
-if [ "$JAVA_VERSION" = "1.7" ]; then
-  bazel clean
-fi
 
 set -x
 

@@ -53,15 +53,8 @@ def call(config = [:]) {
   def prefix = "${config.node_label}"
   def workspace = ""
 
-  def java_version = (config.bazel_version.endsWith("-jdk7")) ? "1.7" : "1.8"
   config.test_tag_filters += ["-noci", "-manual"]
-  if (java_version == "1.7") {
-    config.test_tag_filters += ["-jdk8"]
-    prefix += "-jdk7"
-    config.build_tag_filters += ["-jdk8"]
-  }
   def build_options = config.build_opts + [
-    "--define JAVA_VERSION=${java_version}",
     "--build_tag_filters=${config.build_tag_filters.join ','}"
   ]
   def test_options = config.test_opts + [
@@ -80,20 +73,18 @@ def call(config = [:]) {
                      branch: config.branch)
 
         // And build
-        withEnv(["JAVA_VERSION=${java_version}"]) {
-          maybeDir(config.workspace) {
-            def bazel = bazelPath(config.bazel_version, config.node_label)
+        maybeDir(config.workspace) {
+          def bazel = bazelPath(config.bazel_version, config.node_label)
 
-            bazelJob(binary: bazel,
-                     build_opts: build_options,
-                     test_opts: test_options,
-                     extra_bazelrc: config.extra_bazelrc,
-                     targets: config.targets,
-                     tests: config.tests,
-                     configuration: config.configuration,
-                     stage_name: prefix
-            )
-          }
+          bazelJob(binary: bazel,
+                   build_opts: build_options,
+                   test_opts: test_options,
+                   extra_bazelrc: config.extra_bazelrc,
+                   targets: config.targets,
+                   tests: config.tests,
+                   configuration: config.configuration,
+                   stage_name: prefix
+          )
         }
       }
     }

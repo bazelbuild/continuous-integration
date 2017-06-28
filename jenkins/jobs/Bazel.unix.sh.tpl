@@ -22,19 +22,7 @@ export BUILD_BY="Jenkins"
 export BUILD_LOG="${BUILD_URL}"
 export GIT_REPOSITORY_URL="${GIT_URL}"
 export BAZEL_COMPILE_TARGET="compile,srcs,determinism"
-if [ "${JAVA_VERSION}" = "1.7" ]
-then
-  export BOOTSTRAP_BAZEL="${HOME}/.bazel/latest-jdk7/binary/bazel"
-  if [[ "${PLATFORM_NAME}" =~ "freebsd" ]] ; then
-      echo "Skipping building bazel of freebsd with java 7"
-      exit 0
-  fi
-  # Workaround for bazelbuild/bazel#2941
-  # TODO(dmarting): remove once 0.5.0 is released
-  "${BOOTSTRAP_BAZEL}" clean
-else
-  export BOOTSTRAP_BAZEL="${HOME}/.bazel/latest/binary/bazel"
-fi
+export BOOTSTRAP_BAZEL="${HOME}/.bazel/latest/binary/bazel"
 
 if [[ "${NODE_LABELS}" =~ "no-release" ]]; then
   bazel_build

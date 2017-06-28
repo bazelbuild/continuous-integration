@@ -3,25 +3,17 @@
 [
     {
         // This is a configuration that have 3 subconfigurations: linux, ubuntu and darwin
-        // Each of those configurations have 4 bazel variations: HEAD, HEAD-jdk7, latest,
-        // and latest-jdk7
         // A job configuration special keys are:
         //   node -> indicate a node label to run the configuration on
         //   variation -> an extra content to the bazel version
         "configurations": [
             {
                 "node": "linux-x86_64",
-                "configurations": [
-                    {"variation": ""},
-                    {"variation": "-jdk7"}
-                ]
+                "variation": "",
             },
             {
                 "node": "ubuntu_16.04-x86_64",
-                "configurations": [
-                    {"variation": ""},
-                    {"variation": "-jdk7"}
-                ]
+                "variation": "",
             }
         ],
         // And specify the parameters for these configurations, which can be:
@@ -56,10 +48,7 @@
         }
     }, {
         "node": "darwin-x86_64",
-        "configurations": [
-            {"variation": ""},
-            {"variation": "-jdk7"}
-        ],
+        "variation": "",
         "parameters": {
             "configure": [
                 "echo >>WORKSPACE",

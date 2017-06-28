@@ -85,41 +85,5 @@
                 "--host_copt=-w"
             ]
         }
-    },
-    {
-        "node": "linux-x86_64",
-        "variation": "-jdk7",
-        "parameters": {
-            "archive": {
-                "bazel-bin/src/bazel": "bazel",
-                "bazel-bin/scripts/packages/without-jdk/install.sh": "bazel-%{release_name}-installer.sh",
-                "bazel-bin/scripts/packages/debian/bazel-debian.deb": "bazel_%{release_name}.deb"
-            },
-            "stash": {
-                "bazel-genfiles/scripts/packages/debian/bazel.dsc": "bazel.dsc",
-                "bazel-genfiles/scripts/packages/debian/bazel.tar.gz": "bazel.tar.gz"
-            },
-            "targets": ["//scripts/packages"],
-            "opts": ["--define JAVA_VERSION=1.7"]
-        }
-    },
-    {
-        "variation": "-jdk7",
-        "node": "ubuntu_16.04-x86_64",
-        "parameters": {"opts": ["--define JAVA_VERSION=1.7"]},
-    },
-    {
-        "variation": "-jdk7",
-        "node": "darwin-x86_64",
-        "parameters": {
-            "archive": {
-                "bazel-bin/src/bazel": "bazel",
-                "bazel-bin/scripts/packages/without-jdk/install.sh": "bazel-%{release_name}-installer.sh"
-            },
-            "targets": [
-                "//scripts/packages"
-            ],
-            "opts": ["--define JAVA_VERSION=1.7"]
-        }
     }
 ]

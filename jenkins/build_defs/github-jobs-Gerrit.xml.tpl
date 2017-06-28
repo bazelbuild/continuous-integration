@@ -115,12 +115,6 @@ This job for testing changes submitted to the Gerrit project: {{ variables.GERRI
               <label>${PLATFORM_NAME}</label>
             </condition>
           </org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
-          <org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
-            <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition">
-              <expression>^((?!jdk7).)*$</expression>
-              <label>${BAZEL_VERSION}</label>
-            </condition>
-          </org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
         </conditions>
       </runCondition>
       <conditionalbuilders>

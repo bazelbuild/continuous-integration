@@ -57,9 +57,9 @@ mklink /J c:\bazel_ci\installs\bootstrap %folder%
 :: Install Bazel built at HEAD
 md c:\bazel_ci\installs\HEAD
 if "%PLATFORM_NAME:~0,12%" == "windows-msvc" (
-  echo F | xcopy /y "bazel-installer\JAVA_VERSION=1.8,PLATFORM_NAME=windows-msvc-x86_64\output\ci\bazel*.exe" c:\bazel_ci\installs\HEAD\bazel.exe
+  echo F | xcopy /y "bazel-installer\PLATFORM_NAME=windows-msvc-x86_64\output\ci\bazel*.exe" c:\bazel_ci\installs\HEAD\bazel.exe
 ) else (
-  echo F | xcopy /y "bazel-installer\JAVA_VERSION=1.8,PLATFORM_NAME=windows-x86_64\output\ci\bazel*.exe" c:\bazel_ci\installs\HEAD\bazel.exe
+  echo F | xcopy /y "bazel-installer\PLATFORM_NAME=windows-x86_64\output\ci\bazel*.exe" c:\bazel_ci\installs\HEAD\bazel.exe
 )
 
 

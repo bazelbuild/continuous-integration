@@ -65,21 +65,13 @@ fi
 install_bazel "$(find $PWD/bazel-installer -name '*.sh' | \
   grep -F "PLATFORM_NAME=${PLATFORM}" | grep -Fv jdk7 | grep -F without-jdk | head -1)" \
   ~/.bazel/HEAD
-install_bazel "$(find $PWD/bazel-installer -name '*.sh' | \
-  grep -F "PLATFORM_NAME=${PLATFORM}" | grep -F jdk7 | head -1)" \
-  ~/.bazel/HEAD-jdk7
 
 # Install latest Bazel if not yet installed
 if [ ! -d ~/.bazel/${BAZEL_VERSION} ]; then
   install_bazel "$(create_url ${BAZEL_VERSION} without-jdk)" \
     ~/.bazel/${BAZEL_VERSION}
 fi
-if [ ! -d ~/.bazel/${BAZEL_VERSION}-jdk7 ]; then
-  install_bazel "$(create_url ${BAZEL_VERSION} "jdk7")" \
-    ~/.bazel/${BAZEL_VERSION}-jdk7
-fi
 
 # Recreate symlinks to the latest version for Bazel
 rm -f ~/.bazel/latest ~/.bazel/latest-jdk7
 ln -s ~/.bazel/${BAZEL_VERSION} ~/.bazel/latest
-ln -s ~/.bazel/${BAZEL_VERSION}-jdk7 ~/.bazel/latest-jdk7

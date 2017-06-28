@@ -70,13 +70,6 @@ To be run on head and for release branch/tags only</description>
       <name>PLATFORM_NAME</name>
       <values>{% for v in variables.PLATFORMS.split("\n") %}<string>{{ v }}</string>{% endfor %}</values>
     </hudson.matrix.LabelAxis>
-    <hudson.matrix.TextAxis>
-      <name>JAVA_VERSION</name>
-      <values>
-        <string>1.7</string>
-        <string>1.8</string>
-      </values>
-    </hudson.matrix.TextAxis>
   </axes>
   <builders>
     <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
@@ -96,13 +89,6 @@ To be run on head and for release branch/tags only</description>
             <condition class="org.jenkins_ci.plugins.run_condition.core.ExpressionCondition">
               <expression>windows.*</expression>
               <label>${PLATFORM_NAME}</label>
-            </condition>
-          </org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
-          <org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
-            <condition class="org.jenkins_ci.plugins.run_condition.core.StringsMatchCondition">
-              <arg1>1.8</arg1>
-              <arg2>${JAVA_VERSION}</arg2>
-              <ignoreCase>false</ignoreCase>
             </condition>
           </org.jenkins__ci.plugins.run__condition.logic.ConditionContainer>
         </conditions>

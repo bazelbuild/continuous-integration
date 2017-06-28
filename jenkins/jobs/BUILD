@@ -164,9 +164,7 @@ bazel_github_job(
     name = "bazel-tests",
     bazel_versions = [
         "HEAD",
-        "HEAD-jdk7",
         "latest",
-        "latest-jdk7",
     ],
     config = ":configs/bazel-tests.json",
     configure = [
