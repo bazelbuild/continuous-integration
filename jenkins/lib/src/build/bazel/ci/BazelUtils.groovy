@@ -111,10 +111,18 @@ class BazelUtils implements Serializable {
     }
   }
 
+  @NonCPS
+  private def makeTestQuery(tests) {
+    // Lambda are not working well with CPS, so NonCPS...
+    def quote = isWindows ? { s -> s.replace('"', '""') } : { s -> s.replace("'", "'\\''") }
+    def q = isWindows ? '"' : "'"
+    return "query ${q}tests(${tests.collect(quote).join(' + ')})${q}"
+  }
+
   // Execute a bazel tests
   def test(tests = ["//..."]) {
     if (!tests.isEmpty()) {
-      def filteredTests = bazelCommand("query \"tests(${tests.join ' + '})\"", false, true)
+      def filteredTests = bazelCommand(makeTestQuery(tests), false, true)
       if (filteredTests.isEmpty()) {
         script.echo "Skipped tests (no tests found)"
       } else {
