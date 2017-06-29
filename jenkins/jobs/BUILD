@@ -179,6 +179,12 @@ bazel_github_job(
     project = "bazel",
     substitutions = {"GLOBAL_USE_UPSTREAM_BRANCH": "True"},
     targets = [],
+    build_opts = [
+        "--verbose_failures",
+        # TODO(pcloudy): This is only for Windows.
+        # Remove it after wrapper-less CROSSTOOL becomes default
+        "--action_env=NO_MSVC_WRAPPER=1",
+    ],
     test_opts = [
         "-k",
         "--test_output=errors",
