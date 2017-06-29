@@ -15,6 +15,7 @@
 // Inspired by https://gerrit.googlesource.com/gerrit-ci-scripts/+/master/jenkins/gerrit-verifier-flow.groovy
 package build.bazel.ci
 
+import com.cloudbees.groovy.cps.NonCPS
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 

@@ -21,6 +21,6 @@
 : "${IMAGE_NAME:=gcr.io/bazel-public/jenkins-master-staging}"
 
 cd "$(dirname "$0")"
-gcloud compute copy-files "--zone=${JENKINS_ZONE}" lib transfer-lib.sh "${JENKINS_SERVER}":
+gcloud compute copy-files "--zone=${JENKINS_ZONE}" lib/{src,vars} transfer-lib.sh "${JENKINS_SERVER}":
 gcloud compute ssh "--zone=${JENKINS_ZONE}" "${JENKINS_SERVER}" \
   --command "sudo bash -c 'IMAGE_NAME=${IMAGE_NAME} ./transfer-lib.sh'"

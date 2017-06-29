@@ -11,14 +11,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 package build.bazel.ci
 
-import java.lang.annotation.Target;
+import build.bazel.ci.utils.BaseLibraryTest
+import org.junit.Test
 
-/**
- * Mock com.cloudbees.groovy.cps.NonCPS to avoid pulling in huge dependencies.
- */
-@Target(java.lang.annotation.ElementType.METHOD)
-public @interface NonCPS {
+// Test the bazelJob pipeline step
+class BazelJobTest extends BaseLibraryTest {
+
+  @Test
+  void testSimpleBazelJob() {
+    evalScript('''
+bazelJob(binary: "/path/to/bazel",
+         targets: ["//a", "//b"],
+         tests: ["//test1", "//test2"])
+''')
+    // TODO(dmarting): verify the stack trace
+    printCallStack()
+  }
 }

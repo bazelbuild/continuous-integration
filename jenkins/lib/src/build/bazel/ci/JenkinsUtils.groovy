@@ -14,6 +14,11 @@
 
 package build.bazel.ci
 
+// Automatic import in Jenkins but we need them to compile outside of Jenkins
+import com.cloudbees.groovy.cps.NonCPS
+import hudson.model.*
+import jenkins.model.*
+
 import hudson.FilePath
 import hudson.remoting.Channel
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper

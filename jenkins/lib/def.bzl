@@ -20,7 +20,7 @@ def bazel_job_configuration_test(name, configs):
         runtime_deps = [
             "//3rdparty/jvm/org/codehaus/groovy:groovy_all",
             "//3rdparty/jvm/org/hamcrest:hamcrest_all",
-            "//jenkins/lib:BazelConfigurationParsingTest"],
+            "//jenkins/lib/tests/build/bazel/ci:BazelConfigurationParsingTest"],
         data = configs,
         test_class = "build.bazel.ci.BazelConfigurationParsingTest",
     )

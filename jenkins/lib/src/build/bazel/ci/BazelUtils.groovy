@@ -14,6 +14,8 @@
 
 package build.bazel.ci
 
+import com.cloudbees.groovy.cps.NonCPS
+
 /**
  * A set of utility methods to call Bazel inside Jenkins
  */
@@ -146,7 +148,7 @@ class BazelUtils implements Serializable {
   def test(tests = ["//..."]) {
     if (!tests.isEmpty()) {
       def filteredTests = bazelCommand(makeTestQuery(tests), false, true)
-      if (filteredTests.isEmpty()) {
+      if (filteredTests == null || filteredTests.isEmpty()) {
         script.echo "Skipped tests (no tests found)"
       } else {
         def status = bazelCommand("test ${filteredTests.replaceAll("\n", " ")}", true)
