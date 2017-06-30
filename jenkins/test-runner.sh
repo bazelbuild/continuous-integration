@@ -24,18 +24,25 @@ cd "${PYTHON_RUNFILES}"
 PYTHON_RUNFILES="${PWD}"
 
 # Port to serve Jenkins on, default is 8080.
-PORT="${1:-8080}"
+PORT="8080"
 
 # Machine on which the docker daemon is running, default is localhost.
 : ${DOCKER_SERVER:=localhost}
 
-while getopts ":p:" opt; do
+VOLUMES=()
+while getopts ":p:h:s:" opt; do
   case "${opt}" in
     p)
       PORT="${OPTARG}"
       ;;
+    h)
+      VOLUMES=(-v "${OPTARG}:/volumes/jenkins_home")
+      ;;
+    s)
+      VOLUMES=(-v "${OPTARG}:/volumes/secrets")
+      ;;
     *)
-      echo "Usage: $0 [-p <port>]" >&2
+      echo "Usage: $0 [-p <port>] [-s </volumes/secrets>] [-h </volumes/jenkins_home>]" >&2
       exit 1
       ;;
   esac
@@ -52,6 +59,7 @@ docker rm -f jenkins &> /dev/null  # Remove latent jenkins instance.
 docker run -d \
   --env JENKINS_SERVER="http://jenkins:${PORT}" \
   --name jenkins \
+  "${VOLUMES[@]}" \
   -p "${PORT}:8080" \
   -p 50000:50000 \
   bazel/jenkins:jenkins-test >/dev/null
