@@ -208,4 +208,16 @@ node=linux-x86_64,variation=HEAD-jdk7
 node=windows-x86_64,toolchain=msvc,variation=HEAD
 node=windows-x86_64,toolchain=msys,variation=HEAD'''
   }
+
+  @Test
+  void testFlattenWithRestrictionNoWindows() {
+    def result = BazelConfiguration.flattenConfigurations(
+      BazelConfiguration.parse(JSON_TEST),
+      [node: ["linux-x86_64"], variation: ["HEAD", "HEAD-jdk7"]])
+    def allKeys = result.collect {
+      k, v -> k.collect { k1, v1 -> "${k1}=${v1}" }.toSorted().join(",") }.toSorted()
+    assert allKeys.size() == 2
+    assert allKeys.join("\n") == '''node=linux-x86_64,variation=HEAD
+node=linux-x86_64,variation=HEAD-jdk7'''
+  }
 }

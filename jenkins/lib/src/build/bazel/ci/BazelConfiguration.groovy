@@ -49,6 +49,8 @@ class BazelConfiguration implements java.io.Serializable {
   private Map<String, Object> parameters
   private List<BazelConfiguration> configurations
 
+  private static def EMPTY_CONFIGURATION = new BazelConfiguration([:], [:], [])
+
   static public interface ConfigurationContainer {
     def addConfiguration(BazelConfiguration)
   }
@@ -122,7 +124,7 @@ class BazelConfiguration implements java.io.Serializable {
       Map<String, List<String>> configurationRestrictions = [:]) {
     def result = [:]
     for (conf in configurations) {
-      result += conf.flatten(configurationRestrictions)
+      result += conf.restrict(configurationRestrictions).flatten()
     }
     return result
   }
@@ -154,12 +156,43 @@ class BazelConfiguration implements java.io.Serializable {
     return configurations
   }
 
-  private Map<Map<String, String>, Map<String, Object>> flatten(Map<String, List<String>> configurationRestrictions = [:]) {
-    Map<Map<String, String>, Map<String, Object>> result = [:]
-    if (descriptor.any {
-          k, v -> (k in configurationRestrictions) && !(v in configurationRestrictions[k]) }) {
-      return result
+  private boolean matchRestriction(configurationRestrictions) {
+    // Avoid closures because CPS is having trouble with it
+    for (def e : descriptor.entrySet()) {
+      if ((e.key in configurationRestrictions) && !(e.value in configurationRestrictions[e.key])) {
+        return true
+      }
     }
+    return false
+  }
+
+  private BazelConfiguration restrict(configurationRestrictions) {
+    if (!configurationRestrictions.isEmpty()) {
+      if (matchRestriction(configurationRestrictions)) {
+        return EMPTY_CONFIGURATION
+      }
+      if (configurations.isEmpty()) {
+        return this
+      } else {
+        def newConfigs = []
+        for (configuration in configurations) {
+          def conf = configuration.restrict(configurationRestrictions)
+          if (conf != EMPTY_CONFIGURATION) {
+            newConfigs << conf
+          }
+        }
+        if (newConfigs.isEmpty()) {
+          return EMPTY_CONFIGURATION;
+        } else {
+          return new BazelConfiguration(descriptor, parameters, newConfigs)
+        }
+      }
+    }
+    return this
+  }
+
+  private Map<Map<String, String>, Map<String, Object>> flatten() {
+    Map<Map<String, String>, Map<String, Object>> result = [:]
 
     if (configurations.isEmpty()) {
       if (!descriptor.isEmpty()) {
@@ -168,7 +201,7 @@ class BazelConfiguration implements java.io.Serializable {
       return result
     } else {
       for (conf in configurations) {
-        def configs = conf.flatten(configurationRestrictions)
+        def configs = conf.flatten()
         for (e in configs) {
           def descr2 = [:]
           descr2.putAll(descriptor)
@@ -183,5 +216,9 @@ class BazelConfiguration implements java.io.Serializable {
       }
       return result
     }
+  }
+
+  public String toString() {
+    return "BazelConfiguration({descriptor=${descriptor}, parameters=${parameters}, configurations=${configurations})"
   }
 }
