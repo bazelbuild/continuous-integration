@@ -7,3 +7,4 @@ RUN apt-get update
 RUN apt-get install -y jekyll
 RUN apt-get install -y reprepro
 RUN apt-get install -y devscripts
+RUN update-ca-certificates -f
