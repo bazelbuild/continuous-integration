@@ -285,19 +285,26 @@ function action() {
   wait %?gcloud 2>/dev/null || true  # wait fails if the job already finished.
 }
 
+function test_slave() {
+  local TAG=$1
+  if test_vm $TAG; then
+    if [ "$TAG" = "${MASTER[0]}" ]; then
+      echo "${MASTER[1]}"
+    elif [ "$TAG" =  "${STAGING_MASTER[0]}" ]; then
+      echo "${STAGING_MASTER[1]}"
+    else
+      get_slave_by_name "$TAG" | cut -d " " -f 4
+    fi
+  fi
+}
+
 function vm_command() {
   local command=$1
   local TAG=$2
-  local location
-  if test_vm $TAG; then
-    if [ "$TAG" = "${MASTER[0]}" ]; then
-      location="${MASTER[1]}"
-    elif [ "$TAG" =  "${STAGING_MASTER[0]}" ]; then
-      location="${STAGING_MASTER[1]}"
-    else
-      local location="$(get_slave_by_name "$TAG" | cut -d " " -f 4)"
-    fi
-    gcloud compute instances $command --quiet --zone=$location $TAG
+  local location="$(test_slave "$TAG")"
+  shift 2
+  if [ -n "$location" ]; then
+    gcloud compute instances $command --quiet --zone=$location $TAG "$@"
   fi
 }
 
@@ -311,6 +318,17 @@ function stop_vm() {
 
 function start_vm() {
   vm_command start "$@"
+}
+
+function do_ssh_command() {
+  tag=$1
+  shift
+  location="$(test_slave "${tag}")"
+  if [ -z "${location}" ]; then
+    echo "Slave ${tag} was not found or is not running" >&2
+  else
+    ssh_command "$tag" "$location" "$@"
+  fi
 }
 
 command="${1-}"
@@ -336,8 +354,40 @@ case "${command}" in
   "update_metadata")
     action update_metadata "$@"
     ;;
+  "ssh_command")
+    do_ssh_command "$@"
+    ;;
+  "ssh")
+    tag=$1
+    location="$(test_slave "${tag}")"
+    if [ -z "${location}" ]; then
+      echo "Slave ${tag} was not found or is not running" >&2
+    else
+      gcloud compute ssh "$tag" --zone "$location"
+    fi
+    ;;
+  "kill_container")
+    tag="$1"
+    do_ssh_command "$1" 'sudo docker stop $(sudo docker ps -q -f status=running -f ancestor='"$2"')'
+    ;;
   *)
-    echo "Usage: $0 (create|delete|reimage|update_metadata|start|stop) ([vm ... vm]|staging|prod)" >&2
+    echo "Usage: $0 <command> ([<vm> ... <vm>]|staging|prod)" >&2
+    echo "       $0 ssh_command <vm> <arg0> [<arg1>..<argN>]" >&2
+    echo "       $0 ssh <vm>" >&2
+    echo "       $0 kill_container <vm> <image>" >&2
+    echo " - command can be:" >&2
+    echo "    create: create the VM, fails if the VM already exists." >&2
+    echo "    delete: delete the VM, fails if the VM does not exists." >&2
+    echo "    reimage: reimage the VM, equivalent to create followed by delete." >&2
+    echo "    update_metadata: update the VM metadata, the VM must already exists." >&2
+    echo "    start: start the VM, the VM must exists." >&2
+    echo "    stop: stop the VM, the VM must exists." >&2
+    echo " - ssh_command executes a command via SSH on the specified VM." >&2
+    echo " - ssh launch a secure shell on the specified VM." >&2
+    echo " - kill_container kills container that runs the specified image on the" >&2
+    echo "   specified VM." >&2
+    echo "Special value 'staging' and 'prod' point to all VM in, respectively," >&2
+    echo "ci-staging.bazel.io and ci.bazel.io." >&2
     exit 1
     ;;
 esac
