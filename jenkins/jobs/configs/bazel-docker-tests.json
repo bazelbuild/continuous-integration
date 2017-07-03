@@ -6,7 +6,7 @@
             "targets": [],
             "tests": [
                 "//tools/cpp/...",
-                "filter(\"^//src/test/docker\", //src/test/...)",
+                "filter(\"^//src/test/docker\", //src/test/...)"
             ]
         }
     }
