@@ -39,10 +39,10 @@ while getopts ":p:h:s:" opt; do
       PORT="${OPTARG}"
       ;;
     h)
-      VOLUMES=(-v "${OPTARG}:/volumes/jenkins_home")
+      VOLUMES=(-v "${OPTARG}:/var/jenkins_home")
       ;;
     s)
-      VOLUMES=(-v "${OPTARG}:/volumes/secrets")
+      VOLUMES=(-v "${OPTARG}:/opt/secrets")
       ;;
     *)
       echo "Usage: $0 [-p <port>] [-s </volumes/secrets>] [-h </volumes/jenkins_home>]" >&2
