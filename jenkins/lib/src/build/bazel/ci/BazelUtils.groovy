@@ -14,8 +14,6 @@
 
 package build.bazel.ci
 
-import groovy.json.JsonSlurper
-
 /**
  * A set of utility methods to call Bazel inside Jenkins
  */
@@ -141,11 +139,8 @@ class BazelUtils implements Serializable {
   }
 
   private def parseEventsFile(String fileName) {
-    // We requires that weirdness because the format of the events are not one JSON object
-    // but a sequence of JSON Object.
     if (script.fileExists(fileName)) {
-      def content = script.readFile(fileName).replaceAll('\n}(?!\\s*$)', '\n},')
-      return new JsonSlurper().parseText("[${content}]")
+      return JsonUtils.parseJsonStream(script.readFile(fileName))
     }
     // The file does not exists (probably because empty set of targets / tests), just return
     // an empty list.
