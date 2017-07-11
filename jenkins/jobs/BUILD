@@ -134,6 +134,7 @@ bazel_github_job(
     name = n,
     config = ":configs/%s.json" % n,
 ) for n in [
+    "rules_apple",
     "rules_scala",
     "rules_rust",
     "rules_dotnet",
