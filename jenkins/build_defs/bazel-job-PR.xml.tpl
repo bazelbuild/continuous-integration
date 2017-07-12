@@ -7,6 +7,14 @@
     {% if variables.RUN_SEQUENTIAL == "true" %}
     <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty/>
     {% endif %}
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>90</daysToKeep>
+        <numToKeep>-1</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>-1</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
     <com.coravy.hudson.plugins.github.GithubProjectProperty>
       <projectUrl>{{ variables.GITHUB_URL }}</projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>

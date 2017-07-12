@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <flow-definition plugin="workflow-job">
   <actions/>
-  <description>Test Gerrit code review for {{ variables.PROJECT_NAME }}. 
+  <description>Test Gerrit code review for {{ variables.PROJECT_NAME }}.
 
 This job for testing changes submitted to the Gerrit project: {{ variables.GERRIT_PROJECT }}.
 </description>
@@ -10,6 +10,14 @@ This job for testing changes submitted to the Gerrit project: {{ variables.GERRI
     {% if variables.RUN_SEQUENTIAL == "true" %}
     <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty/>
     {% endif %}
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>90</daysToKeep>
+        <numToKeep>-1</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>-1</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
     {% if variables.github == "True" %}
     <com.coravy.hudson.plugins.github.GithubProjectProperty>
       <projectUrl>{{ variables.GITHUB_URL }}</projectUrl>
