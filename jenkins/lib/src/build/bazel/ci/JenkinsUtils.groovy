@@ -14,6 +14,9 @@
 
 package build.bazel.ci
 
+import hudson.FilePath
+import hudson.remoting.Channel
+
 /**
  * This class provide utility methods of the Jenkins API
  */
@@ -139,5 +142,54 @@ class JenkinsUtils {
       run = run.getPreviousBuild()
     }
     return run
+  }
+
+  @NonCPS
+  private static def _pruneIfOlderThan(file, timestamp) throws IOException {
+    if (file.isDirectory()) {
+      boolean empty = true
+      for (child in file.list()) {
+        if (!_pruneIfOlderThan(child, timestamp)) {
+          empty = false
+        }
+      }
+      if (empty) {
+        if (file.delete()) {
+          return true
+        }
+      }
+    } else if (file.lastModified() < timestamp) {
+      if (file.delete()) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /** Prune file that are older than timestamp on the current node. */
+  @NonCPS
+  public static def pruneIfOlderThan(path, timestamp) {
+    return _pruneIfOlderThan(new FilePath(Channel.current(), path), timestamp)
+  }
+
+  /** Touch a file anywhere on the FS on the current node. */
+  @NonCPS
+  public static def touchFileIfExists(path) {
+    FilePath f = new FilePath(Channel.current(), path)
+    def r = f.exists()
+    if (r) {
+      try {
+        f.touch(System.currentTimeMillis())
+      } catch(IOException ex) {
+        // The file might be busy, especially on windows, swallowing exception
+      }
+    }
+    return r;
+  }
+
+  /** Read a file from the node, but without reporting anything in the Jenkins UI. */
+  @NonCPS
+  public static def readFile(path) {
+    return new FilePath(Channel.current(), path).readToString()
   }
 }

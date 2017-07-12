@@ -13,43 +13,15 @@
 // limitations under the License.
 
 import build.bazel.ci.JenkinsUtils
-import hudson.FilePath
-import hudson.remoting.Channel
-
-@NonCPS
-private def getFilePath(String path) {
-  return new FilePath(Channel.current(), path)
-}
-
-private def pruneIfOlderThan(file, timestamp) throws IOException {
-  if (file.isDirectory()) {
-    boolean empty = true
-    for (child in file.list()) {
-      if (!pruneIfOlderThan(child, timestamp)) {
-        empty = false
-      }
-    }
-    if (empty) {
-      if (file.delete()) {
-        return true
-      }
-    }
-  } else if (file.lastModified() < timestamp) {
-    if (file.delete()) {
-      return true
-    }
-  }
-  return false
-}
 
 private def pruneOldCustomBazel(node_label) {
-  def file = getFilePath(getBazelInstallBase(node_label) +  "custom")
   try {
     // TODO(dmarting): unfortunately, this will trigger a RPC per file operation
     // but using FilePath.act needs a class that can be shiped to the client, so
     // needs to be in the client classpath. If the number of RPC became a problem,
     // maybe we can use a Jenkins plugins.
-    pruneIfOlderThan(file, System.currentTimeMillis() - 172800000 /* 2 days */)
+    JenkinsUtils.pruneIfOlderThan(getBazelInstallBase(node_label) +  "custom",
+                                  System.currentTimeMillis() - 172800000 /* 2 days */)
   } catch(IOException ex) {
     // Several error can occurs, we ignore them all as this step
     // is just for convenience, not critical.
@@ -67,21 +39,6 @@ private def getBazelInstallPath(node_label, String... segments) {
       "${segments.join '\\'}\\bazel.exe" :
       "${segments.join '/'}/binary/bazel"
   return getBazelInstallBase(node_label) + lastPart
-}
-
-@NonCPS
-private def touchFileIfExists(path) {
-  // Touch a file anywhere on the FS
-  FilePath f = getFilePath(path)
-  def r = f.exists()
-  if (r) {
-    try {
-      f.touch(System.currentTimeMillis())
-    } catch(IOException ex) {
-      // The file might be busy, especially on windows, swallowing exception
-    }
-  }
-  return r;
 }
 
 /**
@@ -111,7 +68,7 @@ def call(String bazel_version, String node_label) {
       cause.upstreamProject.toString().replaceAll("/", "_"),
       cause.upstreamBuild.toString(),
       "variation_${variation}")
-    if (!touchFileIfExists(bazel)) {
+    if (!JenkinsUtils.touchFileIfExists(bazel)) {
       dir(".bazel") { deleteDir() }
       step([$class: 'CopyArtifact',
             filter: cause.artifactPath,
