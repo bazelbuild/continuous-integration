@@ -20,7 +20,8 @@ private def pruneOldCustomBazel(node_label) {
     // but using FilePath.act needs a class that can be shiped to the client, so
     // needs to be in the client classpath. If the number of RPC became a problem,
     // maybe we can use a Jenkins plugins.
-    JenkinsUtils.pruneIfOlderThan(getBazelInstallBase(node_label) +  "custom",
+    JenkinsUtils.pruneIfOlderThan(env,
+                                  getBazelInstallBase(node_label) + "custom",
                                   System.currentTimeMillis() - 172800000 /* 2 days */)
   } catch(IOException ex) {
     // Several error can occurs, we ignore them all as this step
@@ -68,7 +69,7 @@ def call(String bazel_version, String node_label) {
       cause.upstreamProject.toString().replaceAll("/", "_"),
       cause.upstreamBuild.toString(),
       "variation_${variation}")
-    if (!JenkinsUtils.touchFileIfExists(bazel)) {
+    if (!JenkinsUtils.touchFileIfExists(env, bazel)) {
       dir(".bazel") { deleteDir() }
       step([$class: 'CopyArtifact',
             filter: cause.artifactPath,

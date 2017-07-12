@@ -187,16 +187,25 @@ class JenkinsUtils {
     return false
   }
 
+  @NonCPS
+  private static def createFilePath(env, path) {
+    if (env['NODE_NAME'].equals("master")) {
+        return new FilePath(path);
+    } else {
+        return new FilePath(Jenkins.getInstance().getComputer(env['NODE_NAME']).getChannel(), path);
+    }
+  }
+
   /** Prune file that are older than timestamp on the current node. */
   @NonCPS
-  public static def pruneIfOlderThan(path, timestamp) {
-    return _pruneIfOlderThan(new FilePath(Channel.current(), path), timestamp)
+  public static def pruneIfOlderThan(env, path, timestamp) {
+    return _pruneIfOlderThan(createFilePath(env, path), timestamp)
   }
 
   /** Touch a file anywhere on the FS on the current node. */
   @NonCPS
-  public static def touchFileIfExists(path) {
-    FilePath f = new FilePath(Channel.current(), path)
+  public static def touchFileIfExists(env, path) {
+    FilePath f = createFilePath(env, path)
     def r = f.exists()
     if (r) {
       try {
@@ -210,7 +219,13 @@ class JenkinsUtils {
 
   /** Read a file from the node, but without reporting anything in the Jenkins UI. */
   @NonCPS
-  public static def readFile(path) {
-    return new FilePath(Channel.current(), path).readToString()
+  public static def readFile(env, path) {
+    return createFilePath(env, path).readToString()
+  }
+
+  /** Save the current log to a file on the current node. */
+  @NonCPS
+  public static void saveLog(env, RunWrapper run, path) {
+    createFilePath(env, path).copyFrom(run.getRawBuild().getLogInputStream())
   }
 }

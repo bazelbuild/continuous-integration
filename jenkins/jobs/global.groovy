@@ -25,7 +25,7 @@ notifyStatus(mail_recipient) {
   // First we bootstrap bazel on all platform
   stage("Bootstrap on all platforms") {
     bootstrapBazelAll(repository: params.REPOSITORY,
-		      branch: params.BRANCH,
+                      branch: params.BRANCH,
                       refspec: params.REFSPEC,
                       email: mail_recipient,
                       configuration: json_config,
@@ -47,14 +47,18 @@ notifyStatus(mail_recipient) {
 
 
 // Deployment steps
-if(params.BRANCH.matches('^(.*/)master$')) {
-  stage("Push website") {
+def is_master = params.BRANCH.matches('^(.*/)?master$')
+def is_rc = params.BRANCH.matches('^(refs/heads/)?release-.*$')
+def is_release = params.BRANCH.matches('^refs/tags/.*$')
+if(is_master || is_rc | is_release) {
+  stage(is_master ? "Push website" : "Push release") {
     machine("deploy") {
       recursiveGit(repository: params.REPOSITORY,
                    refspec: params.REFSPEC,
                    branch: params.BRANCH)
-      unstash "bazel--node=linux-x86_64--variation="
-      sh script: '''#!/bin/bash
+      if (is_master) {
+        unstash "bazel--node=linux-x86_64--variation="
+        sh script: '''#!/bin/bash
 . scripts/ci/build.sh
 for i in $(find input -name \'*.bazel.build.tar\'); do
   build_and_publish_site "$i" "$(basename $i .tar)" "build"
@@ -63,62 +67,22 @@ for i in $(find input -name \'*.bazel.build.tar.nobuild\'); do
   build_and_publish_site "$i" "$(basename $i .tar.nobuild)" "nobuild"
 done
 '''
-    }
-  }
-} else if(params.BRANCH.matches('^refs/((heads/release-)|(tags/)).*$')) {
-  def r_name = ""
-  machine("deploy") {
-    r_name = sh(script: "bash -c 'source scripts/release/common.sh; get_full_release_name'",
-                returnStdout: true)
-    if (!r_name.isEmpty()) {
-      stage("Push release") {
-        // unstash all the things
-        def conf = BazelConfiguration.flattenConfigurations(
-          BazelConfiguration.parse(json_config), restrict_configuration).keySet().toArray()
-        for (int k = 0; k < entrySet.size; k++) {
-          unstash "bazel--node=${conf[k].node}--variation=${conf[k].variation}"
-        }
-        // Delete files we do not need
-        sh "rm -f node=*/variation=*/bazel node=*/variation=*/*.bazel.build.tar*"
-        // Now the actual release
-        withEnv(["GCS_BUCKET=bazel",
-                 "GIT_REPOSITORY_URL=https://github.com/bazelbuild/bazel"]) {
-          dir("output/ci") { -> }
-          sh '''#!/bin/bash
-# Credentials should not be displayed on the command line
-export GITHUB_TOKEN="$(cat "$GITHUB_TOKEN_FILE")"
-export APT_GPG_KEY_ID="$(cat "${APT_GPG_KEY_ID_FILE}")"
-source scripts/ci/build.sh
-
-args=()
-for i in node=*; do
-  for j in $i/variation=*/*; do
-    args+=("$(echo $i | cut -d = -f 2)" "$j")
-done
-
-bazel_release "${args[@]}"
-echo "${RELEASE_EMAIL_RECIPIENT}" | tee output/ci/recipient
-echo "${RELEASE_EMAIL_SUBJECT}" | tee output/ci/subject
-echo "${RELEASE_EMAIL_CONTENT}" | tee output/ci/content
-'''
-          if (r_name.contains("test")) {
-            echo "Test release, skipping announcement mail"
-          } else {
-            stage("Announcement mail") {
-              mail(subject: readFile("output/ci/subject"),
-                   to: readFile("output/ci/recipient"),
-                   replyTo: "bazel-ci@googlegroups.com",
-                   body: readFile("output/ci/content"))
-            }
-          }
+      } else {
+        def r_name = sh(script: "bash -c 'source scripts/release/common.sh; get_full_release_name'",
+                        returnStdout: true)
+        if (!r_name.isEmpty()) {
+          pushRelease(name: r_name,
+                      configuration: json_config,
+                      restrict_configuration: restrict_configuration,
+                      excludes: "node=*/variation=*/bazel node=*/variation=*/*.bazel.build.tar*")
+          // TODO(dmarting): trigger bazel install everywhere in case of release.
         }
       }
     }
   }
-  // TODO(dmarting): trigger bazel install everywhere in case of release.
 }
 
-// Then we run all jobs in the Global folder except the global pipeline job (the current job). 
+// Then we run all jobs in the Global folder except the global pipeline job (the current job).
 report = null
 stage("Test downstream jobs") {
   report = runAll(folder: "Global",

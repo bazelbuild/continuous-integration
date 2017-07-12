@@ -62,7 +62,6 @@ def call(config = [:]) {
 
     stage("[${config.node},${variation}] bootstrap") {
       def envs = ["BUILD_BY=Jenkins",
-                  "BUILD_LOG=${currentBuild.absoluteUrl}",
                   "GIT_REPOSITORY_URL=${env.GIT_URL}"]
       utils.build(["//src:bazel"] + targets)
     }

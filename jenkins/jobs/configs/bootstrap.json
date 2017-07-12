@@ -17,7 +17,6 @@
                 "bazel-genfiles/bazel-distfile.zip": "bazel-%{release_name}-dist.zip"
             },
             "stash": {
-                "bazel-genfiles/scripts/packages/README.md": "README.md",
                 "bazel-genfiles/scripts/packages/debian/bazel.dsc": "bazel.dsc",
                 "bazel-genfiles/scripts/packages/debian/bazel.tar.gz": "bazel.tar.gz",
                 "bazel-genfiles/site/jekyll-tree.tar": "docs.bazel.build.tar",
