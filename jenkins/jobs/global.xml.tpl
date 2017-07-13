@@ -12,6 +12,11 @@
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
         <hudson.model.StringParameterDefinition>
+          <name>REPOSITORY</name>
+          <description>The repository to build</description>
+          <defaultValue>https://bazel.googlesource.com/bazel</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
           <name>BRANCH</name>
           <description>The branch to build</description>
           <defaultValue>master</defaultValue>

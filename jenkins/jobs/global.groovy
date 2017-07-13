@@ -24,7 +24,8 @@ stage("Startup global test") {
 notifyStatus(mail_recipient) {
   // First we bootstrap bazel on all platform
   stage("Bootstrap on all platforms") {
-    bootstrapBazelAll(branch: params.BRANCH,
+    bootstrapBazelAll(repository: params.REPOSITORY,
+		      branch: params.BRANCH,
                       refspec: params.REFSPEC,
                       email: mail_recipient,
                       configuration: json_config,
@@ -35,7 +36,7 @@ notifyStatus(mail_recipient) {
   // TODO(dmarting): maybe we want to run it in parallel of other jobs?
   stage("Test that all sources are in the //:srcs filegroup") {
     machine("linux-x86_64") {
-      recursiveGit(repository: "https://bazel.googlesource.com/bazel",
+      recursiveGit(repository: params.REPOSITORY,
                    refspec: params.REFSPEC,
                    branch: params.BRANCH)
       def bazel = bazelPath("latest", "linux-x86_64")
@@ -49,7 +50,7 @@ notifyStatus(mail_recipient) {
 if(params.BRANCH.matches('^(.*/)master$')) {
   stage("Push website") {
     machine("deploy") {
-      recursiveGit(repository: "https://bazel.googlesource.com/bazel",
+      recursiveGit(repository: params.REPOSITORY,
                    refspec: params.REFSPEC,
                    branch: params.BRANCH)
       unstash "bazel--node=linux-x86_64--variation="
@@ -125,6 +126,9 @@ stage("Test downstream jobs") {
            [$class: 'TextParameterValue',
             name: 'EXTRA_BAZELRC',
             value: "${params.EXTRA_BAZELRC}"],
+           [$class: 'StringParameterValue',
+            name: 'REPOSITORY',
+            value: "${params.REPOSITORY}"],
            [$class: 'StringParameterValue',
             name: 'BRANCH',
             value: "${params.BRANCH}"],

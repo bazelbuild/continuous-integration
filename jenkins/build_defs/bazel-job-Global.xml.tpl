@@ -24,6 +24,11 @@
         </hudson.model.TextParameterDefinition>
 {% if variables.GLOBAL_USE_UPSTREAM_BRANCH == "True" %}
         <hudson.model.StringParameterDefinition>
+          <name>REPOSITORY</name>
+          <description>Repository to build</description>
+          <defaultValue>{{ variables.GIT_URL }}</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
           <name>BRANCH</name>
           <description>Branch to build</description>
           <defaultValue>{{ variables.BRANCH }}</defaultValue>
@@ -43,12 +48,13 @@
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
     <script><![CDATA[
 bazelCiConfiguredJob(
-    repository: "{{ variables.GIT_URL }}",
     bazel_version: "custom",
 {% if variables.GLOBAL_USE_UPSTREAM_BRANCH == "True" %}
+    repository: params.REPOSITORY,
     refspec: params.REFSPEC,
     branch: params.BRANCH,
 {% else %}
+    repository: "{{ variables.GIT_URL }}",
     branch: "{{ variables.BRANCH }}",
 {% endif %}
     extra_bazelrc: params.EXTRA_BAZELRC,
