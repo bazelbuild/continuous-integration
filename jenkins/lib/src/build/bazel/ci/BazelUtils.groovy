@@ -163,10 +163,13 @@ class BazelUtils implements Serializable {
     def cp_lines = []
     events.each { event ->
       if("testResult" in event) {
-        def uri = URI.create(event.testResult.testActionOutput.find { it.name == "test.xml" }.uri)
-        def relativePath = uri.path.substring(uri.path.indexOf("/testlogs/") + 10)
-        cp_lines.add("mkdir -p \$(dirname '${test_folder}/${relativePath}')")
-        cp_lines.add("cp -r '${uri.path}' '${test_folder}/${relativePath}'")
+        def log = event.testResult.testActionOutput.find { it.name == "test.xml" }
+        if (log != null) {
+          def uri = URI.create(log.uri)
+          def relativePath = uri.path.substring(uri.path.indexOf("/testlogs/") + 10)
+          cp_lines.add("mkdir -p \$(dirname '${test_folder}/${relativePath}')")
+          cp_lines.add("cp -r '${uri.path}' '${test_folder}/${relativePath}'")
+        }
       }
     }
     return cp_lines.join('\n')
