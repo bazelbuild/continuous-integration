@@ -63,7 +63,7 @@ wait_for_server() {
     if (( "$(date +%s)" - "$ts" > "$timeout" )); then
       echo
       echo "Failed to connect to Jenkins, aborting..." >&2
-      exit 1
+      return 1
     fi
   done
   echo " ok."
@@ -95,7 +95,11 @@ test_setup() {
   load_images >&2
   local jenkins="$(run_jenkins_master "${server}" "${port}" "$@")"
   port=$(get_jenkins_port "${jenkins}")
-  wait_for_server "${server}" "${port}" >&2
+  wait_for_server "${server}" "${port}" >&2 || {
+    echo "Docker logs:" >&2
+    ${DOCKER} logs "$jenkins"
+    exit 1
+  }
   local containers="$(run_containers "${jenkins}" | xargs)"
   echo "$jenkins $containers"
 }
