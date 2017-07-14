@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import build.bazel.ci.GerritUtils
+import build.bazel.ci.JenkinsUtils
 
 /**
  * Define a step "gerritReview" that wrap a build to be a "Gerrit review": the change

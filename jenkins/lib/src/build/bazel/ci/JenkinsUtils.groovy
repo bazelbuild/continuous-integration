@@ -16,6 +16,7 @@ package build.bazel.ci
 
 import hudson.FilePath
 import hudson.remoting.Channel
+import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
 /**
  * This class provide utility methods of the Jenkins API
