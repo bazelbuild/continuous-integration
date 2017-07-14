@@ -26,7 +26,8 @@ def call(String server, String cookiesFile, String reviewer, changeNum, branch, 
   stage("Start Gerrit review") {
     echo "Reviewing change ${url} (${branch})"
     gerrit.addReviewer(changeNum)
-    gerrit.comment(changeNum, branch, "Starting build at ${currentBuild.getAbsoluteUrl()}")
+    gerrit.comment(changeNum, branch,
+		   "Starting build at ${JenkinsUtils.getBlueOceanUrl(currentBuild)}")
   }
   def config = [gerritBuild: currentBuild]
   try {
@@ -37,6 +38,6 @@ def call(String server, String cookiesFile, String reviewer, changeNum, branch, 
     def verified = result == "SUCCESS" ? "+" : "-"
     echo "Setting ${verified}Verified to change ${url} after build returned ${result}"
     gerrit.review(changeNum, branch, result == "SUCCESS" ? 1 : -1,
-                  "Build ${config.gerritBuild.getAbsoluteUrl()} finished with status ${result}")
+                  "Build ${JenkinsUtils.getBlueOceanUrl(config.gerritBuild)} finished with status ${result}")
   }
 }

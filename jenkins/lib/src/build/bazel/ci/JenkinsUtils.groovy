@@ -91,6 +91,26 @@ class JenkinsUtils {
     return null
   }
 
+  /** Returns the URL of the console for a job run */
+  static def getConsoleUrl(RunWrapper run) {
+    return "${run.absoluteUrl}console"
+  }
+
+  /** Returns the URL of the blue ocean view for a job run */
+  @NonCPS
+  static def getBlueOceanUrl(RunWrapper run) {
+    def name = java.net.URLEncoder.encode(run.fullProjectName, "UTF-8")
+    def url = new URL(run.absoluteUrl)
+    def path = "/blue/organizations/jenkins/${name}/detail/${run.projectName}/${run.number}/pipeline/"
+    return new URL(url.protocol, url.host, url.port, path).toString()
+  }
+
+  /** Returns the URL to the small icon for a run */
+  @NonCPS
+  static def getSmallIconUrl(RunWrapper run) {
+    return "${Jenkins.RESOURCE_PATH}/images/16x16/${run.rawBuild.getIconColor()}.png"
+  }
+
   /**
    * A utility method that look for an artifact matching a pattern in upstream
    * builds.
