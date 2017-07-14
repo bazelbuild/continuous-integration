@@ -39,7 +39,7 @@
               <commitStatusContext>ci.bazel.io</commitStatusContext>
               <triggeredStatus></triggeredStatus>
               <startedStatus></startedStatus>
-              <statusUrl></statusUrl>
+              <statusUrl>${RUN_DISPLAY_URL}</statusUrl>
               <addTestResults>false</addTestResults>
             </org.jenkinsci.plugins.ghprb.extensions.status.GhprbSimpleStatus>
           </extensions>
