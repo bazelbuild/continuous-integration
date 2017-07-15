@@ -15,60 +15,104 @@
 import build.bazel.ci.JenkinsUtils
 import build.bazel.ci.BazelConfiguration
 
+private def ensureGpgSecretKeyImported() {
+  sh '''#!/bin/bash
+echo "Import GPG Secret key"
+(gpg --list-secret-keys | grep "${APT_GPG_KEY_ID}" > /dev/null) || \\
+  gpg --allow-secret-key-import --import "${APT_GPG_KEY_PATH}"
+# Make sure we use stronger digest algorithm.
+# We use reprepro to generate the debian repository,
+# but there is no way to pass flags to gpg using reprepro, so writting it into
+# ~/.gnupg/gpg.conf
+(grep "digest-algo sha256" ~/.gnupg/gpg.conf > /dev/null) || \\
+  echo "digest-algo sha256" >> ~/.gnupg/gpg.conf
+'''
+}
+
+// Generate the SHA-256 checksum and the GPG signature for a list of artifacts.
+// Returns a new list of artifacts that include the generated checksum and signature files.
+private def signArtifacts(files) {
+  def result = []
+  def script = []
+  for (def file : files) {
+    script <<= "echo 'Signing ${file}'"
+    script <<= "(cd \"\$(dirname '${file}')\" && sha256sum \"\$(basename '${file}')\") > '${file}.sha256'"
+    script <<= "gpg --no-tty --detach-sign -u \"\${APT_GPG_KEY_ID}\" '${file}'"
+    result <<= file
+    result <<= "${file}.sha256"
+    result <<= "${file}.sig"
+  }
+  sh "#!/bin/bash \n${script.join '\n'}"
+  return result
+}
+
+@NonCPS
+private def listArtifacts(ws, dir, excludes) {
+  return JenkinsUtils.list(env, "${ws}/${dir}", excludes).collect { "${dir}/${it}" }
+}
+
+private def listStashes(configuration, restrict_configuration) {
+  def result = []
+  def conf = BazelConfiguration.flattenConfigurations(
+    BazelConfiguration.parse(configuration), restrict_configuration)
+  for (k in conf.keySet()) {
+    if ("stash" in conf[k] || "archive" in conf[k]) {
+      result.add("bazel--node=${k.node}--variation=${k.variation}")
+    }
+  }
+  return result
+}
+
 // A step that push a release for Bazel.
 def call(params = [:]) {
+  // Parameters
   def r_name = params.name
-  def stashes = params.get("stashes",
-                           { conf -> "bazel--node=${conf.node}--variation=${conf.variation}" })
   def bucket = params.get("bucket", "bazel")
-  def release_script = params.get("script", "source scripts/ci/build.sh; bazel_release")
+  def release_script = params.get("release_script", "source scripts/ci/build.sh; deploy_release")
+  def email_script = params.get("email_script", "source scripts/ci/build.sh; generate_email")
   def repository = params.get("repository", "https://github.com/bazelbuild/bazel")
   def replyTo = params.get("replyTo", "bazel-ci@googlegroups.com")
+
+  def ws = pwd()
+
+  // Save the build log
+  JenkinsUtils.saveLog(env, currentBuild, "${ws}/build.log")
+
   // unstash all the things
-  def conf = BazelConfiguration.flattenConfigurations(
-    BazelConfiguration.parse(params.configuration),
-    params.restrict_configuration).keySet().toArray()
-  for (int k = 0; k < conf.length; k++) {
-    def stashName = stashes(conf[k])
-    if (stashName) {
+  dir("artifacts") {
+    def stashNames = listStashes(params.configuration, params.restrict_configuration)
+    for (def stashName : stashNames) {
       unstash stashName
     }
   }
-  // Delete files we do not need
-  if ("excludes" in params) {
-    sh "rm -f ${params.excludes}"
-  }
+  def artifacts = listArtifacts(ws, "artifacts", params.get("excludes", []))
+
   // Now the actual release
   withEnv(["GCS_BUCKET=${bucket}",
-           "GIT_REPOSITORY_URL=${repository}"]) {
-    JenkinsUtils.saveLog(env, currentBuild, "${pwd()}/build.log")
-    sh '''#!/bin/bash
-# Credentials should not be displayed on the command line
-export GITHUB_TOKEN="$(cat "$GITHUB_TOKEN_FILE")"
-export APT_GPG_KEY_ID="$(cat "${APT_GPG_KEY_ID_FILE}")"
+           "GIT_REPOSITORY_URL=${repository}",
+           "GITHUB_TOKEN=${readFile(env.GITHUB_TOKEN_FILE).trim()}",
+           "APT_GPG_KEY_ID=${readFile(env.APT_GPG_KEY_ID_FILE).trim()}",
+           // TODO(dmarting): hack to work with release_to_apt(), we should get rid of it.
+           "tmpdir=${ws}/artifacts/node=linux-x86_64/variation="]) {
+    // Sign artifacts
+    ensureGpgSecretKeyImported()
+    def artifact_list = signArtifacts(artifacts)
 
-args=()
-# TODO(dmarting): Add build.log to the list of artifacts to deploy
-for i in node=*; do
-  for j in $i/variation=*; do
-    args+=("$(echo $i | cut -d = -f 2)" "$j")
-  done
-done
+    // Release
+    sh "#!/bin/bash\n${release_script} build.log ${artifact_list.join ' '}"
 
-set -x
-''' + release_script + ''' "${args[@]}"
-echo "${RELEASE_EMAIL_RECIPIENT}" | tee output/ci/recipient
-echo "${RELEASE_EMAIL_SUBJECT}" | tee output/ci/subject
-echo "${RELEASE_EMAIL_CONTENT}" | tee output/ci/content
-'''
-    if (r_name.contains("test")) {
-      echo "Test release, skipping announcement mail"
-    } else {
-      stage("Announcement mail") {
-        mail(subject: JenkinsUtils.readFile(env, "output/ci/subject"),
-             to: JenkinsUtils.readFile(env, "output/ci/recipient"),
+    // Send email announcement
+    stage("Announcement mail") {
+      def email = sh(script: "bash -c '${email_script}'", returnStdout: true)
+      echo "Mail to: ${email}"
+      if (r_name.contains("test")) {
+        echo "Test release, skipping announcement mail."
+      } else {
+        def splittedEmail = email.split("\n", 3)
+        mail(subject: splittedEmail[1],
+             to: splittedEmail[0],
              replyTo: replyTo,
-             body: JenkinsUtils.readFile(env, "output/ci/content"))
+             body: splittedEmail[2])
       }
     }
   }

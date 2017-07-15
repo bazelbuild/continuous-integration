@@ -47,7 +47,6 @@ def call(config = [:]) {
       release_name =
         sh(script: "bash -c 'source scripts/release/common.sh; get_full_release_name'",
            returnStdout: true).trim()
-
       def opts = config.get("opts", [])
       opts <<= "--stamp"
       if (!isWindows) {

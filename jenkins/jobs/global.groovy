@@ -69,12 +69,12 @@ done
 '''
       } else {
         def r_name = sh(script: "bash -c 'source scripts/release/common.sh; get_full_release_name'",
-                        returnStdout: true)
+                        returnStdout: true).trim()
         if (!r_name.isEmpty()) {
           pushRelease(name: r_name,
                       configuration: json_config,
                       restrict_configuration: restrict_configuration,
-                      excludes: "node=*/variation=*/bazel node=*/variation=*/*.bazel.build.tar*")
+                      excludes: ["**/*.bazel.build.tar*", "**/bazel", "**/bazel.exe"])
           // TODO(dmarting): trigger bazel install everywhere in case of release.
         }
       }

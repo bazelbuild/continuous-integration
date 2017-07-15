@@ -11,9 +11,9 @@
         "parameters": {
             "archive": {
                 "bazel-bin/src/bazel": "bazel",
-                "bazel-bin/scripts/packages/with-jdk/install.sh": "bazel-%{release_name}-installer.sh",
-                "bazel-bin/scripts/packages/without-jdk/install.sh": "bazel-%{release_name}-without-jdk-installer.sh",
-                "bazel-bin/scripts/packages/debian/bazel-debian.deb": "bazel_%{release_name}.deb",
+                "bazel-bin/scripts/packages/with-jdk/install.sh": "bazel-%{release_name}-installer-linux-x86_64.sh",
+                "bazel-bin/scripts/packages/without-jdk/install.sh": "bazel-%{release_name}-without-jdk-installer-linux-x86_64.sh",
+                "bazel-bin/scripts/packages/debian/bazel-debian.deb": "bazel_%{release_name}-linux-x86_64.deb",
                 "bazel-genfiles/bazel-distfile.zip": "bazel-%{release_name}-dist.zip"
             },
             "stash": {
@@ -46,8 +46,8 @@
         "parameters": {
             "archive": {
                 "bazel-bin/src/bazel": "bazel",
-                "bazel-bin/scripts/packages/with-jdk/install.sh": "bazel-%{release_name}-installer.sh",
-                "bazel-bin/scripts/packages/without-jdk/install.sh": "bazel-%{release_name}-without-jdk-installer.sh"
+                "bazel-bin/scripts/packages/with-jdk/install.sh": "bazel-%{release_name}-darwin-x86_64-installer.sh",
+                "bazel-bin/scripts/packages/without-jdk/install.sh": "bazel-%{release_name}-darwin-x86_64-without-jdk-installer.sh"
             },
             "targets": [
                 "//scripts/packages"
@@ -63,7 +63,7 @@
         "node": "windows-x86_64",
         "parameters": {
             "archive": {
-                "bazel-bin/src/bazel": ["bazel.exe", "bazel-%{release_name}.exe"]
+                "bazel-bin/src/bazel": ["bazel.exe", "bazel-%{release_name}-windows-x86_64.exe"]
             },
             "opts": [
                 "--cpu=x64_windows_msys",
@@ -77,7 +77,7 @@
         "node": "windows-msvc-x86_64",
         "parameters": {
             "archive": {
-                "bazel-bin/src/bazel": ["bazel.exe", "bazel-msvc-%{release_name}.exe"]
+                "bazel-bin/src/bazel": ["bazel.exe", "bazel-msvc-%{release_name}-windows-x86_64.exe"]
             },
             "opts": [
                 "--copt=-w",

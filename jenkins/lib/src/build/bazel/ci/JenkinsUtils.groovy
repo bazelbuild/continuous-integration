@@ -228,4 +228,13 @@ class JenkinsUtils {
   public static void saveLog(env, RunWrapper run, path) {
     createFilePath(env, path).copyFrom(run.getRawBuild().getLogInputStream())
   }
+
+  /** Returns the recursive list of files of a folder, ignoring some files. */
+  @NonCPS
+  public static def list(env, dir, excludes) {
+    def directory = createFilePath(env, dir)
+    def results = directory.list("**", excludes.join(","))
+    def directoryUri = directory.toURI()
+    return results.collect { it -> directoryUri.relativize(it.toURI()) }
+  }
 }
