@@ -53,7 +53,7 @@ test_http() {
 wait_for_server() {
   local server="${1:-localhost}"
   local port="${2:-8080}"
-  local timeout=180
+  local timeout=300
   local ts="$(date +%s)"
   echo -n "*** Waiting for jenkins server to be up and running on port ${port}"
   while ! [[ "$(curl -sI  "http://${server}:${port}/jnlpJars/slave.jar")" =~ ^HTTP/[0-9.]+\ 2 ]]
