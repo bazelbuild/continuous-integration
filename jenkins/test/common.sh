@@ -98,6 +98,7 @@ test_setup() {
   wait_for_server "${server}" "${port}" >&2 || {
     echo "Docker logs:" >&2
     ${DOCKER} logs "$jenkins"
+    ${DOCKER} rm -f "${jenkins}" >&2
     exit 1
   }
   local containers="$(run_containers "${jenkins}" | xargs)"
