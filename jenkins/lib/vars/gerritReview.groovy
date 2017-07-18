@@ -31,11 +31,17 @@ def call(String server, String cookiesFile, String reviewer, changeNum, branch, 
 		   "Starting build at ${JenkinsUtils.getBlueOceanUrl(currentBuild)}")
   }
   def config = [gerritBuild: currentBuild]
+  def result = null
   try {
     body.delegate = config
     body()
+  } catch(Exception ex) {
+    result = "ERROR"
+    throw ex
   } finally {
-    def result = config.gerritBuild.result == null ? "SUCCESS" : config.gerritBuild.result
+    if (result == null) {
+      result = config.gerritBuild.result == null ? "SUCCESS" : config.gerritBuild.result
+    }
     def verified = result == "SUCCESS" ? "+" : "-"
     echo "Setting ${verified}Verified to change ${url} after build returned ${result}"
     gerrit.review(changeNum, branch, result == "SUCCESS" ? 1 : -1,
