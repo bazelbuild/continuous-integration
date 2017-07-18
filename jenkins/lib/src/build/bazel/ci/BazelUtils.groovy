@@ -157,6 +157,16 @@ class BazelUtils implements Serializable {
   }
 
   @NonCPS
+  private static def copyCommands(cp_lines, log, test_folder) {
+    if (log != null) {
+      def uri = URI.create(log.uri)
+      def relativePath = uri.path.substring(uri.path.indexOf("/testlogs/") + 10)
+      cp_lines.add("mkdir -p \$(dirname '${test_folder}/${relativePath}')")
+      cp_lines.add("cp -r '${uri.path}' '${test_folder}/${relativePath}'")
+    }
+  }
+
+  @NonCPS
   def generateTestLogsCopy(events, test_folder) {
     // To avoid looking at all the files, including the stalled output log, we parse the events
     // from the build.
@@ -164,13 +174,13 @@ class BazelUtils implements Serializable {
     def cp_lines = []
     events.each { event ->
       if("testResult" in event) {
-        def log = event.testResult.testActionOutput.find { it.name == "test.xml" }
-        if (log != null) {
-          def uri = URI.create(log.uri)
-          def relativePath = uri.path.substring(uri.path.indexOf("/testlogs/") + 10)
-          cp_lines.add("mkdir -p \$(dirname '${test_folder}/${relativePath}')")
-          cp_lines.add("cp -r '${uri.path}' '${test_folder}/${relativePath}'")
-        }
+        copyCommands(cp_lines,
+                     event.testResult.testActionOutput.find { it.name == "test.xml" },
+                     test_folder)
+        // Also copy the test log
+        copyCommands(cp_lines,
+                     event.testResult.testActionOutput.find { it.name == "test.log" },
+                     test_folder)
       }
     }
     return cp_lines.join('\n')
@@ -183,7 +193,16 @@ class BazelUtils implements Serializable {
     def res = script.sh(
       script: "rm -fr ${test_folder}\n" + generateTestLogsCopy(testEvents(), test_folder),
       returnStatus: true)
+    // Archive BEP files
+    if (script.fileExists(BUILD_EVENTS_FILE)) {
+      script.archiveArtifacts artifacts: BUILD_EVENTS_FILE
+    }
+    if (script.fileExists(TEST_EVENTS_FILE)) {
+      script.archiveArtifacts artifacts: TEST_EVENTS_FILE
+    }
     if (res == 0) {
+      // Archive the test logs and xml files
+      script.archiveArtifacts artifacts: "${test_folder}/**/test.log"
       script.junit testResults: "${test_folder}/**/test.xml", allowEmptyResults: true
     }
   }
