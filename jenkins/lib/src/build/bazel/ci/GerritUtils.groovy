@@ -162,10 +162,37 @@ class GerritUtils implements java.io.Serializable {
     if (maxChanges > 0) {
       url += "&n=${maxChanges}"
     }
-    url += "&q=${java.net.URLEncoder.encode(query)}"
+    url += "&q=${java.net.URLEncoder.encode(query.toString())}"
     def changes = new URL(url).getText().substring(5)
     def jsonSlurper = new JsonSlurper()
     return jsonSlurper.parseText(changes)
+  }
+
+  @NonCPS
+  def removeVote(changeNumber, label, reviewer) {
+    def rev = java.net.URLEncoder.encode(reviewer.toString())
+    this.post("a/changes/${changeNumber}/reviewers/${rev}/votes/${label}/delete",
+              ["notify": "NONE"])
+  }
+
+  @NonCPS
+  def removeVotes(changeNumber, label) {
+    def changeLabels = query(changeNumber)[0].labels
+    if (label in changeLabels) {
+      for (reviewer in changeLabels[label].all) {
+        if (reviewer.value > 0) {
+	  this.removeVote(changeNumber, label, reviewer._account_id)
+        }
+      }
+    }
+  }
+
+  // Mark a code review as review started
+  @NonCPS
+  def startReview(changeNumber) {
+    this.addReviewer(changeNumber)
+    this.removeVotes(changeNumber, "Presubmit-Ready")
+    this.removeVote(changeNumber, "Verified", this.reviewer)
   }
 
   // Returns the list of verified changes not reviewed by the Gerrit reviewer and matching
@@ -174,7 +201,7 @@ class GerritUtils implements java.io.Serializable {
   // of the patch and the project of the change.
   @NonCPS
   def getVerifiedChanges(filter = "", verifiedLevel = 1, maxChanges = 0) {
-    def changesJson = query("status:open -reviewer:${reviewerEmail} ${filter}",
+    def changesJson = query("status:open ${filter}",
                             maxChanges).findAll { change ->
         def verified = change.labels.get("Presubmit-Ready", [])
         return verified.all.any({ it.value == verifiedLevel })

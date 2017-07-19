@@ -26,7 +26,7 @@ def buildChange(gerrit, change) {
   def jobs = JenkinsUtils.jobsWithDescription("CR", "Gerrit project: " + change.project + ".")
 
   if (jobs != null && !jobs.empty) {
-    gerrit.addReviewer(change.number)
+    gerrit.startReview(change.number)
     for(job in jobs) {
       build job: job, propagate: false, wait: false, parameters: [
         [$class: 'StringParameterValue', name: 'REFSPEC', value: refspec],
@@ -39,7 +39,7 @@ def buildChange(gerrit, change) {
 // Run the global presubmit job for a given change
 def globalPresubmit(gerrit, change) {
   def refspec = "+" + change.ref + ":" + change.ref.replaceAll('ref/', 'ref/remotes/origin/')
-  gerrit.addReviewer(change.number)
+  gerrit.startReview(change.number)
   build job: "CR/global-verifier", propagate: false, wait: false, parameters: [
     [$class: 'StringParameterValue', name: 'REFSPEC', value: refspec],
     [$class: 'StringParameterValue', name: 'BRANCH', value: change.sha1],

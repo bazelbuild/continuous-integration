@@ -26,7 +26,7 @@ def call(String server, String cookiesFile, String reviewer, changeNum, branch, 
   this.gerritBuild = currentBuild
   stage("Start Gerrit review") {
     echo "Reviewing change ${url} (${branch})"
-    gerrit.addReviewer(changeNum)
+    gerrit.startReview(changeNum)
     gerrit.comment(changeNum, branch,
                    "Starting build at ${JenkinsUtils.getBlueOceanUrl(currentBuild)}")
   }
