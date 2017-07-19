@@ -30,7 +30,10 @@ def call(params = [:]) {
     if (!(jobName in excludes)) {
       toRun[jobName] = { ->
         try {
-          r = build(job: jobName, parameters: parameters, wait: wait, propagate: false)
+          r = build(job: folder ? "/${folder}/${jobName}" : jobName,
+                    parameters: parameters,
+                    wait: wait,
+                    propagate: false)
           if (r.result == "FAILURE") {
             currentBuild.result = statusOnFailure
           } else if (r.result == "UNSTABLE") {

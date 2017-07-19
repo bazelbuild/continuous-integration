@@ -53,9 +53,9 @@ def toHTMLList(lst) {
 }
 
 def call(args = [:]) {
-  def name = args.name
-  def jobs = collectJobs(args.report, args.get("beforeFolder", ""))
   node {
+    def name = args.name
+    def jobs = collectJobs(args.report, args.get("beforeFolder", ""))
     writeFile file: (".report/${name}.html"), text: """
 <html>
 <h2>Newly failing jobs</h2>
@@ -74,9 +74,9 @@ def call(args = [:]) {
       reportFiles: "${name}.html",
       reportName: name
     ]
-  }
 
-  if (args.get("unstableOnNewFailure", true) && !jobs.failures.empty) {
-    currentBuild.result = "UNSTABLE"
+    if (args.get("unstableOnNewFailure", true) && !jobs.failures.empty) {
+      currentBuild.result = "UNSTABLE"
+    }
   }
 }

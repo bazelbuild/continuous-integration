@@ -99,7 +99,8 @@ stage("Test downstream jobs") {
            [$class: 'StringParameterValue',
             name: 'REFSPEC',
             value: "${params.REFSPEC}"]
-         ])
+         ],
+         excludes: ["pipeline", currentBuild.getProjectName()])
 }
 
 stage("Publish report") {
