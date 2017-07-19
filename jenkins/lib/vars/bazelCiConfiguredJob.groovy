@@ -35,21 +35,22 @@ def createJobsFromConfiguration(config, configNames, script) {
     def configName = descriptorToString(conf)
     configNames.add(configName)
     cfgs.add({ ->
-      script.bazelCiJob(repository: config.repository,
-                        branch: config.branch,
-                        refspec: config.refspec,
-                        node_label: conf["node"],
-                        targets: params.get("targets", ["//..."]),
-                        tests: params.get("tests", ["//..."]),
-                        configuration: params.get("configure", []),
-                        build_opts: params.get("build_opts", []),
-                        test_opts: params.get("test_opts", []),
-                        bazel_version: config.bazel_version + conf.get("variation", ""),
-                        extra_bazelrc: config.extra_bazelrc,
-                        build_tag_filters: params.get("build_tag_filters", []),
-                        test_tag_filters: params.get("test_tag_filters", []),
-                        workspace: config.workspace,
-                        sauce: config.sauce
+        script.bazelCiJob(name: configName,
+                          repository: config.repository,
+                          branch: config.branch,
+                          refspec: config.refspec,
+                          node_label: conf["node"],
+                          targets: params.get("targets", ["//..."]),
+                          tests: params.get("tests", ["//..."]),
+                          configuration: params.get("configure", []),
+                          build_opts: params.get("build_opts", []),
+                          test_opts: params.get("test_opts", []),
+                          bazel_version: config.bazel_version + conf.get("variation", ""),
+                          extra_bazelrc: config.extra_bazelrc,
+                          build_tag_filters: params.get("build_tag_filters", []),
+                          test_tag_filters: params.get("test_tag_filters", []),
+                          workspace: config.workspace,
+                          sauce: config.sauce
       )
     })
   }

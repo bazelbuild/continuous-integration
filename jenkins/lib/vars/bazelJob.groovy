@@ -73,7 +73,7 @@ def call(config = [:]) {
     }
   } finally {
     stage("${stage_prefix}Results") {
-      utils.testlogs("tests-${config.stage_name}")
+      utils.testlogs("tests-${config.stage_name.replaceAll(',', '-')}")
     }
   }
 }

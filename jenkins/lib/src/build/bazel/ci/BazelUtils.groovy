@@ -157,12 +157,17 @@ class BazelUtils implements Serializable {
   }
 
   @NonCPS
-  private static def copyCommands(cp_lines, log, test_folder) {
+  private def copyCommands(cp_lines, log, test_folder) {
     if (log != null) {
       def uri = URI.create(log.uri)
-      def relativePath = uri.path.substring(uri.path.indexOf("/testlogs/") + 10)
+      def path = uri.path
+      if (isWindows) {
+	// on windows the host is the drive letter, add it to the path.
+	path = "/${uri.host}${path}"
+      }
+      def relativePath = path.substring(path.indexOf("/testlogs/") + 10)
       cp_lines.add("mkdir -p \$(dirname '${test_folder}/${relativePath}')")
-      cp_lines.add("cp -r '${uri.path}' '${test_folder}/${relativePath}'")
+      cp_lines.add("cp -r '${path}' '${test_folder}/${relativePath}'")
     }
   }
 
@@ -190,19 +195,17 @@ class BazelUtils implements Serializable {
   def testlogs(test_folder) {
     // JUnit test result does not look at test result if they are "old", copying them to a new
     // location, unique accross configurations.
-    def res = script.sh(
-      script: "rm -fr ${test_folder}\n" + generateTestLogsCopy(testEvents(), test_folder),
-      returnStatus: true)
-    // Archive BEP files
-    if (script.fileExists(BUILD_EVENTS_FILE)) {
-      script.archiveArtifacts artifacts: BUILD_EVENTS_FILE
-    }
-    if (script.fileExists(TEST_EVENTS_FILE)) {
-      script.archiveArtifacts artifacts: TEST_EVENTS_FILE
-    }
+    def res = script.sh(script: """#!/bin/bash
+echo 'Copying test outputs and events file for archiving'
+rm -fr ${test_folder}
+mkdir -p ${test_folder}
+touch ${BUILD_EVENTS_FILE} ${TEST_EVENTS_FILE}
+cp -f ${BUILD_EVENTS_FILE} ${TEST_EVENTS_FILE} ${test_folder}
+""" + generateTestLogsCopy(testEvents(), test_folder),
+                        returnStatus: true)
     if (res == 0) {
       // Archive the test logs and xml files
-      script.archiveArtifacts artifacts: "${test_folder}/**/test.log"
+      script.archiveArtifacts artifacts: "${test_folder}/**/test.log,${test_folder}/*.json"
       script.junit testResults: "${test_folder}/**/test.xml", allowEmptyResults: true
     }
   }

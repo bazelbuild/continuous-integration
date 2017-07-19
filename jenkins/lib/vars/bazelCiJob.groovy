@@ -50,7 +50,7 @@ def call(config = [:]) {
   config["branch"] = config.get("branch", "master")
   config["refspec"] = config.get("refspec", "+refs/heads/*:refs/remotes/origin/*")
 
-  def prefix = "${config.node_label}"
+  def prefix = config.get("name", "${config.node_label}-${config.bazel_version}")
   def workspace = ""
 
   config.test_tag_filters += ["-noci", "-manual"]
@@ -63,8 +63,7 @@ def call(config = [:]) {
     "-k"
   ]
   machine(config.node_label) {
-    ws("workspace/${currentBuild.fullProjectName}-" +
-       config.get("name", config.node_label + "-" + config.bazel_version)) {
+    ws("workspace/${currentBuild.fullProjectName}-${prefix}") {
       maybeSauce(config.sauce) {
         // Checkout the code
         echo "Checkout ${config.repository}"
