@@ -93,6 +93,7 @@ class JenkinsUtils {
   }
 
   /** Returns the URL of the console for a job run */
+  @NonCPS
   static def getConsoleUrl(RunWrapper run) {
     return "${run.absoluteUrl}console"
   }
