@@ -91,8 +91,8 @@ $bazel_version=$res.ResponseUri.AbsolutePath.TrimStart("/bazelbuild/bazel/releas
 
 # Download the latest bazel
 
-# This will be replaced in vm.sh with $MSVC_LABEL='-msvc' for Windows MSVC nodes 
-$MSVC_LABEL=''
+# TODO(pcloudy): Remove MSVC_LABEL after we release MSVC Bazel as default
+$MSVC_LABEL='-msvc'
 $folder="c:\bazel_ci\installs\${BAZEL_VERSION}"
 $url="https://releases.bazel.build/${BAZEL_VERSION}/release/bazel${MSVC_LABEL}-${BAZEL_VERSION}-windows${MSVC_LABEL}-x86_64.exe"
 New-Item $folder -type directory -force

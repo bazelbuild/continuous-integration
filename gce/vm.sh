@@ -60,10 +60,6 @@ SLAVES=(
     "windows-slave-2 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-2 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows.ps1"
     "windows-slave-3 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-3 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows.ps1"
     "windows-slave-4 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-4 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows.ps1"
-    "windows-msvc-slave-1 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-msvc-x86_64-1 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows-msvc.ps1"
-    "windows-msvc-slave-2 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-msvc-x86_64-2 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows-msvc.ps1"
-    "windows-msvc-slave-3 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-msvc-x86_64-3 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows-msvc.ps1"
-    "windows-msvc-slave-4 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-msvc-x86_64-4 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows-msvc.ps1"
     # For benchmark
     "ubuntu-14-04-benchmark-slave ubuntu-1404-lts ubuntu_14.04-x86_64-benchmark-1 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
 )
@@ -93,7 +89,6 @@ STAGING_SLAVES=(
     "freebsd-12-slave-staging https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-12-0-current-amd64-2017-07-04 freebsd-12-staging europe-west1-d staging startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
     # Fow Windows, we use a custom image with pre-installed MSVC.
     "windows-slave-staging windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-staging europe-west1-d staging windows-startup-script-ps1=jenkins-slave-windows.ps1"
-    "windows-msvc-slave-staging windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-msvc-x86_64-staging europe-west1-d staging windows-startup-script-ps1=jenkins-slave-windows-msvc.ps1"
 )
 STAGING_MASTER=(
     # VM name
@@ -186,17 +181,9 @@ function create_slave() {
   gcloud compute instances stop "$TAG" \
       --zone "$LOCATION"
 
-  # Generating the start-up script for Windows MSVC nodes.
-  if [[ $TAG == windows-msvc* ]]; then
-    sed -e "s/MSVC_LABEL=''/MSVC_LABEL='-msvc'/g" jenkins-slave-windows.ps1 > jenkins-slave-windows-msvc.ps1
-  fi
   gcloud compute instances add-metadata "$TAG" \
       --zone "$LOCATION" \
       --metadata-from-file "$STARTUP_METADATA"
-  # Delete the generated start-up script for Windows MSVC nodes.
-  if [[ $TAG == windows-msvc* ]]; then
-    rm jenkins-slave-windows-msvc.ps1
-  fi
 
   gcloud compute instances start "$TAG" \
       --zone "$LOCATION"

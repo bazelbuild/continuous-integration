@@ -66,20 +66,6 @@
                 "bazel-bin/src/bazel": ["bazel.exe", "bazel-%{release_name}-windows-x86_64.exe"]
             },
             "opts": [
-                "--cpu=x64_windows_msys",
-                "--host_cpu=x64_windows_msys"
-            ]
-        }
-    },
-    // TODO(dmarting): This should be a variation, not a node name
-    {
-        "variation": "",
-        "node": "windows-msvc-x86_64",
-        "parameters": {
-            "archive": {
-                "bazel-bin/src/bazel": ["bazel.exe", "bazel-msvc-%{release_name}-windows-x86_64.exe"]
-            },
-            "opts": [
                 "--copt=-w",
                 "--host_copt=-w",
                 // TODO(pcloudy):

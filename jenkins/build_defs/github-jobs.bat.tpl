@@ -32,12 +32,6 @@ if "%BAZEL_VERSION%" == "" (
   exit /b 1
 )
 
-:: Skip if latest MSVC Bazel is not installed
-if not exist "%BAZEL%" if "%BAZEL_VERSION%" == "latest" if "%PLATFORM_NAME:~0,12%" == "windows-msvc" (
-  echo "CI WARNING: Latest MSVC Bazel not found, not yet released? Ignore for now."
-  exit /b 0
-)
-
 :: Check if BAZEL exists.
 if exist "%BAZEL%" (
   echo CI info: BAZEL binary found
@@ -46,9 +40,9 @@ if exist "%BAZEL%" (
   exit /b 1
 )
 
-:: Remove MSYS path on Windows MSVC platform, the MSYS path
+:: Remove MSYS path on Windows platform, the MSYS path
 :: was originally added by jenkins-slave-windows.ps1
-if "%PLATFORM_NAME:~0,12%" == "windows-msvc" set PATH=%PATH:c:\tools\msys64\usr\bin;=%
+set PATH=%PATH:c:\tools\msys64\usr\bin;=%
 
 set ROOT=%cd%
 set BAZELRC=%ROOT%\.bazelrc

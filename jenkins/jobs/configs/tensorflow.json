@@ -24,7 +24,7 @@
         "toolchain": "msvc",
         "configurations": [{
             "variation": "",
-            "configurations": [{"node": "windows-msvc-x86_64", "node": "windows-x86_64"}]
+            "configurations": [{"node": "windows-x86_64"}]
         }],
         "parameters": {
             // TODO(dmarting): this is terrible, can we actually call Bazel?

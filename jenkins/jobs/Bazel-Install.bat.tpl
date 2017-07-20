@@ -33,13 +33,11 @@ if "%BAZEL_VERSION%" == "" (
 :: Download the latest bazel release
 set folder=c:\bazel_ci\installs\%BAZEL_VERSION%
 
-if "%PLATFORM_NAME:~0,12%" == "windows-msvc" (
-:: Download MSVC version Bazel, this will fail before MSVC Bazel is released
-  set url='https://releases.bazel.build/%BAZEL_VERSION%/release/bazel-msvc-%BAZEL_VERSION%-windows-msvc-x86_64.exe'
-) else (
-:: Download MSYS version Bazel
-  set url='https://releases.bazel.build/%BAZEL_VERSION%/release/bazel-%BAZEL_VERSION%-windows-x86_64.exe'
-)
+
+:: Download MSVC version Bazel.
+:: TODO(pcloudy): Use the following URL after default Bazel release is MSVC version
+:: set url='https://releases.bazel.build/%BAZEL_VERSION%/release/bazel-%BAZEL_VERSION%-windows-x86_64.exe'
+set url='https://releases.bazel.build/%BAZEL_VERSION%/release/bazel-msvc-%BAZEL_VERSION%-windows-msvc-x86_64.exe'
 
 if not exist %folder%\bazel.exe (
   md %folder%
@@ -56,23 +54,8 @@ mklink /J c:\bazel_ci\installs\bootstrap %folder%
 
 :: Install Bazel built at HEAD
 md c:\bazel_ci\installs\HEAD
-if "%PLATFORM_NAME:~0,12%" == "windows-msvc" (
-  echo F | xcopy /y "bazel-installer\PLATFORM_NAME=windows-msvc-x86_64\output\ci\bazel*.exe" c:\bazel_ci\installs\HEAD\bazel.exe
-) else (
-  echo F | xcopy /y "bazel-installer\PLATFORM_NAME=windows-x86_64\output\ci\bazel*.exe" c:\bazel_ci\installs\HEAD\bazel.exe
-)
+echo F | xcopy /y "bazel-installer\PLATFORM_NAME=windows-x86_64\output\ci\bazel*.exe" c:\bazel_ci\installs\HEAD\bazel.exe
 
-
-:: check if installation is successfuly
-:: Ignore the failure, if latest MSVC Bazel is not installed.
-:: TODO(pcloudy): Remove this after MSVC Bazel is released.
-if not exist c:\bazel_ci\installs\latest\bazel.exe (
-  if "%PLATFORM_NAME:~0,12%" == "windows-msvc" (
-    exit 0
-  ) else (
-    exit 1
-  )
-)
 if not exist c:\bazel_ci\installs\HEAD\bazel.exe (
   exit 1
 )

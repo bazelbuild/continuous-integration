@@ -75,13 +75,6 @@
     }, {
         "toolchain": "msvc",
         "configurations": [{
-            // TODO(dmarting): MSVC is a misnommer, it should have been called win32
-            // (for win32 native binary).
-            // TODO(dmarting): really MSVC/Win32 should be a bazel variation, not part of
-            // the node.
-            "node": "windows-msvc-x86_64",
-            "variation": ""
-        }, {
             "node": "windows-x86_64",
             "variation": ""
         }],
@@ -105,13 +98,6 @@
     }, {
         "toolchain": "msys",
         "configurations": [{
-            // TODO(dmarting): MSVC is a misnommer, it should have been called win32
-            // (for win32 native binary).
-            // TODO(dmarting): really MSVC/Win32 should be a bazel variation, not part of
-            // the node.
-            "node": "windows-msvc-x86_64",
-            "variation": ""
-        }, {
             "node": "windows-x86_64",
             "variation": ""
         }],
