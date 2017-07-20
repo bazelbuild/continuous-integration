@@ -37,12 +37,6 @@ then
   echo "build --build_tag_filters ${BUILD_TAG_FILTERS}" >> ${ROOT}/bazel.bazelrc
 fi
 
-if [[ "${PLATFORM_NAME}" =~ .*darwin.* ]]; then
-  cat >>${ROOT}/bazel.bazelrc <<EOF
-test --local_test_jobs=3
-EOF
-fi
-
 if [[ "${PLATFORM_NAME}" =~ .*darwin.* ]] && \
       xcodebuild -showsdks 2> /dev/null | grep -q '\-sdk iphonesimulator'; then
   cat >>${ROOT}/bazel.bazelrc <<EOF

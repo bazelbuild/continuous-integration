@@ -63,9 +63,7 @@ FREEBSD_12_COUNT = 1
 jenkins_nodes(
     DARWIN_PREFIX,
     DARWIN_COUNT,
-    prod_args = {
-        "num_executors": 2,
-    },
+    num_executors = 1,
     remote_fs = "/Users/ci",
 )
 
