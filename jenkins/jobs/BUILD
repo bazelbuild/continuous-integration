@@ -219,7 +219,9 @@ bazel_github_job(
         "//src/test/java/...",
         "//src/test/cpp/...",
         "//src/test/native:all_tests",
+        "//src/tools/launcher/util/...",
         "//src/test/shell/bazel:bazel_bootstrap_distfile_test",
+        "//src/test/shell/bazel:bazel_windows_example_test",
     ],
     windows_tests_msys = [
         "//src/test/shell/bazel:bazel_windows_example_test",
