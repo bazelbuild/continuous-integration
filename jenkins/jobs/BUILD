@@ -140,7 +140,7 @@ bazel_github_job(
     substitutions = {"GLOBAL_USE_UPSTREAM_BRANCH": "True"},
     targets = [],
     tests = [
-        "filter(\"^//src/test/docker/\", //src/test/...)",
+        "filter(\"^//src/test/docker\", //src/test/...)",
         "//tools/cpp/...",
     ],
 )
