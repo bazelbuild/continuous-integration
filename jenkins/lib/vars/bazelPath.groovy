@@ -82,7 +82,7 @@ def call(String bazel_version, String node_label) {
       if (node_label.startsWith("windows")) {
         // File.parent is null, use custom substring
         def bazelDir = bazel.substring(0, bazel.lastIndexOf("\\"))
-        bat "mkdir ${bazelDir}\r\nmove /Y ${pwd()}\\.bazel\\bazel.exe ${bazel}"
+        bat "mkdir \"${bazelDir}\"\r\nmove /Y \"${pwd()}\\.bazel\\bazel.exe\" \"${bazel}\""
       } else {
         def bazelDir = bazel.substring(0, bazel.lastIndexOf("/"))
         sh "mkdir -p ${bazelDir}; mv -f .bazel/bazel ${bazel}"
