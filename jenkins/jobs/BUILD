@@ -179,6 +179,11 @@ bazel_github_job(
         # TODO(pcloudy): This is only for Windows.
         # Remove it after wrapper-less CROSSTOOL becomes default
         "--action_env=NO_MSVC_WRAPPER=1",
+        # TODO(pcloudy): Remove this after TEMP is properly set.
+        # A workaround for ASSERT_DEATH in gtest on Windows.
+        # When running tests, Bazel doesn't set TEMP,
+        # ASSERT_DEATH will try to write to C:/Windows, then fails.
+        "--test_env=TEMP",
     ],
     config = ":configs/bazel-tests.json",
     configure = [
