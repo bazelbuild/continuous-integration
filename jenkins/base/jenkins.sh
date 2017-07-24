@@ -78,7 +78,7 @@ if [ -d "/opt/lib" ]; then
       git config user.email "nobody@nowhere.local" && \
       git config user.name "Nobody" && \
       git add . && \
-      git commit -m "Dummy")
+      git commit -m "Jenkins library: commit from container")
 fi
 
 # Execute Jenkins

@@ -32,4 +32,4 @@ for i in "$LIB_DIR/"*; do
     docker cp "$i" "$CONTAINER_NAME:/opt/lib/"
 done
 docker exec "$CONTAINER_NAME" chown -R jenkins /opt/lib
-docker exec "$CONTAINER_NAME" su jenkins bash -c 'cd /opt/lib; git add .; git commit -m sync'
+docker exec "$CONTAINER_NAME" su jenkins bash -c 'cd /opt/lib; git add .; git commit -m "Jenkins library: manual sync on $(date)"'
