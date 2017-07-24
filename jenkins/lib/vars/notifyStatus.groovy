@@ -25,6 +25,7 @@ def call(String recipients, Closure body) {
         node("deploy") {
           // Why do we even need a node to send a mail?
           // TODO(dmarting): maybe use mailext?
+          echo "Sending mail to ${recipients.join ','}"
           step([$class: 'Mailer',
                 notifyEveryUnstableBuild: false,
                 recipients: recipients,
