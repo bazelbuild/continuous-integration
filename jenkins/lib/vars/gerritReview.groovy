@@ -30,7 +30,7 @@ def call(String server, String cookiesFile, String reviewer, changeNum, branch, 
     gerrit.comment(changeNum, branch,
                    "Starting build at ${JenkinsUtils.getBlueOceanUrl(currentBuild)}")
   }
-  def config = [gerritBuild: currentBuild, gerrit: gerrit]
+  def config = [gerritBuild: currentBuild, gerrit: gerrit, reportUrl: null]
   def result = null
   try {
     body.delegate = config
@@ -42,9 +42,10 @@ def call(String server, String cookiesFile, String reviewer, changeNum, branch, 
     if (result == null) {
       result = config.gerritBuild.result == null ? "SUCCESS" : config.gerritBuild.result
     }
+    def reportUrl = config.reportUrl ? config.reportUrl : JenkinsUtils.getBlueOceanUrl(config.gerritBuild)
     def verified = result == "SUCCESS" ? "+" : "-"
     echo "Setting ${verified}Verified to change ${url} after build returned ${result}"
     gerrit.review(changeNum, branch, result == "SUCCESS" ? 1 : -1,
-                  "Build ${JenkinsUtils.getBlueOceanUrl(config.gerritBuild)} finished with status ${result}")
+                  "Build ${reportUrl} finished with status ${result}")
   }
 }

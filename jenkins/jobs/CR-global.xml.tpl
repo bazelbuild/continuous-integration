@@ -61,8 +61,7 @@ gerritReview("https://bazel-review.googlesource.com/",
     params.CHANGE_NUMBER,
     params.BRANCH) {
   {{ imports['//jenkins/jobs:global.groovy'] }}
-  delegate.gerrit.comment(params.CHANGE_NUMBER, params.BRANCH,
-                                          "Review result of the global test at ${currentBuild.getAbsoluteUrl()}Downstream_projects/")
+  delegate.reportUrl = "${currentBuild.getAbsoluteUrl()}Downstream_projects/"
 }</script>
     <sandbox>true</sandbox>
   </definition>
