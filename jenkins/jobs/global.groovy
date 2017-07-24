@@ -109,4 +109,12 @@ stage("Test downstream jobs") {
 
 stage("Publish report") {
   reportAB report: report, name: "Downstream projects"
+  if (mail_recipient) {
+    mail(subject: "Global tests #${currentBuild.number} finished with status ${currentBuild.result}",
+         body: """A global tests has just finished with status ${currentBuild.result}.
+
+You can find the report at ${currentBuild.getAbsoluteUrl()}Downstream_projects/.
+""",
+         to: mail_recipient)
+  }
 }
