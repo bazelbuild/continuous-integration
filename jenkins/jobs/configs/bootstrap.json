@@ -46,8 +46,8 @@
         "parameters": {
             "archive": {
                 "bazel-bin/src/bazel": "bazel",
-                "bazel-bin/scripts/packages/with-jdk/install.sh": "bazel-%{release_name}-darwin-x86_64-installer.sh",
-                "bazel-bin/scripts/packages/without-jdk/install.sh": "bazel-%{release_name}-darwin-x86_64-without-jdk-installer.sh"
+                "bazel-bin/scripts/packages/with-jdk/install.sh": "bazel-%{release_name}-installer-darwin-x86_64.sh",
+                "bazel-bin/scripts/packages/without-jdk/install.sh": "bazel-%{release_name}-without-jdk-installer-darwin-x86_64.sh"
             },
             "targets": [
                 "//scripts/packages"
@@ -63,8 +63,14 @@
         "node": "windows-x86_64",
         "parameters": {
             "archive": {
-                "bazel-bin/src/bazel": ["bazel.exe", "bazel-%{release_name}-windows-x86_64.exe"]
+                "bazel-bin/src/bazel": ["bazel.exe", "bazel-%{release_name}-without-jdk-windows-x86_64.exe"],
+                "bazel-bin/src/bazel_with_jdk": "bazel-%{release_name}-windows-x86_64.exe",
+                "bazel-genfiles/scripts/packages/bazel.zip": "bazel-%{release_name}-without-jdk-windows-x86_64.zip",
+                "bazel-genfiles/scripts/packages/bazel_with_jdk.zip": "bazel-%{release_name}-windows-x86_64.zip"
             },
+            "targets": [
+                "//scripts/packages"
+            ],
             "opts": [
                 "--copt=-w",
                 "--host_copt=-w",
