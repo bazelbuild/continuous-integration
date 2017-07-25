@@ -46,9 +46,13 @@ EOF
 
 git config --global http.cookiefile /opt/secrets/gerritcookies
 
-set -eux
+set -eu
 
 cd /tmp
+
+function log() {
+  echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] $@"
+}
 
 function clone() {
   git clone $1 $3
@@ -58,6 +62,7 @@ function clone() {
 }
 
 function sync_branch() {
+  log "sync_branch $@"
   local branch="$1"
   local bidirectional="$2"
   git checkout origin/${branch} -B ${branch} || {
@@ -65,6 +70,7 @@ function sync_branch() {
     return 1
   }
 
+  log "Origin branch is $(git rev-parse origin/master), destination is $(git rev-parse destination/master)"
   if $bidirectional; then
     git rebase destination/${branch} || {
       echo "Failed to rebase ${branch} from destination, aborting sync..."
@@ -77,6 +83,7 @@ function sync_branch() {
     }
   fi
 
+  log "New head for destination is $(git rev-parse HEAD)"
   git push destination ${branch} || {
     echo "Failed to push to destination..."
     return 1
@@ -84,6 +91,7 @@ function sync_branch() {
 }
 
 function sync() {
+  log "sync $@"
   local bidirectional="$4"
   pushd $3
   shift 4
