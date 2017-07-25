@@ -33,7 +33,7 @@ for (int k = 0; k < nodes.size(); k++) {
       stage("Install Bazel on ${node}") {
         installBazel(node: node,
                      version: latest,
-                     flavours: node.startsWith("windows") ? [""] : ["", "-jdk7"],
+                     flavours: [""],
                      alias: "latest")
       }
     }

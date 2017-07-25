@@ -12,6 +12,7 @@
         <artifactDaysToKeep>-1</artifactDaysToKeep>
         <artifactNumToKeep>-1</artifactNumToKeep>
       </strategy>
+    </jenkins.model.BuildDiscarderProperty>
   </properties>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition">
     <script>{{ imports['//jenkins/jobs:install-bazel.groovy'] }}</script>

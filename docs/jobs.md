@@ -5,7 +5,7 @@ projects, and hidden jobs.
 
 ## Bootstrap and maintenance
 
-Four jobs control the bootstrap and maintenance of Bazel:
+Five jobs control the bootstrap and maintenance of Bazel:
 
 * `Github-Trigger`: A job that is automatically triggered (by a GitHub
  webhook) every time someone or something pushes commits to the GitHub
@@ -14,6 +14,7 @@ Four jobs control the bootstrap and maintenance of Bazel:
 * `Bazel-Benchmark` and `Bazel-Push-Benchmark-Output`: jobs running
   continously to produce benchmarks of Bazel published at [perf.bazel.build](https://perf.bazel.build).
 * `Global/pipeline`: a job that handles the global tests as well as the release process
+* `install-bazel`: a job that install Bazel release on all the slaves.
 
 All those jobs have custom configuration files that can be found in `jenkins/jobs/*.xml.tpl`.
 
