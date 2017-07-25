@@ -85,7 +85,7 @@ def call(String bazel_version, String node_label) {
         bat "mkdir \"${bazelDir}\"\r\nmove /Y \"${pwd()}\\.bazel\\bazel.exe\" \"${bazel}\""
       } else {
         def bazelDir = bazel.substring(0, bazel.lastIndexOf("/"))
-        sh "mkdir -p ${bazelDir}; mv -f .bazel/bazel ${bazel}"
+        sh "mkdir -p ${bazelDir}; mv -f .bazel/bazel ${bazel}; chmod +x ${bazel}"
       }
     }
     pruneOldCustomBazel(node_label)
