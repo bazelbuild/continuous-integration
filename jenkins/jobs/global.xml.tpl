@@ -20,19 +20,9 @@
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
         <hudson.model.StringParameterDefinition>
-          <name>REPOSITORY</name>
-          <description>The repository to build</description>
-          <defaultValue>https://bazel.googlesource.com/bazel</defaultValue>
-        </hudson.model.StringParameterDefinition>
-        <hudson.model.StringParameterDefinition>
-          <name>BRANCH</name>
-          <description>The branch to build</description>
-          <defaultValue>master</defaultValue>
-        </hudson.model.StringParameterDefinition>
-        <hudson.model.StringParameterDefinition>
-          <name>REFSPEC</name>
-          <description>The refspec to fetch</description>
-          <defaultValue>+refs/heads/*:refs/remotes/origin/*</defaultValue>
+          <name>payload</name>
+          <description>Payload sent by GitHub</description>
+          <defaultValue></defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.TextParameterDefinition>
           <name>EXTRA_BAZELRC</name>
@@ -42,19 +32,32 @@
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
     <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
-      <triggers/>
+      <triggers>
+        {% if variables.production == "true" %}
+        <hudson.triggers.TimerTrigger>
+          <spec>@midnight</spec>
+        </hudson.triggers.TimerTrigger>
+        {% endif %}
+      </triggers>
     </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
   </properties>
+  <authToken>##SECRET:github_trigger_auth_token##</authToken>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition">
     <script>
-globalBazelTest(
-      repository: params.REPOSITORY,
-      branch: params.BRANCH,
+githubHook(refs: '^refs/(heads/release-|tags/).*$') {
+  def branch = delegate.branch ? delegate.branch :"master"
+  def refspec = branch.matches('^(refs/heads/)?master$') ?
+                        "+refs/heads/*:refs/remotes/origin/*" :
+                        "+refs/heads/*:refs/remotes/origin/* +refs/notes/*:refs/notes/*"
+  globalBazelTest(
+      repository: delegate.url ? delegate.url : "https://bazel.googlesource.com/bazel",
+      branch: branch,
       extra_bazelrc: params.EXTRA_BAZELRC,
-      refspec: params.REFSPEC,
+      refspec: refspec,
       configuration: '''{{ raw_imports['//jenkins/jobs:configs/bootstrap.json'].replace('\\', '\\\\').replace("'", "\\'") }}''',
       restrict_configuration: {{ variables.RESTRICT_CONFIGURATION }},
       mail_recipient: "{{ variables.BAZEL_BUILD_RECIPIENT }}")
+}
   </script>
     <sandbox>true</sandbox>
   </definition>

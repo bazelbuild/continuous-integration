@@ -25,7 +25,7 @@ source "${PYTHON_RUNFILES}/io_bazel_ci/jenkins/test/test-support.sh"
 setup
 
 test_ok_status "/job/Global/job/pipeline/"
-test_ok_status "/job/Github-Trigger/"
+test_ok_status "/job/install-bazel/"
 test_ok_status "/job/CR/job/gerrit-verifier"
 test_ok_status "/job/CR/job/global-verifier"
 

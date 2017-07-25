@@ -5,18 +5,13 @@ projects, and hidden jobs.
 
 ## Bootstrap and maintenance
 
-Five jobs control the bootstrap and maintenance of Bazel:
+Four jobs control the bootstrap and maintenance of Bazel:
 
-* `Github-Trigger`: A job that is automatically triggered (by a GitHub
- webhook) every time someone or something pushes commits to the GitHub
- master branch, to a GitHub release branch, or to a GitHub release
- tag. This job then triggers the `Global/pipeline` job.
 * `Bazel-Benchmark` and `Bazel-Push-Benchmark-Output`: jobs running
   continously to produce benchmarks of Bazel published at [perf.bazel.build](https://perf.bazel.build).
-* `Global/pipeline`: a job that handles the global tests as well as the release process
+* `Global/pipeline`: a job that handles the global tests as well as the release process, it is run
+   every night and on release.
 * `install-bazel`: a job that install Bazel release on all the slaves.
-
-All those jobs have custom configuration files that can be found in `jenkins/jobs/*.xml.tpl`.
 
 ## Projects
 
@@ -32,6 +27,8 @@ which is a strip down version of the `JOBS` definition.
 
 * `CR/gerrit-verifier` is a job to detect pending reviews on Gerrit that
   need validation (that have been marked as `Presubmit-Ready`).
+* `CR/global-verifier` is a clone of `Global/pipeline` that is triggered
+  when someone set `Presubmit-Ready+2` on Gerrit.
 * `PR/_project_` is a copy of the job for _project_ that validates a GitHub pull
   request on _project_ with the latest release of Bazel.
 * `CR/_project_` is the same as `PR-_project_` but for validating Gerrit

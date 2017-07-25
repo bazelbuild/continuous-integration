@@ -9,12 +9,6 @@ load("//jenkins/lib:def.bzl", "bazel_job_configuration_test")
 ) for s in glob(["configs/*.json"])]
 
 # Some common jobs
-jenkins_job(
-    name = "Github-Trigger",
-    config = "jobs-Github-Trigger.xml.tpl",
-    project_url = "http://bazel.io",
-)
-
 [jenkins_job(
     name = job,
     config = "jobs-%s.xml.tpl" % job,
@@ -94,7 +88,6 @@ bazel_github_job(
 bazel_github_job(
     name = "bazel-docker-tests",
     config = ":configs/bazel-docker-tests.json",
-    enable_trigger = False,
     git_url = "https://bazel.googlesource.com/bazel",
     pr_enabled = False,  # Do not vet PR because those tests are slow.
     project = "bazel",
@@ -115,7 +108,6 @@ bazel_github_job(
 bazel_github_job(
     name = "bazel-tests",
     config = ":configs/bazel-tests.json",
-    enable_trigger = False,
     gerrit_project = "bazel",
     git_url = "https://bazel.googlesource.com/bazel",
     project = "bazel",
