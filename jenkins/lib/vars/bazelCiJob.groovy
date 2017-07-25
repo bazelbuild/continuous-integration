@@ -74,11 +74,19 @@ def call(config = [:]) {
         // And build
         maybeDir(config.workspace) {
           def bazel = bazelPath(config.bazel_version, config.node_label)
-
+          def extrarc = config.extra_bazelrc
+          if (config.bazel_version.startsWith("custom")) {
+            // Make the server dies after 10 minutes on custom bazel version.
+            // Other bazel servers stays alive for 3 hours, which is ok for
+            // release but not for custom binaries used for Global tests. We
+            // do not set the max_idle_secs to 1 because we still want the
+            // server to survive between steps.
+            extrarc += "\nstartup --max_idle_secs 600\n"
+          }
           bazelJob(binary: bazel,
                    build_opts: build_options,
                    test_opts: test_options,
-                   extra_bazelrc: config.extra_bazelrc,
+                   extra_bazelrc: extrarc,
                    targets: config.targets,
                    tests: config.tests,
                    configuration: config.configuration,
