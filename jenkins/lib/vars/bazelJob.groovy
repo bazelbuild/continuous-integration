@@ -55,7 +55,7 @@ def call(config = [:]) {
       withEnv(["PATH=${new File(config.binary).parent}:${env.PATH}",
               "BAZEL=${config.binary}"]) {
         if (isUnix()) {
-          sh "#!/bin/bash -x\n${config.configuration.join('\n')}"
+          sh "#!/bin/sh -x\n${config.configuration.join('\n')}"
         } else {
           bat config.configuration.join('\n')
         }

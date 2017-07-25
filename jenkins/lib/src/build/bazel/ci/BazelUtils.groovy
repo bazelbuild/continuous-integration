@@ -195,7 +195,7 @@ class BazelUtils implements Serializable {
   def testlogs(test_folder) {
     // JUnit test result does not look at test result if they are "old", copying them to a new
     // location, unique accross configurations.
-    def res = script.sh(script: """#!/bin/bash
+    def res = script.sh(script: """#!/bin/sh
 echo 'Copying test outputs and events file for archiving'
 rm -fr ${test_folder}
 mkdir -p ${test_folder}
