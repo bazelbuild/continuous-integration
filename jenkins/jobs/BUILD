@@ -29,7 +29,6 @@ jenkins_job(
     config = "global.xml.tpl",
     deps = [
         ":configs/bootstrap.json",
-        ":global.groovy",
     ],
 )
 
@@ -38,7 +37,6 @@ jenkins_job(
     config = "CR-global.xml.tpl",
     deps = [
         ":configs/bootstrap.json",
-        ":global.groovy",
     ],
 )
 

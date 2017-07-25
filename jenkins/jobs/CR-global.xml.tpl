@@ -52,15 +52,18 @@
   </properties>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition">
     <script>
-json_config = '''{{ raw_imports['//jenkins/jobs:configs/bootstrap.json'].replace('\\', '\\\\').replace("'", "\\'") }}'''
-restrict_configuration = {{ variables.RESTRICT_CONFIGURATION }}
-mail_recipient = ""
 gerritReview("https://bazel-review.googlesource.com/",
     "/opt/secrets/gerritcookies",
     "Bazel CI &lt;ci.bazel@gmail.com&gt;",
     params.CHANGE_NUMBER,
     params.BRANCH) {
-  {{ imports['//jenkins/jobs:global.groovy'] }}
+  globalBazelTest(
+      repository: params.REPOSITORY,
+      branch: params.BRANCH,
+      extra_bazelrc: params.EXTRA_BAZELRC,
+      refspec: params.REFSPEC,
+      configuration: '''{{ raw_imports['//jenkins/jobs:configs/bootstrap.json'].replace('\\', '\\\\').replace("'", "\\'") }}''',
+      restrict_configuration: {{ variables.RESTRICT_CONFIGURATION }})
   delegate.reportUrl = "${currentBuild.getAbsoluteUrl()}Downstream_projects/"
 }</script>
     <sandbox>true</sandbox>

@@ -47,10 +47,14 @@
   </properties>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition">
     <script>
-json_config = '''{{ raw_imports['//jenkins/jobs:configs/bootstrap.json'].replace('\\', '\\\\').replace("'", "\\'") }}'''
-restrict_configuration = {{ variables.RESTRICT_CONFIGURATION }}
-mail_recipient = "{{ variables.BAZEL_BUILD_RECIPIENT }}"
-{{ imports['//jenkins/jobs:global.groovy'] }}
+globalBazelTest(
+      repository: params.REPOSITORY,
+      branch: params.BRANCH,
+      extra_bazelrc: params.EXTRA_BAZELRC,
+      refspec: params.REFSPEC,
+      configuration: '''{{ raw_imports['//jenkins/jobs:configs/bootstrap.json'].replace('\\', '\\\\').replace("'", "\\'") }}''',
+      restrict_configuration: {{ variables.RESTRICT_CONFIGURATION }},
+      mail_recipient: "{{ variables.BAZEL_BUILD_RECIPIENT }}")
   </script>
     <sandbox>true</sandbox>
   </definition>
