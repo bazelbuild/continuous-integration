@@ -48,11 +48,11 @@ UBUNTU_DOCKER_COUNT = 2
 
 FREEBSD_11_PREFIX = "freebsd-11"
 
-FREEBSD_11_COUNT = 1
+FREEBSD_11_COUNT = 4
 
 FREEBSD_12_PREFIX = "freebsd-12"
 
-FREEBSD_12_COUNT = 1
+FREEBSD_12_COUNT = 4
 
 # Physical machines
 jenkins_nodes(
