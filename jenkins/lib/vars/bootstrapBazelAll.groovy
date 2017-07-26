@@ -52,6 +52,7 @@ def call(config = [:]) {
                        archive: value.get("archive"),
                        stash: value.get("stash"),
                        targets: value.get("targets", []),
+                       configure: value.get("configure", []),
                        opts: value.get("opts", []))
       }
     }

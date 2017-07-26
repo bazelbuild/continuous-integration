@@ -4,6 +4,7 @@
 //     (for non release build).
 //   - stash: list of artifacts to stash (to be released / push but no need to keep it forever)
 //   - targets: list of targets to build, in addition to //src:bazel.
+//   - configure: list of configuration step to run before bazel
 [
     {
         "node": "linux-x86_64",
@@ -33,12 +34,34 @@
     {
         "variation": "",
         "node": "freebsd-11",
-        "parameters": {"archive": {"bazel-bin/src/bazel": "bazel"}}
+        "parameters": {
+            "configure": [
+                "find -E . -type f -iregex '.*(sh|txt|_stub|stub_.*|bazel|get_workspace_status|protobuf_support|_so)' \\",
+                "-exec sed -i '' \\",
+                "-e '1s|^\\#![[:space:]]*/bin/bash\\([[:space:]]\\)|\\#!/usr/local/bin/bash\\1|' \\",
+                "-e '1s|^\\#![[:space:]]*/bin/bash$|\\#!/usr/local/bin/bash|' \\",
+                "-e '1s|^\\#![[:space:]]*/usr/bin/env bash\\([[:space:]]\\)|\\#!/usr/local/bin/bash\\1|' \\",
+                "-e '1s|^\\#![[:space:]]*/usr/bin/env bash$|\\#!/usr/local/bin/bash|' \\",
+                "{} +"
+            ],
+            "archive": {"bazel-bin/src/bazel": "bazel"}
+        }
     },
     {
         "variation": "",
         "node": "freebsd-12",
-        "parameters": {"archive": {"bazel-bin/src/bazel": "bazel"}}
+        "parameters": {
+            "configure": [
+                "find -E . -type f -iregex '.*(sh|txt|_stub|stub_.*|bazel|get_workspace_status|protobuf_support|_so)' \\",
+                "-exec sed -i '' \\",
+                "-e '1s|^\\#![[:space:]]*/bin/bash\\([[:space:]]\\)|\\#!/usr/local/bin/bash\\1|' \\",
+                "-e '1s|^\\#![[:space:]]*/bin/bash$|\\#!/usr/local/bin/bash|' \\",
+                "-e '1s|^\\#![[:space:]]*/usr/bin/env bash\\([[:space:]]\\)|\\#!/usr/local/bin/bash\\1|' \\",
+                "-e '1s|^\\#![[:space:]]*/usr/bin/env bash$|\\#!/usr/local/bin/bash|' \\",
+                "{} +"
+            ],
+            "archive": {"bazel-bin/src/bazel": "bazel"}
+        }
     },
     {
         "variation": "",

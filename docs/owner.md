@@ -222,4 +222,5 @@ This file follows the same syntax but accepts different parameters:
   be replaced by the release name. An empty list means we do not
   archive anything (for non release build).
 * `stash`: list of artifacts to stash (to be released / push but no need to keep it forever)
+* `configure`: list of shell (batch on Windows) commands to execute before building
 * `targets`: list of targets to build, in addition to //src:bazel.

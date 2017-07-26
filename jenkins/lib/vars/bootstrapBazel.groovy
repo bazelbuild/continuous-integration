@@ -59,6 +59,18 @@ def call(config = [:]) {
       utils.writeRc(opts)
     }
 
+    // Configure, if necessary
+    def configuration = config.get("configure", [])
+    if (!configuration.isEmpty()) {
+      stage("[${config.node},${variation}] configure") {
+        if (isUnix()) {
+          sh "#!/bin/sh -x\n${configuration.join('\n')}"
+        } else {
+          bat configuration.join('\n')
+        }
+      }
+    }
+
     stage("[${config.node},${variation}] bootstrap") {
       def envs = ["BUILD_BY=Jenkins",
                   "GIT_REPOSITORY_URL=${env.GIT_URL}"]
