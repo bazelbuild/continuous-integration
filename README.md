@@ -8,7 +8,7 @@ system of Bazel. This setup is based on docker images built by bazel.
 If you are a user of the CI system, you might be interested in the
 following document:
 
-* [owners](docs/owners.md): explains how to add a job for a repository
+* [owner](docs/owner.md): explains how to add a job for a repository
   owner.
 * [user](docs/user.md): explains how to use the CI system for a Bazel
   contributor.
