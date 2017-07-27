@@ -146,6 +146,10 @@ def bazel_github_job(name, branch="master", project=None, org="bazelbuild",
   test_files = [name + "-test.xml"]
   staging_files = [name + "-staging.xml"]
 
+  kwargs = {}
+  if not github_enabled:
+    kwargs["git_url"] = git_url
+
   jenkins_job(
       name = name,
       config = "//jenkins/build_defs:bazel-job.xml.tpl",
@@ -153,12 +157,12 @@ def bazel_github_job(name, branch="master", project=None, org="bazelbuild",
         "JSON_CONFIGURATION": config,
       },
       substitutions=substitutions,
-      git_url=git_url,
       project=project,
       org=org,
       project_url=project_url,
-      test_platforms = test_platforms,
-      create_filegroups=False)
+      test_platforms=test_platforms,
+      create_filegroups=False,
+      **kwargs)
 
   if enabled and config:
     jenkins_job(
