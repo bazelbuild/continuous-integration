@@ -95,6 +95,8 @@ STAGING_SLAVES=(
     "freebsd-12-slave-staging https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-12-0-current-amd64-2017-07-04 freebsd-12-staging europe-west1-d staging startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
     # Fow Windows, we use a custom image with pre-installed MSVC.
     "windows-slave-staging windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-staging europe-west1-d staging windows-startup-script-ps1=jenkins-slave-windows.ps1"
+    # Remote Cache
+    "remote-cache-staging ubuntu-1604-lts remote-cache-staging europe-west1-d staging startup-script=start-remote-cache.sh setup-remote-cache.sh"
 )
 STAGING_MASTER=(
     # VM name
