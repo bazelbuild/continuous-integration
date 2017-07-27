@@ -1,11 +1,8 @@
-// This is a relaxed JSON format, you can have comment in it.
-// This is a list of configuration for the bazel-tests job.
+// DO NOT MODIFY!
+// This file is used only for older tree of Bazel, new tree includes it.
+// Please modify https://github.com/bazelbuild/bazel/blob/master/scripts/ci/bazel-tests.json
 [
     {
-        // This is a configuration that have 3 subconfigurations: linux, ubuntu and darwin
-        // A job configuration special keys are:
-        //   node -> indicate a node label to run the configuration on
-        //   variation -> an extra content to the bazel version
         "configurations": [
             {
                 "node": "linux-x86_64",
@@ -16,14 +13,6 @@
                 "variation": ""
             }
         ],
-        // And specify the parameters for these configurations, which can be:
-        //   configure: list of configuration step to run before bazel
-        //   tests: tests to execute, default to ["//..."]
-        //   targets: targets to build, default to ["//..."]
-        //   test_tag_filters: tag to filter test (-noci and -manual are automatically added)
-        //   build_tag_filters: tag to filter target to build
-        //   test_opts: test options
-        //   build_opts: build options
         "parameters": {
             "configure": [
                 "echo >>WORKSPACE",

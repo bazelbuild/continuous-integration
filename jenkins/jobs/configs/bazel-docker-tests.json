@@ -1,3 +1,6 @@
+// DO NOT MODIFY!
+// This file is used only for older tree of Bazel, new tree includes it.
+// Please modify https://github.com/bazelbuild/bazel/blob/master/scripts/ci/bazel-docker-tests.json
 [
     {
         "node": "docker",

@@ -1,10 +1,6 @@
-// Configure the nodes to bootstrap bazel on. Possible parameters are:
-//   - archive: list of file to archive as a map of target, new name. %{release_name} string will
-//     be replaced by the release name. An empty list means we do not archive anything
-//     (for non release build).
-//   - stash: list of artifacts to stash (to be released / push but no need to keep it forever)
-//   - targets: list of targets to build, in addition to //src:bazel.
-//   - configure: list of configuration step to run before bazel
+// DO NOT MODIFY!
+// This file is used only for older tree of Bazel, new tree includes it.
+// Please modify https://github.com/bazelbuild/bazel/blob/master/scripts/ci/bootstrap.json
 [
     {
         "node": "linux-x86_64",
@@ -80,7 +76,6 @@
             "opts": ["--define IPHONE_SDK=1"]
         }
     },
-    // TODO(dmarting): windows build zip with "zip -j", add it to //packages
     {
         "variation": "",
         "node": "windows-x86_64",
