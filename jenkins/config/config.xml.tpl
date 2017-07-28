@@ -76,7 +76,7 @@
         <displayCommitters>false</displayCommitters>
         <order class="com.smartcodeltd.jenkinsci.plugins.buildmonitor.order.ByName"/>
       </config>
-      <includeRegex>Global.*</includeRegex>
+      <includeRegex>(Global/pipeline|(?!.*/).*)</includeRegex>
       <recurse>true</recurse>
       <statusFilter>true</statusFilter>
     </com.smartcodeltd.jenkinsci.plugins.buildmonitor.BuildMonitorView>
