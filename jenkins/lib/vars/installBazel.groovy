@@ -34,8 +34,9 @@ private def installBazel(script, version, flavour, platform) {
       msvc = "-msvc"
     }
     def url = "${release_url}/bazel${msvc}-${version}-windows${msvc}-x86_64.exe"
-    def to = "c:\\bazel_ci\\installs\\${version}\\bazel.exe"
-    script.bat "powershell -Command \"(New-Object Net.WebClient).DownloadFile('${url}', '${to}')\""
+    def dir = "c:\\bazel_ci\\installs\\${version}"
+    def to = "${dir}\\bazel.exe"
+    script.bat "powershell -Command \"New-Item -ItemType directory -Force -Path ${dir}; (New-Object Net.WebClient).DownloadFile('${url}', '${to}')\""
   } else {
     def destination ="${env.HOME}/.bazel/${version}${flavour}"
     // TODO(dmarting): this is kind of a hack, can we select -without-jdk in a better way?
