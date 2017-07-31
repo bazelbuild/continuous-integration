@@ -28,12 +28,7 @@ def getLatestBazelVersion() {
 private def installBazel(script, version, flavour, platform) {
   def release_url = "https://releases.bazel.build/${version}/release"
   if (platform.startsWith("windows")) {
-    // TODO(dmarting): this should be included in the flavour rather than special casing here
-    def msvc = ""
-    if (platform.startsWith("windows-msvc")) {
-      msvc = "-msvc"
-    }
-    def url = "${release_url}/bazel${msvc}-${version}-windows${msvc}-x86_64.exe"
+    def url = "${release_url}/bazel-${version}-windows-x86_64.exe"
     def dir = "c:\\bazel_ci\\installs\\${version}"
     def to = "${dir}\\bazel.exe"
     script.bat "powershell -Command \"New-Item -ItemType directory -Force -Path ${dir}; (New-Object Net.WebClient).DownloadFile('${url}', '${to}')\""
@@ -51,8 +46,7 @@ chmod 0755 install.sh
 
 @NonCPS
 private def getPlatformFromNodeName(node) {
-  def platforms = ["windows-msvc": "windows-msvc-x86_64",
-                   "windows": "windows-x86_64",
+  def platforms = ["windows": "windows-x86_64",
                    "darwin": "darwin-x86_64",
                    "": "linux-x86_64"]
   return platforms.find { e -> node.startsWith(e.key) }.value

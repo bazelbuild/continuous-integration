@@ -91,13 +91,9 @@ $bazel_version=$res.ResponseUri.AbsolutePath.TrimStart("/bazelbuild/bazel/releas
 
 # Download the latest bazel
 
-# TODO(pcloudy): Remove MSVC_LABEL after we release MSVC Bazel as default
-$MSVC_LABEL='-msvc'
 $folder="c:\bazel_ci\installs\${BAZEL_VERSION}"
-$url="https://releases.bazel.build/${BAZEL_VERSION}/release/bazel${MSVC_LABEL}-${BAZEL_VERSION}-windows${MSVC_LABEL}-x86_64.exe"
+$url="https://releases.bazel.build/${BAZEL_VERSION}/release/bazel-${BAZEL_VERSION}-windows-x86_64.exe"
 New-Item $folder -type directory -force
-
-# Continue if MSVC Bazel download fails due to not releasing yet
 (New-Object Net.WebClient).DownloadFile("${url}", "${folder}\bazel.exe")
 
 # Create a junction to the latest release
