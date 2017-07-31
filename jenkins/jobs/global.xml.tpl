@@ -44,7 +44,7 @@
   <authToken>##SECRET:github_trigger_auth_token##</authToken>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition">
     <script>
-githubHook(refs: '^refs/(heads/release-|tags/).*$') {
+githubHook(refs: '^refs/(heads/release-|tags/|heads/master).*$') {
   def branch = delegate.branch ? delegate.branch :"master"
   def refspec = branch.matches('^(refs/heads/)?master$') ?
                         "+refs/heads/*:refs/remotes/origin/*" :
