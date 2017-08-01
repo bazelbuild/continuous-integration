@@ -75,8 +75,5 @@ def call(args = [:]) {
       reportName: name
     ]
 
-    if (args.get("unstableOnNewFailure", true) && !jobs.failures.empty) {
-      currentBuild.result = "UNSTABLE"
-    }
   }
 }

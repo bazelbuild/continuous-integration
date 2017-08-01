@@ -19,9 +19,6 @@ def call(params = [:]) {
   def parameters = params.get("parameters", [])
   def wait = params.get("wait", true)
   def catchError = params.get("catchError", false)
-  def statusOnError = params.get("statusOnError", "FAILURE")
-  def statusOnFailure = params.get("statusOnFailure", "SUCCESS")
-  def statusOnUnstable = params.get("statusOnUnstable", "SUCCESS")
   def jobs = JenkinsUtils.jobs(folder).toArray()
   def toRun = [:]
   def report = [:]
@@ -29,30 +26,24 @@ def call(params = [:]) {
     def jobName = jobs[k]
     if (!(jobName in excludes)) {
       toRun[jobName] = { ->
-        try {
           r = build(job: folder ? "/${folder}/${jobName}" : jobName,
                     parameters: parameters,
                     wait: wait,
                     propagate: false)
-          if (r.result == "FAILURE") {
-            currentBuild.result = statusOnFailure
-          } else if (r.result == "UNSTABLE") {
-            currentBuild.result = statusOnUnstable
-          }
           report.put(jobName, r)
-        } catch(error) {
-          if (catchError) {
-            echo "Catched ${error} from upstream job ${jobName}"
-            currentBuild.result = statusOnError
-          } else {
-            throw error
+          if (r.result == "FAILURE" || r.result == "UNSTABLE"
+	      || r.result == "ABORTED") {
+            throw new Exception("Failed on " + jobName + ": " + r.result);
           }
         }
-      }
     }
   }
   jobs = null
-  parallel(toRun)
+  try {
+    parallel(toRun)
+  } catch(Exception e) {
+    // back to normal execution, to have the report available
+  }
 
   return report
 }
