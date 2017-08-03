@@ -38,5 +38,7 @@ expect {
     eof
 }
 '
-tools/bin/sdkmanager "platforms;android-24" "platform-tools" "build-tools;24.0.3" "add-ons;addon-google_apis-google-24" "extras;android;m2repository"
+tools/bin/sdkmanager "platforms;android-24" "platform-tools" \
+  "build-tools;24.0.3" "build-tools;26.0.1" \
+  "add-ons;addon-google_apis-google-24" "extras;android;m2repository"
 chown -R ci /home/ci/android
