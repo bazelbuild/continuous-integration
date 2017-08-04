@@ -31,6 +31,7 @@ def call(params = [:]) {
                     wait: wait,
                     propagate: false)
           report.put(jobName, r)
+	  echo "Details of ${jobName}: ${JenkinsUtils.getBlueOceanUrl(r)}"
           if (r.result == "FAILURE" || r.result == "UNSTABLE"
 	      || r.result == "ABORTED") {
             throw new Exception("Failed on " + jobName + ": " + r.result);
