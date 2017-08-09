@@ -22,23 +22,16 @@ CI_HOME="$(echo ~ci)"
 mkdir -p "${CI_HOME}/bootstrap-bazel"
 cd "${CI_HOME}/bootstrap-bazel"
 
-for flavour in '' '-jdk7'
-do
-    jdk=
-    if [ "$flavour" = "" ]; then
-      jdk="-without-jdk"
-    fi
-    installer="https://releases.bazel.build/${BAZEL_VERSION}/release/bazel-${BAZEL_VERSION}${flavour}${jdk}-installer-${PLATFORM}.sh"
-    destination="${CI_HOME}/.bazel/${BAZEL_VERSION}${flavour}"
-    curl -L -o install.sh "${installer}"
-    chmod 0755 ./install.sh
-    rm -fr "${destination}"
-    mkdir -p "${destination}"
-    ./install.sh \
-        --base="${destination}" \
-        --bin="${destination}/binary"
-    ln -s "${destination}" "${CI_HOME}/.bazel/latest${flavour}"
-done
+installer="https://releases.bazel.build/${BAZEL_VERSION}/release/bazel-${BAZEL_VERSION}-without-jdk-installer-${PLATFORM}.sh"
+destination="${CI_HOME}/.bazel/${BAZEL_VERSION}"
+curl -L -o install.sh "${installer}"
+chmod 0755 ./install.sh
+rm -fr "${destination}"
+mkdir -p "${destination}"
+./install.sh \
+    --base="${destination}" \
+    --bin="${destination}/binary"
+ln -s "${destination}" "${CI_HOME}/.bazel/latest"
 
 chown -R ci "${CI_HOME}/.bazel"
 rm -rf "${CI_HOME}/bootstrap-bazel"
