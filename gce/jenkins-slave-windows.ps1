@@ -52,6 +52,9 @@ Start-Process -Wait $anaconda3_installer -ArgumentList "/AddToPath=0? /Installat
 # Required by TensorFlow Python tests (tfdbg).
 & "C:\Program Files\Anaconda3\Scripts\pip.exe" install pyreadline portpicker
 
+# Install autograd (needed by TensorFlow)
+& "C:\Program Files\Anaconda3\Scripts\pip.exe" install autograd
+
 # Install all the Windows software we need:
 #   - JDK, because, Bazel is written in Java
 #   - NSSM, because that's the easiest way to create services
