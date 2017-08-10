@@ -24,7 +24,7 @@ load("//jenkins/build_defs:jenkins.bzl", "jenkins_node", "jenkins_docker_build",
 
 DARWIN_PREFIX = "darwin-x86_64"
 
-DARWIN_COUNT = 4
+DARWIN_COUNT = 8
 
 WINDOWS_PREFIX = "windows-x86_64"
 
