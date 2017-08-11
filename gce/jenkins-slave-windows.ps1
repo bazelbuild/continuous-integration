@@ -55,6 +55,9 @@ Start-Process -Wait $anaconda3_installer -ArgumentList "/AddToPath=0? /Installat
 # Install autograd (needed by TensorFlow)
 & "C:\Program Files\Anaconda3\Scripts\pip.exe" install autograd
 
+# Install protobuf (needed by TensorFlow)
+& "C:\Program Files\Anaconda3\Scripts\pip.exe" install protobuf
+
 # Install all the Windows software we need:
 #   - JDK, because, Bazel is written in Java
 #   - NSSM, because that's the easiest way to create services
