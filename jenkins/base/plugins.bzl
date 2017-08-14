@@ -138,9 +138,13 @@ JENKINS_PLUGINS = {
         "1.36.2",
         "ecf7cd881136e60e48e220172bd0ddedb77c50129bc9dac271b32c715be38541",
     ],
-    "build-flow-plugin": [
-        "0.20",
-        "7ce4746b7d59e543da340c98f3eaf0f559581d2fdd7f39d787152f45554a2966",
+    "workflow-aggregator": [
+        "2.5",
+        "f5122377769a5e43ee4c2d88c720dd893054c3658fc4d29f21d362eabcaac86a",
+    ],
+    "pipeline-milestone-step": [
+        "1.3",
+        "15705a8b6e396ea8fd2dab935d7639bed429b2ac3fb6981ac6e02da63f0cb53b",
     ],
     "embeddable-build-status": [
         "1.9",
