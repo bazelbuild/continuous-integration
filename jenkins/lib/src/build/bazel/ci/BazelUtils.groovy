@@ -127,7 +127,8 @@ class BazelUtils implements Serializable {
         def status = bazelCommand("test ${filteredTests.replaceAll("\n", " ")}", true)
         if (status == 3) {
           // Bazel returns 3 if there was a test failures but no breakage, that is unstable
-          script.error("`bazel test` returned status 3 which indicates test failures")
+          script.currentBuild.result = "UNSTABLE"
+          script.echo("`bazel test` returned status 3 which indicates test failures")
         } else if (status != 0) {
           // TODO(dmarting): capturing the output mark the wrong step at failure, there is
           // no good way to do so, it would probably better to have better output in the failing
