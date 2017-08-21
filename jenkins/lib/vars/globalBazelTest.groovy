@@ -39,18 +39,6 @@ def call(config = [:]) {
                         configuration: json_config,
                         restrict_configuration: restrict_configuration)
     }
-
-    // Some basic tests
-    // TODO(dmarting): maybe we want to run it in parallel of other jobs?
-    stage("Test that all sources are in the //:srcs filegroup") {
-      machine("linux-x86_64") {
-        recursiveGit(repository: repository,
-                     refspec: refspec,
-                     branch: branch)
-        def bazel = bazelPath("latest", "linux-x86_64")
-        sh(script: "./compile.sh srcs ${bazel}")
-      }
-    }
   }
 
 
