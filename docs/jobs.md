@@ -5,13 +5,21 @@ projects, and hidden jobs.
 
 ## Bootstrap and maintenance
 
-Four jobs control the bootstrap and maintenance of Bazel:
+Several jobs control the bootstrap and maintenance of Bazel, they
+are mostly under the `maintenance` and `bazel` folders:
 
-* `Bazel-Benchmark` and `Bazel-Push-Benchmark-Output`: jobs running
-  continously to produce benchmarks of Bazel published at [perf.bazel.build](https://perf.bazel.build).
-* `Global/pipeline`: a job that handles the global tests as well as the release process, it is run
-   every night and on release.
-* `install-bazel`: a job that install Bazel release on all the slaves.
+* `benchmark`: job running continously to produce benchmarks of
+   Bazel published at [perf.bazel.build](https://perf.bazel.build).
+* `maintenance/push-benchmark`: job running after `benchmark` to publish
+   the performance test to the website.
+* `maintenance/install-bazel`: job that install Bazel release on all the slaves.
+* `maintenance/gerrit-verifier`: job to detect pending reviews on Gerrit that
+   need validation (that have been marked as `Presubmit-Ready`).
+* `bazel/nightly`: job that handles the global tests, it runs every night.
+* `bazel/release`: copy of `bazel/nightly` that runs for the release, it also
+   handle publishing the release artifacts.
+* `bazel/presubmit`: copy of `bazel/nightly` that is triggered
+  when someone set `Presubmit-Ready+2` on Gerrit.
 
 ## Projects
 
@@ -25,10 +33,6 @@ which is a strip down version of the `JOBS` definition.
 
 ## Hidden jobs
 
-* `CR/gerrit-verifier` is a job to detect pending reviews on Gerrit that
-  need validation (that have been marked as `Presubmit-Ready`).
-* `CR/global-verifier` is a clone of `Global/pipeline` that is triggered
-  when someone set `Presubmit-Ready+2` on Gerrit.
 * `PR/_project_` is a copy of the job for _project_ that validates a GitHub pull
   request on _project_ with the latest release of Bazel.
 * `CR/_project_` is the same as `PR-_project_` but for validating Gerrit

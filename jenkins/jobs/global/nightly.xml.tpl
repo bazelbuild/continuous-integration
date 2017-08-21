@@ -19,11 +19,6 @@
     </jenkins.model.BuildDiscarderProperty>
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
-        <hudson.model.StringParameterDefinition>
-          <name>payload</name>
-          <description>Payload sent by GitHub</description>
-          <defaultValue></defaultValue>
-        </hudson.model.StringParameterDefinition>
         <hudson.model.TextParameterDefinition>
           <name>EXTRA_BAZELRC</name>
           <description>To inject new option to the .bazelrc file in downstream projects.</description>
@@ -41,23 +36,16 @@
       </triggers>
     </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
   </properties>
-  <authToken>##SECRET:github_trigger_auth_token##</authToken>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition">
     <script>
-githubHook(refs: '^refs/(heads/release-|tags/|heads/master).*$') {
-  def branch = delegate.branch ? delegate.branch :"master"
-  def refspec = branch.matches('^(refs/heads/)?master$') ?
-                        "+refs/heads/*:refs/remotes/origin/*" :
-                        "+refs/heads/*:refs/remotes/origin/* +refs/notes/*:refs/notes/*"
   globalBazelTest(
-      repository: delegate.url ? delegate.url : "https://bazel.googlesource.com/bazel",
-      branch: branch,
+      repository: "https://bazel.googlesource.com/bazel",
+      branch: "master",
       extra_bazelrc: params.EXTRA_BAZELRC,
-      refspec: refspec,
+      refspec: "+refs/heads/*:refs/remotes/origin/*",
       configuration: '''{{ raw_imports['//jenkins/jobs:configs/bootstrap.json'].replace('\\', '\\\\').replace("'", "\\'") }}''',
       restrict_configuration: {{ variables.RESTRICT_CONFIGURATION }},
       mail_recipient: "{{ variables.BAZEL_BUILD_RECIPIENT }}")
-}
   </script>
     <sandbox>true</sandbox>
   </definition>

@@ -9,33 +9,28 @@ load("//jenkins/lib:def.bzl", "bazel_job_configuration_test")
 ) for s in glob(["configs/*.json"])]
 
 # Some common jobs
-[jenkins_job(
-    name = job,
-    config = "jobs-%s.xml.tpl" % job,
+jenkins_job(
+    name = "benchmark",
+    config = "benchmark.xml.tpl",
     project_url = "http://bazel.io",
-) for job in [
-    "Bazel-Benchmark",
-    "Bazel-Push-Benchmark-Output",
-]]
+)
 
-jenkins_job(
-    name = "Global/pipeline",
-    config = "global.xml.tpl",
+[jenkins_job(
+    name = "bazel/" + job,
+    config = "global/%s.xml.tpl" % job,
     deps = [
         ":configs/bootstrap.json",
     ],
+) for job in ["nightly", "presubmit", "release"]]
+
+jenkins_job(
+    name = "maintenance/push-benchmark",
+    config = "push-benchmark.xml.tpl",
+    project_url = "http://bazel.io",
 )
 
 jenkins_job(
-    name = "CR/global-verifier",
-    config = "CR-global.xml.tpl",
-    deps = [
-        ":configs/bootstrap.json",
-    ],
-)
-
-jenkins_job(
-    name = "install-bazel",
+    name = "maintenance/install-bazel",
     config = "install-bazel.xml.tpl",
     deps = [":install-bazel.groovy"],
 )

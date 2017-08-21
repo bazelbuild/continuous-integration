@@ -38,7 +38,7 @@
         <hudson.views.BuildButtonColumn/>
       </columns>
       <recurse>false</recurse>
-      <includeRegex>(?!(install-bazel|Github-Trigger|PR|CR|Global|.*-Benchmark).*).*</includeRegex>
+      <includeRegex>(?!(bazel|PR|CR|maintenance|Global|benchmark)).*</includeRegex>
       <statusFilter>true</statusFilter>
     </listView>
     <listView>
@@ -58,7 +58,7 @@
         <hudson.views.LastDurationColumn/>
         <hudson.views.BuildButtonColumn/>
       </columns>
-      <includeRegex>(install-bazel|Github-Trigger|PR|CR|Global|.*-Benchmark.*)</includeRegex>
+      <includeRegex>(bazel|PR|CR|maintenance|Global|benchmark)</includeRegex>
       <recurse>false</recurse>
       <statusFilter>true</statusFilter>
     </listView>
@@ -76,7 +76,7 @@
         <displayCommitters>false</displayCommitters>
         <order class="com.smartcodeltd.jenkinsci.plugins.buildmonitor.order.ByName"/>
       </config>
-      <includeRegex>(Global/pipeline|(?!.*/).*)</includeRegex>
+      <includeRegex>(bazel/.*|(?!.*/).*)</includeRegex>
       <recurse>true</recurse>
       <statusFilter>true</statusFilter>
     </com.smartcodeltd.jenkinsci.plugins.buildmonitor.BuildMonitorView>

@@ -24,10 +24,11 @@ PYTHON_RUNFILES="${PWD}"
 source "${PYTHON_RUNFILES}/io_bazel_ci/jenkins/test/test-support.sh"
 setup
 
-test_ok_status "/job/Global/job/pipeline/"
-test_ok_status "/job/install-bazel/"
-test_ok_status "/job/CR/job/gerrit-verifier"
-test_ok_status "/job/CR/job/global-verifier"
+test_ok_status "/job/bazel/job/presubmit/"
+test_ok_status "/job/bazel/job/nightly/"
+test_ok_status "/job/bazel/job/release/"
+test_ok_status "/job/maintenance/job/install-bazel/"
+test_ok_status "/job/maintenance/job/gerrit-verifier"
 
 test_ok_status "/job/rules_closure/"
 test_ok_status "/job/PR/job/rules_closure/"

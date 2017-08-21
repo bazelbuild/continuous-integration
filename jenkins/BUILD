@@ -190,7 +190,7 @@ jenkins_node(
 
 # Jenkins job for Gerrit vetting
 jenkins_job(
-    name = "CR/gerrit-verifier",
+    name = "maintenance/gerrit-verifier",
     config = "gerrit-verifier.xml.tpl",
     project_url = "https://bazel-review.googlesource.com",
     deps = ["gerrit-verifier.groovy"],
@@ -279,7 +279,7 @@ jenkins_docker_build(
               jenkins_node_names(FREEBSD_12_PREFIX, FREEBSD_12_COUNT),
     jobs = [
         "//jenkins/jobs",
-        ":CR/gerrit-verifier",
+        ":maintenance/gerrit-verifier",
     ],
     substitutions = {
         "SECURITY_CONFIG": SECURITY_CONFIG,
@@ -304,7 +304,7 @@ jenkins_docker_build(
     ],
     jobs = [
         "//jenkins/jobs:staging-jobs",
-        ":CR/gerrit-verifier/staging",
+        ":maintenance/gerrit-verifier/staging",
     ],
     substitutions = {
         "SECURITY_CONFIG": SECURITY_CONFIG,
@@ -325,7 +325,7 @@ jenkins_docker_build(
     ],
     jobs = [
         "//jenkins/jobs:test-jobs",
-        ":CR/gerrit-verifier/test",
+        ":maintenance/gerrit-verifier/test",
     ],
     substitutions = {
         "SECURITY_CONFIG": "<useSecurity>false</useSecurity>",

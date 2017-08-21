@@ -112,7 +112,7 @@ bazel-bin/src/tools/benchmark/java/com/google/devtools/build/benchmark/benchmark
           <configs>
             <hudson.plugins.parameterizedtrigger.CurrentBuildParameters/>
           </configs>
-          <projects>Bazel-Push-Benchmark-Output</projects>
+          <projects>maintenance/push-benchmark</projects>
           <condition>UNSTABLE_OR_BETTER</condition>
           <triggerWithNoParameters>false</triggerWithNoParameters>
         </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
