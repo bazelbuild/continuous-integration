@@ -53,13 +53,15 @@ def call(config = [:]) {
                      refspec: refspec,
                      branch: branch)
         if (is_master) {
-          unstash "bazel--node=linux-x86_64--variation="
+          dir("artifacts") {
+            unstash "bazel--node=linux-x86_64--variation="
+          }
           sh script: '''#!/bin/bash
 . scripts/ci/build.sh
-for i in $(find input -name \'*.bazel.build.tar\'); do
+for i in $(find artifacts -name \'*.bazel.build.tar\'); do
   build_and_publish_site "$i" "$(basename $i .tar)" "build"
 done
-for i in $(find input -name \'*.bazel.build.tar.nobuild\'); do
+for i in $(find artifacts -name \'*.bazel.build.tar.nobuild\'); do
   build_and_publish_site "$i" "$(basename $i .tar.nobuild)" "nobuild"
 done
 '''
