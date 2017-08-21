@@ -76,7 +76,7 @@
         <displayCommitters>false</displayCommitters>
         <order class="com.smartcodeltd.jenkinsci.plugins.buildmonitor.order.ByName"/>
       </config>
-      <includeRegex>(bazel/.*|(?!.*/).*)</includeRegex>
+      <includeRegex>(bazel/nightly|bazel/release|(?!.*/).*)</includeRegex>
       <recurse>true</recurse>
       <statusFilter>true</statusFilter>
     </com.smartcodeltd.jenkinsci.plugins.buildmonitor.BuildMonitorView>
