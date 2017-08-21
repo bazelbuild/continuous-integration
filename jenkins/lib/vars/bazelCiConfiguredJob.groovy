@@ -115,14 +115,19 @@ def call(config = [:]) {
 
   notifyStatus(config.mail_recipient) {
     timeout(240) {
-      stage("Run configurations") {
-        if (config.run_sequentially) {
-          for (configName in configNames) {
-            configs[configName]()
+      try {
+        stage("Run configurations") {
+          if (config.run_sequentially) {
+            for (configName in configNames) {
+              configs[configName]()
+            }
+          } else {
+            parallel configs
           }
-        } else {
-          parallel configs
         }
+      } catch(build.bazel.ci.BazelTestFailure ex) {
+        // Do not mark the build as error with a test failure
+        currentBuild.result = "UNSTABLE"
       }
     }
   }

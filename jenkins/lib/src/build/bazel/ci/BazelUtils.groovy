@@ -26,6 +26,12 @@ class BazelUtils implements Serializable {
   private boolean isWindows;
   private def envs = [];
 
+  public static class BazelTestFailure extends Exception {
+    BazelTestFailure() {
+      super("Test failures")
+    }
+  }
+
   // Accessors
   def setBazel(value) {
     bazel = value
@@ -127,13 +133,12 @@ class BazelUtils implements Serializable {
         def status = bazelCommand("test ${filteredTests.replaceAll("\n", " ")}", true)
         if (status == 3) {
           // Bazel returns 3 if there was a test failures but no breakage, that is unstable
-          script.currentBuild.result = "UNSTABLE"
-          script.echo("`bazel test` returned status 3 which indicates test failures")
+          throw new BazelTestFailure()
         } else if (status != 0) {
           // TODO(dmarting): capturing the output mark the wrong step at failure, there is
           // no good way to do so, it would probably better to have better output in the failing
           // step
-          script.error("`bazel test` returned status ${status}")
+          throw new Exception("`bazel test` returned status ${status}")
         }
       }
     }
