@@ -75,6 +75,17 @@ class BazelUtils implements Serializable {
     }
   }
 
+  // Execute a shell/batch command with bazel as a command on the path
+  def commandWithBazelOnPath(script) {
+    this.script.withEnv(["PATH=${new File(this.bazel).parent}:${this.script.env.PATH}",
+          "BAZEL=${this.bazel}"] + envs) {
+      if (isWindows) {
+        this.script.bat script
+      } else {
+        this.script.sh "#!/bin/sh -x\n${script}"
+      }
+    }
+  }
 
   // Write a RC file to consume by the other step
   def writeRc(build_opts = [],

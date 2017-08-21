@@ -12,7 +12,7 @@ load("//jenkins/lib:def.bzl", "bazel_job_configuration_test")
 jenkins_job(
     name = "benchmark",
     config = "benchmark.xml.tpl",
-    project_url = "http://bazel.io",
+    deps = [":benchmark.groovy"],
 )
 
 [jenkins_job(
@@ -22,12 +22,6 @@ jenkins_job(
         ":configs/bootstrap.json",
     ],
 ) for job in ["nightly", "presubmit", "release"]]
-
-jenkins_job(
-    name = "maintenance/push-benchmark",
-    config = "push-benchmark.xml.tpl",
-    project_url = "http://bazel.io",
-)
 
 jenkins_job(
     name = "maintenance/install-bazel",

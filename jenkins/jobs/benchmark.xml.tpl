@@ -14,13 +14,15 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project>
+<flow-definition>
   <actions/>
   <description>Run Bazel benchmark for new changes</description>
   <keepDependencies>false</keepDependencies>
   <properties>
+    <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty/>
     <com.coravy.hudson.plugins.github.GithubProjectProperty>
-      <projectUrl>{{ variables.GITHUB_URL }}</projectUrl>
+      <projectUrl>https://github.com/bazelbuild/bazel/</projectUrl>
+      <displayName></displayName>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
     <jenkins.model.BuildDiscarderProperty>
       <strategy class="hudson.tasks.LogRotator">
@@ -30,106 +32,19 @@
         <artifactNumToKeep>-1</artifactNumToKeep>
       </strategy>
     </jenkins.model.BuildDiscarderProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers>
+        {% if variables.production == "true" %}
+        <hudson.triggers.TimerTrigger>
+          <spec>@midnight</spec>
+        </hudson.triggers.TimerTrigger>
+        {% endif %}
+      </triggers>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
   </properties>
-  <scm class="hudson.plugins.git.GitSCM">
-    <configVersion>2</configVersion>
-    <userRemoteConfigs>
-      <hudson.plugins.git.UserRemoteConfig>
-        <refspec>+refs/heads/*:refs/remotes/origin/* +refs/notes/*:refs/notes/*</refspec>
-        <url>{{ variables.GITHUB_URL }}</url>
-      </hudson.plugins.git.UserRemoteConfig>
-    </userRemoteConfigs>
-    <branches>
-      <hudson.plugins.git.BranchSpec>
-        <name>master</name>
-      </hudson.plugins.git.BranchSpec>
-    </branches>
-    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
-    <submoduleCfg class="list"/>
-    <extensions>
-      <hudson.plugins.git.extensions.impl.CleanBeforeCheckout/>
-      <hudson.plugins.git.extensions.impl.AuthorInChangelog/>
-    </extensions>
-  </scm>
-  <quietPeriod>5</quietPeriod>
-  <assignedNode>benchmark</assignedNode>
-  <canRoam>false</canRoam>
-  <disabled>false</disabled>
-  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
-  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <triggers>
-    <hudson.triggers.TimerTrigger>
-      <spec>H H * * *</spec>
-    </hudson.triggers.TimerTrigger>
-  </triggers>
-  <concurrentBuild>false</concurrentBuild>
-  <builders>
-    <hudson.tasks.Shell>
-        <command>#!/bin/bash
-echo &quot;Getting all the changes...&quot;
-curl &quot;http://ci.bazel.io/view/Bazel%20bootstrap%20and%20maintenance/job/Bazel-Benchmark/$BUILD_NUMBER/api/xml?wrapper=changes&amp;xpath=//changeSet//commitId&quot; &gt; change.log
-sed change.log -i -e &quot;s/&lt;\/commitId&gt;/\n/g; s/&lt;commitId&gt;//g; s/&lt;changes&gt;//g; s/&lt;\/changes&gt;//g&quot;
-if [ ! -s change.log ]; then
-  echo &quot;No new changes. Exit.&quot;
-  exit 0
-fi
-
-# Add bazel to the PATH
-PATH=$PATH:$HOME/.bazel/latest/bin
-
-# build benchmark
-echo "Building benchmark..."
-bazel build src/tools/benchmark/java/com/google/devtools/build/benchmark \
-    --spawn_strategy=standalone --genrule_strategy=standalone
-
-# run benchmark
-filename=&quot;build_$BUILD_NUMBER.json&quot;
-version_string=&quot;&quot;
-while read line
-do
-  version_string+=&quot; --versions=${line}&quot;
-done &lt; change.log
-
-mkdir output
-bazel-bin/src/tools/benchmark/java/com/google/devtools/build/benchmark/benchmark \
-    --workspace=${WORKSPACE}/benchmark_workspace \
-    --output=${WORKSPACE}/output/${filename} \
-    ${version_string}
-        </command>
-    </hudson.tasks.Shell>
-  </builders>
-  <publishers>
-    <hudson.tasks.ArtifactArchiver>
-      <artifacts>output/*.json</artifacts>
-      <allowEmptyArchive>true</allowEmptyArchive>
-      <onlyIfSuccessful>false</onlyIfSuccessful>
-      <fingerprint>false</fingerprint>
-      <defaultExcludes>true</defaultExcludes>
-    </hudson.tasks.ArtifactArchiver>
-    <hudson.plugins.parameterizedtrigger.BuildTrigger>
-      <configs>
-        <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
-          <configs>
-            <hudson.plugins.parameterizedtrigger.CurrentBuildParameters/>
-          </configs>
-          <projects>maintenance/push-benchmark</projects>
-          <condition>UNSTABLE_OR_BETTER</condition>
-          <triggerWithNoParameters>false</triggerWithNoParameters>
-        </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
-      </configs>
-    </hudson.plugins.parameterizedtrigger.BuildTrigger>
-  </publishers>
-  <buildWrappers>
-    <hudson.plugins.build__timeout.BuildTimeoutWrapper>
-      <strategy class="hudson.plugins.build_timeout.impl.AbsoluteTimeOutStrategy">
-        <timeoutMinutes>1200</timeoutMinutes>
-      </strategy>
-      <operationList>
-        <hudson.plugins.build__timeout.operations.FailOperation/>
-        <hudson.plugins.build__timeout.operations.WriteDescriptionOperation>
-          <description>Timed out</description>
-        </hudson.plugins.build__timeout.operations.WriteDescriptionOperation>
-      </operationList>
-    </hudson.plugins.build__timeout.BuildTimeoutWrapper>
-  </buildWrappers>
-</project>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition">
+    <script>{{ imports['//jenkins/jobs:benchmark.groovy'] }}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+</flow-definition>

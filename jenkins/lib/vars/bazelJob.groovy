@@ -52,14 +52,7 @@ def call(config = [:]) {
 
   if(!config.configuration.isEmpty()) {
     stage("${stage_prefix}Configuration") {
-      withEnv(["PATH=${new File(config.binary).parent}:${env.PATH}",
-              "BAZEL=${config.binary}"]) {
-        if (isUnix()) {
-          sh "#!/bin/sh -x\n${config.configuration.join('\n')}"
-        } else {
-          bat config.configuration.join('\n')
-        }
-      }
+      utils.commandWithBazelOnPath(config.configuration.join("\n"))
     }
   }
 

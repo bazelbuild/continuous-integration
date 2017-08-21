@@ -10,8 +10,6 @@ are mostly under the `maintenance` and `bazel` folders:
 
 * `benchmark`: job running continously to produce benchmarks of
    Bazel published at [perf.bazel.build](https://perf.bazel.build).
-* `maintenance/push-benchmark`: job running after `benchmark` to publish
-   the performance test to the website.
 * `maintenance/install-bazel`: job that install Bazel release on all the slaves.
 * `maintenance/gerrit-verifier`: job to detect pending reviews on Gerrit that
    need validation (that have been marked as `Presubmit-Ready`).
