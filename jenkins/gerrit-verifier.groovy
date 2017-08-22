@@ -28,7 +28,7 @@ def buildChange(gerrit, change) {
   if (jobs != null && !jobs.empty) {
     gerrit.startReview(change.number)
     for(job in jobs) {
-      build job: job, propagate: false, wait: false, parameters: [
+      build job: "/CR/${job}", propagate: false, wait: false, parameters: [
         [$class: 'StringParameterValue', name: 'REFSPEC', value: refspec],
         [$class: 'StringParameterValue', name: 'BRANCH', value: change.sha1],
         [$class: 'StringParameterValue', name: 'CHANGE_NUMBER', value: change.number.toString()]]
@@ -40,7 +40,7 @@ def buildChange(gerrit, change) {
 def globalPresubmit(gerrit, change) {
   def refspec = "+" + change.ref + ":" + change.ref.replaceAll('ref/', 'ref/remotes/origin/')
   gerrit.startReview(change.number)
-  build job: "bazel/presubmit", propagate: false, wait: false, parameters: [
+  build job: "/bazel/presubmit", propagate: false, wait: false, parameters: [
     [$class: 'StringParameterValue', name: 'REFSPEC', value: refspec],
     [$class: 'StringParameterValue', name: 'BRANCH', value: change.sha1],
     [$class: 'StringParameterValue', name: 'CHANGE_NUMBER', value: change.number.toString()]]
