@@ -34,9 +34,9 @@ UBUNTU_1404_PREFIX = "ubuntu_14.04-x86_64"
 
 UBUNTU_1404_COUNT = 8
 
-UBUNTU_1404_BENCHMARK_PREFIX = "ubuntu_14.04-x86_64-benchmark"
+UBUNTU_1604_BENCHMARK_PREFIX = "ubuntu_16.04-x86_64-benchmark"
 
-UBUNTU_1404_BENCHMARK_COUNT = 1
+UBUNTU_1604_BENCHMARK_COUNT = 1
 
 UBUNTU_1604_PREFIX = "ubuntu_16.04-x86_64"
 
@@ -78,8 +78,8 @@ jenkins_nodes(
 )
 
 jenkins_nodes(
-    UBUNTU_1404_BENCHMARK_PREFIX,
-    UBUNTU_1404_BENCHMARK_COUNT,
+    UBUNTU_1604_BENCHMARK_PREFIX,
+    UBUNTU_1604_BENCHMARK_COUNT,
     install_bazel = False,
     labels = ["benchmark"],
     mode = "EXCLUSIVE",
@@ -273,7 +273,7 @@ jenkins_docker_build(
               jenkins_node_names(WINDOWS_PREFIX, WINDOWS_COUNT) +
               jenkins_node_names(UBUNTU_DOCKER_PREFIX, UBUNTU_DOCKER_COUNT) +
               jenkins_node_names(UBUNTU_1404_PREFIX, UBUNTU_1404_COUNT) +
-              jenkins_node_names(UBUNTU_1404_BENCHMARK_PREFIX, UBUNTU_1404_BENCHMARK_COUNT) +
+              jenkins_node_names(UBUNTU_1604_BENCHMARK_PREFIX, UBUNTU_1604_BENCHMARK_COUNT) +
               jenkins_node_names(UBUNTU_1604_PREFIX, UBUNTU_1604_COUNT) +
               jenkins_node_names(FREEBSD_11_PREFIX, FREEBSD_11_COUNT) +
               jenkins_node_names(FREEBSD_12_PREFIX, FREEBSD_12_COUNT),
