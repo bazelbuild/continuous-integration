@@ -26,12 +26,6 @@ class BazelUtils implements Serializable {
   private boolean isWindows;
   private def envs = [];
 
-  public static class BazelTestFailure extends Exception {
-    BazelTestFailure() {
-      super("Test failures")
-    }
-  }
-
   // Accessors
   def setBazel(value) {
     bazel = value

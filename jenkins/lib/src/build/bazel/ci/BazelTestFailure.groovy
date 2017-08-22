@@ -16,6 +16,8 @@ package build.bazel.ci
 
 /** An exception thrown when a test failure occur */
 public class BazelTestFailure extends Exception {
+  static final long serialVersionUID = 1L;
+
   BazelTestFailure() {
     super("Test failures")
   }
