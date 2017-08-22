@@ -38,7 +38,7 @@
         <hudson.views.BuildButtonColumn/>
       </columns>
       <recurse>false</recurse>
-      <includeRegex>(?!(bazel|PR|CR|maintenance|Global|benchmark)).*</includeRegex>
+      <includeRegex>(?!^(bazel|PR|CR|maintenance|Global|benchmark)$).*</includeRegex>
       <statusFilter>true</statusFilter>
     </listView>
     <listView>
