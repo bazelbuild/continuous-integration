@@ -20,7 +20,7 @@
             "tests": ["filter(':(lib|platform)_.*', kind(test, //tensorflow/core:all))"],
             "targets": ["//tensorflow/tools/pip_package:build_pip_package"]
         }
-    }, {
+    }/*, {
         "toolchain": "msvc",
         "configurations": [{
             "variation": "",
@@ -36,5 +36,5 @@
                 ".\\tensorflow\\tools\\ci_build\\windows\\cpu\\pip\\run.bat"
             ],
         }
-    }
+    } */
 ]
