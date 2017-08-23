@@ -13,7 +13,6 @@ following document:
 * [user](docs/user.md): explains how to use the CI system for a Bazel
   contributor.
 
-
 ## For maintainers of Bazel continuous integration system
 
 Make sure you have a Bazel installed with a recent enough version of

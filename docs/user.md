@@ -12,12 +12,43 @@ If you wish to add or modify a configuration for one of the project
 tested on Bazel CI, go see the
 [project owner documentation](owner.md).
 
+<a name="postsubmit">
 ## Postsubmit
 
 Every project that runs on Bazel CI is run on postsubmit. It is done
 using the GitHub API and handled automatically if
 [bazel-io](https://github.com/bazel-io) has write access to the
 repository.
+
+The result of a build can be either:
+
+  - Sucesss (job is green).
+  - Unstable (job is yellow). Some tests failed. Blue Ocean View<sup>1</sup>
+    will show the failing platforms in Pipeline view, and list of failing tests
+    in Tests view.
+  - Failed (job is red). Compilation failed, or configuration files broken.
+    Blue Ocean View<sup>1</sup> will show the build breakage. If it does not
+    fall back to the full console log.
+
+<sup>1</sup> Open Blue Ocean view with the button on the left of the job view.
+
+Tips:
+
+  - Tests logs are available under the artifacts list (`<joburl>/artifact`, e.g.
+    http://ci.bazel.io/job/bazel-tests/lastCompletedBuild/artifact/).
+  - Flaky tests can be analyzed with the Test Results Analyzer (available in
+    the normal job view on the side menu) which show history per tests.
+  - The "Pipeline Steps" button on the side menu on a job view let you examine
+    each step of the Jenkins pipeline one by one. Looking for the enclosing
+    workspace or node start step of another step give you access to the
+    workspace of that step.
+
+Current limitations:
+
+  - Jenkins Blue Ocean UI has no good way to mark an unstable step so if a
+    platform stage fails without clear sub-step failing look for the last shell
+    step in the platform stage view.
+  - Tests are not ordered by platforms in the test view.
 
 ## Presubmit
 
@@ -47,18 +78,32 @@ with the link to the test results and mark the code review as
 `Verified+1` or `Verified-1` depending on the result of the test. To
 retrigger a test, simply reset the `Presubmit-Ready` label.
 
+The output should be read the same way as the output of the [postsubmit](#postsubmit).
+
+<a name="global-tests"/>
 ## Global tests
 
 In addition to pre- and postsubmit tests for an individual change, the
 Bazel CI performs a "global test" which builds Bazel from a branch, and
-uses that build of Bazel to run all the other jobs on the Bazel CI. It
-then produces a report comparing the global test results of this build
-of Bazel with the global test results from the latest release of
-Bazel.
+uses that build of Bazel to run all the other jobs on the Bazel CI.
 
-This report can be found at `http://ci.bazel.io/job/Global/job/pipeline/<buildNumber>/Downstream_projects/`,
-for instance for the last run it will be at
-[http://ci.bazel.io/job/Global/job/pipeline/lastBuild/Downstream_projects/](http://ci.bazel.io/job/Global/job/pipeline/lastBuild/Downstream_projects/).
+If it succeed to build Bazel (if it is not red), it produces a report
+comparing the global test results of this build of Bazel with the global
+test results from the latest release of Bazel.
+
+This report can be found at `http://ci.bazel.io/job/bazel/job/<nightly|release|presubmit>/<buildNumber>/Downstream_projects/`,
+for instance for the last nigthly run it will be at
+[http://ci.bazel.io/job/bazel/job/nightly/lastBuild/Downstream_projects/](http://ci.bazel.io/job/bazel/job/nightly/lastBuild/Downstream_projects/).
+
+The way to read that report is:
+
+  - Every newly failing jobs are problematic and likely to indicate a
+    failure due to a Bazel change. It cause the build to be unstable (yellow).
+  - Every already failing jobs means that the job result is no worse, it is
+    generally safe to ignore those failure but we should aim at having 0 of
+    them to make sure we do not hide problem (a build that breaks because of
+    Bazel whereas it was broken before of a project issue).
+  - Every passing job can be safely ignored.
 
 ## Release process
 
