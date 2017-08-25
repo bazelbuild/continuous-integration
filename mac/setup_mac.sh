@@ -48,6 +48,9 @@ sudo git version
 # Set the machine to never sleep
 sudo systemsetup -setcomputersleep Never
 
+# Set the max number of files, see https://github.com/bazelbuild/bazel/issues/2422
+sudo sysctl -w kern.maxfiles=16384
+
 # Url to fetch other scripts
 # We use script from HEAD, ideally we would use the same commit hash
 # than this script but it is not really easy and we generally do not
