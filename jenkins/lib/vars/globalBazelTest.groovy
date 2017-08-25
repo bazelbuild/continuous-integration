@@ -75,7 +75,7 @@ done
                         excludes: ["**/*.bazel.build.tar*", "**/bazel", "**/bazel.exe"])
             if (is_release) {
               stage("Install new release on all nodes") {
-                build(job: "install-bazel", wait: false, propagate: false)
+                build(job: "/maintenance/install-bazel", wait: false, propagate: false)
               }
             }
           }
