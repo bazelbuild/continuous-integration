@@ -50,6 +50,7 @@ sudo systemsetup -setcomputersleep Never
 
 # Set the max number of files, see https://github.com/bazelbuild/bazel/issues/2422
 sudo sysctl -w kern.maxfiles=16384
+echo "kern.maxfiles=16384" | sudo tee -a /etc/sysctl.conf
 
 # Url to fetch other scripts
 # We use script from HEAD, ideally we would use the same commit hash
