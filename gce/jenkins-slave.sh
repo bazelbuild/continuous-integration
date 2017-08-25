@@ -43,7 +43,7 @@ if [ ! -d /home/ci/node ]; then
   mkdir -p /home/ci/node
   (cd /home/ci/node && curl "https://nodejs.org/dist/v6.9.1/node-v6.9.1-linux-x64.tar.gz" | tar zx)
   # || true to ignore failure on non-linux platforms.
-  (PATH=/home/ci/node/node-v6.9.1-linux-x64/bin:$PATH npm install -g typescript fried-twinkie || true)
+  (PATH=/home/ci/node/node-v6.9.1-linux-x64/bin:$PATH npm install -g typescript@2.3.4 fried-twinkie@0.0.14 || true)
 fi
 
 cd /home/ci
