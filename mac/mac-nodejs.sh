@@ -22,4 +22,5 @@ set -eu
 if [ ! -d "/Users/ci/node" ]; then
   mkdir -p "/Users/ci/node"
   (cd "/Users/ci/node" && curl "https://nodejs.org/dist/v6.9.1/node-v6.9.1-darwin-x64.tar.gz" | tar zx)
+  (PATH=/Users/ci/node/node-v6.9.1-darwin-x64/bin:$PATH npm install -g typescript fried-twinkie)
 fi
