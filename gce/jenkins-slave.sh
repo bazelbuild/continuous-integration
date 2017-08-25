@@ -20,6 +20,7 @@
 # We ignore errors on this script as we want to retry on errors.
 
 cat > /root/jenkins-startup <<'EOF'
+&> /root/jenkins-startup.log
 
 # Wait until the machine is set-up on creation
 while ! (id ci >&/dev/null) || [ ! -f /home/ci/node_name ]; do
