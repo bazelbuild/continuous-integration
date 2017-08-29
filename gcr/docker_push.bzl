@@ -29,9 +29,12 @@ def _reverse(lst):
 
 def _generate_load_statement(ctx, tag, file):
   return ("echo 'Image %s'\n" % tag) + "\n".join([
-      "incr_load '%s' '%s'" %  (_get_runfile_path(ctx, l["id"]),
-                                _get_runfile_path(ctx, l["layer"]))
-      for l in _reverse(file.docker_layers)
+      "incr_load '%s' '%s'" %  (_get_runfile_path(ctx, id),
+                                _get_runfile_path(ctx, layer))
+      for id, layer in _reverse(zip(
+          file.docker_parts["diff_id"],
+          file.docker_parts["unzipped_layer"]
+      ))
   ]) + ("\ntag_last_load '%s'" % tag)
 
 # TODO(dmarting): replace with proper docker_push using the docker library.
@@ -55,9 +58,10 @@ def _impl(ctx):
   )
   runfiles = []
   for s in ctx.attr.images:
-    for l in s.docker_layers:
-      runfiles.append(l["layer"])
-      runfiles.append(l["id"])
+    for l in s.docker_parts["unzipped_layer"]:
+      runfiles.append(l)
+    for id in s.docker_parts["diff_id"]:
+      runfiles.append(id)
 
   return struct(runfiles = ctx.runfiles(files = runfiles))
 
@@ -70,7 +74,7 @@ _docker_push = rule(
             single_file=True,
             allow_files=True),
         "image_tags": attr.string_list(),
-        "images": attr.label_list(providers=["docker_layers"]),
+        "images": attr.label_list(providers=["docker_parts"]),
     },
     executable = True,
 )
