@@ -8,7 +8,7 @@ def _is_staging(job):
   # Exclude Benchmark jobs
   is_not_benchmark = "-Benchmark" not in job
   # Gold jobs are some bazel job that we include for testing
-  is_gold = job in ["TensorFlow", "Tutorial"]
+  is_gold = job in ["TensorFlow", "Tutorial", "rules_k8s", "rules_python"]
   return (is_gold or is_gerrit_or_not_bazel) and is_not_benchmark
 
 

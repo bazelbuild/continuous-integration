@@ -134,7 +134,6 @@ bazel_github_job(
     name = n,
     config = ":configs/%s.json" % n,
 ) for n in [
-    "rules_apple",
     "rules_scala",
     "rules_rust",
     "rules_dotnet",
@@ -156,6 +155,13 @@ bazel_github_job(
     "skydoc",
     "bazel-watcher",
     "migration-tooling",
+]]
+
+# Jobs from the bazelbuild org using a dummy configuration
+[bazel_github_job(name = n, config = ":configs/empty.json") for n in [
+    "rules_apple",
+    "rules_k8s",
+    "rules_python",
 ]]
 
 # Jobs from the google org
