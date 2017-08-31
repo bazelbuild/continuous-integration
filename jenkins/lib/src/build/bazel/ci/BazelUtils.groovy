@@ -119,6 +119,20 @@ class BazelUtils implements Serializable {
     }
   }
 
+  def showFailedActions(events) {
+    def eventsstring = ""
+    for(event in events) {
+      if ("action" in event) {
+        eventstring = eventstring + event + "\n"
+      }
+    }
+    if (eventsstring == "") {
+      script.echo("No failed actions reported in the event stream")
+    } else {
+      script.echo("Failed actions:\n" + eventstring)
+    }
+  }
+
   // Execute a bazel build
   def build(targets = ["//..."]) {
     if (!targets.isEmpty()) {
@@ -126,6 +140,7 @@ class BazelUtils implements Serializable {
         bazelCommand("build ${targets.join ' '}")
       } finally {
         archiveEventFile(BUILD_EVENTS_FILE)
+        showFailedActions(buildEvents())
       }
     }
   }
@@ -147,6 +162,7 @@ class BazelUtils implements Serializable {
       } else {
         try {
           def status = bazelCommand("test ${filteredTests.replaceAll("\n", " ")}", true)
+          showFailedActions(testEvents())
           if (status == 3) {
             // Bazel returns 3 if there was a test failures but no breakage, that is unstable
             throw new BazelTestFailure()
