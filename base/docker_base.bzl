@@ -14,15 +14,15 @@
 
 """Wrapper to fetch the base docker images we need."""
 
-load(":docker_pull.bzl", "docker_pull")
+load(":dockerfile_build.bzl", "dockerfile_build")
 
 def docker_bases():
-  docker_pull(
+  dockerfile_build(
     name = "ubuntu-xenial-amd64-deploy",
     dockerfile = "//base:Dockerfile.ubuntu-xenial-amd64-deploy",
     tag = "local:ubuntu-xenial-amd64-deploy",
   )
-  docker_pull(
+  dockerfile_build(
     name = "ubuntu-xenial-amd64-ssh",
     dockerfile = "//base:Dockerfile.ubuntu-xenial-amd64-ssh",
     tag = "local:ubuntu-xenial-amd64-ssh",

@@ -14,7 +14,7 @@
 
 # Some definition to create a base image for jenkins in docker
 
-load("//base:docker_pull.bzl", "docker_pull")
+load("@io_bazel_rules_docker//docker:docker.bzl", "docker_pull")
 JENKINS_PLUGINS_URL = "http://mirrors.xmission.com/jenkins/plugins/{name}/{version}/{name}.hpi"
 
 def _jenkins_image_impl(repository_ctx):
@@ -61,15 +61,22 @@ jenkins_image_ = repository_rule(
         "volumes": attr.string_list(default=[]),
     })
 
-def jenkins_base(name, plugins, volumes=[], version="1.642.4"):
+def jenkins_base(name, plugins, volumes=[], digest=None, version="1.642.4"):
   base = "jenkins_" + version.replace(".", "_")
   if not native.existing_rule(base):
+    kwargs = {}
+    if digest:
+      kwargs["digest"] = digest
+    else:
+      kwargs["tag"] = version
     docker_pull(
         name = base,
-        tag = "jenkinsci/jenkins:" + version,
+        registry = "index.docker.io",
+        repository = "jenkins/jenkins",
+        **kwargs
     )
   jenkins_image_(
       name=name,
       plugins=plugins,
-      base="@%s//:image" % base,
+      base="@%s//image" % base,
       volumes=volumes)

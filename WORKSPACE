@@ -16,7 +16,7 @@ workspace(name = "io_bazel_ci")
 git_repository(
     name = "io_bazel_rules_docker",
     remote = "https://github.com/bazelbuild/rules_docker.git",
-    commit = "e770f81cef4165828df955f37b827874a884a1de",
+    commit = "db1b348dfdf161a784bc1efc5a1020395572b996",
 )
 
 load(
@@ -41,6 +41,7 @@ jenkins_base(
     name = "jenkins",
     plugins = JENKINS_PLUGINS,
     version = "2.60.2",
+    digest = "sha256:2686bba435a53d8bff0cb5380a341cbf2a337ce789db4753f30367f38a3239e6",
     volumes = ["/opt/secrets"],
 )
 
@@ -116,9 +117,9 @@ py_library(
 #   - Repository overrely on bind() and does not respect naming conventions
 http_archive(
     name = "io_bazel_rules_groovy",
-    url = "https://github.com/bazelbuild/rules_groovy/archive/1256063915da0e46c229ce93489175f0d084f0cb.zip",
-    sha256 = "0e7a425e3ebcc649c4fac9876ebbfdb3948bf97c47954ffda3e15b32a5bf4b6e",
-    strip_prefix = "rules_groovy-1256063915da0e46c229ce93489175f0d084f0cb",
+    url = "https://github.com/bazelbuild/rules_groovy/archive/6b8e32ce0f7e33ae1b859706c2dc0c169b966e7e.zip",
+    sha256 = "9dac7ddcf9e0004b1eeaf53dd9324350601eaee8c252f77423330af3effe2f5c",
+    strip_prefix = "rules_groovy-6b8e32ce0f7e33ae1b859706c2dc0c169b966e7e",
 )
 load("@io_bazel_rules_groovy//groovy:groovy.bzl", "groovy_repositories")
 groovy_repositories()

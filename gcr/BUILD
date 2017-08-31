@@ -1,20 +1,35 @@
-load(":docker_push.bzl", "docker_push")
+load(
+    "@io_bazel_rules_docker//docker:docker.bzl",
+    "docker_bundle",
+)
+load(
+    "@io_bazel_rules_docker//docker/contrib:push-all.bzl",
+    "docker_push",
+)
+
+docker_bundle(
+    name = "prod-bundle",
+    images = {
+        "gcr.io/bazel-public/jenkins-master:latest": "//jenkins:jenkins",
+        "gcr.io/bazel-public/deploy-slave:latest": "//jenkins:deploy.docker",
+        "gcr.io/bazel-public/sync-gerrit-github:latest": "//gerrit-github-sync:gerrit-github-sync",
+    },
+)
 
 docker_push(
     name = "deploy",
+    bundle = ":prod-bundle",
+)
+
+docker_bundle(
+    name = "staging-bundle",
     images = {
-        "//jenkins:jenkins": "jenkins-master",
-        "//jenkins:deploy.docker": "deploy-slave",
-        "//gerrit-github-sync:gerrit-github-sync": "sync-gerrit-github",
+        "gcr.io/bazel-public/jenkins-master-staging:latest": "//jenkins:jenkins-staging",
+        "gcr.io/bazel-public/deploy-slave-staging:latest": "//jenkins:deploy-staging.docker",
     },
-    repository = "gcr.io/bazel-public",
 )
 
 docker_push(
     name = "deploy-staging",
-    images = {
-        "//jenkins:jenkins-staging": "jenkins-master-staging",
-        "//jenkins:deploy-staging.docker": "deploy-slave-staging",
-    },
-    repository = "gcr.io/bazel-public",
+    bundle = ":staging-bundle",
 )

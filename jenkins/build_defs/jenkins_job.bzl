@@ -49,7 +49,7 @@ def jenkins_job(name, config, substitutions = {}, deps = [], deps_aliases = {},
     git_url = github_url
   if not project_url:
     project_url = git_url
-  deps += [deps_aliases[k] for k in deps_aliases]
+  deps = deps + [deps_aliases[k] for k in deps_aliases]
   substitutions = substitutions + {
       "GITHUB_URL": github_url,
       "GIT_URL": git_url,

@@ -20,6 +20,21 @@ it. Also make sure [gcloud](https://cloud.google.com/sdk/) and
 [docker](https://www.docker.com) are correctly configured on your
 machine. Only docker version 1.10 or later is supported.
 
+Finally, our docker rules needs authentication which is configured with the
+[credential helper](https://github.com/GoogleCloudPlatform/docker-credential-gcr):
+
+```bash
+gcloud components install docker-credential-gcr
+export DOCKER_CONFIG="$(docker-credential-gcr configure-docker | cut -d " " -f 1)"
+```
+
+You might want to permanently set your `DOCKER_CONFIG` environment, e.g. in your
+`~/.bash_profile`:
+
+```bash
+echo "export DOCKER_CONFIG='${DOCKER_CONFIG}'" >> ~/.bash_profile
+```
+
 More documentation:
 
 * [`init.sh`](docs/init.md): initializes the whole CI platform. This
