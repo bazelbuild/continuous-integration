@@ -1,7 +1,6 @@
 ADMIN_USERS = [
     "dmarting@google.com",
     "dslomov@google.com",
-    "kchodorow@google.com",
     "laszlocsomor@google.com",
     "lberki@google.com",
     "pcloudy@google.com",
@@ -14,4 +13,5 @@ ADMIN_USERS = [
     "fisherii@google.com",
     "philwo@google.com",
     "buchgr@google.com",
+    "davidstanke@google.com",
 ]
