@@ -54,14 +54,14 @@ def call(config = [:]) {
   def workspace = ""
 
   config.test_tag_filters += ["-noci", "-manual"]
-  def build_options = config.build_opts + [
+  def build_options = [
     "--build_tag_filters=${config.build_tag_filters.join ','}"
-  ]
-  def test_options = config.test_opts + [
+  ] + config.build_opts
+  def test_options = [
     "--test_tag_filters=${config.test_tag_filters.join ','}",
     "--build_tests_only",
     "-k"
-  ]
+  ] + config.test_opts
   machine(config.node_label) {
     ws("workspace/${currentBuild.fullProjectName}-${prefix}") {
       maybeSauce(config.sauce) {
