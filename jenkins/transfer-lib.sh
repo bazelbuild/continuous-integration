@@ -23,7 +23,7 @@
 LIB_DIR="$(cd "$(dirname "$0")" && pwd -P)/lib"
 
 if [ -z "$CONTAINER_NAME" ]; then
-    echo "Could not find container running bazel:jenkins-test, is the test container running?" >&2
+    echo "Could not find container running ${IMAGE_NAME}, is the test container running?" >&2
     exit 1
 fi
 
