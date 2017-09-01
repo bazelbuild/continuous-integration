@@ -98,12 +98,6 @@ class BazelUtils implements Serializable {
     ]
     rc_file_content.addAll(build_opts.collect { "build ${it}" })
     rc_file_content.addAll(test_opts.collect { "test ${it}" })
-    for(opt in build_opts) {
-      rc_file_content += "\nbuild ${opt}"
-    }
-    for(opt in test_opts) {
-      rc_file_content += "\ntest ${opt}"
-    }
     // Store the BEP events on a json file.
     // TODO(dmarting): We should archive it and generate a good HTML report instead of
     // the hard to read jenkins dashboard.
