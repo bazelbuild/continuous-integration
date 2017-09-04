@@ -206,6 +206,7 @@ Possible parameters:
 * `build_opts`: list of options to add to the bazelrc as `build`
  options, note that they impact testing too.
 * `test_opts`: list of options to add to the bazelrc as `test` options.
+* `startup_opts`: list of options to add to the bazelrc as `startup` options.
 
 
 ## Bazel bootstrap

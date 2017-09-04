@@ -90,6 +90,7 @@ class BazelUtils implements Serializable {
   // Write a RC file to consume by the other step
   def writeRc(build_opts = [],
               test_opts = [],
+              startup_opts = [],
               extra_bazelrc = "") {
     def rc_file_content = [
       "common --color=yes",
@@ -98,6 +99,7 @@ class BazelUtils implements Serializable {
     ]
     rc_file_content.addAll(build_opts.collect { "build ${it}" })
     rc_file_content.addAll(test_opts.collect { "test ${it}" })
+    rc_file_content.addAll(startup_opts.collect { "startup ${it}" })
     // Store the BEP events on a json file.
     // TODO(dmarting): We should archive it and generate a good HTML report instead of
     // the hard to read jenkins dashboard.

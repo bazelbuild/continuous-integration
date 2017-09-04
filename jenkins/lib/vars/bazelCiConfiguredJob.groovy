@@ -49,6 +49,7 @@ def createJobsFromConfiguration(config, configNames, script) {
                           configuration: params.get("configure", []),
                           build_opts: params.get("build_opts", []),
                           test_opts: params.get("test_opts", []),
+                          startup_opts: params.get("startup_opts", []),
                           bazel_version: config.bazel_version + conf.get("variation", ""),
                           extra_bazelrc: config.extra_bazelrc,
                           build_tag_filters: params.get("build_tag_filters", []),

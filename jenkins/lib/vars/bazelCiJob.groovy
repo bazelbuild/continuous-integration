@@ -41,6 +41,7 @@ def call(config = [:]) {
   config["configuration"] = config.get("configuration", [])
   config["build_opts"] = config.get("build_opts", [])
   config["test_opts"] = config.get("test_opts", [])
+  config["startup_opts"] = config.get("startup_opts", [])
   config["extra_bazelrc"] = config.get("extra_bazelrc", "")
   config["build_tag_filters"] = config.get("build_tag_filters", [])
   config["test_tag_filters"] = config.get("test_tag_filters", [])
@@ -86,6 +87,7 @@ def call(config = [:]) {
           bazelJob(binary: bazel,
                    build_opts: build_options,
                    test_opts: test_options,
+                   startup_opts: config.startup_opts,
                    extra_bazelrc: extrarc,
                    targets: config.targets,
                    tests: config.tests,

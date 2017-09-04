@@ -35,6 +35,7 @@ def call(config = [:]) {
   config["configuration"] = config.get("configuration", [])
   config["build_opts"] = config.get("build_opts", [])
   config["test_opts"] = config.get("test_opts", [])
+  config["startup_opts"] = config.get("startup_opts", [])
   config["extra_bazelrc"] = config.get("extra_bazelrc", "")
   config["stage_name"] = config.get("stage_name", "")
 
@@ -45,7 +46,7 @@ def call(config = [:]) {
 
   // And now the various stage
   def stage_prefix = config.stage_name.isEmpty() ? "" : "[${config.stage_name}] "
-  utils.writeRc(config.build_opts, config.test_opts, config.extra_bazelrc)
+  utils.writeRc(config.build_opts, config.test_opts, config.startup_opts, config.extra_bazelrc)
   stage("${stage_prefix}Bazel version") {
     utils.bazelCommand("version")
   }
