@@ -1,4 +1,4 @@
-# Copyright 2015 The Bazel Authors. All rights reserved.
+# Copyright 2017 The Bazel Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,17 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# A slave for polling and syncing gerrit and github
-load("@io_bazel_rules_docker//docker:docker.bzl", "docker_build")
+"""Wrapper to fetch the base docker images we need."""
 
-docker_build(
-    name = "gerrit-github-sync",
-    base = "//base:ssh-bash-base",
-    entrypoint = [
-        "/bin/bash",
-        "/gerrit-github-sync.sh",
-    ],
-    files = ["gerrit-github-sync.sh"],
-    visibility = ["//visibility:public"],
-    volumes = ["/opt/secrets"],
-)
+load(":docker_pull.bzl", "docker_pull")
+
+def docker_bases():
+  docker_pull(
+    name = "ubuntu-xenial-amd64-deploy",
+    dockerfile = "//base:Dockerfile.ubuntu-xenial-amd64-deploy",
+    tag = "local:ubuntu-xenial-amd64-deploy",
+  )
+  docker_pull(
+    name = "ubuntu-xenial-amd64-ssh",
+    dockerfile = "//base:Dockerfile.ubuntu-xenial-amd64-ssh",
+    tag = "local:ubuntu-xenial-amd64-ssh",
+  )

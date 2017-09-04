@@ -15,23 +15,7 @@ package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_docker//docker:docker.bzl", "docker_build")
 
-# Base ubuntu
-docker_build(
-    name = "ubuntu-wily-amd64",
-    base = "@ubuntu-wily-amd64//:image",
-)
-
-docker_build(
-    name = "ubuntu-xenial-amd64",
-    base = "@ubuntu-xenial-amd64//:image",
-)
-
 # Image support golang and make
-docker_build(
-    name = "ubuntu-wily-amd64-deploy",
-    base = "@ubuntu-wily-amd64-deploy//:image",
-)
-
 docker_build(
     name = "ubuntu-xenial-amd64-deploy",
     base = "@ubuntu-xenial-amd64-deploy//:image",
@@ -39,11 +23,16 @@ docker_build(
 
 # Support SSH for gerrit deployment
 docker_build(
-    name = "ubuntu-wily-amd64-ssh",
-    base = "@ubuntu-wily-amd64-ssh//:image",
-)
-
-docker_build(
     name = "ubuntu-xenial-amd64-ssh",
     base = "@ubuntu-xenial-amd64-ssh//:image",
+)
+
+alias(
+    name = "ssh-bash-base",
+    actual = ":ubuntu-xenial-amd64-ssh",
+)
+
+alias(
+    name = "deploy-base",
+    actual = ":ubuntu-xenial-amd64-deploy",
 )

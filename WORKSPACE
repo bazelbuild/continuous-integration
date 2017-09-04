@@ -30,20 +30,8 @@ load("//jenkins/test:docker_repository.bzl", "docker_repository")
 docker_repository()
 
 # Docker base images
-load("//base:docker_pull.bzl", "docker_pull")
-
-[[docker_pull(
-    name = "ubuntu-%s-amd64%s" % (ubuntu_version, ext),
-    dockerfile = "//base:Dockerfile.ubuntu-%s-amd64%s" % (ubuntu_version, ext),
-    tag = "local:ubuntu-%s-amd64%s" % (ubuntu_version, ext),
-) for ubuntu_version in [
-    "wily",
-    "xenial",
-]] for ext in [
-    "",
-    "-deploy",
-    "-ssh",
-]]
+load("//base:docker_base.bzl", "docker_bases")
+docker_bases()
 
 # Jenkins
 load("//jenkins/base:plugins.bzl", "JENKINS_PLUGINS")
