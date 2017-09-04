@@ -11,7 +11,8 @@
         ],
         "parameters": {
             "configure": [
-                "(cd tensorflow && ./tensorflow/tools/ci_build/builds/configured CPU)"
+                "(cd tensorflow && ./tensorflow/tools/ci_build/builds/configured CPU)",
+                "echo 'import %workspace%/tensorflow/.tf_configure.bazelrc' >>bazel.bazelrc"
             ],
             "tests": ["syntaxnet/...", "util/utf8/..."],
             "targets": []
