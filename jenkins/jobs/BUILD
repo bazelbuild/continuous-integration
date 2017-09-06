@@ -75,8 +75,8 @@ bazel_github_job(
 )
 
 bazel_github_job(
-    name = "bazel-docker-tests",
-    config = ":configs/bazel-docker-tests.json",
+    name = "bazel-slow-tests",
+    config = ":configs/empty.json",
     git_url = "https://bazel.googlesource.com/bazel",
     pr_enabled = False,  # Do not vet PR because those tests are slow.
     project = "bazel",
@@ -96,7 +96,7 @@ bazel_github_job(
 
 bazel_github_job(
     name = "bazel-tests",
-    config = ":configs/bazel-tests.json",
+    config = ":configs/empty.json",
     gerrit_project = "bazel",
     git_url = "https://bazel.googlesource.com/bazel",
     project = "bazel",
