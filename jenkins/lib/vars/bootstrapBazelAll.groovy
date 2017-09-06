@@ -41,14 +41,15 @@ def call(config = [:]) {
   for (int k = 0; k < values.size; k++) {
     def key = keys[k]
     def value = values[k]
-    def name = "node=${key.node},variation=${key.variation}"
+    def variation = key.get("variation", "")
+    def name = build.bazel.ci.BazelConfiguration.descriptorToString(key)
     jobs[name] = { ->
       stage("Bootstrapping on ${name}") {
         bootstrapBazel(repository: repository,
                        branch: branch,
                        refspec: refspec,
                        node: key.node,
-                       variation: key.variation,
+                       variation: variation,
                        archive: value.get("archive"),
                        stash: value.get("stash"),
                        targets: value.get("targets", []),

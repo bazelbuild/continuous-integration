@@ -18,6 +18,7 @@ groovy_library(
     srcs = [
         "src/build/bazel/ci/BazelConfiguration.groovy",
         "tests/build/bazel/ci/BazelConfigurationTests.groovy",
+        "tests/build/bazel/ci/NonCPS.groovy",
     ],
 )
 
@@ -25,8 +26,8 @@ groovy_library(
     name = "JsonUtilsTests",
     srcs = [
         "src/build/bazel/ci/JsonUtils.groovy",
-        "tests/build/bazel/ci/NonCPS.groovy",
         "tests/build/bazel/ci/JsonUtilsTests.groovy",
+        "tests/build/bazel/ci/NonCPS.groovy",
     ],
 )
 
@@ -35,27 +36,28 @@ groovy_library(
     srcs = [
         "src/build/bazel/ci/BazelConfiguration.groovy",
         "tests/build/bazel/ci/BazelConfigurationParsingTest.groovy",
+        "tests/build/bazel/ci/NonCPS.groovy",
     ],
 )
 
 java_test(
     name = "BazelConfigurationTests-test",
     size = "small",
+    test_class = "build.bazel.ci.BazelConfigurationTests",
     runtime_deps = [
+        ":BazelConfigurationTests",
         "@org_codehaus_groovy_all//jar",
         "@org_hamcrest//jar",
-        ":BazelConfigurationTests",
     ],
-    test_class = "build.bazel.ci.BazelConfigurationTests",
 )
 
 java_test(
     name = "JsonUtilsTests-test",
     size = "small",
+    test_class = "build.bazel.ci.JsonUtilsTests",
     runtime_deps = [
+        ":JsonUtilsTests",
         "@org_codehaus_groovy_all//jar",
         "@org_hamcrest//jar",
-        ":JsonUtilsTests",
     ],
-    test_class = "build.bazel.ci.JsonUtilsTests",
 )

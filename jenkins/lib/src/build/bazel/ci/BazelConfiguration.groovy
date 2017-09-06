@@ -221,4 +221,10 @@ class BazelConfiguration implements java.io.Serializable {
   public String toString() {
     return "BazelConfiguration({descriptor=${descriptor}, parameters=${parameters}, configurations=${configurations})"
   }
+
+  /** Convert a map descriptor to a one line description */
+  @NonCPS
+  public static def descriptorToString(descriptor) {
+    return descriptor.collect { "${it.key}=${it.value}" }.join(",")
+  }
 }

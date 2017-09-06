@@ -12,16 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Work around https://issues.jenkins-ci.org/browse/JENKINS-27421
-@NonCPS
-def descriptorToString(descriptor) {
-  def elements = []
-  for (entry in descriptor) {
-    elements.add("${entry.key}=${entry.value}")
-  }
-  return elements.join(",")
-}
-
 def createJobsFromConfiguration(config, configNames, script) {
   def cfgs = []
   def name = currentBuild.projectName
@@ -36,7 +26,7 @@ def createJobsFromConfiguration(config, configNames, script) {
   for (int k = 0; k < entrySet.length; k++) {
     def params = entrySet[k].value
     def conf = entrySet[k].key
-    def configName = descriptorToString(conf)
+    def configName = build.bazel.ci.BazelConfiguration.descriptorToString(conf)
     configNames.add(configName)
     cfgs.add({ ->
         script.bazelCiJob(name: configName,

@@ -186,7 +186,8 @@ Descriptor keys that have special meaning:
   http://ci.bazel.io/computer/ and each nodes can be selected either
   by name or by label (to see list of labels of a specific node, click
   on it on the Jenkins UI).
-* `variation` is a variation of the Bazel binary, e.g. `-jdk7`.
+* `variation` is a variation of the Bazel binary, e.g. `-jdk7`. If not
+  specified, it is assumed to be empty.
 
 More descriptor keys can be used to specify more
 configuration combination but they won't have any special effects.
