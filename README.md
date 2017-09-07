@@ -25,7 +25,7 @@ Finally, our docker rules needs authentication which is configured with the
 
 ```bash
 gcloud components install docker-credential-gcr
-export DOCKER_CONFIG="$(docker-credential-gcr configure-docker | cut -d " " -f 1)"
+export DOCKER_CONFIG="$(docker-credential-gcr configure-docker | sed 's|/config.json ||')"
 ```
 
 You might want to permanently set your `DOCKER_CONFIG` environment, e.g. in your
