@@ -25,7 +25,6 @@ class BazelUtils implements Serializable {
   private def script;
   private boolean isWindows;
   private def envs = [];
-  private def testLogFolder = null
 
   // Accessors
   def setBazel(value) {
@@ -49,14 +48,6 @@ class BazelUtils implements Serializable {
 
   def getScript() {
     script
-  }
-
-  def setTestLogFolder(value) {
-    testLogFolder = value
-  }
-
-  def getTestLogFolder() {
-    return testLogFolder
   }
 
   // Actual method
@@ -116,9 +107,6 @@ class BazelUtils implements Serializable {
     rc_file_content.add("test --experimental_build_event_json_file=${TEST_EVENTS_FILE}")
     script.writeFile(file: "${ws}/bazel.bazelrc",
                      text: rc_file_content.join("\n") + "\n${extra_bazelrc}")
-    if (testLogFolder != null) {
-      script.sh("rm -fr ${testLogFolder}")
-    }
   }
 
   def showFailedActions(events) {
@@ -141,7 +129,6 @@ class BazelUtils implements Serializable {
       try {
         bazelCommand("build ${targets.join ' '}")
       } finally {
-        archiveEventFile(BUILD_EVENTS_FILE)
         showFailedActions(buildEvents())
       }
     }
@@ -162,13 +149,8 @@ class BazelUtils implements Serializable {
       if (filteredTests.isEmpty()) {
         script.echo "Skipped tests (no tests found)"
       } else {
-        def status = 0
-        try {
-          status = bazelCommand("test ${filteredTests.replaceAll("\n", " ")}", true)
-        } finally {
-          showFailedActions(testEvents())
-          archiveEventFile(TEST_EVENTS_FILE)
-        }
+        def status = bazelCommand("test ${filteredTests.replaceAll("\n", " ")}", true)
+        showFailedActions(testEvents())
         if (status == 3) {
           // Bazel returns 3 if there was a test failures but no breakage, that is unstable
           throw new BazelTestFailure()
@@ -234,32 +216,22 @@ class BazelUtils implements Serializable {
     return cp_lines.join('\n')
   }
 
-  private def archiveEventFile(eventFile) {
-    if (script.fileExists(eventFile)) {
-      def res = script.sh(script: """#!/bin/sh
-echo 'Copying build event file'
-mkdir -p ${testLogFolder}
-cp -f ${eventFile} ${testLogFolder}""", returnStatus: true)
-      if (res == 0) {
-        script.archiveArtifacts artifacts: "${testLogFolder}/${eventFile}"
-      }
-    }
-  }
-
   // Archive test results
-  def testlogs() {
+  def testlogs(test_folder) {
     // JUnit test result does not look at test result if they are "old", copying them to a new
     // location, unique accross configurations.
     def res = script.sh(script: """#!/bin/sh
 echo 'Copying test outputs and events file for archiving'
-rm -fr ${testLogFolder}
-mkdir -p ${testLogFolder}
-""" + generateTestLogsCopy(testEvents(), testLogFolder),
+rm -fr ${test_folder}
+mkdir -p ${test_folder}
+touch ${BUILD_EVENTS_FILE} ${TEST_EVENTS_FILE}
+cp -f ${BUILD_EVENTS_FILE} ${TEST_EVENTS_FILE} ${test_folder}
+""" + generateTestLogsCopy(testEvents(), test_folder),
                         returnStatus: true)
     if (res == 0) {
       // Archive the test logs and xml files
-      script.archiveArtifacts artifacts: "${testLogFolder}/**/test.log,${testLogFolder}/*.json"
-      script.junit testResults: "${testLogFolder}/**/test.xml", allowEmptyResults: true
+      script.archiveArtifacts artifacts: "${test_folder}/**/test.log,${test_folder}/*.json"
+      script.junit testResults: "${test_folder}/**/test.xml", allowEmptyResults: true
     }
   }
 }

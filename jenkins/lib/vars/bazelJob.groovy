@@ -43,7 +43,6 @@ def call(config = [:]) {
   def utils = new BazelUtils();
   utils.bazel = config.binary
   utils.script = this;
-  utils.testLogFolder = "tests-${config.stage_name.replaceAll(',', '-')}"
 
   // And now the various stage
   def stage_prefix = config.stage_name.isEmpty() ? "" : "[${config.stage_name}] "
@@ -68,7 +67,7 @@ def call(config = [:]) {
     }
   } finally {
     stage("${stage_prefix}Results") {
-      utils.testlogs()
+      utils.testlogs("tests-${config.stage_name.replaceAll(',', '-')}")
     }
   }
 }
