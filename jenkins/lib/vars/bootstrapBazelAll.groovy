@@ -12,7 +12,6 @@
 
 // A step to bootstrap bazel on several platforms
 def call(config = [:]) {
-  def variation = config.get("variation", "")
   def repository = config.get("repository", "https://bazel.googlesource.com/bazel")
   def branch = config.get("branch", "master")
   def refspec = config.get("refspec", "+refs/heads/*:refs/remotes/origin/*")
