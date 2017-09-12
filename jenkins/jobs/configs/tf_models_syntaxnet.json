@@ -15,7 +15,7 @@
                 "echo 'import %workspace%/tensorflow/.tf_configure.bazelrc' >>bazel.bazelrc",
                 "$BAZEL clean" // Clean to work around bazelbuild/bazel#3664
             ],
-            "tests": ["syntaxnet/...", "util/utf8/..."],
+            "tests": ["syntaxnet/... - //syntaxnet:beam_reader_ops_test - //syntaxnet:graph_builder_test - //syntaxnet:lexicon_builder_test - //syntaxnet:parser_trainer_test - //syntaxnet:reader_ops_test - //syntaxnet:text_formats_test - //syntaxnet/util:check_test - //syntaxnet/util:registry_test", "util/utf8/..."],
             "targets": []
         }
     }

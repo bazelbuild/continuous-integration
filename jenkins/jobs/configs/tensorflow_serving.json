@@ -15,7 +15,7 @@
                 "echo 'import %workspace%/tensorflow/.tf_configure.bazelrc' >>bazel.bazelrc",
                 "$BAZEL clean" // Clean to work around bazelbuild/bazel#3664
             ],
-            "tests": ["tensorflow_serving/..."],
+            "tests": ["tensorflow_serving/... - //tensorflow_serving/model_servers:tensorflow_model_server_test"],
             "targets": []
         }
     }
