@@ -44,30 +44,33 @@ def call(config = [:]) {
   utils.bazel = config.binary
   utils.script = this;
 
-  // And now the various stage
-  def stage_prefix = config.stage_name.isEmpty() ? "" : "[${config.stage_name}] "
-  utils.writeRc(config.build_opts, config.test_opts, config.startup_opts, config.extra_bazelrc)
-  stage("${stage_prefix}Bazel version") {
-    utils.bazelCommand("version")
-  }
+  withCredentials([file(credentialsId: 'remote-execution', variable: 'AUTH_FILE')]) {
 
-  if(!config.configuration.isEmpty()) {
-    stage("${stage_prefix}Configuration") {
-      utils.commandWithBazelOnPath(config.configuration.join("\n"))
+    // And now the various stage
+    def stage_prefix = config.stage_name.isEmpty() ? "" : "[${config.stage_name}] "
+    utils.writeRc(config.build_opts, config.test_opts, config.startup_opts, config.extra_bazelrc + "\nbuild --auth_credentials=${AUTH_FILE}")
+    stage("${stage_prefix}Bazel version") {
+      utils.bazelCommand("version")
     }
-  }
 
-  stage("${stage_prefix}Build") {
-    utils.build(config.targets)
-  }
-
-  try {
-    stage("${stage_prefix}Tests") {
-      utils.test(config.tests)
+    if(!config.configuration.isEmpty()) {
+      stage("${stage_prefix}Configuration") {
+        utils.commandWithBazelOnPath(config.configuration.join("\n"))
+      }
     }
-  } finally {
-    stage("${stage_prefix}Results") {
-      utils.testlogs("tests-${config.stage_name.replaceAll(',', '-')}")
+
+    stage("${stage_prefix}Build") {
+      utils.build(config.targets)
+    }
+
+    try {
+      stage("${stage_prefix}Tests") {
+        utils.test(config.tests)
+      }
+    } finally {
+      stage("${stage_prefix}Results") {
+        utils.testlogs("tests-${config.stage_name.replaceAll(',', '-')}")
+      }
     }
   }
 }

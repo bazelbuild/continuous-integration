@@ -15,6 +15,7 @@ We monitor:
 
     -   [bazel-tests](http://ci.bazel.io/job/bazel-tests)
     -   [bazel-slow-tests](http://ci.bazel.io/job/bazel-slow-tests)
+    -   [bazel-remote-tests](http://ci.bazel.io/job/bazel-remote-tests)
     -   [Tutorial](http://ci.bazel.io/job/Tutorial)
     -   [benchmark](http://ci.bazel.io/job/benchmark)
     -   [nightly](http://ci.bazel.io/job/bazel/job/nightly)

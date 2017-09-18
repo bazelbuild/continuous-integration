@@ -96,6 +96,14 @@ bazel_github_job(
 )
 
 bazel_github_job(
+    name = "bazel-tests-remote",
+    config = ":configs/bazel-tests-remote.json",
+    gerrit_project = "bazel",
+    git_url = "https://bazel.googlesource.com/bazel",
+    project = "bazel",
+)
+
+bazel_github_job(
     name = "bazel-tests",
     config = ":configs/empty.json",
     gerrit_project = "bazel",
