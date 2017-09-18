@@ -38,7 +38,18 @@ expect {
     eof
 }
 '
-tools/bin/sdkmanager "platforms;android-24" "platform-tools" \
-  "build-tools;24.0.3" "build-tools;26.0.1" \
-  "add-ons;addon-google_apis-google-24" "extras;android;m2repository"
+
+# platform-tools is necessary for ADB. build-tools 26.0.1 is the oldest version
+# that Bazel supports as of 0.5.4 and is necessary for aapt, dx, apksigner, etc.
+# platforms 24, 25 and 26 are installed in case any future test is written that
+# specifically relies on one of them. extras;android;m2repository is necessary
+# for tests of our support library integration.
+# This should be kept in sync with mac/mac-android.sh.
+tools/bin/sdkmanager \
+  "platform-tools" \
+  "build-tools;26.0.1" \
+  "platforms;android-24" \
+  "platforms;android-25" \
+  "platforms;android-26" \
+  "extras;android;m2repository"
 chown -R ci /home/ci/android

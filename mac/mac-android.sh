@@ -43,6 +43,12 @@ expect {
     eof
 }
 '
-tools/bin/sdkmanager "platforms;android-24" "platform-tools" \
-  "build-tools;24.0.3" "build-tools;26.0.1" \
-  "add-ons;addon-google_apis-google-24" "extras;android;m2repository"
+
+# This should be kept in sync with linux/linux-android.sh
+tools/bin/sdkmanager \
+  "platform-tools" \
+  "build-tools;26.0.1" \
+  "platforms;android-24" \
+  "platforms;android-25" \
+  "platforms;android-26" \
+  "extras;android;m2repository"
