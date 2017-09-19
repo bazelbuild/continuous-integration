@@ -162,6 +162,7 @@ bazel_github_job(
     "rules_apple",
     "rules_k8s",
     "rules_python",
+    "rules_nodejs",
 ]]
 
 # Jobs from the google org
