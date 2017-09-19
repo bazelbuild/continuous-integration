@@ -30,7 +30,7 @@ function log() {
 
 # Test whether $1 is the name of an existing instance on GCE
 function test_vm() {
-  (( $(gcloud compute instances list "$1" | wc -l) > 1 ))
+  (( $(gcloud compute instances list --filter="name=$1" | wc -l) > 1 ))
 }
 
 # Wait for a VM $1 in zone $2 to be up and running using ssh.
