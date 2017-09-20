@@ -291,8 +291,8 @@ JENKINS_PLUGINS = {
         "a8ce93220bcd66b982757c2698504e9be2a0ec5445a3d27cc235d82de643f5c1",
     ],
     "credentials-binding": [
-        "1.12",
-        "8b1183534ad093f010dd48a69892ade7aba7551b3119571e1b37ab8c7401a396",
+        "1.13",
+        "92284982f52e785cf802a1a83a3cd59c61f4d76c775f653a27ba2c21204fa4a3",
     ],
     "docker-workflow": [
         "1.10",
