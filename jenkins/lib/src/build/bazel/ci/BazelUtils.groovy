@@ -113,13 +113,13 @@ class BazelUtils implements Serializable {
     def eventsstring = ""
     for(event in events) {
       if ("action" in event) {
-        eventstring = eventstring + event + "\n"
+        eventsstring += event + "\n"
       }
     }
     if (eventsstring == "") {
       script.echo("No failed actions reported in the event stream")
     } else {
-      script.echo("Failed actions:\n" + eventstring)
+      script.echo("Failed actions:\n" + eventsstring)
     }
   }
 
