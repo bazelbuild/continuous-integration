@@ -1,56 +1,93 @@
-# How to monitor for Bazel regression?
+# How to monitor for Bazel regressions
 
-This is a guide on what to monitor for Bazel for the
-Bazel build sheriff.
+This is a guide for the Bazel build sheriff about monitoring the Bazel CI
+(Continuous Integration) projects and jobs.
 
-# The dashboard
+# The CI dashboard
 
-A general dashboard to have a quick view of the general health is available
-at (http://ci.bazel.io/view/Dashboard/)[http://ci.bazel.io/view/Dashboard/].
-This dashboard represent the health of all important builds that runs on the CI
-system.
+URL: http://ci.bazel.io/view/Dashboard/
 
-There is 2 kinds of projects we monitor:
+The dashboard gives a quick overview of the Bazel CI's health.
 
-  - Owned by the core bazel team:
-    [bazel-tests](http://ci.bazel.io/job/bazel-tests),
-    [bazel-docker-tests](http://ci.bazel.io/job/bazel-docker-tests),
-    [Tutorial](http://ci.bazel.io/job/Tutorial),
-    [benchmark](http://ci.bazel.io/job/benchmark),
-    [nightly](http://ci.bazel.io/job/bazel/job/nightly) and
-    [release](http://ci.bazel.io/job/bazel/job/release)
-  - Projects built using Bazel such as repositories on the bazelbuild GitHub
-    organisation, TensorFlow or Gerrit.
+We monitor:
 
-If project owned by the Bazel team are not green, then the Bazel team needs to
-investigate and fix as soon as possible to keep our build green.
+*   Bazel's own jobs (owned by the core Bazel team):
 
-The other projects health depends on the other projects owner and the Bazel team
-responsibility is only to report issue and if the build stay broken for too
-long (more than a week), to deactivate the project. Those projects are useful
-for the Bazel team to test non regression in Bazel itself.
+    -   [bazel-tests](http://ci.bazel.io/job/bazel-tests)
+    -   [bazel-docker-tests](http://ci.bazel.io/job/bazel-docker-tests)
+    -   [Tutorial](http://ci.bazel.io/job/Tutorial)
+    -   [benchmark](http://ci.bazel.io/job/benchmark)
+    -   [nightly](http://ci.bazel.io/job/bazel/job/nightly)
+    -   [release](http://ci.bazel.io/job/bazel/job/release)
 
-# Triaging failure
+*   Projects built using Bazel:
 
-The build sheriff should monitor the output of the various type of job:
+    -   repositories on the bazelbuild GitHub organisation, e.g. rules\_web
+    -   TensorFlow
+    -   Gerrit
+    -   protobuf
+    -   re2
+    -   ...
 
-  - [Global tests](user.md#global-jobs) (e.g.
-    [nightly](http://ci.bazel.io/job/bazel/job/nightly) and
-    [release](http://ci.bazel.io/job/bazel/job/release)).
-    The [release](http://ci.bazel.io/job/bazel/job/release) job runs at every
-    push and is always green for non release push. The
-    [nightly](http://ci.bazel.io/job/bazel/job/nightly) job runs every night
-    and can be re-run on demand simply using the run button in Jenkins (needs
-    to be logged in). See the [user guide](user.md#global-jobs) on how to
-    interpret the results. Serious failure in the a global test should be filed
-    to [bazelbuild/bazel](https://github.com/bazelbuild/bazel/issues/new) as
-    a breakage, and as release blocker if on the release job.
-  - [benchmark](http://ci.bazel.io/job/benchmark) should be investigated
-    just by looking at the output logs. If the job fails with a java error,
-    build error, an issue should be filed to
-    [bazelbuild/bazel](https://github.com/bazelbuild/bazel/issues/new), else it
-    should be filed to [bazelbuild/continuous-integration](https://github.com/bazelbuild/bazel/continuous-integration/new).
-  - [postsubmits](user.md#postsubmit), which are all the other monitored
-    jobs. A postsubmit failure should be reported to the project owning the
-    job. If a failure stay for too long, the job should be partially or totally
-    deactivated to maintain the clarity of global tests.
+If Bazel's own jobs are not green, the Bazel team must:
+
+1.  investigate
+2.  fix as soon as possible
+
+If the other projects are not green:
+
+1.  report it to the project owners
+2.  deactivate the project if it stays broken for more than a week
+
+# Triaging failures
+
+The build sheriff should monitor the outputs of these types of jobs:
+
+*   [global tests](user.md#global-jobs)
+*   benchmark
+*   [postsubmits](user.md#postsubmit)
+
+## Global tests
+
+URLs:
+
+*   nightly: http://ci.bazel.io/job/bazel/job/nightly
+*   release: http://ci.bazel.io/job/bazel/job/release
+
+When do these jobs run:
+
+*   [nightly](http://ci.bazel.io/job/bazel/job/nightly): runs every night and
+    can be re-run on demand using the Run button in Jenkins (you need to log in
+    on the Jenkins UI)
+*   [release](http://ci.bazel.io/job/bazel/job/release): runs at every push and
+    is always green for non-release pushes
+
+How to investigate: see the [user guide](user.md#global-jobs).
+
+When global tests fail badly:
+
+1.  [file a bug to bazelbuild/bazel](https://github.com/bazelbuild/bazel/issues/new)
+2.  add the "breakage" label to the bug
+3.  add the "release blocker" label if the breakage is on the release job
+
+## Benchmark
+
+URL: http://ci.bazel.io/job/benchmark
+
+How to investigate: look at the output logs:
+
+*   if the job fails with a java error or build error: [file a bug to
+    bazelbuild/bazel](https://github.com/bazelbuild/bazel/issues/new)
+*   otherwise: [file a bug to
+    bazelbuild/continuous-integration](https://github.com/bazelbuild/bazel/continuous-integration/new)
+
+## Postsubmits
+
+These are all the other monitored jobs.
+
+To investigate:
+
+How to investigate: see the [user guide](user.md#presubmit).
+
+1.  report to the project owner (e.g. Bazel team for "bazel-tests")
+2.  deactivate partially or totally, if a failure stays for too long
