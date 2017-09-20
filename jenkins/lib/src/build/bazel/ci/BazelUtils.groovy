@@ -139,7 +139,7 @@ class BazelUtils implements Serializable {
     // Lambda are not working well with CPS, so NonCPS...
     def quote = isWindows ? { s -> s.replace('"', '""') } : { s -> s.replace("'", "'\\''") }
     def q = isWindows ? '"' : "'"
-    return "query ${q}tests(${tests.collect(quote).join(' + ')})${q}"
+    return "query ${q}${tests.collect(quote).join(' + ')}${q}"
   }
 
   // Execute a bazel tests
