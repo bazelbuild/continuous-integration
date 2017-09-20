@@ -2,68 +2,99 @@
 
 ## Adding a project
 
-To add a project to Bazel CI that is on the `bazelbuild` organization
-on GitHub, add a `bazel_github_job` in the `jenkins/jobs/BUILD`
-file and send a code review to a CI admin (see
-`jenkins/config.bzl`). In the permission of your GitHub repository, you
-want to add the team [`robots`](https://github.com/orgs/bazelbuild/teams/robot)
-(or [`bazel-io`](https://github.com/bazel-io) for repository outside of
-the `bazelbuild` organization) to have write access to the repository.
+To add a project to Bazel CI that is on the `bazelbuild` GitHub organization:
 
-By default, if the project is in the bazelbuild org and does not need
-special tweaks you should add the project to the comprehension
-list in the BUILD file. Otherwise you can add a `bazel_github_job` that
-takes the following parameters:
+1.  Allow write access to your repository:
 
-* `name` is the name of the job as it will appear in Jenkins.
-* `branch` is the branch to build and test, `master` by default.
-* `project` is the name of the project, by default it is set to the
-  value of `name`. Usefull when renaming a project but keeping the job
-  history.
-* `org` is the name of the organization on github.
-*  `git_url` is the URL to the git repository, default to `https://github.com/<org>/<project>`.
-* `project_url` is the URL to the project, default to the value of `git_url`.
-* `workspace` is the directory where the workspace is relative to the
-  root of the git repository, by default `.`
-* `config` can be used to specify a different default configuration
-  file. By default it is `//jenkins/build_defs:default.json`. Normally,
-  it is no longer needed since the configuration can be changed using a
-  file in the repository (see next section).
-* `enable_trigger` enable postsubmit test (enabled by default).
-* `poll` use polling to trigger post-submit test instead of waiting
-  for GitHub API to notify. Set to `True` by default if the
-  organization is not `bazelbuild`.
-* `gerrit_project` specifies a project on the
-  [Bazel Gerrit server](https://bazel-review.googlesource.com) that
-  mirrors the GitHub project and will be used to trigger presubmit from
-  Gerrit.
-* `enabled` is used to deactivate a project, `True` by default.
-* `pr_enabled` can be set to `False` to turn off presubmit from Pull Requests.
-* `run_sequential` can be used to make the job non concurrent, meaning
-  that each configuration will run in sequence from the other
-  one. Useful if the job use some exclusive resource like [Sauce
-  Labs](https://wiki.saucelabs.com/).
-* `sauce_enabled` activate [Sauce Labs](https://wiki.saucelabs.com/) support.
+    *   for [`robots`](https://github.com/orgs/bazelbuild/teams/robot), if your
+        repository is part of the `bazelbuild` organization
+    *   for [`bazel-io`](https://github.com/bazel-io), if your repository is
+        outside of the `bazelbuild` organization
 
-A variation of `bazel_github_job`, `bazel_git_job` can be used to
-specify a job that runs from a random Git repository instead of a
-GitHub repository. It supports the same non GitHub specific argument
-but need either `git_url` or `project_url` to be specified.
+2.  Add the job to the job list.
+
+    If the project is in the `bazelbuild` organization and doesn't need special
+    tweaking, you can add it to an existing job list in `jenkins/jobs/BUILD`.
+
+    Otherwise add a `bazel_github_job` or `bazel_git_job` rule to
+    `jenkins/jobs/BUILD`:
+
+    *   use `bazel_github_job` for jobs from GitHub repositories
+    *   use `bazel_git_job` for jobs from Git repositories
+
+3.  Send a Gerrit code review to a CI admin.
+
+    See `jenkins/config.bzl` for the list of admins.
+
+### `bazel_github_job` parameters
+
+The `bazel_github_job` rule takes the following parameters:
+
+*   `name`: name of the job as it will appear in Jenkins
+*   `branch`: Git branch to build and test (default: `master`)
+*   `project`: name of the project (default: same as `name`)
+
+    Useful when you rename a job but want to keep its history.
+
+*   `org`: name of the organization on GitHub
+*    `git_url`: URL to the Git repository (default:
+    `https://github.com/<org>/<project>`)
+*   `project_url`: URL to the project (default: same as `git_url`)
+*   `workspace`: the directory where the workspace is, relative to the
+    root of the Git repository (default: `.`)
+*   `config`: specifies a default configuration file (default:
+    `jenkins/build_defs:default.json`)
+
+    Normally it is not needed because you can change the configuration using
+    a file in the repository (see next section).
+
+*   `enable_trigger`: enable postsubmit test (default: true)
+*   `poll`: use polling to trigger postsubmit tests instead of waiting
+    for GitHub API to notify (default: true if organization is not
+    `bazelbuild`)
+*   `gerrit_project`: project on the [Bazel Gerrit
+    server](https://bazel-review.googlesource.com) that mirrors the GitHub
+    project and will be used to trigger presubmits from Gerrit
+*   `enabled`: activates or deactivates the project (default: true)
+*   `pr_enabled`: enables or disables presubmit from GitHub Pull Requests
+*   `run_sequential`: if enabled, runs the job's configurations
+    concurrently; otherwise runs the job's configurations one after the
+    other
+
+    Useful if the job uses some exclusive resource such as [Sauce
+    Labs](https://wiki.saucelabs.com/).
+
+*   `sauce_enabled`: activates or deactivates [Sauce
+    Labs](https://wiki.saucelabs.com/) support
+
+### `bazel_git_job` parameters
+
+The `bazel_git_job` rule takes the same parameters as `bazel_github_job`, but
+requires that either `git_url` or `project_url` be specified.
 
 ## Customizing a project
 
-By default, the CI system tries to build `//...` then tests `//...` on Darwin and Linuxes.
-To change how the project must be built, a JSON description file can be added to the
-repository under `.ci/<name>.json` or `scripts/ci/<name>.json` (where `<name>` is
-the name of the project declared in `jobs.bzl`).
+By default, the CI system tries to build `//...` then to test `//...` on Darwin
+and on Linuxes.
 
-This file contains a list of configurations to build and test, each
-configuration is a dictionary containing platform description (as
-key-value pairs, e.g. `node: "windows-x86\_64"`), a list of parameters
-under the key `parameters` and a list of sub-configurations under the
-key `configurations`.
+You can use a JSON file to change how the project is built:
 
-A simple configuration with one platform would then look like:
+*   add `.ci/<name>.json` to the project's repository, or
+*   or add `scripts/ci/<name>.json` to the
+    https://github.com/bazelbuild/continuous-integration repository
+
+Where `<name>` is the name of the project declared in `jobs.bzl`.
+
+This JSON file contains a list of configurations to build and test.
+Each configuration entry specifies:
+
+*   a platform name under the `node` key
+*   optionally a list of parameters under the key `parameters`
+*   optionally a list of sub-configurations under the key `configurations`
+
+### Example 1
+
+A simple configuration with one platform:
 
 ```javascript
 [
@@ -73,8 +104,11 @@ A simple configuration with one platform would then look like:
 
 This configuration would build and test on a node that has the label
 `linux-x86\_64` with the default set of parameters (i.e. build `//...`
-then tests `//...`). To change the target to build and test, this can
-be set through `parameters`:
+then test `//...`).
+
+### Example 2
+
+Built on the previous example:
 
 ```javascript
 [
@@ -88,10 +122,12 @@ be set through `parameters`:
 ]
 ```
 
-This example used `targets` and `tests` parameters to set the targets
-to respectively build and tests.
+This configuration uses `targets` and `tests` parameters to set the targets
+to build (`targets`) and to test (`tests`), instead of the default `//...`.
 
-Adding a platform can be done by simply adding another configuration:
+### Example 3
+
+To add a platform, add another configuration:
 
 ```javascript
 [
@@ -108,11 +144,23 @@ Adding a platform can be done by simply adding another configuration:
             "targets": ["//my:target"],
             "tests": ["//my:test"],
         }
+    },
+    {
+        "node": "windows-x86_64",
+        "parameters": {
+            "targets": ["//my:target"],
+            "tests": [
+                "//my/other/windows/specific:test",
+                "//and/some/other/test:name"
+            ],
+        }
     }
 ]
 ```
 
-But that's a lot of duplication, so we can use sub-configurations instead:
+### Example 4
+
+Use a sub-configurations to reduce repetitions:
 
 ```javascript
 [
@@ -129,14 +177,16 @@ But that's a lot of duplication, so we can use sub-configurations instead:
 ]
 ```
 
+### Example 5
+
+You can specify child configurations.
+
 Each child configuration inherits parent configuration description. The
 child configurations get factored with the parent configuration to create N
 configurations that inherit the parameters and descriptor of the parent
-configuration. If a child configuration specifies a value already present in the
-parent configuration, the parent configuration value will be ignored and the child
-configuration value will be used.
+configuration. The child configuration can override inherited parameters.
 
-For example:
+The following configuration:
 
 ```javascript
 [
@@ -157,7 +207,7 @@ For example:
 ]
 ```
 
-would expand to the following configurations:
+would expand to this:
 
 ```javascript
 [
@@ -176,53 +226,75 @@ would expand to the following configurations:
 
 ## Reference
 
-### Configuration descriptor keys
+### Configuration `descriptor` keys
 
-Descriptor keys that have special meaning:
+`descriptor` keys that have special meaning:
 
-* `node` is a label that describe the platform to run on, e.g.:
-  `linux-x86_64`, `windows-x86_64`, `freebsd-11`, ... The complete
-  list of currently connected nodes is available on
-  http://ci.bazel.io/computer/ and each nodes can be selected either
-  by name or by label (to see list of labels of a specific node, click
-  on it on the Jenkins UI).
-* `variation` is a variation of the Bazel binary, e.g. `-jdk7`. If not
-  specified, it is assumed to be empty.
+*   `node`: a label that describes the platform to run on
 
-More descriptor keys can be used to specify more
-configuration combination but they won't have any special effects.
+    Example: `linux-x86_64`, `windows-x86_64`, `freebsd-11`, etc.
 
+    The complete list of connected nodes is available on
+    http://ci.bazel.io/computer/ . You can select nodes either by name or by
+    label. To see the list of labels of a specific node, click on the node in
+    the Jenkins UI.
 
-### Parameter keys
+*   `variation`: a variation of the Bazel binary, e.g. `-jdk7`
 
-Possible parameters:
+    If not specified, it is assumed to be empty.
 
-* `configure`: a list of shell (batch on Windows) comnands to execute
-  before the build.
-* `targets`: the list of targets to build.
-* `tests`: the list of targets to test, can be expressed as bazel query expression.
-* `build_tag_filters`: list of tags to filter build on.
-* `test_tag_filters`: list of tags to filter test on (`-noci,-manual`
-  are automatically added).
-* `build_opts`: list of options to add to the bazelrc as `build`
- options, note that they impact testing too.
-* `test_opts`: list of options to add to the bazelrc as `test` options.
-* `startup_opts`: list of options to add to the bazelrc as `startup` options.
+You can use more `descriptor` keys to specify more configuration combinations,
+but they won't have any special effects.
 
 
-## Bazel bootstrap
+### Configuration `parameter` keys
+
+Supported `parameter` keys:
+
+*   `configure`: list of Shell commands (Batch commands on Windows) to execute
+    before the build
+*   `targets`: list of targets to build.
+*   `tests`: the list of targets to test; can be a bazel query expression
+*   `build_tag_filters`: `tags` filter for the build step; works the same way as
+    [test_suite.tags](https://docs.bazel.build/versions/master/be/general.html#test_suite.tags)
+*   `test_tag_filters`: `tags` filter for the build step; always considered to
+    contain `["-noci", "-manual"]`; works the same way as
+    [test_suite.tags](https://docs.bazel.build/versions/master/be/general.html#test_suite.tags)
+*   `build_opts`: list of options to add to the bazelrc as `build` options
+
+    Note that such options also affect testing.
+
+*   `test_opts`: list of options to add to the bazelrc as `test` options
+*   `startup_opts`: list of options to add to the bazelrc as `startup` options
+
+
+### `scripts/ci/bootstrap.json` (Bazel bootstrap configuration)
 
 __For Bazel developers.__
 
 The Bazel project itself has a separate configuration file for
-creating release artifacts. It is stored under
-`scripts/ci/bootstrap.json`.
+creating release artifacts. It is stored under `scripts/ci/bootstrap.json`.
 
-This file follows the same syntax but accepts different parameters:
+This file follows the same JSON format as discussed in [Customizing a
+project](#customizing-a-project) but accepts different parameters:
 
-* `archive`: list of files to archive as a map of target, new name. `%{release_name}` string will
-  be replaced by the release name. An empty list means we do not
-  archive anything (for non release build).
-* `stash`: list of artifacts to stash (to be released / push but no need to keep it forever)
-* `configure`: list of shell (batch on Windows) commands to execute before building
-* `targets`: list of targets to build, in addition to //src:bazel.
+*   `archive`: list of files to archive
+
+    This is a map of target name to new name.
+
+    The names may contain the `%{release_name}` placeholder, which will be
+    replaced by the release name.
+
+    If this parameter is empty then nothing is archived (useful for non-release
+    builds).
+
+*   `stash`: list of artifacts to stash
+
+    These artifacts are either:
+
+    *   to be released, or
+    *   to be pushed, but there's no need to keep them forever
+
+*   `configure`: list of Shell commands (Batch commands on Windows) to execute
+    before building
+*   `targets`: list of targets to build, in addition to `//src:bazel`
