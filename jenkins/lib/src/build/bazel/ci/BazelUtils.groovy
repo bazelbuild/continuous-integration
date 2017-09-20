@@ -113,7 +113,7 @@ class BazelUtils implements Serializable {
     def eventsstring = ""
     for(event in events) {
       if ("action" in event) {
-        eventsstring += event + "\n"
+        eventsstring += event.toString() + "\n"
       }
     }
     if (eventsstring == "") {
