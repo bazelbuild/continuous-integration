@@ -167,6 +167,7 @@ bazel_github_job(
     "rules_k8s",
     "rules_python",
     "rules_nodejs",
+    "BUILD_file_generator",
 ]]
 
 # Jobs from the google org
