@@ -148,13 +148,17 @@ bazel_github_job(
     "rules_d",
     "rules_go",
     "rules_sass",
-    "rules_gwt",
-    "rules_groovy",
     "rules_perl",
     "rules_docker",
     "skydoc",
     "bazel-watcher",
     "migration-tooling",
+]]
+
+# Jobs without tests
+[bazel_github_job(name = n, config = ":configs/no-tests.json") for n in [
+    "rules_groovy",
+    "rules_gwt",
 ]]
 
 # Jobs from the bazelbuild org using a dummy configuration
