@@ -1,4 +1,4 @@
-# Workflow
+# Bazel CI workflow
 
 **Note:** the first bazel build is going to stall for some time while
 building the base images on docker without any output due to
@@ -8,70 +8,111 @@ building the base images on docker without any output due to
 
 Docker:
 
-* You will need [at least 25GB](https://github.com/bazelbuild/continuous-integration/issues/73)
-  of free disk space.
-* Follow the instructions on [Ask Ubuntu](https://askubuntu.com/a/477554/671928)
-  for adding your user to the "docker" group.
+*   [At least
+    25GB](https://github.com/bazelbuild/continuous-integration/issues/73) of
+    free disk space.
+*   Your username in the "docker" group.
+
+    Follow the instructions on [Ask
+    Ubuntu](https://askubuntu.com/a/477554/671928).
 
 Gcloud:
 
-* You may need to authenticate and set the current project. To do so, run:
+*   You may need to authenticate and set the current project. To do so, run:
 
-```
-gcloud auth login
-gcloud set project bazel-public
-```
+    ```
+    gcloud auth login
+    gcloud set project bazel-public
+    ```
 
-## Pushing
+## Pushing changes
 
-The classical worflow when modfiying ci.bazel.io is to first test the
-change on ci-staging.bazel.io, so a complete cycle would looks like:
+The typical worflow when modfiying ci.bazel.io is to first test the
+change on ci-staging.bazel.io.
 
-1. Do a change
-2. Eventually, add a few jobs to test to
-   [`jenkins/jobs/jobs.bzl`](jobs.md).
-3. Start the staging instance with
-   [`./gce/vm.sh start staging`](vm.md).
-4. Run `bazel run //gcr:deploy-staging` to deploy the change to
-   the staging instance.
-5. Restart the staging jenkins instance by going to
-   [http://ci-staging.bazel.io/safeExit](http://ci-staging.bazel.io/safeExit).
-6. Run a job by identifying on [http://ci-staging.bazel.io] and
-   clicking on the play button.
-7. If 6 fails, go back to 1, skipping step 3.
-8. Send the change to review, reverting the change in 3.
-9. Once LGTM, deploy to production with `bazel run //gcr:deploy`.
-10. Finally, restart the prod jenkins instance by going to
-   [http://ci.bazel.io/safeExit](http://ci.bazel.io/safeExit). If you are not
-   logged in, you may get a stack trace. Log in and try again.
+The process typically looks like:
 
-## Setting up for local testing
+1.  Make your change
+2.  Add a few jobs to test to [`jenkins/jobs/jobs.bzl`](jobs.md).
+3.  Start the staging Jenkins instance with [`./gce/vm.sh start staging`](vm.md).
+4.  Run `bazel run //gcr:deploy-staging` to deploy the change to
+    the staging instance.
+5.  Restart the staging Jenkins instance by going to
+    http://ci-staging.bazel.io/safeExit .
+6.  Run a job by identifying it on [http://ci-staging.bazel.io] and
+    clicking on the play button.
+7.  If 6 fails, go back to 1, skipping step 3.
+8.  Send the change to review.
+9.  Shut down the staging Jenkins instance with [`./gce/vm.sh stop staging`](vm.md).
+10. Once LGTM, deploy to production with `bazel run //gcr:deploy`.
+11. Restart the prod Jenkins instance: http://ci.bazel.io/safeExit
 
-There is a way to run a local jenkins instance with a docker executor node,
-by running
+    You need to log in to the Jenkins UI, otherwise you may get a stack trace.
+    Log in and try again.
+
+## Setting up local testing
+
+You can run a local Jenkins instance with a Docker executor node, by running:
 
 ```
 bazel run //jenkins:test [-- -p port]
 ```
 
-It will setup a Jenkins instance without security on port `port`
-(8080 by default) and one node running Ubuntu Wily in Docker. This
-should be enough for local testing. To stop the instance, goes to
-`http://localhost:8080/safeExit` and this will shutdown cleanly.
+It will spin up a Jenkins instance:
 
-You can connect additional instance by modifying the UI to test
-for other platforms. This does not enable to test:
+*   without security
+*   on port `port` (8080 by default)
+*   with one node running Ubuntu Wily in Docker
 
-  - Synchronization between Gerrit and Github,
-  - Adding execution nodes,
-  - Interaction with Github or Gerrit.
+This setup should suffice for local testing.
+
+To stop the instance, go to `http://localhost:8080/safeExit`. This will shut
+down Jenkins cleanly.
+
+You can connect additional instance by modifying the UI to test for other
+platforms. However this does not enable to test:
+
+*   Synchronization between Gerrit and Github
+*   Adding execution nodes
+*   Interaction with Github or Gerrit
 
 ## Faster testing cycle
 
-If the only modification needed are to Groovy code under
-`jenkins/lib`, they can be updated in the running container, without
-restarting jenkins. The script `jenkins/transfer-lib.sh` will transfer
-the lib folder to the running container started by
-`bazel run //jenkins:test`. The wrapper around that script
-`jenkins/transfer-lib-to-staging.sh` will do the same but transfer in
-the container running on the jenkins controller for the staging instance.
+If you only need to modify Groovy code under `jenkins/lib`, you can update that
+in the running container without restarting Jenkins.
+
+### If you test with a local container
+
+1.  start the container
+
+    ```
+    bazel run //jenkins:test
+    ```
+
+2.  make your changes to `.groovy` files
+3.  transfor the `lib` folder to the running container:
+
+    ```
+    jenkins/transfer-lib.sh
+    ```
+
+### If you test with the staging Jenkins instance
+
+1.  start the instance
+
+    ```
+    gce/vm.sh start staging
+    ```
+
+2.  make your changes to `.groovy` files
+3.  transfor the `lib` folder to the container running on the staging instance
+
+    ```
+    jenkins/transfer-lib-to-staging.sh
+    ```
+
+4.  stop the instance when done
+
+    ```
+    gce/vm.sh stop staging
+    ```
