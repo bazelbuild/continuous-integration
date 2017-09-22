@@ -53,7 +53,7 @@ bazel_github_job(
     config = ":configs/tf_models_syntaxnet.json",
     org = "tensorflow",
     project = "models",
-    workspace = "syntaxnet",
+    workspace = "research/syntaxnet",
 )
 
 # Job for testing Gerrit
