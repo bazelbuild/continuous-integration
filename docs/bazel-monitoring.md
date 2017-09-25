@@ -14,7 +14,7 @@ We monitor:
 *   Bazel's own jobs (owned by the core Bazel team):
 
     -   [bazel-tests](http://ci.bazel.io/job/bazel-tests)
-    -   [bazel-docker-tests](http://ci.bazel.io/job/bazel-docker-tests)
+    -   [bazel-slow-tests](http://ci.bazel.io/job/bazel-slow-tests)
     -   [Tutorial](http://ci.bazel.io/job/Tutorial)
     -   [benchmark](http://ci.bazel.io/job/benchmark)
     -   [nightly](http://ci.bazel.io/job/bazel/job/nightly)
