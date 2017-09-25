@@ -43,7 +43,7 @@ def jenkins_job(name, config, substitutions = {}, deps = [], deps_aliases = {},
        staging service and the docker test version. This is to be set
        to false is the calling macros already creates those filegroups.
   """
-  github_project =  "%s/%s" % (org, project.lower())
+  github_project =  "%s/%s" % (org, project)
   github_url = "https://github.com/" + github_project
   if not git_url:
     git_url = github_url

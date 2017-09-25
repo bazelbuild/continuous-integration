@@ -38,6 +38,7 @@ bazel_github_job(
     name = "TensorFlow",
     config = ":configs/tensorflow.json",
     org = "tensorflow",
+    project = "tensorflow",
     project_url = "https://tensorflow.org",
 )
 
