@@ -1,7 +1,7 @@
 # Using the Bazel CI
 
 [Bazel CI](http://ci.bazel.io) tests Bazel and a variety of
-open-source project that use Bazel.
+open-source projects that use Bazel.
 
 We also use the projects using Bazel to validate Bazel changes.
 
@@ -18,6 +18,11 @@ Bazel CI, see the [project owner documentation](owner.md).
 ## Postsubmit <a name="postsubmit"></a>
 
 Every project that runs on Bazel CI is run on postsubmit.
+All test jobs are visible at http://ci.bazel.io/
+
+*   bazel-tests runs all tests affecting the Bazel binary (internal)
+*   other folders contain tests run against other projects (external)
+
 
 The CI uses the GitHub API and handles test runs automatically if
 [bazel-io](https://github.com/bazel-io) has write access to the repository.
