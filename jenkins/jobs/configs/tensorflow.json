@@ -11,7 +11,7 @@
         ],
         "parameters": {
             "configure": [
-                "echo 'import %workspace%/.bazelrc' >>bazel.bazelrc",
+                "echo -e '\nimport %workspace%/.bazelrc' >>bazel.bazelrc",
                 "touch .bazelrc",
                 "./tensorflow/tools/ci_build/builds/configured CPU"
             ],
