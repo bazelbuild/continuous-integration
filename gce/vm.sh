@@ -375,7 +375,7 @@ case "${command}" in
     echo " - command can be:" >&2
     echo "    create: create the VM, fails if the VM already exists." >&2
     echo "    delete: delete the VM, fails if the VM does not exists." >&2
-    echo "    reimage: reimage the VM, equivalent to create followed by delete." >&2
+    echo "    reimage: reimage the VM, equivalent to delete followed by create." >&2
     echo "    update_metadata: update the VM metadata, the VM must already exists." >&2
     echo "    start: start the VM, the VM must exists." >&2
     echo "    stop: stop the VM, the VM must exists." >&2
