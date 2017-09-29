@@ -35,6 +35,9 @@ while (( $retry != 0 )); do
   sleep 5
 done
 
+sed -E -i.bak 's|ci(-staging)?\.bazel\.io|master.\0|g' slave-agent.jnlp
+rm -f slave-agent.jnlp.bak
+
 export ANDROID_SDK_PATH=$(echo $HOME/android-sdk-*)
 export ANDROID_NDK_PATH=$(echo $HOME/android-ndk-*)
 export ANDROID_SDK_BUILD_TOOLS_VERSION=$(ls $ANDROID_SDK_PATH/build-tools | sort -n | tail -1)
