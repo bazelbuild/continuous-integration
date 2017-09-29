@@ -177,6 +177,7 @@ bazel_github_job(
     "rules_python",
     "rules_nodejs",
     "BUILD_file_generator",
+    "bazel-integration-testing",
 ]]
 
 # Jobs from the google org
