@@ -46,8 +46,8 @@ java_test(
     test_class = "build.bazel.ci.BazelConfigurationTests",
     runtime_deps = [
         ":BazelConfigurationTests",
-        "@org_codehaus_groovy_all//jar",
-        "@org_hamcrest//jar",
+        "//3rdparty/jvm/org/codehaus/groovy:groovy_all",
+        "//3rdparty/jvm/org/hamcrest:hamcrest_all",
     ],
 )
 
@@ -57,7 +57,7 @@ java_test(
     test_class = "build.bazel.ci.JsonUtilsTests",
     runtime_deps = [
         ":JsonUtilsTests",
-        "@org_codehaus_groovy_all//jar",
-        "@org_hamcrest//jar",
+        "//3rdparty/jvm/org/codehaus/groovy:groovy_all",
+        "//3rdparty/jvm/org/hamcrest:hamcrest_all",
     ],
 )

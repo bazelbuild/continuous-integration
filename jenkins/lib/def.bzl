@@ -18,10 +18,9 @@ def bazel_job_configuration_test(name, configs):
         name = name,
         size = "small",
         runtime_deps = [
-            "@org_codehaus_groovy_all//jar",
-            "@org_hamcrest//jar",
-            "//jenkins/lib:BazelConfigurationParsingTest",
-        ],
+            "//3rdparty/jvm/org/codehaus/groovy:groovy_all",
+            "//3rdparty/jvm/org/hamcrest:hamcrest_all",
+            "//jenkins/lib:BazelConfigurationParsingTest"],
         data = configs,
         test_class = "build.bazel.ci.BazelConfigurationParsingTest",
     )

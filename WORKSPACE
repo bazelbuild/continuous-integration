@@ -125,12 +125,7 @@ load("@io_bazel_rules_groovy//groovy:groovy.bzl", "groovy_repositories")
 groovy_repositories()
 
 # For groovy tests
-maven_jar(
-    name = "org_codehaus_groovy_all",
-    artifact = "org.codehaus.groovy:groovy-all:jar:2.4.4",
-)
+load("//3rdparty:bzl.bzl", "maven_dependencies")
 
-maven_jar(
-    name = "org_hamcrest",
-    artifact = "org.hamcrest:hamcrest-all:jar:1.3",
-)
+maven_dependencies()
+
