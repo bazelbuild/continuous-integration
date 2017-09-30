@@ -21,7 +21,11 @@ jenkins_job(
     deps = [
         ":configs/bootstrap.json",
     ],
-) for job in ["nightly", "presubmit", "release"]]
+) for job in [
+    "nightly",
+    "presubmit",
+    "release",
+]]
 
 jenkins_job(
     name = "maintenance/install-bazel",
@@ -165,13 +169,19 @@ bazel_github_job(
 ]]
 
 # Jobs without tests
-[bazel_github_job(name = n, config = ":configs/no-tests.json") for n in [
+[bazel_github_job(
+    name = n,
+    config = ":configs/no-tests.json",
+) for n in [
     "rules_groovy",
     "rules_gwt",
 ]]
 
 # Jobs from the bazelbuild org using a dummy configuration
-[bazel_github_job(name = n, config = ":configs/empty.json") for n in [
+[bazel_github_job(
+    name = n,
+    config = ":configs/empty.json",
+) for n in [
     "rules_apple",
     "rules_k8s",
     "rules_python",
