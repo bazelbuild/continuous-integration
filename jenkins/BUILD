@@ -42,7 +42,7 @@ UBUNTU_1604_PREFIX = "ubuntu_16.04-x86_64"
 
 UBUNTU_1604_COUNT = 8
 
-UBUNTU_DOCKER_PREFIX = "ubuntu_15.10-x86_64-docker"
+UBUNTU_DOCKER_PREFIX = "ubuntu_16.04-x86_64-docker"
 
 UBUNTU_DOCKER_COUNT = 4
 
@@ -298,7 +298,7 @@ jenkins_docker_build(
         ":freebsd-12-staging",
         ":jenkins-common-configs",
         ":ubuntu_14.04-x86_64-staging",
-        ":ubuntu_15.10-x86_64-docker-staging",
+        ":ubuntu_16.04-x86_64-docker-staging",
         ":ubuntu_16.04-x86_64-staging",
         ":windows-x86_64-staging",
     ],
