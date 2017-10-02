@@ -190,6 +190,17 @@ bazel_github_job(
     "bazel-integration-testing",
 ]]
 
+# Jobs from the abseil org
+[bazel_github_job(
+    name = n,
+    config = ":configs/empty.json",
+    org = "abseil",
+    poll = False,
+) for n in [
+    "abseil-cpp",
+    "abseil-py",
+]]
+
 # Jobs from the google org
 bazel_github_job(
     name = "re2",
