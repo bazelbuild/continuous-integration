@@ -27,7 +27,7 @@
           <configVersion>3</configVersion>
           <adminlist></adminlist>
           <allowMembersOfWhitelistedOrgsAsAdmin>true</allowMembersOfWhitelistedOrgsAsAdmin>
-          <orgslist>google bazelbuild</orgslist>
+          <orgslist>google bazelbuild abseil</orgslist>
           <cron>H/5 * * * *</cron>
           <buildDescTemplate></buildDescTemplate>
           <onlyTriggerPhrase>false</onlyTriggerPhrase>
