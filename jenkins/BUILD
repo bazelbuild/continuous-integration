@@ -283,7 +283,7 @@ jenkins_docker_build(
     ],
     substitutions = {
         "SECURITY_CONFIG": SECURITY_CONFIG,
-        "PUBLIC_JENKINS_URL": "http://ci.bazel.io/",
+        "PUBLIC_JENKINS_URL": "https://ci.bazel.io/",
     },
     tars = ["//jenkins/lib"],
     visibility = ["//visibility:public"],
@@ -308,7 +308,7 @@ jenkins_docker_build(
     ],
     substitutions = {
         "SECURITY_CONFIG": SECURITY_CONFIG,
-        "PUBLIC_JENKINS_URL": "http://ci-staging.bazel.io/",
+        "PUBLIC_JENKINS_URL": "https://ci-staging.bazel.io/",
     },
     tars = ["//jenkins/lib"],
     visibility = ["//gcr:__pkg__"],

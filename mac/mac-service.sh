@@ -35,7 +35,7 @@ while (( $retry != 0 )); do
   sleep 5
 done
 
-sed -E -i.bak 's|ci(-staging)?\.bazel\.io|master.\0|g' slave-agent.jnlp
+sed -E -i.bak 's|https?://(ci(-staging)?\.bazel\.io)|master.\1|g' slave-agent.jnlp
 rm -f slave-agent.jnlp.bak
 
 export ANDROID_SDK_PATH=$(echo $HOME/android-sdk-*)

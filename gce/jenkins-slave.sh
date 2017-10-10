@@ -73,9 +73,9 @@ function get_slave_agent() {
   wget -nc http://${MASTER}/computer/${NODE_NAME}/slave-agent.jnlp || return 1
   chmod a+r slave-agent.jnlp
   if [[ "$NODE_NAME" =~ .*-staging$ ]]; then
-      sed -i.bak "s|http://ci-staging\.bazel\.io/|http://${MASTER}/|g" slave-agent.jnlp
+      sed -i.bak "s|https?://ci-staging\.bazel\.io/|http://${MASTER}/|g" slave-agent.jnlp
   else
-      sed -i.bak "s|http://ci\.bazel\.io/|http://${MASTER}/|g" slave-agent.jnlp
+      sed -i.bak "s|https?://ci\.bazel\.io/|http://${MASTER}/|g" slave-agent.jnlp
   fi
 }
 
