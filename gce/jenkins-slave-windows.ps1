@@ -108,6 +108,27 @@ cmd.exe /C mklink /j C:\bazel_ci\installs\latest $folder
 # Also use the latest release for bootstrapping
 cmd.exe /C mklink /j C:\bazel_ci\installs\bootstrap $folder
 
+# Download the Android SDK
+$android_sdk="c:\bazel_ci\android"
+$android_sdk_tools_zip="${android_sdk}\tools.zip"
+$android_sdk_url="https://dl.google.com/android/repository/sdk-tools-windows-3859397.zip"
+New-Item $android_sdk -type directory -force
+(New-Object Net.WebClient).DownloadFile($android_sdk_url, $android_sdk_tools_zip)
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[System.IO.Compression.ZipFile]::ExtractToDirectory($android_sdk_tools_zip, $android_sdk)
+# Accept the Android SDK license agreement
+New-Item "${android_sdk}\licenses" -type directory -force
+Add-Content -Value "`n8933bad161af4178b1185d1a37fbf41ea5269c55" -Path "${android_sdk}\licenses\android-sdk-license" -Encoding ASCII
+Add-Content -Value "`n84831b9409646a918e30573bab4c9c91346d8abd`n504667f4c0de7af1a06de9f4b1727b84351f2910" -Path "${android_sdk}\licenses\android-sdk-preview-license" -Encoding ASCII
+# Install the necessary pieces of the SDK for the tests
+& "${android_sdk}\tools\bin\sdkmanager.bat" "platform-tools"
+& "${android_sdk}\tools\bin\sdkmanager.bat" "build-tools;26.0.1"
+& "${android_sdk}\tools\bin\sdkmanager.bat" "platforms;android-24"
+& "${android_sdk}\tools\bin\sdkmanager.bat" "platforms;android-25"
+& "${android_sdk}\tools\bin\sdkmanager.bat" "platforms;android-26"
+& "${android_sdk}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
+
+
 # Create the service that runs the Jenkins slave
 # We can't execute Java directly because then it mysteriously fails with
 # "Sockets error: 10106: create", so we redirect through Powershell
