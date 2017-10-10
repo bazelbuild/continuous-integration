@@ -220,4 +220,46 @@ node=windows-x86_64,toolchain=msys,variation=HEAD'''
     assert allKeys.join("\n") == '''node=linux-x86_64,variation=HEAD
 node=linux-x86_64,variation=HEAD-jdk7'''
   }
+
+  @Test
+  void testFlattenWithExclusion() {
+    def result = BazelConfiguration.flattenConfigurations(
+      BazelConfiguration.parse(JSON_TEST), [:],
+      [node: ["ubuntu_16.04-x86_64", "darwin-x86_64"]])
+    def allKeys = result.collect {
+      k, v -> k.collect { k1, v1 -> "${k1}=${v1}" }.toSorted().join(",") }.toSorted()
+    assert allKeys.size() == 12
+    assert allKeys.join("\n") == '''node=linux-x86_64,variation=HEAD
+node=linux-x86_64,variation=HEAD-jdk7
+node=linux-x86_64,variation=latest
+node=linux-x86_64,variation=latest-jdk7
+node=windows-msvc-x86_64,toolchain=msvc,variation=HEAD
+node=windows-msvc-x86_64,toolchain=msvc,variation=latest
+node=windows-msvc-x86_64,toolchain=msys,variation=HEAD
+node=windows-msvc-x86_64,toolchain=msys,variation=latest
+node=windows-x86_64,toolchain=msvc,variation=HEAD
+node=windows-x86_64,toolchain=msvc,variation=latest
+node=windows-x86_64,toolchain=msys,variation=HEAD
+node=windows-x86_64,toolchain=msys,variation=latest'''
+  }
+
+  @Test
+  void testFlattenWithExclusionNoJDK7() {
+    def result = BazelConfiguration.flattenConfigurations(
+      BazelConfiguration.parse(JSON_TEST), [:],
+      [node: ["ubuntu_16.04-x86_64", "darwin-x86_64"], variation: ["HEAD-jdk7", "latest-jdk7"]])
+    def allKeys = result.collect {
+      k, v -> k.collect { k1, v1 -> "${k1}=${v1}" }.toSorted().join(",") }.toSorted()
+    assert allKeys.size() == 10
+    assert allKeys.join("\n") == '''node=linux-x86_64,variation=HEAD
+node=linux-x86_64,variation=latest
+node=windows-msvc-x86_64,toolchain=msvc,variation=HEAD
+node=windows-msvc-x86_64,toolchain=msvc,variation=latest
+node=windows-msvc-x86_64,toolchain=msys,variation=HEAD
+node=windows-msvc-x86_64,toolchain=msys,variation=latest
+node=windows-x86_64,toolchain=msvc,variation=HEAD
+node=windows-x86_64,toolchain=msvc,variation=latest
+node=windows-x86_64,toolchain=msys,variation=HEAD
+node=windows-x86_64,toolchain=msys,variation=latest'''
+  }
 }

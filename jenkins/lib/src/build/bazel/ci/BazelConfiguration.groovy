@@ -119,13 +119,25 @@ class BazelConfiguration implements java.io.Serializable {
    *   ["a": "a"], ["a": "b"], ["c": "whatever"] but not ["a": "c"] nor ["b": "whatever"]
    * - configurationRestrictions = ["node": ["linux-x86_64"]] would match only the descriptors that
    *   point to an execution on a linux node.
+   *
+   * In addition, excludeConfigurations can be used to specifically deny certain configuration.
+   * A configuration will be selected only if, for any key k in the descriptor, either the k
+   * is not a key of excludeConfigurations or the value of the descriptor is NOT in
+   * excludeConfigurations[k].
+   *
+   * Examples:
+   * - excludeConfigurations = ["a": ["a", "b"]] would NOT match descriptor
+   *   ["a": "a"], ["a": "b"] but would match ["b": "whatever"] or ["a": "c"].
+   * - excludeConfigurations = ["node": ["linux-x86_64"]] would match descriptors
+   *   that DO NOT point to an execution on a linux node.
    */
   public static Map<Map<String, String>, Map<String, Object>> flattenConfigurations(
       List<BazelConfiguration> configurations,
-      Map<String, List<String>> configurationRestrictions = [:]) {
+      Map<String, List<String>> configurationRestrictions = [:],
+      Map<String, List<String>> excludeConfigurations = [:]) {
     def result = [:]
     for (conf in configurations) {
-      result += conf.restrict(configurationRestrictions).flatten()
+      result += conf.restrict(configurationRestrictions, excludeConfigurations).flatten()
     }
     return result
   }
@@ -157,19 +169,22 @@ class BazelConfiguration implements java.io.Serializable {
     return configurations
   }
 
-  private boolean matchRestriction(configurationRestrictions) {
+  private boolean matchRestriction(configurationRestrictions, excludeConfigurations) {
     // Avoid closures because CPS is having trouble with it
     for (def e : descriptor.entrySet()) {
       if ((e.key in configurationRestrictions) && !(e.value in configurationRestrictions[e.key])) {
         return true
       }
+      if ((e.key in excludeConfigurations) && (e.value in excludeConfigurations[e.key])) {
+	return true
+      }
     }
     return false
   }
 
-  private BazelConfiguration restrict(configurationRestrictions) {
-    if (!configurationRestrictions.isEmpty()) {
-      if (matchRestriction(configurationRestrictions)) {
+  private BazelConfiguration restrict(configurationRestrictions, excludeConfigurations) {
+    if (!configurationRestrictions.isEmpty() || !excludeConfigurations.isEmpty()) {
+      if (matchRestriction(configurationRestrictions, excludeConfigurations)) {
         return EMPTY_CONFIGURATION
       }
       if (configurations.isEmpty()) {
@@ -177,7 +192,7 @@ class BazelConfiguration implements java.io.Serializable {
       } else {
         def newConfigs = []
         for (configuration in configurations) {
-          def conf = configuration.restrict(configurationRestrictions)
+          def conf = configuration.restrict(configurationRestrictions, excludeConfigurations)
           if (conf != EMPTY_CONFIGURATION) {
             newConfigs << conf
           }

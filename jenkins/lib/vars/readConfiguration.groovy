@@ -48,8 +48,11 @@ Please check a configuration file under one of: ${files.join ', '}.""")
     }
   }
   try {
+    // We exclude the deploy slaves from being selected by the configuration, they
+    // have access to secrets.
     return BazelConfiguration.flattenConfigurations(
-      BazelConfiguration.parse(conf), config.get("restrict_configuration", [:]))
+      BazelConfiguration.parse(conf), config.get("restrict_configuration", [:]),
+      ["node": ["deploy", "deploy-staging"]])
   } catch(Exception ex) {
     error(filename != null ? "Failed to validate configuration (file was ${filename}): ${ex.message}"
           : "Failed to validate default configuration: ${ex.message}")

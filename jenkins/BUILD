@@ -159,6 +159,8 @@ docker_build(
 jenkins_node(
     name = "deploy",
     docker_base = "deploy-full",
+    # Deploy slave have special access, do not allow to get reserved by accident. 
+    mode = "EXCLUSIVE",
     num_executors = 2,
     visibility = ["//visibility:public"],
 )
@@ -167,6 +169,8 @@ jenkins_node(
     name = "deploy-staging",
     docker_base = "deploy-full",
     labels = ["deploy"],
+    # Deploy slave have special access, do not allow to get reserved by accident. 
+    mode = "EXCLUSIVE",
     num_executors = 2,
     visibility = ["//visibility:public"],
 )
