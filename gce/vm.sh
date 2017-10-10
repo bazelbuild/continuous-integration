@@ -90,6 +90,8 @@ MASTER=(
     "ci"
     # Network name
     "default"
+    # Instance group
+    "ci-instance-group"
 )
 
 # Executor nodes for ci-staging.bazel.io
@@ -117,6 +119,8 @@ STAGING_MASTER=(
     "ci-staging"
     # Network name
     "staging"
+    # Instance group
+    "ci-staging-instance-group"
 )
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
@@ -132,6 +136,7 @@ function create_master() {
   local disk="$4"
   local address="$5"
   local network="$6"
+  local group="$7"
   gcloud compute instances create "$name" --tags jenkins \
          --zone "$location" --machine-type n1-standard-4 \
          --image-family container-vm --image-project google-containers \
@@ -139,6 +144,8 @@ function create_master() {
          --boot-disk-type pd-ssd --boot-disk-size 40GB \
          --network "$network" \
          --address "$address" --disk "$disk"
+  cloud compute instance-groups unmanaged add-instances \
+         "$group" --instances "$name"
 }
 
 # Create a node named $1 whose image is $2 (see `gcloud compute image list`)
