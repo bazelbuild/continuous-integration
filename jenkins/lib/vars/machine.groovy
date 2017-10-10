@@ -17,7 +17,10 @@
  * about the node it is being executed on.
  */
 def call(String node_label, Closure body) {
-  node(node_label) {
+  // We only do full node label matching to avoid people trying to book
+  // sensitive workers.
+  node_label = node_label.replaceAll('"', '')
+  node("\"${node_label}\"") {
     stage("Node information") {
       echo "node = ${env.NODE_NAME}\nworkspace = ${pwd()}"
     }
