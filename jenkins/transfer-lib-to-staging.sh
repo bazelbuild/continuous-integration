@@ -17,10 +17,13 @@
 # just run it and it should transfer the lib to jenkins staging.
 
 : "${JENKINS_SERVER:=jenkins-staging}"
-: "${JENKINS_ZONE:=europe-west1-d}"
+: "${JENKINS_ZONE:=europe-west2-a}"
 : "${IMAGE_NAME:=gcr.io/bazel-public/jenkins-master-staging}"
 
 cd "$(dirname "$0")"
-gcloud compute copy-files "--zone=${JENKINS_ZONE}" lib/{src,vars} transfer-lib.sh "${JENKINS_SERVER}":
+gcloud compute ssh "--zone=${JENKINS_ZONE}" "${JENKINS_SERVER}" \
+  --command "mkdir -p lib"
+gcloud compute scp --recurse "--zone=${JENKINS_ZONE}" lib/{src,vars} "${JENKINS_SERVER}":lib
+gcloud compute scp "--zone=${JENKINS_ZONE}" transfer-lib.sh "${JENKINS_SERVER}":
 gcloud compute ssh "--zone=${JENKINS_ZONE}" "${JENKINS_SERVER}" \
   --command "sudo bash -c 'IMAGE_NAME=${IMAGE_NAME} ./transfer-lib.sh'"
