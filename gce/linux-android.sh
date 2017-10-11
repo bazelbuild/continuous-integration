@@ -45,7 +45,7 @@ expect {
 # specifically relies on one of them. extras;android;m2repository is necessary
 # for tests of our support library integration.
 # This should be kept in sync with mac/mac-android.sh.
-tools/bin/sdkmanager \
+yes | tools/bin/sdkmanager \
   "platform-tools" \
   "build-tools;26.0.1" \
   "platforms;android-24" \
