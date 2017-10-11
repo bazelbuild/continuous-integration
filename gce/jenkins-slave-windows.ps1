@@ -114,8 +114,8 @@ cmd.exe /C mklink /j C:\bazel_ci\installs\bootstrap $folder
 # Replace the host name in the JNLP file, because Jenkins, in its infinite
 # wisdom, does not let us change that separately from its external hostname.
 $jnlp=((New-Object Net.WebClient).DownloadString("http://${jenkins_master}/computer/${jenkins_node}/slave-agent.jnlp"))
-$jnlp=$jnlp -replace "http://ci.bazel.io", "http://${jenkins_master}"
-$jnlp=$jnlp -replace "http://ci-staging.bazel.io", "http://${jenkins_master}"
+$jnlp=$jnlp -replace "https?://ci.bazel.io", "http://${jenkins_master}"
+$jnlp=$jnlp -replace "https?://ci-staging.bazel.io", "http://${jenkins_master}"
 Write-Output $jnlp | Out-File -Encoding ascii slave-agent.jnlp
 
 # Create the service that runs the Jenkins slave
