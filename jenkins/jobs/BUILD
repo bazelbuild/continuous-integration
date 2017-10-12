@@ -104,6 +104,7 @@ bazel_github_job(
     config = ":configs/bazel-tests-remote.json",
     gerrit_project = "bazel",
     git_url = "https://bazel.googlesource.com/bazel",
+    pr_enabled = False,  # Do not vet PR because it seems to cancel bazel-tests.
     project = "bazel",
 )
 
