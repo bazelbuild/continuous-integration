@@ -21,7 +21,6 @@ def call(config = [:]) {
   def branch = config.get("branch", "master")
   def extra_bazelrc = config.get("extra_bazelrc", "")
   def refspec = config.get("refspec", "+refs/heads/*:refs/remotes/origin/*")
-  def mail_recipient = config.get("recipient", "")
   def json_config = config.configuration
   def restrict_configuration = config.get("restrict_configuration", [])
 
@@ -29,16 +28,13 @@ def call(config = [:]) {
     echo "Running global test for branch ${branch} (refspec: ${refspec})"
   }
 
-  notifyStatus(mail_recipient) {
-    // First we bootstrap bazel on all platform
-    stage("Bootstrap on all platforms") {
-      bootstrapBazelAll(repository: repository,
-                        branch: branch,
-                        refspec: refspec,
-                        email: mail_recipient,
-                        configuration: json_config,
-                        restrict_configuration: restrict_configuration)
-    }
+  // First we bootstrap bazel on all platform
+  stage("Bootstrap on all platforms") {
+    bootstrapBazelAll(repository: repository,
+                      branch: branch,
+                      refspec: refspec,
+                      configuration: json_config,
+                      restrict_configuration: restrict_configuration)
   }
 
 
@@ -107,13 +103,5 @@ done
 
   stage("Publish report") {
     reportAB report: report, name: "Downstream projects"
-    if (mail_recipient) {
-      mail(subject: "Global tests #${currentBuild.number} finished with status ${currentBuild.result}",
-           body: """A global tests has just finished with status ${currentBuild.result}.
-
-You can find the report at ${currentBuild.getAbsoluteUrl()}Downstream_projects/.
-""",
-           to: mail_recipient)
-    }
   }
 }

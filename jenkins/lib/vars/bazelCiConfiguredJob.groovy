@@ -70,7 +70,6 @@ def createJobsFromConfiguration(config, configNames, script) {
  *   - repository: git repository to clone.
  *   - branch: branch of the repository to clone (default: master).
  *   - refspec: specification of the references to fetch
- *   - mail_recipient: recipient for mail notification (empty: no mail notification)
  *   - sauce: identifier of the crendentials to connect to SauceLabs.
  *   - run_sequentially: run each configuration sequentially rather than in parallel
  */
@@ -83,7 +82,6 @@ def call(config = [:]) {
   config["repository"] = config.get("repository", "")
   config["branch"] = config.get("branch", "master")
   config["refspec"] = config.get("refspec", "+refs/heads/*:refs/remotes/origin/*")
-  config["mail_recipient"] = config.get("mail_recipient", "bazel-ci@googlegroups.com")
   config["sauce"] = config.get("sauce", "")
   config["run_sequentially"] = config.get("run_sequentially", false)
 
@@ -104,22 +102,20 @@ def call(config = [:]) {
   }
 
 
-  notifyStatus(config.mail_recipient) {
-    timeout(240) {
-      try {
-        stage("Run configurations") {
-          if (config.run_sequentially) {
-            for (configName in configNames) {
-              configs[configName]()
-            }
-          } else {
-            parallel configs
+  timeout(240) {
+    try {
+      stage("Run configurations") {
+        if (config.run_sequentially) {
+          for (configName in configNames) {
+            configs[configName]()
           }
+        } else {
+          parallel configs
         }
-      } catch(build.bazel.ci.BazelTestFailure ex) {
-        // Do not mark the build as error with a test failure
-        currentBuild.result = "UNSTABLE"
       }
+    } catch(build.bazel.ci.BazelTestFailure ex) {
+      // Do not mark the build as error with a test failure
+      currentBuild.result = "UNSTABLE"
     }
   }
 }
