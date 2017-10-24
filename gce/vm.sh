@@ -144,7 +144,7 @@ function create_master() {
          --boot-disk-type pd-ssd --boot-disk-size 40GB \
          --network "$network" \
          --address "$address" --disk "$disk"
-  cloud compute instance-groups unmanaged add-instances \
+  gcloud compute instance-groups unmanaged add-instances \
          "$group" --instances "$name"
 }
 
