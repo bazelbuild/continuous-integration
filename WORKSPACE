@@ -40,8 +40,8 @@ load("//jenkins/base:jenkins_base.bzl", "jenkins_base")
 jenkins_base(
     name = "jenkins",
     plugins = JENKINS_PLUGINS,
-    version = "2.73.1",
-    digest = "sha256:deb7144257b8f332cd4a036ea14d7c27ee7cb1b79063170a6cdf3929269cd9dc",
+    version = "2.73.2",
+    digest = "sha256:025db2d00e5ba8b7a531e6d35513d6945854641977d2ab4ab21be79ac763d86f",
     volumes = ["/opt/secrets"],
 )
 
