@@ -14,10 +14,10 @@
   <githubAuth>
     <org.jenkinsci.plugins.ghprb.GhprbGitHubAuth>
       <serverAPIUrl>https://api.github.com</serverAPIUrl>
-      <credentialsId>3b53d1b7-9c6b-4822-b2d0-82022ade718f</credentialsId>
-      <id>0182cdc4-ebe9-4d40-9b60-b66809f141cc</id>
-      <description>Anonymous connection</description>
-      <secret></secret>
+      <credentialsId>6b2a31e0-cd98-4ed9-bb19-a5e013c68e8a</credentialsId>
+      <id>58f0694f-1760-4610-b4f2-73ffb34c61a3</id>
+      <description></description>
+      <secret>##SECRET:github_token_ghprb2##</secret>
     </org.jenkinsci.plugins.ghprb.GhprbGitHubAuth>
   </githubAuth>
   <adminlist></adminlist>
