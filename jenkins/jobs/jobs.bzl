@@ -5,11 +5,9 @@ def _is_staging(job):
   is_gerrit = "GERRIT_PROJECT" in job_subs and job_subs["GERRIT_PROJECT"] != ""
   # Take job with Gerrit review, or jobs that are not bazel jovbs
   is_gerrit_or_not_bazel = is_gerrit or not is_bazel
-  # Exclude Benchmark jobs
-  is_not_benchmark = "-Benchmark" not in job
   # Gold jobs are some bazel job that we include for testing
   is_gold = job in ["TensorFlow", "Tutorial", "rules_k8s", "rules_python"]
-  return (is_gold or is_gerrit_or_not_bazel) and is_not_benchmark
+  return (is_gold or is_gerrit_or_not_bazel)
 
 
 def _is_testing(job):

@@ -9,12 +9,6 @@ load("//jenkins/lib:def.bzl", "bazel_job_configuration_test")
 ) for s in glob(["configs/*.json"])]
 
 # Some common jobs
-jenkins_job(
-    name = "benchmark",
-    config = "benchmark.xml.tpl",
-    deps = [":benchmark.groovy"],
-)
-
 [jenkins_job(
     name = "bazel/" + job,
     config = "global/%s.xml.tpl" % job,

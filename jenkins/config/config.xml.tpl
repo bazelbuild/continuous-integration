@@ -39,7 +39,7 @@
         <hudson.views.BuildButtonColumn/>
       </columns>
       <recurse>false</recurse>
-      <includeRegex>(?!^(bazel|PR|CR|maintenance|Global|benchmark)$).*</includeRegex>
+      <includeRegex>(?!^(bazel|PR|CR|maintenance|Global)$).*</includeRegex>
       <statusFilter>true</statusFilter>
     </listView>
     <listView>
@@ -59,7 +59,7 @@
         <hudson.views.LastDurationColumn/>
         <hudson.views.BuildButtonColumn/>
       </columns>
-      <includeRegex>(bazel|PR|CR|maintenance|Global|benchmark)</includeRegex>
+      <includeRegex>(bazel|PR|CR|maintenance|Global)</includeRegex>
       <recurse>false</recurse>
       <statusFilter>true</statusFilter>
     </listView>
