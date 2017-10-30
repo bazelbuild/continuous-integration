@@ -48,20 +48,7 @@ def call(config = [:]) {
         recursiveGit(repository: repository,
                      refspec: refspec,
                      branch: branch)
-        if (is_master) {
-          dir("artifacts") {
-            unstash "bazel--node=linux-x86_64--variation="
-          }
-          sh script: '''#!/bin/bash
-. scripts/ci/build.sh
-for i in $(find artifacts -name \'*.bazel.build.tar\'); do
-  build_and_publish_site "$i" "$(basename $i .tar)" "build"
-done
-for i in $(find artifacts -name \'*.bazel.build.tar.nobuild\'); do
-  build_and_publish_site "$i" "$(basename $i .tar.nobuild)" "nobuild"
-done
-'''
-        } else {
+        if (!is_master) {
           def r_name = sh(script: "bash -c 'source scripts/release/common.sh; get_full_release_name'",
                           returnStdout: true).trim()
           if (!r_name.isEmpty()) {
