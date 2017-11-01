@@ -69,8 +69,6 @@ bazel_git_job(
     org = "GerritCodeReview",
     project = "gerrit",
     project_url = "https://www.gerritcodereview.com",
-    # Disable until https://github.com/bazelbuild/continuous-integration/issues/147 is fixed.
-    enabled = False,
 )
 
 # Jobs from the bazelbuild org with customization

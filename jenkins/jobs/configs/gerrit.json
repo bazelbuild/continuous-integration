@@ -11,7 +11,8 @@
             }
         ],
         "parameters": {
-            "tests": ["//..."],
+            // Disable query tests as part of https://github.com/bazelbuild/continuous-integration/issues/147
+            "tests": ["//... - //javatests/com/google/gerrit/server:query_tests"],
             "targets": ["//:release"]
         }
     }
