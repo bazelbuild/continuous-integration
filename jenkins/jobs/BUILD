@@ -95,11 +95,12 @@ bazel_github_job(
 
 bazel_github_job(
     name = "bazel-tests-remote",
-    config = ":configs/bazel-tests-remote.json",
+    config = ":configs/empty.json",
     gerrit_project = "bazel",
     git_url = "https://bazel.googlesource.com/bazel",
     pr_enabled = False,  # Do not vet PR because it seems to cancel bazel-tests.
     project = "bazel",
+    use_upstream_branch = True,
 )
 
 bazel_github_job(
