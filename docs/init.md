@@ -71,7 +71,7 @@ The secrets are:
         ```text
         Application type: Web application
         Name: Jenkins-staging
-        Authorized redirect URIs: http://ci-staging.bazel.io/securityRealm/finishLogin
+        Authorized redirect URIs: https://ci-staging.bazel.io/securityRealm/finishLogin
         ```
 
     3.  Click create, copy the resulting Client ID and Client secret into the

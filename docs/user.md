@@ -1,6 +1,6 @@
 # Using the Bazel CI
 
-[Bazel CI](http://ci.bazel.io) tests Bazel and a variety of
+[Bazel CI](https://ci.bazel.io) tests Bazel and a variety of
 open-source projects that use Bazel.
 
 We also use the projects using Bazel to validate Bazel changes.
@@ -42,7 +42,7 @@ Tips:
 *   Test logs are available under the artifacts list via the URL
     `<joburl>/artifact`.
 
-    Example: http://ci.bazel.io/job/bazel-tests/lastCompletedBuild/artifact/
+    Example: https://ci.bazel.io/job/bazel-tests/lastCompletedBuild/artifact/
 
 *   Flaky tests can be analyzed with the Test Results Analyzer
 
@@ -121,9 +121,9 @@ A global test:
     the latest release of Bazel
 
 This report is at
-`http://ci.bazel.io/job/bazel/job/<nightly|release|presubmit>/<buildNumber>/Downstream_projects/`.
+`https://ci.bazel.io/job/bazel/job/<nightly|release|presubmit>/<buildNumber>/Downstream_projects/`.
 For example for the last nigthly run it will be at
-http://ci.bazel.io/job/bazel/job/nightly/lastBuild/Downstream_projects/ .
+https://ci.bazel.io/job/bazel/job/nightly/lastBuild/Downstream_projects/ .
 
 The way to read that report is as follows:
 
