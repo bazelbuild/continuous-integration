@@ -73,4 +73,5 @@ gerritReview("https://bazel-review.googlesource.com/",
   </definition>
   <triggers/>
   <quietPeriod>5</quietPeriod>
+  <disabled>{{ variables.disabled }}</disabled>
 </flow-definition>

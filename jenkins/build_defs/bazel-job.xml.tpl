@@ -61,4 +61,5 @@ bazelCiConfiguredJob(
   </definition>
   <triggers/>
   <quietPeriod>5</quietPeriod>
+  <disabled>{{ variables.disabled }}</disabled>
 </flow-definition>

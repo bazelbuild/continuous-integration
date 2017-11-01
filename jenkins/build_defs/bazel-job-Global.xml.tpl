@@ -71,4 +71,5 @@ bazelCiConfiguredJob(
     <sandbox>true</sandbox>
   </definition>
   <triggers/>
+  <disabled>{{ variables.disabled }}</disabled>
 </flow-definition>
