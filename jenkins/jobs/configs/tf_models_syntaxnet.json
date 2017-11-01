@@ -16,6 +16,7 @@
                 "$BAZEL clean" // Clean to work around bazelbuild/bazel#3664
             ],
             "tests": ["syntaxnet/... - //syntaxnet:beam_reader_ops_test - //syntaxnet:graph_builder_test - //syntaxnet:lexicon_builder_test - //syntaxnet:parser_trainer_test - //syntaxnet:reader_ops_test - //syntaxnet:text_formats_test - //syntaxnet/util:check_test - //syntaxnet/util:registry_test", "util/utf8/..."],
+            "build_opts": ["--config=monolithic"],
             "targets": []
         }
     }

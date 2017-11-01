@@ -16,6 +16,7 @@
                 "$BAZEL clean" // Clean to work around bazelbuild/bazel#3664
             ],
             "tests": ["tensorflow_serving/... - //tensorflow_serving/model_servers:tensorflow_model_server_test"],
+            "build_opts": ["--config=monolithic"],
             "targets": []
         }
     }
