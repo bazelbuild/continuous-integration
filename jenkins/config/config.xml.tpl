@@ -13,6 +13,7 @@
   <buildsDir>${ITEM_ROOTDIR}/builds</buildsDir>
   <markupFormatter class="hudson.markup.EscapedMarkupFormatter"/>
   <jdks/>
+  <systemMessage>Jenkins configuration built from HEAD={{ imports['//:git-hash'] }}</systemMessage>
   <viewsTabBar class="hudson.views.DefaultViewsTabBar"/>
   <myViewsTabBar class="hudson.views.DefaultMyViewsTabBar"/>
   <clouds/>

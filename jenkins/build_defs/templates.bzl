@@ -20,6 +20,8 @@ def _expand_template_impl(ctx):
       "--variable=%s=%s" % (k, ctx.attr.substitutions[k])
       for k in ctx.attr.substitutions
   ]
+  if not ctx.attr.escape_xml:
+    variables += ["--noescape_xml"]
   d = {str(ctx.attr.deps[i].label): ctx.files.deps[i].path
        for i in range(0, len(ctx.attr.deps))}
   imports = ["--imports=%s=%s" % (k, d[k]) for k in d]
@@ -48,6 +50,7 @@ expand_template = rule(
         "substitutions": attr.string_dict(mandatory = True),
         "out": attr.output(mandatory = True),
         "executable": attr.bool(default = True),
+        "escape_xml": attr.bool(default = True),
         "_engine": attr.label(
             default = Label("//templating:template_engine"),
             executable = True,

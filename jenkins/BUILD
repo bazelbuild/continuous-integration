@@ -16,6 +16,7 @@ package(default_visibility = ["//jenkins:__subpackages__"])
 
 # Configuration for our Jenkins instance
 load("@io_bazel_rules_docker//docker:docker.bzl", "docker_build")
+load("//jenkins/build_defs:templates.bzl", "expand_template")
 load("//jenkins/build_defs:jenkins.bzl", "jenkins_node", "jenkins_docker_build", "jenkins_job", "jenkins_nodes", "jenkins_node_names")
 
 #
@@ -159,7 +160,7 @@ docker_build(
 jenkins_node(
     name = "deploy",
     docker_base = "deploy-full",
-    # Deploy slave have special access, do not allow to get reserved by accident. 
+    # Deploy slave have special access, do not allow to get reserved by accident.
     mode = "EXCLUSIVE",
     num_executors = 2,
     visibility = ["//visibility:public"],
@@ -169,7 +170,7 @@ jenkins_node(
     name = "deploy-staging",
     docker_base = "deploy-full",
     labels = ["deploy"],
-    # Deploy slave have special access, do not allow to get reserved by accident. 
+    # Deploy slave have special access, do not allow to get reserved by accident.
     mode = "EXCLUSIVE",
     num_executors = 2,
     visibility = ["//visibility:public"],
@@ -270,6 +271,7 @@ SECURITY_CONFIG = """
 jenkins_docker_build(
     name = "jenkins",
     configs = [
+                  ":config_xml",
                   ":deploy",
                   ":jenkins-common-configs",
                   ":config/org.jenkinsci.plugins.ghprb.GhprbTrigger.xml",
@@ -286,7 +288,6 @@ jenkins_docker_build(
         ":maintenance/gerrit-verifier",
     ],
     substitutions = {
-        "SECURITY_CONFIG": SECURITY_CONFIG,
         "PUBLIC_JENKINS_URL": "https://ci.bazel.io/",
     },
     tars = ["//jenkins/lib"],
@@ -296,6 +297,7 @@ jenkins_docker_build(
 jenkins_docker_build(
     name = "jenkins-staging",
     configs = [
+        ":config_xml",
         ":darwin-x86_64-staging",
         ":deploy-staging",
         ":freebsd-11-staging",
@@ -311,7 +313,6 @@ jenkins_docker_build(
         ":maintenance/gerrit-verifier/staging",
     ],
     substitutions = {
-        "SECURITY_CONFIG": SECURITY_CONFIG,
         "PUBLIC_JENKINS_URL": "https://ci-staging.bazel.io/",
     },
     tars = ["//jenkins/lib"],
@@ -323,6 +324,7 @@ jenkins_docker_build(
 jenkins_docker_build(
     name = "jenkins-test",
     configs = [
+        ":config_xml-nosecurity",
         ":deploy",
         ":jenkins-common-configs",
         ":ubuntu-docker",
@@ -332,17 +334,37 @@ jenkins_docker_build(
         ":maintenance/gerrit-verifier/test",
     ],
     substitutions = {
-        "SECURITY_CONFIG": "<useSecurity>false</useSecurity>",
         "PUBLIC_JENKINS_URL": "##ENV:JENKINS_SERVER##",
     },
     tars = ["//jenkins/lib"],
+)
+
+expand_template(
+    name = "config_xml",
+    out = "config/config.xml",
+    escape_xml = False,
+    substitutions = {"SECURITY_CONFIG": SECURITY_CONFIG},
+    template = "config/config.xml.tpl",
+    deps = ["//:git-hash"],
+)
+
+expand_template(
+    name = "config_xml-nosecurity",
+    out = "config-nosecurity/config.xml",
+    escape_xml = False,
+    substitutions = {"SECURITY_CONFIG": "<useSecurity>false</useSecurity>"},
+    template = "config/config.xml.tpl",
+    deps = ["//:git-hash"],
 )
 
 filegroup(
     name = "jenkins-common-configs",
     srcs = glob(
         ["config/**"],
-        exclude = ["config/org.jenkinsci.plugins.ghprb.GhprbTrigger.xml"],
+        exclude = [
+            "config/org.jenkinsci.plugins.ghprb.GhprbTrigger.xml",
+            "config/config.xml.tpl",
+        ],
     ),
 )
 
