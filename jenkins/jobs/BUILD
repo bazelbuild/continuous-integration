@@ -123,6 +123,7 @@ bazel_github_job(
 # for the job to keep history but use the new project name.
 bazel_github_job(
     name = "rules_web",
+    config = ":configs/rules_webtesting.json",
     project = "rules_webtesting",
     run_sequential = True,
     sauce_enabled = True,
