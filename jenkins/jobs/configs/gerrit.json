@@ -12,7 +12,8 @@
         ],
         "parameters": {
             "tests": ["//..."],
-            "targets": ["//:release"]
+            "test_tag_filters": ["-slow"],
+            "targets": ["//:release"],
         }
     }
 ]
