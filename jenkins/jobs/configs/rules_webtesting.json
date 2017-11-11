@@ -13,7 +13,7 @@
         "parameters": {
             // Disable chrome55-win10 test until https://github.com/bazelbuild/rules_webtesting/issues/188
             // is resolved.
-            "tests": ["//... - //go/launcher/webdriver:go_default_test_chrome55-win10"],
+            "tests": ["tests(//...) - //go/launcher/webdriver:go_default_test_chrome55-win10"],
         }
     }
 ]
