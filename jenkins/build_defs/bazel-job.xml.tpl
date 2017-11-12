@@ -4,9 +4,7 @@
   <description>Test the {{ variables.PROJECT_NAME }} project located at {{ variables.GIT_URL }}.</description>
   <keepDependencies>false</keepDependencies>
   <properties>
-    {% if variables.RUN_SEQUENTIAL == "true" %}
     <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty/>
-    {% endif %}
     <jenkins.model.BuildDiscarderProperty>
       <strategy class="hudson.tasks.LogRotator">
         <daysToKeep>90</daysToKeep>
