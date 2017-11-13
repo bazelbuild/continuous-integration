@@ -145,7 +145,7 @@ function create_master() {
          --network "$network" \
          --address "$address" --disk "$disk"
   gcloud compute instance-groups unmanaged add-instances \
-         "$group" --instances "$name"
+         "$group" --instances "$name" --zone "$location"
 }
 
 # Create a node named $1 whose image is $2 (see `gcloud compute image list`)
