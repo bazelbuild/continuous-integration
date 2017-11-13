@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #
 # Copyright 2015 The Bazel Authors. All rights reserved.
 #
@@ -99,5 +99,23 @@ done
 
 EOF
 
+# As this init script is called before the setup is complete, we have to do
+# some dance to make sure we only start the actual script once bash (optional
+# on some systems) is installed.
+
+cat > /root/call-jenkins-startup <<'EOF'
+
+PATH=$PATH:/usr/local/bin ; export PATH
+echo `date` PATH=$PATH >> /root/early-startup.log
+
+while [ -z "`which bash`" ] ; do
+  echo `date` Waiting for bash to be installed >> /root/early-startup.log
+  sleep 60
+done
+
+bash /root/jenkins-startup
+
+EOF
+
 # Start the actual jenkins daemon
-echo bash /root/jenkins-startup | batch
+echo /bin/sh /root/call-jenkins-startup | batch
