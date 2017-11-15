@@ -212,5 +212,11 @@ bazel_github_job(
     poll = False,  # protobuf had added the robots
 )
 
+bazel_github_job(
+    name = "subpar",
+    org = "google",
+    poll = False,
+)
+
 # End of project list
 job_lists(visibility = ["//jenkins:__pkg__"])
