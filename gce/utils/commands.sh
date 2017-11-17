@@ -71,7 +71,7 @@ function ssh_command() {
       echo "$i" >>"${tmp}"
     fi
   done
-  cat "${tmp}" | gcloud compute ssh --zone="${LOCATION}" \
+  < "${tmp}" gcloud compute ssh --zone="${LOCATION}" \
       --command "cat >/tmp/s.sh; sudo bash /tmp/s.sh; rm /tmp/s.sh" \
       "${TAG}"
   rm -f "${tmp}"
