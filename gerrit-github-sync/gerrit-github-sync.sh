@@ -51,7 +51,7 @@ set -eu
 cd /tmp
 
 function log() {
-  echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] $@"
+  echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] $*"
 }
 
 function clone() {
@@ -62,7 +62,7 @@ function clone() {
 }
 
 function sync_branch() {
-  log "sync_branch $@"
+  log "sync_branch $*"
   local branch="$1"
   local bidirectional="$2"
   git checkout origin/${branch} -B ${branch} || {
@@ -91,7 +91,7 @@ function sync_branch() {
 }
 
 function sync() {
-  log "sync $@"
+  log "sync $*"
   local bidirectional="$4"
   pushd $3
   shift 4
