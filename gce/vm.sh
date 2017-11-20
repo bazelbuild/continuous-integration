@@ -138,7 +138,7 @@ function create_master() {
   local network="$6"
   local group="$7"
   gcloud compute instances create "$name" --tags jenkins \
-         --zone "$location" --machine-type n1-standard-4 \
+         --zone "$location" --machine-type n1-standard-8 \
          --image-family container-vm --image-project google-containers \
          --metadata-from-file "$metadata" \
          --boot-disk-type pd-ssd --boot-disk-size 40GB \
