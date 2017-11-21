@@ -45,10 +45,6 @@ get_jenkins_port() {
   ${DOCKER} port "$1" 8080 | cut -d ":" -f 2
 }
 
-test_http() {
-  return [[ "$(curl -sI "$1")" =~ ^HTTP/[0-9.]+\ 2 ]]
-}
-
 # Wait for jenkins to start-up for at most 3 minutes
 wait_for_server() {
   local server="${1:-localhost}"
