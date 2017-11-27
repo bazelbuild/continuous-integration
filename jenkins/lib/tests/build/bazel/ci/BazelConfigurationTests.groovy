@@ -18,6 +18,10 @@ import org.junit.Test
 
 /** Tests for {@link BazelConguration} */
 class BazelConfigurationTests {
+
+  // The contents of this JSON string don't matter, i.e. it doesn't have to
+  // refer to existing target patterns for example.
+  // The test only asserts the structure of the JSON.
   static final String JSON_TEST = '''
 
 // This is a test
@@ -68,9 +72,9 @@ class BazelConfigurationTests {
             ],
             "test_opts": ["-k", "--build_tests_only"],
             "tests": [
-                "//scripts/...",
-                "//src/...",
-                "//third_party/ijar/..."
+                "//dummy_path1/...",
+                "//dummy_path2/...",
+                "//dummy/path3/..."
             ],
             "targets": []
         }
@@ -90,9 +94,9 @@ class BazelConfigurationTests {
         "parameters": {
             "test_opts": ["-k", "--build_tests_only"],
             "tests": [
-                "//src/test/java/...",
-                "//src/test/cpp/...",
-                "//src/test/naive:all_tests"
+                "//some/dummy/java_test/...",
+                "//some/dummy/cpp_test/...",
+                "//some/dummy/native_test:all_tests"
             ],
             "targets": ["//src:bazel"]
         }
@@ -107,7 +111,7 @@ class BazelConfigurationTests {
         }],
         "parameters": {
             "test_opts": ["-k", "--build_tests_only"],
-            "tests": ["//src/tst/shell/bazel:bazel_windows_example_test"],
+            "tests": ["//dummy:test"],
             "targets": []
         }
     }
