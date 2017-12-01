@@ -124,7 +124,6 @@ bazel_github_job(
     config = ":configs/empty.json",
     gerrit_project = "bazel-toolchains",
     git_url = "https://bazel.googlesource.com/bazel-toolchains",
-    pr_enabled = False,  # We currently do not accept PR in bazelbuild/bazel-toolchains repo.
     project = "bazel-toolchains",
 )
 
