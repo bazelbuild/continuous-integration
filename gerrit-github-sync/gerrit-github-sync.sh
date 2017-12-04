@@ -23,7 +23,6 @@ REPOSITORIES=(
     "https://bazel.googlesource.com/bazel git@github.com:bazelbuild/bazel.git bazel false master"
     "https://bazel.googlesource.com/tulsi git@github.com:bazelbuild/tulsi.git tulsi false master"
     "https://bazel.googlesource.com/continuous-integration git@github.com:bazelbuild/continuous-integration.git continuous-integration true master"
-    "https://bazel.googlesource.com/devtools git@github.com:bazelbuild/devtools.git devtools false master"
     "https://bazel.googlesource.com/eclipse git@github.com:bazelbuild/eclipse.git eclipse true master"
     "https://bazel.googlesource.com/bazel-toolchains git@github.com:bazelbuild/bazel-toolchains.git bazel-toolchains false master"
 )
