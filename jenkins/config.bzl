@@ -1,5 +1,4 @@
 ADMIN_USERS = [
-    "dmarting@google.com",
     "dslomov@google.com",
     "laszlocsomor@google.com",
     "lberki@google.com",
