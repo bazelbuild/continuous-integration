@@ -208,6 +208,11 @@ bazel_github_job(
 
 # Jobs from the google org
 bazel_github_job(
+    name = "glog",
+    org = "google",
+)
+
+bazel_github_job(
     name = "re2",
     config = ":configs/re2.json",
     org = "google",
