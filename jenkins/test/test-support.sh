@@ -76,6 +76,7 @@ test_status_code() {
   local code="$(get_status_code "$1")"
   if [ "$code" != "$2" ]; then
     report "Got status $code while expecting $2 from $1"
+    mcurl "$1" -I -L >&2
   else
     echo "OK $1 returned $2"
   fi
