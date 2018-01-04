@@ -55,7 +55,6 @@ jenkins_nodes(
     WINDOWS_PREFIX,
     WINDOWS_COUNT,
     num_executors = 1,
-    preference = 1,
     remote_fs = "c:\\jenkins",
     tunnel = "jenkins:50000",
 )

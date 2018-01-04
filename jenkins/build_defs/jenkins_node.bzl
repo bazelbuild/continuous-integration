@@ -20,8 +20,8 @@ load(":templates.bzl", "expand_template")
 JENKINS_SERVER = "http://jenkins:80"
 
 def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1, mode = "NORMAL",
-                 labels = [], docker_base = None, preference = 1,
-                 visibility = None, tunnel = None):
+                 labels = [], docker_base = None, visibility = None,
+                 tunnel = None):
   """Create a node configuration on Jenkins, with possible docker image.
 
   Args:
@@ -34,8 +34,6 @@ def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1, mode = "NORMAL
     docker_base: base for the corresponding docker image to create if we should create one
       (if docker_base is not specified, then a corresponding machine should be configured
       to connect to the Jenkins master).
-    preference: A preference factor, if a node as a factor of 1 and another a factor of
-      4, then the second one will be scheduled 4 time more jobs than the first one.
     visibility: rule visibility.
   """
   if tunnel:
@@ -55,14 +53,9 @@ def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1, mode = "NORMAL
   <retentionStrategy class="hudson.slaves.RetentionStrategy$$Always"/>
   <launcher class="hudson.slaves.JNLPLauncher">%s</launcher>
   <label>%s</label>
-  <nodeProperties>
-    <jp.ikedam.jenkins.plugins.scoringloadbalancer.preferences.BuildPreferenceNodeProperty plugin="scoring-load-balancer@1.0.1">
-      <preference>%s</preference>
-    </jp.ikedam.jenkins.plugins.scoringloadbalancer.preferences.BuildPreferenceNodeProperty>
-  </nodeProperties>
 </slave>
 EOF
-""" % (name, remote_fs, num_executors, mode, tunnel, " ".join([name] + labels), preference),
+""" % (name, remote_fs, num_executors, mode, tunnel, " ".join([name] + labels)),
       outs = ["nodes/%s/config.xml" % name],
       visibility = visibility,
       )
