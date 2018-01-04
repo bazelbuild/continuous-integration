@@ -1,9 +1,14 @@
 java_library(
     name = "commons_httpclient",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@commons_httpclient_commons_httpclient//jar",
+        "//external:jar/commons_httpclient/commons_httpclient"
     ],
+    runtime_deps = [
+        "//3rdparty/jvm/junit:junit"
+    ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

@@ -1,9 +1,11 @@
 java_library(
     name = "eddsa",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@net_i2p_crypto_eddsa//jar",
+        "//external:jar/net/i2p/crypto/eddsa"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

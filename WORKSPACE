@@ -16,14 +16,18 @@ workspace(name = "io_bazel_ci")
 git_repository(
     name = "io_bazel_rules_docker",
     remote = "https://github.com/bazelbuild/rules_docker.git",
-    commit = "db1b348dfdf161a784bc1efc5a1020395572b996",
+    tag = "v0.3.0",
 )
 
 load(
-  "@io_bazel_rules_docker//docker:docker.bzl",
-  "docker_repositories"
+    "@io_bazel_rules_docker//container:container.bzl",
+    "container_pull",
+    container_repositories = "repositories",
 )
-docker_repositories()
+
+# This is NOT needed when going through the language lang_image
+# "repositories" function(s).
+container_repositories()
 
 # For testing with docker
 load("//jenkins/test:docker_repository.bzl", "docker_repository")
@@ -40,22 +44,22 @@ load("//jenkins/base:jenkins_base.bzl", "jenkins_base")
 jenkins_base(
     name = "jenkins",
     plugins = JENKINS_PLUGINS,
-    version = "2.73.2",
-    digest = "sha256:025db2d00e5ba8b7a531e6d35513d6945854641977d2ab4ab21be79ac763d86f",
+    version = "2.89.2",
+    digest = "sha256:4ee807fc56c48bcf7b4f7273d24b11970615b2458bb090671f5020c7451e9114",
     volumes = ["/opt/secrets"],
 )
 
 # Releases stuff
 http_file(
     name = "hoedown",
-    sha256 = "779b75397043f6f6cf2ca8c8a716da58bb03ac42b1a21b83ff66b69bc60c016c",
-    url = "https://github.com/hoedown/hoedown/archive/3.0.4.tar.gz",
+    sha256 = "01b6021b1ec329b70687c0d240b12edcaf09c4aa28423ddf344d2bd9056ba920",
+    url = "https://github.com/hoedown/hoedown/archive/3.0.7.tar.gz",
 )
 
 http_file(
     name = "github_release",
-    sha256 = "d6994f8a43aaa7c5a7c8c867fe69cfe302cd8eda0df3d371d0e69413999c83d8",
-    url = "https://github.com/c4milo/github-release/archive/v1.0.7.tar.gz",
+    sha256 = "bb647fb89f086a78bfc51c0b3264338f3471fb5b275829a7d1f08cf76af17da2",
+    url = "https://github.com/c4milo/github-release/archive/v1.1.0.tar.gz",
 )
 
 # Use Jinja for templating our files
@@ -69,9 +73,9 @@ py_library(
     visibility = ["//visibility:public"],
 )
 """,
-    sha256 = "a4ec1aff59b95a14b45eb2e23761a0179e98319da5a7eb76b56ea8cdc7b871c3",
-    strip_prefix = "MarkupSafe-0.23",
-    url = "https://pypi.python.org/packages/source/M/MarkupSafe/MarkupSafe-0.23.tar.gz#md5=f5ab3deee4c37cd6a922fb81e730da6e",
+    sha256 = "a6be69091dac236ea9c6bc7d012beab42010fa914c459791d627dad4910eb665",
+    strip_prefix = "MarkupSafe-1.0",
+    url = "https://pypi.python.org/packages/4d/de/32d741db316d8fdb7680822dd37001ef7a448255de9699ab4bfcbdf4172b/MarkupSafe-1.0.tar.gz#md5=2fcedc9284d50e577b5192e8e3578355",
 )
 
 new_http_archive(
@@ -87,9 +91,9 @@ py_library(
     visibility = ["//visibility:public"],
 )
 """,
-    sha256 = "bc1ff2ff88dbfacefde4ddde471d1417d3b304e8df103a7a9437d47269201bf4",
-    strip_prefix = "Jinja2-2.8",
-    url = "https://pypi.python.org/packages/source/J/Jinja2/Jinja2-2.8.tar.gz#md5=edb51693fe22c53cee5403775c71a99e",
+    sha256 = "f84be1bb0040caca4cea721fcbbbbd61f9be9464ca236387158b0feea01914a4",
+    strip_prefix = "Jinja2-2.10",
+    url = "https://pypi.python.org/packages/56/e6/332789f295cf22308386cf5bbd1f4e00ed11484299c5d7383378cf48ba47/Jinja2-2.10.tar.gz#md5=61ef1117f945486472850819b8d1eb3d",
 )
 
 # Our template engine use gflags
@@ -125,7 +129,5 @@ load("@io_bazel_rules_groovy//groovy:groovy.bzl", "groovy_repositories")
 groovy_repositories()
 
 # For groovy tests
-load("//3rdparty:bzl.bzl", "maven_dependencies")
-
+load("//3rdparty:workspace.bzl", "maven_dependencies")
 maven_dependencies()
-

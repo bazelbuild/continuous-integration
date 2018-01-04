@@ -1,7 +1,7 @@
 java_library(
-    name = "antlr",
+    name = "assertj_core",
     exports = [
-        "//external:jar/antlr/antlr"
+        "//external:jar/org/assertj/assertj_core"
     ],
     visibility = [
         "//visibility:public"

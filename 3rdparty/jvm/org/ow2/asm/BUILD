@@ -1,49 +1,59 @@
 java_library(
     name = "asm",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_ow2_asm_asm//jar",
+        "//external:jar/org/ow2/asm/asm"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "asm_analysis",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_ow2_asm_asm_analysis//jar",
+        "//external:jar/org/ow2/asm/asm_analysis"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "asm_commons",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_ow2_asm_asm_commons//jar",
+        "//external:jar/org/ow2/asm/asm_commons"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "asm_tree",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_ow2_asm_asm_tree//jar",
+        "//external:jar/org/ow2/asm/asm_tree"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "asm_util",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_ow2_asm_asm_util//jar",
+        "//external:jar/org/ow2/asm/asm_util"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

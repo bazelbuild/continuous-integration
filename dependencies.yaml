@@ -14,12 +14,12 @@ dependencies:
    com.lesfurets:
      jenkins-pipeline-unit:
        lang: java
-       version: "1.0"
+       version: "1.1"
 
    org.codehaus.groovy:
      groovy-all:
        lang: java
-       version: "2.4.6"
+       version: "2.4.13"
 
    org.hamcrest:
      hamcrest-all:
@@ -33,15 +33,15 @@ dependencies:
 
    org.jenkins-ci.main:
      jenkins-core:
-       lang: "java"
-       version: "2.73.1"
+       lang: java
+       version: "2.89.2"
 
    org.jenkins-ci.plugins.workflow:
      workflow-step-api:
        lang: java
-       version: "2.1"
+       version: "2.14"
 
    org.jenkins-ci.plugins.workflow:
      workflow-support:
        lang: java
-       version: "2.14"
+       version: "2.16"

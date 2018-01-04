@@ -1,13 +1,15 @@
 java_library(
     name = "guice",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@com_google_inject_guice//jar",
+        "//external:jar/com/google/inject/guice"
     ],
     runtime_deps = [
-        "//3rdparty/jvm/aopalliance",
-        "//3rdparty/jvm/javax/inject:javax_inject",
+        "//3rdparty/jvm/aopalliance:aopalliance",
+        "//3rdparty/jvm/javax/inject:javax_inject"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

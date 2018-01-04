@@ -1,9 +1,11 @@
 java_library(
     name = "localizer",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jvnet_localizer_localizer//jar",
+        "//external:jar/org/jvnet/localizer/localizer"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

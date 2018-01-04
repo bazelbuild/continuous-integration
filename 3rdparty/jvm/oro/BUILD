@@ -1,9 +1,11 @@
 java_library(
     name = "oro",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@oro_oro//jar",
+        "//external:jar/oro/oro"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

@@ -1,12 +1,14 @@
 java_library(
     name = "guava",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@com_google_guava_guava//jar",
+        "//external:jar/com/google/guava/guava"
     ],
     runtime_deps = [
-        "//3rdparty/jvm/com/google/code/findbugs:jsr305",
+        "//3rdparty/jvm/com/google/code/findbugs:jsr305"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

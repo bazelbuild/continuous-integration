@@ -1,9 +1,11 @@
 java_library(
     name = "jcifs",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_samba_jcifs_jcifs//jar",
+        "//external:jar/org/samba/jcifs/jcifs"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

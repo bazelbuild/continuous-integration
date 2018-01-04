@@ -1,22 +1,26 @@
 java_library(
     name = "ant",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_apache_ant_ant//jar",
+        "//external:jar/org/apache/ant/ant"
     ],
     runtime_deps = [
-        ":ant_launcher",
+        ":ant_launcher"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "ant_launcher",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_apache_ant_ant_launcher//jar",
+        "//external:jar/org/apache/ant/ant_launcher"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

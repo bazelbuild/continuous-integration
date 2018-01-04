@@ -1,39 +1,47 @@
 java_library(
     name = "activation",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jvnet_hudson_activation//jar",
+        "//external:jar/org/jvnet/hudson/activation"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "commons_jelly_tags_define",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jvnet_hudson_commons_jelly_tags_define//jar",
+        "//external:jar/org/jvnet/hudson/commons_jelly_tags_define"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "jtidy",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jvnet_hudson_jtidy//jar",
+        "//external:jar/org/jvnet/hudson/jtidy"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "xstream",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jvnet_hudson_xstream//jar",
+        "//external:jar/org/jvnet/hudson/xstream"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

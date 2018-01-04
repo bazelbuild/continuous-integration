@@ -1,9 +1,11 @@
 java_library(
     name = "jansi",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_fusesource_jansi_jansi//jar",
+        "//external:jar/org/fusesource/jansi/jansi"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

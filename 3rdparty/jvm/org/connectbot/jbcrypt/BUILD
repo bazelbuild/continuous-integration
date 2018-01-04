@@ -1,9 +1,11 @@
 java_library(
     name = "jbcrypt",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_connectbot_jbcrypt_jbcrypt//jar",
+        "//external:jar/org/connectbot/jbcrypt/jbcrypt"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

@@ -1,22 +1,26 @@
 java_library(
     name = "jcommon",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@jfree_jcommon//jar",
+        "//external:jar/jfree/jcommon"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "jfreechart",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@jfree_jfreechart//jar",
+        "//external:jar/jfree/jfreechart"
     ],
     runtime_deps = [
-        ":jcommon",
+        ":jcommon"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

@@ -1,9 +1,11 @@
 java_library(
     name = "aopalliance",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@aopalliance_aopalliance//jar",
+        "//external:jar/aopalliance/aopalliance"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

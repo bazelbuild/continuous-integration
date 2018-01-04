@@ -1,13 +1,15 @@
 java_library(
     name = "acegi_security",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_acegisecurity_acegi_security//jar",
+        "//external:jar/org/acegisecurity/acegi_security"
     ],
     runtime_deps = [
         "//3rdparty/jvm/org/springframework:spring_jdbc",
-        "//3rdparty/jvm/oro",
+        "//3rdparty/jvm/oro:oro"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

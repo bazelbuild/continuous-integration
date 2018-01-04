@@ -1,12 +1,14 @@
 java_library(
     name = "wstx_asl",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_codehaus_woodstox_wstx_asl//jar",
+        "//external:jar/org/codehaus/woodstox/wstx_asl"
     ],
     runtime_deps = [
-        "//3rdparty/jvm/stax:stax_api",
+        "//3rdparty/jvm/stax:stax_api"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

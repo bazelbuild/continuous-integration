@@ -1,129 +1,153 @@
 java_library(
     name = "annotation_indexer",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jenkins_ci_annotation_indexer//jar",
+        "//external:jar/org/jenkins_ci/annotation_indexer"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "bytecode_compatibility_transformer",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jenkins_ci_bytecode_compatibility_transformer//jar",
+        "//external:jar/org/jenkins_ci/bytecode_compatibility_transformer"
     ],
     runtime_deps = [
-        "//3rdparty/jvm/org/kohsuke:asm5",
+        "//3rdparty/jvm/org/kohsuke:asm5"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "commons_jelly",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jenkins_ci_commons_jelly//jar",
+        "//external:jar/org/jenkins_ci/commons_jelly"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "commons_jexl",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jenkins_ci_commons_jexl//jar",
+        "//external:jar/org/jenkins_ci/commons_jexl"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "constant_pool_scanner",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jenkins_ci_constant_pool_scanner//jar",
+        "//external:jar/org/jenkins_ci/constant_pool_scanner"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "crypto_util",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jenkins_ci_crypto_util//jar",
+        "//external:jar/org/jenkins_ci/crypto_util"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "jmdns",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jenkins_ci_jmdns//jar",
+        "//external:jar/org/jenkins_ci/jmdns"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "memory_monitor",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jenkins_ci_memory_monitor//jar",
+        "//external:jar/org/jenkins_ci/memory_monitor"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "symbol_annotation",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jenkins_ci_symbol_annotation//jar",
+        "//external:jar/org/jenkins_ci/symbol_annotation"
     ],
     runtime_deps = [
-        ":annotation_indexer",
+        ":annotation_indexer"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "task_reactor",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jenkins_ci_task_reactor//jar",
+        "//external:jar/org/jenkins_ci/task_reactor"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "trilead_ssh2",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jenkins_ci_trilead_ssh2//jar",
+        "//external:jar/org/jenkins_ci/trilead_ssh2"
     ],
     runtime_deps = [
         "//3rdparty/jvm/net/i2p/crypto:eddsa",
-        "//3rdparty/jvm/org/connectbot/jbcrypt",
+        "//3rdparty/jvm/org/connectbot/jbcrypt:jbcrypt"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "version_number",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jenkins_ci_version_number//jar",
+        "//external:jar/org/jenkins_ci/version_number"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

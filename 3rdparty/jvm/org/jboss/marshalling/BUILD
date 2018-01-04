@@ -1,22 +1,26 @@
 java_library(
     name = "jboss_marshalling",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jboss_marshalling_jboss_marshalling//jar",
+        "//external:jar/org/jboss/marshalling/jboss_marshalling"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "jboss_marshalling_river",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_jboss_marshalling_jboss_marshalling_river//jar",
+        "//external:jar/org/jboss/marshalling/jboss_marshalling_river"
     ],
     runtime_deps = [
-        ":jboss_marshalling",
+        ":jboss_marshalling"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

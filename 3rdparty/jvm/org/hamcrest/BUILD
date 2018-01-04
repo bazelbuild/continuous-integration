@@ -1,19 +1,23 @@
 java_library(
     name = "hamcrest_all",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_hamcrest_hamcrest_all//jar",
+        "//external:jar/org/hamcrest/hamcrest_all"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "hamcrest_core",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_hamcrest_hamcrest_core//jar",
+        "//external:jar/org/hamcrest/hamcrest_core"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

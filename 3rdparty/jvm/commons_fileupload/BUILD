@@ -1,9 +1,11 @@
 java_library(
     name = "commons_fileupload",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@commons_fileupload_commons_fileupload//jar",
+        "//external:jar/commons_fileupload/commons_fileupload"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

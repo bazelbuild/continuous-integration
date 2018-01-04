@@ -1,9 +1,11 @@
 java_library(
     name = "jline",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@jline_jline//jar",
+        "//external:jar/jline/jline"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+

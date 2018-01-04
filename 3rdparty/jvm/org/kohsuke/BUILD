@@ -1,79 +1,95 @@
 java_library(
     name = "access_modifier_annotation",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_kohsuke_access_modifier_annotation//jar",
+        "//external:jar/org/kohsuke/access_modifier_annotation"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "akuma",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_kohsuke_akuma//jar",
+        "//external:jar/org/kohsuke/akuma"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "asm5",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_kohsuke_asm5//jar",
+        "//external:jar/org/kohsuke/asm5"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "groovy_sandbox",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_kohsuke_groovy_sandbox//jar",
+        "//external:jar/org/kohsuke/groovy_sandbox"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "libpam4j",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_kohsuke_libpam4j//jar",
+        "//external:jar/org/kohsuke/libpam4j"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "libzfs",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_kohsuke_libzfs//jar",
+        "//external:jar/org/kohsuke/libzfs"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "trilead_putty_extension",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_kohsuke_trilead_putty_extension//jar",
+        "//external:jar/org/kohsuke/trilead_putty_extension"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
 
 java_library(
     name = "windows_package_checker",
-    visibility = [
-        "//visibility:public",
-    ],
     exports = [
-        "@org_kohsuke_windows_package_checker//jar",
+        "//external:jar/org/kohsuke/windows_package_checker"
     ],
+    visibility = [
+        "//visibility:public"
+    ]
 )
+
+
