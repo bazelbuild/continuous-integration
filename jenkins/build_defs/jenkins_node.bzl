@@ -21,7 +21,7 @@ JENKINS_SERVER = "http://jenkins:80"
 
 def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1, mode = "NORMAL",
                  labels = [], docker_base = None, preference = 1,
-                 visibility = None):
+                 visibility = None, tunnel = None):
   """Create a node configuration on Jenkins, with possible docker image.
 
   Args:
@@ -38,6 +38,10 @@ def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1, mode = "NORMAL
       4, then the second one will be scheduled 4 time more jobs than the first one.
     visibility: rule visibility.
   """
+  if tunnel:
+    tunnel = "<tunnel>%s</tunnel>" % tunnel
+  else:
+    tunnel = ""
   native.genrule(
       name = name,
       cmd = """cat >$@ <<'EOF'
@@ -49,7 +53,7 @@ def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1, mode = "NORMAL
   <numExecutors>%s</numExecutors>
   <mode>%s</mode>
   <retentionStrategy class="hudson.slaves.RetentionStrategy$$Always"/>
-  <launcher class="hudson.slaves.JNLPLauncher"/>
+  <launcher class="hudson.slaves.JNLPLauncher">%s</launcher>
   <label>%s</label>
   <nodeProperties>
     <jp.ikedam.jenkins.plugins.scoringloadbalancer.preferences.BuildPreferenceNodeProperty plugin="scoring-load-balancer@1.0.1">
@@ -58,7 +62,7 @@ def jenkins_node(name, remote_fs = "/home/ci", num_executors = 1, mode = "NORMAL
   </nodeProperties>
 </slave>
 EOF
-""" % (name, remote_fs, num_executors, mode, " ".join([name] + labels), preference),
+""" % (name, remote_fs, num_executors, mode, tunnel, " ".join([name] + labels), preference),
       outs = ["nodes/%s/config.xml" % name],
       visibility = visibility,
       )
