@@ -100,7 +100,7 @@ STAGING_MASTER=(
     # VM name
     "jenkins-staging"
     # Zone
-    "europe-west2-a"
+    "europe-west1-d"
     # Metadata specification
     "google-container-manifest=jenkins-staging.yml,startup-script=mount-volumes.sh"
     # Disk specification
