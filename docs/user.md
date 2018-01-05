@@ -10,7 +10,6 @@ The Bazel CI:
 *   runs presubmit tests (on a pending change)
 *   runs postsubmit tests (on the master branch)
 *   handles the release project of Bazel
-*   handles performance benchmarks
 
 If you wish to add or modify a configuration for one of the projects on
 Bazel CI, see the [project owner documentation](owner.md).
@@ -145,13 +144,3 @@ The way to read that report is as follows:
 In addition to testing all the jobs, the [Global test](#global-tests) handles
 pushing artifacts that are created by a release branch to GCS and to the GitHub
 release system.
-
-## Performance benchmarks
-
-Performance benchmarks run once a day.
-
-This job runs performance tests for each new commit since the previous
-benchmarking run, thus each commit is benchmarked individually.
-
-The job publishes a report for each commit, you can find these at
-[perf.bazel.build](https://perf.bazel.build).

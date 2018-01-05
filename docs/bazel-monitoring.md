@@ -17,7 +17,6 @@ We monitor:
     -   [bazel-slow-tests](https://ci.bazel.io/job/bazel-slow-tests)
     -   [bazel-remote-tests](https://ci.bazel.io/job/bazel-remote-tests)
     -   [Tutorial](https://ci.bazel.io/job/Tutorial)
-    -   [benchmark](https://ci.bazel.io/job/benchmark)
     -   [nightly](https://ci.bazel.io/job/bazel/job/nightly)
     -   [release](https://ci.bazel.io/job/bazel/job/release)
 
@@ -45,7 +44,6 @@ If the other projects are not green:
 The build sheriff should monitor the outputs of these types of jobs:
 
 *   [global tests](user.md#global-jobs)
-*   benchmark
 *   [postsubmits](user.md#postsubmit)
 
 ## Global tests
@@ -70,17 +68,6 @@ When global tests fail badly:
 1.  [file a bug to bazelbuild/bazel](https://github.com/bazelbuild/bazel/issues/new)
 2.  add the "breakage" label to the bug
 3.  add the "release blocker" label if the breakage is on the release job
-
-## Benchmark
-
-URL: https://ci.bazel.io/job/benchmark
-
-How to investigate: look at the output logs:
-
-*   if the job fails with a java error or build error: [file a bug to
-    bazelbuild/bazel](https://github.com/bazelbuild/bazel/issues/new)
-*   otherwise: [file a bug to
-    bazelbuild/continuous-integration](https://github.com/bazelbuild/bazel/continuous-integration/new)
 
 ## Postsubmits
 

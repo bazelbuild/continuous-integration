@@ -11,10 +11,6 @@ Three categories of jobs run on https://ci.bazel.io:
 Several jobs control the bootstrap and maintenance of Bazel, they
 are mostly under the `maintenance` and `bazel` folders:
 
-*   `benchmark`: benchmarks Bazel performance
-    
-    This job runs continuously and publishes results at https://perf.bazel.build
-
 *   `maintenance/install-bazel`: installs Bazel release on all workers
 *   `maintenance/gerrit-verifier`: detects pending reviews on Gerrit that
     need validation.
