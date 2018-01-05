@@ -127,15 +127,18 @@ function create_master() {
   local address="$5"
   local network="$6"
   local group="$7"
+
   gcloud compute instances create "$name" --tags jenkins \
-         --zone "$location" --machine-type n1-standard-8 \
-         --image-family container-vm --image-project google-containers \
-         --metadata-from-file "$metadata" \
-         --boot-disk-type pd-ssd --boot-disk-size 40GB \
-         --network "$network" \
-         --address "$address" --disk "$disk"
+      --zone "$location" --machine-type n1-standard-16 \
+      --image-family container-vm --image-project google-containers \
+      --metadata-from-file "$metadata" \
+      --min-cpu-platform "Intel Skylake" \
+      --boot-disk-type pd-ssd --boot-disk-size 250GB \
+      --network "$network" \
+      --address "$address" --disk "$disk"
+
   gcloud compute instance-groups unmanaged add-instances \
-         "$group" --instances "$name" --zone "$location"
+      "$group" --instances "$name" --zone "$location"
 }
 
 # Create a node named $1 whose image is $2 (see `gcloud compute image list`)
