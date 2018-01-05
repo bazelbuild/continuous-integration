@@ -43,14 +43,6 @@ UBUNTU_DOCKER_PREFIX = "ubuntu_16.04-x86_64-docker"
 
 UBUNTU_DOCKER_COUNT = 4
 
-FREEBSD_11_PREFIX = "freebsd-11"
-
-FREEBSD_11_COUNT = 4
-
-FREEBSD_12_PREFIX = "freebsd-12"
-
-FREEBSD_12_COUNT = 4
-
 # Physical machines
 jenkins_nodes(
     DARWIN_PREFIX,
@@ -84,18 +76,6 @@ jenkins_nodes(
 jenkins_nodes(
     UBUNTU_1604_PREFIX,
     UBUNTU_1604_COUNT,
-    labels = ["no-release"],
-)
-
-jenkins_nodes(
-    FREEBSD_11_PREFIX,
-    FREEBSD_11_COUNT,
-    labels = ["no-release"],
-)
-
-jenkins_nodes(
-    FREEBSD_12_PREFIX,
-    FREEBSD_12_COUNT,
     labels = ["no-release"],
 )
 
@@ -267,9 +247,7 @@ jenkins_docker_build(
               jenkins_node_names(WINDOWS_PREFIX, WINDOWS_COUNT) +
               jenkins_node_names(UBUNTU_DOCKER_PREFIX, UBUNTU_DOCKER_COUNT) +
               jenkins_node_names(UBUNTU_1404_PREFIX, UBUNTU_1404_COUNT) +
-              jenkins_node_names(UBUNTU_1604_PREFIX, UBUNTU_1604_COUNT) +
-              jenkins_node_names(FREEBSD_11_PREFIX, FREEBSD_11_COUNT) +
-              jenkins_node_names(FREEBSD_12_PREFIX, FREEBSD_12_COUNT),
+              jenkins_node_names(UBUNTU_1604_PREFIX, UBUNTU_1604_COUNT),
     jobs = [
         "//jenkins/jobs",
         ":maintenance/gerrit-verifier",
@@ -287,8 +265,6 @@ jenkins_docker_build(
         ":config_xml",
         ":darwin-x86_64-staging",
         ":deploy-staging",
-        ":freebsd-11-staging",
-        ":freebsd-12-staging",
         ":jenkins-common-configs",
         ":ubuntu_14.04-x86_64-staging",
         ":ubuntu_16.04-x86_64-docker-staging",
