@@ -27,7 +27,7 @@ http {
   # Redirect variations of the main website URL to the canonical one.
   server {
     listen 80;
-    server_name www.bazel.build bazel.io www.bazel.io;
+    server_name bazel.build www.bazel.build bazel.io www.bazel.io;
     rewrite ^ https://bazel.build$request_uri permanent;
   }
 
