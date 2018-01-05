@@ -25,7 +25,7 @@
   <jobs/>
   <extensions>
     <org.jenkinsci.plugins.ghprb.extensions.status.GhprbSimpleStatus>
-      <commitStatusContext>ci.bazel.io</commitStatusContext>
+      <commitStatusContext>ci.bazel.build</commitStatusContext>
       <triggeredStatus></triggeredStatus>
       <startedStatus></startedStatus>
       <statusUrl></statusUrl>

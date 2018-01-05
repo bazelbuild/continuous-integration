@@ -253,7 +253,7 @@ jenkins_docker_build(
         ":maintenance/gerrit-verifier",
     ],
     substitutions = {
-        "PUBLIC_JENKINS_URL": "https://ci.bazel.io/",
+        "PUBLIC_JENKINS_URL": "https://ci.bazel.build/",
     },
     tars = ["//jenkins/lib"],
     visibility = ["//visibility:public"],
@@ -276,7 +276,7 @@ jenkins_docker_build(
         ":maintenance/gerrit-verifier/staging",
     ],
     substitutions = {
-        "PUBLIC_JENKINS_URL": "https://ci-staging.bazel.io/",
+        "PUBLIC_JENKINS_URL": "https://ci-staging.bazel.build/",
     },
     tars = ["//jenkins/lib"],
     visibility = ["//gcr:__pkg__"],

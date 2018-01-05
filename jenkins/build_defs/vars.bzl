@@ -17,5 +17,5 @@
 MAIL_SUBSTITUTIONS = {
     "BAZEL_BUILD_RECIPIENT": "bazel-ci@googlegroups.com",
     "BAZEL_RELEASE_RECIPIENT": "bazel-discuss+release@googlegroups.com",
-    "SENDER_EMAIL": "noreply@bazel.io",
+    "SENDER_EMAIL": "noreply@bazel.build",
 }

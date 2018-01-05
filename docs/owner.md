@@ -235,7 +235,7 @@ would expand to this:
     Example: `linux-x86_64`, `windows-x86_64`, `freebsd-11`, etc.
 
     The complete list of connected nodes is available on
-    https://ci.bazel.io/computer/ . You can select nodes either by name or by
+    https://ci.bazel.build/computer/ . You can select nodes either by name or by
     label. To see the list of labels of a specific node, click on the node in
     the Jenkins UI.
 

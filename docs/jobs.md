@@ -1,6 +1,6 @@
 # Jobs
 
-Three categories of jobs run on https://ci.bazel.io:
+Three categories of jobs run on https://ci.bazel.build:
 
 *   bootstrap/maintenance jobs (e.g. bazel-bootstrap)
 *   projects (e.g. TensorFlow)

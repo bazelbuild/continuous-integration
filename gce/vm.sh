@@ -33,7 +33,7 @@ set -eu
 #                and ends with writing to /home/ci/node_name the name
 #                of the jenkins node.
 
-# Executor nodes for ci.bazel.io
+# Executor nodes for ci.bazel.build
 SLAVES=(
     "ubuntu-14-04-slave-1 ubuntu-1404-lts ubuntu_14.04-x86_64-1 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-14-04-slave-2 ubuntu-1404-lts ubuntu_14.04-x86_64-2 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
@@ -70,7 +70,7 @@ SLAVES=(
     "windows-slave-4 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-4 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows.ps1"
 )
 
-# Jenkins controller for ci.bazel.io
+# Jenkins controller for ci.bazel.build
 MASTER=(
     # VM name
     "jenkins"
@@ -88,7 +88,7 @@ MASTER=(
     "ci-instance-group"
 )
 
-# Executor nodes for ci-staging.bazel.io
+# Executor nodes for ci-staging.bazel.build
 STAGING_SLAVES=(
     "ubuntu-14-04-slave-staging ubuntu-1404-lts ubuntu_14.04-x86_64-staging europe-west1-d staging startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-16-04-slave-staging ubuntu-1604-lts ubuntu_16.04-x86_64-staging europe-west1-d staging startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
@@ -392,7 +392,7 @@ case "${command}" in
     echo " - kill_container kills container that runs the specified image on the" >&2
     echo "   specified VM." >&2
     echo "Special value 'staging' and 'prod' point to all VM in, respectively," >&2
-    echo "ci-staging.bazel.io and ci.bazel.io." >&2
+    echo "ci-staging.bazel.build and ci.bazel.build." >&2
     exit 1
     ;;
 esac

@@ -5,7 +5,7 @@ This is a guide for the Bazel build sheriff about monitoring the Bazel CI
 
 # The CI dashboard
 
-URL: https://ci.bazel.io/view/Dashboard/
+URL: https://ci.bazel.build/view/Dashboard/
 
 The dashboard gives a quick overview of the Bazel CI's health.
 
@@ -13,12 +13,12 @@ We monitor:
 
 *   Bazel's own jobs (owned by the core Bazel team):
 
-    -   [bazel-tests](https://ci.bazel.io/job/bazel-tests)
-    -   [bazel-slow-tests](https://ci.bazel.io/job/bazel-slow-tests)
-    -   [bazel-remote-tests](https://ci.bazel.io/job/bazel-remote-tests)
-    -   [Tutorial](https://ci.bazel.io/job/Tutorial)
-    -   [nightly](https://ci.bazel.io/job/bazel/job/nightly)
-    -   [release](https://ci.bazel.io/job/bazel/job/release)
+    -   [bazel-tests](https://ci.bazel.build/job/bazel-tests)
+    -   [bazel-slow-tests](https://ci.bazel.build/job/bazel-slow-tests)
+    -   [bazel-remote-tests](https://ci.bazel.build/job/bazel-remote-tests)
+    -   [Tutorial](https://ci.bazel.build/job/Tutorial)
+    -   [nightly](https://ci.bazel.build/job/bazel/job/nightly)
+    -   [release](https://ci.bazel.build/job/bazel/job/release)
 
 *   Projects built using Bazel:
 
@@ -50,15 +50,15 @@ The build sheriff should monitor the outputs of these types of jobs:
 
 URLs:
 
-*   nightly: https://ci.bazel.io/job/bazel/job/nightly
-*   release: https://ci.bazel.io/job/bazel/job/release
+*   nightly: https://ci.bazel.build/job/bazel/job/nightly
+*   release: https://ci.bazel.build/job/bazel/job/release
 
 When do these jobs run:
 
-*   [nightly](https://ci.bazel.io/job/bazel/job/nightly): runs every night and
+*   [nightly](https://ci.bazel.build/job/bazel/job/nightly): runs every night and
     can be re-run on demand using the Run button in Jenkins (you need to log in
     on the Jenkins UI)
-*   [release](https://ci.bazel.io/job/bazel/job/release): runs at every push and
+*   [release](https://ci.bazel.build/job/bazel/job/release): runs at every push and
     is always green for non-release pushes
 
 How to investigate: see the [user guide](user.md#global-jobs).

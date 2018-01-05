@@ -71,7 +71,7 @@ The secrets are:
         ```text
         Application type: Web application
         Name: Jenkins-staging
-        Authorized redirect URIs: https://ci-staging.bazel.io/securityRealm/finishLogin
+        Authorized redirect URIs: https://ci-staging.bazel.build/securityRealm/finishLogin
         ```
 
     3.  Click create, copy the resulting Client ID and Client secret into the
@@ -139,7 +139,7 @@ The secrets are:
     2.  Run:
 
         ```sh
-        ssh-keygen -t rsa -b 4096 -C "noreply@bazel.io" -N '' -f /volumes/secrets/github_id_rsa
+        ssh-keygen -t rsa -b 4096 -C "noreply@bazel.build" -N '' -f /volumes/secrets/github_id_rsa
         ```
 
     You must add the public key to the list of deploy keys of all repositories

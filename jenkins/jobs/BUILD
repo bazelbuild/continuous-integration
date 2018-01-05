@@ -141,7 +141,7 @@ bazel_github_job(
     name = "intellij",
     config = ":configs/intellij.json",
     project = "intellij",
-    project_url = "https://ij.bazel.io",
+    project_url = "https://ij.bazel.build",
 )
 
 # Jobs from the bazelbuild org that have a specific config on continuous-integration

@@ -30,12 +30,12 @@ retry=1
 while (( $retry != 0 )); do
   retry=0
   rm -f slave.jar slave-agent.jnlp
-  curl -qo slave.jar http://master.ci${staging}.bazel.io/jnlpJars/slave.jar || retry=1
-  curl -qo slave-agent.jnlp http://master.ci${staging}.bazel.io/computer/$(cat $HOME/node_name)/slave-agent.jnlp || retry=1
+  curl -qo slave.jar http://master.ci${staging}.bazel.build/jnlpJars/slave.jar || retry=1
+  curl -qo slave-agent.jnlp http://master.ci${staging}.bazel.build/computer/$(cat $HOME/node_name)/slave-agent.jnlp || retry=1
   sleep 5
 done
 
-sed -E -i.bak 's|https?://(ci(-staging)?\.bazel\.io)|http://master.\1|g' slave-agent.jnlp
+sed -E -i.bak 's|https?://(ci(-staging)?\.bazel\.build)|http://master.\1|g' slave-agent.jnlp
 rm -f slave-agent.jnlp.bak
 
 export ANDROID_SDK_PATH=$(echo $HOME/android-sdk-*)

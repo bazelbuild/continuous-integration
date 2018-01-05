@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Script to create the GCE setup for ci.bazel.io and ci-staging.bazel.io
+# Script to create the GCE setup for ci.bazel.build and ci-staging.bazel.build
 # from scratch.
 set -eu
 

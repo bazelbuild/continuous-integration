@@ -45,7 +45,7 @@
           <triggerPhrase></triggerPhrase>
           <extensions>
             <org.jenkinsci.plugins.ghprb.extensions.status.GhprbSimpleStatus>
-              <commitStatusContext>ci.bazel.io - {{ variables.NAME }}</commitStatusContext>
+              <commitStatusContext>ci.bazel.build - {{ variables.NAME }}</commitStatusContext>
               <triggeredStatus></triggeredStatus>
               <startedStatus></startedStatus>
               <statusUrl>${RUN_DISPLAY_URL}</statusUrl>

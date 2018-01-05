@@ -27,8 +27,8 @@ Gcloud:
 
 ## Pushing changes
 
-The typical worflow when modfiying ci.bazel.io is to first test the
-change on ci-staging.bazel.io.
+The typical worflow when modfiying ci.bazel.build is to first test the
+change on ci-staging.bazel.build.
 
 The process typically looks like:
 
@@ -38,14 +38,14 @@ The process typically looks like:
 4.  Run `bazel run //gcr:deploy-staging` to deploy the change to
     the staging instance.
 5.  Restart the staging Jenkins instance by going to
-    https://ci-staging.bazel.io/safeExit .
-6.  Run a job by identifying it on [https://ci-staging.bazel.io] and
+    https://ci-staging.bazel.build/safeExit .
+6.  Run a job by identifying it on [https://ci-staging.bazel.build] and
     clicking on the play button.
 7.  If 6 fails, go back to 1, skipping step 3.
 8.  Send the change to review.
 9.  Shut down the staging Jenkins instance with [`./gce/vm.sh stop staging`](vm.md).
 10. Once LGTM, deploy to production with `bazel run //gcr:deploy`.
-11. Restart the prod Jenkins instance: https://ci.bazel.io/safeExit
+11. Restart the prod Jenkins instance: https://ci.bazel.build/safeExit
 
     You need to log in to the Jenkins UI, otherwise you may get a stack trace.
     Log in and try again.
