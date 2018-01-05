@@ -167,43 +167,38 @@ function create_slave() {
       --metadata jenkins_node="$JENKINS_NODE" \
       --boot-disk-type pd-ssd --boot-disk-size 500GB
   case "$TAG" in
-    windows-*)  # Windows
+    windows-*)
+      # Nothing to do here.
       ;;
 
-    freebsd*) # FreeBSD
-      # Wait a bit for the VM to fully start
+    freebsd*)
+      # Wait a bit for the VM to fully start.
       wait_vm "$TAG" "$LOCATION" 120 /usr/bin/true
+
       # Install bash directly calling gcloud, as the ssh_command function
       # already depends on bash being installed and in PATH.
       gcloud compute ssh --zone="${LOCATION}" --command "sudo pkg install -y bash" "${TAG}"
+
       # Create the jenkins user, run additional set-up scripts and mark
       # the install process as finished.
       ssh_command "$TAG" "$LOCATION" \
           "pw useradd -n ci -s /usr/local/bin/bash -d /home/ci -m -w no" \
-          "echo \"echo -n '$JENKINS_NODE' >/home/ci/node_name\" | su -m ci" \
-          "$@"
+          "$@" \
+          "echo \"echo -n '$JENKINS_NODE' >/home/ci/node_name\" | su -m ci"
       ;;
 
-    *)  # Linux
-      wait_vm "$TAG" "$LOCATION"  # Wait a bit for the VM to fully start
+    *)
+      # Wait a bit for the VM to fully start.
+      wait_vm "$TAG" "$LOCATION"
+
       # Create the jenkins user, run additional set-up scripts and mark
       # the install process as finished.
       ssh_command "$TAG" "$LOCATION" \
           "sudo adduser --system --home /home/ci ci" \
-          "su ci -s /bin/bash -c \"echo -n '$JENKINS_NODE' >/home/ci/node_name\"" \
-          "$@"
+          "$@" \
+          "su ci -s /bin/bash -c \"echo -n '$JENKINS_NODE' >/home/ci/node_name\""
       ;;
   esac
-
-  gcloud compute instances stop "$TAG" \
-      --zone "$LOCATION"
-
-  gcloud compute instances add-metadata "$TAG" \
-      --zone "$LOCATION" \
-      --metadata-from-file "$STARTUP_METADATA"
-
-  gcloud compute instances start "$TAG" \
-      --zone "$LOCATION"
 }
 
 # Updates the --metadata and --metadata-from-file values of an existing VM.
