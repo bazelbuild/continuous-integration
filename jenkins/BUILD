@@ -24,24 +24,19 @@ load("//jenkins/build_defs:jenkins.bzl", "jenkins_node", "jenkins_docker_build",
 #
 
 DARWIN_PREFIX = "darwin-x86_64"
-
 DARWIN_COUNT = 8
 
-WINDOWS_PREFIX = "windows-x86_64"
-
-WINDOWS_COUNT = 4
-
 UBUNTU_1404_PREFIX = "ubuntu_14.04-x86_64"
-
-UBUNTU_1404_COUNT = 8
+UBUNTU_1404_COUNT = 4
 
 UBUNTU_1604_PREFIX = "ubuntu_16.04-x86_64"
-
-UBUNTU_1604_COUNT = 8
+UBUNTU_1604_COUNT = 4
 
 UBUNTU_DOCKER_PREFIX = "ubuntu_16.04-x86_64-docker"
+UBUNTU_DOCKER_COUNT = 2
 
-UBUNTU_DOCKER_COUNT = 4
+WINDOWS_PREFIX = "windows-x86_64"
+WINDOWS_COUNT = 2
 
 # Physical machines
 jenkins_nodes(

@@ -39,22 +39,12 @@ SLAVES=(
     "ubuntu-14-04-slave-2 ubuntu-1404-lts ubuntu_14.04-x86_64-2 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-14-04-slave-3 ubuntu-1404-lts ubuntu_14.04-x86_64-3 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-14-04-slave-4 ubuntu-1404-lts ubuntu_14.04-x86_64-4 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-14-04-slave-5 ubuntu-1404-lts ubuntu_14.04-x86_64-5 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-14-04-slave-6 ubuntu-1404-lts ubuntu_14.04-x86_64-6 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-14-04-slave-7 ubuntu-1404-lts ubuntu_14.04-x86_64-7 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-14-04-slave-8 ubuntu-1404-lts ubuntu_14.04-x86_64-8 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-16-04-slave-1 ubuntu-1604-lts ubuntu_16.04-x86_64-1 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-16-04-slave-2 ubuntu-1604-lts ubuntu_16.04-x86_64-2 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-16-04-slave-3 ubuntu-1604-lts ubuntu_16.04-x86_64-3 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-16-04-slave-4 ubuntu-1604-lts ubuntu_16.04-x86_64-4 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-16-04-slave-5 ubuntu-1604-lts ubuntu_16.04-x86_64-5 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-16-04-slave-6 ubuntu-1604-lts ubuntu_16.04-x86_64-6 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-16-04-slave-7 ubuntu-1604-lts ubuntu_16.04-x86_64-7 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-16-04-slave-8 ubuntu-1604-lts ubuntu_16.04-x86_64-8 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-docker-slave-1 ubuntu-1604-lts ubuntu_16.04-x86_64-docker-1 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh ubuntu-16-04-docker.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     "ubuntu-docker-slave-2 ubuntu-1604-lts ubuntu_16.04-x86_64-docker-2 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh ubuntu-16-04-docker.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-docker-slave-3 ubuntu-1604-lts ubuntu_16.04-x86_64-docker-3 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh ubuntu-16-04-docker.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-docker-slave-4 ubuntu-1604-lts ubuntu_16.04-x86_64-docker-4 europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh ubuntu-16-04-docker.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
     #"freebsd-11-slave-1 https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-1-stable-amd64-2017-12-28 freebsd-11-1 europe-west1-d default startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
     #"freebsd-11-slave-2 https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-1-stable-amd64-2017-12-28 freebsd-11-2 europe-west1-d default startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
     #"freebsd-12-slave-1 https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-12-0-current-amd64-2017-12-28 freebsd-12-1 europe-west1-d default startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
@@ -62,8 +52,6 @@ SLAVES=(
     # Fow Windows, we use a custom image with pre-installed MSVC.
     "windows-slave-1 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-1 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows.ps1"
     "windows-slave-2 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-2 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows.ps1"
-    "windows-slave-3 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-3 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows.ps1"
-    "windows-slave-4 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-4 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows.ps1"
 )
 
 # Jenkins controller for ci.bazel.build
@@ -156,16 +144,31 @@ function create_slave() {
 
   if [[ $IMAGE == ubuntu-* ]]; then
     IMAGE_FLAG="--image-project=ubuntu-os-cloud --image-family=$IMAGE"
+    SSD_INTERFACE="nvme"
   else
     IMAGE_FLAG="--image $IMAGE"
+    SSD_INTERFACE="scsi"
+  fi
+
+  if [[ $TAG == *-staging ]]; then
+    MACHINE_TYPE="n1-standard-8"
+    BOOT_DISK_SIZE="250GB"
+  else
+    MACHINE_TYPE="n1-standard-32"
+    BOOT_DISK_SIZE="500GB"
   fi
 
   gcloud compute instances create "$TAG" \
-      --zone "$LOCATION" --machine-type n1-standard-16 \
+      --zone "$LOCATION" \
+      --machine-type "$MACHINE_TYPE" \
       --network "$NETWORK" \
       $IMAGE_FLAG \
+      --metadata-from-file "$STARTUP_METADATA" \
       --metadata jenkins_node="$JENKINS_NODE" \
-      --boot-disk-type pd-ssd --boot-disk-size 500GB
+      --min-cpu-platform "Intel Skylake" \
+      --boot-disk-type pd-ssd --boot-disk-size "$BOOT_DISK_SIZE" \
+      --local-ssd interface="$SSD_INTERFACE"
+
   case "$TAG" in
     windows-*)
       # Nothing to do here.
