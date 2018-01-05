@@ -30,8 +30,8 @@ retry=1
 while (( $retry != 0 )); do
   retry=0
   rm -f slave.jar slave-agent.jnlp
-  curl -qo slave.jar http://ci${staging}.bazel.build/jnlpJars/slave.jar || retry=1
-  curl -qo slave-agent.jnlp http://ci${staging}.bazel.build/computer/$(cat $HOME/node_name)/slave-agent.jnlp || retry=1
+  curl -Lqo slave.jar https://ci${staging}.bazel.build/jnlpJars/slave.jar || retry=1
+  curl -Lqo slave-agent.jnlp https://ci${staging}.bazel.build/computer/$(cat $HOME/node_name)/slave-agent.jnlp || retry=1
   sleep 5
 done
 
