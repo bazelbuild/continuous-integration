@@ -79,7 +79,7 @@ MASTER=(
     # Metadata specification
     "google-container-manifest=jenkins.yml,startup-script=mount-volumes.sh"
     # Disk specification
-    "name=jenkins-volumes,device-name=volumes"
+    "name=jenkins-volumes-ssd,device-name=volumes"
     # Address name
     "ci"
     # Network name
