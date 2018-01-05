@@ -335,6 +335,10 @@ function do_ssh_command() {
   fi
 }
 
+function print_vm_name() {
+  echo $1
+}
+
 command="${1-}"
 shift || true
 
@@ -360,6 +364,9 @@ case "${command}" in
     ;;
   "ssh_command")
     do_ssh_command "$@"
+    ;;
+  "vms")
+    action print_vm_name "$@"
     ;;
   "ssh")
     tag=$1
