@@ -182,8 +182,6 @@ JENKINS_PLUGINS = {
                   '666cbc579d82849bef8d0396a57335c9994222e8b0ba52f07be76dab9fb56c40'],
  'run-condition': ['1.0',
                    '4e55ebf4bde1202784404d856f98f7de85470ed145cde06feb45f641891780fb'],
- 'sauce-ondemand': ['1.171',
-                    '5a7a1e1eccb199d82227e41e9bce655d33b2e33219f40a9cd0c884780cc26ae8'],
  'scm-api': ['2.2.6',
              'be7cb7c513ebeb361a8ccb5c636541313c1c54b3119566b969fe10a3552cca14'],
  'script-security': ['1.39',

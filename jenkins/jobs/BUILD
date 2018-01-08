@@ -127,14 +127,11 @@ bazel_github_job(
     project = "bazel-toolchains",
 )
 
-# rules_web was renamed to rules_webtesting, keep the legacy name
-# for the job to keep history but use the new project name.
 bazel_github_job(
-    name = "rules_web",
+    name = "rules_webtesting",
     config = ":configs/rules_webtesting.json",
     project = "rules_webtesting",
     run_sequential = True,
-    sauce_enabled = True,
 )
 
 bazel_github_job(

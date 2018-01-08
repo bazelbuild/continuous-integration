@@ -119,7 +119,6 @@ def bazel_github_job(name, branch="master", project=None, org="bazelbuild",
                      pr_enabled=True,
                      github_enabled=True,
                      run_sequential=False,
-                     sauce_enabled=False,
                      use_upstream_branch=False):
   """Create a generic github job configuration to build against Bazel head."""
   if poll == None:
@@ -138,7 +137,6 @@ def bazel_github_job(name, branch="master", project=None, org="bazelbuild",
     "github": str(github_enabled),
     "GERRIT_PROJECT": str(gerrit_project) if gerrit_project else "",
     "RUN_SEQUENTIAL": str(run_sequential).lower(),
-    "SAUCE_ENABLED": str(sauce_enabled).lower(),
     "GLOBAL_USE_UPSTREAM_BRANCH": str(use_upstream_branch)
   }
 

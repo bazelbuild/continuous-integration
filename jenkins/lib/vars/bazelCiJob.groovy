@@ -31,7 +31,6 @@
  *   - repository: git repository to clone.
  *   - branch: branch of the repository to clone (default: master).
  *   - refspec: specification of the references to fetch
- *   - sauce: identifier of the crendentials to connect to SauceLabs.
  *   - node_label: label of the node to run on
  */
 def call(config = [:]) {
@@ -47,7 +46,6 @@ def call(config = [:]) {
   config["test_tag_filters"] = config.get("test_tag_filters", [])
   config["workspace"] = config.get("workspace", "")
   config["repository"] = config.get("repository", "")
-  config["sauce"] = config.get("sauce", "")
   config["branch"] = config.get("branch", "master")
   config["refspec"] = config.get("refspec", "+refs/heads/*:refs/remotes/origin/*")
 
@@ -65,36 +63,34 @@ def call(config = [:]) {
   ] + config.test_opts
   machine(config.node_label) {
     ws("workspace/${currentBuild.fullProjectName}-${prefix}") {
-      maybeSauce(config.sauce) {
-        // Checkout the code
-        echo "Checkout ${config.repository}"
-        recursiveGit(repository: config.repository,
-                     refspec: config.refspec,
-                     branch: config.branch)
+      // Checkout the code
+      echo "Checkout ${config.repository}"
+      recursiveGit(repository: config.repository,
+                   refspec: config.refspec,
+                   branch: config.branch)
 
-        // And build
-        maybeDir(config.workspace) {
-          def bazel = bazelPath(config.bazel_version, config.node_label)
-          def extrarc = config.extra_bazelrc
-          if (config.bazel_version.startsWith("custom")) {
-            // Make the server dies after 10 minutes on custom bazel version.
-            // Other bazel servers stays alive for 3 hours, which is ok for
-            // release but not for custom binaries used for Global tests. We
-            // do not set the max_idle_secs to 1 because we still want the
-            // server to survive between steps.
-            extrarc += "\nstartup --max_idle_secs 600\n"
-          }
-          bazelJob(binary: bazel,
-                   build_opts: build_options,
-                   test_opts: test_options,
-                   startup_opts: config.startup_opts,
-                   extra_bazelrc: extrarc,
-                   targets: config.targets,
-                   tests: config.tests,
-                   configuration: config.configuration,
-                   stage_name: prefix
-          )
+      // And build
+      maybeDir(config.workspace) {
+        def bazel = bazelPath(config.bazel_version, config.node_label)
+        def extrarc = config.extra_bazelrc
+        if (config.bazel_version.startsWith("custom")) {
+          // Make the server dies after 10 minutes on custom bazel version.
+          // Other bazel servers stays alive for 3 hours, which is ok for
+          // release but not for custom binaries used for Global tests. We
+          // do not set the max_idle_secs to 1 because we still want the
+          // server to survive between steps.
+          extrarc += "\nstartup --max_idle_secs 600\n"
         }
+        bazelJob(binary: bazel,
+                 build_opts: build_options,
+                 test_opts: test_options,
+                 startup_opts: config.startup_opts,
+                 extra_bazelrc: extrarc,
+                 targets: config.targets,
+                 tests: config.tests,
+                 configuration: config.configuration,
+                 stage_name: prefix
+        )
       }
     }
   }
