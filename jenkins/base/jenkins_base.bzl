@@ -15,7 +15,8 @@
 # Some definition to create a base image for jenkins in docker
 
 load("@io_bazel_rules_docker//docker:docker.bzl", "docker_pull")
-JENKINS_PLUGINS_URL = "http://mirrors.xmission.com/jenkins/plugins/{name}/{version}/{name}.hpi"
+
+JENKINS_PLUGINS_URL = "http://updates.jenkins-ci.org/download/plugins/{name}/{version}/{name}.hpi"
 
 def _jenkins_image_impl(repository_ctx):
   repository_ctx.file("plugins/BUILD", """
