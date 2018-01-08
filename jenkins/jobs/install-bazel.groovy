@@ -28,7 +28,7 @@ stage("Get latest version of Bazel") {
 for (int k = 0; k < nodes.size(); k++) {
   def node = nodes[k]
   if (!node.startsWith("freebsd")) {
-    // Skip freebsd who is installed from the port
+    // Skip FreeBSD, because we install Bazel via ports on that platform.
     jobs[node] = {
       stage("Install Bazel on ${node}") {
         installBazel(node: node,
@@ -41,7 +41,7 @@ for (int k = 0; k < nodes.size(); k++) {
 }
 
 stage("Install on all nodes") {
-  // We fail after 4h in case a node is offline and not comming back online
+  // We fail after 4h in case a node is offline and doesn't come back online.
   timeout(240) {
     parallel jobs
   }
