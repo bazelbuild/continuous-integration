@@ -142,20 +142,26 @@ function create_slave() {
   local STARTUP_METADATA="$6"
   shift 6
 
-  if [[ $IMAGE == ubuntu-* ]]; then
-    IMAGE_FLAG="--image-project=ubuntu-os-cloud --image-family=$IMAGE"
-    SSD_INTERFACE="nvme"
-  else
-    IMAGE_FLAG="--image $IMAGE"
-    SSD_INTERFACE="scsi"
-  fi
-
   if [[ $TAG == *-staging ]]; then
     MACHINE_TYPE="n1-standard-8"
     BOOT_DISK_SIZE="250GB"
   else
     MACHINE_TYPE="n1-standard-32"
     BOOT_DISK_SIZE="500GB"
+  fi
+
+  CPU_PLATFORM="Intel Skylake"
+  if [[ $IMAGE == ubuntu-* ]]; then
+    IMAGE_FLAG="--image-project=ubuntu-os-cloud --image-family=$IMAGE"
+    LOCAL_SSD="--local-ssd interface=nvme"
+  elif [[ $IMAGE == windows-* ]]; then
+    CPU_PLATFORM="Intel Haswell"
+    MACHINE_TYPE="n1-standard-16"
+    IMAGE_FLAG="--image $IMAGE"
+    LOCAL_SSD=""
+  else
+    IMAGE_FLAG="--image $IMAGE"
+    LOCAL_SSD="--local-ssd interface=scsi"
   fi
 
   gcloud compute instances create "$TAG" \
@@ -165,9 +171,9 @@ function create_slave() {
       $IMAGE_FLAG \
       --metadata-from-file "$STARTUP_METADATA" \
       --metadata jenkins_node="$JENKINS_NODE" \
-      --min-cpu-platform "Intel Skylake" \
+      --min-cpu-platform "$CPU_PLATFORM" \
       --boot-disk-type pd-ssd --boot-disk-size "$BOOT_DISK_SIZE" \
-      --local-ssd interface="$SSD_INTERFACE"
+      $LOCAL_SSD
 
   case "$TAG" in
     windows-*)
