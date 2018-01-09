@@ -47,7 +47,6 @@ jenkins_nodes(
     DARWIN_COUNT,
     num_executors = 1,
     remote_fs = "/Users/ci",
-    tunnel = "master.ci.bazel.io:50000",
 )
 
 # GCE machines
@@ -56,7 +55,6 @@ jenkins_nodes(
     WINDOWS_COUNT,
     num_executors = 1,
     remote_fs = "c:\\jenkins",
-    tunnel = "jenkins:50000",
 )
 
 jenkins_nodes(
