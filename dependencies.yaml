@@ -34,7 +34,7 @@ dependencies:
    org.jenkins-ci.main:
      jenkins-core:
        lang: java
-       version: "2.89.2"
+       version: "2.101"
 
    org.jenkins-ci.plugins.workflow:
      workflow-step-api:

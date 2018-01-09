@@ -97,7 +97,7 @@ def jenkins_docker_build(name, plugins = None, base = "//jenkins/base", configs 
       # TODO(dmarting): use https://cr.bazel.build/10255 when it hits a release.
       user = "root",
       entrypoint = [
-          "/bin/tini",
+          "/sbin/tini",
           "--",
           "/bin/bash",
           "-c",
