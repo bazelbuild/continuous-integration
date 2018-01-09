@@ -21,19 +21,18 @@ cat >launch.sh <<'EOF'
 #!/bin/bash
 
 cd $HOME
-staging=
-if [[ "$(cat $HOME/node_name)" =~ .*-staging$ ]]; then
-  staging='-staging'
-fi
 
 retry=1
 while (( $retry != 0 )); do
   retry=0
   rm -f slave.jar slave-agent.jnlp
-  curl -Lqo slave.jar https://ci${staging}.bazel.build/jnlpJars/slave.jar || retry=1
-  curl -Lqo slave-agent.jnlp https://ci${staging}.bazel.build/computer/$(cat $HOME/node_name)/slave-agent.jnlp || retry=1
+  curl -qo slave.jar http://master.ci.bazel.io/jnlpJars/slave.jar || retry=1
+  curl -qo slave-agent.jnlp http://master.ci.bazel.io/computer/$(cat $HOME/node_name)/slave-agent.jnlp || retry=1
   sleep 5
 done
+
+sed -E -i.bak 's|https://ci\.bazel\.build|http://master.ci.bazel.io|g' slave-agent.jnlp
+rm -f slave-agent.jnlp.bak
 
 export ANDROID_SDK_PATH=$(echo $HOME/android-sdk-*)
 export ANDROID_NDK_PATH=$(echo $HOME/android-ndk-*)
