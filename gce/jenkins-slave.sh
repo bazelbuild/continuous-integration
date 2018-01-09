@@ -33,10 +33,7 @@ if [ -f /var/run/reboot-required ]; then
 fi
 
 NODE_NAME=$(cat /home/ci/node_name)
-MASTER=jenkins
-if [[ "$NODE_NAME" =~ .*-staging$ ]]; then
-  MASTER=jenkins-staging
-fi
+MASTER="jenkins.c.bazel-public.internal"
 
 # Setup NodeJS
 if [ ! -d /home/ci/node ]; then
@@ -72,11 +69,7 @@ function get_slave_agent() {
   wget -nc http://${MASTER}/jnlpJars/slave.jar || return 1
   wget -nc http://${MASTER}/computer/${NODE_NAME}/slave-agent.jnlp || return 1
   chmod a+r slave-agent.jnlp
-  if [[ "$NODE_NAME" =~ .*-staging$ ]]; then
-      sed -E -i.bak "s|https?://ci-staging\.bazel\.build/|http://${MASTER}/|g" slave-agent.jnlp
-  else
-      sed -E -i.bak "s|https?://ci\.bazel\.build/|http://${MASTER}/|g" slave-agent.jnlp
-  fi
+  sed -E -i.bak "s|https://ci\.bazel\.build/|http://${MASTER}/|g" slave-agent.jnlp
 }
 
 # Run jenkins slave agent
