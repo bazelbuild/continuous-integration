@@ -149,24 +149,24 @@ bazel_github_job(
     name = n,
     config = ":configs/%s.json" % n,
 ) for n in [
-    "rules_scala",
-    "rules_rust",
     "rules_dotnet",
     "rules_jsonnet",
+    "rules_rust",
+    "rules_scala",
 ]]
 
 # Jobs from the bazelbuild org using the default configuration
 [bazel_github_job(name = n) for n in [
+    "bazel-watcher",
+    "migration-tooling",
     "rules_appengine",
     "rules_closure",
     "rules_d",
-    "rules_go",
-    "rules_sass",
-    "rules_perl",
     "rules_docker",
+    "rules_go",
+    "rules_perl",
+    "rules_sass",
     "skydoc",
-    "bazel-watcher",
-    "migration-tooling",
 ]]
 
 # Jobs without tests
@@ -183,13 +183,13 @@ bazel_github_job(
     name = n,
     config = ":configs/empty.json",
 ) for n in [
+    "bazel-integration-testing",
+    "BUILD_file_generator",
     "rules_apple",
     "rules_k8s",
-    "rules_python",
     "rules_nodejs",
+    "rules_python",
     "rules_typescript",
-    "BUILD_file_generator",
-    "bazel-integration-testing",
 ]]
 
 # Jobs from the abseil org
