@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <hudson.plugins.emailext.ExtendedEmailPublisherDescriptor plugin="email-ext@2.40.5">
-  <defaultSuffix>@google.com</defaultSuffix>
+  <defaultSuffix>@bazel.build</defaultSuffix>
   <smtpAuthUsername>##SECRET:smtp.auth.username##</smtpAuthUsername>
   <smtpAuthPassword>##SECRET:smtp.auth.password##</smtpAuthPassword>
-  <smtpHost>smtp.sendgrid.net</smtpHost>
-  <useSsl>false</useSsl>
-  <smtpPort>2525</smtpPort>
+  <smtpHost>smtp.gmail.com</smtpHost>
+  <useSsl>true</useSsl>
+  <smtpPort>465</smtpPort>
   <charset>UTF-8</charset>
   <defaultContentType>text/plain</defaultContentType>
   <defaultSubject>$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!</defaultSubject>
@@ -13,6 +13,7 @@
 &#xd;
 Check console output at $BUILD_URL to view the results.</defaultBody>
   <defaultPresendScript></defaultPresendScript>
+  <defaultPostsendScript></defaultPostsendScript>
   <defaultClasspath/>
   <defaultTriggerIds>
     <string>hudson.plugins.emailext.plugins.trigger.FailureTrigger</string>
@@ -24,7 +25,7 @@ Check console output at $BUILD_URL to view the results.</defaultBody>
   <overrideGlobalSettings>true</overrideGlobalSettings>
   <precedenceBulk>false</precedenceBulk>
   <debugMode>false</debugMode>
-  <enableSecurity>false</enableSecurity>
   <requireAdminForTemplateTesting>false</requireAdminForTemplateTesting>
   <enableWatching>false</enableWatching>
+  <enableAllowUnregistered>false</enableAllowUnregistered>
 </hudson.plugins.emailext.ExtendedEmailPublisherDescriptor>
