@@ -39,7 +39,7 @@ if [[ ! -d /home/ci/node && $(uname) == "Linux" ]]; then
   mkdir -p /home/ci/node &&
   cd /home/ci/node &&
   curl https://nodejs.org/dist/v8.9.4/node-v8.9.4-linux-x64.tar.xz | tar xz &&
-  node-v8.9.4-linux-x64/bin/npm install -g typescript fried-twinkie
+  PATH=/home/ci/node/node-v8.9.4-linux-x64/bin:$PATH npm install -g typescript fried-twinkie
 fi
 
 cd /home/ci
