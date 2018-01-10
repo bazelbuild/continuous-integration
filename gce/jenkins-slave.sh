@@ -33,7 +33,6 @@ if [ -f /var/run/reboot-required ]; then
 fi
 
 NODE_NAME=$(cat /home/ci/node_name)
-MASTER="jenkins.c.bazel-public.internal"
 
 # Setup NodeJS
 if [ ! -d /home/ci/node ]; then
@@ -61,19 +60,9 @@ else
   unset ANDROID_NDK_PATH
 fi
 
-# Download dependencies
-# The server might not be started yet, so do that in a loop until the server is up
-# and running
-function get_slave_agent() {
-  rm -f slave.jar slave-agent.jnlp
-  wget -nc http://${MASTER}/jnlpJars/slave.jar || return 1
-  wget -nc http://${MASTER}/computer/${NODE_NAME}/slave-agent.jnlp || return 1
-  chmod a+r slave-agent.jnlp
-  sed -E -i.bak "s|https://ci\.bazel\.build/|http://${MASTER}/|g" slave-agent.jnlp
-}
-
-# Run jenkins slave agent
-function run_agent() {
+# Keep the agent running, even if it crashes or the server is temporarily not available.
+while true; do
+  wget -O slave.jar https://ci.bazel.build/jnlpJars/slave.jar &&
   sudo -u ci \
       ANDROID_SDK_PATH=$ANDROID_SDK_PATH \
       ANDROID_SDK_BUILD_TOOLS_VERSION=$ANDROID_SDK_BUILD_TOOLS_VERSION \
@@ -81,12 +70,9 @@ function run_agent() {
       ANDROID_NDK_PATH=$ANDROID_NDK_PATH \
       ANDROID_NDK_API_LEVEL=$ANDROID_NDK_API_LEVEL \
       PATH=/home/ci/node/node-v6.9.1-linux-x64/bin:$PATH \
-      $(which java) -jar slave.jar -jnlpUrl file:///home/ci/slave-agent.jnlp -noReconnect
-}
+      $(which java) -jar slave.jar -jnlpUrl https://ci.bazel.build/computer/${NODE_NAME}/slave-agent.jnlp -noReconnect
 
-while true; do
-  get_slave_agent && run_agent
-  # The jenkins server is down, sleep and retries in 1 minute
+  # Something went wrong. Sleep and retry in 1 minute.
   sleep 60
 done
 

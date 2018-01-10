@@ -70,10 +70,9 @@ Start-Process -Wait $anaconda3_installer -ArgumentList "/AddToPath=0? /Installat
 $webclient=(New-Object Net.WebClient)
 $webclient.Headers.Add("Metadata-Flavor", "Google")
 $jenkins_node=$webclient.DownloadString("http://metadata/computeMetadata/v1/instance/attributes/jenkins_node")
-$jenkins_master='jenkins.c.bazel-public.internal'
 
 # Save the Jenkins slave.jar to a suitable location.
-Invoke-WebRequest http://${jenkins_master}/jnlpJars/slave.jar -OutFile slave.jar
+Invoke-WebRequest https://ci.bazel.build/jnlpJars/slave.jar -OutFile slave.jar
 
 # Install the necessary packages in msys2
 $bash_installer=@'
@@ -109,17 +108,12 @@ cmd.exe /C mklink /j C:\bazel_ci\installs\latest $folder
 # Also use the latest release for bootstrapping
 cmd.exe /C mklink /j C:\bazel_ci\installs\bootstrap $folder
 
-# Replace the host name in the JNLP file, because Jenkins, in its infinite
-# wisdom, does not let us change that separately from its external hostname.
-$jnlp=((New-Object Net.WebClient).DownloadString("http://${jenkins_master}/computer/${jenkins_node}/slave-agent.jnlp"))
-$jnlp=$jnlp -replace "https://ci.bazel.build", "http://${jenkins_master}"
-Write-Output $jnlp | Out-File -Encoding ascii slave-agent.jnlp
-
 # Create the service that runs the Jenkins slave
 # We can't execute Java directly because then it mysteriously fails with
 # "Sockets error: 10106: create", so we redirect through Powershell
 # The path change is needed because Jenkins cannot execute a different git
 # binary on different nodes, so we need to simply use "git"
+$jnlpUrl = "https://ci.bazel.build/computer/${jenkins_node}/slave-agent.jnlp"
 $agent_script=@"
 `$env:path="c:\tools\msys64\usr\bin;`$env:path"
 cd c:\bazel_ci
@@ -127,7 +121,7 @@ cd c:\bazel_ci
 # Jenkins tries to reconnect to the wrong port if the server is restarted.
 # -noReconnect makes the agent die, and it is then subsequently restarted by
 # Windows because it is a service, and then all is well.
-& "$java\bin\java" -jar c:\bazel_ci\slave.jar -jnlpUrl file:///bazel_ci/slave-agent.jnlp -noReconnect
+& "${java}\bin\java" -jar c:\bazel_ci\slave.jar -jnlpUrl $jnlpUrl -noReconnect
 "@
 Write-Output $agent_script | Out-File -Encoding ascii agent_script.ps1
 

@@ -24,24 +24,19 @@ HOME_FS={{ variables.HOME_FS }}
     | sed -e 's|^\./||') > /etc/ca-certificates.conf
 update-ca-certificates
 
-# Create the Jenkins user
+# Create the Jenkins user.
 groupadd -g 1000 ci
 useradd -d ${HOME_FS} -r -g 1000 -u 1000 ci
 chown ci.ci ${HOME_FS}
 cd ${HOME_FS}
 
-# Execute additional setups
+# Execute additional setup scripts.
 for i in /opt/run/*.{,ba}sh; do
   if [ -f "$i" ]; then
     /bin/bash $i
   fi
 done
 
-# Run the jenkins agent
-JENKINS_SERVER=${JENKINS_SERVER:-{{ variables.JENKINS_SERVER }}}
-wget -nc ${JENKINS_SERVER}/jnlpJars/slave.jar || exit 1
-wget -nc ${JENKINS_SERVER}/computer/{{ variables.NODE_NAME }}/slave-agent.jnlp || exit 1
-sed -E -i "s|https?://ci(-staging)?\.bazel\.build|http://${JENKINS_SERVER}|g" slave-agent.jnlp
-chmod a+r slave-agent.jnlp
-su ci -c "${JAVA_HOME}/bin/java -jar slave.jar -jnlpUrl file://$PWD/slave-agent.jnlp -noReconnect"
-
+# Run the Jenkins agent.
+wget -O slave.jar https://ci.bazel.build/jnlpJars/slave.jar || exit 1
+su ci -c "${JAVA_HOME}/bin/java -jar slave.jar -jnlpUrl https://ci.bazel.build/computer/{{ variables.NODE_NAME }}/slave-agent.jnlp -noReconnect"

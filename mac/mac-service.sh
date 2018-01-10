@@ -25,14 +25,10 @@ cd $HOME
 retry=1
 while (( $retry != 0 )); do
   retry=0
-  rm -f slave.jar slave-agent.jnlp
+  rm -f slave.jar
   curl -qo slave.jar http://master.ci.bazel.io/jnlpJars/slave.jar || retry=1
-  curl -qo slave-agent.jnlp http://master.ci.bazel.io/computer/$(cat $HOME/node_name)/slave-agent.jnlp || retry=1
   sleep 5
 done
-
-sed -E -i.bak 's|https://ci\.bazel\.build|http://master.ci.bazel.io|g' slave-agent.jnlp
-rm -f slave-agent.jnlp.bak
 
 export ANDROID_SDK_PATH=$(echo $HOME/android-sdk-*)
 export ANDROID_NDK_PATH=$(echo $HOME/android-ndk-*)
@@ -41,11 +37,9 @@ export ANDROID_SDK_API_LEVEL=$(ls $ANDROID_SDK_PATH/platforms | cut -d '-' -f 2 
 export ANDROID_NDK_API_LEVEL=$(ls $ANDROID_NDK_PATH/platforms | cut -d '-' -f 2 | sort -n | tail -1)
 export PATH=/Users/ci/node/node-v6.9.1-darwin-x64/bin:$PATH
 
-chmod a+r slave-agent.jnlp
-
 while true; do
-  $(which java) -jar slave.jar -jnlpUrl file:///$HOME/slave-agent.jnlp -noReconnect
-  # The jenkins server is probably down, sleep and retry in 1 minute
+  $(which java) -jar slave.jar -jnlpUrl https://ci.bazel.build/computer/$(cat $HOME/node_name)/slave-agent.jnlp -noReconnect
+  # Something went wrong. Sleep and retry in 1 minute.
   sleep 60
 done
 EOF

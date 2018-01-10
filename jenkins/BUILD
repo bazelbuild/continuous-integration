@@ -47,6 +47,7 @@ jenkins_nodes(
     DARWIN_COUNT,
     num_executors = 1,
     remote_fs = "/Users/ci",
+    tunnel = "master.ci.bazel.io:50000",
 )
 
 # GCE machines
@@ -55,18 +56,21 @@ jenkins_nodes(
     WINDOWS_COUNT,
     num_executors = 1,
     remote_fs = "c:\\jenkins",
+    tunnel = "jenkins.c.bazel-public.internal:50000",
 )
 
 jenkins_nodes(
     UBUNTU_1404_PREFIX,
     UBUNTU_1404_COUNT,
     labels = ["linux-x86_64"],
+    tunnel = "jenkins.c.bazel-public.internal:50000",
 )
 
 jenkins_nodes(
     UBUNTU_DOCKER_PREFIX,
     UBUNTU_DOCKER_COUNT,
     labels = ["docker"],
+    tunnel = "jenkins.c.bazel-public.internal:50000",
 )
 
 # Non-release nodes
@@ -74,12 +78,14 @@ jenkins_nodes(
     UBUNTU_1604_PREFIX,
     UBUNTU_1604_COUNT,
     labels = ["no-release"],
+    tunnel = "jenkins.c.bazel-public.internal:50000",
 )
 
 jenkins_nodes(
     FREEBSD_11_PREFIX,
     FREEBSD_11_COUNT,
     labels = ["no-release"],
+    tunnel = "jenkins.c.bazel-public.internal:50000",
 )
 
 #
