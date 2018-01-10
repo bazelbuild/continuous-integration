@@ -52,6 +52,8 @@ SLAVES=(
     # Fow Windows, we use a custom image with pre-installed MSVC.
     "windows-slave-1 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-1 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows.ps1"
     "windows-slave-2 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-2 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows.ps1"
+    # "windows-slave-1 windows-server-2016-dc-bazel-ci-v20180110 windows-x86_64-1 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows-2016.ps1"
+    # "windows-slave-2 windows-server-2016-dc-bazel-ci-v20180110 windows-x86_64-2 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows-2016.ps1"
 )
 
 # Jenkins controller for ci.bazel.build
@@ -154,7 +156,7 @@ function create_slave() {
   if [[ $IMAGE == ubuntu-* ]]; then
     IMAGE_FLAG="--image-project=ubuntu-os-cloud --image-family=$IMAGE"
     LOCAL_SSD="--local-ssd interface=nvme"
-  elif [[ $IMAGE == windows-* ]]; then
+  elif [[ $IMAGE == windows-server-2012-* ]]; then
     CPU_PLATFORM="Intel Haswell"
     MACHINE_TYPE="n1-standard-16"
     IMAGE_FLAG="--image $IMAGE"
@@ -215,10 +217,6 @@ function create_slave() {
 # Primary purpose is to propagate changes to the startup scripts (e.g.
 # mount-volumes.sh for the jenkins controller, jenkins-slave.sh for Ubuntu nodes,
 # etc.) without recreating the VM. The update needs a VM reboot to take effect.
-#
-# The gcloud command takes a few moments to complete so it is started as a
-# background job. Wait on its PID or job number (or %?gcloud) before exiting
-# this script.
 function update_metadata() {
   local tag="${MASTER[0]}"
   local metadata_flag=""
@@ -243,7 +241,7 @@ function update_metadata() {
   gcloud compute instances add-metadata "$tag" \
       --zone "$location" \
       $metadata_flag \
-      --metadata-from-file "$startup_metadata" &
+      --metadata-from-file "$startup_metadata"
 }
 
 function get_slave_by_name() {
