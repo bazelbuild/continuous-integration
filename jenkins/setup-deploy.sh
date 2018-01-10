@@ -24,19 +24,18 @@ pushd /opt/data
 # time.
 wget https://storage.googleapis.com/pub/gsutil.tar.gz
 
-tar zxf hoedown.tar.gz
-tar zxf github_release.tar.gz
-tar zxf gsutil.tar.gz
+tar zxf hoedown.tar.gz && rm hoedown.tar.gz
+tar zxf github_release.tar.gz && rm github_release.tar.gz
+tar zxf gsutil.tar.gz && rm gsutil.tar.gz
 
-mv hoedown-3.0.4 hoedown
+mv hoedown-* hoedown
 pushd hoedown
 make CC=gcc hoedown
 popd
 
-mv github-release-1.0.7 github-release
+mv github-release-* github-release
 pushd github-release
 make
 popd
 
 popd
-
