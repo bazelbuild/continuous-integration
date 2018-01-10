@@ -22,7 +22,7 @@
 cat > /root/jenkins-startup <<'EOF'
 &> /root/jenkins-startup.log
 
-# Wait until the machine is set-up on creation
+# Wait until the machine is set-up on creation.
 while ! (id ci >&/dev/null) || [ ! -f /home/ci/node_name ]; do
   sleep 60
 done
@@ -34,18 +34,17 @@ fi
 
 NODE_NAME=$(cat /home/ci/node_name)
 
-# Setup NodeJS
-if [ ! -d /home/ci/node ]; then
-  # TODO(dmarting): this install Linux nodejs on FreeBSD, we should extract this out.
-  mkdir -p /home/ci/node
-  (cd /home/ci/node && curl "https://nodejs.org/dist/v6.9.1/node-v6.9.1-linux-x64.tar.gz" | tar zx)
-  # || true to ignore failure on non-linux platforms.
-  (PATH=/home/ci/node/node-v6.9.1-linux-x64/bin:$PATH npm install -g typescript@2.3.4 fried-twinkie@0.0.14 || true)
+# Setup NodeJS (only on Linux).
+if [[ ! -d /home/ci/node && $(uname) == "Linux" ]]; then
+  mkdir -p /home/ci/node &&
+  cd /home/ci/node &&
+  curl https://nodejs.org/dist/v8.9.4/node-v8.9.4-linux-x64.tar.xz | tar xz &&
+  node-v8.9.4-linux-x64/bin/npm install -g typescript fried-twinkie
 fi
 
 cd /home/ci
 
-# Setup the various android paths
+# Setup the various Android SDK paths.
 export ANDROID_SDK_PATH=$(echo /home/ci/android/android-sdk-*)
 export ANDROID_NDK_PATH=$(echo /home/ci/android/android-ndk-*)
 if [ -d "${ANDROID_SDK_PATH}" ]; then
@@ -83,7 +82,6 @@ EOF
 # on some systems) is installed.
 
 cat > /root/call-jenkins-startup <<'EOF'
-
 PATH=$PATH:/usr/local/bin ; export PATH
 echo `date` PATH=$PATH >> /root/early-startup.log
 
@@ -93,7 +91,6 @@ while [ -z "`which bash`" ] ; do
 done
 
 bash /root/jenkins-startup
-
 EOF
 
 # Start the actual jenkins daemon
