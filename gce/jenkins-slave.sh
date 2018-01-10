@@ -68,7 +68,7 @@ while true; do
       ANDROID_SDK_API_LEVEL=$ANDROID_SDK_API_LEVEL \
       ANDROID_NDK_PATH=$ANDROID_NDK_PATH \
       ANDROID_NDK_API_LEVEL=$ANDROID_NDK_API_LEVEL \
-      PATH=/home/ci/node/node-v6.9.1-linux-x64/bin:$PATH \
+      PATH=/home/ci/node/node-v8.9.4-linux-x64/bin:$PATH \
       $(which java) -jar slave.jar -jnlpUrl https://ci.bazel.build/computer/${NODE_NAME}/slave-agent.jnlp -noReconnect
 
   # Something went wrong. Sleep and retry in 1 minute.
