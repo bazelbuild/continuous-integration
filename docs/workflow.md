@@ -22,7 +22,7 @@ Gcloud:
 
     ```
     gcloud auth login
-    gcloud set project bazel-public
+    gcloud config set project bazel-public
     ```
 
 ## Pushing changes
