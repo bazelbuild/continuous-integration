@@ -109,7 +109,7 @@ genrule(
 
 docker_build(
     name = "deploy-base",
-    base = "//base:deploy-base",
+    base = "//base:ubuntu-xenial-amd64-deploy",
     directory = "/opt/data",
     env = {
         # We have to put those files on some secrets volume.
@@ -144,7 +144,7 @@ jenkins_node(
 
 docker_build(
     name = "ubuntu-with-bazel-installer",
-    base = "//base:deploy-base",
+    base = "//base:ubuntu-xenial-amd64-deploy",
     data_path = "/gce",
     directory = "/opt/run",
     files = ["//gce:bootstrap-bazel.sh"],

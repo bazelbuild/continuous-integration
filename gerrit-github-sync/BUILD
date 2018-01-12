@@ -17,7 +17,7 @@ load("@io_bazel_rules_docker//docker:docker.bzl", "docker_build")
 
 docker_build(
     name = "gerrit-github-sync",
-    base = "//base:ssh-bash-base",
+    base = "//base:ubuntu-xenial-amd64-ssh",
     entrypoint = [
         "/bin/bash",
         "/gerrit-github-sync.sh",

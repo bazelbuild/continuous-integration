@@ -26,13 +26,3 @@ docker_build(
     name = "ubuntu-xenial-amd64-ssh",
     base = "@ubuntu-xenial-amd64-ssh//:image",
 )
-
-alias(
-    name = "ssh-bash-base",
-    actual = ":ubuntu-xenial-amd64-ssh",
-)
-
-alias(
-    name = "deploy-base",
-    actual = ":ubuntu-xenial-amd64-deploy",
-)
