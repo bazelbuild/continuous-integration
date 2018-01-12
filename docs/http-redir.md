@@ -28,14 +28,14 @@ http {
   server {
     listen 80;
     server_name bazel.build www.bazel.build bazel.io www.bazel.io;
-    rewrite ^ https://bazel.build$request_uri permanent;
+    return 301 https://bazel.build$request_uri;
   }
 
   # Redirect http:// to https:// and *.bazel.io to *.bazel.build.
   server {
     listen 80;
     server_name ~^(?<subdomain>.+)\.bazel\.(?<tld>.+)$;
-    rewrite ^ https://$subdomain.bazel.build$request_uri permanent;
+    return 301 https://$subdomain.bazel.build$request_uri;
   }
 
   # Catch-all default server that just returns an error.
