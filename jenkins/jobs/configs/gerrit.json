@@ -15,5 +15,19 @@
             "test_tag_filters": ["-slow"],
             "targets": ["//:release"],
         }
+    }, {
+        "configurations": [
+            {"node": "windows-x86_64"}
+        ],
+        "parameters": {
+            "build_opts": [
+                "--nomaster_bazelrc",
+                "--workspace_status_command=tools/workspace-status.cmd",
+                "--verbose_failures"
+            ],
+            "tests": ["//javatests/..."],
+            "test_tag_filters": ["-slow", "-no_windows"],
+            "targets": ["//:headless"]
+        }
     }
 ]
