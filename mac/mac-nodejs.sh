@@ -20,7 +20,7 @@ set -eu
 
 # Install NodeJS
 if [ ! -d "/Users/ci/node" ]; then
-  mkdir -p "/Users/ci/node"
-  (cd "/Users/ci/node" && curl "https://nodejs.org/dist/v6.9.1/node-v6.9.1-darwin-x64.tar.gz" | tar zx)
-  (PATH=/Users/ci/node/node-v6.9.1-darwin-x64/bin:$PATH npm install -g typescript@2.3.4 fried-twinkie@0.0.14)
+  mkdir -p /Users/ci/node &&
+  curl https://nodejs.org/dist/v8.9.4/node-v8.9.4-darwin-x64.tar.xz | tar xz -C /Users/ci/node &&
+  PATH=/Users/ci/node/node-v8.9.4-darwin-x64/bin:$PATH npm install -g typescript fried-twinkie
 fi
