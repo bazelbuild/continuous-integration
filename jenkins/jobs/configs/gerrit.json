@@ -20,9 +20,6 @@
             {"node": "windows-x86_64"}
         ],
         "parameters": {
-            "startup_opts": [
-                "--nomaster_bazelrc"
-            ],
             "build_opts": [
                 "--workspace_status_command=tools/workspace-status.cmd",
                 "--verbose_failures"
