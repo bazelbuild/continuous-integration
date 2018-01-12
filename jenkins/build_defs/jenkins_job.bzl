@@ -37,11 +37,10 @@ def jenkins_job(name, config, substitutions = {}, deps = [], deps_aliases = {},
      project_url: the project url, defaulted to the Git URL
      test_platforms: platforms on which to run that job when inside of a
        dockerized test, by default only 'linux-x86_64'
-     create_filegroups: create filegroups named <name>/all, <name>/staging
-       and <name>/test that contains the files needed to be included
-       to include that job respectively for the production service, the
-       staging service and the docker test version. This is to be set
-       to false is the calling macros already creates those filegroups.
+     create_filegroups: create filegroups named <name>/all and <name>/test that
+       contain the files that have to be included to include that job. This is
+       to be set to false if the calling macros already creates those
+       filegroups.
   """
   github_project =  "%s/%s" % (org, project)
   github_url = "https://github.com/" + github_project
@@ -72,19 +71,6 @@ def jenkins_job(name, config, substitutions = {}, deps = [], deps_aliases = {},
     )
   if create_filegroups:
     native.filegroup(name = name + "/all", srcs = [name])
-  substitutions["SEND_EMAIL"] = "0"
-  substitutions["BAZEL_BUILD_RECIPIENT"] = ""
-  substitutions["production"] = "false"
-  expand_template(
-      name = name + "-staging",
-      template = config,
-      out = "%s-staging.xml" % name,
-      deps = deps,
-      deps_aliases = deps_aliases,
-      substitutions = substitutions,
-    )
-  if create_filegroups:
-    native.filegroup(name = name + "/staging", srcs = [name + "-staging"])
 
   if test_platforms:
     substitutions["RESTRICT_CONFIGURATION"] += " + [node:%s]" % _to_groovy_list(test_platforms)
@@ -144,7 +130,6 @@ def bazel_github_job(name, branch="master", project=None, org="bazelbuild",
 
   all_files = [name + ".xml"]
   test_files = [name + "-test.xml"]
-  staging_files = [name + "-staging.xml"]
 
   kwargs = {}
   if not github_enabled:
@@ -180,7 +165,6 @@ def bazel_github_job(name, branch="master", project=None, org="bazelbuild",
         create_filegroups=False)
     all_files.append("Global/%s.xml" % name)
     test_files.append("Global/%s-test.xml" % name)
-    staging_files.append("Global/%s-staging.xml" % name)
 
   if pr_enabled and config:
     jenkins_job(
@@ -197,7 +181,6 @@ def bazel_github_job(name, branch="master", project=None, org="bazelbuild",
         create_filegroups=False)
     all_files.append("PR/%s.xml" % name)
     test_files.append("PR/%s-test.xml" % name)
-    staging_files.append("PR/%s-staging.xml" % name)
 
   if gerrit_project:
     jenkins_job(
@@ -213,9 +196,7 @@ def bazel_github_job(name, branch="master", project=None, org="bazelbuild",
         test_platforms=test_platforms)
     all_files.append("CR/%s.xml" % name)
     test_files.append("CR/%s-test.xml" % name)
-    staging_files.append("CR/%s-staging.xml" % name)
 
   native.filegroup(name = "%s/all" % name, srcs = all_files)
   if test_platforms:
     native.filegroup(name = "%s/test" % name, srcs = test_files)
-  native.filegroup(name = "%s/staging" % name, srcs = staging_files)

@@ -52,7 +52,7 @@ Please check a configuration file under one of: ${files.join ', '}.""")
     // have access to secrets.
     return BazelConfiguration.flattenConfigurations(
       BazelConfiguration.parse(conf), config.get("restrict_configuration", [:]),
-      ["node": ["deploy", "deploy-staging"]])
+      ["node": ["deploy"]])
   } catch(Exception ex) {
     error(filename != null ? "Failed to validate configuration (file was ${filename}): ${ex.message}"
           : "Failed to validate default configuration: ${ex.message}")

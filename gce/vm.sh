@@ -72,33 +72,14 @@ MASTER=(
     "ci-instance-group"
 )
 
-# Executor nodes for ci-staging.bazel.build
-STAGING_SLAVES=(
-    "ubuntu-14-04-slave-staging ubuntu-1404-lts ubuntu_14.04-x86_64-staging europe-west1-d staging startup-script=jenkins-slave.sh ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-16-04-slave-staging ubuntu-1604-lts ubuntu_16.04-x86_64-staging europe-west1-d staging startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "ubuntu-docker-slave-staging ubuntu-1604-lts ubuntu_16.04-x86_64-docker-staging europe-west1-d default startup-script=jenkins-slave.sh ubuntu-16-04-slave.sh ubuntu-16-04-docker.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
-    "freebsd-11-slave-staging https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-1-stable-amd64-2017-12-28 freebsd-11-staging europe-west1-d staging startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
-    "freebsd-12-slave-staging https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-12-0-current-amd64-2017-12-28 freebsd-12-staging europe-west1-d staging startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
-    # Fow Windows, we use a custom image with pre-installed MSVC.
-    "windows-slave-staging windows-server-2016-dc-bazel-ci-v20180115 windows-x86_64-staging europe-west1-d staging windows-startup-script-ps1=jenkins-slave-windows-2016.ps1"
-    # Remote Cache
-    "remote-cache-staging ubuntu-1604-lts remote-cache-staging europe-west1-d staging startup-script=start-remote-cache.sh setup-remote-cache.sh"
-)
-STAGING_MASTER=(
-    # VM name
-    "jenkins-staging"
-    # Zone
-    "europe-west1-d"
-    # Metadata specification
-    "google-container-manifest=jenkins-staging.yml,startup-script=mount-volumes.sh"
-    # Disk specification
-    "name=jenkins-volumes-staging,device-name=volumes"
-    # Address name
-    "ci-staging"
-    # Network name
-    "staging"
-    # Instance group
-    "ci-staging-instance-group"
+# You can use these VMs to test anything you want on this platform. They are not
+# connected to Jenkins.
+TESTING=(
+    "ubuntu-14-04-testing ubuntu-1404-lts ubuntu_14.04-x86_64-testing europe-west1-d testing ubuntu-14-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "ubuntu-16-04-testing ubuntu-1604-lts ubuntu_16.04-x86_64-testing europe-west1-d testing ubuntu-16-04-slave.sh bootstrap-bazel.sh linux-android.sh cleanup-install.sh"
+    "freebsd-11-testing https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-1-stable-amd64-2017-12-28 freebsd-11-testing europe-west1-d testing freebsd-slave.sh freebsd-ci-homedir.sh"
+    "freebsd-12-testing https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-12-0-current-amd64-2017-12-28 freebsd-12-testing europe-west1-d testing freebsd-slave.sh freebsd-ci-homedir.sh"
+    "windows-testing windows-server-2016-dc-bazel-ci-v20180115 windows-x86_64-testing europe-west1-d testing"
 )
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
@@ -142,7 +123,7 @@ function create_slave() {
   local STARTUP_METADATA="$6"
   shift 6
 
-  if [[ $TAG == *-staging ]]; then
+  if [[ $TAG == *-testing ]]; then
     MACHINE_TYPE="n1-standard-8"
     BOOT_DISK_SIZE="250GB"
   else
@@ -216,12 +197,7 @@ function update_metadata() {
   local location="${MASTER[1]}"
   local startup_metadata="${MASTER[2]}"
 
-  if [ "$1" = "jenkins-staging" ]; then
-    tag="${STAGING_MASTER[0]}"
-    metadata_flag=""
-    location="${STAGING_MASTER[1]}"
-    startup_metadata="${STAGING_MASTER[2]}"
-  elif [ ! "$1" = jenkins ]; then
+  if [ ! "$1" = jenkins ]; then
     local args="$(get_slave_by_name "$1")"
     [ -n "$args" ] || (echo "Unknown vm $1" >&2; exit 1)
 
@@ -238,7 +214,7 @@ function update_metadata() {
 }
 
 function get_slave_by_name() {
-  for i in "${SLAVES[@]}" "${STAGING_SLAVES[@]}"; do
+  for i in "${SLAVES[@]}" "${TESTING[@]}"; do
     if [[ "$i" =~ ^"$1 " ]]; then
       echo "$i"
     fi
@@ -248,8 +224,6 @@ function get_slave_by_name() {
 function create_vm() {
   if [ "$1" = "jenkins" ]; then
     create_master "${MASTER[@]}"
-  elif [ "$1" = "jenkins-staging" ]; then
-    create_master "${STAGING_MASTER[@]}"
   else
     local args="$(get_slave_by_name "$1")"
     [ -n "$args" ] || (echo "Unknown vm $1" >&2; exit 1)
@@ -262,18 +236,7 @@ function action() {
   shift
   if (( $# == 0 )); then
     $action jenkins
-    $action jenkins-staging
-    for i in "${SLAVES[@]}" "${STAGING_SLAVES[@]}"; do
-      $action "${i%% *}"
-    done
-  elif (( $# == 1 )) && [ "$1" = "prod" ]; then
-    $action jenkins
     for i in "${SLAVES[@]}"; do
-      $action "${i%% *}"
-    done
-  elif (( $# == 1 )) && [ "$1" = "staging" ]; then
-    $action jenkins-staging
-    for i in "${STAGING_SLAVES[@]}"; do
       $action "${i%% *}"
     done
   else
@@ -289,8 +252,6 @@ function test_slave() {
   if test_vm $TAG; then
     if [ "$TAG" = "${MASTER[0]}" ]; then
       echo "${MASTER[1]}"
-    elif [ "$TAG" =  "${STAGING_MASTER[0]}" ]; then
-      echo "${STAGING_MASTER[1]}"
     else
       get_slave_by_name "$TAG" | cut -d " " -f 4
     fi
@@ -360,7 +321,7 @@ case "${command}" in
   "ssh_command")
     do_ssh_command "$@"
     ;;
-  "vms")
+  "vms"|"list")
     action print_vm_name "$@"
     ;;
   "ssh")
@@ -377,7 +338,7 @@ case "${command}" in
     do_ssh_command "$1" 'sudo docker stop $(sudo docker ps -q -f status=running -f ancestor='"$2"')'
     ;;
   *)
-    echo "Usage: $0 <command> ([<vm> ... <vm>]|staging|prod)" >&2
+    echo "Usage: $0 <command> ([<vm> ... <vm>])" >&2
     echo "       $0 ssh_command <vm> <arg0> [<arg1>..<argN>]" >&2
     echo "       $0 ssh <vm>" >&2
     echo "       $0 kill_container <vm> <image>" >&2
@@ -392,8 +353,8 @@ case "${command}" in
     echo " - ssh launch a secure shell on the specified VM." >&2
     echo " - kill_container kills container that runs the specified image on the" >&2
     echo "   specified VM." >&2
-    echo "Special value 'staging' and 'prod' point to all VM in, respectively," >&2
-    echo "ci-staging.bazel.build and ci.bazel.build." >&2
+    echo " Unless you specify a specific VM, this tool will operate on all VMs " >&2
+    echo " (Jenkins master and slaves)." >&2
     exit 1
     ;;
 esac

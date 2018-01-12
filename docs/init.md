@@ -1,46 +1,32 @@
-# Initializing the Bazel CI
+# Initializing Google Cloud for Bazel's CI
 
-## Creating the project from scratch
+This document describes how to setup our Google Cloud project so that it can
+host Bazel's Jenkins CI.
 
-This operation can be __very dangerous__:
+## Network
 
-*   it does not check for the disk existences
-*   it can lead to formatting some disks
+For CI we're using a normal 'auto' mode network:
 
-Only create the project from scratch if you know what you're doing.
-
-### What to run
-
-Run:
-
-```
-./gce/init.sh init <instance>
+```bash
+gcloud compute networks create "default"
 ```
 
-Where `<instance>` is `prod` or `staging`.
+We'll also need a static IP address for Jenkins:
 
-The command:
-
-*   creates the `/volumes` disk
-*   creates the GCP Network
-*   sets up the GCP Firewall Rules
-
-To regenerate the network rules:
-
+```bash
+gcloud compute addresses create "ci"
 ```
-./gce/init.sh firewall <instance>
-```
-
-Note: the Bazel CI's own firewall rules are managed automatically by GCP.
-
-After this command, you can populate the `/volumes` disk of the Jenkins
-controllers ("masters"). There's one controller for each `<instance>`, i.e.
-there's a prod controller and a staging controller.
 
 ## `/volumes` disk
 
 The Jenkins controller is connected to a persistent disk. This disk is
 encrypted, and it is not erased between builds nor after Jenkins restarts.
+
+Let's create one:
+
+```bash
+gcloud compute disks create "jenkins-volumes" --size=4TB
+```
 
 This disk is mounted under `/volumes` on the Jenkins controller and has two
 subdirectories:
@@ -70,8 +56,8 @@ The secrets are:
 
         ```text
         Application type: Web application
-        Name: Jenkins-staging
-        Authorized redirect URIs: https://ci-staging.bazel.build/securityRealm/finishLogin
+        Name: Jenkins
+        Authorized redirect URIs: https://ci.bazel.build/securityRealm/finishLogin
         ```
 
     3.  Click create, copy the resulting Client ID and Client secret into the
@@ -94,7 +80,7 @@ The secrets are:
     1.  Run the local, testing instance of Jenkins:
 
         ```sh
-        bazel run //jenkins:test [-- -p <port>]
+        bazel run //jenkins/test [-- -p <port>]
         ```
 
         This deploys some Docker images on your local machine and starts a
@@ -165,12 +151,11 @@ The secrets are:
 *   `apt-key.id` and `apt-key.sec.gpg`: GPG key to sign the Debian packages
 
 *   `smtp.auth.password` and `smtp.auth.username`: authentication information
-    for the mail provider
+    for the mail provider.
 
-    We use a jenkins-only identifier to send emails through
-    [SendGrid](https://sendgrid.com).
+    We use bazel.build's G Suite to send e-mails.
 
 ## Next
 
-You can now use the [`vm.sh` script to manipulate the Virtual Machines and
-the `setup_mac.sh` script to setup mac nodes](machines.md).
+You can now use the [`vm.sh` script to create the virtual machines and the
+`setup_mac.sh` script to setup mac nodes](machines.md).

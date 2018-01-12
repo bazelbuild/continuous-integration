@@ -35,10 +35,7 @@ These jobs simply run Bazel on a GitHub repository.
 The job templates and definitions are under `//jenkins`.
 
 Particularly interesting is `//jenkins/jobs/jobs.bzl`: it contains the logic
-that computes which jobs to run on the prod CI and on the staging CI.
-
-On the staging CI we run fewer jobs than on the prod one, to make full builds
-faster.
+that computes which jobs to run on CI.
 
 ## Hidden jobs
 

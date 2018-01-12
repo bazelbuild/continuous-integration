@@ -142,32 +142,12 @@ jenkins_node(
     tunnel = "jenkins.c.bazel-public.internal:50000",
 )
 
-jenkins_node(
-    name = "deploy-staging",
-    docker_base = "deploy-full",
-    labels = ["deploy"],
-    # Deploy slave have special access, do not allow to get reserved by accident.
-    mode = "EXCLUSIVE",
-    num_executors = 2,
-    visibility = ["//visibility:public"],
-)
-
 docker_build(
     name = "ubuntu-with-bazel-installer",
     base = "//base:deploy-base",
     data_path = "/gce",
     directory = "/opt/run",
     files = ["//gce:bootstrap-bazel.sh"],
-)
-
-jenkins_node(
-    name = "ubuntu-docker",
-    docker_base = ":ubuntu-with-bazel-installer",
-    labels = [
-        "linux-x86_64",
-        "install-bazel",
-    ],
-    tunnel = "jenkins.c.bazel-public.internal:50000",
 )
 
 # Jenkins job for Gerrit vetting
@@ -269,32 +249,17 @@ jenkins_docker_build(
     visibility = ["//visibility:public"],
 )
 
-jenkins_docker_build(
-    name = "jenkins-staging",
-    configs = [
-        ":config_xml",
-        ":darwin-x86_64-staging",
-        ":deploy-staging",
-        ":freebsd-11-staging",
-        ":jenkins-common-configs",
-        ":ubuntu_14.04-x86_64-staging",
-        ":ubuntu_16.04-x86_64-docker-staging",
-        ":ubuntu_16.04-x86_64-staging",
-        ":windows-x86_64-staging",
+# The Jenkins node used for testing on localhost via //jenkins/test.
+jenkins_node(
+    name = "ubuntu-docker",
+    docker_base = ":ubuntu-with-bazel-installer",
+    labels = [
+        "linux-x86_64",
+        "install-bazel",
     ],
-    jobs = [
-        "//jenkins/jobs:staging-jobs",
-        ":maintenance/gerrit-verifier/staging",
-    ],
-    substitutions = {
-        "PUBLIC_JENKINS_URL": "https://ci-staging.bazel.build/",
-    },
-    tars = ["//jenkins/lib"],
-    visibility = ["//gcr:__pkg__"],
 )
 
-#
-# A jenkins image for testing purpose
+# The Jenkins image used for testing on localhost via //jenkins/test.
 jenkins_docker_build(
     name = "jenkins-test",
     configs = [
@@ -340,9 +305,4 @@ filegroup(
             "config/config.xml.tpl",
         ],
     ),
-)
-
-alias(
-    name = "test",
-    actual = "//jenkins/test",
 )

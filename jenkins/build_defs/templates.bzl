@@ -159,7 +159,7 @@ merge_files = rule(
         "template_extension": attr.string(default=".tpl"),
         "directory": attr.string(default="/"),
         "strip_prefixes": attr.string_list(default=[]),
-        "strip_suffixes": attr.string_list(default=["-staging", "-test"]),
+        "strip_suffixes": attr.string_list(default=["-test"]),
         "substitutions": attr.string_dict(default={}),
         "path_format": attr.string(default="{path}"),
         "_build_tar": attr.label(

@@ -53,7 +53,7 @@ def _build_jobs_impl(ctx):
 _build_jobs = rule(
     attrs = {
         "jobs": attr.label_list(allow_files=True),
-        "strip_suffixes": attr.string_list(default=["-staging", "-test"]),
+        "strip_suffixes": attr.string_list(default=["-test"]),
         "_folder_xml": attr.label(
             default=Label("//jenkins/build_defs:folder.xml"),
             allow_files=True,

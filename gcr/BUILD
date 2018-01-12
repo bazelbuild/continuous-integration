@@ -8,7 +8,7 @@ load(
 )
 
 docker_bundle(
-    name = "prod-bundle",
+    name = "bundle",
     images = {
         "gcr.io/bazel-public/jenkins-master:latest": "//jenkins:jenkins",
         "gcr.io/bazel-public/deploy-slave:latest": "//jenkins:deploy.docker",
@@ -18,18 +18,5 @@ docker_bundle(
 
 docker_push(
     name = "deploy",
-    bundle = ":prod-bundle",
-)
-
-docker_bundle(
-    name = "staging-bundle",
-    images = {
-        "gcr.io/bazel-public/jenkins-master-staging:latest": "//jenkins:jenkins-staging",
-        "gcr.io/bazel-public/deploy-slave-staging:latest": "//jenkins:deploy-staging.docker",
-    },
-)
-
-docker_push(
-    name = "deploy-staging",
-    bundle = ":staging-bundle",
+    bundle = ":bundle",
 )

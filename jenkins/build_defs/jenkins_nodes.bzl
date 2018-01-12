@@ -32,7 +32,6 @@ def jenkins_nodes(name,
                   count,
                   labels=None,
                   prod_args=None,
-                  staging_args=None,
                   install_bazel=True,
                   **kwargs):
   """Create a set of Jenkins nodes on the system.
@@ -41,8 +40,7 @@ def jenkins_nodes(name,
 
   Example:
   If `name` is `darwin-x86_64` and `count` is two, it will
-  create two production nodes `darwin-x86_64-1` and
-  `darwin-x86_64-2` and one staging node `darwin-x86_64-staging`.
+  create two production nodes `darwin-x86_64-1` and `darwin-x86_64-2`.
 
   Args:
     name: prefix of each node name, it should be the platform
@@ -51,8 +49,6 @@ def jenkins_nodes(name,
     labels: Jenkins node labels to apply to this node (in addition to
       the "install-bazel" label and the `name` itself).
     prod_args: dictionary of aditional arguments for production only
-      nodes that will be passed to `jenkins_node`.
-    staging_args: dictionary of aditional arguments for staging only
       nodes that will be passed to `jenkins_node`.
     install_bazel: if the "install-bazel" label should be added to labels.
     **kwargs: other arguments to be passed verbatim to `jenkins_node`.
@@ -65,8 +61,3 @@ def jenkins_nodes(name,
       labels = labels,
       **prod_kwargs
   ) for n in jenkins_node_names(name, count)]
-  staging_kwargs = _extend_kwargs(kwargs, staging_args)
-  jenkins_node(
-      name = "%s-staging" % name,
-      labels = labels,
-      **staging_kwargs)

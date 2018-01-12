@@ -16,15 +16,14 @@ The Jenkins controller distributes the work to various nodes:
 *   Docker containers (e.g. the deploy node that deploys Bazel releases and the
     Bazel homepage)
 
-    The Docker containers run on the Jenkins controller's VM.
+The Docker containers run on the Jenkins controller's VM.
 
 ## Administration
 
 *   VMs: through the `//gce/vm.sh` script
 *   Physical machines: physically or through Chrome Remote Desktop
-*   Docker containers: through the `//gce/jenkins.yml` and
-    `//gce/jenkins-staging.yml` files (Google Container Engine pod
-    configurations)
+*   Docker containers: through the `//gce/jenkins.yml` files (Google Container
+    Engine pod configurations)
 
 ### Virtual machines admininstration
 
@@ -33,8 +32,7 @@ You can administer the VMs using the `//gce/vm.sh` script.
 You can apply the script's changes to:
 
 *   individual machines, or
-*   all machines, or
-*   all machines from `staging` or `prod` instance
+*   all machines
 
 `//gce/vm.sh` script commands:
 
@@ -42,9 +40,6 @@ You can apply the script's changes to:
     it
 *   `reimage`: `delete` a machine, then `create` it again
 *   `start` and `stop`: start or stop the specified machine(s).
-
-    We typically use this to shut down the staging instance.
-
 *   `update_metadata`: update the metadata for the VM
 
     The metadata is what we pass to the `--metadata` flags when we run `gcloud
