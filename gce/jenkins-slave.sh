@@ -38,7 +38,7 @@ NODE_NAME=$(cat /home/ci/node_name)
 if [[ ! -d /home/ci/node && $(uname) == "Linux" ]]; then
   mkdir -p /home/ci/node &&
   cd /home/ci/node &&
-  curl https://nodejs.org/dist/v8.9.4/node-v8.9.4-linux-x64.tar.xz | tar xz &&
+  curl https://nodejs.org/dist/v8.9.4/node-v8.9.4-linux-x64.tar.xz | tar xJ &&
   PATH=/home/ci/node/node-v8.9.4-linux-x64/bin:$PATH npm install -g typescript fried-twinkie
 fi
 
