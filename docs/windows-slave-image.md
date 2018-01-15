@@ -42,6 +42,9 @@ completely automatic by the PowerShell script in `gce/jenkins-slave-windows-2016
   - Launch msys2 shell from installer, run "pacman -Syuu", forcibly close terminal window when prompted.
   - Launch "MSYS2 MinGW 64-bit" shell, run "pacman -Syuu", install all updates.
   - Run "pacman -S git curl zip unzip gcc zlib-devel isl tar patch".
+  - Open a cmd.exe with administrator privileges and run:
+    - mkdir c:\tools
+    - mklink /j c:\tools\msys64 c:\msys64
 
 - Go to http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
   - Download and install latest "Windows x64" JDK 8.
