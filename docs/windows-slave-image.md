@@ -5,6 +5,10 @@ that makes it a Jenkins slave VM. It's just a normal Windows setup with a few pr
 that you would install on a workstation anyway. The Jenkins-specific setup is then handled
 completely automatic by the PowerShell script in `gce/jenkins-slave-windows-2016.ps1`.
 
+## Modifying an existing image
+
+Instead of recreating the image from scratch, it is also fine to just take an existing image that was generated using an earlier version of these instructions, create a VM using it, make the necessary changes, run GCESysprep again and create a new image from the VM disk.
+
 ## Necessary steps
 - Create a new GCE VM with Windows Server 2016.
 - Temporarily enable RDP access to the VM via:
