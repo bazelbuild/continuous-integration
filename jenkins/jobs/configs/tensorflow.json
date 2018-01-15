@@ -29,7 +29,6 @@
         "parameters": {
             "configure": [
                 "SET TMPDIR=c:/tmp", // Use a short output root to avoid potential long path issue
-                "SET BAZEL_SH=c:/tools/msys64/usr/bin/bash.exe",
                 "yes '' | python ./configure.py"
             ],
             "build_opts": [
