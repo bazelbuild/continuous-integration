@@ -79,7 +79,15 @@ class BazelUtils implements Serializable {
 
   // Execute a shell/batch command with bazel as a command on the path
   def commandWithBazelOnPath(script) {
-    this.script.withEnv(["PATH=${new File(this.bazel).parent}:${this.script.env.PATH}",
+    def pathWithBazel = ""
+    if (isWindows) {
+      def bazelDir = bazel.substring(0, bazel.lastIndexOf("\\"))
+      pathWithBazel = "${bazelDir};${this.script.env.PATH}"
+    } else {
+      def bazelDir = bazel.substring(0, bazel.lastIndexOf("/"))
+      pathWithBazel = "${bazelDir}:${this.script.env.PATH}"
+    }
+    this.script.withEnv(["PATH=${PathWithBazel}",
           "BAZEL=${this.bazel}"] + envs) {
       if (isWindows) {
         this.script.bat script
