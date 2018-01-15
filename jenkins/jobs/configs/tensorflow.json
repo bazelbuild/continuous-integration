@@ -27,14 +27,16 @@
             "configurations": [{"node": "windows-x86_64"}]
         }],
         "parameters": {
-            // TODO(dmarting): this is terrible, can we actually call Bazel?
-            "tests": [],
-            "targets": [],
             "configure": [
-                "del c:\\tools\\msys64\\usr\\bin\\bazel.exe",
-                "copy %BAZEL% c:\\tools\\msys64\\usr\\bin\\bazel.exe",
-                ".\\tensorflow\\tools\\ci_build\\windows\\cpu\\pip\\run.bat"
+                "SET TMPDIR=c:/tmp", // Use a short output root to avoid potential long path issue
+                "SET BAZEL_SH=c:/tools/msys64/usr/bin/bash.exe",
+                "yes '' | python ./configure.py"
             ],
+            "build_opts": [
+                "-c opt",
+                "--define=override_eigen_strong_inline=true" // speed up the compiling, see https://github.com/tensorflow/tensorflow/issues/10521
+            ],
+            "targets": ["//tensorflow/tools/pip_package:build_pip_package"]
         }
     }
 ]
