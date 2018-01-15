@@ -45,7 +45,6 @@ WINDOWS_COUNT = 2
 jenkins_nodes(
     DARWIN_PREFIX,
     DARWIN_COUNT,
-    num_executors = 1,
     remote_fs = "/Users/ci",
     tunnel = "master.ci.bazel.io:50000",
 )
@@ -54,7 +53,6 @@ jenkins_nodes(
 jenkins_nodes(
     WINDOWS_PREFIX,
     WINDOWS_COUNT,
-    num_executors = 1,
     remote_fs = "c:\\jenkins",
     tunnel = "jenkins.c.bazel-public.internal:50000",
 )

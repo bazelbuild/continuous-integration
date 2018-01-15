@@ -50,10 +50,10 @@ SLAVES=(
     "freebsd-12-slave-1 https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-12-0-current-amd64-2017-12-28 freebsd-12-1 europe-west1-d default startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
     "freebsd-12-slave-2 https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-12-0-current-amd64-2017-12-28 freebsd-12-2 europe-west1-d default startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
     # Fow Windows, we use a custom image with pre-installed MSVC.
-    "windows-slave-1 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-1 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows.ps1"
-    "windows-slave-2 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-2 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows.ps1"
-    # "windows-slave-1 windows-server-2016-dc-bazel-ci-v20180110 windows-x86_64-1 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows-2016.ps1"
-    # "windows-slave-2 windows-server-2016-dc-bazel-ci-v20180110 windows-x86_64-2 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows-2016.ps1"
+    # "windows-slave-1 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-1 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows.ps1"
+    # "windows-slave-2 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-2 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows.ps1"
+    "windows-slave-1 windows-server-2016-dc-bazel-ci-v20180115 windows-x86_64-1 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows-2016.ps1"
+    "windows-slave-2 windows-server-2016-dc-bazel-ci-v20180115 windows-x86_64-2 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows-2016.ps1"
 )
 
 # Jenkins controller for ci.bazel.build
