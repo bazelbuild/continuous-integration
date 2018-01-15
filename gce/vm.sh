@@ -50,8 +50,6 @@ SLAVES=(
     "freebsd-12-slave-1 https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-12-0-current-amd64-2017-12-28 freebsd-12-1 europe-west1-d default startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
     "freebsd-12-slave-2 https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-12-0-current-amd64-2017-12-28 freebsd-12-2 europe-west1-d default startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
     # Fow Windows, we use a custom image with pre-installed MSVC.
-    # "windows-slave-1 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-1 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows.ps1"
-    # "windows-slave-2 windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-2 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows.ps1"
     "windows-slave-1 windows-server-2016-dc-bazel-ci-v20180115 windows-x86_64-1 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows-2016.ps1"
     "windows-slave-2 windows-server-2016-dc-bazel-ci-v20180115 windows-x86_64-2 europe-west1-d default windows-startup-script-ps1=jenkins-slave-windows-2016.ps1"
 )
@@ -82,7 +80,7 @@ STAGING_SLAVES=(
     "freebsd-11-slave-staging https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-1-stable-amd64-2017-12-28 freebsd-11-staging europe-west1-d staging startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
     "freebsd-12-slave-staging https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-12-0-current-amd64-2017-12-28 freebsd-12-staging europe-west1-d staging startup-script=jenkins-slave.sh freebsd-slave.sh freebsd-ci-homedir.sh"
     # Fow Windows, we use a custom image with pre-installed MSVC.
-    "windows-slave-staging windows-server-2012-r2-dc-v20160112-vs2015-cpp-python-msys windows-x86_64-staging europe-west1-d staging windows-startup-script-ps1=jenkins-slave-windows.ps1"
+    "windows-slave-staging windows-server-2016-dc-bazel-ci-v20180115 windows-x86_64-staging europe-west1-d staging windows-startup-script-ps1=jenkins-slave-windows-2016.ps1"
     # Remote Cache
     "remote-cache-staging ubuntu-1604-lts remote-cache-staging europe-west1-d staging startup-script=start-remote-cache.sh setup-remote-cache.sh"
 )
@@ -156,11 +154,6 @@ function create_slave() {
   if [[ $IMAGE == ubuntu-* ]]; then
     IMAGE_FLAG="--image-project=ubuntu-os-cloud --image-family=$IMAGE"
     LOCAL_SSD="--local-ssd interface=nvme"
-  elif [[ $IMAGE == windows-server-2012-* ]]; then
-    CPU_PLATFORM="Intel Haswell"
-    MACHINE_TYPE="n1-standard-16"
-    IMAGE_FLAG="--image $IMAGE"
-    LOCAL_SSD=""
   else
     IMAGE_FLAG="--image $IMAGE"
     LOCAL_SSD="--local-ssd interface=scsi"
