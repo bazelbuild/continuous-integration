@@ -141,6 +141,7 @@ jenkins_node(
     mode = "EXCLUSIVE",
     num_executors = 2,
     visibility = ["//visibility:public"],
+    tunnel = "jenkins.c.bazel-public.internal:50000",
 )
 
 jenkins_node(
@@ -168,6 +169,7 @@ jenkins_node(
         "linux-x86_64",
         "install-bazel",
     ],
+    tunnel = "jenkins.c.bazel-public.internal:50000",
 )
 
 # Jenkins job for Gerrit vetting
