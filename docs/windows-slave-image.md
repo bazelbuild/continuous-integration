@@ -55,12 +55,28 @@ completely automatic by the PowerShell script in `gce/jenkins-slave-windows-2016
   - Create new folder: "C:\Program Files\nssm".
   - Extract nssm.exe from the download ZIP file's "win64" folder into the just created folder.
 
+- Install the Android SDK:
+  - Download the command-line tools from: https://developer.android.com/studio/index.html#downloads
+  - Extract the ZIP into C:\bazel_ci\android (create missing folders if necessary).
+  - Open a cmd.exe with administrator privileges and run:
+    - cd \bazel_ci\android
+    - ren tools tools.old
+    - tools.old\bin\sdkmanager tools
+    - rd /s /q tools.old
+    - tools\bin\sdkmanager --install platform-tools build-tools;26.0.1 platforms;android-24 platforms;android-25 platforms;android-26 extras;android;m2repository
+    
+- Install the Android NDK:
+  - Download the NDK from here: https://dl.google.com/android/repository/android-ndk-r10e-windows-x86_64.zip
+  - Extract the ZIP into C:\bazel_ci.
+
 - Start -> Search for "path" -> Choose "Edit the system environment variables"
   - Click "Environment Variables". Do the following actions in the lower "System variables" part of the UI.
   - Add "C:\Program Files\nssm" to the PATH variable.
   - Set BAZEL_VC to "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC"
   - Set BAZEL_SH to "C:\msys64\usr\bin\bash.exe"
   - Set JAVA_HOME to "C:\Program Files\Java\jdk1.8.0_152" (or the latest version installed)
+  - Set ANDROID_HOME to "C:\bazel_ci\android".
+  - Set ANDROID_NDK_HOME to "C:\bazel_ci\android-ndk-r10e".
 
 - Start -> Type "GCESysprep", run it.
   - The system will shut down and prepare itself for being used as an image to create new VMs.
