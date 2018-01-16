@@ -87,7 +87,7 @@ class BazelUtils implements Serializable {
       def bazelDir = bazel.substring(0, bazel.lastIndexOf("/"))
       pathWithBazel = "${bazelDir}:${this.script.env.PATH}"
     }
-    this.script.withEnv(["PATH=${PathWithBazel}",
+    this.script.withEnv(["PATH=${pathWithBazel}",
           "BAZEL=${this.bazel}"] + envs) {
       if (isWindows) {
         this.script.bat script
