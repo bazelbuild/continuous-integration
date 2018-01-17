@@ -40,8 +40,7 @@ githubHook(refs: '^refs/(heads/release-|tags/).*$') {
       repository: delegate.url,
       branch: delegate.branch,
       extra_bazelrc: params.EXTRA_BAZELRC,
-      refspec: "+refs/heads/*:refs/remotes/origin/* +refs/notes/*:refs/notes/*",
-      configuration: '''{{ raw_imports['//jenkins/jobs:configs/bootstrap.json'].replace('\\', '\\\\').replace("'", "\\'") }}''')
+      refspec: "+refs/heads/*:refs/remotes/origin/* +refs/notes/*:refs/notes/*")
 }
   </script>
     <sandbox>true</sandbox>

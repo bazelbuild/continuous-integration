@@ -12,9 +12,6 @@ load("//jenkins/lib:def.bzl", "bazel_job_configuration_test")
 [jenkins_job(
     name = "bazel/" + job,
     config = "global/%s.xml.tpl" % job,
-    deps = [
-        ":configs/bootstrap.json",
-    ],
 ) for job in [
     "nightly",
     "presubmit",

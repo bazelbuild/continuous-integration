@@ -42,8 +42,7 @@
       repository: "https://bazel.googlesource.com/bazel",
       branch: "master",
       extra_bazelrc: params.EXTRA_BAZELRC,
-      refspec: "+refs/heads/*:refs/remotes/origin/*",
-      configuration: '''{{ raw_imports['//jenkins/jobs:configs/bootstrap.json'].replace('\\', '\\\\').replace("'", "\\'") }}''')
+      refspec: "+refs/heads/*:refs/remotes/origin/*")
   </script>
     <sandbox>true</sandbox>
   </definition>

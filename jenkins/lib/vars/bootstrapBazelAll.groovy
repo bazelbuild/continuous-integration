@@ -15,15 +15,13 @@ def call(config = [:]) {
   def repository = config.get("repository", "https://bazel.googlesource.com/bazel")
   def branch = config.get("branch", "master")
   def refspec = config.get("refspec", "+refs/heads/*:refs/remotes/origin/*")
-  def configuration = config.get("configuration", "")
 
   def jobs = [:]
   // Convert to an array to avoid serialization issue with Jenkins
   def entrySet = readConfiguration(files: ["scripts/ci/bootstrap.json"],
                                    repository: config.repository,
                                    branch: config.branch,
-                                   refspec: config.refspec,
-                                   default_configuration: config.get("configuration", null)
+                                   refspec: config.refspec
                                   ).entrySet().toArray()
   def values = []
   def keys = []
