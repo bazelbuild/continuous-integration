@@ -70,10 +70,10 @@ Instead of recreating the image from scratch, it is also fine to just take an ex
     - ren tools tools.old
     - tools.old\bin\sdkmanager tools
     - rd /s /q tools.old
-    - tools\bin\sdkmanager --install platform-tools build-tools;26.0.1 platforms;android-24 platforms;android-25 platforms;android-26 extras;android;m2repository
+    - tools\bin\sdkmanager --install platform-tools build-tools;27.0.3 platforms;android-24 platforms;android-25 platforms;android-26 platforms;android-27 extras;android;m2repository
     
 - Install the Android NDK:
-  - Download the NDK from here: https://dl.google.com/android/repository/android-ndk-r10e-windows-x86_64.zip
+  - Download the NDK from here: https://dl.google.com/android/repository/android-ndk-r14b-windows-x86_64.zip
   - Extract the ZIP into C:\bazel_ci.
 
 - Start -> Search for "path" -> Choose "Edit the system environment variables"
