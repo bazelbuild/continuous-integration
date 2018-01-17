@@ -82,15 +82,9 @@ def strip_prefix(path, prefixes):
       return path[len(prefix):]
   return path
 
-def strip_suffix(path, suffixes):
-  for suffix in suffixes:
-    if path.endswith(suffix):
-      return path[:-len(suffix)]
-  return path
-
-def _dest_path(f, strip_prefixes, strip_suffixes):
-  """Returns the short path of f, stripped of strip_prefixes and strip_suffixes."""
-  return strip_suffix(strip_prefix(f.short_path, strip_prefixes), strip_suffixes)
+def _dest_path(f, strip_prefixes):
+  """Returns the short path of f, stripped of strip_prefixes."""
+  return strip_prefix(f.short_path, strip_prefixes)
 
 def _format_path(path_format, path):
   dirsep = path.rfind("/")
@@ -128,7 +122,7 @@ def _merge_files_impl(ctx):
       for k in ctx.attr.substitutions
   ]
   for f in ctx.files.srcs:
-    path = _dest_path(f, ctx.attr.strip_prefixes, ctx.attr.strip_suffixes)
+    path = _dest_path(f, ctx.attr.strip_prefixes)
     if path.endswith(ctx.attr.template_extension):
       path = path[:-4]
       f2 = ctx.new_file(ctx.label.name + "/" + path)
@@ -159,7 +153,6 @@ merge_files = rule(
         "template_extension": attr.string(default=".tpl"),
         "directory": attr.string(default="/"),
         "strip_prefixes": attr.string_list(default=[]),
-        "strip_suffixes": attr.string_list(default=["-test"]),
         "substitutions": attr.string_dict(default={}),
         "path_format": attr.string(default="{path}"),
         "_build_tar": attr.label(
@@ -191,8 +184,6 @@ Args:
       by default.
   directory: base directory for all the files in the resulting tarball.
   strip_prefixes: list of prefixes to strip from the path of the srcs to obtain
-      the final path (see path_format).
-  strip_suffixes: list of suffixes to strip from the path of the srcs to obtain
       the final path (see path_format).
   substitutions: map of substitutions to make available during template
       expansion. Values of that map will be available as "variables.name" in

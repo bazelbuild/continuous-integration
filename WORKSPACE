@@ -29,10 +29,6 @@ load(
 # "repositories" function(s).
 container_repositories()
 
-# For testing with docker
-load("//jenkins/test:docker_repository.bzl", "docker_repository")
-docker_repository()
-
 # Docker base images
 load("//base:docker_base.bzl", "docker_bases")
 docker_bases()

@@ -142,14 +142,6 @@ jenkins_node(
     tunnel = "jenkins.c.bazel-public.internal:50000",
 )
 
-docker_build(
-    name = "ubuntu-with-bazel-installer",
-    base = "//base:ubuntu-xenial-amd64-deploy",
-    data_path = "/gce",
-    directory = "/opt/run",
-    files = ["//gce:bootstrap-bazel.sh"],
-)
-
 # Jenkins job for Gerrit vetting
 jenkins_job(
     name = "maintenance/gerrit-verifier",
@@ -247,35 +239,6 @@ jenkins_docker_build(
     },
     tars = ["//jenkins/lib"],
     visibility = ["//visibility:public"],
-)
-
-# The Jenkins node used for testing on localhost via //jenkins/test.
-jenkins_node(
-    name = "ubuntu-docker",
-    docker_base = ":ubuntu-with-bazel-installer",
-    labels = [
-        "linux-x86_64",
-        "install-bazel",
-    ],
-)
-
-# The Jenkins image used for testing on localhost via //jenkins/test.
-jenkins_docker_build(
-    name = "jenkins-test",
-    configs = [
-        ":config_xml-nosecurity",
-        ":deploy",
-        ":jenkins-common-configs",
-        ":ubuntu-docker",
-    ],
-    jobs = [
-        "//jenkins/jobs:test-jobs",
-        ":maintenance/gerrit-verifier/test",
-    ],
-    substitutions = {
-        "PUBLIC_JENKINS_URL": "##ENV:JENKINS_SERVER##",
-    },
-    tars = ["//jenkins/lib"],
 )
 
 expand_template(

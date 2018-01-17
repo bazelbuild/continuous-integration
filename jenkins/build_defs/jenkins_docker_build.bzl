@@ -15,7 +15,7 @@
 # Creation of the docker container for the jenkins master.
 
 load("@io_bazel_rules_docker//docker:docker.bzl", "docker_build")
-load(":templates.bzl", "merge_files", "strip_suffix")
+load(":templates.bzl", "merge_files")
 load(":vars.bzl", "MAIL_SUBSTITUTIONS")
 
 def _build_jobs_impl(ctx):
@@ -26,17 +26,16 @@ def _build_jobs_impl(ctx):
     "--mode=0644",
     "--directory=/usr/share/jenkins/ref/jobs",
     ]
-  suffixes = ctx.attr.strip_suffixes
   # Group fob by folders
   for f in ctx.files.jobs:
     if f.owner and "/" in f.owner.name:
       segments = f.owner.name.split("/")
       for i in range(1, len(segments)):
         folders_to_create["/jobs/".join(segments[:i])] = True
-      p = strip_suffix(f.owner.name.replace("/", "/jobs/"), suffixes)
+      p = f.owner.name.replace("/", "/jobs/")
       args.append("--file=%s=%s/config.xml" % (f.path, p))
     else:
-      p = strip_suffix(f.basename[:-len(f.extension)-1], suffixes)
+      p = f.basename[:-len(f.extension)-1]
       args.append("--file=%s=%s/config.xml" % (f.path, p))
 
   for folder in folders_to_create:
@@ -53,7 +52,6 @@ def _build_jobs_impl(ctx):
 _build_jobs = rule(
     attrs = {
         "jobs": attr.label_list(allow_files=True),
-        "strip_suffixes": attr.string_list(default=["-test"]),
         "_folder_xml": attr.label(
             default=Label("//jenkins/build_defs:folder.xml"),
             allow_files=True,

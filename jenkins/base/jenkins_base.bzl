@@ -23,7 +23,7 @@ def _jenkins_image_impl(repository_ctx):
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
 pkg_tar(
     name = "plugins",
-    files = glob(["**/*.jpi"]),
+    srcs = glob(["**/*.jpi"]),
     mode = "0644",
     strip_prefix = ".",
     package_dir = "/usr/share/jenkins/ref/plugins",

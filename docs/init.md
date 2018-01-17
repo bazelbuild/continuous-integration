@@ -77,38 +77,26 @@ The secrets are:
 
     To regenerate:
 
-    1.  Run the local, testing instance of Jenkins:
-
-        ```sh
-        bazel run //jenkins/test [-- -p <port>]
-        ```
-
-        This deploys some Docker images on your local machine and starts a
-        testing Jenkins instance, by default on port 8080.
-
-    2.  Wait for the server to start on `localhost:8080`
-    3.  Click "Manage Jenkins" > "Manage Credentials".
-    4.  Enter the password for the GitHub account
-    5.  Click on "Save".
+    1.  Click "Manage Jenkins" > "Manage Credentials".
+    2.  Enter the password for the GitHub account
+    3.  Click on "Save".
 
         This updates `/var/jenkins_home/credentials.xml` inside
         the local Docker container with the secret.
 
-    6.  Find the container's ID and open an interactive terminal in it:
+    4.  Connect to the Jenkins VM:
 
         ```sh
-        docker ps | grep "jenkins-test"
-        docker exec -t -i <container ID> bash
+        gcloud compute ssh jenkins
         ```
 
-    7.  In the interactive terminal, grep the transformed password:
+    5.  Copy the credentials out of the file:
 
         ```sh
-        # inside jenkins@<container ID>
-        cat /var/jenkins_home/credentials.xml | grep password
+        cat /volumes/jenkins_home/credentials.xml
         ```
 
-    8.  Copy the value of the `<password>` tag and write it to
+    6.  Copy the value of the `<password>` tag and write it to
         `/volumes/secrets/github.bazel-io.jenkins.password`.
 
 *   `boto_config`: a boto config file with oauth token to access GCS
