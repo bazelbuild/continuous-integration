@@ -1,4 +1,4 @@
-def job_lists(name = "jobs", visibility = None):
+def job_lists(name, visibility):
   jobs = native.existing_rules()
 
   native.filegroup(

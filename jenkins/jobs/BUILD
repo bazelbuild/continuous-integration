@@ -71,15 +71,6 @@ bazel_github_job(
 )
 
 bazel_github_job(
-    name = "bazel-slow-tests",
-    config = ":configs/empty.json",
-    git_url = "https://bazel.googlesource.com/bazel",
-    pr_enabled = False,  # Do not vet PR because those tests are slow.
-    project = "bazel",
-    use_upstream_branch = True,
-)
-
-bazel_github_job(
     name = "eclipse",
     gerrit_project = "eclipse",
 )
@@ -227,4 +218,7 @@ bazel_github_job(
 )
 
 # End of project list
-job_lists(visibility = ["//jenkins:__pkg__"])
+job_lists(
+    name = "jobs",
+    visibility = ["//jenkins:__pkg__"],
+)
