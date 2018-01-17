@@ -51,10 +51,10 @@ private def listArtifacts(ws, dir, excludes) {
   return JenkinsUtils.list(env, "${ws}/${dir}", excludes).collect { "${dir}/${it}" }
 }
 
-private def listStashes(configuration, restrict_configuration) {
+private def listStashes(configuration) {
   def result = []
   def conf = BazelConfiguration.flattenConfigurations(
-    BazelConfiguration.parse(configuration), restrict_configuration)
+    BazelConfiguration.parse(configuration))
   for (k in conf.keySet()) {
     if ("stash" in conf[k] || "archive" in conf[k]) {
       result.add("bazel--node=${k.node}")
@@ -80,7 +80,7 @@ def call(params = [:]) {
 
   // unstash all the things
   dir("artifacts") {
-    def stashNames = listStashes(params.configuration, params.restrict_configuration)
+    def stashNames = listStashes(params.configuration)
     for (def stashName : stashNames) {
       unstash stashName
     }

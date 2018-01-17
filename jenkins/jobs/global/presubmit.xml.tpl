@@ -62,8 +62,7 @@ gerritReview("https://bazel-review.googlesource.com/",
       branch: params.BRANCH,
       extra_bazelrc: params.EXTRA_BAZELRC,
       refspec: params.REFSPEC,
-      configuration: '''{{ raw_imports['//jenkins/jobs:configs/bootstrap.json'].replace('\\', '\\\\').replace("'", "\\'") }}''',
-      restrict_configuration: {{ variables.RESTRICT_CONFIGURATION }})
+      configuration: '''{{ raw_imports['//jenkins/jobs:configs/bootstrap.json'].replace('\\', '\\\\').replace("'", "\\'") }}''')
   delegate.reportUrl = "${currentBuild.getAbsoluteUrl()}Downstream_projects/"
 }</script>
     <sandbox>true</sandbox>

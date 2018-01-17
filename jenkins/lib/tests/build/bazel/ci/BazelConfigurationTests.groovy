@@ -127,30 +127,9 @@ node=windows-x86_64'''
   }
 
   @Test
-  void testFlattenWithRestriction() {
-    def result = BazelConfiguration.flattenConfigurations(
-      BazelConfiguration.parse(JSON_TEST),
-      [node: ["linux-x86_64", "windows-x86_64"]])
-    def allKeys = result.collect {
-      k, v -> k.collect { k1, v1 -> "${k1}=${v1}" }.toSorted().join(",") }.toSorted()
-    assert allKeys.join("\n") == '''node=linux-x86_64
-node=windows-x86_64'''
-  }
-
-  @Test
-  void testFlattenWithRestrictionNoWindows() {
-    def result = BazelConfiguration.flattenConfigurations(
-      BazelConfiguration.parse(JSON_TEST),
-      [node: ["linux-x86_64"]])
-    def allKeys = result.collect {
-      k, v -> k.collect { k1, v1 -> "${k1}=${v1}" }.toSorted().join(",") }.toSorted()
-    assert allKeys.join("\n") == '''node=linux-x86_64'''
-  }
-
-  @Test
   void testFlattenWithExclusion() {
     def result = BazelConfiguration.flattenConfigurations(
-      BazelConfiguration.parse(JSON_TEST), [:],
+      BazelConfiguration.parse(JSON_TEST),
       [node: ["ubuntu_16.04-x86_64", "darwin-x86_64"]])
     def allKeys = result.collect {
       k, v -> k.collect { k1, v1 -> "${k1}=${v1}" }.toSorted().join(",") }.toSorted()

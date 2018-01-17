@@ -16,7 +16,6 @@ def call(config = [:]) {
   def branch = config.get("branch", "master")
   def refspec = config.get("refspec", "+refs/heads/*:refs/remotes/origin/*")
   def configuration = config.get("configuration", "")
-  def restrict_configuration = config.get("restrict_configuration", [:])
 
   def jobs = [:]
   // Convert to an array to avoid serialization issue with Jenkins
@@ -24,8 +23,7 @@ def call(config = [:]) {
                                    repository: config.repository,
                                    branch: config.branch,
                                    refspec: config.refspec,
-                                   default_configuration: config.get("configuration", null),
-                                   restrict_configuration: config.restrict_configuration
+                                   default_configuration: config.get("configuration", null)
                                   ).entrySet().toArray()
   def values = []
   def keys = []

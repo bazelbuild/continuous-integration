@@ -20,8 +20,7 @@ def createJobsFromConfiguration(config, configNames, script) {
                                    repository: config.repository,
                                    branch: config.branch,
                                    refspec: config.refspec,
-                                   default_configuration: config.configuration,
-                                   restrict_configuration: config.restrict_configuration
+                                   default_configuration: config.configuration
                                   ).entrySet().toArray()
   for (int k = 0; k < entrySet.length; k++) {
     def params = entrySet[k].value
@@ -61,8 +60,6 @@ def createJobsFromConfiguration(config, configNames, script) {
  *   - bazel_version is the baseline for the version of Bazel, generally a parameter for the job.
  *        If set to 'custom', the job will try to fetch the Bazel binary from upstream.
  *   - configuration: JSON configuration, see BazelConfiguration
- *   - restrict_configuration: A map of acceptable descriptor values. If provided, for each key,
- *     only the values that are in that map will generate a configuration.
  *   - extra_bazelrc: extraneous content for the rc file, will go after all other options.
  *        Generally to be provided as a parameter of the job.
  *   - workspace: a directory, relative to the root of the repository, that contains
@@ -76,7 +73,6 @@ def createJobsFromConfiguration(config, configNames, script) {
 def call(config = [:]) {
   config["bazel_version"] = config.get("bazel_version", "latest")
   config["configuration"] = config.get("configuration", "[]")
-  config["restrict_configuration"] = config.get("restrict_configuration", [:])
   config["extra_bazelrc"] = config.get("extra_bazelrc", "")
   config["workspace"] = config.get("workspace", "")
   config["repository"] = config.get("repository", "")

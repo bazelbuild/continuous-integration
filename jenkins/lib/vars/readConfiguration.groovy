@@ -20,8 +20,6 @@ import build.bazel.ci.BazelConfiguration
 //   - files: the list of files to read from the repository (if the first one
 //     does not exists, try the second one and so on...), default to .ci/bazel.json.
 //   - default_configuration: default json content to use if the file cannot be found
-//   - restrict_configuration: restriction to the returned configuration, see
-//     BazelConfiguration.flattenConfiguration
 def call(config = [:]) {
   def conf = null
   def files = config.get("files", [".ci/bazel.json"])
@@ -51,9 +49,8 @@ Please check a configuration file under one of: ${files.join ', '}.""")
     // We exclude the deploy slaves from being selected by the configuration, they
     // have access to secrets.
     return BazelConfiguration.flattenConfigurations(
-      BazelConfiguration.parse(conf), config.get("restrict_configuration", [:]),
-      ["node": ["deploy"]])
-  } catch(Exception ex) {
+      BazelConfiguration.parse(conf), ["node": ["deploy"]])
+  } catch (Exception ex) {
     error(filename != null ? "Failed to validate configuration (file was ${filename}): ${ex.message}"
           : "Failed to validate default configuration: ${ex.message}")
   }

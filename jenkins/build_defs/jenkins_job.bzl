@@ -54,10 +54,6 @@ def jenkins_job(name, config, substitutions = {}, deps = [], deps_aliases = {},
       "production": "true",
       } + MAIL_SUBSTITUTIONS
   substitutions["SEND_EMAIL"] = "1"
-  # RESTRICT_CONFIGURATION can be use to restrict configuration of the groovy jobs
-  if (not "RESTRICT_CONFIGURATION" in substitutions) or (
-      not substitutions["RESTRICT_CONFIGURATION"]):
-    substitutions["RESTRICT_CONFIGURATION"] = "[:]"
   expand_template(
       name = name,
       template = config,

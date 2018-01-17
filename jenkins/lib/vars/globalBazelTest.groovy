@@ -22,7 +22,6 @@ def call(config = [:]) {
   def extra_bazelrc = config.get("extra_bazelrc", "")
   def refspec = config.get("refspec", "+refs/heads/*:refs/remotes/origin/*")
   def json_config = config.configuration
-  def restrict_configuration = config.get("restrict_configuration", [])
 
   stage("Startup global test") {
     echo "Running global test for branch ${branch} (refspec: ${refspec})"
@@ -33,8 +32,7 @@ def call(config = [:]) {
     bootstrapBazelAll(repository: repository,
                       branch: branch,
                       refspec: refspec,
-                      configuration: json_config,
-                      restrict_configuration: restrict_configuration)
+                      configuration: json_config)
   }
 
 
@@ -54,7 +52,6 @@ def call(config = [:]) {
           if (!r_name.isEmpty()) {
             pushRelease(name: r_name,
                         configuration: json_config,
-                        restrict_configuration: restrict_configuration,
                         excludes: ["**/*.bazel.build.tar*", "**/bazel", "**/bazel.exe"])
             if (is_release) {
               stage("Install new release on all nodes") {
