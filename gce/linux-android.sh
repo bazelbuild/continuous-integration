@@ -19,20 +19,19 @@ set -eu
 # NDK
 mkdir -p /home/ci/android
 cd /home/ci/android
-curl -o android-ndk.bin http://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin
-chmod +x android-ndk.bin
-./android-ndk.bin >/dev/null
-rm android-ndk.bin
+curl -o android-ndk.zip https://dl.google.com/android/repository/android-ndk-r14b-linux-x86_64.zip
+unzip android-ndk.zip
+rm android-ndk.zip
 
 # Android SDK
 mkdir -p /home/ci/android/android-sdk-linux
 cd /home/ci/android/android-sdk-linux
-curl -o tools.zip https://dl.google.com/android/repository/tools_r25.2.3-linux.zip
-unzip tools.zip
-rm tools.zip
+curl -o android-sdk.zip https://dl.google.com/android/repository/sdk-tools-linux-3859397.zip
+unzip android-sdk.zip
+rm android-sdk.zip
 expect -c '
 set timeout -1;
-spawn /home/ci/android/android-sdk-linux/tools/bin/sdkmanager --update
+spawn tools/bin/sdkmanager --update
 expect {
     "Accept? (y/N)" { exp_send "y\r" ; exp_continue }
     eof
@@ -47,9 +46,10 @@ expect {
 # This should be kept in sync with mac/mac-android.sh.
 yes | tools/bin/sdkmanager \
   "platform-tools" \
-  "build-tools;26.0.1" \
+  "build-tools;27.0.3" \
   "platforms;android-24" \
   "platforms;android-25" \
   "platforms;android-26" \
+  "platforms;android-27" \
   "extras;android;m2repository"
 chown -R ci /home/ci/android
