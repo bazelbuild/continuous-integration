@@ -132,6 +132,7 @@ bazel_github_job(
     config = ":configs/rules_webtesting.json",
     project = "rules_webtesting",
     run_sequential = True,
+    sauce_enabled = True,
 )
 
 bazel_github_job(

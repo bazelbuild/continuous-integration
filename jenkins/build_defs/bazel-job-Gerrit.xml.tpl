@@ -60,6 +60,9 @@ gerritReview("https://bazel-review.googlesource.com/",
         bazel_version: "latest",
         configuration: '''{{ raw_imports['JSON_CONFIGURATION'].replace('\\', '\\\\').replace("'", "\\'") }}''',
         workspace: "{{ variables.WORKSPACE }}",
+        {% if variables.SAUCE_ENABLED == "true" %}
+        sauce: "61b4846b-279d-4369-ae20-31e9d8b9bc66",
+        {% endif %}
         run_sequentially: {{ variables.RUN_SEQUENTIAL }},
         restrict_configuration: {{ variables.RESTRICT_CONFIGURATION }}
     )

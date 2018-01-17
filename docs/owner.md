@@ -61,6 +61,12 @@ The `bazel_github_job` rule takes the following parameters:
     concurrently; otherwise runs the job's configurations one after the
     other
 
+    Useful if the job uses some exclusive resource such as [Sauce
+    Labs](https://wiki.saucelabs.com/).
+
+*   `sauce_enabled`: activates or deactivates [Sauce
+    Labs](https://wiki.saucelabs.com/) support
+
 ### `bazel_git_job` parameters
 
 The `bazel_git_job` rule takes the same parameters as `bazel_github_job`, but

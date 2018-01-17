@@ -44,7 +44,8 @@ def createJobsFromConfiguration(config, configNames, script) {
                           extra_bazelrc: config.extra_bazelrc,
                           build_tag_filters: params.get("build_tag_filters", []),
                           test_tag_filters: params.get("test_tag_filters", []),
-                          workspace: config.workspace
+                          workspace: config.workspace,
+                          sauce: config.sauce
       )
     })
   }
@@ -69,6 +70,7 @@ def createJobsFromConfiguration(config, configNames, script) {
  *   - repository: git repository to clone.
  *   - branch: branch of the repository to clone (default: master).
  *   - refspec: specification of the references to fetch
+ *   - sauce: identifier of the crendentials to connect to SauceLabs.
  *   - run_sequentially: run each configuration sequentially rather than in parallel
  */
 def call(config = [:]) {
@@ -80,6 +82,7 @@ def call(config = [:]) {
   config["repository"] = config.get("repository", "")
   config["branch"] = config.get("branch", "master")
   config["refspec"] = config.get("refspec", "+refs/heads/*:refs/remotes/origin/*")
+  config["sauce"] = config.get("sauce", "")
   config["run_sequentially"] = config.get("run_sequentially", false)
 
   // Remove special characters from bazel_version (which can be coming from a URL post):
