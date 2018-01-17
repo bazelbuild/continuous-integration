@@ -40,7 +40,7 @@ def createJobsFromConfiguration(config, configNames, script) {
                           build_opts: params.get("build_opts", []),
                           test_opts: params.get("test_opts", []),
                           startup_opts: params.get("startup_opts", []),
-                          bazel_version: config.bazel_version + conf.get("variation", ""),
+                          bazel_version: config.bazel_version,
                           extra_bazelrc: config.extra_bazelrc,
                           build_tag_filters: params.get("build_tag_filters", []),
                           test_tag_filters: params.get("test_tag_filters", []),
@@ -55,7 +55,7 @@ def createJobsFromConfiguration(config, configNames, script) {
 
 /**
  * This define a Jenkins step "bazelCiConfiguredJob" that use git and Bazel
- * with various configurations given by a list of platforms and a list of variation of Bazel.
+ * with various configurations given by a list of platforms.
  * Each arguments is set by a variable in the body of the step and the list of possible arguments
  * is:
  *   - bazel_version is the baseline for the version of Bazel, generally a parameter for the job.

@@ -57,7 +57,7 @@ private def listStashes(configuration, restrict_configuration) {
     BazelConfiguration.parse(configuration), restrict_configuration)
   for (k in conf.keySet()) {
     if ("stash" in conf[k] || "archive" in conf[k]) {
-      result.add("bazel--node=${k.node}--variation=${k.variation}")
+      result.add("bazel--node=${k.node}")
     }
   }
   return result
@@ -93,7 +93,7 @@ def call(params = [:]) {
            "GITHUB_TOKEN=${readFile(env.GITHUB_TOKEN_FILE).trim()}",
            "APT_GPG_KEY_ID=${readFile(env.APT_GPG_KEY_ID_FILE).trim()}",
            // TODO(dmarting): hack to work with release_to_apt(), we should get rid of it.
-           "tmpdir=${ws}/artifacts/node=linux-x86_64/variation="]) {
+           "tmpdir=${ws}/artifacts/node=linux-x86_64"]) {
     // Sign artifacts
     ensureGpgSecretKeyImported()
     def artifact_list = signArtifacts(artifacts)

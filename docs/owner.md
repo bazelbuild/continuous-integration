@@ -239,10 +239,6 @@ would expand to this:
     label. To see the list of labels of a specific node, click on the node in
     the Jenkins UI.
 
-*   `variation`: a variation of the Bazel binary, e.g. `-jdk7`
-
-    If not specified, it is assumed to be empty.
-
 You can use more `descriptor` keys to specify more configuration combinations,
 but they won't have any special effects.
 

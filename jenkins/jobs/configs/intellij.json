@@ -3,7 +3,6 @@
         "product": "intellij",
         "configurations": [
             {
-                "variation": "",
                 "configurations": [
                     {"node": "linux-x86_64"},
                     {"node": "ubuntu_16.04-x86_64"},
@@ -22,7 +21,6 @@
         "product": "clion",
         "configurations": [
             {
-                "variation": "",
                 "configurations": [
                     {"node": "linux-x86_64"},
                     {"node": "ubuntu_16.04-x86_64"},
@@ -42,7 +40,6 @@
     //     "name": "android-studio",
     //     "configurations": [
     //         {
-    //             "variation": "",
     //             "configurations": [
     //                 {"node": "linux-x86_64"},
     //                 {"node": "ubuntu_16.04-x86_64"},

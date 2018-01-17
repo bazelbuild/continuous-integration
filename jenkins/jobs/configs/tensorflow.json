@@ -2,7 +2,6 @@
     {
         "configurations": [
             {
-                "variation": "",
                 "configurations": [
                     {"node": "linux-x86_64"},
                     {"node": "ubuntu_16.04-x86_64"}
@@ -23,7 +22,6 @@
     }, {
         "toolchain": "msvc",
         "configurations": [{
-            "variation": "",
             "configurations": [{"node": "windows-x86_64"}]
         }],
         "parameters": {

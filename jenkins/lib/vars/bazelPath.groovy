@@ -51,12 +51,10 @@ private def getBazelInstallPath(node_label, String... segments) {
 def call(String bazel_version, String node_label) {
   // Grab bazel
   if (bazel_version.startsWith("custom")) {
-    // A custom version can be completed with a variation, e.g. custom-jdk7, extract it
-    def variation = bazel_version.substring(6)
     node_label = JenkinsUtils.normalizeNodeLabel(node_label)
     def cause = JenkinsUtils.findAndCopyUpstreamArtifacts(
       currentBuild,
-      "^node=${node_label}/variation=${variation}/bazel(\\.exe)?\$")
+      "^node=${node_label}/bazel(\\.exe)?\$")
 
     if (cause == null) {
       error("Failed to find upstream cause while asked to build with custom Bazel")
@@ -67,8 +65,7 @@ def call(String bazel_version, String node_label) {
       node_label,
       "custom",
       cause.upstreamProject.toString().replaceAll("/", "_"),
-      cause.upstreamBuild.toString(),
-      "variation_${variation}")
+      cause.upstreamBuild.toString())
     if (!JenkinsUtils.touchFileIfExists(env, bazel)) {
       dir(".bazel") { deleteDir() }
       step([$class: 'CopyArtifact',

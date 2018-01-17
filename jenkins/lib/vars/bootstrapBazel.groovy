@@ -26,7 +26,6 @@ def createCopyCommand(rootDir, toCopy, release_name) {
 
 // A step to bootstrap bazel on one platform
 def call(config = [:]) {
-  def variation = config.get("variation", "")
   def repository = config.get("repository", "https://bazel.googlesource.com/bazel")
   def branch = config.get("branch", "master")
   def refspec = config.get("refspec", "+refs/heads/*:refs/remotes/origin/*")
@@ -37,13 +36,13 @@ def call(config = [:]) {
     def release_name = ""
     def isWindows = !isUnix()
     utils.script = this
-    utils.bazel = bazelPath("latest${variation}", config.node)
-    stage("[${config.node},${variation}] clone") {
+    utils.bazel = bazelPath("latest", config.node)
+    stage("[${config.node}] clone") {
       recursiveGit(repository: repository,
                    refspec: refspec,
                    branch: branch)
     }
-    stage("[${config.node},${variation}] get_version") {
+    stage("[${config.node}] get_version") {
       release_name =
         sh(script: "bash -c 'source scripts/release/common.sh; get_full_release_name'",
            returnStdout: true).trim()
@@ -54,7 +53,7 @@ def call(config = [:]) {
         opts <<= "--workspace_status_command=scripts/ci/build_status_command.sh"
       }
       if (!release_name.isEmpty()) {
-        opts <<= "--embed_label ${release_name}${variation}"
+        opts <<= "--embed_label ${release_name}"
       }
       utils.writeRc(opts)
     }
@@ -62,7 +61,7 @@ def call(config = [:]) {
     // Configure, if necessary
     def configuration = config.get("configure", [])
     if (!configuration.isEmpty()) {
-      stage("[${config.node},${variation}] configure") {
+      stage("[${config.node}] configure") {
         if (isUnix()) {
           sh "#!/bin/sh -x\n${configuration.join('\n')}"
         } else {
@@ -71,7 +70,7 @@ def call(config = [:]) {
       }
     }
 
-    stage("[${config.node},${variation}] bootstrap") {
+    stage("[${config.node}] bootstrap") {
       def envs = ["BUILD_BY=Jenkins",
                   "GIT_REPOSITORY_URL=${env.GIT_URL}"]
       utils.build(["//src:bazel"] + targets)
@@ -84,7 +83,7 @@ def call(config = [:]) {
     toStash = toStash == null ? [:] : toStash
 
     if (!toArchive.isEmpty() || !toStash.isEmpty()) {
-      stage("[${config.node},${variation}] archive") {
+      stage("[${config.node}] archive") {
         def rootDir = pwd()
         if (isWindows) {
           rootDir = sh(script: 'cygpath -u '+rootDir.replace("\\", "/"),
@@ -94,7 +93,7 @@ def call(config = [:]) {
           deleteDir()
         }
         if(!toArchive.isEmpty()) {
-          dir("output/node=${config.node}/variation=${variation}") {
+          dir("output/node=${config.node}") {
             sh createCopyCommand(rootDir, toArchive, release_name)
           }
           dir("output") {
@@ -102,12 +101,12 @@ def call(config = [:]) {
           }
         }
         if (!toStash.isEmpty()) {
-          dir("output/node=${config.node}/variation=${variation}") {
+          dir("output/node=${config.node}") {
             sh createCopyCommand(rootDir, toStash, release_name)
           }
         }
         dir("output") {
-          stash name: "bazel--node=${config.node}--variation=${variation}"
+          stash name: "bazel--node=${config.node}"
         }
       }
     }

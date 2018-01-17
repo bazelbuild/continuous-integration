@@ -32,36 +32,15 @@ class BazelConfigurationTests {
 [
     {
         // This is a configuration that have 3 subconfiguration: linux, ubuntu and darwin
-        // Each of those configuration have 4 bazel variations: HEAD, HEAD-jdk7, latest,
-        // and latest-jdk7
         "configurations": [
             {
-                "node": "linux-x86_64",
-                "configurations": [
-                    // XXX(dmarting): Remove HEAD from here.
-                    {"variation": "HEAD"},
-                    {"variation": "HEAD-jdk7"},
-                    {"variation": "latest"},
-                    {"variation": "latest-jdk7"}
-                ]
+                "node": "linux-x86_64"
             },
             {
-                "node": "ubuntu_16.04-x86_64",
-                "configurations": [
-                    {"variation": "HEAD"},
-                    {"variation": "HEAD-jdk7"},
-                    {"variation": "latest"},
-                    {"variation": "latest-jdk7"}
-                ]
+                "node": "ubuntu_16.04-x86_64"
             },
             {
-                "node": "darwin-x86_64",
-                "configurations": [
-                    {"variation": "HEAD"},
-                    {"variation": "HEAD-jdk7"},
-                    {"variation": "latest"},
-                    {"variation": "latest-jdk7"}
-                ]
+                "node": "darwin-x86_64"
             }
         ],
         // And specify the parameters for these configurations.
@@ -79,17 +58,8 @@ class BazelConfigurationTests {
             "targets": []
         }
     }, {
-        "toolchain": "msvc",
         "configurations": [{
-            // XXX(dmarting): MSVC is a misnommer, it should have been called win32
-            // (for win32 native binary).
-            // XXX(dmarting): really MSVC/Win32 should be a bazel variation, not part of
-            // the node.
-            "node": "windows-msvc-x86_64",
-            "configurations": [{"variation": "HEAD"},{"variation": "latest"}]
-        }, {
             "node": "windows-x86_64",
-            "configurations": [{"variation": "HEAD"},{"variation": "latest"}]
         }],
         "parameters": {
             "test_opts": ["-k", "--build_tests_only"],
@@ -100,20 +70,6 @@ class BazelConfigurationTests {
             ],
             "targets": ["//src:bazel"]
         }
-    }, {
-        "toolchain": "msys",
-        "configurations": [{
-            "node": "windows-msvc-x86_64",
-            "configurations": [{"variation": "HEAD"},{"variation": "latest"}]
-        }, {
-            "node": "windows-x86_64",
-            "configurations": [{"variation": "HEAD"},{"variation": "latest"}]
-        }],
-        "parameters": {
-            "test_opts": ["-k", "--build_tests_only"],
-            "tests": ["//dummy:test"],
-            "targets": []
-        }
     }
 ]
 
@@ -121,26 +77,15 @@ class BazelConfigurationTests {
 '''
 
   private void assertConfigurationCorrect(confs) {
-    assert confs.size() == 3
-    assert confs[0].descriptor.size() == 0
+    assert confs.size() == 2
     assert confs[0].parameters.size() == 4
     assert confs[0].parameters["configure"] == [
       "source scripts/ci/build.sh",
       "setup_android_repositories"
     ]
     assert confs[0].configurations.size() == 3
-    assert confs[0].configurations.every {
-      v -> v.configurations.size() == 4 && v.parameters.size() == 0 && v.descriptor.size() == 1 }
-    assert confs[1].descriptor.size() == 1
     assert confs[1].parameters.size() == 3
-    assert confs[1].configurations.size() == 2
-    assert confs[1].configurations.every {
-      v -> v.configurations.size() == 2 && v.parameters.size() == 0 && v.descriptor.size() == 1 }
-    assert confs[2].descriptor.size() == 1
-    assert confs[2].parameters.size() == 3
-    assert confs[2].configurations.size() == 2
-    assert confs[2].configurations.every {
-      v -> v.configurations.size() == 2 && v.parameters.size() == 0 && v.descriptor.size() == 1 }
+    assert confs[1].configurations.size() == 1
   }
 
   @Test
@@ -175,54 +120,31 @@ class BazelConfigurationTests {
     def result = BazelConfiguration.flattenConfigurations(BazelConfiguration.parse(JSON_TEST))
     def allKeys = result.collect {
       k, v -> k.collect { k1, v1 -> "${k1}=${v1}" }.toSorted().join(",") }.toSorted()
-    // Once flatten there are 20 configurations
-    assert allKeys.size() == 20
-    assert allKeys.join("\n") == '''node=darwin-x86_64,variation=HEAD
-node=darwin-x86_64,variation=HEAD-jdk7
-node=darwin-x86_64,variation=latest
-node=darwin-x86_64,variation=latest-jdk7
-node=linux-x86_64,variation=HEAD
-node=linux-x86_64,variation=HEAD-jdk7
-node=linux-x86_64,variation=latest
-node=linux-x86_64,variation=latest-jdk7
-node=ubuntu_16.04-x86_64,variation=HEAD
-node=ubuntu_16.04-x86_64,variation=HEAD-jdk7
-node=ubuntu_16.04-x86_64,variation=latest
-node=ubuntu_16.04-x86_64,variation=latest-jdk7
-node=windows-msvc-x86_64,toolchain=msvc,variation=HEAD
-node=windows-msvc-x86_64,toolchain=msvc,variation=latest
-node=windows-msvc-x86_64,toolchain=msys,variation=HEAD
-node=windows-msvc-x86_64,toolchain=msys,variation=latest
-node=windows-x86_64,toolchain=msvc,variation=HEAD
-node=windows-x86_64,toolchain=msvc,variation=latest
-node=windows-x86_64,toolchain=msys,variation=HEAD
-node=windows-x86_64,toolchain=msys,variation=latest'''
+    assert allKeys.join("\n") == '''node=darwin-x86_64
+node=linux-x86_64
+node=ubuntu_16.04-x86_64
+node=windows-x86_64'''
   }
 
   @Test
   void testFlattenWithRestriction() {
     def result = BazelConfiguration.flattenConfigurations(
       BazelConfiguration.parse(JSON_TEST),
-      [node: ["linux-x86_64", "windows-x86_64"], variation: ["HEAD", "HEAD-jdk7"]])
+      [node: ["linux-x86_64", "windows-x86_64"]])
     def allKeys = result.collect {
       k, v -> k.collect { k1, v1 -> "${k1}=${v1}" }.toSorted().join(",") }.toSorted()
-    assert allKeys.size() == 4
-    assert allKeys.join("\n") == '''node=linux-x86_64,variation=HEAD
-node=linux-x86_64,variation=HEAD-jdk7
-node=windows-x86_64,toolchain=msvc,variation=HEAD
-node=windows-x86_64,toolchain=msys,variation=HEAD'''
+    assert allKeys.join("\n") == '''node=linux-x86_64
+node=windows-x86_64'''
   }
 
   @Test
   void testFlattenWithRestrictionNoWindows() {
     def result = BazelConfiguration.flattenConfigurations(
       BazelConfiguration.parse(JSON_TEST),
-      [node: ["linux-x86_64"], variation: ["HEAD", "HEAD-jdk7"]])
+      [node: ["linux-x86_64"]])
     def allKeys = result.collect {
       k, v -> k.collect { k1, v1 -> "${k1}=${v1}" }.toSorted().join(",") }.toSorted()
-    assert allKeys.size() == 2
-    assert allKeys.join("\n") == '''node=linux-x86_64,variation=HEAD
-node=linux-x86_64,variation=HEAD-jdk7'''
+    assert allKeys.join("\n") == '''node=linux-x86_64'''
   }
 
   @Test
@@ -232,38 +154,7 @@ node=linux-x86_64,variation=HEAD-jdk7'''
       [node: ["ubuntu_16.04-x86_64", "darwin-x86_64"]])
     def allKeys = result.collect {
       k, v -> k.collect { k1, v1 -> "${k1}=${v1}" }.toSorted().join(",") }.toSorted()
-    assert allKeys.size() == 12
-    assert allKeys.join("\n") == '''node=linux-x86_64,variation=HEAD
-node=linux-x86_64,variation=HEAD-jdk7
-node=linux-x86_64,variation=latest
-node=linux-x86_64,variation=latest-jdk7
-node=windows-msvc-x86_64,toolchain=msvc,variation=HEAD
-node=windows-msvc-x86_64,toolchain=msvc,variation=latest
-node=windows-msvc-x86_64,toolchain=msys,variation=HEAD
-node=windows-msvc-x86_64,toolchain=msys,variation=latest
-node=windows-x86_64,toolchain=msvc,variation=HEAD
-node=windows-x86_64,toolchain=msvc,variation=latest
-node=windows-x86_64,toolchain=msys,variation=HEAD
-node=windows-x86_64,toolchain=msys,variation=latest'''
-  }
-
-  @Test
-  void testFlattenWithExclusionNoJDK7() {
-    def result = BazelConfiguration.flattenConfigurations(
-      BazelConfiguration.parse(JSON_TEST), [:],
-      [node: ["ubuntu_16.04-x86_64", "darwin-x86_64"], variation: ["HEAD-jdk7", "latest-jdk7"]])
-    def allKeys = result.collect {
-      k, v -> k.collect { k1, v1 -> "${k1}=${v1}" }.toSorted().join(",") }.toSorted()
-    assert allKeys.size() == 10
-    assert allKeys.join("\n") == '''node=linux-x86_64,variation=HEAD
-node=linux-x86_64,variation=latest
-node=windows-msvc-x86_64,toolchain=msvc,variation=HEAD
-node=windows-msvc-x86_64,toolchain=msvc,variation=latest
-node=windows-msvc-x86_64,toolchain=msys,variation=HEAD
-node=windows-msvc-x86_64,toolchain=msys,variation=latest
-node=windows-x86_64,toolchain=msvc,variation=HEAD
-node=windows-x86_64,toolchain=msvc,variation=latest
-node=windows-x86_64,toolchain=msys,variation=HEAD
-node=windows-x86_64,toolchain=msys,variation=latest'''
+    assert allKeys.join("\n") == '''node=linux-x86_64
+node=windows-x86_64'''
   }
 }
