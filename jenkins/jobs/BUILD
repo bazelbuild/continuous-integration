@@ -186,7 +186,6 @@ bazel_github_job(
     name = n,
     config = ":configs/empty.json",
     org = "abseil",
-    poll = False,
 ) for n in [
     "abseil-cpp",
     "abseil-py",
@@ -208,13 +207,11 @@ bazel_github_job(
     name = "protobuf",
     config = ":configs/protobuf.json",
     org = "google",
-    poll = False,  # protobuf had added the robots
 )
 
 bazel_github_job(
     name = "subpar",
     org = "google",
-    poll = False,
 )
 
 # End of project list

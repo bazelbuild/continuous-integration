@@ -20,12 +20,10 @@
  *   repository (mandatory): the name of the repository to fetch
  *   branch (default to master): the name of the branch to checkout (can be a hash too)
  *   refspec (default to refs/heads/*): the list of refs to fetch
- *   poll (defaull to true): poll the repository for change (see Jenkins' SCMStep)
  */
 def call(config = [:]) {
   config["branch"] = config.get("branch", "master")
   config["refspec"] = config.get("refspec", "+refs/heads/*:refs/remotes/origin/*")
-  config["poll"] = config.get("poll", true)
   if (!("repository" in config)) {
     error("recursiveGit needs a repository parameter")
   }
@@ -42,5 +40,5 @@ def call(config = [:]) {
                               [$class: 'CleanBeforeCheckout']],
                  submoduleCfg: [],
                  userRemoteConfigs: [[url: config.repository, refspec: config.refspec]]],
-           poll: config.poll)
+           poll: true)
 }
