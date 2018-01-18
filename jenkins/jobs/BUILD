@@ -100,10 +100,8 @@ bazel_github_job(
 )
 
 bazel_github_job(
-    name = "buildifier",
-    config = ":configs/buildifier.json",
-    # Repository was renamed
-    project = "buildtools",
+    name = "buildtools",
+    config = ":configs/buildtools.json",
 )
 
 bazel_github_job(
