@@ -234,9 +234,6 @@ jenkins_docker_build(
         "//jenkins/jobs",
         ":maintenance/gerrit-verifier",
     ],
-    substitutions = {
-        "PUBLIC_JENKINS_URL": "https://ci.bazel.build/",
-    },
     tars = ["//jenkins/lib"],
     visibility = ["//visibility:public"],
 )
