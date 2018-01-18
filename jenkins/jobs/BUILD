@@ -58,7 +58,6 @@ bazel_git_job(
     config = ":configs/gerrit.json",
     git_url = "https://gerrit.googlesource.com/gerrit",
     org = "GerritCodeReview",
-    project = "gerrit",
     project_url = "https://www.gerritcodereview.com",
 )
 
@@ -112,13 +111,11 @@ bazel_github_job(
     config = ":configs/empty.json",
     gerrit_project = "bazel-toolchains",
     git_url = "https://bazel.googlesource.com/bazel-toolchains",
-    project = "bazel-toolchains",
 )
 
 bazel_github_job(
     name = "rules_webtesting",
     config = ":configs/rules_webtesting.json",
-    project = "rules_webtesting",
     run_sequential = True,
     sauce_enabled = True,
 )
@@ -126,7 +123,6 @@ bazel_github_job(
 bazel_github_job(
     name = "intellij",
     config = ":configs/intellij.json",
-    project = "intellij",
     project_url = "https://ij.bazel.build",
 )
 
