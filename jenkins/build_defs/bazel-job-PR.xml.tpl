@@ -22,7 +22,6 @@
       <triggers>
         <org.jenkinsci.plugins.ghprb.GhprbTrigger>
           <spec>H/5 * * * *</spec>
-          <latestVersion>3</latestVersion>
           <configVersion>3</configVersion>
           <adminlist></adminlist>
           <allowMembersOfWhitelistedOrgsAsAdmin>true</allowMembersOfWhitelistedOrgsAsAdmin>
@@ -40,8 +39,19 @@
               <branch></branch>
             </org.jenkinsci.plugins.ghprb.GhprbBranch>
           </whiteListTargetBranches>
-          <gitHubAuthId>0182cdc4-ebe9-4d40-9b60-b66809f141cc</gitHubAuthId>
+          <blackListTargetBranches>
+            <org.jenkinsci.plugins.ghprb.GhprbBranch>
+              <branch></branch>
+            </org.jenkinsci.plugins.ghprb.GhprbBranch>
+          </blackListTargetBranches>
+          <gitHubAuthId>58f0694f-1760-4610-b4f2-73ffb34c61a3</gitHubAuthId>
           <triggerPhrase></triggerPhrase>
+          <skipBuildPhrase>.*\[skip\W+ci\].*</skipBuildPhrase>
+          <blackListCommitAuthor></blackListCommitAuthor>
+          <blackListLabels></blackListLabels>
+          <whiteListLabels></whiteListLabels>
+          <includedRegions></includedRegions>
+          <excludedRegions></excludedRegions>
           <extensions>
             <org.jenkinsci.plugins.ghprb.extensions.status.GhprbSimpleStatus>
               <commitStatusContext>ci.bazel.build - {{ variables.NAME }}</commitStatusContext>
