@@ -51,7 +51,6 @@ def jenkins_job(name, config, substitutions = {}, deps = [], deps_aliases = {},
       "GIT_URL": git_url,
       "GITHUB_PROJECT": github_project,
       "PROJECT_URL": project_url,
-      "production": "true",
       } + MAIL_SUBSTITUTIONS
   substitutions["SEND_EMAIL"] = "1"
   expand_template(

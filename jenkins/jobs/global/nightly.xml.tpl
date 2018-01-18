@@ -28,11 +28,9 @@
     </hudson.model.ParametersDefinitionProperty>
     <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
       <triggers>
-        {% if variables.production == "true" %}
         <hudson.triggers.TimerTrigger>
           <spec>@midnight</spec>
         </hudson.triggers.TimerTrigger>
-        {% endif %}
       </triggers>
     </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
   </properties>

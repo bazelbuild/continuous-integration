@@ -16,7 +16,7 @@
 load(":jenkins_node.bzl", "jenkins_node")
 
 def jenkins_node_names(name, count):
-  """Returns the names for `count` production jenkins node prefixed by `name`."""
+  """Returns the names for `count` jenkins nodes prefixed by `name`."""
   return ["%s-%s" % (name, i) for i in range(1, count+1)]
 
 def _extend_kwargs(kwargs, extra_args):
@@ -31,33 +31,29 @@ def _extend_kwargs(kwargs, extra_args):
 def jenkins_nodes(name,
                   count,
                   labels=None,
-                  prod_args=None,
                   install_bazel=True,
                   **kwargs):
   """Create a set of Jenkins nodes on the system.
 
-  It creates `count` production nodes with name prefix `name`.
+  It creates `count` Jenkins nodes with name prefix `name`.
 
   Example:
   If `name` is `darwin-x86_64` and `count` is two, it will
-  create two production nodes `darwin-x86_64-1` and `darwin-x86_64-2`.
+  create two nodes `darwin-x86_64-1` and `darwin-x86_64-2`.
 
   Args:
     name: prefix of each node name, it should be the platform
       name (e.g., darwin-x86_64, ubuntu-14.04-x86_64, ...).
-    count: number of production node to create.
+    count: number of nodes to create.
     labels: Jenkins node labels to apply to this node (in addition to
       the "install-bazel" label and the `name` itself).
-    prod_args: dictionary of aditional arguments for production only
-      nodes that will be passed to `jenkins_node`.
     install_bazel: if the "install-bazel" label should be added to labels.
     **kwargs: other arguments to be passed verbatim to `jenkins_node`.
   """
   labels = [
       name] + (["install-bazel"] if install_bazel else []) + (labels if labels else [])
-  prod_kwargs = _extend_kwargs(kwargs, prod_args)
   [jenkins_node(
       name = n,
       labels = labels,
-      **prod_kwargs
+      **kwargs
   ) for n in jenkins_node_names(name, count)]

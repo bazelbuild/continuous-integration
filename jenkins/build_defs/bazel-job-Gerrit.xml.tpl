@@ -3,7 +3,7 @@
   <actions/>
   <description>Test Gerrit code review for {{ variables.PROJECT_NAME }}.
 
-This job for testing changes submitted to the Gerrit project: {{ variables.GERRIT_PROJECT }}.
+This job is for testing changes submitted to the Gerrit project: {{ variables.GERRIT_PROJECT }}.
 </description>
   <keepDependencies>false</keepDependencies>
   <properties>
