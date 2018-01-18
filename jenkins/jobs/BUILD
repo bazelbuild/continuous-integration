@@ -63,7 +63,7 @@ bazel_git_job(
 
 # Jobs from the bazelbuild org with customization
 bazel_github_job(
-    name = "Tutorial",
+    name = "tutorial",
     config = ":configs/tutorial.json",
     project = "examples",
     workspace = "tutorial",
