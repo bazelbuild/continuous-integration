@@ -82,4 +82,5 @@ if [ -d "/opt/lib" ]; then
 fi
 
 # Execute Jenkins
+JAVA_OPTS="${JAVA_OPTS-} -Dorg.jenkinsci.plugins.ghprb.GhprbTrigger.disableRegisterOnStartup=true"
 exec java ${JAVA_OPTS-} -jar /usr/share/jenkins/jenkins.war ${JENKINS_OPTS-} "$@"
