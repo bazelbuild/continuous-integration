@@ -35,9 +35,6 @@ UBUNTU_1404_COUNT = 4
 UBUNTU_1604_PREFIX = "ubuntu_16.04-x86_64"
 UBUNTU_1604_COUNT = 4
 
-UBUNTU_DOCKER_PREFIX = "ubuntu_16.04-x86_64-docker"
-UBUNTU_DOCKER_COUNT = 2
-
 WINDOWS_PREFIX = "windows-x86_64"
 WINDOWS_COUNT = 2
 
@@ -61,13 +58,6 @@ jenkins_nodes(
     UBUNTU_1404_PREFIX,
     UBUNTU_1404_COUNT,
     labels = ["linux-x86_64"],
-    tunnel = "jenkins.c.bazel-public.internal:50000",
-)
-
-jenkins_nodes(
-    UBUNTU_DOCKER_PREFIX,
-    UBUNTU_DOCKER_COUNT,
-    labels = ["docker"],
     tunnel = "jenkins.c.bazel-public.internal:50000",
 )
 
@@ -227,7 +217,6 @@ jenkins_docker_build(
               ] + jenkins_node_names(DARWIN_PREFIX, DARWIN_COUNT) +
               jenkins_node_names(FREEBSD_11_PREFIX, FREEBSD_11_COUNT) +
               jenkins_node_names(WINDOWS_PREFIX, WINDOWS_COUNT) +
-              jenkins_node_names(UBUNTU_DOCKER_PREFIX, UBUNTU_DOCKER_COUNT) +
               jenkins_node_names(UBUNTU_1404_PREFIX, UBUNTU_1404_COUNT) +
               jenkins_node_names(UBUNTU_1604_PREFIX, UBUNTU_1604_COUNT),
     jobs = [

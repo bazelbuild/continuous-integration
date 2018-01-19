@@ -30,7 +30,6 @@ class JenkinsUtils {
   /** A list of regex aliases to know that ubuntu is linux */
   private static def NODE_ALIASES = [
     "ubuntu.*": "linux-x86_64",
-    "docker.*": "linux-x86_64",
     "darwin.*": "darwin-x86_64",
   ]
 

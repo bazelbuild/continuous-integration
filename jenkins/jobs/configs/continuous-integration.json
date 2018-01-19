@@ -1,5 +1,5 @@
 [
     {
-        "node": "docker",
+        "node": "linux-x86_64",
     }
 ]
