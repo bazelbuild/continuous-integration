@@ -90,7 +90,7 @@
       <jobNames/>
       <jobFilters/>
       <columns/>
-      <title>Bazel Tests</title>
+      <title>Global Dashboard</title>
       <config>
         <displayCommitters>false</displayCommitters>
         <order class="com.smartcodeltd.jenkinsci.plugins.buildmonitor.order.ByStatus"/>
