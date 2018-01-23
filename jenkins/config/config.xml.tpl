@@ -81,6 +81,24 @@
       <recurse>true</recurse>
       <statusFilter>true</statusFilter>
     </com.smartcodeltd.jenkinsci.plugins.buildmonitor.BuildMonitorView>
+    <com.smartcodeltd.jenkinsci.plugins.buildmonitor.BuildMonitorView>
+      <owner class="hudson" reference="../../.."/>
+      <name>Global Dashboard</name>
+      <filterExecutors>false</filterExecutors>
+      <filterQueue>false</filterQueue>
+      <properties class="hudson.model.View$PropertyList"/>
+      <jobNames/>
+      <jobFilters/>
+      <columns/>
+      <title>Bazel Tests</title>
+      <config>
+        <displayCommitters>false</displayCommitters>
+        <order class="com.smartcodeltd.jenkinsci.plugins.buildmonitor.order.ByStatus"/>
+      </config>
+      <includeRegex>Global/.*</includeRegex>
+      <recurse>true</recurse>
+      <statusFilter>true</statusFilter>
+    </com.smartcodeltd.jenkinsci.plugins.buildmonitor.BuildMonitorView>
   </views>
   <primaryView>Projects</primaryView>
   <nodeProperties/>
