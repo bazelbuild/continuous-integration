@@ -75,7 +75,7 @@
       <title>Bazel Tests</title>
       <config>
         <displayCommitters>false</displayCommitters>
-        <order class="com.smartcodeltd.jenkinsci.plugins.buildmonitor.order.ByName"/>
+        <order class="com.smartcodeltd.jenkinsci.plugins.buildmonitor.order.ByStatus"/>
       </config>
       <includeRegex>(bazel/nightly|bazel/release|(?!.*/).*)</includeRegex>
       <recurse>true</recurse>
