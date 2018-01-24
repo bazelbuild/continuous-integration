@@ -9,5 +9,4 @@ sudo rm -rf /var/tmp/_bazel_ci workspace android-ndk-* android-sdk-* node jenkin
 curl https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/mac/mac-android.sh | bash
 curl https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/mac/mac-nodejs.sh | bash
 curl -o slave.jar http://master.ci.bazel.io/jnlpJars/slave.jar
-
-sudo launchctl load /Library/LaunchDaemons/jenkins.plist
+curl https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/mac/mac-service.sh | bash
