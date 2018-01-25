@@ -73,13 +73,6 @@ def call(config = [:]) {
     "-k"
   ] + config.test_opts
   if (getPlatformFromNodeName(config.node_label) == "linux") {
-    if (config.node_label.startsWith("ubuntu_14.04")) {
-      // Ubuntu 14.04 has /run/shm.
-      build_options << "--experimental_sandbox_base=/run/shm"
-    } else {
-      // Ubuntu 16.04 has /dev/shm.
-      build_options << "--experimental_sandbox_base=/dev/shm"
-    }
     build_options << "--sandbox_tmpfs_path=/tmp"
   }
   machine(config.node_label) {
