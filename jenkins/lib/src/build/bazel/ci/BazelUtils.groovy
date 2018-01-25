@@ -107,6 +107,7 @@ class BazelUtils implements Serializable {
       "test --test_output=errors",
       "build --verbose_failures"
     ]
+
     rc_file_content.addAll(build_opts.collect { "build ${it}" })
     rc_file_content.addAll(test_opts.collect { "test ${it}" })
     rc_file_content.addAll(startup_opts.collect { "startup ${it}" })
@@ -197,8 +198,8 @@ class BazelUtils implements Serializable {
       def uri = URI.create(log.uri)
       def path = uri.path
       if (isWindows) {
-	// on windows the host is the drive letter, add it to the path.
-	path = "/${uri.host}${path}"
+        // on windows the host is the drive letter, add it to the path.
+        path = "/${uri.host}${path}"
       }
       def relativePath = path.substring(path.indexOf("/testlogs/") + 10)
       cp_lines.add("mkdir -p \$(dirname '${test_folder}/${relativePath}')")

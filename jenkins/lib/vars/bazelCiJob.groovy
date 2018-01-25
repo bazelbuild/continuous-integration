@@ -12,6 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+@NonCPS
+private def getPlatformFromNodeName(node_label) {
+  def platforms = ["windows": "windows",
+                   "darwin": "darwin",
+                   "freebsd": "freebsd",
+                   "": "linux"]
+  return platforms.find { e -> node_label.startsWith(e.key) }.value
+}
+
 /**
  * This define a Jenkins step "bazelCiJob" that use git and Bazel to test one configuration.
  * Each arguments is set by a variable in the body of the step and the list of possible arguments
@@ -63,6 +72,16 @@ def call(config = [:]) {
     "--build_tests_only",
     "-k"
   ] + config.test_opts
+  if (getPlatformFromNodeName(config.node_label) == "linux") {
+    if (config.node_label.startsWith("ubuntu_14.04")) {
+      // Ubuntu 14.04 has /run/shm.
+      build_options << "--experimental_sandbox_base=/run/shm"
+    } else {
+      // Ubuntu 16.04 has /dev/shm.
+      build_options << "--experimental_sandbox_base=/dev/shm"
+    }
+    build_options << "--sandbox_tmpfs_path=/tmp"
+  }
   machine(config.node_label) {
     ws("workspace/${currentBuild.fullProjectName}-${prefix}") {
       maybeSauce(config.sauce) {
