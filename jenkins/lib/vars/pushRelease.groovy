@@ -102,7 +102,6 @@ def call(params = [:]) {
     sh "#!/bin/bash\n${release_script} build.log ${artifact_list.join ' '}"
 
     // Send email announcement
-    /* TODO(iirina): 
     stage("Announcement mail") {
       def email = sh(script: "bash -c '${email_script}'", returnStdout: true)
       echo "Mail to: ${email}"
@@ -116,6 +115,5 @@ def call(params = [:]) {
              body: splittedEmail[2])
       }
     }
-    */
   }
 }
