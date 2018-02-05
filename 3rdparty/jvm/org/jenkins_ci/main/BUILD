@@ -42,6 +42,7 @@ java_library(
         "//3rdparty/jvm/jline:jline",
         "//3rdparty/jvm/net/java/dev/jna:jna",
         "//3rdparty/jvm/net/java/sezpoz:sezpoz",
+        "//3rdparty/jvm/net/sf/kxml:kxml2",
         "//3rdparty/jvm/org/acegisecurity:acegi_security",
         "//3rdparty/jvm/org/apache/ant:ant",
         "//3rdparty/jvm/org/apache/commons:commons_compress",
