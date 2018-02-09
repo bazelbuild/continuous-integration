@@ -25,18 +25,19 @@
 set -eu
 
 # Install the Android NDK
-curl -o android-ndk.zip https://dl.google.com/android/repository/android-ndk-r14b-darwin-x86_64.zip
-unzip android-ndk.zip
+curl -sSLo android-ndk.zip https://dl.google.com/android/repository/android-ndk-r14b-darwin-x86_64.zip
+unzip android-ndk.zip > /dev/null
 rm android-ndk.zip
 
 # Install the Android SDK
 mkdir -p ~/android-sdk-macosx
 cd ~/android-sdk-macosx
-curl -o android-sdk.zip https://dl.google.com/android/repository/sdk-tools-darwin-3859397.zip
-unzip android-sdk.zip
+curl -sSLo android-sdk.zip https://dl.google.com/android/repository/sdk-tools-darwin-3859397.zip
+unzip android-sdk.zip > /dev/null
 rm android-sdk.zip
 expect -c '
-set timeout -1;
+set timeout -1
+log_user 0
 spawn tools/bin/sdkmanager --update
 expect {
     "Accept? (y/N)" { exp_send "y\r" ; exp_continue }
@@ -44,8 +45,8 @@ expect {
 }
 '
 
-# This should be kept in sync with linux/linux-android.sh
-yes | tools/bin/sdkmanager \
+# This should be kept in sync with gce/install-android-sdk.sh
+tools/bin/sdkmanager \
   "platform-tools" \
   "build-tools;27.0.3" \
   "platforms;android-24" \
