@@ -35,6 +35,7 @@ def call(config = [:]) {
                       configuration: json_config)
   }
 
+
   // Deployment steps
   def is_master = branch.matches('^(.*/)?master$')
   def is_rc = branch.matches('^(refs/heads/)?release-.*$')
