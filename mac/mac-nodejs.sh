@@ -19,8 +19,6 @@
 set -eu
 
 # Install NodeJS
-if [ ! -d "/Users/ci/node" ]; then
-  mkdir -p /Users/ci/node &&
-  curl https://nodejs.org/dist/v8.9.4/node-v8.9.4-darwin-x64.tar.xz | tar xz -C /Users/ci/node &&
-  PATH=/Users/ci/node/node-v8.9.4-darwin-x64/bin:$PATH npm install -g typescript fried-twinkie
-fi
+brew install node@8
+npm install -g npm
+npm install -g typescript fried-twinkie
