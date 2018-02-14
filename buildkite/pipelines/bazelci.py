@@ -1,14 +1,31 @@
 import argparse
+import codecs
 import json
 import os.path
 import shutil
 import subprocess
 import sys
-from common import fetch_configs
-from common import OUTPUT_DIRECTORY
-from common import BEP_OUTPUT_FILENAME
+import urllib.request
 from shutil import copyfile
 from urllib.parse import urlparse
+
+OUTPUT_DIRECTORY = ".bazelci_outputs/"
+BEP_OUTPUT_FILENAME = OUTPUT_DIRECTORY + "test.json"
+
+def supported_platforms():
+    return {
+        "ubuntu1404" : "Ubuntu 14.04", 
+        "ubuntu1604" : "Ubuntu 16.04",
+        "macos" : "macOS"
+    }
+
+def fetch_configs(http_config):
+    if http_config is None:
+        with open(".bazelci/config.json", "r") as fd:
+            return json.load(fd)
+    with urllib.request.urlopen(http_config) as resp:
+        reader = codecs.getreader("utf-8")
+        return json.load(reader(resp))
 
 def run(config, platform, bazel_binary, git_repository):
     try:
@@ -112,18 +129,62 @@ def run_command(args, shell=False):
     if res.returncode != 0:
         exit(res.returncode)
 
+def generate_pipeline(configs, http_config):
+    if not configs:
+        print("The CI config is empty.")
+        exit(1)
+    pipeline_steps = []
+    for platform, config in configs.items():
+        if platform not in supported_platforms():
+            print("'{0}' is not a supported platform on Bazel CI".format(platform))
+            exit(1)
+        pipeline_steps.append(command_step(supported_platforms()[platform], platform, http_config))
+    if not pipeline_steps:
+        print("The CI config is empty.")
+        exit(1)
+    write_pipeline_file(pipeline_steps)
+
+def write_pipeline_file(steps):
+    print("steps:")
+    for step in steps:
+        print(step)
+
+def command_step(label, platform, http_config):
+  return """
+ - label: \"{0}\"
+   command: \"curl -s https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazelci.py > bazelci.py\\n{1}\"
+   agents:
+     - \"os={2}\"""".format(label, "{0} --platform={1} {2} ".format(runner_command(platform), platform, http_config_flag(http_config)), platform)
+
+def runner_command(platform):
+    return "python3 bazelci.py --runner"
+
+def http_config_flag(http_config):
+    if http_config is not None:
+        return "--http_config=" + http_config
+    return ""
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Bazel Continous Integration Runner')
-    parser.add_argument("--platform", type=str, required=True, help="The platform the script is running on. Required.")
+    parser.add_argument("--generate_pipeline", type=bool)
+    parser.add_argument("--runner", type=bool)
+    parser.add_argument("--platform", type=str, help="The platform the script is running on. Required.")
     parser.add_argument("--bazel_binary", type=str, help="The path to the Bazel binary. Optional.")
     parser.add_argument("--http_config", type=str, help="The URL of the config file. Optional.")
     args = parser.parse_args()
 
-    configs = fetch_configs(args.http_config)
-    bazel_binary = "bazel"
-    if args.bazel_binary is not None:
-        bazel_binary = args.bazel_binary
-    git_repository = configs.get("git_repository", None)
-    if args.platform not in configs["platforms"]:
-        print("No configuration exists for '{0}'".format(args.platform))
-    run(configs["platforms"][args.platform], args.platform, bazel_binary, git_repository)
+    if args.generate_pipeline:
+        configs = fetch_configs(args.http_config)
+        generate_pipeline(configs.get("platforms", None), args.http_config)
+    elif args.runner:
+        configs = fetch_configs(args.http_config)
+        bazel_binary = "bazel"
+        if args.bazel_binary is not None:
+            bazel_binary = args.bazel_binary
+        git_repository = configs.get("git_repository", None)
+        if args.platform not in configs["platforms"]:
+            print("No configuration exists for '{0}'".format(args.platform))
+        run(configs["platforms"][args.platform], args.platform, bazel_binary, git_repository)
+    else:
+        print("Need to specify either --runner or --generate_pipeline")
+        exit(1)
