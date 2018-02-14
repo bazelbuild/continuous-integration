@@ -74,7 +74,7 @@ def bazel_build(bazel_binary, flags, targets):
     if not targets:
         return
     print("+++ Build")
-    fail_if_nonzero(run_command([bazel_binary, "build", "--color=yes"] + flags + targets))
+    fail_if_nonzero(run_command([bazel_binary, "build", "--color=yes", "--keep_going"] + flags + targets))
 
 def bazel_test(bazel_binary, flags, targets):
     if not targets:
