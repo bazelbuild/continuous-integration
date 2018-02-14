@@ -47,7 +47,7 @@ def run(config, platform, bazel_binary, git_repository):
             delete_repository(git_repository)
     finally:
         if tmpdir:
-             os.rmtree(tmpdir)
+             shutil.rmtree(tmpdir)
         cleanup(bazel_binary)
         exit(exit_code)
 
