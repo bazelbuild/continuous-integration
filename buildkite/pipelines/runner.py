@@ -7,6 +7,7 @@ import sys
 from common import fetch_configs
 from common import OUTPUT_DIRECTORY
 from common import BEP_OUTPUT_FILENAME
+from shutil import copyfile
 from urllib.parse import urlparse
 
 def run(config, platform, bazel_binary, git_repository):
