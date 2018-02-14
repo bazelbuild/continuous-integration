@@ -1,3 +1,4 @@
+import codecs
 import json
 import urllib.request
 
@@ -16,4 +17,5 @@ def fetch_configs(http_config):
         with open(".bazelci/config.json", "r") as fd:
             return json.load(fd)
     with urllib.request.urlopen(http_config) as resp:
-        return json.loads(resp.read())
+        reader = codecs.getreader("utf-8")
+        return json.load(reader(resp))
