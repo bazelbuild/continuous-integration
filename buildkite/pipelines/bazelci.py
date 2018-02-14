@@ -30,6 +30,8 @@ def fetch_configs(http_config):
 def run(config, platform, bazel_binary, git_repository):
     try:
         if git_repository:
+            if os.path.exists("downstream-repo"):
+                shutil.rmtree("downstream-repo")
             clone_repository(git_repository)
             cleanup(bazel_binary)
         else:
