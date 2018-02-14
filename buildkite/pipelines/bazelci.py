@@ -47,7 +47,7 @@ def run(config, platform, bazel_binary, git_repository):
         cleanup(bazel_binary)
 
 def clone_repository(git_repository):
-    run_command(["git", "clone", git_repository, "downstream-repo"])
+    fail_if_nonzero(run_command(["git", "clone", git_repository, "downstream-repo"]))
     os.chdir("downstream-repo")
 
 def delete_repository(git_repository):
@@ -59,31 +59,34 @@ def shell_commands(commands):
         return
     print("--- Shell Commands")
     shell_command = "\n".join(commands)
-    run_command(shell_command, shell=True)
+    fail_if_nonzero(run_command([shell_command], shell=True))
 
 def bazel_run(bazel_binary, targets):
     if not targets:
         return
     print("--- Run Targets")
     for target in targets:
-        run_command([bazel_binary, "run", target])
+        fail_if_nonzero(run_command([bazel_binary, "run", target]))
 
 def bazel_build(bazel_binary, flags, targets):
     if not targets:
         return
     print("+++ Build")
-    run_command([bazel_binary, "build", "--color=yes"] + flags + targets)
+    fail_if_nonzero(run_command([bazel_binary, "build", "--color=yes"] + flags + targets))
 
 def bazel_test(bazel_binary, flags, targets):
     if not targets:
         return
     print("+++ Test")
-    res = subprocess.run([bazel_binary, "test", "--color=yes", "--build_event_json_file=" + BEP_OUTPUT_FILENAME] + flags + targets)
-    return res.returncode
+    return fail_if_nonzero(run_command([bazel_binary, "test", "--color=yes", "--build_event_json_file=" + BEP_OUTPUT_FILENAME] + flags + targets))
+
+def fail_if_nonzero(exitcode):
+    if exitcode is not 0:
+        exit(exitcode)
 
 def upload_failed_test_logs(bep_path):
     for logfile in failed_test_logs(bep_path):
-        run_command(["buildkite-agent", "artifact", "upload", logfile])
+        fail_if_nonzero(fail_if_nonzero(run_command(["buildkite-agent", "artifact", "upload", logfile])))
 
 def failed_test_logs(bep_path):
     test_logs = []
@@ -117,7 +120,7 @@ def label_to_path(label):
 def cleanup(bazel_binary):
     print("--- Cleanup")
     if os.path.exists("WORKSPACE"):
-        run_command([bazel_binary, "clean", "--expunge"])
+        fail_if_nonzero(run_command([bazel_binary, "clean", "--expunge"]))
     if os.path.exists(OUTPUT_DIRECTORY):
         shutil.rmtree(OUTPUT_DIRECTORY)
     if os.path.exists("downstream-repo"):
@@ -126,8 +129,7 @@ def cleanup(bazel_binary):
 def run_command(args, shell=False):
     print(" ".join(args))
     res = subprocess.run(args, shell=shell)
-    if res.returncode != 0:
-        exit(res.returncode)
+    return res.returncode
 
 def generate_pipeline(configs, http_config):
     if not configs:
