@@ -1,5 +1,4 @@
 {
-  "git_repository": "https://github.com/bazelbuild/bazel.git",
   "platforms": {
     "ubuntu1404": {
       "shell_commands": [
