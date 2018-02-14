@@ -80,7 +80,7 @@ def bazel_test(bazel_binary, flags, targets):
     if not targets:
         return
     print("+++ Test")
-    return fail_if_nonzero(run_command([bazel_binary, "test", "--color=yes", "--build_event_json_file=" + BEP_OUTPUT_FILENAME] + flags + targets))
+    return run_command([bazel_binary, "test", "--color=yes", "--build_event_json_file=" + BEP_OUTPUT_FILENAME] + flags + targets)
 
 def fail_if_nonzero(exitcode):
     if exitcode is not 0:
