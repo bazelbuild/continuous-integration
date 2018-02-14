@@ -59,27 +59,27 @@ def delete_repository(git_repository):
 def shell_commands(commands):
     if not commands:
         return
-    print("--- Shell Commands")
+    print("\n--- Shell Commands")
     shell_command = "\n".join(commands)
     fail_if_nonzero(run_command([shell_command], shell=True))
 
 def bazel_run(bazel_binary, targets):
     if not targets:
         return
-    print("--- Run Targets")
+    print("\n--- Run Targets")
     for target in targets:
         fail_if_nonzero(run_command([bazel_binary, "run", target]))
 
 def bazel_build(bazel_binary, flags, targets):
     if not targets:
         return
-    print("+++ Build")
+    print("\n+++ Build")
     fail_if_nonzero(run_command([bazel_binary, "build", "--color=yes", "--keep_going"] + flags + targets))
 
 def bazel_test(bazel_binary, flags, targets):
     if not targets:
         return
-    print("+++ Test")
+    print("\n+++ Test")
     return run_command([bazel_binary, "test", "--color=yes", "--keep_going", "--build_tests_only", "--build_event_json_file=" + BEP_OUTPUT_FILENAME] + flags + targets)
 
 def fail_if_nonzero(exitcode):
@@ -120,7 +120,7 @@ def label_to_path(label):
   return OUTPUT_DIRECTORY + path + ".log"
 
 def cleanup(bazel_binary):
-    print("--- Cleanup")
+    print("\n--- Cleanup")
     if os.path.exists("WORKSPACE"):
         fail_if_nonzero(run_command([bazel_binary, "clean", "--expunge"]))
     if os.path.exists(OUTPUT_DIRECTORY):
