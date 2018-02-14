@@ -5,12 +5,10 @@ import os.path
 import shutil
 import subprocess
 import sys
+import tempfile
 import urllib.request
 from shutil import copyfile
 from urllib.parse import urlparse
-
-OUTPUT_DIRECTORY = ".bazelci_outputs/"
-BEP_OUTPUT_FILENAME = OUTPUT_DIRECTORY + "test.json"
 
 def supported_platforms():
     return {
@@ -28,7 +26,10 @@ def fetch_configs(http_config):
         return json.load(reader(resp))
 
 def run(config, platform, bazel_binary, git_repository):
+    exit_code = 0
+    tmpdir = None
     try:
+        tmpdir = tempfile.mkdtemp()
         if git_repository:
             if os.path.exists("downstream-repo"):
                 shutil.rmtree("downstream-repo")
@@ -36,17 +37,19 @@ def run(config, platform, bazel_binary, git_repository):
             cleanup(bazel_binary)
         else:
             cleanup(bazel_binary)
-        os.mkdir(OUTPUT_DIRECTORY)
         shell_commands(config.get("shell_commands", None))
         bazel_run(bazel_binary, config.get("run_targets", None))
         bazel_build(bazel_binary, config.get("build_flags", []), config.get("build_targets", None))
-        exit_code = bazel_test(bazel_binary, config.get("test_flags", []), config.get("test_targets", None))
-        upload_failed_test_logs(BEP_OUTPUT_FILENAME)
+        bep_file = os.path.join(tmpdir, "build_event_json_file.json")
+        exit_code = bazel_test(bazel_binary, config.get("test_flags", []), config.get("test_targets", None), bep_file)
+        upload_failed_test_logs(bep_file, tmpdir)
         if git_repository:
             delete_repository(git_repository)
-        exit(exit_code)
     finally:
+        if tmpdir:
+             os.rmtree(tmpdir)
         cleanup(bazel_binary)
+        exit(exit_code)
 
 def clone_repository(git_repository):
     fail_if_nonzero(run_command(["git", "clone", git_repository, "downstream-repo"]))
@@ -76,24 +79,24 @@ def bazel_build(bazel_binary, flags, targets):
     print("\n+++ Build")
     fail_if_nonzero(run_command([bazel_binary, "build", "--color=yes", "--keep_going"] + flags + targets))
 
-def bazel_test(bazel_binary, flags, targets):
+def bazel_test(bazel_binary, flags, targets, bep_file):
     if not targets:
         return
     print("\n+++ Test")
-    return run_command([bazel_binary, "test", "--color=yes", "--keep_going", "--build_tests_only", "--build_event_json_file=" + BEP_OUTPUT_FILENAME] + flags + targets)
+    return run_command([bazel_binary, "test", "--color=yes", "--keep_going", "--build_tests_only", "--build_event_json_file=" + bep_file] + flags + targets)
 
 def fail_if_nonzero(exitcode):
     if exitcode is not 0:
         exit(exitcode)
 
-def upload_failed_test_logs(bep_path):
-    for logfile in failed_test_logs(bep_path):
-        fail_if_nonzero(fail_if_nonzero(run_command(["buildkite-agent", "artifact", "upload", logfile])))
+def upload_failed_test_logs(bep_file, tmpdir):
+    for logfile in failed_test_logs(bep_file, tmpdir):
+        fail_if_nonzero(run_command(["buildkite-agent", "artifact", "upload", logfile]))
 
-def failed_test_logs(bep_path):
+def failed_test_logs(bep_file, tmpdir):
     test_logs = []
     raw_data = ""
-    with open(bep_path) as f:
+    with open(bep_file) as f:
         raw_data = f.read()
     decoder = json.JSONDecoder()
 
@@ -106,25 +109,23 @@ def failed_test_logs(bep_path):
                 outputs = test_result["testActionOutput"]
                 for output in outputs:
                     if output["name"] == "test.log":
-                        new_path = label_to_path(json_dict["id"]["testResult"]["label"])
+                        new_path = label_to_path(tmpdir, json_dict["id"]["testResult"]["label"])
                         os.makedirs(os.path.dirname(new_path), exist_ok=True)
                         copyfile(urlparse(output["uri"]).path, new_path)
                         test_logs.append(new_path)
         pos += size + 1
     return test_logs
 
-def label_to_path(label):
+def label_to_path(tmpdir, label):
   # remove leading //
   path = label[2:]
   path = path.replace(":", "/")
-  return OUTPUT_DIRECTORY + path + ".log"
+  return os.path.join(tmpdir, path + ".log")
 
 def cleanup(bazel_binary):
     print("\n--- Cleanup")
     if os.path.exists("WORKSPACE"):
         fail_if_nonzero(run_command([bazel_binary, "clean", "--expunge"]))
-    if os.path.exists(OUTPUT_DIRECTORY):
-        shutil.rmtree(OUTPUT_DIRECTORY)
     if os.path.exists("downstream-repo"):
         shutil.rmtree("downstream-repo")
 
