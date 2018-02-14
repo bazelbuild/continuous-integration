@@ -14,7 +14,7 @@ BEP_OUTPUT_FILENAME = OUTPUT_DIRECTORY + "test.json"
 
 def supported_platforms():
     return {
-        "ubuntu1404" : "Ubuntu 14.04", 
+        "ubuntu1404" : "Ubuntu 14.04",
         "ubuntu1604" : "Ubuntu 16.04",
         "macos" : "macOS"
     }
@@ -125,7 +125,7 @@ def cleanup(bazel_binary):
 
 def run_command(args, shell=False):
     print(" ".join(args))
-    res = subprocess.run(args, shell)
+    res = subprocess.run(args, shell=shell)
     if res.returncode != 0:
         exit(res.returncode)
 

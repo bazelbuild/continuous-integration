@@ -7,7 +7,11 @@
         "rm -f WORKSPACE.bak"
       ],
       "build_targets": ["//src:bazel"],
-      "test_targets": ["//scripts/... //src/test/... //third_party/ijar/... //tools/android/..."]
+      "test_targets": [
+        "//scripts/...",
+	"//src/test/...",
+	"//third_party/ijar/...",
+	"//tools/android/..."]
     },
     "ubuntu1604": {
       "shell_commands": [
@@ -15,7 +19,11 @@
         "rm -f WORKSPACE.bak"
       ],
       "build_targets": ["//src:bazel"],
-      "test_targets": ["//scripts/... //src/test/... //third_party/ijar/... //tools/android/..."]
+      "test_targets": [
+        "//scripts/...",
+	"//src/test/...",
+	"//third_party/ijar/...",
+	"//tools/android/..."]
     },
     "macos": {
       "shell_commands": [
@@ -23,7 +31,11 @@
         "rm -f WORKSPACE.bak"
       ],
       "build_targets": ["//src:bazel"],
-      "test_targets": ["//scripts/... //src/test/... //third_party/ijar/... //tools/android/..."]
+      "test_targets": [
+        "//scripts/...",
+	"//src/test/...",
+	"//third_party/ijar/...",
+	"//tools/android/..."]
     }
   }
 }
