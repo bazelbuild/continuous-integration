@@ -157,7 +157,7 @@ def command_step(label, platform, http_config):
      - \"os={2}\"""".format(label, "{0} --platform={1} {2} ".format(runner_command(platform), platform, http_config_flag(http_config)), platform)
 
 def runner_command(platform):
-    return "python3 bazelci.py --runner"
+    return "python3 bazelci.py --runner=true"
 
 def http_config_flag(http_config):
     if http_config is not None:
