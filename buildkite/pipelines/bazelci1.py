@@ -44,7 +44,8 @@ def git_clone_path():
 def downstream_projects():
     return {
         "rules_python" : {
-            "git_repository" : "https://github.com/bazebuild/rules_python"
+            "git_repository" : "https://github.com/bazebuild/rules_python",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_python-postsubmit.json"
         }
     }
 
