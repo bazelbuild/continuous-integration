@@ -47,6 +47,26 @@ def downstream_projects():
         "rules_python" : {
             "git_repository" : "https://github.com/bazelbuild/rules_python.git",
             "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_python-postsubmit.json"
+        },
+        "BUILD_file_generator" : {
+            "git_repository" : "https://github.com/bazelbuild/BUILD_file_generator.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/BUILD_file_generator-postsubmit.json"
+        },
+        "buildtools" : {
+            "git_repository" : "https://github.com/bazelbuild/buildtools.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/buildtools-postsubmit.json"
+        },
+        "examples" : {
+            "git_repository" : "https://github.com/bazelbuild/examples.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/examples-postsubmit.json"
+        },
+        "migration-tooling" : {
+            "git_repository" : "https://github.com/bazelbuild/migration-tooling.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/migration-tooling-postsubmit.json"
+        },
+        "protobuf" : {
+            "git_repository" : "https://github.com/google/protobuf.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/protobuf-postsubmit.json"
         }
     }
 
