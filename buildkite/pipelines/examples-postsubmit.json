@@ -1,0 +1,8 @@
+{
+  "platforms": {
+    "ubuntu1404": {"build_targets": ["//:all"]},
+    "ubuntu1604": {"build_targets": ["//:all"]},
+    "macos": {"build_targets": ["//:all"]}
+  }
+}
+
