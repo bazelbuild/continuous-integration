@@ -108,7 +108,7 @@ def upload_bazel_binary():
 def download_bazel_binary(dest_dir, source_step):
     print("\n--- Downloading Bazel Binary")
     fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "download",
-        "bazel-bin/src/bazel", dest_dir, "--step", "source_step"]))
+        "bazel-bin/src/bazel", dest_dir, "--step", source_step]))
     return os.path.join(dest_dir, "bazel-bin/src/bazel")
 
 def clone_git_repository(git_repository):
