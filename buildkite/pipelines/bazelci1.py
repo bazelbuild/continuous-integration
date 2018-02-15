@@ -6,6 +6,7 @@ import os.path
 import shutil
 import subprocess
 import sys
+import stat
 import tempfile
 import urllib.request
 from shutil import copyfile
@@ -109,7 +110,10 @@ def download_bazel_binary(dest_dir, source_step):
     print("\n--- Downloading Bazel Binary")
     fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "download",
         "bazel-bin/src/bazel", dest_dir, "--step", source_step]))
-    return os.path.join(dest_dir, "bazel-bin/src/bazel")
+    bazel_binary_path = os.path.join(dest_dir, "bazel-bin/src/bazel")
+    st = os.stat(bazel_binary_path)
+    os.chmod(bazel_binary_path, st.st_mode | stat.S_IEXEC)
+    return bazel_binary_path
 
 def clone_git_repository(git_repository):
     delete_git_checkout()
