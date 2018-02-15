@@ -100,10 +100,12 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
             exit(exit_code)
 
 def upload_bazel_binary():
+    print("\n--- Uploading Bazel Binary")
     fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "upload",
         "bazel-bin/src/bazel"]))
 
 def download_bazel_binary(dest_dir, source_step):
+    print("\n--- Downloading Bazel Binary")
     fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "download",
         "bazel-bin/src/bazel", dest_dir, "--step", "source_step"]))
     return os.path.join(dest_dir, "bazel-bin/src/bazel")
@@ -252,7 +254,7 @@ def upload_project_pipeline_step(project_name, git_repository, http_config):
         git_repository)        
     if http_config:
         pipeline_command = pipeline_command + " --http_config=" + http_config
-    pipeline_command = pipeline_command + " | build-kite-agent pipeline upload"
+    pipeline_command = pipeline_command + " | buildkite-agent pipeline upload"
 
     return """
   - label: \":pipeline: {0}\"
