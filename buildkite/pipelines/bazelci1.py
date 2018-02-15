@@ -235,7 +235,8 @@ def print_pipeline(steps):
         print(step)
 
 def wait_step():
-  return " - wait"
+  return """
+  - wait"""
 
 def http_config_flag(http_config):
     if http_config is not None:
