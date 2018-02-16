@@ -140,14 +140,14 @@ def platforms_info():
 
 
 def downstream_projects_root(platform):
-    path = os.path.join(agent_directory(platform), "downstream-projects")
-    if not os.path.exists(path):
-        os.makedirs(path)
-    return path
+  path = os.path.join(agent_directory(platform), "downstream-projects")
+  if not os.path.exists(path):
+    os.makedirs(path)
+  return path
 
 
 def agent_directory(platform):
-    return os.path.expandvars(platforms_info()[platform]["agent-directory"])
+  return os.path.expandvars(platforms_info()[platform]["agent-directory"])
 
 
 def supported_platforms():
@@ -233,14 +233,16 @@ def clone_git_repository(git_repository, platform):
   clone_path = os.path.join(root, project_name)
   print("\n--- Fetching " + project_name + " sources")
   if os.path.exists(clone_path):
-      shutil.rmtree(clone_path)
+    shutil.rmtree(clone_path)
   fail_if_nonzero(execute_command(["git", "clone", git_repository, clone_path]))
   os.chdir(clone_path)
+
 
 def cleanup(bazel_binary):
   if os.path.exists("WORKSPACE"):
     print("\n--- Cleanup")
     fail_if_nonzero(execute_command([bazel_binary, "clean", "--expunge"]))
+
 
 def execute_shell_commands(commands):
   if not commands:
@@ -283,9 +285,12 @@ def fail_if_nonzero(exitcode):
 def upload_failed_test_logs(bep_file, tmpdir):
   if not os.path.exists(bep_file):
     return
-  for logfile in failed_logs_from_bep(bep_file, tmpdir):
-    fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "upload",
-                                     logfile]))
+  logfiles = failed_logs_from_bep(bep_file, tmpdir)
+  if logfiles:
+    print("\n--- Uploading failed test logs")
+    for logfile in logfiles:
+      fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "upload",
+                                       logfile]))
 
 
 def failed_logs_from_bep(bep_file, tmpdir):
