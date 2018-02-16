@@ -18,6 +18,10 @@ def downstream_projects():
             "git_repository" : "https://github.com/bazelbuild/rules_python.git",
             "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_python-postsubmit.json"
         },
+        "rules_typescript" : {
+            "git_repository" : "https://github.com/bazelbuild/rules_typescript.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_typescript-postsubmit.json"
+        },
         "BUILD_file_generator" : {
             "git_repository" : "https://github.com/bazelbuild/BUILD_file_generator.git",
             "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/BUILD_file_generator-postsubmit.json"
@@ -288,7 +292,7 @@ def upload_project_pipeline_step(project_name, git_repository, http_config):
     pipeline_command = pipeline_command + " | buildkite-agent pipeline upload"
 
     return """
-  - label: \":pipeline: {0}\"
+  - label: \"Setup {0}\"
     command: \"{1}\\n{2}\"
     agents:
       - \"pipeline=true\"""".format(project_name, fetch_bazelcipy_command(),
