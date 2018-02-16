@@ -274,7 +274,7 @@ def clone_git_repository(git_repository, platform):
         ["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"]))
   else:
     fail_if_nonzero(execute_command(
-        ["git", "clone", git_repository, clone_path]))
+        ["git", "clone", "--recurse-submodules", git_repository, clone_path]))
     os.chdir(clone_path)
 
 
