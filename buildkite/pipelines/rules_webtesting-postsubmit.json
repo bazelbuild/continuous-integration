@@ -8,6 +8,6 @@
     },
     "macos": {
       "test_targets": ["-- //... -//go/launcher/webdriver:go_default_test_chrome55-win10"]
-    },
+    }
   }
 }
