@@ -42,6 +42,10 @@ def downstream_projects():
           "git_repository": "https://github.com/bazelbuild/intellij.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/clion-postsubmit.json"
       },
+      "Eclipse Plugin": {
+          "git_repository": "https://github.com/bazelbuild/eclipse.git",
+          "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/eclipse-postsubmit.json"
+      },
       "IntelliJ Plugin": {
           "git_repository": "https://github.com/bazelbuild/intellij.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/intellij-postsubmit.json"
