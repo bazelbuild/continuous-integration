@@ -34,6 +34,10 @@ def downstream_projects():
           "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/BUILD_file_generator-postsubmit.json"
       },
+      "bazel-toolchains": {
+          "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
+          "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-toolchains-postsubmit.json"
+      },
       "buildtools": {
           "git_repository": "https://github.com/bazelbuild/buildtools.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/buildtools-postsubmit.json"
