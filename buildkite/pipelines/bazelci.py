@@ -116,17 +116,37 @@ def eprint(*args, **kwargs):
   print(*args, file=sys.stderr, **kwargs)
   exit(1)
 
-
-def supported_platforms():
+def platforms_info():
   '''
   Returns a map containing all supported platform names as keys, with the
-  values being the platform name in a human readable format.
+  values being the platform name in a human readable format, and a the
+  buildkite-agent's working directory.
   '''
   return {
-      "ubuntu1404": "Ubuntu 14.04",
-      "ubuntu1604": "Ubuntu 16.04",
-      "macos": "macOS"
+      "ubuntu1404":
+      {
+          "name": "Ubuntu 14.04",
+          "agent-directory": " /var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
+      },
+      "ubuntu1604":
+      {
+          "name": "Ubuntu 16.04",
+          "agent-directory": " /var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
+      },
+      "macos":
+      {
+          "name": "macOS",
+          "agent-directory": "/usr/local/var/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
+      },
   }
+
+
+def supported_platforms():
+    return set(platforms_info().keys())
+
+
+def platform_name(platform):
+    return platforms_info()[platform]["name"]
 
 
 def git_clone_path():
@@ -155,7 +175,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
   try:
     tmpdir = tempfile.mkdtemp()
     if use_but:
-      source_step = create_label(supported_platforms()[platform], "Bazel",
+      source_step = create_label(platform_name(platform), "Bazel",
                                  build_only=True, test_only=False)
       bazel_binary = download_bazel_binary(tmpdir, source_step)
     if git_repository:
@@ -336,8 +356,8 @@ def runner_step(platform, project_name=None, http_config=None,
     command = command + " --build_only"
   if test_only:
     command = command + " --test_only"
-  platform_name = supported_platforms()[platform]
-  label = create_label(platform_name, project_name, build_only, test_only)
+  label = create_label(platform_name(platform),
+                       project_name, build_only, test_only)
   return """
   - label: \"{0}\"
     command: \"{1}\\n{2}\"
@@ -396,7 +416,7 @@ def create_label(platform_name, project_name=None, build_only=False,
   return label
 
 
-def bazel_build_step(platform_name, platform, project_name, http_config=None,
+def bazel_build_step(platform, project_name, http_config=None,
                      build_only=False, test_only=False):
   pipeline_command = python_binary() + " bazelci.py runner"
   if build_only:
@@ -405,7 +425,7 @@ def bazel_build_step(platform_name, platform, project_name, http_config=None,
     pipeline_command = pipeline_command + " --test_only"
   if http_config:
     pipeline_command = pipeline_command + " --http_config=" + http_config
-  label = create_label(platform_name, project_name, build_only=build_only,
+  label = create_label(platform_name(platform), project_name, build_only=build_only,
                        test_only=test_only)
   pipeline_command = pipeline_command + " --platform=" + platform
 
@@ -420,19 +440,17 @@ def bazel_build_step(platform_name, platform, project_name, http_config=None,
 def print_bazel_postsubmit_pipeline(configs, http_config):
   if not configs:
     eprint("Bazel postsubmit pipeline configuration is empty.")
-  if set(configs.keys()) != set(supported_platforms().keys()):
+  if set(configs.keys()) != set(supported_platforms()):
     eprint("Bazel postsubmit pipeline needs to build Bazel on all " +
            "supported platforms.")
 
   pipeline_steps = []
   for platform, config in configs.items():
-    platform_name = supported_platforms()[platform]
-    pipeline_steps.append(bazel_build_step(platform_name, platform, "Bazel",
+    pipeline_steps.append(bazel_build_step(platform, "Bazel",
                                            http_config, build_only=True))
   pipeline_steps.append(wait_step())
   for platform, config in configs.items():
-    platform_name = supported_platforms()[platform]
-    pipeline_steps.append(bazel_build_step(platform_name, platform, "Bazel",
+    pipeline_steps.append(bazel_build_step(platform, "Bazel",
                                            http_config, test_only=True))
   for project, config in downstream_projects().items():
     git_repository = config["git_repository"]
@@ -470,18 +488,18 @@ if __name__ == "__main__":
   runner.add_argument("--build_only", type=bool, nargs="?", const=True)
   runner.add_argument("--test_only", type=bool, nargs="?", const=True)
 
-  args = parser.parse_args()
+  args=parser.parse_args()
 
   if args.subparsers_name == "bazel_postsubmit_pipeline":
-    configs = fetch_configs(args.http_config)
+    configs=fetch_configs(args.http_config)
     print_bazel_postsubmit_pipeline(configs.get("platforms", None),
                                     args.http_config)
   elif args.subparsers_name == "project_pipeline":
-    configs = fetch_configs(args.http_config)
+    configs=fetch_configs(args.http_config)
     print_project_pipeline(configs.get("platforms", None), args.project_name,
                            args.http_config, args.git_repository, args.use_but)
   elif args.subparsers_name == "runner":
-    configs = fetch_configs(args.http_config)
+    configs=fetch_configs(args.http_config)
     execute_commands(configs.get("platforms", None)[args.platform],
                      args.platform, args.git_repository, args.use_but, args.save_but,
                      args.build_only, args.test_only)
