@@ -12,7 +12,35 @@ import urllib.request
 from shutil import copyfile
 from urllib.parse import urlparse
 
-def python_version():
+def downstream_projects():
+    return {
+        "rules_python" : {
+            "git_repository" : "https://github.com/bazelbuild/rules_python.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_python-postsubmit.json"
+        },
+        "BUILD_file_generator" : {
+            "git_repository" : "https://github.com/bazelbuild/BUILD_file_generator.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/BUILD_file_generator-postsubmit.json"
+        },
+        "buildtools" : {
+            "git_repository" : "https://github.com/bazelbuild/buildtools.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/buildtools-postsubmit.json"
+        },
+        "examples" : {
+            "git_repository" : "https://github.com/bazelbuild/examples.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/examples-postsubmit.json"
+        },
+        "migration-tooling" : {
+            "git_repository" : "https://github.com/bazelbuild/migration-tooling.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/migration-tooling-postsubmit.json"
+        },
+        "protobuf" : {
+            "git_repository" : "https://github.com/google/protobuf.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/protobuf-postsubmit.json"
+        }
+    }
+
+def python_binary():
     return "python3.6"
 
 def bazelcipy_url():
@@ -41,34 +69,6 @@ def supported_platforms():
 
 def git_clone_path():
     return "project-under-test"
-
-def downstream_projects():
-    return {
-        "rules_python" : {
-            "git_repository" : "https://github.com/bazelbuild/rules_python.git",
-            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_python-postsubmit.json"
-        },
-        "BUILD_file_generator" : {
-            "git_repository" : "https://github.com/bazelbuild/BUILD_file_generator.git",
-            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/BUILD_file_generator-postsubmit.json"
-        },
-        "buildtools" : {
-            "git_repository" : "https://github.com/bazelbuild/buildtools.git",
-            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/buildtools-postsubmit.json"
-        },
-        "examples" : {
-            "git_repository" : "https://github.com/bazelbuild/examples.git",
-            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/examples-postsubmit.json"
-        },
-        "migration-tooling" : {
-            "git_repository" : "https://github.com/bazelbuild/migration-tooling.git",
-            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/migration-tooling-postsubmit.json"
-        },
-        "protobuf" : {
-            "git_repository" : "https://github.com/google/protobuf.git",
-            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/protobuf-postsubmit.json"
-        }
-    }
 
 def fetch_configs(http_url):
     '''
@@ -172,21 +172,27 @@ def execute_bazel_build(bazel_binary, flags, targets):
     if not targets:
         return
     print("\n+++ Build")
-    fail_if_nonzero(execute_command([bazel_binary, "build", "--color=yes", "--keep_going"] + flags + targets))
+    fail_if_nonzero(execute_command([bazel_binary, "build", "--color=yes",
+        "--keep_going"] + flags + targets))
 
 def execute_bazel_test(bazel_binary, flags, targets, bep_file):
     if not targets:
-        return
+        return 0
     print("\n+++ Test")
-    return execute_command([bazel_binary, "test", "--color=yes", "--keep_going", "--build_tests_only", "--build_event_json_file=" + bep_file] + flags + targets)
+    return execute_command([bazel_binary, "test", "--color=yes", "--keep_going",
+        "--build_tests_only", "--build_event_json_file=" + bep_file] + flags +
+        targets)
 
 def fail_if_nonzero(exitcode):
     if exitcode is not 0:
         exit(exitcode)
 
 def upload_failed_test_logs(bep_file, tmpdir):
+    if not os.path.exists(bep_file):
+        return
     for logfile in failed_logs_from_bep(bep_file, tmpdir):
-        fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "upload", logfile]))
+        fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "upload",
+            logfile]))
 
 def failed_logs_from_bep(bep_file, tmpdir):
     test_logs = []
@@ -235,7 +241,7 @@ def print_project_pipeline(platform_configs, project_name, http_config,
 def runner_step(platform, project_name=None, http_config=None,
     git_repository=None, use_but=False, save_but=False, build_only=False,
     test_only=False):
-    command = python_version() + " bazelci.py runner --platform=" + platform
+    command = python_binary() + " bazelci.py runner --platform=" + platform
     if http_config:
         command = command + " --http_config=" + http_config
     if git_repository:
@@ -275,7 +281,7 @@ def fetch_bazelcipy_command():
 
 def upload_project_pipeline_step(project_name, git_repository, http_config):
     pipeline_command = ("{0} bazelci.py project_pipeline --project_name=\\\"{1}\\\" " + 
-        "--use_but --git_repository={2}").format(python_version(), project_name,
+        "--use_but --git_repository={2}").format(python_binary(), project_name,
         git_repository)        
     if http_config:
         pipeline_command = pipeline_command + " --http_config=" + http_config
@@ -288,7 +294,8 @@ def upload_project_pipeline_step(project_name, git_repository, http_config):
       - \"pipeline=true\"""".format(project_name, fetch_bazelcipy_command(),
         pipeline_command)
 
-def create_label(platform_name, project_name=None, build_only=False, test_only=False):
+def create_label(platform_name, project_name=None, build_only=False,
+    test_only=False):
     label = ""
     if build_only:
         label = "Build "
@@ -302,7 +309,7 @@ def create_label(platform_name, project_name=None, build_only=False, test_only=F
 
 def bazel_build_step(platform_name, platform, project_name, http_config=None,
     build_only=False, test_only=False):
-    pipeline_command = python_version() + " bazelci.py runner"
+    pipeline_command = python_binary() + " bazelci.py runner"
     if build_only:
         pipeline_command = pipeline_command + " --build_only --save_but"
     if test_only:
