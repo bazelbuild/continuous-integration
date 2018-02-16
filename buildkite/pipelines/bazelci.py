@@ -134,6 +134,10 @@ def downstream_projects():
           "git_repository": "https://github.com/bazelbuild/rules_typescript.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_typescript-postsubmit.json"
       },
+      "rules_webtesting": {
+          "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
+          "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_webtesting-postsubmit.json"
+      },
       "skydoc": {
           "git_repository": "https://github.com/bazelbuild/skydoc.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/skydoc-postsubmit.json"
@@ -147,7 +151,7 @@ def downstream_projects():
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.json"
       },
       "TensorFlow Serving": {
-          "git_repository": "https://github.com/tensorflow/tensorflow.git",
+          "git_repository": "https://github.com/tensorflow/serving.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-serving-postsubmit.json"
       }
   }
