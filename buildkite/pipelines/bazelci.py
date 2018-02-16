@@ -124,23 +124,25 @@ def platforms_info():
       "ubuntu1404":
       {
           "name": "Ubuntu 14.04",
-          "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}/"
+          "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
       },
       "ubuntu1604":
       {
           "name": "Ubuntu 16.04",
-          "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}/"
+          "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
       },
       "macos":
       {
           "name": "macOS",
-          "agent-directory": "/usr/local/var/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}/"
+          "agent-directory": "/usr/local/var/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
       }
   }
 
 
 def downstream_projects_root(platform):
-  path = os.path.join(agent_directory(platform), "downstream-projects")
+  downstream_projects_dir = os.path.expandvars(
+      "${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects")
+  path = os.path.join(agent_directory(platform), downstream_projects_dir)
   if not os.path.exists(path):
     os.makedirs(path)
   return path
@@ -156,6 +158,7 @@ def supported_platforms():
 
 def platform_name(platform):
   return platforms_info()[platform]["name"]
+
 
 def fetch_configs(http_url):
   '''
@@ -229,24 +232,33 @@ def clone_git_repository(git_repository, platform):
   print("\n--- Fetching " + project_name + " sources")
   if os.path.exists(clone_path):
     os.chdir(clone_path)
-    fail_if_nonzero(execute_command(["git", "remote", "set-url", "origin", git_repository]))
+    fail_if_nonzero(execute_command(
+        ["git", "remote", "set-url", "origin", git_repository]))
     fail_if_nonzero(execute_command(["git", "clean", "-fdqx"]))
-    fail_if_nonzero(execute_command(["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"]))
+    fail_if_nonzero(execute_command(
+        ["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"]))
     # sync to the latest commit of HEAD. Unlikely git pull this also works after
     # a force push.
     fail_if_nonzero(execute_command(["git", "fetch", "origin"]))
-    remote_head = subprocess.check_output(["git", "symbolic-ref", "refs/remotes/origin/HEAD"])
+    remote_head = subprocess.check_output(
+        ["git", "symbolic-ref", "refs/remotes/origin/HEAD"])
     remote_head = remote_head.decode("utf-8")
     remote_head = remote_head.rstrip()
     fail_if_nonzero(execute_command(["git", "reset", remote_head, "--hard"]))
-    fail_if_nonzero(execute_command(["git", "submodule", "sync", "--recursive"]))
-    fail_if_nonzero(execute_command(["git", "submodule", "update", "--init", "--recursive", "--force"]))
-    fail_if_nonzero(execute_command(["git", "submodule", "foreach", "--recursive", "git", "reset", "--hard"]))
+    fail_if_nonzero(execute_command(
+        ["git", "submodule", "sync", "--recursive"]))
+    fail_if_nonzero(execute_command(
+        ["git", "submodule", "update", "--init", "--recursive", "--force"]))
+    fail_if_nonzero(execute_command(
+        ["git", "submodule", "foreach", "--recursive", "git", "reset", "--hard"]))
     fail_if_nonzero(execute_command(["git", "clean", "-fdqx"]))
-    fail_if_nonzero(execute_command(["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"]))
+    fail_if_nonzero(execute_command(
+        ["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"]))
   else:
-    fail_if_nonzero(execute_command(["git", "clone", git_repository, clone_path]))
+    fail_if_nonzero(execute_command(
+        ["git", "clone", git_repository, clone_path]))
     os.chdir(clone_path)
+
 
 def cleanup(bazel_binary):
   if os.path.exists("WORKSPACE"):
