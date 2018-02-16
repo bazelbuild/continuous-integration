@@ -24,10 +24,6 @@ def downstream_projects():
           "git_repository": "https://github.com/bazelbuild/buildtools.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/buildtools-postsubmit.json"
       },
-      "examples": {
-          "git_repository": "https://github.com/bazelbuild/examples.git",
-          "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/examples-postsubmit.json"
-      },
       "migration-tooling": {
           "git_repository": "https://github.com/bazelbuild/migration-tooling.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/migration-tooling-postsubmit.json"
