@@ -118,6 +118,10 @@ def downstream_projects():
           "git_repository": "https://github.com/bazelbuild/rules_python.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_python-postsubmit.json"
       },
+      "rules_rust": {
+          "git_repository": "https://github.com/bazelbuild/rules_rust.git",
+          "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_rust-postsubmit.json"
+      },
       "rules_scala": {
           "git_repository": "https://github.com/bazelbuild/rules_scala.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_scala-postsubmit.json"
