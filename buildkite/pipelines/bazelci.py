@@ -109,6 +109,10 @@ def downstream_projects():
       "TensorFlow": {
           "git_repository": "https://github.com/tensorflow/tensorflow.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.json"
+      },
+      "TensorFlow Serving": {
+          "git_repository": "https://github.com/tensorflow/tensorflow.git",
+          "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-serving-postsubmit.json"
       }
   }
 
