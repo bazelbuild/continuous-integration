@@ -38,6 +38,14 @@ def downstream_projects():
           "git_repository": "https://github.com/bazelbuild/buildtools.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/buildtools-postsubmit.json"
       },
+      "CLion Plugin": {
+          "git_repository": "https://github.com/bazelbuild/intellij.git",
+          "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/clion-postsubmit.json"
+      },
+      "IntelliJ Plugin": {
+          "git_repository": "https://github.com/bazelbuild/intellij.git",
+          "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/intellij-postsubmit.json"
+      },
       "migration-tooling": {
           "git_repository": "https://github.com/bazelbuild/migration-tooling.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/migration-tooling-postsubmit.json"
