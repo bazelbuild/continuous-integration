@@ -50,6 +50,10 @@ def downstream_projects():
           "git_repository": "https://github.com/bazelbuild/eclipse.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/eclipse-postsubmit.json"
       },
+      "Gerrit": {
+          "git_repository": "https://gerrit.googlesource.com/gerrit.git",
+          "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.json"
+      },
       "IntelliJ Plugin": {
           "git_repository": "https://github.com/bazelbuild/intellij.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/intellij-postsubmit.json"
