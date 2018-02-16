@@ -54,6 +54,10 @@ def downstream_projects():
           "git_repository": "https://gerrit.googlesource.com/gerrit.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.json"
       },
+      "Google Logging": {
+          "git_repository": "https://github.com/google/glog.git",
+          "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/glog-postsubmit.json"
+      },
       "IntelliJ Plugin": {
           "git_repository": "https://github.com/bazelbuild/intellij.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/intellij-postsubmit.json"
