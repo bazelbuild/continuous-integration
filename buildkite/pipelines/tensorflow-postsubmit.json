@@ -6,7 +6,6 @@
         "touch .bazelrc",
         "./tensorflow/tools/ci_build/builds/configured CPU"
       ],
-      "build_flags": ["-c opt"],
       "build_targets": ["//tensorflow/tools/pip_package:build_pip_package"]
     },
     "ubuntu1604": {
@@ -15,7 +14,6 @@
         "touch .bazelrc",
         "./tensorflow/tools/ci_build/builds/configured CPU"
       ],
-      "build_flags": ["-c opt"],
       "build_targets": ["//tensorflow/tools/pip_package:build_pip_package"]
     }
   }
