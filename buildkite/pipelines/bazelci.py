@@ -3,6 +3,7 @@ import argparse
 import codecs
 import json
 import os.path
+import re
 import shutil
 import subprocess
 import sys
@@ -116,6 +117,7 @@ def eprint(*args, **kwargs):
   print(*args, file=sys.stderr, **kwargs)
   exit(1)
 
+
 def platforms_info():
   '''
   Returns a map containing all supported platform names as keys, with the
@@ -141,12 +143,23 @@ def platforms_info():
   }
 
 
+def downstream_projects_root(platform):
+    path = os.path.join(agent_directory(platform), "downstream-projects")
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return path
+
+
+def agent_directory(platform):
+    return os.path.expandvars(platforms_info()[platform]["agent-directory"])
+
+
 def supported_platforms():
-    return set(platforms_info().keys())
+  return set(platforms_info().keys())
 
 
 def platform_name(platform):
-    return platforms_info()[platform]["name"]
+  return platforms_info()[platform]["name"]
 
 
 def git_clone_path():
@@ -179,8 +192,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                                  build_only=True, test_only=False)
       bazel_binary = download_bazel_binary(tmpdir, source_step)
     if git_repository:
-      clone_git_repository(git_repository)
-      os.chdir(git_clone_path())
+      clone_git_repository(git_repository, platform)
       cleanup(bazel_binary)
     else:
       cleanup(bazel_binary)
@@ -197,9 +209,6 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                                      config.get("test_targets", None), bep_file)
       upload_failed_test_logs(bep_file, tmpdir)
   finally:
-    if git_repository:
-      os.chdir("..")
-      delete_git_checkout()
     if tmpdir:
       shutil.rmtree(tmpdir)
     if exit_code > -1:
@@ -222,11 +231,14 @@ def download_bazel_binary(dest_dir, source_step):
   return bazel_binary_path
 
 
-def clone_git_repository(git_repository):
-  delete_git_checkout()
-  fail_if_nonzero(execute_command(["git", "clone", git_repository,
-                                   git_clone_path()]))
-
+def clone_git_repository(git_repository, platform):
+  root = downstream_projects_root(platform)
+  project_name = re.search("/([^/]+)\.git$", git_repository).group(1)
+  clone_path = os.path.join(root, project_name)
+  if os.path.exists(clone_path):
+      shutil.rmtree(clone_path)
+  fail_if_nonzero(execute_command(["git", "clone", git_repository, clone_path]))
+  os.chdir(clone_path)
 
 def delete_git_checkout():
   if os.path.exists(git_clone_path()):
@@ -488,18 +500,18 @@ if __name__ == "__main__":
   runner.add_argument("--build_only", type=bool, nargs="?", const=True)
   runner.add_argument("--test_only", type=bool, nargs="?", const=True)
 
-  args=parser.parse_args()
+  args = parser.parse_args()
 
   if args.subparsers_name == "bazel_postsubmit_pipeline":
-    configs=fetch_configs(args.http_config)
+    configs = fetch_configs(args.http_config)
     print_bazel_postsubmit_pipeline(configs.get("platforms", None),
                                     args.http_config)
   elif args.subparsers_name == "project_pipeline":
-    configs=fetch_configs(args.http_config)
+    configs = fetch_configs(args.http_config)
     print_project_pipeline(configs.get("platforms", None), args.project_name,
                            args.http_config, args.git_repository, args.use_but)
   elif args.subparsers_name == "runner":
-    configs=fetch_configs(args.http_config)
+    configs = fetch_configs(args.http_config)
     execute_commands(configs.get("platforms", None)[args.platform],
                      args.platform, args.git_repository, args.use_but, args.save_but,
                      args.build_only, args.test_only)
