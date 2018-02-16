@@ -14,14 +14,6 @@ from urllib.parse import urlparse
 
 def downstream_projects():
     return {
-        "rules_python" : {
-            "git_repository" : "https://github.com/bazelbuild/rules_python.git",
-            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_python-postsubmit.json"
-        },
-        "rules_typescript" : {
-            "git_repository" : "https://github.com/bazelbuild/rules_typescript.git",
-            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_typescript-postsubmit.json"
-        },
         "BUILD_file_generator" : {
             "git_repository" : "https://github.com/bazelbuild/BUILD_file_generator.git",
             "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/BUILD_file_generator-postsubmit.json"
@@ -41,6 +33,66 @@ def downstream_projects():
         "protobuf" : {
             "git_repository" : "https://github.com/google/protobuf.git",
             "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/protobuf-postsubmit.json"
+        },
+        "re2" : {
+            "git_repository" : "https://github.com/google/re2.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/re2-postsubmit.json"
+        },
+        "rules_appengine" : {
+            "git_repository" : "https://github.com/bazelbuild/rules_appengine.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_appengine-postsubmit.json"
+        },
+        "rules_closure" : {
+            "git_repository" : "https://github.com/bazelbuild/rules_closure.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_closure-postsubmit.json"
+        },
+        "rules_go" : {
+            "git_repository" : "https://github.com/bazelbuild/rules_go.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_go-postsubmit.json"
+        },
+        "rules_groovy" : {
+            "git_repository" : "https://github.com/bazelbuild/rules_groovy.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_groovy-postsubmit.json"
+        },
+        "rules_gwt" : {
+            "git_repository" : "https://github.com/bazelbuild/rules_gwt.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_gwt-postsubmit.json"
+        },
+        "rules_jsonnet" : {
+            "git_repository" : "https://github.com/bazelbuild/rules_jsonnet.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_jsonnet-postsubmit.json"
+        },
+        "rules_k8s" : {
+            "git_repository" : "https://github.com/bazelbuild/rules_k8s.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_k8s-postsubmit.json"
+        },
+        "rules_nodejs" : {
+            "git_repository" : "https://github.com/bazelbuild/rules_nodejs.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_nodejs-postsubmit.json"
+        },
+        "rules_perl" : {
+            "git_repository" : "https://github.com/bazelbuild/rules_perl.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_perl-postsubmit.json"
+        },
+        "rules_python" : {
+            "git_repository" : "https://github.com/bazelbuild/rules_python.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_python-postsubmit.json"
+        },
+        "rules_scala" : {
+            "git_repository" : "https://github.com/bazelbuild/rules_scala.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_scala-postsubmit.json"
+        },
+        "rules_typescript" : {
+            "git_repository" : "https://github.com/bazelbuild/rules_typescript.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_typescript-postsubmit.json"
+        },
+        "skydoc" : {
+            "git_repository" : "https://github.com/bazelbuild/skydoc.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/skydoc-postsubmit.json"
+        },
+        "subpar" : {
+            "git_repository" : "https://github.com/google/subpar.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/subpar-postsubmit.json"
         }
     }
 
@@ -126,12 +178,12 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
             exit(exit_code)
 
 def upload_bazel_binary():
-    print("\n--- Uploading Bazel Binary")
+    print("\n--- Uploading Bazel under test")
     fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "upload",
         "bazel-bin/src/bazel"]))
 
 def download_bazel_binary(dest_dir, source_step):
-    print("\n--- Downloading Bazel Binary")
+    print("\n--- Downloading Bazel under test")
     fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "download",
         "bazel-bin/src/bazel", dest_dir, "--step", source_step]))
     bazel_binary_path = os.path.join(dest_dir, "bazel-bin/src/bazel")
