@@ -134,7 +134,7 @@ def platforms_info():
       "macos":
       {
           "name": "macOS",
-          "agent-directory": "/usr/local/var/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
+          "agent-directory": "/Users/buchgr/citest"
       }
   }
 
@@ -229,10 +229,21 @@ def clone_git_repository(git_repository, platform):
   print("\n--- Fetching " + project_name + " sources")
   if os.path.exists(clone_path):
     os.chdir(clone_path)
+    fail_if_nonzero(execute_command(["git", "remote", "set-url", "origin", git_repository]))
+    fail_if_nonzero(execute_command(["git", "clean", "-fdqx"]))
+    fail_if_nonzero(execute_command(["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"]))
     # sync to the latest commit of HEAD. Unlikely git pull this also works after
     # a force push.
-    fail_if_nonzero(execute_command(["git", "fetch"]))
-    fail_if_nonzero(execute_command(["git", "reset", "HEAD", "--hard"]))
+    fail_if_nonzero(execute_command(["git", "fetch", "origin"]))
+    remote_head = subprocess.check_output(["git", "symbolic-ref", "refs/remotes/origin/HEAD"])
+    remote_head = remote_head.decode("utf-8")
+    remote_head = remote_head.rstrip()
+    fail_if_nonzero(execute_command(["git", "reset", remote_head, "--hard"]))
+    fail_if_nonzero(execute_command(["git", "submodule", "sync", "--recursive"]))
+    fail_if_nonzero(execute_command(["git", "submodule", "update", "--init", "--recursive", "--force"]))
+    fail_if_nonzero(execute_command(["git", "submodule", "foreach", "--recursive", "git", "reset", "--hard"]))
+    fail_if_nonzero(execute_command(["git", "clean", "-fdqx"]))
+    fail_if_nonzero(execute_command(["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"]))
   else:
     fail_if_nonzero(execute_command(["git", "clone", git_repository, clone_path]))
 
