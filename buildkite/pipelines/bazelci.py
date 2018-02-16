@@ -128,18 +128,18 @@ def platforms_info():
       "ubuntu1404":
       {
           "name": "Ubuntu 14.04",
-          "agent-directory": " /var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
+          "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
       },
       "ubuntu1604":
       {
           "name": "Ubuntu 16.04",
-          "agent-directory": " /var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
+          "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
       },
       "macos":
       {
           "name": "macOS",
           "agent-directory": "/usr/local/var/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
-      },
+      }
   }
 
 
@@ -235,27 +235,16 @@ def clone_git_repository(git_repository, platform):
   root = downstream_projects_root(platform)
   project_name = re.search("/([^/]+)\.git$", git_repository).group(1)
   clone_path = os.path.join(root, project_name)
+  print("\n--- Fetching " + project_name + " sources")
   if os.path.exists(clone_path):
       shutil.rmtree(clone_path)
   fail_if_nonzero(execute_command(["git", "clone", git_repository, clone_path]))
   os.chdir(clone_path)
 
-def delete_git_checkout():
-  if os.path.exists(git_clone_path()):
-    shutil.rmtree(git_clone_path())
-
-
 def cleanup(bazel_binary):
-  print("\n--- Cleanup")
   if os.path.exists("WORKSPACE"):
+    print("\n--- Cleanup")
     fail_if_nonzero(execute_command([bazel_binary, "clean", "--expunge"]))
-  delete_git_checkout()
-
-
-def delete_git_repository(git_repository):
-  os.chdir("..")
-  shutil.rmtree(git_clone_path())
-
 
 def execute_shell_commands(commands):
   if not commands:
