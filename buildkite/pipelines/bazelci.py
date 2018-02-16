@@ -246,6 +246,7 @@ def clone_git_repository(git_repository, platform):
     fail_if_nonzero(execute_command(["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"]))
   else:
     fail_if_nonzero(execute_command(["git", "clone", git_repository, clone_path]))
+    os.chdir(clone_path)
 
 def cleanup(bazel_binary):
   if os.path.exists("WORKSPACE"):
