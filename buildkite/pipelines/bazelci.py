@@ -157,11 +157,6 @@ def supported_platforms():
 def platform_name(platform):
   return platforms_info()[platform]["name"]
 
-
-def git_clone_path():
-  return "project-under-test"
-
-
 def fetch_configs(http_url):
   '''
   If specified fetches the build configuration from http_url, else tries to
@@ -233,10 +228,13 @@ def clone_git_repository(git_repository, platform):
   clone_path = os.path.join(root, project_name)
   print("\n--- Fetching " + project_name + " sources")
   if os.path.exists(clone_path):
-    shutil.rmtree(clone_path)
-  fail_if_nonzero(execute_command(["git", "clone", git_repository, clone_path]))
-  os.chdir(clone_path)
-
+    os.chdir(clone_path)
+    # sync to the latest commit of HEAD. Unlikely git pull this also works after
+    # a force push.
+    fail_if_nonzero(execute_command(["git", "fetch"]))
+    fail_if_nonzero(execute_command(["git", "reset", "HEAD", "--hard"]))
+  else:
+    fail_if_nonzero(execute_command(["git", "clone", git_repository, clone_path]))
 
 def cleanup(bazel_binary):
   if os.path.exists("WORKSPACE"):
