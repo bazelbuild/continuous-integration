@@ -103,7 +103,7 @@ def bazelcipy_url():
     '''
     URL to the latest version of this script.
     '''
-    return "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazelci1.py"
+    return "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazelci.py"
 
 def eprint(*args, **kwargs):
     '''
