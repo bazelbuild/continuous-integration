@@ -1,8 +1,17 @@
 {
   "platforms": {
-    "ubuntu1404": {"build_targets": ["//:all"]},
-    "ubuntu1604": {"build_targets": ["//:all"]},
-    "macos": {"build_targets": ["//:all"]}
+    "ubuntu1404": {
+      "shell_commands": ["cd tutorial"],
+      "build_targets": ["//:all"]
+    },
+    "ubuntu1604": {
+      "shell_commands": ["cd tutorial"],
+      "build_targets": ["//:all"]
+    },
+    "macos": {
+      "shell_commands": ["cd tutorial"],
+      "build_targets": ["//:all"]
+    }
   }
 }
 
