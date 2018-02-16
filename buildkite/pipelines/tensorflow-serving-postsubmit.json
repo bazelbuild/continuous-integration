@@ -1,19 +1,9 @@
 {
   "platforms": {
     "ubuntu1404": {
-      "shell_commands": [
-        "(cd tensorflow && ./tensorflow/tools/ci_build/builds/configured CPU)",
-        "echo -e '\nimport %workspace%/tensorflow/.tf_configure.bazelrc' >>bazel.bazelrc",
-        "./tensorflow/tools/ci_build/builds/configured CPU"
-      ],
       "build_targets": ["tensorflow_serving/..."]
     },
     "ubuntu1604": {
-      "shell_commands": [
-        "(cd tensorflow && ./tensorflow/tools/ci_build/builds/configured CPU)",
-        "echo -e '\nimport %workspace%/tensorflow/.tf_configure.bazelrc' >>bazel.bazelrc",
-        "./tensorflow/tools/ci_build/builds/configured CPU"
-      ],
       "build_targets": ["tensorflow_serving/..."]
     }
   }
