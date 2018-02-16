@@ -105,6 +105,10 @@ def downstream_projects():
       "subpar": {
           "git_repository": "https://github.com/google/subpar.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/subpar-postsubmit.json"
+      },
+      "TensorFlow": {
+          "git_repository": "https://github.com/tensorflow/tensorflow.git",
+          "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.json"
       }
   }
 
