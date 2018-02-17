@@ -17,6 +17,7 @@ import argparse
 import codecs
 import json
 import os.path
+import multiprocessing
 import re
 import shutil
 import subprocess
@@ -188,8 +189,8 @@ def platforms_info():
           "name": "Ubuntu 14.04",
           "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/",
           "cleanup-commands": [
-            "find /tmp -user $(whoami) -delete || true",
-            "find /tmp -user $(whoami) -type d -empty -exec rmdir {} \; || true"
+              "find /tmp -user $(whoami) -delete || true",
+              "find /tmp -user $(whoami) -type d -empty -exec rmdir {} \; || true"
           ]
       },
       "ubuntu1604":
@@ -197,8 +198,8 @@ def platforms_info():
           "name": "Ubuntu 16.04",
           "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/",
           "cleanup-commands": [
-            "find /tmp -user $(whoami) -delete || true",
-            "find /tmp -user $(whoami) -type d -empty -exec rmdir {} \; || true"
+              "find /tmp -user $(whoami) -delete || true",
+              "find /tmp -user $(whoami) -type d -empty -exec rmdir {} \; || true"
           ]
       },
       "macos":
@@ -209,8 +210,10 @@ def platforms_info():
       }
   }
 
+
 def cleanup_commands(platform):
   return platforms_info()[platform]["cleanup-commands"]
+
 
 def downstream_projects_root(platform):
   downstream_projects_dir = os.path.expandvars(
@@ -358,17 +361,20 @@ def execute_bazel_build(bazel_binary, flags, targets):
   if not targets:
     return
   print("\n+++ Build")
-  fail_if_nonzero(execute_command([bazel_binary, "build", "--color=yes",
-                                   "--keep_going"] + flags + targets))
+  num_jobs = multiprocessing.cpu_count()
+  common_flags = ["--color=yes", "--keep_going", "--jobs=" + num_jobs]
+  fail_if_nonzero(execute_command(
+      [bazel_binary, "build"] + common_flags + flags + targets))
 
 
 def execute_bazel_test(bazel_binary, flags, targets, bep_file):
   if not targets:
     return 0
   print("\n+++ Test")
-  return execute_command([bazel_binary, "test", "--color=yes", "--keep_going",
-                          "--build_tests_only", "--build_event_json_file=" + bep_file] + flags +
-                         targets)
+  num_jobs = multiprocessing.cpu_count()
+  common_flags = ["--color=yes", "--keep_going", "--jobs=" + num_jobs,
+                  "--local_test_jobs=" + num_jobs, "--build_event_json_file=" + bep_file]
+  return execute_command([bazel_binary, "test"] + common_flags + flags + targets)
 
 
 def fail_if_nonzero(exitcode):
