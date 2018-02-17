@@ -276,7 +276,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
   finally:
     if tmpdir:
       shutil.rmtree(tmpdir)
-    execute_shell_commands(cleanup_commands)
+    execute_shell_commands(cleanup_commands(platform))
     if exit_code > -1:
       exit(exit_code)
 
