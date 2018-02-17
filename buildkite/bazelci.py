@@ -190,7 +190,8 @@ def platforms_info():
           "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/",
           "cleanup-commands": [
               "find /tmp -user $(whoami) -delete || true",
-              "find /tmp -user $(whoami) -type d -empty -exec rmdir {} \; || true"
+              "find /tmp -user $(whoami) -type d -empty -exec rmdir {} \; || true",
+              "yes | docker system prune -a"
           ]
       },
       "ubuntu1604":
@@ -199,7 +200,8 @@ def platforms_info():
           "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/",
           "cleanup-commands": [
               "find /tmp -user $(whoami) -delete || true",
-              "find /tmp -user $(whoami) -type d -empty -exec rmdir {} \; || true"
+              "find /tmp -user $(whoami) -type d -empty -exec rmdir {} \; || true",
+              "yes | docker system prune -a"
           ]
       },
       "macos":
@@ -279,7 +281,6 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
   finally:
     if tmpdir:
       shutil.rmtree(tmpdir)
-    execute_shell_commands(cleanup_commands(platform))
     if exit_code > -1:
       exit(exit_code)
 
@@ -336,10 +337,12 @@ def clone_git_repository(git_repository, platform):
 
 
 def cleanup(bazel_binary):
+  print("\n--- Cleanup")
   if os.path.exists("WORKSPACE"):
-    print("\n--- Cleanup")
     fail_if_nonzero(execute_command([bazel_binary, "clean", "--expunge"]))
-
+  if cleanup_commands(platform):
+    shell_command = "\n".join(cleanup_commands(platform))
+    fail_if_nonzero(execute_command(shell_command, shell=True))
 
 def execute_shell_commands(commands):
   if not commands:
