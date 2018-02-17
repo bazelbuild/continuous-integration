@@ -258,14 +258,14 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
   tmpdir = None
   bazel_binary = "bazel"
   try:
+    if git_repository:
+      clone_git_repository(git_repository, platform)
+    cleanup(platform)
     tmpdir = tempfile.mkdtemp()
     if use_but:
       source_step = create_label(platform_name(platform), "Bazel",
                                  build_only=True, test_only=False)
       bazel_binary = download_bazel_binary(tmpdir, source_step)
-    if git_repository:
-      clone_git_repository(git_repository, platform)
-    cleanup(platform)
     execute_shell_commands(config.get("shell_commands", None))
     execute_bazel_run(bazel_binary, config.get("run_targets", None))
     if not test_only:
@@ -343,7 +343,7 @@ def cleanup(platform):
     fail_if_nonzero(execute_command(["bazel", "clean", "--expunge"]))
   if cleanup_commands(platform):
     shell_command = "\n".join(cleanup_commands(platform))
-    fail_if_nonzero(execute_command(shell_command, shell=True))
+    fail_if_nonzero(execute_command([shell_command], shell=True))
 
 
 def execute_shell_commands(commands):
