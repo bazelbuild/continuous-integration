@@ -349,7 +349,7 @@ def cleanup(platform):
 def execute_shell_commands(commands):
   if not commands:
     return
-  print("\n--- Shell Commands")
+  print("\n--- Setup (Shell Commands)")
   shell_command = "\n".join(commands)
   fail_if_nonzero(execute_command([shell_command], shell=True))
 
@@ -357,7 +357,7 @@ def execute_shell_commands(commands):
 def execute_bazel_run(bazel_binary, targets):
   if not targets:
     return
-  print("\n--- Run Targets")
+  print("\n--- Setup (Run Targets)")
   for target in targets:
     fail_if_nonzero(execute_command([bazel_binary, "run", target]))
 
