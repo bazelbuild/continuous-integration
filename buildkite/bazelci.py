@@ -361,7 +361,7 @@ def execute_bazel_build(bazel_binary, flags, targets):
   if not targets:
     return
   print("\n+++ Build")
-  num_jobs = multiprocessing.cpu_count()
+  num_jobs = str(multiprocessing.cpu_count())
   common_flags = ["--color=yes", "--keep_going", "--jobs=" + num_jobs]
   fail_if_nonzero(execute_command(
       [bazel_binary, "build"] + common_flags + flags + targets))
@@ -371,7 +371,7 @@ def execute_bazel_test(bazel_binary, flags, targets, bep_file):
   if not targets:
     return 0
   print("\n+++ Test")
-  num_jobs = multiprocessing.cpu_count()
+  num_jobs = str(multiprocessing.cpu_count())
   common_flags = ["--color=yes", "--keep_going", "--jobs=" + num_jobs,
                   "--local_test_jobs=" + num_jobs, "--build_event_json_file=" + bep_file]
   return execute_command([bazel_binary, "test"] + common_flags + flags + targets)
