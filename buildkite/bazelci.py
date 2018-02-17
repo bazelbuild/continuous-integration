@@ -279,9 +279,9 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                                      config.get("test_targets", None), bep_file)
       upload_failed_test_logs(bep_file, tmpdir)
   finally:
+    cleanup(bazel_binary)
     if tmpdir:
       shutil.rmtree(tmpdir)
-    cleanup(bazel_binary)
     if exit_code > -1:
       exit(exit_code)
 
@@ -344,6 +344,7 @@ def cleanup(bazel_binary):
   if cleanup_commands(platform):
     shell_command = "\n".join(cleanup_commands(platform))
     fail_if_nonzero(execute_command(shell_command, shell=True))
+
 
 def execute_shell_commands(commands):
   if not commands:
