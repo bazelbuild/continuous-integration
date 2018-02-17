@@ -186,20 +186,31 @@ def platforms_info():
       "ubuntu1404":
       {
           "name": "Ubuntu 14.04",
-          "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
+          "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/",
+          "cleanup-commands": [
+            "find /tmp -user $(whoami) -delete || true",
+            "find /tmp -user $(whoami) -type d -empty -exec rmdir {} \; || true"
+          ]
       },
       "ubuntu1604":
       {
           "name": "Ubuntu 16.04",
-          "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
+          "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/",
+          "cleanup-commands": [
+            "find /tmp -user $(whoami) -delete || true",
+            "find /tmp -user $(whoami) -type d -empty -exec rmdir {} \; || true"
+          ]
       },
       "macos":
       {
           "name": "macOS",
-          "agent-directory": "/usr/local/var/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
+          "agent-directory": "/usr/local/var/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/",
+          "cleanup-commands": []
       }
   }
 
+def cleanup_commands(platform):
+  return platforms_info()[platform]["cleanup-commands"]
 
 def downstream_projects_root(platform):
   downstream_projects_dir = os.path.expandvars(
@@ -249,9 +260,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
       bazel_binary = download_bazel_binary(tmpdir, source_step)
     if git_repository:
       clone_git_repository(git_repository, platform)
-      cleanup(bazel_binary)
-    else:
-      cleanup(bazel_binary)
+    cleanup(bazel_binary)
     execute_shell_commands(config.get("shell_commands", None))
     execute_bazel_run(bazel_binary, config.get("run_targets", None))
     if not test_only:
@@ -267,6 +276,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
   finally:
     if tmpdir:
       shutil.rmtree(tmpdir)
+    execute_shell_commands(cleanup_commands)
     if exit_code > -1:
       exit(exit_code)
 
