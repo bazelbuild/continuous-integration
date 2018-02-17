@@ -265,7 +265,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
       bazel_binary = download_bazel_binary(tmpdir, source_step)
     if git_repository:
       clone_git_repository(git_repository, platform)
-    cleanup(bazel_binary)
+    cleanup(platform)
     execute_shell_commands(config.get("shell_commands", None))
     execute_bazel_run(bazel_binary, config.get("run_targets", None))
     if not test_only:
@@ -279,7 +279,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                                      config.get("test_targets", None), bep_file)
       upload_failed_test_logs(bep_file, tmpdir)
   finally:
-    cleanup(bazel_binary)
+    cleanup(platform)
     if tmpdir:
       shutil.rmtree(tmpdir)
     if exit_code > -1:
@@ -337,10 +337,10 @@ def clone_git_repository(git_repository, platform):
     os.chdir(clone_path)
 
 
-def cleanup(bazel_binary):
+def cleanup(platform):
   print("\n--- Cleanup")
   if os.path.exists("WORKSPACE"):
-    fail_if_nonzero(execute_command([bazel_binary, "clean", "--expunge"]))
+    fail_if_nonzero(execute_command(["bazel", "clean", "--expunge"]))
   if cleanup_commands(platform):
     shell_command = "\n".join(cleanup_commands(platform))
     fail_if_nonzero(execute_command(shell_command, shell=True))
