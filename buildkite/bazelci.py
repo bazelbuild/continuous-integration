@@ -279,9 +279,9 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                                      config.get("test_targets", None), bep_file)
       upload_failed_test_logs(bep_file, tmpdir)
   finally:
-    cleanup(platform)
     if tmpdir:
       shutil.rmtree(tmpdir)
+    cleanup(platform)
     if exit_code > -1:
       exit(exit_code)
 
