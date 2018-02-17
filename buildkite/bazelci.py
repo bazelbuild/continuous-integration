@@ -281,6 +281,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
   finally:
     if tmpdir:
       shutil.rmtree(tmpdir)
+    cleanup(bazel_binary)
     if exit_code > -1:
       exit(exit_code)
 
