@@ -634,7 +634,7 @@ def try_publish_binary(platform, build_number, expected_generation):
   try:
     tmpdir = tempfile.mkdtemp()
     bazel_binary_path = download_bazel_binary(tmpdir, platform)
-    fail_if_nonzero(execute_command(["gsutil", "cp", bazel_binary_path,
+    fail_if_nonzero(execute_command(["gsutil", "cp", "-a", "public-read", bazel_binary_path,
                                      bazelci_builds_upload_url(platform, build_number)]))
 
     info = {
@@ -648,7 +648,7 @@ def try_publish_binary(platform, build_number, expected_generation):
     json.dump(info, fp)
     fp.close()
     exitcode = execute_command(["gsutil", "-h", "x-goog-if-generation-match:" + expected_generation,
-                                "cp", fp.name, bazelci_builds_metadata_url(platform)])
+                                "cp", "-a", "public-read", fp.name, bazelci_builds_metadata_url(platform)])
     os.unlink(fp.name)
     return exitcode == 0
   finally:
