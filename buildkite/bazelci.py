@@ -641,9 +641,9 @@ def try_publish_binary(platform, build_number, expected_generation):
     info_file = os.path.join(tmpdir, "info.json")
     with open(info_file, mode="w", encoding="utf-8") as fp:
       json.dump(info, fp)
-      exitcode = execute_command(["gsutil", "-h", "x-goog-if-generation-match:" + expected_generation,
-                                  "-h", "Content-Type:application/json", "cp", "-a",
-                                  "public-read", info_file, bazelci_builds_metadata_url(platform)])
+    exitcode = execute_command(["gsutil", "-h", "x-goog-if-generation-match:" + expected_generation,
+                                "-h", "Content-Type:application/json", "cp", "-a",
+                                "public-read", info_file, bazelci_builds_metadata_url(platform)])
     return exitcode == 0
   finally:
     if tmpdir:
