@@ -267,6 +267,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
     if use_but:
       print("\n--- Downloading Bazel under test")
       bazel_binary = download_bazel_binary(tmpdir, platform)
+    print_bazel_version_info(bazel_binary)
     execute_shell_commands(config.get("shell_commands", None))
     execute_bazel_run(bazel_binary, config.get("run_targets", None))
     if not test_only:
@@ -285,6 +286,12 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
     cleanup(platform)
     if exit_code > -1:
       exit(exit_code)
+
+
+def print_bazel_version_info(bazel_binary):
+  print("\n--- Bazel Info")
+  fail_if_nonzero(execute_command([bazel_binary, "version"]))
+  fail_if_nonzero(execute_command([bazel_binary, "info"]))
 
 
 def upload_bazel_binary():
@@ -323,7 +330,8 @@ def clone_git_repository(git_repository, platform):
         ["git", "symbolic-ref", "refs/remotes/origin/HEAD"])
     remote_head = remote_head.decode("utf-8")
     remote_head = remote_head.rstrip()
-    fail_if_nonzero(execute_command(["git", "reset", remote_head, "--hard"]))
+    fail_if_nonzero(execute_command(
+        ["git", "reset", remote_head, "--hard"]))
     fail_if_nonzero(execute_command(
         ["git", "submodule", "sync", "--recursive"]))
     fail_if_nonzero(execute_command(
@@ -641,13 +649,11 @@ def try_publish_binary(platform, build_number, expected_generation):
         "platform": platform,
     }
     info_file = os.path.join(tmpdir, "info.json")
-    fp = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", delete=False)
-    json.dump(info, fp)
-    fp.close()
-    exitcode = execute_command(["gsutil", "-h", "x-goog-if-generation-match:" + expected_generation,
-                                "-h", "Content-Type:application/json",
-                                "cp", "-a", "public-read", fp.name, bazelci_builds_metadata_url(platform)])
-    os.unlink(fp.name)
+    with open(info_file, mode="w", encoding="utf-8") as fp:
+      json.dump(info, fp)
+      exitcode = execute_command(["gsutil", "-h", "x-goog-if-generation-match:" + expected_generation,
+                                  "-h", "Content-Type:application/json", "cp", "-a",
+                                  "public-read", info_file, bazelci_builds_metadata_url(platform)])
     return exitcode == 0
   finally:
     if tmpdir:
@@ -674,7 +680,8 @@ def publish_binary(platform):
       break
 
     if try_publish_binary(platform, current_build_number, latest_generation):
-      print("Successfully published " + bazelci_builds_download_url(platform, current_build_number))
+      print("Successfully published " +
+            bazelci_builds_download_url(platform, current_build_number))
       break
     attempt = attempt + 1
 
