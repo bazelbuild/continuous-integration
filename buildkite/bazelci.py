@@ -14,7 +14,9 @@
 
 from __future__ import print_function
 import argparse
+import base64
 import codecs
+import hashlib
 import json
 import os.path
 import multiprocessing
@@ -263,9 +265,8 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
     cleanup(platform)
     tmpdir = tempfile.mkdtemp()
     if use_but:
-      source_step = create_label(platform_name(platform), "Bazel",
-                                 build_only=True, test_only=False)
-      bazel_binary = download_bazel_binary(tmpdir, source_step)
+      print("\n--- Downloading Bazel under test")
+      bazel_binary = download_bazel_binary(tmpdir, platform)
     execute_shell_commands(config.get("shell_commands", None))
     execute_bazel_run(bazel_binary, config.get("run_targets", None))
     if not test_only:
@@ -292,8 +293,9 @@ def upload_bazel_binary():
                                    "bazel-bin/src/bazel"]))
 
 
-def download_bazel_binary(dest_dir, source_step):
-  print("\n--- Downloading Bazel under test")
+def download_bazel_binary(dest_dir, platform):
+  source_step = create_label(platform_name(platform), "Bazel", build_only=True,
+                             test_only=False)
   fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "download",
                                    "bazel-bin/src/bazel", dest_dir, "--step", source_step]))
   bazel_binary_path = os.path.join(dest_dir, "bazel-bin/src/bazel")
@@ -544,6 +546,16 @@ def bazel_build_step(platform, project_name, http_config=None,
                              pipeline_command, platform)
 
 
+def publish_bazel_binary_step(platform):
+  command = python_binary() + " bazelci.py publish_binary --platform=" + platform
+  return """
+  - label: \"Publish Bazel Binary ({0})\"
+    command: \"{1}\\n{2}\"
+    agents:
+      - \"pipeline=true\"""".format(platform_name(platform), fetch_bazelcipy_command(),
+                                    command)
+
+
 def print_bazel_postsubmit_pipeline(configs, http_config):
   if not configs:
     eprint("Bazel postsubmit pipeline configuration is empty.")
@@ -556,6 +568,10 @@ def print_bazel_postsubmit_pipeline(configs, http_config):
     pipeline_steps.append(bazel_build_step(platform, "Bazel",
                                            http_config, build_only=True))
   pipeline_steps.append(wait_step())
+
+  for platform in supported_platforms():
+    pipeline_steps.append(publish_bazel_binary_step(platform))
+
   for platform, config in configs.items():
     pipeline_steps.append(bazel_build_step(platform, "Bazel",
                                            http_config, test_only=True))
@@ -566,6 +582,100 @@ def print_bazel_postsubmit_pipeline(configs, http_config):
                                                        git_repository, http_config))
 
   print_pipeline(pipeline_steps)
+
+
+def bazelci_builds_download_url(platform, build_number):
+  return "https://storage.googleapis.com/bazel-builds/{0}/{1}/bazel".format(build_number, platform)
+
+
+def bazelci_builds_upload_url(platform, build_number):
+  return "gs//bazel-builds/{0}/{1}/bazel".format(build_number, platform)
+
+
+def bazelci_builds_metadata_url(platform):
+  return "gs://bazel-builds/metadata/{0}/latest.json"
+
+
+def latest_generation_and_build_number(platform):
+  output = None
+  attempt = 0
+  while attempt < 5:
+    output = subprocess.check_output(
+        ["gsutil", "stat", bazelci_builds_metadata_url(platform)])
+    match = re.search("Generation:[ ]*([0-9]+)", output.decode("utf-8"))
+    if not match:
+      eprint("Couldn't parse generation. gsutil output format changed?")
+    generation = match.group(1)
+
+    match = re.search("Hash \(md5\):[ ]*([^\s]+)", output.decode("utf-8"))
+    if not match:
+      eprint("Couldn't parse md5 hash. gsutil output format changed?")
+    expected_md5hash = base64.b64decode(match.group(1))
+
+    output = subprocess.check_output(
+        ["gsutil", "cat", bazelci_builds_metadata_url(platform)])
+    hasher = hashlib.md5()
+    hasher.update(output)
+    actual_md5hash = hasher.digest()
+
+    if expected_md5hash == actual_md5hash:
+      break
+    attempt = attempt + 1
+  info = json.loads(output.decode("utf-8"))
+  return (generation, info["build_number"])
+
+
+def try_publish_binary(platform, build_number, expected_generation):
+  tmpdir = None
+  try:
+    tmpdir = tempfile.mkdtemp()
+    bazel_binary_path = download_bazel_binary(tmpdir, platform)
+    fail_if_nonzero(["gsutil", "cp", bazel_binary_path,
+                     bazelci_builds_upload_url(platform, build_number)])
+
+    info = {
+        "build_number": build_number,
+        "binary": bazelci_builds_download_url(platform, build_number),
+        "commit": os.environ["BUILDKITE_COMMIT"],
+        "platform": platform,
+    }
+    info_file = os.path.join(tmpdir, "info.json")
+    fp = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", delete=False)
+    json.dump(info, fp)
+    fp.close()
+    exitcode = subprocess.run(["gsutil", "-h", "x-goog-if-generation-match:" + expected_generation,
+                               "cp", fp.name, bazelci_builds_metadata_url(platform)]).returncode
+    os.unlink(fp.name)
+    return exitcode == 0
+  finally:
+    if tmpdir:
+      shutil.rmdir(tmpdir)
+
+
+def publish_binary(platform):
+  '''
+  Publish tested Bazel binary to GCS.
+  '''
+  attempt = 0
+  while attempt < 5:
+    latest_generation, latest_build_number = latest_generation_and_build_number(
+        platform)
+
+    current_build_number = os.environ.get("BUILDKITE_BUILD_NUMBER", None)
+    if not current_build_number:
+      eprint("Not running inside Buildkite")
+    current_build_number = int(current_build_number)
+    if current_build_number <= latest_build_number:
+      print(("Current build '{0}' is not newer than latest published '{1}'. " +
+             "Skipping publishing of binaries.").format(current_build_number,
+                                                        latest_build_number))
+      break
+
+    if try_publish_binary(platform, current_build_number, latest_generation):
+      print("Successfully published binaries of build '{0}'.".format(
+          current_build_number))
+      break
+    attempt = attempt + 1
 
 
 if __name__ == "__main__":
@@ -595,6 +705,10 @@ if __name__ == "__main__":
   runner.add_argument("--build_only", type=bool, nargs="?", const=True)
   runner.add_argument("--test_only", type=bool, nargs="?", const=True)
 
+  runner = subparsers.add_parser("publish_binary")
+  runner.add_argument("--platform", action="store", required=True,
+                      choices=list(supported_platforms()))
+
   args = parser.parse_args()
 
   if args.subparsers_name == "bazel_postsubmit_pipeline":
@@ -610,5 +724,7 @@ if __name__ == "__main__":
     execute_commands(configs.get("platforms", None)[args.platform],
                      args.platform, args.git_repository, args.use_but, args.save_but,
                      args.build_only, args.test_only)
+  elif args.subparsers_name == "publish_binary":
+    publish_binary(args.platform)
   else:
     parser.print_help()
