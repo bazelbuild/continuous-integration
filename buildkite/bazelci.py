@@ -623,6 +623,12 @@ def latest_generation_and_build_number(platform):
   info = json.loads(output.decode("utf-8"))
   return (generation, info["build_number"])
 
+def sha256_hexdigest(filename):
+    sha256 = hashlib.sha256()
+    with open(filename, 'rb') as f:
+        for block in iter(lambda: f.read(65536), b''):
+            sha256.update(block)
+    return sha256.hexdigest()
 
 def try_publish_binary(platform, build_number, expected_generation):
   tmpdir = None
@@ -634,8 +640,9 @@ def try_publish_binary(platform, build_number, expected_generation):
 
     info = {
         "build_number": build_number,
-        "binary": bazelci_builds_download_url(platform, build_number),
-        "commit": os.environ["BUILDKITE_COMMIT"],
+        "binary_url": bazelci_builds_download_url(platform, build_number),
+        "binary_sha256": sha256_hexdigest(bazel_binary_path),
+        "git_commit": os.environ["BUILDKITE_COMMIT"],
         "platform": platform,
     }
     info_file = os.path.join(tmpdir, "info.json")
