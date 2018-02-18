@@ -599,11 +599,11 @@ def print_bazel_postsubmit_pipeline(configs, http_config):
 
 
 def bazelci_builds_download_url(platform, build_number):
-  return "https://storage.googleapis.com/bazel-builds/{0}/{1}/bazel".format(build_number, platform)
+  return "https://storage.googleapis.com/bazel-builds/artifacts/{0}/{1}/bazel".format(build_number, platform)
 
 
 def bazelci_builds_upload_url(platform, build_number):
-  return "gs://bazel-builds/{0}/{1}/bazel".format(build_number, platform)
+  return "gs://bazel-builds/artifacts/{0}/{1}/bazel".format(build_number, platform)
 
 
 def bazelci_builds_metadata_url(platform):
