@@ -189,34 +189,19 @@ def platforms_info():
       "ubuntu1404":
       {
           "name": "Ubuntu 14.04",
-          "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/",
-          "cleanup-commands": [
-              "find /tmp -user $(whoami) -delete || true",
-              "find /tmp -user $(whoami) -type d -empty -exec rmdir {} \; || true",
-              "yes | docker system prune -a"
-          ]
+          "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
       },
       "ubuntu1604":
       {
           "name": "Ubuntu 16.04",
-          "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/",
-          "cleanup-commands": [
-              "find /tmp -user $(whoami) -delete || true",
-              "find /tmp -user $(whoami) -type d -empty -exec rmdir {} \; || true",
-              "yes | docker system prune -a"
-          ]
+          "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
       },
       "macos":
       {
           "name": "macOS",
-          "agent-directory": "/usr/local/var/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/",
-          "cleanup-commands": []
+          "agent-directory": "/usr/local/var/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
       }
   }
-
-
-def cleanup_commands(platform):
-  return platforms_info()[platform]["cleanup-commands"]
 
 
 def downstream_projects_root(platform):
@@ -253,11 +238,14 @@ def fetch_configs(http_url):
     reader = codecs.getreader("utf-8")
     return json.load(reader(resp))
 
+
 def print_collapsed_group(name):
   print("\n--- {0}\n".format(name))
 
+
 def print_expanded_group(name):
   print("\n+++ {0}\n".format(name))
+
 
 def execute_commands(config, platform, git_repository, use_but, save_but,
                      build_only, test_only):
@@ -356,9 +344,6 @@ def cleanup(platform):
   print_collapsed_group("Cleanup")
   if os.path.exists("WORKSPACE"):
     fail_if_nonzero(execute_command(["bazel", "clean", "--expunge"]))
-  if cleanup_commands(platform):
-    shell_command = "\n".join(cleanup_commands(platform))
-    fail_if_nonzero(execute_command([shell_command], shell=True))
 
 
 def execute_shell_commands(commands):
