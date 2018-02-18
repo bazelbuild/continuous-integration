@@ -320,7 +320,7 @@ def clone_git_repository(git_repository, platform):
   root = downstream_projects_root(platform)
   project_name = re.search("/([^/]+)\.git$", git_repository).group(1)
   clone_path = os.path.join(root, project_name)
-  print_collapsed_group(Fetching " + project_name + " sources")
+  print_collapsed_group("Fetching " + project_name + " sources")
   if os.path.exists(clone_path):
     os.chdir(clone_path)
     fail_if_nonzero(execute_command(
