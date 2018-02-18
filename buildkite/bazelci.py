@@ -137,10 +137,11 @@ def downstream_projects():
           "git_repository": "https://github.com/bazelbuild/rules_typescript.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_typescript-postsubmit.json"
       },
-      "rules_webtesting": {
-          "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
-          "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_webtesting-postsubmit.json"
-      },
+      # Enable once is resolved: https://github.com/bazelbuild/continuous-integration/issues/191
+      # "rules_webtesting": {
+      #     "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
+      #     "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_webtesting-postsubmit.json"
+      # },
       "skydoc": {
           "git_repository": "https://github.com/bazelbuild/skydoc.git",
           "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/skydoc-postsubmit.json"
