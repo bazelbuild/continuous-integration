@@ -565,25 +565,22 @@ def print_bazel_postsubmit_pipeline(configs, http_config):
 
   pipeline_steps = []
   for platform, config in configs.items():
-    if platform == "macos":
-      continue
     pipeline_steps.append(bazel_build_step(platform, "Bazel",
                                            http_config, build_only=True))
   pipeline_steps.append(wait_step())
 
+  # todo move this to the end with a wait step.
   for platform in supported_platforms():
-    if platform == "macos":
-      continue
     pipeline_steps.append(publish_bazel_binary_step(platform))
 
-  # for platform, config in configs.items():
-  #   pipeline_steps.append(bazel_build_step(platform, "Bazel",
-  #                                          http_config, test_only=True))
-  # for project, config in downstream_projects().items():
-  #   git_repository = config["git_repository"]
-  #   http_config = config.get("http_config", None)
-  #   pipeline_steps.append(upload_project_pipeline_step(project,
-  #                                                      git_repository, http_config))
+  for platform, config in configs.items():
+    pipeline_steps.append(bazel_build_step(platform, "Bazel",
+                                           http_config, test_only=True))
+  for project, config in downstream_projects().items():
+    git_repository = config["git_repository"]
+    http_config = config.get("http_config", None)
+    pipeline_steps.append(upload_project_pipeline_step(project,
+                                                       git_repository, http_config))
 
   print_pipeline(pipeline_steps)
 
@@ -676,8 +673,7 @@ def publish_binary(platform):
       break
 
     if try_publish_binary(platform, current_build_number, latest_generation):
-      print("Successfully published binaries of build '{0}'.".format(
-          current_build_number))
+      print("Successfully published " + bazelci_builds_download_url(platform, current_build_number)
       break
     attempt = attempt + 1
 
