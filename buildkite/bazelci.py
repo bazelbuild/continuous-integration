@@ -589,7 +589,7 @@ def bazelci_builds_download_url(platform, build_number):
 
 
 def bazelci_builds_upload_url(platform, build_number):
-  return "gs//bazel-builds/{0}/{1}/bazel".format(build_number, platform)
+  return "gs://bazel-builds/{0}/{1}/bazel".format(build_number, platform)
 
 
 def bazelci_builds_metadata_url(platform):
@@ -649,7 +649,7 @@ def try_publish_binary(platform, build_number, expected_generation):
     return exitcode == 0
   finally:
     if tmpdir:
-      shutil.rmdir(tmpdir)
+      shutil.rmtree(tmpdir)
 
 
 def publish_binary(platform):
