@@ -593,7 +593,7 @@ def bazelci_builds_upload_url(platform, build_number):
 
 
 def bazelci_builds_metadata_url(platform):
-  return "gs://bazel-builds/metadata/{0}/latest.json"
+  return "gs://bazel-builds/metadata/{0}/latest.json".format(platform)
 
 
 def latest_generation_and_build_number(platform):
