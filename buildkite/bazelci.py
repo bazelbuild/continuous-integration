@@ -673,7 +673,7 @@ def publish_binary(platform):
       break
 
     if try_publish_binary(platform, current_build_number, latest_generation):
-      print("Successfully published " + bazelci_builds_download_url(platform, current_build_number)
+      print("Successfully published " + bazelci_builds_download_url(platform, current_build_number))
       break
     attempt = attempt + 1
 
