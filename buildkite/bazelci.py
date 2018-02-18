@@ -253,6 +253,11 @@ def fetch_configs(http_url):
     reader = codecs.getreader("utf-8")
     return json.load(reader(resp))
 
+def print_collapsed_group(name):
+  print("\n--- {0}\n".format(name))
+
+def print_expanded_group(name):
+  print("\n+++ {0}\n".format(name))
 
 def execute_commands(config, platform, git_repository, use_but, save_but,
                      build_only, test_only):
@@ -265,7 +270,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
     cleanup(platform)
     tmpdir = tempfile.mkdtemp()
     if use_but:
-      print("\n--- Downloading Bazel under test")
+      print_collapsed_group("Downloading Bazel under test")
       bazel_binary = download_bazel_binary(tmpdir, platform)
     print_bazel_version_info(bazel_binary)
     execute_shell_commands(config.get("shell_commands", None))
@@ -289,13 +294,13 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
 
 
 def print_bazel_version_info(bazel_binary):
-  print("\n--- Bazel Info")
+  print_collapsed_group("Bazel Info")
   fail_if_nonzero(execute_command([bazel_binary, "version"]))
   fail_if_nonzero(execute_command([bazel_binary, "info"]))
 
 
 def upload_bazel_binary():
-  print("\n--- Uploading Bazel under test")
+  print_collapsed_group("Uploading Bazel under test")
   fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "upload",
                                    "bazel-bin/src/bazel"]))
 
@@ -315,7 +320,7 @@ def clone_git_repository(git_repository, platform):
   root = downstream_projects_root(platform)
   project_name = re.search("/([^/]+)\.git$", git_repository).group(1)
   clone_path = os.path.join(root, project_name)
-  print("\n--- Fetching " + project_name + " sources")
+  print_collapsed_group(Fetching " + project_name + " sources")
   if os.path.exists(clone_path):
     os.chdir(clone_path)
     fail_if_nonzero(execute_command(
@@ -348,7 +353,7 @@ def clone_git_repository(git_repository, platform):
 
 
 def cleanup(platform):
-  print("\n--- Cleanup")
+  print_collapsed_group("Cleanup")
   if os.path.exists("WORKSPACE"):
     fail_if_nonzero(execute_command(["bazel", "clean", "--expunge"]))
   if cleanup_commands(platform):
@@ -359,7 +364,7 @@ def cleanup(platform):
 def execute_shell_commands(commands):
   if not commands:
     return
-  print("\n--- Setup (Shell Commands)")
+  print_collapsed_group("Setup (Shell Commands)")
   shell_command = "\n".join(commands)
   fail_if_nonzero(execute_command([shell_command], shell=True))
 
@@ -367,7 +372,7 @@ def execute_shell_commands(commands):
 def execute_bazel_run(bazel_binary, targets):
   if not targets:
     return
-  print("\n--- Setup (Run Targets)")
+  print_collapsed_group("Setup (Run Targets)")
   for target in targets:
     fail_if_nonzero(execute_command([bazel_binary, "run", target]))
 
@@ -375,7 +380,7 @@ def execute_bazel_run(bazel_binary, targets):
 def execute_bazel_build(bazel_binary, flags, targets):
   if not targets:
     return
-  print("\n+++ Build")
+  print_expanded_group("Build")
   num_jobs = str(multiprocessing.cpu_count())
   common_flags = ["--color=yes", "--keep_going", "--jobs=" + num_jobs]
   fail_if_nonzero(execute_command(
@@ -385,7 +390,7 @@ def execute_bazel_build(bazel_binary, flags, targets):
 def execute_bazel_test(bazel_binary, flags, targets, bep_file):
   if not targets:
     return 0
-  print("\n+++ Test")
+  print_expanded_group("Test")
   num_jobs = str(multiprocessing.cpu_count())
   common_flags = ["--color=yes", "--keep_going", "--jobs=" + num_jobs,
                   "--local_test_jobs=" + num_jobs, "--build_event_json_file=" + bep_file]
@@ -402,7 +407,7 @@ def upload_failed_test_logs(bep_file, tmpdir):
     return
   logfiles = failed_logs_from_bep(bep_file, tmpdir)
   if logfiles:
-    print("\n--- Uploading failed test logs")
+    print_collapsed_group("Uploading failed test logs")
     for logfile in logfiles:
       fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "upload",
                                        logfile]))
