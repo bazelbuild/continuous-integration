@@ -14,18 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -eu
-
-# Use a local SSD if available, otherwise use a RAM disk for our builds.
-if [ -e /dev/nvme0n1 ]; then
-  mkfs.ext4 -F /dev/nvme0n1
-  mount /dev/nvme0n1 /var/lib/buildkite-agent
-  chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent
-  chmod 0755 /var/lib/buildkite-agent
-else
-  mount -t tmpfs -o mode=0755,uid=buildkite-agent,gid=buildkite-agent tmpfs /var/lib/buildkite-agent
-fi
-
-systemctl start buildkite-agent
-
-exit 0
+add-apt-repository -y "ppa:deadsnakes/ppa"
+apt-get -qqy update > /dev/null
+apt-get -qqy install python3.6 > /dev/null

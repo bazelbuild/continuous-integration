@@ -14,15 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 32A37959C2FA5C3C99EFBC32A79206696452D198 &> /dev/null
-add-apt-repository -y "deb https://apt.buildkite.com/buildkite-agent stable main"
-
-apt-get -qqy update > /dev/null
-apt-get -qqy install buildkite-agent > /dev/null
-
-# Our very secret Buildkite token used to authenticate the agent.
-BUILDKITE_TOKEN="xxx"
-
 # Deduce the operating system from the hostname and put it into the metadata.
 case $(hostname) in
   *ubuntu1404*)
@@ -31,45 +22,85 @@ case $(hostname) in
   *ubuntu1604*)
     osname="ubuntu1604"
     ;;
-  *freebsd11*)
-    osname="freebsd11"
-    ;;
   default)
     echo "Could not deduce operating system from hostname: $(hostname)!"
     exit 1
 esac
 
-# Create configuration file for buildkite-agent.
-sed -i \
-  -e "s/^\(# \)*token=.*/token=\"${BUILDKITE_TOKEN}\"/g" \
-  -e "s/^\(# \)*name=.*/name=\"%hostname\"/g" \
-  -e "s/^\(# \)*meta-data=.*/meta-data=\"os=$osname\"/g" \
-  /etc/buildkite-agent/buildkite-agent.cfg
+if [[ $(hostname) == *ubuntu* ]]; then
+  apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 32A37959C2FA5C3C99EFBC32A79206696452D198 &> /dev/null
+  add-apt-repository -y "deb https://apt.buildkite.com/buildkite-agent unstable main"
+  apt-get -qqy update > /dev/null
+  apt-get -qqy install buildkite-agent > /dev/null
+fi
 
 cat > /etc/buildkite-agent/hooks/environment <<'EOF'
 #!/bin/bash
 
-# The `environment` hook will run before all other commands, and can be used
-# to set up secrets, data, etc. Anything exported in hooks will be available
-# to the build script.
-#
-# For example:
-#
-# export SECRET_VAR=token
-
-set -e
+set -eu
 
 export ANDROID_HOME="/opt/android-sdk-linux"
 export ANDROID_NDK_HOME="/opt/android-ndk-r14b"
 export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://bazel-buildkite-artifacts/$BUILDKITE_JOB_ID"
+export BUILDKITE_GS_ACL="publicRead"
 EOF
-
-chmod 0400 /etc/buildkite-agent/buildkite-agent.cfg
 chmod 0500 /etc/buildkite-agent/hooks/*
 chown -R buildkite-agent:buildkite-agent /etc/buildkite-agent
 
-# Do not start buildkite-agent automatically. The startup script will prepare
-# the local SSD first and then start it.
-if [ "$osname" = "ubuntu1404" ]; then
-  echo manual > /etc/init/buildkite-agent.override
+cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
+token="xxx"
+name="%hostname"
+tags="os=${osname},pipeline=true"
+tags-from-gcp=true
+build-path="/var/lib/buildkite-agent/builds"
+hooks-path="/etc/buildkite-agent/hooks"
+plugins-path="/etc/buildkite-agent/plugins"
+timestamp-lines=true
+
+# Stop the agent (which will trigger a reboot of the VM) after each job.
+disconnect-after-job=true
+disconnect-after-job-timeout=86400
+EOF
+chmod 0400 /etc/buildkite-agent/buildkite-agent.cfg
+chown -R buildkite-agent:buildkite-agent /etc/buildkite-agent
+
+# Do not start buildkite-agent automatically. The startup script will start it
+# when necessary.
+if [[ -e /bin/systemctl ]]; then
+  systemctl disable buildkite-agent
+
+  # Configure the buildkite-agent service so that it reboots the VM when the
+  # agent exits.
+  mkdir /etc/systemd/system/buildkite-agent.service.d
+  cat > /etc/systemd/system/buildkite-agent.service.d/override.conf <<'EOF'
+[Service]
+# The difference between ExecStop and ExecStopPost is that the former only runs
+# when the service started up successfully. This is probably more useful for us,
+# as we want to be able to ssh into the VM and debug why the buildkite-agent
+# fails to start, instead of going into a reboot loop.
+ExecStop=/sbin/reboot
+
+# This is required as otherwise /sbin/reboot is executed as the buildkite-agent
+# user and won't have permissions to actually reboot the system.
+PermissionsStartOnly=true
+
+# We don't want to restart the service when it stops, as we're going to reboot
+# the entire VM.
+Restart=no
+EOF
+else
+  cat > /etc/init/buildkite-agent.conf <<'EOF'
+description "buildkite-agent"
+
+manual
+
+exec start-stop-daemon --start \
+    --quiet \
+    --chuid buildkite-agent \
+    --pidfile "/var/run/buildkite-agent.pid" \
+    --make-pidfile \
+    --exec /usr/bin/buildkite-agent -- start
+
+post-stop exec /sbin/reboot
+EOF
 fi

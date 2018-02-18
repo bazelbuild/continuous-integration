@@ -21,3 +21,13 @@ BAZEL_VERSION=$(curl -sSI https://github.com/bazelbuild/bazel/releases/latest | 
 curl -sSLo install.sh "https://releases.bazel.build/${BAZEL_VERSION}/release/bazel-${BAZEL_VERSION}-without-jdk-installer-${PLATFORM}.sh"
 bash install.sh > /dev/null
 bazel version
+
+# Setup a system-wide bazelrc file. This should be kept to the minimum required
+# as it also influences Bazel running inside our integration tests.
+cat > /etc/bazel.bazelrc <<EOF
+# Necessary fix for JVM crashing with SIGBUS (#3236), also improves hermeticity.
+build --sandbox_tmpfs_path=/tmp
+
+# Increase performance on SSDs / tmpfs.
+build --experimental_multi_threaded_digest
+EOF

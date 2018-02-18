@@ -25,3 +25,11 @@ apt-get -qqy install docker-ce > /dev/null
 
 # Docker group
 usermod -aG docker buildkite-agent
+
+# Disable the Docker service, as the startup script has to mount /var/lib/docker
+# first.
+if [[ -e /bin/systemctl ]]; then
+  systemctl disable docker
+else
+  echo manual > /etc/init/docker.override
+fi

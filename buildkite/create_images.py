@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 
+import getpass
 import json
 import os
+import queue
 import re
 import subprocess
 import sys
 import tempfile
+import threading
 import time
+import urllib.request
 from datetime import datetime
 
 DEBUG = False
@@ -14,15 +18,18 @@ DEBUG = False
 LOCATION = 'europe-west1-d'
 
 IMAGE_CREATION_VMS = {
-    # 'buildkite-freebsd11-image': {
-    #     'source_image': 'https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-1-stable-amd64-2017-12-28',
-    #     'target_image_family': 'bazel-freebsd11',
-    #     'scripts': [
-    #         'setup-freebsd.sh',
-    #         'install-buildkite-agent.sh'
-    #     ]
-    # },
-    'buildkite-ubuntu1404-image': {
+    # Find the newest FreeBSD 11 image via:
+    # gcloud compute images list --project freebsd-org-cloud-dev \
+    #     --no-standard-images
+    'buildkite-freebsd11': {
+        'source_image': 'https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-1-stable-amd64-2017-12-28',
+        'target_image_family': 'bazel-freebsd11',
+        'scripts': [
+            'setup-freebsd.sh',
+            'install-buildkite-agent.sh'
+        ]
+    },
+    'buildkite-ubuntu1404': {
         'source_image_project': 'ubuntu-os-cloud',
         'source_image_family': 'ubuntu-1404-lts',
         'target_image_family': 'buildkite-ubuntu1404',
@@ -34,11 +41,12 @@ IMAGE_CREATION_VMS = {
             'install-buildkite-agent.sh',
             'install-docker.sh',
             'install-nodejs.sh',
+            'install-python36.sh',
             'install-android-sdk.sh',
             'shutdown.sh'
         ]
     },
-    'buildkite-ubuntu1604-image': {
+    'buildkite-ubuntu1604': {
         'source_image_project': 'ubuntu-os-cloud',
         'source_image_family': 'ubuntu-1604-lts',
         'target_image_family': 'buildkite-ubuntu1604',
@@ -50,146 +58,228 @@ IMAGE_CREATION_VMS = {
             'install-buildkite-agent.sh',
             'install-docker.sh',
             'install-nodejs.sh',
+            'install-python36.sh',
             'install-android-sdk.sh',
             'shutdown.sh'
         ]
     },
-    # 'buildkite-windows2016-image': {
+    # 'buildkite-windows2016': {
     #     'source_image_project': 'windows-cloud',
     #     'source_image_family': 'windows-2016',
-    #     'target_image_family': 'bazel-windows2016',
+    #     'target_image_family': 'buildkite-windows2016',
     #     'scripts': [
     #         'setup-windows2016.ps1'
     #     ]
     # }
+    'buildkite-windows': {
+        'source_image_project': 'windows-cloud',
+        'source_image_family': 'windows-1709-core',
+        'target_image_family': 'buildkite-windows',
+        'scripts': [
+            'setup-windows-manual.ps1'
+        ]
+    }
 }
+
+MY_IPV4 = urllib.request.urlopen('https://v4.ifconfig.co/ip').read().decode('us-ascii').strip()
+# MY_IPV4 = urllib.request.urlopen('https://v4.ident.me').read().decode('us-ascii').strip()
+
+PRINT_LOCK = threading.Lock()
+WORK_QUEUE = queue.Queue()
 
 
 def debug(*args, **kwargs):
-  if DEBUG:
-    print(*args, **kwargs)
+    if DEBUG:
+        with PRINT_LOCK:
+            print(*args, **kwargs)
 
 
 def run(args, **kwargs):
-  if DEBUG:
-    print('Running: %s' % ' '.join(args))
-  return subprocess.run(args, **kwargs)
+    debug('Running: %s' % ' '.join(args))
+    return subprocess.run(args, **kwargs)
 
 
 def wait_for_vm(vm, status):
-  while True:
-    result = run(['gcloud', 'compute', 'instances', 'describe', '--zone', LOCATION, '--format', 'json', vm], check=True, stdout=subprocess.PIPE)
-    current_status = json.loads(result.stdout)['status']
-    if current_status == status:
-      debug("wait_for_vm: VM %s reached status %s" % (vm, status))
-      break
-    else:
-      debug("wait_for_vm: Waiting for VM %s to transition from status %s -> %s" % (vm, current_status, status))
-    time.sleep(1)
+    while True:
+        result = run(['gcloud', 'compute', 'instances', 'describe', '--zone', LOCATION,
+                      '--format', 'json', vm], check=True, stdout=subprocess.PIPE)
+        current_status = json.loads(result.stdout)['status']
+        if current_status == status:
+            debug("wait_for_vm: VM %s reached status %s" % (vm, status))
+            break
+        else:
+            debug("wait_for_vm: Waiting for VM %s to transition from status %s -> %s" %
+                  (vm, current_status, status))
+        time.sleep(1)
 
 
 def print_pretty_logs(vm, log):
-  for line in log.splitlines():
-    # Skip empty lines.
-    if not line:
-      continue
-    if 'ubuntu' in vm:
-      match = re.match(r'.*INFO startup-script: (.*)', line)
-      if match:
-        print(match.group(1))
-    elif 'windows' in vm:
-      match = re.match(r'.*windows-startup-script-ps1: (.*)', line)
-      if match:
-        print(match.group(1))
-    else:
-      print(line)
+    with PRINT_LOCK:
+        for line in log.splitlines():
+            # Skip empty lines.
+            if not line:
+                continue
+            if 'ubuntu' in vm:
+                match = re.match(r'.*INFO startup-script: (.*)', line)
+                if match:
+                    print("%s: %s" % (vm, match.group(1)))
+            # elif 'windows' in vm:
+            #     match = re.match(r'.*windows-startup-script-ps1: (.*)', line)
+            #     if match:
+            #         print(match.group(1))
+            else:
+                print("%s: %s" % (vm, line))
 
 
-def tail_serial_console(vm):
-  next_start = '0'
-  while True:
-    result = run(['gcloud', 'compute', 'instances', 'get-serial-port-output', '--zone', LOCATION, '--start', next_start, vm], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-    if result.returncode != 0:
-      break
-    print_pretty_logs(vm, result.stdout)
-    next_start = re.search(r'--start=(\d*)', result.stderr).group(1)
+def tail_serial_console(vm, until=None):
+    next_start = '0'
+    while True:
+        result = run(['gcloud', 'compute', 'instances', 'get-serial-port-output', '--zone', LOCATION, '--start',
+                      next_start, vm], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if result.returncode != 0:
+            break
+        print_pretty_logs(vm, result.stdout)
+        if until and until in result.stdout:
+            break
+        next_start = re.search(r'--start=(\d*)', result.stderr).group(1)
 
 
 def merge_setup_scripts(scripts):
-  # Merge all setup scripts into one.
-  merged_script_path = tempfile.mkstemp()[1]
-  with open(merged_script_path, 'w') as merged_script_file:
-    for script in scripts:
-      with open(script, 'r') as script_file:
-        script_contents = script_file.read()
-        script_contents.replace('BUILDKITE_TOKEN="xxx"', 'BUILDKITE_TOKEN="%s"' % os.environ['BUILDKITE_TOKEN'])
-        merged_script_file.write(script_contents + '\n')
-  return merged_script_path
+    # Merge all setup scripts into one.
+    merged_script_path = tempfile.mkstemp()[1]
+    with open(merged_script_path, 'w') as merged_script_file:
+        for script in scripts:
+            with open(script, 'r') as script_file:
+                merged_script_file.write(script_file.read() + '\n')
+    return merged_script_path
 
 
 def create_vm(vm, params):
-  merged_script_path = merge_setup_scripts(params['scripts'])
-  try:
-    cmd = ['gcloud', 'compute', 'instances', 'create', vm]
-    cmd.extend(['--zone', LOCATION])
-    cmd.extend(['--machine-type', 'n1-standard-32'])
-    cmd.extend(['--network', 'buildkite'])
-    if 'windows' in vm:
-      cmd.extend(['--metadata-from-file', 'windows-startup-script-ps1=' + merged_script_path])
-    else:
-      cmd.extend(['--metadata-from-file', 'startup-script=' + merged_script_path])
-    cmd.extend(['--min-cpu-platform', 'Intel Skylake'])
-    cmd.extend(['--boot-disk-type', 'pd-ssd'])
-    cmd.extend(['--boot-disk-size', '25GB'])
-    if 'source_image' in params:
-      cmd.extend(['--image', params['source_image']])
-    else:
-      cmd.extend(['--image-project', params['source_image_project']])
-      cmd.extend(['--image-family', params['source_image_family']])
-    run(cmd)
-  finally:
-    os.remove(merged_script_path)
+    merged_script_path = merge_setup_scripts(params['scripts'])
+    try:
+        cmd = ['gcloud', 'compute', 'instances', 'create', vm]
+        cmd.extend(['--zone', LOCATION])
+        cmd.extend(['--machine-type', 'n1-standard-8'])
+        cmd.extend(['--network', 'buildkite'])
+        if 'windows' in vm:
+            cmd.extend(['--metadata-from-file', 'windows-startup-script-ps1=' + merged_script_path])
+        else:
+            cmd.extend(['--metadata-from-file', 'startup-script=' + merged_script_path])
+        cmd.extend(['--min-cpu-platform', 'Intel Skylake'])
+        cmd.extend(['--boot-disk-type', 'pd-ssd'])
+        cmd.extend(['--boot-disk-size', '50GB'])
+        if 'source_image' in params:
+            cmd.extend(['--image', params['source_image']])
+        else:
+            cmd.extend(['--image-project', params['source_image_project']])
+            cmd.extend(['--image-family', params['source_image_family']])
+        run(cmd)
+    finally:
+        os.remove(merged_script_path)
 
 
 def delete_vm(vm):
-  run(['gcloud', 'compute', 'instances', 'delete', '--quiet', vm])
+    run(['gcloud', 'compute', 'instances', 'delete', '--quiet', vm])
 
 
 def create_image(vm, target_image_family):
-  run(['gcloud', 'compute', 'images', 'create', vm, '--family', target_image_family, '--source-disk', vm, '--source-disk-zone', LOCATION])
+    run(['gcloud', 'compute', 'images', 'create', vm, '--family',
+         target_image_family, '--source-disk', vm, '--source-disk-zone', LOCATION])
+
+
+# https://stackoverflow.com/a/25802742
+def write_to_clipboard(output):
+    process = subprocess.Popen(
+        'pbcopy', env={'LANG': 'en_US.UTF-8'}, stdin=subprocess.PIPE)
+    process.communicate(output.encode('utf-8'))
+
+
+def print_windows_instructions(vm):
+    run(['gcloud', 'compute', 'firewall-rules', 'create', getpass.getuser() + '-rdp',
+         '--allow', 'tcp:3389,udp:3389', '--network', 'buildkite', '--source-ranges', MY_IPV4 + '/32'])
+    pw = json.loads(run(['gcloud', 'compute', 'reset-windows-password', '--format', 'json', '--quiet',
+                         vm], check=True, stdout=subprocess.PIPE).stdout)
+    rdp_file = tempfile.mkstemp(suffix='.rdp')[1]
+    with open(rdp_file, 'w') as f:
+        f.write('full address:s:' + pw['ip_address'] + '\n')
+        f.write('username:s:' + pw['username'] + '\n')
+    run(['open', rdp_file])
+    write_to_clipboard(pw['password'])
+    with PRINT_LOCK:
+        print('Use this password to connect to the Windows VM: ' + pw['password'])
+        print('Please run the setup script C:\\setup.ps1 once you\'re logged in.')
+
+
+def workflow(name, params):
+    vm = "%s-image-%s" % (name, int(datetime.now().timestamp()))
+    try:
+        # Create the VM.
+        create_vm(vm, params)
+
+        # Wait for the VM to become ready.
+        wait_for_vm(vm, 'RUNNING')
+
+        if 'windows' in vm:
+            # Wait for VM to be ready, then print setup instructions.
+            tail_serial_console(vm, until='Instance setup finished.')
+            print_windows_instructions(vm)
+
+        # Continuously print the serial console.
+        tail_serial_console(vm)
+
+        # Wait for the VM to shutdown.
+        wait_for_vm(vm, 'TERMINATED')
+
+        # Create a new image from our VM.
+        create_image(vm, params['target_image_family'])
+    finally:
+        delete_vm(vm)
+
+
+def worker():
+    while True:
+        item = WORK_QUEUE.get()
+        if not item:
+            break
+        try:
+            workflow(**item)
+        finally:
+            WORK_QUEUE.task_done()
 
 
 def main(argv=None):
-  if argv is None:
-    argv = sys.argv[1:]
+    if argv is None:
+        argv = sys.argv[1:]
 
-  if not 'BUILDKITE_TOKEN' in os.environ:
-    print("Please set the BUILDKITE_TOKEN environment variable.")
-    print("You can get the token from: https://buildkite.com/organizations/bazel/agents")
-    return 1
+    # Put VM creation instructions into the work queue.
+    for name, params in IMAGE_CREATION_VMS.items():
+        if argv and name not in argv:
+            continue
+        WORK_QUEUE.put({
+            'name': name,
+            'params': params
+        })
 
-  for vm, params in IMAGE_CREATION_VMS.items():
-    if argv and not vm in argv:
-        continue
-    vm = "%s-%s" % (vm, int(datetime.now().timestamp()))
-    try:
-      # Create the VM.
-      create_vm(vm, params)
+    # Spawn worker threads that will create the VMs.
+    threads = []
+    for _ in range(WORK_QUEUE.qsize()):
+        t = threading.Thread(target=worker)
+        t.start()
+        threads.append(t)
 
-      # Wait for the VM to become ready.
-      wait_for_vm(vm, 'RUNNING')
+    # Wait for all VMs to be created.
+    WORK_QUEUE.join()
 
-      # Continuously print the serial console.
-      tail_serial_console(vm)
+    # Signal worker threads to exit.
+    for _ in range(len(threads)):
+        WORK_QUEUE.put(None)
 
-      # Wait for the VM to shutdown.
-      wait_for_vm(vm, 'TERMINATED')
+    # Wait for worker threads to exit.
+    for t in threads:
+        t.join()
 
-      # Create a new image from our VM.
-      create_image(vm, params['target_image_family'])
-    finally:
-      delete_vm(vm)
-  return 0
+    return 0
+
 
 if __name__ == '__main__':
-  sys.exit(main())
+    sys.exit(main())
