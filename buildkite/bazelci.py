@@ -645,6 +645,7 @@ def try_publish_binary(platform, build_number, expected_generation):
     json.dump(info, fp)
     fp.close()
     exitcode = execute_command(["gsutil", "-h", "x-goog-if-generation-match:" + expected_generation,
+                                "-h", "Content-Type:application/json",
                                 "cp", "-a", "public-read", fp.name, bazelci_builds_metadata_url(platform)])
     os.unlink(fp.name)
     return exitcode == 0
