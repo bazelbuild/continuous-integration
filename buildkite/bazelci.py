@@ -279,9 +279,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
             # Fail the pipeline if there were any flaky tests.
             if has_flaky_tests(bep_file) and exit_code == 0:
                 exit_code = 1
-            print("\nBefore Upload Test\n")
             upload_test_logs(bep_file, tmpdir)
-            print("\nAfter Upload Test\n")
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
@@ -392,25 +390,20 @@ def upload_test_logs(bep_file, tmpdir):
     if not os.path.exists(bep_file):
         return
     test_logs = test_logs_to_upload(bep_file, tmpdir)
-    print("\n After test_logs_to_upload\n")
     if test_logs:
         cwd = os.getcwd()
         try:
             os.chdir(tmpdir)
             print_collapsed_group("Uploading test logs")
-            for logfile in test_logs:
-                relative_path = os.path.relpath(logfile, tmpdir)
-                execute_command(["buildkite-agent", "artifact", "upload", relative_path])
+            execute_command(["buildkite-agent", "artifact", "upload", "**/*.log"])
         finally:
             os.chdir(cwd)
 
 
 def test_logs_to_upload(bep_file, tmpdir):
-    print("\n before test_logs_for_status\n")
     failed = test_logs_for_status(bep_file, status="FAILED")
     timed_out = test_logs_for_status(bep_file, status="TIMEOUT")
     flaky = test_logs_for_status(bep_file, status="FLAKY")
-    print("\n after test_logs_for_status\n")
     # Rename the test.log files to the target that created them
     # so that it's easy to associate test.log and target.
     new_paths = []
