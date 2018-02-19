@@ -458,17 +458,15 @@ def test_logs_for_status(bep_file, status):
     pos = 0
     while pos < len(raw_data):
         bep_obj, size = decoder.raw_decode(raw_data[pos:])
-        if "testResult" in bep_obj:
-            test_target = bep_obj["id"]["testResult"]["label"]
-            test_result = bep_obj["testResult"]
-            if test_result["status"] == status:
-                outputs = test_result["testActionOutput"]
+        if "testSummary" in bep_obj:
+            test_target = bep_obj["id"]["testSummary"]["label"]
+            test_status = bep_obj["testSummary"]["overallStatus"]
+            if test_status == status:
+                outputs = bep_obj["testSummary"]["failed"]
                 test_logs = []
                 for output in outputs:
-                    if output["name"] == "test.log":
-                        test_logs.append(urlparse(output["uri"]).path)
-                if test_logs:
-                    targets.append((test_target, test_logs))
+                    test_logs.append(urlparse(output["uri"]).path)
+                targets.append((test_target, test_logs))
         pos += size + 1
     return targets
 
