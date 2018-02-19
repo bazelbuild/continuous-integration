@@ -395,7 +395,7 @@ def upload_test_logs(bep_file, tmpdir):
         try:
             os.chdir(tmpdir)
             print_collapsed_group("Uploading test logs")
-            execute_command(["buildkite-agent", "artifact", "upload", "**/*.log"])
+            execute_command(["buildkite-agent", "artifact", "upload", "*/**/*.log"])
         finally:
             os.chdir(cwd)
 
