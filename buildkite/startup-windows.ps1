@@ -37,6 +37,7 @@ tags="os=windows"
 build-path="d:\build"
 hooks-path="c:\buildkite\hooks"
 plugins-path="c:\buildkite\plugins"
+timestamp-lines=true
 "@
 [System.IO.File]::WriteAllLines("${buildkite_agent_root}\buildkite-agent.cfg", $buildkite_agent_config)
 
