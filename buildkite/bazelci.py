@@ -166,26 +166,26 @@ def python_binary():
 
 
 def bazelcipy_url():
-    '''
+    """
     URL to the latest version of this script.
-    '''
+    """
     return "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py"
 
 
 def eprint(*args, **kwargs):
-    '''
+    """
     Print to stderr and exit the process.
-    '''
+    """
     print(*args, file=sys.stderr, **kwargs)
     exit(1)
 
 
 def platforms_info():
-    '''
+    """
     Returns a map containing all supported platform names as keys, with the
     values being the platform name in a human readable format, and a the
     buildkite-agent's working directory.
-    '''
+    """
     return {
         "ubuntu1404": {
             "name": "Ubuntu 14.04",
@@ -228,11 +228,11 @@ def platform_name(platform):
 
 
 def fetch_configs(http_url):
-    '''
+    """
     If specified fetches the build configuration from http_url, else tries to
     read it from .bazelci/config.json.
     Returns the json configuration as a python data structure.
-    '''
+    """
     if http_url is None:
         with open(".bazelci/config.json", "r") as fd:
             return json.load(fd)
@@ -704,9 +704,9 @@ def try_publish_binaries(build_number, expected_generation):
 
 
 def publish_binaries():
-    '''
+    """
     Publish Bazel binaries to GCS.
-    '''
+    """
     attempt = 0
     while attempt < 5:
         latest_generation, latest_build_number = latest_generation_and_build_number()
