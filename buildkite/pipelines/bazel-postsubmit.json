@@ -63,9 +63,10 @@
         "//src:bazel"
       ],
       "test_flags": [
-        "--test_env=TEMP"
+        "--test_env=TEMP",
+        "--test_timeout=900"
       ],
-      "tests": [
+      "test_targets": [
         "//src:all_windows_tests"
       ]
     }
