@@ -367,8 +367,8 @@ def execute_bazel_run(bazel_binary, targets):
     return
   print_collapsed_group("Setup (Run Targets)")
   for target in targets:
-    fail_if_nonzero(execute_command([bazel_binary, "run", "--color=yes",
-                                    "--verbose_failurs", target]))
+    fail_if_nonzero(execute_command([bazel_binary, "run", "--curses=yes",
+                                     "--color=yes", "--verbose_failurs", target]))
 
 
 def execute_bazel_build(bazel_binary, flags, targets):
@@ -376,8 +376,8 @@ def execute_bazel_build(bazel_binary, flags, targets):
     return
   print_expanded_group("Build")
   num_jobs = str(multiprocessing.cpu_count())
-  common_flags = ["--color=yes", "--keep_going", "--verbose_failures",
-                  "--jobs=" + num_jobs]
+  common_flags = ["--curses=yes", "--color=yes", "--keep_going",
+                  "--verbose_failures", "--jobs=" + num_jobs]
   fail_if_nonzero(execute_command(
       [bazel_binary, "build"] + common_flags + flags + targets))
 
@@ -387,7 +387,7 @@ def execute_bazel_test(bazel_binary, flags, targets, bep_file):
     return 0
   print_expanded_group("Test")
   num_jobs = str(multiprocessing.cpu_count())
-  common_flags = ["--color=yes", "--keep_going", "--verbose_failures",
+  common_flags = ["--curses=yes", "--color=yes", "--keep_going", "--verbose_failures",
                   "--flaky_test_attempts=3", "--build_tests_only",
                   "--jobs=" + num_jobs, "--local_test_jobs=" + num_jobs,
                   "--build_event_json_file=" + bep_file]
