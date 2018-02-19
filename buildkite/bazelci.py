@@ -403,8 +403,9 @@ def upload_failed_test_logs(bep_file, tmpdir):
         print(label)
       print_collapsed_group("Uploading logs of failed tests")
       for _, logfile in failed_tests:
+        relative_path = os.path.relpath(logfile, tmpdir)
         fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "upload",
-                                         logfile]))
+                                         relative_path]))
     finally:
       os.chdir(cwd)
 
