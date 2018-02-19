@@ -274,12 +274,16 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                 upload_bazel_binary()
         if not build_only:
             bep_file = os.path.join(tmpdir, "build_event_json_file.json")
+            print("\nBefore Execute Test\n")
             exit_code = execute_bazel_test(bazel_binary, config.get("test_flags", []),
                                            config.get("test_targets", None), bep_file)
+            print("\nAfter Execute Test\n")
             # Fail the pipeline if there were any flaky tests.
             if has_flaky_tests() and exit_code == 0:
                 exit_code = 1
+            print("\nBefore Upload Test\n")
             upload_test_logs(bep_file, tmpdir)
+            print("\nAfter Upload Test\n")
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
