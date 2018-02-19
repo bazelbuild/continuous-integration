@@ -161,7 +161,9 @@ def downstream_projects():
     }
 
 
-def python_binary():
+def python_binary(platform=None):
+    if platform == "windows":
+        return "python.exe"
     return "python3.6"
 
 
@@ -474,7 +476,7 @@ def print_project_pipeline(platform_configs, project_name, http_config,
 def runner_step(platform, project_name=None, http_config=None,
                 git_repository=None, use_but=False, save_but=False, build_only=False,
                 test_only=False):
-    command = python_binary() + " bazelci.py runner --platform=" + platform
+    command = python_binary(platform) + " bazelci.py runner --platform=" + platform
     if http_config:
         command = command + " --http_config=" + http_config
     if git_repository:
@@ -549,7 +551,7 @@ def create_label(platform_name, project_name=None, build_only=False,
 
 def bazel_build_step(platform, project_name, http_config=None,
                      build_only=False, test_only=False):
-    pipeline_command = python_binary() + " bazelci.py runner"
+    pipeline_command = python_binary(platform) + " bazelci.py runner"
     if build_only:
         pipeline_command = pipeline_command + " --build_only --save_but"
     if test_only:
