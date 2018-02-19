@@ -384,11 +384,6 @@ def execute_bazel_test(bazel_binary, flags, targets, bep_file):
     return execute_command([bazel_binary, "test"] + common_flags + flags + targets, fail_if_nonzero=False)
 
 
-def fail_if_nonzero(exitcode):
-    if exitcode is not 0:
-        exit(exitcode)
-
-
 def upload_test_logs(bep_file, tmpdir):
     if not os.path.exists(bep_file):
         return
