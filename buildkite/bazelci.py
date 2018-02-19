@@ -408,8 +408,10 @@ def upload_failed_test_logs(bep_file, tmpdir):
 
 
 def failed_test_logs(bep_file, tmpdir):
+  failed_tests = test_targets_with_status(bep_file, status="FAILED")
+  timeout_tests = test_targets_with_status(bep_file, status="TIMEOUT")
   test_logs = []
-  for label, test_log in test_targets_with_status(bep_file, status="FAILED"):
+  for label, test_log in (failed_tests + timeout_tests):
     new_path = test_label_to_path(tmpdir, label)
     os.makedirs(os.path.dirname(new_path), exist_ok=True)
     copyfile(test_log, new_path)
