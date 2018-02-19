@@ -292,21 +292,20 @@ def has_flaky_tests(bep_file):
 
 def print_bazel_version_info(bazel_binary):
     print_collapsed_group("Bazel Info")
-    fail_if_nonzero(execute_command([bazel_binary, "version"]))
-    fail_if_nonzero(execute_command([bazel_binary, "info"]))
+    execute_command([bazel_binary, "version"])
+    execute_command([bazel_binary, "info"])
 
 
 def upload_bazel_binary():
     print_collapsed_group("Uploading Bazel under test")
-    fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "upload",
-                                     "bazel-bin/src/bazel"]))
+    execute_command(["buildkite-agent", "artifact", "upload", "bazel-bin/src/bazel"])
 
 
 def download_bazel_binary(dest_dir, platform):
     source_step = create_label(platform_name(platform), "Bazel", build_only=True,
                                test_only=False)
-    fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "download",
-                                     "bazel-bin/src/bazel", dest_dir, "--step", source_step]))
+    execute_command(["buildkite-agent", "artifact", "download",
+                     "bazel-bin/src/bazel", dest_dir, "--step", source_step])
     bazel_binary_path = os.path.join(dest_dir, "bazel-bin/src/bazel")
     st = os.stat(bazel_binary_path)
     os.chmod(bazel_binary_path, st.st_mode | stat.S_IEXEC)
@@ -320,39 +319,30 @@ def clone_git_repository(git_repository, platform):
     print_collapsed_group("Fetching " + project_name + " sources")
     if os.path.exists(clone_path):
         os.chdir(clone_path)
-        fail_if_nonzero(execute_command(
-            ["git", "remote", "set-url", "origin", git_repository]))
-        fail_if_nonzero(execute_command(["git", "clean", "-fdqx"]))
-        fail_if_nonzero(execute_command(
-            ["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"]))
+        execute_command(["git", "remote", "set-url", "origin", git_repository])
+        execute_command(["git", "clean", "-fdqx"])
+        execute_command(["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"])
         # sync to the latest commit of HEAD. Unlikely git pull this also works after
         # a force push.
-        fail_if_nonzero(execute_command(["git", "fetch", "origin"]))
-        remote_head = subprocess.check_output(
-            ["git", "symbolic-ref", "refs/remotes/origin/HEAD"])
+        execute_command(["git", "fetch", "origin"])
+        remote_head = subprocess.check_output(["git", "symbolic-ref", "refs/remotes/origin/HEAD"])
         remote_head = remote_head.decode("utf-8")
         remote_head = remote_head.rstrip()
-        fail_if_nonzero(execute_command(
-            ["git", "reset", remote_head, "--hard"]))
-        fail_if_nonzero(execute_command(
-            ["git", "submodule", "sync", "--recursive"]))
-        fail_if_nonzero(execute_command(
-            ["git", "submodule", "update", "--init", "--recursive", "--force"]))
-        fail_if_nonzero(execute_command(
-            ["git", "submodule", "foreach", "--recursive", "git", "reset", "--hard"]))
-        fail_if_nonzero(execute_command(["git", "clean", "-fdqx"]))
-        fail_if_nonzero(execute_command(
-            ["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"]))
+        execute_command(["git", "reset", remote_head, "--hard"])
+        execute_command(["git", "submodule", "sync", "--recursive"])
+        execute_command(["git", "submodule", "update", "--init", "--recursive", "--force"])
+        execute_command(["git", "submodule", "foreach", "--recursive", "git", "reset", "--hard"])
+        execute_command(["git", "clean", "-fdqx"])
+        execute_command(["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"])
     else:
-        fail_if_nonzero(execute_command(
-            ["git", "clone", "--recurse-submodules", git_repository, clone_path]))
+        execute_command(["git", "clone", "--recurse-submodules", git_repository, clone_path])
         os.chdir(clone_path)
 
 
 def cleanup(platform):
     print_collapsed_group("Cleanup")
     if os.path.exists("WORKSPACE"):
-        fail_if_nonzero(execute_command(["bazel", "clean", "--expunge"]))
+        execute_command(["bazel", "clean", "--expunge"])
 
 
 def execute_shell_commands(commands):
@@ -360,7 +350,7 @@ def execute_shell_commands(commands):
         return
     print_collapsed_group("Setup (Shell Commands)")
     shell_command = "\n".join(commands)
-    fail_if_nonzero(execute_command([shell_command], shell=True))
+    execute_command([shell_command], shell=True)
 
 
 def execute_bazel_run(bazel_binary, targets):
@@ -368,8 +358,8 @@ def execute_bazel_run(bazel_binary, targets):
         return
     print_collapsed_group("Setup (Run Targets)")
     for target in targets:
-        fail_if_nonzero(execute_command([bazel_binary, "run", "--curses=yes",
-                                         "--color=yes", "--verbose_failurs", target]))
+        execute_command([bazel_binary, "run", "--curses=yes",
+                         "--color=yes", "--verbose_failurs", target])
 
 
 def execute_bazel_build(bazel_binary, flags, targets):
@@ -379,8 +369,7 @@ def execute_bazel_build(bazel_binary, flags, targets):
     num_jobs = str(multiprocessing.cpu_count())
     common_flags = ["--curses=yes", "--color=yes", "--keep_going",
                     "--verbose_failures", "--jobs=" + num_jobs]
-    fail_if_nonzero(execute_command(
-        [bazel_binary, "build"] + common_flags + flags + targets))
+    execute_command([bazel_binary, "build"] + common_flags + flags + targets)
 
 
 def execute_bazel_test(bazel_binary, flags, targets, bep_file):
@@ -392,7 +381,7 @@ def execute_bazel_test(bazel_binary, flags, targets, bep_file):
                     "--flaky_test_attempts=3", "--build_tests_only",
                     "--jobs=" + num_jobs, "--local_test_jobs=" + num_jobs,
                     "--build_event_json_file=" + bep_file]
-    return execute_command([bazel_binary, "test"] + common_flags + flags + targets)
+    return execute_command([bazel_binary, "test"] + common_flags + flags + targets, fail_if_nonzero=False)
 
 
 def fail_if_nonzero(exitcode):
@@ -411,8 +400,7 @@ def upload_test_logs(bep_file, tmpdir):
             print_collapsed_group("Uploading test logs")
             for logfile in test_logs:
                 relative_path = os.path.relpath(logfile, tmpdir)
-                fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "upload",
-                                                 relative_path]))
+                execute_command(["buildkite-agent", "artifact", "upload", relative_path])
         finally:
             os.chdir(cwd)
 
@@ -471,9 +459,9 @@ def test_logs_for_status(bep_file, status):
     return targets
 
 
-def execute_command(args, shell=False):
+def execute_command(args, shell=False, fail_if_nonzero=True):
     print(" ".join(args))
-    res = subprocess.run(args, shell=shell)
+    res = subprocess.run(args, shell=shell, check=fail_if_nonzero)
     return res.returncode
 
 
@@ -672,9 +660,8 @@ def sha256_hexdigest(filename):
 
 
 def try_publish_binaries(build_number, expected_generation):
-    tmpdir = None
+    tmpdir = tempfile.mkdtemp()
     try:
-        tmpdir = tempfile.mkdtemp()
         info = {
             "build_number": build_number,
             "git_commit": os.environ["BUILDKITE_COMMIT"],
@@ -682,8 +669,8 @@ def try_publish_binaries(build_number, expected_generation):
         }
         for platform in supported_platforms():
             bazel_binary_path = download_bazel_binary(tmpdir, platform)
-            fail_if_nonzero(execute_command(["gsutil", "cp", "-a", "public-read", bazel_binary_path,
-                                             bazelci_builds_upload_url(platform, build_number)]))
+            execute_command(["gsutil", "cp", "-a", "public-read", bazel_binary_path,
+                             bazelci_builds_upload_url(platform, build_number)])
             info["platforms"][platform] = {
                 "url": bazelci_builds_download_url(platform, build_number),
                 "sha256": sha256_hexdigest(bazel_binary_path),
@@ -694,11 +681,10 @@ def try_publish_binaries(build_number, expected_generation):
             json.dump(info, fp)
         exitcode = execute_command(["gsutil", "-h", "x-goog-if-generation-match:" + expected_generation,
                                     "-h", "Content-Type:application/json", "cp", "-a",
-                                    "public-read", info_file, bazelci_builds_metadata_url(platform)])
+                                    "public-read", info_file, bazelci_builds_metadata_url()])
         return exitcode == 0
     finally:
-        if tmpdir:
-            shutil.rmtree(tmpdir)
+        shutil.rmtree(tmpdir)
 
 
 def publish_binaries():
@@ -727,12 +713,10 @@ def publish_binaries():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description='Bazel Continuous Integration Script')
+    parser = argparse.ArgumentParser(description='Bazel Continuous Integration Script')
 
     subparsers = parser.add_subparsers(dest="subparsers_name")
-    bazel_postsubmit_pipeline = subparsers.add_parser(
-        "bazel_postsubmit_pipeline")
+    bazel_postsubmit_pipeline = subparsers.add_parser("bazel_postsubmit_pipeline")
     bazel_postsubmit_pipeline.add_argument("--http_config", type=str)
     bazel_postsubmit_pipeline.add_argument("--git_repository", type=str)
 
@@ -740,12 +724,10 @@ if __name__ == "__main__":
     project_pipeline.add_argument("--project_name", type=str)
     project_pipeline.add_argument("--http_config", type=str)
     project_pipeline.add_argument("--git_repository", type=str)
-    project_pipeline.add_argument(
-        "--use_but", type=bool, nargs="?", const=True)
+    project_pipeline.add_argument("--use_but", type=bool, nargs="?", const=True)
 
     runner = subparsers.add_parser("runner")
-    runner.add_argument("--platform", action="store",
-                        choices=list(supported_platforms()))
+    runner.add_argument("--platform", action="store", choices=list(supported_platforms()))
     runner.add_argument("--http_config", type=str)
     runner.add_argument("--git_repository", type=str)
     runner.add_argument("--use_but", type=bool, nargs="?", const=True)
