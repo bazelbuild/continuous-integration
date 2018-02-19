@@ -391,13 +391,16 @@ def fail_if_nonzero(exitcode):
 def upload_failed_test_logs(bep_file, tmpdir):
   if not os.path.exists(bep_file):
     return
-  logfiles = failed_test_logs(bep_file, tmpdir)
-  if logfiles:
-    print_collapsed_group("Uploading logs of failed tests")
+  failed_tests = failed_test_logs(bep_file, tmpdir)
+  if failed_tests:
     cwd = os.getcwd()
     try:
       os.chdir(tmpdir)
-      for logfile in logfiles:
+      print_expanded_group("Failed Tests")
+      for label, _ in failed_tests:
+        print(label)
+      print_collapsed_group("Uploading logs of failed tests")
+      for _, logfile in failed_tests:
         fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "upload",
                                          logfile]))
     finally:
