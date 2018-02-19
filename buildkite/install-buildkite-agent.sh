@@ -72,6 +72,7 @@ if [[ -e /bin/systemctl ]]; then
   cat > /etc/systemd/system/buildkite-agent.service.d/override.conf <<'EOF'
 [Service]
 Restart=always
+PermissionsStartOnly=true
 ExecStopPost=/bin/echo "Cleaning up after Buildkite Agent exited ..."
 ExecStopPost=/usr/bin/find /tmp -user buildkite-agent -delete
 ExecStopPost=/usr/bin/find /var/lib/buildkite-agent -mindepth 1 -maxdepth 1 ! -name builds -execdir rm -rf '{}' +
