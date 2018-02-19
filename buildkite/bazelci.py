@@ -410,7 +410,7 @@ def test_logs_to_upload(bep_file, tmpdir):
     failed = test_logs_for_status(bep_file, status="FAILED")
     timed_out = test_logs_for_status(bep_file, status="TIMEOUT")
     flaky = test_logs_for_status(bep_file, status="FLAKY")
-        print("\n after test_logs_for_status\n")
+    print("\n after test_logs_for_status\n")
     # Rename the test.log files to the target that created them
     # so that it's easy to associate test.log and target.
     new_paths = []
