@@ -279,7 +279,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                                            config.get("test_targets", None), bep_file)
             print("\nAfter Execute Test\n")
             # Fail the pipeline if there were any flaky tests.
-            if has_flaky_tests() and exit_code == 0:
+            if has_flaky_tests(bep_file) and exit_code == 0:
                 exit_code = 1
             print("\nBefore Upload Test\n")
             upload_test_logs(bep_file, tmpdir)
