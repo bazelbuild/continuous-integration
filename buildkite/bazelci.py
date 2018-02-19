@@ -20,6 +20,7 @@ import hashlib
 import json
 import os.path
 import multiprocessing
+import random
 import re
 import shutil
 import subprocess
@@ -208,6 +209,12 @@ def platforms_info():
     }
 
 
+def flaky_test_meme_url():
+    urls = ["https://storage.googleapis.com/bazel-builds/memes/flaky_tests_1.jpg",
+            "https://storage.googleapis.com/bazel-builds/memes/flaky_tests_2.jpg"]
+    return random.choice(urls)
+
+
 def downstream_projects_root(platform):
     downstream_projects_dir = os.path.expandvars(
         "${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects")
@@ -267,7 +274,6 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
         print_bazel_version_info(bazel_binary)
         execute_shell_commands(config.get("shell_commands", None))
         execute_bazel_run(bazel_binary, config.get("run_targets", None))
-        print("\033]1338;url='\"{0}\"';alt='\"{1}\"'\a\n".format("https://storage.googleapis.com/bazel-buildkite-artifacts/flaky_tests.jpg", "Flaky Tests"))
         if not test_only:
             execute_bazel_build(bazel_binary, config.get("build_flags", []),
                                 config.get("build_targets", None))
@@ -289,6 +295,11 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
         if exit_code > -1:
             exit(exit_code)
 
+
+def show_image(url, alt):
+    print("\033]1338;url='\"{0}\"';alt='\"{1}\"'\a\n".format(url, alt))
+
+
 def print_test_summary(bep_file):
     failed = test_logs_for_status(bep_file, status="FAILED")
     if failed:
@@ -303,8 +314,10 @@ def print_test_summary(bep_file):
     flaky = test_logs_for_status(bep_file, status="FLAKY")
     if flaky:
         print_expanded_group("Flaky Tests")
+        show_image(flaky_test_meme_url(), "Flaky Tests")
         for label, _ in failed:
             print(label)
+
 
 def has_flaky_tests(bep_file):
     return len(test_logs_for_status(bep_file, status="FLAKY")) > 0
