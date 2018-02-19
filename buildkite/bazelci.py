@@ -274,10 +274,8 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                 upload_bazel_binary()
         if not build_only:
             bep_file = os.path.join(tmpdir, "build_event_json_file.json")
-            print("\nBefore Execute Test\n")
             exit_code = execute_bazel_test(bazel_binary, config.get("test_flags", []),
                                            config.get("test_targets", None), bep_file)
-            print("\nAfter Execute Test\n")
             # Fail the pipeline if there were any flaky tests.
             if has_flaky_tests(bep_file) and exit_code == 0:
                 exit_code = 1
@@ -394,6 +392,7 @@ def upload_test_logs(bep_file, tmpdir):
     if not os.path.exists(bep_file):
         return
     test_logs = test_logs_to_upload(bep_file, tmpdir)
+    print("\n After test_logs_to_upload\n")
     if test_logs:
         cwd = os.getcwd()
         try:
@@ -407,9 +406,11 @@ def upload_test_logs(bep_file, tmpdir):
 
 
 def test_logs_to_upload(bep_file, tmpdir):
+    print("\n before test_logs_for_status\n")
     failed = test_logs_for_status(bep_file, status="FAILED")
     timed_out = test_logs_for_status(bep_file, status="TIMEOUT")
     flaky = test_logs_for_status(bep_file, status="FLAKY")
+        print("\n after test_logs_for_status\n")
     # Rename the test.log files to the target that created them
     # so that it's easy to associate test.log and target.
     new_paths = []
@@ -420,7 +421,7 @@ def test_logs_to_upload(bep_file, tmpdir):
         for test_log in test_logs:
             new_path = test_label_to_path(tmpdir, label, attempt)
             os.makedirs(os.path.dirname(new_path), exist_ok=True)
-            copyfile(test_logs, new_path)
+            copyfile(test_log, new_path)
             new_paths.append(new_path)
             attempt = attempt + 1
     return new_paths
