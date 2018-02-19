@@ -62,6 +62,10 @@ Write-Host "Installing Chocolatey..."
 Invoke-Expression ((New-Object Net.WebClient).DownloadString("https://chocolatey.org/install.ps1"))
 & choco feature enable -n allowGlobalConfirmation
 
+## Install Curl
+Write-Host "Installing MSYS2..."
+& choco install curl
+
 ## Install MSYS2
 Write-Host "Installing MSYS2..."
 & choco install msys2 --params="'/NoPath /NoUpdate'"
