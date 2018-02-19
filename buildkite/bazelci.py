@@ -586,14 +586,13 @@ def bazel_build_step(platform, project_name, http_config=None,
                              pipeline_command, platform)
 
 
-def publish_bazel_binary_step(platform):
-  command = python_binary() + " bazelci.py publish_binary --platform=" + platform
+def publish_bazel_binaries_step():
+  command = python_binary() + " bazelci.py publish_binaries"
   return """
-  - label: \"Publish Bazel Binary ({0})\"
-    command: \"{1}\\n{2}\"
+  - label: \"Publish Bazel Binaries\"
+    command: \"{0}\\n{1}\"
     agents:
-      - \"pipeline=true\"""".format(platform_name(platform), fetch_bazelcipy_command(),
-                                    command)
+      - \"pipeline=true\"""".format(fetch_bazelcipy_command(), command)
 
 
 def print_bazel_postsubmit_pipeline(configs, http_config):
@@ -610,8 +609,7 @@ def print_bazel_postsubmit_pipeline(configs, http_config):
   pipeline_steps.append(wait_step())
 
   # todo move this to the end with a wait step.
-  for platform in supported_platforms():
-    pipeline_steps.append(publish_bazel_binary_step(platform))
+  pipeline_steps.append(publish_bazel_binaries_step())
 
   for platform, config in configs.items():
     pipeline_steps.append(bazel_build_step(platform, "Bazel",
@@ -626,23 +624,23 @@ def print_bazel_postsubmit_pipeline(configs, http_config):
 
 
 def bazelci_builds_download_url(platform, build_number):
-  return "https://storage.googleapis.com/bazel-builds/artifacts/{0}/{1}/bazel".format(build_number, platform)
+  return "https://storage.googleapis.com/bazel-builds/artifacts/{0}/{1}/bazel".format(platform, build_number)
 
 
 def bazelci_builds_upload_url(platform, build_number):
   return "gs://bazel-builds/artifacts/{0}/{1}/bazel".format(build_number, platform)
 
 
-def bazelci_builds_metadata_url(platform):
-  return "gs://bazel-builds/metadata/{0}/latest.json".format(platform)
+def bazelci_builds_metadata_url():
+  return "gs://bazel-builds/metadata/latest_fully_tested.json"
 
 
-def latest_generation_and_build_number(platform):
+def latest_generation_and_build_number():
   output = None
   attempt = 0
   while attempt < 5:
     output = subprocess.check_output(
-        ["gsutil", "stat", bazelci_builds_metadata_url(platform)])
+        ["gsutil", "stat", bazelci_builds_metadata_url()])
     match = re.search("Generation:[ ]*([0-9]+)", output.decode("utf-8"))
     if not match:
       eprint("Couldn't parse generation. gsutil output format changed?")
@@ -654,7 +652,7 @@ def latest_generation_and_build_number(platform):
     expected_md5hash = base64.b64decode(match.group(1))
 
     output = subprocess.check_output(
-        ["gsutil", "cat", bazelci_builds_metadata_url(platform)])
+        ["gsutil", "cat", bazelci_builds_metadata_url()])
     hasher = hashlib.md5()
     hasher.update(output)
     actual_md5hash = hasher.digest()
@@ -674,21 +672,24 @@ def sha256_hexdigest(filename):
   return sha256.hexdigest()
 
 
-def try_publish_binary(platform, build_number, expected_generation):
+def try_publish_binaries(build_number, expected_generation):
   tmpdir = None
   try:
     tmpdir = tempfile.mkdtemp()
-    bazel_binary_path = download_bazel_binary(tmpdir, platform)
-    fail_if_nonzero(execute_command(["gsutil", "cp", "-a", "public-read", bazel_binary_path,
-                                     bazelci_builds_upload_url(platform, build_number)]))
-
     info = {
         "build_number": build_number,
-        "binary_url": bazelci_builds_download_url(platform, build_number),
-        "binary_sha256": sha256_hexdigest(bazel_binary_path),
         "git_commit": os.environ["BUILDKITE_COMMIT"],
-        "platform": platform,
+        "platforms": {}
     }
+    for platform in supported_platforms():
+      bazel_binary_path = download_bazel_binary(tmpdir, platform)
+      fail_if_nonzero(execute_command(["gsutil", "cp", "-a", "public-read", bazel_binary_path,
+                                       bazelci_builds_upload_url(platform, build_number)]))
+      info["platforms"][platform] = {
+          "url": bazelci_builds_download_url(platform, build_number),
+          "sha256": sha256_hexdigest(bazel_binary_path),
+      }
+
     info_file = os.path.join(tmpdir, "info.json")
     with open(info_file, mode="w", encoding="utf-8") as fp:
       json.dump(info, fp)
@@ -701,14 +702,13 @@ def try_publish_binary(platform, build_number, expected_generation):
       shutil.rmtree(tmpdir)
 
 
-def publish_binary(platform):
+def publish_binaries():
   '''
-  Publish tested Bazel binary to GCS.
+  Publish Bazel binaries to GCS.
   '''
   attempt = 0
   while attempt < 5:
-    latest_generation, latest_build_number = latest_generation_and_build_number(
-        platform)
+    latest_generation, latest_build_number = latest_generation_and_build_number()
 
     current_build_number = os.environ.get("BUILDKITE_BUILD_NUMBER", None)
     if not current_build_number:
@@ -720,9 +720,9 @@ def publish_binary(platform):
                                                         latest_build_number))
       break
 
-    if try_publish_binary(platform, current_build_number, latest_generation):
-      print("Successfully published " +
-            bazelci_builds_download_url(platform, current_build_number))
+    if try_publish_binaries(current_build_number, latest_generation):
+      print("Successfully updated '{0}' to binaries from build {1}."
+            .format(bazelci_builds_metadata_url(), current_build_number))
       break
     attempt = attempt + 1
 
@@ -754,9 +754,7 @@ if __name__ == "__main__":
   runner.add_argument("--build_only", type=bool, nargs="?", const=True)
   runner.add_argument("--test_only", type=bool, nargs="?", const=True)
 
-  runner = subparsers.add_parser("publish_binary")
-  runner.add_argument("--platform", action="store", required=True,
-                      choices=list(supported_platforms()))
+  runner = subparsers.add_parser("publish_binaries")
 
   args = parser.parse_args()
 
@@ -773,7 +771,7 @@ if __name__ == "__main__":
     execute_commands(configs.get("platforms", None)[args.platform],
                      args.platform, args.git_repository, args.use_but, args.save_but,
                      args.build_only, args.test_only)
-  elif args.subparsers_name == "publish_binary":
-    publish_binary(args.platform)
+  elif args.subparsers_name == "publish_binaries":
+    publish_binaries()
   else:
     parser.print_help()
