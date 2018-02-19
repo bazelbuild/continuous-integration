@@ -210,8 +210,8 @@ def platforms_info():
 
 
 def flaky_test_meme_url():
-    urls = ["https://storage.googleapis.com/bazel-builds/memes/flaky_tests_1.jpg",
-            "https://storage.googleapis.com/bazel-builds/memes/flaky_tests_2.jpg"]
+    urls = ["https://storage.googleapis.com/bazel-buildkite-memes/flaky_tests_1.jpg",
+            "https://storage.googleapis.com/bazel-buildkite-memes/flaky_tests_1.jpg"]
     return random.choice(urls)
 
 
