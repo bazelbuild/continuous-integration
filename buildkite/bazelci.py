@@ -391,16 +391,39 @@ def fail_if_nonzero(exitcode):
 def upload_failed_test_logs(bep_file, tmpdir):
   if not os.path.exists(bep_file):
     return
-  logfiles = failed_logs_from_bep(bep_file, tmpdir)
+  logfiles = failed_test_logs(bep_file, tmpdir)
   if logfiles:
-    print_collapsed_group("Uploading failed test logs")
-    for logfile in logfiles:
-      fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "upload",
-                                       logfile]))
+    print_collapsed_group("Uploading logs of failed tests")
+    cwd = os.getcwd()
+    try:
+      os.chdir(tmpdir)
+      for logfile in logfiles:
+        fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "upload",
+                                         logfile]))
+    finally:
+      os.chdir(cwd)
 
 
-def failed_logs_from_bep(bep_file, tmpdir):
+def failed_test_logs(bep_file, tmpdir):
   test_logs = []
+  for label, test_log in test_targets_with_status(bep_file, status="FAILED"):
+    new_path = test_label_to_path(tmpdir, label)
+    os.makedirs(os.path.dirname(new_path), exist_ok=True)
+    copyfile(test_log, new_path)
+    test_logs.append((label, new_path))
+  return test_logs
+
+
+def test_label_to_path(tmpdir, label):
+  # remove leading //
+  path = label[2:]
+  path = path.replace(":", "/")
+  path = os.path.join(path, "test.log")
+  return os.path.join(tmpdir, path)
+
+
+def test_targets_with_status(bep_file, status):
+  targets = []
   raw_data = ""
   with open(bep_file) as f:
     raw_data = f.read()
@@ -408,27 +431,17 @@ def failed_logs_from_bep(bep_file, tmpdir):
 
   pos = 0
   while pos < len(raw_data):
-    json_dict, size = decoder.raw_decode(raw_data[pos:])
-    if "testResult" in json_dict:
-      test_result = json_dict["testResult"]
-      if test_result["status"] != "PASSED":
+    bep_obj, size = decoder.raw_decode(raw_data[pos:])
+    if "testResult" in bep_obj:
+      test_result = bep_obj["testResult"]
+      if test_result["status"] == status:
         outputs = test_result["testActionOutput"]
         for output in outputs:
           if output["name"] == "test.log":
-            new_path = label_to_path(
-                tmpdir, json_dict["id"]["testResult"]["label"])
-            os.makedirs(os.path.dirname(new_path), exist_ok=True)
-            copyfile(urlparse(output["uri"]).path, new_path)
-            test_logs.append(new_path)
+            targets.append((bep_obj["id"]["testResult"]
+                            ["label"], urlparse(output["uri"]).path))
     pos += size + 1
-  return test_logs
-
-
-def label_to_path(tmpdir, label):
-  # remove leading //
-  path = label[2:]
-  path = path.replace(":", "/")
-  return os.path.join(tmpdir, path + ".log")
+  return targets
 
 
 def execute_command(args, shell=False):
@@ -624,12 +637,14 @@ def latest_generation_and_build_number(platform):
   info = json.loads(output.decode("utf-8"))
   return (generation, info["build_number"])
 
+
 def sha256_hexdigest(filename):
-    sha256 = hashlib.sha256()
-    with open(filename, 'rb') as f:
-        for block in iter(lambda: f.read(65536), b''):
-            sha256.update(block)
-    return sha256.hexdigest()
+  sha256 = hashlib.sha256()
+  with open(filename, 'rb') as f:
+    for block in iter(lambda: f.read(65536), b''):
+      sha256.update(block)
+  return sha256.hexdigest()
+
 
 def try_publish_binary(platform, build_number, expected_generation):
   tmpdir = None
