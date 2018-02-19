@@ -309,13 +309,13 @@ def print_test_summary(bep_file):
     timed_out = test_logs_for_status(bep_file, status="TIMEOUT")
     if failed:
         print_expanded_group("Timed out Tests")
-        for label, _ in failed:
+        for label, _ in timed_out:
             print(label)
     flaky = test_logs_for_status(bep_file, status="FLAKY")
     if flaky:
         print_expanded_group("Flaky Tests")
         show_image(flaky_test_meme_url(), "Flaky Tests")
-        for label, _ in failed:
+        for label, _ in flaky:
             print(label)
 
 
