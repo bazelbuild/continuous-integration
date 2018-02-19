@@ -189,15 +189,19 @@ def platforms_info():
     return {
         "ubuntu1404": {
             "name": "Ubuntu 14.04",
-            "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
+            "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}"
         },
         "ubuntu1604": {
             "name": "Ubuntu 16.04",
-            "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
+            "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}"
         },
         "macos": {
             "name": "macOS",
-            "agent-directory": "/usr/local/var/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/"
+            "agent-directory": "/usr/local/var/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}"
+        },
+        "windows": {
+            "name": "Windows",
+            "agent-directory": "d:/build/${BUILDKITE_AGENT_NAME}",
         }
     }
 
