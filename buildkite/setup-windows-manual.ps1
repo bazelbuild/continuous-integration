@@ -62,9 +62,13 @@ Write-Host "Installing Chocolatey..."
 Invoke-Expression ((New-Object Net.WebClient).DownloadString("https://chocolatey.org/install.ps1"))
 & choco feature enable -n allowGlobalConfirmation
 
-## Install Curl
-Write-Host "Installing MSYS2..."
+## Install curl
+Write-Host "Installing curl..."
 & choco install curl
+
+## Install Git for Windows.
+Write-Host "Installing Git for Windows..."
+& choco install git --params="'/GitOnlyOnPath'"
 
 ## Install MSYS2
 Write-Host "Installing MSYS2..."
@@ -90,10 +94,6 @@ Write-Host "Updating MSYS2 packages (round 2)..."
 ## Install MSYS2 packages required by Bazel.
 Write-Host "Installing required MSYS2 packages..."
 & bash -lc "pacman --noconfirm --needed -S curl zip unzip tar diffutils patch"
-
-## Install Git for Windows.
-Write-Host "Installing Git for Windows..."
-& choco install git
 
 ## Install the JDK.
 Write-Host "Installing JDK 8..."
@@ -121,6 +121,8 @@ $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 ## Install Python3
 Write-Host "Installing Python 3..."
 & choco install python3 --params="/InstallDir:C:\python3"
+[Environment]::SetEnvironmentVariable("PATH", $env:PATH + ";c:\python3;c:\python3\scripts", "Machine")
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Install a couple of Python modules required by TensorFlow.
 Write-Host "Updating Python packages..."
