@@ -610,7 +610,7 @@ def bazelci_builds_download_url(platform, build_number):
 
 
 def bazelci_builds_upload_url(platform, build_number):
-    return "gs://bazel-builds/artifacts/{0}/{1}/bazel".format(build_number, platform)
+    return "gs://bazel-builds/artifacts/{0}/{1}/bazel".format(platform, build_number)
 
 
 def bazelci_builds_metadata_url():
