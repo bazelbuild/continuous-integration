@@ -276,8 +276,9 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
             bep_file = os.path.join(tmpdir, "build_event_json_file.json")
             exit_code = execute_bazel_test(bazel_binary, config.get("test_flags", []),
                                            config.get("test_targets", None), bep_file)
-            # Fail the pipeline if there were any flaky tests.
+            print_test_summary(bep_file)
             if has_flaky_tests(bep_file) and exit_code == 0:
+                # Fail the pipeline if there were any flaky tests.
                 exit_code = 1
             upload_test_logs(bep_file, tmpdir)
     finally:
@@ -287,6 +288,22 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
         if exit_code > -1:
             exit(exit_code)
 
+def print_test_summary(bep_file):
+    failed = test_logs_for_status(bep_file, status="FAILED")
+    if failed:
+        print_expanded_group("Failed Tests")
+        for label, _ in failed:
+            print(label)
+    timed_out = test_logs_for_status(bep_file, status="TIMEOUT")
+    if failed:
+        print_expanded_group("Timed out Tests")
+        for label, _ in failed:
+            print(label)
+    flaky = test_logs_for_status(bep_file, status="FLAKY")
+    if flaky:
+        print_expanded_group("Flaky Tests")
+        for label, _ in failed:
+            print(label)
 
 def has_flaky_tests(bep_file):
     return len(test_logs_for_status(bep_file, status="FLAKY")) > 0
