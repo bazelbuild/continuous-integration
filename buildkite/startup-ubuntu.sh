@@ -35,9 +35,9 @@ if [ -e /dev/nvme0n1 ]; then
 fi
 
 # Make /tmp a tmpfs.
-mount -t tmpfs -o mode=1777,uid=root,gid=root tmpfs /tmp
-mount -t tmpfs -o mode=0711,uid=root,gid=root tmpfs /var/lib/docker
-mount -t tmpfs -o mode=0755,uid=buildkite-agent,gid=buildkite-agent tmpfs /var/lib/buildkite-agent
+mount -t tmpfs -o mode=1777,uid=root,gid=root,size=$((100 * 1024 * 1024 * 1024)) tmpfs /tmp
+mount -t tmpfs -o mode=0711,uid=root,gid=root,size=$((100 * 1024 * 1024 * 1024)) tmpfs /var/lib/docker
+mount -t tmpfs -o mode=0755,uid=buildkite-agent,gid=buildkite-agent,size=$((100 * 1024 * 1024 * 1024)) tmpfs /var/lib/buildkite-agent
 
 # Start Docker.
 if [[ -e /bin/systemctl ]]; then
