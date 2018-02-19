@@ -273,13 +273,20 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
       bep_file = os.path.join(tmpdir, "build_event_json_file.json")
       exit_code = execute_bazel_test(bazel_binary, config.get("test_flags", []),
                                      config.get("test_targets", None), bep_file)
-      upload_failed_test_logs(bep_file, tmpdir)
+      # Fail the pipeline if there were any flaky tests.
+      if has_flaky_tests() and exit_code == 0:
+        exit_code = 1
+      upload_test_logs(bep_file, tmpdir)
   finally:
     if tmpdir:
       shutil.rmtree(tmpdir)
     cleanup(platform)
     if exit_code > -1:
       exit(exit_code)
+
+
+def has_flaky_tests(bep_file):
+  return len(test_logs_for_status(bep_file, status="FLAKY")) > 0
 
 
 def print_bazel_version_info(bazel_binary):
@@ -380,8 +387,9 @@ def execute_bazel_test(bazel_binary, flags, targets, bep_file):
   print_expanded_group("Test")
   num_jobs = str(multiprocessing.cpu_count())
   common_flags = ["--color=yes", "--keep_going", "--verbose_failures",
-                  "--build_tests_only",  "--jobs=" + num_jobs,
-                  "--local_test_jobs=" + num_jobs, "--build_event_json_file=" + bep_file]
+                  "--flaky_test_attempts=3", "--build_tests_only",
+                  "--jobs=" + num_jobs, "--local_test_jobs=" + num_jobs,
+                  "--build_event_json_file=" + bep_file]
   return execute_command([bazel_binary, "test"] + common_flags + flags + targets)
 
 
@@ -390,19 +398,16 @@ def fail_if_nonzero(exitcode):
     exit(exitcode)
 
 
-def upload_failed_test_logs(bep_file, tmpdir):
+def upload_test_logs(bep_file, tmpdir):
   if not os.path.exists(bep_file):
     return
-  failed_tests = failed_test_logs(bep_file, tmpdir)
-  if failed_tests:
+  test_logs = test_logs_to_upload(bep_file, tmpdir)
+  if test_logs:
     cwd = os.getcwd()
     try:
       os.chdir(tmpdir)
-      print_expanded_group("Failed Tests")
-      for label, _ in failed_tests:
-        print(label)
-      print_collapsed_group("Uploading logs of failed tests")
-      for _, logfile in failed_tests:
+      print_collapsed_group("Uploading test logs")
+      for logfile in test_logs:
         relative_path = os.path.relpath(logfile, tmpdir)
         fail_if_nonzero(execute_command(["buildkite-agent", "artifact", "upload",
                                          relative_path]))
@@ -410,27 +415,38 @@ def upload_failed_test_logs(bep_file, tmpdir):
       os.chdir(cwd)
 
 
-def failed_test_logs(bep_file, tmpdir):
-  failed_tests = test_targets_with_status(bep_file, status="FAILED")
-  timeout_tests = test_targets_with_status(bep_file, status="TIMEOUT")
-  test_logs = []
-  for label, test_log in (failed_tests + timeout_tests):
-    new_path = test_label_to_path(tmpdir, label)
-    os.makedirs(os.path.dirname(new_path), exist_ok=True)
-    copyfile(test_log, new_path)
-    test_logs.append((label, new_path))
-  return test_logs
+def test_logs_to_upload(bep_file, tmpdir):
+  failed = test_logs_for_status(bep_file, status="FAILED")
+  timed_out = test_logs_for_status(bep_file, status="TIMEOUT")
+  flaky = test_logs_for_status(bep_file, status="FLAKY")
+  # Rename the test.log files to the target that created them
+  # so that it's easy to associate test.log and target.
+  new_paths = []
+  for label, test_logs in (failed + timed_out + flaky):
+    attempt = 0
+    if len(test_logs) > 1:
+      attempt = 1
+    for test_log in test_logs:
+      new_path = test_label_to_path(tmpdir, label, attempt)
+      os.makedirs(os.path.dirname(new_path), exist_ok=True)
+      copyfile(test_logs, new_path)
+      new_paths.append(new_path)
+      attempt = attempt + 1
+  return new_paths
 
 
-def test_label_to_path(tmpdir, label):
+def test_label_to_path(tmpdir, label, attempt):
   # remove leading //
   path = label[2:]
   path = path.replace(":", "/")
-  path = os.path.join(path, "test.log")
+  if attempt == 0:
+    path = os.path.join(path, "test.log")
+  else:
+    path = os.path.join(path, "attempt_" + str(attempt) + ".log")
   return os.path.join(tmpdir, path)
 
 
-def test_targets_with_status(bep_file, status):
+def test_logs_for_status(bep_file, status):
   targets = []
   raw_data = ""
   with open(bep_file) as f:
@@ -441,13 +457,16 @@ def test_targets_with_status(bep_file, status):
   while pos < len(raw_data):
     bep_obj, size = decoder.raw_decode(raw_data[pos:])
     if "testResult" in bep_obj:
+      test_target = bep_obj["id"]["testResult"]["label"]
       test_result = bep_obj["testResult"]
       if test_result["status"] == status:
         outputs = test_result["testActionOutput"]
+        test_logs = []
         for output in outputs:
           if output["name"] == "test.log":
-            targets.append((bep_obj["id"]["testResult"]
-                            ["label"], urlparse(output["uri"]).path))
+            test_logs.append(urlparse(output["uri"]).path)
+        if test_logs:
+          targets.append((test_target, test_logs))
     pos += size + 1
   return targets
 
