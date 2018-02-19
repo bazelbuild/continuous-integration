@@ -28,10 +28,15 @@ apt-get -qqy dist-upgrade > /dev/null
 packages=(
   # Bazel dependencies.
   build-essential
+  clang
   curl
   git
   python
+  python-dev
+  python-pip
   python3
+  python3-dev
+  python3-pip
   realpath
   unzip
   wget
@@ -50,12 +55,10 @@ packages=(
 
   # Dependencies for TensorFlow.
   libcurl3-dev
-  python-dev
+  python-mock
   python-numpy
-  python-pip
-  #python-wheel
+  python3-mock
+  python3-numpy
   swig
 )
 apt-get -qqy install "${packages[@]}" > /dev/null
-
-pip install mock

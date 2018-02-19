@@ -12,13 +12,13 @@ LOCATION = 'europe-west1-d'
 
 AGENTS = {
     'buildkite-ubuntu1404': {
-        'count': 4,
+        'count': 8,
         'startup_script': 'startup-ubuntu.sh',
         'machine_type': 'n1-standard-32',
         'local_ssd': 'interface=nvme',
     },
     'buildkite-ubuntu1604': {
-        'count': 4,
+        'count': 8,
         'startup_script': 'startup-ubuntu.sh',
         'machine_type': 'n1-standard-32',
         'local_ssd': 'interface=nvme',

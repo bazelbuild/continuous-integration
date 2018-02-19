@@ -23,6 +23,9 @@ set -eu
 #   mount -o defaults,nobarrier /dev/nvme0n1 /var/lib/buildkite-agent
 #   chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent
 #   chmod 0755 /var/lib/buildkite-agent
+#   mkdir /var/lib/buildkite-agent/docker
+#   chown root:root /var/lib/buildkite-agent/docker
+#   chmod 0711 /var/lib/buildkite-agent/docker
 # fi
 
 # Use the local SSD as swap space.

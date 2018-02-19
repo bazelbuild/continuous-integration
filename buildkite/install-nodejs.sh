@@ -16,4 +16,9 @@
 
 curl -sSL https://deb.nodesource.com/setup_8.x | bash - > /dev/null
 apt-get -qqy install nodejs > /dev/null
-npm install -g typescript fried-twinkie
+
+# Required by Gerrit:
+# https://gerrit.googlesource.com/gerrit/+show/master/polygerrit-ui/README.md
+npm install -g \
+  typescript \
+  fried-twinkie@0.0.15

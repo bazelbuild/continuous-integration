@@ -57,7 +57,7 @@ hooks-path="/etc/buildkite-agent/hooks"
 plugins-path="/etc/buildkite-agent/plugins"
 timestamp-lines=true
 
-# Stop the agent (which will trigger a reboot of the VM) after each job.
+# Stop the agent (which will automatically be restarted) after each job.
 disconnect-after-job=true
 disconnect-after-job-timeout=86400
 EOF
@@ -68,39 +68,38 @@ chown -R buildkite-agent:buildkite-agent /etc/buildkite-agent
 # when necessary.
 if [[ -e /bin/systemctl ]]; then
   systemctl disable buildkite-agent
-
-  # Configure the buildkite-agent service so that it reboots the VM when the
-  # agent exits.
   mkdir /etc/systemd/system/buildkite-agent.service.d
   cat > /etc/systemd/system/buildkite-agent.service.d/override.conf <<'EOF'
 [Service]
-# The difference between ExecStop and ExecStopPost is that the former only runs
-# when the service started up successfully. This is probably more useful for us,
-# as we want to be able to ssh into the VM and debug why the buildkite-agent
-# fails to start, instead of going into a reboot loop.
-ExecStop=/sbin/reboot
-
-# This is required as otherwise /sbin/reboot is executed as the buildkite-agent
-# user and won't have permissions to actually reboot the system.
-PermissionsStartOnly=true
-
-# We don't want to restart the service when it stops, as we're going to reboot
-# the entire VM.
-Restart=no
+Restart=always
+ExecStopPost=/bin/echo "Cleaning up after Buildkite Agent exited ..."
+ExecStopPost=/usr/bin/find /tmp -user buildkite-agent -delete
+ExecStopPost=/usr/bin/find /var/lib/buildkite-agent -mindepth 1 -maxdepth 1 ! -name builds -execdir rm -rf '{}' +
+ExecStopPost=/bin/sh -c 'docker ps -q | xargs -r docker kill'
+ExecStopPost=/usr/bin/docker system prune -f --volumes
 EOF
 else
   cat > /etc/init/buildkite-agent.conf <<'EOF'
 description "buildkite-agent"
 
-manual
+respawn
+respawn limit unlimited
 
-exec start-stop-daemon --start \
-    --quiet \
-    --chuid buildkite-agent \
-    --pidfile "/var/run/buildkite-agent.pid" \
-    --make-pidfile \
-    --exec /usr/bin/buildkite-agent -- start
+exec sudo -H -u buildkite-agent /usr/bin/buildkite-agent start
 
-post-stop exec /sbin/reboot
+# Kill all possibly remaining processes after each build.
+post-stop script
+  set +e
+  set -x
+
+  # Kill all remaining processes.
+  killall -q -9 -u buildkite-agent
+
+  # Clean up left-over files.
+  find /tmp -user buildkite-agent -delete
+  find /var/lib/buildkite-agent -mindepth 1 -maxdepth 1 ! -name builds -execdir rm -rf '{}' +
+  docker ps -q | xargs -r docker kill
+  docker system prune -f --volumes
+end script
 EOF
 fi

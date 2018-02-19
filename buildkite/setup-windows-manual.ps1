@@ -216,7 +216,6 @@ $winsw_config=@"
   <description>The Buildkite CI agent.</description>
   <executable>%BASE%\buildkite-agent.exe</executable>
   <arguments>start</arguments>
-  <onfailure action="reboot" />
   <startmode>Manual</startmode>
   <logmode>roll</logmode>
 </configuration>
