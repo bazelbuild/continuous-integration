@@ -532,7 +532,7 @@ def http_config_flag(http_config):
 
 
 def fetch_bazelcipy_command():
-  return "curl -s {0} > bazelci.py".format(bazelcipy_url())
+  return "curl -s {0} -o bazelci.py".format(bazelcipy_url())
 
 
 def upload_project_pipeline_step(project_name, git_repository, http_config):
