@@ -61,9 +61,13 @@ Write-Host "Installing Chocolatey..."
 Invoke-Expression ((New-Object Net.WebClient).DownloadString("https://chocolatey.org/install.ps1"))
 & choco feature enable -n allowGlobalConfirmation
 
-## Install Curl
-Write-Host "Installing MSYS2..."
+## Install curl
+Write-Host "Installing curl..."
 & choco install curl
+
+## Install Git for Windows.
+Write-Host "Installing Git for Windows..."
+& choco install git --params="'/GitOnlyOnPath'"
 
 ## Install MSYS2
 Write-Host "Installing MSYS2..."
@@ -89,10 +93,6 @@ Write-Host "Updating MSYS2 packages (round 2)..."
 ## Install MSYS2 packages required by Bazel.
 Write-Host "Installing required MSYS2 packages..."
 & bash -lc "pacman --noconfirm --needed -S curl zip unzip tar diffutils patch"
-
-## Install Git for Windows.
-Write-Host "Installing Git for Windows..."
-& choco install git
 
 ## Install the JDK.
 Write-Host "Installing JDK 8..."
