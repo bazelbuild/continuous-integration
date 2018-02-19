@@ -267,6 +267,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
         print_bazel_version_info(bazel_binary)
         execute_shell_commands(config.get("shell_commands", None))
         execute_bazel_run(bazel_binary, config.get("run_targets", None))
+        print("\033]1338;url='\"{0}\"';alt='\"{1}\"'\a\n".format("https://storage.googleapis.com/bazel-buildkite-artifacts/flaky_tests.jpg", "Flaky Tests"))
         if not test_only:
             execute_bazel_build(bazel_binary, config.get("build_flags", []),
                                 config.get("build_targets", None))
