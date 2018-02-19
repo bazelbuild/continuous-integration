@@ -367,7 +367,8 @@ def execute_bazel_run(bazel_binary, targets):
     return
   print_collapsed_group("Setup (Run Targets)")
   for target in targets:
-    fail_if_nonzero(execute_command([bazel_binary, "run", target]))
+    fail_if_nonzero(execute_command([bazel_binary, "run", "--color=yes",
+                                    "--verbose_failurs", target]))
 
 
 def execute_bazel_build(bazel_binary, flags, targets):
