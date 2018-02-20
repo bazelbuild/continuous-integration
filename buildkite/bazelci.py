@@ -36,6 +36,10 @@ random.seed(datetime.now())
 
 def downstream_projects():
     return {
+        "Bazel Remote Execution": {
+            "git_repository": "https://github.com/bazelbuild/bazel.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.json"
+        },
         "BUILD_file_generator": {
             "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
             "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/BUILD_file_generator-postsubmit.json"
