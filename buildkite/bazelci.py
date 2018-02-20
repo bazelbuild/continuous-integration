@@ -412,6 +412,15 @@ def remote_caching_flags(platform):
     return []
 
 
+def remote_enabled(flags):
+    # Detect if the project configuration enabled its own remote caching / execution.
+    remote_flags = ["--remote_executor", "--remote_cache", "--remote_http_cache"]
+    for flag in flags:
+        for remote_flag in remote_flags:
+            if flag.startswith(remote_flag):
+                return True
+    return False
+
 def execute_bazel_build(bazel_binary, platform, flags, targets):
     if not targets:
         return
@@ -419,7 +428,10 @@ def execute_bazel_build(bazel_binary, platform, flags, targets):
     num_jobs = str(multiprocessing.cpu_count())
     common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
                     "--jobs=" + num_jobs]
-    execute_command([bazel_binary, "build"] + common_flags + remote_caching_flags(platform) + flags + targets)
+    caching_flags = []
+    if not remote_enabled(flags):
+        caching_flags = remote_caching_flags(platform)
+    execute_command([bazel_binary, "build"] + common_flags + caching_flags + flags + targets)
 
 
 def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
@@ -431,7 +443,10 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
                     "--flaky_test_attempts=3", "--build_tests_only",
                     "--jobs=" + num_jobs, "--local_test_jobs=" + num_jobs,
                     "--build_event_json_file=" + bep_file]
-    return execute_command([bazel_binary, "test"] + common_flags + remote_caching_flags(platform) + flags + targets, fail_if_nonzero=False)
+    caching_flags = []
+    if not remote_enabled(flags):
+        caching_flags = remote_caching_flags(platform)
+    return execute_command([bazel_binary, "test"] + common_flags + caching_flags + flags + targets, fail_if_nonzero=False)
 
 
 def upload_test_logs(bep_file, tmpdir):
