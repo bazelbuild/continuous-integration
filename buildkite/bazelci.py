@@ -275,13 +275,13 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
         execute_shell_commands(config.get("shell_commands", None))
         execute_bazel_run(bazel_binary, config.get("run_targets", None))
         if not test_only:
-            execute_bazel_build(bazel_binary, config.get("build_flags", []),
+            execute_bazel_build(bazel_binary, platform, config.get("build_flags", []),
                                 config.get("build_targets", None))
             if save_but:
                 upload_bazel_binary()
         if not build_only:
             bep_file = os.path.join(tmpdir, "build_event_json_file.json")
-            exit_code = execute_bazel_test(bazel_binary, config.get("test_flags", []),
+            exit_code = execute_bazel_test(bazel_binary, platform, config.get("test_flags", []),
                                            config.get("test_targets", None), bep_file)
             print_test_summary(bep_file)
             if has_flaky_tests(bep_file) and exit_code == 0:
@@ -404,7 +404,7 @@ def remote_caching_flags(platform):
     return []
 
 
-def execute_bazel_build(bazel_binary, flags, targets):
+def execute_bazel_build(bazel_binary, platform, flags, targets):
     if not targets:
         return
     print_expanded_group("Build")
@@ -414,7 +414,7 @@ def execute_bazel_build(bazel_binary, flags, targets):
     execute_command([bazel_binary, "build"] + common_flags + remote_caching_flags(platform) + flags + targets)
 
 
-def execute_bazel_test(bazel_binary, flags, targets, bep_file):
+def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
     if not targets:
         return 0
     print_expanded_group("Test")
