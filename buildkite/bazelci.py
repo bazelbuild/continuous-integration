@@ -482,11 +482,18 @@ def test_logs_to_upload(bep_file, tmpdir):
         if len(test_logs) > 1:
             attempt = 1
         for test_log in test_logs:
-            new_path = test_label_to_path(tmpdir, label, attempt)
-            os.makedirs(os.path.dirname(new_path), exist_ok=True)
-            copyfile(test_log, new_path)
-            new_paths.append(new_path)
-            attempt = attempt + 1
+            try:
+                new_path = test_label_to_path(tmpdir, label, attempt)
+                print("newpath: " + new_path)
+                print("test_log: " + test_log)
+                os.makedirs(os.path.dirname(new_path), exist_ok=True)
+                print("mkdirs ok")
+                copyfile(test_log, new_path)
+                print("copyfile ok")
+                new_paths.append(new_path)
+                attempt = attempt + 1
+            except IOError as err:
+                print(err)
     return new_paths
 
 
