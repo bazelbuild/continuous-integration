@@ -286,10 +286,13 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
             exit_code = execute_bazel_test(bazel_binary, platform, config.get("test_flags", []),
                                            config.get("test_targets", None), bep_file)
             print_test_summary(bep_file)
+            print("\nAfter Test Summary\n")
             if has_flaky_tests(bep_file) and exit_code == 0:
                 # Fail the pipeline if there were any flaky tests.
                 exit_code = 1
+            print("\nBefore Upload Testlogs\n")
             upload_test_logs(bep_file, tmpdir)
+            print("\nAfter Upload Testlogs\n")
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
@@ -435,6 +438,7 @@ def upload_test_logs(bep_file, tmpdir):
     if not os.path.exists(bep_file):
         return
     test_logs = test_logs_to_upload(bep_file, tmpdir)
+    print("\After Test Logs To Upload\n")
     if test_logs:
         cwd = os.getcwd()
         try:
@@ -446,9 +450,11 @@ def upload_test_logs(bep_file, tmpdir):
 
 
 def test_logs_to_upload(bep_file, tmpdir):
+    print("\nBefore Parse BEP\n")
     failed = test_logs_for_status(bep_file, status="FAILED")
     timed_out = test_logs_for_status(bep_file, status="TIMEOUT")
     flaky = test_logs_for_status(bep_file, status="FLAKY")
+    print("\nAfter Parse BEP\n")
     # Rename the test.log files to the target that created them
     # so that it's easy to associate test.log and target.
     new_paths = []
