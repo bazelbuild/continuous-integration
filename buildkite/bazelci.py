@@ -293,7 +293,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
             if has_flaky_tests(bep_file) and exit_code == 0:
                 # Fail the pipeline if there were any flaky tests.
                 exit_code = 1
-            upload_test_logs(bep_file, tmpdir)
+            #upload_test_logs(bep_file, tmpdir)
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
@@ -402,10 +402,13 @@ def execute_bazel_run(bazel_binary, targets):
 
 
 def remote_caching_flags(platform):
-    common_flags = ["--experimental_strict_action_env", "--remote_timeout=10",
+    common_flags = ["--bes_backend=buildeventservice.googleapis.com", "--bes_best_effort=false",
+                    "--bes_timeout=10", "--project_id=bazel-public",
+                    "--remote_instance_name=projects/bazel-public",
                     "--experimental_remote_spawn_cache",
-                    "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}",
-                    "--remote_http_cache=https://storage.googleapis.com/bazel-buildkite-cache"]
+                    "--experimental_strict_action_env", "--remote_timeout=10",
+                    "--remote_cache=remotebuildexecution.googleapis.com",
+                    "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}"]
     if platform in ["ubuntu1404", "ubuntu1604"]:
         return common_flags + ["--google_default_credentials"]
     elif platform == "macos":
