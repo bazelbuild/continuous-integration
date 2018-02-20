@@ -70,6 +70,8 @@
         "//src:bazel"
       ],
       "test_flags": [
+        "--copt=-w",
+        "--host_copt=-w",
         "--test_env=TEMP",
         "--test_timeout=900"
       ],
