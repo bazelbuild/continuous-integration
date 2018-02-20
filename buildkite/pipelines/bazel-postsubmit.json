@@ -12,10 +12,12 @@
         "--test_timeout=900"
       ],
       "test_targets": [
+        "--",
         "//scripts/...",
         "//src/test/...",
         "//third_party/ijar/...",
-        "//tools/android/..."
+        "//tools/android/...",
+        "-//src/test/shell/bazel/android:android_ndk_integration_test"
       ]
     },
     "ubuntu1604": {
@@ -30,10 +32,12 @@
         "--test_timeout=900"
       ],
       "test_targets": [
+        "--",
         "//scripts/...",
         "//src/test/...",
         "//third_party/ijar/...",
-        "//tools/android/..."
+        "//tools/android/...",
+        "-//src/test/shell/bazel/android:android_ndk_integration_test"
       ]
     },
     "macos": {
@@ -48,10 +52,12 @@
         "--test_timeout=900"
       ],
       "test_targets": [
+        "--",
         "//scripts/...",
         "//src/test/...",
         "//third_party/ijar/...",
-        "//tools/android/..."
+        "//tools/android/...",
+        "-//src/test/shell/bazel/android:android_ndk_integration_test"
       ]
     },
     "windows": {
