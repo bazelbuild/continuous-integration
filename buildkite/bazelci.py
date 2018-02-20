@@ -16,6 +16,7 @@ from __future__ import print_function
 import argparse
 import base64
 import codecs
+from datetime import datetime
 import hashlib
 import json
 import os.path
@@ -30,6 +31,7 @@ import tempfile
 import urllib.request
 from shutil import copyfile
 from urllib.parse import urlparse
+random.seed(datetime.now())
 
 
 def downstream_projects():
