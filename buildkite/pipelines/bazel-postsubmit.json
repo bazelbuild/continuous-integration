@@ -57,7 +57,8 @@
         "//src/test/...",
         "//third_party/ijar/...",
         "//tools/android/...",
-        "-//src/test/shell/bazel/android:android_ndk_integration_test"
+        "-//src/test/shell/bazel/android:android_ndk_integration_test",
+        "-//src/test/shell/bazel:bazel_determinism_test"
       ]
     },
     "windows": {
