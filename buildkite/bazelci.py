@@ -413,7 +413,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets):
     print_expanded_group("Build")
     num_jobs = str(multiprocessing.cpu_count())
     common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
-                    "--verbose_failures", "--jobs=" + num_jobs]
+                    "--jobs=" + num_jobs]
     execute_command([bazel_binary, "build"] + common_flags + remote_caching_flags(platform) + flags + targets)
 
 
@@ -422,7 +422,7 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
         return 0
     print_expanded_group("Test")
     num_jobs = str(multiprocessing.cpu_count())
-    common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going", "--verbose_failures",
+    common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
                     "--flaky_test_attempts=3", "--build_tests_only",
                     "--jobs=" + num_jobs, "--local_test_jobs=" + num_jobs,
                     "--build_event_json_file=" + bep_file]
