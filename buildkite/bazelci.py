@@ -396,11 +396,14 @@ def execute_bazel_run(bazel_binary, targets):
 
 
 def remote_caching_flags(platform):
-    if platform in ["ubuntu1404", "ubuntu1604"]:
-        return ["--experimental_strict_action_env", "--remote_timeout=10",
-                "--google_default_credentials", "--experimental_remote_spawn_cache",
+    common_flags = ["--experimental_strict_action_env", "--remote_timeout=10",
+                "--experimental_remote_spawn_cache",
                 "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}",
                 "--remote_http_cache=https://storage.googleapis.com/bazel-buildkite-cache"]
+    if platform in ["ubuntu1404", "ubuntu1604"]:
+        return common_flags + ["--google_default_credentials"]
+    elif platform == "macos":
+        return common_flags + ["--google_credentials=/Users/ci/GoogleDrive/bazel-public-e29b1f995cb1.json"]
     return []
 
 
