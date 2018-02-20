@@ -403,7 +403,7 @@ def execute_bazel_run(bazel_binary, targets):
 
 def remote_caching_flags(platform):
     common_flags = ["--bes_backend=buildeventservice.googleapis.com", "--bes_best_effort=false",
-                    "--bes_timeout=10", "--project_id=bazel-public",
+                    "--bes_timeout=10s", "--tls_enabled", "--project_id=bazel-public",
                     "--remote_instance_name=projects/bazel-public",
                     "--experimental_remote_spawn_cache",
                     "--experimental_strict_action_env", "--remote_timeout=10",
