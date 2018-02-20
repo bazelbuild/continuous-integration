@@ -395,6 +395,15 @@ def execute_bazel_run(bazel_binary, targets):
                          "--color=yes", "--verbose_failures", target])
 
 
+def remote_caching_flags(platform):
+    if platform in ["ubuntu1404", "ubuntu1604"]:
+        return ["--experimental_strict_action_env", "--remote_timeout=10",
+                "--google_default_credentials", "--experimental_remote_spawn_cache",
+                "--experimental_remote_platform_override='properties:{name:\"platform\" value:\"{0}\"}'".format(platform),
+                "--remote_http_cache=https://storage.googleapis.com/bazel-buildkite-cache"]
+    return []
+
+
 def execute_bazel_build(bazel_binary, flags, targets):
     if not targets:
         return
@@ -402,7 +411,7 @@ def execute_bazel_build(bazel_binary, flags, targets):
     num_jobs = str(multiprocessing.cpu_count())
     common_flags = ["--curses=yes", "--color=yes", "--keep_going",
                     "--verbose_failures", "--jobs=" + num_jobs]
-    execute_command([bazel_binary, "build"] + common_flags + flags + targets)
+    execute_command([bazel_binary, "build"] + common_flags + remote_caching_flags(platform) + flags + targets)
 
 
 def execute_bazel_test(bazel_binary, flags, targets, bep_file):
@@ -414,7 +423,7 @@ def execute_bazel_test(bazel_binary, flags, targets, bep_file):
                     "--flaky_test_attempts=3", "--build_tests_only",
                     "--jobs=" + num_jobs, "--local_test_jobs=" + num_jobs,
                     "--build_event_json_file=" + bep_file]
-    return execute_command([bazel_binary, "test"] + common_flags + flags + targets, fail_if_nonzero=False)
+    return execute_command([bazel_binary, "test"] + common_flags + remote_caching_flags(platform) + flags + targets, fail_if_nonzero=False)
 
 
 def upload_test_logs(bep_file, tmpdir):
