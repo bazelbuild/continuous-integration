@@ -660,6 +660,7 @@ def untrusted_code_verification_step():
   - block: \"Untrusted Code Verification\"
     prompt: \"Did you review this pull request for malicious code?\""""
 
+
 def print_project_pipeline(platform_configs, project_name, http_config,
                            git_repository, use_but):
     pipeline_steps = []
