@@ -655,9 +655,16 @@ def execute_command(args, shell=False, fail_if_nonzero=True):
     return subprocess.run(args, shell=shell, check=fail_if_nonzero).returncode
 
 
+def untrusted_code_verification_step(message):
+    return """
+  - block: \"Untrusted Code Verification\"
+    prompt: \"Did you review this pull request for malicious code?\""""
+
 def print_project_pipeline(platform_configs, project_name, http_config,
                            git_repository, use_but):
     pipeline_steps = []
+    if is_pull_request():
+        pipeline_steps(untrusted_code_verification_step())
     for platform, _ in platform_configs.items():
         step = runner_step(platform, project_name, http_config, git_repository, use_but)
         pipeline_steps.append(step)
