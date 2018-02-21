@@ -16,4 +16,8 @@
 
 add-apt-repository -y "ppa:deadsnakes/ppa"
 apt-get -qqy update > /dev/null
-apt-get -qqy install python3.6 > /dev/null
+apt-get -qqy install python3.6 python3.6-dev python3.6-venv > /dev/null
+python3.6 -m ensurepip
+
+pip3.6 install requests pyyaml
+pip3.6 install --pre github3.py
