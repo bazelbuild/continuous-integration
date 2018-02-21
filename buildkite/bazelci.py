@@ -361,11 +361,14 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
 
 
 def fetch_github_token():
-    execute_command(
-        ["gsutil", "cp", "gs://bazel-encrypted-secrets/github-token.enc", "github-token.enc"])
-    return subprocess.check_output(["gcloud", "kms", "decrypt", "--location", "global", "--keyring", "buildkite",
-                                    "--key", "github-token", "--ciphertext-file", "github-token.enc",
-                                    "--plaintext-file", "-"]).decode("utf-8").strip()
+    try:
+        execute_command(
+            ["gsutil", "cp", "gs://bazel-encrypted-secrets/github-token.enc", "github-token.enc"])
+        return subprocess.check_output(["gcloud", "kms", "decrypt", "--location", "global", "--keyring", "buildkite",
+                                        "--key", "github-token", "--ciphertext-file", "github-token.enc",
+                                        "--plaintext-file", "-"]).decode("utf-8").strip()
+    finally:
+        shutil.rmtree("github-token.enc")
 
 
 def owner_repository_from_url(git_repository):
@@ -379,7 +382,9 @@ def update_pull_request_status(git_repository, commit, state, invocation_id, des
     gh = login(token=fetch_github_token())
     owner, repo = owner_repository_from_url(git_repository)
     repo = gh.repository(owner=owner, repository=repo)
-    results_url = "https://source.cloud.google.com/results/invocations/" + invocation_id
+    results_url = None
+    if invocation_id:
+        results_url = "https://source.cloud.google.com/results/invocations/" + invocation_id
     repo.create_status(sha=commit, state=state, target_url=results_url, description=description, context=context)
 
 
@@ -397,10 +402,12 @@ def update_pull_request_build_status(git_repository, commit, state, invocation_i
 def update_pull_request_test_status(git_repository, commit, state, invocation_id, failed, timed_out,
                                     flaky):
     description = ""
-    if failed == 0 and timed_out == 0 and flaky == 0:
-        description = "All Tests Passed"
-    else:
+    if state == "pending":
+        description = "Running ..."
+    elif state == "failure":
         description = "{0} tests failed, {1} tests timed out, {2} tests are flaky".format(failed, timed_out, flaky)
+    elfi state == "success":
+        description = "All Tests Passed"
     update_pull_request_status(git_repository, commit, state, invocation_id, description, "bazel test")
 
 
@@ -664,15 +671,15 @@ def execute_command(args, shell=False, fail_if_nonzero=True):
 
 def print_project_pipeline(platform_configs, project_name, http_config,
                            git_repository, use_but):
-    pipeline_steps=[]
+    pipeline_steps = []
     for platform, _ in platform_configs.items():
-        step=runner_step(platform, project_name, http_config, git_repository, use_but)
+        step = runner_step(platform, project_name, http_config, git_repository, use_but)
         pipeline_steps.append(step)
 
     print_pipeline(pipeline_steps)
 
 
-def runner_step(platform, project_name = None, http_config = None,
+def runner_step(platform, project_name=None, http_config=None,
                 git_repository=None, use_but=False):
     command = python_binary(platform) + " bazelci.py runner --platform=" + platform
     if http_config:
