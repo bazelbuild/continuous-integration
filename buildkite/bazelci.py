@@ -66,6 +66,7 @@ class BazelTestFailedException(Exception):
     """
     pass
 
+
 def eprint(*args, **kwargs):
     """
     Print to stderr and flush (just in case).
@@ -321,7 +322,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                 if save_but:
                     upload_bazel_binary()
             except BazelBuildFailedException:
-                if is_pull_request()
+                if is_pull_request():
                     invocation_id = bes_invocation_id(build_bep_file)
                     update_pull_request_build_status(git_repository, commit, "failure", invocation_id)
                 fail_pipeline = True
@@ -549,7 +550,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     print_expanded_group("Build")
     num_jobs = str(multiprocessing.cpu_count())
     common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
-                    "--jobs=" + num_jobs], "--build_event_json_file=" + bep_file,
+                    "--jobs=" + num_jobs, "--build_event_json_file=" + bep_file,
                     "--experimental_build_event_json_file_path_conversion=false"]
     caching_flags = []
     if not remote_enabled(flags):
@@ -660,15 +661,15 @@ def execute_command(args, shell=False, fail_if_nonzero=True):
 
 def print_project_pipeline(platform_configs, project_name, http_config,
                            git_repository, use_but):
-    pipeline_steps = []
+    pipeline_steps=[]
     for platform, _ in platform_configs.items():
-        step = runner_step(platform, project_name, http_config, git_repository, use_but)
+        step=runner_step(platform, project_name, http_config, git_repository, use_but)
         pipeline_steps.append(step)
 
     print_pipeline(pipeline_steps)
 
 
-def runner_step(platform, project_name=None, http_config=None,
+def runner_step(platform, project_name = None, http_config = None,
                 git_repository=None, use_but=False):
     command = python_binary(platform) + " bazelci.py runner --platform=" + platform
     if http_config:
