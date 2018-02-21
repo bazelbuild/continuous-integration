@@ -406,8 +406,7 @@ def remote_caching_flags(platform):
                     "--bes_timeout=10s", "--tls_enabled", "--project_id=bazel-public",
                     "--remote_instance_name=projects/bazel-public",
                     "--experimental_remote_spawn_cache",
-                    "--experimental_strict_action_env", "--remote_timeout=10",
-                    "--remote_cache=remotebuildexecution.googleapis.com",
+                    "--remote_timeout=10", "--remote_cache=remotebuildexecution.googleapis.com",
                     "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}"]
     if platform in ["ubuntu1404", "ubuntu1604"]:
         return common_flags + ["--google_default_credentials"]
