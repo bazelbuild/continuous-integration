@@ -245,7 +245,8 @@ def platforms_info():
             "agent-directory": "/usr/local/var/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}"
         },
         "windows": {
-            "name": ":windows:",
+            "name": "Windows",
+            "emoji-name": ":windows",
             "agent-directory": "d:/build/${BUILDKITE_AGENT_NAME}",
         }
     }
