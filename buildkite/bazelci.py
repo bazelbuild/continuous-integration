@@ -260,10 +260,6 @@ def supported_platforms():
     return set(platforms_info().keys())
 
 
-def platform_name(platform):
-    return platforms_info()[platform]["name"]
-
-
 def fetch_configs(http_url):
     """
     If specified fetches the build configuration from http_url, else tries to
@@ -369,8 +365,7 @@ def upload_bazel_binary():
 
 
 def download_bazel_binary(dest_dir, platform):
-    source_step = create_label(platform_name(platform), "Bazel", build_only=True,
-                               test_only=False)
+    source_step = create_label(platform, "Bazel", build_only=True)
     execute_command(["buildkite-agent", "artifact", "download",
                      "bazel-bin/src/bazel", dest_dir, "--step", source_step])
     bazel_binary_path = os.path.join(dest_dir, "bazel-bin/src/bazel")
@@ -512,7 +507,7 @@ def test_logs_to_upload(bep_file, tmpdir):
         for test_log in test_logs:
             try:
                 new_path = test_label_to_path(tmpdir, label, attempt)
-                print("newpath: " + newpath)
+                eprint("new_path: " + new_path)
                 os.makedirs(os.path.dirname(new_path), exist_ok=True)
                 copyfile(test_log, new_path)
                 new_paths.append(new_path)
@@ -566,31 +561,22 @@ def print_project_pipeline(platform_configs, project_name, http_config,
                            git_repository, use_but):
     pipeline_steps = []
     for platform, _ in platform_configs.items():
-        step = runner_step(platform, project_name, http_config, git_repository,
-                           use_but)
+        step = runner_step(platform, project_name, http_config, git_repository, use_but)
         pipeline_steps.append(step)
 
     print_pipeline(pipeline_steps)
 
 
 def runner_step(platform, project_name=None, http_config=None,
-                git_repository=None, use_but=False, save_but=False, build_only=False,
-                test_only=False):
+                git_repository=None, use_but=False):
     command = python_binary(platform) + " bazelci.py runner --platform=" + platform
     if http_config:
-        command = command + " --http_config=" + http_config
+        command += " --http_config=" + http_config
     if git_repository:
-        command = command + " --git_repository=" + git_repository
+        command += " --git_repository=" + git_repository
     if use_but:
-        command = command + " --use_but"
-    if save_but:
-        command = command + " --save_but"
-    if build_only:
-        command = command + " --build_only"
-    if test_only:
-        command = command + " --test_only"
-    label = create_label(platform_name(platform),
-                         project_name, build_only, test_only)
+        command += " --use_but"
+    label = create_label(platform, project_name)
     return """
   - label: \"{0}\"
     command: \"{1}\\n{2}\"
@@ -624,8 +610,8 @@ def upload_project_pipeline_step(project_name, git_repository, http_config):
                         "--use_but --git_repository={2}").format(python_binary(), project_name,
                                                                  git_repository)
     if http_config:
-        pipeline_command = pipeline_command + " --http_config=" + http_config
-    pipeline_command = pipeline_command + " | buildkite-agent pipeline upload"
+        pipeline_command += " --http_config=" + http_config
+    pipeline_command += " | buildkite-agent pipeline upload"
 
     return """
   - label: \"Setup {0}\"
@@ -635,32 +621,36 @@ def upload_project_pipeline_step(project_name, git_repository, http_config):
                                     pipeline_command)
 
 
-def create_label(platform, project_name=None, build_only=False,
-                 test_only=False):
-    label = ""
+def create_label(platform, project_name, build_only=False, test_only=False):
+    if build_only and test_only:
+        raise BuildkiteException("build_only and test_only cannot be true at the same time")
+    platform_name = platforms_info()[platform]["name"]
+
     if build_only:
         label = "Build "
-    if test_only:
+    elif test_only:
         label = "Test "
-    if project_name:
-        label = label + "{0} ({1})".format(project_name, platform_name(platform))
     else:
-        label = label + platform_name(platform)
+        label = ""
+
+    if project_name:
+        label += "{0} ({1})".format(project_name, platform_name)
+    else:
+        label += platform_name
+
     return label
 
 
-def bazel_build_step(platform, project_name, http_config=None,
-                     build_only=False, test_only=False):
+def bazel_build_step(platform, project_name, http_config=None, build_only=False, test_only=False):
     pipeline_command = python_binary(platform) + " bazelci.py runner"
     if build_only:
-        pipeline_command = pipeline_command + " --build_only --save_but"
+        pipeline_command += " --build_only --save_but"
     if test_only:
-        pipeline_command = pipeline_command + " --test_only"
+        pipeline_command += " --test_only"
     if http_config:
-        pipeline_command = pipeline_command + " --http_config=" + http_config
-    label = create_label(platform, project_name, build_only=build_only,
-                         test_only=test_only)
-    pipeline_command = pipeline_command + " --platform=" + platform
+        pipeline_command += " --http_config=" + http_config
+    label = create_label(platform, project_name, build_only, test_only)
+    pipeline_command += " --platform=" + platform
 
     return """
   - label: \"{0}\"
@@ -687,16 +677,15 @@ def print_bazel_postsubmit_pipeline(configs, http_config):
 
     pipeline_steps = []
     for platform, config in configs.items():
-        pipeline_steps.append(bazel_build_step(platform, "Bazel",
-                                               http_config, build_only=True))
+        pipeline_steps.append(bazel_build_step(platform, "Bazel", http_config, build_only=True))
     pipeline_steps.append(wait_step())
 
     # todo move this to the end with a wait step.
     pipeline_steps.append(publish_bazel_binaries_step())
 
     for platform, config in configs.items():
-        pipeline_steps.append(bazel_build_step(platform, "Bazel",
-                                               http_config, test_only=True))
+        pipeline_steps.append(bazel_build_step(platform, "Bazel", http_config, test_only=True))
+
     for project, config in downstream_projects().items():
         git_repository = config["git_repository"]
         http_config = config.get("http_config", None)
@@ -742,7 +731,7 @@ def latest_generation_and_build_number():
 
         if expected_md5hash == actual_md5hash:
             break
-        attempt = attempt + 1
+        attempt += 1
     info = json.loads(output.decode("utf-8"))
     return (generation, info["build_number"])
 
