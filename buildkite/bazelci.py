@@ -286,11 +286,11 @@ def fetch_configs(http_url):
 
 
 def print_collapsed_group(name):
-    eprint("\n--- {0}\n".format(name))
+    eprint("\n\n--- {0}\n\n".format(name))
 
 
 def print_expanded_group(name):
-    eprint("\n+++ {0}\n".format(name))
+    eprint("\n\n+++ {0}\n\n".format(name))
 
 
 def execute_commands(config, platform, git_repository, use_but, save_but,
