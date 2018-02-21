@@ -708,7 +708,7 @@ def print_project_pipeline(platform_configs, project_name, http_config,
         trusted_git_repository = git_repository
         if not trusted_git_repository:
             trusted_git_repository = os.getenv("BUILDKITE_REPO")
-        commit = os.getenv(["BUILDKITE_COMMIT"])
+        commit = os.getenv("BUILDKITE_COMMIT")
         update_pull_request_verification_status(project_name, trusted_git_repository, commit,
                                                 state="pending")
         pipeline_steps.append(untrusted_code_verification_step())
