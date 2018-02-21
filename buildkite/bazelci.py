@@ -333,21 +333,24 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
             test_bep_file = os.path.join(tmpdir, "test_bep.json")
             try:
                 if is_pull_request():
-                    update_pull_request_test_status(git_repository, commit, "pending", None, 0, 0, 0)
+                    update_pull_request_test_status(git_repository, commit, "pending", None)
                 execute_bazel_test(bazel_binary, platform, config.get("test_flags", []),
                                    config.get("test_targets", None), test_bep_file)
+                if has_flaky_tests(test_bep_file):
+                    show_image(flaky_test_meme_url(), "Flaky Tests")
+                    # We also treat flaky tests as test failures
+                    raise BazelTestFailedException
                 if is_pull_request():
                     invocation_id = bes_invocation_id(test_bep_file)
-                    update_pull_request_test_status(git_repository, commit, "success", invocation_id, 0, 0, 0)
+                    update_pull_request_test_status(git_repository, commit, "success", invocation_id)
             except BazelTestFailedException:
                 if is_pull_request():
                     invocation_id = bes_invocation_id(test_bep_file)
-                    update_pull_request_test_status(git_repository, commit, "success", invocation_id, 1, 1, 1)
-                fail_pipeline = True
-            print_test_summary(test_bep_file)
-
-            # Fail the pipeline if there were any flaky tests.
-            if has_flaky_tests(test_bep_file):
+                    failed_tests = tests_with_status(test_bep_file, status="FAILED")
+                    timed_out_tests = tests_with_status(test_bep_file, status="TIMEOUT"))
+                    flaky_tests = tests_with_status(test_bep_file, status="FLAKY")
+                    update_pull_request_test_status(git_repository, commit, "success", invocation_id,
+                                                    len(failed_tests), len(timed_out_tests), len(flaky_tests))
                 fail_pipeline = True
 
             upload_test_logs(test_bep_file, tmpdir)
@@ -359,6 +362,8 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
     if fail_pipeline:
         raise BuildkiteException("At least one test failed or was flaky.")
 
+def tests_with_status(bep_file, status):
+    return set(label for label, _ in test_logs_for_status(bep_file, status=status))
 
 def fetch_github_token():
     try:
@@ -399,8 +404,8 @@ def update_pull_request_build_status(git_repository, commit, state, invocation_i
     update_pull_request_status(git_repository, commit, state, invocation_id, description, "bazel build")
 
 
-def update_pull_request_test_status(git_repository, commit, state, invocation_id, failed, timed_out,
-                                    flaky):
+def update_pull_request_test_status(git_repository, commit, state, invocation_id, failed=0, timed_out=0,
+                                    flaky=0):
     description = ""
     if state == "pending":
         description = "Running ..."
@@ -434,25 +439,6 @@ def bes_invocation_id(bep_file):
 
 def show_image(url, alt):
     eprint("\033]1338;url='\"{0}\"';alt='\"{1}\"'\a\n".format(url, alt))
-
-
-def print_test_summary(bep_file):
-    failed = test_logs_for_status(bep_file, status="FAILED")
-    if failed:
-        print_expanded_group("Failed Tests")
-        for label, _ in failed:
-            eprint(label)
-    timed_out = test_logs_for_status(bep_file, status="TIMEOUT")
-    if timed_out:
-        print_expanded_group("Timed out Tests")
-        for label, _ in timed_out:
-            eprint(label)
-    flaky = test_logs_for_status(bep_file, status="FLAKY")
-    if flaky:
-        print_expanded_group("Flaky Tests")
-        show_image(flaky_test_meme_url(), "Flaky Tests")
-        for label, _ in flaky:
-            eprint(label)
 
 
 def has_flaky_tests(bep_file):
