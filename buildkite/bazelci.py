@@ -378,6 +378,9 @@ def tests_with_status(bep_file, status):
     return set(label for label, _ in test_logs_for_status(bep_file, status=status))
 
 
+GITHUB_TOKEN = None
+
+
 def fetch_github_token():
     if GITHUB_TOKEN:
         return GITHUB_TOKEN
@@ -390,9 +393,6 @@ def fetch_github_token():
         return GITHUB_TOKEN
     finally:
         os.remove("github-token.enc")
-
-
-GITHUB_TOKEN = None
 
 
 def owner_repository_from_url(git_repository):
