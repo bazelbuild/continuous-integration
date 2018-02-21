@@ -407,7 +407,7 @@ def results_view_url(invocation_id):
     results_url = None
     if invocation_id:
         results_url = "https://source.cloud.google.com/results/invocations/" + invocation_id
-    return None
+    return results_url
 
 
 def update_pull_request_status(git_repository, commit, state, details_url, description, context):
