@@ -30,6 +30,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.request
+from urllib.request import url2pathname
 from urllib.parse import urlparse
 
 # Initialize the random number generator.
@@ -511,7 +512,7 @@ def test_logs_to_upload(bep_file, tmpdir):
                 os.makedirs(os.path.dirname(new_path), exist_ok=True)
                 copyfile(test_log, new_path)
                 new_paths.append(new_path)
-                attempt = attempt + 1
+                attempt += 1
             except IOError as err:
                 # Log error and ignore.
                 eprint(err)
@@ -521,7 +522,8 @@ def test_logs_to_upload(bep_file, tmpdir):
 def test_label_to_path(tmpdir, label, attempt):
     # remove leading //
     path = label[2:]
-    path = path.replace(":", "/")
+    path = path.replace("/", os.sep)
+    path = path.replace(":", os.sep)
     if attempt == 0:
         path = os.path.join(path, "test.log")
     else:
@@ -546,7 +548,7 @@ def test_logs_for_status(bep_file, status):
                 outputs = bep_obj["testSummary"]["failed"]
                 test_logs = []
                 for output in outputs:
-                    test_logs.append(urlparse(output["uri"]).path)
+                    test_logs.append(url2pathname(urlparse(output["uri"]).path))
                 targets.append((test_target, test_logs))
         pos += size + 1
     return targets
