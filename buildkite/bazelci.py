@@ -446,7 +446,8 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
     common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
                     "--flaky_test_attempts=3", "--build_tests_only",
                     "--jobs=" + num_jobs, "--local_test_jobs=" + num_jobs,
-                    "--build_event_json_file=" + bep_file]
+                    "--build_event_json_file=" + bep_file,
+                    "--experimental_build_event_json_file_path_conversion=false"]
     caching_flags = []
     if not remote_enabled(flags):
         caching_flags = remote_caching_flags(platform)
