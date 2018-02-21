@@ -409,7 +409,7 @@ def update_pull_request_status(git_repository, commit, state, invocation_id, des
 def update_pull_request_verification_status(project_name, git_repository, commit, state):
     description = ""
     if state == "pending":
-        description = "A {0} team member needs to verify this pull request."
+        description = "A {0} team member needs to verify this pull request.".format(project_name)
     elif state == "success":
         description = "Code Verified"
     update_pull_request_status(git_repository, commit, state, None, description,
