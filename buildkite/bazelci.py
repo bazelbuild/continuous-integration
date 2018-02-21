@@ -367,7 +367,7 @@ def fetch_github_token():
 
 
 def owner_repository_from_url(git_repository):
-    m = re.search(r"/([^/]+)/([^/]+)\.git$", repository_url)
+    m = re.search(r"/([^/]+)/([^/]+)\.git$", git_repository)
     owner = m.group(1)
     repository = m.group(2)
     return (owner, repository)
@@ -392,14 +392,14 @@ def update_pull_request_build_status(git_repository, commit, state, invocation_i
     update_pull_request_status(git_repository, commit, state, invocation_id, description, "bazel build")
 
 
-def update_pull_request_test_status(repository_url, commit, state, invocation_id, failed, timed_out,
+def update_pull_request_test_status(git_repository, commit, state, invocation_id, failed, timed_out,
                                     flaky):
     description = ""
     if failed == 0 and timed_out == 0 and flaky == 0:
         description = "All Tests Passed"
     else:
         description = "{0} tests failed, {1} tests timed out, {2} tests are flaky".format(failed, timed_out, flaky)
-    update_pull_request_status(repository_url, commit, state, invocation_id, description, "bazel test")
+    update_pull_request_status(git_repository, commit, state, invocation_id, description, "bazel test")
 
 
 def is_pull_request():
