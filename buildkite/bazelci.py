@@ -378,19 +378,20 @@ def tests_with_status(bep_file, status):
     return set(label for label, _ in test_logs_for_status(bep_file, status=status))
 
 
-GITHUB_TOKEN = None
+__github_token__ = None
 
 
 def fetch_github_token():
-    if GITHUB_TOKEN:
-        return GITHUB_TOKEN
+    global __github_token__
+    if __github_token__:
+        return __github_token__
     try:
         execute_command(
             ["gsutil", "cp", "gs://bazel-encrypted-secrets/github-token.enc", "github-token.enc"])
-        GITHUB_TOKEN = subprocess.check_output(["gcloud", "kms", "decrypt", "--location", "global", "--keyring", "buildkite",
+        __github_token__ = subprocess.check_output(["gcloud", "kms", "decrypt", "--location", "global", "--keyring", "buildkite",
                                                 "--key", "github-token", "--ciphertext-file", "github-token.enc",
                                                 "--plaintext-file", "-"]).decode("utf-8").strip()
-        return GITHUB_TOKEN
+        return __github_token__
     finally:
         os.remove("github-token.enc")
 
