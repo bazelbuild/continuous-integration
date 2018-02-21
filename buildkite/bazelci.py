@@ -347,7 +347,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                 if is_pull_request():
                     invocation_id = bes_invocation_id(test_bep_file)
                     failed_tests = tests_with_status(test_bep_file, status="FAILED")
-                    timed_out_tests = tests_with_status(test_bep_file, status="TIMEOUT"))
+                    timed_out_tests = tests_with_status(test_bep_file, status="TIMEOUT")
                     flaky_tests = tests_with_status(test_bep_file, status="FLAKY")
                     update_pull_request_test_status(git_repository, commit, "success", invocation_id,
                                                     len(failed_tests), len(timed_out_tests), len(flaky_tests))
