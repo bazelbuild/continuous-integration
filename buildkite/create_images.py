@@ -44,6 +44,9 @@ IMAGE_CREATION_VMS = {
             'install-python36.sh',
             'install-android-sdk.sh',
             'shutdown.sh'
+        ],
+        'licenses': [
+            'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
         ]
     },
     'buildkite-ubuntu1604': {
@@ -61,6 +64,9 @@ IMAGE_CREATION_VMS = {
             'install-python36.sh',
             'install-android-sdk.sh',
             'shutdown.sh'
+        ],
+        'licenses': [
+            'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
         ]
     },
     # 'buildkite-windows2016': {
@@ -182,9 +188,14 @@ def delete_vm(vm):
     run(['gcloud', 'compute', 'instances', 'delete', '--quiet', vm])
 
 
-def create_image(vm, target_image_family):
-    run(['gcloud', 'compute', 'images', 'create', vm, '--family',
-         target_image_family, '--source-disk', vm, '--source-disk-zone', LOCATION])
+def create_image(vm, params):
+    cmd = ['gcloud', 'compute', 'images', 'create', vm]
+    cmd.extend(['--family', params['target_image_family']])
+    cmd.extend(['--source-disk', vm])
+    cmd.extend(['--source-disk-zone', LOCATION])
+    for license in params.get('licenses', []):
+        cmd.extend(['--licenses', license])
+    run(cmd)
 
 
 # https://stackoverflow.com/a/25802742
@@ -209,6 +220,11 @@ def print_windows_instructions(vm):
         print('Use this password to connect to the Windows VM: ' + pw['password'])
         print('Please run the setup script C:\\setup.ps1 once you\'re logged in.')
 
+    # Wait until the VM reboots once, then open RDP again.
+    tail_serial_console(vm, until='Finished running startup scripts')
+    write_to_clipboard(pw['password'])
+    run(['open', rdp_file])
+
 
 def workflow(name, params):
     vm = "%s-image-%s" % (name, int(datetime.now().timestamp()))
@@ -221,7 +237,7 @@ def workflow(name, params):
 
         if 'windows' in vm:
             # Wait for VM to be ready, then print setup instructions.
-            tail_serial_console(vm, until='Instance setup finished.')
+            tail_serial_console(vm, until='Finished running startup scripts')
             print_windows_instructions(vm)
 
         # Continuously print the serial console.
@@ -231,7 +247,7 @@ def workflow(name, params):
         wait_for_vm(vm, 'TERMINATED')
 
         # Create a new image from our VM.
-        create_image(vm, params['target_image_family'])
+        create_image(vm, params)
     finally:
         delete_vm(vm)
 
