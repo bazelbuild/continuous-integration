@@ -359,7 +359,8 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                         test_bep_file, status="TIMEOUT")
                     flaky_tests = tests_with_status(
                         test_bep_file, status="FLAKY")
-                    update_pull_request_test_status(platform, git_repository, commit, "success", invocation_id,
+
+                    update_pull_request_test_status(platform, git_repository, commit, "failure", invocation_id,
                                                     len(failed_tests), len(timed_out_tests), len(flaky_tests))
                 fail_pipeline = True
 
@@ -409,9 +410,10 @@ def update_pull_request_status(git_repository, commit, state, invocation_id, des
 def update_pull_request_verification_status(project_name, git_repository, commit, state):
     description = ""
     if state == "pending":
-        description = "A {0} team member needs to verify this pull request.".format(project_name)
+        description = ("A {0} team member must verify this pull request before " +
+                       "it can be tested").format(project_name)
     elif state == "success":
-        description = "Code Verified"
+        description = "Verified"
     update_pull_request_status(git_repository, commit, state, None, description,
                                "Untrusted Code Verification")
 
@@ -419,25 +421,33 @@ def update_pull_request_verification_status(project_name, git_repository, commit
 def update_pull_request_build_status(platform, git_repository, commit, state, invocation_id):
     description = ""
     if state == "pending":
-        description = "Running ..."
+        description = "Building ..."
     elif state == "failure":
-        description = "Failed"
+        description = "Failure"
     elif state == "success":
-        description = "Succeeded"
+        description = "Success"
     update_pull_request_status(git_repository, commit, state, invocation_id, description,
                                "bazel build ({0})".format(platforms_info()[platform]["name"]))
 
 
-def update_pull_request_test_status(platform, git_repository, commit, state, invocation_id, failed=0,
-                                    timed_out=0, flaky=0):
+def update_pull_request_test_status(platform, git_repository, commit, state, invocation_id, num_failed=0,
+                                    num_timed_out=0, num_flaky=0):
     description = ""
     if state == "pending":
-        description = "Running ..."
+        description = "Testing ..."
     elif state == "failure":
-        description = "{0} tests failed, {1} tests timed out, {2} tests are flaky".format(
-            failed, timed_out, flaky)
+        if failed > 0:
+            description = description + "{0} tests failed, ".format(num_failed)
+        if num_timed_out > 0:
+            description = description + "{0} tests timed out, ".format(num_timed_out)
+        if num_flaky > 0:
+            description = description + "{0} tests are flaky, ".format(num_flaky)
+        if len(description) > 0:
+            description = description[:-2]
+        else:
+            description = "Some tests didn't pass"
     elif state == "success":
-        description = "All Tests Passed"
+        description = "All tests passed"
     update_pull_request_status(git_repository, commit, state, invocation_id, description,
                                "bazel test ({0})".format(platforms_info()[platform]["name"]))
 
