@@ -20,6 +20,7 @@ import codecs
 import hashlib
 import json
 import multiprocessing
+import os
 import os.path
 import random
 import re
