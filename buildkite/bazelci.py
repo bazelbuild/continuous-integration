@@ -31,6 +31,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.request
+from github3 import login
 from urllib.request import url2pathname
 from urllib.parse import urlparse
 
