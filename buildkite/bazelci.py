@@ -231,18 +231,21 @@ def platforms_info():
     return {
         "ubuntu1404": {
             "name": "Ubuntu 14.04",
+            "emoji-name": ":ubuntu: 14.04",
             "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}"
         },
         "ubuntu1604": {
             "name": "Ubuntu 16.04",
+            "emoji-name": ":ubuntu: 16.04",
             "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}"
         },
         "macos": {
             "name": "macOS",
+            "emoji-name": ":darwin:",
             "agent-directory": "/usr/local/var/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}"
         },
         "windows": {
-            "name": "Windows",
+            "name": ":windows:",
             "agent-directory": "d:/build/${BUILDKITE_AGENT_NAME}",
         }
     }
@@ -499,7 +502,7 @@ def print_bazel_version_info(bazel_binary):
 
 
 def upload_bazel_binary():
-    print_collapsed_group("Uploading Bazel under test")
+    print_collapsed_group(":gcloud: Uploading Bazel Under Test")
     execute_command(["buildkite-agent", "artifact",
                      "upload", "bazel-bin/src/bazel"])
 
@@ -598,7 +601,7 @@ def remote_enabled(flags):
 def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     if not targets:
         return
-    print_expanded_group("Build")
+    print_expanded_group(":bazel: Build")
     num_jobs = str(multiprocessing.cpu_count())
     common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
                     "--jobs=" + num_jobs, "--build_event_json_file=" + bep_file,
@@ -617,7 +620,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
 def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
     if not targets:
         return
-    print_expanded_group("Test")
+    print_expanded_group(":bazel: Test")
     num_jobs = str(multiprocessing.cpu_count())
     common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
                     "--flaky_test_attempts=3", "--build_tests_only",
@@ -643,7 +646,7 @@ def upload_test_logs(bep_file, tmpdir):
         cwd = os.getcwd()
         try:
             os.chdir(tmpdir)
-            print_collapsed_group("Uploading test logs")
+            print_collapsed_group(":gcloud: Uploading Test Logs")
             execute_command(
                 ["buildkite-agent", "artifact", "upload", "*/**/*.log"])
         finally:
@@ -798,7 +801,7 @@ def create_label(platform, project_name, build_only=False, test_only=False):
     if build_only and test_only:
         raise BuildkiteException(
             "build_only and test_only cannot be true at the same time")
-    platform_name = platforms_info()[platform]["name"]
+    platform_name = platforms_info()[platform]["emoji-name"]
 
     if build_only:
         label = "Build "
