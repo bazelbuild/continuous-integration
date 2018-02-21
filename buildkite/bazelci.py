@@ -402,7 +402,7 @@ def update_pull_request_test_status(repository_url, commit, state, invocation_id
 
 
 def is_pull_request():
-    third_party_repo = pos.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
+    third_party_repo = os.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
     return len(third_party_repo) > 0
 
 
