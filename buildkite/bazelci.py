@@ -368,7 +368,7 @@ def fetch_github_token():
                                         "--key", "github-token", "--ciphertext-file", "github-token.enc",
                                         "--plaintext-file", "-"]).decode("utf-8").strip()
     finally:
-        shutil.rmtree("github-token.enc")
+        os.remove("github-token.enc")
 
 
 def owner_repository_from_url(git_repository):
@@ -406,7 +406,7 @@ def update_pull_request_test_status(git_repository, commit, state, invocation_id
         description = "Running ..."
     elif state == "failure":
         description = "{0} tests failed, {1} tests timed out, {2} tests are flaky".format(failed, timed_out, flaky)
-    elfi state == "success":
+    elif state == "success":
         description = "All Tests Passed"
     update_pull_request_status(git_repository, commit, state, invocation_id, description, "bazel test")
 
