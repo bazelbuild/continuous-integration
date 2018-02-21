@@ -451,7 +451,7 @@ def update_pull_request_test_status(platform, git_repository, commit, state, inv
     if state == "pending":
         description = "Testing ..."
     elif state == "failure":
-        if failed > 0:
+        if num_failed > 0:
             description = description + "{0} tests failed, ".format(num_failed)
         if num_timed_out > 0:
             description = description + "{0} tests timed out, ".format(num_timed_out)
