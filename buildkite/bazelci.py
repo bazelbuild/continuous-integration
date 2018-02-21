@@ -655,7 +655,7 @@ def execute_command(args, shell=False, fail_if_nonzero=True):
     return subprocess.run(args, shell=shell, check=fail_if_nonzero).returncode
 
 
-def untrusted_code_verification_step(message):
+def untrusted_code_verification_step():
     return """
   - block: \"Untrusted Code Verification\"
     prompt: \"Did you review this pull request for malicious code?\""""
