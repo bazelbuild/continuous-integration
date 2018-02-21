@@ -17,7 +17,6 @@
 import argparse
 import base64
 import codecs
-import functools
 import hashlib
 import json
 import multiprocessing
@@ -295,7 +294,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
     try:
         if git_repository:
             clone_git_repository(git_repository, platform)
-        cleanup(platform)
+        cleanup()
         tmpdir = tempfile.mkdtemp()
         if use_but:
             print_collapsed_group("Downloading Bazel under test")
@@ -325,7 +324,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
-        cleanup(platform)
+        cleanup()
 
     if fail_pipeline:
         raise BuildkiteException("At least one test failed or was flaky.")
@@ -382,7 +381,7 @@ def download_bazel_binary(dest_dir, platform):
 
 def clone_git_repository(git_repository, platform):
     root = downstream_projects_root(platform)
-    project_name = re.search("/([^/]+)\.git$", git_repository).group(1)
+    project_name = re.search(r"/([^/]+)\.git$", git_repository).group(1)
     clone_path = os.path.join(root, project_name)
     print_collapsed_group("Fetching " + project_name + " sources")
     if os.path.exists(clone_path):
@@ -407,7 +406,7 @@ def clone_git_repository(git_repository, platform):
         os.chdir(clone_path)
 
 
-def cleanup(platform):
+def cleanup():
     print_collapsed_group("Cleanup")
     if os.path.exists("WORKSPACE"):
         execute_command(["bazel", "clean", "--expunge"])
@@ -506,7 +505,7 @@ def test_logs_to_upload(bep_file, tmpdir):
     # Rename the test.log files to the target that created them
     # so that it's easy to associate test.log and target.
     new_paths = []
-    for label, test_logs in (failed + timed_out + flaky):
+    for label, test_logs in failed + timed_out + flaky:
         attempt = 0
         if len(test_logs) > 1:
             attempt = 1
@@ -566,7 +565,7 @@ def execute_command(args, shell=False, fail_if_nonzero=True):
 def print_project_pipeline(platform_configs, project_name, http_config,
                            git_repository, use_but):
     pipeline_steps = []
-    for platform, config in platform_configs.items():
+    for platform, _ in platform_configs.items():
         step = runner_step(platform, project_name, http_config, git_repository,
                            use_but)
         pipeline_steps.append(step)
@@ -636,7 +635,7 @@ def upload_project_pipeline_step(project_name, git_repository, http_config):
                                     pipeline_command)
 
 
-def create_label(platform_name, project_name=None, build_only=False,
+def create_label(platform, project_name=None, build_only=False,
                  test_only=False):
     label = ""
     if build_only:
@@ -644,9 +643,9 @@ def create_label(platform_name, project_name=None, build_only=False,
     if test_only:
         label = "Test "
     if project_name:
-        label = label + "{0} ({1})".format(project_name, platform_name)
+        label = label + "{0} ({1})".format(project_name, platform_name(platform))
     else:
-        label = label + platform_name
+        label = label + platform_name(platform)
     return label
 
 
@@ -659,7 +658,7 @@ def bazel_build_step(platform, project_name, http_config=None,
         pipeline_command = pipeline_command + " --test_only"
     if http_config:
         pipeline_command = pipeline_command + " --http_config=" + http_config
-    label = create_label(platform_name(platform), project_name, build_only=build_only,
+    label = create_label(platform, project_name, build_only=build_only,
                          test_only=test_only)
     pipeline_command = pipeline_command + " --platform=" + platform
 
@@ -730,7 +729,7 @@ def latest_generation_and_build_number():
             raise BuildkiteException("Couldn't parse generation. gsutil output format changed?")
         generation = match.group(1)
 
-        match = re.search("Hash \(md5\):[ ]*([^\s]+)", output.decode("utf-8"))
+        match = re.search(r"Hash \(md5\):[ ]*([^\s]+)", output.decode("utf-8"))
         if not match:
             raise BuildkiteException("Couldn't parse md5 hash. gsutil output format changed?")
         expected_md5hash = base64.b64decode(match.group(1))
