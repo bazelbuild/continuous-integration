@@ -302,6 +302,8 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
     try:
         if git_repository:
             clone_git_repository(git_repository, platform)
+        else:
+            git_repository = os.getenv("BUILDKITE_REPO")
         cleanup()
         tmpdir = tempfile.mkdtemp()
         if use_but:
