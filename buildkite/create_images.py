@@ -35,14 +35,14 @@ IMAGE_CREATION_VMS = {
     # Find the newest FreeBSD 11 image via:
     # gcloud compute images list --project freebsd-org-cloud-dev \
     #     --no-standard-images
-    'buildkite-freebsd11': {
-        'source_image': 'https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-1-stable-amd64-2017-12-28',
-        'target_image_family': 'bazel-freebsd11',
-        'scripts': [
-            'setup-freebsd.sh',
-            'install-buildkite-agent.sh'
-        ]
-    },
+    # 'buildkite-freebsd11': {
+    #     'source_image': 'https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-1-stable-amd64-2017-12-28',
+    #     'target_image_family': 'bazel-freebsd11',
+    #     'scripts': [
+    #         'setup-freebsd.sh',
+    #         'install-buildkite-agent.sh'
+    #     ]
+    # },
     'buildkite-ubuntu1404': {
         'source_image_project': 'ubuntu-os-cloud',
         'source_image_family': 'ubuntu-1404-lts',
