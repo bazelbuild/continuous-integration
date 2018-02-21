@@ -664,7 +664,7 @@ def print_project_pipeline(platform_configs, project_name, http_config,
                            git_repository, use_but):
     pipeline_steps = []
     if is_pull_request():
-        pipeline_steps(untrusted_code_verification_step())
+        pipeline_steps.append(untrusted_code_verification_step())
     for platform, _ in platform_configs.items():
         step = runner_step(platform, project_name, http_config, git_repository, use_but)
         pipeline_steps.append(step)
