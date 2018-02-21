@@ -462,7 +462,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets):
 
 def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
     if not targets:
-        return 0
+        return
     print_expanded_group("Test")
     num_jobs = str(multiprocessing.cpu_count())
     common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
