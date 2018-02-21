@@ -481,6 +481,7 @@ def test_logs_to_upload(bep_file, tmpdir):
         for test_log in test_logs:
             try:
                 new_path = test_label_to_path(tmpdir, label, attempt)
+                print("newpath: " + newpath)
                 os.makedirs(os.path.dirname(new_path), exist_ok=True)
                 copyfile(test_log, new_path)
                 new_paths.append(new_path)
