@@ -403,14 +403,18 @@ def owner_repository_from_url(git_repository):
     return (owner, repository)
 
 
-def update_pull_request_status(git_repository, commit, state, invocation_id, description, context):
-    gh = login(token=fetch_github_token())
-    owner, repo = owner_repository_from_url(git_repository)
-    repo = gh.repository(owner=owner, repository=repo)
+def results_view_url(invocation_id):
     results_url = None
     if invocation_id:
         results_url = "https://source.cloud.google.com/results/invocations/" + invocation_id
-    repo.create_status(sha=commit, state=state, target_url=results_url, description=description,
+    return None
+
+
+def update_pull_request_status(git_repository, commit, state, details_url, description, context):
+    gh = login(token=fetch_github_token())
+    owner, repo = owner_repository_from_url(git_repository)
+    repo = gh.repository(owner=owner, repository=repo)
+    repo.create_status(sha=commit, state=state, target_url=details_url, description=description,
                        context=context)
 
 
@@ -420,7 +424,8 @@ def update_pull_request_verification_status(git_repository, commit, state):
         description = "A project member must verify this pull request."
     elif state == "success":
         description = "Verified"
-    update_pull_request_status(git_repository, commit, state, None, description,
+    build_url = os.getenv("BUILDKITE_BUILD_URL")
+    update_pull_request_status(git_repository, commit, state, build_url, description,
                                "Untrusted Code Verification")
 
 
@@ -432,7 +437,7 @@ def update_pull_request_build_status(platform, git_repository, commit, state, in
         description = "Failure"
     elif state == "success":
         description = "Success"
-    update_pull_request_status(git_repository, commit, state, invocation_id, description,
+    update_pull_request_status(git_repository, commit, state, results_view_url(invocation_id), description,
                                "bazel build ({0})".format(platforms_info()[platform]["name"]))
 
 
@@ -454,7 +459,7 @@ def update_pull_request_test_status(platform, git_repository, commit, state, inv
             description = "Some tests didn't pass"
     elif state == "success":
         description = "All tests passed"
-    update_pull_request_status(git_repository, commit, state, invocation_id, description,
+    update_pull_request_status(git_repository, commit, state, results_view_url(invocation_id), description,
                                "bazel test ({0})".format(platforms_info()[platform]["name"]))
 
 
