@@ -379,14 +379,20 @@ def tests_with_status(bep_file, status):
 
 
 def fetch_github_token():
+    if GITHUB_TOKEN:
+        return GITHUB_TOKEN
     try:
         execute_command(
             ["gsutil", "cp", "gs://bazel-encrypted-secrets/github-token.enc", "github-token.enc"])
-        return subprocess.check_output(["gcloud", "kms", "decrypt", "--location", "global", "--keyring", "buildkite",
-                                        "--key", "github-token", "--ciphertext-file", "github-token.enc",
-                                        "--plaintext-file", "-"]).decode("utf-8").strip()
+        GITHUB_TOKEN = subprocess.check_output(["gcloud", "kms", "decrypt", "--location", "global", "--keyring", "buildkite",
+                                                "--key", "github-token", "--ciphertext-file", "github-token.enc",
+                                                "--plaintext-file", "-"]).decode("utf-8").strip()
+        return GITHUB_TOKEN
     finally:
         os.remove("github-token.enc")
+
+
+GITHUB_TOKEN = None
 
 
 def owner_repository_from_url(git_repository):
