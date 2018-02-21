@@ -3,6 +3,9 @@ $setup_script = @'
 $ErrorActionPreference = "Stop"
 $ConfirmPreference = "None"
 
+## Use only the global PATH, not any user-specific bits.
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+
 ## Load PowerShell support for ZIP files.
 Add-Type -AssemblyName "System.IO.Compression.FileSystem"
 
@@ -59,20 +62,27 @@ Write-Host "Enabling long paths..."
 
 ## Install Chocolatey
 Write-Host "Installing Chocolatey..."
+# Chocolatey adds "C:\ProgramData\chocolatey\bin" to global PATH.
 Invoke-Expression ((New-Object Net.WebClient).DownloadString("https://chocolatey.org/install.ps1"))
 & choco feature enable -n allowGlobalConfirmation
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Install curl
 Write-Host "Installing curl..."
+# FYI: choco installs curl.exe in C:\ProgramData\chocolatey\bin (which is on the PATH).
 & choco install curl
 
 ## Install Git for Windows.
 Write-Host "Installing Git for Windows..."
+# FYI: choco adds "C:\Program Files\Git\cmd" to global PATH.
 & choco install git --params="'/GitOnlyOnPath'"
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Install MSYS2
 Write-Host "Installing MSYS2..."
+# FYI: We don't add MSYS2 to the PATH on purpose.
 & choco install msys2 --params="'/NoPath /NoUpdate'"
+
 [Environment]::SetEnvironmentVariable("BAZEL_SH", "C:\tools\msys64\usr\bin\bash.exe", "Machine")
 $env:BAZEL_SH = [Environment]::GetEnvironmentVariable("BAZEL_SH", "Machine")
 Set-Alias bash "c:\tools\msys64\usr\bin\bash.exe"
@@ -93,17 +103,16 @@ Write-Host "Updating MSYS2 packages (round 2)..."
 
 ## Install MSYS2 packages required by Bazel.
 Write-Host "Installing required MSYS2 packages..."
-& bash -lc "pacman --noconfirm --needed -S curl zip unzip tar diffutils patch"
+& bash -lc "pacman --noconfirm --needed -S curl zip unzip gcc tar diffutils patch perl"
 
 ## Install the JDK.
 Write-Host "Installing JDK 8..."
+# FYI: choco adds "C:\Program Files\Java\jdk<version>\bin" to global PATH.
+# FYI: choco sets JAVA_HOME to "C:\Program Files\Java\jdk<version>\bin".
 & choco install jdk8
-
-## Set JAVA_HOME to the path of the installed JDK.
-$java = Get-ChildItem "c:\Program Files\Java\jdk*" | Select-Object -Index 0 | foreach { $_.FullName }
-Write-Host "Setting JAVA_HOME to ${java}..."
-[Environment]::SetEnvironmentVariable("JAVA_HOME", $java, "Machine")
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 $env:JAVA_HOME = [Environment]::GetEnvironmentVariable("JAVA_HOME", "Machine")
+Write-Host "JAVA_HOME was set to '${JAVA_HOME}'..."
 
 ## Install Visual C++ 2015 Build Tools (Update 3).
 # Write-Host "Installing Visual C++ 2015 Build Tools..."
@@ -120,8 +129,8 @@ $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 
 ## Install Python3
 Write-Host "Installing Python 3..."
+# FYI: choco adds "C:\python3\Scripts\;C:\python3\" to PATH.
 & choco install python3 --params="/InstallDir:C:\python3"
-[Environment]::SetEnvironmentVariable("PATH", $env:PATH + ";c:\python3;c:\python3\scripts", "Machine")
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Install a couple of Python modules required by TensorFlow.
@@ -148,8 +157,8 @@ Write-Host "Downloading Bazel ${bazel_version}..."
 $bazel_url = "https://releases.bazel.build/${bazel_version}/release/bazel-${bazel_version}-without-jdk-windows-x86_64.exe"
 New-Item "c:\bazel" -ItemType "directory" -Force
 (New-Object Net.WebClient).DownloadFile($bazel_url, "c:\bazel\bazel.exe")
-[Environment]::SetEnvironmentVariable("PATH", $env:PATH + ";c:\bazel", "Machine")
-$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";c:\bazel"
+[Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
 ## Download the Android NDK and install into C:\android-ndk-r14b.
 $android_ndk_url = "https://dl.google.com/android/repository/android-ndk-r14b-windows-x86_64.zip"
@@ -204,8 +213,8 @@ New-Item $buildkite_agent_root -ItemType "directory" -Force
 Remove-Item $buildkite_agent_zip
 New-Item "${buildkite_agent_root}\hooks" -ItemType "directory" -Force
 New-Item "${buildkite_agent_root}\plugins" -ItemType "directory" -Force
-[Environment]::SetEnvironmentVariable("PATH", $env:PATH + ";${buildkite_agent_root}", "Machine")
-$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${buildkite_agent_root}"
+[Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
 ## Create a service for the Buildkite agent.
 # Some hints: https://gist.github.com/fdstevex/52da0d7e5892fe2965eae105b8cf3883
@@ -222,6 +231,7 @@ $winsw_config=@"
   <description>The Buildkite CI agent.</description>
   <executable>%BASE%\buildkite-agent.exe</executable>
   <arguments>start</arguments>
+  <onfailure action="restart" delay="10 sec"/>
   <startmode>Manual</startmode>
   <logmode>roll</logmode>
 </configuration>
@@ -229,8 +239,9 @@ $winsw_config=@"
 [System.IO.File]::WriteAllLines("${buildkite_agent_root}\buildkite-service.xml", $winsw_config)
 & $winsw install
 
-Write-Host "All done, preparing system for imaging with GCESysprep..."
-& GCESysprep
+Write-Host "All done, adding GCESysprep to RunOnce and rebooting..."
+Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "GCESysprep" -Value "C:\Program Files\Google\Compute Engine\sysprep\gcesysprep.bat"
+Restart-Computer
 '@
 
 [System.IO.File]::WriteAllLines("c:\setup.ps1", $setup_script)
