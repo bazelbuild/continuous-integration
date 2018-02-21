@@ -305,7 +305,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
         else:
             git_repository = os.getenv("BUILDKITE_REPO")
         if is_pull_request():
-            update_pull_request_verification_status(None, git_repository, commit, state="success")
+            update_pull_request_verification_status(git_repository, commit, state="success")
         cleanup()
         tmpdir = tempfile.mkdtemp()
         if use_but:
@@ -389,8 +389,8 @@ def fetch_github_token():
         execute_command(
             ["gsutil", "cp", "gs://bazel-encrypted-secrets/github-token.enc", "github-token.enc"])
         __github_token__ = subprocess.check_output(["gcloud", "kms", "decrypt", "--location", "global", "--keyring", "buildkite",
-                                                "--key", "github-token", "--ciphertext-file", "github-token.enc",
-                                                "--plaintext-file", "-"]).decode("utf-8").strip()
+                                                    "--key", "github-token", "--ciphertext-file", "github-token.enc",
+                                                    "--plaintext-file", "-"]).decode("utf-8").strip()
         return __github_token__
     finally:
         os.remove("github-token.enc")
@@ -414,11 +414,10 @@ def update_pull_request_status(git_repository, commit, state, invocation_id, des
                        context=context)
 
 
-def update_pull_request_verification_status(project_name, git_repository, commit, state):
+def update_pull_request_verification_status(git_repository, commit, state):
     description = ""
     if state == "pending":
-        description = ("A {0} team member must verify this pull request before " +
-                       "it can be tested").format(project_name)
+        description = "A project member must verify this pull request."
     elif state == "success":
         description = "Verified"
     update_pull_request_status(git_repository, commit, state, None, description,
@@ -726,8 +725,7 @@ def print_project_pipeline(platform_configs, project_name, http_config,
         if not trusted_git_repository:
             trusted_git_repository = os.getenv("BUILDKITE_REPO")
         commit = os.getenv("BUILDKITE_COMMIT")
-        update_pull_request_verification_status(project_name, trusted_git_repository, commit,
-                                                state="pending")
+        update_pull_request_verification_status(trusted_git_repository, commit, state="pending")
         pipeline_steps.append(untrusted_code_verification_step())
     for platform, _ in platform_configs.items():
         step = runner_step(platform, project_name,
