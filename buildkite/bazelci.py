@@ -37,6 +37,7 @@ from urllib.parse import urlparse
 # Initialize the random number generator.
 random.seed()
 
+
 class BuildkiteException(Exception):
     """
     Raised whenever something goes wrong and we should exit with an error.
@@ -58,6 +59,12 @@ class BazelTestFailedException(Exception):
     """
     pass
 
+
+class BazelTestFailedException(Exception):
+    """
+    Raised when a Bazel build fails.
+    """
+    pass
 
 def eprint(*args, **kwargs):
     """
@@ -289,6 +296,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
     fail_pipeline = False
     tmpdir = None
     bazel_binary = "bazel"
+    commit = os.getenv("BUILDKITE_COMMIT")
     try:
         if git_repository:
             clone_git_repository(git_repository, platform)
@@ -301,24 +309,44 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
         execute_shell_commands(config.get("shell_commands", None))
         execute_bazel_run(bazel_binary, config.get("run_targets", None))
         if not test_only:
-            execute_bazel_build(bazel_binary, platform, config.get("build_flags", []),
-                                config.get("build_targets", None))
-            if save_but:
-                upload_bazel_binary()
-        if not build_only:
-            bep_file = os.path.join(tmpdir, "build_event_json_file.json")
+            build_bep_file = os.path.join(tmpdir, "build_bep.json")
+            if is_pull_request():
+                update_pull_request_build_status(git_repository, commit, "pending", None)
             try:
-                execute_bazel_test(bazel_binary, platform, config.get("test_flags", []),
-                                   config.get("test_targets", None), bep_file)
-            except BazelTestFailedException:
+                execute_bazel_build(bazel_binary, platform, config.get("build_flags", []),
+                                    config.get("build_targets", None), build_bep_file)
+                if is_pull_request():
+                    invocation_id = bes_invocation_id(build_bep_file)
+                    update_pull_request_build_status(git_repository, commit, "success", invocation_id)
+                if save_but:
+                    upload_bazel_binary()
+            except BazelBuildFailedException:
+                if is_pull_request()
+                    invocation_id = bes_invocation_id(build_bep_file)
+                    update_pull_request_build_status(git_repository, commit, "failure", invocation_id)
                 fail_pipeline = True
-            print_test_summary(bep_file)
+        if not fail_pipeline and not build_only:
+            test_bep_file = os.path.join(tmpdir, "test_bep.json")
+            try:
+                if is_pull_request():
+                    update_pull_request_test_status(git_repository, commit, "pending", None, 0, 0, 0)
+                execute_bazel_test(bazel_binary, platform, config.get("test_flags", []),
+                                   config.get("test_targets", None), test_bep_file)
+                if is_pull_request():
+                    invocation_id = bes_invocation_id(test_bep_file)
+                    update_pull_request_test_status(git_repository, commit, "success", invocation_id, 0, 0, 0)
+            except BazelTestFailedException:
+                if is_pull_request():
+                    invocation_id = bes_invocation_id(test_bep_file)
+                    update_pull_request_test_status(git_repository, commit, "success", invocation_id, 1, 1, 1)
+                fail_pipeline = True
+            print_test_summary(test_bep_file)
 
             # Fail the pipeline if there were any flaky tests.
-            if has_flaky_tests(bep_file):
+            if has_flaky_tests(test_bep_file):
                 fail_pipeline = True
 
-            upload_test_logs(bep_file, tmpdir)
+            upload_test_logs(test_bep_file, tmpdir)
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
@@ -326,6 +354,71 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
 
     if fail_pipeline:
         raise BuildkiteException("At least one test failed or was flaky.")
+
+
+def fetch_github_token():
+    execute_command(
+        ["gsutil", "cp", "gs://bazel-encrypted-secrets/github-token.enc", "github-token.enc"])
+    return subprocess.check_output(["gcloud", "kms", "decrypt", "--location", "global", "--keyring", "buildkite",
+                                    "--key", "github-token", "--ciphertext-file", "github-token.enc",
+                                    "--plaintext-file", "-"]).decode("utf-8").strip()
+
+
+def owner_repository_from_url(git_repository):
+    m = re.search(r"/([^/]+)/([^/]+)\.git$", repository_url)
+    owner = m.group(1)
+    repository = m.group(2)
+    return (owner, repository)
+
+
+def update_pull_request_status(git_repository, commit, state, invocation_id, description, context):
+    gh = login(token=fetch_github_token())
+    owner, repo = owner_repository_from_url(git_repository)
+    repo = gh.repository(owner=owner, repository=repo)
+    results_url = "https://source.cloud.google.com/results/invocations/" + invocation_id
+    repo.create_status(sha=commit, state=state, target_url=results_url, description=description, context=context)
+
+
+def update_pull_request_build_status(git_repository, commit, state, invocation_id):
+    description = ""
+    if state == "pending":
+        description = "Running ..."
+    elif state == "failure":
+        description = "Failed"
+    elif state == "success":
+        description = "Succeeded"
+    update_pull_request_status(git_repository, commit, state, invocation_id, description, "bazel build")
+
+
+def update_pull_request_test_status(repository_url, commit, state, invocation_id, failed, timed_out,
+                                    flaky):
+    description = ""
+    if failed == 0 and timed_out == 0 and flaky == 0:
+        description = "All Tests Passed"
+    else:
+        description = "{0} tests failed, {1} tests timed out, {2} tests are flaky".format(failed, timed_out, flaky)
+    update_pull_request_status(repository_url, commit, state, invocation_id, description, "bazel test")
+
+
+def is_pull_request():
+    third_party_repo = pos.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
+    return len(third_party_repo) > 0
+
+
+def bes_invocation_id(bep_file):
+    targets = []
+    raw_data = ""
+    with open(bep_file) as f:
+        raw_data = f.read()
+    decoder = json.JSONDecoder()
+
+    pos = 0
+    while pos < len(raw_data):
+        bep_obj, size = decoder.raw_decode(raw_data[pos:])
+        if "started" in bep_obj:
+            return bep_obj["started"]["uuid"]
+        pos += size + 1
+    return None
 
 
 def show_image(url, alt):
@@ -449,17 +542,22 @@ def remote_enabled(flags):
                 return True
     return False
 
-def execute_bazel_build(bazel_binary, platform, flags, targets):
+
+def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     if not targets:
         return
     print_expanded_group("Build")
     num_jobs = str(multiprocessing.cpu_count())
     common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
-                    "--jobs=" + num_jobs]
+                    "--jobs=" + num_jobs], "--build_event_json_file=" + bep_file,
+                    "--experimental_build_event_json_file_path_conversion=false"]
     caching_flags = []
     if not remote_enabled(flags):
         caching_flags = remote_caching_flags(platform)
-    execute_command([bazel_binary, "build"] + common_flags + caching_flags + flags + targets)
+    try:
+        execute_command([bazel_binary, "build"] + common_flags + caching_flags + flags + targets)
+    except subprocess.CalledProcessError as e:
+        raise BazelBuildFailedException("bazel build failed with exit code {}".format(e.returncode))
 
 
 def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
@@ -865,6 +963,7 @@ def main(argv=None):
         eprint(str(e))
         return 1
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
