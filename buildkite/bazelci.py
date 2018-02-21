@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+#
 # Copyright 2018 The Bazel Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,26 +14,55 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
 import argparse
 import base64
 import codecs
-from datetime import datetime
+import functools
 import hashlib
 import json
-import os.path
 import multiprocessing
+import os.path
 import random
 import re
+from shutil import copyfile
 import shutil
+import stat
 import subprocess
 import sys
-import stat
 import tempfile
 import urllib.request
-from shutil import copyfile
 from urllib.parse import urlparse
-random.seed(datetime.now())
+
+# Initialize the random number generator.
+random.seed()
+
+class BuildkiteException(Exception):
+    """
+    Raised whenever something goes wrong and we should exit with an error.
+    """
+    pass
+
+
+class BinaryUploadRaceException(Exception):
+    """
+    Raised when try_publish_binaries wasn't able to publish a set of binaries,
+    because the generation of the current file didn't match the expected value.
+    """
+    pass
+
+
+class BazelTestFailedException(Exception):
+    """
+    Raised when a Bazel test fails.
+    """
+    pass
+
+
+def eprint(*args, **kwargs):
+    """
+    Print to stderr and flush (just in case).
+    """
+    print(*args, flush=True, file=sys.stderr, **kwargs)
 
 
 def downstream_projects():
@@ -181,14 +212,6 @@ def bazelcipy_url():
     return "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py"
 
 
-def eprint(*args, **kwargs):
-    """
-    Print to stderr and exit the process.
-    """
-    print(*args, file=sys.stderr, **kwargs)
-    exit(1)
-
-
 def platforms_info():
     """
     Returns a map containing all supported platform names as keys, with the
@@ -257,16 +280,16 @@ def fetch_configs(http_url):
 
 
 def print_collapsed_group(name):
-    print("\n--- {0}\n".format(name))
+    eprint("\n--- {0}\n".format(name))
 
 
 def print_expanded_group(name):
-    print("\n+++ {0}\n".format(name))
+    eprint("\n+++ {0}\n".format(name))
 
 
 def execute_commands(config, platform, git_repository, use_but, save_but,
                      build_only, test_only):
-    exit_code = -1
+    fail_pipeline = False
     tmpdir = None
     bazel_binary = "bazel"
     try:
@@ -287,23 +310,29 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                 upload_bazel_binary()
         if not build_only:
             bep_file = os.path.join(tmpdir, "build_event_json_file.json")
-            exit_code = execute_bazel_test(bazel_binary, platform, config.get("test_flags", []),
-                                           config.get("test_targets", None), bep_file)
+            try:
+                execute_bazel_test(bazel_binary, platform, config.get("test_flags", []),
+                                   config.get("test_targets", None), bep_file)
+            except BazelTestFailedException:
+                fail_pipeline = True
             print_test_summary(bep_file)
-            if has_flaky_tests(bep_file) and exit_code == 0:
-                # Fail the pipeline if there were any flaky tests.
-                exit_code = 1
+
+            # Fail the pipeline if there were any flaky tests.
+            if has_flaky_tests(bep_file):
+                fail_pipeline = True
+
             upload_test_logs(bep_file, tmpdir)
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
         cleanup(platform)
-        if exit_code > -1:
-            exit(exit_code)
+
+    if fail_pipeline:
+        raise BuildkiteException("At least one test failed or was flaky.")
 
 
 def show_image(url, alt):
-    print("\033]1338;url='\"{0}\"';alt='\"{1}\"'\a\n".format(url, alt))
+    eprint("\033]1338;url='\"{0}\"';alt='\"{1}\"'\a\n".format(url, alt))
 
 
 def print_test_summary(bep_file):
@@ -311,18 +340,18 @@ def print_test_summary(bep_file):
     if failed:
         print_expanded_group("Failed Tests")
         for label, _ in failed:
-            print(label)
+            eprint(label)
     timed_out = test_logs_for_status(bep_file, status="TIMEOUT")
     if timed_out:
         print_expanded_group("Timed out Tests")
         for label, _ in timed_out:
-            print(label)
+            eprint(label)
     flaky = test_logs_for_status(bep_file, status="FLAKY")
     if flaky:
         print_expanded_group("Flaky Tests")
         show_image(flaky_test_meme_url(), "Flaky Tests")
         for label, _ in flaky:
-            print(label)
+            eprint(label)
 
 
 def has_flaky_tests(bep_file):
@@ -450,7 +479,10 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
     caching_flags = []
     if not remote_enabled(flags):
         caching_flags = remote_caching_flags(platform)
-    return execute_command([bazel_binary, "test"] + common_flags + caching_flags + flags + targets, fail_if_nonzero=False)
+    try:
+        execute_command([bazel_binary, "test"] + common_flags + caching_flags + flags + targets)
+    except subprocess.CalledProcessError as e:
+        raise BazelTestFailedException("bazel test failed with exit code {}".format(e.returncode))
 
 
 def upload_test_logs(bep_file, tmpdir):
@@ -487,7 +519,8 @@ def test_logs_to_upload(bep_file, tmpdir):
                 new_paths.append(new_path)
                 attempt = attempt + 1
             except IOError as err:
-                print(err)
+                # Log error and ignore.
+                eprint(err)
     return new_paths
 
 
@@ -526,9 +559,8 @@ def test_logs_for_status(bep_file, status):
 
 
 def execute_command(args, shell=False, fail_if_nonzero=True):
-    print(" ".join(args))
-    res = subprocess.run(args, shell=shell, check=fail_if_nonzero)
-    return res.returncode
+    eprint(" ".join(args))
+    return subprocess.run(args, shell=shell, check=fail_if_nonzero).returncode
 
 
 def print_project_pipeline(platform_configs, project_name, http_config,
@@ -650,10 +682,9 @@ def publish_bazel_binaries_step():
 
 def print_bazel_postsubmit_pipeline(configs, http_config):
     if not configs:
-        eprint("Bazel postsubmit pipeline configuration is empty.")
+        raise BuildkiteException("Bazel postsubmit pipeline configuration is empty.")
     if set(configs.keys()) != set(supported_platforms()):
-        eprint("Bazel postsubmit pipeline needs to build Bazel on all " +
-               "supported platforms.")
+        raise BuildkiteException("Bazel postsubmit pipeline needs to build Bazel on all supported platforms.")
 
     pipeline_steps = []
     for platform, config in configs.items():
@@ -696,12 +727,12 @@ def latest_generation_and_build_number():
             ["gsutil", "stat", bazelci_builds_metadata_url()])
         match = re.search("Generation:[ ]*([0-9]+)", output.decode("utf-8"))
         if not match:
-            eprint("Couldn't parse generation. gsutil output format changed?")
+            raise BuildkiteException("Couldn't parse generation. gsutil output format changed?")
         generation = match.group(1)
 
         match = re.search("Hash \(md5\):[ ]*([^\s]+)", output.decode("utf-8"))
         if not match:
-            eprint("Couldn't parse md5 hash. gsutil output format changed?")
+            raise BuildkiteException("Couldn't parse md5 hash. gsutil output format changed?")
         expected_md5hash = base64.b64decode(match.group(1))
 
         output = subprocess.check_output(
@@ -745,10 +776,16 @@ def try_publish_binaries(build_number, expected_generation):
         info_file = os.path.join(tmpdir, "info.json")
         with open(info_file, mode="w", encoding="utf-8") as fp:
             json.dump(info, fp)
-        exitcode = execute_command(["gsutil", "-h", "x-goog-if-generation-match:" + expected_generation,
-                                    "-h", "Content-Type:application/json", "cp", "-a",
-                                    "public-read", info_file, bazelci_builds_metadata_url()])
-        return exitcode == 0
+
+        try:
+            execute_command([
+                "gsutil",
+                "-h", "x-goog-if-generation-match:" + expected_generation,
+                "-h", "Content-Type:application/json",
+                "cp", "-a", "public-read",
+                info_file, bazelci_builds_metadata_url()])
+        except subprocess.CalledProcessError:
+            raise BinaryUploadRaceException()
     finally:
         shutil.rmtree(tmpdir)
 
@@ -757,31 +794,41 @@ def publish_binaries():
     """
     Publish Bazel binaries to GCS.
     """
-    attempt = 0
-    while attempt < 5:
+    current_build_number = os.environ.get("BUILDKITE_BUILD_NUMBER", None)
+    if not current_build_number:
+        raise BuildkiteException("Not running inside Buildkite")
+    current_build_number = int(current_build_number)
+
+    for _ in range(5):
         latest_generation, latest_build_number = latest_generation_and_build_number()
 
-        current_build_number = os.environ.get("BUILDKITE_BUILD_NUMBER", None)
-        if not current_build_number:
-            eprint("Not running inside Buildkite")
-        current_build_number = int(current_build_number)
         if current_build_number <= latest_build_number:
-            print(("Current build '{0}' is not newer than latest published '{1}'. " +
-                   "Skipping publishing of binaries.").format(current_build_number,
-                                                              latest_build_number))
+            eprint(("Current build '{0}' is not newer than latest published '{1}'. " +
+                    "Skipping publishing of binaries.").format(current_build_number,
+                                                               latest_build_number))
             break
 
-        if try_publish_binaries(current_build_number, latest_generation):
-            print("Successfully updated '{0}' to binaries from build {1}."
-                  .format(bazelci_builds_metadata_url(), current_build_number))
-            break
-        attempt = attempt + 1
+        try:
+            try_publish_binaries(current_build_number, latest_generation)
+        except BinaryUploadRaceException:
+            # Retry.
+            continue
+
+        eprint("Successfully updated '{0}' to binaries from build {1}."
+               .format(bazelci_builds_metadata_url(), current_build_number))
+        break
+    else:
+        raise BuildkiteException("Could not publish binaries, ran out of attempts.")
 
 
-if __name__ == "__main__":
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
     parser = argparse.ArgumentParser(description='Bazel Continuous Integration Script')
 
     subparsers = parser.add_subparsers(dest="subparsers_name")
+
     bazel_postsubmit_pipeline = subparsers.add_parser("bazel_postsubmit_pipeline")
     bazel_postsubmit_pipeline.add_argument("--http_config", type=str)
     bazel_postsubmit_pipeline.add_argument("--git_repository", type=str)
@@ -805,20 +852,28 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.subparsers_name == "bazel_postsubmit_pipeline":
-        configs = fetch_configs(args.http_config)
-        print_bazel_postsubmit_pipeline(configs.get("platforms", None),
-                                        args.http_config)
-    elif args.subparsers_name == "project_pipeline":
-        configs = fetch_configs(args.http_config)
-        print_project_pipeline(configs.get("platforms", None), args.project_name,
-                               args.http_config, args.git_repository, args.use_but)
-    elif args.subparsers_name == "runner":
-        configs = fetch_configs(args.http_config)
-        execute_commands(configs.get("platforms", None)[args.platform],
-                         args.platform, args.git_repository, args.use_but, args.save_but,
-                         args.build_only, args.test_only)
-    elif args.subparsers_name == "publish_binaries":
-        publish_binaries()
-    else:
-        parser.print_help()
+    try:
+        if args.subparsers_name == "bazel_postsubmit_pipeline":
+            configs = fetch_configs(args.http_config)
+            print_bazel_postsubmit_pipeline(configs.get("platforms", None), args.http_config)
+        elif args.subparsers_name == "project_pipeline":
+            configs = fetch_configs(args.http_config)
+            print_project_pipeline(configs.get("platforms", None), args.project_name,
+                                   args.http_config, args.git_repository, args.use_but)
+        elif args.subparsers_name == "runner":
+            configs = fetch_configs(args.http_config)
+            execute_commands(configs.get("platforms", None)[args.platform],
+                             args.platform, args.git_repository, args.use_but, args.save_but,
+                             args.build_only, args.test_only)
+        elif args.subparsers_name == "publish_binaries":
+            publish_binaries()
+        else:
+            parser.print_help()
+            return 2
+    except BuildkiteException as e:
+        eprint(str(e))
+        return 1
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
