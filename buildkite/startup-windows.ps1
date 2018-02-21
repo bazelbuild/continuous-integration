@@ -8,7 +8,7 @@ if ((Get-Disk -Number 1).PartitionStyle -ne "RAW") {
 }
 Initialize-Disk -Number 1
 New-Partition -DiskNumber 1 -UseMaximumSize -DriveLetter D
-Format-Volume -DriveLetter D
+Format-Volume -DriveLetter D -ShortFileNameSupport $true
 
 Write-Host "Creating temporary folder on local SSD..."
 New-Item "D:\temp" -ItemType "directory"
