@@ -632,7 +632,7 @@ def concurrent_jobs():
 def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     print_expanded_group(":bazel: Build")
     common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
-                    "--jobs=" + concurrent_jobs, "--build_event_json_file=" + bep_file,
+                    "--jobs=" + concurrent_jobs(), "--build_event_json_file=" + bep_file,
                     "--experimental_build_event_json_file_path_conversion=false"]
     caching_flags = []
     if not remote_enabled(flags):
