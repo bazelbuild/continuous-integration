@@ -625,11 +625,14 @@ def remote_enabled(flags):
     return False
 
 
+def concurrent_jobs():
+    return str(multiprocessing.cpu_count() * 2)
+
+
 def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     print_expanded_group(":bazel: Build")
-    num_jobs = str(multiprocessing.cpu_count())
     common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
-                    "--jobs=" + num_jobs, "--build_event_json_file=" + bep_file,
+                    "--jobs=" + concurrent_jobs, "--build_event_json_file=" + bep_file,
                     "--experimental_build_event_json_file_path_conversion=false"]
     caching_flags = []
     if not remote_enabled(flags):
@@ -644,10 +647,9 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
 
 def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
     print_expanded_group(":bazel: Test")
-    num_jobs = str(multiprocessing.cpu_count())
     common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
                     "--flaky_test_attempts=3", "--build_tests_only",
-                    "--jobs=" + num_jobs, "--local_test_jobs=" + num_jobs,
+                    "--jobs=" + concurrent_jobs(), "--local_test_jobs=" + concurrent_jobs(),
                     "--build_event_json_file=" + bep_file,
                     "--experimental_build_event_json_file_path_conversion=false"]
     caching_flags = []
