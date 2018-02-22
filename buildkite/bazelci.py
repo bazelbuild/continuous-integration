@@ -338,7 +338,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                     update_pull_request_build_status(
                         platform, git_repository, commit, "failure", invocation_id)
                 fail_pipeline = True
-        if not fail_pipeline and not build_only:
+        if (not fail_pipeline) and (not build_only):
             test_bep_file = os.path.join(tmpdir, "test_bep.json")
             try:
                 if is_pull_request():
