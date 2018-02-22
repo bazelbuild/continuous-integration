@@ -459,12 +459,21 @@ def update_pull_request_test_status(platform, git_repository, commit, state, inv
     if state == "pending":
         description = "Testing ..."
     elif state == "failure":
-        if num_failed > 0:
+        if num_failed == 1:
+            description = description + "{0} test failed, ".format(num_failed)
+        elif num_failed > 0:
             description = description + "{0} tests failed, ".format(num_failed)
-        if num_timed_out > 0:
+
+        if num_timed_out == 1:
+            description = description + "{0} test timed out, ".format(num_timed_out)
+        elif num_timed_out > 0:
             description = description + "{0} tests timed out, ".format(num_timed_out)
-        if num_flaky > 0:
+
+        if num_flaky == 1:
+            description = description + "{0} test is flaky, ".format(num_flaky)
+        elif num_flaky > 0:
             description = description + "{0} tests are flaky, ".format(num_flaky)
+
         if len(description) > 0:
             description = description[:-2]
         else:
