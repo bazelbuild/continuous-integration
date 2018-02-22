@@ -293,7 +293,7 @@ def fetch_configs(http_url):
     """
     if http_url is None:
         with open(".bazelci/presubmit.yml", "r") as fd:
-            return yml.load(fd)
+            return yaml.load(fd)
     with urllib.request.urlopen(http_url) as resp:
         reader = codecs.getreader("utf-8")
         return yaml.load(reader(resp))
