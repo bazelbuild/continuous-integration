@@ -575,12 +575,17 @@ def execute_bazel_run(bazel_binary, targets):
 
 
 def remote_caching_flags(platform):
-    common_flags = ["--bes_backend=buildeventservice.googleapis.com", "--bes_best_effort=false",
-                    "--bes_timeout=10s", "--tls_enabled", "--project_id=bazel-public",
-                    "--remote_instance_name=projects/bazel-public",
-                    "--experimental_remote_spawn_cache",
-                    "--remote_timeout=10", "--remote_cache=remotebuildexecution.googleapis.com",
-                    "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}"]
+    if is_pull_request():
+        common_flags = ["--bes_backend=buildeventservice.googleapis.com", "--bes_best_effort=false",
+                        "--bes_timeout=10s", "--tls_enabled", "--project_id=bazel-public",
+                        "--remote_instance_name=projects/bazel-public",
+                        "--experimental_remote_spawn_cache",
+                        "--remote_timeout=10", "--remote_cache=remotebuildexecution.googleapis.com",
+                        "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}"]
+    else:
+        common_flags = ["--remote_timeout=10", "--experimental_remote_spawn_cache",
+                        "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}",
+                        "--remote_http_cache=https://storage.googleapis.com/bazel-buildkite-cache"]
     if platform in ["ubuntu1404", "ubuntu1604"]:
         return common_flags + ["--google_default_credentials"]
     elif platform == "macos":
