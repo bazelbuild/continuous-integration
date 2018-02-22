@@ -16,4 +16,5 @@ platforms:
     test_targets:
     - "--"
     - "..."
+    # See https://github.com/bazelbuild/rules_closure/issues/247
     - "-//closure/testing/test:noto_fonts_render_as_expected"
