@@ -158,6 +158,10 @@ def downstream_projects():
             "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
             "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_jsonnet-postsubmit.yml"
         },
+        "rules_kotlin": {
+            "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_kotlin-postsubmit.yml"
+        },
         "rules_k8s": {
             "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
             "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_k8s-postsubmit.yml"
