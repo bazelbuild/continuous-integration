@@ -58,7 +58,14 @@
         "//third_party/ijar/...",
         "//tools/android/...",
         "-//src/test/shell/bazel/android:android_ndk_integration_test",
-        "-//src/test/shell/bazel:bazel_determinism_test"
+        "-//src/test/shell/bazel:bazel_determinism_test",
+        "-//src/test/shell/bazel:bazel_java_test",
+        "-//src/test/shell/bazel:bazel_bootstrap_distfile_test",
+        "-//src/test/shell/bazel:remote_execution_test",
+        "-//src/test/shell/bazel:skylark_git_repository_test",
+        "-//src/test/shell/bazel:external_path_test",
+        "-//src/test/py/bazel:runfiles_test",
+        "-//src/test/shell/bazel:git_repository_test"
       ]
     },
     "windows": {
