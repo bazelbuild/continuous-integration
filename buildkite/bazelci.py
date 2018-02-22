@@ -31,6 +31,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.request
+import yaml
 from github3 import login
 from urllib.request import url2pathname
 from urllib.parse import urlparse
@@ -283,15 +284,18 @@ def supported_platforms():
 def fetch_configs(http_url):
     """
     If specified fetches the build configuration from http_url, else tries to
-    read it from .bazelci/config.json.
+    read it from .bazelci/presubmit.yml.
     Returns the json configuration as a python data structure.
     """
     if http_url is None:
-        with open(".bazelci/config.json", "r") as fd:
-            return json.load(fd)
+        with open(".bazelci/presubmit.yml", "r") as fd:
+            return yml.load(fd)
     with urllib.request.urlopen(http_url) as resp:
         reader = codecs.getreader("utf-8")
-        return json.load(reader(resp))
+        if http_url.endswith("yml")
+            return yaml.load(reader(resp))
+        else:
+            return json.load(reader(resp))
 
 
 def print_collapsed_group(name):
