@@ -552,9 +552,8 @@ def clone_git_repository(git_repository, platform):
 
 
 def cleanup():
-    print_collapsed_group("Cleanup")
+    print_collapsed_group(":wastebasket: Cleanup")
     if os.path.exists("WORKSPACE"):
-        execute_command(["bazel", "clean", "--expunge"])
 
 
 def execute_shell_commands(commands):
