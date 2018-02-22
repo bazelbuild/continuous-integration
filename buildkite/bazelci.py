@@ -303,6 +303,10 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
     tmpdir = None
     bazel_binary = "bazel"
     commit = os.getenv("BUILDKITE_COMMIT")
+    build_only = build_only or "test_targets" not in config
+    test_only = test_only or "build_targets" not in config
+    if build_only and test_only:
+        raise BuildkiteException("build_only and test_only cannot be true at the same time")
     try:
         if git_repository:
             clone_git_repository(git_repository, platform)
@@ -605,8 +609,6 @@ def remote_enabled(flags):
 
 
 def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
-    if not targets:
-        return
     print_expanded_group(":bazel: Build")
     num_jobs = str(multiprocessing.cpu_count())
     common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
@@ -624,8 +626,6 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
 
 
 def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
-    if not targets:
-        return
     print_expanded_group(":bazel: Test")
     num_jobs = str(multiprocessing.cpu_count())
     common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
