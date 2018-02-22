@@ -61,7 +61,7 @@ class BazelTestFailedException(Exception):
     pass
 
 
-class BazelTestFailedException(Exception):
+class BazelBuildFailedException(Exception):
     """
     Raised when a Bazel build fails.
     """
