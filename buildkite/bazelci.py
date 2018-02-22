@@ -560,7 +560,7 @@ def cleanup():
 def execute_shell_commands(commands):
     if not commands:
         return
-    print_collapsed_group("Setup (Shell Commands)")
+    print_collapsed_group(":bash: Setup (Shell Commands)")
     shell_command = "\n".join(commands)
     execute_command([shell_command], shell=True)
 
@@ -693,7 +693,7 @@ def test_label_to_path(tmpdir, label, attempt):
 def test_logs_for_status(bep_file, status):
     targets = []
     raw_data = ""
-    with open(bep_file) as f:
+    with open(bep_file, encoding="utf-8") as f:
         raw_data = f.read()
     decoder = json.JSONDecoder()
 
