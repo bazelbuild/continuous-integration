@@ -321,7 +321,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
         cleanup()
         tmpdir = tempfile.mkdtemp()
         if use_but:
-            print_collapsed_group("Downloading Bazel under test")
+            print_collapsed_group(":gcloud: Downloading Bazel Under Test")
             bazel_binary = download_bazel_binary(tmpdir, platform)
         print_bazel_version_info(bazel_binary)
         execute_shell_commands(config.get("shell_commands", None))
@@ -666,8 +666,8 @@ def upload_test_logs(bep_file, tmpdir):
         try:
             os.chdir(tmpdir)
             print_collapsed_group(":gcloud: Uploading Test Logs")
-            execute_command(
-                ["buildkite-agent", "artifact", "upload", "*/**/*.log"])
+            test_logs = sorted(test_logs)
+            execute_command(["buildkite-agent", "artifact", "upload", ";".join(test_logs)])
         finally:
             os.chdir(cwd)
 
