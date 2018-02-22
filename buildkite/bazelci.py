@@ -292,7 +292,7 @@ def fetch_configs(http_url):
             return yml.load(fd)
     with urllib.request.urlopen(http_url) as resp:
         reader = codecs.getreader("utf-8")
-        if http_url.endswith("yml")
+        if http_url.endswith("yml"):
             return yaml.load(reader(resp))
         else:
             return json.load(reader(resp))
