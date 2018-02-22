@@ -501,7 +501,7 @@ def has_flaky_tests(bep_file):
 
 
 def print_bazel_version_info(bazel_binary):
-    print_collapsed_group("Bazel Info")
+    print_collapsed_group(":information_source: Bazel Info")
     execute_command([bazel_binary, "version"])
     execute_command([bazel_binary, "info"])
 
