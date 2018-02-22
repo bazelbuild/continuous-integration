@@ -433,12 +433,12 @@ def update_pull_request_status(git_repository, commit, state, details_url, descr
 def update_pull_request_verification_status(git_repository, commit, state):
     description = ""
     if state == "pending":
-        description = "A project member must verify this pull request."
+        description = "Waiting for a project member to verify this pull request."
     elif state == "success":
         description = "Verified"
     build_url = os.getenv("BUILDKITE_BUILD_URL")
     update_pull_request_status(git_repository, commit, state, build_url, description,
-                               "Untrusted Code Verification")
+                               "Verify Pull Request")
 
 
 def update_pull_request_build_status(platform, git_repository, commit, state, invocation_id):
@@ -739,7 +739,7 @@ def execute_command(args, shell=False, fail_if_nonzero=True):
 
 def untrusted_code_verification_step():
     return """
-  - block: \"Untrusted Code Verification\"
+  - block: \"Verify Pull Request\"
     prompt: \"Did you review this pull request for malicious code?\""""
 
 
