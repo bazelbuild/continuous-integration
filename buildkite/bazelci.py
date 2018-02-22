@@ -137,6 +137,10 @@ def downstream_projects():
             "git_repository": "https://github.com/bazelbuild/rules_d.git",
             "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_d-postsubmit.json"
         },
+        "rules_docker": {
+            "git_repository": "https://github.com/bazelbuild/rules_docker.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_docker-postsubmit.json"
+        },
         "rules_go": {
             "git_repository": "https://github.com/bazelbuild/rules_go.git",
             "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_go-postsubmit.json"
