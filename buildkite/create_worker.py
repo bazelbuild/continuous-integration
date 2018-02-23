@@ -26,29 +26,31 @@ LOCATION = 'europe-west1-d'
 
 MACHINES = {
     'buildkite-ubuntu1404': {
-        'count': 4,
         'startup_script': 'startup-ubuntu.sh',
         'machine_type': 'n1-standard-32',
         'local_ssd': 'interface=nvme',
     },
     'buildkite-ubuntu1604': {
-        'count': 4,
         'startup_script': 'startup-ubuntu.sh',
         'machine_type': 'n1-standard-32',
         'local_ssd': 'interface=nvme',
     },
     'buildkite-windows': {
-        'count': 4,
         'startup_script': 'startup-windows.ps1',
         'machine_type': 'n1-standard-32',
         'local_ssd': 'interface=scsi',
     },
     '%s-ubuntu1604' % getpass.getuser(): {
         'image': 'buildkite-ubuntu1604',
-        'count': 4,
         'startup_script': 'startup-ubuntu.sh',
         'machine_type': 'n1-standard-32',
         'local_ssd': 'interface=nvme',
+    },
+    '%s-windows' % getpass.getuser(): {
+        'image': 'buildkite-windows',
+        'startup_script': 'startup-windows.ps1',
+        'machine_type': 'n1-standard-32',
+        'local_ssd': 'interface=scsi',
     }
 }
 
@@ -115,28 +117,18 @@ def main(argv=None):
         argv = sys.argv[1:]
 
     # Put VM creation instructions into the work queue.
-    worker_count = 0
     for vm, params in MACHINES.items():
         if argv and vm not in argv:
             continue
-        worker_count += params['count']
-        if params['count'] > 1:
-            for idx in range(1, params['count'] + 1):
-                WORK_QUEUE.put({
-                    'vm': vm,
-                    'idx': idx,
-                    'params': params
-                })
-        else:
-            WORK_QUEUE.put({
-                'vm': vm,
-                'idx': 0,
-                'params': params
-            })
+        WORK_QUEUE.put({
+            'vm': vm,
+            'idx': 0,
+            'params': params
+        })
 
     # Spawn worker threads that will create the VMs.
     threads = []
-    for _ in range(worker_count):
+    for _ in range(WORK_QUEUE.qsize()):
         t = threading.Thread(target=worker)
         t.start()
         threads.append(t)
@@ -145,7 +137,7 @@ def main(argv=None):
     WORK_QUEUE.join()
 
     # Signal worker threads to exit.
-    for _ in range(worker_count):
+    for _ in range(len(threads)):
         WORK_QUEUE.put(None)
 
     # Wait for worker threads to exit.
