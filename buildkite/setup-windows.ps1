@@ -49,15 +49,22 @@ Write-Host "Enabling long paths..."
 # Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine -Force
 
 ## Enable Microsoft Updates.
+Write-Host "Enabling PowerShell Gallery provider..."
+Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+
+## Enable Microsoft Updates.
 # Write-Host "Installing all available Windows Updates (this can take ~30 minutes)..."
-# Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-# Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
 # Install-Module PSWindowsUpdate
 # Get-Command -Module PSWindowsUpdate
 # Get-WindowsUpdate -Install -AcceptAll -AutoReboot
 # This fails with: https://gist.github.com/philwo/010bb5dffc62eccb391cd916c3bee2be
 # Add-WUServiceManager -ServiceID 7971f918-a847-4430-9279-4a52d1efe18d
 # Get-WindowsUpdate -Install -MicrosoftUpdate -AcceptAll -AutoReboot
+
+## Install support for managing NTFS ACLs in PowerShell.
+Write-Host "Installing NTFSSecurity module..."
+Install-Module NTFSSecurity
 
 ## Install Chocolatey
 Write-Host "Installing Chocolatey..."
@@ -141,7 +148,11 @@ Write-Host "Updating Python packages..."
     protobuf `
     pyreadline `
     six `
-    wheel
+    wheel `
+    requests `
+    pyyaml
+& "C:\Python3\Scripts\pip.exe" install --upgrade --pre `
+    github3.py
 
 ## Get the latest release version number of Bazel.
 Write-Host "Grabbing latest Bazel version number from GitHub..."
@@ -201,7 +212,18 @@ Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-27"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
 
+\## Create an unprivileged user that we'll run the Buildkite agent as.
+Write-Host "Creating 'buildkite' user..."
+$buildkite_username = "buildkite"
+# The password used here is not relevant for security, as the server is behind a
+# firewall blocking all incoming access and locally we run the CI jobs as that
+# user anyway.
+$buildkite_password = ConvertTo-SecureString "b@1ldk1te" -AsPlainText -Force
+New-LocalUser -Name $buildkite_username -Password $buildkite_password -UserMayNotChangePassword
+$buildkite_credential = New-Object System.Management.Automation.PSCredential $buildkite_username, $buildkite_password
+
 ## Download and install the Buildkite agent.
+Write-Host "Downloading Buildkite agent..."
 $buildkite_agent_version = "3.0-beta.39"
 $buildkite_agent_url = "https://github.com/buildkite/agent/releases/download/v${buildkite_agent_version}/buildkite-agent-windows-amd64-${buildkite_agent_version}.zip"
 $buildkite_agent_zip = "c:\temp\buildkite-agent.zip"
@@ -215,24 +237,87 @@ New-Item "${buildkite_agent_root}\plugins" -ItemType "directory" -Force
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${buildkite_agent_root}"
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
+## Remove empty folders (";;") from PATH.
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine").replace(";;", ";")
+[Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
+
+## Create a service wrapper script for the Buildkite agent.
+Write-Host "Creating Buildkite agent environment hook..."
+$buildkite_environment_hook = @"
+SET BUILDKITE_ARTIFACT_UPLOAD_DESTINATION=gs://bazel-buildkite-artifacts/`$BUILDKITE_JOB_ID
+SET BUILDKITE_GS_ACL=publicRead
+SET TEMP=D:\temp
+SET TMP=D:\temp
+SET PATH=${env:PATH}
+"@
+[System.IO.File]::WriteAllLines("${buildkite_agent_root}\hooks\environment.bat", $buildkite_environment_hook)
+
+Write-Host "Creating Buildkite agent wrapper script..."
+$buildkite_service = @"
+Write-Host "Buildkite agent wrapper starting..."
+`$ErrorActionPreference = "Stop"
+`$ConfirmPreference = "None"
+
+`$buildkite_agent_root = "${buildkite_agent_root}"
+`$buildkite_username = "${buildkite_username}"
+`$buildkite_password = ConvertTo-SecureString "b@1ldk1te" -AsPlainText -Force
+`$buildkite_credential = New-Object System.Management.Automation.PSCredential ``
+    `${buildkite_username}, `${buildkite_password}
+
+function Bazel-Clean {
+  Write-Host "Terminating all processes belonging to the 'buildkite' user..."
+  & taskkill /FI "username eq `${buildkite_username}" /T /F
+  Start-Sleep -Seconds 1
+
+  Write-Host "Recreating fresh temporary directory D:\temp..."
+  Remove-Item -Recurse -Force "D:\temp"
+  New-Item -Type Directory "D:\temp"
+  Add-NTFSAccess -Path "D:\temp" -Account BUILTIN\Users -AccessRights Write
+}
+
+Bazel-Clean
+
+Write-Host "Deleting home directory of the 'buildkite' user..."
+Get-CimInstance Win32_UserProfile | Where LocalPath -EQ "C:\Users\`${buildkite_username}" | Remove-CimInstance
+if ( Test-Path "C:\Users\`${buildkite_username}" ) {
+  Throw "The home directory of the buildkite-agent user could not be deleted."
+}
+
+Write-Host "Starting Buildkite agent as user `${buildkite_username}..."
+Start-Process -FilePath "buildkite-agent.exe" -ArgumentList "start" ``
+    -Credential `${buildkite_credential} -WorkingDirectory "C:\buildkite" ``
+    -RedirectStandardError "buildkite.err.log" ``
+    -RedirectStandardOutput "buildkite.out.log" ``
+    -Wait
+
+Bazel-Clean
+
+Write-Host "buildkite-agent has exited."
+"@
+[System.IO.File]::WriteAllLines("${buildkite_agent_root}\buildkite-service.ps1", $buildkite_service)
+
+## Allow the Buildkite agent to store SSH host keys in this folder.
+Write-Host "Creating C:\buildkite\.ssh folder..."
+New-Item "c:\buildkite\.ssh" -ItemType "directory"
+Add-NTFSAccess -Path "c:\buildkite\.ssh" -Account BUILTIN\Users -AccessRights Write
+
 ## Create a service for the Buildkite agent.
 # Some hints: https://gist.github.com/fdstevex/52da0d7e5892fe2965eae105b8cf3883
 #             https://github.com/buildkite/agent/issues/329
 #             https://github.com/kohsuke/winsw
-Write-Host "Creating Buildkite Agent service..."
+Write-Host "Creating Buildkite agent service..."
 $winsw_url = "https://github.com/kohsuke/winsw/releases/download/winsw-v2.1.2/WinSW.NET4.exe"
 $winsw = "${buildkite_agent_root}\buildkite-service.exe"
 (New-Object Net.WebClient).DownloadFile($winsw_url, $winsw)
-$winsw_config=@"
+$winsw_config = @"
 <configuration>
   <id>buildkite-service</id>
-  <name>Buildkite Agent</name>
+  <name>Buildkite agent</name>
   <description>The Buildkite CI agent.</description>
-  <executable>%BASE%\buildkite-agent.exe</executable>
-  <arguments>start</arguments>
-  <onfailure action="restart" delay="10 sec"/>
+  <executable>C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe</executable>
+  <executable>%BASE%\buildkite-service.ps1</executable>
   <startmode>Manual</startmode>
-  <logmode>roll</logmode>
+  <onfailure action="restart" delay="10 sec"/>
 </configuration>
 "@
 [System.IO.File]::WriteAllLines("${buildkite_agent_root}\buildkite-service.xml", $winsw_config)
