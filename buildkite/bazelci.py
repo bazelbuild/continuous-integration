@@ -83,24 +83,20 @@ def downstream_projects():
             "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml"
         },
         "BUILD_file_generator": {
-            "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/BUILD_file_generator-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git"
         },
         "bazel-toolchains": {
-            "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-toolchains-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git"
         },
         "buildtools": {
-            "git_repository": "https://github.com/bazelbuild/buildtools.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/buildtools-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/buildtools.git"
         },
         "CLion Plugin": {
             "git_repository": "https://github.com/bazelbuild/intellij.git",
             "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/clion-postsubmit.yml"
         },
         "Eclipse Plugin": {
-            "git_repository": "https://github.com/bazelbuild/eclipse.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/eclipse-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/eclipse.git"
         },
         "Gerrit": {
             "git_repository": "https://gerrit.googlesource.com/gerrit.git",
@@ -115,8 +111,7 @@ def downstream_projects():
             "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/intellij-postsubmit.yml"
         },
         "migration-tooling": {
-            "git_repository": "https://github.com/bazelbuild/migration-tooling.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/migration-tooling-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/migration-tooling.git"
         },
         "protobuf": {
             "git_repository": "https://github.com/google/protobuf.git",
@@ -127,72 +122,55 @@ def downstream_projects():
             "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/re2-postsubmit.yml"
         },
         "rules_appengine": {
-            "git_repository": "https://github.com/bazelbuild/rules_appengine.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_appengine-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/rules_appengine.git"
         },
         "rules_closure": {
-            "git_repository": "https://github.com/bazelbuild/rules_closure.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_closure-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/rules_closure.git"
         },
         "rules_d": {
-            "git_repository": "https://github.com/bazelbuild/rules_d.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_d-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/rules_d.git"
         },
         "rules_docker": {
-            "git_repository": "https://github.com/bazelbuild/rules_docker.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_docker-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/rules_docker.git"
         },
         "rules_go": {
-            "git_repository": "https://github.com/bazelbuild/rules_go.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_go-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/rules_go.git"
         },
         "rules_groovy": {
-            "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_groovy-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/rules_groovy.git"
         },
         "rules_gwt": {
-            "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_gwt-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/rules_gwt.git"
         },
         "rules_jsonnet": {
-            "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_jsonnet-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git"
         },
         "rules_kotlin": {
-            "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_kotlin-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/rules_kotlin.git"
         },
         "rules_k8s": {
-            "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_k8s-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/rules_k8s.git"
         },
         "rules_nodejs": {
-            "git_repository": "https://github.com/bazelbuild/rules_nodejs.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_nodejs-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/rules_nodejs.git"
         },
         "rules_perl": {
-            "git_repository": "https://github.com/bazelbuild/rules_perl.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_perl-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/rules_perl.git"
         },
         "rules_python": {
-            "git_repository": "https://github.com/bazelbuild/rules_python.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_python-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/rules_python.git"
         },
         "rules_rust": {
-            "git_repository": "https://github.com/bazelbuild/rules_rust.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_rust-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/rules_rust.git"
         },
         "rules_sass": {
-            "git_repository": "https://github.com/bazelbuild/rules_sass.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_sass-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/rules_sass.git"
         },
         "rules_scala": {
-            "git_repository": "https://github.com/bazelbuild/rules_scala.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_scala-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/rules_scala.git"
         },
         "rules_typescript": {
-            "git_repository": "https://github.com/bazelbuild/rules_typescript.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_typescript-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/rules_typescript.git"
         },
         # Enable once is resolved: https://github.com/bazelbuild/continuous-integration/issues/191
         # "rules_webtesting": {
@@ -200,8 +178,7 @@ def downstream_projects():
         #     "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_webtesting-postsubmit.yml"
         # },
         "skydoc": {
-            "git_repository": "https://github.com/bazelbuild/skydoc.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/skydoc-postsubmit.yml"
+            "git_repository": "https://github.com/bazelbuild/skydoc.git"
         },
         "subpar": {
             "git_repository": "https://github.com/google/subpar.git",
