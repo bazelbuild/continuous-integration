@@ -608,6 +608,15 @@ def concurrent_jobs():
     return str(multiprocessing.cpu_count())
 
 
+def concurrent_test_jobs(platform):
+    if platform == "windows":
+        return str(multiprocessing.cpu_count() // 4)
+    elif platform == "macos":
+        return str(multiprocessing.cpu_count() // 2)
+    else:
+        return str(multiprocessing.cpu_count())
+
+
 def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     print_expanded_group(":bazel: Build")
     common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
@@ -628,7 +637,7 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
     print_expanded_group(":bazel: Test")
     common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
                     "--flaky_test_attempts=3", "--build_tests_only",
-                    "--jobs=" + concurrent_jobs(), "--local_test_jobs=" + concurrent_jobs(),
+                    "--jobs=" + concurrent_jobs(), "--local_test_jobs=" + concurrent_test_jobs(),
                     "--build_event_json_file=" + bep_file,
                     "--experimental_build_event_json_file_path_conversion=false"]
     caching_flags = []
