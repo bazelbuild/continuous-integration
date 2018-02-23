@@ -143,6 +143,7 @@ bazel_github_job(
 
 # Jobs from the bazelbuild org using the default configuration
 [bazel_github_job(name = n) for n in [
+    "bazel-buildfarm",
     "bazel-watcher",
     "migration-tooling",
     "rules_appengine",
