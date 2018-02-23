@@ -673,7 +673,7 @@ def upload_test_logs(bep_file, tmpdir):
         cwd = os.getcwd()
         try:
             os.chdir(tmpdir)
-            test_logs = [os.path.relpath(test_log) for test_log in test_logs]
+            test_logs = [os.path.relpath(test_log, tmpdir) for test_log in test_logs]
             test_logs = sorted(test_logs)
             print_collapsed_group(":gcloud: Uploading Test Logs")
             execute_command(["buildkite-agent", "artifact", "upload", ";".join(test_logs)])
