@@ -605,7 +605,7 @@ def remote_enabled(flags):
 
 
 def concurrent_jobs():
-    return str(multiprocessing.cpu_count() * 2)
+    return str(multiprocessing.cpu_count())
 
 
 def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
