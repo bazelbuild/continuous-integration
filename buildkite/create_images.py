@@ -165,10 +165,11 @@ def tail_serial_console(vm, start=None, until=None):
     return next_start
 
 
-def merge_setup_scripts(scripts):
+def merge_setup_scripts(vm, scripts):
+    newline = '\r\n' if 'windows' in vm else None
     # Merge all setup scripts into one.
     merged_script_path = tempfile.mkstemp()[1]
-    with open(merged_script_path, 'w') as merged_script_file:
+    with open(merged_script_path, 'w', newline=newline) as merged_script_file:
         for script in scripts:
             with open(script, 'r') as script_file:
                 merged_script_file.write(script_file.read() + '\n')
@@ -176,7 +177,7 @@ def merge_setup_scripts(scripts):
 
 
 def create_vm(vm, params):
-    merged_script_path = merge_setup_scripts(params['scripts'])
+    merged_script_path = merge_setup_scripts(vm, params['scripts'])
     try:
         cmd = ['gcloud', 'compute', 'instances', 'create', vm]
         cmd.extend(['--zone', LOCATION])
