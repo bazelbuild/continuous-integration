@@ -112,14 +112,29 @@ Write-Host "Updating MSYS2 packages (round 2)..."
 Write-Host "Installing required MSYS2 packages..."
 & bash -lc "pacman --noconfirm --needed -S curl zip unzip gcc tar diffutils patch perl"
 
+## Install Azul Zulu.
+Write-Host "Installing Zulu 8..."
+$zulu_url = "https://cdn.azul.com/zulu/bin/zulu8.27.0.7-jdk8.0.162-win_x64.zip"
+$zulu_zip = "c:\temp\zulu8.27.0.7-jdk8.0.162-win_x64.zip"
+$zulu_extracted_path = "c:\temp\" + [IO.Path]::GetFileNameWithoutExtension($zulu_zip)
+$zulu_root = "c:\openjdk"
+(New-Object Net.WebClient).DownloadFile($zulu_url, $zulu_zip)
+[System.IO.Compression.ZipFile]::ExtractToDirectory($zulu_zip, "c:\temp")
+Move-Item $zulu_extracted_path -Destination $zulu_root
+Remove-Item $zulu_zip
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${zulu_root}\bin"
+[Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
+$env:JAVA_HOME = $zulu_root
+[Environment]::SetEnvironmentVariable("JAVA_HOME", $env:JAVA_HOME, "Machine")
+
 ## Install the JDK.
-Write-Host "Installing JDK 8..."
+# Write-Host "Installing JDK 8..."
 # FYI: choco adds "C:\Program Files\Java\jdk<version>\bin" to global PATH.
 # FYI: choco sets JAVA_HOME to "C:\Program Files\Java\jdk<version>\bin".
-& choco install jdk8
-$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
-$env:JAVA_HOME = [Environment]::GetEnvironmentVariable("JAVA_HOME", "Machine")
-Write-Host "JAVA_HOME was set to '${JAVA_HOME}'..."
+# & choco install jdk8
+# $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+# $env:JAVA_HOME = [Environment]::GetEnvironmentVariable("JAVA_HOME", "Machine")
+# Write-Host "JAVA_HOME was set to '${JAVA_HOME}'..."
 
 ## Install Visual C++ 2015 Build Tools (Update 3).
 # Write-Host "Installing Visual C++ 2015 Build Tools..."
@@ -213,9 +228,9 @@ Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-27"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
 
-\## Create an unprivileged user that we'll run the Buildkite agent as.
-Write-Host "Creating 'buildkite' user..."
+## Create an unprivileged user that we'll run the Buildkite agent as.
 $buildkite_username = "buildkite"
+Write-Host "Creating ${buildkite_username} user..."
 # The password used here is not relevant for security, as the server is behind a
 # firewall blocking all incoming access and locally we run the CI jobs as that
 # user anyway.
@@ -247,9 +262,10 @@ Write-Host "Creating Buildkite agent environment hook..."
 $buildkite_environment_hook = @"
 SET BUILDKITE_ARTIFACT_UPLOAD_DESTINATION=gs://bazel-buildkite-artifacts/`$BUILDKITE_JOB_ID
 SET BUILDKITE_GS_ACL=publicRead
+SET JAVA_HOME=${env:JAVA_HOME}
+SET PATH=${env:PATH}
 SET TEMP=D:\temp
 SET TMP=D:\temp
-SET PATH=${env:PATH}
 "@
 [System.IO.File]::WriteAllLines("${buildkite_agent_root}\hooks\environment.bat", $buildkite_environment_hook)
 
@@ -266,7 +282,7 @@ Write-Host "Buildkite agent wrapper starting..."
     `${buildkite_username}, `${buildkite_password}
 
 function Bazel-Clean {
-  Write-Host "Terminating all processes belonging to the 'buildkite' user..."
+  Write-Host "Terminating all processes belonging to the `${buildkite_username} user..."
   & taskkill /FI "username eq `${buildkite_username}" /T /F
   Start-Sleep -Seconds 1
 
@@ -278,10 +294,10 @@ function Bazel-Clean {
 
 Bazel-Clean
 
-Write-Host "Deleting home directory of the 'buildkite' user..."
+Write-Host "Deleting home directory of the `${buildkite_username} user..."
 Get-CimInstance Win32_UserProfile | Where LocalPath -EQ "C:\Users\`${buildkite_username}" | Remove-CimInstance
 if ( Test-Path "C:\Users\`${buildkite_username}" ) {
-  Throw "The home directory of the buildkite-agent user could not be deleted."
+  Throw "The home directory of the `${buildkite_username} user could not be deleted."
 }
 
 Write-Host "Starting Buildkite agent as user `${buildkite_username}..."
