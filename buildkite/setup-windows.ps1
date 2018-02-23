@@ -227,9 +227,9 @@ Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-27"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
 
-\## Create an unprivileged user that we'll run the Buildkite agent as.
-Write-Host "Creating 'buildkite' user..."
+## Create an unprivileged user that we'll run the Buildkite agent as.
 $buildkite_username = "buildkite"
+Write-Host "Creating ${buildkite_username} user..."
 # The password used here is not relevant for security, as the server is behind a
 # firewall blocking all incoming access and locally we run the CI jobs as that
 # user anyway.
@@ -281,7 +281,7 @@ Write-Host "Buildkite agent wrapper starting..."
     `${buildkite_username}, `${buildkite_password}
 
 function Bazel-Clean {
-  Write-Host "Terminating all processes belonging to the 'buildkite' user..."
+  Write-Host "Terminating all processes belonging to the `${buildkite_username} user..."
   & taskkill /FI "username eq `${buildkite_username}" /T /F
   Start-Sleep -Seconds 1
 
@@ -293,10 +293,10 @@ function Bazel-Clean {
 
 Bazel-Clean
 
-Write-Host "Deleting home directory of the 'buildkite' user..."
+Write-Host "Deleting home directory of the `${buildkite_username} user..."
 Get-CimInstance Win32_UserProfile | Where LocalPath -EQ "C:\Users\`${buildkite_username}" | Remove-CimInstance
 if ( Test-Path "C:\Users\`${buildkite_username}" ) {
-  Throw "The home directory of the buildkite-agent user could not be deleted."
+  Throw "The home directory of the `${buildkite_username} user could not be deleted."
 }
 
 Write-Host "Starting Buildkite agent as user `${buildkite_username}..."
