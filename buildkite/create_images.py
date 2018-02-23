@@ -151,17 +151,18 @@ def print_pretty_logs(vm, log):
                 print("%s: %s" % (vm, line))
 
 
-def tail_serial_console(vm, until=None):
-    next_start = '0'
+def tail_serial_console(vm, start=None, until=None):
+    next_start = start if start else '0'
     while True:
         result = run(['gcloud', 'compute', 'instances', 'get-serial-port-output', '--zone', LOCATION, '--start',
                       next_start, vm], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         if result.returncode != 0:
             break
         print_pretty_logs(vm, result.stdout)
+        next_start = re.search(r'--start=(\d*)', result.stderr).group(1)
         if until and until in result.stdout:
             break
-        next_start = re.search(r'--start=(\d*)', result.stderr).group(1)
+    return next_start
 
 
 def merge_setup_scripts(scripts):
@@ -220,6 +221,8 @@ def write_to_clipboard(output):
 
 
 def print_windows_instructions(vm):
+    tail_start = tail_serial_console(vm, until='Finished running startup scripts')
+
     run(['gcloud', 'compute', 'firewall-rules', 'create', getpass.getuser() + '-rdp',
          '--allow', 'tcp:3389,udp:3389', '--network', 'buildkite', '--source-ranges', MY_IPV4 + '/32'])
     pw = json.loads(run(['gcloud', 'compute', 'reset-windows-password', '--format', 'json', '--quiet',
@@ -235,9 +238,11 @@ def print_windows_instructions(vm):
         print('Please run the setup script C:\\setup.ps1 once you\'re logged in.')
 
     # Wait until the VM reboots once, then open RDP again.
-    tail_serial_console(vm, until='Finished running startup scripts')
+    tail_start = tail_serial_console(vm, start=tail_start, until='Finished running startup scripts')
+    print('Connecting via RDP a second time to finish the setup...')
     write_to_clipboard(pw['password'])
     run(['open', rdp_file])
+    return tail_start
 
 
 def workflow(name, params):
@@ -251,13 +256,14 @@ def workflow(name, params):
 
         if 'windows' in vm:
             # Wait for VM to be ready, then print setup instructions.
-            tail_serial_console(vm, until='Finished running startup scripts')
-            print_windows_instructions(vm)
+            tail_start = print_windows_instructions(vm)
+            # Continue printing the serial console until the VM shuts down.
+            tail_serial_console(vm, start=tail_start)
+        else:
+            # Continuously print the serial console.
+            tail_serial_console(vm)
 
-        # Continuously print the serial console.
-        tail_serial_console(vm)
-
-        # Wait for the VM to shutdown.
+        # Wait for the VM to completely shutdown.
         wait_for_vm(vm, 'TERMINATED')
 
         # Create a new image from our VM.
