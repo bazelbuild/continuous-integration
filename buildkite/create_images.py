@@ -223,8 +223,6 @@ def write_to_clipboard(output):
 def print_windows_instructions(vm):
     tail_start = tail_serial_console(vm, until='Finished running startup scripts')
 
-    run(['gcloud', 'compute', 'firewall-rules', 'create', getpass.getuser() + '-rdp',
-         '--allow', 'tcp:3389,udp:3389', '--network', 'buildkite', '--source-ranges', MY_IPV4 + '/32'])
     pw = json.loads(run(['gcloud', 'compute', 'reset-windows-password', '--format', 'json', '--quiet',
                          vm], check=True, stdout=subprocess.PIPE).stdout)
     rdp_file = tempfile.mkstemp(suffix='.rdp')[1]
