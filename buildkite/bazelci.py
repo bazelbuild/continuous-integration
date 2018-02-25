@@ -984,7 +984,7 @@ def try_publish_binaries(build_number, expected_generation):
 
         info_file = os.path.join(tmpdir, "info.json")
         with open(info_file, mode="w", encoding="utf-8") as fp:
-            json.dump(info, fp)
+            json.dump(info, fp, indent=2, sort_keys=True)
 
         try:
             execute_command([
