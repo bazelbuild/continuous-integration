@@ -41,30 +41,16 @@ Bazel accepts contributions via pull requests. Contributions by members of the [
 organisation as well as members of individual repositories (i.e. rule maintainers) are automatically
 whitelisted and will be build and tested on [Buildkite] automatically.
 
-An external contribution first needs to be verified by a member before it's build and tested on
-Bazel's CI. For external contributions you'll see a status as the below:
+An external contribution first needs to be verified by a project member and these contributions
+will display a pending status named *Verify Pull Request*.
 
 ![status verify pull request]
 
-A member can approve the pull request by clicking on *Details*, followed by *Verify Pull Request*
+A member can verify the pull request by clicking on *Details*, followed by *Verify Pull Request*
 
 ![buildkite verify pull request]
-![buildkite pull request verified]
 
-Please vet those contributions carefully as they can run arbitrary code on our CI
-machines. 
-
-
-When you open a new pull request, [Buildkite] will
-first try to verify the contribution based on the pull request creator. That is, contributions
-by users who are part of the bazelbuild organisation are automatically accepted
-
- That is, if the creator of the pull request is a Bazel
-team member then it will create a new pull request there. 
-
-When a new pull request is opened [Buildkite]
-will be triggered and first try to verify that the contribution 
-
+*Please vet those contributions carefully as they can run arbitrary code on our CI machines.*
 
 [Buildkite]: https://buildkite.com
 [buildkite folder]: https://github.com/bazelbuild/continuous-integration/tree/master/buildkite
@@ -78,4 +64,3 @@ will be triggered and first try to verify that the contribution
 [flaky test log]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/flaky-test-log.png
 [status verify pull request]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/status-verify-pull-request.png
 [buildkite verify pull request]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/buildkite-verify-pull-request.png
-[buildkite pull request verified]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/buildkite-pull-request-verified.png
