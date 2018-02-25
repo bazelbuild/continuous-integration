@@ -303,7 +303,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
             clone_git_repository(git_repository, platform)
         else:
             git_repository = os.getenv("BUILDKITE_REPO")
-        if is_pull_request():
+        if is_pull_request() and not is_trusted_author(os.getenv("BUILDKITE_BUILD_CREATOR"), git_repository):
             update_pull_request_verification_status(git_repository, commit, state="success")
         cleanup()
         tmpdir = tempfile.mkdtemp()
@@ -742,16 +742,26 @@ def untrusted_code_verification_step():
     prompt: \"Did you review this pull request for malicious code?\""""
 
 
+def is_trusted_author(github_user, git_repository):
+    if not github_user or not git_repository:
+        raise BuildkiteException("github_user and git_repository must be set.")
+
+    gh = login(token=fetch_github_token())
+    owner, repo = owner_repository_from_url(git_repository)
+    repo = gh.repository(owner=owner, repository=repo)
+    return repo.is_collaborator(github_user)
+
+
 def print_project_pipeline(platform_configs, project_name, http_config,
                            git_repository, use_but):
     pipeline_steps = []
-    if is_pull_request():
-        trusted_git_repository = git_repository
-        if not trusted_git_repository:
-            trusted_git_repository = os.getenv("BUILDKITE_REPO")
+    commit_author = os.getenv("BUILDKITE_BUILD_CREATOR")
+    trusted_git_repository = git_repository or os.getenv("BUILDKITE_REPO")
+    if is_pull_request() and not is_trusted_author(commit_author, trusted_git_repository):
         commit = os.getenv("BUILDKITE_COMMIT")
         update_pull_request_verification_status(trusted_git_repository, commit, state="pending")
         pipeline_steps.append(untrusted_code_verification_step())
+
     for platform, _ in platform_configs.items():
         step = runner_step(platform, project_name,
                            http_config, git_repository, use_but)
