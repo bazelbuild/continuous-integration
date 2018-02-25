@@ -36,8 +36,8 @@ step on Ubuntu 16.04.
 
 ![failed build step]
 
-One can see which tests failed by clicking on the *Test* section which shows that
-`//src/test/shell/bazel:external_path_test` is flaky as it failed in 1 out of 5 runs.
+One can see which tests failed by clicking on the *Test* section which for this example shows that
+`//src/test/shell/bazel:external_path_test` was flaky as it failed in 1 out of 5 runs.
 
 ![flaky test]
 
