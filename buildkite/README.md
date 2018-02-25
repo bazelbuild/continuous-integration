@@ -13,11 +13,11 @@ view build and test results of [pull requests](#build-and-test-results) and so a
 Bazel you typically don't need access to Buildkite. However, if you are a maintainer of a repository
 under the @bazelbuild organisation or a Bazel team member with sheriffing duties you probably do need
 access. Please ping either @buchgr, @philwo or @fweikert if you don't have access to Bazel on Buildkite
-but think you should have.
+but think you should.
 
-When you first log into [Buildkite] you are presented with a list of pipelines. A pipeline consists
-of steps that are executed either in sequence or in parallel and that all need to succeed in order
-for the pipeline to succeed. The Bazel organisation has dozens of pipelines. Here are a selected
+When you first log into [Buildkite] you are presented with a list of pipelines. A pipeline is a
+template of steps that are executed either in sequence or in parallel and that all need to succeed in
+order for the pipeline to succeed. The Bazel organisation has dozens of pipelines. Here are a selected
 few:
 
 ![pipelines]
@@ -28,10 +28,20 @@ platforms.
 * The *rules_go postsubmit* pipeline is triggered on every commit to the [rules_go] repository.
 * The *TensorFlow* pipeline builds and tests TensorFlow at `HEAD` every four hours.
 
+### Builds
+
+When you click on a pipeline you can see the last few builds of this pipeline. Clicking on a build
+then gives you access to the details of the build. For example, the below image shows a failed build
+step on Ubuntu 16.04.
 
 ![failed build step]
 
+One can see which tests failed by clicking on the *Test* section which shows that
+`//src/test/shell/bazel:external_path_test` is flaky as it failed in 1 out of 5 runs.
+
 ![flaky test]
+
+You can view the failed test attempt's `test.log` file in the *Artifacts* tab.
 
 ![flaky test log]
 
