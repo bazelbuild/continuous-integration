@@ -303,7 +303,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
             clone_git_repository(git_repository, platform)
         else:
             git_repository = os.getenv("BUILDKITE_REPO")
-        if is_pull_request() and not is_trusted_author(os.getenv("BUILDKITE_BUILD_CREATOR"), git_repository):
+        if is_pull_request() and not is_trusted_author(github_user_for_pull_request(), git_repository):
             update_pull_request_verification_status(git_repository, commit, state="success")
         cleanup()
         tmpdir = tempfile.mkdtemp()
@@ -752,15 +752,22 @@ def is_trusted_author(github_user, git_repository):
     return repo.is_collaborator(github_user)
 
 
+def github_user_for_pull_request():
+    branch = os.getenv("BUILDKITE_BRANCH")
+    user = branch.split(":", 1)
+    return user
+
+
 def print_project_pipeline(platform_configs, project_name, http_config,
                            git_repository, use_but):
     pipeline_steps = []
-    commit_author = os.getenv("BUILDKITE_BUILD_CREATOR")
-    trusted_git_repository = git_repository or os.getenv("BUILDKITE_REPO")
-    if is_pull_request() and not is_trusted_author(commit_author, trusted_git_repository):
-        commit = os.getenv("BUILDKITE_COMMIT")
-        update_pull_request_verification_status(trusted_git_repository, commit, state="pending")
-        pipeline_steps.append(untrusted_code_verification_step())
+    if is_pull_request():
+        commit_author = github_user_for_pull_request()
+        trusted_git_repository = git_repository or os.getenv("BUILDKITE_REPO")
+        if is_pull_request() and not is_trusted_author(commit_author, trusted_git_repository):
+            commit = os.getenv("BUILDKITE_COMMIT")
+            update_pull_request_verification_status(trusted_git_repository, commit, state="pending")
+            pipeline_steps.append(untrusted_code_verification_step())
 
     for platform, _ in platform_configs.items():
         step = runner_step(platform, project_name,
