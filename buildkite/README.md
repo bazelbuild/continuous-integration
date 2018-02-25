@@ -1,17 +1,19 @@
 # Bazel Continuous Integration
 
-Bazel uses [Buildkite] for continuous integration. The [buildkite folder] contains all the scripts
-and configuration files necessary to setup Bazel's CI on Buildkite.
+Bazel uses [Buildkite] for continuous integration. The user interface and the orchestration of CI
+builds is fully managed by Buildkite, but Bazel brings its own CI machines. The [buildkite folder]
+contains all the scripts and configuration files necessary to setup Bazel's CI on Buildkite.
 
 ## Bazel on Buildkite 101
 
-[Buildkite] currently does not support anonymous viewing of build results (it's in the works) and
-for now requires one to be logged in before being able to trigger builds, view build and test results.
-We have set up a separate mechanism to view build and test results for [pull requests](#pull-requests)
-and so as a contributor to Bazel you typically don't need access to Buildkite. However, if you are a
-maintainer of a repository under the @bazelbuild organisation or a Bazel team member with sheriff
-duties you probably do need access, and if so please ping either @buchgr, @philwo or @fweikert and we
-will get you on Buildkite.
+[Buildkite] currently does not support public viewing of build and test results (it's actively being
+[worked](https://github.com/buildkite/feedback/issues/137#issuecomment-360336774) on)
+and for now requires one to be logged in. In the meantime, we have set up a separate mechanism to
+view build and test results of [pull requests](#build-and-test-results) and so as a contributor to
+Bazel you typically don't need access to Buildkite. However, if you are a maintainer of a repository
+under the @bazelbuild organisation or a Bazel team member with sheriffing duties you probably do need
+access. Please ping either @buchgr, @philwo or @fweikert if you don't have access to Bazel on Buildkite
+but think you should have.
 
 When you first log into [Buildkite] you are presented with a list of pipelines. A pipeline consists
 of steps that are executed either in sequence or in parallel and that all need to succeed in order
@@ -27,8 +29,6 @@ platforms.
 * The *TensorFlow* pipeline builds and tests TensorFlow at `HEAD` every four hours.
 
 
-
-
 ![failed build step]
 
 ![flaky test]
@@ -38,8 +38,8 @@ platforms.
 ## Pull Requests
 
 Bazel accepts contributions via pull requests. Contributions by members of the [bazelbuild]
-organisation as well as members of individual repositories (i.e. rule maintainers) are automatically
-whitelisted and will be build and tested on [Buildkite] automatically.
+organisation as well as members of individual repositories (i.e. rule maintainers) are whitelisted
+automatically will immediately be build and tested on [Buildkite].
 
 An external contribution first needs to be verified by a project member and these contributions
 will display a pending status named *Verify Pull Request*.
@@ -50,7 +50,16 @@ A member can verify the pull request by clicking on *Details*, followed by *Veri
 
 ![buildkite verify pull request]
 
-*Please vet those contributions carefully as they can run arbitrary code on our CI machines.*
+*Please vet external contributions carefully as they can execute arbitrary code on our CI machines*
+
+### Build and Test Results
+
+After a pull request has been built and tested, the results will be displayed as a status message on
+the pull request. A detailed view is available when clicking on the corresponding *Details*
+link. Click [here](https://source.cloud.google.com/results/invocations/dc0510c0-afc6-42b3-8d2e-6d879dec526a/targets)
+for an example.
+
+![pull request details]
 
 [Buildkite]: https://buildkite.com
 [buildkite folder]: https://github.com/bazelbuild/continuous-integration/tree/master/buildkite
@@ -64,3 +73,4 @@ A member can verify the pull request by clicking on *Details*, followed by *Veri
 [flaky test log]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/flaky-test-log.png
 [status verify pull request]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/status-verify-pull-request.png
 [buildkite verify pull request]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/buildkite-verify-pull-request.png
+[pull request details]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/pull-request-details.png
