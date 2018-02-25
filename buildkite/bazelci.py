@@ -755,7 +755,7 @@ def is_trusted_author(github_user, git_repository):
 def github_user_for_pull_request():
     branch = os.getenv("BUILDKITE_BRANCH")
     user = branch.split(":", 1)
-    return user
+    return user[0]
 
 
 def print_project_pipeline(platform_configs, project_name, http_config,
