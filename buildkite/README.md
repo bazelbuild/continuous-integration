@@ -39,14 +39,14 @@ platforms.
 
 Bazel accepts contributions via pull requests. Contributions by members of the [bazelbuild]
 organisation as well as members of individual repositories (i.e. rule maintainers) are whitelisted
-automatically and will immediately be build and tested on [Buildkite].
+automatically and will immediately be built and tested on [Buildkite].
 
 An external contribution, however, first needs to be verified by a project member and therefore will
 display a pending status named *Verify Pull Request*.
 
 ![status verify pull request]
 
-A member can verify the pull request by clicking on *Details*, followed by *Verify Pull Request*
+A member can verify a pull request by clicking on *Details*, followed by *Verify Pull Request*.
 
 ![buildkite verify pull request]
 
