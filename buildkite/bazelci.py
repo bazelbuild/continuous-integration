@@ -17,6 +17,7 @@
 import argparse
 import base64
 import codecs
+import datetime
 import hashlib
 import json
 import multiprocessing
@@ -965,8 +966,10 @@ def sha256_hexdigest(filename):
 def try_publish_binaries(build_number, expected_generation):
     tmpdir = tempfile.mkdtemp()
     try:
+        now = datetime.datetime.now()
         info = {
             "build_number": build_number,
+            "build_time": now.strftime("%d-%m-%Y %H:%M"),
             "git_commit": os.environ["BUILDKITE_COMMIT"],
             "platforms": {}
         }
