@@ -44,12 +44,6 @@ INSTANCE_GROUPS = {
         'machine_type': 'n1-standard-32',
         'local_ssd': 'interface=scsi',
     },
-    'buildkite-freebsd11': {
-        'count': 2,
-        'startup_script': 'startup-ubuntu.sh',
-        'machine_type': 'n1-standard-32',
-        'local_ssd': 'interface=scsi',
-    }
 }
 
 SINGLE_INSTANCES = {
@@ -200,7 +194,13 @@ def main(argv=None):
 
     # Put VM creation instructions into the work queue.
     for instance_group_name, params in INSTANCE_GROUPS.items():
+        # If the user specified instance (group) names on the command-line, we process only these
+        # instances, otherwise we process all.
         if argv and instance_group_name not in argv:
+            continue
+        # Do not automatically create user-specific instances. These must be specified explicitly
+        # on the command-line.
+        if instance_group_name.startswith(getpass.getuser()) and instance_group_name not in argv:
             continue
         WORK_QUEUE.put({
             'instance_group_name': instance_group_name,
@@ -209,6 +209,8 @@ def main(argv=None):
 
     for instance_name, params in SINGLE_INSTANCES.items():
         if argv and instance_name not in argv:
+            continue
+        if instance_name.startswith(getpass.getuser()) and instance_name not in argv:
             continue
         WORK_QUEUE.put({
             'instance_name': instance_name,
