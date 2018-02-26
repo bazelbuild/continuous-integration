@@ -101,9 +101,6 @@ IMAGE_CREATION_VMS = {
     }
 }
 
-MY_IPV4 = urllib.request.urlopen('https://v4.ifconfig.co/ip').read().decode('us-ascii').strip()
-# MY_IPV4 = urllib.request.urlopen('https://v4.ident.me').read().decode('us-ascii').strip()
-
 PRINT_LOCK = threading.Lock()
 WORK_QUEUE = queue.Queue()
 
