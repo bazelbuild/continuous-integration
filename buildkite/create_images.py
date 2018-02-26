@@ -83,14 +83,19 @@ IMAGE_CREATION_VMS = {
             'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
         ]
     },
-    # 'buildkite-windows2016': {
-    #     'source_image_project': 'windows-cloud',
-    #     'source_image_family': 'windows-2016',
-    #     'target_image_family': 'buildkite-windows2016',
-    #     'scripts': [
-    #         'setup-windows2016.ps1'
-    #     ]
-    # }
+    'buildkite-pipeline-ubuntu1604': {
+        'source_image_project': 'ubuntu-os-cloud',
+        'source_image_family': 'ubuntu-1604-lts',
+        'target_image_family': 'buildkite-pipeline-ubuntu1604',
+        'scripts': [
+            'shell-utils.sh',
+            'setup-ubuntu.sh',
+            'install-azul-zulu.sh',
+            'install-buildkite-agent.sh',
+            'install-python36.sh',
+            'shutdown.sh'
+        ]
+    },
     'buildkite-windows': {
         'source_image_project': 'windows-cloud',
         'source_image_family': 'windows-1709-core',

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -eu
+set -euxo pipefail
 
 # Use a local SSD if available, otherwise use a RAM disk for our builds.
 # if [ -e /dev/nvme0n1 ]; then
@@ -32,18 +32,20 @@ set -eu
 if [ -e /dev/nvme0n1 ]; then
   mkswap -f /dev/nvme0n1
   swapon /dev/nvme0n1
+
+  # Move fast and lose data.
+  mount -t tmpfs -o mode=1777,uid=root,gid=root,size=$((100 * 1024 * 1024 * 1024)) tmpfs /tmp
+  mount -t tmpfs -o mode=0711,uid=root,gid=root,size=$((100 * 1024 * 1024 * 1024)) tmpfs /var/lib/docker
+  mount -t tmpfs -o mode=0755,uid=buildkite-agent,gid=buildkite-agent,size=$((100 * 1024 * 1024 * 1024)) tmpfs /var/lib/buildkite-agent
 fi
 
-# Make /tmp a tmpfs.
-mount -t tmpfs -o mode=1777,uid=root,gid=root,size=$((100 * 1024 * 1024 * 1024)) tmpfs /tmp
-mount -t tmpfs -o mode=0711,uid=root,gid=root,size=$((100 * 1024 * 1024 * 1024)) tmpfs /var/lib/docker
-mount -t tmpfs -o mode=0755,uid=buildkite-agent,gid=buildkite-agent,size=$((100 * 1024 * 1024 * 1024)) tmpfs /var/lib/buildkite-agent
-
 # Start Docker.
-if [[ -e /bin/systemctl ]]; then
-  systemctl start docker
-else
-  service docker start
+if [[ $(docker --version 2>/dev/null) ]]; then
+  if [[ $(systemctl --version 2>/dev/null) ]]; then
+    systemctl start docker
+  else
+    service docker start
+  fi
 fi
 
 # Get the Buildkite Token from GCS and decrypt it using KMS.
