@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import getpass
 import json
 import os
 import queue
@@ -24,7 +23,6 @@ import sys
 import tempfile
 import threading
 import time
-import urllib.request
 from datetime import datetime
 
 DEBUG = False
