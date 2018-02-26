@@ -66,7 +66,7 @@ disconnect-after-job-timeout=86400
 [System.IO.File]::WriteAllLines("${buildkite_agent_root}\buildkite-agent.cfg", $buildkite_agent_config)
 
 # Start the Buildkite agent service.
-if ( $(hostname) -match 'buildkite-' ) {
-  Write-Host "Starting Buildkite agent..."
-  & net start buildkite-service
+if ($(hostname) -match 'buildkite-') {
+  Write-Host "Starting Buildkite Monitor..."
+  & nssm start buildkite-monitor
 }

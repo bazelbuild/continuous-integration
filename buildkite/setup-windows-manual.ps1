@@ -228,16 +228,6 @@ Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-27"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
 
-## Create an unprivileged user that we'll run the Buildkite agent as.
-$buildkite_username = "buildkite"
-Write-Host "Creating ${buildkite_username} user..."
-# The password used here is not relevant for security, as the server is behind a
-# firewall blocking all incoming access and locally we run the CI jobs as that
-# user anyway.
-$buildkite_password = ConvertTo-SecureString "b@1ldk1te" -AsPlainText -Force
-New-LocalUser -Name $buildkite_username -Password $buildkite_password -UserMayNotChangePassword
-$buildkite_credential = New-Object System.Management.Automation.PSCredential $buildkite_username, $buildkite_password
-
 ## Download and install the Buildkite agent.
 Write-Host "Downloading Buildkite agent..."
 $buildkite_agent_version = "3.0-beta.39"
@@ -269,30 +259,31 @@ SET TMP=D:\temp
 "@
 [System.IO.File]::WriteAllLines("${buildkite_agent_root}\hooks\environment.bat", $buildkite_environment_hook)
 
-Write-Host "Creating Buildkite agent wrapper script..."
-$buildkite_service = @"
-Write-Host "Buildkite agent wrapper starting..."
+## Create an unprivileged user that we'll run the Buildkite agent as.
+# The password used here is not relevant for security, as the server is behind a
+# firewall blocking all incoming access and locally we run the CI jobs as that
+# user anyway.
+Write-Host "Creating Buildkite service user..."
+$buildkite_username = "buildkite"
+$buildkite_password = "Bu1ldk1t3"
+$buildkite_secure_password = ConvertTo-SecureString $buildkite_password -AsPlainText -Force
+New-LocalUser -Name $buildkite_username -Password $buildkite_secure_password -UserMayNotChangePassword
+
+## Create the Buildkite Monitor script.
+Write-Host "Creating Buildkite Monitor script..."
+$buildkite_monitor_script = @"
 `$ErrorActionPreference = "Stop"
 `$ConfirmPreference = "None"
-
-`$buildkite_agent_root = "${buildkite_agent_root}"
 `$buildkite_username = "${buildkite_username}"
-`$buildkite_password = ConvertTo-SecureString "b@1ldk1te" -AsPlainText -Force
-`$buildkite_credential = New-Object System.Management.Automation.PSCredential ``
-    `${buildkite_username}, `${buildkite_password}
 
-function Bazel-Clean {
-  Write-Host "Terminating all processes belonging to the `${buildkite_username} user..."
-  & taskkill /FI "username eq `${buildkite_username}" /T /F
-  Start-Sleep -Seconds 1
+Write-Host "Terminating all processes belonging to the `${buildkite_username} user..."
+& taskkill /FI "username eq `${buildkite_username}" /T /F
+Start-Sleep -Seconds 1
 
-  Write-Host "Recreating fresh temporary directory D:\temp..."
-  Remove-Item -Recurse -Force "D:\temp"
-  New-Item -Type Directory "D:\temp"
-  Add-NTFSAccess -Path "D:\temp" -Account BUILTIN\Users -AccessRights Write
-}
-
-Bazel-Clean
+Write-Host "Recreating fresh temporary directory D:\temp..."
+Remove-Item -Recurse -Force "D:\temp"
+New-Item -Type Directory "D:\temp"
+Add-NTFSAccess -Path "D:\temp" -Account BUILTIN\Users -AccessRights Write
 
 Write-Host "Deleting home directory of the `${buildkite_username} user..."
 Get-CimInstance Win32_UserProfile | Where LocalPath -EQ "C:\Users\`${buildkite_username}" | Remove-CimInstance
@@ -301,47 +292,55 @@ if ( Test-Path "C:\Users\`${buildkite_username}" ) {
 }
 
 Write-Host "Starting Buildkite agent as user `${buildkite_username}..."
-Start-Process -FilePath "buildkite-agent.exe" -ArgumentList "start" ``
-    -Credential `${buildkite_credential} -WorkingDirectory "C:\buildkite" ``
-    -RedirectStandardError "buildkite.err.log" ``
-    -RedirectStandardOutput "buildkite.out.log" ``
-    -Wait
+& nssm start "buildkite-agent"
 
-Bazel-Clean
+Write-Host "Waiting for Buildkite agent to exit..."
+While ((Get-Service "buildkite-agent").Status -eq "Running") { Start-Sleep -Seconds 1 }
 
-Write-Host "buildkite-agent has exited."
+Write-Host "Buildkite agent has exited."
 "@
-[System.IO.File]::WriteAllLines("${buildkite_agent_root}\buildkite-service.ps1", $buildkite_service)
+[System.IO.File]::WriteAllLines("${buildkite_agent_root}\buildkite-monitor.ps1", $buildkite_monitor_script)
 
 ## Allow the Buildkite agent to store SSH host keys in this folder.
 Write-Host "Creating C:\buildkite\.ssh folder..."
 New-Item "c:\buildkite\.ssh" -ItemType "directory"
 Add-NTFSAccess -Path "c:\buildkite\.ssh" -Account BUILTIN\Users -AccessRights Write
 
+Write-Host "Creating C:\buildkite\logs folder..."
+New-Item "c:\buildkite\logs" -ItemType "directory"
+Add-NTFSAccess -Path "c:\buildkite\logs" -Account BUILTIN\Users -AccessRights Write
+
 ## Create a service for the Buildkite agent.
-# Some hints: https://gist.github.com/fdstevex/52da0d7e5892fe2965eae105b8cf3883
-#             https://github.com/buildkite/agent/issues/329
-#             https://github.com/kohsuke/winsw
-Write-Host "Creating Buildkite agent service..."
-$winsw_url = "https://github.com/kohsuke/winsw/releases/download/winsw-v2.1.2/WinSW.NET4.exe"
-$winsw = "${buildkite_agent_root}\buildkite-service.exe"
-(New-Object Net.WebClient).DownloadFile($winsw_url, $winsw)
-$winsw_config = @"
-<configuration>
-  <id>buildkite-service</id>
-  <name>Buildkite agent</name>
-  <description>The Buildkite CI agent.</description>
-  <executable>C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe</executable>
-  <executable>%BASE%\buildkite-service.ps1</executable>
-  <startmode>Manual</startmode>
-  <onfailure action="restart" delay="10 sec"/>
-</configuration>
-"@
-[System.IO.File]::WriteAllLines("${buildkite_agent_root}\buildkite-service.xml", $winsw_config)
-& $winsw install
+& choco install nssm
+
+Write-Host "Creating Buildkite Monitor service..."
+nssm install "buildkite-monitor" `
+    "c:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" `
+    "c:\buildkite\buildkite-monitor.ps1"
+nssm set "buildkite-monitor" "AppDirectory" "c:\buildkite"
+nssm set "buildkite-monitor" "DisplayName" "Buildkite Monitor"
+nssm set "buildkite-monitor" "Start" "SERVICE_DEMAND_START"
+nssm set "buildkite-monitor" "AppExit" "Default" "Restart"
+nssm set "buildkite-monitor" "AppRestartDelay" "3000"
+nssm set "buildkite-monitor" "AppStdout" "c:\buildkite\logs\buildkite-monitor.log"
+nssm set "buildkite-monitor" "AppStderr" "c:\buildkite\logs\buildkite-monitor.log"
+nssm set "buildkite-monitor" "AppRotateFiles" "1"
+
+Write-Host "Creating Buildkite Agent service..."
+nssm install "buildkite-agent" `
+    "c:\buildkite\buildkite-agent.exe" `
+    "start"
+nssm set "buildkite-agent" "AppDirectory" "c:\buildkite"
+nssm set "buildkite-agent" "DisplayName" "Buildkite Agent"
+nssm set "buildkite-agent" "Start" "SERVICE_DEMAND_START"
+nssm set "buildkite-agent" "ObjectName" ".\${buildkite_username}" "$buildkite_password"
+nssm set "buildkite-agent" "AppExit" "Default" "Exit"
+nssm set "buildkite-agent" "AppStdout" "c:\buildkite\logs\buildkite-agent.log"
+nssm set "buildkite-agent" "AppStderr" "c:\buildkite\logs\buildkite-agent.log"
+nssm set "buildkite-agent" "AppRotateFiles" "1"
 
 Write-Host "All done, adding GCESysprep to RunOnce and rebooting..."
-Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "GCESysprep" -Value "C:\Program Files\Google\Compute Engine\sysprep\gcesysprep.bat"
+Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "GCESysprep" -Value "c:\Program Files\Google\Compute Engine\sysprep\gcesysprep.bat"
 Restart-Computer
 '@
 
