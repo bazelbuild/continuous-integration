@@ -84,24 +84,28 @@ def downstream_projects():
             "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml"
         },
         "BUILD_file_generator": {
-            "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git"
+            "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml"
         },
         "bazel-toolchains": {
-            "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git"
+            "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-toolchains/master/.bazelci/presubmit.yml"
         },
         "bazel-skylib": {
             "git_repository": "https://github.com/bazelbuild/bazel-skylib.git",
             "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-skylib-postsubmit.yml"
         },
         "buildtools": {
-            "git_repository": "https://github.com/bazelbuild/buildtools.git"
+            "git_repository": "https://github.com/bazelbuild/buildtools.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/buildtools/master/.bazelci/presubmit.yml"
         },
         "CLion Plugin": {
             "git_repository": "https://github.com/bazelbuild/intellij.git",
             "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/clion-postsubmit.yml"
         },
         "Eclipse Plugin": {
-            "git_repository": "https://github.com/bazelbuild/eclipse.git"
+            "git_repository": "https://github.com/bazelbuild/eclipse.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/eclipse/master/.bazelci/presubmit.yml"
         },
         "Gerrit": {
             "git_repository": "https://gerrit.googlesource.com/gerrit.git",
@@ -116,7 +120,8 @@ def downstream_projects():
             "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/intellij-postsubmit.yml"
         },
         "migration-tooling": {
-            "git_repository": "https://github.com/bazelbuild/migration-tooling.git"
+            "git_repository": "https://github.com/bazelbuild/migration-tooling.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/migration-tooling/master/.bazelci/presubmit.yml"
         },
         "protobuf": {
             "git_repository": "https://github.com/google/protobuf.git",
@@ -127,55 +132,72 @@ def downstream_projects():
             "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/re2-postsubmit.yml"
         },
         "rules_appengine": {
-            "git_repository": "https://github.com/bazelbuild/rules_appengine.git"
+            "git_repository": "https://github.com/bazelbuild/rules_appengine.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_appengine/master/.bazelci/presubmit.yml"
         },
         "rules_closure": {
-            "git_repository": "https://github.com/bazelbuild/rules_closure.git"
+            "git_repository": "https://github.com/bazelbuild/rules_closure.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_closure/master/.bazelci/presubmit.yml"
         },
         "rules_d": {
-            "git_repository": "https://github.com/bazelbuild/rules_d.git"
+            "git_repository": "https://github.com/bazelbuild/rules_d.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_d/master/.bazelci/presubmit.yml"
         },
         "rules_docker": {
-            "git_repository": "https://github.com/bazelbuild/rules_docker.git"
+            "git_repository": "https://github.com/bazelbuild/rules_docker.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_docker/master/.bazelci/presubmit.yml"
         },
         "rules_go": {
-            "git_repository": "https://github.com/bazelbuild/rules_go.git"
+            "git_repository": "https://github.com/bazelbuild/rules_go.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_go/master/.bazelci/presubmit.yml"
         },
         "rules_groovy": {
-            "git_repository": "https://github.com/bazelbuild/rules_groovy.git"
+            "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/rules_groovy/master/.bazelci/presubmit.yml"
         },
         "rules_gwt": {
-            "git_repository": "https://github.com/bazelbuild/rules_gwt.git"
+            "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
+            "http_config" : "https://raw.githubusercontent.com/bazelbuild/rules_gwt/master/.bazelci/presubmit.yml"
         },
         "rules_jsonnet": {
-            "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git"
+            "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jsonnet/master/.bazelci/presubmit.yml"
         },
         "rules_kotlin": {
-            "git_repository": "https://github.com/bazelbuild/rules_kotlin.git"
+            "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_kotlin/master/.bazelci/presubmit.yml"
         },
         "rules_k8s": {
-            "git_repository": "https://github.com/bazelbuild/rules_k8s.git"
+            "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_k8s/master/.bazelci/presubmit.yml"
         },
         "rules_nodejs": {
-            "git_repository": "https://github.com/bazelbuild/rules_nodejs.git"
+            "git_repository": "https://github.com/bazelbuild/rules_nodejs.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_nodejs/master/.bazelci/presubmit.yml"
         },
         "rules_perl": {
-            "git_repository": "https://github.com/bazelbuild/rules_perl.git"
+            "git_repository": "https://github.com/bazelbuild/rules_perl.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_perl/master/.bazelci/presubmit.yml"
         },
         "rules_python": {
-            "git_repository": "https://github.com/bazelbuild/rules_python.git"
+            "git_repository": "https://github.com/bazelbuild/rules_python.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_python/master/.bazelci/presubmit.yml"
         },
         "rules_rust": {
-            "git_repository": "https://github.com/bazelbuild/rules_rust.git"
+            "git_repository": "https://github.com/bazelbuild/rules_rust.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_rust/master/.bazelci/presubmit.yml"
         },
         "rules_sass": {
-            "git_repository": "https://github.com/bazelbuild/rules_sass.git"
+            "git_repository": "https://github.com/bazelbuild/rules_sass.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_sass/master/.bazelci/presubmit.yml"
         },
         "rules_scala": {
-            "git_repository": "https://github.com/bazelbuild/rules_scala.git"
+            "git_repository": "https://github.com/bazelbuild/rules_scala.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_scala/master/.bazelci/presubmit.yml"
         },
         "rules_typescript": {
-            "git_repository": "https://github.com/bazelbuild/rules_typescript.git"
+            "git_repository": "https://github.com/bazelbuild/rules_typescript.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_typescript/master/.bazelci/presubmit.yml"
         },
         # Enable once is resolved: https://github.com/bazelbuild/continuous-integration/issues/191
         # "rules_webtesting": {
@@ -183,7 +205,8 @@ def downstream_projects():
         #     "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_webtesting-postsubmit.yml"
         # },
         "skydoc": {
-            "git_repository": "https://github.com/bazelbuild/skydoc.git"
+            "git_repository": "https://github.com/bazelbuild/skydoc.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/skydoc/master/.bazelci/presubmit.yml"
         },
         "subpar": {
             "git_repository": "https://github.com/google/subpar.git",
