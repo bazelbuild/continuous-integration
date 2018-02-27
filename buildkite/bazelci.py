@@ -200,11 +200,23 @@ def downstream_projects():
     }
 
 
-def python_binary(platform=None):
-    if platform == "windows":
+def python_binary():
+    if is_windows():
         return "python.exe"
     return "python3.6"
 
+def is_windows():
+    return os.name == 'nt'
+
+def gsutil_command():
+    if is_windows():
+        return "gsutil.cmd"
+    return "gsutil"
+
+def gcloud_command():
+    if is_windows():
+        return "gsutil.cmd"
+    return "gsutil"
 
 def bazelcipy_url():
     """
@@ -387,8 +399,8 @@ def fetch_github_token():
         return __github_token__
     try:
         execute_command(
-            ["gsutil", "cp", "gs://bazel-encrypted-secrets/github-token.enc", "github-token.enc"])
-        __github_token__ = subprocess.check_output(["gcloud", "kms", "decrypt", "--location", "global", "--keyring", "buildkite",
+            [gsutil_command(), "cp", "gs://bazel-encrypted-secrets/github-token.enc", "github-token.enc"])
+        __github_token__ = subprocess.check_output([gcloud_command(), "kms", "decrypt", "--location", "global", "--keyring", "buildkite",
                                                     "--key", "github-token", "--ciphertext-file", "github-token.enc",
                                                     "--plaintext-file", "-"]).decode("utf-8").strip()
         return __github_token__
@@ -780,7 +792,7 @@ def print_project_pipeline(platform_configs, project_name, http_config,
 
 def runner_step(platform, project_name=None, http_config=None,
                 git_repository=None, use_but=False):
-    command = python_binary(platform) + \
+    command = python_binary() + \
         " bazelci.py runner --platform=" + platform
     if http_config:
         command += " --http_config=" + http_config
@@ -855,7 +867,7 @@ def create_label(platform, project_name, build_only=False, test_only=False):
 
 
 def bazel_build_step(platform, project_name, http_config=None, build_only=False, test_only=False):
-    pipeline_command = python_binary(platform) + " bazelci.py runner"
+    pipeline_command = python_binary() + " bazelci.py runner"
     if build_only:
         pipeline_command += " --build_only --save_but"
     if test_only:
@@ -929,7 +941,7 @@ def latest_generation_and_build_number():
     attempt = 0
     while attempt < 5:
         output = subprocess.check_output(
-            ["gsutil", "stat", bazelci_builds_metadata_url()])
+            [gsutil_command(), "stat", bazelci_builds_metadata_url()])
         match = re.search("Generation:[ ]*([0-9]+)", output.decode("utf-8"))
         if not match:
             raise BuildkiteException(
@@ -943,7 +955,7 @@ def latest_generation_and_build_number():
         expected_md5hash = base64.b64decode(match.group(1))
 
         output = subprocess.check_output(
-            ["gsutil", "cat", bazelci_builds_metadata_url()])
+            [gsutil_command(), "cat", bazelci_builds_metadata_url()])
         hasher = hashlib.md5()
         hasher.update(output)
         actual_md5hash = hasher.digest()
@@ -975,7 +987,7 @@ def try_publish_binaries(build_number, expected_generation):
         }
         for platform in supported_platforms():
             bazel_binary_path = download_bazel_binary(tmpdir, platform)
-            execute_command(["gsutil", "cp", "-a", "public-read", bazel_binary_path,
+            execute_command([gsutil_command(), "cp", "-a", "public-read", bazel_binary_path,
                              bazelci_builds_upload_url(platform, build_number)])
             info["platforms"][platform] = {
                 "url": bazelci_builds_download_url(platform, build_number),
@@ -988,7 +1000,7 @@ def try_publish_binaries(build_number, expected_generation):
 
         try:
             execute_command([
-                "gsutil",
+                gsutil_command(),
                 "-h", "x-goog-if-generation-match:" + expected_generation,
                 "-h", "Content-Type:application/json",
                 "cp", "-a", "public-read",
