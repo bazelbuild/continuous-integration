@@ -45,6 +45,10 @@ You can view the failed test attempt's `test.log` file in the *Artifacts* tab.
 
 ![flaky test log]
 
+### Useful Links
+
+![buildkite useful buttons]
+
 ## Pull Requests
 
 Bazel accepts contributions via pull requests. Contributions by members of the [bazelbuild]
@@ -84,3 +88,4 @@ for an example.
 [status verify pull request]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/status-verify-pull-request.png
 [buildkite verify pull request]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/buildkite-verify-pull-request.png
 [pull request details]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/pull-request-details.png
+[buildkite useful buttons]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/buildkite-useful-buttons.png
