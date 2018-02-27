@@ -215,8 +215,8 @@ def gsutil_command():
 
 def gcloud_command():
     if is_windows():
-        return "gsutil.cmd"
-    return "gsutil"
+        return "gcloud.cmd"
+    return "gcloud"
 
 def bazelcipy_url():
     """
