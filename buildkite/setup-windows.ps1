@@ -15,6 +15,8 @@ if (-Not (Test-Path "c:\temp")) {
 }
 [Environment]::SetEnvironmentVariable("TEMP", "C:\temp", "Machine")
 [Environment]::SetEnvironmentVariable("TMP", "C:\temp", "Machine")
+[Environment]::SetEnvironmentVariable("TEMP", "C:\temp", "User")
+[Environment]::SetEnvironmentVariable("TMP", "C:\temp", "User")
 $env:TEMP = [Environment]::GetEnvironmentVariable("TEMP", "Machine")
 $env:TMP = [Environment]::GetEnvironmentVariable("TMP", "Machine")
 
@@ -249,7 +251,7 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine").replace(";;
 ## Create a service wrapper script for the Buildkite agent.
 Write-Host "Creating Buildkite agent environment hook..."
 $buildkite_environment_hook = @"
-SET BUILDKITE_ARTIFACT_UPLOAD_DESTINATION=gs://bazel-buildkite-artifacts/`$BUILDKITE_JOB_ID
+SET BUILDKITE_ARTIFACT_UPLOAD_DESTINATION=gs://bazel-buildkite-artifacts/%BUILDKITE_JOB_ID%
 SET BUILDKITE_GS_ACL=publicRead
 SET JAVA_HOME=${env:JAVA_HOME}
 SET PATH=${env:PATH}

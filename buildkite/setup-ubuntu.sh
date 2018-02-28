@@ -60,5 +60,8 @@ packages=(
   # Dependencies for TensorFlow.
   libcurl3-dev
   swig
+
+  # Infra stuff.
+  lvm2
 )
 apt-get -qqy install "${packages[@]}" > /dev/null

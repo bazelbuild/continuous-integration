@@ -16,6 +16,8 @@ if (-Not (Test-Path "c:\temp")) {
 }
 [Environment]::SetEnvironmentVariable("TEMP", "C:\temp", "Machine")
 [Environment]::SetEnvironmentVariable("TMP", "C:\temp", "Machine")
+[Environment]::SetEnvironmentVariable("TEMP", "C:\temp", "User")
+[Environment]::SetEnvironmentVariable("TMP", "C:\temp", "User")
 $env:TEMP = [Environment]::GetEnvironmentVariable("TEMP", "Machine")
 $env:TMP = [Environment]::GetEnvironmentVariable("TMP", "Machine")
 
@@ -250,7 +252,7 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine").replace(";;
 ## Create a service wrapper script for the Buildkite agent.
 Write-Host "Creating Buildkite agent environment hook..."
 $buildkite_environment_hook = @"
-SET BUILDKITE_ARTIFACT_UPLOAD_DESTINATION=gs://bazel-buildkite-artifacts/`$BUILDKITE_JOB_ID
+SET BUILDKITE_ARTIFACT_UPLOAD_DESTINATION=gs://bazel-buildkite-artifacts/%BUILDKITE_JOB_ID%
 SET BUILDKITE_GS_ACL=publicRead
 SET JAVA_HOME=${env:JAVA_HOME}
 SET PATH=${env:PATH}
@@ -325,6 +327,8 @@ nssm set "buildkite-monitor" "AppRestartDelay" "3000"
 nssm set "buildkite-monitor" "AppStdout" "c:\buildkite\logs\buildkite-monitor.log"
 nssm set "buildkite-monitor" "AppStderr" "c:\buildkite\logs\buildkite-monitor.log"
 nssm set "buildkite-monitor" "AppRotateFiles" "1"
+nssm set "buildkite-monitor" "AppRotateSeconds" 86400
+nssm set "buildkite-monitor" "AppRotateBytes" 1048576
 
 Write-Host "Creating Buildkite Agent service..."
 nssm install "buildkite-agent" `
@@ -338,6 +342,8 @@ nssm set "buildkite-agent" "AppExit" "Default" "Exit"
 nssm set "buildkite-agent" "AppStdout" "c:\buildkite\logs\buildkite-agent.log"
 nssm set "buildkite-agent" "AppStderr" "c:\buildkite\logs\buildkite-agent.log"
 nssm set "buildkite-agent" "AppRotateFiles" "1"
+nssm set "buildkite-agent" "AppRotateSeconds" 86400
+nssm set "buildkite-agent" "AppRotateBytes" 1048576
 
 Write-Host "All done, adding GCESysprep to RunOnce and rebooting..."
 Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "GCESysprep" -Value "c:\Program Files\Google\Compute Engine\sysprep\gcesysprep.bat"

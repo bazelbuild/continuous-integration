@@ -16,20 +16,43 @@
 
 set -euxo pipefail
 
-# Use a local SSD if available, otherwise use a RAM disk for our builds.
-# if [ -e /dev/nvme0n1 ]; then
-#   mkfs.ext4 -F /dev/nvme0n1
-#   # TODO(philwo) add 'discard' option again, when b/68062163 is fixed.
-#   mount -o defaults,nobarrier /dev/nvme0n1 /var/lib/buildkite-agent
-#   chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent
-#   chmod 0755 /var/lib/buildkite-agent
-#   mkdir /var/lib/buildkite-agent/docker
-#   chown root:root /var/lib/buildkite-agent/docker
-#   chmod 0711 /var/lib/buildkite-agent/docker
-# fi
+# If available: Use a persistent disk as a use-case specific data volume.
+if [[ -e /dev/sdb ]]; then
+  if [[ ! -e /dev/vg0 ]]; then
+    pvcreate /dev/sdb
+    vgcreate vg0 /dev/sdb
+  fi
 
-# Use the local SSD as swap space.
-if [ -e /dev/nvme0n1 ]; then
+  if [[ $(hostname) == *testing* ]]; then
+    # On "testing" machines, we create big /var/lib/docker and /home directories so that everyone
+    # has enough space to try out stuff.
+    if [[ ! -e /dev/vg0/docker ]]; then
+      lvcreate -n docker -l25%FREE vg0
+      mkfs.ext4 /dev/vg0/docker
+    fi
+    mount /dev/vg0/docker /var/lib/docker
+    chmod 0711 /var/lib/docker
+
+    if [[ ! -e /dev/vg0/home ]]; then
+      lvcreate -n home -l100%FREE vg0
+      mkfs.ext4 /dev/vg0/home
+    fi
+    mount /dev/vg0/home /home
+    chmod 0755 /home
+  elif [[ $(hostname) == *pipeline* ]]; then
+    # On "pipeline" machines, we create a big /var/lib/buildkite-agent directory, because these
+    # machines check out a lot of different Git repositories.
+    if [[ ! -e /dev/vg0/buildkite-agent ]]; then
+      lvcreate -n buildkite-agent -l100%FREE vg0
+      mkfs.ext4 /dev/vg0/buildkite-agent
+    fi
+    mount /dev/vg0/buildkite-agent /var/lib/buildkite-agent
+    chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent
+  fi
+fi
+
+# If available: Use the local SSD as swap space.
+if [[ -e /dev/nvme0n1 ]]; then
   mkswap -f /dev/nvme0n1
   swapon /dev/nvme0n1
 
@@ -39,7 +62,7 @@ if [ -e /dev/nvme0n1 ]; then
   mount -t tmpfs -o mode=0755,uid=buildkite-agent,gid=buildkite-agent,size=$((100 * 1024 * 1024 * 1024)) tmpfs /var/lib/buildkite-agent
 fi
 
-# Start Docker.
+# Start Docker if it's installed.
 if [[ $(docker --version 2>/dev/null) ]]; then
   if [[ $(systemctl --version 2>/dev/null) ]]; then
     systemctl start docker
@@ -48,17 +71,22 @@ if [[ $(docker --version 2>/dev/null) ]]; then
   fi
 fi
 
-# Get the Buildkite Token from GCS and decrypt it using KMS.
-BUILDKITE_TOKEN=$(curl -sS "https://storage.googleapis.com/bazel-encrypted-secrets/buildkite-agent-token.enc" | \
-  gcloud kms decrypt --location global --keyring buildkite --key buildkite-agent-token --ciphertext-file - --plaintext-file -)
-
-# Insert the Buildkite Token into the agent configuration.
-sed -i "s/token=\"xxx\"/token=\"${BUILDKITE_TOKEN}\"/" /etc/buildkite-agent/buildkite-agent.cfg
-
 # Only start the Buildkite Agent if this is a worker node (as opposed to a VM
 # being used by someone for testing / development).
 if [[ $(hostname) == buildkite* ]]; then
-  if [[ -e /bin/systemctl ]]; then
+  # Get the Buildkite Token from GCS and decrypt it using KMS.
+  BUILDKITE_TOKEN=$(curl -sS "https://storage.googleapis.com/bazel-encrypted-secrets/buildkite-agent-token.enc" | \
+    gcloud kms decrypt --location global --keyring buildkite --key buildkite-agent-token --ciphertext-file - --plaintext-file -)
+
+  # Insert the Buildkite Token into the agent configuration.
+  sed -i "s/token=\"xxx\"/token=\"${BUILDKITE_TOKEN}\"/" /etc/buildkite-agent/buildkite-agent.cfg
+
+  if [[ $(hostname) == *pipeline* ]]; then
+    # Start 8 instances of the Buildkite agent.
+    for i in $(seq 8); do
+      systemctl start buildkite-agent@$i
+    done
+  elif [[ -e /bin/systemctl ]]; then
     systemctl start buildkite-agent
   else
     service buildkite-agent start

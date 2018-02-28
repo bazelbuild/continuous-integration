@@ -17,13 +17,13 @@
 # Deduce the operating system from the hostname and put it into the metadata.
 case $(hostname) in
   *pipeline*)
-    AGENT_TAGS="osname=pipeline,pipeline=true"
+    AGENT_TAGS="os=pipeline,pipeline=true"
     ;;
   *ubuntu1404*)
-    AGENT_TAGS="osname=ubuntu1404"
+    AGENT_TAGS="os=ubuntu1404"
     ;;
   *ubuntu1604*)
-    AGENT_TAGS="osname=ubuntu1604"
+    AGENT_TAGS="os=ubuntu1604"
     ;;
   default)
     echo "Could not deduce operating system from hostname: $(hostname)!"
@@ -55,7 +55,7 @@ chown -R buildkite-agent:buildkite-agent /etc/buildkite-agent
 # Write the Buildkite agent configuration.
 cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
 token="xxx"
-name="%hostname"
+name="%hostname-%n"
 tags="${AGENT_TAGS}"
 tags-from-gcp=true
 build-path="/var/lib/buildkite-agent/builds"

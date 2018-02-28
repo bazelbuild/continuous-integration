@@ -25,6 +25,16 @@ DEBUG = True
 
 LOCATION = 'europe-west1-d'
 
+# Note that the hostnames are parsed and trigger specific behavior for different use cases.
+# The following parts have a special meaning:
+#
+# - "buildkite": This is a normal production VM running the Buildkite agent.
+# - "pipeline": This is a special production VM that only runs pipeline setup scripts.
+# - "testing": This is a shared VM that can be used by project members for experiments.
+#              It does not run the Buildkite agent.
+# - "$USER": This is a VM used by one specific engineer for tests. It does not run the Buildkite
+#            agent.
+#
 INSTANCE_GROUPS = {
     'buildkite-ubuntu1404': {
         'count': 8,
@@ -52,14 +62,37 @@ SINGLE_INSTANCES = {
         'machine_type': 'n1-standard-8',
         'persistent_disk': 'buildkite-pipeline-persistent'
     },
+    'testing-ubuntu1404': {
+        'image_family': 'buildkite-ubuntu1404',
+        'startup_script': 'startup-ubuntu.sh',
+        'machine_type': 'n1-standard-32',
+        'persistent_disk': 'testing-ubuntu1404-persistent'
+    },
+    'testing-ubuntu1604': {
+        'image_family': 'buildkite-ubuntu1604',
+        'startup_script': 'startup-ubuntu.sh',
+        'machine_type': 'n1-standard-32',
+        'persistent_disk': 'testing-ubuntu1604-persistent'
+    },
+    'testing-windows': {
+        'image_family': 'buildkite-windows',
+        'machine_type': 'n1-standard-32',
+        'boot_disk_size': '500GB'
+    },
+    '{}-ubuntu1404'.format(getpass.getuser()): {
+        'image_family': 'buildkite-ubuntu1404',
+        'startup_script': 'startup-ubuntu.sh',
+        'machine_type': 'n1-standard-32',
+        'local_ssd': 'interface=nvme',
+    },
     '{}-ubuntu1604'.format(getpass.getuser()): {
-        'image': 'buildkite-ubuntu1604',
+        'image_family': 'buildkite-ubuntu1604',
         'startup_script': 'startup-ubuntu.sh',
         'machine_type': 'n1-standard-32',
         'local_ssd': 'interface=nvme',
     },
     '{}-windows'.format(getpass.getuser()): {
-        'image': 'buildkite-windows',
+        'image_family': 'buildkite-windows',
         'startup_script': 'startup-windows.ps1',
         'machine_type': 'n1-standard-32',
         'local_ssd': 'interface=scsi',
@@ -83,10 +116,12 @@ def run(args, **kwargs):
 def flags_for_instance(image_family, params):
     cmd = ['--machine-type', params['machine_type']]
     cmd.extend(['--network', 'buildkite'])
-    if 'windows' in image_family:
-        cmd.extend(['--metadata-from-file', 'windows-startup-script-ps1=' + params['startup_script']])
-    else:
-        cmd.extend(['--metadata-from-file', 'startup-script=' + params['startup_script']])
+    if 'startup_script' in params:
+        if 'windows' in image_family:
+            cmd.extend(['--metadata-from-file',
+                        'windows-startup-script-ps1=' + params['startup_script']])
+        else:
+            cmd.extend(['--metadata-from-file', 'startup-script=' + params['startup_script']])
     cmd.extend(['--min-cpu-platform', 'Intel Skylake'])
     cmd.extend(['--boot-disk-type', 'pd-ssd'])
     cmd.extend(['--boot-disk-size', params.get('boot_disk_size', '50GB')])
@@ -120,11 +155,18 @@ def create_instance_template(template_name, image_family, params):
 
 
 def delete_instance(instance_name):
-    return run(['gcloud', 'compute', 'instances', 'delete', '--quiet', instance_name])
+    cmd = ['gcloud', 'compute', 'instances', 'delete', '--quiet', instance_name]
+    result = run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+    if result.returncode != 0:
+        # It's not an error if 'delete' failed, because the template didn't exist in the first place.
+        # But we do want to error out on other unexpected errors.
+        if not re.search(r'The resource .* was not found', result.stdout):
+            raise Exception('"gcloud compute instance delete" returned unexpected error:\n{}'.format(result.stdout))
+    return result
 
 
 def create_instance(instance_name, image_family, params):
-    cmd = ['gcloud', 'compute', 'instance', 'create', instance_name]
+    cmd = ['gcloud', 'compute', 'instances', 'create', instance_name]
     cmd.extend(['--zone', LOCATION])
     cmd.extend(flags_for_instance(image_family, params))
     run(cmd)
@@ -208,8 +250,12 @@ def main(argv=None):
         })
 
     for instance_name, params in SINGLE_INSTANCES.items():
+        # If the user specified instance (group) names on the command-line, we process only these
+        # instances, otherwise we process all.
         if argv and instance_name not in argv:
             continue
+        # Do not automatically create user-specific instances. These must be specified explicitly
+        # on the command-line.
         if instance_name.startswith(getpass.getuser()) and instance_name not in argv:
             continue
         WORK_QUEUE.put({
