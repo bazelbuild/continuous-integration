@@ -74,6 +74,7 @@ platforms:
     - "--copt=-w"
     - "--host_copt=-w"
     - "--test_env=TEMP"
+    - "--test_env=JAVA_HOME"
     - "--test_timeout=900"
     test_targets:
     - "//src:all_windows_tests"
