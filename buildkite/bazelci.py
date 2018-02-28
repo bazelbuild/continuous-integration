@@ -267,7 +267,7 @@ def platforms_info():
         "macos": {
             "name": "macOS",
             "emoji-name": ":darwin:",
-            "agent-directory": "/usr/local/var/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}"
+            "agent-directory": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}"
         },
         "windows": {
             "name": "Windows",
