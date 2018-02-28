@@ -658,7 +658,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     print_expanded_group(":bazel: Build")
     common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
                     "--jobs=" + concurrent_jobs(), "--build_event_json_file=" + bep_file,
-                    "--experimental_build_event_json_file_path_conversion=false"]
+                    "--experimental_build_event_json_file_path_conversion=false", "--announce_rc"]
     caching_flags = []
     if not remote_enabled(flags):
         caching_flags = remote_caching_flags(platform)
@@ -676,7 +676,7 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
                     "--flaky_test_attempts=3", "--build_tests_only",
                     "--jobs=" + concurrent_jobs(), "--local_test_jobs=" + concurrent_test_jobs(platform),
                     "--build_event_json_file=" + bep_file,
-                    "--experimental_build_event_json_file_path_conversion=false"]
+                    "--experimental_build_event_json_file_path_conversion=false", "--announce_rc"]
     caching_flags = []
     if not remote_enabled(flags):
         caching_flags = remote_caching_flags(platform)
