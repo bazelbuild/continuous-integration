@@ -116,8 +116,8 @@ Write-Host "Installing required MSYS2 packages..."
 
 ## Install Azul Zulu.
 Write-Host "Installing Zulu 8..."
-$zulu_url = "https://cdn.azul.com/zulu/bin/zulu8.27.0.7-jdk8.0.162-win_x64.zip"
-$zulu_zip = "c:\temp\zulu8.27.0.7-jdk8.0.162-win_x64.zip"
+$zulu_url = "https://cdn.azul.com/zulu/bin/zulu8.28.0.1-jdk8.0.163-win_x64.zip"
+$zulu_zip = "c:\temp\zulu8.28.0.1-jdk8.0.163-win_x64.zip"
 $zulu_extracted_path = "c:\temp\" + [IO.Path]::GetFileNameWithoutExtension($zulu_zip)
 $zulu_root = "c:\openjdk"
 (New-Object Net.WebClient).DownloadFile($zulu_url, $zulu_zip)
