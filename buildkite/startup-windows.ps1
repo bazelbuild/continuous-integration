@@ -57,9 +57,6 @@ tags="os=windows"
 build-path="d:\build"
 hooks-path="c:\buildkite\hooks"
 plugins-path="c:\buildkite\plugins"
-timestamp-lines=true
-
-# Stop the agent (which will automatically be restarted) after each job.
 disconnect-after-job=true
 disconnect-after-job-timeout=86400
 "@
