@@ -153,11 +153,11 @@ def downstream_projects():
         },
         "rules_groovy": {
             "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
-            "http_config" : "https://raw.githubusercontent.com/bazelbuild/rules_groovy/master/.bazelci/presubmit.yml"
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_groovy/master/.bazelci/presubmit.yml"
         },
         "rules_gwt": {
             "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
-            "http_config" : "https://raw.githubusercontent.com/bazelbuild/rules_gwt/master/.bazelci/presubmit.yml"
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_gwt/master/.bazelci/presubmit.yml"
         },
         "rules_jsonnet": {
             "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
@@ -222,23 +222,28 @@ def downstream_projects():
         }
     }
 
+
 def python_binary(platform=None):
     if platform == "windows":
         return "python.exe"
     return "python3.6"
 
+
 def is_windows():
     return os.name == "nt"
+
 
 def gsutil_command():
     if is_windows():
         return "gsutil.cmd"
     return "gsutil"
 
+
 def gcloud_command():
     if is_windows():
         return "gcloud.cmd"
     return "gcloud"
+
 
 def bazelcipy_url():
     """
@@ -437,7 +442,9 @@ def owner_repository_from_url(git_repository):
     return (owner, repository)
 
 
-def results_view_url(invocation_id):
+def results_view_url(invocation_id, platform):
+    if platform == "windows":
+        return "https://github.com/bazelbuild/bazel/issues/4735"
     results_url = None
     if invocation_id:
         results_url = "https://source.cloud.google.com/results/invocations/" + invocation_id
@@ -471,8 +478,8 @@ def update_pull_request_build_status(platform, git_repository, commit, state, in
         description = "Failure"
     elif state == "success":
         description = "Success"
-    update_pull_request_status(git_repository, commit, state, results_view_url(invocation_id), description,
-                               "bazel build ({0})".format(platforms_info()[platform]["name"]))
+    update_pull_request_status(git_repository, commit, state, results_view_url(invocation_id, platform),
+                               description, "bazel build ({0})".format(platforms_info()[platform]["name"]))
 
 
 def update_pull_request_test_status(platform, git_repository, commit, state, invocation_id, num_failed=0,
@@ -502,8 +509,8 @@ def update_pull_request_test_status(platform, git_repository, commit, state, inv
             description = "Some tests didn't pass"
     elif state == "success":
         description = "All tests passed"
-    update_pull_request_status(git_repository, commit, state, results_view_url(invocation_id), description,
-                               "bazel test ({0})".format(platforms_info()[platform]["name"]))
+    update_pull_request_status(git_repository, commit, state, results_view_url(invocation_id, platform),
+                               description, "bazel test ({0})".format(platforms_info()[platform]["name"]))
 
 
 def is_pull_request():
