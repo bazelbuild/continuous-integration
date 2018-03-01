@@ -61,7 +61,14 @@ packages=(
   libcurl3-dev
   swig
 
-  # Infra stuff.
+  # Required by Envoy: https://github.com/bazelbuild/continuous-integration/issues/218
+  automake
+  autotools-dev
+  cmake
+  libtool
+  m4
+
+  # Required by our infrastructure.
   lvm2
 )
 apt-get -qqy install "${packages[@]}" > /dev/null
