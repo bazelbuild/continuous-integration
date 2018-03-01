@@ -61,13 +61,10 @@ tags-from-gcp=true
 build-path="/var/lib/buildkite-agent/builds"
 hooks-path="/etc/buildkite-agent/hooks"
 plugins-path="/etc/buildkite-agent/plugins"
-timestamp-lines=true
 EOF
 if [[ $(hostname) != *pipeline* ]]; then
   # Stop the agent after each job on stateless worker machines.
   cat >> /etc/buildkite-agent/buildkite-agent.cfg <<EOF
-
-# Stop the agent (which will automatically be restarted) after each job.
 disconnect-after-job=true
 disconnect-after-job-timeout=86400
 EOF
