@@ -139,17 +139,19 @@ $env:JAVA_HOME = $zulu_root
 # Write-Host "JAVA_HOME was set to '${JAVA_HOME}'..."
 
 ## Install Visual C++ 2015 Build Tools (Update 3).
-# Write-Host "Installing Visual C++ 2015 Build Tools..."
-# (New-Object Net.WebClient).DownloadFile("http://go.microsoft.com/fwlink/?LinkId=691126", "c:\temp\visualcppbuildtools_full.exe")
-# Start-Process -Wait "c:\temp\visualcppbuildtools_full.exe" -ArgumentList "/Passive", "/NoRestart"
-# Remove-Item "c:\temp\visualcppbuildtools_full.exe"
+Write-Host "Installing Visual C++ 2015 Build Tools..."
+(New-Object Net.WebClient).DownloadFile("http://go.microsoft.com/fwlink/?LinkId=691126", "c:\temp\visualcppbuildtools_full.exe")
+Start-Process -Wait "c:\temp\visualcppbuildtools_full.exe" -ArgumentList "/Passive", "/NoRestart"
+Remove-Item "c:\temp\visualcppbuildtools_full.exe"
+[Environment]::SetEnvironmentVariable("BAZEL_VC", "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC", "Machine")
+$env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 
 ## Install Visual C++ 2017 Build Tools.
-Write-Host "Installing Visual C++ 2017 Build Tools..."
-& choco install microsoft-build-tools
-& choco install visualstudio2017-workload-vctools
-[Environment]::SetEnvironmentVariable("BAZEL_VC", "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC", "Machine")
-$env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
+# Write-Host "Installing Visual C++ 2017 Build Tools..."
+# & choco install microsoft-build-tools
+# & choco install visualstudio2017-workload-vctools
+# [Environment]::SetEnvironmentVariable("BAZEL_VC", "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC", "Machine")
+# $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 
 ## Install Python3
 Write-Host "Installing Python 3..."
