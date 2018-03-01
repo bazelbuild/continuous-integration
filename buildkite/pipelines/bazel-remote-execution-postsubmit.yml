@@ -14,6 +14,7 @@ platforms:
     - "--tls_enabled=true"
     - "--google_default_credentials"
     - "--jobs=75"
+    - "--remote_accept_cached=false"
     - --experimental_remote_platform_override=properties:{ name:"container-image"
       value:"docker://gcr.io/asci-toolchain/nosla-debian8-clang-fl@sha256:aa20628a902f06a11a015caa94b0432eb60690de2d2525bd046b9eea046f5d8a"
       }
