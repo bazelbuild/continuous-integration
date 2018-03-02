@@ -521,7 +521,7 @@ def is_pull_request():
 def bes_invocation_id(bep_file):
     targets = []
     raw_data = ""
-    with open(bep_file) as f:
+    with open(bep_file, encoding="utf-8") as f:
         raw_data = f.read()
     decoder = json.JSONDecoder()
 
