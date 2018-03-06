@@ -45,7 +45,7 @@ cat > /etc/buildkite-agent/hooks/environment <<'EOF'
 set -eu
 
 export ANDROID_HOME="/opt/android-sdk-linux"
-export ANDROID_NDK_HOME="/opt/android-ndk-r14b"
+export ANDROID_NDK_HOME="/opt/android-ndk-r15c"
 export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://bazel-buildkite-artifacts/$BUILDKITE_JOB_ID"
 export BUILDKITE_GS_ACL="publicRead"
 EOF
