@@ -25,7 +25,7 @@
 set -eu
 
 # Install the Android NDK
-curl -sSLo android-ndk.zip https://dl.google.com/android/repository/android-ndk-r14b-darwin-x86_64.zip
+curl -sSLo android-ndk.zip https://dl.google.com/android/repository/android-ndk-r15c-darwin-x86_64.zip
 unzip android-ndk.zip > /dev/null
 rm android-ndk.zip
 
