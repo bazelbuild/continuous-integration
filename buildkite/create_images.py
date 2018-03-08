@@ -121,8 +121,9 @@ def run(args, **kwargs):
 
 def wait_for_vm(vm, status):
     while True:
-        result = run(['gcloud', 'compute', 'instances', 'describe', '--zone', LOCATION,
-                      '--format', 'json', vm], check=True, stdout=subprocess.PIPE)
+        cmd = ['gcloud', 'compute', 'instances', 'describe', vm]
+        cmd += ['--zone', LOCATION, '--format', 'json']
+        result = run(cmd, check=True, stdout=subprocess.PIPE)
         current_status = json.loads(result.stdout)['status']
         if current_status == status:
             debug("wait_for_vm: VM %s reached status %s" % (vm, status))
@@ -154,8 +155,9 @@ def print_pretty_logs(vm, log):
 def tail_serial_console(vm, start=None, until=None):
     next_start = start if start else '0'
     while True:
-        result = run(['gcloud', 'compute', 'instances', 'get-serial-port-output', '--zone', LOCATION, '--start',
-                      next_start, vm], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        cmd = ['gcloud', 'compute', 'instances', 'get-serial-port-output', vm]
+        cmd += ['--zone', LOCATION, '--start', next_start]
+        result = run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         if result.returncode != 0:
             break
         print_pretty_logs(vm, result.stdout)
@@ -180,37 +182,37 @@ def create_vm(vm, params):
     merged_script_path = merge_setup_scripts(vm, params['scripts'])
     try:
         cmd = ['gcloud', 'compute', 'instances', 'create', vm]
-        cmd.extend(['--zone', LOCATION])
-        cmd.extend(['--machine-type', 'n1-standard-8'])
-        cmd.extend(['--network', 'buildkite'])
+        cmd += ['--zone', LOCATION]
+        cmd += ['--machine-type', 'n1-standard-8']
+        cmd += ['--network', 'buildkite']
         if 'windows' in vm:
-            cmd.extend(['--metadata-from-file', 'windows-startup-script-ps1=' + merged_script_path])
+            cmd += ['--metadata-from-file', 'windows-startup-script-ps1=' + merged_script_path]
         else:
-            cmd.extend(['--metadata-from-file', 'startup-script=' + merged_script_path])
-        cmd.extend(['--min-cpu-platform', 'Intel Skylake'])
-        cmd.extend(['--boot-disk-type', 'pd-ssd'])
-        cmd.extend(['--boot-disk-size', '50GB'])
+            cmd += ['--metadata-from-file', 'startup-script=' + merged_script_path]
+        cmd += ['--min-cpu-platform', 'Intel Skylake']
+        cmd += ['--boot-disk-type', 'pd-ssd']
+        cmd += ['--boot-disk-size', '50GB']
         if 'source_image' in params:
-            cmd.extend(['--image', params['source_image']])
+            cmd += ['--image', params['source_image']]
         else:
-            cmd.extend(['--image-project', params['source_image_project']])
-            cmd.extend(['--image-family', params['source_image_family']])
+            cmd += ['--image-project', params['source_image_project']]
+            cmd += ['--image-family', params['source_image_family']]
         run(cmd)
     finally:
         os.remove(merged_script_path)
 
 
 def delete_vm(vm):
-    run(['gcloud', 'compute', 'instances', 'delete', '--quiet', vm])
+    run(['gcloud', 'compute', 'instances', 'delete', vm, '--quiet', '--zone', LOCATION])
 
 
 def create_image(vm, params):
     cmd = ['gcloud', 'compute', 'images', 'create', vm]
-    cmd.extend(['--family', params['target_image_family']])
-    cmd.extend(['--source-disk', vm])
-    cmd.extend(['--source-disk-zone', LOCATION])
+    cmd += ['--family', params['target_image_family']]
+    cmd += ['--source-disk', vm]
+    cmd += ['--source-disk-zone', LOCATION]
     for license in params.get('licenses', []):
-        cmd.extend(['--licenses', license])
+        cmd += ['--licenses', license]
     run(cmd)
 
 
@@ -224,8 +226,10 @@ def write_to_clipboard(output):
 def print_windows_instructions(vm):
     tail_start = tail_serial_console(vm, until='Finished running startup scripts')
 
-    pw = json.loads(run(['gcloud', 'compute', 'reset-windows-password', '--format', 'json', '--quiet',
-                         vm], check=True, stdout=subprocess.PIPE).stdout)
+    cmd = ['gcloud', 'compute', 'reset-windows-password', vm]
+    cmd += ['--format', 'json', '--quiet', '--zone', LOCATION]
+
+    pw = json.loads(run(cmd, check=True, stdout=subprocess.PIPE).stdout)
     rdp_file = tempfile.mkstemp(suffix='.rdp')[1]
     with open(rdp_file, 'w') as f:
         f.write('full address:s:' + pw['ip_address'] + '\n')
