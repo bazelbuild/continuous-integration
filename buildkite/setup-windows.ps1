@@ -189,15 +189,15 @@ New-Item "c:\bazel" -ItemType "directory" -Force
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";c:\bazel"
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
-## Download the Android NDK and install into C:\android-ndk-r14b.
-$android_ndk_url = "https://dl.google.com/android/repository/android-ndk-r14b-windows-x86_64.zip"
+## Download the Android NDK and install into C:\android-ndk-r15c.
+$android_ndk_url = "https://dl.google.com/android/repository/android-ndk-r15c-windows-x86_64.zip"
 $android_ndk_zip = "c:\temp\android_ndk.zip"
 $android_ndk_root = "c:\android_ndk"
 New-Item $android_ndk_root -ItemType "directory" -Force
 (New-Object Net.WebClient).DownloadFile($android_ndk_url, $android_ndk_zip)
 [System.IO.Compression.ZipFile]::ExtractToDirectory($android_ndk_zip, $android_ndk_root)
-Rename-Item "${android_ndk_root}\android-ndk-r14b" -NewName "r14b"
-[Environment]::SetEnvironmentVariable("ANDROID_NDK_HOME", "${android_ndk_root}\r14b", "Machine")
+Rename-Item "${android_ndk_root}\android-ndk-r15c" -NewName "r15c"
+[Environment]::SetEnvironmentVariable("ANDROID_NDK_HOME", "${android_ndk_root}\r15c", "Machine")
 $env:ANDROID_NDK_HOME = [Environment]::GetEnvironmentVariable("ANDROID_NDK_HOME", "Machine")
 Remove-Item $android_ndk_zip
 

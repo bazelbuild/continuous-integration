@@ -16,7 +16,7 @@
 
 # Android NDK
 cd /opt
-curl -sSLo android-ndk.zip https://dl.google.com/android/repository/android-ndk-r14b-linux-x86_64.zip
+curl -sSLo android-ndk.zip https://dl.google.com/android/repository/android-ndk-r15c-linux-x86_64.zip
 unzip android-ndk.zip > /dev/null
 rm android-ndk.zip
 
