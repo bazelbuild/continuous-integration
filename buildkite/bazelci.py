@@ -671,7 +671,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
         caching_flags = remote_caching_flags(platform)
     try:
         execute_command([bazel_binary, "build"] +
-                        common_flags + caching_flags + flags + targets)
+                        common_flags + caching_flags + flags + ["--"] + targets)
     except subprocess.CalledProcessError as e:
         raise BazelBuildFailedException(
             "bazel build failed with exit code {}".format(e.returncode))
@@ -689,7 +689,7 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
         caching_flags = remote_caching_flags(platform)
     try:
         execute_command([bazel_binary, "test"] +
-                        common_flags + caching_flags + flags + targets)
+                        common_flags + caching_flags + flags + ["--"] + targets)
     except subprocess.CalledProcessError as e:
         raise BazelTestFailedException(
             "bazel test failed with exit code {}".format(e.returncode))
