@@ -37,8 +37,11 @@ if [[ -e /dev/sdb ]]; then
       lvcreate -n home -l100%FREE vg0
       mkfs.ext4 /dev/vg0/home
     fi
+    mkdir /tmp/home
+    rsync -a /home/ /tmp/home/
     mount /dev/vg0/home /home
-    chmod 0755 /home
+    rsync -a /tmp/home/ /home/
+    rm -rf /tmp/home
   elif [[ $(hostname) == *pipeline* ]]; then
     # On "pipeline" machines, we create a big /var/lib/buildkite-agent directory, because these
     # machines check out a lot of different Git repositories.
