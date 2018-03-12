@@ -21,6 +21,9 @@ import subprocess
 import sys
 import threading
 
+import gcloud
+
+
 DEBUG = True
 
 LOCATION = 'europe-west1-d'
@@ -35,68 +38,63 @@ LOCATION = 'europe-west1-d'
 # - "$USER": This is a VM used by one specific engineer for tests. It does not run the Buildkite
 #            agent.
 #
+DEFAULT_VM = {
+    'boot_disk_size': '50GB',
+    'boot_disk_type': 'pd-ssd',
+    'image_project': 'bazel-public',
+    'machine_type': 'n1-standard-32',
+    'min_cpu_platform': 'Intel Skylake',
+    'network': 'buildkite',
+    'scopes': 'cloud-platform',
+    'service_account': 'remote-account@bazel-public.iam.gserviceaccount.com',
+}
+
 INSTANCE_GROUPS = {
     'buildkite-ubuntu1404': {
         'count': 8,
-        'startup_script': 'startup-ubuntu.sh',
-        'machine_type': 'n1-standard-32',
+        'image_family': 'buildkite-ubuntu1404',
         'local_ssd': 'interface=nvme',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
     'buildkite-ubuntu1604': {
         'count': 8,
-        'startup_script': 'startup-ubuntu.sh',
-        'machine_type': 'n1-standard-32',
+        'image_family': 'buildkite-ubuntu1604',
         'local_ssd': 'interface=nvme',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
     'buildkite-windows': {
         'count': 4,
-        'startup_script': 'startup-windows.ps1',
-        'machine_type': 'n1-standard-32',
+        'image_family': 'buildkite-windows',
         'local_ssd': 'interface=scsi',
+        'metadata_from_file': 'windows-startup-script-ps1=startup-windows.ps1',
     },
 }
 
 SINGLE_INSTANCES = {
     'buildkite-pipeline-ubuntu1604': {
-        'startup_script': 'startup-ubuntu.sh',
+        'image_family': 'buildkite-pipeline-ubuntu1604',
         'machine_type': 'n1-standard-8',
-        'persistent_disk': 'buildkite-pipeline-persistent'
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+        'persistent_disk': 'name={0},device-name={0},mode=rw,boot=no'.format('buildkite-pipeline-persistent'),
     },
     'testing-ubuntu1404': {
         'image_family': 'buildkite-ubuntu1404',
-        'startup_script': 'startup-ubuntu.sh',
-        'machine_type': 'n1-standard-32',
-        'persistent_disk': 'testing-ubuntu1404-persistent'
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+        'persistent_disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1404-persistent'),
     },
     'testing-ubuntu1604': {
         'image_family': 'buildkite-ubuntu1604',
-        'startup_script': 'startup-ubuntu.sh',
-        'machine_type': 'n1-standard-32',
-        'persistent_disk': 'testing-ubuntu1604-persistent'
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+        'persistent_disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1604-persistent'),
+    },
+    'philwo-ubuntu1604': {
+        'image_family': 'buildkite-ubuntu1604',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
     'testing-windows': {
+        'boot_disk_size': '500GB',
         'image_family': 'buildkite-windows',
-        'machine_type': 'n1-standard-32',
-        'boot_disk_size': '500GB'
     },
-    '{}-ubuntu1404'.format(getpass.getuser()): {
-        'image_family': 'buildkite-ubuntu1404',
-        'startup_script': 'startup-ubuntu.sh',
-        'machine_type': 'n1-standard-32',
-        'local_ssd': 'interface=nvme',
-    },
-    '{}-ubuntu1604'.format(getpass.getuser()): {
-        'image_family': 'buildkite-ubuntu1604',
-        'startup_script': 'startup-ubuntu.sh',
-        'machine_type': 'n1-standard-32',
-        'local_ssd': 'interface=nvme',
-    },
-    '{}-windows'.format(getpass.getuser()): {
-        'image_family': 'buildkite-windows',
-        'startup_script': 'startup-windows.ps1',
-        'machine_type': 'n1-standard-32',
-        'local_ssd': 'interface=scsi',
-    }
 }
 
 PRINT_LOCK = threading.Lock()
@@ -113,105 +111,27 @@ def run(args, **kwargs):
     return subprocess.run(args, **kwargs)
 
 
-def flags_for_instance(image_family, params):
-    cmd = ['--machine-type', params['machine_type']]
-    cmd.extend(['--network', 'buildkite'])
-    if 'startup_script' in params:
-        if 'windows' in image_family:
-            cmd.extend(['--metadata-from-file',
-                        'windows-startup-script-ps1=' + params['startup_script']])
-        else:
-            cmd.extend(['--metadata-from-file', 'startup-script=' + params['startup_script']])
-    cmd.extend(['--min-cpu-platform', 'Intel Skylake'])
-    cmd.extend(['--boot-disk-type', 'pd-ssd'])
-    cmd.extend(['--boot-disk-size', params.get('boot_disk_size', '50GB')])
-    if 'local_ssd' in params:
-        cmd.extend(['--local-ssd', params['local_ssd']])
-    if 'persistent_disk' in params:
-        cmd.extend(['--disk',
-                    'name={0},device-name={0},mode=rw,boot=no'.format(params['persistent_disk'])])
-    cmd.extend(['--image-project', 'bazel-public'])
-    cmd.extend(['--image-family', image_family])
-    cmd.extend(['--service-account', 'remote-account@bazel-public.iam.gserviceaccount.com'])
-    cmd.extend(['--scopes', 'cloud-platform'])
-    return cmd
-
-
-def delete_instance_template(template_name):
-    cmd = ['gcloud', 'compute', 'instance-templates', 'delete', template_name, '--quiet']
-    result = run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
-    if result.returncode != 0:
-        # It's not an error if 'delete' failed, because the template didn't exist in the first place.
-        # But we do want to error out on other unexpected errors.
-        if not re.search(r'The resource .* was not found', result.stdout):
-            raise Exception('"gcloud compute instance-templates delete" returned unexpected error:\n{}'.format(result.stdout))
-    return result
-
-
-def create_instance_template(template_name, image_family, params):
-    cmd = ['gcloud', 'compute', 'instance-templates', 'create', template_name]
-    cmd.extend(flags_for_instance(image_family, params))
-    run(cmd)
-
-
-def delete_instance(instance_name):
-    cmd = ['gcloud', 'compute', 'instances', 'delete', '--quiet', instance_name]
-    result = run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
-    if result.returncode != 0:
-        # It's not an error if 'delete' failed, because the template didn't exist in the first place.
-        # But we do want to error out on other unexpected errors.
-        if not re.search(r'The resource .* was not found', result.stdout):
-            raise Exception('"gcloud compute instance delete" returned unexpected error:\n{}'.format(result.stdout))
-    return result
-
-
-def create_instance(instance_name, image_family, params):
-    cmd = ['gcloud', 'compute', 'instances', 'create', instance_name]
-    cmd.extend(['--zone', LOCATION])
-    cmd.extend(flags_for_instance(image_family, params))
-    run(cmd)
-
-
-def delete_instance_group(instance_group_name):
-    cmd = ['gcloud', 'compute', 'instance-groups', 'managed', 'delete', instance_group_name]
-    cmd.extend(['--zone', LOCATION])
-    cmd.extend(['--quiet'])
-    result = run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
-    if result.returncode != 0:
-        # It's not an error if 'delete' failed, because the template didn't exist in the first place.
-        # But we do want to error out on other unexpected errors.
-        if not re.search(r'The resource .* was not found', result.stdout):
-            raise Exception('"gcloud compute instance-groups managed delete" returned unexpected error:\n{}'.format(result.stdout))
-    return result
-
-
-def create_instance_group(instance_group_name, template_name, count):
-    cmd = ['gcloud', 'compute', 'instance-groups', 'managed', 'create', instance_group_name]
-    cmd.extend(['--zone', LOCATION])
-    cmd.extend(['--base-instance-name', instance_group_name])
-    cmd.extend(['--template', template_name])
-    cmd.extend(['--size', str(count)])
-    return run(cmd)
-
-
-def instance_group_task(instance_group_name, params):
-    image_family = params.get('image_family', instance_group_name)
+def instance_group_task(instance_group_name, count, **kwargs):
     template_name = instance_group_name + '-template'
 
-    if delete_instance_group(instance_group_name).returncode == 0:
+    if gcloud.delete_instance_group(instance_group_name, zone=LOCATION).returncode == 0:
         print('Deleted existing instance group: {}'.format(instance_group_name))
-    if delete_instance_template(template_name).returncode == 0:
+
+    if gcloud.delete_instance_template(template_name, zone=LOCATION).returncode == 0:
         print('Deleted existing VM template: {}'.format(template_name))
-    create_instance_template(template_name, image_family, params)
-    create_instance_group(instance_group_name, template_name, params['count'])
+
+    gcloud.create_instance_template(template_name, **kwargs)
+
+    gcloud.create_instance_group(instance_group_name,
+        zone=LOCATION, base_instance_name=instance_group_name, template=template_name,
+        size=count)
 
 
-def single_instance_task(instance_name, params):
-    image_family = params.get('image_family', instance_name)
-
-    if delete_instance(instance_name).returncode == 0:
+def single_instance_task(instance_name, **kwargs):
+    if gcloud.delete_instance(instance_name, zone=LOCATION).returncode == 0:
         print('Deleted existing instance: {}'.format(instance_name))
-    create_instance(instance_name, image_family, params)
+
+    gcloud.create_instance(instance_name, zone=LOCATION, **kwargs)
 
 
 def worker():
@@ -240,13 +160,10 @@ def main(argv=None):
         # instances, otherwise we process all.
         if argv and instance_group_name not in argv:
             continue
-        # Do not automatically create user-specific instances. These must be specified explicitly
-        # on the command-line.
-        if instance_group_name.startswith(getpass.getuser()) and instance_group_name not in argv:
-            continue
         WORK_QUEUE.put({
+            **DEFAULT_VM,
             'instance_group_name': instance_group_name,
-            'params': params
+            **params
         })
 
     for instance_name, params in SINGLE_INSTANCES.items():
@@ -254,13 +171,10 @@ def main(argv=None):
         # instances, otherwise we process all.
         if argv and instance_name not in argv:
             continue
-        # Do not automatically create user-specific instances. These must be specified explicitly
-        # on the command-line.
-        if instance_name.startswith(getpass.getuser()) and instance_name not in argv:
-            continue
         WORK_QUEUE.put({
+            **DEFAULT_VM,
             'instance_name': instance_name,
-            'params': params
+            **params
         })
 
     # Spawn worker threads that will create the VMs.
