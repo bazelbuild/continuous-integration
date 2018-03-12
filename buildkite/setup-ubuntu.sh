@@ -70,5 +70,8 @@ packages=(
 
   # Required by our infrastructure.
   lvm2
+
+  # Required by Android projects using the Skylark maven_{jar, aar} rules
+  maven
 )
 apt-get -qqy install "${packages[@]}" > /dev/null
