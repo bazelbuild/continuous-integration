@@ -5,16 +5,27 @@ platforms:
     - |-
       echo -e '
       import %workspace%/.bazelrc' >>bazel.bazelrc
+    - |-
+      echo -e '
+      android_sdk_repository(name = "androidsdk")
+      android_ndk_repository(name = "androidndk")' >>WORKSPACE
     - touch .bazelrc
     - "./tensorflow/tools/ci_build/builds/configured CPU"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
+    - "//tensorflow/examples/android:tensorflow_demo"
   ubuntu1604:
     shell_commands:
     - |-
       echo -e '
       import %workspace%/.bazelrc' >>bazel.bazelrc
+    - |- 
+      echo -e '
+      android_sdk_repository(name = "androidsdk")
+      android_ndk_repository(name = "androidndk")' >>WORKSPACE
     - touch .bazelrc
     - "./tensorflow/tools/ci_build/builds/configured CPU"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
+    - "//tensorflow/examples/android:tensorflow_demo"
+
