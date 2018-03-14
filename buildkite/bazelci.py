@@ -625,11 +625,11 @@ def remote_caching_flags(platform):
         common_flags = ["--bes_backend=buildeventservice.googleapis.com", "--bes_best_effort=false",
                         "--bes_timeout=10s", "--tls_enabled", "--project_id=bazel-public",
                         "--remote_instance_name=projects/bazel-public",
-                        "--spawn_strategy=remote", "--genrule_strategy=remote", "--strategy=Javac=remote", "--strategy=Closure=remote",
+                        "--experimental_remote_spawn_cache",
                         "--remote_timeout=10", "--remote_cache=remotebuildexecution.googleapis.com",
                         "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}"]
     else:
-        common_flags = ["--remote_timeout=10", "--spawn_strategy=remote", "--genrule_strategy=remote", "--strategy=Javac=remote", "--strategy=Closure=remote",
+        common_flags = ["--remote_timeout=10", "--experimental_remote_spawn_cache",
                         "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}",
                         "--remote_http_cache=https://storage.googleapis.com/bazel-buildkite-cache"]
     if platform in ["ubuntu1404", "ubuntu1604", "macos"]:
