@@ -3,10 +3,10 @@ platforms:
   ubuntu1404:
     shell_commands:
     - |-
-      echo -e '
+      echo '
       import %workspace%/.bazelrc' >>bazel.bazelrc
     - |-
-      echo -e '
+      echo '
       android_sdk_repository(name = "androidsdk")
       android_ndk_repository(name = "androidndk")' >>WORKSPACE
     - touch .bazelrc
@@ -17,10 +17,10 @@ platforms:
   ubuntu1604:
     shell_commands:
     - |-
-      echo -e '
+      echo '
       import %workspace%/.bazelrc' >>bazel.bazelrc
     - |- 
-      echo -e '
+      echo '
       android_sdk_repository(name = "androidsdk")
       android_ndk_repository(name = "androidndk")' >>WORKSPACE
     - touch .bazelrc
