@@ -14,43 +14,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Deduce the operating system from the hostname and put it into the metadata.
+###
+### Install the Buildkite agent.
+###
+
 case $(hostname) in
-  *pipeline*)
-    AGENT_TAGS="os=pipeline,pipeline=true"
+  *ubuntu*)
+    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 \
+        --recv-keys 32A37959C2FA5C3C99EFBC32A79206696452D198 &> /dev/null
+    add-apt-repository -y "deb https://apt.buildkite.com/buildkite-agent unstable main"
+    apt-get -qqy update > /dev/null
+    apt-get -qqy install buildkite-agent > /dev/null
     ;;
-  *ubuntu1404*)
-    AGENT_TAGS="os=ubuntu1404"
-    ;;
-  *ubuntu1604*)
-    AGENT_TAGS="os=ubuntu1604"
-    ;;
-  default)
-    echo "Could not deduce operating system from hostname: $(hostname)!"
+  *)
+    echo "Don't know how to install the Buildkite agent on this host: $(hostname)!"
     exit 1
 esac
 
-if [[ $(hostname) == *ubuntu* ]]; then
-  apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 \
-      --recv-keys 32A37959C2FA5C3C99EFBC32A79206696452D198 &> /dev/null
-  add-apt-repository -y "deb https://apt.buildkite.com/buildkite-agent unstable main"
-  apt-get -qqy update > /dev/null
-  apt-get -qqy install buildkite-agent > /dev/null
-fi
+###
+### /etc/buildkite-agent/buildkite-agent.cfg
+###
 
-# Add the Buildkite agent hooks.
-cat > /etc/buildkite-agent/hooks/environment <<'EOF'
-#!/bin/bash
-
-set -eu
-
-export ANDROID_HOME="/opt/android-sdk-linux"
-export ANDROID_NDK_HOME="/opt/android-ndk-r15c"
-export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://bazel-buildkite-artifacts/$BUILDKITE_JOB_ID"
-export BUILDKITE_GS_ACL="publicRead"
-EOF
-chmod 0500 /etc/buildkite-agent/hooks/*
-chown -R buildkite-agent:buildkite-agent /etc/buildkite-agent
+# Deduce the operating system from the hostname and put it into the metadata.
+case $(hostname) in
+  *pipeline*)
+    AGENT_TAGS="kind=pipeline,os=pipeline,pipeline=true"
+    ;;
+  *trusted*)
+    AGENT_TAGS="kind=trusted,os=trusted"
+    ;;
+  *ubuntu1404*)
+    AGENT_TAGS="kind=worker,os=ubuntu1404"
+    ;;
+  *ubuntu1604*)
+    AGENT_TAGS="kind=worker,os=ubuntu1604"
+    ;;
+  *)
+    echo "Could not deduce operating system from hostname: $(hostname)!"
+    exit 1
+esac
 
 # Write the Buildkite agent configuration.
 cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
@@ -62,23 +64,89 @@ build-path="/var/lib/buildkite-agent/builds"
 hooks-path="/etc/buildkite-agent/hooks"
 plugins-path="/etc/buildkite-agent/plugins"
 EOF
+
+# Stop the agent after each job on stateless worker machines.
 if [[ $(hostname) != *pipeline* ]]; then
-  # Stop the agent after each job on stateless worker machines.
   cat >> /etc/buildkite-agent/buildkite-agent.cfg <<EOF
 disconnect-after-job=true
 disconnect-after-job-timeout=86400
 EOF
 fi
-chmod 0400 /etc/buildkite-agent/buildkite-agent.cfg
-chown -R buildkite-agent:buildkite-agent /etc/buildkite-agent
+
+###
+### /etc/buildkite-agent/hooks/environment
+###
+
+# Add the Buildkite agent hooks.
+cat > /etc/buildkite-agent/hooks/environment <<'EOF'
+#!/bin/bash
+
+set -euo pipefail
+
+export ANDROID_HOME="/opt/android-sdk-linux"
+echo "Android SDK is at $ANDROID_HOME"
+
+export ANDROID_NDK_HOME="/opt/android-ndk-*"
+echo "Android NDK is at $ANDROID_NDK_HOME"
+
+export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://bazel-buildkite-artifacts/$BUILDKITE_JOB_ID"
+export BUILDKITE_GS_ACL="publicRead"
+EOF
+
+# The trusted worker machine may only execute certain whitelisted builds.
+if [[ $(hostname) == *trusted* ]]; then
+  cat >> /etc/buildkite-agent/hooks/environment <<'EOF'
+case ${BUILDKITE_BUILD_CREATOR_EMAIL} in
+  *@google.com)
+    ;;
+  *)
+    echo "Build creator not allowed: ${BUILDKITE_BUILD_CREATOR_EMAIL}"
+    exit 1
+esac
+
+case ${BUILDKITE_REPO} in
+  https://github.com/bazelbuild/bazel.git|\
+  https://github.com/bazelbuild/continuous-integration.git)
+    ;;
+  *)
+    echo "Repository not allowed: ${BUILDKITE_REPO}"
+    exit 1
+esac
+
+case ${BUILDKITE_ORGANIZATION_SLUG} in
+  bazel)
+    ;;
+  *)
+    echo "Organization not allowed: ${BUILDKITE_PIPELINE_SLUG}"
+    exit 1
+esac
+
+case ${BUILDKITE_PIPELINE_SLUG} in
+  google-bazel-presubmit-metrics|\
+  release)
+    ;;
+  *)
+    echo "Pipeline not allowed: ${BUILDKITE_PIPELINE_SLUG}"
+    exit 1
+esac
+
+export BUILDKITE_API_TOKEN=$(gsutil cat "gs://bazel-encrypted-secrets/buildkite-api-token.enc" | \
+    gcloud kms decrypt --location "global" --keyring "buildkite" --key "buildkite-api-token" \
+        --plaintext-file "-" --ciphertext-file "-")
+EOF
+fi
+
+###
+### Service configuration.
+###
 
 # Some notes about our service config:
 #
 # - All Buildkite agents except the pipeline agent are stateless and need a special service config
-# that kills remaining processes and deletes temporary files.
+#   that kills remaining processes and deletes temporary files.
 #
 # - We set the service to not launch automatically, as the startup script will start it once it is
-# done with setting up the local SSD and writing the agent configuration.
+#   done with setting up the local SSD and writing the agent configuration.
 if [[ $(hostname) == *pipeline* ]]; then
   # This is a pipeline worker machine.
   systemctl disable buildkite-agent

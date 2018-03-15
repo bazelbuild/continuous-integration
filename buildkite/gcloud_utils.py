@@ -74,6 +74,9 @@ def tail_serial_console(instance_name, zone, start=None, until=None):
         try:
             result = gcloud.get_serial_port_output(instance_name, zone=zone, start=next_start)
         except subprocess.CalledProcessError as e:
+            if 'Could not fetch serial port output: TIMEOUT' in e.stderr:
+                gcloud.debug('tail_serial_console: Retrying after TIMEOUT')
+                continue
             gcloud.debug('tail_serial_console: Done, because got exception: {}'.format(e))
             if e.stdout:
                 gcloud.debug('stdout: ' + e.stdout)

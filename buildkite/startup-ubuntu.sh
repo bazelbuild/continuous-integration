@@ -78,12 +78,18 @@ fi
 # being used by someone for testing / development).
 if [[ $(hostname) == buildkite* ]]; then
   # Get the Buildkite Token from GCS and decrypt it using KMS.
-  BUILDKITE_TOKEN=$(curl -sS "https://storage.googleapis.com/bazel-encrypted-secrets/buildkite-agent-token.enc" | \
+  BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-encrypted-secrets/buildkite-agent-token.enc" | \
     gcloud kms decrypt --location global --keyring buildkite --key buildkite-agent-token --ciphertext-file - --plaintext-file -)
 
   # Insert the Buildkite Token into the agent configuration.
   sed -i "s/token=\"xxx\"/token=\"${BUILDKITE_TOKEN}\"/" /etc/buildkite-agent/buildkite-agent.cfg
 
+  # Fix permissions of the Buildkite agent configuration files and hooks.
+  chmod 0400 /etc/buildkite-agent/buildkite-agent.cfg
+  chmod 0500 /etc/buildkite-agent/hooks/*
+  chown -R buildkite-agent:buildkite-agent /etc/buildkite-agent
+
+  # Start the Buildkite agent service.
   if [[ $(hostname) == *pipeline* ]]; then
     # Start 8 instances of the Buildkite agent.
     for i in $(seq 8); do

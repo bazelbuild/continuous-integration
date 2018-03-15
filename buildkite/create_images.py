@@ -36,18 +36,16 @@ IMAGE_CREATION_VMS = {
     # Find the newest FreeBSD 11 image via:
     # gcloud compute images list --project freebsd-org-cloud-dev \
     #     --no-standard-images
-    # 'buildkite-freebsd11': {
+    # ('buildkite-freebsd11',): {
     #     'source_image': 'https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-1-stable-amd64-2017-12-28',
-    #     'target_image_family': 'bazel-freebsd11',
     #     'scripts': [
     #         'setup-freebsd.sh',
     #         'install-buildkite-agent.sh'
     #     ]
     # },
-    'buildkite-ubuntu1404': {
+    ('buildkite-ubuntu1404',): {
         'source_image_project': 'ubuntu-os-cloud',
         'source_image_family': 'ubuntu-1404-lts',
-        'target_image_family': 'buildkite-ubuntu1404',
         'scripts': [
             'shell-utils.sh',
             'setup-ubuntu.sh',
@@ -64,10 +62,9 @@ IMAGE_CREATION_VMS = {
             'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
         ]
     },
-    'buildkite-ubuntu1604': {
+    ('buildkite-ubuntu1604', 'buildkite-trusted-ubuntu1604', 'buildkite-pipeline-ubuntu1604'): {
         'source_image_project': 'ubuntu-os-cloud',
         'source_image_family': 'ubuntu-1604-lts',
-        'target_image_family': 'buildkite-ubuntu1604',
         'scripts': [
             'shell-utils.sh',
             'setup-ubuntu.sh',
@@ -84,43 +81,9 @@ IMAGE_CREATION_VMS = {
             'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
         ]
     },
-    'philwo-ubuntu1604': {
-        'source_image_project': 'ubuntu-os-cloud',
-        'source_image_family': 'ubuntu-1604-lts',
-        'target_image_family': 'philwo-ubuntu1604',
-        'scripts': [
-            'shell-utils.sh',
-            'setup-ubuntu.sh',
-            'install-azul-zulu.sh',
-            'install-bazel.sh',
-            'install-buildkite-agent.sh',
-            'install-docker.sh',
-            'install-nodejs.sh',
-            'install-python36.sh',
-            'install-android-sdk.sh',
-            'shutdown.sh'
-        ],
-        'licenses': [
-            'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
-        ]
-    },
-    'buildkite-pipeline-ubuntu1604': {
-        'source_image_project': 'ubuntu-os-cloud',
-        'source_image_family': 'ubuntu-1604-lts',
-        'target_image_family': 'buildkite-pipeline-ubuntu1604',
-        'scripts': [
-            'shell-utils.sh',
-            'setup-ubuntu.sh',
-            'install-azul-zulu.sh',
-            'install-buildkite-agent.sh',
-            'install-python36.sh',
-            'shutdown.sh'
-        ]
-    },
-    'buildkite-windows': {
+    ('buildkite-windows',): {
         'source_image_project': 'windows-cloud',
         'source_image_family': 'windows-1709-core',
-        'target_image_family': 'buildkite-windows',
         'scripts': [
             'setup-windows-manual.ps1'
         ]
@@ -163,7 +126,8 @@ def create_instance(instance_name, params):
                 'image-family': params['source_image_family']
             }
 
-        gcloud.create_instance(instance_name,
+        gcloud.create_instance(
+            instance_name,
             zone=LOCATION,
             machine_type='n1-standard-8',
             network='buildkite',
@@ -228,8 +192,9 @@ def workflow(name, params):
         gcloud_utils.wait_for_instance(instance_name, zone=LOCATION, status='TERMINATED')
 
         # Create a new image from our VM.
-        gcloud.create_image(instance_name,
-            family=params['target_image_family'],
+        gcloud.create_image(
+            instance_name,
+            family=name,
             source_disk=instance_name,
             source_disk_zone=LOCATION,
             licenses=params.get('licenses', []))
@@ -253,13 +218,14 @@ def main(argv=None):
         argv = sys.argv[1:]
 
     # Put VM creation instructions into the work queue.
-    for name, params in IMAGE_CREATION_VMS.items():
-        if argv and name not in argv:
-            continue
-        WORK_QUEUE.put({
-            'name': name,
-            'params': params
-        })
+    for names, params in IMAGE_CREATION_VMS.items():
+        for name in names:
+            if argv and name not in argv:
+                continue
+            WORK_QUEUE.put({
+                'name': name,
+                'params': params
+            })
 
     # Spawn worker threads that will create the VMs.
     threads = []

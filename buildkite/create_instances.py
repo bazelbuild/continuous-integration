@@ -62,6 +62,14 @@ INSTANCE_GROUPS = {
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
+    'buildkite-trusted-ubuntu1604': {
+        'count': 1,
+        'image_family': 'buildkite-trusted-ubuntu1604',
+        'local_ssd': 'interface=nvme',
+        'machine_type': 'n1-standard-8',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+        'service_account': 'bazel-release-process@bazel-public.iam.gserviceaccount.com',
+    },
     'buildkite-windows': {
         'count': 4,
         'image_family': 'buildkite-windows',
@@ -86,10 +94,6 @@ SINGLE_INSTANCES = {
         'image_family': 'buildkite-ubuntu1604',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
         'persistent_disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1604-persistent'),
-    },
-    'philwo-ubuntu1604': {
-        'image_family': 'buildkite-ubuntu1604',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
     'testing-windows': {
         'boot_disk_size': '500GB',
@@ -117,7 +121,7 @@ def instance_group_task(instance_group_name, count, **kwargs):
     if gcloud.delete_instance_group(instance_group_name, zone=LOCATION).returncode == 0:
         print('Deleted existing instance group: {}'.format(instance_group_name))
 
-    if gcloud.delete_instance_template(template_name, zone=LOCATION).returncode == 0:
+    if gcloud.delete_instance_template(template_name).returncode == 0:
         print('Deleted existing VM template: {}'.format(template_name))
 
     gcloud.create_instance_template(template_name, **kwargs)
