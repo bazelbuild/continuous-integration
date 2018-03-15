@@ -93,7 +93,7 @@ def downstream_projects():
         },
         "bazel-skylib": {
             "git_repository": "https://github.com/bazelbuild/bazel-skylib.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-skylib-postsubmit.yml"
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-skylib/master/.bazelci/presubmit.yml"
         },
         "buildtools": {
             "git_repository": "https://github.com/bazelbuild/buildtools.git",
