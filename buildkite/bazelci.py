@@ -383,8 +383,8 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                                    config.get("test_targets", None), test_bep_file)
                 if has_flaky_tests(test_bep_file):
                     show_image(flaky_test_meme_url(), "Flaky Tests")
-                    # We also treat flaky tests as test failures
-                    raise BazelTestFailedException
+                    # TODO(buchgr) upload the BEP and/or logs somewhere to get data on
+                    # flaky tests.
                 if is_pull_request():
                     invocation_id = bes_invocation_id(test_bep_file)
                     update_pull_request_test_status(
