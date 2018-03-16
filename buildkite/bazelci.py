@@ -383,8 +383,10 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                                    config.get("test_targets", None), test_bep_file)
                 if has_flaky_tests(test_bep_file):
                     show_image(flaky_test_meme_url(), "Flaky Tests")
-                    # TODO(buchgr) upload the BEP and/or logs somewhere to get data on
-                    # flaky tests.
+                    if os.getenv("BUILDKITE_PIPELINE_SLUG") in ["bazel-bazel", "google-bazel-presubmit"]:
+                        # Upload the BEP logs from Bazel builds for later analysis on flaky tests
+                        build_id = os.getenv("BUILDKITE_BUILD_ID")
+                        execute_command([gsutil_command(), "cp", test_bep_file, "gs://bazel-buildkite-stats/build_event_protocols/"+build_id+".json"])
                 if is_pull_request():
                     invocation_id = bes_invocation_id(test_bep_file)
                     update_pull_request_test_status(
