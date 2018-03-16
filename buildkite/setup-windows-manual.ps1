@@ -247,6 +247,10 @@ New-Item "${buildkite_agent_root}\plugins" -ItemType "directory" -Force
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${buildkite_agent_root}"
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
+## Store the image version in a file.
+(New-Object Net.WebClient).DownloadFile("http://metadata.google.internal/computeMetadata/v1/instance/attributes/image-version", "c:\buildkite\image.version")
+$image_version = Get-Content "c:\buildkite\image.version" -Raw
+
 ## Remove empty folders (";;") from PATH.
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine").replace(";;", ";")
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
@@ -256,6 +260,7 @@ Write-Host "Creating Buildkite agent environment hook..."
 $buildkite_environment_hook = @"
 SET BUILDKITE_ARTIFACT_UPLOAD_DESTINATION=gs://bazel-buildkite-artifacts/%BUILDKITE_JOB_ID%
 SET BUILDKITE_GS_ACL=publicRead
+SET BUILDKITE_IMAGE_VERSION=${image_version}
 SET JAVA_HOME=${env:JAVA_HOME}
 SET PATH=${env:PATH}
 SET TEMP=D:\temp

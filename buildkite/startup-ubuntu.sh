@@ -16,6 +16,13 @@
 
 set -euxo pipefail
 
+# Set the image version on the current instance labels.
+# TODO(philwo) we would have to grant setMetadata permission to the service account,
+# but we can't restrict this to specific instances...
+# INSTANCE_NAME=$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/name" -H "Metadata-Flavor: Google")
+# INSTANCE_ZONE=$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/zone" -H "Metadata-Flavor: Google")
+# IMAGE_VERSION=$(</etc/image-version)
+
 # If available: Use a persistent disk as a use-case specific data volume.
 if [[ -e /dev/sdb ]]; then
   if [[ ! -e /dev/vg0 ]]; then

@@ -49,6 +49,7 @@ IMAGE_CREATION_VMS = {
         'scripts': [
             'shell-utils.sh',
             'setup-ubuntu.sh',
+            'install-image-version.sh',
             'install-azul-zulu.sh',
             'install-bazel.sh',
             'install-buildkite-agent.sh',
@@ -68,6 +69,7 @@ IMAGE_CREATION_VMS = {
         'scripts': [
             'shell-utils.sh',
             'setup-ubuntu.sh',
+            'install-image-version.sh',
             'install-azul-zulu.sh',
             'install-bazel.sh',
             'install-buildkite-agent.sh',
@@ -91,6 +93,7 @@ IMAGE_CREATION_VMS = {
 }
 
 WORK_QUEUE = queue.Queue()
+GIT_COMMIT = None
 
 
 def run(args, **kwargs):
@@ -131,6 +134,7 @@ def create_instance(instance_name, params):
             zone=LOCATION,
             machine_type='n1-standard-8',
             network='buildkite',
+            metadata='image-version={}'.format(GIT_COMMIT),
             metadata_from_file=startup_script,
             min_cpu_platform='Intel Skylake',
             boot_disk_type='pd-ssd',
@@ -216,6 +220,19 @@ def worker():
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
+
+    try:
+        GIT_COMMIT = subprocess.check_output(['git', 'rev-parse', '--verify', 'HEAD'])
+    except subprocess.CalledProcessError:
+        print("Could not get current Git commit hash. You have to run "
+            "create_images.py from a Git repository.", file=sys.stderr)
+        return 1
+
+    if subprocess.check_output(['git', 'status', '--porcelain']).strip():
+        print("There are pending changes in your Git repository. You have to "
+            "commit them, before create_images.py can continue.",
+            file=sys.stderr)
+        return 1
 
     # Put VM creation instructions into the work queue.
     for names, params in IMAGE_CREATION_VMS.items():

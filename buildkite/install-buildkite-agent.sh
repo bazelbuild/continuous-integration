@@ -54,6 +54,8 @@ case $(hostname) in
     exit 1
 esac
 
+AGENT_TAGS="${AGENT_TAGS},image-version=${IMAGE_VERSION}"
+
 # Write the Buildkite agent configuration.
 cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
 token="xxx"
@@ -78,19 +80,22 @@ fi
 ###
 
 # Add the Buildkite agent hooks.
-cat > /etc/buildkite-agent/hooks/environment <<'EOF'
+cat > /etc/buildkite-agent/hooks/environment <<EOF
 #!/bin/bash
 
 set -euo pipefail
 
 export ANDROID_HOME="/opt/android-sdk-linux"
-echo "Android SDK is at $ANDROID_HOME"
+echo "Android SDK is at \${ANDROID_HOME}"
 
 export ANDROID_NDK_HOME="/opt/android-ndk-*"
-echo "Android NDK is at $ANDROID_NDK_HOME"
+echo "Android NDK is at \${ANDROID_NDK_HOME}"
 
-export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://bazel-buildkite-artifacts/$BUILDKITE_JOB_ID"
+export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://bazel-buildkite-artifacts/\$BUILDKITE_JOB_ID"
 export BUILDKITE_GS_ACL="publicRead"
+
+export BUILDKITE_IMAGE_VERSION="${IMAGE_VERSION}"
+echo "Running image is version \${BUILDKITE_IMAGE_VERSION}"
 EOF
 
 # The trusted worker machine may only execute certain whitelisted builds.
