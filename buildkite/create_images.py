@@ -93,7 +93,6 @@ IMAGE_CREATION_VMS = {
 }
 
 WORK_QUEUE = queue.Queue()
-GIT_COMMIT = None
 
 
 def run(args, **kwargs):
@@ -111,7 +110,7 @@ def merge_setup_scripts(instance_name, scripts):
     return merged_script_path
 
 
-def create_instance(instance_name, params):
+def create_instance(instance_name, params, git_commit):
     merged_script_path = merge_setup_scripts(instance_name, params['scripts'])
     try:
         if 'windows' in instance_name:
@@ -134,7 +133,7 @@ def create_instance(instance_name, params):
             zone=LOCATION,
             machine_type='n1-standard-8',
             network='buildkite',
-            metadata='image-version={}'.format(GIT_COMMIT),
+            metadata='image-version={}'.format(git_commit),
             metadata_from_file=startup_script,
             min_cpu_platform='Intel Skylake',
             boot_disk_type='pd-ssd',
@@ -174,11 +173,11 @@ def print_windows_instructions(instance_name):
     return tail_start
 
 
-def workflow(name, params):
+def workflow(name, params, git_commit):
     instance_name = "%s-image-%s" % (name, int(datetime.now().timestamp()))
     try:
         # Create the VM.
-        create_instance(instance_name, params)
+        create_instance(instance_name, params, git_commit)
 
         # Wait for the VM to become ready.
         gcloud_utils.wait_for_instance(instance_name, zone=LOCATION, status='RUNNING')
@@ -222,7 +221,7 @@ def main(argv=None):
         argv = sys.argv[1:]
 
     try:
-        GIT_COMMIT = subprocess.check_output(['git', 'rev-parse', '--verify', 'HEAD'])
+        git_commit = subprocess.check_output(['git', 'rev-parse', '--verify', 'HEAD'])
     except subprocess.CalledProcessError:
         print("Could not get current Git commit hash. You have to run "
             "create_images.py from a Git repository.", file=sys.stderr)
@@ -241,7 +240,8 @@ def main(argv=None):
                 continue
             WORK_QUEUE.put({
                 'name': name,
-                'params': params
+                'params': params,
+                'git_commit': git_commit,
             })
 
     # Spawn worker threads that will create the VMs.
