@@ -221,16 +221,16 @@ def main(argv=None):
         argv = sys.argv[1:]
 
     try:
-        git_commit = subprocess.check_output(['git', 'rev-parse', '--verify', 'HEAD'])
+        git_commit = subprocess.check_output(['git', 'rev-parse', '--verify', 'HEAD'],
+                                             universal_newlines=True)
     except subprocess.CalledProcessError:
         print("Could not get current Git commit hash. You have to run "
-            "create_images.py from a Git repository.", file=sys.stderr)
+              "create_images.py from a Git repository.", file=sys.stderr)
         return 1
 
-    if subprocess.check_output(['git', 'status', '--porcelain']).strip():
+    if subprocess.check_output(['git', 'status', '--porcelain'], universal_newlines=True).strip():
         print("There are pending changes in your Git repository. You have to "
-            "commit them, before create_images.py can continue.",
-            file=sys.stderr)
+              "commit them, before create_images.py can continue.", file=sys.stderr)
         return 1
 
     # Put VM creation instructions into the work queue.
