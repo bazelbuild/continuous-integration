@@ -31,7 +31,7 @@ mkdir -p /usr/local/src
 pushd /usr/local/src
 
 curl -O "https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz"
-tar xvfJ "Python-${PYTHON_VERSION}.tar.xz"
+tar xfJ "Python-${PYTHON_VERSION}.tar.xz"
 rm -f "Python-${PYTHON_VERSION}.tar.xz"
 cd "Python-${PYTHON_VERSION}"
 
@@ -43,7 +43,7 @@ _ssl _ssl.c \
 EOF
 
 echo "Compiling Python ${PYTHON_VERSION} ..."
-./configure --enable-ipv6
+./configure --quiet --enable-ipv6
 make -s -j8 all > /dev/null
 echo "Installing Python ${PYTHON_VERSION} ..."
 make -s altinstall > /dev/null

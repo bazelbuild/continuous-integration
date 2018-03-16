@@ -234,7 +234,7 @@ Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
 
 ## Download and install the Buildkite agent.
 Write-Host "Downloading Buildkite agent..."
-$buildkite_agent_version = "3.0-beta.39"
+$buildkite_agent_version = "3.0-beta.40"
 $buildkite_agent_url = "https://github.com/buildkite/agent/releases/download/v${buildkite_agent_version}/buildkite-agent-windows-amd64-${buildkite_agent_version}.zip"
 $buildkite_agent_zip = "c:\temp\buildkite-agent.zip"
 $buildkite_agent_root = "c:\buildkite"
@@ -248,8 +248,11 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${build
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
 ## Store the image version in a file.
-(New-Object Net.WebClient).DownloadFile("http://metadata.google.internal/computeMetadata/v1/instance/attributes/image-version", "c:\buildkite\image.version")
-$image_version = Get-Content "c:\buildkite\image.version" -Raw
+$web_client = New-Object Net.WebClient
+$web_client.Headers.add("Metadata-Flavor","Google")
+$image_version = $web_client.DownloadString("http://metadata.google.internal/computeMetadata/v1/instance/attributes/image-version")
+$image_version = $image_version.Trim()
+$image_version | Set-Content -Path "c:\buildkite\image.version"
 
 ## Remove empty folders (";;") from PATH.
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine").replace(";;", ";")
