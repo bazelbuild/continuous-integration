@@ -923,6 +923,29 @@ def publish_bazel_binaries_step():
       - \"pipeline=true\"""".format(fetch_bazelcipy_command(), command)
 
 
+def print_bazel_publish_binaries_pipeline(configs, http_config):
+    if not configs:
+        raise BuildkiteException(
+            "Bazel postsubmit pipeline configuration is empty.")
+    if set(configs.keys()) != set(supported_platforms()):
+        raise BuildkiteException(
+            "Bazel postsubmit pipeline needs to build Bazel on all supported platforms.")
+
+    # Build and Test Bazel
+    pipeline_steps = []
+    for platform, config in configs.items():
+        pipeline_steps.append(bazel_build_step(
+            platform, "Bazel", http_config))
+
+    pipeline_steps.append(wait_step())
+
+    # If all builds and tests pass, publish the Bazel binaries
+    # to GCS.
+    pipeline_steps.append(publish_bazel_binaries_step())
+
+    print_pipeline(pipeline_steps)
+
+
 def print_bazel_postsubmit_pipeline(configs, http_config):
     if not configs:
         raise BuildkiteException(
@@ -934,11 +957,8 @@ def print_bazel_postsubmit_pipeline(configs, http_config):
     pipeline_steps = []
     for platform, config in configs.items():
         pipeline_steps.append(bazel_build_step(
-            platform, "Bazel", http_config, build_only=True))
+            platform, "Bazel", http_config))
     pipeline_steps.append(wait_step())
-
-    # todo move this to the end with a wait step.
-    pipeline_steps.append(publish_bazel_binaries_step())
 
     for platform, config in configs.items():
         pipeline_steps.append(bazel_build_step(
@@ -1081,6 +1101,11 @@ def main(argv=None):
 
     subparsers = parser.add_subparsers(dest="subparsers_name")
 
+    bazel_publish_binaries_pipeline = subparsers.add_parser(
+        "bazel_publish_binaries_pipeline")
+    bazel_publish_binaries_pipeline.add_argument("--http_config", type=str)
+    bazel_publish_binaries_pipeline.add_argument("--git_repository", type=str)
+
     bazel_postsubmit_pipeline = subparsers.add_parser(
         "bazel_postsubmit_pipeline")
     bazel_postsubmit_pipeline.add_argument("--http_config", type=str)
@@ -1108,7 +1133,10 @@ def main(argv=None):
     args = parser.parse_args()
 
     try:
-        if args.subparsers_name == "bazel_postsubmit_pipeline":
+        if args.subparsers_name == "bazel_publish_binaries_pipeline":
+            configs = fetch_configs(args.http_config)
+            print_bazel_publish_binaries_pipeline(configs.get("platforms", None), args.http_config)
+        elif args.subparsers_name == "bazel_postsubmit_pipeline":
             configs = fetch_configs(args.http_config)
             print_bazel_postsubmit_pipeline(
                 configs.get("platforms", None), args.http_config)
