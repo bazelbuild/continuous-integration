@@ -366,7 +366,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                     update_pull_request_build_status(
                         platform, git_repository, commit, "success", invocation_id)
                 if save_but:
-                    upload_bazel_binary()
+                    upload_bazel_binary(platform)
             except BazelBuildFailedException:
                 if is_pull_request():
                     invocation_id = bes_invocation_id(build_bep_file)
@@ -550,16 +550,24 @@ def print_bazel_version_info(bazel_binary):
     execute_command([bazel_binary, "info"])
 
 
-def upload_bazel_binary():
+def upload_bazel_binary(platform):
     print_collapsed_group(":gcloud: Uploading Bazel Under Test")
+    binary_path = "bazel-bin/src/bazel"
+    if platform == "windows":
+        binary_path = "bazel-bin\src\bazel"
+
     execute_command(["buildkite-agent", "artifact",
                      "upload", "bazel-bin/src/bazel"])
 
 
 def download_bazel_binary(dest_dir, platform):
+    binary_path = "bazel-bin/src/bazel"
+    if platform == "windows":
+        binary_path = "bazel-bin\src\bazel"
+
     source_step = create_label(platform, "Bazel", build_only=True)
     execute_command(["buildkite-agent", "artifact", "download",
-                     "bazel-bin/src/bazel", dest_dir, "--step", source_step])
+                     binary_path, dest_dir, "--step", source_step])
     bazel_binary_path = os.path.join(dest_dir, "bazel-bin/src/bazel")
     st = os.stat(bazel_binary_path)
     os.chmod(bazel_binary_path, st.st_mode | stat.S_IEXEC)
