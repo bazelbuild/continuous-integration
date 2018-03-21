@@ -222,7 +222,7 @@ def main(argv=None):
 
     try:
         git_commit = subprocess.check_output(['git', 'rev-parse', '--verify', 'HEAD'],
-                                             universal_newlines=True)
+                                             universal_newlines=True).strip()
     except subprocess.CalledProcessError:
         print("Could not get current Git commit hash. You have to run "
               "create_images.py from a Git repository.", file=sys.stderr)
