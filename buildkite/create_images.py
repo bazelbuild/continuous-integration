@@ -174,7 +174,7 @@ def print_windows_instructions(instance_name):
 
 
 def workflow(name, params, git_commit):
-    instance_name = "%s-image-%s-%s" % (name, git_commit, int(datetime.now().timestamp()))
+    instance_name = "%s-image-%s-%s" % (name, int(datetime.now().timestamp()), git_commit)
     try:
         # Create the VM.
         create_instance(instance_name, params, git_commit)
