@@ -233,7 +233,7 @@ Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
 
 ## Download and install the Buildkite agent.
 Write-Host "Downloading Buildkite agent..."
-$buildkite_agent_version = "3.0-beta.40"
+$buildkite_agent_version = "3.0-beta.42"
 $buildkite_agent_url = "https://github.com/buildkite/agent/releases/download/v${buildkite_agent_version}/buildkite-agent-windows-amd64-${buildkite_agent_version}.zip"
 $buildkite_agent_zip = "c:\temp\buildkite-agent.zip"
 $buildkite_agent_root = "c:\buildkite"
