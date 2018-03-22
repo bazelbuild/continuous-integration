@@ -62,6 +62,13 @@ INSTANCE_GROUPS = {
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
+    'buildkite-pipeline-ubuntu1604': {
+        'count': 1,
+        'image_family': 'buildkite-pipeline-ubuntu1604',
+        'local_ssd': 'interface=nvme',
+        'machine_type': 'n1-standard-8',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+    },
     'buildkite-trusted-ubuntu1604': {
         'count': 1,
         'image_family': 'buildkite-trusted-ubuntu1604',
@@ -79,12 +86,6 @@ INSTANCE_GROUPS = {
 }
 
 SINGLE_INSTANCES = {
-    'buildkite-pipeline-ubuntu1604': {
-        'image_family': 'buildkite-pipeline-ubuntu1604',
-        'machine_type': 'n1-standard-8',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-        'disk': 'name={0},device-name={0},mode=rw,boot=no'.format('buildkite-pipeline-persistent'),
-    },
     'testing-ubuntu1404': {
         'image_family': 'buildkite-ubuntu1404',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
