@@ -38,23 +38,29 @@ esac
 # Deduce the operating system from the hostname and put it into the metadata.
 case $(hostname) in
   *pipeline*)
-    AGENT_TAGS="kind=pipeline,os=pipeline,pipeline=true"
+    kind="pipeline"
     ;;
   *trusted*)
-    AGENT_TAGS="kind=trusted,os=trusted"
+    kind="trusted"
     ;;
+  *)
+    kind="worker"
+    ;;
+esac
+
+case $(hostname) in
   *ubuntu1404*)
-    AGENT_TAGS="kind=worker,os=ubuntu1404"
+    os="ubuntu1404"
     ;;
   *ubuntu1604*)
-    AGENT_TAGS="kind=worker,os=ubuntu1604"
+    os="ubuntu1604"
     ;;
   *)
     echo "Could not deduce operating system from hostname: $(hostname)!"
     exit 1
 esac
 
-AGENT_TAGS="${AGENT_TAGS},image-version=${IMAGE_VERSION}"
+AGENT_TAGS="kind=${kind},os=${os},image-version=${IMAGE_VERSION}"
 
 # Write the Buildkite agent configuration.
 cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
@@ -68,7 +74,7 @@ plugins-path="/etc/buildkite-agent/plugins"
 EOF
 
 # Stop the agent after each job on stateless worker machines.
-if [[ $(hostname) != *pipeline* ]]; then
+if [[ $kind == worker ]]; then
   cat >> /etc/buildkite-agent/buildkite-agent.cfg <<EOF
 disconnect-after-job=true
 disconnect-after-job-timeout=86400
@@ -152,7 +158,7 @@ fi
 #
 # - We set the service to not launch automatically, as the startup script will start it once it is
 #   done with setting up the local SSD and writing the agent configuration.
-if [[ $(hostname) == *pipeline* ]]; then
+if [[ $kind == pipeline ]]; then
   # This is a pipeline worker machine.
   systemctl disable buildkite-agent
 elif [[ $(systemctl --version 2>/dev/null) ]]; then

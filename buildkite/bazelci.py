@@ -842,7 +842,8 @@ def runner_step(platform, project_name=None, http_config=None,
   - label: \"{0}\"
     command: \"{1}\\n{2}\"
     agents:
-      - \"os={3}\"""".format(label, fetch_bazelcipy_command(), command, platform)
+      kind: worker
+      os: {3}""".format(label, fetch_bazelcipy_command(), command, platform)
 
 
 def print_pipeline(steps):
@@ -878,7 +879,7 @@ def upload_project_pipeline_step(project_name, git_repository, http_config):
   - label: \"Setup {0}\"
     command: \"{1}\\n{2}\"
     agents:
-      - \"pipeline=true\"""".format(project_name, fetch_bazelcipy_command(),
+      kind: pipeline""".format(project_name, fetch_bazelcipy_command(),
                                     pipeline_command)
 
 
@@ -918,7 +919,8 @@ def bazel_build_step(platform, project_name, http_config=None, build_only=False,
   - label: \"{0}\"
     command: \"{1}\\n{2}\"
     agents:
-      - \"os={3}\"""".format(label, fetch_bazelcipy_command(),
+      kind: worker
+      os: {3}""".format(label, fetch_bazelcipy_command(),
                              pipeline_command, platform)
 
 
@@ -928,7 +930,7 @@ def publish_bazel_binaries_step():
   - label: \"Publish Bazel Binaries\"
     command: \"{0}\\n{1}\"
     agents:
-      - \"pipeline=true\"""".format(fetch_bazelcipy_command(), command)
+      kind: pipeline""".format(fetch_bazelcipy_command(), command)
 
 
 def print_bazel_publish_binaries_pipeline(configs, http_config):
