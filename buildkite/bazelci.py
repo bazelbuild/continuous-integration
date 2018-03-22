@@ -688,7 +688,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
 def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
     print_expanded_group(":bazel: Test")
     common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
-                    "--flaky_test_attempts=3", "--build_tests_only",
+                    "--flaky_test_attempts=3", "--build_tests_only", "--test_summary=terse",
                     "--jobs=" + concurrent_jobs(), "--local_test_jobs=" + concurrent_test_jobs(platform),
                     "--build_event_json_file=" + bep_file,
                     "--experimental_build_event_json_file_path_conversion=false", "--announce_rc"]
