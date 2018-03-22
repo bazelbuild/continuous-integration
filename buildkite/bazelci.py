@@ -569,7 +569,7 @@ def download_bazel_binary(dest_dir, platform):
     if platform == "windows":
         binary_path = "bazel-bin\src\bazel"
 
-    source_step = create_label(platform, "Bazel", build_only=True)
+    source_step = create_label(platform, "Bazel")
     execute_command(["buildkite-agent", "artifact", "download",
                      binary_path, dest_dir, "--step", source_step])
     bazel_binary_path = os.path.join(dest_dir, "bazel-bin/src/bazel")
