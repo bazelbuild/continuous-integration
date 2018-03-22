@@ -569,7 +569,7 @@ def download_bazel_binary(dest_dir, platform):
     if platform == "windows":
         binary_path = "bazel-bin\src\\bazel"
 
-    source_step = create_label(platform, "Bazel")
+    source_step = create_label(platform, "Bazel", build_only=True)
     execute_command(["buildkite-agent", "artifact", "download",
                      binary_path, dest_dir, "--step", source_step])
     bazel_binary_path = os.path.join(dest_dir, "bazel-bin/src/bazel")
@@ -949,7 +949,11 @@ def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
     pipeline_steps = []
     for platform, config in configs.items():
         pipeline_steps.append(bazel_build_step(
-            platform, "Bazel", http_config, file_config))
+            platform, "Bazel", http_config, file_config, build_only=True))
+
+    for platform, config in configs.items():
+        pipeline_steps.append(bazel_build_step(
+            platform, "Bazel", http_config, file_config, test_only=True))
 
     pipeline_steps.append(wait_step())
 
@@ -971,7 +975,7 @@ def print_bazel_downstream_pipeline(configs, http_config, file_config):
     pipeline_steps = []
     for platform, config in configs.items():
         pipeline_steps.append(bazel_build_step(
-            platform, "Bazel", http_config, file_config))
+            platform, "Bazel", http_config, file_config, build_only=True))
     pipeline_steps.append(wait_step())
 
     for platform, config in configs.items():
