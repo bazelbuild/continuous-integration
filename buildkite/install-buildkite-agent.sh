@@ -94,7 +94,7 @@ set -euo pipefail
 export ANDROID_HOME="/opt/android-sdk-linux"
 echo "Android SDK is at \${ANDROID_HOME}"
 
-export ANDROID_NDK_HOME="/opt/android-ndk-*"
+export ANDROID_NDK_HOME="/opt/android-ndk-r15c"
 echo "Android NDK is at \${ANDROID_NDK_HOME}"
 
 export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://bazel-buildkite-artifacts/\$BUILDKITE_JOB_ID"
