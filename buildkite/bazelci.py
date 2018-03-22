@@ -351,7 +351,6 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
             git_repository = os.getenv("BUILDKITE_REPO")
         if is_pull_request() and not is_trusted_author(github_user_for_pull_request(), git_repository):
             update_pull_request_verification_status(git_repository, commit, state="success")
-        cleanup()
         tmpdir = tempfile.mkdtemp()
         if use_but:
             print_collapsed_group(":gcloud: Downloading Bazel Under Test")
@@ -415,7 +414,6 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
-        cleanup()
 
     if fail_pipeline:
         raise BuildkiteException("At least one test failed or was flaky.")
@@ -611,12 +609,6 @@ def clone_git_repository(git_repository, platform):
         execute_command(
             ["git", "clone", "--recurse-submodules", git_repository, clone_path])
         os.chdir(clone_path)
-
-
-def cleanup():
-    print_collapsed_group(":wastebasket: Cleanup")
-    if os.path.exists("WORKSPACE"):
-        execute_command(["bazel", "clean", "--expunge"])
 
 
 def execute_shell_commands(commands):
