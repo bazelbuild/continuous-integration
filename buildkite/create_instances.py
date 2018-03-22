@@ -83,17 +83,17 @@ SINGLE_INSTANCES = {
         'image_family': 'buildkite-pipeline-ubuntu1604',
         'machine_type': 'n1-standard-8',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-        'persistent_disk': 'name={0},device-name={0},mode=rw,boot=no'.format('buildkite-pipeline-persistent'),
+        'disk': 'name={0},device-name={0},mode=rw,boot=no'.format('buildkite-pipeline-persistent'),
     },
     'testing-ubuntu1404': {
         'image_family': 'buildkite-ubuntu1404',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-        'persistent_disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1404-persistent'),
+        'disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1404-persistent'),
     },
     'testing-ubuntu1604': {
         'image_family': 'buildkite-ubuntu1604',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-        'persistent_disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1604-persistent'),
+        'disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1604-persistent'),
     },
     'testing-windows': {
         'boot_disk_size': '500GB',
