@@ -951,11 +951,11 @@ def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
         pipeline_steps.append(bazel_build_step(
             platform, "Bazel", http_config, file_config, build_only=True))
 
+    pipeline_steps.append(wait_step())
+
     for platform, config in configs.items():
         pipeline_steps.append(bazel_build_step(
             platform, "Bazel", http_config, file_config, test_only=True))
-
-    pipeline_steps.append(wait_step())
 
     # If all builds and tests pass, publish the Bazel binaries
     # to GCS.
