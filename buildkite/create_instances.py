@@ -71,7 +71,7 @@ INSTANCE_GROUPS = {
         'service_account': 'bazel-release-process@bazel-public.iam.gserviceaccount.com',
     },
     'buildkite-windows': {
-        'count': 4,
+        'count': 8,
         'image_family': 'buildkite-windows',
         'local_ssd': 'interface=scsi',
         'metadata_from_file': 'windows-startup-script-ps1=startup-windows.ps1',
