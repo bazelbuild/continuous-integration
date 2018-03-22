@@ -306,18 +306,24 @@ def supported_platforms():
     return set(platforms_info().keys())
 
 
-def fetch_configs(http_url):
+def fetch_configs(http_url, file_config):
     """
-    If specified fetches the build configuration from http_url, else tries to
+    If specified fetches the build configuration from file_config or http_url, else tries to
     read it from .bazelci/presubmit.yml.
     Returns the json configuration as a python data structure.
     """
-    if http_url is None:
-        with open(".bazelci/presubmit.yml", "r") as fd:
+    if file_config is not None and http_url is not None:
+        raise BuildkiteException("file_config and http_url cannot be set at the same time")
+
+    if file_config is not None:
+        with open(file_config, "r") as fd:
             return yaml.load(fd)
-    with urllib.request.urlopen(http_url) as resp:
-        reader = codecs.getreader("utf-8")
-        return yaml.load(reader(resp))
+    if http_url is not None:
+        with urllib.request.urlopen(http_url) as resp:
+            reader = codecs.getreader("utf-8")
+            return yaml.load(reader(resp))
+    with open(".bazelci/presubmit.yml", "r") as fd:
+        return yaml.load(fd)
 
 
 def print_collapsed_group(name):
@@ -808,7 +814,7 @@ def github_user_for_pull_request():
     return user[0]
 
 
-def print_project_pipeline(platform_configs, project_name, http_config,
+def print_project_pipeline(platform_configs, project_name, http_config, file_config,
                            git_repository, use_but):
     pipeline_steps = []
     if is_pull_request():
@@ -821,18 +827,20 @@ def print_project_pipeline(platform_configs, project_name, http_config,
 
     for platform, _ in platform_configs.items():
         step = runner_step(platform, project_name,
-                           http_config, git_repository, use_but)
+                           http_config, file_config, git_repository, use_but)
         pipeline_steps.append(step)
 
     print_pipeline(pipeline_steps)
 
 
 def runner_step(platform, project_name=None, http_config=None,
-                git_repository=None, use_but=False):
+                file_config=None, git_repository=None, use_but=False):
     command = python_binary(platform) + \
         " bazelci.py runner --platform=" + platform
     if http_config:
         command += " --http_config=" + http_config
+    if file_config:
+        command += " --file_config=" + file_config
     if git_repository:
         command += " --git_repository=" + git_repository
     if use_but:
@@ -867,12 +875,14 @@ def fetch_bazelcipy_command():
     return "curl -s {0} -o bazelci.py".format(bazelcipy_url())
 
 
-def upload_project_pipeline_step(project_name, git_repository, http_config):
+def upload_project_pipeline_step(project_name, git_repository, http_config, file_config):
     pipeline_command = ("{0} bazelci.py project_pipeline --project_name=\\\"{1}\\\" " +
                         "--use_but --git_repository={2}").format(python_binary(), project_name,
                                                                  git_repository)
     if http_config:
         pipeline_command += " --http_config=" + http_config
+    if file_config:
+        pipeline_command += " --file_config=" + file_config
     pipeline_command += " | buildkite-agent pipeline upload"
 
     return """
@@ -904,7 +914,7 @@ def create_label(platform, project_name, build_only=False, test_only=False):
     return label
 
 
-def bazel_build_step(platform, project_name, http_config=None, build_only=False, test_only=False):
+def bazel_build_step(platform, project_name, http_config=None, file_config=None, build_only=False, test_only=False):
     pipeline_command = python_binary(platform) + " bazelci.py runner"
     if build_only:
         pipeline_command += " --build_only --save_but"
@@ -912,6 +922,8 @@ def bazel_build_step(platform, project_name, http_config=None, build_only=False,
         pipeline_command += " --test_only"
     if http_config:
         pipeline_command += " --http_config=" + http_config
+    if file_config:
+        pipeline_command += " --file_config=" + file_config
     label = create_label(platform, project_name, build_only, test_only)
     pipeline_command += " --platform=" + platform
 
@@ -933,19 +945,19 @@ def publish_bazel_binaries_step():
       kind: pipeline""".format(fetch_bazelcipy_command(), command)
 
 
-def print_bazel_publish_binaries_pipeline(configs, http_config):
+def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
     if not configs:
         raise BuildkiteException(
-            "Bazel postsubmit pipeline configuration is empty.")
+            "Bazel publish binaries pipeline configuration is empty.")
     if set(configs.keys()) != set(supported_platforms()):
         raise BuildkiteException(
-            "Bazel postsubmit pipeline needs to build Bazel on all supported platforms.")
+            "Bazel publish binaries pipeline needs to build Bazel on all supported platforms.")
 
     # Build and Test Bazel
     pipeline_steps = []
     for platform, config in configs.items():
         pipeline_steps.append(bazel_build_step(
-            platform, "Bazel", http_config))
+            platform, "Bazel", http_config, file_config))
 
     pipeline_steps.append(wait_step())
 
@@ -956,29 +968,28 @@ def print_bazel_publish_binaries_pipeline(configs, http_config):
     print_pipeline(pipeline_steps)
 
 
-def print_bazel_postsubmit_pipeline(configs, http_config):
+def print_bazel_downstream_pipeline(configs, http_config, file_config):
     if not configs:
         raise BuildkiteException(
-            "Bazel postsubmit pipeline configuration is empty.")
+            "Bazel downstream pipeline configuration is empty.")
     if set(configs.keys()) != set(supported_platforms()):
         raise BuildkiteException(
-            "Bazel postsubmit pipeline needs to build Bazel on all supported platforms.")
+            "Bazel downstream pipeline needs to build Bazel on all supported platforms.")
 
     pipeline_steps = []
     for platform, config in configs.items():
         pipeline_steps.append(bazel_build_step(
-            platform, "Bazel", http_config))
+            platform, "Bazel", http_config, file_config))
     pipeline_steps.append(wait_step())
 
     for platform, config in configs.items():
         pipeline_steps.append(bazel_build_step(
-            platform, "Bazel", http_config, test_only=True))
+            platform, "Bazel", http_config, file_config, test_only=True))
 
     for project, config in downstream_projects().items():
         git_repository = config["git_repository"]
-        http_config = config.get("http_config", None)
         pipeline_steps.append(upload_project_pipeline_step(project,
-                                                           git_repository, http_config))
+                                                           git_repository, config.get("http_config", None), config.get("file_config", None)))
 
     print_pipeline(pipeline_steps)
 
@@ -1111,18 +1122,19 @@ def main(argv=None):
 
     subparsers = parser.add_subparsers(dest="subparsers_name")
 
-    bazel_publish_binaries_pipeline = subparsers.add_parser(
-        "bazel_publish_binaries_pipeline")
+    bazel_publish_binaries_pipeline = subparsers.add_parser("bazel_publish_binaries_pipeline")
+    bazel_publish_binaries_pipeline.add_argument("--file_config", type=str)
     bazel_publish_binaries_pipeline.add_argument("--http_config", type=str)
     bazel_publish_binaries_pipeline.add_argument("--git_repository", type=str)
 
-    bazel_postsubmit_pipeline = subparsers.add_parser(
-        "bazel_postsubmit_pipeline")
-    bazel_postsubmit_pipeline.add_argument("--http_config", type=str)
-    bazel_postsubmit_pipeline.add_argument("--git_repository", type=str)
+    bazel_downstream_pipeline = subparsers.add_parser("bazel_downstream_pipeline")
+    bazel_downstream_pipeline.add_argument("--file_config", type=str)
+    bazel_downstream_pipeline.add_argument("--http_config", type=str)
+    bazel_downstream_pipeline.add_argument("--git_repository", type=str)
 
     project_pipeline = subparsers.add_parser("project_pipeline")
     project_pipeline.add_argument("--project_name", type=str)
+    project_pipeline.add_argument("--file_config", type=str)
     project_pipeline.add_argument("--http_config", type=str)
     project_pipeline.add_argument("--git_repository", type=str)
     project_pipeline.add_argument(
@@ -1131,6 +1143,7 @@ def main(argv=None):
     runner = subparsers.add_parser("runner")
     runner.add_argument("--platform", action="store",
                         choices=list(supported_platforms()))
+    runner.add_argument("--file_config", type=str)
     runner.add_argument("--http_config", type=str)
     runner.add_argument("--git_repository", type=str)
     runner.add_argument("--use_but", type=bool, nargs="?", const=True)
@@ -1144,18 +1157,18 @@ def main(argv=None):
 
     try:
         if args.subparsers_name == "bazel_publish_binaries_pipeline":
-            configs = fetch_configs(args.http_config)
-            print_bazel_publish_binaries_pipeline(configs.get("platforms", None), args.http_config)
-        elif args.subparsers_name == "bazel_postsubmit_pipeline":
-            configs = fetch_configs(args.http_config)
-            print_bazel_postsubmit_pipeline(
-                configs.get("platforms", None), args.http_config)
+            configs = fetch_configs(args.http_config, args.file_config)
+            print_bazel_publish_binaries_pipeline(configs.get("platforms", None), args.http_config, args.file_config)
+        elif args.subparsers_name == "bazel_downstream_pipeline":
+            configs = fetch_configs(args.http_config, args.file_config)
+            print_bazel_downstream_pipeline(
+                configs.get("platforms", None), args.http_config, args.file_config)
         elif args.subparsers_name == "project_pipeline":
-            configs = fetch_configs(args.http_config)
+            configs = fetch_configs(args.http_config, args.file_config)
             print_project_pipeline(configs.get("platforms", None), args.project_name,
-                                   args.http_config, args.git_repository, args.use_but)
+                                   args.http_config, args.file_config, args.git_repository, args.use_but)
         elif args.subparsers_name == "runner":
-            configs = fetch_configs(args.http_config)
+            configs = fetch_configs(args.http_config, args.file_config)
             execute_commands(configs.get("platforms", None)[args.platform],
                              args.platform, args.git_repository, args.use_but, args.save_but,
                              args.build_only, args.test_only)
