@@ -48,7 +48,7 @@ $buildkite_agent_token = & gcloud kms decrypt --location global --keyring buildk
 Remove-Item $buildkite_agent_token_file
 
 ## Get the current image version.
-$image_version = Get-Content "c:\buildkite\image.version" -Raw
+$image_version = (Get-Content "c:\buildkite\image.version" -Raw).Trim()
 
 ## Configure the Buildkite agent.
 Write-Host "Configuring Buildkite Agent..."
