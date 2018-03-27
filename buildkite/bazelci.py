@@ -572,7 +572,7 @@ def download_bazel_binary(dest_dir, platform):
     source_step = create_label(platform, "Bazel", build_only=True)
     execute_command(["buildkite-agent", "artifact", "download",
                      binary_path, dest_dir, "--step", source_step])
-    bazel_binary_path = os.path.join(dest_dir, "bazel-bin/src/bazel")
+    bazel_binary_path = os.path.join(dest_dir, binary_path)
     st = os.stat(bazel_binary_path)
     os.chmod(bazel_binary_path, st.st_mode | stat.S_IEXEC)
     return bazel_binary_path
