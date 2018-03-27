@@ -391,7 +391,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                     if os.getenv("BUILDKITE_PIPELINE_SLUG") in ["bazel-bazel", "google-bazel-presubmit"]:
                         # Upload the BEP logs from Bazel builds for later analysis on flaky tests
                         build_id = os.getenv("BUILDKITE_BUILD_ID")
-                        execute_command([gsutil_command(), "cp", test_bep_file, "gs://bazel-buildkite-stats/build_event_protocols/"+build_id+".json"])
+                        execute_command([gsutil_command(), "cp", test_bep_file, "gs://bazel-buildkite-stats/build_event_protocols/" + build_id + ".json"])
                 if is_pull_request():
                     invocation_id = bes_invocation_id(test_bep_file)
                     update_pull_request_test_status(
@@ -1042,16 +1042,16 @@ def sha256_hexdigest(filename):
 
 
 def try_publish_binaries(build_number, expected_generation):
-    tmpdir = tempfile.mkdtemp()
-    try:
-        now = datetime.datetime.now()
-        info = {
-            "build_number": build_number,
-            "build_time": now.strftime("%d-%m-%Y %H:%M"),
-            "git_commit": os.environ["BUILDKITE_COMMIT"],
-            "platforms": {}
-        }
-        for platform in supported_platforms():
+    now = datetime.datetime.now()
+    info = {
+        "build_number": build_number,
+        "build_time": now.strftime("%d-%m-%Y %H:%M"),
+        "git_commit": os.environ["BUILDKITE_COMMIT"],
+        "platforms": {}
+    }
+    for platform in supported_platforms():
+        tmpdir = tempfile.mkdtemp()
+        try:
             bazel_binary_path = download_bazel_binary(tmpdir, platform)
             execute_command([gsutil_command(), "cp", "-a", "public-read", bazel_binary_path,
                              bazelci_builds_upload_url(platform, build_number)])
@@ -1059,7 +1059,10 @@ def try_publish_binaries(build_number, expected_generation):
                 "url": bazelci_builds_download_url(platform, build_number),
                 "sha256": sha256_hexdigest(bazel_binary_path),
             }
-
+        finally:
+            shutil.rmtree(tmpdir)
+    tmpdir = tempfile.mkdtemp()
+    try:
         info_file = os.path.join(tmpdir, "info.json")
         with open(info_file, mode="w", encoding="utf-8") as fp:
             json.dump(info, fp, indent=2, sort_keys=True)
