@@ -1,0 +1,17 @@
+# https://github.com/googlesamples/android-testing#experimental-bazel-support
+---
+platforms:
+  ubuntu1404:
+    build_targets:
+    - "//ui/..."
+    test_flags:
+    - "--spawn_strategy=local" # Required due to unified launcher bug
+    test_targets:
+    - "//ui/..."
+  ubuntu1604:
+    build_targets:
+    - "//ui/..."
+    test_flags:
+    - "--spawn_strategy=local" # Required due to unified launcher bug
+    test_targets:
+    - "//ui/..."

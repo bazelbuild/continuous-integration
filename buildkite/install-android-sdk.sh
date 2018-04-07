@@ -38,6 +38,8 @@ expect {
 
 # This should be kept in sync with mac/mac-android.sh.
 tools/bin/sdkmanager \
+  "emulator" \
+  "system-images;android-23;default;x86" \
   "platform-tools" \
   "build-tools;27.0.3" \
   "platforms;android-24" \
