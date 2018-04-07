@@ -27,72 +27,60 @@ REPOSITORIES=(
     "https://bazel.googlesource.com/bazel-toolchains git@github.com:bazelbuild/bazel-toolchains.git bazel-toolchains true master"
 )
 
-# Install certificates
-(cd /usr/share/ca-certificates && find . -type f -name '*.crt' \
-    | sed -e 's|^\./||') > /etc/ca-certificates.conf
-update-ca-certificates
+set -euxo pipefail
 
-# Set-up deploy keys
-mkdir -p ~/.ssh
-cat >~/.ssh/config <<'EOF'
-Host               github.com
-    Hostname       github.com
-    User           git
-    IdentityFile   /opt/secrets/github_id_rsa
-    IdentitiesOnly yes
-    StrictHostKeyChecking no
-EOF
+# Download & decrypt gitcookies.
+gsutil cat "gs://bazel-encrypted-secrets/gitsync-cookies.enc" | \
+    gcloud kms decrypt --location "global" --keyring "buildkite" --key "gitsync-cookies-key" --plaintext-file "-" --ciphertext-file "-" \
+    > /home/gitsync/.gitcookies
+chmod 0600 /home/gitsync/.gitcookies
 
-git config --global http.cookiefile /opt/secrets/gerritcookies
-
-set -eu
-
-cd /tmp
-
-function log() {
-  echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] $*"
-}
+# Download & decrypt GitHub SSH key.
+gsutil cat "gs://bazel-encrypted-secrets/gitsync-ssh.enc" | \
+    gcloud kms decrypt --location "global" --keyring "buildkite" --key "gitsync-ssh-key" --plaintext-file "-" --ciphertext-file "-" \
+    > /home/gitsync/.ssh/id_rsa
+chmod 0600 /home/gitsync/.ssh/id_rsa
 
 function clone() {
-  git clone $1 $3
-  pushd $3
-  git remote add destination $2
+  git clone "$1" "$3"
+  pushd "$3"
+  git remote add destination "$2"
   popd
 }
 
 function sync_branch() {
-  log "sync_branch $*"
+  echo "sync_branch $*"
   local branch="$1"
   local bidirectional="$2"
-  git checkout origin/${branch} -B ${branch} || {
+  git checkout "origin/${branch}" -B "${branch}" || {
     echo "Failed to checkout ${branch}, aborting sync..."
     return 1
   }
 
-  log "Origin branch is $(git rev-parse origin/master), destination is $(git rev-parse destination/master)"
+  echo "Origin branch is $(git rev-parse origin/master), destination is $(git rev-parse destination/master)"
   if $bidirectional; then
-    git rebase destination/${branch} || {
+    git rebase "destination/${branch}" || {
       echo "Failed to rebase ${branch} from destination, aborting sync..."
       git rebase --abort &>/dev/null || true
       return 1
     }
-    git push -f origin ${branch} || {
+    git push -f origin "${branch}" || {
       echo "Failed to force pushed to origin, aborting sync..."
       return 1
     }
   fi
 
-  log "New head for destination is $(git rev-parse HEAD)"
-  git push destination ${branch} || {
+  echo "New head for destination is $(git rev-parse HEAD)"
+  git push destination "${branch}" || {
     echo "Failed to push to destination..."
     return 1
   }
 }
 
 function sync() {
-  log "sync $*"
+  echo "sync $*"
   local bidirectional="$4"
-  pushd $3
+  pushd "$3"
   shift 4
   git fetch origin
   git fetch destination
