@@ -22,7 +22,7 @@ case $(hostname) in
   *ubuntu*)
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 \
         --recv-keys 32A37959C2FA5C3C99EFBC32A79206696452D198 &> /dev/null
-    add-apt-repository -y "deb https://apt.buildkite.com/buildkite-agent unstable main"
+    add-apt-repository -y "deb https://apt.buildkite.com/buildkite-agent stable main"
     apt-get -qqy update > /dev/null
     apt-get -qqy install buildkite-agent > /dev/null
     ;;

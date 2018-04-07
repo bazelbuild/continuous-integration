@@ -233,8 +233,14 @@ Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
 
 ## Download and install the Buildkite agent.
+Write-Host "Grabbing latest Buildkite Agent version number from GitHub..."
+$url = "https://github.com/buildkite/agent/releases/latest"
+$req = [system.Net.HttpWebRequest]::Create($url)
+$res = $req.getresponse()
+$res.Close()
+$buildkite_agent_version = $res.ResponseUri.AbsolutePath.TrimStart("/buildkite/agent/releases/tag/v")
+
 Write-Host "Downloading Buildkite agent..."
-$buildkite_agent_version = "3.0-beta.42"
 $buildkite_agent_url = "https://github.com/buildkite/agent/releases/download/v${buildkite_agent_version}/buildkite-agent-windows-amd64-${buildkite_agent_version}.zip"
 $buildkite_agent_zip = "c:\temp\buildkite-agent.zip"
 $buildkite_agent_root = "c:\buildkite"
