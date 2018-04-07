@@ -16,7 +16,7 @@
 
 apt-get -qqy install zlib1g-dev libssl-dev
 
-PYTHON_VERSION="3.6.4"
+PYTHON_VERSION="3.6.5"
 
 mkdir -p /usr/local/src
 pushd /usr/local/src
