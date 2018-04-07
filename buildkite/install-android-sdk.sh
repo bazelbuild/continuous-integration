@@ -38,13 +38,14 @@ expect {
 
 # This should be kept in sync with mac/mac-android.sh.
 tools/bin/sdkmanager \
-  "emulator" \
-  "system-images;android-23;default;x86" \
-  "platform-tools" \
   "build-tools;27.0.3" \
+  "emulator" \
+  "extras;android;m2repository" \
+  "platform-tools" \
   "platforms;android-24" \
   "platforms;android-25" \
   "platforms;android-26" \
   "platforms;android-27" \
-  "extras;android;m2repository" > /dev/null
+  "system-images;android-23;default;x86" \
+  > /dev/null
 chown -R root:root /opt/android*
