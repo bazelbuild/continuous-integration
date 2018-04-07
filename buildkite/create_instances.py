@@ -14,9 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import getpass
 import queue
-import re
 import subprocess
 import sys
 import threading
@@ -127,9 +125,9 @@ def instance_group_task(instance_group_name, count, **kwargs):
 
     gcloud.create_instance_template(template_name, **kwargs)
 
-    gcloud.create_instance_group(instance_group_name,
-        zone=LOCATION, base_instance_name=instance_group_name, template=template_name,
-        size=count)
+    gcloud.create_instance_group(instance_group_name, zone=LOCATION,
+                                 base_instance_name=instance_group_name,
+                                 template=template_name, size=count)
 
 
 def single_instance_task(instance_name, **kwargs):

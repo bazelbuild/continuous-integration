@@ -19,12 +19,10 @@ import itertools
 import json
 import os
 import queue
-import re
 import subprocess
 import sys
 import tempfile
 import threading
-import time
 
 import gcloud
 import gcloud_utils
