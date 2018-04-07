@@ -183,7 +183,7 @@ $bazel_version = $res.ResponseUri.AbsolutePath.TrimStart("/bazelbuild/bazel/rele
 
 ## Download the latest Bazel.
 Write-Host "Downloading Bazel ${bazel_version}..."
-$bazel_url = "https://releases.bazel.build/${bazel_version}/release/bazel-${bazel_version}-without-jdk-windows-x86_64.exe"
+$bazel_url = "https://releases.bazel.build/${bazel_version}/release/bazel-${bazel_version}-windows-x86_64.exe"
 New-Item "c:\bazel" -ItemType "directory" -Force
 (New-Object Net.WebClient).DownloadFile($bazel_url, "c:\bazel\bazel.exe")
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";c:\bazel"

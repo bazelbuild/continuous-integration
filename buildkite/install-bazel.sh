@@ -18,7 +18,7 @@
 PLATFORM=$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)
 BAZEL_VERSION=$(curl -sSI https://github.com/bazelbuild/bazel/releases/latest | grep '^Location: ' | sed 's|.*/||' | sed $'s/\r//')
 
-curl -sSLo install.sh "https://releases.bazel.build/${BAZEL_VERSION}/release/bazel-${BAZEL_VERSION}-without-jdk-installer-${PLATFORM}.sh"
+curl -sSLo install.sh "https://releases.bazel.build/${BAZEL_VERSION}/release/bazel-${BAZEL_VERSION}-installer-${PLATFORM}.sh"
 bash install.sh > /dev/null
 bazel version
 
