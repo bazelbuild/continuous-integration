@@ -15,6 +15,7 @@
 # limitations under the License.
 
 from datetime import datetime
+import itertools
 import json
 import os
 import queue
@@ -56,6 +57,7 @@ IMAGE_CREATION_VMS = {
             'install-docker.sh',
             'install-nodejs.sh',
             'install-python36.sh',
+            'install-kvm.sh',
             'install-android-sdk.sh',
             'shutdown.sh'
         ],
@@ -76,6 +78,7 @@ IMAGE_CREATION_VMS = {
             'install-docker.sh',
             'install-nodejs.sh',
             'install-python36.sh',
+            'install-kvm.sh',
             'install-android-sdk.sh',
             'shutdown.sh'
         ],
@@ -219,6 +222,10 @@ def worker():
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
+
+    if not argv:
+        print("Usage: create_images.py {}".format(" ".join(itertools.chain(*IMAGE_CREATION_VMS.keys()))))
+        return 1
 
     try:
         git_commit = subprocess.check_output(['git', 'rev-parse', '--verify', '--short=16', 'HEAD'],
