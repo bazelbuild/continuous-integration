@@ -1,9 +1,0 @@
-[
-    {
-        // rules_dotnet is disabled on Linux until bazelbuild/rules_dotnet#13 is fixed.
-        "node": "darwin-x86_64",
-        "parameters": {
-            "build_opts": ["--spawn_strategy=standalone"]
-        }
-    }
-]
