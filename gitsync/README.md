@@ -21,3 +21,22 @@ $ gcloud beta compute instances create-with-container \
     --service-account gitsync@bazel-public.iam.gserviceaccount.com \
     gitsync
 ```
+
+# About the service account
+
+The service account used for the container must have at least the following
+permissions:
+
+- `Cloud KMS Decryption` for the gitcookies and SSH key files only.
+- `Logging > Logs Writer` to write the Docker logs to Google Cloud Logging.
+
+# Getting logs from the container
+
+Print the logs of the last minute in an easily readable format:
+
+```
+$ gcloud logging read --freshness 1m \
+    --format 'value(receiveTimestamp,jsonPayload.data)' \
+    'logName="projects/bazel-public/logs/gcplogs-docker-driver" AND
+    jsonPayload.instance.name="gitsync"'
+```
