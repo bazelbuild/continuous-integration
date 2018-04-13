@@ -139,6 +139,10 @@ def downstream_projects():
             "git_repository": "https://github.com/bazelbuild/rules_appengine.git",
             "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_appengine/master/.bazelci/presubmit.yml"
         },
+        "rules_apple": {
+            "git_repository": "https://github.com/bazelbuild/rules_apple.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_apple/master/.bazelci/presubmit.yml"
+        },
         "rules_closure": {
             "git_repository": "https://github.com/bazelbuild/rules_closure.git",
             "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_closure/master/.bazelci/presubmit.yml"
