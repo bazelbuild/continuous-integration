@@ -46,6 +46,9 @@ tools/bin/sdkmanager \
   "platforms;android-25" \
   "platforms;android-26" \
   "platforms;android-27" \
+  "system-images;android-19;default;x86" \
+  "system-images;android-21;default;x86" \
+  "system-images;android-22;default;x86" \
   "system-images;android-23;default;x86" \
   > /dev/null
 chown -R root:root /opt/android*
