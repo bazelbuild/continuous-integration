@@ -33,14 +33,8 @@ packages=(
   git
   python
   python-dev
-  python-mock
-  python-numpy
-  python-pip
   python3
   python3-dev
-  python3-mock
-  python3-numpy
-  python3-pip
   realpath
   unzip
   wget
@@ -60,6 +54,15 @@ packages=(
   # Dependencies for TensorFlow.
   libcurl3-dev
   swig
+  python-enum34
+  python-mock
+  python-numpy
+  python-pip
+  python-wheel
+  python3-mock
+  python3-numpy
+  python3-pip
+  python3-wheel
 
   # Required by Envoy: https://github.com/bazelbuild/continuous-integration/issues/218
   automake
