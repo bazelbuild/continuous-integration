@@ -74,7 +74,7 @@ plugins-path="/etc/buildkite-agent/plugins"
 EOF
 
 # Stop the agent after each job on stateless worker machines.
-if [[ $kind == worker ]]; then
+if [[ $kind != pipeline ]]; then
   cat >> /etc/buildkite-agent/buildkite-agent.cfg <<EOF
 disconnect-after-job=true
 disconnect-after-job-timeout=86400
