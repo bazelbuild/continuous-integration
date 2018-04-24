@@ -6,6 +6,7 @@ platforms:
     - "//ui/..."
     test_flags:
     - "--spawn_strategy=local" # Required due to unified launcher bug
+    - "--local_test_jobs=8" # Run at most 8 tests (= emulators) in parallel
     test_targets:
     - "//ui/..."
   ubuntu1604:
@@ -13,5 +14,6 @@ platforms:
     - "//ui/..."
     test_flags:
     - "--spawn_strategy=local" # Required due to unified launcher bug
+    - "--local_test_jobs=8" # Run at most 8 tests (= emulators) in parallel
     test_targets:
     - "//ui/..."
