@@ -49,7 +49,7 @@ IMAGE_CREATION_VMS = {
             'shell-utils.sh',
             'setup-ubuntu.sh',
             'install-image-version.sh',
-            'install-azul-zulu.sh',
+            'install-azul-zulu-8.sh',
             'install-bazel.sh',
             'install-buildkite-agent.sh',
             'install-docker.sh',
@@ -70,7 +70,28 @@ IMAGE_CREATION_VMS = {
             'shell-utils.sh',
             'setup-ubuntu.sh',
             'install-image-version.sh',
-            'install-azul-zulu.sh',
+            'install-azul-zulu-8.sh',
+            'install-bazel.sh',
+            'install-buildkite-agent.sh',
+            'install-docker.sh',
+            'install-nodejs.sh',
+            'install-python36.sh',
+            'install-kvm.sh',
+            'install-android-sdk.sh',
+            'shutdown.sh'
+        ],
+        'licenses': [
+            'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
+        ]
+    },
+    ('buildkite-java9-ubuntu1604',): {
+        'source_image_project': 'ubuntu-os-cloud',
+        'source_image_family': 'ubuntu-1604-lts',
+        'scripts': [
+            'shell-utils.sh',
+            'setup-ubuntu.sh',
+            'install-image-version.sh',
+            'install-azul-zulu-9.sh',
             'install-bazel.sh',
             'install-buildkite-agent.sh',
             'install-docker.sh',
