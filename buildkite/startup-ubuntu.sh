@@ -16,13 +16,6 @@
 
 set -euxo pipefail
 
-# Set the image version on the current instance labels.
-# TODO(philwo) we would have to grant setMetadata permission to the service account,
-# but we can't restrict this to specific instances...
-# INSTANCE_NAME=$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/name" -H "Metadata-Flavor: Google")
-# INSTANCE_ZONE=$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/zone" -H "Metadata-Flavor: Google")
-# IMAGE_VERSION=$(</etc/image-version)
-
 # If available: Use a persistent disk as a use-case specific data volume.
 if [[ -e /dev/sdb ]]; then
   if [[ ! -e /dev/vg0 ]]; then
@@ -30,9 +23,9 @@ if [[ -e /dev/sdb ]]; then
     vgcreate vg0 /dev/sdb
   fi
 
-  if [[ $(hostname) == *testing* ]]; then
-    # On "testing" machines, we create big /var/lib/docker and /home directories so that everyone
-    # has enough space to try out stuff.
+  if [[ $(hostname) == testing* ]]; then
+    # On "testing" machines, we create big /var/lib/docker and /home directories
+    # so that everyone has enough space to try out stuff.
     if [[ ! -e /dev/vg0/docker ]]; then
       lvcreate -n docker -l25%FREE vg0
       mkfs.ext4 /dev/vg0/docker
@@ -49,15 +42,6 @@ if [[ -e /dev/sdb ]]; then
     mount /dev/vg0/home /home
     rsync -a /tmp/home/ /home/
     rm -rf /tmp/home
-  elif [[ $(hostname) == *pipeline* ]]; then
-    # On "pipeline" machines, we create a big /var/lib/buildkite-agent directory, because these
-    # machines check out a lot of different Git repositories.
-    if [[ ! -e /dev/vg0/buildkite-agent ]]; then
-      lvcreate -n buildkite-agent -l100%FREE vg0
-      mkfs.ext4 /dev/vg0/buildkite-agent
-    fi
-    mount /dev/vg0/buildkite-agent /var/lib/buildkite-agent
-    chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent
   fi
 fi
 
@@ -72,14 +56,18 @@ if [[ -e /dev/nvme0n1 ]]; then
   mount -t tmpfs -o mode=0755,uid=buildkite-agent,gid=buildkite-agent,size=$((100 * 1024 * 1024 * 1024)) tmpfs /var/lib/buildkite-agent
 fi
 
-# Start Docker if it's installed.
-if [[ $(docker --version 2>/dev/null) ]]; then
-  if [[ $(systemctl --version 2>/dev/null) ]]; then
-    systemctl start docker
-  else
-    service docker start
-  fi
+# Start Docker.
+if [[ $(systemctl --version 2>/dev/null) ]]; then
+  systemctl start docker
+else
+  service docker start
 fi
+
+# Download a static bundle of all our Git repositories and unpack it.
+rm -rf /var/lib/bazelbuild
+curl -sS https://storage.googleapis.com/bazel-git-mirror/bazelbuild.tar | tar x -C /var/lib
+chown -R root:root /var/lib/bazelbuild
+chmod -R 0644 /var/lib/bazelbuild
 
 # Only start the Buildkite Agent if this is a worker node (as opposed to a VM
 # being used by someone for testing / development).

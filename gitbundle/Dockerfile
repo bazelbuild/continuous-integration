@@ -17,16 +17,14 @@ RUN apt-get update \
  && gcloud --version \
  && rm -rf /var/lib/apt/lists/*
 
-RUN useradd --create-home --user-group --shell /bin/bash gitsync
+RUN useradd --create-home --user-group --shell /bin/bash gitbundle
 
-RUN mkdir -p /home/gitsync/.ssh
-COPY ssh_config /home/gitsync/.ssh/config
-COPY known_hosts /home/gitsync/.ssh/known_hosts
-COPY gitsync.sh /home/gitsync/gitsync.sh
-RUN chown -R gitsync:gitsync /home/gitsync
+RUN mkdir -p /home/gitbundle/.ssh
+COPY gitbundle.sh /home/gitbundle/gitbundle.sh
+RUN chown -R gitbundle:gitbundle /home/gitbundle
 
-USER gitsync
-RUN git config --global http.cookiefile /home/gitsync/.gitcookies
+USER gitbundle
+RUN git config --global http.cookiefile /home/gitbundle/.gitcookies
 
-WORKDIR /home/gitsync
-ENTRYPOINT [ "/home/gitsync/gitsync.sh" ]
+WORKDIR /home/gitbundle
+ENTRYPOINT [ "/home/gitbundle/gitbundle.sh" ]

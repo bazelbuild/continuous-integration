@@ -566,16 +566,15 @@ def upload_bazel_binary(platform):
     print_collapsed_group(":gcloud: Uploading Bazel Under Test")
     binary_path = "bazel-bin/src/bazel"
     if platform == "windows":
-        binary_path = "bazel-bin\src\bazel"
+        binary_path = r"bazel-bin\src\bazel"
 
-    execute_command(["buildkite-agent", "artifact",
-                     "upload", "bazel-bin/src/bazel"])
+    execute_command(["buildkite-agent", "artifact", "upload", binary_path])
 
 
 def download_bazel_binary(dest_dir, platform):
     binary_path = "bazel-bin/src/bazel"
     if platform == "windows":
-        binary_path = "bazel-bin\src\\bazel"
+        binary_path = r"bazel-bin\src\bazel"
 
     source_step = create_label(platform, "Bazel", build_only=True)
     execute_command(["buildkite-agent", "artifact", "download",
@@ -638,14 +637,19 @@ def execute_bazel_run(bazel_binary, targets):
 
 def remote_caching_flags(platform):
     if is_pull_request():
-        common_flags = ["--bes_backend=buildeventservice.googleapis.com", "--bes_best_effort=false",
-                        "--bes_timeout=10s", "--tls_enabled", "--project_id=bazel-public",
+        common_flags = ["--bes_backend=buildeventservice.googleapis.com",
+                        "--bes_best_effort=false",
+                        "--bes_timeout=10s",
+                        "--tls_enabled",
+                        "--project_id=bazel-public",
                         "--remote_instance_name=projects/bazel-public",
                         "--experimental_remote_spawn_cache",
-                        "--remote_timeout=10", "--remote_cache=remotebuildexecution.googleapis.com",
+                        "--remote_timeout=10",
+                        "--remote_cache=remotebuildexecution.googleapis.com",
                         "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}"]
     else:
-        common_flags = ["--remote_timeout=10", "--experimental_remote_spawn_cache",
+        common_flags = ["--remote_timeout=10",
+                        "--experimental_remote_spawn_cache",
                         "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}",
                         "--remote_http_cache=https://storage.googleapis.com/bazel-buildkite-cache"]
     if platform in ["ubuntu1404", "ubuntu1604", "macos"]:
@@ -677,17 +681,26 @@ def concurrent_test_jobs(platform):
         return str(multiprocessing.cpu_count())
 
 
+def common_flags(bep_file):
+    return ["--show_progress_rate_limit=5",
+            "--curses=yes",
+            "--color=yes",
+            "--keep_going",
+            "--jobs=" + concurrent_jobs(),
+            "--build_event_json_file=" + bep_file,
+            "--experimental_build_event_json_file_path_conversion=false",
+            "--announce_rc",
+            "--sandbox_tmpfs_path=/tmp",
+            "--experimental_multi_threaded_digest"]
+
 def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     print_expanded_group(":bazel: Build")
-    common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
-                    "--jobs=" + concurrent_jobs(), "--build_event_json_file=" + bep_file,
-                    "--experimental_build_event_json_file_path_conversion=false", "--announce_rc"]
     caching_flags = []
     if not remote_enabled(flags):
         caching_flags = remote_caching_flags(platform)
     try:
-        execute_command([bazel_binary, "build"] +
-                        common_flags + caching_flags + flags + targets)
+        execute_command([bazel_binary, "build"] + common_flags(bep_file) +
+                         caching_flags + flags + targets)
     except subprocess.CalledProcessError as e:
         raise BazelBuildFailedException(
             "bazel build failed with exit code {}".format(e.returncode))
@@ -695,17 +708,15 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
 
 def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
     print_expanded_group(":bazel: Test")
-    common_flags = ["--show_progress_rate_limit=5", "--curses=yes", "--color=yes", "--keep_going",
-                    "--flaky_test_attempts=3", "--build_tests_only",
-                    "--jobs=" + concurrent_jobs(), "--local_test_jobs=" + concurrent_test_jobs(platform),
-                    "--build_event_json_file=" + bep_file,
-                    "--experimental_build_event_json_file_path_conversion=false", "--announce_rc"]
+    test_flags = ["--flaky_test_attempts=3",
+                  "--build_tests_only",
+                  "--local_test_jobs=" + concurrent_test_jobs(platform)]
     caching_flags = []
     if not remote_enabled(flags):
         caching_flags = remote_caching_flags(platform)
     try:
-        execute_command([bazel_binary, "test"] +
-                        common_flags + caching_flags + flags + targets)
+        execute_command([bazel_binary, "test"] + common_flags(bep_file) +
+                         test_flags + caching_flags + flags + targets)
     except subprocess.CalledProcessError as e:
         raise BazelTestFailedException(
             "bazel test failed with exit code {}".format(e.returncode))
@@ -851,6 +862,7 @@ def runner_step(platform, project_name=None, http_config=None,
     command: \"{1}\\n{2}\"
     agents:
       kind: worker
+      java: 8
       os: {3}""".format(label, fetch_bazelcipy_command(), command, platform)
 
 
@@ -932,6 +944,7 @@ def bazel_build_step(platform, project_name, http_config=None, file_config=None,
     command: \"{1}\\n{2}\"
     agents:
       kind: worker
+      java: 8
       os: {3}""".format(label, fetch_bazelcipy_command(),
                              pipeline_command, platform)
 

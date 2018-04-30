@@ -42,75 +42,32 @@ IMAGE_CREATION_VMS = {
     #         'install-buildkite-agent.sh'
     #     ]
     # },
-    ('buildkite-ubuntu1404',): {
+    ('buildkite-worker-ubuntu1404-java8',
+     'buildkite-testing-ubuntu1404-java8',): {
         'source_image_project': 'ubuntu-os-cloud',
         'source_image_family': 'ubuntu-1404-lts',
-        'scripts': [
-            'shell-utils.sh',
-            'setup-ubuntu.sh',
-            'install-image-version.sh',
-            'install-azul-zulu-8.sh',
-            'install-bazel.sh',
-            'install-buildkite-agent.sh',
-            'install-docker.sh',
-            'install-nodejs.sh',
-            'install-python36.sh',
-            'install-kvm.sh',
-            'install-android-sdk.sh',
-            'shutdown.sh'
-        ],
+        'setup_script': 'setup-ubuntu.sh',
         'licenses': [
             'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
         ]
     },
-    ('buildkite-ubuntu1604', 'buildkite-trusted-ubuntu1604', 'buildkite-pipeline-ubuntu1604'): {
+    ('buildkite-worker-ubuntu1604-nojava',
+     'buildkite-worker-ubuntu1604-java8',
+     'buildkite-worker-ubuntu1604-java9',
+     'buildkite-testing-ubuntu1604-java8',
+     'buildkite-trusted-ubuntu1604-java8',
+     'buildkite-pipeline-ubuntu1604-java8'): {
         'source_image_project': 'ubuntu-os-cloud',
         'source_image_family': 'ubuntu-1604-lts',
-        'scripts': [
-            'shell-utils.sh',
-            'setup-ubuntu.sh',
-            'install-image-version.sh',
-            'install-azul-zulu-8.sh',
-            'install-bazel.sh',
-            'install-buildkite-agent.sh',
-            'install-docker.sh',
-            'install-nodejs.sh',
-            'install-python36.sh',
-            'install-kvm.sh',
-            'install-android-sdk.sh',
-            'shutdown.sh'
-        ],
+        'setup_script': 'setup-ubuntu.sh',
         'licenses': [
             'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
         ]
     },
-    ('buildkite-java9-ubuntu1604',): {
-        'source_image_project': 'ubuntu-os-cloud',
-        'source_image_family': 'ubuntu-1604-lts',
-        'scripts': [
-            'shell-utils.sh',
-            'setup-ubuntu.sh',
-            'install-image-version.sh',
-            'install-azul-zulu-9.sh',
-            'install-bazel.sh',
-            'install-buildkite-agent.sh',
-            'install-docker.sh',
-            'install-nodejs.sh',
-            'install-python36.sh',
-            'install-kvm.sh',
-            'install-android-sdk.sh',
-            'shutdown.sh'
-        ],
-        'licenses': [
-            'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
-        ]
-    },
-    ('buildkite-windows',): {
+    ('buildkite-worker-windows-java8',): {
         'source_image_project': 'windows-cloud',
         'source_image_family': 'windows-1709-core',
-        'scripts': [
-            'setup-windows-manual.ps1'
-        ]
+        'setup_script': 'setup-windows.ps1',
     }
 }
 
@@ -121,24 +78,28 @@ def run(args, **kwargs):
     return subprocess.run(args, **kwargs)
 
 
-def merge_setup_scripts(instance_name, scripts):
-    newline = '\r\n' if 'windows' in instance_name else None
-    # Merge all setup scripts into one.
-    merged_script_path = tempfile.mkstemp()[1]
-    with open(merged_script_path, 'w', newline=newline) as merged_script_file:
-        for script in scripts:
-            with open(script, 'r') as script_file:
-                merged_script_file.write(script_file.read() + '\n')
-    return merged_script_path
+def preprocess_setup_script(setup_script, is_windows):
+    output_file = tempfile.mkstemp()[1]
+    newline = '\r\n' if is_windows else '\n'
+    with open(output_file, 'w', newline=newline) as f:
+        with open(setup_script, 'r') as setup_script_file:
+            if is_windows:
+                f.write("$setup_script = @'\n")
+            f.write(setup_script_file.read() + '\n')
+            if is_windows:
+                f.write("'@\n")
+                f.write('[System.IO.File]::WriteAllLines("c:\\setup.ps1", $setup_script)\n')
+    return output_file
 
 
 def create_instance(instance_name, params, git_commit):
-    merged_script_path = merge_setup_scripts(instance_name, params['scripts'])
+    is_windows = 'windows' in instance_name
+    setup_script = preprocess_setup_script(params['setup_script'], is_windows)
     try:
-        if 'windows' in instance_name:
-            startup_script = 'windows-startup-script-ps1=' + merged_script_path
+        if is_windows:
+            startup_script = 'windows-startup-script-ps1=' + setup_script
         else:
-            startup_script = 'startup-script=' + merged_script_path
+            startup_script = 'startup-script=' + setup_script
 
         if 'source_image' in params:
             image = {
@@ -162,7 +123,7 @@ def create_instance(instance_name, params, git_commit):
             boot_disk_size='50GB',
             **image)
     finally:
-        os.remove(merged_script_path)
+        os.remove(setup_script)
 
 
 # https://stackoverflow.com/a/25802742
@@ -196,7 +157,7 @@ def print_windows_instructions(instance_name):
 
 
 def workflow(name, params, git_commit):
-    instance_name = "%s-image-%s-%s" % (name, int(datetime.now().timestamp()), git_commit)
+    instance_name = "%s-image-%s" % (name, int(datetime.now().timestamp()))
     try:
         # Create the VM.
         create_instance(instance_name, params, git_commit)
@@ -247,7 +208,7 @@ def main(argv=None):
         return 1
 
     try:
-        git_commit = subprocess.check_output(['git', 'rev-parse', '--verify', '--short=16', 'HEAD'],
+        git_commit = subprocess.check_output(['git', 'rev-parse', '--verify', 'HEAD'],
                                              universal_newlines=True).strip()
     except subprocess.CalledProcessError:
         print("Could not get current Git commit hash. You have to run "

@@ -29,12 +29,14 @@ LOCATION = 'europe-west1-d'
 # Note that the hostnames are parsed and trigger specific behavior for different use cases.
 # The following parts have a special meaning:
 #
-# - "buildkite": This is a normal production VM running the Buildkite agent.
-# - "pipeline": This is a special production VM that only runs pipeline setup scripts.
-# - "testing": This is a shared VM that can be used by project members for experiments.
-#              It does not run the Buildkite agent.
-# - "$USER": This is a VM used by one specific engineer for tests. It does not run the Buildkite
-#            agent.
+# - "buildkite": This is a production VM running the Buildkite agent.
+# - "pipeline": This is a special production VM that only runs pipeline setup
+#               scripts.
+# - "testing": This is a shared VM that can be used by project members for
+#              experiments. It does not run the Buildkite agent.
+# - "trusted": This is a special production VM that has additional access to
+#              secrets.
+# - "worker": This is a worker VM running normal CI jobs.
 #
 DEFAULT_VM = {
     'boot_disk_size': '50GB',
@@ -48,55 +50,67 @@ DEFAULT_VM = {
 }
 
 INSTANCE_GROUPS = {
-    'buildkite-ubuntu1404': {
+    'buildkite-worker-ubuntu1404-java8': {
         'count': 8,
-        'image_family': 'buildkite-ubuntu1404',
+        'image_family': 'buildkite-worker-ubuntu1404-java8',
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
-    'buildkite-ubuntu1604': {
-        'count': 8,
-        'image_family': 'buildkite-ubuntu1604',
+    'buildkite-worker-ubuntu1604-nojava': {
+        'count': 4,
+        'image_family': 'buildkite-worker-ubuntu1604-nojava',
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
-    'buildkite-pipeline-ubuntu1604': {
+    'buildkite-worker-ubuntu1604-java8': {
+        'count': 8,
+        'image_family': 'buildkite-worker-ubuntu1604-java8',
+        'local_ssd': 'interface=nvme',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+    },
+    'buildkite-worker-ubuntu1604-java9': {
+        'count': 4,
+        'image_family': 'buildkite-worker-ubuntu1604-java9',
+        'local_ssd': 'interface=nvme',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+    },
+    'buildkite-pipeline-ubuntu1604-java8': {
         'count': 1,
-        'image_family': 'buildkite-pipeline-ubuntu1604',
+        'image_family': 'buildkite-pipeline-ubuntu1604-java8',
         'local_ssd': 'interface=nvme',
         'machine_type': 'n1-standard-8',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
-    'buildkite-trusted-ubuntu1604': {
+    'buildkite-trusted-ubuntu1604-java8': {
         'count': 1,
-        'image_family': 'buildkite-trusted-ubuntu1604',
+        'image_family': 'buildkite-trusted-ubuntu1604-java8',
         'local_ssd': 'interface=nvme',
         'machine_type': 'n1-standard-8',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
         'service_account': 'bazel-release-process@bazel-public.iam.gserviceaccount.com',
     },
-    'buildkite-windows': {
+    'buildkite-worker-windows-java8': {
         'count': 8,
-        'image_family': 'buildkite-windows',
+        'image_family': 'buildkite-worker-windows-java8',
         'local_ssd': 'interface=scsi',
         'metadata_from_file': 'windows-startup-script-ps1=startup-windows.ps1',
     },
 }
 
 SINGLE_INSTANCES = {
-    'testing-ubuntu1404': {
-        'image_family': 'buildkite-ubuntu1404',
+    'testing-ubuntu1404-java8': {
+        'image_family': 'buildkite-testing-ubuntu1404-java8',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
         'disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1404-persistent'),
     },
-    'testing-ubuntu1604': {
-        'image_family': 'buildkite-ubuntu1604',
+    'testing-ubuntu1604-java9': {
+        'image_family': 'buildkite-testing-ubuntu1604-java9',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
         'disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1604-persistent'),
     },
-    'testing-windows': {
+    'testing-windows-java8': {
         'boot_disk_size': '500GB',
-        'image_family': 'buildkite-windows',
+        'image_family': 'buildkite-testing-windows-java8',
     },
 }
 

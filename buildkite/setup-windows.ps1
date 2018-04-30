@@ -268,7 +268,6 @@ Write-Host "Creating Buildkite agent environment hook..."
 $buildkite_environment_hook = @"
 SET BUILDKITE_ARTIFACT_UPLOAD_DESTINATION=gs://bazel-buildkite-artifacts/%BUILDKITE_JOB_ID%
 SET BUILDKITE_GS_ACL=publicRead
-SET BUILDKITE_IMAGE_VERSION=${image_version}
 SET JAVA_HOME=${env:JAVA_HOME}
 SET PATH=${env:PATH}
 SET TEMP=D:\temp
