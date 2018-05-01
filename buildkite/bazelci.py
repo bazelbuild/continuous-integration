@@ -613,8 +613,22 @@ def clone_git_repository(git_repository, platform):
         execute_command(["git", "submodule", "foreach",
                          "--recursive", "git", "clean", "-fdqx"])
     else:
-        execute_command(
-            ["git", "clone", "--recurse-submodules", git_repository, clone_path])
+        if platform in ["ubuntu1404", "ubuntu1604"]:
+            execute_command(
+                ["git", "clone", "--recurse-submodules", "--reference",
+                 "/var/lib/bazelbuild", git_repository, clone_path])
+        elif platform in ["macos"]:
+            execute_command(
+                ["git", "clone", "--recurse-submodules", "--reference",
+                 "/usr/local/var/bazelbuild", git_repository, clone_path])
+        elif platform in ["windows"]:
+            execute_command(
+                ["git", "clone", "--recurse-submodules", "--reference",
+                 "c:\\buildkite\\bazelbuild", git_repository, clone_path])
+        else:
+            execute_command(
+                ["git", "clone", "--recurse-submodules", git_repository,
+                 clone_path])
         os.chdir(clone_path)
 
 

@@ -103,7 +103,7 @@ SINGLE_INSTANCES = {
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
         'disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1404-persistent'),
     },
-    'testing-ubuntu1604-java9': {
+    'testing-ubuntu1604-java8': {
         'image_family': 'buildkite-testing-ubuntu1604-java9',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
         'disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1604-persistent'),

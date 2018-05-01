@@ -47,6 +47,14 @@ Write-Host "Decrypting Buildkite Agent token using KMS..."
 $buildkite_agent_token = & gcloud kms decrypt --location global --keyring buildkite --key buildkite-agent-token --ciphertext-file $buildkite_agent_token_file --plaintext-file -
 Remove-Item $buildkite_agent_token_file
 
+## Download and unpack our Git snapshot.
+$bazelbuild_url = "https://storage.googleapis.com/bazel-git-mirror/bazelbuild.zip"
+$bazelbuild_zip = "c:\temp\bazelbuild.zip"
+$bazelbuild_root = "c:\buildkite"
+(New-Object Net.WebClient).DownloadFile($bazelbuild_url, $bazelbuild_zip)
+[System.IO.Compression.ZipFile]::ExtractToDirectory($bazelbuild_zip, $bazelbuild_root)
+Remove-Item $bazelbuild_zip
+
 ## Get the current image version.
 $image_version = (Get-Content "c:\buildkite\image.version" -Raw).Trim()
 
@@ -60,6 +68,7 @@ tags="kind=worker,os=windows,java=8,image-version=${image_version}"
 build-path="d:\build"
 hooks-path="c:\buildkite\hooks"
 plugins-path="c:\buildkite\plugins"
+git-clone-flags="-v --reference c:\buildkite\bazelbuild"
 disconnect-after-job=true
 disconnect-after-job-timeout=86400
 "@

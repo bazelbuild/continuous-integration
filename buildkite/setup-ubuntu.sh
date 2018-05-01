@@ -453,8 +453,7 @@ fi
 ### Clean up and trim the filesystem (potentially reduces the final image size).
 {
   rm -rf /var/lib/apt/lists/*
-  # Ubuntu 14.04 doesn't support "-a".
-  fstrim -av || fstrim -v /
+  fstrim -v /
   sleep 3
 }
 

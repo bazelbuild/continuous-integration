@@ -67,7 +67,7 @@ fi
 rm -rf /var/lib/bazelbuild
 curl -sS https://storage.googleapis.com/bazel-git-mirror/bazelbuild.tar | tar x -C /var/lib
 chown -R root:root /var/lib/bazelbuild
-chmod -R 0644 /var/lib/bazelbuild
+chmod -R 0755 /var/lib/bazelbuild
 
 # Only start the Buildkite Agent if this is a worker node (as opposed to a VM
 # being used by someone for testing / development).
