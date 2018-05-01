@@ -280,7 +280,7 @@ SET TMP=C:\temp
 # firewall blocking all incoming access and locally we run the CI jobs as that
 # user anyway.
 Write-Host "Creating Buildkite service user..."
-$buildkite_username = "buildkite"
+$buildkite_username = "b"
 $buildkite_password = "Bu1ldk1t3"
 $buildkite_secure_password = ConvertTo-SecureString $buildkite_password -AsPlainText -Force
 New-LocalUser -Name $buildkite_username -Password $buildkite_secure_password -UserMayNotChangePassword
