@@ -16,6 +16,7 @@ New-Item -ItemType Junction -Path "C:\tools\msys64\tmp" -Value "C:\temp"
 
 ## Create Buildkite agent working directory (C:\build).
 Write-Host "Creating build folder..."
+Remove-Item "C:\build" -Recurse -Force -ErrorAction Ignore
 New-Item "C:\build" -ItemType "directory"
 Add-NTFSAccess "C:\build" -Account BUILTIN\Users -AccessRights Write
 
