@@ -2,3 +2,4 @@
 /base/*.tar
 /jenkins/*.tar
 /target/
+__pycache__
