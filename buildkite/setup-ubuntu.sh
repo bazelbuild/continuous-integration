@@ -129,10 +129,9 @@ esac
     # Required by our infrastructure.
     lvm2
 
-    # Required by Android projects using the Skylark maven_{jar, aar} rules.
+    # Required by Android projects that launches the Android emulator headlessly
     # (see https://github.com/bazelbuild/continuous-integration/pull/246)
     cpu-checker
-    maven
     qemu-system-x86
     unzip
     xvfb
