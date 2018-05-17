@@ -129,7 +129,7 @@ esac
     # Required by our infrastructure.
     lvm2
 
-    # Required by Android projects that launches the Android emulator headlessly
+    # Required by Android projects that launche the Android emulator headlessly
     # (see https://github.com/bazelbuild/continuous-integration/pull/246)
     cpu-checker
     qemu-system-x86
