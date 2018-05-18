@@ -365,7 +365,10 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
             print_collapsed_group(":gcloud: Downloading Bazel Under Test")
             bazel_binary = download_bazel_binary(tmpdir, platform)
         print_bazel_version_info(bazel_binary)
-        execute_shell_commands(config.get("shell_commands", None))
+        if platform == "Windows":
+            execute_batch_commands(config.get("batch_commands", None))
+        else:
+            execute_shell_commands(config.get("shell_commands", None))
         execute_bazel_run(bazel_binary, config.get("run_targets", None))
         if not test_only:
             build_bep_file = os.path.join(tmpdir, "build_bep.json")
@@ -632,6 +635,13 @@ def clone_git_repository(git_repository, platform):
                  clone_path])
         os.chdir(clone_path)
 
+
+def execute_batch_commands(commands):
+    if not commands:
+        return
+    print_collapsed_group(":batch: Setup (Batch Commands)")
+    batch_commands = "&".join(commands)
+    return subprocess.run(batch_commands, shell=True, check=True).returncode
 
 def execute_shell_commands(commands):
     if not commands:
