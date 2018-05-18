@@ -365,7 +365,7 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
             print_collapsed_group(":gcloud: Downloading Bazel Under Test")
             bazel_binary = download_bazel_binary(tmpdir, platform)
         print_bazel_version_info(bazel_binary)
-        if platform == "Windows":
+        if platform == "windows":
             execute_batch_commands(config.get("batch_commands", None))
         else:
             execute_shell_commands(config.get("shell_commands", None))
