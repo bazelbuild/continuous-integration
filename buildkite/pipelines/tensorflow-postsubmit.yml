@@ -29,7 +29,7 @@ platforms:
     - "//tensorflow/tools/pip_package:build_pip_package"
     - "//tensorflow/examples/android:tensorflow_demo"
   windows:
-    shell_commands:
+    batch_commands:
     - "echo.| python ./configure.py"
     build_flags:
     - "-c opt"
