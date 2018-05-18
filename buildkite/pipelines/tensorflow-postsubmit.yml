@@ -30,7 +30,7 @@ platforms:
     - "//tensorflow/examples/android:tensorflow_demo"
   windows:
     shell_commands:
-    - "echo.| python .\configure.py"
+    - "echo.| python ./configure.py"
     build_flags:
     - "-c opt"
     - "--copt=-w"
