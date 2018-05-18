@@ -28,4 +28,13 @@ platforms:
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
     - "//tensorflow/examples/android:tensorflow_demo"
-
+  windows:
+    shell_commands:
+    - "echo.| python .\configure.py"
+    build_flags:
+    - "-c opt"
+    - "--copt=-w"
+    - "--host_copt=-w"
+    - "--define=override_eigen_strong_inline=true"
+    build_targets:
+    - "//tensorflow/tools/pip_package:build_pip_package"
