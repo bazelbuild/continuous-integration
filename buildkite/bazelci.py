@@ -656,7 +656,7 @@ def execute_bazel_run(bazel_binary, targets):
         return
     print_collapsed_group("Setup (Run Targets)")
     for target in targets:
-        execute_command([bazel_binary, "--nomaster_bazelrc", "--bazelrc=/dev/null", "run", "--curses=yes",
+        execute_command([bazel_binary, "run", "--curses=yes",
                          "--color=yes", "--verbose_failures", target])
 
 
@@ -724,7 +724,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     if not remote_enabled(flags):
         caching_flags = remote_caching_flags(platform)
     try:
-        execute_command([bazel_binary, "--nomaster_bazelrc", "--bazelrc=/dev/null", "build"] + common_flags(bep_file) +
+        execute_command([bazel_binary, "build"] + common_flags(bep_file) +
                          caching_flags + flags + targets)
     except subprocess.CalledProcessError as e:
         raise BazelBuildFailedException(
@@ -740,7 +740,7 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
     if not remote_enabled(flags):
         caching_flags = remote_caching_flags(platform)
     try:
-        execute_command([bazel_binary, "--nomaster_bazelrc", "--bazelrc=/dev/null", "test"] + common_flags(bep_file) +
+        execute_command([bazel_binary, "test"] + common_flags(bep_file) +
                          test_flags + caching_flags + flags + targets)
     except subprocess.CalledProcessError as e:
         raise BazelTestFailedException(
