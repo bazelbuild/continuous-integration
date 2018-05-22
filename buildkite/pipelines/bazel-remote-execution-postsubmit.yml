@@ -16,7 +16,7 @@ platforms:
     - "--jobs=75"
     - "--verbose_failures"
     - --experimental_remote_platform_override=properties:{ name:"container-image"
-      value:"docker://launcher.gcr.io/google/rbe-debian8:latest"
+      value:"docker://launcher.gcr.io/google/rbe-debian8@sha256:0d5db936f8fa04638ca31e4fc117415068dca43dc343d605c0db2a15f433a327"
       }
     - "--crosstool_top=@bazel_toolchains//configs/debian8_clang/0.2.0/bazel_0.7.0:toolchain"
     - "--host_java_toolchain=@bazel_toolchains//configs/java/0.1.0/bazel_0.6.0:remote_toolchain"
