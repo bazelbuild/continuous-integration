@@ -15,7 +15,7 @@ platforms:
     - "--google_default_credentials"
     - "--jobs=75"
     - --experimental_remote_platform_override=properties:{ name:"container-image"
-      value:"docker://gcr.io/google/rbe-debian8:latest"
+      value:"docker://launcher.gcr.io/google/rbe-debian8:latest"
       }
     - "--crosstool_top=@bazel_toolchains//configs/debian8_clang/0.2.0/bazel_0.7.0:toolchain"
     - "--host_java_toolchain=@bazel_toolchains//configs/java/0.1.0/bazel_0.6.0:remote_toolchain"
@@ -25,7 +25,7 @@ platforms:
     - "//src/test/shell/integration/..."
     - "//src/test/java/..."
     - "//src/test/shell/bazel:bazel_java_test"
-    - "//src/test/shell/bazel:bazel_experimental_ui_test"
+    - "//src/test/shell/bazel:experimental_ui_test"
     - "-//src/test/java/com/google/devtools/build/android/..."
     - "-//src/test/java/com/google/devtools/build/lib/shell:CommandUsingLinuxSandboxTest"
 
