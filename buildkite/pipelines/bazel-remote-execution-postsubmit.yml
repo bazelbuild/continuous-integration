@@ -24,7 +24,5 @@ platforms:
     - "--"
     - "//src/test/shell/integration/..."
     - "//src/test/java/..."
-    - "//src/test/shell/bazel:bazel_java_test"
     - "-//src/test/java/com/google/devtools/build/android/..."
     - "-//src/test/java/com/google/devtools/build/lib/shell:CommandUsingLinuxSandboxTest"
-
