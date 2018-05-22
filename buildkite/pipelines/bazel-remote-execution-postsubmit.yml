@@ -25,7 +25,6 @@ platforms:
     - "//src/test/shell/integration/..."
     - "//src/test/java/..."
     - "//src/test/shell/bazel/..."
-    - "//third_party/ijar/..."
     # See https://github.com/bazelbuild/bazel/issues/5234
     - "-//src/test/shell/bazel/android/..."
     - "-//src/test/shell/bazel:bazel_execute_testlog"
