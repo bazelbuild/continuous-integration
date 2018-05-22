@@ -14,7 +14,7 @@ platforms:
     - "--tls_enabled=true"
     - "--google_default_credentials"
     - "--jobs=75"
-    - "--verbose_failures"
+    - "--verbose_failures"  
     - --experimental_remote_platform_override=properties:{ name:"container-image"
       value:"docker://launcher.gcr.io/google/rbe-debian8:latest"
       }
