@@ -23,8 +23,10 @@ platforms:
       }
     test_targets:
     - "--"
+    - "//scripts/..."
     - "//src/test/..."
     # See https://github.com/bazelbuild/bazel/issues/5234
+    - "-//src/test/py/..."
     - "-//src/test/shell/bazel/android/..."
     - "-//src/test/shell/bazel:bazel_execute_testlog"
     - "-//src/test/shell/bazel:bazel_repository_cache_test"
