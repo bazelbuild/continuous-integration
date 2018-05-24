@@ -14,6 +14,7 @@ platforms:
     - "--tls_enabled=true"
     - "--google_default_credentials"
     - "--jobs=75"
+    - "--local_test_jobs=75"
     - "--host_javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:jdk8"
     - "--javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:jdk8"
     - "--crosstool_top=@bazel_toolchains//configs/ubuntu16_04_clang/1.0/bazel_0.13.0/default:toolchain"
