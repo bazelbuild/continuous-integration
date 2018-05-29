@@ -677,7 +677,7 @@ def remote_caching_flags(platform):
                         "--experimental_remote_spawn_cache",
                         "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}",
                         "--remote_http_cache=https://storage.googleapis.com/bazel-buildkite-cache"]
-    if platform in ["ubuntu1404", "ubuntu1604", "macos"]:
+    if platform in ["ubuntu1404", "ubuntu1604", "macos", "windows"]:
         return common_flags + ["--google_default_credentials"]
     return []
 
