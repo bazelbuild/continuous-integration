@@ -461,8 +461,6 @@ def owner_repository_from_url(git_repository):
 
 
 def results_view_url(invocation_id, platform):
-    if platform == "windows":
-        return "https://github.com/bazelbuild/bazel/issues/4735"
     results_url = None
     if invocation_id:
         results_url = "https://source.cloud.google.com/results/invocations/" + invocation_id
