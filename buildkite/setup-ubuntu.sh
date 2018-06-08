@@ -214,14 +214,6 @@ EOF
   # The trusted worker machine may only execute certain whitelisted builds.
   if [[ "${config_kind}" == "trusted" ]]; then
     cat >> /etc/buildkite-agent/hooks/environment <<'EOF'
-case ${BUILDKITE_BUILD_CREATOR_EMAIL} in
-  *@google.com)
-    ;;
-  *)
-    echo "Build creator not allowed: ${BUILDKITE_BUILD_CREATOR_EMAIL}"
-    exit 1
-esac
-
 case ${BUILDKITE_REPO} in
   https://github.com/bazelbuild/bazel.git|\
   https://github.com/bazelbuild/continuous-integration.git)
