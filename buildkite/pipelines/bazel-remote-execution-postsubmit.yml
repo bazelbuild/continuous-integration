@@ -37,3 +37,5 @@ platforms:
     - "-//src/test/shell/integration:java_integration_test"
     - "-//src/test/java/com/google/devtools/build/android/..."
     - "-//src/test/java/com/google/devtools/build/lib/shell:CommandUsingLinuxSandboxTest"
+    # Re-enable once fixed: https://github.com/bazelbuild/bazel/issues/5376
+    - "-//src/test/java/com/google/devtools/build/lib:sandbox-tests"
