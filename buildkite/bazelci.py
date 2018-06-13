@@ -670,7 +670,6 @@ def remote_caching_flags(platform):
                         # https://github.com/bazelbuild/bazel/issues/5382 and as part of that keep
                         # or remove the `--disk_cache=` flag.
                         "--disk_cache=",
-                        "--experimental_remote_spawn_cache",
                         "--remote_timeout=10",
                         "--remote_cache=remotebuildexecution.googleapis.com",
                         "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}"]
@@ -680,7 +679,6 @@ def remote_caching_flags(platform):
                         # https://github.com/bazelbuild/bazel/issues/5382 and as part of that keep
                         # or remove the `--disk_cache=` flag.
                         "--disk_cache=",
-                        "--experimental_remote_spawn_cache",
                         "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}",
                         "--remote_http_cache=https://storage.googleapis.com/bazel-buildkite-cache"]
     if platform in ["ubuntu1404", "ubuntu1604", "macos", "windows"]:
