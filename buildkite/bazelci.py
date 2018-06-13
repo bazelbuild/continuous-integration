@@ -662,7 +662,7 @@ def remote_caching_flags(platform):
     if is_pull_request():
         common_flags = ["--bes_backend=buildeventservice.googleapis.com",
                         "--bes_best_effort=false",
-                        "--bes_timeout=60s",
+                        "--bes_timeout=360s",
                         "--tls_enabled",
                         "--project_id=bazel-public",
                         "--remote_instance_name=projects/bazel-public",
