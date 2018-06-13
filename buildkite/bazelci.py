@@ -666,11 +666,19 @@ def remote_caching_flags(platform):
                         "--tls_enabled",
                         "--project_id=bazel-public",
                         "--remote_instance_name=projects/bazel-public",
+                        # TODO(ulfjack): figure out how to resolve
+                        # https://github.com/bazelbuild/bazel/issues/5382 and as part of that keep
+                        # or remove the `--disk_cache=` flag.
+                        "--disk_cache=",
                         "--remote_timeout=10",
                         "--remote_cache=remotebuildexecution.googleapis.com",
                         "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}"]
     else:
         common_flags = ["--remote_timeout=10",
+                        # TODO(ulfjack): figure out how to resolve
+                        # https://github.com/bazelbuild/bazel/issues/5382 and as part of that keep
+                        # or remove the `--disk_cache=` flag.
+                        "--disk_cache=",
                         "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}",
                         "--remote_http_cache=https://storage.googleapis.com/bazel-buildkite-cache"]
     if platform in ["ubuntu1404", "ubuntu1604", "macos", "windows"]:
