@@ -42,6 +42,7 @@ $bazelbuild_url = "https://storage.googleapis.com/bazel-git-mirror/bazelbuild.zi
 $bazelbuild_zip = "c:\temp\bazelbuild.zip"
 $bazelbuild_root = "c:\buildkite"
 (New-Object Net.WebClient).DownloadFile($bazelbuild_url, $bazelbuild_zip)
+Remove-Item $bazelbuild_root -Recurse -Force -ErrorAction Ignore
 [System.IO.Compression.ZipFile]::ExtractToDirectory($bazelbuild_zip, $bazelbuild_root)
 Remove-Item $bazelbuild_zip
 
