@@ -45,9 +45,11 @@ platforms:
     - "--copt=-w"
     - "--host_copt=-w"
     - "--define=override_eigen_strong_inline=true"
-    # TODO(laszlocsomor): remove "--cxxopt=--std=c++11" after cr/200219133
-    # is merged to upstream TensorFlow, it's a temporary workaround for
-    # https://github.com/bazelbuild/bazel/issues/5365.
-    - "--cxxopt=--std=c++11"
+    # NOTE(laszlocsomor): Regarding https://github.com/bazelbuild/bazel/issues/5365
+    # and the "--cxxopt=--std=c++11" flag on other platforms: Visual C++
+    # does not understand "--std=c++11", its syntax for C++ standard
+    # is "/std:c++14" or "/std:c++latest". It does not support "/std:c++11" so
+    # it is probably compiling for c++11 by default, therefore no flag is
+    # necessary.
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
