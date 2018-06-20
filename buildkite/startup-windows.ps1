@@ -42,7 +42,7 @@ $bazelbuild_url = "https://storage.googleapis.com/bazel-git-mirror/bazelbuild.zi
 $bazelbuild_zip = "c:\temp\bazelbuild.zip"
 $bazelbuild_root = "c:\buildkite"
 (New-Object Net.WebClient).DownloadFile($bazelbuild_url, $bazelbuild_zip)
-[System.IO.Compression.ZipFile]::ExtractToDirectory($bazelbuild_zip, $bazelbuild_root)
+Expand-Archive -LiteralPath $bazelbuild_zip -DestinationPath $bazelbuild_root -Force
 Remove-Item $bazelbuild_zip
 
 ## Get the current image version.
