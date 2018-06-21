@@ -707,7 +707,7 @@ def concurrent_test_jobs(platform):
     elif platform == "macos":
         return str(multiprocessing.cpu_count() // 2)
     else:
-        return str(multiprocessing.cpu_count())
+        return str(multiprocessing.cpu_count() // 2)
 
 
 def common_flags(bep_file):
