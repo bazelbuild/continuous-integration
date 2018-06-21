@@ -358,35 +358,40 @@ fi
 
 ### Install Python 3.6.
 {
-  apt-get -qqy install zlib1g-dev libssl-dev
+  if [[ "${config_os}" == "ubuntu1804" ]]; then
+    pip3 install requests uritemplate pyyaml github3.py
+  else
+    packages+=("realpath")
+    apt-get -qqy install zlib1g-dev libssl-dev
 
-  PYTHON_VERSION="3.6.5"
+    PYTHON_VERSION="3.6.5"
 
-  mkdir -p /usr/local/src
-  pushd /usr/local/src
+    mkdir -p /usr/local/src
+    pushd /usr/local/src
 
-  curl -O "https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz"
-  tar xfJ "Python-${PYTHON_VERSION}.tar.xz"
-  rm -f "Python-${PYTHON_VERSION}.tar.xz"
-  cd "Python-${PYTHON_VERSION}"
+    curl -O "https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz"
+    tar xfJ "Python-${PYTHON_VERSION}.tar.xz"
+    rm -f "Python-${PYTHON_VERSION}.tar.xz"
+    cd "Python-${PYTHON_VERSION}"
 
-  # Enable the 'ssl' module.
-  cat >> Modules/Setup.dist <<'EOF'
+    # Enable the 'ssl' module.
+    cat >> Modules/Setup.dist <<'EOF'
 _ssl _ssl.c \
        -DUSE_SSL -I/usr/include -I/usr/include/openssl \
        -L/usr/lib -lssl -lcrypto
 EOF
 
-  echo "Compiling Python ${PYTHON_VERSION} ..."
-  ./configure --quiet --enable-ipv6
-  make -s -j8 all > /dev/null
-  echo "Installing Python ${PYTHON_VERSION} ..."
-  make -s altinstall > /dev/null
+    echo "Compiling Python ${PYTHON_VERSION} ..."
+    ./configure --quiet --enable-ipv6
+    make -s -j8 all > /dev/null
+    echo "Installing Python ${PYTHON_VERSION} ..."
+    make -s altinstall > /dev/null
 
-  pip3.6 install requests uritemplate pyyaml github3.py
+    pip3.6 install requests uritemplate pyyaml github3.py
 
-  popd
-  rm -rf "/usr/local/src/Python-${PYTHON_VERSION}"
+    popd
+    rm -rf "/usr/local/src/Python-${PYTHON_VERSION}"
+  fi
 }
 
 ### Enable KVM support.
