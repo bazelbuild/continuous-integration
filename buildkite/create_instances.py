@@ -56,6 +56,12 @@ INSTANCE_GROUPS = {
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
+    'buildkite-worker-ubuntu1804-java8': {
+        'count': 8,
+        'image_family': 'buildkite-worker-ubuntu1804-java8',
+        'local_ssd': 'interface=nvme',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+    },
     'buildkite-worker-ubuntu1604-nojava': {
         'count': 4,
         'image_family': 'buildkite-worker-ubuntu1604-nojava',

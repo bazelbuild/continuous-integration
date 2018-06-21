@@ -64,6 +64,14 @@ IMAGE_CREATION_VMS = {
             'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
         ]
     },
+    ('buildkite-worker-ubuntu1804-java8',): {
+        'source_image_project': 'ubuntu-os-cloud',
+        'source_image_family': 'ubuntu-1804-lts',
+        'setup_script': 'setup-ubuntu.sh',
+        'licenses': [
+            'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
+        ]
+    },
     ('buildkite-worker-windows-java8',): {
         'source_image_project': 'windows-cloud',
         'source_image_family': 'windows-1709-core',

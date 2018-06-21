@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Setup script for Ubuntu 14.04 LTS and 16.04 LTS.
+# Setup script for Ubuntu 14.04 LTS, 16.04 LTS and 18.04 LTS.
 
 # Fail on errors.
 # Fail when using undefined variables.
@@ -51,6 +51,9 @@ case $(hostname) in
     ;;
   *ubuntu1604*)
     config_os="ubuntu1604"
+    ;;
+  *ubuntu1804*)
+    config_os="ubuntu1804"
     ;;
   *)
     echo "Could not deduce operating system from hostname: $(hostname)!"
@@ -90,7 +93,6 @@ esac
     python-dev
     python3
     python3-dev
-    realpath
     unzip
     wget
     xvfb
@@ -143,6 +145,14 @@ esac
     reprepro
     ssmtp
   )
+
+  # Bazel dependencies.
+  if [[ "${config_os}" == "ubuntu1804" ]]; then
+    packages+=("coreutils")
+  else
+    packages+=("realpath")
+  fi
+
   apt-get -qqy install "${packages[@]}" > /dev/null
 
   # Remove apport, as it's unneeded and uses significant CPU and I/O.

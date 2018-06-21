@@ -278,6 +278,11 @@ def platforms_info():
             "emoji-name": ":ubuntu: 16.04",
             "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}"
         },
+        "ubuntu1804": {
+            "name": "Ubuntu 18.04",
+            "emoji-name": ":ubuntu: 18.04",
+            "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}"
+        },
         "macos": {
             "name": "macOS",
             "emoji-name": ":darwin:",
@@ -615,7 +620,7 @@ def clone_git_repository(git_repository, platform):
         execute_command(["git", "submodule", "foreach",
                          "--recursive", "git", "clean", "-fdqx"])
     else:
-        if platform in ["ubuntu1404", "ubuntu1604"]:
+        if platform in ["ubuntu1404", "ubuntu1604", "ubuntu1804"]:
             execute_command(
                 ["git", "clone", "--recurse-submodules", "--reference",
                  "/var/lib/bazelbuild", git_repository, clone_path])
@@ -681,7 +686,7 @@ def remote_caching_flags(platform):
                         "--disk_cache=",
                         "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}",
                         "--remote_http_cache=https://storage.googleapis.com/bazel-buildkite-cache"]
-    if platform in ["ubuntu1404", "ubuntu1604", "macos", "windows"]:
+    if platform in ["ubuntu1404", "ubuntu1604", "ubuntu1804", "macos", "windows"]:
         return common_flags + ["--google_default_credentials"]
     return []
 
