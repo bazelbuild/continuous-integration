@@ -1,8 +1,5 @@
 ---
 platforms:
-  ubuntu1404:
-    build_targets:
-    - tensorflow_serving/...
-  ubuntu1604:
+  ubuntu1804:
     build_targets:
     - tensorflow_serving/...
