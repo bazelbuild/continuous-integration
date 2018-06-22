@@ -75,6 +75,14 @@ case $(hostname) in
     exit 1
 esac
 
+### Increase file descriptor limits
+{
+cat >> /etc/security/limits.conf <<EOF
+*                soft    nofile          100000
+*                hard    nofile          100000
+EOF
+}
+
 ### Install base packages.
 {
   # Android SDK requires 32-bits libraries.
