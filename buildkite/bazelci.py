@@ -736,7 +736,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     if not remote_enabled(flags):
         caching_flags = remote_caching_flags(platform)
     try:
-        execute_command([bazel_binary, "--host_jvm_args=-Xms32g", "--host_jvm_args=-Xmx32g", "--host_jvm_args=-XX:+UseParallelGC", "build"] +
+        execute_command([bazel_binary, "--host_jvm_args=-Xms48g", "--host_jvm_args=-Xmx48g", "--host_jvm_args=-XX:+UseParallelGC", "build"] +
                         common_flags(bep_file) + caching_flags + flags + targets)
     except subprocess.CalledProcessError as e:
         raise BazelBuildFailedException(
@@ -755,7 +755,7 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor
     if not remote_enabled(flags) and not monitor_flaky_tests:
         caching_flags = remote_caching_flags(platform)
     try:
-        execute_command([bazel_binary, "--host_jvm_args=-Xms32g", "--host_jvm_args=-Xmx32g", "--host_jvm_args=-XX:+UseParallelGC", "test"] +
+        execute_command([bazel_binary, "--host_jvm_args=-Xms48g", "--host_jvm_args=-Xmx48g", "--host_jvm_args=-XX:+UseParallelGC", "test"] +
                         common_flags(bep_file) + test_flags + caching_flags + flags + targets)
     except subprocess.CalledProcessError as e:
         raise BazelTestFailedException(
