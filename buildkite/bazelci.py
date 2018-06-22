@@ -752,7 +752,7 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor
     # Don't enable remote caching if the user enabled remote execution / caching himself
     # or flaky test monitoring is enabled, as remote caching makes tests look less flaky than
     # they are.
-    if not remote_enabled(flags) or not monitor_flaky_tests:
+    if not remote_enabled(flags) and not monitor_flaky_tests:
         caching_flags = remote_caching_flags(platform)
     try:
         execute_command([bazel_binary, "test"] + common_flags(bep_file) +
