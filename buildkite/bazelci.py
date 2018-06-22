@@ -736,8 +736,8 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     if not remote_enabled(flags):
         caching_flags = remote_caching_flags(platform)
     try:
-        execute_command([bazel_binary, "build"] + common_flags(bep_file) +
-                         caching_flags + flags + targets)
+        execute_command([bazel_binary, "--host_jvm_args=-Xms10g", "--host_jvm_args=-Xmx10g", build"] +
+                         common_flags(bep_file) + caching_flags + flags + targets)
     except subprocess.CalledProcessError as e:
         raise BazelBuildFailedException(
             "bazel build failed with exit code {}".format(e.returncode))
@@ -755,8 +755,8 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor
     if not remote_enabled(flags) and not monitor_flaky_tests:
         caching_flags = remote_caching_flags(platform)
     try:
-        execute_command([bazel_binary, "test"] + common_flags(bep_file) +
-                         test_flags + caching_flags + flags + targets)
+        execute_command([bazel_binary, "--host_jvm_args=-Xms10g", "--host_jvm_args=-Xmx10g","test"] +
+                        common_flags(bep_file) + test_flags + caching_flags + flags + targets)
     except subprocess.CalledProcessError as e:
         raise BazelTestFailedException(
             "bazel test failed with exit code {}".format(e.returncode))
