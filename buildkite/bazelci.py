@@ -749,7 +749,6 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor
                   "--build_tests_only",
                   "--local_test_jobs=" + concurrent_test_jobs(platform)]
     caching_flags = []
-    eprint("Monitory Flaky Tests: " + str(monitor_flaky_tests))
     # Don't enable remote caching if the user enabled remote execution / caching himself
     # or flaky test monitoring is enabled, as remote caching makes tests look less flaky than
     # they are.
