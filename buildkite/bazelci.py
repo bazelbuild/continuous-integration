@@ -349,7 +349,7 @@ def print_expanded_group(name):
 
 
 def execute_commands(config, platform, git_repository, use_but, save_but,
-                     build_only, test_only):
+                     build_only, test_only, monitor_flaky_tests):
     fail_pipeline = False
     tmpdir = None
     bazel_binary = "bazel"
@@ -402,13 +402,16 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                     update_pull_request_test_status(
                         platform, git_repository, commit, "pending", None)
                 execute_bazel_test(bazel_binary, platform, config.get("test_flags", []),
-                                   config.get("test_targets", None), test_bep_file)
+                                   config.get("test_targets", None), test_bep_file,
+                                   monitor_flaky_tests)
                 if has_flaky_tests(test_bep_file):
                     show_image(flaky_test_meme_url(), "Flaky Tests")
-                    if os.getenv("BUILDKITE_PIPELINE_SLUG") in ["bazel-bazel", "google-bazel-presubmit"]:
+                    if monitor_flaky_tests:
                         # Upload the BEP logs from Bazel builds for later analysis on flaky tests
                         build_id = os.getenv("BUILDKITE_BUILD_ID")
-                        execute_command([gsutil_command(), "cp", test_bep_file, "gs://bazel-buildkite-stats/build_event_protocols/" + build_id + ".json"])
+                        pipeline_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
+                        execute_command([gsutil_command(), "cp", test_bep_file,
+                            "gs://bazel-buildkite-stats/flaky-tests-bep/" + pipeline_slug + "/" + build_id + ".json"])
                 if is_pull_request():
                     invocation_id = bes_invocation_id(test_bep_file)
                     update_pull_request_test_status(
@@ -740,13 +743,16 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
             "bazel build failed with exit code {}".format(e.returncode))
 
 
-def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file):
+def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor_flaky_tests):
     print_expanded_group(":bazel: Test")
     test_flags = ["--flaky_test_attempts=3",
                   "--build_tests_only",
                   "--local_test_jobs=" + concurrent_test_jobs(platform)]
     caching_flags = []
-    if not remote_enabled(flags):
+    # Don't enable remote caching if the user enabled remote execution / caching himself
+    # or flaky test monitoring is enabled, as remote caching makes tests look less flaky than
+    # they are.
+    if not remote_enabled(flags) and not monitor_flaky_tests:
         caching_flags = remote_caching_flags(platform)
     try:
         execute_command([bazel_binary, "test"] + common_flags(bep_file) +
@@ -860,7 +866,7 @@ def github_user_for_pull_request():
 
 
 def print_project_pipeline(platform_configs, project_name, http_config, file_config,
-                           git_repository, use_but):
+                           git_repository, monitory_flaky_tests, use_but):
     pipeline_steps = []
     if is_pull_request():
         commit_author = github_user_for_pull_request()
@@ -872,14 +878,14 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
 
     for platform, _ in platform_configs.items():
         step = runner_step(platform, project_name,
-                           http_config, file_config, git_repository, use_but)
+                           http_config, file_config, git_repository, monitory_flaky_tests, use_but)
         pipeline_steps.append(step)
 
     print_pipeline(pipeline_steps)
 
 
 def runner_step(platform, project_name=None, http_config=None,
-                file_config=None, git_repository=None, use_but=False):
+                file_config=None, git_repository=None, monitor_flaky_tests=False, use_but=False):
     command = python_binary(platform) + \
         " bazelci.py runner --platform=" + platform
     if http_config:
@@ -888,6 +894,8 @@ def runner_step(platform, project_name=None, http_config=None,
         command += " --file_config=" + file_config
     if git_repository:
         command += " --git_repository=" + git_repository
+    if monitor_flaky_tests:
+        command += " --monitor_flaky_tests"
     if use_but:
         command += " --use_but"
     label = create_label(platform, project_name)
@@ -1191,6 +1199,7 @@ def main(argv=None):
     project_pipeline.add_argument("--file_config", type=str)
     project_pipeline.add_argument("--http_config", type=str)
     project_pipeline.add_argument("--git_repository", type=str)
+    project_pipeline.add_argument("--monitor_flaky_tests", type=bool, nargs="?", const=False)
     project_pipeline.add_argument(
         "--use_but", type=bool, nargs="?", const=True)
 
@@ -1204,6 +1213,8 @@ def main(argv=None):
     runner.add_argument("--save_but", type=bool, nargs="?", const=True)
     runner.add_argument("--build_only", type=bool, nargs="?", const=True)
     runner.add_argument("--test_only", type=bool, nargs="?", const=True)
+    runner.add_argument("--monitor_flaky_tests", type=bool, nargs="?", const=False)
+
 
     runner = subparsers.add_parser("publish_binaries")
 
@@ -1220,12 +1231,13 @@ def main(argv=None):
         elif args.subparsers_name == "project_pipeline":
             configs = fetch_configs(args.http_config, args.file_config)
             print_project_pipeline(configs.get("platforms", None), args.project_name,
-                                   args.http_config, args.file_config, args.git_repository, args.use_but)
+                                   args.http_config, args.file_config, args.git_repository,
+                                   args.monitor_flaky_tests, args.use_but)
         elif args.subparsers_name == "runner":
             configs = fetch_configs(args.http_config, args.file_config)
             execute_commands(configs.get("platforms", None)[args.platform],
                              args.platform, args.git_repository, args.use_but, args.save_but,
-                             args.build_only, args.test_only)
+                             args.build_only, args.test_only, args.monitor_flaky_tests)
         elif args.subparsers_name == "publish_binaries":
             publish_binaries()
         else:
