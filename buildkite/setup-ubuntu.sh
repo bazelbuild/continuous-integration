@@ -217,6 +217,7 @@ EOF
 
 set -euo pipefail
 
+export PATH=$PATH:/snap/bin/
 export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://bazel-buildkite-artifacts/$BUILDKITE_JOB_ID"
 export BUILDKITE_GS_ACL="publicRead"
 EOF
