@@ -452,7 +452,7 @@ def fetch_github_token():
             [gsutil_command(), "cp", "gs://bazel-encrypted-secrets/github-token.enc", "github-token.enc"])
         __github_token__ = subprocess.check_output([gcloud_command(), "kms", "decrypt", "--location", "global", "--keyring", "buildkite",
                                                     "--key", "github-token", "--ciphertext-file", "github-token.enc",
-                                                    "--plaintext-file", "-"]).decode("utf-8").strip()
+                                                    "--plaintext-file", "-"], env=os.environ).decode("utf-8").strip()
         return __github_token__
     finally:
         os.remove("github-token.enc")
@@ -644,7 +644,7 @@ def execute_batch_commands(commands):
         return
     print_collapsed_group(":batch: Setup (Batch Commands)")
     batch_commands = "&".join(commands)
-    return subprocess.run(batch_commands, shell=True, check=True).returncode
+    return subprocess.run(batch_commands, shell=True, check=True, env=os.environ).returncode
 
 def execute_shell_commands(commands):
     if not commands:
@@ -834,7 +834,7 @@ def test_logs_for_status(bep_file, status):
 
 def execute_command(args, shell=False, fail_if_nonzero=True):
     eprint(" ".join(args))
-    return subprocess.run(args, shell=shell, check=fail_if_nonzero).returncode
+    return subprocess.run(args, shell=shell, check=fail_if_nonzero, env=os.environ).returncode
 
 
 def untrusted_code_verification_step():
@@ -1062,7 +1062,7 @@ def latest_generation_and_build_number():
     attempt = 0
     while attempt < 5:
         output = subprocess.check_output(
-            [gsutil_command(), "stat", bazelci_builds_metadata_url()])
+            [gsutil_command(), "stat", bazelci_builds_metadata_url()], env=os.environ)
         match = re.search("Generation:[ ]*([0-9]+)", output.decode("utf-8"))
         if not match:
             raise BuildkiteException(
@@ -1076,7 +1076,7 @@ def latest_generation_and_build_number():
         expected_md5hash = base64.b64decode(match.group(1))
 
         output = subprocess.check_output(
-            [gsutil_command(), "cat", bazelci_builds_metadata_url()])
+            [gsutil_command(), "cat", bazelci_builds_metadata_url()], env=os.environ)
         hasher = hashlib.md5()
         hasher.update(output)
         actual_md5hash = hasher.digest()
