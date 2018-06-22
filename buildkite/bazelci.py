@@ -1200,7 +1200,7 @@ def main(argv=None):
     project_pipeline.add_argument("--file_config", type=str)
     project_pipeline.add_argument("--http_config", type=str)
     project_pipeline.add_argument("--git_repository", type=str)
-    project_pipeline.add_argument("--monitor_flaky_tests", type=bool, nargs="?", const=False)
+    project_pipeline.add_argument("--monitor_flaky_tests", type=bool, nargs="?", const=True)
     project_pipeline.add_argument(
         "--use_but", type=bool, nargs="?", const=True)
 
@@ -1214,7 +1214,7 @@ def main(argv=None):
     runner.add_argument("--save_but", type=bool, nargs="?", const=True)
     runner.add_argument("--build_only", type=bool, nargs="?", const=True)
     runner.add_argument("--test_only", type=bool, nargs="?", const=True)
-    runner.add_argument("--monitor_flaky_tests", type=bool, nargs="?", const=False)
+    runner.add_argument("--monitor_flaky_tests", type=bool, nargs="?", const=True)
 
 
     runner = subparsers.add_parser("publish_binaries")
