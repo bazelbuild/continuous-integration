@@ -193,7 +193,7 @@ def workflow(name, params, git_commit):
             source_disk_zone=LOCATION,
             licenses=params.get('licenses', []))
     finally:
-        gcloud.delete_instance(instance_name)
+        gcloud.delete_instance(instance_name, zone=LOCATION)
 
 
 def worker():
