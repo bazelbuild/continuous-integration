@@ -190,6 +190,7 @@ fi
   bazel_version=$(curl -sSI https://github.com/bazelbuild/bazel/releases/latest | grep '^Location: ' | sed 's|.*/||' | sed $'s/\r//')
   curl -sSLo install.sh "https://releases.bazel.build/${bazel_version}/release/bazel-${bazel_version}-installer-linux-x86_64.sh"
   bash install.sh > /dev/null
+  rm -f install.sh
 }
 
 ### Install the Buildkite Agent on production images.
