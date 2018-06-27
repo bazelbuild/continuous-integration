@@ -16,6 +16,9 @@
 
 set -euxo pipefail
 
+# Ubuntu 18.04 installs gcloud, gsutil, etc. commands in /snap/bin
+PATH=$PATH:/snap/bin
+
 # If available: Use a persistent disk as a use-case specific data volume.
 if [[ -e /dev/sdb ]]; then
   if [[ ! -e /dev/vg0 ]]; then
