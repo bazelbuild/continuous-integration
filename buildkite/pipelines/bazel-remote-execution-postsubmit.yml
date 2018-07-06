@@ -17,6 +17,8 @@ platforms:
     - "--local_test_jobs=75"
     - "--host_javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:jdk8"
     - "--javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:jdk8"
+    - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8"
+    - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8"
     - "--crosstool_top=@bazel_toolchains//configs/ubuntu16_04_clang/1.0/bazel_0.13.0/default:toolchain"
     - --experimental_remote_platform_override=properties:{ name:"container-image"
       value:"docker://gcr.io/cloud-marketplace/google/rbe-ubuntu16-04@sha256:b940d4f08ea79ce9a07220754052da2ac4a4316e035d8799769cea3c24d10c66"
