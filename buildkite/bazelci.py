@@ -627,10 +627,11 @@ def clone_git_repository(git_repository, platform):
             execute_command(
                 ["git", "clone", "--recurse-submodules", "--reference",
                  "/var/lib/bazelbuild", git_repository, clone_path])
-        elif platform in ["macos"]:
-            execute_command(
-                ["git", "clone", "--recurse-submodules", "--reference",
-                 "/usr/local/var/bazelbuild", git_repository, clone_path])
+        # TODO(philwo): Re-enable this once issue #293 is fixed.
+        # elif platform in ["macos"]:
+        #     execute_command(
+        #         ["git", "clone", "--recurse-submodules", "--reference",
+        #          "/usr/local/var/bazelbuild", git_repository, clone_path])
         elif platform in ["windows"]:
             execute_command(
                 ["git", "clone", "--recurse-submodules", "--reference",
