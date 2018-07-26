@@ -438,8 +438,10 @@ expect {
 '
 
   # This should be kept in sync with mac/mac-android.sh.
+  # build-tools 28.0.1 introduces the new dexer, d8.jar
   tools/bin/sdkmanager \
     "build-tools;27.0.3" \
+    "build-tools;28.0.1" \
     "emulator" \
     "extras;android;m2repository" \
     "platform-tools" \
