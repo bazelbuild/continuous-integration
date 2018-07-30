@@ -10,6 +10,7 @@ if ((Get-Disk -Number 1).PartitionStyle -ne "RAW") {
 Initialize-Disk -Number 1
 New-Partition -DiskNumber 1 -UseMaximumSize -DriveLetter D
 Format-Volume -DriveLetter D -ShortFileNameSupport $true
+
 ## Load PowerShell support for ZIP files.
 Add-Type -AssemblyName "System.IO.Compression.FileSystem"
 

@@ -115,8 +115,8 @@ Write-Host "Installing required MSYS2 packages..."
 
 ## Install Azul Zulu.
 Write-Host "Installing Zulu 8..."
-$zulu_url = "https://cdn.azul.com/zulu/bin/zulu8.28.0.1-jdk8.0.163-win_x64.zip"
-$zulu_zip = "c:\temp\zulu8.28.0.1-jdk8.0.163-win_x64.zip"
+$zulu_url = "https://cdn.azul.com/zulu/bin/zulu8.30.0.1-jdk8.0.172-win_x64.zip"
+$zulu_zip = "c:\temp\zulu8.30.0.1-jdk8.0.172-win_x64.zip"
 $zulu_extracted_path = "c:\temp\" + [IO.Path]::GetFileNameWithoutExtension($zulu_zip)
 $zulu_root = "c:\openjdk"
 (New-Object Net.WebClient).DownloadFile($zulu_url, $zulu_zip)
@@ -127,15 +127,6 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${zulu_
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 $env:JAVA_HOME = $zulu_root
 [Environment]::SetEnvironmentVariable("JAVA_HOME", $env:JAVA_HOME, "Machine")
-
-## Install the JDK.
-# Write-Host "Installing JDK 8..."
-# FYI: choco adds "C:\Program Files\Java\jdk<version>\bin" to global PATH.
-# FYI: choco sets JAVA_HOME to "C:\Program Files\Java\jdk<version>\bin".
-# & choco install jdk8
-# $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
-# $env:JAVA_HOME = [Environment]::GetEnvironmentVariable("JAVA_HOME", "Machine")
-# Write-Host "JAVA_HOME was set to '${JAVA_HOME}'..."
 
 ## Install Visual C++ 2015 Build Tools (Update 3).
 Write-Host "Installing Visual C++ 2015 Build Tools..."
