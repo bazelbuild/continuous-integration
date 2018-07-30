@@ -95,12 +95,6 @@ Write-Host "Installing MSYS2..."
 $env:BAZEL_SH = [Environment]::GetEnvironmentVariable("BAZEL_SH", "Machine")
 Set-Alias bash "c:\tools\msys64\usr\bin\bash.exe"
 
-## This is a temporary hack that is necessary, because otherwise pacman asks whether it should
-## remove 'catgets' and 'libcatgets', which '--noconfirm' unfortunately answers with 'no', which
-## then causes the installation to fail.
-Write-Host "Removing MSYS2 catgets and libcatgets packages..."
-& bash -lc "pacman --noconfirm -R catgets libcatgets"
-
 ## Update MSYS2 once.
 Write-Host "Updating MSYS2 packages (round 1)..."
 & bash -lc "pacman --noconfirm -Syuu"
