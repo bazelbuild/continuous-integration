@@ -144,7 +144,12 @@ Write-Host "Installing Python 3..."
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Install a couple of Python modules required by TensorFlow.
-Write-Host "Updating Python packages..."
+Write-Host "Updating Python package management tools..."
+& "C:\Python3\Scripts\pip.exe" install --upgrade `
+    pip `
+    setuptools `
+    wheel
+Write-Host "Installing Python packages..."
 & "C:\Python3\Scripts\pip.exe" install --upgrade `
     autograd `
     numpy `
@@ -152,10 +157,8 @@ Write-Host "Updating Python packages..."
     protobuf `
     pyreadline `
     six `
-    wheel `
     requests `
-    pyyaml
-& "C:\Python3\Scripts\pip.exe" install --upgrade --pre `
+    pyyaml `
     github3.py
 
 ## Get the latest release version number of Bazel.
