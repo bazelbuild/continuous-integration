@@ -98,9 +98,7 @@ INSTANCE_GROUPS = {
     'buildkite-worker-windows-java8': {
         'count': 8,
         'image_family': 'buildkite-worker-windows-java8',
-        # We need to boost the size in order to get better IOPS and throughput.
-        # See: https://cloud.google.com/compute/docs/disks/performance
-        'boot_disk_size': '1000GB',
+        'local_ssd': 'interface=scsi',
         'metadata_from_file': 'windows-startup-script-ps1=startup-windows.ps1',
     },
 }

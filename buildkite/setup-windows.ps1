@@ -272,8 +272,8 @@ SET BUILDKITE_ARTIFACT_UPLOAD_DESTINATION=gs://bazel-buildkite-artifacts/%BUILDK
 SET BUILDKITE_GS_ACL=publicRead
 SET JAVA_HOME=${env:JAVA_HOME}
 SET PATH=${env:PATH}
-SET TEMP=C:\temp
-SET TMP=C:\temp
+SET TEMP=D:\temp
+SET TMP=D:\temp
 "@
 [System.IO.File]::WriteAllLines("${buildkite_agent_root}\hooks\environment.bat", $buildkite_environment_hook)
 
@@ -298,10 +298,10 @@ Write-Host "Terminating all processes belonging to the `${buildkite_username} us
 & taskkill /FI "username eq `${buildkite_username}" /T /F
 Start-Sleep -Seconds 1
 
-Write-Host "Recreating fresh temporary directory C:\temp..."
-Remove-Item -Recurse -Force "C:\temp"
-New-Item -Type Directory "C:\temp"
-Add-NTFSAccess -Path "C:\temp" -Account BUILTIN\Users -AccessRights Write
+Write-Host "Recreating fresh temporary directory D:\temp..."
+Remove-Item -Recurse -Force "D:\temp"
+New-Item -Type Directory "D:\temp"
+Add-NTFSAccess -Path "D:\temp" -Account BUILTIN\Users -AccessRights Write
 
 Write-Host "Deleting home directory of the `${buildkite_username} user..."
 Get-CimInstance Win32_UserProfile | Where LocalPath -EQ "C:\Users\`${buildkite_username}" | Remove-CimInstance
