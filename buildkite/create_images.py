@@ -51,9 +51,7 @@ IMAGE_CREATION_VMS = {
             'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
         ]
     },
-    ('buildkite-worker-ubuntu1604-nojava',
-     'buildkite-worker-ubuntu1604-java8',
-     'buildkite-worker-ubuntu1604-java9',
+    ('buildkite-worker-ubuntu1604-java8',
      'buildkite-testing-ubuntu1604-java8',
      'buildkite-trusted-ubuntu1604-java8',
      'buildkite-pipeline-ubuntu1604-java8'): {
