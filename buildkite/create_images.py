@@ -42,8 +42,7 @@ IMAGE_CREATION_VMS = {
     #         'install-buildkite-agent.sh'
     #     ]
     # },
-    ('buildkite-worker-ubuntu1404-java8',
-     'buildkite-testing-ubuntu1404-java8',): {
+    ('buildkite-worker-ubuntu1404-java8',): {
         'source_image_project': 'ubuntu-os-cloud',
         'source_image_family': 'ubuntu-1404-lts',
         'setup_script': 'setup-ubuntu.sh',
