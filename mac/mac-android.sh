@@ -46,9 +46,11 @@ expect {
 '
 
 # This should be kept in sync with gce/install-android-sdk.sh
+# build-tools 28.0.1 introduces the new dexer, d8.jar
 tools/bin/sdkmanager \
   "platform-tools" \
   "build-tools;27.0.3" \
+  "build-tools;28.0.1" \
   "platforms;android-24" \
   "platforms;android-25" \
   "platforms;android-26" \

@@ -223,8 +223,10 @@ Rename-Item "${android_sdk_root}\tools" "${android_sdk_root}\tools.old"
 Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
 
 ## Install all required Android SDK components.
+## build-tools 28.0.1 introduces the new dexer, d8.jar
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platform-tools"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;27.0.3"
+& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;28.0.1"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-24"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-25"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-26"
