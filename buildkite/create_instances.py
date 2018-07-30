@@ -56,27 +56,15 @@ INSTANCE_GROUPS = {
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
-    'buildkite-worker-ubuntu1804-java8': {
-        'count': 8,
-        'image_family': 'buildkite-worker-ubuntu1804-java8',
-        'local_ssd': 'interface=nvme',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-    },
-    'buildkite-worker-ubuntu1604-nojava': {
-        'count': 4,
-        'image_family': 'buildkite-worker-ubuntu1604-nojava',
-        'local_ssd': 'interface=nvme',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-    },
     'buildkite-worker-ubuntu1604-java8': {
         'count': 8,
         'image_family': 'buildkite-worker-ubuntu1604-java8',
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
-    'buildkite-worker-ubuntu1604-java9': {
-        'count': 4,
-        'image_family': 'buildkite-worker-ubuntu1604-java9',
+    'buildkite-worker-ubuntu1804-java8': {
+        'count': 8,
+        'image_family': 'buildkite-worker-ubuntu1804-java8',
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
@@ -104,13 +92,8 @@ INSTANCE_GROUPS = {
 }
 
 SINGLE_INSTANCES = {
-    'testing-ubuntu1404-java8': {
-        'image_family': 'buildkite-testing-ubuntu1404-java8',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-        'disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1404-persistent'),
-    },
     'testing-ubuntu1604-java8': {
-        'image_family': 'buildkite-testing-ubuntu1604-java9',
+        'image_family': 'buildkite-testing-ubuntu1604-java8',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
         'disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1604-persistent'),
     },
@@ -122,16 +105,6 @@ SINGLE_INSTANCES = {
 
 PRINT_LOCK = threading.Lock()
 WORK_QUEUE = queue.Queue()
-
-
-def debug(*args, **kwargs):
-    if DEBUG:
-        print(*args, **kwargs)
-
-
-def run(args, **kwargs):
-    debug('Running: {}'.format(' '.join(args)))
-    return subprocess.run(args, **kwargs)
 
 
 def instance_group_task(instance_group_name, count, **kwargs):
