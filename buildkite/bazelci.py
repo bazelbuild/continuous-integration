@@ -235,6 +235,8 @@ def downstream_projects():
 def python_binary(platform=None):
     if platform == "windows":
         return "python.exe"
+    if platform == "macos":
+        return "python3.7"
     return "python3.6"
 
 
