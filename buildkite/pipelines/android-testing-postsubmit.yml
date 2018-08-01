@@ -6,6 +6,7 @@ platforms:
     - "//ui/..."
     test_flags:
     - "--local_test_jobs=8" # Run at most 8 tests (= emulators) in parallel
+    - "--runs_per_test=3" # Flakes.
     test_targets:
     # Test API 23 only
     - "//ui/uiautomator/BasicSample:BasicSampleInstrumentationTest_23_x86"
@@ -22,6 +23,7 @@ platforms:
     - "//ui/..."
     test_flags:
     - "--local_test_jobs=8" # Run at most 8 tests (= emulators) in parallel
+    - "--runs_per_test=3" # Flakes.
     test_targets:
     - "//ui/uiautomator/BasicSample:BasicSampleInstrumentationTest_23_x86"
     - "//ui/espresso/RecyclerViewSample:RecyclerViewSampleInstrumentationTest_23_x86"
