@@ -92,15 +92,15 @@ INSTANCE_GROUPS = {
 }
 
 SINGLE_INSTANCES = {
-    'testing-ubuntu1604-java8': {
-        'image_family': 'buildkite-testing-ubuntu1604-java8',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-        'disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1604-persistent'),
-    },
-    'testing-windows-java8': {
-        'boot_disk_size': '500GB',
-        'image_family': 'buildkite-testing-windows-java8',
-    },
+    # 'testing-ubuntu1604-java8': {
+    #     'image_family': 'buildkite-testing-ubuntu1604-java8',
+    #     'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+    #     'disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1604-persistent'),
+    # },
+    # 'testing-windows-java8': {
+    #     'boot_disk_size': '500GB',
+    #     'image_family': 'buildkite-testing-windows-java8',
+    # },
 }
 
 PRINT_LOCK = threading.Lock()
