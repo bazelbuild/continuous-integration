@@ -3,3 +3,4 @@
 /jenkins/*.tar
 /target/
 __pycache__
+.vscode
