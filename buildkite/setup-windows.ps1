@@ -145,10 +145,8 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Install a couple of Python modules required by TensorFlow.
 Write-Host "Updating Python package management tools..."
-& "C:\Python3\Scripts\pip.exe" install --upgrade `
-    pip `
-    setuptools `
-    wheel
+& "C:\Python3\python.exe" -m pip install --upgrade pip setuptools wheel
+
 Write-Host "Installing Python packages..."
 & "C:\Python3\Scripts\pip.exe" install --upgrade `
     autograd `
