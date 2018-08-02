@@ -79,11 +79,10 @@ def eprint(*args, **kwargs):
 
 def downstream_projects():
     return {
-        # Removed until issues in https://github.com/bazelbuild/bazel/issues/4979 is fully resolved
-        # "Android Testing": {
-        #    "git_repository": "https://github.com/googlesamples/android-testing.git",
-        #    "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/android-testing-postsubmit.yml"
-        # },
+        "Android Testing": {
+            "git_repository": "https://github.com/googlesamples/android-testing.git",
+            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/android-testing-postsubmit.yml"
+        },
         "Bazel Remote Execution": {
             "git_repository": "https://github.com/bazelbuild/bazel.git",
             "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml"
