@@ -292,7 +292,7 @@ def platforms_info():
         "windows": {
             "name": "Windows",
             "emoji-name": ":windows:",
-            "agent-directory": "c:/build/${BUILDKITE_AGENT_NAME}",
+            "agent-directory": "d:/build/${BUILDKITE_AGENT_NAME}",
         }
     }
 
