@@ -41,6 +41,203 @@ from urllib.parse import urlparse
 random.seed()
 
 
+DOWNSTREAM_PROJECTS = {
+    "Android Testing": {
+        "git_repository": "https://github.com/googlesamples/android-testing.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/android-testing-postsubmit.yml"
+    },
+    "Bazel Remote Execution": {
+        "git_repository": "https://github.com/bazelbuild/bazel.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml"
+    },
+    "BUILD_file_generator": {
+        "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml"
+    },
+    "bazel-toolchains": {
+        "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-toolchains/master/.bazelci/presubmit.yml"
+    },
+    "bazel-skylib": {
+        "git_repository": "https://github.com/bazelbuild/bazel-skylib.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-skylib/master/.bazelci/presubmit.yml"
+    },
+    "buildtools": {
+        "git_repository": "https://github.com/bazelbuild/buildtools.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/buildtools/master/.bazelci/presubmit.yml"
+    },
+    "CLion Plugin": {
+        "git_repository": "https://github.com/bazelbuild/intellij.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/clion-postsubmit.yml"
+    },
+    "Eclipse Plugin": {
+        "git_repository": "https://github.com/bazelbuild/eclipse.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/eclipse/master/.bazelci/presubmit.yml"
+    },
+    "Gerrit": {
+        "git_repository": "https://gerrit.googlesource.com/gerrit.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml"
+    },
+    "Google Logging": {
+        "git_repository": "https://github.com/google/glog.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/glog-postsubmit.yml"
+    },
+    "IntelliJ Plugin": {
+        "git_repository": "https://github.com/bazelbuild/intellij.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/intellij-postsubmit.yml"
+    },
+    "migration-tooling": {
+        "git_repository": "https://github.com/bazelbuild/migration-tooling.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/migration-tooling/master/.bazelci/presubmit.yml"
+    },
+    "protobuf": {
+        "git_repository": "https://github.com/google/protobuf.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/protobuf-postsubmit.yml"
+    },
+    "re2": {
+        "git_repository": "https://github.com/google/re2.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/re2-postsubmit.yml"
+    },
+    "rules_appengine": {
+        "git_repository": "https://github.com/bazelbuild/rules_appengine.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_appengine/master/.bazelci/presubmit.yml"
+    },
+    "rules_apple": {
+        "git_repository": "https://github.com/bazelbuild/rules_apple.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_apple/master/.bazelci/presubmit.yml"
+    },
+    "rules_closure": {
+        "git_repository": "https://github.com/bazelbuild/rules_closure.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_closure/master/.bazelci/presubmit.yml"
+    },
+    "rules_d": {
+        "git_repository": "https://github.com/bazelbuild/rules_d.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_d/master/.bazelci/presubmit.yml"
+    },
+    "rules_docker": {
+        "git_repository": "https://github.com/bazelbuild/rules_docker.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_docker/master/.bazelci/presubmit.yml"
+    },
+    "rules_go": {
+        "git_repository": "https://github.com/bazelbuild/rules_go.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_go/master/.bazelci/presubmit.yml"
+    },
+    "rules_groovy": {
+        "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_groovy/master/.bazelci/presubmit.yml"
+    },
+    "rules_gwt": {
+        "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_gwt/master/.bazelci/presubmit.yml"
+    },
+    "rules_jsonnet": {
+        "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jsonnet/master/.bazelci/presubmit.yml"
+    },
+    "rules_kotlin": {
+        "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_kotlin/master/.bazelci/presubmit.yml"
+    },
+    "rules_k8s": {
+        "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_k8s/master/.bazelci/presubmit.yml"
+    },
+    "rules_nodejs": {
+        "git_repository": "https://github.com/bazelbuild/rules_nodejs.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_nodejs/master/.bazelci/presubmit.yml"
+    },
+    "rules_perl": {
+        "git_repository": "https://github.com/bazelbuild/rules_perl.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_perl/master/.bazelci/presubmit.yml"
+    },
+    "rules_python": {
+        "git_repository": "https://github.com/bazelbuild/rules_python.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_python/master/.bazelci/presubmit.yml"
+    },
+    "rules_rust": {
+        "git_repository": "https://github.com/bazelbuild/rules_rust.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_rust/master/.bazelci/presubmit.yml"
+    },
+    "rules_sass": {
+        "git_repository": "https://github.com/bazelbuild/rules_sass.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_sass/master/.bazelci/presubmit.yml"
+    },
+    "rules_scala": {
+        "git_repository": "https://github.com/bazelbuild/rules_scala.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_scala/master/.bazelci/presubmit.yml"
+    },
+    "rules_typescript": {
+        "git_repository": "https://github.com/bazelbuild/rules_typescript.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_typescript/master/.bazelci/presubmit.yml"
+    },
+    # Enable once is resolved: https://github.com/bazelbuild/continuous-integration/issues/191
+    # "rules_webtesting": {
+    #     "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
+    #     "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_webtesting-postsubmit.yml"
+    # },
+    "skydoc": {
+        "git_repository": "https://github.com/bazelbuild/skydoc.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/skydoc/master/.bazelci/presubmit.yml"
+    },
+    "subpar": {
+        "git_repository": "https://github.com/google/subpar.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/subpar-postsubmit.yml"
+    },
+    "TensorFlow": {
+        "git_repository": "https://github.com/tensorflow/tensorflow.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.yml"
+    },
+    "TensorFlow Serving": {
+        "git_repository": "https://github.com/tensorflow/serving.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-serving-postsubmit.yml"
+    }
+}
+
+
+# A map containing all supported platform names as keys, with the values being
+# the platform name in a human readable format, and a the buildkite-agent's
+# working directory.
+PLATFORMS = {
+    "ubuntu1404": {
+        "name": "Ubuntu 14.04",
+        "emoji-name": ":ubuntu: 14.04",
+        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
+        "nightly": True
+    },
+    "ubuntu1604": {
+        "name": "Ubuntu 16.04",
+        "emoji-name": ":ubuntu: 16.04",
+        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
+        "nightly": True
+    },
+    "ubuntu1804": {
+        "name": "Ubuntu 18.04",
+        "emoji-name": ":ubuntu: 18.04",
+        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
+        "nightly": True
+    },
+    "macos": {
+        "name": "macOS",
+        "emoji-name": ":darwin:",
+        "agent-directory": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}",
+        "nightly": True
+    },
+    "windows": {
+        "name": "Windows",
+        "emoji-name": ":windows:",
+        "agent-directory": "d:/build/${BUILDKITE_AGENT_NAME}",
+        "nightly": True
+    },
+    "rbe_ubuntu1604": {
+        "name": "RBE (Ubuntu 16.04)",
+        "emoji-name": ":gcloud:",
+        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
+        "nightly": False,
+        "host-platform": "ubuntu1604"
+    }
+}
+
+
 class BuildkiteException(Exception):
     """
     Raised whenever something goes wrong and we should exit with an error.
@@ -77,160 +274,6 @@ def eprint(*args, **kwargs):
     print(*args, flush=True, file=sys.stderr, **kwargs)
 
 
-def downstream_projects():
-    return {
-        "Android Testing": {
-            "git_repository": "https://github.com/googlesamples/android-testing.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/android-testing-postsubmit.yml"
-        },
-        "Bazel Remote Execution": {
-            "git_repository": "https://github.com/bazelbuild/bazel.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml"
-        },
-        "BUILD_file_generator": {
-            "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml"
-        },
-        "bazel-toolchains": {
-            "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-toolchains/master/.bazelci/presubmit.yml"
-        },
-        "bazel-skylib": {
-            "git_repository": "https://github.com/bazelbuild/bazel-skylib.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-skylib/master/.bazelci/presubmit.yml"
-        },
-        "buildtools": {
-            "git_repository": "https://github.com/bazelbuild/buildtools.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/buildtools/master/.bazelci/presubmit.yml"
-        },
-        "CLion Plugin": {
-            "git_repository": "https://github.com/bazelbuild/intellij.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/clion-postsubmit.yml"
-        },
-        "Eclipse Plugin": {
-            "git_repository": "https://github.com/bazelbuild/eclipse.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/eclipse/master/.bazelci/presubmit.yml"
-        },
-        "Gerrit": {
-            "git_repository": "https://gerrit.googlesource.com/gerrit.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml"
-        },
-        "Google Logging": {
-            "git_repository": "https://github.com/google/glog.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/glog-postsubmit.yml"
-        },
-        "IntelliJ Plugin": {
-            "git_repository": "https://github.com/bazelbuild/intellij.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/intellij-postsubmit.yml"
-        },
-        "migration-tooling": {
-            "git_repository": "https://github.com/bazelbuild/migration-tooling.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/migration-tooling/master/.bazelci/presubmit.yml"
-        },
-        "protobuf": {
-            "git_repository": "https://github.com/google/protobuf.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/protobuf-postsubmit.yml"
-        },
-        "re2": {
-            "git_repository": "https://github.com/google/re2.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/re2-postsubmit.yml"
-        },
-        "rules_appengine": {
-            "git_repository": "https://github.com/bazelbuild/rules_appengine.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_appengine/master/.bazelci/presubmit.yml"
-        },
-        "rules_apple": {
-            "git_repository": "https://github.com/bazelbuild/rules_apple.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_apple/master/.bazelci/presubmit.yml"
-        },
-        "rules_closure": {
-            "git_repository": "https://github.com/bazelbuild/rules_closure.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_closure/master/.bazelci/presubmit.yml"
-        },
-        "rules_d": {
-            "git_repository": "https://github.com/bazelbuild/rules_d.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_d/master/.bazelci/presubmit.yml"
-        },
-        "rules_docker": {
-            "git_repository": "https://github.com/bazelbuild/rules_docker.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_docker/master/.bazelci/presubmit.yml"
-        },
-        "rules_go": {
-            "git_repository": "https://github.com/bazelbuild/rules_go.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_go/master/.bazelci/presubmit.yml"
-        },
-        "rules_groovy": {
-            "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_groovy/master/.bazelci/presubmit.yml"
-        },
-        "rules_gwt": {
-            "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_gwt/master/.bazelci/presubmit.yml"
-        },
-        "rules_jsonnet": {
-            "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jsonnet/master/.bazelci/presubmit.yml"
-        },
-        "rules_kotlin": {
-            "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_kotlin/master/.bazelci/presubmit.yml"
-        },
-        "rules_k8s": {
-            "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_k8s/master/.bazelci/presubmit.yml"
-        },
-        "rules_nodejs": {
-            "git_repository": "https://github.com/bazelbuild/rules_nodejs.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_nodejs/master/.bazelci/presubmit.yml"
-        },
-        "rules_perl": {
-            "git_repository": "https://github.com/bazelbuild/rules_perl.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_perl/master/.bazelci/presubmit.yml"
-        },
-        "rules_python": {
-            "git_repository": "https://github.com/bazelbuild/rules_python.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_python/master/.bazelci/presubmit.yml"
-        },
-        "rules_rust": {
-            "git_repository": "https://github.com/bazelbuild/rules_rust.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_rust/master/.bazelci/presubmit.yml"
-        },
-        "rules_sass": {
-            "git_repository": "https://github.com/bazelbuild/rules_sass.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_sass/master/.bazelci/presubmit.yml"
-        },
-        "rules_scala": {
-            "git_repository": "https://github.com/bazelbuild/rules_scala.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_scala/master/.bazelci/presubmit.yml"
-        },
-        "rules_typescript": {
-            "git_repository": "https://github.com/bazelbuild/rules_typescript.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_typescript/master/.bazelci/presubmit.yml"
-        },
-        # Enable once is resolved: https://github.com/bazelbuild/continuous-integration/issues/191
-        # "rules_webtesting": {
-        #     "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
-        #     "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_webtesting-postsubmit.yml"
-        # },
-        "skydoc": {
-            "git_repository": "https://github.com/bazelbuild/skydoc.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/skydoc/master/.bazelci/presubmit.yml"
-        },
-        "subpar": {
-            "git_repository": "https://github.com/google/subpar.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/subpar-postsubmit.yml"
-        },
-        "TensorFlow": {
-            "git_repository": "https://github.com/tensorflow/tensorflow.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.yml"
-        },
-        "TensorFlow Serving": {
-            "git_repository": "https://github.com/tensorflow/serving.git",
-            "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-serving-postsubmit.yml"
-        }
-    }
-
-
 def python_binary(platform=None):
     if platform == "windows":
         return "python.exe"
@@ -244,15 +287,11 @@ def is_windows():
 
 
 def gsutil_command():
-    if is_windows():
-        return "gsutil.cmd"
-    return "gsutil"
+    return "gsutil.cmd" if is_windows() else "gsutil"
 
 
 def gcloud_command():
-    if is_windows():
-        return "gcloud.cmd"
-    return "gcloud"
+    return "gcloud.cmd" if is_windows() else "gcloud"
 
 
 def bazelcipy_url():
@@ -262,63 +301,13 @@ def bazelcipy_url():
     return "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py"
 
 
-def platforms_info():
-    """
-    Returns a map containing all supported platform names as keys, with the
-    values being the platform name in a human readable format, and a the
-    buildkite-agent's working directory.
-    """
-    return {
-        "ubuntu1404": {
-            "name": "Ubuntu 14.04",
-            "emoji-name": ":ubuntu: 14.04",
-            "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}"
-        },
-        "ubuntu1604": {
-            "name": "Ubuntu 16.04",
-            "emoji-name": ":ubuntu: 16.04",
-            "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}"
-        },
-        "ubuntu1804": {
-            "name": "Ubuntu 18.04",
-            "emoji-name": ":ubuntu: 18.04",
-            "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}"
-        },
-        "macos": {
-            "name": "macOS",
-            "emoji-name": ":darwin:",
-            "agent-directory": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}"
-        },
-        "windows": {
-            "name": "Windows",
-            "emoji-name": ":windows:",
-            "agent-directory": "d:/build/${BUILDKITE_AGENT_NAME}",
-        }
-    }
-
-
-def flaky_test_meme_url():
-    urls = ["https://storage.googleapis.com/bazel-buildkite-memes/flaky_tests_1.jpg",
-            "https://storage.googleapis.com/bazel-buildkite-memes/flaky_tests_2.jpg",
-            "https://storage.googleapis.com/bazel-buildkite-memes/flaky_tests_3.jpg"]
-    return random.choice(urls)
-
-
 def downstream_projects_root(platform):
-    downstream_projects_dir = os.path.expandvars(
-        "${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects")
-    path = os.path.join(agent_directory(platform), downstream_projects_dir)
+    downstream_projects_dir = os.path.expandvars("${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects")
+    agent_directory = os.path.expandvars(PLATFORMS[platform]["agent-directory"])
+    path = os.path.join(agent_directory, downstream_projects_dir)
     if not os.path.exists(path):
         os.makedirs(path)
     return path
-
-
-def agent_directory(platform):
-    return os.path.expandvars(platforms_info()[platform]["agent-directory"])
-
-
-def supported_platforms():
-    return set(platforms_info().keys())
 
 
 def fetch_configs(http_url, file_config):
@@ -364,18 +353,24 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
             clone_git_repository(git_repository, platform)
         else:
             git_repository = os.getenv("BUILDKITE_REPO")
+
         if is_pull_request() and not is_trusted_author(github_user_for_pull_request(), git_repository):
             update_pull_request_verification_status(git_repository, commit, state="success")
+
         tmpdir = tempfile.mkdtemp()
+
         if use_but:
             print_collapsed_group(":gcloud: Downloading Bazel Under Test")
             bazel_binary = download_bazel_binary(tmpdir, platform)
+
         print_bazel_version_info(bazel_binary)
+
         if platform == "windows":
             execute_batch_commands(config.get("batch_commands", None))
         else:
             execute_shell_commands(config.get("shell_commands", None))
         execute_bazel_run(bazel_binary, config.get("run_targets", None))
+
         if not test_only:
             build_bep_file = os.path.join(tmpdir, "build_bep.json")
             if is_pull_request():
@@ -406,7 +401,6 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
                                    config.get("test_targets", None), test_bep_file,
                                    monitor_flaky_tests)
                 if has_flaky_tests(test_bep_file):
-                    show_image(flaky_test_meme_url(), "Flaky Tests")
                     if monitor_flaky_tests:
                         # Upload the BEP logs from Bazel builds for later analysis on flaky tests
                         build_id = os.getenv("BUILDKITE_BUILD_ID")
@@ -469,11 +463,10 @@ def owner_repository_from_url(git_repository):
     return (owner, repository)
 
 
-def results_view_url(invocation_id, platform):
-    results_url = None
+def results_view_url(invocation_id):
     if invocation_id:
-        results_url = "https://source.cloud.google.com/results/invocations/" + invocation_id
-    return results_url
+        return "https://source.cloud.google.com/results/invocations/" + invocation_id
+    return None
 
 
 def update_pull_request_status(git_repository, commit, state, details_url, description, context):
@@ -503,8 +496,8 @@ def update_pull_request_build_status(platform, git_repository, commit, state, in
         description = "Failure"
     elif state == "success":
         description = "Success"
-    update_pull_request_status(git_repository, commit, state, results_view_url(invocation_id, platform),
-                               description, "bazel build ({0})".format(platforms_info()[platform]["name"]))
+    update_pull_request_status(git_repository, commit, state, results_view_url(invocation_id),
+                               description, "bazel build ({0})".format(PLATFORMS[platform]["name"]))
 
 
 def update_pull_request_test_status(platform, git_repository, commit, state, invocation_id, num_failed=0,
@@ -534,8 +527,8 @@ def update_pull_request_test_status(platform, git_repository, commit, state, inv
             description = "Some tests didn't pass"
     elif state == "success":
         description = "All tests passed"
-    update_pull_request_status(git_repository, commit, state, results_view_url(invocation_id, platform),
-                               description, "bazel test ({0})".format(platforms_info()[platform]["name"]))
+    update_pull_request_status(git_repository, commit, state, results_view_url(invocation_id),
+                               description, "bazel test ({0})".format(PLATFORMS[platform]["name"]))
 
 
 def is_pull_request():
@@ -559,10 +552,6 @@ def bes_invocation_id(bep_file):
     return None
 
 
-def show_image(url, alt):
-    eprint("\033]1338;url='\"{0}\"';alt='\"{1}\"'\a\n".format(url, alt))
-
-
 def has_flaky_tests(bep_file):
     return len(test_logs_for_status(bep_file, status="FLAKY")) > 0
 
@@ -578,16 +567,16 @@ def upload_bazel_binary(platform):
     binary_path = "bazel-bin/src/bazel"
     if platform == "windows":
         binary_path = r"bazel-bin\src\bazel"
-
     execute_command(["buildkite-agent", "artifact", "upload", binary_path])
 
 
 def download_bazel_binary(dest_dir, platform):
+    but_platform = PLATFORMS[platform].get("host-platform", platform)
     binary_path = "bazel-bin/src/bazel"
     if platform == "windows":
         binary_path = r"bazel-bin\src\bazel"
 
-    source_step = create_label(platform, "Bazel", build_only=True)
+    source_step = create_label(but_platform, "Bazel", build_only=True)
     execute_command(["buildkite-agent", "artifact", "download",
                      binary_path, dest_dir, "--step", source_step])
     bazel_binary_path = os.path.join(dest_dir, binary_path)
@@ -624,7 +613,7 @@ def clone_git_repository(git_repository, platform):
         execute_command(["git", "submodule", "foreach",
                          "--recursive", "git", "clean", "-fdqx"])
     else:
-        if platform in ["ubuntu1404", "ubuntu1604", "ubuntu1804"]:
+        if platform in ["ubuntu1404", "ubuntu1604", "ubuntu1804", "rbe_ubuntu1604"]:
             execute_command(
                 ["git", "clone", "--recurse-submodules", "--reference",
                  "/var/lib/bazelbuild", git_repository, clone_path])
@@ -668,38 +657,38 @@ def execute_bazel_run(bazel_binary, targets):
 
 
 def remote_caching_flags(platform):
+    if platform not in ["ubuntu1404", "ubuntu1604", "ubuntu1804", "macos", "windows"]:
+        return []
+    flags = ["--google_default_credentials", "--experimental_guard_against_concurrent_changes"]
     if is_pull_request():
-        common_flags = ["--bes_backend=buildeventservice.googleapis.com",
-                        "--bes_best_effort=false",
-                        "--bes_timeout=360s",
-                        "--tls_enabled",
-                        "--project_id=bazel-public",
-                        "--remote_instance_name=projects/bazel-public",
-                        # TODO(ulfjack): figure out how to resolve
-                        # https://github.com/bazelbuild/bazel/issues/5382 and as part of that keep
-                        # or remove the `--disk_cache=` flag.
-                        "--disk_cache=",
-                        "--remote_timeout=360",
-                        "--remote_cache=remotebuildexecution.googleapis.com",
-                        "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}"]
+        flags += ["--bes_backend=buildeventservice.googleapis.com",
+                  "--bes_best_effort=false",
+                  "--bes_timeout=360s",
+                  "--tls_enabled",
+                  "--project_id=bazel-public",
+                  "--remote_instance_name=projects/bazel-public",
+                  # TODO(ulfjack): figure out how to resolve
+                  # https://github.com/bazelbuild/bazel/issues/5382 and as part of that keep
+                  # or remove the `--disk_cache=` flag.
+                  "--disk_cache=",
+                  "--remote_timeout=360",
+                  "--remote_cache=remotebuildexecution.googleapis.com",
+                  "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}"]
     else:
-        common_flags = ["--remote_timeout=10",
-                        # TODO(ulfjack): figure out how to resolve
-                        # https://github.com/bazelbuild/bazel/issues/5382 and as part of that keep
-                        # or remove the `--disk_cache=` flag.
-                        "--disk_cache=",
-                        "--remote_max_connections=200",
-                        "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}",
-                        "--remote_http_cache=https://storage.googleapis.com/bazel-buildkite-cache"]
-    if platform in ["ubuntu1404", "ubuntu1604", "ubuntu1804", "macos", "windows"]:
-        return common_flags + ["--google_default_credentials", "--experimental_guard_against_concurrent_changes"]
-    return []
+        flags += ["--remote_timeout=10",
+                  # TODO(ulfjack): figure out how to resolve
+                  # https://github.com/bazelbuild/bazel/issues/5382 and as part of that keep
+                  # or remove the `--disk_cache=` flag.
+                  "--disk_cache=",
+                  "--remote_max_connections=200",
+                  "--experimental_remote_platform_override=properties:{name:\"platform\" value:\"" + platform + "\"}",
+                  "--remote_http_cache=https://storage.googleapis.com/bazel-buildkite-cache"]
+    return flags
 
 
 def remote_enabled(flags):
     # Detect if the project configuration enabled its own remote caching / execution.
-    remote_flags = ["--remote_executor",
-                    "--remote_cache", "--remote_http_cache"]
+    remote_flags = ["--remote_executor", "--remote_cache", "--remote_http_cache"]
     for flag in flags:
         for remote_flag in remote_flags:
             if flag.startswith(remote_flag):
@@ -707,38 +696,84 @@ def remote_enabled(flags):
     return False
 
 
-def concurrent_jobs():
-    return str(multiprocessing.cpu_count())
+def concurrent_jobs(platform):
+    return "75" if platform.startswith("rbe_") else str(multiprocessing.cpu_count())
 
 
 def concurrent_test_jobs(platform):
-    if platform == "windows":
+    if platform.startswith("rbe_"):
+        return "75"
+    elif platform == "windows":
         return "8"
-    elif platform == "macos":
-        return "12"
-    else:
-        return "12"
+    return "12"
 
-def common_flags(bep_file):
+
+def common_flags(bep_file, platform):
     return ["--show_progress_rate_limit=5",
             "--curses=yes",
             "--color=yes",
             "--keep_going",
-            "--jobs=" + concurrent_jobs(),
+            "--jobs=" + concurrent_jobs(platform),
             "--build_event_json_file=" + bep_file,
             "--experimental_build_event_json_file_path_conversion=false",
             "--announce_rc",
             "--sandbox_tmpfs_path=/tmp",
             "--experimental_multi_threaded_digest"]
 
+
+def rbe_flags(accept_cached):
+    flags = [
+        "--remote_executor=remotebuildexecution.googleapis.com",
+        "--remote_instance_name=projects/bazel-public",
+        "--remote_timeout=3600",
+        "--spawn_strategy=remote",
+        "--strategy=Javac=remote",
+        "--strategy=Closure=remote",
+        "--genrule_strategy=remote",
+        "--experimental_strict_action_env",
+        "--tls_enabled=true",
+        "--google_default_credentials"
+    ]
+    if not accept_cached:
+        flags += ["--noremote_accept_cached"]
+    # Copied from https://github.com/bazelbuild/bazel-toolchains/blob/master/configs/ubuntu16_04_clang/1.0/toolchain.bazelrc
+    flags += [
+        # Toolchain related flags to append at the end of your .bazelrc file.
+        "--host_javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:jdk8",
+        "--javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:jdk8",
+        "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
+        "--java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
+        "--crosstool_top=@bazel_toolchains//configs/ubuntu16_04_clang/1.0/bazel_0.15.0/default:toolchain",
+        "--action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1",
+        # Platform flags:
+        # The toolchain container used for execution is defined in the target indicated
+        # by "extra_execution_platforms", "host_platform" and "platforms".
+        # If you are using your own toolchain container, you need to create a platform
+        # target with "constraint_values" that allow for the toolchain specified with
+        # "extra_toolchains" to be selected (given constraints defined in
+        # "exec_compatible_with").
+        # More about platforms: https://docs.bazel.build/versions/master/platforms.html
+        "--extra_toolchains=@bazel_toolchains//configs/ubuntu16_04_clang/1.0/bazel_0.15.0/cpp:cc-toolchain-clang-x86_64-default",
+        "--extra_execution_platforms=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:rbe_ubuntu1604",
+        "--host_platform=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:rbe_ubuntu1604",
+        "--platforms=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:rbe_ubuntu1604",
+    ]
+    return flags
+
+
 def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     print_expanded_group(":bazel: Build")
-    caching_flags = []
+
+    aggregated_flags = common_flags(bep_file, platform)
     if not remote_enabled(flags):
-        caching_flags = remote_caching_flags(platform)
+        if platform.startswith("rbe_"):
+            aggregated_flags += rbe_flags(accept_cached=True)
+        else:
+            aggregated_flags += remote_caching_flags(platform)
+    aggregated_flags += flags
+
     try:
-        execute_command([bazel_binary, "--host_jvm_args=-Xms30g", "--host_jvm_args=-Xmx30g", "--host_jvm_args=-XX:+UseParallelGC", "build"] +
-                        common_flags(bep_file) + caching_flags + flags + targets)
+        execute_command([bazel_binary, "build"] + aggregated_flags + targets)
     except subprocess.CalledProcessError as e:
         raise BazelBuildFailedException(
             "bazel build failed with exit code {}".format(e.returncode))
@@ -746,18 +781,23 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
 
 def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor_flaky_tests):
     print_expanded_group(":bazel: Test")
-    test_flags = ["--flaky_test_attempts=3",
-                  "--build_tests_only",
-                  "--local_test_jobs=" + concurrent_test_jobs(platform)]
-    caching_flags = []
-    # Don't enable remote caching if the user enabled remote execution / caching himself
+
+    aggregated_flags = common_flags(bep_file, platform)
+    aggregated_flags += ["--flaky_test_attempts=3",
+                         "--build_tests_only",
+                         "--local_test_jobs=" + concurrent_test_jobs(platform)]
+    # Don't enable remote caching if the user enabled remote execution / caching themselves
     # or flaky test monitoring is enabled, as remote caching makes tests look less flaky than
     # they are.
-    if not remote_enabled(flags) and not monitor_flaky_tests:
-        caching_flags = remote_caching_flags(platform)
+    if not remote_enabled(flags):
+        if platform.startswith("rbe_"):
+            aggregated_flags += rbe_flags(accept_cached=not monitor_flaky_tests)
+        elif not monitor_flaky_tests:
+            aggregated_flags += remote_caching_flags(platform)
+    aggregated_flags += flags
+
     try:
-        execute_command([bazel_binary, "--host_jvm_args=-Xms30g", "--host_jvm_args=-Xmx30g", "--host_jvm_args=-XX:+UseParallelGC", "test"] +
-                        common_flags(bep_file) + test_flags + caching_flags + flags + targets)
+        execute_command([bazel_binary, "test"] + aggregated_flags + targets)
     except subprocess.CalledProcessError as e:
         raise BazelTestFailedException(
             "bazel test failed with exit code {}".format(e.returncode))
@@ -844,12 +884,6 @@ def execute_command(args, shell=False, fail_if_nonzero=True):
     return subprocess.run(args, shell=shell, check=fail_if_nonzero, env=os.environ).returncode
 
 
-def untrusted_code_verification_step():
-    return """
-  - block: \"Verify Pull Request\"
-    prompt: \"Did you review this pull request for malicious code?\""""
-
-
 def is_trusted_author(github_user, git_repository):
     if not github_user or not git_repository:
         raise BuildkiteException("github_user and git_repository must be set.")
@@ -867,7 +901,10 @@ def github_user_for_pull_request():
 
 
 def print_project_pipeline(platform_configs, project_name, http_config, file_config,
-                           git_repository, monitory_flaky_tests, use_but):
+                           git_repository, monitor_flaky_tests, use_but):
+    if not platform_configs:
+        raise BuildkiteException("{0} pipeline configuration is empty.".format(project_name))
+
     pipeline_steps = []
     if is_pull_request():
         commit_author = github_user_for_pull_request()
@@ -875,20 +912,22 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
         if is_pull_request() and not is_trusted_author(commit_author, trusted_git_repository):
             commit = os.getenv("BUILDKITE_COMMIT")
             update_pull_request_verification_status(trusted_git_repository, commit, state="pending")
-            pipeline_steps.append(untrusted_code_verification_step())
+            pipeline_steps.append({
+                "block": "Verify Pull Request",
+                "prompt": "Did you review this pull request for malicious code?"
+            })
 
-    for platform, _ in platform_configs.items():
+    for platform in platform_configs:
         step = runner_step(platform, project_name,
-                           http_config, file_config, git_repository, monitory_flaky_tests, use_but)
+                           http_config, file_config, git_repository, monitor_flaky_tests, use_but)
         pipeline_steps.append(step)
 
-    print_pipeline(pipeline_steps)
+    print(yaml.dump({"steps": pipeline_steps}))
 
 
 def runner_step(platform, project_name=None, http_config=None,
                 file_config=None, git_repository=None, monitor_flaky_tests=False, use_but=False):
-    command = python_binary(platform) + \
-        " bazelci.py runner --platform=" + platform
+    command = python_binary(platform) + " bazelci.py runner --platform=" + platform
     if http_config:
         command += " --http_config=" + http_config
     if file_config:
@@ -900,30 +939,18 @@ def runner_step(platform, project_name=None, http_config=None,
     if use_but:
         command += " --use_but"
     label = create_label(platform, project_name)
-    return """
-  - label: \"{0}\"
-    command: \"{1}\\n{2}\"
-    agents:
-      kind: worker
-      java: 8
-      os: {3}""".format(label, fetch_bazelcipy_command(), command, platform)
-
-
-def print_pipeline(steps):
-    print("steps:")
-    for step in steps:
-        print(step)
-
-
-def wait_step():
-    return """
-  - wait"""
-
-
-def http_config_flag(http_config):
-    if http_config is not None:
-        return "--http_config=" + http_config
-    return ""
+    return {
+        "label": label,
+        "command": [
+            fetch_bazelcipy_command(),
+            command
+        ],
+        "agents": {
+            "kind": "worker",
+            "java": 8,
+            "os": platform
+        }
+    }
 
 
 def fetch_bazelcipy_command():
@@ -940,19 +967,23 @@ def upload_project_pipeline_step(project_name, git_repository, http_config, file
         pipeline_command += " --file_config=" + file_config
     pipeline_command += " | buildkite-agent pipeline upload"
 
-    return """
-  - label: \"Setup {0}\"
-    command: \"{1}\\n{2}\"
-    agents:
-      kind: pipeline""".format(project_name, fetch_bazelcipy_command(),
-                                    pipeline_command)
+    return {
+        "label": "Setup {0}".format(project_name),
+        "command": [
+            fetch_bazelcipy_command(),
+            pipeline_command
+        ],
+        "agents": {
+            "kind": "pipeline"
+        }
+    }
 
 
 def create_label(platform, project_name, build_only=False, test_only=False):
     if build_only and test_only:
         raise BuildkiteException(
             "build_only and test_only cannot be true at the same time")
-    platform_name = platforms_info()[platform]["emoji-name"]
+    platform_name = PLATFORMS[platform]["emoji-name"]
 
     if build_only:
         label = "Build "
@@ -972,86 +1003,95 @@ def create_label(platform, project_name, build_only=False, test_only=False):
 def bazel_build_step(platform, project_name, http_config=None, file_config=None, build_only=False, test_only=False):
     pipeline_command = python_binary(platform) + " bazelci.py runner"
     if build_only:
-        pipeline_command += " --build_only --save_but"
+        pipeline_command += " --build_only"
+        if "host-platform" not in PLATFORMS[platform]:
+            pipeline_command += " --save_but"
     if test_only:
         pipeline_command += " --test_only"
     if http_config:
         pipeline_command += " --http_config=" + http_config
     if file_config:
         pipeline_command += " --file_config=" + file_config
-    label = create_label(platform, project_name, build_only, test_only)
     pipeline_command += " --platform=" + platform
 
-    return """
-  - label: \"{0}\"
-    command: \"{1}\\n{2}\"
-    agents:
-      kind: worker
-      java: 8
-      os: {3}""".format(label, fetch_bazelcipy_command(),
-                             pipeline_command, platform)
-
-
-def publish_bazel_binaries_step():
-    command = python_binary() + " bazelci.py publish_binaries"
-    return """
-  - label: \"Publish Bazel Binaries\"
-    command: \"{0}\\n{1}\"
-    agents:
-      kind: pipeline""".format(fetch_bazelcipy_command(), command)
+    return {
+        "label": create_label(platform, project_name, build_only, test_only),
+        "command": [
+            fetch_bazelcipy_command(),
+            pipeline_command
+        ],
+        "agents": {
+            "kind": "worker",
+            "java": 8,
+            "os": platform
+        }
+    }
 
 
 def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
     if not configs:
-        raise BuildkiteException(
-            "Bazel publish binaries pipeline configuration is empty.")
-    if set(configs.keys()) != set(supported_platforms()):
-        raise BuildkiteException(
-            "Bazel publish binaries pipeline needs to build Bazel on all supported platforms.")
+        raise BuildkiteException("Bazel publish binaries pipeline configuration is empty.")
+
+    if set(configs) != set(name for name, platform in PLATFORMS.items() if platform["nightly"]):
+        raise BuildkiteException("Bazel publish binaries pipeline needs to build Bazel on all nightly-enabled platforms.")
 
     # Build and Test Bazel
     pipeline_steps = []
-    for platform, config in configs.items():
+
+    for platform in configs:
         pipeline_steps.append(bazel_build_step(
             platform, "Bazel", http_config, file_config, build_only=True))
 
-    for platform, config in configs.items():
+    for platform in configs:
         pipeline_steps.append(bazel_build_step(
             platform, "Bazel", http_config, file_config, test_only=True))
 
-    pipeline_steps.append(wait_step())
+    pipeline_steps.append("wait")
 
-    # If all builds and tests pass, publish the Bazel binaries
-    # to GCS.
-    pipeline_steps.append(publish_bazel_binaries_step())
+    # If all builds and tests pass, publish the Bazel binaries to GCS.
+    pipeline_steps.append({
+        "label": "Publish Bazel Binaries",
+        "command": [
+            fetch_bazelcipy_command(),
+            python_binary() + " bazelci.py publish_binaries"
+        ],
+        "agents": {
+            "kind": "pipeline"
+        }
+    })
 
-    print_pipeline(pipeline_steps)
+    print(yaml.dump({"steps": pipeline_steps}))
 
 
 def print_bazel_downstream_pipeline(configs, http_config, file_config):
     if not configs:
-        raise BuildkiteException(
-            "Bazel downstream pipeline configuration is empty.")
-    if set(configs.keys()) != set(supported_platforms()):
-        raise BuildkiteException(
-            "Bazel downstream pipeline needs to build Bazel on all supported platforms.")
+        raise BuildkiteException("Bazel downstream pipeline configuration is empty.")
+
+    if set(configs) != set(PLATFORMS):
+        raise BuildkiteException("Bazel downstream pipeline needs to build Bazel on all supported platforms.")
 
     pipeline_steps = []
-    for platform, config in configs.items():
-        pipeline_steps.append(bazel_build_step(
-            platform, "Bazel", http_config, file_config, build_only=True))
-    pipeline_steps.append(wait_step())
+
+    for platform in configs:
+        pipeline_steps.append(
+            bazel_build_step(platform, "Bazel", http_config, file_config, build_only=True))
+
+    pipeline_steps.append("wait")
 
     for platform, config in configs.items():
-        pipeline_steps.append(bazel_build_step(
-            platform, "Bazel", http_config, file_config, test_only=True))
+        if not "test_targets" in config:
+            continue
+        pipeline_steps.append(
+            bazel_build_step(platform, "Bazel", http_config, file_config, test_only=True))
 
-    for project, config in downstream_projects().items():
-        git_repository = config["git_repository"]
-        pipeline_steps.append(upload_project_pipeline_step(project,
-                                                           git_repository, config.get("http_config", None), config.get("file_config", None)))
+    for project, config in DOWNSTREAM_PROJECTS.items():
+        pipeline_steps.append(
+            upload_project_pipeline_step(project_name=project,
+                                         git_repository=config["git_repository"],
+                                         http_config=config.get("http_config", None),
+                                         file_config=config.get("file_config", None)))
 
-    print_pipeline(pipeline_steps)
+    print(yaml.dump({"steps": pipeline_steps}))
 
 
 def bazelci_builds_download_url(platform, build_number):
@@ -1074,14 +1114,12 @@ def latest_generation_and_build_number():
             [gsutil_command(), "stat", bazelci_builds_metadata_url()], env=os.environ)
         match = re.search("Generation:[ ]*([0-9]+)", output.decode("utf-8"))
         if not match:
-            raise BuildkiteException(
-                "Couldn't parse generation. gsutil output format changed?")
+            raise BuildkiteException("Couldn't parse generation. gsutil output format changed?")
         generation = match.group(1)
 
         match = re.search(r"Hash \(md5\):[ ]*([^\s]+)", output.decode("utf-8"))
         if not match:
-            raise BuildkiteException(
-                "Couldn't parse md5 hash. gsutil output format changed?")
+            raise BuildkiteException("Couldn't parse md5 hash. gsutil output format changed?")
         expected_md5hash = base64.b64decode(match.group(1))
 
         output = subprocess.check_output(
@@ -1099,8 +1137,8 @@ def latest_generation_and_build_number():
 
 def sha256_hexdigest(filename):
     sha256 = hashlib.sha256()
-    with open(filename, 'rb') as f:
-        for block in iter(lambda: f.read(65536), b''):
+    with open(filename, "rb") as f:
+        for block in iter(lambda: f.read(65536), b""):
             sha256.update(block)
     return sha256.hexdigest()
 
@@ -1113,7 +1151,7 @@ def try_publish_binaries(build_number, expected_generation):
         "git_commit": os.environ["BUILDKITE_COMMIT"],
         "platforms": {}
     }
-    for platform in supported_platforms():
+    for platform in (name for name in PLATFORMS if PLATFORMS[name]["nightly"]):
         tmpdir = tempfile.mkdtemp()
         try:
             bazel_binary_path = download_bazel_binary(tmpdir, platform)
@@ -1180,8 +1218,7 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
 
-    parser = argparse.ArgumentParser(
-        description='Bazel Continuous Integration Script')
+    parser = argparse.ArgumentParser(description="Bazel Continuous Integration Script")
 
     subparsers = parser.add_subparsers(dest="subparsers_name")
 
@@ -1201,12 +1238,10 @@ def main(argv=None):
     project_pipeline.add_argument("--http_config", type=str)
     project_pipeline.add_argument("--git_repository", type=str)
     project_pipeline.add_argument("--monitor_flaky_tests", type=bool, nargs="?", const=True)
-    project_pipeline.add_argument(
-        "--use_but", type=bool, nargs="?", const=True)
+    project_pipeline.add_argument("--use_but", type=bool, nargs="?", const=True)
 
     runner = subparsers.add_parser("runner")
-    runner.add_argument("--platform", action="store",
-                        choices=list(supported_platforms()))
+    runner.add_argument("--platform", action="store", choices=list(PLATFORMS))
     runner.add_argument("--file_config", type=str)
     runner.add_argument("--http_config", type=str)
     runner.add_argument("--git_repository", type=str)
@@ -1216,7 +1251,6 @@ def main(argv=None):
     runner.add_argument("--test_only", type=bool, nargs="?", const=True)
     runner.add_argument("--monitor_flaky_tests", type=bool, nargs="?", const=True)
 
-
     runner = subparsers.add_parser("publish_binaries")
 
     args = parser.parse_args()
@@ -1224,21 +1258,33 @@ def main(argv=None):
     try:
         if args.subparsers_name == "bazel_publish_binaries_pipeline":
             configs = fetch_configs(args.http_config, args.file_config)
-            print_bazel_publish_binaries_pipeline(configs.get("platforms", None), args.http_config, args.file_config)
+            print_bazel_publish_binaries_pipeline(configs=configs.get("platforms", None),
+                                                  http_config=args.http_config,
+                                                  file_config=args.file_config)
         elif args.subparsers_name == "bazel_downstream_pipeline":
             configs = fetch_configs(args.http_config, args.file_config)
-            print_bazel_downstream_pipeline(
-                configs.get("platforms", None), args.http_config, args.file_config)
+            print_bazel_downstream_pipeline(configs=configs.get("platforms", None),
+                                            http_config=args.http_config,
+                                            file_config=args.file_config)
         elif args.subparsers_name == "project_pipeline":
             configs = fetch_configs(args.http_config, args.file_config)
-            print_project_pipeline(configs.get("platforms", None), args.project_name,
-                                   args.http_config, args.file_config, args.git_repository,
-                                   args.monitor_flaky_tests, args.use_but)
+            print_project_pipeline(platform_configs=configs.get("platforms", None),
+                                   project_name=args.project_name,
+                                   http_config=args.http_config,
+                                   file_config=args.file_config,
+                                   git_repository=args.git_repository,
+                                   monitor_flaky_tests=args.monitor_flaky_tests,
+                                   use_but=args.use_but)
         elif args.subparsers_name == "runner":
             configs = fetch_configs(args.http_config, args.file_config)
-            execute_commands(configs.get("platforms", None)[args.platform],
-                             args.platform, args.git_repository, args.use_but, args.save_but,
-                             args.build_only, args.test_only, args.monitor_flaky_tests)
+            execute_commands(config=configs.get("platforms", None)[args.platform],
+                             platform=args.platform,
+                             git_repository=args.git_repository,
+                             use_but=args.use_but,
+                             save_but=args.save_but,
+                             build_only=args.build_only,
+                             test_only=args.test_only,
+                             monitor_flaky_tests=args.monitor_flaky_tests)
         elif args.subparsers_name == "publish_binaries":
             publish_binaries()
         else:
