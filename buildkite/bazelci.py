@@ -571,12 +571,12 @@ def upload_bazel_binary(platform):
 
 
 def download_bazel_binary(dest_dir, platform):
-    but_platform = PLATFORMS[platform].get("host-platform", platform)
+    host_platform = PLATFORMS[platform].get("host-platform", platform)
     binary_path = "bazel-bin/src/bazel"
     if platform == "windows":
         binary_path = r"bazel-bin\src\bazel"
 
-    source_step = create_label(but_platform, "Bazel", build_only=True)
+    source_step = create_label(host_platform, "Bazel", build_only=True)
     execute_command(["buildkite-agent", "artifact", "download",
                      binary_path, dest_dir, "--step", source_step])
     bazel_binary_path = os.path.join(dest_dir, binary_path)
@@ -927,7 +927,8 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
 
 def runner_step(platform, project_name=None, http_config=None,
                 file_config=None, git_repository=None, monitor_flaky_tests=False, use_but=False):
-    command = python_binary(platform) + " bazelci.py runner --platform=" + platform
+    host_platform = PLATFORMS[platform].get("host-platform", platform)
+    command = python_binary(host_platform) + " bazelci.py runner --platform=" + platform
     if http_config:
         command += " --http_config=" + http_config
     if file_config:
@@ -948,7 +949,7 @@ def runner_step(platform, project_name=None, http_config=None,
         "agents": {
             "kind": "worker",
             "java": 8,
-            "os": platform
+            "os": host_platform
         }
     }
 
@@ -1001,7 +1002,8 @@ def create_label(platform, project_name, build_only=False, test_only=False):
 
 
 def bazel_build_step(platform, project_name, http_config=None, file_config=None, build_only=False, test_only=False):
-    pipeline_command = python_binary(platform) + " bazelci.py runner"
+    host_platform = PLATFORMS[platform].get("host-platform", platform)
+    pipeline_command = python_binary(host_platform) + " bazelci.py runner"
     if build_only:
         pipeline_command += " --build_only"
         if "host-platform" not in PLATFORMS[platform]:
@@ -1023,7 +1025,7 @@ def bazel_build_step(platform, project_name, http_config=None, file_config=None,
         "agents": {
             "kind": "worker",
             "java": 8,
-            "os": platform
+            "os": host_platform
         }
     }
 
