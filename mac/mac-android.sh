@@ -24,12 +24,20 @@
 
 set -eu
 
+# If "unzip" was installed via Homebrew, use that. The "unzip" supplied with macOS 10.11
+# is too old and cannot extract the Android NDK.
+if [ -x /usr/local/opt/unzip/bin/unzip ]; then
+  export PATH="/usr/local/opt/unzip/bin:$PATH"
+fi
+
 # Install the Android NDK
 curl -sSLo android-ndk.zip https://dl.google.com/android/repository/android-ndk-r15c-darwin-x86_64.zip
+rm -rf ~/android-ndk-r15c
 unzip android-ndk.zip > /dev/null
 rm android-ndk.zip
 
 # Install the Android SDK
+rm -rf ~/android-sdk-macosx
 mkdir -p ~/android-sdk-macosx
 cd ~/android-sdk-macosx
 curl -sSLo android-sdk.zip https://dl.google.com/android/repository/sdk-tools-darwin-3859397.zip
