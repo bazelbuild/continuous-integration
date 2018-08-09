@@ -167,6 +167,12 @@ EOF
   apt-get -qqy purge apport
 }
 
+### Install required Python packages from pip for Tensorflow.
+if [[ "${config_os}" == "ubuntu1604" || "${config_os}" == "ubuntu1804" ]]; then
+  pip install keras_applications keras_preprocessing
+  pip3 install keras_applications keras_preprocessing
+fi
+
 ### Fetch and save image version to file.
 {
   IMAGE_VERSION=$(curl -sS "http://metadata.google.internal/computeMetadata/v1/instance/attributes/image-version" -H "Metadata-Flavor: Google")
@@ -241,7 +247,7 @@ case ${BUILDKITE_BUILD_CREATOR_EMAIL} in
     echo "Build creator not allowed: ${BUILDKITE_BUILD_CREATOR_EMAIL}"
     exit 1
 esac
-    
+
 case ${BUILDKITE_REPO} in
   https://github.com/bazelbuild/bazel.git|\
   https://github.com/bazelbuild/continuous-integration.git)
