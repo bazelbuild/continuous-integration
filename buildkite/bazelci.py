@@ -722,6 +722,7 @@ def common_flags(bep_file, platform):
 
 
 def rbe_flags(accept_cached):
+    # Enable remote execution via RBE.
     flags = [
         "--remote_executor=remotebuildexecution.googleapis.com",
         "--remote_instance_name=projects/bazel-public",
@@ -734,8 +735,18 @@ def rbe_flags(accept_cached):
         "--tls_enabled=true",
         "--google_default_credentials"
     ]
+    
+    # Enable BES / Build Results reporting.
+    flags += [
+        "--bes_backend=buildeventservice.googleapis.com",
+        "--bes_best_effort=false",
+        "--bes_timeout=360s",
+        "--project_id=bazel-public"
+    ]
+    
     if not accept_cached:
         flags += ["--noremote_accept_cached"]
+
     # Copied from https://github.com/bazelbuild/bazel-toolchains/blob/master/configs/ubuntu16_04_clang/1.0/toolchain.bazelrc
     flags += [
         # Toolchain related flags to append at the end of your .bazelrc file.
@@ -758,6 +769,7 @@ def rbe_flags(accept_cached):
         "--host_platform=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:rbe_ubuntu1604",
         "--platforms=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:rbe_ubuntu1604",
     ]
+    
     return flags
 
 
