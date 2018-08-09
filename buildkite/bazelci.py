@@ -959,7 +959,7 @@ def fetch_bazelcipy_command():
 
 
 def upload_project_pipeline_step(project_name, git_repository, http_config, file_config):
-    pipeline_command = ("{0} bazelci.py project_pipeline --project_name=\\\"{1}\\\" " +
+    pipeline_command = ("{0} bazelci.py project_pipeline --project_name=\"{1}\" " +
                         "--use_but --git_repository={2}").format(python_binary(), project_name,
                                                                  git_repository)
     if http_config:
