@@ -83,13 +83,13 @@ Write-Host "Installing curl..."
 ## Install Git for Windows.
 Write-Host "Installing Git for Windows..."
 # FYI: choco adds "C:\Program Files\Git\cmd" to global PATH.
-& choco install git --params="'/GitOnlyOnPath'"
+& choco install git --params "'/GitOnlyOnPath'"
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Install MSYS2
 Write-Host "Installing MSYS2..."
 # FYI: We don't add MSYS2 to the PATH on purpose.
-& choco install msys2 --params="'/NoPath /NoUpdate'"
+& choco install msys2 --params "'/NoPath /NoUpdate'"
 
 [Environment]::SetEnvironmentVariable("BAZEL_SH", "C:\tools\msys64\usr\bin\bash.exe", "Machine")
 $env:BAZEL_SH = [Environment]::GetEnvironmentVariable("BAZEL_SH", "Machine")
@@ -140,7 +140,7 @@ $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 ## Install Python3
 Write-Host "Installing Python 3..."
 # FYI: choco adds "C:\python3\Scripts\;C:\python3\" to PATH.
-& choco install python3 --params="/InstallDir:C:\python3"
+& choco install python3 --version 3.6.6 --params "/InstallDir:C:\python3"
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Install a couple of Python modules required by TensorFlow.
@@ -157,7 +157,9 @@ Write-Host "Installing Python packages..."
     six `
     requests `
     pyyaml `
-    github3.py
+    github3.py `
+    keras_applications `
+    keras_preprocessing
 
 ## Get the latest release version number of Bazel.
 Write-Host "Grabbing latest Bazel version number from GitHub..."
