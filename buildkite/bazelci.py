@@ -118,6 +118,10 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_docker.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_docker/master/.bazelci/presubmit.yml"
     },
+    "rules_foreign_cc": {
+        "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_foreign_cc/master/.bazelci/config.yaml"
+    },
     "rules_go": {
         "git_repository": "https://github.com/bazelbuild/rules_go.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_go/master/.bazelci/presubmit.yml"
