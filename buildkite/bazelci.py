@@ -31,7 +31,9 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.request
+import uuid
 import yaml
 from github3 import login
 from urllib.request import url2pathname
@@ -352,6 +354,9 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
     test_only = test_only or "build_targets" not in config
     if build_only and test_only:
         raise BuildkiteException("build_only and test_only cannot be true at the same time")
+
+    tmpdir = tempfile.mkdtemp()
+    sc_process = None
     try:
         if git_repository:
             clone_git_repository(git_repository, platform)
@@ -360,8 +365,6 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
 
         if is_pull_request() and not is_trusted_author(github_user_for_pull_request(), git_repository):
             update_pull_request_verification_status(git_repository, commit, state="success")
-
-        tmpdir = tempfile.mkdtemp()
 
         if use_but:
             print_collapsed_group(":gcloud: Downloading Bazel Under Test")
@@ -374,6 +377,25 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
         else:
             execute_shell_commands(config.get("shell_commands", None))
         execute_bazel_run(bazel_binary, config.get("run_targets", None))
+
+        if config.get("sauce", None):
+            print_collapsed_group(":saucelabs: Starting Sauce Connect Proxy")
+            os.environ["SAUCE_USERNAME"] = "bazel_rules_webtesting"
+            os.environ["SAUCE_ACCESS_KEY"] = fetch_saucelabs_token()
+            os.environ["TUNNEL_ID"] = str(uuid.uuid4())
+            os.environ["BUILD_TAG"] = str(uuid.uuid4())
+            readyfile = os.path.join(tmpdir, "sc_is_ready")
+            if platform == "windows":
+                cmd = ["sauce-connect.exe", "/i", os.environ["TUNNEL_ID"], "/f", readyfile]
+            else:
+                cmd = ["sc", "-i", os.environ["TUNNEL_ID"], "-f", readyfile]
+            sc_process = execute_command_background(cmd)
+            wait_start = time.time()
+            while not os.path.exists(readyfile):
+                if time.time() - wait_start > 30:
+                    raise BuildkiteException("Sauce Connect Proxy is still not ready after 30 seconds, aborting!")
+                time.sleep(1)
+            print("Sauce Connect Proxy is ready, continuing...")
 
         if not test_only:
             build_bep_file = os.path.join(tmpdir, "build_bep.json")
@@ -431,6 +453,12 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
 
             upload_test_logs(test_bep_file, tmpdir)
     finally:
+        if sc_process:
+            sc_process.terminate()
+            try:
+                sc_process.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                sc_process.kill()
         if tmpdir:
             shutil.rmtree(tmpdir)
 
@@ -443,6 +471,7 @@ def tests_with_status(bep_file, status):
 
 
 __github_token__ = None
+__saucelabs_token__ = None
 
 
 def fetch_github_token():
@@ -458,6 +487,21 @@ def fetch_github_token():
         return __github_token__
     finally:
         os.remove("github-token.enc")
+
+
+def fetch_saucelabs_token():
+    global __saucelabs_token__
+    if __saucelabs_token__:
+        return __saucelabs_token__
+    try:
+        execute_command(
+            [gsutil_command(), "cp", "gs://bazel-encrypted-secrets/saucelabs-access-key.enc", "saucelabs-access-key.enc"])
+        __saucelabs_token__ = subprocess.check_output([gcloud_command(), "kms", "decrypt", "--location", "global", "--keyring", "buildkite",
+                                                       "--key", "saucelabs-access-key", "--ciphertext-file", "saucelabs-access-key.enc",
+                                                       "--plaintext-file", "-"], env=os.environ).decode("utf-8").strip()
+        return __saucelabs_token__
+    finally:
+        os.remove("saucelabs-access-key.enc")
 
 
 def owner_repository_from_url(git_repository):
@@ -739,7 +783,7 @@ def rbe_flags(accept_cached):
         "--tls_enabled=true",
         "--google_default_credentials"
     ]
-    
+
     # Enable BES / Build Results reporting.
     flags += [
         "--bes_backend=buildeventservice.googleapis.com",
@@ -747,7 +791,7 @@ def rbe_flags(accept_cached):
         "--bes_timeout=360s",
         "--project_id=bazel-public"
     ]
-    
+
     if not accept_cached:
         flags += ["--noremote_accept_cached"]
 
@@ -773,7 +817,7 @@ def rbe_flags(accept_cached):
         "--host_platform=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:rbe_ubuntu1604",
         "--platforms=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:rbe_ubuntu1604",
     ]
-    
+
     return flags
 
 
@@ -898,6 +942,12 @@ def test_logs_for_status(bep_file, status):
 def execute_command(args, shell=False, fail_if_nonzero=True):
     eprint(" ".join(args))
     return subprocess.run(args, shell=shell, check=fail_if_nonzero, env=os.environ).returncode
+
+
+def execute_command_background(args):
+    eprint(" ".join(args))
+    #return subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=os.environ)
+    return subprocess.Popen(args, env=os.environ)
 
 
 def is_trusted_author(github_user, git_repository):
