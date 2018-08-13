@@ -482,6 +482,14 @@ fi
   chmod 0755 /usr/local/bin/github-release
 }
 
+### Install Sauce Connect (for rules_webtesting).
+{
+  curl -sSL https://saucelabs.com/downloads/sc-4.5.0-linux.tar.gz | \
+    tar xvz -C /opt
+  chown -R root:root /opt/sc-4.5.0-linux
+  ln -s /opt/sc-4.5.0-linux/bin/sc /usr/local/bin/sc
+}
+
 ### Clean up and trim the filesystem (potentially reduces the final image size).
 {
   rm -rf /var/lib/apt/lists/*

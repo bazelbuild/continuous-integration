@@ -161,6 +161,10 @@ Write-Host "Installing Python packages..."
     keras_applications `
     keras_preprocessing
 
+## Install Sauce Connect (for rules_webtesting).
+& choco install sauce-connect
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+
 ## Get the latest release version number of Bazel.
 Write-Host "Grabbing latest Bazel version number from GitHub..."
 $url = "https://github.com/bazelbuild/bazel/releases/latest"
