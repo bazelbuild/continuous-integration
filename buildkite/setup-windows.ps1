@@ -171,8 +171,7 @@ $url = "https://github.com/bazelbuild/bazel/releases/latest"
 $req = [system.Net.HttpWebRequest]::Create($url)
 $res = $req.getresponse()
 $res.Close()
-#$bazel_version = $res.ResponseUri.AbsolutePath.TrimStart("/bazelbuild/bazel/releases/tag/")
-$bazel_version = "0.15.2"
+$bazel_version = $res.ResponseUri.AbsolutePath.TrimStart("/bazelbuild/bazel/releases/tag/")
 
 ## Download the latest Bazel.
 Write-Host "Downloading Bazel ${bazel_version}..."
