@@ -382,13 +382,13 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
             print_collapsed_group(":saucelabs: Starting Sauce Connect Proxy")
             os.environ["SAUCE_USERNAME"] = "bazel_rules_webtesting"
             os.environ["SAUCE_ACCESS_KEY"] = fetch_saucelabs_token()
-            os.environ["TUNNEL_ID"] = str(uuid.uuid4())
+            os.environ["TUNNEL_IDENTIFIER"] = str(uuid.uuid4())
             os.environ["BUILD_TAG"] = str(uuid.uuid4())
             readyfile = os.path.join(tmpdir, "sc_is_ready")
             if platform == "windows":
-                cmd = ["sauce-connect.exe", "/i", os.environ["TUNNEL_ID"], "/f", readyfile]
+                cmd = ["sauce-connect.exe", "/i", os.environ["TUNNEL_IDENTIFIER"], "/f", readyfile]
             else:
-                cmd = ["sc", "-i", os.environ["TUNNEL_ID"], "-f", readyfile]
+                cmd = ["sc", "-i", os.environ["TUNNEL_IDENTIFIER"], "-f", readyfile]
             sc_process = execute_command_background(cmd)
             wait_start = time.time()
             while not os.path.exists(readyfile):
