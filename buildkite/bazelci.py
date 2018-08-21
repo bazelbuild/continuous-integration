@@ -663,15 +663,15 @@ def clone_git_repository(git_repository, platform):
     else:
         if platform in ["ubuntu1404", "ubuntu1604", "ubuntu1804", "rbe_ubuntu1604"]:
             execute_command(
-                ["git", "clone", "--recurse-submodules", "--reference",
+                ["git", "clone", "--recurse-submodules", "--reference-if-able",
                  "/var/lib/bazelbuild", git_repository, clone_path])
         elif platform in ["macos"]:
             execute_command(
-                ["git", "clone", "--recurse-submodules", "--reference",
+                ["git", "clone", "--recurse-submodules", "--reference-if-able",
                  "/usr/local/var/bazelbuild", git_repository, clone_path])
         elif platform in ["windows"]:
             execute_command(
-                ["git", "clone", "--recurse-submodules", "--reference",
+                ["git", "clone", "--recurse-submodules", "--reference-if-able",
                  "c:\\buildkite\\bazelbuild", git_repository, clone_path])
         else:
             execute_command(
