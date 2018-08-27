@@ -12,6 +12,7 @@ New-Partition -DiskNumber 1 -UseMaximumSize -DriveLetter D
 Format-Volume -DriveLetter D -ShortFileNameSupport $true
 
 ## Load PowerShell support for ZIP files.
+Write-Host "Loading support for ZIP files..."
 Add-Type -AssemblyName "System.IO.Compression.FileSystem"
 
 ## Remove write access to volumes for unprivileged users.
@@ -25,6 +26,7 @@ New-Item "D:\temp" -ItemType "directory"
 Add-NTFSAccess "D:\temp" -Account BUILTIN\Users -AccessRights Write
 
 ## Redirect MSYS2's tmp folder to D:\temp
+Write-Host "Redirecting MSYS2's tmp folder to D:\temp..."
 Remove-Item -Recurse -Force C:\tools\msys64\tmp
 New-Item -ItemType Junction -Path "C:\tools\msys64\tmp" -Value "D:\temp"
 
@@ -35,6 +37,7 @@ New-Item "D:\build" -ItemType "directory"
 Add-NTFSAccess "D:\build" -Account BUILTIN\Users -AccessRights Write
 
 ## Setup the TEMP and TMP environment variables.
+Write-Host "Setting environment variables..."
 [Environment]::SetEnvironmentVariable("TEMP", "D:\temp", "Machine")
 [Environment]::SetEnvironmentVariable("TMP", "D:\temp", "Machine")
 $env:TEMP = [Environment]::GetEnvironmentVariable("TEMP", "Machine")
@@ -52,14 +55,17 @@ $buildkite_agent_token = & gcloud kms decrypt --location global --keyring buildk
 Remove-Item $buildkite_agent_token_file
 
 ## Download and unpack our Git snapshot.
+Write-Host "Downloading Git snapshot..."
 $bazelbuild_url = "https://storage.googleapis.com/bazel-git-mirror/bazelbuild.zip"
 $bazelbuild_zip = "c:\temp\bazelbuild.zip"
 $bazelbuild_root = "c:\buildkite"
 (New-Object Net.WebClient).DownloadFile($bazelbuild_url, $bazelbuild_zip)
+Write-Host "Unpacking Git snapshot..."
 Expand-Archive -LiteralPath $bazelbuild_zip -DestinationPath $bazelbuild_root -Force
 Remove-Item $bazelbuild_zip
 
 ## Get the current image version.
+Write-Host "Getting image version..."
 $image_version = (Get-Content "c:\buildkite\image.version" -Raw).Trim()
 
 ## Configure the Buildkite agent.
