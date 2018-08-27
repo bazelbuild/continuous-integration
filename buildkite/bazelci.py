@@ -214,13 +214,13 @@ PLATFORMS = {
         "name": "Ubuntu 16.04",
         "emoji-name": ":ubuntu: 16.04",
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
-        "nightly": True
+        "nightly": False
     },
     "ubuntu1804": {
         "name": "Ubuntu 18.04",
         "emoji-name": ":ubuntu: 18.04",
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
-        "nightly": True
+        "nightly": False
     },
     "macos": {
         "name": "macOS",
@@ -1099,6 +1099,12 @@ def bazel_build_step(platform, project_name, http_config=None, file_config=None,
 def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
     if not configs:
         raise BuildkiteException("Bazel publish binaries pipeline configuration is empty.")
+
+    for platform in configs.copy():
+        if not platform in PLATFORMS:
+            raise BuildkiteException("Unknown platform '{}'".format(platform))
+        if not PLATFORMS[platform]["nightly"]:
+            del configs[platform]
 
     if set(configs) != set(name for name, platform in PLATFORMS.items() if platform["nightly"]):
         raise BuildkiteException("Bazel publish binaries pipeline needs to build Bazel on all nightly-enabled platforms.")
