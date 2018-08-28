@@ -641,39 +641,29 @@ def clone_git_repository(git_repository, platform):
     
     if not os.path.exists(clone_path):
         if platform in ["ubuntu1404", "ubuntu1604", "ubuntu1804", "rbe_ubuntu1604"]:
-            execute_command(
-                ["git", "clone", "--reference", "/var/lib/bazelbuild", git_repository, clone_path])
+            execute_command(["git", "clone", "--reference", "/var/lib/bazelbuild", git_repository, clone_path])
         elif platform in ["macos"]:
-            execute_command(
-                ["git", "clone", "--reference", "/usr/local/var/bazelbuild", git_repository, clone_path])
+            execute_command(["git", "clone", "--reference", "/usr/local/var/bazelbuild", git_repository, clone_path])
         elif platform in ["windows"]:
-            execute_command(
-                ["git", "clone", "--reference", "c:\\buildkite\\bazelbuild", git_repository, clone_path])
+            execute_command(["git", "clone", "--reference", "c:\\buildkite\\bazelbuild", git_repository, clone_path])
         else:
-            execute_command(
-                ["git", "clone", git_repository, clone_path])
+            execute_command(["git", "clone", git_repository, clone_path])
 
     os.chdir(clone_path)
     execute_command(["git", "remote", "set-url", "origin", git_repository])
     execute_command(["git", "clean", "-fdqx"])
-    execute_command(["git", "submodule", "foreach",
-                     "--recursive", "git", "clean", "-fdqx"])
-    # sync to the latest commit of HEAD. Unlikely git pull this also works after
-    # a force push.
+    execute_command(["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"])
+    # sync to the latest commit of HEAD. Unlikely git pull this also works after a force push.
     execute_command(["git", "fetch", "origin"])
-    remote_head = subprocess.check_output(
-        ["git", "symbolic-ref", "refs/remotes/origin/HEAD"])
+    remote_head = subprocess.check_output(["git", "symbolic-ref", "refs/remotes/origin/HEAD"])
     remote_head = remote_head.decode("utf-8")
     remote_head = remote_head.rstrip()
     execute_command(["git", "reset", remote_head, "--hard"])
     execute_command(["git", "submodule", "sync", "--recursive"])
-    execute_command(["git", "submodule", "update",
-                     "--init", "--recursive", "--force"])
-    execute_command(["git", "submodule", "foreach",
-                     "--recursive", "git", "reset", "--hard"])
+    execute_command(["git", "submodule", "update", "--init", "--recursive", "--force"])
+    execute_command(["git", "submodule", "foreach", "--recursive", "git", "reset", "--hard"])
     execute_command(["git", "clean", "-fdqx"])
-    execute_command(["git", "submodule", "foreach",
-                     "--recursive", "git", "clean", "-fdqx"])
+    execute_command(["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"])
 
     
 def execute_batch_commands(commands):
