@@ -714,7 +714,7 @@ def remote_caching_flags(platform):
                   "--bes_timeout=360s",
                   "--tls_enabled",
                   "--project_id=bazel-public",
-                  "--remote_instance_name=projects/bazel-public",
+                  "--remote_instance_name=projects/bazel-public/instances/default_instance",
                   # TODO(ulfjack): figure out how to resolve
                   # https://github.com/bazelbuild/bazel/issues/5382 and as part of that keep
                   # or remove the `--disk_cache=` flag.
@@ -773,7 +773,7 @@ def rbe_flags(accept_cached):
     # Enable remote execution via RBE.
     flags = [
         "--remote_executor=remotebuildexecution.googleapis.com",
-        "--remote_instance_name=projects/bazel-public",
+        "--remote_instance_name=projects/bazel-public/instances/default_instance",
         "--remote_timeout=3600",
         "--spawn_strategy=remote",
         "--strategy=Javac=remote",
