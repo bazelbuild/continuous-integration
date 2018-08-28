@@ -352,6 +352,7 @@ nssm set "buildkite-agent" "AppStderr" "c:\buildkite\logs\buildkite-agent.log"
 nssm set "buildkite-agent" "AppRotateFiles" "1"
 nssm set "buildkite-agent" "AppRotateSeconds" 86400
 nssm set "buildkite-agent" "AppRotateBytes" 1048576
+nssm set "buildkite-agent" "AppEnvironmentExtra" "TEMP=d:\temp" "TMP=d:\temp"
 
 Write-Host "All done, adding GCESysprep to RunOnce and rebooting..."
 Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "GCESysprep" -Value "c:\Program Files\Google\Compute Engine\sysprep\gcesysprep.bat"
