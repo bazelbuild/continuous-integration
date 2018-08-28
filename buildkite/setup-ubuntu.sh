@@ -152,6 +152,9 @@ EOF
     pandoc
     reprepro
     ssmtp
+    
+    # Required by our C++ coverage tests.
+    lcov
   )
 
   # Bazel dependencies.
