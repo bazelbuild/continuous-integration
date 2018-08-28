@@ -36,13 +36,6 @@ Remove-Item "D:\build" -Recurse -Force -ErrorAction Ignore
 New-Item "D:\build" -ItemType "directory"
 Add-NTFSAccess "D:\build" -Account BUILTIN\Users -AccessRights Write
 
-## Setup the TEMP and TMP environment variables.
-Write-Host "Setting environment variables..."
-[Environment]::SetEnvironmentVariable("TEMP", "D:\temp", "Machine")
-[Environment]::SetEnvironmentVariable("TMP", "D:\temp", "Machine")
-$env:TEMP = [Environment]::GetEnvironmentVariable("TEMP", "Machine")
-$env:TMP = [Environment]::GetEnvironmentVariable("TMP", "Machine")
-
 ## Download the Buildkite agent token.
 Write-Host "Getting Buildkite Agent token from GCS..."
 $buildkite_agent_token_url = "https://storage.googleapis.com/bazel-encrypted-secrets/buildkite-agent-token.enc"
