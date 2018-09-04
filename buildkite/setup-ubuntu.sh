@@ -152,7 +152,7 @@ EOF
     pandoc
     reprepro
     ssmtp
-    
+
     # Required by our C++ coverage tests.
     lcov
   )
@@ -487,10 +487,10 @@ fi
 
 ### Install Sauce Connect (for rules_webtesting).
 {
-  curl -sSL https://saucelabs.com/downloads/sc-4.5.0-linux.tar.gz | \
+  curl -sSL https://saucelabs.com/downloads/sc-4.5.1-linux.tar.gz | \
     tar xvz -C /opt
-  chown -R root:root /opt/sc-4.5.0-linux
-  ln -s /opt/sc-4.5.0-linux/bin/sc /usr/local/bin/sc
+  chown -R root:root /opt/sc-4.5.1-linux
+  ln -s /opt/sc-4.5.1-linux/bin/sc /usr/local/bin/sc
 }
 
 ### Clean up and trim the filesystem (potentially reduces the final image size).
