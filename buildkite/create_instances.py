@@ -51,14 +51,20 @@ DEFAULT_VM = {
 
 INSTANCE_GROUPS = {
     'buildkite-worker-ubuntu1404-java8': {
-        'count': 8,
+        'count': 4,
         'image_family': 'buildkite-worker-ubuntu1404-java8',
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
     'buildkite-worker-ubuntu1604-java8': {
-        'count': 8,
+        'count': 4,
         'image_family': 'buildkite-worker-ubuntu1604-java8',
+        'local_ssd': 'interface=nvme',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+    },
+    'buildkite-worker-ubuntu1804-nojava': {
+        'count': 4,
+        'image_family': 'buildkite-worker-ubuntu1804-nojava',
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
@@ -68,16 +74,28 @@ INSTANCE_GROUPS = {
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
-    'buildkite-pipeline-ubuntu1604-java8': {
+    'buildkite-worker-ubuntu1804-java9': {
+        'count': 8,
+        'image_family': 'buildkite-worker-ubuntu1804-java9',
+        'local_ssd': 'interface=nvme',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+    },
+    'buildkite-worker-ubuntu1804-java10': {
+        'count': 8,
+        'image_family': 'buildkite-worker-ubuntu1804-java10',
+        'local_ssd': 'interface=nvme',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+    },
+    'buildkite-pipeline-ubuntu1804-java8': {
         'count': 1,
-        'image_family': 'buildkite-pipeline-ubuntu1604-java8',
+        'image_family': 'buildkite-pipeline-ubuntu1804-java8',
         'local_ssd': 'interface=nvme',
         'machine_type': 'n1-standard-8',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
-    'buildkite-trusted-ubuntu1604-java8': {
+    'buildkite-trusted-ubuntu1804-java8': {
         'count': 1,
-        'image_family': 'buildkite-trusted-ubuntu1604-java8',
+        'image_family': 'buildkite-trusted-ubuntu1804-java8',
         'local_ssd': 'interface=nvme',
         'machine_type': 'n1-standard-8',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',

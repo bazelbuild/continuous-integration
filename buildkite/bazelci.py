@@ -205,41 +205,68 @@ DOWNSTREAM_PROJECTS = {
 # working directory.
 PLATFORMS = {
     "ubuntu1404": {
-        "name": "Ubuntu 14.04",
-        "emoji-name": ":ubuntu: 14.04",
+        "name": "Ubuntu 14.04, JDK 8",
+        "emoji-name": ":ubuntu: 14.04 (JDK 8)",
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
-        "nightly": True
+        "nightly": True,
+        "java": "8"
     },
     "ubuntu1604": {
-        "name": "Ubuntu 16.04",
-        "emoji-name": ":ubuntu: 16.04",
-        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
-        "nightly": False
-    },
-    "ubuntu1804": {
-        "name": "Ubuntu 18.04",
-        "emoji-name": ":ubuntu: 18.04",
-        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
-        "nightly": False
-    },
-    "macos": {
-        "name": "macOS",
-        "emoji-name": ":darwin:",
-        "agent-directory": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}",
-        "nightly": True
-    },
-    "windows": {
-        "name": "Windows",
-        "emoji-name": ":windows:",
-        "agent-directory": "d:/build/${BUILDKITE_AGENT_NAME}",
-        "nightly": True
-    },
-    "rbe_ubuntu1604": {
-        "name": "RBE (Ubuntu 16.04)",
-        "emoji-name": ":gcloud:",
+        "name": "Ubuntu 16.04, JDK 8",
+        "emoji-name": ":ubuntu: 16.04 (JDK 8)",
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
         "nightly": False,
-        "host-platform": "ubuntu1604"
+        "java": "8"
+    },
+    "ubuntu1804": {
+        "name": "Ubuntu 18.04, JDK 8",
+        "emoji-name": ":ubuntu: 18.04 (JDK 8)",
+        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
+        "nightly": False,
+        "java": "8"
+    },
+    "ubuntu1804_nojava": {
+        "name": "Ubuntu 18.04, no JDK",
+        "emoji-name": ":ubuntu: 18.04 (no JDK)",
+        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
+        "nightly": False,
+        "java": "no"
+    },
+    "ubuntu1804_java9": {
+        "name": "Ubuntu 18.04, JDK 9",
+        "emoji-name": ":ubuntu: 18.04 (JDK 9)",
+        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
+        "nightly": False,
+        "java": "9"
+    },
+    "ubuntu1804_java10": {
+        "name": "Ubuntu 18.04, JDK 10",
+        "emoji-name": ":ubuntu: 18.04 (JDK 10)",
+        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
+        "nightly": False,
+        "java": "10"
+    },
+    "macos": {
+        "name": "macOS, JDK 8",
+        "emoji-name": ":darwin: (JDK 8)",
+        "agent-directory": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}",
+        "nightly": True,
+        "java": "8"
+    },
+    "windows": {
+        "name": "Windows, JDK 8",
+        "emoji-name": ":windows: (JDK 8)",
+        "agent-directory": "d:/build/${BUILDKITE_AGENT_NAME}",
+        "nightly": True,
+        "java": "8"
+    },
+    "rbe_ubuntu1604": {
+        "name": "RBE (Ubuntu 16.04, JDK 8)",
+        "emoji-name": ":gcloud: (JDK 8)",
+        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
+        "nightly": False,
+        "host-platform": "ubuntu1604",
+        "java": "8"
     }
 }
 
@@ -638,7 +665,7 @@ def clone_git_repository(git_repository, platform):
     project_name = re.search(r"/([^/]+)\.git$", git_repository).group(1)
     clone_path = os.path.join(root, project_name)
     print_collapsed_group("Fetching " + project_name + " sources")
-    
+
     if not os.path.exists(clone_path):
         if platform in ["ubuntu1404", "ubuntu1604", "ubuntu1804", "rbe_ubuntu1604"]:
             execute_command(["git", "clone", "--reference", "/var/lib/bazelbuild", git_repository, clone_path])
@@ -665,7 +692,7 @@ def clone_git_repository(git_repository, platform):
     execute_command(["git", "clean", "-fdqx"])
     execute_command(["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"])
 
-    
+
 def execute_batch_commands(commands):
     if not commands:
         return
@@ -1001,7 +1028,7 @@ def runner_step(platform, project_name=None, http_config=None,
         ],
         "agents": {
             "kind": "worker",
-            "java": 8,
+            "java": PLATFORMS[platform]["java"],
             "os": host_platform
         }
     }
@@ -1077,7 +1104,7 @@ def bazel_build_step(platform, project_name, http_config=None, file_config=None,
         ],
         "agents": {
             "kind": "worker",
-            "java": 8,
+            "java": PLATFORMS[platform]["java"],
             "os": host_platform
         }
     }
