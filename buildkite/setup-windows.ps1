@@ -108,19 +108,37 @@ Write-Host "Installing required MSYS2 packages..."
 & bash -lc "pacman --noconfirm --needed -S curl zip unzip gcc tar diffutils patch perl"
 
 ## Install Azul Zulu.
-Write-Host "Installing Zulu 8..."
-$zulu_url = "https://cdn.azul.com/zulu/bin/zulu8.30.0.1-jdk8.0.172-win_x64.zip"
-$zulu_zip = "c:\temp\zulu8.30.0.1-jdk8.0.172-win_x64.zip"
-$zulu_extracted_path = "c:\temp\" + [IO.Path]::GetFileNameWithoutExtension($zulu_zip)
-$zulu_root = "c:\openjdk"
-(New-Object Net.WebClient).DownloadFile($zulu_url, $zulu_zip)
-[System.IO.Compression.ZipFile]::ExtractToDirectory($zulu_zip, "c:\temp")
-Move-Item $zulu_extracted_path -Destination $zulu_root
-Remove-Item $zulu_zip
-$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${zulu_root}\bin"
-[Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
-$env:JAVA_HOME = $zulu_root
-[Environment]::SetEnvironmentVariable("JAVA_HOME", $env:JAVA_HOME, "Machine")
+$myhostname = [System.Net.Dns]::GetHostName()
+if ($myhostname -like "*nojava*") {
+    $java = "no"
+} elseif ($myhostname -like "*java8*") {
+    $java = "8"
+    $zulu_filename = "zulu8.31.0.1-jdk8.0.181-win_x64.zip"
+} elseif ($myhostname -like "*java9*") {
+    $java = "9"
+    $zulu_filename = "zulu9.0.7.1-jdk9.0.7-win_x64.zip"
+} elseif ($myhostname -like "*java10*") {
+    $java = "10"
+    $zulu_filename = "zulu10.3+5-jdk10.0.2-win_x64.zip"
+} else {
+    Throw "Could not deduce Java version from hostname: ${myhostname}!"
+}
+
+if ($java -ne "no") {
+    Write-Host "Installing Zulu ${java}..."
+    $zulu_url = "https://cdn.azul.com/zulu/bin/${zulu_filename}"
+    $zulu_zip = "c:\temp\${zulu_filename}"
+    $zulu_extracted_path = "c:\temp\" + [IO.Path]::GetFileNameWithoutExtension($zulu_zip)
+    $zulu_root = "c:\openjdk"
+    (New-Object Net.WebClient).DownloadFile($zulu_url, $zulu_zip)
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($zulu_zip, "c:\temp")
+    Move-Item $zulu_extracted_path -Destination $zulu_root
+    Remove-Item $zulu_zip
+    $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${zulu_root}\bin"
+    [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
+    $env:JAVA_HOME = $zulu_root
+    [Environment]::SetEnvironmentVariable("JAVA_HOME", $env:JAVA_HOME, "Machine")
+}
 
 ## Install Visual C++ 2015 Build Tools (Update 3).
 Write-Host "Installing Visual C++ 2015 Build Tools..."
@@ -181,49 +199,57 @@ New-Item "c:\bazel" -ItemType "directory" -Force
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";c:\bazel"
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
-## Download the Android NDK and install into C:\android-ndk-r15c.
-$android_ndk_url = "https://dl.google.com/android/repository/android-ndk-r15c-windows-x86_64.zip"
-$android_ndk_zip = "c:\temp\android_ndk.zip"
-$android_ndk_root = "c:\android_ndk"
-New-Item $android_ndk_root -ItemType "directory" -Force
-(New-Object Net.WebClient).DownloadFile($android_ndk_url, $android_ndk_zip)
-[System.IO.Compression.ZipFile]::ExtractToDirectory($android_ndk_zip, $android_ndk_root)
-Rename-Item "${android_ndk_root}\android-ndk-r15c" -NewName "r15c"
-[Environment]::SetEnvironmentVariable("ANDROID_NDK_HOME", "${android_ndk_root}\r15c", "Machine")
-$env:ANDROID_NDK_HOME = [Environment]::GetEnvironmentVariable("ANDROID_NDK_HOME", "Machine")
-Remove-Item $android_ndk_zip
+if ($java -ne "no") {
+    ## Download the Android NDK and install into C:\android-ndk-r15c.
+    $android_ndk_url = "https://dl.google.com/android/repository/android-ndk-r15c-windows-x86_64.zip"
+    $android_ndk_zip = "c:\temp\android_ndk.zip"
+    $android_ndk_root = "c:\android_ndk"
+    New-Item $android_ndk_root -ItemType "directory" -Force
+    (New-Object Net.WebClient).DownloadFile($android_ndk_url, $android_ndk_zip)
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($android_ndk_zip, $android_ndk_root)
+    Rename-Item "${android_ndk_root}\android-ndk-r15c" -NewName "r15c"
+    [Environment]::SetEnvironmentVariable("ANDROID_NDK_HOME", "${android_ndk_root}\r15c", "Machine")
+    $env:ANDROID_NDK_HOME = [Environment]::GetEnvironmentVariable("ANDROID_NDK_HOME", "Machine")
+    Remove-Item $android_ndk_zip
 
-## Download the Android SDK and install into C:\android_sdk.
-$android_sdk_url = "https://dl.google.com/android/repository/sdk-tools-windows-3859397.zip"
-$android_sdk_zip = "c:\temp\android_sdk.zip"
-$android_sdk_root = "c:\android_sdk"
-New-Item $android_sdk_root -ItemType "directory" -Force
-(New-Object Net.WebClient).DownloadFile($android_sdk_url, $android_sdk_zip)
-[System.IO.Compression.ZipFile]::ExtractToDirectory($android_sdk_zip, $android_sdk_root)
-[Environment]::SetEnvironmentVariable("ANDROID_HOME", $android_sdk_root, "Machine")
-$env:ANDROID_HOME = [Environment]::GetEnvironmentVariable("ANDROID_HOME", "Machine")
-Remove-Item $android_sdk_zip
+    ## Download the Android SDK and install into C:\android_sdk.
+    $android_sdk_url = "https://dl.google.com/android/repository/sdk-tools-windows-4333796.zip"
+    $android_sdk_zip = "c:\temp\android_sdk.zip"
+    $android_sdk_root = "c:\android_sdk"
+    New-Item $android_sdk_root -ItemType "directory" -Force
+    (New-Object Net.WebClient).DownloadFile($android_sdk_url, $android_sdk_zip)
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($android_sdk_zip, $android_sdk_root)
+    [Environment]::SetEnvironmentVariable("ANDROID_HOME", $android_sdk_root, "Machine")
+    $env:ANDROID_HOME = [Environment]::GetEnvironmentVariable("ANDROID_HOME", "Machine")
+    Remove-Item $android_sdk_zip
 
-## Accept the Android SDK license agreement.
-New-Item "${android_sdk_root}\licenses" -ItemType "directory" -Force
-Add-Content -Value "`nd56f5187479451eabf01fb78af6dfcb131a6481e" -Path "${android_sdk_root}\licenses\android-sdk-license" -Encoding ASCII
-Add-Content -Value "`nd975f751698a77b662f1254ddbeed3901e976f5a" -Path "${android_sdk_root}\licenses\intel-android-extra-license" -Encoding ASCII
+    ## Use OpenJDK 9 (and higher) compatibility flags.
+    if ($java -eq "9" -or $java -eq "10") {
+        [Environment]::SetEnvironmentVariable("SDKMANAGER_OPTS", "--add-modules java.se.ee", "Machine")
+        $env:ANDROID_HOME = [Environment]::GetEnvironmentVariable("SDKMANAGER_OPTS", "Machine")
+    }
 
-## Update the Android SDK tools.
-Rename-Item "${android_sdk_root}\tools" "${android_sdk_root}\tools.old"
-& "${android_sdk_root}\tools.old\bin\sdkmanager" "tools"
-Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
+    ## Accept the Android SDK license agreement.
+    New-Item "${android_sdk_root}\licenses" -ItemType "directory" -Force
+    Add-Content -Value "`nd56f5187479451eabf01fb78af6dfcb131a6481e" -Path "${android_sdk_root}\licenses\android-sdk-license" -Encoding ASCII
+    Add-Content -Value "`nd975f751698a77b662f1254ddbeed3901e976f5a" -Path "${android_sdk_root}\licenses\intel-android-extra-license" -Encoding ASCII
 
-## Install all required Android SDK components.
-## build-tools 28.0.1 introduces the new dexer, d8.jar
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platform-tools"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;27.0.3"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;28.0.1"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-24"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-25"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-26"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-27"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
+    ## Update the Android SDK tools.
+    Rename-Item "${android_sdk_root}\tools" "${android_sdk_root}\tools.old"
+    & "${android_sdk_root}\tools.old\bin\sdkmanager" "tools"
+    Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
+
+    ## Install all required Android SDK components.
+    ## build-tools 28.0.1 introduces the new dexer, d8.jar
+    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platform-tools"
+    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;27.0.3"
+    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;28.0.1"
+    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-24"
+    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-25"
+    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-26"
+    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-27"
+    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
+}
 
 ## Download and install the Buildkite agent.
 Write-Host "Grabbing latest Buildkite Agent version number from GitHub..."
@@ -248,7 +274,7 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${build
 
 ## Store the image version in a file.
 $web_client = New-Object Net.WebClient
-$web_client.Headers.add("Metadata-Flavor","Google")
+$web_client.Headers.add("Metadata-Flavor", "Google")
 $image_version = $web_client.DownloadString("http://metadata.google.internal/computeMetadata/v1/instance/attributes/image-version")
 $image_version = $image_version.Trim()
 $image_version | Set-Content -Path "c:\buildkite\image.version"

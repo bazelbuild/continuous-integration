@@ -50,10 +50,7 @@ IMAGE_CREATION_VMS = {
             'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
         ]
     },
-    ('buildkite-worker-ubuntu1604-java8',
-     'buildkite-testing-ubuntu1604-java8',
-     'buildkite-trusted-ubuntu1604-java8',
-     'buildkite-pipeline-ubuntu1604-java8'): {
+    ('buildkite-worker-ubuntu1604-java8',): {
         'source_image_project': 'ubuntu-os-cloud',
         'source_image_family': 'ubuntu-1604-lts',
         'setup_script': 'setup-ubuntu.sh',
@@ -61,19 +58,26 @@ IMAGE_CREATION_VMS = {
             'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
         ]
     },
-    ('buildkite-worker-ubuntu1804-java8',): {
-        'source_image_project': 'ubuntu-os-cloud',
-        'source_image_family': 'ubuntu-1804-lts',
-        'setup_script': 'setup-ubuntu.sh',
-        'licenses': [
-            'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
-        ]
-    },
-    ('buildkite-worker-windows-java8',): {
-        'source_image_project': 'windows-cloud',
-        'source_image_family': 'windows-1709-core',
-        'setup_script': 'setup-windows.ps1',
-    }
+    ('buildkite-pipeline-ubuntu1804-java8',
+     'buildkite-trusted-ubuntu1804-java8',
+     'buildkite-worker-ubuntu1804-nojava',
+     'buildkite-worker-ubuntu1804-java8',
+     'buildkite-worker-ubuntu1804-java9',
+     'buildkite-worker-ubuntu1804-java10'): {
+         'source_image_project': 'ubuntu-os-cloud',
+         'source_image_family': 'ubuntu-1804-lts',
+         'setup_script': 'setup-ubuntu.sh',
+         'licenses': [
+             'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
+         ]
+     },
+    ('buildkite-worker-windows-java8',
+     'buildkite-worker-windows-java9',
+     'buildkite-worker-windows-java10',): {
+         'source_image_project': 'windows-cloud',
+         'source_image_family': 'windows-1803-core',
+         'setup_script': 'setup-windows.ps1',
+     }
 }
 
 WORK_QUEUE = queue.Queue()

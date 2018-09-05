@@ -33,9 +33,6 @@ case $(hostname) in
   *trusted*)
     config_kind="trusted"
     ;;
-  *testing*)
-    config_kind="testing"
-    ;;
   *worker*)
     config_kind="worker"
     ;;
@@ -69,6 +66,9 @@ case $(hostname) in
     ;;
   *java9*)
     config_java="9"
+    ;;
+  *java10*)
+    config_java="10"
     ;;
   *)
     echo "Could not deduce Java version from hostname: $(hostname)!"
@@ -203,7 +203,7 @@ fi
 }
 
 ### Install the Buildkite Agent on production images.
-if [[ "${config_kind}" != "testing" ]]; then
+{
   apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 \
       --recv-keys 32A37959C2FA5C3C99EFBC32A79206696452D198 &> /dev/null
   add-apt-repository -y "deb https://apt.buildkite.com/buildkite-agent stable main"
@@ -235,7 +235,7 @@ EOF
 
 set -euo pipefail
 
-export PATH=$PATH:/snap/bin/
+export PATH=$PATH:/snap/bin
 export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://bazel-buildkite-artifacts/$BUILDKITE_JOB_ID"
 export BUILDKITE_GS_ACL="publicRead"
 EOF
@@ -336,13 +336,12 @@ EOF
     echo "Unknown operating system - has neither systemd nor upstart?"
     exit 1
   fi
-fi
+}
 
 ### Install Docker.
 {
   apt-get -qqy install apt-transport-https ca-certificates > /dev/null
 
-  # From https://download.docker.com/linux/ubuntu/gpg
   curl -sSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
   add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 
@@ -350,9 +349,7 @@ fi
   apt-get -qqy install docker-ce > /dev/null
 
   # Allow the buildkite-agent user access to Docker.
-  if [[ "${config_kind}" != "testing" ]]; then
-    usermod -aG docker buildkite-agent
-  fi
+  usermod -aG docker buildkite-agent
 
   # Disable the Docker service, as the startup script has to mount
   # /var/lib/docker first.
@@ -414,13 +411,11 @@ EOF
 }
 
 ### Enable KVM support.
-if [[ "${config_kind}" != "testing" ]]; then
-  usermod -a -G kvm buildkite-agent
-fi
+usermod -a -G kvm buildkite-agent
 
 ### Install Android SDK and NDK (only if we have a JVM).
 if [[ "${config_java}" != "no" ]]; then
-  if [[ "${config_java}" == "9" ]]; then
+  if [[ "${config_java}" == "9" || "${config_java}" == "10" ]]; then
     export SDKMANAGER_OPTS="--add-modules java.se.ee"
   fi
 
@@ -433,7 +428,7 @@ if [[ "${config_java}" != "no" ]]; then
   # Android SDK
   mkdir -p /opt/android-sdk-linux
   cd /opt/android-sdk-linux
-  curl -sSLo android-sdk.zip https://dl.google.com/android/repository/sdk-tools-linux-3859397.zip
+  curl -sSLo android-sdk.zip https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
   unzip android-sdk.zip > /dev/null
   rm android-sdk.zip
   expect -c '
@@ -465,16 +460,13 @@ expect {
     > /dev/null
   chown -R root:root /opt/android*
 
-
-  if [[ "${config_kind}" != "testing" ]]; then
-    cat >> /etc/buildkite-agent/hooks/environment <<'EOF'
+  cat >> /etc/buildkite-agent/hooks/environment <<'EOF'
 export ANDROID_HOME="/opt/android-sdk-linux"
 echo "Android SDK is at ${ANDROID_HOME}"
 
 export ANDROID_NDK_HOME="/opt/android-ndk-r15c"
 echo "Android NDK is at ${ANDROID_NDK_HOME}"
 EOF
-  fi
 fi
 
 ### Install tools required by the release process.
