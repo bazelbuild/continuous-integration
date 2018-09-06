@@ -307,6 +307,12 @@ def eprint(*args, **kwargs):
     print(*args, flush=True, file=sys.stderr, **kwargs)
 
 
+def rchop(string_, *endings):
+    for ending in endings:
+        if string_.endswith(ending):
+            return string_[:-len(ending)]
+    return string_
+
 def python_binary(platform=None):
     if platform == "windows":
         return "python.exe"
@@ -1029,7 +1035,7 @@ def runner_step(platform, project_name=None, http_config=None,
         "agents": {
             "kind": "worker",
             "java": PLATFORMS[platform]["java"],
-            "os": host_platform
+            "os": rchop(host_platform, "_nojava", "_java8", "_java9", "_java10")
         }
     }
 
@@ -1105,7 +1111,7 @@ def bazel_build_step(platform, project_name, http_config=None, file_config=None,
         "agents": {
             "kind": "worker",
             "java": PLATFORMS[platform]["java"],
-            "os": host_platform
+            "os": rchop(host_platform, "_nojava", "_java8", "_java9", "_java10")
         }
     }
 
