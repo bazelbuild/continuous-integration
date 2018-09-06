@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import queue
-import subprocess
 import sys
 import threading
 
@@ -23,8 +22,6 @@ import gcloud
 
 
 DEBUG = True
-
-LOCATION = 'europe-west1-d'
 
 # Note that the hostnames are parsed and trigger specific behavior for different use cases.
 # The following parts have a special meaning:
@@ -47,6 +44,7 @@ DEFAULT_VM = {
     'network': 'buildkite',
     'scopes': 'cloud-platform',
     'service_account': 'remote-account@bazel-public.iam.gserviceaccount.com',
+    'zone': 'europe-west1-d',
 }
 
 INSTANCE_GROUPS = {
@@ -67,6 +65,7 @@ INSTANCE_GROUPS = {
         'image_family': 'buildkite-worker-ubuntu1804-nojava',
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+        'zone': 'europe-west1-c',
     },
     'buildkite-worker-ubuntu1804-java8': {
         'count': 8,
@@ -79,6 +78,7 @@ INSTANCE_GROUPS = {
         'image_family': 'buildkite-worker-ubuntu1804-java9',
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+        'zone': 'europe-west1-c',
     },
     'buildkite-worker-ubuntu1804-java10': {
         'count': 8,
@@ -125,10 +125,10 @@ PRINT_LOCK = threading.Lock()
 WORK_QUEUE = queue.Queue()
 
 
-def instance_group_task(instance_group_name, count, **kwargs):
+def instance_group_task(instance_group_name, count, zone, **kwargs):
     template_name = instance_group_name + '-template'
 
-    if gcloud.delete_instance_group(instance_group_name, zone=LOCATION).returncode == 0:
+    if gcloud.delete_instance_group(instance_group_name, zone=zone).returncode == 0:
         print('Deleted existing instance group: {}'.format(instance_group_name))
 
     if gcloud.delete_instance_template(template_name).returncode == 0:
@@ -136,16 +136,16 @@ def instance_group_task(instance_group_name, count, **kwargs):
 
     gcloud.create_instance_template(template_name, **kwargs)
 
-    gcloud.create_instance_group(instance_group_name, zone=LOCATION,
+    gcloud.create_instance_group(instance_group_name, zone=zone,
                                  base_instance_name=instance_group_name,
                                  template=template_name, size=count)
 
 
-def single_instance_task(instance_name, **kwargs):
-    if gcloud.delete_instance(instance_name, zone=LOCATION).returncode == 0:
+def single_instance_task(instance_name, zone, **kwargs):
+    if gcloud.delete_instance(instance_name, zone=zone).returncode == 0:
         print('Deleted existing instance: {}'.format(instance_name))
 
-    gcloud.create_instance(instance_name, zone=LOCATION, **kwargs)
+    gcloud.create_instance(instance_name, zone=zone, **kwargs)
 
 
 def worker():
