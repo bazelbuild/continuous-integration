@@ -730,7 +730,6 @@ def remote_caching_flags(platform):
     flags = ["--google_default_credentials", "--experimental_guard_against_concurrent_changes"]
     if is_pull_request():
         flags += ["--bes_backend=buildeventservice.googleapis.com",
-                  "--bes_best_effort=false",
                   "--bes_timeout=360s",
                   "--tls_enabled",
                   "--project_id=bazel-public",
@@ -807,7 +806,6 @@ def rbe_flags(accept_cached):
     # Enable BES / Build Results reporting.
     flags += [
         "--bes_backend=buildeventservice.googleapis.com",
-        "--bes_best_effort=false",
         "--bes_timeout=360s",
         "--project_id=bazel-public"
     ]
