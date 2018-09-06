@@ -431,6 +431,7 @@ if [[ "${config_java}" != "no" ]]; then
   curl -sSLo android-sdk.zip https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
   unzip android-sdk.zip > /dev/null
   rm android-sdk.zip
+  tools/bin/sdkmanager --update
   expect -c '
 set timeout -1
 log_user 0
@@ -443,7 +444,10 @@ expect {
 
   # This should be kept in sync with mac/mac-android.sh.
   # build-tools 28.0.1 introduces the new dexer, d8.jar
-  tools/bin/sdkmanager \
+  expect -c '
+set timeout -1
+log_user 0
+spawn tools/bin/sdkmanager \
     "build-tools;27.0.3" \
     "build-tools;28.0.1" \
     "emulator" \
@@ -456,8 +460,12 @@ expect {
     "system-images;android-19;default;x86" \
     "system-images;android-21;default;x86" \
     "system-images;android-22;default;x86" \
-    "system-images;android-23;default;x86" \
-    > /dev/null
+    "system-images;android-23;default;x86"
+  expect {
+      "Accept? (y/N)" { exp_send "y\r" ; exp_continue }
+      eof
+  }
+  '
   chown -R root:root /opt/android*
 
   cat >> /etc/buildkite-agent/hooks/environment <<'EOF'
