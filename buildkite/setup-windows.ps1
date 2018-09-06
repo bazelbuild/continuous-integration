@@ -305,38 +305,6 @@ $buildkite_password = "Bu1ldk1t3"
 $buildkite_secure_password = ConvertTo-SecureString $buildkite_password -AsPlainText -Force
 New-LocalUser -Name $buildkite_username -Password $buildkite_secure_password -UserMayNotChangePassword
 
-## Create the Buildkite Monitor script.
-Write-Host "Creating Buildkite Monitor script..."
-$buildkite_monitor_script = @"
-`$ErrorActionPreference = "Stop"
-`$ConfirmPreference = "None"
-`$buildkite_username = "${buildkite_username}"
-
-Write-Host "Terminating all processes belonging to the `${buildkite_username} user..."
-& taskkill /FI "username eq `${buildkite_username}" /T /F
-Start-Sleep -Seconds 1
-
-Write-Host "Recreating fresh temporary directory D:\temp..."
-Remove-Item -Recurse -Force "D:\temp"
-New-Item -Type Directory "D:\temp"
-Add-NTFSAccess -Path "D:\temp" -Account BUILTIN\Users -AccessRights Write
-
-Write-Host "Deleting home directory of the `${buildkite_username} user..."
-Get-CimInstance Win32_UserProfile | Where LocalPath -EQ "C:\Users\`${buildkite_username}" | Remove-CimInstance
-if ( Test-Path "C:\Users\`${buildkite_username}" ) {
-  Throw "The home directory of the `${buildkite_username} user could not be deleted."
-}
-
-Write-Host "Starting Buildkite agent as user `${buildkite_username}..."
-& nssm start "buildkite-agent"
-
-Write-Host "Waiting for Buildkite agent to exit..."
-While ((Get-Service "buildkite-agent").Status -eq "Running") { Start-Sleep -Seconds 1 }
-
-Write-Host "Buildkite agent has exited."
-"@
-[System.IO.File]::WriteAllLines("${buildkite_agent_root}\buildkite-monitor.ps1", $buildkite_monitor_script)
-
 ## Allow the Buildkite agent to store SSH host keys in this folder.
 Write-Host "Creating C:\buildkite\.ssh folder..."
 New-Item "c:\buildkite\.ssh" -ItemType "directory"
@@ -348,21 +316,6 @@ Add-NTFSAccess -Path "c:\buildkite\logs" -Account BUILTIN\Users -AccessRights Wr
 
 ## Create a service for the Buildkite agent.
 & choco install nssm
-
-Write-Host "Creating Buildkite Monitor service..."
-nssm install "buildkite-monitor" `
-    "c:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" `
-    "c:\buildkite\buildkite-monitor.ps1"
-nssm set "buildkite-monitor" "AppDirectory" "c:\buildkite"
-nssm set "buildkite-monitor" "DisplayName" "Buildkite Monitor"
-nssm set "buildkite-monitor" "Start" "SERVICE_DEMAND_START"
-nssm set "buildkite-monitor" "AppExit" "Default" "Restart"
-nssm set "buildkite-monitor" "AppRestartDelay" "3000"
-nssm set "buildkite-monitor" "AppStdout" "c:\buildkite\logs\buildkite-monitor.log"
-nssm set "buildkite-monitor" "AppStderr" "c:\buildkite\logs\buildkite-monitor.log"
-nssm set "buildkite-monitor" "AppRotateFiles" "1"
-nssm set "buildkite-monitor" "AppRotateSeconds" 86400
-nssm set "buildkite-monitor" "AppRotateBytes" 1048576
 
 Write-Host "Creating Buildkite Agent service..."
 nssm install "buildkite-agent" `
