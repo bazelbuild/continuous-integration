@@ -4,13 +4,39 @@ platforms:
     build_targets:
     - "//:release"
     test_flags:
-    - "--test_tag_filters=-slow"
+    - "--test_tag_filters=-slow,-flaky,-docker"
     test_targets:
-    - "..."
+    - "//..."
+  ubuntu1804_java9:
+    build_flags:
+    - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_java9"
+    - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_jdk9"
+    build_targets:
+    - "//:release"
+    test_flags:
+    - "--test_tag_filters=-slow,-flaky,-docker"
+    - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_java9"
+    - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_jdk9"
+    test_targets:
+    - "//..."
+  # TODO(philwo): Enable once Bazel supports targeting Java 10 and this change has been merged:
+  #               https://gerrit-review.googlesource.com/c/gerrit/+/193832
+  # ubuntu1804_java10:
+  #   build_flags:
+  #   - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_java10"
+  #   - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_jdk10"
+  #   build_targets:
+  #   - "//:release"
+  #   test_flags:
+  #   - "--test_tag_filters=-slow,-flaky,-docker"
+  #   - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_java10"
+  #   - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_jdk10"
+  #   test_targets:
+  #   - "//..."
   macos:
     build_targets:
     - "//:release"
     test_flags:
     - "--test_tag_filters=-slow"
     test_targets:
-    - "..."
+    - "//..."
