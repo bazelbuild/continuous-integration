@@ -1160,7 +1160,7 @@ def print_bazel_downstream_pipeline(configs, http_config, file_config):
         raise BuildkiteException("Bazel downstream pipeline configuration is empty.")
 
     if set(configs) != set(PLATFORMS):
-        raise BuildkiteException("Bazel downstream pipeline needs to build Bazel on all supported platforms.")
+        raise BuildkiteException("Bazel downstream pipeline needs to build Bazel on all supported platforms (has=%s vs. want=%s)." % (sorted(set(configs)), sorted(set(PLATFORMS))))
 
     pipeline_steps = []
 
