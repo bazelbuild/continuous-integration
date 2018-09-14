@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -x
+
+# Ensure that we only run on production machines.
+if [[ $(hostname) != buildkite* ]]; then
+  echo "Not running, because our hostname does not indicate a production system..."
+  sleep 60
+  exit 1
+fi
+
+IMAGE_VERSION=$(</usr/local/etc/image-version)
+OS_VERSION=$(sw_vers -productVersion)
+XCODE_VERSION=$(xcodebuild -version | grep ^Xcode | awk '{print $2}')
+TAGS="kind=worker,os=macos,java=8, machine-type=imacpro,image-version=${IMAGE_VERSION},os-version=${OS_VERSION},xcode-version=${XCODE_VERSION}"
+sed -i '' "s/^tags=.*/tags=${TAGS}/" /usr/local/etc/buildkite-agent/buildkite-agent.cfg
+echo "Set tags to $(cat /usr/local/etc/buildkite-agent/buildkite-agent.cfg | grep '^tags=')"
+
+sudo -H -u buildkite env \
+    GOOGLE_APPLICATION_CREDENTIALS=/usr/local/etc/buildkite-agent/bazel-public-e29b1f995cb1.json \
+    PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin \
+    /usr/local/bin/buildkite-agent start \
+    --config /usr/local/etc/buildkite-agent/buildkite-agent.cfg
+
+killall -9 -u buildkite
+find /private/tmp -user buildkite -delete
+find /private/var/tmp -user buildkite -delete
+/usr/local/bin/rsync -aAX --delete --exclude="/builds" /Users/buildkite-fresh/ /Users/buildkite/
