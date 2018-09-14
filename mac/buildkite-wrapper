@@ -24,4 +24,4 @@ sudo -H -u buildkite env \
 killall -9 -u buildkite
 find /private/tmp -user buildkite -delete
 find /private/var/tmp -user buildkite -delete
-/usr/local/bin/rsync -aAX --delete --exclude="/builds" /Users/buildkite-fresh/ /Users/buildkite/
+/usr/local/bin/rsync -aAX --delete /Users/buildkite-fresh/ /Users/buildkite/
