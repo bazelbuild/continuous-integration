@@ -9,10 +9,9 @@ if [[ $(hostname) != buildkite* ]]; then
   exit 1
 fi
 
-IMAGE_VERSION=$(</usr/local/etc/image-version)
 OS_VERSION=$(sw_vers -productVersion)
 XCODE_VERSION=$(xcodebuild -version | grep ^Xcode | awk '{print $2}')
-TAGS="kind=worker,os=macos,java=8, machine-type=imacpro,image-version=${IMAGE_VERSION},os-version=${OS_VERSION},xcode-version=${XCODE_VERSION}"
+TAGS="kind=worker,os=macos,java=8, machine-type=imacpro,os-version=${OS_VERSION},xcode-version=${XCODE_VERSION}"
 sed -i '' "s/^tags=.*/tags=${TAGS}/" /usr/local/etc/buildkite-agent/buildkite-agent.cfg
 echo "Set tags to $(cat /usr/local/etc/buildkite-agent/buildkite-agent.cfg | grep '^tags=')"
 
