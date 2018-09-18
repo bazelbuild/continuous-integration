@@ -843,7 +843,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     print_expanded_group(":bazel: Build")
 
     aggregated_flags = common_flags(bep_file, platform)
-    if not remote_enabled(flags):
+    if not remote_enabled(flags) and not "windows" in platform:
         if platform.startswith("rbe_"):
             aggregated_flags += rbe_flags(accept_cached=True)
         else:
@@ -867,8 +867,8 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor
     # Don't enable remote caching if the user enabled remote execution / caching themselves
     # or flaky test monitoring is enabled, as remote caching makes tests look less flaky than
     # they are.
-    if not remote_enabled(flags):
-        if platform.startswith("rbe_"):
+    if not remote_enabled(flags) and not "windows" in platform:
+        elif platform.startswith("rbe_"):
             aggregated_flags += rbe_flags(accept_cached=not monitor_flaky_tests)
         elif not monitor_flaky_tests:
             aggregated_flags += remote_caching_flags(platform)
