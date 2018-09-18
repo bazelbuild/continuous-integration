@@ -868,7 +868,7 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor
     # or flaky test monitoring is enabled, as remote caching makes tests look less flaky than
     # they are.
     if not remote_enabled(flags) and not "windows" in platform:
-        elif platform.startswith("rbe_"):
+        if platform.startswith("rbe_"):
             aggregated_flags += rbe_flags(accept_cached=not monitor_flaky_tests)
         elif not monitor_flaky_tests:
             aggregated_flags += remote_caching_flags(platform)
