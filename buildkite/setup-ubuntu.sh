@@ -155,6 +155,7 @@ EOF
 
     # Required by our C++ coverage tests.
     lcov
+    llvm
   )
 
   # Bazel dependencies.
