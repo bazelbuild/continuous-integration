@@ -194,6 +194,11 @@ Remove-Item $ninja_zip
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${ninja_root}"
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
+## .NET Framework 4.6.2 Devpack (for rules_dotnet)
+Write-Host "Installing .NET Framework 4.6.2 Devpack..."
+& choco install netfx-4.6.2-devpack
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+
 ## Install Sauce Connect (for rules_webtesting).
 Write-Host "Installing Sauce Connect Proxy..."
 & choco install sauce-connect
