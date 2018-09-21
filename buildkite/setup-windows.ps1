@@ -180,14 +180,9 @@ Write-Host "Installing Python packages..."
     keras_preprocessing
 
 ## CMake 3.12.2 (for rules_foreign_cc).
-Write-Host "Installing CMake 3.12.2..."
-$cmake_zip = "c:\temp\cmake-3.12.2-win64-x64.zip"
-$cmake_root = "c:\cmake"
-(New-Object Net.WebClient).DownloadFile("https://cmake.org/files/v3.12/cmake-3.12.2-win64-x64.zip", $cmake_zip)
-[System.IO.Compression.ZipFile]::ExtractToDirectory($cmake_zip, $cmake_root)
-Remove-Item $cmake_zip
-$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${cmake_root}\cmake-3.12.2-win64-x64\bin"
-[Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
+Write-Host "Installing CMake..."
+& choco install cmake
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Ninja 1.8.2 (for rules_foreign_cc).
 Write-Host "Installing Ninja 1.8.2..."
@@ -200,6 +195,7 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${ninja
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
 ## Install Sauce Connect (for rules_webtesting).
+Write-Host "Installing Sauce Connect Proxy..."
 & choco install sauce-connect
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
