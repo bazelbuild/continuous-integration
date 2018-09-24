@@ -56,7 +56,7 @@ def create_instance(name, **kwargs):
     try:
         return gcloud('compute', 'instances', 'create', name, **kwargs)
     except subprocess.CalledProcessError as e:
-        raise Exception('"gcloud compute instance create" returned unexpected error:\n{}'.format(e.stderr))
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
 def delete_instance(name, **kwargs):
@@ -66,7 +66,7 @@ def delete_instance(name, **kwargs):
         # It's not an error if 'delete' failed, because the object didn't exist in the first place.
         # But we do want to error out on other unexpected errors.
         if not re.search(r'The resource .* was not found', e.stderr):
-            raise Exception('"gcloud compute instance delete" returned unexpected error:\n{}'.format(e.stderr))
+            raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
         return e
 
 
@@ -74,14 +74,14 @@ def describe_instance(name, **kwargs):
     try:
         return gcloud('compute', 'instances', 'describe', name, **kwargs)
     except subprocess.CalledProcessError as e:
-        raise Exception('"gcloud compute instance describe" returned unexpected error:\n{}'.format(e.stderr))
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
 def create_instance_group(name, **kwargs):
     try:
         return gcloud('compute', 'instance-groups', 'managed', 'create', name, **kwargs)
     except subprocess.CalledProcessError as e:
-        raise Exception('"gcloud compute instance-groups managed create" returned unexpected error:\n{}'.format(e.stderr))
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
 def delete_instance_group(name, **kwargs):
@@ -91,7 +91,7 @@ def delete_instance_group(name, **kwargs):
         # It's not an error if 'delete' failed, because the object didn't exist in the first place.
         # But we do want to error out on other unexpected errors.
         if not re.search(r'The resource .* was not found', e.stderr):
-            raise Exception('"gcloud compute instance-groups managed delete" returned unexpected error:\n{}'.format(e.stderr))
+            raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
         return e
 
 
@@ -99,7 +99,7 @@ def create_instance_template(name, **kwargs):
     try:
         return gcloud('compute', 'instance-templates', 'create', name, **kwargs)
     except subprocess.CalledProcessError as e:
-        raise Exception('"gcloud compute instance-templates create" returned unexpected error:\n{}'.format(e.stderr))
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
 def delete_instance_template(name, **kwargs):
@@ -109,7 +109,7 @@ def delete_instance_template(name, **kwargs):
         # It's not an error if 'delete' failed, because the object didn't exist in the first place.
         # But we do want to error out on other unexpected errors.
         if not re.search(r'The resource .* was not found', e.stderr):
-            raise Exception('"gcloud compute instance-templates delete" returned unexpected error:\n{}'.format(e.stderr))
+            raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
         return e
 
 
@@ -117,14 +117,14 @@ def create_image(name, **kwargs):
     try:
         return gcloud('compute', 'images', 'create', name, **kwargs)
     except subprocess.CalledProcessError as e:
-        raise Exception('"gcloud compute images create" returned unexpected error:\n{}'.format(e.stderr))
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
 def reset_windows_password(name, **kwargs):
     try:
         return gcloud('compute', 'reset-windows-password', name, '--quiet', **kwargs)
     except subprocess.CalledProcessError as e:
-        raise Exception('"gcloud compute reset-windows-password" returned unexpected error:\n{}'.format(e.stderr))
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
 def get_serial_port_output(name, **kwargs):
