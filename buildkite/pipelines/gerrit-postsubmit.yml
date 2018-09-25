@@ -19,20 +19,24 @@ platforms:
     - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_java9"
     test_targets:
     - "//..."
-  # TODO(philwo): Enable once Bazel supports targeting Java 10 and this change has been merged:
-  #               https://gerrit-review.googlesource.com/c/gerrit/+/193832
-  # ubuntu1804_java10:
-  #   build_flags:
-  #   - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_java10"
-  #   - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_java10"
-  #   build_targets:
-  #   - "//:release"
-  #   test_flags:
-  #   - "--test_tag_filters=-slow,-flaky,-docker"
-  #   - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_java10"
-  #   - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_java10"
-  #   test_targets:
-  #   - "//..."
+  ubuntu1804_java10:
+    build_flags:
+    - "--host_javabase=:absolute_javabase"
+    - "--define=ABSOLUTE_JAVABASE=/usr/lib/jvm/java-10-openjdk-amd64"
+    - "--define=USE_ABSOLUTE_JAVABASE=true"
+    - "--host_java_toolchain=//:toolchain_vanilla"
+    - "--java_toolchain=//:toolchain_vanilla"
+    build_targets:
+    - "//:release"
+    test_flags:
+    - "--test_tag_filters=-slow,-flaky,-docker"
+    - "--host_javabase=:absolute_javabase"
+    - "--define=ABSOLUTE_JAVABASE=/usr/lib/jvm/java-10-openjdk-amd64"
+    - "--define=USE_ABSOLUTE_JAVABASE=true"
+    - "--host_java_toolchain=//:toolchain_vanilla"
+    - "--java_toolchain=//:toolchain_vanilla"
+    test_targets:
+    - "//..."
   macos:
     build_targets:
     - "//:release"
