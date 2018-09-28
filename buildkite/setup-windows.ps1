@@ -155,6 +155,12 @@ $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 # [Environment]::SetEnvironmentVariable("BAZEL_VC", "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC", "Machine")
 # $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 
+## Install Python2
+Write-Host "Installing Python 2..."
+# FYI: choco adds "C:\python2\Scripts\;C:\python2\" to PATH.
+& choco install python2 --version 2.7.15 --params "/InstallDir:C:\python2"
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+
 ## Install Python3
 Write-Host "Installing Python 3..."
 # FYI: choco adds "C:\python3\Scripts\;C:\python3\" to PATH.
