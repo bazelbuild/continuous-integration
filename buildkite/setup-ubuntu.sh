@@ -441,7 +441,7 @@ expect {
   # build-tools 28.0.1 introduces the new dexer, d8.jar
   tools/bin/sdkmanager \
     "build-tools;27.0.3" \
-    "build-tools;28.0.1" \
+    "build-tools;28.0.2" \
     "emulator" \
     "extras;android;m2repository" \
     "platform-tools" \
@@ -449,6 +449,7 @@ expect {
     "platforms;android-25" \
     "platforms;android-26" \
     "platforms;android-27" \
+    "platforms;android-28" \
     "system-images;android-19;default;x86" \
     "system-images;android-21;default;x86" \
     "system-images;android-22;default;x86" \
