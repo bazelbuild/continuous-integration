@@ -48,10 +48,11 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/googlesamples/android-testing.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/android-testing-postsubmit.yml"
     },
-    "Bazel Remote Execution": {
-        "git_repository": "https://github.com/bazelbuild/bazel.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml"
-    },
+    # TODO(bazel#6288): enable once remote execution is green
+    # "Bazel Remote Execution": {
+    #     "git_repository": "https://github.com/bazelbuild/bazel.git",
+    #     "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml"
+    # },
     "BUILD_file_generator": {
         "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml"
@@ -120,10 +121,11 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_docker.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_docker/master/.bazelci/presubmit.yml"
     },
-    "rules_foreign_cc": {
-        "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_foreign_cc/master/.bazelci/config.yaml"
-    },
+    # TODO(rules_foreign_cc#118): enable once rules_foreign_cc are green
+    # "rules_foreign_cc": {
+    #     "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
+    #     "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_foreign_cc/master/.bazelci/config.yaml"
+    # },
     "rules_go": {
         "git_repository": "https://github.com/bazelbuild/rules_go.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_go/master/.bazelci/presubmit.yml"
@@ -156,10 +158,11 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_perl.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_perl/master/.bazelci/presubmit.yml"
     },
-    "rules_python": {
-        "git_repository": "https://github.com/bazelbuild/rules_python.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_python/master/.bazelci/presubmit.yml"
-    },
+    # TODO(rules_python#123): enable once rules_python are green
+    # "rules_python": {
+    #     "git_repository": "https://github.com/bazelbuild/rules_python.git",
+    #     "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_python/master/.bazelci/presubmit.yml"
+    # },
     "rules_rust": {
         "git_repository": "https://github.com/bazelbuild/rules_rust.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_rust/master/.bazelci/presubmit.yml"
