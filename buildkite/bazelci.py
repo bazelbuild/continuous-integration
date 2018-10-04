@@ -196,10 +196,11 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.yml"
     },
-    "TensorFlow Serving": {
-        "git_repository": "https://github.com/tensorflow/serving.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-serving-postsubmit.yml"
-    }
+    # TODO(pcloudy): enable once TensorFlow_serving adopts to Bazel 0.18.0 or later, https://github.com/tensorflow/serving/pull/1066
+    # "TensorFlow Serving": {
+    #     "git_repository": "https://github.com/tensorflow/serving.git",
+    #     "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-serving-postsubmit.yml"
+    # }
 }
 
 
