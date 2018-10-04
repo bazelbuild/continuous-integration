@@ -1,24 +1,5 @@
 ---
 platforms:
-  ubuntu1404:
-    shell_commands:
-    - |-
-      echo '
-      import %workspace%/.bazelrc' >>bazel.bazelrc
-    - |-
-      echo '
-      android_sdk_repository(name = "androidsdk")
-      android_ndk_repository(name = "androidndk")' >>WORKSPACE
-    - touch .bazelrc
-    - "./tensorflow/tools/ci_build/builds/configured CPU"
-    build_flags:
-    # TODO(laszlocsomor): remove "--cxxopt=--std=c++11" after cr/200219133
-    # is merged to upstream TensorFlow, it's a temporary workaround for
-    # https://github.com/bazelbuild/bazel/issues/5365.
-    - "--cxxopt=--std=c++11"
-    build_targets:
-    - "//tensorflow/tools/pip_package:build_pip_package"
-    - "//tensorflow/examples/android:tensorflow_demo"
   ubuntu1604:
     shell_commands:
     - |-

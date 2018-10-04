@@ -83,23 +83,17 @@ Write-Host "Installing curl..."
 ## Install Git for Windows.
 Write-Host "Installing Git for Windows..."
 # FYI: choco adds "C:\Program Files\Git\cmd" to global PATH.
-& choco install git --params="'/GitOnlyOnPath'"
+& choco install git --params "'/GitOnlyOnPath'"
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Install MSYS2
 Write-Host "Installing MSYS2..."
 # FYI: We don't add MSYS2 to the PATH on purpose.
-& choco install msys2 --params="'/NoPath /NoUpdate'"
+& choco install msys2 --params "'/NoPath /NoUpdate'"
 
 [Environment]::SetEnvironmentVariable("BAZEL_SH", "C:\tools\msys64\usr\bin\bash.exe", "Machine")
 $env:BAZEL_SH = [Environment]::GetEnvironmentVariable("BAZEL_SH", "Machine")
 Set-Alias bash "c:\tools\msys64\usr\bin\bash.exe"
-
-## This is a temporary hack that is necessary, because otherwise pacman asks whether it should
-## remove 'catgets' and 'libcatgets', which '--noconfirm' unfortunately answers with 'no', which
-## then causes the installation to fail.
-Write-Host "Removing MSYS2 catgets and libcatgets packages..."
-& bash -lc "pacman --noconfirm -R catgets libcatgets"
 
 ## Update MSYS2 once.
 Write-Host "Updating MSYS2 packages (round 1)..."
@@ -114,28 +108,37 @@ Write-Host "Installing required MSYS2 packages..."
 & bash -lc "pacman --noconfirm --needed -S curl zip unzip gcc tar diffutils patch perl"
 
 ## Install Azul Zulu.
-Write-Host "Installing Zulu 8..."
-$zulu_url = "https://cdn.azul.com/zulu/bin/zulu8.28.0.1-jdk8.0.163-win_x64.zip"
-$zulu_zip = "c:\temp\zulu8.28.0.1-jdk8.0.163-win_x64.zip"
-$zulu_extracted_path = "c:\temp\" + [IO.Path]::GetFileNameWithoutExtension($zulu_zip)
-$zulu_root = "c:\openjdk"
-(New-Object Net.WebClient).DownloadFile($zulu_url, $zulu_zip)
-[System.IO.Compression.ZipFile]::ExtractToDirectory($zulu_zip, "c:\temp")
-Move-Item $zulu_extracted_path -Destination $zulu_root
-Remove-Item $zulu_zip
-$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${zulu_root}\bin"
-[Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
-$env:JAVA_HOME = $zulu_root
-[Environment]::SetEnvironmentVariable("JAVA_HOME", $env:JAVA_HOME, "Machine")
+$myhostname = [System.Net.Dns]::GetHostName()
+if ($myhostname -like "*nojava*") {
+    $java = "no"
+} elseif ($myhostname -like "*java8*") {
+    $java = "8"
+    $zulu_filename = "zulu8.31.0.1-jdk8.0.181-win_x64.zip"
+} elseif ($myhostname -like "*java9*") {
+    $java = "9"
+    $zulu_filename = "zulu9.0.7.1-jdk9.0.7-win_x64.zip"
+} elseif ($myhostname -like "*java10*") {
+    $java = "10"
+    $zulu_filename = "zulu10.3+5-jdk10.0.2-win_x64.zip"
+} else {
+    Throw "Could not deduce Java version from hostname: ${myhostname}!"
+}
 
-## Install the JDK.
-# Write-Host "Installing JDK 8..."
-# FYI: choco adds "C:\Program Files\Java\jdk<version>\bin" to global PATH.
-# FYI: choco sets JAVA_HOME to "C:\Program Files\Java\jdk<version>\bin".
-# & choco install jdk8
-# $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
-# $env:JAVA_HOME = [Environment]::GetEnvironmentVariable("JAVA_HOME", "Machine")
-# Write-Host "JAVA_HOME was set to '${JAVA_HOME}'..."
+if ($java -ne "no") {
+    Write-Host "Installing Zulu ${java}..."
+    $zulu_url = "https://cdn.azul.com/zulu/bin/${zulu_filename}"
+    $zulu_zip = "c:\temp\${zulu_filename}"
+    $zulu_extracted_path = "c:\temp\" + [IO.Path]::GetFileNameWithoutExtension($zulu_zip)
+    $zulu_root = "c:\openjdk"
+    (New-Object Net.WebClient).DownloadFile($zulu_url, $zulu_zip)
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($zulu_zip, "c:\temp")
+    Move-Item $zulu_extracted_path -Destination $zulu_root
+    Remove-Item $zulu_zip
+    $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${zulu_root}\bin"
+    [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
+    $env:JAVA_HOME = $zulu_root
+    [Environment]::SetEnvironmentVariable("JAVA_HOME", $env:JAVA_HOME, "Machine")
+}
 
 ## Install Visual C++ 2015 Build Tools (Update 3).
 Write-Host "Installing Visual C++ 2015 Build Tools..."
@@ -155,11 +158,14 @@ $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 ## Install Python3
 Write-Host "Installing Python 3..."
 # FYI: choco adds "C:\python3\Scripts\;C:\python3\" to PATH.
-& choco install python3 --params="/InstallDir:C:\python3"
+& choco install python3 --version 3.6.6 --params "/InstallDir:C:\python3"
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Install a couple of Python modules required by TensorFlow.
-Write-Host "Updating Python packages..."
+Write-Host "Updating Python package management tools..."
+& "C:\Python3\python.exe" -m pip install --upgrade pip setuptools wheel
+
+Write-Host "Installing Python packages..."
 & "C:\Python3\Scripts\pip.exe" install --upgrade `
     autograd `
     numpy `
@@ -167,11 +173,36 @@ Write-Host "Updating Python packages..."
     protobuf `
     pyreadline `
     six `
-    wheel `
     requests `
-    pyyaml
-& "C:\Python3\Scripts\pip.exe" install --upgrade --pre `
-    github3.py
+    pyyaml `
+    github3.py `
+    keras_applications `
+    keras_preprocessing
+
+## CMake 3.12.2 (for rules_foreign_cc).
+Write-Host "Installing CMake..."
+& choco install cmake
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+
+## Ninja 1.8.2 (for rules_foreign_cc).
+Write-Host "Installing Ninja 1.8.2..."
+$ninja_zip = "c:\temp\ninja-win.zip"
+$ninja_root = "c:\ninja"
+(New-Object Net.WebClient).DownloadFile("https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-win.zip", $ninja_zip)
+[System.IO.Compression.ZipFile]::ExtractToDirectory($ninja_zip, $ninja_root)
+Remove-Item $ninja_zip
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${ninja_root}"
+[Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
+
+## .NET Framework 4.6.2 Devpack (for rules_dotnet)
+Write-Host "Installing .NET Framework 4.6.2 Devpack..."
+& choco install netfx-4.6.2-devpack
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+
+## Install Sauce Connect (for rules_webtesting).
+Write-Host "Installing Sauce Connect Proxy..."
+& choco install sauce-connect
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Get the latest release version number of Bazel.
 Write-Host "Grabbing latest Bazel version number from GitHub..."
@@ -189,50 +220,58 @@ New-Item "c:\bazel" -ItemType "directory" -Force
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";c:\bazel"
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
-## Download the Android NDK and install into C:\android-ndk-r15c.
-$android_ndk_url = "https://dl.google.com/android/repository/android-ndk-r15c-windows-x86_64.zip"
-$android_ndk_zip = "c:\temp\android_ndk.zip"
-$android_ndk_root = "c:\android_ndk"
-New-Item $android_ndk_root -ItemType "directory" -Force
-(New-Object Net.WebClient).DownloadFile($android_ndk_url, $android_ndk_zip)
-[System.IO.Compression.ZipFile]::ExtractToDirectory($android_ndk_zip, $android_ndk_root)
-Rename-Item "${android_ndk_root}\android-ndk-r15c" -NewName "r15c"
-[Environment]::SetEnvironmentVariable("ANDROID_NDK_HOME", "${android_ndk_root}\r15c", "Machine")
-$env:ANDROID_NDK_HOME = [Environment]::GetEnvironmentVariable("ANDROID_NDK_HOME", "Machine")
-Remove-Item $android_ndk_zip
+if ($java -ne "no") {
+    ## Download the Android NDK and install into C:\android-ndk-r15c.
+    $android_ndk_url = "https://dl.google.com/android/repository/android-ndk-r15c-windows-x86_64.zip"
+    $android_ndk_zip = "c:\temp\android_ndk.zip"
+    $android_ndk_root = "c:\android_ndk"
+    New-Item $android_ndk_root -ItemType "directory" -Force
+    (New-Object Net.WebClient).DownloadFile($android_ndk_url, $android_ndk_zip)
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($android_ndk_zip, $android_ndk_root)
+    Rename-Item "${android_ndk_root}\android-ndk-r15c" -NewName "r15c"
+    [Environment]::SetEnvironmentVariable("ANDROID_NDK_HOME", "${android_ndk_root}\r15c", "Machine")
+    $env:ANDROID_NDK_HOME = [Environment]::GetEnvironmentVariable("ANDROID_NDK_HOME", "Machine")
+    Remove-Item $android_ndk_zip
 
-## Download the Android SDK and install into C:\android_sdk.
-$android_sdk_url = "https://dl.google.com/android/repository/sdk-tools-windows-3859397.zip"
-$android_sdk_zip = "c:\temp\android_sdk.zip"
-$android_sdk_root = "c:\android_sdk"
-New-Item $android_sdk_root -ItemType "directory" -Force
-(New-Object Net.WebClient).DownloadFile($android_sdk_url, $android_sdk_zip)
-[System.IO.Compression.ZipFile]::ExtractToDirectory($android_sdk_zip, $android_sdk_root)
-[Environment]::SetEnvironmentVariable("ANDROID_HOME", $android_sdk_root, "Machine")
-$env:ANDROID_HOME = [Environment]::GetEnvironmentVariable("ANDROID_HOME", "Machine")
-Remove-Item $android_sdk_zip
+    ## Download the Android SDK and install into C:\android_sdk.
+    $android_sdk_url = "https://dl.google.com/android/repository/sdk-tools-windows-4333796.zip"
+    $android_sdk_zip = "c:\temp\android_sdk.zip"
+    $android_sdk_root = "c:\android_sdk"
+    New-Item $android_sdk_root -ItemType "directory" -Force
+    (New-Object Net.WebClient).DownloadFile($android_sdk_url, $android_sdk_zip)
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($android_sdk_zip, $android_sdk_root)
+    [Environment]::SetEnvironmentVariable("ANDROID_HOME", $android_sdk_root, "Machine")
+    $env:ANDROID_HOME = [Environment]::GetEnvironmentVariable("ANDROID_HOME", "Machine")
+    Remove-Item $android_sdk_zip
 
-## Accept the Android SDK license agreement.
-New-Item "${android_sdk_root}\licenses" -ItemType "directory" -Force
-Add-Content -Value "`nd56f5187479451eabf01fb78af6dfcb131a6481e" -Path "${android_sdk_root}\licenses\android-sdk-license" -Encoding ASCII
-Add-Content -Value "`nd975f751698a77b662f1254ddbeed3901e976f5a" -Path "${android_sdk_root}\licenses\intel-android-extra-license" -Encoding ASCII
+    ## Use OpenJDK 9 (and higher) compatibility flags.
+    if ($java -eq "9" -or $java -eq "10") {
+        [Environment]::SetEnvironmentVariable("SDKMANAGER_OPTS", "--add-modules java.se.ee", "Machine")
+        $env:ANDROID_HOME = [Environment]::GetEnvironmentVariable("SDKMANAGER_OPTS", "Machine")
+    }
 
-## Update the Android SDK tools.
-Rename-Item "${android_sdk_root}\tools" "${android_sdk_root}\tools.old"
-& "${android_sdk_root}\tools.old\bin\sdkmanager" "tools"
-Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
+    ## Accept the Android SDK license agreement.
+    New-Item "${android_sdk_root}\licenses" -ItemType "directory" -Force
+    Add-Content -Value "`nd56f5187479451eabf01fb78af6dfcb131a6481e" -Path "${android_sdk_root}\licenses\android-sdk-license" -Encoding ASCII
+    Add-Content -Value "`nd975f751698a77b662f1254ddbeed3901e976f5a" -Path "${android_sdk_root}\licenses\intel-android-extra-license" -Encoding ASCII
 
-## Install all required Android SDK components.
-## build-tools 28.0.1 introduces the new dexer, d8.jar
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platform-tools"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;27.0.3"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;28.0.2"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-24"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-25"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-26"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-27"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-28"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
+    ## Update the Android SDK tools.
+    Rename-Item "${android_sdk_root}\tools" "${android_sdk_root}\tools.old"
+    & "${android_sdk_root}\tools.old\bin\sdkmanager" "tools"
+    Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
+
+    ## Install all required Android SDK components.
+    ## build-tools 28.0.1 introduces the new dexer, d8.jar
+    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platform-tools"
+    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;27.0.3"
+    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;28.0.2"
+    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-24"
+    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-25"
+    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-26"
+    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-27"
+    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-28"
+    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
+}
 
 ## Download and install the Buildkite agent.
 Write-Host "Grabbing latest Buildkite Agent version number from GitHub..."
@@ -257,7 +296,7 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${build
 
 ## Store the image version in a file.
 $web_client = New-Object Net.WebClient
-$web_client.Headers.add("Metadata-Flavor","Google")
+$web_client.Headers.add("Metadata-Flavor", "Google")
 $image_version = $web_client.DownloadString("http://metadata.google.internal/computeMetadata/v1/instance/attributes/image-version")
 $image_version = $image_version.Trim()
 $image_version | Set-Content -Path "c:\buildkite\image.version"
@@ -273,8 +312,8 @@ SET BUILDKITE_ARTIFACT_UPLOAD_DESTINATION=gs://bazel-buildkite-artifacts/%BUILDK
 SET BUILDKITE_GS_ACL=publicRead
 SET JAVA_HOME=${env:JAVA_HOME}
 SET PATH=${env:PATH}
-SET TEMP=C:\temp
-SET TMP=C:\temp
+SET TEMP=D:\temp
+SET TMP=D:\temp
 "@
 [System.IO.File]::WriteAllLines("${buildkite_agent_root}\hooks\environment.bat", $buildkite_environment_hook)
 
@@ -288,38 +327,6 @@ $buildkite_password = "Bu1ldk1t3"
 $buildkite_secure_password = ConvertTo-SecureString $buildkite_password -AsPlainText -Force
 New-LocalUser -Name $buildkite_username -Password $buildkite_secure_password -UserMayNotChangePassword
 
-## Create the Buildkite Monitor script.
-Write-Host "Creating Buildkite Monitor script..."
-$buildkite_monitor_script = @"
-`$ErrorActionPreference = "Stop"
-`$ConfirmPreference = "None"
-`$buildkite_username = "${buildkite_username}"
-
-Write-Host "Terminating all processes belonging to the `${buildkite_username} user..."
-& taskkill /FI "username eq `${buildkite_username}" /T /F
-Start-Sleep -Seconds 1
-
-Write-Host "Recreating fresh temporary directory C:\temp..."
-Remove-Item -Recurse -Force "C:\temp"
-New-Item -Type Directory "C:\temp"
-Add-NTFSAccess -Path "C:\temp" -Account BUILTIN\Users -AccessRights Write
-
-Write-Host "Deleting home directory of the `${buildkite_username} user..."
-Get-CimInstance Win32_UserProfile | Where LocalPath -EQ "C:\Users\`${buildkite_username}" | Remove-CimInstance
-if ( Test-Path "C:\Users\`${buildkite_username}" ) {
-  Throw "The home directory of the `${buildkite_username} user could not be deleted."
-}
-
-Write-Host "Starting Buildkite agent as user `${buildkite_username}..."
-& nssm start "buildkite-agent"
-
-Write-Host "Waiting for Buildkite agent to exit..."
-While ((Get-Service "buildkite-agent").Status -eq "Running") { Start-Sleep -Seconds 1 }
-
-Write-Host "Buildkite agent has exited."
-"@
-[System.IO.File]::WriteAllLines("${buildkite_agent_root}\buildkite-monitor.ps1", $buildkite_monitor_script)
-
 ## Allow the Buildkite agent to store SSH host keys in this folder.
 Write-Host "Creating C:\buildkite\.ssh folder..."
 New-Item "c:\buildkite\.ssh" -ItemType "directory"
@@ -331,21 +338,6 @@ Add-NTFSAccess -Path "c:\buildkite\logs" -Account BUILTIN\Users -AccessRights Wr
 
 ## Create a service for the Buildkite agent.
 & choco install nssm
-
-Write-Host "Creating Buildkite Monitor service..."
-nssm install "buildkite-monitor" `
-    "c:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" `
-    "c:\buildkite\buildkite-monitor.ps1"
-nssm set "buildkite-monitor" "AppDirectory" "c:\buildkite"
-nssm set "buildkite-monitor" "DisplayName" "Buildkite Monitor"
-nssm set "buildkite-monitor" "Start" "SERVICE_DEMAND_START"
-nssm set "buildkite-monitor" "AppExit" "Default" "Restart"
-nssm set "buildkite-monitor" "AppRestartDelay" "3000"
-nssm set "buildkite-monitor" "AppStdout" "c:\buildkite\logs\buildkite-monitor.log"
-nssm set "buildkite-monitor" "AppStderr" "c:\buildkite\logs\buildkite-monitor.log"
-nssm set "buildkite-monitor" "AppRotateFiles" "1"
-nssm set "buildkite-monitor" "AppRotateSeconds" 86400
-nssm set "buildkite-monitor" "AppRotateBytes" 1048576
 
 Write-Host "Creating Buildkite Agent service..."
 nssm install "buildkite-agent" `

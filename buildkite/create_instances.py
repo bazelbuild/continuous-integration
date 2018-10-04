@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import queue
-import subprocess
 import sys
 import threading
 
@@ -23,8 +22,6 @@ import gcloud
 
 
 DEBUG = True
-
-LOCATION = 'europe-west1-d'
 
 # Note that the hostnames are parsed and trigger specific behavior for different use cases.
 # The following parts have a special meaning:
@@ -47,14 +44,28 @@ DEFAULT_VM = {
     'network': 'buildkite',
     'scopes': 'cloud-platform',
     'service_account': 'remote-account@bazel-public.iam.gserviceaccount.com',
+    'zone': 'europe-west1-d',
 }
 
 INSTANCE_GROUPS = {
     'buildkite-worker-ubuntu1404-java8': {
-        'count': 8,
+        'count': 4,
         'image_family': 'buildkite-worker-ubuntu1404-java8',
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+    },
+    'buildkite-worker-ubuntu1604-java8': {
+        'count': 4,
+        'image_family': 'buildkite-worker-ubuntu1604-java8',
+        'local_ssd': 'interface=nvme',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+    },
+    'buildkite-worker-ubuntu1804-nojava': {
+        'count': 4,
+        'image_family': 'buildkite-worker-ubuntu1804-nojava',
+        'local_ssd': 'interface=nvme',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+        'zone': 'europe-west1-c',
     },
     'buildkite-worker-ubuntu1804-java8': {
         'count': 8,
@@ -62,34 +73,29 @@ INSTANCE_GROUPS = {
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
-    'buildkite-worker-ubuntu1604-nojava': {
-        'count': 4,
-        'image_family': 'buildkite-worker-ubuntu1604-nojava',
-        'local_ssd': 'interface=nvme',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-    },
-    'buildkite-worker-ubuntu1604-java8': {
+    'buildkite-worker-ubuntu1804-java9': {
         'count': 8,
-        'image_family': 'buildkite-worker-ubuntu1604-java8',
+        'image_family': 'buildkite-worker-ubuntu1804-java9',
+        'local_ssd': 'interface=nvme',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+        'zone': 'europe-west1-c',
+    },
+    'buildkite-worker-ubuntu1804-java10': {
+        'count': 8,
+        'image_family': 'buildkite-worker-ubuntu1804-java10',
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
-    'buildkite-worker-ubuntu1604-java9': {
-        'count': 4,
-        'image_family': 'buildkite-worker-ubuntu1604-java9',
-        'local_ssd': 'interface=nvme',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-    },
-    'buildkite-pipeline-ubuntu1604-java8': {
+    'buildkite-pipeline-ubuntu1804-java8': {
         'count': 1,
-        'image_family': 'buildkite-pipeline-ubuntu1604-java8',
+        'image_family': 'buildkite-pipeline-ubuntu1804-java8',
         'local_ssd': 'interface=nvme',
         'machine_type': 'n1-standard-8',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
-    'buildkite-trusted-ubuntu1604-java8': {
+    'buildkite-trusted-ubuntu1804-java8': {
         'count': 1,
-        'image_family': 'buildkite-trusted-ubuntu1604-java8',
+        'image_family': 'buildkite-trusted-ubuntu1804-java8',
         'local_ssd': 'interface=nvme',
         'machine_type': 'n1-standard-8',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
@@ -98,48 +104,32 @@ INSTANCE_GROUPS = {
     'buildkite-worker-windows-java8': {
         'count': 8,
         'image_family': 'buildkite-worker-windows-java8',
-        # We need to boost the size in order to get better IOPS and throughput.
-        # See: https://cloud.google.com/compute/docs/disks/performance
-        'boot_disk_size': '1000GB',
+        'local_ssd': 'interface=scsi',
         'metadata_from_file': 'windows-startup-script-ps1=startup-windows.ps1',
+        'restart-on-failure': false,
     },
 }
 
 SINGLE_INSTANCES = {
-    'testing-ubuntu1404-java8': {
-        'image_family': 'buildkite-testing-ubuntu1404-java8',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-        'disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1404-persistent'),
-    },
-    'testing-ubuntu1604-java8': {
-        'image_family': 'buildkite-testing-ubuntu1604-java9',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-        'disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1604-persistent'),
-    },
-    'testing-windows-java8': {
-        'boot_disk_size': '500GB',
-        'image_family': 'buildkite-testing-windows-java8',
-    },
+    # 'testing-ubuntu1604-java8': {
+    #     'image_family': 'buildkite-testing-ubuntu1604-java8',
+    #     'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+    #     'disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1604-persistent'),
+    # },
+    # 'testing-windows-java8': {
+    #     'boot_disk_size': '500GB',
+    #     'image_family': 'buildkite-testing-windows-java8',
+    # },
 }
 
 PRINT_LOCK = threading.Lock()
 WORK_QUEUE = queue.Queue()
 
 
-def debug(*args, **kwargs):
-    if DEBUG:
-        print(*args, **kwargs)
-
-
-def run(args, **kwargs):
-    debug('Running: {}'.format(' '.join(args)))
-    return subprocess.run(args, **kwargs)
-
-
-def instance_group_task(instance_group_name, count, **kwargs):
+def instance_group_task(instance_group_name, count, zone, **kwargs):
     template_name = instance_group_name + '-template'
 
-    if gcloud.delete_instance_group(instance_group_name, zone=LOCATION).returncode == 0:
+    if gcloud.delete_instance_group(instance_group_name, zone=zone).returncode == 0:
         print('Deleted existing instance group: {}'.format(instance_group_name))
 
     if gcloud.delete_instance_template(template_name).returncode == 0:
@@ -147,16 +137,16 @@ def instance_group_task(instance_group_name, count, **kwargs):
 
     gcloud.create_instance_template(template_name, **kwargs)
 
-    gcloud.create_instance_group(instance_group_name, zone=LOCATION,
+    gcloud.create_instance_group(instance_group_name, zone=zone,
                                  base_instance_name=instance_group_name,
                                  template=template_name, size=count)
 
 
-def single_instance_task(instance_name, **kwargs):
-    if gcloud.delete_instance(instance_name, zone=LOCATION).returncode == 0:
+def single_instance_task(instance_name, zone, **kwargs):
+    if gcloud.delete_instance(instance_name, zone=zone).returncode == 0:
         print('Deleted existing instance: {}'.format(instance_name))
 
-    gcloud.create_instance(instance_name, zone=LOCATION, **kwargs)
+    gcloud.create_instance(instance_name, zone=zone, **kwargs)
 
 
 def worker():

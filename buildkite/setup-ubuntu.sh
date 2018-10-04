@@ -33,9 +33,6 @@ case $(hostname) in
   *trusted*)
     config_kind="trusted"
     ;;
-  *testing*)
-    config_kind="testing"
-    ;;
   *worker*)
     config_kind="worker"
     ;;
@@ -69,6 +66,9 @@ case $(hostname) in
     ;;
   *java9*)
     config_java="9"
+    ;;
+  *java10*)
+    config_java="10"
     ;;
   *)
     echo "Could not deduce Java version from hostname: $(hostname)!"
@@ -152,6 +152,10 @@ EOF
     pandoc
     reprepro
     ssmtp
+
+    # Required by our C++ coverage tests.
+    lcov
+    llvm
   )
 
   # Bazel dependencies.
@@ -166,6 +170,12 @@ EOF
   # Remove apport, as it's unneeded and uses significant CPU and I/O.
   apt-get -qqy purge apport
 }
+
+### Install required Python packages from pip for Tensorflow.
+if [[ "${config_os}" == "ubuntu1604" || "${config_os}" == "ubuntu1804" ]]; then
+  pip install keras_applications keras_preprocessing
+  pip3 install keras_applications keras_preprocessing
+fi
 
 ### Fetch and save image version to file.
 {
@@ -194,7 +204,7 @@ fi
 }
 
 ### Install the Buildkite Agent on production images.
-if [[ "${config_kind}" != "testing" ]]; then
+{
   apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 \
       --recv-keys 32A37959C2FA5C3C99EFBC32A79206696452D198 &> /dev/null
   add-apt-repository -y "deb https://apt.buildkite.com/buildkite-agent stable main"
@@ -226,7 +236,7 @@ EOF
 
 set -euo pipefail
 
-export PATH=$PATH:/snap/bin/
+export PATH=$PATH:/snap/bin
 export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://bazel-buildkite-artifacts/$BUILDKITE_JOB_ID"
 export BUILDKITE_GS_ACL="publicRead"
 EOF
@@ -241,7 +251,7 @@ case ${BUILDKITE_BUILD_CREATOR_EMAIL} in
     echo "Build creator not allowed: ${BUILDKITE_BUILD_CREATOR_EMAIL}"
     exit 1
 esac
-    
+
 case ${BUILDKITE_REPO} in
   https://github.com/bazelbuild/bazel.git|\
   https://github.com/bazelbuild/continuous-integration.git)
@@ -327,13 +337,12 @@ EOF
     echo "Unknown operating system - has neither systemd nor upstart?"
     exit 1
   fi
-fi
+}
 
 ### Install Docker.
 {
   apt-get -qqy install apt-transport-https ca-certificates > /dev/null
 
-  # From https://download.docker.com/linux/ubuntu/gpg
   curl -sSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
   add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 
@@ -341,9 +350,7 @@ fi
   apt-get -qqy install docker-ce > /dev/null
 
   # Allow the buildkite-agent user access to Docker.
-  if [[ "${config_kind}" != "testing" ]]; then
-    usermod -aG docker buildkite-agent
-  fi
+  usermod -aG docker buildkite-agent
 
   # Disable the Docker service, as the startup script has to mount
   # /var/lib/docker first.
@@ -352,6 +359,15 @@ fi
   else
     echo manual > /etc/init/docker.override
   fi
+}
+
+### Install Mono.
+{
+  apt-get -qqy install apt-transport-https ca-certificates > /dev/null
+  apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+  add-apt-repository "deb https://download.mono-project.com/repo/ubuntu stable-$(lsb_release -cs) main"
+  apt-get -qqy update
+  apt-get -qqy install mono-devel mono-complete
 }
 
 ### Install Node.js.
@@ -405,13 +421,11 @@ EOF
 }
 
 ### Enable KVM support.
-if [[ "${config_kind}" != "testing" ]]; then
-  usermod -a -G kvm buildkite-agent
-fi
+usermod -a -G kvm buildkite-agent
 
 ### Install Android SDK and NDK (only if we have a JVM).
 if [[ "${config_java}" != "no" ]]; then
-  if [[ "${config_java}" == "9" ]]; then
+  if [[ "${config_java}" == "9" || "${config_java}" == "10" ]]; then
     export SDKMANAGER_OPTS="--add-modules java.se.ee"
   fi
 
@@ -424,9 +438,10 @@ if [[ "${config_java}" != "no" ]]; then
   # Android SDK
   mkdir -p /opt/android-sdk-linux
   cd /opt/android-sdk-linux
-  curl -sSLo android-sdk.zip https://dl.google.com/android/repository/sdk-tools-linux-3859397.zip
+  curl -sSLo android-sdk.zip https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
   unzip android-sdk.zip > /dev/null
   rm android-sdk.zip
+  tools/bin/sdkmanager --update
   expect -c '
 set timeout -1
 log_user 0
@@ -439,7 +454,10 @@ expect {
 
   # This should be kept in sync with mac/mac-android.sh.
   # build-tools 28.0.1 introduces the new dexer, d8.jar
-  tools/bin/sdkmanager \
+  expect -c '
+set timeout -1
+log_user 0
+spawn tools/bin/sdkmanager \
     "build-tools;27.0.3" \
     "build-tools;28.0.2" \
     "emulator" \
@@ -453,20 +471,21 @@ expect {
     "system-images;android-19;default;x86" \
     "system-images;android-21;default;x86" \
     "system-images;android-22;default;x86" \
-    "system-images;android-23;default;x86" \
-    > /dev/null
+    "system-images;android-23;default;x86"
+  expect {
+      "Accept? (y/N)" { exp_send "y\r" ; exp_continue }
+      eof
+  }
+  '
   chown -R root:root /opt/android*
 
-
-  if [[ "${config_kind}" != "testing" ]]; then
-    cat >> /etc/buildkite-agent/hooks/environment <<'EOF'
+  cat >> /etc/buildkite-agent/hooks/environment <<'EOF'
 export ANDROID_HOME="/opt/android-sdk-linux"
 echo "Android SDK is at ${ANDROID_HOME}"
 
 export ANDROID_NDK_HOME="/opt/android-ndk-r15c"
 echo "Android NDK is at ${ANDROID_NDK_HOME}"
 EOF
-  fi
 fi
 
 ### Install tools required by the release process.
@@ -475,6 +494,14 @@ fi
     tar xvz -C /usr/local/bin
   chown root:root /usr/local/bin/github-release
   chmod 0755 /usr/local/bin/github-release
+}
+
+### Install Sauce Connect (for rules_webtesting).
+{
+  curl -sSL https://saucelabs.com/downloads/sc-4.5.1-linux.tar.gz | \
+    tar xvz -C /opt
+  chown -R root:root /opt/sc-4.5.1-linux
+  ln -s /opt/sc-4.5.1-linux/bin/sc /usr/local/bin/sc
 }
 
 ### Clean up and trim the filesystem (potentially reduces the final image size).
