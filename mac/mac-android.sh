@@ -54,14 +54,12 @@ expect {
 '
 
 # This should be kept in sync with gce/install-android-sdk.sh
-# build-tools 28.0.1 introduces the new dexer, d8.jar
+# - build-tools 28.0.1 introduces the new dexer, d8.jar
+# - android-24 is required for desugar tests.
 tools/bin/sdkmanager \
   "platform-tools" \
   "build-tools;27.0.3" \
   "build-tools;28.0.2" \
   "platforms;android-24" \
-  "platforms;android-25" \
-  "platforms;android-26" \
-  "platforms;android-27" \
   "platforms;android-28" \
   "extras;android;m2repository"
