@@ -29,7 +29,7 @@ import gcloud_utils
 
 DEBUG = False
 
-LOCATION = 'europe-west1-d'
+LOCATION = 'europe-west1-c'
 
 IMAGE_CREATION_VMS = {
     # Find the newest FreeBSD 11 image via:
