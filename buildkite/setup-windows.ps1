@@ -261,14 +261,12 @@ if ($java -ne "no") {
     Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
 
     ## Install all required Android SDK components.
-    ## build-tools 28.0.1 introduces the new dexer, d8.jar
+    ## - build-tools 28.0.1 introduces the new dexer, d8.jar
+    ## - android-24 is required for desugar tests.
     & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platform-tools"
     & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;27.0.3"
     & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;28.0.2"
     & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-24"
-    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-25"
-    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-26"
-    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-27"
     & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-28"
     & "${android_sdk_root}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
 }

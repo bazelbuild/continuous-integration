@@ -453,7 +453,8 @@ expect {
 '
 
   # This should be kept in sync with mac/mac-android.sh.
-  # build-tools 28.0.1 introduces the new dexer, d8.jar
+  # - build-tools 28.0.1 introduces the new dexer, d8.jar
+  # - android-24 is required for desugar tests.
   expect -c '
 set timeout -1
 log_user 0
@@ -464,9 +465,6 @@ spawn tools/bin/sdkmanager \
     "extras;android;m2repository" \
     "platform-tools" \
     "platforms;android-24" \
-    "platforms;android-25" \
-    "platforms;android-26" \
-    "platforms;android-27" \
     "platforms;android-28" \
     "system-images;android-19;default;x86" \
     "system-images;android-21;default;x86" \
