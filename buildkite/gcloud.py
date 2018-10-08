@@ -39,8 +39,10 @@ def gcloud(*args, **kwargs):
     for flag, value in kwargs.items():
         # Python uses underscores as word delimiters in kwargs, but gcloud wants dashes.
         flag = flag.replace('_', '-')
+        if isinstance(value, bool):
+            cmd += ['--' + ('no-' if not value else '') + flag]
         # We convert key=[a, b] into two flags: --key=a --key=b.
-        if is_sequence(value):
+        elif is_sequence(value):
             for item in value:
                 cmd += ['--' + flag, str(item)]
         else:
