@@ -48,52 +48,14 @@ DEFAULT_VM = {
 }
 
 INSTANCE_GROUPS = {
-    'buildkite-worker-ubuntu1404-java8': {
-        'count': 4,
-        'image_family': 'buildkite-worker-ubuntu1404-java8',
-        'local_ssd': 'interface=nvme',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-    },
-    'buildkite-worker-ubuntu1604-java8': {
-        'count': 4,
-        'image_family': 'buildkite-worker-ubuntu1604-java8',
-        'local_ssd': 'interface=nvme',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-    },
-    'buildkite-worker-ubuntu1804-nojava': {
-        'count': 4,
-        'image_family': 'buildkite-worker-ubuntu1804-nojava',
-        'local_ssd': 'interface=nvme',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-        'zone': 'europe-west1-c',
-    },
-    'buildkite-worker-ubuntu1804-java8': {
-        'count': 8,
-        'image_family': 'buildkite-worker-ubuntu1804-java8',
-        'local_ssd': 'interface=nvme',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-    },
-    'buildkite-worker-ubuntu1804-java9': {
-        'count': 8,
-        'image_family': 'buildkite-worker-ubuntu1804-java9',
-        'local_ssd': 'interface=nvme',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-        'zone': 'europe-west1-c',
-    },
-    'buildkite-worker-ubuntu1804-java10': {
-        'count': 8,
-        'image_family': 'buildkite-worker-ubuntu1804-java10',
-        'local_ssd': 'interface=nvme',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-    },
-    'buildkite-pipeline-ubuntu1804-java8': {
+    'buildkite-pipeline-ubuntu1804-java8-ew1d': {
         'count': 1,
         'image_family': 'buildkite-pipeline-ubuntu1804-java8',
         'local_ssd': 'interface=nvme',
         'machine_type': 'n1-standard-8',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
-    'buildkite-trusted-ubuntu1804-java8': {
+    'buildkite-trusted-ubuntu1804-java8-ew1d': {
         'count': 1,
         'image_family': 'buildkite-trusted-ubuntu1804-java8',
         'local_ssd': 'interface=nvme',
@@ -101,12 +63,51 @@ INSTANCE_GROUPS = {
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
         'service_account': 'bazel-release-process@bazel-public.iam.gserviceaccount.com',
     },
-    'buildkite-worker-windows-java8': {
+    'buildkite-worker-ubuntu1404-java8-ew1d': {
+        'count': 4,
+        'image_family': 'buildkite-worker-ubuntu1404-java8',
+        'local_ssd': 'interface=nvme',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+    },
+    'buildkite-worker-ubuntu1604-java8-ew1d': {
+        'count': 4,
+        'image_family': 'buildkite-worker-ubuntu1604-java8',
+        'local_ssd': 'interface=nvme',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+    },
+    'buildkite-worker-ubuntu1804-java8-ew1d': {
+        'count': 8,
+        'image_family': 'buildkite-worker-ubuntu1804-java8',
+        'local_ssd': 'interface=nvme',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+    },
+    'buildkite-worker-ubuntu1804-java9-ew1c': {
+        'count': 8,
+        'image_family': 'buildkite-worker-ubuntu1804-java9',
+        'local_ssd': 'interface=nvme',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+        'zone': 'europe-west1-c',
+    },
+    'buildkite-worker-ubuntu1804-java10-ew1d': {
+        'count': 8,
+        'image_family': 'buildkite-worker-ubuntu1804-java10',
+        'local_ssd': 'interface=nvme',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+    },
+    'buildkite-worker-ubuntu1804-nojava-ew1c': {
+        'count': 4,
+        'image_family': 'buildkite-worker-ubuntu1804-nojava',
+        'local_ssd': 'interface=nvme',
+        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
+        'zone': 'europe-west1-c',
+    },
+    'buildkite-worker-windows-java8-ew1c': {
         'count': 8,
         'image_family': 'buildkite-worker-windows-java8',
         'local_ssd': 'interface=scsi',
         'metadata_from_file': 'windows-startup-script-ps1=startup-windows.ps1',
         'restart-on-failure': False,
+        'zone': 'europe-west1-c',
     },
 }
 
