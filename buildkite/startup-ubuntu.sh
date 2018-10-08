@@ -24,35 +24,6 @@ until command -v gsutil &>/dev/null; do
   sleep 1
 done
 
-# If available: Use a persistent disk as a use-case specific data volume.
-if [[ -e /dev/sdb ]]; then
-  if [[ ! -e /dev/vg0 ]]; then
-    pvcreate /dev/sdb
-    vgcreate vg0 /dev/sdb
-  fi
-
-  if [[ $(hostname) == testing* ]]; then
-    # On "testing" machines, we create big /var/lib/docker and /home directories
-    # so that everyone has enough space to try out stuff.
-    if [[ ! -e /dev/vg0/docker ]]; then
-      lvcreate -n docker -l25%FREE vg0
-      mkfs.ext4 /dev/vg0/docker
-    fi
-    mount /dev/vg0/docker /var/lib/docker
-    chmod 0711 /var/lib/docker
-
-    if [[ ! -e /dev/vg0/home ]]; then
-      lvcreate -n home -l100%FREE vg0
-      mkfs.ext4 /dev/vg0/home
-    fi
-    mkdir /tmp/home
-    rsync -a /home/ /tmp/home/
-    mount /dev/vg0/home /home
-    rsync -a /tmp/home/ /home/
-    rm -rf /tmp/home
-  fi
-fi
-
 # If available: Use the local SSD as swap space.
 if [[ -e /dev/nvme0n1 ]]; then
   mkswap -f /dev/nvme0n1
@@ -77,32 +48,32 @@ curl -sS https://storage.googleapis.com/bazel-git-mirror/bazelbuild.tar | tar x 
 chown -R root:root /var/lib/bazelbuild
 chmod -R 0755 /var/lib/bazelbuild
 
-# Only start the Buildkite Agent if this is a worker node (as opposed to a VM
-# being used by someone for testing / development).
-if [[ $(hostname) == buildkite* ]]; then
-  # Get the Buildkite Token from GCS and decrypt it using KMS.
-  BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-encrypted-secrets/buildkite-agent-token.enc" | \
-    gcloud kms decrypt --location global --keyring buildkite --key buildkite-agent-token --ciphertext-file - --plaintext-file -)
+# Get the Buildkite Token from GCS and decrypt it using KMS.
+BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-encrypted-secrets/buildkite-agent-token.enc" | \
+  gcloud kms decrypt --location global --keyring buildkite --key buildkite-agent-token --ciphertext-file - --plaintext-file -)
 
-  # Insert the Buildkite Token into the agent configuration.
-  sed -i "s/token=\"xxx\"/token=\"${BUILDKITE_TOKEN}\"/" /etc/buildkite-agent/buildkite-agent.cfg
+# Insert the Buildkite Token into the agent configuration.
+sed -i "s/token=\"xxx\"/token=\"${BUILDKITE_TOKEN}\"/" /etc/buildkite-agent/buildkite-agent.cfg
+sed -i "s/name=.*/name=%hostname/" /etc/buildkite-agent/buildkite-agent.cfg
 
-  # Fix permissions of the Buildkite agent configuration files and hooks.
-  chmod 0400 /etc/buildkite-agent/buildkite-agent.cfg
-  chmod 0500 /etc/buildkite-agent/hooks/*
-  chown -R buildkite-agent:buildkite-agent /etc/buildkite-agent
+# Fix permissions of the Buildkite agent configuration files and hooks.
+chmod 0400 /etc/buildkite-agent/buildkite-agent.cfg
+chmod 0500 /etc/buildkite-agent/hooks/*
+chown -R buildkite-agent:buildkite-agent /etc/buildkite-agent
 
-  # Start the Buildkite agent service.
-  if [[ $(hostname) == *pipeline* ]]; then
-    # Start 8 instances of the Buildkite agent.
-    for i in $(seq 8); do
-      systemctl start buildkite-agent@$i
-    done
-  elif [[ -e /bin/systemctl ]]; then
-    systemctl start buildkite-agent
-  else
-    service buildkite-agent start
-  fi
+# Start the Buildkite agent service.
+if [[ $(hostname) == *pipeline* ]]; then
+  # We run multiple agents on this machine, so append a counter to the name.
+  sed -i "s/name=.*/name=%hostname-%n/" /etc/buildkite-agent/buildkite-agent.cfg
+
+  # Start 8 instances of the Buildkite agent.
+  for i in $(seq 8); do
+    systemctl start buildkite-agent@$i
+  done
+elif [[ -e /bin/systemctl ]]; then
+  systemctl start buildkite-agent
+else
+  service buildkite-agent start
 fi
 
 exit 0

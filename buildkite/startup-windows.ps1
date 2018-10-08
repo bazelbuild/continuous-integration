@@ -38,11 +38,11 @@ Write-Host "Redirecting MSYS2's tmp folder to D:\temp..."
 Remove-Item -Recurse -Force C:\tools\msys64\tmp
 New-Item -ItemType Junction -Path "C:\tools\msys64\tmp" -Value "D:\temp"
 
-## Create Buildkite agent working directory (D:\build).
+## Create Buildkite agent working directory (D:\b).
 Write-Host "Creating build folder on local SSD..."
-Remove-Item "D:\build" -Recurse -Force -ErrorAction Ignore
-New-Item "D:\build" -ItemType "directory"
-Add-NTFSAccess "D:\build" -Account BUILTIN\Users -AccessRights Write
+Remove-Item "D:\b" -Recurse -Force -ErrorAction Ignore
+New-Item "D:\b" -ItemType "directory"
+Add-NTFSAccess "D:\b" -Account BUILTIN\Users -AccessRights Write
 
 ## Setup the TEMP and TMP environment variables.
 Write-Host "Setting environment variables..."
@@ -81,9 +81,9 @@ Write-Host "Configuring Buildkite Agent..."
 $buildkite_agent_root = "c:\buildkite"
 $buildkite_agent_config = @"
 token="${buildkite_agent_token}"
-name="%hostname-%n"
+name="%hostname"
 tags="kind=worker,os=windows,java=8,image-version=${image_version}"
-build-path="d:\build"
+build-path="d:\b"
 hooks-path="c:\buildkite\hooks"
 plugins-path="c:\buildkite\plugins"
 git-clone-flags="-v --reference c:\buildkite\bazelbuild"

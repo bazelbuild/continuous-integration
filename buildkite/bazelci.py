@@ -260,7 +260,7 @@ PLATFORMS = {
     "windows": {
         "name": "Windows, JDK 8",
         "emoji-name": ":windows: (JDK 8)",
-        "agent-directory": "d:/build/${BUILDKITE_AGENT_NAME}",
+        "agent-directory": "d:/b/${BUILDKITE_AGENT_NAME}",
         "nightly": True,
         "java": "8"
     },
