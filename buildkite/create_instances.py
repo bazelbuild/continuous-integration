@@ -106,7 +106,7 @@ INSTANCE_GROUPS = {
         'image_family': 'buildkite-worker-windows-java8',
         'local_ssd': 'interface=scsi',
         'metadata_from_file': 'windows-startup-script-ps1=startup-windows.ps1',
-        'restart-on-failure': false,
+        'restart-on-failure': False,
     },
 }
 
