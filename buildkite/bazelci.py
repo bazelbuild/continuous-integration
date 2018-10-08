@@ -341,7 +341,7 @@ def bazelcipy_url():
     """
     URL to the latest version of this script.
     """
-    return "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py"
+    return "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?{}".format(int(time.time()))
 
 
 def downstream_projects_root(platform):
