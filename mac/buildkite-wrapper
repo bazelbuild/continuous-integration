@@ -11,7 +11,8 @@ fi
 
 OS_VERSION=$(sw_vers -productVersion)
 XCODE_VERSION=$(xcodebuild -version | grep ^Xcode | awk '{print $2}')
-TAGS="kind=worker,os=macos,java=8, machine-type=imacpro,os-version=${OS_VERSION},xcode-version=${XCODE_VERSION}"
+MACHINE_TYPE=$(system_profiler SPHardwareDataType | grep 'Model Name' | cut -d':' -f2 | tr -d ' ' | tr '[:upper:]' '[:lower:]')
+TAGS="kind=worker,os=macos,java=8,os-version=${OS_VERSION},xcode-version=${XCODE_VERSION},machine-type=${MACHINE_TYPE}"
 sed -i '' "s/^tags=.*/tags=${TAGS}/" /usr/local/etc/buildkite-agent/buildkite-agent.cfg
 echo "Set tags to $(cat /usr/local/etc/buildkite-agent/buildkite-agent.cfg | grep '^tags=')"
 
