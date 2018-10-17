@@ -213,63 +213,63 @@ PLATFORMS = {
         "name": "Ubuntu 14.04, JDK 8",
         "emoji-name": ":ubuntu: 14.04 (JDK 8)",
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
-        "nightly": True,
+        "publish_binary": True,
         "java": "8"
     },
     "ubuntu1604": {
         "name": "Ubuntu 16.04, JDK 8",
         "emoji-name": ":ubuntu: 16.04 (JDK 8)",
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
-        "nightly": False,
+        "publish_binary": False,
         "java": "8"
     },
     "ubuntu1804": {
         "name": "Ubuntu 18.04, JDK 8",
         "emoji-name": ":ubuntu: 18.04 (JDK 8)",
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
-        "nightly": False,
+        "publish_binary": False,
         "java": "8"
     },
     "ubuntu1804_nojava": {
         "name": "Ubuntu 18.04, no JDK",
         "emoji-name": ":ubuntu: 18.04 (no JDK)",
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
-        "nightly": False,
+        "publish_binary": False,
         "java": "no"
     },
     "ubuntu1804_java9": {
         "name": "Ubuntu 18.04, JDK 9",
         "emoji-name": ":ubuntu: 18.04 (JDK 9)",
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
-        "nightly": False,
+        "publish_binary": False,
         "java": "9"
     },
     "ubuntu1804_java10": {
         "name": "Ubuntu 18.04, JDK 10",
         "emoji-name": ":ubuntu: 18.04 (JDK 10)",
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
-        "nightly": False,
+        "publish_binary": False,
         "java": "10"
     },
     "macos": {
         "name": "macOS, JDK 8",
         "emoji-name": ":darwin: (JDK 8)",
         "agent-directory": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}",
-        "nightly": True,
+        "publish_binary": True,
         "java": "8"
     },
     "windows": {
         "name": "Windows, JDK 8",
         "emoji-name": ":windows: (JDK 8)",
         "agent-directory": "d:/b/${BUILDKITE_AGENT_NAME}",
-        "nightly": True,
+        "publish_binary": True,
         "java": "8"
     },
     "rbe_ubuntu1604": {
         "name": "RBE (Ubuntu 16.04, JDK 8)",
         "emoji-name": ":gcloud: (JDK 8)",
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
-        "nightly": False,
+        "publish_binary": False,
         "host-platform": "ubuntu1604",
         "java": "8"
     }
@@ -1126,11 +1126,11 @@ def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
     for platform in configs.copy():
         if not platform in PLATFORMS:
             raise BuildkiteException("Unknown platform '{}'".format(platform))
-        if not PLATFORMS[platform]["nightly"]:
+        if not PLATFORMS[platform]["publish_binary"]:
             del configs[platform]
 
-    if set(configs) != set(name for name, platform in PLATFORMS.items() if platform["nightly"]):
-        raise BuildkiteException("Bazel publish binaries pipeline needs to build Bazel on all nightly-enabled platforms.")
+    if set(configs) != set(name for name, platform in PLATFORMS.items() if platform["publish_binary"]):
+        raise BuildkiteException("Bazel publish binaries pipeline needs to build Bazel for every commit on all publish_binary-enabled platforms.")
 
     # Build and Test Bazel
     pipeline_steps = []
@@ -1145,7 +1145,7 @@ def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
 
     pipeline_steps.append("wait")
 
-    # If all builds and tests pass, publish the Bazel binaries to GCS.
+    # If all builds succeed, publish the Bazel binaries to GCS.
     pipeline_steps.append({
         "label": "Publish Bazel Binaries",
         "command": [
@@ -1191,12 +1191,12 @@ def print_bazel_downstream_pipeline(configs, http_config, file_config):
     print(yaml.dump({"steps": pipeline_steps}))
 
 
-def bazelci_builds_download_url(platform, build_number):
-    return "https://storage.googleapis.com/bazel-builds/artifacts/{0}/{1}/bazel".format(platform, build_number)
+def bazelci_builds_download_url(platform, git_commit):
+    return "https://storage.googleapis.com/bazel-builds/artifacts/{0}/{1}/bazel".format(platform, git_commit)
 
 
-def bazelci_builds_upload_url(platform, build_number):
-    return "gs://bazel-builds/artifacts/{0}/{1}/bazel".format(platform, build_number)
+def bazelci_builds_upload_url(platform, git_commit):
+    return "gs://bazel-builds/artifacts/{0}/{1}/bazel".format(platform, git_commit)
 
 
 def bazelci_builds_metadata_url():
@@ -1242,20 +1242,21 @@ def sha256_hexdigest(filename):
 
 def try_publish_binaries(build_number, expected_generation):
     now = datetime.datetime.now()
+    git_commit = os.environ["BUILDKITE_COMMIT"]
     info = {
         "build_number": build_number,
         "build_time": now.strftime("%d-%m-%Y %H:%M"),
-        "git_commit": os.environ["BUILDKITE_COMMIT"],
+        "git_commit": git_commit,
         "platforms": {}
     }
-    for platform in (name for name in PLATFORMS if PLATFORMS[name]["nightly"]):
+    for platform in (name for name in PLATFORMS if PLATFORMS[name]["publish_binary"]):
         tmpdir = tempfile.mkdtemp()
         try:
             bazel_binary_path = download_bazel_binary(tmpdir, platform)
             execute_command([gsutil_command(), "cp", "-a", "public-read", bazel_binary_path,
-                             bazelci_builds_upload_url(platform, build_number)])
+                             bazelci_builds_upload_url(platform, git_commit)])
             info["platforms"][platform] = {
-                "url": bazelci_builds_download_url(platform, build_number),
+                "url": bazelci_builds_download_url(platform, git_commit),
                 "sha256": sha256_hexdigest(bazel_binary_path),
             }
         finally:
