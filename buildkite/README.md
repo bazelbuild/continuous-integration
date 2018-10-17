@@ -89,3 +89,29 @@ for an example.
 [buildkite verify pull request]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/buildkite-verify-pull-request.png
 [pull request details]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/pull-request-details.png
 [buildkite useful buttons]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/buildkite-useful-buttons.png
+
+
+### Culprit Finder
+
+[Bazel downstream projects](https://buildkite.com/bazel/bazel-with-downstream-projects-bazel) is red? Use culprit finder to find out which bazel commit broke it!
+
+First you should check if the project is green with the latest Bazel release. If not, probably it's their commits that broke the CI.
+
+If a project is green with release Bazel but red with Bazel nightly, it means some Bazel commit broke it, then culprit finder can help!
+
+Create "New Build" in the [Culprit Finder](https://buildkite.com/bazel/culprit-finder) project with the following environment variable:
+
+- PROJECT_NAME (The project name must exists in DOWNSTREAM_PROJECTS in [bazelci.py](https://github.com/bazelbuild/continuous-integration/blob/master/buildkite/bazelci.py))
+- PLATFORM_NAME (The platform name must exists in PLATFORMS in [bazelci.py](https://github.com/bazelbuild/continuous-integration/blob/master/buildkite/bazelci.py))
+- GOOD_BAZEL_COMMIT (A full Bazel commit, Bazel built at this commit still works for this project)
+- BAD_BAZEL_COMMIT (A full Bazel commit, Bazel built at this commit fails with this project)
+
+eg.
+```
+PROJECT_NAME=rules_go
+PLATFORM_NAME=ubuntu1404
+GOOD_BAZEL_COMMIT=b6ea3b6caa7f379778e74da33d1bd0ff6477f963
+BAD_BAZEL_COMMIT=91eb3d207714af0ab1e5812252a0f10f40d6e4a8
+```
+
+Note: Bazel commit can only be set to commits after [63453bdbc6b05bd201375ee9e25b35010ae88aab](https://github.com/bazelbuild/bazel/commit/63453bdbc6b05bd201375ee9e25b35010ae88aab), Culprit Finder needs to download Bazel at specific commit, but we didn't prebuilt Bazel binaries before this commit.
