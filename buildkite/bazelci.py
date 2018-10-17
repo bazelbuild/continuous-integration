@@ -1132,16 +1132,12 @@ def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
     if set(configs) != set(name for name, platform in PLATFORMS.items() if platform["publish_binary"]):
         raise BuildkiteException("Bazel publish binaries pipeline needs to build Bazel for every commit on all publish_binary-enabled platforms.")
 
-    # Build and Test Bazel
+    # Build Bazel
     pipeline_steps = []
 
     for platform in configs:
         pipeline_steps.append(bazel_build_step(
             platform, "Bazel", http_config, file_config, build_only=True))
-
-    for platform in configs:
-        pipeline_steps.append(bazel_build_step(
-            platform, "Bazel", http_config, file_config, test_only=True))
 
     pipeline_steps.append("wait")
 
