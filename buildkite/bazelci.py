@@ -382,8 +382,8 @@ def print_expanded_group(name):
     eprint("\n\n+++ {0}\n\n".format(name))
 
 
-def execute_commands(config, platform, git_repository, use_but, save_but,
-                     build_only, test_only, monitor_flaky_tests):
+def execute_commands(config, platform, git_repository, git_repo_location, use_bazel_at_commit,
+                     use_but, save_but, build_only, test_only, monitor_flaky_tests):
     fail_pipeline = False
     tmpdir = None
     bazel_binary = "bazel"
@@ -393,16 +393,26 @@ def execute_commands(config, platform, git_repository, use_but, save_but,
     if build_only and test_only:
         raise BuildkiteException("build_only and test_only cannot be true at the same time")
 
+    if use_bazel_at_commit and use_but:
+        raise BuildkiteException("use_bazel_at_commit cannot be set when use_but is true")
+
     tmpdir = tempfile.mkdtemp()
     sc_process = None
     try:
         if git_repository:
-            clone_git_repository(git_repository, platform)
+            if git_repo_location:
+                os.chdir(git_repo_location)
+            else:
+                clone_git_repository(git_repository, platform)
         else:
             git_repository = os.getenv("BUILDKITE_REPO")
 
         if is_pull_request() and not is_trusted_author(github_user_for_pull_request(), git_repository):
             update_pull_request_verification_status(git_repository, commit, state="success")
+
+        if use_bazel_at_commit:
+            print_collapsed_group(":gcloud: Downloading Bazel built at " + use_bazel_at_commit)
+            bazel_binary = download_bazel_binary_at_commit(tmpdir, platform, use_bazel_at_commit)
 
         if use_but:
             print_collapsed_group(":gcloud: Downloading Bazel Under Test")
@@ -671,6 +681,18 @@ def download_bazel_binary(dest_dir, platform):
     return bazel_binary_path
 
 
+def download_bazel_binary_at_commit(dest_dir, platform, bazel_git_commit):
+    # We only build bazel binary on ubuntu14.04 for every bazel commit.
+    # It should be OK to use it on other ubuntu platforms.
+    if "ubuntu" in PLATFORMS[platform].get("host-platform", platform):
+        platform = "ubuntu1404"
+    bazel_binary_path = os.path.join(dest_dir, "bazel.exe" if platform == "windows" else "bazel")
+    execute_command([gsutil_command(), "cp", bazelci_builds_gs_url(platform, bazel_git_commit),
+                     bazel_binary_path])
+    st = os.stat(bazel_binary_path)
+    os.chmod(bazel_binary_path, st.st_mode | stat.S_IEXEC)
+    return bazel_binary_path
+
 def clone_git_repository(git_repository, platform):
     root = downstream_projects_root(platform)
     project_name = re.search(r"/([^/]+)\.git$", git_repository).group(1)
@@ -702,6 +724,7 @@ def clone_git_repository(git_repository, platform):
     execute_command(["git", "submodule", "foreach", "--recursive", "git", "reset", "--hard"])
     execute_command(["git", "clean", "-fdqx"])
     execute_command(["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"])
+    return clone_path
 
 
 def execute_batch_commands(commands):
@@ -1191,7 +1214,7 @@ def bazelci_builds_download_url(platform, git_commit):
     return "https://storage.googleapis.com/bazel-builds/artifacts/{0}/{1}/bazel".format(platform, git_commit)
 
 
-def bazelci_builds_upload_url(platform, git_commit):
+def bazelci_builds_gs_url(platform, git_commit):
     return "gs://bazel-builds/artifacts/{0}/{1}/bazel".format(platform, git_commit)
 
 
@@ -1250,7 +1273,7 @@ def try_publish_binaries(build_number, expected_generation):
         try:
             bazel_binary_path = download_bazel_binary(tmpdir, platform)
             execute_command([gsutil_command(), "cp", "-a", "public-read", bazel_binary_path,
-                             bazelci_builds_upload_url(platform, git_commit)])
+                             bazelci_builds_gs_url(platform, git_commit)])
             info["platforms"][platform] = {
                 "url": bazelci_builds_download_url(platform, git_commit),
                 "sha256": sha256_hexdigest(bazel_binary_path),
@@ -1310,7 +1333,7 @@ def publish_binaries():
 
 def main(argv=None):
     if argv is None:
-        argv = sys.argv
+        argv = sys.argv[1:]
 
     parser = argparse.ArgumentParser(description="Bazel Continuous Integration Script")
 
@@ -1339,6 +1362,8 @@ def main(argv=None):
     runner.add_argument("--file_config", type=str)
     runner.add_argument("--http_config", type=str)
     runner.add_argument("--git_repository", type=str)
+    runner.add_argument("--git_repo_location", type=str, help="Use an existing repository instead of cloning from github")
+    runner.add_argument("--use_bazel_at_commit", type=str, help="Use Bazel binariy built at a specifc commit")
     runner.add_argument("--use_but", type=bool, nargs="?", const=True)
     runner.add_argument("--save_but", type=bool, nargs="?", const=True)
     runner.add_argument("--build_only", type=bool, nargs="?", const=True)
@@ -1347,7 +1372,7 @@ def main(argv=None):
 
     runner = subparsers.add_parser("publish_binaries")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         if args.subparsers_name == "bazel_publish_binaries_pipeline":
@@ -1374,6 +1399,8 @@ def main(argv=None):
             execute_commands(config=configs.get("platforms", None)[args.platform],
                              platform=args.platform,
                              git_repository=args.git_repository,
+                             git_repo_location=args.git_repo_location,
+                             use_bazel_at_commit=args.use_bazel_at_commit,
                              use_but=args.use_but,
                              save_but=args.save_but,
                              build_only=args.build_only,
