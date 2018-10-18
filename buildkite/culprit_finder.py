@@ -101,7 +101,7 @@ def print_culprit_finder_pipeline(project_name, platform_name, good_bazel_commit
     command = ("%s culprit_finder.py runner --project_name=\"%s\" --platform_name=%s --good_bazel_commit=%s --bad_bazel_commit=%s"
                % (bazelci.python_binary(platform_name), project_name, platform_name, good_bazel_commit, bad_bazel_commit))
     pipeline_steps.append({
-            "label": "Bisecting for {0}".format(project_name),
+            "label": PLATFORMS[platform_name]["emoji-name"] + " Bisecting for {0}".format(project_name),
             "command": [
                 bazelci.fetch_bazelcipy_command(),
                 fetch_culprit_finder_py_command(),
