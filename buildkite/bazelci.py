@@ -148,10 +148,11 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_kotlin/master/.bazelci/presubmit.yml"
     },
-    "rules_k8s": {
-        "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_k8s/master/.bazelci/presubmit.yml"
-    },
+    # TODO(rules_k8s#195): enable once https://github.com/bazelbuild/rules_k8s/pull/195 is merged
+#     "rules_k8s": {
+#         "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
+#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_k8s/master/.bazelci/presubmit.yml"
+#     },
     "rules_nodejs": {
         "git_repository": "https://github.com/bazelbuild/rules_nodejs.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_nodejs/master/.bazelci/presubmit.yml"
