@@ -118,10 +118,11 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_d.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_d/master/.bazelci/presubmit.yml"
     },
-    "rules_docker": {
-        "git_repository": "https://github.com/bazelbuild/rules_docker.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_docker/master/.bazelci/presubmit.yml"
-    },
+    # TODO(rules_rust#131): Enable once https://github.com/bazelbuild/rules_rust/issues/131 is fixed and rules_docker use fixed rules.
+#     "rules_docker": {
+#         "git_repository": "https://github.com/bazelbuild/rules_docker.git",
+#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_docker/master/.bazelci/presubmit.yml"
+#     },
     # TODO(rules_foreign_cc#118): enable once rules_foreign_cc are green
     # "rules_foreign_cc": {
     #     "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
