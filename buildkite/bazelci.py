@@ -110,11 +110,10 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_apple.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_apple/master/.bazelci/presubmit.yml"
     },
-    #TODO(rules_closure#286): Re-enable once PR is accepted
-#     "rules_closure": {
-#         "git_repository": "https://github.com/bazelbuild/rules_closure.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_closure/master/.bazelci/presubmit.yml"
-#     },
+    "rules_closure": {
+        "git_repository": "https://github.com/bazelbuild/rules_closure.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_closure/master/.bazelci/presubmit.yml"
+    },
     "rules_d": {
         "git_repository": "https://github.com/bazelbuild/rules_d.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_d/master/.bazelci/presubmit.yml"
