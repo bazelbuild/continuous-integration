@@ -411,7 +411,9 @@ def execute_commands(config, platform, git_repository, git_repo_location, use_ba
         else:
             git_repository = os.getenv("BUILDKITE_REPO")
 
-        if is_pull_request() and not is_trusted_author(github_user_for_pull_request(), git_repository):
+        if (is_pull_request()
+                and not os.getenv("BUILDKITE_PULL_REQUEST_REPO").startswith("git://github.com/bazelbuild/")
+                and not is_trusted_author(github_user_for_pull_request(), git_repository)):
             update_pull_request_verification_status(git_repository, commit, state="success")
 
         if use_bazel_at_commit:
@@ -1025,7 +1027,9 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
     if is_pull_request():
         commit_author = github_user_for_pull_request()
         trusted_git_repository = git_repository or os.getenv("BUILDKITE_REPO")
-        if is_pull_request() and not is_trusted_author(commit_author, trusted_git_repository):
+        if (is_pull_request()
+                and not os.getenv("BUILDKITE_PULL_REQUEST_REPO").startswith("git://github.com/bazelbuild/")
+                and not is_trusted_author(commit_author, trusted_git_repository)):
             commit = os.getenv("BUILDKITE_COMMIT")
             update_pull_request_verification_status(trusted_git_repository, commit, state="pending")
             pipeline_steps.append({
