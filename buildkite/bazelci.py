@@ -77,10 +77,11 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/eclipse.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/eclipse/master/.bazelci/presubmit.yml"
     },
-    "Gerrit": {
-        "git_repository": "https://gerrit.googlesource.com/gerrit.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml"
-    },
+    # TODO(rules_typescript#286): update rules_typescript once https://github.com/bazelbuild/rules_closure/pull/286 is merged
+#     "Gerrit": {
+#         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
+#         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml"
+#     },
     "Google Logging": {
         "git_repository": "https://github.com/google/glog.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/glog-postsubmit.yml"
