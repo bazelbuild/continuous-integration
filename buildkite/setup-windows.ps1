@@ -105,7 +105,7 @@ Write-Host "Updating MSYS2 packages (round 2)..."
 
 ## Install MSYS2 packages required by Bazel.
 Write-Host "Installing required MSYS2 packages..."
-& bash -lc "pacman --noconfirm --needed -S curl zip unzip gcc tar diffutils patch perl"
+& bash -lc "pacman --noconfirm --needed -S curl zip unzip gcc tar diffutils patch perl mingw-w64-x86_64-gcc"
 
 ## Install Azul Zulu.
 $myhostname = [System.Net.Dns]::GetHostName()
