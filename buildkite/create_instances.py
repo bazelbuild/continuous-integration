@@ -26,7 +26,7 @@ DEBUG = True
 # Note that the hostnames are parsed and trigger specific behavior for different use cases.
 # The following parts have a special meaning:
 #
-# - "buildkite": This is a production VM running the Buildkite agent.
+# - "bk": This is a production VM running the Buildkite agent.
 # - "pipeline": This is a special production VM that only runs pipeline setup
 #               scripts.
 # - "testing": This is a shared VM that can be used by project members for
@@ -50,14 +50,14 @@ DEFAULT_VM = {
 INSTANCE_GROUPS = {
     'bk-pipeline-ubuntu1804-java8': {
         'count': 1,
-        'image_family': 'buildkite-pipeline-ubuntu1804-java8',
+        'image_family': 'bk-pipeline-ubuntu1804-java8',
         'local_ssd': 'interface=nvme',
         'machine_type': 'n1-standard-8',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
     'bk-trusted-ubuntu1804-java8': {
         'count': 1,
-        'image_family': 'buildkite-trusted-ubuntu1804-java8',
+        'image_family': 'bk-trusted-ubuntu1804-java8',
         'local_ssd': 'interface=nvme',
         'machine_type': 'n1-standard-8',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
@@ -65,43 +65,43 @@ INSTANCE_GROUPS = {
     },
     'bk-worker-ubuntu1404-java8': {
         'count': 8,
-        'image_family': 'buildkite-worker-ubuntu1404-java8',
+        'image_family': 'bk-worker-ubuntu1404-java8',
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
     'bk-worker-ubuntu1604-java8': {
         'count': 8,
-        'image_family': 'buildkite-worker-ubuntu1604-java8',
+        'image_family': 'bk-worker-ubuntu1604-java8',
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
     'bk-worker-ubuntu1804-java8': {
         'count': 8,
-        'image_family': 'buildkite-worker-ubuntu1804-java8',
+        'image_family': 'bk-worker-ubuntu1804-java8',
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
     'bk-worker-ubuntu1804-java9': {
         'count': 8,
-        'image_family': 'buildkite-worker-ubuntu1804-java9',
+        'image_family': 'bk-worker-ubuntu1804-java9',
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
     'bk-worker-ubuntu1804-java10': {
         'count': 8,
-        'image_family': 'buildkite-worker-ubuntu1804-java10',
+        'image_family': 'bk-worker-ubuntu1804-java10',
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
     'bk-worker-ubuntu1804-nojava': {
         'count': 8,
-        'image_family': 'buildkite-worker-ubuntu1804-nojava',
+        'image_family': 'bk-worker-ubuntu1804-nojava',
         'local_ssd': 'interface=nvme',
         'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     },
     'bk-worker-windows-java8': {
         'count': 8,
-        'image_family': 'buildkite-worker-windows-java8',
+        'image_family': 'bk-worker-windows-java8',
         'local_ssd': 'interface=scsi',
         'metadata_from_file': 'windows-startup-script-ps1=startup-windows.ps1',
         'restart-on-failure': False,
@@ -110,13 +110,13 @@ INSTANCE_GROUPS = {
 
 SINGLE_INSTANCES = {
     # 'testing-ubuntu1604-java8': {
-    #     'image_family': 'buildkite-testing-ubuntu1604-java8',
+    #     'image_family': 'bk-testing-ubuntu1604-java8',
     #     'metadata_from_file': 'startup-script=startup-ubuntu.sh',
     #     'disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1604-persistent'),
     # },
     # 'testing-windows-java8': {
     #     'boot_disk_size': '500GB',
-    #     'image_family': 'buildkite-testing-windows-java8',
+    #     'image_family': 'bk-testing-windows-java8',
     # },
 }
 
