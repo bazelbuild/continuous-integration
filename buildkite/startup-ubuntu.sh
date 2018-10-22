@@ -19,8 +19,13 @@ set -euxo pipefail
 # Ubuntu 18.04 installs gcloud, gsutil, etc. commands in /snap/bin
 PATH=$PATH:/snap/bin
 
-until command -v gsutil &>/dev/null; do
-  echo "Waiting for gsutil / gcloud to become available..."
+until gcloud version &>/dev/null; do
+  echo "Waiting for gcloud to become available..."
+  sleep 1
+done
+
+until gsutil version &>/dev/null; do
+  echo "Waiting for gsutil to become available..."
   sleep 1
 done
 
