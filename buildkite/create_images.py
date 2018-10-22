@@ -35,14 +35,14 @@ IMAGE_CREATION_VMS = {
     # Find the newest FreeBSD 11 image via:
     # gcloud compute images list --project freebsd-org-cloud-dev \
     #     --no-standard-images
-    # ('buildkite-freebsd11',): {
+    # ('bk-freebsd11',): {
     #     'source_image': 'https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-1-stable-amd64-2017-12-28',
     #     'scripts': [
     #         'setup-freebsd.sh',
     #         'install-buildkite-agent.sh'
     #     ]
     # },
-    ('buildkite-worker-ubuntu1404-java8',): {
+    ('bk-worker-ubuntu1404-java8',): {
         'source_image_project': 'ubuntu-os-cloud',
         'source_image_family': 'ubuntu-1404-lts',
         'setup_script': 'setup-ubuntu.sh',
@@ -50,7 +50,7 @@ IMAGE_CREATION_VMS = {
             'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
         ]
     },
-    ('buildkite-worker-ubuntu1604-java8',): {
+    ('bk-worker-ubuntu1604-java8',): {
         'source_image_project': 'ubuntu-os-cloud',
         'source_image_family': 'ubuntu-1604-lts',
         'setup_script': 'setup-ubuntu.sh',
@@ -58,12 +58,12 @@ IMAGE_CREATION_VMS = {
             'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
         ]
     },
-    ('buildkite-pipeline-ubuntu1804-java8',
-     'buildkite-trusted-ubuntu1804-java8',
-     'buildkite-worker-ubuntu1804-nojava',
-     'buildkite-worker-ubuntu1804-java8',
-     'buildkite-worker-ubuntu1804-java9',
-     'buildkite-worker-ubuntu1804-java10'): {
+    ('bk-pipeline-ubuntu1804-java8',
+     'bk-trusted-ubuntu1804-java8',
+     'bk-worker-ubuntu1804-nojava',
+     'bk-worker-ubuntu1804-java8',
+     'bk-worker-ubuntu1804-java9',
+     'bk-worker-ubuntu1804-java10'): {
          'source_image_project': 'ubuntu-os-cloud',
          'source_image_family': 'ubuntu-1804-lts',
          'setup_script': 'setup-ubuntu.sh',
@@ -71,9 +71,9 @@ IMAGE_CREATION_VMS = {
              'https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx'
          ]
      },
-    ('buildkite-worker-windows-java8',
-    #  'buildkite-worker-windows-java9',
-    #  'buildkite-worker-windows-java10',
+    ('bk-worker-windows-java8',
+    #  'bk-worker-windows-java9',
+    #  'bk-worker-windows-java10',
      ): {
          'source_image_project': 'windows-cloud',
          'source_image_family': 'windows-1803-core',
