@@ -175,14 +175,14 @@ def workflow(name, params, git_commit):
         # Wait for the VM to become ready.
         gcloud_utils.wait_for_instance(instance_name, zone=LOCATION, status='RUNNING')
 
-        # if 'windows' in instance_name:
-        #     # Wait for VM to be ready, then print setup instructions.
-        #     tail_start = print_windows_instructions(instance_name)
-        #     # Continue printing the serial console until the VM shuts down.
-        #     gcloud_utils.tail_serial_console(instance_name, zone=LOCATION, start=tail_start)
-        # else:
-        # Continuously print the serial console.
-        gcloud_utils.tail_serial_console(instance_name, zone=LOCATION)
+        if 'windows' in instance_name:
+            # Wait for VM to be ready, then print setup instructions.
+            tail_start = print_windows_instructions(instance_name)
+            # Continue printing the serial console until the VM shuts down.
+            gcloud_utils.tail_serial_console(instance_name, zone=LOCATION, start=tail_start)
+        else:
+            # Continuously print the serial console.
+            gcloud_utils.tail_serial_console(instance_name, zone=LOCATION)
 
         # Wait for the VM to completely shutdown.
         gcloud_utils.wait_for_instance(instance_name, zone=LOCATION, status='TERMINATED')
