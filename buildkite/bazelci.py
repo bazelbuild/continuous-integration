@@ -760,7 +760,7 @@ def execute_bazel_run(bazel_binary, targets):
 
 
 def remote_caching_flags(platform):
-    if platform not in ["ubuntu1404", "ubuntu1604", "ubuntu1804", "macos", "windows"]:
+    if platform not in ["ubuntu1404", "ubuntu1604", "ubuntu1804", "ubuntu1804_nojava", "ubuntu1804_java9", "ubuntu1804_java10", "macos", "windows"]:
         return []
     flags = ["--google_default_credentials", "--experimental_guard_against_concurrent_changes"]
     if is_pull_request():
