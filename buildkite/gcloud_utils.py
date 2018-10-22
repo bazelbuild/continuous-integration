@@ -49,11 +49,11 @@ def prettify_logs(instance_name, log, with_prefix=True):
             if not match:
                 continue
             line = match.group(1)
-        # elif 'windows' in instance_name:
-        #     match = re.match(r'.*windows-startup-script-ps1: (.*)', line)
-        #     if not match:
-        #         continue
-        #     line = match.group(1)
+        elif 'windows' in instance_name:
+            match = re.match(r'.*windows-startup-script-ps1: (.*)', line)
+            if not match:
+                continue
+            line = match.group(1)
 
         if with_prefix:
             yield "{}: {}".format(instance_name, line)

@@ -356,49 +356,9 @@ Write-Host "All done, adding GCESysprep to RunOnce and rebooting..."
 Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "GCESysprep" -Value "c:\Program Files\Google\Compute Engine\sysprep\gcesysprep.bat"
 Restart-Computer
 '@
-[System.IO.File]::WriteAllLines("C:\setup.ps1", $setup_script)
 
-if (-Not (Test-Path "c:\sysinternals\autologon.exe")) {
-    ## Create C:\temp
-    Write-Host "Creating temporary folder C:\temp..."
-    if (-Not (Test-Path "c:\temp")) {
-    New-Item "c:\temp" -ItemType "directory"
-    }
-    [Environment]::SetEnvironmentVariable("TEMP", "C:\temp", "Machine")
-    [Environment]::SetEnvironmentVariable("TMP", "C:\temp", "Machine")
-    [Environment]::SetEnvironmentVariable("TEMP", "C:\temp", "User")
-    [Environment]::SetEnvironmentVariable("TMP", "C:\temp", "User")
-    $env:TEMP = [Environment]::GetEnvironmentVariable("TEMP", "Machine")
-    $env:TMP = [Environment]::GetEnvironmentVariable("TMP", "Machine")
-
-    ## Load PowerShell support for ZIP files.
-    Add-Type -AssemblyName "System.IO.Compression.FileSystem"
-
-    ## Download AutoLogon.
-    Write-Host "Downloading AutoLogon..."
-    $autologon_url = "https://download.sysinternals.com/files/AutoLogon.zip"
-    $autologon_zip = "c:\temp\autologon.zip"
-    $autologon_root = "c:\sysinternals"
-    New-Item $autologon_root -ItemType "directory" -Force
-    (New-Object Net.WebClient).DownloadFile($autologon_url, $autologon_zip)
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($autologon_zip, $autologon_root)
-    Remove-Item $autologon_zip
-
-    ## Accept the EULA of AutoLogon.
-    Write-Host "Accepting the EULA of AutoLogon..."
-    & reg.exe ADD HKCU\Software\Sysinternals /v EulaAccepted /t REG_DWORD /d 1 /f
-    & reg.exe ADD HKU\.DEFAULT\Software\Sysinternals /v EulaAccepted /t REG_DWORD /d 1 /f
-
-    ## Assign a random secure password to the Administrator user and setup AutoLogon.
-    Write-Host "Setting the Administrator password to a secure random password..."
-    Add-Type -AssemblyName System.Web
-    $admin_password = [System.Web.Security.Membership]::GeneratePassword(16,2)
-    $secure_admin_password = ConvertTo-SecureString $admin_password -AsPlainText -Force
-    Set-LocalUser -Name "Administrator" -Password $secure_admin_password
-    Write-Host "Enabling AutoLogon..."
-    & "c:\sysinternals\autologon" Administrator . "$admin_password"
-
-    Write-Host "Adding setup.ps1 to RunOnce and rebooting..."
+if (-Not (Test-Path "c:\setup.ps1")) {
+    Write-Host "Adding setup.ps1 to RunOnce..."
+    [System.IO.File]::WriteAllLines("C:\setup.ps1", $setup_script)
     Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "BuildkiteSetup" -Value "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe c:\setup.ps1"
-    Restart-Computer
 }
