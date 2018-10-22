@@ -93,6 +93,7 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 ## Install MSYS2
 Write-Host "Installing MSYS2..."
 & choco install msys2
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 [Environment]::SetEnvironmentVariable("BAZEL_SH", "C:\tools\msys64\usr\bin\bash.exe", "Machine")
 $env:BAZEL_SH = [Environment]::GetEnvironmentVariable("BAZEL_SH", "Machine")
