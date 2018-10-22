@@ -72,8 +72,9 @@ IMAGE_CREATION_VMS = {
          ]
      },
     ('buildkite-worker-windows-java8',
-     'buildkite-worker-windows-java9',
-     'buildkite-worker-windows-java10',): {
+    #  'buildkite-worker-windows-java9',
+    #  'buildkite-worker-windows-java10',
+     ): {
          'source_image_project': 'windows-cloud',
          'source_image_family': 'windows-1803-core',
          'setup_script': 'setup-windows.ps1',
