@@ -2,10 +2,6 @@
 $ErrorActionPreference = "Stop"
 $ConfirmPreference = "None"
 
-$setup_script = @'
-$ErrorActionPreference = "Stop"
-$ConfirmPreference = "None"
-
 ## Use only the global PATH, not any user-specific bits.
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
@@ -356,10 +352,3 @@ nssm set "buildkite-agent" "AppRotateBytes" 1048576
 Write-Host "All done, adding GCESysprep to RunOnce and rebooting..."
 Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "GCESysprep" -Value "c:\Program Files\Google\Compute Engine\sysprep\gcesysprep.bat"
 Restart-Computer
-'@
-
-if (-Not (Test-Path "c:\setup.ps1")) {
-    Write-Host "Adding setup.ps1 to RunOnce..."
-    [System.IO.File]::WriteAllLines("C:\setup.ps1", $setup_script)
-    Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "BuildkiteSetup" -Value "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe c:\setup.ps1"
-}

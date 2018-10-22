@@ -93,12 +93,12 @@ def preprocess_setup_script(setup_script, is_windows):
     newline = '\r\n' if is_windows else '\n'
     with open(output_file, 'w', newline=newline) as f:
         with open(setup_script, 'r') as setup_script_file:
-            # if is_windows:
-            #     f.write("$setup_script = @'\n")
+            if is_windows:
+                f.write("$setup_script = @'\n")
             f.write(setup_script_file.read() + '\n')
-            # if is_windows:
-            #     f.write("'@\n")
-            #     f.write('[System.IO.File]::WriteAllLines("c:\\setup.ps1", $setup_script)\n')
+            if is_windows:
+                f.write("'@\n")
+                f.write('[System.IO.File]::WriteAllLines("c:\\setup.ps1", $setup_script)\n')
     return output_file
 
 
