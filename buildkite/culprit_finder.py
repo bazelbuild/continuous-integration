@@ -65,10 +65,12 @@ def test_with_bazel_at_commit(project_name, platform_name, git_repo_location, ba
     return return_code == 0
 
 
-def start_bisecting(project_name, platform_name, commits_list):
+def clone_git_repository(project_name):
     git_repository = DOWNSTREAM_PROJECTS[project_name]["git_repository"]
-    git_repo_location = bazelci.clone_git_repository(git_repository, platform_name)
+    return bazelci.clone_git_repository(git_repository, platform_name)
 
+
+def start_bisecting(project_name, platform_name, git_repo_location, commits_list):
     left = 0
     right = len(commits_list)
     while left < right:
@@ -79,18 +81,18 @@ def start_bisecting(project_name, platform_name, commits_list):
         for i in range(left, right):
             bazelci.eprint(commits_list[i] + "\n")
         if test_with_bazel_at_commit(project_name, platform_name, git_repo_location, mid_commit):
-            bazelci.print_expanded_group(":bazel: Succeeded at " + mid_commit)
+            bazelci.print_collapsed_group(":bazel: Succeeded at " + mid_commit)
             left = mid + 1
         else:
-            bazelci.print_expanded_group(":bazel: Failed at " + mid_commit)
+            bazelci.print_collapsed_group(":bazel: Failed at " + mid_commit)
             right = mid
 
     bazelci.print_expanded_group(":bazel: Bisect Result")
     if right == len(commits_list):
-        print("first bad commit not found, every commit succeeded.")
+        bazelci.eprint("first bad commit not found, every commit succeeded.")
     else:
         first_bad_commit = commits_list[right]
-        print("first bad commit is " + first_bad_commit)
+        bazelci.eprint("first bad commit is " + first_bad_commit)
         os.chdir(BAZEL_REPO_DIR)
         bazelci.execute_command(["git", "--no-pager", "log", "-n", "1", first_bad_commit])
 
@@ -155,8 +157,17 @@ def main(argv=None):
                                           good_bazel_commit = good_bazel_commit,
                                           bad_bazel_commit = bad_bazel_commit)
         elif args.subparsers_name == "runner":
+            git_repo_location = clone_git_repository(args.project_name)
+            bazelci.print_collapsed_group("Check good bazel commit " + args.good_bazel_commit)
+            if not test_with_bazel_at_commit(project_name = args.project_name,
+                                             platform_name = args.platform_name,
+                                             git_repo_location = git_repo_location,
+                                             bazel_commit = args.good_bazel_commit):
+                raise BuildkiteException("Given good commit (%s) is not actually good, abort bisecting."
+                                         % args.good_bazel_commit)
             start_bisecting(project_name = args.project_name,
                             platform_name = args.platform_name,
+                            git_repo_location = git_repo_location,
                             commits_list = get_bazel_commits_between(args.good_bazel_commit, args.bad_bazel_commit))
         else:
             parser.print_help()
