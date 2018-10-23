@@ -65,7 +65,7 @@ def test_with_bazel_at_commit(project_name, platform_name, git_repo_location, ba
     return return_code == 0
 
 
-def clone_git_repository(project_name):
+def clone_git_repository(project_name, platform_name):
     git_repository = DOWNSTREAM_PROJECTS[project_name]["git_repository"]
     return bazelci.clone_git_repository(git_repository, platform_name)
 
@@ -157,7 +157,7 @@ def main(argv=None):
                                           good_bazel_commit = good_bazel_commit,
                                           bad_bazel_commit = bad_bazel_commit)
         elif args.subparsers_name == "runner":
-            git_repo_location = clone_git_repository(args.project_name)
+            git_repo_location = clone_git_repository(args.project_name, args.platform_name)
             bazelci.print_collapsed_group("Check good bazel commit " + args.good_bazel_commit)
             if not test_with_bazel_at_commit(project_name = args.project_name,
                                              platform_name = args.platform_name,
