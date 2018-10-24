@@ -70,10 +70,11 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/buildtools.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/buildtools/master/.bazelci/presubmit.yml"
     },
-    "CLion Plugin": {
-        "git_repository": "https://github.com/bazelbuild/intellij.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/clion-postsubmit.yml"
-    },
+    # TODO(https://github.com/bazelbuild/intellij/issues/333): reenable once resolved
+#     "CLion Plugin": {
+#         "git_repository": "https://github.com/bazelbuild/intellij.git",
+#         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/clion-postsubmit.yml"
+#     },
     "Eclipse Plugin": {
         "git_repository": "https://github.com/bazelbuild/eclipse.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/eclipse/master/.bazelci/presubmit.yml"
@@ -86,10 +87,11 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/google/glog.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/glog-postsubmit.yml"
     },
-    "IntelliJ Plugin": {
-        "git_repository": "https://github.com/bazelbuild/intellij.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/intellij-postsubmit.yml"
-    },
+    # TODO(https://github.com/bazelbuild/intellij/issues/333): reenable once resolved
+#     "IntelliJ Plugin": {
+#         "git_repository": "https://github.com/bazelbuild/intellij.git",
+#         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/intellij-postsubmit.yml"
+#     },
     "migration-tooling": {
         "git_repository": "https://github.com/bazelbuild/migration-tooling.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/migration-tooling/master/.bazelci/presubmit.yml"
