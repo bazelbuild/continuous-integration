@@ -57,11 +57,10 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml"
     },
-    # TODO(https://github.com/bazelbuild/bazel-toolchains/issues/66): Reenable once fixed
-#     "bazel-toolchains": {
-#         "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-toolchains/master/.bazelci/presubmit.yml"
-#     },
+    "bazel-toolchains": {
+        "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-toolchains/master/.bazelci/presubmit.yml"
+    },
     "bazel-skylib": {
         "git_repository": "https://github.com/bazelbuild/bazel-skylib.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-skylib/master/.bazelci/presubmit.yml"
