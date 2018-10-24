@@ -116,10 +116,11 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_closure.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_closure/master/.bazelci/presubmit.yml"
     },
-    "rules_d": {
-        "git_repository": "https://github.com/bazelbuild/rules_d.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_d/master/.bazelci/presubmit.yml"
-    },
+    # TODO(https://github.com/bazelbuild/rules_d/issues/15): reenable once fixed
+#     "rules_d": {
+#         "git_repository": "https://github.com/bazelbuild/rules_d.git",
+#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_d/master/.bazelci/presubmit.yml"
+#     },
     # TODO(rules_rust#131): Enable once https://github.com/bazelbuild/rules_rust/issues/131 is fixed and rules_docker use fixed rules.
 #     "rules_docker": {
 #         "git_repository": "https://github.com/bazelbuild/rules_docker.git",
