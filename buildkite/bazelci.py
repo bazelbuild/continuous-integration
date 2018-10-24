@@ -148,11 +148,10 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jsonnet/master/.bazelci/presubmit.yml"
     },
-    # TODO(https://github.com/bazelbuild/bazel-toolchains/issues/66): Reenable once toolchains are fixed and rules_kotlin updated
-#     "rules_kotlin": {
-#         "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_kotlin/master/.bazelci/presubmit.yml"
-#     },
+    "rules_kotlin": {
+        "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_kotlin/master/.bazelci/presubmit.yml"
+    },
     # TODO(rules_k8s#195): enable once https://github.com/bazelbuild/rules_k8s/pull/195 is merged
 #     "rules_k8s": {
 #         "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
