@@ -148,10 +148,11 @@ DOWNSTREAM_PROJECTS = {
 #         "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
 #         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_gwt/master/.bazelci/presubmit.yml"
 #     },
-    "rules_jsonnet": {
-        "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jsonnet/master/.bazelci/presubmit.yml"
-    },
+     # TODO(https://github.com/bazelbuild/rules_jsonnet/issues/82): Reenable once fixed
+#     "rules_jsonnet": {
+#         "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
+#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jsonnet/master/.bazelci/presubmit.yml"
+#     },
     "rules_kotlin": {
         "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_kotlin/master/.bazelci/presubmit.yml"
