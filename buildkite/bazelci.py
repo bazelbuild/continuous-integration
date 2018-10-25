@@ -82,10 +82,11 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml"
     },
-    "Google Logging": {
-        "git_repository": "https://github.com/google/glog.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/glog-postsubmit.yml"
-    },
+    # TODO(https://github.com/google/glog/issues/376) Reenable when fixed   
+#     "Google Logging": {
+#         "git_repository": "https://github.com/google/glog.git",
+#         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/glog-postsubmit.yml"
+#     },
     # TODO(https://github.com/bazelbuild/intellij/issues/333): reenable once resolved
 #     "IntelliJ Plugin": {
 #         "git_repository": "https://github.com/bazelbuild/intellij.git",
