@@ -59,10 +59,11 @@ DOWNSTREAM_PROJECTS = {
 #         "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
 #         "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml"
 #     },
-    "bazel-toolchains": {
-        "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-toolchains/master/.bazelci/presubmit.yml"
-    },
+     # TODO(https://github.com/bazelbuild/bazel-toolchains/issues/216): Reenable once fixed    
+#     "bazel-toolchains": {
+#         "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
+#         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-toolchains/master/.bazelci/presubmit.yml"
+#     },
     "bazel-skylib": {
         "git_repository": "https://github.com/bazelbuild/bazel-skylib.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-skylib/master/.bazelci/presubmit.yml"
@@ -134,10 +135,11 @@ DOWNSTREAM_PROJECTS = {
     #     "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
     #     "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_foreign_cc/master/.bazelci/config.yaml"
     # },
-    "rules_go": {
-        "git_repository": "https://github.com/bazelbuild/rules_go.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_go/master/.bazelci/presubmit.yml"
-    },
+    # TODO(https://github.com/google/glog/issues/376) Reenable when fixed        
+#     "rules_go": {
+#         "git_repository": "https://github.com/bazelbuild/rules_go.git",
+#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_go/master/.bazelci/presubmit.yml"
+#     },
     # TODO(https://github.com/bazelbuild/rules_groovy/issues/15): Reenable once fixed   
 #     "rules_groovy": {
 #         "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
@@ -153,10 +155,11 @@ DOWNSTREAM_PROJECTS = {
 #         "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
 #         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jsonnet/master/.bazelci/presubmit.yml"
 #     },
-    "rules_kotlin": {
-        "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_kotlin/master/.bazelci/presubmit.yml"
-    },
+    # TODO(https://github.com/google/glog/issues/376) Reenable when fixed        
+#     "rules_kotlin": {
+#         "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
+#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_kotlin/master/.bazelci/presubmit.yml"
+#     },
     # TODO(rules_k8s#195): enable once https://github.com/bazelbuild/rules_k8s/pull/195 is merged
 #     "rules_k8s": {
 #         "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
@@ -176,19 +179,21 @@ DOWNSTREAM_PROJECTS = {
     #     "git_repository": "https://github.com/bazelbuild/rules_python.git",
     #     "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_python/master/.bazelci/presubmit.yml"
     # },
-    "rules_rust": {
-        "git_repository": "https://github.com/bazelbuild/rules_rust.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_rust/master/.bazelci/presubmit.yml"
-    },
+    # TODO(https://github.com/google/glog/issues/376) Reenable when fixed   
+#     "rules_rust": {
+#         "git_repository": "https://github.com/bazelbuild/rules_rust.git",
+#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_rust/master/.bazelci/presubmit.yml"
+#     },
     # TODO(https://github.com/bazelbuild/rules_sass/issues/27): reenable once fixed 
 #     "rules_sass": {
 #         "git_repository": "https://github.com/bazelbuild/rules_sass.git",
 #         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_sass/master/.bazelci/presubmit.yml"
 #     },
-    "rules_scala": {
-        "git_repository": "https://github.com/bazelbuild/rules_scala.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_scala/master/.bazelci/presubmit.yml"
-    },
+    # TODO(https://github.com/google/glog/issues/376) Reenable when fixed        
+#     "rules_scala": {
+#         "git_repository": "https://github.com/bazelbuild/rules_scala.git",
+#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_scala/master/.bazelci/presubmit.yml"
+#     },
     # TODO(rules_typescript#308): enable once https://github.com/bazelbuild/rules_typescript/pull/308 is merged
 #     "rules_typescript": {
 #         "git_repository": "https://github.com/bazelbuild/rules_typescript.git",
