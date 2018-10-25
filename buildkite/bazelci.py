@@ -54,10 +54,11 @@ DOWNSTREAM_PROJECTS = {
     #     "git_repository": "https://github.com/bazelbuild/bazel.git",
     #     "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml"
     # },
-    "BUILD_file_generator": {
-        "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml"
-    },
+     # TODO(https://github.com/bazelbuild/BUILD_file_generator/issues/39): reenable once fixed
+#     "BUILD_file_generator": {
+#         "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
+#         "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml"
+#     },
     "bazel-toolchains": {
         "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-toolchains/master/.bazelci/presubmit.yml"
