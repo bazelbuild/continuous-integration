@@ -184,11 +184,10 @@ DOWNSTREAM_PROJECTS = {
 #         "git_repository": "https://github.com/bazelbuild/rules_rust.git",
 #         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_rust/master/.bazelci/presubmit.yml"
 #     },
-    # TODO(https://github.com/bazelbuild/rules_sass/issues/27): reenable once fixed 
-#     "rules_sass": {
-#         "git_repository": "https://github.com/bazelbuild/rules_sass.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_sass/master/.bazelci/presubmit.yml"
-#     },
+    "rules_sass": {
+        "git_repository": "https://github.com/bazelbuild/rules_sass.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_sass/master/.bazelci/presubmit.yml"
+    },
     # TODO(https://github.com/google/glog/issues/376) Reenable when fixed        
 #     "rules_scala": {
 #         "git_repository": "https://github.com/bazelbuild/rules_scala.git",
@@ -204,11 +203,10 @@ DOWNSTREAM_PROJECTS = {
     #     "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
     #     "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_webtesting-postsubmit.yml"
     # },
-    # TODO(https://github.com/bazelbuild/skydoc/issues/98): reenable once resolved  
-#     "skydoc": {
-#         "git_repository": "https://github.com/bazelbuild/skydoc.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/skydoc/master/.bazelci/presubmit.yml"
-#     },
+    "skydoc": {
+        "git_repository": "https://github.com/bazelbuild/skydoc.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/skydoc/master/.bazelci/presubmit.yml"
+    },
     "subpar": {
         "git_repository": "https://github.com/google/subpar.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/subpar-postsubmit.yml"
