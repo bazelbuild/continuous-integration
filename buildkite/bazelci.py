@@ -204,11 +204,10 @@ DOWNSTREAM_PROJECTS = {
     #     "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
     #     "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_webtesting-postsubmit.yml"
     # },
-    # TODO(https://github.com/bazelbuild/skydoc/issues/98): reenable once resolved 
-#    "skydoc": {
-#        "git_repository": "https://github.com/bazelbuild/skydoc.git",
-#        "http_config": "https://raw.githubusercontent.com/bazelbuild/skydoc/master/.bazelci/presubmit.yml"
-#    },
+    "skydoc": {
+        "git_repository": "https://github.com/bazelbuild/skydoc.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/skydoc/master/.bazelci/presubmit.yml"
+    },
     "subpar": {
         "git_repository": "https://github.com/google/subpar.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/subpar-postsubmit.yml"
