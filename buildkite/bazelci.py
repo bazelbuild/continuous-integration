@@ -90,11 +90,10 @@ DOWNSTREAM_PROJECTS = {
 #         "git_repository": "https://github.com/google/glog.git",
 #         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/glog-postsubmit.yml"
 #     },
-    # TODO(https://github.com/bazelbuild/intellij/issues/333): reenable once resolved
-#     "IntelliJ Plugin": {
-#         "git_repository": "https://github.com/bazelbuild/intellij.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/intellij-postsubmit.yml"
-#     },
+    "IntelliJ Plugin": {
+        "git_repository": "https://github.com/bazelbuild/intellij.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/intellij-postsubmit.yml"
+    },
     "migration-tooling": {
         "git_repository": "https://github.com/bazelbuild/migration-tooling.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/migration-tooling/master/.bazelci/presubmit.yml"
