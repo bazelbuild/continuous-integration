@@ -138,11 +138,10 @@ DOWNSTREAM_PROJECTS = {
 #         "git_repository": "https://github.com/bazelbuild/rules_go.git",
 #         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_go/master/.bazelci/presubmit.yml"
 #     },
-    # TODO(https://github.com/bazelbuild/rules_groovy/issues/15): Reenable once fixed   
-#     "rules_groovy": {
-#         "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_groovy/master/.bazelci/presubmit.yml"
-#     },
+    "rules_groovy": {
+         "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
+         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_groovy/master/.bazelci/presubmit.yml"
+     },
     # TODO(https://github.com/bazelbuild/rules_gwt/issues/15): Reenable once fixed
 #     "rules_gwt": {
 #         "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
