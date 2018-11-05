@@ -203,12 +203,13 @@ Write-Host "Installing Sauce Connect Proxy..."
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Get the latest release version number of Bazel.
-Write-Host "Grabbing latest Bazel version number from GitHub..."
-$url = "https://github.com/bazelbuild/bazel/releases/latest"
-$req = [system.Net.HttpWebRequest]::Create($url)
-$res = $req.getresponse()
-$res.Close()
-$bazel_version = $res.ResponseUri.AbsolutePath.TrimStart("/bazelbuild/bazel/releases/tag/")
+# Write-Host "Grabbing latest Bazel version number from GitHub..."
+# $url = "https://github.com/bazelbuild/bazel/releases/latest"
+# $req = [system.Net.HttpWebRequest]::Create($url)
+# $res = $req.getresponse()
+# $res.Close()
+# $bazel_version = $res.ResponseUri.AbsolutePath.TrimStart("/bazelbuild/bazel/releases/tag/")
+$bazel_version = "0.19.0"
 
 ## Download the latest Bazel.
 Write-Host "Downloading Bazel ${bazel_version}..."
