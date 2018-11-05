@@ -860,11 +860,11 @@ def rbe_flags(accept_cached):
     # Copied from https://github.com/bazelbuild/bazel-toolchains/blob/master/configs/ubuntu16_04_clang/1.0/toolchain.bazelrc
     flags += [
         # Toolchain related flags to append at the end of your .bazelrc file.
-        "--host_javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:jdk8",
-        "--javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:jdk8",
+        "--host_javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.1:jdk8",
+        "--javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.1:jdk8",
         "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
         "--java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
-        "--crosstool_top=@bazel_toolchains//configs/ubuntu16_04_clang/1.0/bazel_0.16.1/default:toolchain",
+        "--crosstool_top=@bazel_toolchains//configs/ubuntu16_04_clang/1.1/bazel_0.18.0/default:toolchain",
         "--action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1",
         # Platform flags:
         # The toolchain container used for execution is defined in the target indicated
@@ -874,10 +874,10 @@ def rbe_flags(accept_cached):
         # "extra_toolchains" to be selected (given constraints defined in
         # "exec_compatible_with").
         # More about platforms: https://docs.bazel.build/versions/master/platforms.html
-        "--extra_toolchains=@bazel_toolchains//configs/ubuntu16_04_clang/1.0/bazel_0.16.1/cpp:cc-toolchain-clang-x86_64-default",
-        "--extra_execution_platforms=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:rbe_ubuntu1604",
-        "--host_platform=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:rbe_ubuntu1604",
-        "--platforms=@bazel_toolchains//configs/ubuntu16_04_clang/1.0:rbe_ubuntu1604",
+        "--extra_toolchains=@bazel_toolchains//configs/ubuntu16_04_clang/1.1/bazel_0.18.0/cpp:cc-toolchain-clang-x86_64-default",
+        "--extra_execution_platforms=@bazel_toolchains//configs/ubuntu16_04_clang/1.1:rbe_ubuntu1604",
+        "--host_platform=@bazel_toolchains//configs/ubuntu16_04_clang/1.1:rbe_ubuntu1604",
+        "--platforms=@bazel_toolchains//configs/ubuntu16_04_clang/1.1:rbe_ubuntu1604",
     ]
 
     return flags
