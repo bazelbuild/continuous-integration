@@ -44,11 +44,10 @@ random.seed()
 
 
 DOWNSTREAM_PROJECTS = {
-    # TODO(https://github.com/googlesamples/android-testing/issues/213): Reenable once fixed
-    #"Android Testing": {
-    #    "git_repository": "https://github.com/googlesamples/android-testing.git",
-    #    "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/android-testing-postsubmit.yml"
-    #},
+    "Android Testing": {
+        "git_repository": "https://github.com/googlesamples/android-testing.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/android-testing-postsubmit.yml"
+    },
     # TODO(bazel#6288): enable once remote execution is green
     # "Bazel Remote Execution": {
     #     "git_repository": "https://github.com/bazelbuild/bazel.git",
