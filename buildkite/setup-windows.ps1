@@ -8,6 +8,9 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 ## Load PowerShell support for ZIP files.
 Add-Type -AssemblyName "System.IO.Compression.FileSystem"
 
+## Use TLS1.2 for HTTPS (fixes an issue where later steps can't connect to github.com)
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 ## Create C:\temp
 Write-Host "Creating temporary folder C:\temp..."
 if (-Not (Test-Path "c:\temp")) {
@@ -246,7 +249,7 @@ if ($java -ne "no") {
     ## Use OpenJDK 9 (and higher) compatibility flags.
     if ($java -eq "9" -or $java -eq "10") {
         [Environment]::SetEnvironmentVariable("SDKMANAGER_OPTS", "--add-modules java.se.ee", "Machine")
-        $env:ANDROID_HOME = [Environment]::GetEnvironmentVariable("SDKMANAGER_OPTS", "Machine")
+        $env:SDKMANAGER_OPTS = [Environment]::GetEnvironmentVariable("SDKMANAGER_OPTS", "Machine")
     }
 
     ## Accept the Android SDK license agreement.
