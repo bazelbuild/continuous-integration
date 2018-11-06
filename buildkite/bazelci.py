@@ -44,11 +44,10 @@ random.seed()
 
 
 DOWNSTREAM_PROJECTS = {
-     # TODO(https://github.com/googlesamples/android-testing/issues/213): Reenable once fixed
-#     "Android Testing": {
-#         "git_repository": "https://github.com/googlesamples/android-testing.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/android-testing-postsubmit.yml"
-#     },
+    "Android Testing": {
+        "git_repository": "https://github.com/googlesamples/android-testing.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/android-testing-postsubmit.yml"
+    },
     # TODO(bazel#6288): enable once remote execution is green
     # "Bazel Remote Execution": {
     #     "git_repository": "https://github.com/bazelbuild/bazel.git",
@@ -85,16 +84,14 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml"
     },
-    # TODO(https://github.com/google/glog/issues/376) Reenable when fixed   
-#     "Google Logging": {
-#         "git_repository": "https://github.com/google/glog.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/glog-postsubmit.yml"
-#     },
-    # TODO(https://github.com/bazelbuild/intellij/issues/333): reenable once resolved
-#     "IntelliJ Plugin": {
-#         "git_repository": "https://github.com/bazelbuild/intellij.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/intellij-postsubmit.yml"
-#     },
+    "Google Logging": {
+        "git_repository": "https://github.com/google/glog.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/glog-postsubmit.yml"
+    },
+    "IntelliJ Plugin": {
+        "git_repository": "https://github.com/bazelbuild/intellij.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/intellij-postsubmit.yml"
+    },
     "migration-tooling": {
         "git_repository": "https://github.com/bazelbuild/migration-tooling.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/migration-tooling/master/.bazelci/presubmit.yml"
@@ -137,22 +134,19 @@ DOWNSTREAM_PROJECTS = {
     "rules_go": {
         "git_repository": "https://github.com/bazelbuild/rules_go.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_go/master/.bazelci/presubmit.yml"
-    },
-    # TODO(https://github.com/bazelbuild/rules_groovy/issues/15): Reenable once fixed   
-#     "rules_groovy": {
-#         "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_groovy/master/.bazelci/presubmit.yml"
-#     },
-    # TODO(https://github.com/bazelbuild/rules_gwt/issues/15): Reenable once fixed
-#     "rules_gwt": {
-#         "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_gwt/master/.bazelci/presubmit.yml"
-#     },
-     # TODO(https://github.com/bazelbuild/rules_jsonnet/issues/82): Reenable once fixed
-#     "rules_jsonnet": {
-#         "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jsonnet/master/.bazelci/presubmit.yml"
-#     },      
+    },  
+    "rules_groovy": {
+         "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
+         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_groovy/master/.bazelci/presubmit.yml"
+     },
+     "rules_gwt": {
+         "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
+         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_gwt/master/.bazelci/presubmit.yml"
+     },
+     "rules_jsonnet": {
+         "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
+         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jsonnet/master/.bazelci/presubmit.yml"
+     },
     "rules_kotlin": {
         "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_kotlin/master/.bazelci/presubmit.yml"
@@ -180,11 +174,10 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_rust.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_rust/master/.bazelci/presubmit.yml"
     },
-     # TODO(https://github.com/bazelbuild/rules_sass/issues/27): reenable once fixed 
-#    "rules_sass": {
-#        "git_repository": "https://github.com/bazelbuild/rules_sass.git",
-#        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_sass/master/.bazelci/presubmit.yml"
-#    },  
+    "rules_sass": {
+        "git_repository": "https://github.com/bazelbuild/rules_sass.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_sass/master/.bazelci/presubmit.yml"
+    },
     "rules_scala": {
         "git_repository": "https://github.com/bazelbuild/rules_scala.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_scala/master/.bazelci/presubmit.yml"
@@ -199,11 +192,10 @@ DOWNSTREAM_PROJECTS = {
     #     "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
     #     "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_webtesting-postsubmit.yml"
     # },
-    # TODO(https://github.com/bazelbuild/skydoc/issues/98): reenable once resolved 
-#    "skydoc": {
-#        "git_repository": "https://github.com/bazelbuild/skydoc.git",
-#        "http_config": "https://raw.githubusercontent.com/bazelbuild/skydoc/master/.bazelci/presubmit.yml"
-#    },
+    "skydoc": {
+        "git_repository": "https://github.com/bazelbuild/skydoc.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/skydoc/master/.bazelci/presubmit.yml"
+    },
     "subpar": {
         "git_repository": "https://github.com/google/subpar.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/subpar-postsubmit.yml"
@@ -892,7 +884,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     print_expanded_group(":bazel: Build")
 
     aggregated_flags = common_flags(bep_file, platform)
-    if not remote_enabled(flags) and not "windows" in platform:
+    if not remote_enabled(flags):
         if platform.startswith("rbe_"):
             aggregated_flags += rbe_flags(accept_cached=True)
         else:
@@ -916,7 +908,7 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor
     # Don't enable remote caching if the user enabled remote execution / caching themselves
     # or flaky test monitoring is enabled, as remote caching makes tests look less flaky than
     # they are.
-    if not remote_enabled(flags) and not "windows" in platform:
+    if not remote_enabled(flags):
         if platform.startswith("rbe_"):
             aggregated_flags += rbe_flags(accept_cached=not monitor_flaky_tests)
         elif not monitor_flaky_tests:

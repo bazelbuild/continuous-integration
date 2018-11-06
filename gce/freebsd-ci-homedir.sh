@@ -14,7 +14,7 @@
 
 # Setup the required file structure in the ci's home directory
 
-CI_HOME="$(echo ~ci)"
+CI_HOME="$(echo ~/ci)"
 PLATFORM="$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)"
 BAZEL_VERSION="$(pkg query '%v' bazel)"
 destination="${CI_HOME}/.bazel/${BAZEL_VERSION}"

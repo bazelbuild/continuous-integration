@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import itertools
 import queue
 import sys
 import threading
@@ -166,6 +167,10 @@ def worker():
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
+
+    if not argv:
+        print("Usage: create_instances.py {}".format(" ".join(INSTANCE_GROUPS.keys())))
+        return 1
 
     # Put VM creation instructions into the work queue.
     for instance_group_name, params in INSTANCE_GROUPS.items():

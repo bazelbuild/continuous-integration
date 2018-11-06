@@ -197,7 +197,8 @@ fi
 
 ### Install Bazel.
 {
-  bazel_version=$(curl -sSI https://github.com/bazelbuild/bazel/releases/latest | grep '^Location: ' | sed 's|.*/||' | sed $'s/\r//')
+  # bazel_version=$(curl -sSI https://github.com/bazelbuild/bazel/releases/latest | grep '^Location: ' | sed 's|.*/||' | sed $'s/\r//')
+  bazel_version="0.19.0"
   curl -sSLo install.sh "https://releases.bazel.build/${bazel_version}/release/bazel-${bazel_version}-installer-linux-x86_64.sh"
   bash install.sh > /dev/null
   rm -f install.sh
@@ -236,9 +237,11 @@ EOF
 
 set -euo pipefail
 
-export PATH=$PATH:/snap/bin
+export PATH=$PATH:/usr/lib/google-cloud-sdk/bin:/snap/bin:/snap/google-cloud-sdk/current/bin
 export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://bazel-buildkite-artifacts/$BUILDKITE_JOB_ID"
 export BUILDKITE_GS_ACL="publicRead"
+
+gcloud auth configure-docker --quiet
 EOF
 
   # The trusted worker machine may only execute certain whitelisted builds.

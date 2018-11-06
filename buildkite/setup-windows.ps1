@@ -8,6 +8,9 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 ## Load PowerShell support for ZIP files.
 Add-Type -AssemblyName "System.IO.Compression.FileSystem"
 
+## Use TLS1.2 for HTTPS (fixes an issue where later steps can't connect to github.com)
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 ## Create C:\temp
 Write-Host "Creating temporary folder C:\temp..."
 if (-Not (Test-Path "c:\temp")) {
@@ -203,12 +206,13 @@ Write-Host "Installing Sauce Connect Proxy..."
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Get the latest release version number of Bazel.
-Write-Host "Grabbing latest Bazel version number from GitHub..."
-$url = "https://github.com/bazelbuild/bazel/releases/latest"
-$req = [system.Net.HttpWebRequest]::Create($url)
-$res = $req.getresponse()
-$res.Close()
-$bazel_version = $res.ResponseUri.AbsolutePath.TrimStart("/bazelbuild/bazel/releases/tag/")
+# Write-Host "Grabbing latest Bazel version number from GitHub..."
+# $url = "https://github.com/bazelbuild/bazel/releases/latest"
+# $req = [system.Net.HttpWebRequest]::Create($url)
+# $res = $req.getresponse()
+# $res.Close()
+# $bazel_version = $res.ResponseUri.AbsolutePath.TrimStart("/bazelbuild/bazel/releases/tag/")
+$bazel_version = "0.19.0"
 
 ## Download the latest Bazel.
 Write-Host "Downloading Bazel ${bazel_version}..."
@@ -245,7 +249,7 @@ if ($java -ne "no") {
     ## Use OpenJDK 9 (and higher) compatibility flags.
     if ($java -eq "9" -or $java -eq "10") {
         [Environment]::SetEnvironmentVariable("SDKMANAGER_OPTS", "--add-modules java.se.ee", "Machine")
-        $env:ANDROID_HOME = [Environment]::GetEnvironmentVariable("SDKMANAGER_OPTS", "Machine")
+        $env:SDKMANAGER_OPTS = [Environment]::GetEnvironmentVariable("SDKMANAGER_OPTS", "Machine")
     }
 
     ## Accept the Android SDK license agreement.
