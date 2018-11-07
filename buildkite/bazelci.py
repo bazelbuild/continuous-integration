@@ -59,11 +59,10 @@ DOWNSTREAM_PROJECTS = {
 #         "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
 #         "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml"
 #     },
-     # TODO(https://github.com/bazelbuild/bazel-toolchains/issues/216): Reenable once fixed    
-#     "bazel-toolchains": {
-#         "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-toolchains/master/.bazelci/presubmit.yml"
-#     },
+    "bazel-toolchains": {
+        "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-toolchains/master/.bazelci/presubmit.yml"
+    },
     "bazel-skylib": {
         "git_repository": "https://github.com/bazelbuild/bazel-skylib.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-skylib/master/.bazelci/presubmit.yml"
@@ -132,12 +131,11 @@ DOWNSTREAM_PROJECTS = {
     # "rules_foreign_cc": {
     #     "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
     #     "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_foreign_cc/master/.bazelci/config.yaml"
-    # },
-    # TODO(https://github.com/google/glog/issues/376) Reenable when fixed        
-#     "rules_go": {
-#         "git_repository": "https://github.com/bazelbuild/rules_go.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_go/master/.bazelci/presubmit.yml"
-#     },
+    # },  
+    "rules_go": {
+        "git_repository": "https://github.com/bazelbuild/rules_go.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_go/master/.bazelci/presubmit.yml"
+    },  
     "rules_groovy": {
          "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
          "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_groovy/master/.bazelci/presubmit.yml"
@@ -150,11 +148,10 @@ DOWNSTREAM_PROJECTS = {
          "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
          "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jsonnet/master/.bazelci/presubmit.yml"
      },
-    # TODO(https://github.com/google/glog/issues/376) Reenable when fixed        
-#     "rules_kotlin": {
-#         "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_kotlin/master/.bazelci/presubmit.yml"
-#     },
+    "rules_kotlin": {
+        "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_kotlin/master/.bazelci/presubmit.yml"
+    },
     # TODO(rules_k8s#195): enable once https://github.com/bazelbuild/rules_k8s/pull/195 is merged
 #     "rules_k8s": {
 #         "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
@@ -174,20 +171,18 @@ DOWNSTREAM_PROJECTS = {
     #     "git_repository": "https://github.com/bazelbuild/rules_python.git",
     #     "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_python/master/.bazelci/presubmit.yml"
     # },
-    # TODO(https://github.com/google/glog/issues/376) Reenable when fixed   
-#     "rules_rust": {
-#         "git_repository": "https://github.com/bazelbuild/rules_rust.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_rust/master/.bazelci/presubmit.yml"
-#     },
+    "rules_rust": {
+        "git_repository": "https://github.com/bazelbuild/rules_rust.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_rust/master/.bazelci/presubmit.yml"
+    },
     "rules_sass": {
         "git_repository": "https://github.com/bazelbuild/rules_sass.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_sass/master/.bazelci/presubmit.yml"
     },
-    # TODO(https://github.com/google/glog/issues/376) Reenable when fixed        
-#     "rules_scala": {
-#         "git_repository": "https://github.com/bazelbuild/rules_scala.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_scala/master/.bazelci/presubmit.yml"
-#     },
+    "rules_scala": {
+        "git_repository": "https://github.com/bazelbuild/rules_scala.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_scala/master/.bazelci/presubmit.yml"
+    },
     # TODO(rules_typescript#308): enable once https://github.com/bazelbuild/rules_typescript/pull/308 is merged
 #     "rules_typescript": {
 #         "git_repository": "https://github.com/bazelbuild/rules_typescript.git",
@@ -859,12 +854,15 @@ def rbe_flags(accept_cached):
 
     # Copied from https://github.com/bazelbuild/bazel-toolchains/blob/master/configs/ubuntu16_04_clang/1.0/toolchain.bazelrc
     flags += [
+        # These should NOT be modified before @bazel_toolchains repo pin is
+        # updated in projects' WORKSPACE files.
+        #
         # Toolchain related flags to append at the end of your .bazelrc file.
-        "--host_javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.1:jdk8",
-        "--javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.1:jdk8",
+        "--host_javabase=@bazel_toolchains//configs/ubuntu16_04_clang/latest:javabase",
+        "--javabase=@bazel_toolchains//configs/ubuntu16_04_clang/latest:javabase",
         "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
         "--java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
-        "--crosstool_top=@bazel_toolchains//configs/ubuntu16_04_clang/1.1/bazel_0.18.0/default:toolchain",
+        "--crosstool_top=@bazel_toolchains//configs/ubuntu16_04_clang/latest:crosstool_top_default",
         "--action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1",
         # Platform flags:
         # The toolchain container used for execution is defined in the target indicated
@@ -874,10 +872,10 @@ def rbe_flags(accept_cached):
         # "extra_toolchains" to be selected (given constraints defined in
         # "exec_compatible_with").
         # More about platforms: https://docs.bazel.build/versions/master/platforms.html
-        "--extra_toolchains=@bazel_toolchains//configs/ubuntu16_04_clang/1.1/bazel_0.18.0/cpp:cc-toolchain-clang-x86_64-default",
-        "--extra_execution_platforms=@bazel_toolchains//configs/ubuntu16_04_clang/1.1:rbe_ubuntu1604",
-        "--host_platform=@bazel_toolchains//configs/ubuntu16_04_clang/1.1:rbe_ubuntu1604",
-        "--platforms=@bazel_toolchains//configs/ubuntu16_04_clang/1.1:rbe_ubuntu1604",
+        "--extra_toolchains=@bazel_toolchains//configs/ubuntu16_04_clang/latest:toolchain_default",
+        "--extra_execution_platforms=@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
+        "--host_platform=@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
+        "--platforms=@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
     ]
 
     return flags
