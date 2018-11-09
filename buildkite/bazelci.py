@@ -71,11 +71,10 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/buildtools.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/buildtools/master/.bazelci/presubmit.yml"
     },
-    # TODO(https://github.com/bazelbuild/intellij/issues/333): reenable once resolved
-#     "CLion Plugin": {
-#         "git_repository": "https://github.com/bazelbuild/intellij.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/clion-postsubmit.yml"
-#     },
+    "CLion Plugin": {
+        "git_repository": "https://github.com/bazelbuild/intellij.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/clion-postsubmit.yml"
+    },
      # TODO(https://github.com/bazelbuild/eclipse/issues/65): Reenable once fixed
 #     "Eclipse Plugin": {
 #         "git_repository": "https://github.com/bazelbuild/eclipse.git",
