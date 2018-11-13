@@ -883,12 +883,13 @@ def rbe_flags(accept_cached):
 def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     print_expanded_group(":bazel: Build")
 
-    aggregated_flags = flags + common_flags(bep_file, platform)
+    aggregated_flags = common_flags(bep_file, platform)
     if not remote_enabled(flags):
         if platform.startswith("rbe_"):
             aggregated_flags += rbe_flags(accept_cached=True)
         else:
             aggregated_flags += remote_caching_flags(platform)
+    aggregated_flags += flags
 
     try:
         execute_command([bazel_binary, "build"] + aggregated_flags + targets)
@@ -900,7 +901,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
 def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor_flaky_tests):
     print_expanded_group(":bazel: Test")
 
-    aggregated_flags = flags + common_flags(bep_file, platform)
+    aggregated_flags = common_flags(bep_file, platform)
     aggregated_flags += ["--flaky_test_attempts=3",
                          "--build_tests_only",
                          "--local_test_jobs=" + concurrent_test_jobs(platform)]
@@ -912,6 +913,7 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor
             aggregated_flags += rbe_flags(accept_cached=not monitor_flaky_tests)
         elif not monitor_flaky_tests:
             aggregated_flags += remote_caching_flags(platform)
+    aggregated_flags += flags
 
     try:
         execute_command([bazel_binary, "test"] + aggregated_flags + targets)
