@@ -1,17 +1,15 @@
 # Bazel Release Playbook
 
-Authors: lpino@, pcloudy@, laurentlb@
-
 Status: Work in progress
 
-Last Updated: 2018-11-09
+This is the guide to conducting a Bazel release. This is especially relevant for
+release managers, but will be of interest ti anyone who is curious about the
+release process.
 
-Link to this document: go/bazel-release-playbook
-
-Congratulations, you're the new release manager!
-
-Each release has a tracking bug (see the list on http://go/bazel-release). The bug
-includes a "Target RC date". On that day, create a new release candidate.
+Each release has a tracking bug (see the
+[list](https://github.com/bazelbuild/bazel/issues?utf8=%E2%9C%93&q=label%3Arelease+)).
+The bug includes a "Target RC date". On that day, create a new release
+candidate.
 
 ## Creating a new release candidate
 
@@ -36,7 +34,7 @@ Create candidates with the release.sh script.
 
 *   If it's the first candidate for this version, run:
 
-    ```
+    ```bash
     RELEASE_NUMBER=<CURRENT RELEASE NUMBER x.yy.z>
     BASELINE_COMMIT=01234567890abcdef # From the Setup phase
     git clone https://github.com/bazelbuild/bazel.git ~/bazel-release-$RELEASE_NUMBER
@@ -50,7 +48,7 @@ Create candidates with the release.sh script.
     release candidate of `$RELEASE_NUMBER`. For example, the first time you do a
     cherry-pick (after the initial candidate), N will be 2.
 
-    ```
+    ```bash
     scripts/release/release.sh create --force_rc=2 $RELEASE_NUMBER $BASELINE_COMMIT [CHERRY_PICKS...]
     ```
 
@@ -112,7 +110,7 @@ Create candidates with the release.sh script.
         (from the "generate announcement" step).
     *   Reorganize the notes per category (C++, Java, etc.)
     *   Add a comment with "+[spomorski@google.com](mailto:spomorski@google.com)" so that he takes a look.
-    *   Send an email to [blaze-devel](mailto:blaze-devel@google.com) asking for reviewers.
+    *   Send an email to [bazel-dev](https://groups.google.com/forum/#!forum/bazel-dev) asking for reviewers.
 
 *   Copy & paste the generated text into a new e-mail and send it.
     *   The first line is the recipient address.
