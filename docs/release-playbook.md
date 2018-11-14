@@ -171,11 +171,10 @@ Create candidates with the release.sh script.
 
 1.  Ensure all binaries were uploaded to GitHub properly.
     1.  **Why?** Sometimes binaries are uploaded incorrectly.
-    1.  **How?** Go to the [GH releases
-        page](https://github.com/bazelbuild/bazel/releases), click "Edit", see
-        if there's a red warning sign next to any binary. You need to manually
-        upload those; get them from Jenkins
-        ([example](https://github.com/bazelbuild/bazel/issues/2158#issuecomment-265538453)).
+    1.  **How?** Go to the [GH releases page](https://github.com/bazelbuild/bazel/releases),
+        click "Edit", see if there's a red warning sign next to any binary. You
+        need to manually upload those; get them from
+        `https://storage.googleapis.com/bazel/$RELEASE_NUMBER/release/index.html`.
 1.  Update the release bug:
     1.  State the fact that you pushed the release
     1.  Ask the package maintainers to update the package definitions: @vbatts @petemounce
