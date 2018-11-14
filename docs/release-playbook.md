@@ -32,7 +32,7 @@ Do these steps once per release.
 
 Create candidates with the release.sh script.
 
-*   If it's the first candidate for this version, run:
+1.  If it's the first candidate for this version, run:
 
     ```bash
     RELEASE_NUMBER=<CURRENT RELEASE NUMBER x.yy.z>
@@ -44,7 +44,7 @@ Create candidates with the release.sh script.
 
     Note that the three-digit version is important: "0.19.0". not "0.19".
 
-*   For cherry-picks, you need `--force_rc=N` where `N` is the number of the
+1.  For cherry-picks, you need `--force_rc=N` where `N` is the number of the
     release candidate of `$RELEASE_NUMBER`. For example, the first time you do a
     cherry-pick (after the initial candidate), N will be 2.
 
@@ -52,32 +52,32 @@ Create candidates with the release.sh script.
     scripts/release/release.sh create --force_rc=2 $RELEASE_NUMBER $BASELINE_COMMIT [CHERRY_PICKS...]
     ```
 
-*   If you already did some cherry-picks and you want to add more, use "git log"
+1.  If you already did some cherry-picks and you want to add more, use "git log"
     to find the latest commit (this corresponds to the last cherry-pick commit).
     Use that as the new baseline and list the new cherry-picks to add on top. Or
     simply re-use the same baseline and cherrypicks from the previous candidate,
     and add the new cherrypicks.
 
-    ```
+    ```bash
     scripts/release/release.sh create --force_rc=3 $RELEASE_NUMBER NEW_BASELINE_COMMIT [NEW_CHERRY_PICKS...]
     ```
 
-*   Resolve conflicts if there are any, type `exit` when you are done, then the script will continue.
+1.  Resolve conflicts if there are any, type `exit` when you are done, then the script will continue.
     *   WARNING: `release.sh create` handles conflicts in a subshell (which is why you need to type `exit`).
 
-*   Check/edit release notes.
+1.  Check/edit release notes.
 
-*   Run `release.sh push`. This uploads the candidate and starts the release
+1.  Run `release.sh push`. This uploads the candidate and starts the release
     process on BuildKite.
 
-    ```
+    ```bash
     scripts/release/release.sh push
     ```
 
-*   Update GitHub issue with the command that was run and the new candidate name
+1.  Update GitHub issue with the command that was run and the new candidate name
     (ie, 0.19.1rc3).
 
-*   Check BuildKite results at https://buildkite.com/bazel/release. You should
+1.  Check BuildKite results at https://buildkite.com/bazel/release. You should
     see the `release-$RELEASE_NUMBER` branch here and a new build running for
     your release.
 
@@ -86,14 +86,14 @@ Create candidates with the release.sh script.
         ([Issue
         #281](https://github.com/bazelbuild/continuous-integration/issues/281)).
 
-*   Check the postsubmit test run for the release branch to ensure that all
+1.  Check the postsubmit test run for the release branch to ensure that all
     tests on all platforms pass with the version you're about to release.
 
     *   Go to https://buildkite.com/bazel/bazel-bazel and find the
         `release-$RELEASE_NUMBER` branch in the list. A build should
         automatically run. Make sure that it passes.
 
-*   When it all looks good, go back to the job in the release pipeline, click
+1.  When it all looks good, go back to the job in the release pipeline, click
     "Unblock step" for the deployment step. This will upload the release
     candidate binaries to GitHub, https://releases.bazel.build and our apt-get
     repository.
@@ -105,26 +105,26 @@ Create candidates with the release.sh script.
 
     *   If that worked, click "Unblock step" for the "Generate Announcement" step.
 
-*   Prepare the release announcement on http://go/bazel-newsletters.
+1.  Prepare the release announcement on https://docs.google.com/document/d/1wDvulLlj4NAlPZamdlEVFORks3YXJonCjyuQMUQEmB0/edit.
     *   Create a new section for the release. Populate using the generated text
         (from the "generate announcement" step).
     *   Reorganize the notes per category (C++, Java, etc.)
     *   Add a comment with "+[spomorski@google.com](mailto:spomorski@google.com)" so that he takes a look.
     *   Send an email to [bazel-dev](https://groups.google.com/forum/#!forum/bazel-dev) asking for reviewers.
 
-*   Copy & paste the generated text into a new e-mail and send it.
+1.  Copy & paste the generated text into a new e-mail and send it.
     *   The first line is the recipient address.
     *   The second line is the subject.
     *   The rest is the body of the message.
 
-*   Trigger a new pipeline in BuildKite to test the release candidate with all the downstream projects.
+1.  Trigger a new pipeline in BuildKite to test the release candidate with all the downstream projects.
     *   Go to https://buildkite.com/bazel/bazel-with-downstream-projects-bazel
     *   Click "New Build", then fill in the fields like this:
         *   Message: Test Release-0.14.0rc1 (Or any message you like)
         *   Commit: HEAD
         *   Branch: release-0.14.0
 
-*   Look for failing projects in red.
+1.  Look for failing projects in red.
     *   Compare the results with the latest Bazel release:
         *   Jobs built with the latest Bazel:
             https://buildkite.com/bazel?team=bazel
@@ -147,20 +147,19 @@ Create candidates with the release.sh script.
 
     *   File bugs (**TODO: how to find the owner/project link?**)
 
-*   Once issues are fixed, create a new candidate with the relevant cherry-picks.
+1.  Once issues are fixed, create a new candidate with the relevant cherry-picks.
 
 ## Push a release
 
 1.  Verify that the following conditions **all apply**:
     1.  at least **2 weeks passed since you pushed RC1**, and
     1.  at least **2 business days passed since you pushed the last RC**, and
-    1.  there are **no open [release-critical Blaze bugs](https://b.corp.google.com/hotlists/14305)** in Buganizer, and
     1.  there are **no open ["Release blocking" Bazel bugs](https://github.com/bazelbuild/bazel/labels/Release%20blocker)** on GitHub.
 1.  Generate a new identifier: https://bazel.googlesource.com/new-password (and paste the code in your shell).
     This is only necessary the first time you handle a release.
 1.  **Push the final release (do not cancel midway)**:
 
-    ```
+    ```bash
     scripts/release/release.sh release
     ```
 
@@ -177,7 +176,7 @@ Create candidates with the release.sh script.
     1.  State the fact that you pushed the release
     1.  Ask the package maintainers to update the package definitions: @vbatts @petemounce
     1.  Example: [https://github.com/bazelbuild/bazel/issues/3773#issuecomment-352692144]
-1.  Publish blog post (http://go/bazel-newsletters).
+1.  Publish blog post (https://docs.google.com/document/d/1wDvulLlj4NAlPZamdlEVFORks3YXJonCjyuQMUQEmB0/edit).
 
 
 ### Updating the Homebrew recipe
