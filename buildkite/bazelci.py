@@ -181,11 +181,10 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_scala.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_scala/master/.bazelci/presubmit.yml"
     },
-    # TODO(rules_typescript#308): enable once https://github.com/bazelbuild/rules_typescript/pull/308 is merged
-#     "rules_typescript": {
-#         "git_repository": "https://github.com/bazelbuild/rules_typescript.git",
-#         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_typescript/master/.bazelci/presubmit.yml"
-#     },
+    "rules_typescript": {
+        "git_repository": "https://github.com/bazelbuild/rules_typescript.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_typescript/master/.bazelci/presubmit.yml"
+    },
     # Enable once is resolved: https://github.com/bazelbuild/continuous-integration/issues/191
     # "rules_webtesting": {
     #     "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
