@@ -389,6 +389,12 @@ def print_expanded_group(name):
     eprint("\n\n+++ {0}\n\n".format(name))
 
 
+def add_to_user_bazelrc_file(line):
+    user_bazelrc_file = os.path.join(os.path.expanduser("~"), ".bazelrc")
+    with open(user_bazelrc_file, 'a') as f:
+        f.write(line + '\n')
+
+
 def execute_commands(config, platform, git_repository, git_repo_location, use_bazel_at_commit,
                      use_but, save_but, build_only, test_only, monitor_flaky_tests):
     fail_pipeline = False
@@ -402,6 +408,10 @@ def execute_commands(config, platform, git_repository, git_repo_location, use_ba
 
     if use_bazel_at_commit and use_but:
         raise BuildkiteException("use_bazel_at_commit cannot be set when use_but is true")
+
+    # (b/119048398) Change the output user root to D drive, which is a more reliable SSD drive.
+    if platform == "windows":
+        add_to_user_bazelrc_file("startup --output_user_root=D:/tmp")
 
     tmpdir = tempfile.mkdtemp()
     sc_process = None
