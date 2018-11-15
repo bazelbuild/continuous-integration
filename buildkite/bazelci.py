@@ -882,7 +882,7 @@ def rbe_flags(original_flags, accept_cached):
         "--host_platform" : "@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
         "--platforms" : "@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
     }
-    for platform_flag, value in platform_flags:
+    for platform_flag, value in list(platform_flags.items()):
         found = False
         for original_flag in original_flags:
             if original_flag.startswith(platform_flag):
