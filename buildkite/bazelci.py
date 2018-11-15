@@ -861,10 +861,6 @@ def rbe_flags(original_flags, accept_cached):
         "--java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
         "--crosstool_top=@bazel_toolchains//configs/ubuntu16_04_clang/latest:crosstool_top_default",
         "--action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1",
-        "--extra_toolchains=@bazel_toolchains//configs/ubuntu16_04_clang/latest:toolchain_default",
-        "--extra_execution_platforms=@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
-        "--host_platform=@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
-        "--platforms=@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
     ]
 
     # Platform flags:
