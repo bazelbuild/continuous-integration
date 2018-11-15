@@ -164,10 +164,11 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_perl.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_perl/master/.bazelci/presubmit.yml"
     },
-    "rules_python": {
-        "git_repository": "https://github.com/bazelbuild/rules_python.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_python/master/.bazelci/presubmit.yml"
-    },
+    # TODO(https://github.com/bazelbuild/rules_python/issues/105)
+    # "rules_python": {
+    #     "git_repository": "https://github.com/bazelbuild/rules_python.git",
+    #     "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_python/master/.bazelci/presubmit.yml"
+    # },
     "rules_rust": {
         "git_repository": "https://github.com/bazelbuild/rules_rust.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_rust/master/.bazelci/presubmit.yml"
