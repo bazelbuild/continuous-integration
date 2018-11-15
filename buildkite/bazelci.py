@@ -130,11 +130,11 @@ DOWNSTREAM_PROJECTS = {
     # "rules_foreign_cc": {
     #     "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
     #     "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_foreign_cc/master/.bazelci/config.yaml"
-    # },  
+    # },
     "rules_go": {
         "git_repository": "https://github.com/bazelbuild/rules_go.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_go/master/.bazelci/presubmit.yml"
-    },  
+    },
     "rules_groovy": {
          "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
          "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_groovy/master/.bazelci/presubmit.yml"
@@ -155,7 +155,7 @@ DOWNSTREAM_PROJECTS = {
 #     "rules_k8s": {
 #         "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
 #         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_k8s/master/.bazelci/presubmit.yml"
-#     }, 
+#     },
     "rules_nodejs": {
         "git_repository": "https://github.com/bazelbuild/rules_nodejs.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_nodejs/master/.bazelci/presubmit.yml"
@@ -824,7 +824,7 @@ def common_flags(bep_file, platform):
             "--experimental_multi_threaded_digest"]
 
 
-def rbe_flags(accept_cached):
+def rbe_flags(original_flags, accept_cached):
     # Enable remote execution via RBE.
     flags = [
         "--remote_executor=remotebuildexecution.googleapis.com",
@@ -861,19 +861,35 @@ def rbe_flags(accept_cached):
         "--java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
         "--crosstool_top=@bazel_toolchains//configs/ubuntu16_04_clang/latest:crosstool_top_default",
         "--action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1",
-        # Platform flags:
-        # The toolchain container used for execution is defined in the target indicated
-        # by "extra_execution_platforms", "host_platform" and "platforms".
-        # If you are using your own toolchain container, you need to create a platform
-        # target with "constraint_values" that allow for the toolchain specified with
-        # "extra_toolchains" to be selected (given constraints defined in
-        # "exec_compatible_with").
-        # More about platforms: https://docs.bazel.build/versions/master/platforms.html
         "--extra_toolchains=@bazel_toolchains//configs/ubuntu16_04_clang/latest:toolchain_default",
         "--extra_execution_platforms=@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
         "--host_platform=@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
         "--platforms=@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
     ]
+
+    # Platform flags:
+    # The toolchain container used for execution is defined in the target indicated
+    # by "extra_execution_platforms", "host_platform" and "platforms".
+    # If you are using your own toolchain container, you need to create a platform
+    # target with "constraint_values" that allow for the toolchain specified with
+    # "extra_toolchains" to be selected (given constraints defined in
+    # "exec_compatible_with").
+    # More about platforms: https://docs.bazel.build/versions/master/platforms.html
+    # Don't add platform flags if they are specified already.
+    platform_flags = {
+        "--extra_toolchains" : "@bazel_toolchains//configs/ubuntu16_04_clang/latest:toolchain_default",
+        "--extra_execution_platforms" : "@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
+        "--host_platform" : "@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
+        "--platforms" : "@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
+    }
+    for platform_flag, value in platform_flags:
+        found = False
+        for original_flag in original_flags:
+            if original_flag.startswith(platform_flag):
+                found = True
+                break
+        if not found:
+            flags += [platform_flag + "=" + value]
 
     return flags
 
@@ -884,7 +900,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     aggregated_flags = common_flags(bep_file, platform)
     if not remote_enabled(flags):
         if platform.startswith("rbe_"):
-            aggregated_flags += rbe_flags(accept_cached=True)
+            aggregated_flags += rbe_flags(flags, accept_cached=True)
         else:
             aggregated_flags += remote_caching_flags(platform)
     aggregated_flags += flags
@@ -908,7 +924,7 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor
     # they are.
     if not remote_enabled(flags):
         if platform.startswith("rbe_"):
-            aggregated_flags += rbe_flags(accept_cached=not monitor_flaky_tests)
+            aggregated_flags += rbe_flags(flags, accept_cached=not monitor_flaky_tests)
         elif not monitor_flaky_tests:
             aggregated_flags += remote_caching_flags(platform)
     aggregated_flags += flags
