@@ -812,7 +812,7 @@ def concurrent_test_jobs(platform):
 
 
 def common_flags(bep_file, platform):
-    return [
+    flags = [
         "--show_progress_rate_limit=5",
         "--curses=yes",
         "--color=yes",
@@ -823,8 +823,12 @@ def common_flags(bep_file, platform):
         "--announce_rc",
         "--sandbox_tmpfs_path=/tmp",
         "--experimental_multi_threaded_digest"
-    ] + (["--build_event_json_file=" + bep_file] if bep_file else [])
-    + (["--output_user_root=D:/tmp"] if platform == "windows" else [])
+    ]
+    if bep_file:
+        flags += ["--build_event_json_file=" + bep_file]
+    if platform == "windows":
+        flags += ["--output_user_root=D:/tmp"]
+    return flags
 
 
 def rbe_flags(original_flags, accept_cached):
