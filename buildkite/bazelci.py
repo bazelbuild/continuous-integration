@@ -824,7 +824,7 @@ def common_flags(bep_file, platform):
         "--sandbox_tmpfs_path=/tmp",
         "--experimental_multi_threaded_digest"
     ] + (["--build_event_json_file=" + bep_file] if bep_file else [])
-    + (["--output_user_root=D:/tmp"] if is_windows() else [])
+    + (["--output_user_root=D:/tmp"] if platform == "windows" else [])
 
 
 def rbe_flags(original_flags, accept_cached):
