@@ -757,7 +757,7 @@ def execute_bazel_run(bazel_binary, platform, targets):
         return
     print_collapsed_group("Setup (Run Targets)")
     for target in targets:
-        execute_command([bazel_binary, "run"] + common_flags(None, platform) + [target])
+        execute_command([bazel_binary] + common_startup_flags(platform) + ["run"] + common_build_flags(None, platform) + [target])
 
 
 def remote_caching_flags(platform):
@@ -811,7 +811,14 @@ def concurrent_test_jobs(platform):
     return "12"
 
 
-def common_flags(bep_file, platform):
+def common_startup_flags(platform):
+    flags = []
+    if platform == "windows":
+        flags += ["--output_user_root=D:/tmp"]
+    return flags
+
+
+def common_build_flags(bep_file, platform):
     flags = [
         "--show_progress_rate_limit=5",
         "--curses=yes",
@@ -826,8 +833,6 @@ def common_flags(bep_file, platform):
     ]
     if bep_file:
         flags += ["--build_event_json_file=" + bep_file]
-    if platform == "windows":
-        flags += ["--output_user_root=D:/tmp"]
     return flags
 
 
@@ -900,7 +905,7 @@ def rbe_flags(original_flags, accept_cached):
 def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     print_expanded_group(":bazel: Build")
 
-    aggregated_flags = common_flags(bep_file, platform)
+    aggregated_flags = common_build_flags(bep_file, platform)
     if not remote_enabled(flags):
         if platform.startswith("rbe_"):
             aggregated_flags += rbe_flags(flags, accept_cached=True)
@@ -909,7 +914,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
     aggregated_flags += flags
 
     try:
-        execute_command([bazel_binary, "build"] + aggregated_flags + targets)
+        execute_command([bazel_binary] + common_startup_flags(platform) + ["build"] + aggregated_flags + targets)
     except subprocess.CalledProcessError as e:
         raise BazelBuildFailedException(
             "bazel build failed with exit code {}".format(e.returncode))
@@ -918,7 +923,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
 def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor_flaky_tests):
     print_expanded_group(":bazel: Test")
 
-    aggregated_flags = common_flags(bep_file, platform)
+    aggregated_flags = common_build_flags(bep_file, platform)
     aggregated_flags += ["--flaky_test_attempts=3",
                          "--build_tests_only",
                          "--local_test_jobs=" + concurrent_test_jobs(platform)]
@@ -933,7 +938,7 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor
     aggregated_flags += flags
 
     try:
-        execute_command([bazel_binary, "test"] + aggregated_flags + targets)
+        execute_command([bazel_binary] + common_startup_flags(platform) + ["test"] + aggregated_flags + targets)
     except subprocess.CalledProcessError as e:
         raise BazelTestFailedException(
             "bazel test failed with exit code {}".format(e.returncode))
