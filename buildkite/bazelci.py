@@ -433,7 +433,7 @@ def execute_commands(config, platform, git_repository, git_repo_location, use_ba
             execute_batch_commands(config.get("batch_commands", None))
         else:
             execute_shell_commands(config.get("shell_commands", None))
-        execute_bazel_run(bazel_binary, config.get("run_targets", None))
+        execute_bazel_run(bazel_binary, platform, config.get("run_targets", None))
 
         if config.get("sauce", None):
             print_collapsed_group(":saucelabs: Starting Sauce Connect Proxy")
@@ -752,13 +752,12 @@ def execute_shell_commands(commands):
     execute_command([shell_command], shell=True)
 
 
-def execute_bazel_run(bazel_binary, targets):
+def execute_bazel_run(bazel_binary, platform, targets):
     if not targets:
         return
     print_collapsed_group("Setup (Run Targets)")
     for target in targets:
-        execute_command([bazel_binary, "run", "--curses=yes",
-                         "--color=yes", "--verbose_failures", target])
+        execute_command([bazel_binary, "run"] + common_flags(None, platform) + [target])
 
 
 def remote_caching_flags(platform):
@@ -816,13 +815,15 @@ def common_flags(bep_file, platform):
     return ["--show_progress_rate_limit=5",
             "--curses=yes",
             "--color=yes",
+            "--verbose_failures",
             "--keep_going",
             "--jobs=" + concurrent_jobs(platform),
-            "--build_event_json_file=" + bep_file,
             "--experimental_build_event_json_file_path_conversion=false",
             "--announce_rc",
             "--sandbox_tmpfs_path=/tmp",
-            "--experimental_multi_threaded_digest"]
+            "--experimental_multi_threaded_digest"] +
+            (["--build_event_json_file=" + bep_file] if bep_file else []) +
+            (["--output_user_root=D:/tmp"] if is_windows() else [])
 
 
 def rbe_flags(original_flags, accept_cached):
