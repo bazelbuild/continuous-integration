@@ -812,18 +812,19 @@ def concurrent_test_jobs(platform):
 
 
 def common_flags(bep_file, platform):
-    return ["--show_progress_rate_limit=5",
-            "--curses=yes",
-            "--color=yes",
-            "--verbose_failures",
-            "--keep_going",
-            "--jobs=" + concurrent_jobs(platform),
-            "--experimental_build_event_json_file_path_conversion=false",
-            "--announce_rc",
-            "--sandbox_tmpfs_path=/tmp",
-            "--experimental_multi_threaded_digest"] +
-            (["--build_event_json_file=" + bep_file] if bep_file else []) +
-            (["--output_user_root=D:/tmp"] if is_windows() else [])
+    return [
+        "--show_progress_rate_limit=5",
+        "--curses=yes",
+        "--color=yes",
+        "--verbose_failures",
+        "--keep_going",
+        "--jobs=" + concurrent_jobs(platform),
+        "--experimental_build_event_json_file_path_conversion=false",
+        "--announce_rc",
+        "--sandbox_tmpfs_path=/tmp",
+        "--experimental_multi_threaded_digest"
+    ] + (["--build_event_json_file=" + bep_file] if bep_file else [])
+    + (["--output_user_root=D:/tmp"] if is_windows() else [])
 
 
 def rbe_flags(original_flags, accept_cached):
