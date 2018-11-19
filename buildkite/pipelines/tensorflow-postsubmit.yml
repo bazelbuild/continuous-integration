@@ -1,6 +1,6 @@
 ---
 platforms:
-  ubuntu1604:
+  ubuntu1804:
     shell_commands:
     - |-
       echo '
@@ -16,7 +16,6 @@ platforms:
     # is merged to upstream TensorFlow, it's a temporary workaround for
     # https://github.com/bazelbuild/bazel/issues/5365.
     - "--cxxopt=--std=c++11"
-    - "--cxxopt=-Wno-narrowing"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
     - "//tensorflow/examples/android:tensorflow_demo"
