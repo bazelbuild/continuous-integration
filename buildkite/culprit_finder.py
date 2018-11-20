@@ -45,6 +45,7 @@ def get_bazel_commits_between(first_commit, second_commit):
     second_commit is included in the list.
     """
     try:
+        os.chdir(BAZEL_REPO_DIR)
         output = subprocess.check_output(["git", "log", "--pretty=tformat:%H", "%s..%s"
                                          % (first_commit, second_commit)])
         return [ i for i in reversed(output.decode("utf-8").split("\n")) if i ]
