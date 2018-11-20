@@ -16,6 +16,7 @@
 
 import argparse
 import collections
+import gcloud
 import itertools
 import os
 import queue
