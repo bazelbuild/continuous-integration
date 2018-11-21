@@ -29,7 +29,7 @@ import yaml
 
 DEBUG = True
 
-CONFIG_URL = 'https://github.com/bazelbuild/continuous-integration/blob/master/buildkite/instances.yml'
+CONFIG_URL = 'https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/instances.yml'
 LOCAL_CONFIG_FILE_NAME = 'instances.yml'
 DEFAULT_VM_CONFIG_KEY = 'default_vm'
 INSTANCE_GROUPS_CONFIG_KEY = 'instance_groups'
