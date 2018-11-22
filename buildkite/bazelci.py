@@ -807,6 +807,8 @@ def concurrent_test_jobs(platform):
         return "75"
     elif platform == "windows":
         return "8"
+    elif platform == "macos":
+        return "8"
     return "12"
 
 
