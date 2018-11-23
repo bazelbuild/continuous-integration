@@ -1080,8 +1080,8 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
         project_name_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
 
         last_green_commit = get_last_green_commit(git_repository, project_name_slug)
+        current_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
         if last_green_commit:
-            current_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
             result = subprocess.check_output(["git", "rev-list", "%s..%s" % (last_green_commit, current_commit)]).decode("utf-8").strip()
         # If current_commit is newer that last_green_commit, `git rev-list A..B` will output a bunch of commits,
         # otherwise the output should be empty.
