@@ -1072,19 +1072,27 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
                            http_config, file_config, git_repository, monitor_flaky_tests, use_but)
         pipeline_steps.append(step)
 
-    if not is_pull_request() and not use_but and \
-       os.getenv("BUILDKITE_BRANCH") == "master" and os.getenv("BUILDKITE_COMMIT") == "HEAD":
+    if not is_pull_request() and not use_but and os.getenv("BUILDKITE_BRANCH") == "master":
         pipeline_steps.append("wait")
 
-        last_green_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
         if not git_repository:
             git_repository = os.getenv("BUILDKITE_REPO")
+        project_name_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
+
+        last_green_commit = get_last_green_commit(git_repository, project_name_slug)
+        if last_green_commit:
+            current_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
+            result = subprocess.check_output(["git", "rev-list", "%s..%s" % (last_green_commit, current_commit)]).decode("utf-8").strip()
+        # If current_commit is newer that last_green_commit, `git rev-list A..B` will output a bunch of commits,
+        # otherwise the output should be empty.
+        if not last_green_commit or result:
+            last_green_commit = current_commit
 
         # If all builds succeed, update the last green commit of this project
         pipeline_steps.append({
             "label": "Update Last Green Commmit",
             "command": [
-                "echo %s | %s cp - %s" % (last_green_commit, gsutil_command(), bazelci_last_green_commit_url(git_repository, project_name))
+                "echo %s | %s cp - %s" % (last_green_commit, gsutil_command(), bazelci_last_green_commit_url(git_repository, project_name_slug))
             ],
             "agents": {
                 "kind": "pipeline"
@@ -1278,8 +1286,13 @@ def bazelci_builds_metadata_url():
     return "gs://bazel-builds/metadata/latest.json"
 
 
-def bazelci_last_green_commit_url(git_repository, project_name):
-    return "gs://bazel-builds/last_green_commit/%s/%s" % (git_repository[len("https://"):], project_name)
+def bazelci_last_green_commit_url(git_repository, project_name_slug):
+    return "gs://bazel-builds/last_green_commit/%s/%s" % (git_repository[len("https://"):], project_name_slug)
+
+
+def get_last_green_commit(git_repository, project_name_slug):
+    last_green_commit_url = bazelci_last_green_commit_url(git_repository, project_name_slug)
+    return subprocess.check_output([gsutil_command(), "cat", last_green_commit_url], env=os.environ).decode("utf-8").strip()
 
 
 def latest_generation_and_build_number():
