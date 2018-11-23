@@ -1072,10 +1072,11 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
                            http_config, file_config, git_repository, monitor_flaky_tests, use_but)
         pipeline_steps.append(step)
 
-    if not is_pull_request() and not use_but and os.getenv("BUILDKITE_BRANCH") == "master":
+    if not is_pull_request() and not use_but and \
+       os.getenv("BUILDKITE_BRANCH") == "master" and os.getenv("BUILDKITE_COMMIT") == "HEAD":
         pipeline_steps.append("wait")
 
-        last_green_commit = os.getenv("BUILDKITE_COMMIT")
+        last_green_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
         if not git_repository:
             git_repository = os.getenv("BUILDKITE_REPO")
 
@@ -1083,7 +1084,7 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
         pipeline_steps.append({
             "label": "Update Last Green Commmit",
             "command": [
-                "echo %s | %s cp -I %s" % (last_green_commit, gsutil_command(), bazelci_last_green_commit_url(git_repository))
+                "echo %s | %s cp - %s" % (last_green_commit, gsutil_command(), bazelci_last_green_commit_url(git_repository))
             ],
             "agents": {
                 "kind": "pipeline"
