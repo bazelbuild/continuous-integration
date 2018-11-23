@@ -1,0 +1,88 @@
+# Note that the hostnames are parsed and trigger specific behavior for different use cases.
+# The following parts have a special meaning:
+#
+# - bk: This is a production VM running the Buildkite agent.
+# - pipeline: This is a special production VM that only runs pipeline setup
+#               scripts.
+# - testing: This is a shared VM that can be used by project members for
+#              experiments. It does not run the Buildkite agent.
+# - trusted: This is a special production VM that has additional access to
+#              secrets.
+# - worker: This is a worker VM running normal CI jobs.
+#
+---
+default_vm:
+  boot_disk_size: 50GB
+  boot_disk_type: pd-ssd
+  image_project: bazel-public
+  machine_type: n1-standard-32
+  min_cpu_platform: Intel Skylake
+  network: buildkite
+  scopes: cloud-platform
+  service_account: remote-account@bazel-public.iam.gserviceaccount.com
+  zone: europe-west1-c
+instance_groups:
+  - name: bk-pipeline-ubuntu1804-java8
+    count: 1
+    image_family: bk-pipeline-ubuntu1804-java8
+    local_ssd: interface=nvme
+    machine_type: n1-standard-8
+    metadata_from_file: startup-script=startup-ubuntu.sh
+  - name: bk-trusted-ubuntu1804-java8
+    count: 1
+    image_family: bk-trusted-ubuntu1804-java8
+    local_ssd: interface=nvme
+    machine_type: n1-standard-8
+    metadata_from_file: startup-script=startup-ubuntu.sh
+    service_account: bazel-release-process@bazel-public.iam.gserviceaccount.com
+  - name: bk-worker-ubuntu1404-java8
+    count: 8
+    image_family: bk-worker-ubuntu1404-java8
+    local_ssd: interface=nvme
+    metadata_from_file: startup-script=startup-ubuntu.sh
+  - name: bk-worker-ubuntu1604-java8
+    count: 8
+    image_family: bk-worker-ubuntu1604-java8
+    local_ssd: interface=nvme
+    metadata_from_file: startup-script=startup-ubuntu.sh
+  - name: bk-worker-ubuntu1804-java8
+    count: 8
+    image_family: bk-worker-ubuntu1804-java8
+    local_ssd: interface=nvme
+    metadata_from_file: startup-script=startup-ubuntu.sh
+  - name: bk-worker-ubuntu1804-java9
+    count: 8
+    image_family: bk-worker-ubuntu1804-java9
+    local_ssd: interface=nvme
+    metadata_from_file: startup-script=startup-ubuntu.sh
+  - name: bk-worker-ubuntu1804-java10
+    count: 8
+    image_family: bk-worker-ubuntu1804-java10
+    local_ssd: interface=nvme
+    metadata_from_file: startup-script=startup-ubuntu.sh
+  - name: bk-worker-ubuntu1804-nojava
+    count: 8
+    image_family: bk-worker-ubuntu1804-nojava
+    local_ssd: interface=nvme
+    metadata_from_file: startup-script=startup-ubuntu.sh
+  - name: bk-worker-windows-java8
+    count: 8
+    image_family: bk-worker-windows-java8
+    local_ssd: interface=scsi
+    metadata_from_file: windows-startup-script-ps1=startup-windows.ps1
+    restart-on-failure: False
+single_instances:
+#  - name: testing-ubuntu1604-java8
+#    image_family: bk-testing-ubuntu1604-java8
+#    metadata_from_file: startup-script=startup-ubuntu.sh
+#    disk: name={0device-name={0mode=rwboot=no.format(testing-ubuntu1604-persistent)
+#  - name: testing-windows-java8
+#    boot_disk_size: 500GB
+#    image_family: bk-testing-windows-java8
+physical_clusters:
+  - name: buildkite-imacpro
+    count: 10
+  - name: buildkite-macpro-elcapitan
+    count: 2
+  - name: buildkite-macpro-sierra
+    count: 2

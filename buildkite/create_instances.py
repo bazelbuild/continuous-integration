@@ -14,112 +14,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
+import collections
+import gcloud
 import itertools
+import os
 import queue
 import sys
 import threading
-
-import gcloud
+import urllib.error
+import urllib.request
+import yaml
 
 
 DEBUG = True
 
-# Note that the hostnames are parsed and trigger specific behavior for different use cases.
-# The following parts have a special meaning:
-#
-# - "bk": This is a production VM running the Buildkite agent.
-# - "pipeline": This is a special production VM that only runs pipeline setup
-#               scripts.
-# - "testing": This is a shared VM that can be used by project members for
-#              experiments. It does not run the Buildkite agent.
-# - "trusted": This is a special production VM that has additional access to
-#              secrets.
-# - "worker": This is a worker VM running normal CI jobs.
-#
-DEFAULT_VM = {
-    'boot_disk_size': '50GB',
-    'boot_disk_type': 'pd-ssd',
-    'image_project': 'bazel-public',
-    'machine_type': 'n1-standard-32',
-    'min_cpu_platform': 'Intel Skylake',
-    'network': 'buildkite',
-    'scopes': 'cloud-platform',
-    'service_account': 'remote-account@bazel-public.iam.gserviceaccount.com',
-    'zone': 'europe-west1-c',
-}
+CONFIG_URL = 'https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/instances.yml'
+LOCAL_CONFIG_FILE_NAME = 'instances.yml'
+DEFAULT_VM_CONFIG_KEY = 'default_vm'
+INSTANCE_GROUPS_CONFIG_KEY = 'instance_groups'
+SINGLE_INSTANCES_CONFIG_KEY = 'single_instances'
 
-INSTANCE_GROUPS = {
-    'bk-pipeline-ubuntu1804-java8': {
-        'count': 1,
-        'image_family': 'bk-pipeline-ubuntu1804-java8',
-        'local_ssd': 'interface=nvme',
-        'machine_type': 'n1-standard-8',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-    },
-    'bk-trusted-ubuntu1804-java8': {
-        'count': 1,
-        'image_family': 'bk-trusted-ubuntu1804-java8',
-        'local_ssd': 'interface=nvme',
-        'machine_type': 'n1-standard-8',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-        'service_account': 'bazel-release-process@bazel-public.iam.gserviceaccount.com',
-    },
-    'bk-worker-ubuntu1404-java8': {
-        'count': 8,
-        'image_family': 'bk-worker-ubuntu1404-java8',
-        'local_ssd': 'interface=nvme',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-    },
-    'bk-worker-ubuntu1604-java8': {
-        'count': 8,
-        'image_family': 'bk-worker-ubuntu1604-java8',
-        'local_ssd': 'interface=nvme',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-    },
-    'bk-worker-ubuntu1804-java8': {
-        'count': 8,
-        'image_family': 'bk-worker-ubuntu1804-java8',
-        'local_ssd': 'interface=nvme',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-    },
-    'bk-worker-ubuntu1804-java9': {
-        'count': 8,
-        'image_family': 'bk-worker-ubuntu1804-java9',
-        'local_ssd': 'interface=nvme',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-    },
-    'bk-worker-ubuntu1804-java10': {
-        'count': 8,
-        'image_family': 'bk-worker-ubuntu1804-java10',
-        'local_ssd': 'interface=nvme',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-    },
-    'bk-worker-ubuntu1804-nojava': {
-        'count': 8,
-        'image_family': 'bk-worker-ubuntu1804-nojava',
-        'local_ssd': 'interface=nvme',
-        'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-    },
-    'bk-worker-windows-java8': {
-        'count': 8,
-        'image_family': 'bk-worker-windows-java8',
-        'local_ssd': 'interface=scsi',
-        'metadata_from_file': 'windows-startup-script-ps1=startup-windows.ps1',
-        'restart-on-failure': False,
-    },
-}
+Config = collections.namedtuple('Config', ['default_vm', 'single_instances', 'instance_groups'])
 
-SINGLE_INSTANCES = {
-    # 'testing-ubuntu1604-java8': {
-    #     'image_family': 'bk-testing-ubuntu1604-java8',
-    #     'metadata_from_file': 'startup-script=startup-ubuntu.sh',
-    #     'disk': 'name={0},device-name={0},mode=rw,boot=no'.format('testing-ubuntu1604-persistent'),
-    # },
-    # 'testing-windows-java8': {
-    #     'boot_disk_size': '500GB',
-    #     'image_family': 'bk-testing-windows-java8',
-    # },
-}
+class ConfigError(Exception):
+    pass
 
 PRINT_LOCK = threading.Lock()
 WORK_QUEUE = queue.Queue()
@@ -164,33 +83,93 @@ def worker():
             WORK_QUEUE.task_done()
 
 
+def get_config(use_local_config):
+    config = read_config_file(use_local_config)
+    return Config(default_vm=create_index(config, DEFAULT_VM_CONFIG_KEY),
+                  single_instances=create_index(config, SINGLE_INSTANCES_CONFIG_KEY),
+                  instance_groups=create_index(config, INSTANCE_GROUPS_CONFIG_KEY))
+
+
+def read_config_file(use_local_config):
+    content = None
+    if use_local_config:
+        path = os.path.join(os.getcwd(), LOCAL_CONFIG_FILE_NAME)
+        try:
+            with open(path, "r") as fd:
+                content = fd.read()
+        except IOError as ex:
+            raise ConfigError('Cannot read local file %s: %s' % (path, ex))
+    else:
+        try:
+            with urllib.request.urlopen(CONFIG_URL) as resp:
+                reader = codecs.getreader("utf-8")
+                content = reader(resp)
+        except urllib.error.URLError as ex:
+            raise ConfigError('Cannot read remote file %s: %s' % (CONFIG_URL, ex))
+
+    try:
+        return yaml.safe_load(content)
+    except yaml.YAMLError as ex:
+        raise ConfigError('Malformed YAML: %s' % ex)
+
+
+def create_index(config, key):
+    if key not in config:
+        raise ValueError('Missing entry "%s" from the configuration file.' % key)
+
+    if not config[key]:
+        return {}
+
+    # Special case for Default VM: only one entry, so no need to create an index
+    if isinstance(config[key], dict):
+        return config[key]
+
+    index = {}
+    for item in config[key]:
+        name = item.pop('name', None)
+        if not name:
+            raise ConfigError('At least one configuration entry for "%s" does not have a name.' % key)
+
+        index[name] = item
+
+    return index
+
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
-    if not argv:
-        print("Usage: create_instances.py {}".format(" ".join(INSTANCE_GROUPS.keys())))
+    parser = argparse.ArgumentParser(description="Bazel Continuous Integration Instance Creation")
+    parser.add_argument('names', type=str, nargs='+',
+                        help='List of instance (group) names that should be created. '
+                             'These values must correspond to "name" entries in the '
+                             'Yaml configuration, e.g. "bk-pipeline-ubuntu1804-java8".')
+    parser.add_argument('--local_config', type=bool, default=False,
+                        help='Whether to read the configuration from CWD/%s' % LOCAL_CONFIG_FILE_NAME)
+
+    args = parser.parse_args(argv)
+
+    try:
+        config = get_config(args.local_config)
+    except Exception as ex:
+        print("Failed to retrieve configuration: %s" % ex)
         return 1
 
     # Put VM creation instructions into the work queue.
-    for instance_group_name, params in INSTANCE_GROUPS.items():
-        # If the user specified instance (group) names on the command-line, we process only these
-        # instances, otherwise we process all.
-        if argv and instance_group_name not in argv:
+    for instance_group_name, params in config.instance_groups.items():
+        if instance_group_name not in args.names:
             continue
         WORK_QUEUE.put({
-            **DEFAULT_VM,
+            **config.default_vm,
             'instance_group_name': instance_group_name,
             **params
         })
 
-    for instance_name, params in SINGLE_INSTANCES.items():
-        # If the user specified instance (group) names on the command-line, we process only these
-        # instances, otherwise we process all.
-        if argv and instance_name not in argv:
+    for instance_name, params in config.single_instances.items():
+        if instance_name not in args.names:
             continue
         WORK_QUEUE.put({
-            **DEFAULT_VM,
+            **config.default_vm,
             'instance_name': instance_name,
             **params
         })
