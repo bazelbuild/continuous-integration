@@ -1072,8 +1072,25 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
                            http_config, file_config, git_repository, monitor_flaky_tests, use_but)
         pipeline_steps.append(step)
 
-    print(yaml.dump({"steps": pipeline_steps}))
+    if not is_pull_request and not use_but and os.getenv("BUILDKITE_BRANCH") == "master":
+        pipeline_steps.append("wait")
 
+        last_green_commit = os.getenv("BUILDKITE_COMMIT")
+        if not git_repository:
+            git_repository = os.getenv("BUILDKITE_REPO")
+
+        # If all builds succeed, update the last green commit of this project
+        pipeline_steps.append({
+            "label": "Update Last Green Commmit",
+            "command": [
+                "echo %s | %s cp -I %s" % (last_green_commit, gsutil_command(), bazelci_last_green_commit_url(git_repository))
+            ],
+            "agents": {
+                "kind": "pipeline"
+            }
+        })
+
+    print(yaml.dump({"steps": pipeline_steps}))
 
 def runner_step(platform, project_name=None, http_config=None,
                 file_config=None, git_repository=None, monitor_flaky_tests=False, use_but=False):
@@ -1258,6 +1275,10 @@ def bazelci_builds_gs_url(platform, git_commit):
 
 def bazelci_builds_metadata_url():
     return "gs://bazel-builds/metadata/latest.json"
+
+
+def bazelci_last_green_commit_url(git_repository):
+    return "gs://bazel-builds/last_green_commit/" + git_repository[len("https://"):]
 
 
 def latest_generation_and_build_number():
