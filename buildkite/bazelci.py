@@ -1072,11 +1072,11 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
                            http_config, file_config, git_repository, monitor_flaky_tests, use_but)
         pipeline_steps.append(step)
 
-    if not is_pull_request() and not use_but and os.getenv("BUILDKITE_BRANCH") == "master":
-
+    project_name_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
+    if not is_pull_request() and not use_but and os.getenv("BUILDKITE_BRANCH") == "master" and \
+       project_name_slug != "google-bazel-presubmit":
         if not git_repository:
             git_repository = os.getenv("BUILDKITE_REPO")
-        project_name_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
 
         last_green_commit = get_last_green_commit(git_repository, project_name_slug)
         current_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
