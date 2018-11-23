@@ -1072,7 +1072,7 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
                            http_config, file_config, git_repository, monitor_flaky_tests, use_but)
         pipeline_steps.append(step)
 
-    if not is_pull_request and not use_but and os.getenv("BUILDKITE_BRANCH") == "master":
+    if not is_pull_request() and not use_but and os.getenv("BUILDKITE_BRANCH") == "master":
         pipeline_steps.append("wait")
 
         last_green_commit = os.getenv("BUILDKITE_COMMIT")
