@@ -1084,7 +1084,7 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
         pipeline_steps.append({
             "label": "Update Last Green Commmit",
             "command": [
-                "echo %s | %s cp - %s" % (last_green_commit, gsutil_command(), bazelci_last_green_commit_url(git_repository))
+                "echo %s | %s cp - %s" % (last_green_commit, gsutil_command(), bazelci_last_green_commit_url(git_repository, project_name))
             ],
             "agents": {
                 "kind": "pipeline"
@@ -1278,8 +1278,8 @@ def bazelci_builds_metadata_url():
     return "gs://bazel-builds/metadata/latest.json"
 
 
-def bazelci_last_green_commit_url(git_repository):
-    return "gs://bazel-builds/last_green_commit/" + git_repository[len("https://"):]
+def bazelci_last_green_commit_url(git_repository, project_name):
+    return "gs://bazel-builds/last_green_commit/%s/%s" % (git_repository[len("https://"):], project_name)
 
 
 def latest_generation_and_build_number():
