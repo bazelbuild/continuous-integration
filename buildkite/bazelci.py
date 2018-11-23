@@ -1073,7 +1073,6 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
         pipeline_steps.append(step)
 
     if not is_pull_request() and not use_but and os.getenv("BUILDKITE_BRANCH") == "master":
-        pipeline_steps.append("wait")
 
         if not git_repository:
             git_repository = os.getenv("BUILDKITE_REPO")
@@ -1086,18 +1085,18 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
         # If current_commit is newer that last_green_commit, `git rev-list A..B` will output a bunch of commits,
         # otherwise the output should be empty.
         if not last_green_commit or result:
-            last_green_commit = current_commit
+            pipeline_steps.append("wait")
 
-        # If all builds succeed, update the last green commit of this project
-        pipeline_steps.append({
-            "label": "Update Last Green Commmit",
-            "command": [
-                "echo %s | %s cp - %s" % (last_green_commit, gsutil_command(), bazelci_last_green_commit_url(git_repository, project_name_slug))
-            ],
-            "agents": {
-                "kind": "pipeline"
-            }
-        })
+            # If all builds succeed, update the last green commit of this project
+            pipeline_steps.append({
+                "label": "Update Last Green Commmit",
+                "command": [
+                    "echo %s | %s cp - %s" % (current_commit, gsutil_command(), bazelci_last_green_commit_url(git_repository, project_name_slug))
+                ],
+                "agents": {
+                    "kind": "pipeline"
+                }
+            })
 
     print(yaml.dump({"steps": pipeline_steps}))
 
