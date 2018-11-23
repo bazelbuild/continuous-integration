@@ -1292,7 +1292,10 @@ def bazelci_last_green_commit_url(git_repository, project_name_slug):
 
 def get_last_green_commit(git_repository, project_name_slug):
     last_green_commit_url = bazelci_last_green_commit_url(git_repository, project_name_slug)
-    return subprocess.check_output([gsutil_command(), "cat", last_green_commit_url], env=os.environ).decode("utf-8").strip()
+    try:
+        return subprocess.check_output([gsutil_command(), "cat", last_green_commit_url], env=os.environ).decode("utf-8").strip()
+    except subprocess.CalledProcessError:
+        return None
 
 
 def latest_generation_and_build_number():
