@@ -1074,7 +1074,7 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
 
     project_name_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
     if not is_pull_request() and not use_but and os.getenv("BUILDKITE_BRANCH") == "master" and \
-       project_name_slug != "google-bazel-presubmit":
+       project_name_slug != "google-bazel-presubmit" and project_name_slug != "google-typescript-presubmit":
         if not git_repository:
             git_repository = os.getenv("BUILDKITE_REPO")
 
