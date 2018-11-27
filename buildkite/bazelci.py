@@ -1089,7 +1089,7 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
 
             # If all builds succeed, update the last green commit of this project
             pipeline_steps.append({
-                "label": "Update Last Green Commmit",
+                "label": "Update Last Green Commit",
                 "command": [
                     "echo %s | %s cp - %s" % (current_commit, gsutil_command(), bazelci_last_green_commit_url(git_repository, project_name_slug))
                 ],
