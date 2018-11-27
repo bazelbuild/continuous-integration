@@ -52,7 +52,7 @@ DOWNSTREAM_PROJECTS = {
     },
     "Bazel Remote Execution": {
         "git_repository": "https://github.com/bazelbuild/bazel.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml"
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml",
         "pipeline_slug": "remote-execution",
         "disabled_reason": "bazel#6288: enable once remote execution is green"
     },
