@@ -1205,9 +1205,7 @@ def upload_project_disabled_step(project_name, disabled_reason):
     return {
         "label": "{0} is disabled".format(project_name),
         "command": [
-            "echo",
-            "Disabled reason: ",
-            disabled_reason,
+            "echo \"Disabled reason: %s\"" % disabled_reason
         ],
         "agents": {
             "kind": "pipeline"
