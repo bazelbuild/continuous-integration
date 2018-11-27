@@ -48,240 +48,203 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/googlesamples/android-testing.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/android-testing-postsubmit.yml",
         "pipeline_slug": "android-testing",
-        # TODO(https://github.com/googlesamples/android-testing/issues/213): Reenable once fixed
-        "downstream_enabled": False
+        "disabled_reason": "https://github.com/googlesamples/android-testing/issues/213: Reenable once fixed"
     },
     "Bazel Remote Execution": {
         "git_repository": "https://github.com/bazelbuild/bazel.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml"
         "pipeline_slug": "remote-execution",
-        # TODO(bazel#6288): enable once remote execution is green
-        "downstream_enabled": False
+        "disabled_reason": "bazel#6288: enable once remote execution is green"
     },
     "BUILD_file_generator": {
         "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml",
         "pipeline_slug": "build-file-generator",
-        # TODO(https://github.com/bazelbuild/BUILD_file_generator/issues/39): reenable once fixed
-        "downstream_enabled": False
+        "disabled_reason": "https://github.com/bazelbuild/BUILD_file_generator/issues/39: reenable once fixed"
     },
     "bazel-toolchains": {
         "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-toolchains/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "bazel-toolchains",
-        "downstream_enabled": True
+        "pipeline_slug": "bazel-toolchains"
     },
     "bazel-skylib": {
         "git_repository": "https://github.com/bazelbuild/bazel-skylib.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-skylib/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "bazel-skylib",
-        "downstream_enabled": True
+        "pipeline_slug": "bazel-skylib"
     },
     "buildtools": {
         "git_repository": "https://github.com/bazelbuild/buildtools.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/buildtools/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "buildtools",
-        "downstream_enabled": True
+        "pipeline_slug": "buildtools"
     },
     "CLion Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/clion-postsubmit.yml",
-        "pipeline_slug": "clion-plugin",
-        "downstream_enabled": True
+        "pipeline_slug": "clion-plugin"
     },
     "Eclipse Plugin": {
        "git_repository": "https://github.com/bazelbuild/eclipse.git",
        "http_config": "https://raw.githubusercontent.com/bazelbuild/eclipse/master/.bazelci/presubmit.yml",
        "pipeline_slug": "eclipse-plugin",
-        # TODO(https://github.com/bazelbuild/eclipse/issues/65): Reenable once fixed
-       "downstream_enabled": False
+       "disabled_reason": "https://github.com/bazelbuild/eclipse/issues/65: Reenable once fixed"
     },
     "Gerrit": {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml",
-        "pipeline_slug": "gerrit",
-        "downstream_enabled": True
+        "pipeline_slug": "gerrit"
     },
     "Google Logging": {
         "git_repository": "https://github.com/google/glog.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/glog-postsubmit.yml",
-        "pipeline_slug": "google-logging",
-        "downstream_enabled": True
+        "pipeline_slug": "google-logging"
     },
     "IntelliJ Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/intellij-postsubmit.yml",
-        "pipeline_slug": "intellij-plugin",
-        "downstream_enabled": True
+        "pipeline_slug": "intellij-plugin"
     },
     "migration-tooling": {
         "git_repository": "https://github.com/bazelbuild/migration-tooling.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/migration-tooling/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "migration-tooling",
-        "downstream_enabled": True
+        "pipeline_slug": "migration-tooling"
     },
     "protobuf": {
         "git_repository": "https://github.com/google/protobuf.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/protobuf-postsubmit.yml",
-        "pipeline_slug": "protobuf",
-        "downstream_enabled": True
+        "pipeline_slug": "protobuf"
     },
     "re2": {
         "git_repository": "https://github.com/google/re2.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/re2-postsubmit.yml",
-        "pipeline_slug": "re2",
-        "downstream_enabled": True
+        "pipeline_slug": "re2"
     },
     "rules_appengine": {
         "git_repository": "https://github.com/bazelbuild/rules_appengine.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_appengine/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-appengine-appengine",
-        "downstream_enabled": True
+        "pipeline_slug": "rules-appengine-appengine"
     },
     "rules_apple": {
         "git_repository": "https://github.com/bazelbuild/rules_apple.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_apple/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-apple-darwin",
-        "downstream_enabled": True
+        "pipeline_slug": "rules-apple-darwin"
     },
     "rules_closure": {
         "git_repository": "https://github.com/bazelbuild/rules_closure.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_closure/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-closure-closure-compiler",
-        "downstream_enabled": True
+        "pipeline_slug": "rules-closure-closure-compiler"
     },
     "rules_d": {
         "git_repository": "https://github.com/bazelbuild/rules_d.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_d/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-d",
-        # TODO(https://github.com/bazelbuild/rules_d/issues/15): reenable once fixed
-        "downstream_enabled": False
+        "disabled_reason": "https://github.com/bazelbuild/rules_d/issues/15: reenable once fixed"
     },
     "rules_docker": {
         "git_repository": "https://github.com/bazelbuild/rules_docker.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_docker/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-docker-docker",
-        # TODO(rules_rust#131): Enable once https://github.com/bazelbuild/rules_rust/issues/131 is fixed and rules_docker use fixed rules.
-        "downstream_enabled": False
+        "disabled_reason": "rules_rust#131: Enable once https://github.com/bazelbuild/rules_rust/issues/131 is fixed and rules_docker use fixed rules."
     },
     "rules_foreign_cc": {
         "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_foreign_cc/master/.bazelci/config.yaml",
         "pipeline_slug": "rules-foreign-cc",
-        # TODO(rules_foreign_cc#118): enable once rules_foreign_cc are green
-        "downstream_enabled": False
+        "disabled_reason": "rules_foreign_cc#118: enable once rules_foreign_cc are green"
     },
     "rules_go": {
         "git_repository": "https://github.com/bazelbuild/rules_go.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_go/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-go-golang",
-        "downstream_enabled": True
+        "pipeline_slug": "rules-go-golang"
     },
     "rules_groovy": {
         "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_groovy/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-groovy",
-        "downstream_enabled": True
+        "pipeline_slug": "rules-groovy"
     },
     "rules_gwt": {
         "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_gwt/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-gwt",
-        "downstream_enabled": True
+        "pipeline_slug": "rules-gwt"
     },
     "rules_jsonnet": {
         "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jsonnet/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-jsonnet",
-        "downstream_enabled": True
+        "pipeline_slug": "rules-jsonnet"
     },
     "rules_kotlin": {
         "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_kotlin/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-kotlin-kotlin",
-        "downstream_enabled": True
+        "pipeline_slug": "rules-kotlin-kotlin"
     },
     "rules_k8s": {
         "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_k8s/master/.bazelci/presubmit.yml",
-        # TODO(rules_k8s#195): enable once https://github.com/bazelbuild/rules_k8s/pull/195 is merged
         "pipeline_slug": "rules-k8s-k8s"
+        "disabled_reason": "Enable once https://github.com/bazelbuild/rules_k8s/pull/195 is merged"
     },
     "rules_nodejs": {
         "git_repository": "https://github.com/bazelbuild/rules_nodejs.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_nodejs/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-nodejs-nodejs",
-        "downstream_enabled": True
+        "pipeline_slug": "rules-nodejs-nodejs"
     },
     "rules_perl": {
         "git_repository": "https://github.com/bazelbuild/rules_perl.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_perl/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-perl",
-        "downstream_enabled": True
+        "pipeline_slug": "rules-perl"
     },
     "rules_python": {
         "git_repository": "https://github.com/bazelbuild/rules_python.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_python/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-python-python",
-        "downstream_enabled": True
+        "pipeline_slug": "rules-python-python"
     },
     "rules_rust": {
         "git_repository": "https://github.com/bazelbuild/rules_rust.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_rust/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-rust-rustlang",
-        "downstream_enabled": True
+        "pipeline_slug": "rules-rust-rustlang"
     },
     "rules_sass": {
         "git_repository": "https://github.com/bazelbuild/rules_sass.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_sass/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-sass",
-        "downstream_enabled": True
+        "pipeline_slug": "rules-sass"
     },
     "rules_scala": {
         "git_repository": "https://github.com/bazelbuild/rules_scala.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_scala/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-scala-scala",
-        "downstream_enabled": True
+        "pipeline_slug": "rules-scala-scala"
     },
     "rules_typescript": {
         "git_repository": "https://github.com/bazelbuild/rules_typescript.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_typescript/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-typescript-typescript",
-        # TODO(https://github.com/bazelbuild/bazel/issues/6675)
-        "downstream_enabled": False
+        "disabled_reason": "https://github.com/bazelbuild/bazel/issues/6675"
     },
     "rules_webtesting": {
         "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_webtesting-postsubmit.yml",
         "pipeline_slug": "rules-webtesting-saucelabs",
-        # TODO(Enable once is resolved: https://github.com/bazelbuild/continuous-integration/issues/191
-        "downstream_enabled": False
+        "disabled_reason": "Enable once is resolved: https://github.com/bazelbuild/continuous-integration/issues/191"
     },
     "skydoc": {
         "git_repository": "https://github.com/bazelbuild/skydoc.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/skydoc/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "skydoc",
-        "downstream_enabled": True
+        "pipeline_slug": "skydoc"
     },
     "subpar": {
         "git_repository": "https://github.com/google/subpar.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/subpar-postsubmit.yml",
-        "pipeline_slug": "subpar",
-        "downstream_enabled": True
+        "pipeline_slug": "subpar"
     },
     "TensorFlow": {
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.yml",
         "pipeline_slug": "tensorflow",
-        # TODO(pcloudy): enable once TensoFlow adopts to Bazel 0.18.0 or later, https://github.com/tensorflow/tensorflow/pull/22964
-        "downstream_enabled": False
+        "disabled_reason": "Enable once TensoFlow adopts to Bazel 0.18.0 or later, https://github.com/tensorflow/tensorflow/pull/22964"
     },
     "TensorFlow Serving": {
         "git_repository": "https://github.com/tensorflow/serving.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-serving-postsubmit.yml",
         "pipeline_slug": "tensorflow-serving",
-        # TODO(pcloudy): enable once TensorFlow_serving adopts to Bazel 0.18.0 or later, https://github.com/tensorflow/serving/pull/1066
-        "downstream_enabled": False
+        "disabled_reason": "Enable once TensorFlow_serving adopts to Bazel 0.18.0 or later, https://github.com/tensorflow/serving/pull/1066"
     }
 }
 
@@ -1238,6 +1201,20 @@ def upload_project_pipeline_step(project_name, git_repository, http_config, file
     }
 
 
+def upload_project_disabled_step(project_name, disabled_reason):
+    return {
+        "label": "{0} is disabled".format(project_name),
+        "command": [
+            "echo",
+            "Disabled reason: ",
+            disabled_reason,
+        ],
+        "agents": {
+            "kind": "pipeline"
+        }
+    }
+
+
 def create_label(platform, project_name, build_only=False, test_only=False):
     if build_only and test_only:
         raise BuildkiteException(
@@ -1347,7 +1324,10 @@ def print_bazel_downstream_pipeline(configs, http_config, file_config):
             bazel_build_step(platform, "Bazel", http_config, file_config, test_only=True))
 
     for project, config in DOWNSTREAM_PROJECTS.items():
-        if config["downstream_enabled"]:
+        disabled_reason = config.get("disabled_reason", None)
+        if disabled_reason:
+            pipeline_steps.append(upload_project_disabled_step(project, disabled_reason))
+        else:
             pipeline_steps.append(
                 upload_project_pipeline_step(project_name=project,
                                              git_repository=config["git_repository"],
