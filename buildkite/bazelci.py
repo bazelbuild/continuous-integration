@@ -1203,7 +1203,7 @@ def upload_project_pipeline_step(project_name, git_repository, http_config, file
 
 def upload_project_disabled_step(project_name, disabled_reason):
     return {
-        "label": ":bangbang: {0} is disabled".format(project_name),
+        "label": "{0} is disabled :sadpanda:".format(project_name),
         "command": [
             "echo \"Disabled reason: %s\"" % disabled_reason
         ],
