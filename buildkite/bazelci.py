@@ -1121,28 +1121,19 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
     #   4. We don't intend to run the same job in downstream with Bazel@HEAD (eg. google-bazel-presubmit)
     if not is_pull_request() and not use_but and os.getenv("BUILDKITE_BRANCH") == "master" and \
        pipeline_slug in all_downstream_pipeline_slugs:
-        if not git_repository:
-            git_repository = os.getenv("BUILDKITE_REPO")
+        pipeline_steps.append("wait")
 
-        last_green_commit = get_last_green_commit(git_repository, pipeline_slug)
-        current_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
-        if last_green_commit:
-            result = subprocess.check_output(["git", "rev-list", "%s..%s" % (last_green_commit, current_commit)]).decode("utf-8").strip()
-        # If current_commit is newer that last_green_commit, `git rev-list A..B` will output a bunch of commits,
-        # otherwise the output should be empty.
-        if not last_green_commit or result:
-            pipeline_steps.append("wait")
-
-            # If all builds succeed, update the last green commit of this project
-            pipeline_steps.append({
-                "label": "Update Last Green Commit",
-                "command": [
-                    "echo %s | %s cp - %s" % (current_commit, gsutil_command(), bazelci_last_green_commit_url(git_repository, pipeline_slug))
-                ],
-                "agents": {
-                    "kind": "pipeline"
-                }
-            })
+        # If all builds succeed, update the last green commit of this project
+        pipeline_steps.append({
+            "label": "Try Update Last Green Commit",
+            "command": [
+                fetch_bazelcipy_command(),
+                python_binary() + " bazelci.py try_update_last_green_commit"
+            ],
+            "agents": {
+                "kind": "pipeline"
+            }
+        })
 
     print(yaml.dump({"steps": pipeline_steps}))
 
@@ -1359,6 +1350,21 @@ def get_last_green_commit(git_repository, pipeline_slug):
         return None
 
 
+def try_update_last_green_commit():
+    pipeline_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
+    git_repository = os.getenv("BUILDKITE_REPO")
+    last_green_commit = get_last_green_commit(git_repository, pipeline_slug)
+    current_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
+    if last_green_commit:
+        result = subprocess.check_output(["git", "rev-list", "%s..%s" % (last_green_commit, current_commit)]).decode("utf-8").strip()
+
+    # If current_commit is newer that last_green_commit, `git rev-list A..B` will output a bunch of commits,
+    # otherwise the output should be empty.
+    if not last_green_commit or result:
+        execute_command(["echo %s | %s cp - %s" % (current_commit, gsutil_command(), bazelci_last_green_commit_url(git_repository, pipeline_slug))], shell = True)
+    else:
+        eprint("Updating abandoned: last green commit (%s) is newer than current commit (%s)." % (last_green_commit, current_commit))
+
 def latest_generation_and_build_number():
     output = None
     attempt = 0
@@ -1509,6 +1515,8 @@ def main(argv=None):
 
     runner = subparsers.add_parser("publish_binaries")
 
+    runner = subparsers.add_parser("try_update_last_green_commit")
+
     args = parser.parse_args(argv)
 
     try:
@@ -1545,6 +1553,8 @@ def main(argv=None):
                              monitor_flaky_tests=args.monitor_flaky_tests)
         elif args.subparsers_name == "publish_binaries":
             publish_binaries()
+        elif args.subparsers_name == "try_update_last_green_commit":
+            try_update_last_green_commit()
         else:
             parser.print_help()
             return 2
