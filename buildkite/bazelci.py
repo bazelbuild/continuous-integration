@@ -425,8 +425,9 @@ def print_expanded_group(name):
     eprint("\n\n+++ {0}\n\n".format(name))
 
 
-def execute_commands(config, platform, git_repository, git_repo_location, use_bazel_at_commit,
-                     use_but, save_but, build_only, test_only, monitor_flaky_tests):
+def execute_commands(config, platform, git_repository, git_commit, git_repo_location,
+                     use_bazel_at_commit, use_but, save_but, build_only, test_only,
+                     monitor_flaky_tests):
     fail_pipeline = False
     tmpdir = None
     bazel_binary = "bazel"
@@ -442,11 +443,10 @@ def execute_commands(config, platform, git_repository, git_repo_location, use_ba
     tmpdir = tempfile.mkdtemp()
     sc_process = None
     try:
-        if git_repository:
-            if git_repo_location:
-                os.chdir(git_repo_location)
-            else:
-                clone_git_repository(git_repository, platform)
+        if git_repo_location:
+            os.chdir(git_repo_location)
+        elif git_repository:
+            clone_git_repository(git_repository, platform, git_commit)
         else:
             git_repository = os.getenv("BUILDKITE_REPO")
 
@@ -738,11 +738,14 @@ def download_bazel_binary_at_commit(dest_dir, platform, bazel_git_commit):
     os.chmod(bazel_binary_path, st.st_mode | stat.S_IEXEC)
     return bazel_binary_path
 
-def clone_git_repository(git_repository, platform):
+def clone_git_repository(git_repository, platform, git_commit=None):
     root = downstream_projects_root(platform)
     project_name = re.search(r"/([^/]+)\.git$", git_repository).group(1)
     clone_path = os.path.join(root, project_name)
-    print_collapsed_group("Fetching " + project_name + " sources")
+    if git_commit:
+        print_collapsed_group("Fetching " + project_name + " sources at " + git_commit)
+    else:
+        print_collapsed_group("Fetching " + project_name + " sources")
 
     if not os.path.exists(clone_path):
         if platform in ["ubuntu1404", "ubuntu1604", "ubuntu1804", "rbe_ubuntu1604"]:
@@ -758,12 +761,14 @@ def clone_git_repository(git_repository, platform):
     execute_command(["git", "remote", "set-url", "origin", git_repository])
     execute_command(["git", "clean", "-fdqx"])
     execute_command(["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"])
-    # sync to the latest commit of HEAD. Unlikely git pull this also works after a force push.
     execute_command(["git", "fetch", "origin"])
-    remote_head = subprocess.check_output(["git", "symbolic-ref", "refs/remotes/origin/HEAD"])
-    remote_head = remote_head.decode("utf-8")
-    remote_head = remote_head.rstrip()
-    execute_command(["git", "reset", remote_head, "--hard"])
+    if git_commit:
+        # sync to a specific commit of this repository
+        execute_command(["git", "reset", git_commit, "--hard"])
+    else:
+        # sync to the latest commit of HEAD. Unlikely git pull this also works after a force push.
+        remote_head = subprocess.check_output(["git", "symbolic-ref", "refs/remotes/origin/HEAD"]).decode("utf-8").rstrip()
+        execute_command(["git", "reset", remote_head, "--hard"])
     execute_command(["git", "submodule", "sync", "--recursive"])
     execute_command(["git", "submodule", "update", "--init", "--recursive", "--force"])
     execute_command(["git", "submodule", "foreach", "--recursive", "git", "reset", "--hard"])
@@ -1104,9 +1109,14 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
                 "prompt": "Did you review this pull request for malicious code?"
             })
 
+    # In Bazel Downstream Project pipeline, git_repository and project_name must be specified,
+    # and we should test the project at the last green commit.
+    git_commit = None
+    if use_but and git_repository and project_name:
+        git_commit = get_last_green_commit(git_repository, DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"])
     for platform in platform_configs:
-        step = runner_step(platform, project_name,
-                           http_config, file_config, git_repository, monitor_flaky_tests, use_but)
+        step = runner_step(platform, project_name, http_config, file_config,
+                           git_repository, git_commit, monitor_flaky_tests, use_but)
         pipeline_steps.append(step)
 
     pipeline_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
@@ -1145,8 +1155,8 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
 
     print(yaml.dump({"steps": pipeline_steps}))
 
-def runner_step(platform, project_name=None, http_config=None,
-                file_config=None, git_repository=None, monitor_flaky_tests=False, use_but=False):
+def runner_step(platform, project_name=None, http_config=None, file_config=None,
+                git_repository=None, git_commit=None, monitor_flaky_tests=False, use_but=False):
     host_platform = PLATFORMS[platform].get("host-platform", platform)
     command = python_binary(host_platform) + " bazelci.py runner --platform=" + platform
     if http_config:
@@ -1155,6 +1165,8 @@ def runner_step(platform, project_name=None, http_config=None,
         command += " --file_config=" + file_config
     if git_repository:
         command += " --git_repository=" + git_repository
+    if git_commit:
+        command += " --git_commit=" + git_commit
     if monitor_flaky_tests:
         command += " --monitor_flaky_tests"
     if use_but:
@@ -1498,6 +1510,7 @@ def main(argv=None):
     runner.add_argument("--file_config", type=str)
     runner.add_argument("--http_config", type=str)
     runner.add_argument("--git_repository", type=str)
+    runner.add_argument("--git_commit", type=str, help="Reset the git repository to this commit after cloning it")
     runner.add_argument("--git_repo_location", type=str, help="Use an existing repository instead of cloning from github")
     runner.add_argument("--use_bazel_at_commit", type=str, help="Use Bazel binariy built at a specifc commit")
     runner.add_argument("--use_but", type=bool, nargs="?", const=True)
@@ -1535,6 +1548,7 @@ def main(argv=None):
             execute_commands(config=configs.get("platforms", None)[args.platform],
                              platform=args.platform,
                              git_repository=args.git_repository,
+                             git_commit=args.git_commit,
                              git_repo_location=args.git_repo_location,
                              use_bazel_at_commit=args.use_bazel_at_commit,
                              use_but=args.use_but,

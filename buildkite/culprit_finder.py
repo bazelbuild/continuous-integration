@@ -56,11 +56,9 @@ def get_bazel_commits_between(first_commit, second_commit):
 
 def test_with_bazel_at_commit(project_name, platform_name, git_repo_location, bazel_commit):
     http_config = DOWNSTREAM_PROJECTS[project_name]["http_config"]
-    git_repository = DOWNSTREAM_PROJECTS[project_name]["git_repository"]
     return_code =  bazelci.main(["runner",
                                  "--platform=" + platform_name,
                                  "--http_config=" + http_config,
-                                 "--git_repository=" + git_repository,
                                  "--git_repo_location=" + git_repo_location,
                                  "--use_bazel_at_commit=" + bazel_commit])
     return return_code == 0
@@ -68,7 +66,8 @@ def test_with_bazel_at_commit(project_name, platform_name, git_repo_location, ba
 
 def clone_git_repository(project_name, platform_name):
     git_repository = DOWNSTREAM_PROJECTS[project_name]["git_repository"]
-    return bazelci.clone_git_repository(git_repository, platform_name)
+    git_commit = bazelci.get_last_green_commit(git_repository, DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"])
+    return bazelci.clone_git_repository(git_repository, platform_name, git_commit)
 
 
 def start_bisecting(project_name, platform_name, git_repo_location, commits_list):
