@@ -743,10 +743,7 @@ def clone_git_repository(git_repository, platform, git_commit=None):
     root = downstream_projects_root(platform)
     project_name = re.search(r"/([^/]+)\.git$", git_repository).group(1)
     clone_path = os.path.join(root, project_name)
-    if git_commit:
-        print_collapsed_group("Fetching " + project_name + " sources at " + git_commit)
-    else:
-        print_collapsed_group("Fetching " + project_name + " sources")
+    print_collapsed_group("Fetching %s sources at %s" % (project_name, git_commit if git_commit else "HEAD"))
 
     if not os.path.exists(clone_path):
         if platform in ["ubuntu1404", "ubuntu1604", "ubuntu1804", "rbe_ubuntu1604"]:
