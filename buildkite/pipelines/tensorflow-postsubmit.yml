@@ -18,7 +18,7 @@ platforms:
     - "--cxxopt=--std=c++11"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
-    - "//tensorflow/examples/android:tensorflow_demo"
+    # - "//tensorflow/examples/android:tensorflow_demo"
   windows:
     batch_commands:
     - "echo.| python ./configure.py"
