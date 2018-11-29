@@ -1374,7 +1374,7 @@ def try_update_last_green_commit():
     if not last_green_commit or result:
         execute_command(["echo %s | %s cp - %s" % (current_commit, gsutil_command(), bazelci_last_green_commit_url(git_repository, pipeline_slug))], shell = True)
     else:
-        eprint("Updating abandoned: last green commit (%s) is newer than current commit (%s)." % (last_green_commit, current_commit))
+        eprint("Updating abandoned: last green commit (%s) is not older than current commit (%s)." % (last_green_commit, current_commit))
 
 def latest_generation_and_build_number():
     output = None
