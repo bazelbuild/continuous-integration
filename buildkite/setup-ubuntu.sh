@@ -310,6 +310,9 @@ ExecStopPost=/usr/bin/find /tmp -user buildkite-agent -delete
 ExecStopPost=/usr/bin/find /var/lib/buildkite-agent -mindepth 1 -maxdepth 1 -execdir rm -rf '{}' +
 ExecStopPost=/bin/sh -c 'docker ps -q | xargs -r docker kill'
 ExecStopPost=/usr/bin/docker system prune -f --volumes
+# Disable tasks accounting, because Bazel is prone to run into resource limits there.
+# This fixes the "cgroup: fork rejected by pids controller" error that some CI jobs triggered.
+TasksAccounting=no
 EOF
   elif [[ $(init --version 2>/dev/null | grep upstart) ]]; then
     # This is a normal worker machine with upstart (e.g. Ubuntu 14.04 LTS).
