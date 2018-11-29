@@ -427,7 +427,7 @@ def print_expanded_group(name):
 
 def execute_commands(config, platform, git_repository, git_commit, git_repo_location,
                      use_bazel_at_commit, use_but, save_but, build_only, test_only,
-                     monitor_flaky_tests, incompatible_flags=[]):
+                     monitor_flaky_tests, incompatible_flags):
     fail_pipeline = False
     tmpdir = None
     bazel_binary = "bazel"
@@ -793,12 +793,12 @@ def execute_shell_commands(commands):
     execute_command([shell_command], shell=True)
 
 
-def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags=[]):
+def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags):
     if not targets:
         return
     print_collapsed_group("Setup (Run Targets)")
     for target in targets:
-        execute_command([bazel_binary] + common_startup_flags(platform) + ["run"] + common_build_flags(None, platform) + incompatible_flags + [target])
+        execute_command([bazel_binary] + common_startup_flags(platform) + ["run"] + common_build_flags(None, platform) + (incompatible_flags or []) + [target])
 
 
 def remote_caching_flags(platform):
@@ -945,7 +945,7 @@ def rbe_flags(original_flags, accept_cached):
     return flags
 
 
-def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file, incompatible_flags=[]):
+def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file, incompatible_flags):
     print_expanded_group(":bazel: Build")
 
     aggregated_flags = common_build_flags(bep_file, platform)
@@ -955,7 +955,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file, incomp
         else:
             aggregated_flags += remote_caching_flags(platform)
     aggregated_flags += flags
-    aggregated_flags += incompatible_flags
+    aggregated_flags += (incompatible_flags or [])
 
     try:
         execute_command([bazel_binary] + common_startup_flags(platform) + ["build"] + aggregated_flags + targets)
@@ -964,7 +964,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file, incomp
             "bazel build failed with exit code {}".format(e.returncode))
 
 
-def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor_flaky_tests, incompatible_flags=[]):
+def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor_flaky_tests, incompatible_flags):
     print_expanded_group(":bazel: Test")
 
     aggregated_flags = common_build_flags(bep_file, platform)
@@ -980,7 +980,7 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor
         elif not monitor_flaky_tests:
             aggregated_flags += remote_caching_flags(platform)
     aggregated_flags += flags
-    aggregated_flags += incompatible_flags
+    aggregated_flags += (incompatible_flags or [])
 
     try:
         execute_command([bazel_binary] + common_startup_flags(platform) + ["test"] + aggregated_flags + targets)
@@ -1093,7 +1093,7 @@ def github_user_for_pull_request():
 
 
 def print_project_pipeline(platform_configs, project_name, http_config, file_config,
-                           git_repository, monitor_flaky_tests, use_but, incompatible_flags=[]):
+                           git_repository, monitor_flaky_tests, use_but, incompatible_flags):
     if not platform_configs:
         raise BuildkiteException("{0} pipeline configuration is empty.".format(project_name))
 
@@ -1150,7 +1150,7 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
     print(yaml.dump({"steps": pipeline_steps}))
 
 def runner_step(platform, project_name=None, http_config=None, file_config=None,
-                git_repository=None, git_commit=None, monitor_flaky_tests=False, use_but=False, incompatible_flags=[]):
+                git_repository=None, git_commit=None, monitor_flaky_tests=False, use_but=False, incompatible_flags):
     host_platform = PLATFORMS[platform].get("host-platform", platform)
     command = python_binary(host_platform) + " bazelci.py runner --platform=" + platform
     if http_config:
@@ -1165,7 +1165,7 @@ def runner_step(platform, project_name=None, http_config=None, file_config=None,
         command += " --monitor_flaky_tests"
     if use_but:
         command += " --use_but"
-    for flag in incompatible_flags:
+    for flag in (incompatible_flags or []):
         command += " --incompatible_flag=" + flag
     label = create_label(platform, project_name)
     return {
