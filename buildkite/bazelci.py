@@ -1191,18 +1191,15 @@ def fetch_bazelcipy_command():
     return "curl -s {0} -o bazelci.py".format(bazelcipy_url())
 
 
-def upload_project_pipeline_step(project_name, git_repository, http_config, file_config, test_incompatible_flags):
+def upload_project_pipeline_step(project_name, git_repository, http_config, file_config, incompatible_flags):
     pipeline_command = ("{0} bazelci.py project_pipeline --project_name=\"{1}\" " +
                         "--git_repository={2}").format(python_binary(), project_name,
                                                                  git_repository)
-    if  test_incompatible_flags:
-        incompatible_flags = os.environ.get("INCOMPATIBLE_FLAGS", "").split()
-        print_expanded_group("Build and test with the following incompatible flags:")
-        for flag in incompatible_flags:
-            eprint(flag + "\n")
-            pipeline_command += " --incompatible_flag=" + flag
-    else:
+    if incompatible_flags == None:
         pipeline_command += " --use_but"
+    else:
+        for flag in incompatible_flags:
+            pipeline_command += " --incompatible_flag=" + flag
     if http_config:
         pipeline_command += " --http_config=" + http_config
     if file_config:
@@ -1346,12 +1343,17 @@ def print_bazel_downstream_pipeline(configs, http_config, file_config, test_inco
         if disabled_reason:
             pipeline_steps.append(upload_project_disabled_step(project, disabled_reason))
         else:
+            if test_incompatible_flags:
+                incompatible_flags = os.environ.get("INCOMPATIBLE_FLAGS", "").split()
+                print_expanded_group("Build and test with the following incompatible flags:")
+                for flag in incompatible_flags:
+                    eprint(flag + "\n")
             pipeline_steps.append(
                 upload_project_pipeline_step(project_name=project,
                                              git_repository=config["git_repository"],
                                              http_config=config.get("http_config", None),
                                              file_config=config.get("file_config", None),
-                                             test_incompatible_flags=test_incompatible_flags))
+                                             incompatible_flags=incompatible_flags))
 
     print(yaml.dump({"steps": pipeline_steps}))
 
