@@ -948,19 +948,24 @@ def rbe_flags(original_flags, accept_cached):
     return flags
 
 
-def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file, incompatible_flags):
-    print_expanded_group(":bazel: Build")
-
+def compute_flags(platform, flags, incompatible_flags, bep_file, enable_remote_cache=False):
     aggregated_flags = common_build_flags(bep_file, platform)
     if not remote_enabled(flags):
         if platform.startswith("rbe_"):
-            aggregated_flags += rbe_flags(flags, accept_cached=True)
-        else:
+            aggregated_flags += rbe_flags(flags, accept_cached=enable_remote_cache)
+        elif enable_remote_cache:
             aggregated_flags += remote_caching_flags(platform)
     aggregated_flags += flags
     if incompatible_flags:
         aggregated_flags += incompatible_flags
+    
+    return aggregated_flags
+        
 
+def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file, incompatible_flags):
+    print_expanded_group(":bazel: Build")
+
+    aggregated_flags = compute_flags(platform, flags, incompatible_flags, bep_file, enable_remote_cache=True)
     try:
         execute_command([bazel_binary] + common_startup_flags(platform) + ["build"] + aggregated_flags + targets)
     except subprocess.CalledProcessError as e:
@@ -971,21 +976,17 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file, incomp
 def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor_flaky_tests, incompatible_flags):
     print_expanded_group(":bazel: Test")
 
-    aggregated_flags = common_build_flags(bep_file, platform)
-    aggregated_flags += ["--flaky_test_attempts=3",
-                         "--build_tests_only",
-                         "--local_test_jobs=" + concurrent_test_jobs(platform)]
+    aggregated_flags = ["--flaky_test_attempts=3",
+                        "--build_tests_only",
+                        "--local_test_jobs=" + concurrent_test_jobs(platform)]
     # Don't enable remote caching if the user enabled remote execution / caching themselves
     # or flaky test monitoring is enabled, as remote caching makes tests look less flaky than
     # they are.
-    if not remote_enabled(flags):
-        if platform.startswith("rbe_"):
-            aggregated_flags += rbe_flags(flags, accept_cached=not monitor_flaky_tests)
-        elif not monitor_flaky_tests:
-            aggregated_flags += remote_caching_flags(platform)
-    aggregated_flags += flags
-    if incompatible_flags:
-        aggregated_flags += incompatible_flags
+    aggregated_flags += compute_flags(platform,
+                                      flags,
+                                      incompatible_flags,
+                                      bep_file,
+                                      enable_remote_cache=not monitor_flaky_tests)
 
     try:
         execute_command([bazel_binary] + common_startup_flags(platform) + ["test"] + aggregated_flags + targets)
