@@ -466,6 +466,11 @@ def execute_commands(config, platform, git_repository, git_commit, git_repo_loca
 
         print_bazel_version_info(bazel_binary)
 
+        if incompatible_flags:
+            print_expanded_group("Build and test with the following incompatible flags:")
+            for flag in incompatible_flags:
+                eprint(flag + "\n")
+
         if platform == "windows":
             execute_batch_commands(config.get("batch_commands", None))
         else:
@@ -1192,7 +1197,9 @@ def upload_project_pipeline_step(project_name, git_repository, http_config, file
                                                                  git_repository)
     if  test_incompatible_flags:
         incompatible_flags = os.environ.get("INCOMPATIBLE_FLAGS", "").split()
+        print_expanded_group("Build and test with the following incompatible flags:")
         for flag in incompatible_flags:
+            eprint(flag + "\n")
             pipeline_command += " --incompatible_flag=" + flag
     else:
         pipeline_command += " --use_but"
