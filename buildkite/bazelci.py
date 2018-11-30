@@ -1150,7 +1150,7 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
     print(yaml.dump({"steps": pipeline_steps}))
 
 def runner_step(platform, project_name=None, http_config=None, file_config=None,
-                git_repository=None, git_commit=None, monitor_flaky_tests=False, use_but=False, incompatible_flags):
+                git_repository=None, git_commit=None, monitor_flaky_tests=False, use_but=False, incompatible_flags=None):
     host_platform = PLATFORMS[platform].get("host-platform", platform)
     command = python_binary(host_platform) + " bazelci.py runner --platform=" + platform
     if http_config:
