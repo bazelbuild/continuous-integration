@@ -428,7 +428,7 @@ def print_expanded_group(name):
 
 def execute_commands(config, platform, git_repository, git_commit, git_repo_location,
                      use_bazel_at_commit, use_but, save_but, build_only, test_only,
-                     monitor_flaky_tests):
+                     monitor_flaky_tests, incompatible_flags):
     fail_pipeline = False
     tmpdir = None
     bazel_binary = "bazel"
@@ -470,7 +470,7 @@ def execute_commands(config, platform, git_repository, git_commit, git_repo_loca
             execute_batch_commands(config.get("batch_commands", None))
         else:
             execute_shell_commands(config.get("shell_commands", None))
-        execute_bazel_run(bazel_binary, platform, config.get("run_targets", None))
+        execute_bazel_run(bazel_binary, platform, config.get("run_targets", None), incompatible_flags)
 
         if config.get("sauce", None):
             print_collapsed_group(":saucelabs: Starting Sauce Connect Proxy")
@@ -498,7 +498,7 @@ def execute_commands(config, platform, git_repository, git_commit, git_repo_loca
                     platform, git_repository, commit, "pending", None)
             try:
                 execute_bazel_build(bazel_binary, platform, config.get("build_flags", []),
-                                    config.get("build_targets", None), build_bep_file)
+                                    config.get("build_targets", None), build_bep_file, incompatible_flags)
                 if is_pull_request():
                     invocation_id = bes_invocation_id(build_bep_file)
                     update_pull_request_build_status(
@@ -519,7 +519,7 @@ def execute_commands(config, platform, git_repository, git_commit, git_repo_loca
                         platform, git_repository, commit, "pending", None)
                 execute_bazel_test(bazel_binary, platform, config.get("test_flags", []),
                                    config.get("test_targets", None), test_bep_file,
-                                   monitor_flaky_tests)
+                                   monitor_flaky_tests, incompatible_flags)
                 if has_flaky_tests(test_bep_file):
                     if monitor_flaky_tests:
                         # Upload the BEP logs from Bazel builds for later analysis on flaky tests
@@ -791,12 +791,12 @@ def execute_shell_commands(commands):
     execute_command([shell_command], shell=True)
 
 
-def execute_bazel_run(bazel_binary, platform, targets):
+def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags):
     if not targets:
         return
     print_collapsed_group("Setup (Run Targets)")
     for target in targets:
-        execute_command([bazel_binary] + common_startup_flags(platform) + ["run"] + common_build_flags(None, platform) + [target])
+        execute_command([bazel_binary] + common_startup_flags(platform) + ["run"] + common_build_flags(None, platform) + (incompatible_flags or []) + [target])
 
 
 def remote_caching_flags(platform):
@@ -943,7 +943,7 @@ def rbe_flags(original_flags, accept_cached):
     return flags
 
 
-def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
+def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file, incompatible_flags):
     print_expanded_group(":bazel: Build")
 
     aggregated_flags = common_build_flags(bep_file, platform)
@@ -953,6 +953,8 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
         else:
             aggregated_flags += remote_caching_flags(platform)
     aggregated_flags += flags
+    if incompatible_flags:
+        aggregated_flags += incompatible_flags
 
     try:
         execute_command([bazel_binary] + common_startup_flags(platform) + ["build"] + aggregated_flags + targets)
@@ -961,7 +963,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file):
             "bazel build failed with exit code {}".format(e.returncode))
 
 
-def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor_flaky_tests):
+def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor_flaky_tests, incompatible_flags):
     print_expanded_group(":bazel: Test")
 
     aggregated_flags = common_build_flags(bep_file, platform)
@@ -977,6 +979,8 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor
         elif not monitor_flaky_tests:
             aggregated_flags += remote_caching_flags(platform)
     aggregated_flags += flags
+    if incompatible_flags:
+        aggregated_flags += incompatible_flags
 
     try:
         execute_command([bazel_binary] + common_startup_flags(platform) + ["test"] + aggregated_flags + targets)
@@ -1089,7 +1093,7 @@ def github_user_for_pull_request():
 
 
 def print_project_pipeline(platform_configs, project_name, http_config, file_config,
-                           git_repository, monitor_flaky_tests, use_but):
+                           git_repository, monitor_flaky_tests, use_but, incompatible_flags):
     if not platform_configs:
         raise BuildkiteException("{0} pipeline configuration is empty.".format(project_name))
 
@@ -1114,7 +1118,7 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
         git_commit = get_last_green_commit(git_repository, DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"])
     for platform in platform_configs:
         step = runner_step(platform, project_name, http_config, file_config,
-                           git_repository, git_commit, monitor_flaky_tests, use_but)
+                           git_repository, git_commit, monitor_flaky_tests, use_but, incompatible_flags)
         pipeline_steps.append(step)
 
     pipeline_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
@@ -1126,8 +1130,9 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
     #   2. This job uses a custom built Bazel binary (In Bazel Downstream Projects pipeline)
     #   3. This job doesn't run on master branch (Could be a custom build launched manually)
     #   4. We don't intend to run the same job in downstream with Bazel@HEAD (eg. google-bazel-presubmit)
-    if not is_pull_request() and not use_but and os.getenv("BUILDKITE_BRANCH") == "master" and \
-       pipeline_slug in all_downstream_pipeline_slugs:
+    #   5. We are testing incompatible flags
+    if not (is_pull_request() or use_but or os.getenv("BUILDKITE_BRANCH") != "master" \
+       pipeline_slug not in all_downstream_pipeline_slugs or incompatible_flags):
         pipeline_steps.append("wait")
 
         # If all builds succeed, update the last green commit of this project
@@ -1145,7 +1150,7 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
     print(yaml.dump({"steps": pipeline_steps}))
 
 def runner_step(platform, project_name=None, http_config=None, file_config=None,
-                git_repository=None, git_commit=None, monitor_flaky_tests=False, use_but=False):
+                git_repository=None, git_commit=None, monitor_flaky_tests=False, use_but=False, incompatible_flags):
     host_platform = PLATFORMS[platform].get("host-platform", platform)
     command = python_binary(host_platform) + " bazelci.py runner --platform=" + platform
     if http_config:
@@ -1160,6 +1165,8 @@ def runner_step(platform, project_name=None, http_config=None, file_config=None,
         command += " --monitor_flaky_tests"
     if use_but:
         command += " --use_but"
+    for flag in (incompatible_flags or []):
+        command += " --incompatible_flag=" + flag
     label = create_label(platform, project_name)
     return {
         "label": label,
@@ -1179,10 +1186,16 @@ def fetch_bazelcipy_command():
     return "curl -s {0} -o bazelci.py".format(bazelcipy_url())
 
 
-def upload_project_pipeline_step(project_name, git_repository, http_config, file_config):
+def upload_project_pipeline_step(project_name, git_repository, http_config, file_config, test_incompatible_flags):
     pipeline_command = ("{0} bazelci.py project_pipeline --project_name=\"{1}\" " +
-                        "--use_but --git_repository={2}").format(python_binary(), project_name,
+                        "--git_repository={2}").format(python_binary(), project_name,
                                                                  git_repository)
+    if  test_incompatible_flags:
+        incompatible_flags = os.environ.get("INCOMPATIBLE_FLAGS", "").split()
+        for flag in incompatible_flags:
+            pipeline_command += " --incompatible_flag=" + flag
+    else:
+        pipeline_command += " --use_but"
     if http_config:
         pipeline_command += " --http_config=" + http_config
     if file_config:
@@ -1300,7 +1313,7 @@ def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
     print(yaml.dump({"steps": pipeline_steps}))
 
 
-def print_bazel_downstream_pipeline(configs, http_config, file_config):
+def print_bazel_downstream_pipeline(configs, http_config, file_config, test_incompatible_flags):
     if not configs:
         raise BuildkiteException("Bazel downstream pipeline configuration is empty.")
 
@@ -1330,7 +1343,8 @@ def print_bazel_downstream_pipeline(configs, http_config, file_config):
                 upload_project_pipeline_step(project_name=project,
                                              git_repository=config["git_repository"],
                                              http_config=config.get("http_config", None),
-                                             file_config=config.get("file_config", None)))
+                                             file_config=config.get("file_config", None),
+                                             test_incompatible_flags=test_incompatible_flags))
 
     print(yaml.dump({"steps": pipeline_steps}))
 
@@ -1500,6 +1514,7 @@ def main(argv=None):
     bazel_downstream_pipeline.add_argument("--file_config", type=str)
     bazel_downstream_pipeline.add_argument("--http_config", type=str)
     bazel_downstream_pipeline.add_argument("--git_repository", type=str)
+    bazel_downstream_pipeline.add_argument("--test_incompatible_flags", type=bool, nargs="?", const=True)
 
     project_pipeline = subparsers.add_parser("project_pipeline")
     project_pipeline.add_argument("--project_name", type=str)
@@ -1508,6 +1523,7 @@ def main(argv=None):
     project_pipeline.add_argument("--git_repository", type=str)
     project_pipeline.add_argument("--monitor_flaky_tests", type=bool, nargs="?", const=True)
     project_pipeline.add_argument("--use_but", type=bool, nargs="?", const=True)
+    project_pipeline.add_argument("--incompatible_flag", type=str, action='append')
 
     runner = subparsers.add_parser("runner")
     runner.add_argument("--platform", action="store", choices=list(PLATFORMS))
@@ -1522,6 +1538,7 @@ def main(argv=None):
     runner.add_argument("--build_only", type=bool, nargs="?", const=True)
     runner.add_argument("--test_only", type=bool, nargs="?", const=True)
     runner.add_argument("--monitor_flaky_tests", type=bool, nargs="?", const=True)
+    runner.add_argument("--incompatible_flag", type=str, action='append')
 
     runner = subparsers.add_parser("publish_binaries")
 
@@ -1539,7 +1556,8 @@ def main(argv=None):
             configs = fetch_configs(args.http_config, args.file_config)
             print_bazel_downstream_pipeline(configs=configs.get("platforms", None),
                                             http_config=args.http_config,
-                                            file_config=args.file_config)
+                                            file_config=args.file_config,
+                                            test_incompatible_flags=args.test_incompatible_flags)
         elif args.subparsers_name == "project_pipeline":
             configs = fetch_configs(args.http_config, args.file_config)
             print_project_pipeline(platform_configs=configs.get("platforms", None),
@@ -1548,7 +1566,8 @@ def main(argv=None):
                                    file_config=args.file_config,
                                    git_repository=args.git_repository,
                                    monitor_flaky_tests=args.monitor_flaky_tests,
-                                   use_but=args.use_but)
+                                   use_but=args.use_but,
+                                   incompatible_flags=args.incompatible_flag)
         elif args.subparsers_name == "runner":
             configs = fetch_configs(args.http_config, args.file_config)
             execute_commands(config=configs.get("platforms", None)[args.platform],
@@ -1561,7 +1580,8 @@ def main(argv=None):
                              save_but=args.save_but,
                              build_only=args.build_only,
                              test_only=args.test_only,
-                             monitor_flaky_tests=args.monitor_flaky_tests)
+                             monitor_flaky_tests=args.monitor_flaky_tests,
+                             incompatible_flags=args.incompatible_flag)
         elif args.subparsers_name == "publish_binaries":
             publish_binaries()
         elif args.subparsers_name == "try_update_last_green_commit":
