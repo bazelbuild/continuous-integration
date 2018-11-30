@@ -1338,16 +1338,17 @@ def print_bazel_downstream_pipeline(configs, http_config, file_config, test_inco
         pipeline_steps.append(
             bazel_build_step(platform, "Bazel", http_config, file_config, test_only=True))
 
+    if test_incompatible_flags:
+        incompatible_flags = os.environ.get("INCOMPATIBLE_FLAGS", "").split()
+        print_expanded_group("Build and test with the following incompatible flags:")
+        for flag in incompatible_flags:
+            eprint(flag + "\n")
+
     for project, config in DOWNSTREAM_PROJECTS.items():
         disabled_reason = config.get("disabled_reason", None)
         if disabled_reason:
             pipeline_steps.append(upload_project_disabled_step(project, disabled_reason))
         else:
-            if test_incompatible_flags:
-                incompatible_flags = os.environ.get("INCOMPATIBLE_FLAGS", "").split()
-                print_expanded_group("Build and test with the following incompatible flags:")
-                for flag in incompatible_flags:
-                    eprint(flag + "\n")
             pipeline_steps.append(
                 upload_project_pipeline_step(project_name=project,
                                              git_repository=config["git_repository"],
