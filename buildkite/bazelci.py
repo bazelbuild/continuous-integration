@@ -1131,7 +1131,7 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
     #   3. This job doesn't run on master branch (Could be a custom build launched manually)
     #   4. We don't intend to run the same job in downstream with Bazel@HEAD (eg. google-bazel-presubmit)
     #   5. We are testing incompatible flags
-    if not (is_pull_request() or use_but or os.getenv("BUILDKITE_BRANCH") != "master" \
+    if not (is_pull_request() or use_but or os.getenv("BUILDKITE_BRANCH") != "master" or \
        pipeline_slug not in all_downstream_pipeline_slugs or incompatible_flags):
         pipeline_steps.append("wait")
 
