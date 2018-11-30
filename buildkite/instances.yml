@@ -41,7 +41,7 @@ instance_groups:
     local_ssd: interface=nvme
     metadata_from_file: startup-script=startup-ubuntu.sh
   - name: bk-worker-ubuntu1604-java8
-    count: 8
+    count: 16
     image_family: bk-worker-ubuntu1604-java8
     local_ssd: interface=nvme
     metadata_from_file: startup-script=startup-ubuntu.sh
