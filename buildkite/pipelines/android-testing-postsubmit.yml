@@ -2,12 +2,15 @@
 ---
 platforms:
   ubuntu1404:
+    build_flags:
+    - "--incompatible_package_name_is_a_function=false" # Remove when android/android-test is updated to use updated protobuf https://github.com/protocolbuffers/protobuf/pull/4650
     build_targets:
     - "//ui/..."
     test_flags:
     - "--local_test_jobs=8" # Run at most 8 tests (= emulators) in parallel
     - "--flaky_test_attempts=3" # Flakes.
     - "--spawn_strategy=standalone" # Reduce flakes.
+    - "--incompatible_package_name_is_a_function=false" # Remove when android/android-test is updated to use updated protobuf https://github.com/protocolbuffers/protobuf/pull/4650
     test_targets:
     - "//ui/espresso/RecyclerViewSample:RecyclerViewSampleInstrumentationTest_23_x86"
     - "//ui/espresso/IntentsBasicSample:IntentsBasicSampleInstrumentationTest_23_x86"
@@ -16,12 +19,15 @@ platforms:
     - "//ui/espresso/CustomMatcherSample:CustomMatcherSampleInstrumentationTest_23_x86"
     - "//ui/espresso/BasicSample:BasicSampleInstrumentationTest_23_x86"
   ubuntu1604:
+    build_flags:
+    - "--incompatible_package_name_is_a_function=false" # Remove when android/android-test is updated to use updated protobuf https://github.com/protocolbuffers/protobuf/pull/4650
     build_targets:
     - "//ui/..."
     test_flags:
     - "--local_test_jobs=8" # Run at most 8 tests (= emulators) in parallel
     - "--flaky_test_attempts=3" # Flakes.
     - "--spawn_strategy=standalone" # Reduce flakes.
+    - "--incompatible_package_name_is_a_function=false" # Remove when android/android-test is updated to use updated protobuf https://github.com/protocolbuffers/protobuf/pull/4650
     test_targets:
     - "//ui/espresso/RecyclerViewSample:RecyclerViewSampleInstrumentationTest_23_x86"
     - "//ui/espresso/IntentsBasicSample:IntentsBasicSampleInstrumentationTest_23_x86"
@@ -30,12 +36,15 @@ platforms:
     - "//ui/espresso/CustomMatcherSample:CustomMatcherSampleInstrumentationTest_23_x86"
     - "//ui/espresso/BasicSample:BasicSampleInstrumentationTest_23_x86"
   ubuntu1804:
+    build_flags:
+    - "--incompatible_package_name_is_a_function=false" # Remove when android/android-test is updated to use updated protobuf https://github.com/protocolbuffers/protobuf/pull/4650
     build_targets:
     - "//ui/..."
     test_flags:
     - "--local_test_jobs=8" # Run at most 8 tests (= emulators) in parallel
     - "--flaky_test_attempts=3" # Flakes.
     - "--spawn_strategy=standalone" # Reduce flakes.
+    - "--incompatible_package_name_is_a_function=false" # Remove when android/android-test is updated to use updated protobuf https://github.com/protocolbuffers/protobuf/pull/4650
     test_targets:
     - "//ui/espresso/RecyclerViewSample:RecyclerViewSampleInstrumentationTest_23_x86"
     - "//ui/espresso/IntentsBasicSample:IntentsBasicSampleInstrumentationTest_23_x86"
@@ -45,6 +54,8 @@ platforms:
     - "//ui/espresso/BasicSample:BasicSampleInstrumentationTest_23_x86"
   macos:
     # Testing does not work for macos and windows yet
+    build_flags:
+    - "--incompatible_package_name_is_a_function=false" # Remove when android/android-test is updated to use updated protobuf https://github.com/protocolbuffers/protobuf/pull/4650
     build_targets: # Results of `bazel query 'kind(android_binary, //...)'
       - "//ui/uiautomator/BasicSample:BasicSampleTest"
       - "//ui/uiautomator/BasicSample:BasicSample"
