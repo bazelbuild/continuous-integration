@@ -955,7 +955,8 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file, incomp
         else:
             aggregated_flags += remote_caching_flags(platform)
     aggregated_flags += flags
-    aggregated_flags += (incompatible_flags or [])
+    if incompatible_flags:
+        aggregated_flags += incompatible_flags
 
     try:
         execute_command([bazel_binary] + common_startup_flags(platform) + ["build"] + aggregated_flags + targets)
@@ -980,7 +981,8 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor
         elif not monitor_flaky_tests:
             aggregated_flags += remote_caching_flags(platform)
     aggregated_flags += flags
-    aggregated_flags += (incompatible_flags or [])
+    if incompatible_flags:
+        aggregated_flags += incompatible_flags
 
     try:
         execute_command([bazel_binary] + common_startup_flags(platform) + ["test"] + aggregated_flags + targets)
