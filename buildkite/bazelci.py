@@ -1339,6 +1339,7 @@ def print_bazel_downstream_pipeline(configs, http_config, file_config, test_inco
         pipeline_steps.append(
             bazel_build_step(platform, "Bazel", http_config, file_config, test_only=True))
 
+    incompatible_flags = None
     if test_incompatible_flags:
         incompatible_flags = os.environ.get("INCOMPATIBLE_FLAGS", "").split()
         print_expanded_group("Build and test with the following incompatible flags:")
