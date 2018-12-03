@@ -958,9 +958,9 @@ def compute_flags(platform, flags, incompatible_flags, bep_file, enable_remote_c
     aggregated_flags += flags
     if incompatible_flags:
         aggregated_flags += incompatible_flags
-    
+
     return aggregated_flags
-        
+
 
 def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file, incompatible_flags):
     print_expanded_group(":bazel: Build")
@@ -1117,10 +1117,10 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
                 "prompt": "Did you review this pull request for malicious code?"
             })
 
-    # In Bazel Downstream Project pipeline, git_repository and project_name must be specified,
+    # In Bazel Downstream Project pipelines, git_repository and project_name must be specified,
     # and we should test the project at the last green commit.
     git_commit = None
-    if use_but and git_repository and project_name:
+    if (use_but or incompatible_flags) and git_repository and project_name:
         git_commit = get_last_green_commit(git_repository, DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"])
     for platform in platform_configs:
         step = runner_step(platform, project_name, http_config, file_config,
