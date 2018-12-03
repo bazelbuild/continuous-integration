@@ -47,8 +47,7 @@ DOWNSTREAM_PROJECTS = {
     "Android Testing": {
         "git_repository": "https://github.com/googlesamples/android-testing.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/android-testing-postsubmit.yml",
-        "pipeline_slug": "android-testing",
-        "disabled_reason": "https://github.com/googlesamples/android-testing/issues/224: reenable once fixed"
+        "pipeline_slug": "android-testing"
     },
     "Bazel Remote Execution": {
         "git_repository": "https://github.com/bazelbuild/bazel.git",
