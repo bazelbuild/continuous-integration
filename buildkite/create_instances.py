@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import argparse
+import codecs
 import collections
 import gcloud
 import itertools
@@ -85,6 +86,8 @@ def worker():
 
 def get_config(use_local_config):
     config = read_config_file(use_local_config)
+    if not config:
+        raise ConfigError('Configuration is empty.')
     return Config(default_vm=create_index(config, DEFAULT_VM_CONFIG_KEY),
                   single_instances=create_index(config, SINGLE_INSTANCES_CONFIG_KEY),
                   instance_groups=create_index(config, INSTANCE_GROUPS_CONFIG_KEY))
@@ -103,7 +106,7 @@ def read_config_file(use_local_config):
         try:
             with urllib.request.urlopen(CONFIG_URL) as resp:
                 reader = codecs.getreader("utf-8")
-                content = reader(resp)
+                content = reader(resp).read()
         except urllib.error.URLError as ex:
             raise ConfigError('Cannot read remote file %s: %s' % (CONFIG_URL, ex))
 
