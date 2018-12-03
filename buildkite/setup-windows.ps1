@@ -227,6 +227,7 @@ if ($java -ne "no") {
     $android_ndk_zip = "c:\temp\android_ndk.zip"
     $android_ndk_root = "c:\android_ndk"
     New-Item $android_ndk_root -ItemType "directory" -Force
+    Add-NTFSAccess -Path $android_ndk_root -Account BUILTIN\Users -AccessRights Read
     (New-Object Net.WebClient).DownloadFile($android_ndk_url, $android_ndk_zip)
     [System.IO.Compression.ZipFile]::ExtractToDirectory($android_ndk_zip, $android_ndk_root)
     Rename-Item "${android_ndk_root}\android-ndk-r15c" -NewName "r15c"
@@ -239,6 +240,7 @@ if ($java -ne "no") {
     $android_sdk_zip = "c:\temp\android_sdk.zip"
     $android_sdk_root = "c:\android_sdk"
     New-Item $android_sdk_root -ItemType "directory" -Force
+    Add-NTFSAccess -Path $android_sdk_root -Account BUILTIN\Users -AccessRights Read
     (New-Object Net.WebClient).DownloadFile($android_sdk_url, $android_sdk_zip)
     [System.IO.Compression.ZipFile]::ExtractToDirectory($android_sdk_zip, $android_sdk_root)
     [Environment]::SetEnvironmentVariable("ANDROID_HOME", $android_sdk_root, "Machine")
