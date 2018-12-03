@@ -5,13 +5,14 @@ platforms:
     - |-
       echo '
       import %workspace%/.bazelrc' >>bazel.bazelrc
-    - |- 
+    - |-
       echo '
       android_sdk_repository(name = "androidsdk")
       android_ndk_repository(name = "androidndk")' >>WORKSPACE
     - touch .bazelrc
     - "./tensorflow/tools/ci_build/builds/configured CPU"
     build_flags:
+    - "--config=opt"
     # TODO(laszlocsomor): remove "--cxxopt=--std=c++11" after cr/200219133
     # is merged to upstream TensorFlow, it's a temporary workaround for
     # https://github.com/bazelbuild/bazel/issues/5365.
@@ -23,9 +24,7 @@ platforms:
     batch_commands:
     - "echo.| python ./configure.py"
     build_flags:
-    - "--copt=-w"
-    - "--host_copt=-w"
-    - "--define=override_eigen_strong_inline=true"
+    - "--config=opt"
     # NOTE(laszlocsomor): Regarding https://github.com/bazelbuild/bazel/issues/5365
     # and the "--cxxopt=--std=c++11" flag on other platforms: Visual C++
     # does not understand "--std=c++11", its syntax for C++ standard
