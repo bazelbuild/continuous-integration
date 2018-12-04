@@ -15,23 +15,9 @@ Format-Volume -DriveLetter D -ShortFileNameSupport $true
 Write-Host "Loading support for ZIP files..."
 Add-Type -AssemblyName "System.IO.Compression.FileSystem"
 
-## Remove write access to volumes for unprivileged users.
-Write-Host "Setting NTFS permissions..."
-Remove-NTFSAccess "C:\" -Account BUILTIN\Users -AccessRights Write
-Remove-NTFSAccess "D:\" -Account BUILTIN\Users -AccessRights Write
-
-## Ensure that home directory of buildkite user is deleted.
-$buildkite_username = "b"
-Write-Host "Deleting home directory of the buildkite user ${buildkite_username} user..."
-Get-CimInstance Win32_UserProfile | Where LocalPath -EQ "C:\Users\${buildkite_username}" | Remove-CimInstance
-if ( Test-Path "C:\Users\${buildkite_username}" ) {
-  Throw "The home directory of the ${buildkite_username} user could not be deleted."
-}
-
 ## Create temporary folder (D:\temp).
 Write-Host "Creating temporary folder on local SSD..."
 New-Item "D:\temp" -ItemType "directory"
-Add-NTFSAccess "D:\temp" -Account BUILTIN\Users -AccessRights Write
 
 ## Redirect MSYS2's tmp folder to D:\temp
 Write-Host "Redirecting MSYS2's tmp folder to D:\temp..."
@@ -42,7 +28,6 @@ New-Item -ItemType Junction -Path "C:\tools\msys64\tmp" -Value "D:\temp"
 Write-Host "Creating build folder on local SSD..."
 Remove-Item "D:\b" -Recurse -Force -ErrorAction Ignore
 New-Item "D:\b" -ItemType "directory"
-Add-NTFSAccess "D:\b" -Account BUILTIN\Users -AccessRights Write
 
 ## Setup the TEMP and TMP environment variables.
 Write-Host "Setting environment variables..."
@@ -72,17 +57,13 @@ Write-Host "Unpacking Git snapshot..."
 Expand-Archive -LiteralPath $bazelbuild_zip -DestinationPath $bazelbuild_root -Force
 Remove-Item $bazelbuild_zip
 
-## Get the current image version.
-Write-Host "Getting image version..."
-$image_version = (Get-Content "c:\buildkite\image.version" -Raw).Trim()
-
 ## Configure the Buildkite agent.
 Write-Host "Configuring Buildkite Agent..."
 $buildkite_agent_root = "c:\buildkite"
 $buildkite_agent_config = @"
 token="${buildkite_agent_token}"
 name="%hostname"
-tags="kind=worker,os=windows,java=8,image-version=${image_version}"
+tags="kind=worker,os=windows,java=8"
 build-path="d:\b"
 hooks-path="c:\buildkite\hooks"
 plugins-path="c:\buildkite\plugins"
@@ -93,11 +74,10 @@ disconnect-after-job-timeout=86400
 [System.IO.File]::WriteAllLines("${buildkite_agent_root}\buildkite-agent.cfg", $buildkite_agent_config)
 
 ## Start the Buildkite agent service.
-Write-Host "Starting Buildkite agent as user ${buildkite_username}..."
-& nssm start "buildkite-agent"
-
-Write-Host "Waiting for Buildkite agent to exit..."
-While ((Get-Service "buildkite-agent").Status -eq "Running") { Start-Sleep -Seconds 1 }
-
-Write-Host "Buildkite agent has exited, rebooting."
-Restart-Computer -Force
+try {
+    Write-Host "Starting Buildkite agent..."
+    & c:\buildkite\buildkite-agent.exe start
+} finally {
+    Write-Host "Buildkite agent has exited, shutting down."
+    Stop-Computer -Force
+}

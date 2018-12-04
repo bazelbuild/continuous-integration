@@ -859,7 +859,7 @@ def concurrent_test_jobs(platform):
 def common_startup_flags(platform):
     flags = []
     if platform == "windows":
-        flags += ["--output_user_root=D:/tmp"]
+        flags += ["--output_user_root=D:/b"]
     return flags
 
 

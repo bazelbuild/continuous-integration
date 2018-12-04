@@ -14,7 +14,7 @@ Add-Type -AssemblyName "System.IO.Compression.FileSystem"
 ## Create C:\temp
 Write-Host "Creating temporary folder C:\temp..."
 if (-Not (Test-Path "c:\temp")) {
-New-Item "c:\temp" -ItemType "directory"
+    New-Item "c:\temp" -ItemType "directory"
 }
 [Environment]::SetEnvironmentVariable("TEMP", "C:\temp", "Machine")
 [Environment]::SetEnvironmentVariable("TMP", "C:\temp", "Machine")
@@ -67,10 +67,6 @@ Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
 # Add-WUServiceManager -ServiceID 7971f918-a847-4430-9279-4a52d1efe18d
 # Get-WindowsUpdate -Install -MicrosoftUpdate -AcceptAll -AutoReboot
 
-## Install support for managing NTFS ACLs in PowerShell.
-Write-Host "Installing NTFSSecurity module..."
-Install-Module NTFSSecurity
-
 ## Install Chocolatey
 Write-Host "Installing Chocolatey..."
 # Chocolatey adds "C:\ProgramData\chocolatey\bin" to global PATH.
@@ -109,13 +105,16 @@ if ($myhostname -like "*nojava*") {
     $java = "no"
 } elseif ($myhostname -like "*java8*") {
     $java = "8"
-    $zulu_filename = "zulu8.31.0.1-jdk8.0.181-win_x64.zip"
+    $zulu_filename = "zulu8.33.0.1-jdk8.0.192-win_x64.zip"
 } elseif ($myhostname -like "*java9*") {
     $java = "9"
     $zulu_filename = "zulu9.0.7.1-jdk9.0.7-win_x64.zip"
 } elseif ($myhostname -like "*java10*") {
     $java = "10"
     $zulu_filename = "zulu10.3+5-jdk10.0.2-win_x64.zip"
+} elseif ($myhostname -like "*java11*") {
+    $java = "11"
+    $zulu_filename = "zulu11.2.3-jdk11.0.1-win_x64.zip"
 } else {
     Throw "Could not deduce Java version from hostname: ${myhostname}!"
 }
@@ -262,8 +261,6 @@ if ($java -ne "no") {
     Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
 
     ## Install all required Android SDK components.
-    ## - build-tools 28.0.1 introduces the new dexer, d8.jar
-    ## - android-24 is required for desugar tests.
     & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platform-tools"
     & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;27.0.3"
     & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;28.0.2"
@@ -293,22 +290,17 @@ New-Item "${buildkite_agent_root}\plugins" -ItemType "directory" -Force
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${buildkite_agent_root}"
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
-## Store the image version in a file.
-$web_client = New-Object Net.WebClient
-$web_client.Headers.add("Metadata-Flavor", "Google")
-$image_version = $web_client.DownloadString("http://metadata.google.internal/computeMetadata/v1/instance/attributes/image-version")
-$image_version = $image_version.Trim()
-$image_version | Set-Content -Path "c:\buildkite\image.version"
-
 ## Remove empty folders (";;") from PATH.
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine").replace(";;", ";")
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
-## Create a service wrapper script for the Buildkite agent.
+## Create an environment hook for the Buildkite agent.
 Write-Host "Creating Buildkite agent environment hook..."
 $buildkite_environment_hook = @"
 SET BUILDKITE_ARTIFACT_UPLOAD_DESTINATION=gs://bazel-buildkite-artifacts/%BUILDKITE_JOB_ID%
 SET BUILDKITE_GS_ACL=publicRead
+SET ANDROID_HOME=${env:ANDROID_HOME}
+SET ANDROID_NDK_HOME=${env:ANDROID_NDK_HOME}
 SET JAVA_HOME=${env:JAVA_HOME}
 SET PATH=${env:PATH}
 SET TEMP=D:\temp
@@ -316,42 +308,12 @@ SET TMP=D:\temp
 "@
 [System.IO.File]::WriteAllLines("${buildkite_agent_root}\hooks\environment.bat", $buildkite_environment_hook)
 
-## Create an unprivileged user that we'll run the Buildkite agent as.
-# The password used here is not relevant for security, as the server is behind a
-# firewall blocking all incoming access and locally we run the CI jobs as that
-# user anyway.
-Write-Host "Creating Buildkite service user..."
-$buildkite_username = "b"
-$buildkite_password = "Bu1ldk1t3"
-$buildkite_secure_password = ConvertTo-SecureString $buildkite_password -AsPlainText -Force
-New-LocalUser -Name $buildkite_username -Password $buildkite_secure_password -UserMayNotChangePassword
-
 ## Allow the Buildkite agent to store SSH host keys in this folder.
 Write-Host "Creating C:\buildkite\.ssh folder..."
 New-Item "c:\buildkite\.ssh" -ItemType "directory"
-Add-NTFSAccess -Path "c:\buildkite\.ssh" -Account BUILTIN\Users -AccessRights Write
 
 Write-Host "Creating C:\buildkite\logs folder..."
 New-Item "c:\buildkite\logs" -ItemType "directory"
-Add-NTFSAccess -Path "c:\buildkite\logs" -Account BUILTIN\Users -AccessRights Write
-
-## Create a service for the Buildkite agent.
-& choco install nssm
-
-Write-Host "Creating Buildkite Agent service..."
-nssm install "buildkite-agent" `
-    "c:\buildkite\buildkite-agent.exe" `
-    "start"
-nssm set "buildkite-agent" "AppDirectory" "c:\buildkite"
-nssm set "buildkite-agent" "DisplayName" "Buildkite Agent"
-nssm set "buildkite-agent" "Start" "SERVICE_DEMAND_START"
-nssm set "buildkite-agent" "ObjectName" ".\${buildkite_username}" "$buildkite_password"
-nssm set "buildkite-agent" "AppExit" "Default" "Exit"
-nssm set "buildkite-agent" "AppStdout" "c:\buildkite\logs\buildkite-agent.log"
-nssm set "buildkite-agent" "AppStderr" "c:\buildkite\logs\buildkite-agent.log"
-nssm set "buildkite-agent" "AppRotateFiles" "1"
-nssm set "buildkite-agent" "AppRotateSeconds" 86400
-nssm set "buildkite-agent" "AppRotateBytes" 1048576
 
 Write-Host "All done, adding GCESysprep to RunOnce and rebooting..."
 Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "GCESysprep" -Value "c:\Program Files\Google\Compute Engine\sysprep\gcesysprep.bat"
