@@ -15,10 +15,6 @@
 # limitations under the License.
 
 import argparse
-import codecs
-import collections
-import gcloud
-import itertools
 import os
 import queue
 import sys
@@ -27,45 +23,13 @@ import urllib.error
 import urllib.request
 import yaml
 
+import gcloud
 
-DEBUG = True
 
 CONFIG_URL = 'https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/instances.yml'
 LOCAL_CONFIG_FILE_NAME = 'instances.yml'
-DEFAULT_VM_CONFIG_KEY = 'default_vm'
-INSTANCE_GROUPS_CONFIG_KEY = 'instance_groups'
-SINGLE_INSTANCES_CONFIG_KEY = 'single_instances'
 
-Config = collections.namedtuple('Config', ['default_vm', 'single_instances', 'instance_groups'])
-
-class ConfigError(Exception):
-    pass
-
-PRINT_LOCK = threading.Lock()
 WORK_QUEUE = queue.Queue()
-
-
-def instance_group_task(instance_group_name, count, zone, **kwargs):
-    template_name = instance_group_name + '-template'
-
-    if gcloud.delete_instance_group(instance_group_name, zone=zone).returncode == 0:
-        print('Deleted existing instance group: {}'.format(instance_group_name))
-
-    if gcloud.delete_instance_template(template_name).returncode == 0:
-        print('Deleted existing VM template: {}'.format(template_name))
-
-    gcloud.create_instance_template(template_name, **kwargs)
-
-    gcloud.create_instance_group(instance_group_name, zone=zone,
-                                 base_instance_name=instance_group_name,
-                                 template=template_name, size=count)
-
-
-def single_instance_task(instance_name, zone, **kwargs):
-    if gcloud.delete_instance(instance_name, zone=zone).returncode == 0:
-        print('Deleted existing instance: {}'.format(instance_name))
-
-    gcloud.create_instance(instance_name, zone=zone, **kwargs)
 
 
 def worker():
@@ -74,107 +38,76 @@ def worker():
         if not item:
             break
         try:
-            if 'instance_group_name' in item:
-                instance_group_task(**item)
-            elif 'instance_name' in item:
-                single_instance_task(**item)
-            else:
-                raise Exception('Unknown task: {}'.format(item))
+            # We take three keys out of the config item. The rest is passed
+            # as-is to create_instance_template() and thus to the gcloud
+            # command line tool.
+            count = item.pop('count')
+            instance_group_name = item.pop('name')
+            zone = item.pop('zone')
+
+            template_name = instance_group_name + '-template'
+
+            if gcloud.delete_instance_group(instance_group_name, zone=zone).returncode == 0:
+                print('Deleted existing instance group: {}'.format(instance_group_name))
+
+            if gcloud.delete_instance_template(template_name).returncode == 0:
+                print('Deleted existing VM template: {}'.format(template_name))
+
+            gcloud.create_instance_template(template_name, **item)
+
+            gcloud.create_instance_group(instance_group_name, zone=zone,
+                                         base_instance_name=instance_group_name,
+                                         template=template_name, size=count)
         finally:
             WORK_QUEUE.task_done()
-
-
-def get_config(use_local_config):
-    config = read_config_file(use_local_config)
-    if not config:
-        raise ConfigError('Configuration is empty.')
-    return Config(default_vm=create_index(config, DEFAULT_VM_CONFIG_KEY),
-                  single_instances=create_index(config, SINGLE_INSTANCES_CONFIG_KEY),
-                  instance_groups=create_index(config, INSTANCE_GROUPS_CONFIG_KEY))
 
 
 def read_config_file(use_local_config):
     content = None
     if use_local_config:
         path = os.path.join(os.getcwd(), LOCAL_CONFIG_FILE_NAME)
-        try:
-            with open(path, "r") as fd:
-                content = fd.read()
-        except IOError as ex:
-            raise ConfigError('Cannot read local file %s: %s' % (path, ex))
+        with open(path, "rb") as fd:
+            content = fd.read().decode('utf-8')
     else:
-        try:
-            with urllib.request.urlopen(CONFIG_URL) as resp:
-                reader = codecs.getreader("utf-8")
-                content = reader(resp).read()
-        except urllib.error.URLError as ex:
-            raise ConfigError('Cannot read remote file %s: %s' % (CONFIG_URL, ex))
-
-    try:
-        return yaml.safe_load(content)
-    except yaml.YAMLError as ex:
-        raise ConfigError('Malformed YAML: %s' % ex)
-
-
-def create_index(config, key):
-    if key not in config:
-        raise ValueError('Missing entry "%s" from the configuration file.' % key)
-
-    if not config[key]:
-        return {}
-
-    # Special case for Default VM: only one entry, so no need to create an index
-    if isinstance(config[key], dict):
-        return config[key]
-
-    index = {}
-    for item in config[key]:
-        name = item.pop('name', None)
-        if not name:
-            raise ConfigError('At least one configuration entry for "%s" does not have a name.' % key)
-
-        index[name] = item
-
-    return index
+        with urllib.request.urlopen(CONFIG_URL) as resp:
+            content = resp.read().decode('utf-8')
+    return yaml.safe_load(content)
 
 
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
-    parser = argparse.ArgumentParser(description="Bazel Continuous Integration Instance Creation")
-    parser.add_argument('names', type=str, nargs='+',
+    parser = argparse.ArgumentParser(description="Bazel CI Instance Creation")
+    parser.add_argument('names', type=str, nargs='*',
                         help='List of instance (group) names that should be created. '
                              'These values must correspond to "name" entries in the '
                              'Yaml configuration, e.g. "bk-pipeline-ubuntu1804-java8".')
-    parser.add_argument('--local_config', type=bool, default=False,
+    parser.add_argument('--local_config', action="store_true",
                         help='Whether to read the configuration from CWD/%s' % LOCAL_CONFIG_FILE_NAME)
 
     args = parser.parse_args(argv)
+    config = read_config_file(args.local_config)
 
-    try:
-        config = get_config(args.local_config)
-    except Exception as ex:
-        print("Failed to retrieve configuration: %s" % ex)
+    # Verify names passed on the command-line.
+    valid_names = [item['name'] for item in config['instance_groups']]
+    for name in args.names:
+        if name not in valid_names:
+            print("Unknown instance name: {}!".format(name))
+            print("\nValid instance names are: {}".format(' '.join(valid_names)))
+            return 1
+    if not args.names:
+        parser.print_help()
+        print("\nValid instance names are: {}".format(' '.join(valid_names)))
         return 1
 
     # Put VM creation instructions into the work queue.
-    for instance_group_name, params in config.instance_groups.items():
-        if instance_group_name not in args.names:
+    for instance in config['instance_groups']:
+        if instance['name'] not in args.names:
             continue
         WORK_QUEUE.put({
-            **config.default_vm,
-            'instance_group_name': instance_group_name,
-            **params
-        })
-
-    for instance_name, params in config.single_instances.items():
-        if instance_name not in args.names:
-            continue
-        WORK_QUEUE.put({
-            **config.default_vm,
-            'instance_name': instance_name,
-            **params
+            **config['default_vm'],
+            **instance
         })
 
     # Spawn worker threads that will create the VMs.
