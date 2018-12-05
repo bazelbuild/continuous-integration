@@ -238,12 +238,6 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.yml",
         "pipeline_slug": "tensorflow",
         "disabled_reason": "Enable once TensoFlow adopts to Bazel 0.18.0 or later, https://github.com/tensorflow/tensorflow/pull/22964"
-    },
-    "TensorFlow Serving": {
-        "git_repository": "https://github.com/tensorflow/serving.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-serving-postsubmit.yml",
-        "pipeline_slug": "tensorflow-serving",
-        "disabled_reason": "Enable once TensorFlow_serving adopts to Bazel 0.18.0 or later, https://github.com/tensorflow/serving/pull/1066"
     }
 }
 
