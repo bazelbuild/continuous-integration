@@ -459,6 +459,8 @@ def execute_commands(config, platform, git_repository, git_commit, git_repo_loca
 
         print_bazel_version_info(bazel_binary)
 
+        print_environment_variables_info()
+
         if incompatible_flags:
             print_expanded_group("Build and test with the following incompatible flags:")
             for flag in incompatible_flags:
@@ -700,6 +702,12 @@ def print_bazel_version_info(bazel_binary):
     print_collapsed_group(":information_source: Bazel Info")
     execute_command([bazel_binary, "--nomaster_bazelrc", "--bazelrc=/dev/null", "version"])
     execute_command([bazel_binary, "--nomaster_bazelrc", "--bazelrc=/dev/null", "info"])
+
+
+def print_environment_variables_info():
+    print_collapsed_group(":information_source: Environment Variables")
+    for key, value in os.environ.items():
+        eprint(key + "=" + value)
 
 
 def upload_bazel_binary(platform):
