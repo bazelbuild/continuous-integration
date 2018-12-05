@@ -457,7 +457,7 @@ def execute_commands(config, platform, git_repository, git_commit, git_repo_loca
             print_collapsed_group(":gcloud: Downloading Bazel Under Test")
             bazel_binary = download_bazel_binary(tmpdir, platform)
 
-        print_bazel_version_info(bazel_binary)
+        print_bazel_version_info(bazel_binary, platform)
 
         print_environment_variables_info()
 
@@ -698,10 +698,10 @@ def has_flaky_tests(bep_file):
     return len(test_logs_for_status(bep_file, status="FLAKY")) > 0
 
 
-def print_bazel_version_info(bazel_binary):
+def print_bazel_version_info(bazel_binary, platform):
     print_collapsed_group(":information_source: Bazel Info")
-    execute_command([bazel_binary, "--nomaster_bazelrc", "--bazelrc=/dev/null", "version"])
-    execute_command([bazel_binary, "--nomaster_bazelrc", "--bazelrc=/dev/null", "info"])
+    execute_command([bazel_binary] + common_startup_flags(platform) + ["--nomaster_bazelrc", "--bazelrc=/dev/null", "version"])
+    execute_command([bazel_binary] + common_startup_flags(platform) + ["--nomaster_bazelrc", "--bazelrc=/dev/null", "info"])
 
 
 def print_environment_variables_info():
