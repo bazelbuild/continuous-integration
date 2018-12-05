@@ -707,7 +707,7 @@ def print_bazel_version_info(bazel_binary):
 def print_environment_variables_info():
     print_collapsed_group(":information_source: Environment Variables")
     for key, value in os.environ.items():
-        eprint(key + "=" + value)
+        eprint("%s=(%s)" % (key, value))
 
 
 def upload_bazel_binary(platform):
