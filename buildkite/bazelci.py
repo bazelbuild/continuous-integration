@@ -1328,7 +1328,6 @@ def print_bazel_downstream_pipeline(configs, http_config, file_config, test_inco
     pipeline_steps = []
 
     info_box_step = print_disabled_projects_info_box_step()
-    print(info_box_step["command"])
     if info_box_step is not None:
         pipeline_steps.append(info_box_step)
 
