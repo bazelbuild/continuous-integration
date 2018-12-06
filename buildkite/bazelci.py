@@ -53,13 +53,13 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/bazel.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml",
         "pipeline_slug": "remote-execution",
-        "disabled_reason": "bazel#6288: enable once remote execution is green"
+        "disabled_reason": "Re-enable once fixed: https://github.com/bazelbuild/bazel/issues/6288"
     },
     "BUILD_file_generator": {
         "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml",
         "pipeline_slug": "build-file-generator",
-        "disabled_reason": "https://github.com/bazelbuild/BUILD_file_generator/issues/39: reenable once fixed"
+        "disabled_reason": "Re-enable once fixed: https://github.com/bazelbuild/BUILD_file_generator/issues/39"
     },
     "bazel-toolchains": {
         "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
@@ -130,7 +130,7 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_d.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_d/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-d",
-        "disabled_reason": "https://github.com/bazelbuild/rules_d/issues/15: reenable once fixed"
+        "disabled_reason": "Re-enable once fixed: https://github.com/bazelbuild/rules_d/issues/15"
     },
     "rules_docker": {
         "git_repository": "https://github.com/bazelbuild/rules_docker.git",
@@ -172,7 +172,7 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_k8s/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-k8s-k8s",
-        "disabled_reason": "Enable once https://github.com/bazelbuild/rules_k8s/pull/195 is merged"
+        "disabled_reason": "Re-enable once merged: https://github.com/bazelbuild/rules_k8s/pull/195"
     },
     "rules_nodejs": {
         "git_repository": "https://github.com/bazelbuild/rules_nodejs.git",
@@ -208,13 +208,13 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_typescript.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_typescript/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-typescript-typescript",
-        "disabled_reason": "https://github.com/bazelbuild/bazel/issues/6675"
+        "disabled_reason": "Re-enable once fixed: https://github.com/bazelbuild/bazel/issues/6675"
     },
     "rules_webtesting": {
         "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/rules_webtesting-postsubmit.yml",
         "pipeline_slug": "rules-webtesting-saucelabs",
-        "disabled_reason": "Enable once is resolved: https://github.com/bazelbuild/continuous-integration/issues/191"
+        "disabled_reason": "Re-enable once fixed: https://github.com/bazelbuild/continuous-integration/issues/191"
     },
     "skydoc": {
         "git_repository": "https://github.com/bazelbuild/skydoc.git",
@@ -230,7 +230,7 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.yml",
         "pipeline_slug": "tensorflow",
-        "disabled_reason": "Enable once TensoFlow adopts to Bazel 0.18.0 or later, https://github.com/tensorflow/tensorflow/pull/22964"
+        "disabled_reason": "Re-enable once TensoFlow adopts to Bazel 0.18.0 or later: https://github.com/tensorflow/tensorflow/pull/22964"
     }
 }
 
