@@ -1212,19 +1212,6 @@ def upload_project_pipeline_step(project_name, git_repository, http_config, file
         }
     }
 
-
-def upload_project_disabled_step(project_name, disabled_reason):
-    return {
-        "label": "{0} is disabled :sadpanda:".format(project_name),
-        "command": [
-            "echo \"Disabled reason: %s\"" % disabled_reason
-        ],
-        "agents": {
-            "kind": "pipeline"
-        }
-    }
-
-
 def create_label(platform, project_name, build_only=False, test_only=False):
     if build_only and test_only:
         raise BuildkiteException(
@@ -1312,6 +1299,25 @@ def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
     print(yaml.dump({"steps": pipeline_steps}))
 
 
+def print_disabled_projects_info_box_step():
+    info_text = ["Downstream testing is disabled for the following projects :sadpanda:"]
+    for project, config in DOWNSTREAM_PROJECTS.items():
+        disabled_reason = config.get("disabled_reason", None)
+        if disabled_reason:
+            info_text.append("* **%s**: %s" % (project, disabled_reason))
+
+    if len(info_text) == 1:
+        return None
+    return {
+        "label": ":sadpanda:",
+        "command": [
+            "buildkite-agent annotate --style=info \"" + "\n".join(info_text) + "\"",
+        ],
+        "agents": {
+            "kind": "pipeline"
+        }
+    }
+
 def print_bazel_downstream_pipeline(configs, http_config, file_config, test_incompatible_flags):
     if not configs:
         raise BuildkiteException("Bazel downstream pipeline configuration is empty.")
@@ -1320,6 +1326,11 @@ def print_bazel_downstream_pipeline(configs, http_config, file_config, test_inco
         raise BuildkiteException("Bazel downstream pipeline needs to build Bazel on all supported platforms (has=%s vs. want=%s)." % (sorted(set(configs)), sorted(set(PLATFORMS))))
 
     pipeline_steps = []
+
+    info_box_step = print_disabled_projects_info_box_step()
+    print(info_box_step["command"])
+    if info_box_step is not None:
+        pipeline_steps.append(info_box_step)
 
     for platform in configs:
         pipeline_steps.append(
@@ -1336,9 +1347,7 @@ def print_bazel_downstream_pipeline(configs, http_config, file_config, test_inco
 
     for project, config in DOWNSTREAM_PROJECTS.items():
         disabled_reason = config.get("disabled_reason", None)
-        if disabled_reason:
-            pipeline_steps.append(upload_project_disabled_step(project, disabled_reason))
-        else:
+        if not disabled_reason:
             pipeline_steps.append(
                 upload_project_pipeline_step(project_name=project,
                                              git_repository=config["git_repository"],
@@ -1496,10 +1505,18 @@ def publish_binaries():
         raise BuildkiteException(
             "Could not publish binaries, ran out of attempts.")
 
+# This is so that multiline python strings are represnted as YAML
+# block strings
+def str_presenter(dumper, data):
+  if len(data.splitlines()) > 1:  # check for multiline string
+    return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+  return dumper.represent_scalar('tag:yaml.org,2002:str', data)
 
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
+
+    yaml.add_representer(str, str_presenter)
 
     parser = argparse.ArgumentParser(description="Bazel Continuous Integration Script")
 
