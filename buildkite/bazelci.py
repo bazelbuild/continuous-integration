@@ -126,12 +126,6 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_closure/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-closure-closure-compiler"
     },
-    "rules_d": {
-        "git_repository": "https://github.com/bazelbuild/rules_d.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_d/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-d",
-        "disabled_reason": "Re-enable once fixed: https://github.com/bazelbuild/rules_d/issues/15"
-    },
     "rules_docker": {
         "git_repository": "https://github.com/bazelbuild/rules_docker.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_docker/master/.bazelci/presubmit.yml",
