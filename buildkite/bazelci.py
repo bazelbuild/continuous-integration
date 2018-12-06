@@ -164,8 +164,7 @@ DOWNSTREAM_PROJECTS = {
     "rules_k8s": {
         "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_k8s/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-k8s-k8s",
-        "disabled_reason": "Re-enable once merged: https://github.com/bazelbuild/rules_k8s/pull/195"
+        "pipeline_slug": "rules-k8s-k8s"
     },
     "rules_nodejs": {
         "git_repository": "https://github.com/bazelbuild/rules_nodejs.git",
