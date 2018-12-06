@@ -135,8 +135,7 @@ DOWNSTREAM_PROJECTS = {
     "rules_docker": {
         "git_repository": "https://github.com/bazelbuild/rules_docker.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_docker/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-docker-docker",
-        "disabled_reason": "rules_rust#131: Enable once https://github.com/bazelbuild/rules_rust/issues/131 is fixed and rules_docker use fixed rules."
+        "pipeline_slug": "rules-docker-docker"
     },
     "rules_foreign_cc": {
         "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
