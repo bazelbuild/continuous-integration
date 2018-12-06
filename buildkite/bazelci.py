@@ -81,12 +81,6 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/clion-postsubmit.yml",
         "pipeline_slug": "clion-plugin"
     },
-    "Eclipse Plugin": {
-       "git_repository": "https://github.com/bazelbuild/eclipse.git",
-       "http_config": "https://raw.githubusercontent.com/bazelbuild/eclipse/master/.bazelci/presubmit.yml",
-       "pipeline_slug": "eclipse-plugin",
-       "disabled_reason": "https://github.com/bazelbuild/eclipse/issues/65: Reenable once fixed"
-    },
     "Gerrit": {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml",
