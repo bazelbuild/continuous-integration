@@ -23,5 +23,13 @@ platforms:
     - "-//src/test/shell/integration:java_integration_test"
     - "-//src/test/java/com/google/devtools/build/android/..."
     - "-//src/test/java/com/google/devtools/build/lib/shell:CommandUsingLinuxSandboxTest"
+    # Flaky tests on RBE
+    - "-//src/test/java/com/google/devtools/build/lib:remote-tests"
+    - "-//src/test/shell/bazel:bazel_proto_library_test"
+    - "-//src/test/shell/integration:discard_analysis_cache_test"
+    - "-//src/test/shell/integration:execution_phase_tests"
+    - "-//src/test/shell/integration:nonincremental_builds_test"
+    - "-//src/test/shell/integration:discard_graph_edges_test"
     # Re-enable once fixed: https://github.com/bazelbuild/bazel/issues/5376
-    - "-//src/test/java/com/google/devtools/build/lib:sandbox-tests"
+    #    - "-//src/test/java/com/google/devtools/build/lib:sandbox-tests"
+
