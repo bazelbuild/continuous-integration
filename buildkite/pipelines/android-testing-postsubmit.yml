@@ -26,9 +26,12 @@ platforms:
     - "--flaky_test_attempts=3" # Flakes.
     - "--spawn_strategy=standalone" # Reduce flakes.
     test_targets:
+    - "//ui/uiautomator/BasicSample:BasicSampleInstrumentationTest_23_x86"
     - "//ui/espresso/RecyclerViewSample:RecyclerViewSampleInstrumentationTest_23_x86"
+    - "//ui/espresso/MultiWindowSample:MultiWindowSampleInstrumentationTest_23_x86"
     - "//ui/espresso/IntentsBasicSample:IntentsBasicSampleInstrumentationTest_23_x86"
     - "//ui/espresso/IntentsAdvancedSample:IntentsAdvancedSampleInstrumentationTest_23_x86"
+    - "//ui/espresso/IdlingResourceSample:IdlingResourceSampleInstrumentationTest_23_x86"
     - "//ui/espresso/DataAdapterSample:DataAdapterSampleInstrumentationTest_23_x86"
     - "//ui/espresso/CustomMatcherSample:CustomMatcherSampleInstrumentationTest_23_x86"
     - "//ui/espresso/BasicSample:BasicSampleInstrumentationTest_23_x86"
@@ -40,9 +43,12 @@ platforms:
     - "--flaky_test_attempts=3" # Flakes.
     - "--spawn_strategy=standalone" # Reduce flakes.
     test_targets:
+    - "//ui/uiautomator/BasicSample:BasicSampleInstrumentationTest_23_x86"
     - "//ui/espresso/RecyclerViewSample:RecyclerViewSampleInstrumentationTest_23_x86"
+    - "//ui/espresso/MultiWindowSample:MultiWindowSampleInstrumentationTest_23_x86"
     - "//ui/espresso/IntentsBasicSample:IntentsBasicSampleInstrumentationTest_23_x86"
     - "//ui/espresso/IntentsAdvancedSample:IntentsAdvancedSampleInstrumentationTest_23_x86"
+    - "//ui/espresso/IdlingResourceSample:IdlingResourceSampleInstrumentationTest_23_x86"
     - "//ui/espresso/DataAdapterSample:DataAdapterSampleInstrumentationTest_23_x86"
     - "//ui/espresso/CustomMatcherSample:CustomMatcherSampleInstrumentationTest_23_x86"
     - "//ui/espresso/BasicSample:BasicSampleInstrumentationTest_23_x86"
