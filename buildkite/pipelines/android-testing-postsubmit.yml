@@ -9,7 +9,6 @@ platforms:
     - "--flaky_test_attempts=3" # Flakes.
     - "--spawn_strategy=standalone" # Reduce flakes.
     test_targets:
-    - "//ui/espresso/BasicSample:BasicSampleInstrumentationTest_21_x86"
     - "//ui/uiautomator/BasicSample:BasicSampleInstrumentationTest_23_x86"
     - "//ui/espresso/RecyclerViewSample:RecyclerViewSampleInstrumentationTest_23_x86"
     - "//ui/espresso/MultiWindowSample:MultiWindowSampleInstrumentationTest_23_x86"
@@ -19,6 +18,8 @@ platforms:
     - "//ui/espresso/DataAdapterSample:DataAdapterSampleInstrumentationTest_23_x86"
     - "//ui/espresso/CustomMatcherSample:CustomMatcherSampleInstrumentationTest_23_x86"
     - "//ui/espresso/BasicSample:BasicSampleInstrumentationTest_23_x86"
+    - "//ui/espresso/BasicSample:BasicSampleInstrumentationTest_21_x86"
+    - "//ui/espresso/CustomMatcherSample:CustomMatcherSampleInstrumentationTest_21_x86"
   ubuntu1604:
     build_targets:
     - "//ui/..."
