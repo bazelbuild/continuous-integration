@@ -220,8 +220,7 @@ DOWNSTREAM_PROJECTS = {
     "TensorFlow": {
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.yml",
-        "pipeline_slug": "tensorflow",
-        "disabled_reason": "Re-enable once TensoFlow adopts to Bazel 0.18.0 or later: https://github.com/tensorflow/tensorflow/pull/22964"
+        "pipeline_slug": "tensorflow"
     }
 }
 
