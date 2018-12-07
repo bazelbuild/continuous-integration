@@ -84,7 +84,8 @@ DOWNSTREAM_PROJECTS = {
     "Gerrit": {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml",
-        "pipeline_slug": "gerrit"
+        "pipeline_slug": "gerrit",
+        "disabled_reason": "Re-enable once merged: https://gerrit-review.googlesource.com/c/gerrit/+/206093"
     },
     "Google Logging": {
         "git_repository": "https://github.com/google/glog.git",
@@ -129,7 +130,8 @@ DOWNSTREAM_PROJECTS = {
     "rules_docker": {
         "git_repository": "https://github.com/bazelbuild/rules_docker.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_docker/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-docker-docker"
+        "pipeline_slug": "rules-docker-docker",
+        "disabled_reason": "Re-enable once fixed: https://github.com/bazelbuild/rules_docker/issues/601"
     },
     "rules_foreign_cc": {
         "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
@@ -164,7 +166,8 @@ DOWNSTREAM_PROJECTS = {
     "rules_k8s": {
         "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_k8s/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-k8s-k8s"
+        "pipeline_slug": "rules-k8s-k8s",
+        "disabled_reason": "Re-enable once protobuf is updated: https://github.com/bazelbuild/rules_k8s/issues/240"
     },
     "rules_nodejs": {
         "git_repository": "https://github.com/bazelbuild/rules_nodejs.git",
@@ -199,7 +202,8 @@ DOWNSTREAM_PROJECTS = {
     "rules_typescript": {
         "git_repository": "https://github.com/bazelbuild/rules_typescript.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_typescript/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-typescript-typescript"
+        "pipeline_slug": "rules-typescript-typescript",
+        "disabled_reason": "Re-enable once merged: https://github.com/bazelbuild/rules_typescript/pull/343"
     },
     "rules_webtesting": {
         "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
