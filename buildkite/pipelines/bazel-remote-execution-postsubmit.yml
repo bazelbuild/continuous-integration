@@ -30,6 +30,4 @@ platforms:
     - "-//src/test/shell/integration:execution_phase_tests"
     - "-//src/test/shell/integration:nonincremental_builds_test"
     - "-//src/test/shell/integration:discard_graph_edges_test"
-    # Re-enable once fixed: https://github.com/bazelbuild/bazel/issues/5376
-    #    - "-//src/test/java/com/google/devtools/build/lib:sandbox-tests"
-
+    - "-//src/test/java/com/google/devtools/build/lib:sandbox-tests"
