@@ -46,7 +46,7 @@ random.seed()
 DOWNSTREAM_PROJECTS = {
     "Android Testing": {
         "git_repository": "https://github.com/googlesamples/android-testing.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/android-testing-postsubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/googlesamples/android-testing/master/bazelci/buildkite-pipeline.yml",
         "pipeline_slug": "android-testing"
     },
     "Bazel Remote Execution": {
