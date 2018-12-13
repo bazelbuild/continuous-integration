@@ -1310,7 +1310,7 @@ def print_disabled_projects_info_box_step():
         }
     }
 
-def print_bazel_downstream_pipeline(configs, http_config, file_config, test_incompatible_flags):
+def print_bazel_downstream_pipeline(configs, http_config, file_config, test_incompatible_flags, test_disabled_projects):
     if not configs:
         raise BuildkiteException("Bazel downstream pipeline configuration is empty.")
 
@@ -1338,7 +1338,9 @@ def print_bazel_downstream_pipeline(configs, http_config, file_config, test_inco
 
     for project, config in DOWNSTREAM_PROJECTS.items():
         disabled_reason = config.get("disabled_reason", None)
-        if not disabled_reason:
+        # If test_disabled_projects is true, we add configs for disabled projects.
+        # If test_disabled_projects is false, we add configs for not disbaled projects.
+        if (test_disabled_projects and disabled_reason) or (not test_disabled_projects and not disabled_reason):
             pipeline_steps.append(
                 upload_project_pipeline_step(project_name=project,
                                              git_repository=config["git_repository"],
@@ -1523,6 +1525,7 @@ def main(argv=None):
     bazel_downstream_pipeline.add_argument("--http_config", type=str)
     bazel_downstream_pipeline.add_argument("--git_repository", type=str)
     bazel_downstream_pipeline.add_argument("--test_incompatible_flags", type=bool, nargs="?", const=True)
+    bazel_downstream_pipeline.add_argument("--test_disabled_projects", type=bool, nargs="?", const=True)
 
     project_pipeline = subparsers.add_parser("project_pipeline")
     project_pipeline.add_argument("--project_name", type=str)
@@ -1565,7 +1568,8 @@ def main(argv=None):
             print_bazel_downstream_pipeline(configs=configs.get("platforms", None),
                                             http_config=args.http_config,
                                             file_config=args.file_config,
-                                            test_incompatible_flags=args.test_incompatible_flags)
+                                            test_incompatible_flags=args.test_incompatible_flags,
+                                            test_disabled_projects=args.test_disabled_projects)
         elif args.subparsers_name == "project_pipeline":
             configs = fetch_configs(args.http_config, args.file_config)
             print_project_pipeline(platform_configs=configs.get("platforms", None),
