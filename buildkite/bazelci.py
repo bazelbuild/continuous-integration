@@ -371,6 +371,13 @@ def bazelcipy_url():
     return "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?{}".format(int(time.time()))
 
 
+def incompatible_flag_verbose_failures_url():
+    """
+    URL to the latest version of this script.
+    """
+    return "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/incompatible_flag_verbose_failures.py?{}".format(int(time.time()))
+
+
 def downstream_projects_root(platform):
     downstream_projects_dir = os.path.expandvars("${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects")
     agent_directory = os.path.expandvars(PLATFORMS[platform]["agent-directory"])
@@ -555,6 +562,7 @@ def tests_with_status(bep_file, status):
 
 __github_token__ = None
 __saucelabs_token__ = None
+__buildkite_token__ = None
 
 
 def fetch_github_token():
@@ -585,6 +593,23 @@ def fetch_saucelabs_token():
         return __saucelabs_token__
     finally:
         os.remove("saucelabs-access-key.enc")
+
+
+def fetch_buildkite_token():
+    # Test token, only has read access, remove after permission error is resolved.
+    return "ec103f5f697b5446f19179665aa6ef2ca3266dfd"
+    global __buildkite_token__
+    if __buildkite_token__:
+        return __buildkite_token__
+    try:
+        execute_command(
+            [gsutil_command(), "cp", "gs://bazel-encrypted-secrets/buildkite-api-token.enc", "buildkite-api-token.enc"])
+        __buildkite_token__ = subprocess.check_output([gcloud_command(), "kms", "decrypt", "--location", "global", "--keyring", "buildkite",
+                                                       "--key", "buildkite-api-token", "--ciphertext-file", "buildkite-api-token.enc",
+                                                       "--plaintext-file", "-"], env=os.environ).decode("utf-8").strip()
+        return __buildkite_token__
+    finally:
+        os.remove("buildkite-api-token.enc")
 
 
 def owner_repository_from_url(git_repository):
@@ -1181,6 +1206,9 @@ def runner_step(platform, project_name=None, http_config=None, file_config=None,
 def fetch_bazelcipy_command():
     return "curl -s {0} -o bazelci.py".format(bazelcipy_url())
 
+def fetch_incompatible_flag_verbose_failures_command():
+    return "curl -s {0} -o incompatible_flag_verbose_failures.py".format(incompatible_flag_verbose_failures_url())
+
 
 def upload_project_pipeline_step(project_name, git_repository, http_config, file_config, incompatible_flags):
     pipeline_command = ("{0} bazelci.py project_pipeline --project_name=\"{1}\" " +
@@ -1351,6 +1379,25 @@ def print_bazel_downstream_pipeline(configs, http_config, file_config, test_inco
                                              http_config=config.get("http_config", None),
                                              file_config=config.get("file_config", None),
                                              incompatible_flags=incompatible_flags))
+
+    if test_incompatible_flags:
+        pipeline_steps.append({
+            "wait": "~",
+            "continue_on_failure": "true"
+        })
+        current_build_number = os.environ.get("BUILDKITE_BUILD_NUMBER", None)
+        if not current_build_number:
+            raise BuildkiteException("Not running inside Buildkite")
+        pipeline_steps.append({
+            "label": "Test failing jobs with individual incompatible flag",
+            "command": [
+                fetch_incompatible_flag_verbose_failures_command(),
+                python_binary() + " incompatible_flag_verbose_failures.py --build_number=%s | buildkite-agent pipeline upload" % current_build_number,
+            ],
+            "agents": {
+                "kind": "pipeline"
+            }
+        })
 
     print(yaml.dump({"steps": pipeline_steps}))
 
