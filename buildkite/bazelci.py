@@ -295,6 +295,12 @@ PLATFORMS = {
     }
 }
 
+# A list of incompatible flags to be tested in downstream with the latest release Bazel
+INCOMPATIBLE_FLAGS = {
+    "--incompatible_use_jdk10_as_host_javabase" : "https://github.com/bazelbuild/bazel/issues/6661",
+    "--incompatible_disallow_data_transition" : "https://github.com/bazelbuild/bazel/issues/6153",
+}
+
 
 class BuildkiteException(Exception):
     """
@@ -1329,10 +1335,10 @@ def print_bazel_downstream_pipeline(configs, http_config, file_config, test_inco
 
     incompatible_flags = None
     if test_incompatible_flags:
-        incompatible_flags = os.environ.get("INCOMPATIBLE_FLAGS", "").split()
+        incompatible_flags = list(INCOMPATIBLE_FLAGS.keys())
         print_expanded_group("Build and test with the following incompatible flags:")
         for flag in incompatible_flags:
-            eprint(flag + "\n")
+            eprint("%s (%s)\n" % (flag, INCOMPATIBLE_FLAGS[flag]))
 
     for project, config in DOWNSTREAM_PROJECTS.items():
         disabled_reason = config.get("disabled_reason", None)
