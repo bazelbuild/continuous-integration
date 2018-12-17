@@ -1389,7 +1389,7 @@ def print_bazel_downstream_pipeline(configs, http_config, file_config, test_inco
         if not current_build_number:
             raise BuildkiteException("Not running inside Buildkite")
         pipeline_steps.append({
-            "label": "Test failing jobs with individual incompatible flag",
+            "label": "Test failing jobs with incompatible flag separately",
             "command": [
                 fetch_incompatible_flag_verbose_failures_command(),
                 python_binary() + " incompatible_flag_verbose_failures.py --build_number=%s | buildkite-agent pipeline upload" % current_build_number,
