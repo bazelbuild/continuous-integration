@@ -58,7 +58,6 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml",
         "pipeline_slug": "build-file-generator",
-        "disabled_reason": "Re-enable once fixed: https://github.com/bazelbuild/BUILD_file_generator/issues/39"
     },
     "bazel-toolchains": {
         "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
