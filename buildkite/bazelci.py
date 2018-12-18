@@ -595,9 +595,7 @@ def fetch_saucelabs_token():
         os.remove("saucelabs-access-key.enc")
 
 
-def fetch_buildkite_token():
-    # Test token, only has read access, remove after permission error is resolved.
-    return "ec103f5f697b5446f19179665aa6ef2ca3266dfd"
+def fetch_buildkite_token():    
     global __buildkite_token__
     if __buildkite_token__:
         return __buildkite_token__
