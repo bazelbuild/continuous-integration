@@ -82,8 +82,7 @@ DOWNSTREAM_PROJECTS = {
     "Gerrit": {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml",
-        "pipeline_slug": "gerrit",
-        "disabled_reason": "Re-enable once merged: https://gerrit-review.googlesource.com/c/gerrit/+/206093"
+        "pipeline_slug": "gerrit"
     },
     "Google Logging": {
         "git_repository": "https://github.com/google/glog.git",
