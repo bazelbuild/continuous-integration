@@ -723,17 +723,17 @@ def print_environment_variables_info():
 
 def upload_bazel_binary(platform):
     print_collapsed_group(":gcloud: Uploading Bazel Under Test")
-    binary_path = "bazel-bin/src/bazel_jdk_minimal"
+    binary_path = "bazel-bin/src/bazel"
     if platform == "windows":
-        binary_path = r"bazel-bin\src\bazel_jdk_minimal"
+        binary_path = r"bazel-bin\src\bazel"
     execute_command(["buildkite-agent", "artifact", "upload", binary_path])
 
 
 def download_bazel_binary(dest_dir, platform):
     host_platform = PLATFORMS[platform].get("host-platform", platform)
-    binary_path = "bazel-bin/src/bazel_jdk_minimal"
+    binary_path = "bazel-bin/src/bazel"
     if platform == "windows":
-        binary_path = r"bazel-bin\src\bazel_jdk_minimal"
+        binary_path = r"bazel-bin\src\bazel"
 
     source_step = create_label(host_platform, "Bazel", build_only=True)
     execute_command(["buildkite-agent", "artifact", "download",
