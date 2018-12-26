@@ -176,8 +176,42 @@ Create candidates with the release.sh script.
     1.  State the fact that you pushed the release
     1.  Ask the package maintainers to update the package definitions: @vbatts @petemounce
     1.  Example: [https://github.com/bazelbuild/bazel/issues/3773#issuecomment-352692144]
-1.  Publish blog post (https://docs.google.com/document/d/1wDvulLlj4NAlPZamdlEVFORks3YXJonCjyuQMUQEmB0/edit).
+1.  Publish versioned documentation
+    1.  Fetch the git tag for the release: `git fetch --tags`
+    1.  Do a checkout to that tag: `git checkout $RELEASE_NUMBER`
+        1. You should see this message (e.g. for 0.21.0):
 
+        ```
+        $ git checkout 0.21.0
+        Note: checking out '0.21.0'.
+
+        You are in 'detached HEAD' state. You can look around, make experimental
+        changes and commit them, and you can discard any commits you make in this
+        state without impacting any branches by performing another checkout.
+
+        If you want to create a new branch to retain commits you create, you may
+        do so (now or later) by using -b with the checkout command again. Example:
+
+        git checkout -b <new-branch-name>
+
+        HEAD is now at defd737761 Release 0.21.0 (2018-12-19)
+        ```
+    1.  [Install `gsutil`](https://cloud.google.com/storage/docs/gsutil_install)
+        and ensure you have access to the `bazel-public` GCP project.
+    1.  Run `scripts/docs/generate_versioned_docs.sh`. If you get interrupted,
+        it is safe to re-run the script. This script will build the web assets
+        for the documentation, generate a tarball from them, and push the
+        tarball to Google Cloud Storage.
+        * The script will fail to run if you're not in a git checkout of a
+          release.
+        * If the tarball has already been pushed to GCS, this script will not
+          overwrite the existing tarball.
+    1.  Add `$RELEASE_NUMBER` to `site/_config.yml` and
+        `scripts/docs/doc_versions.bzl`, and submit these changes. After ~30
+        minutes to an hour, the new release will show up on the documentation
+        site.
+1.  Publish blog post (https://docs.google.com/document/d/1wDvulLlj4NAlPZamdlEVFORks3YXJonCjyuQMUQEmB0/edit).
+    1. Use versioned links whenever possible: `/versions/0.21.0/foo.html` instead of `/versions/master/foo.html`.
 
 ### Updating the Homebrew recipe
 
