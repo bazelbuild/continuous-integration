@@ -294,12 +294,6 @@ PLATFORMS = {
     }
 }
 
-# A list of incompatible flags to be tested in downstream with the latest release Bazel
-INCOMPATIBLE_FLAGS = {
-    "--incompatible_use_jdk10_as_host_javabase" : "https://github.com/bazelbuild/bazel/issues/6661",
-    "--incompatible_disallow_data_transition" : "https://github.com/bazelbuild/bazel/issues/6153",
-}
-
 
 class BuildkiteException(Exception):
     """
@@ -594,7 +588,7 @@ def fetch_saucelabs_token():
         os.remove("saucelabs-access-key.enc")
 
 
-def fetch_buildkite_token():    
+def fetch_buildkite_token():
     global __buildkite_token__
     if __buildkite_token__:
         return __buildkite_token__
@@ -1339,6 +1333,51 @@ def print_disabled_projects_info_box_step():
         }
     }
 
+
+def print_incompatible_flags_info_box_step(incompatible_flags_map):
+    info_text = ["Build and test with the following incompatible flags:"]
+
+    for flag in incompatible_flags_map:
+        info_text.append("* **%s**: %s" % (flag, incompatible_flags_map[flag]))
+
+    if len(info_text) == 1:
+        return None
+    return {
+        "label": "Incompatible flags info",
+        "command": [
+            "buildkite-agent annotate --style=info \"" + "\n".join(info_text) + "\"",
+        ],
+        "agents": {
+            "kind": "pipeline"
+        }
+    }
+
+
+def fetch_incompatible_flags_from_github():
+    """
+    Return a list of incompatible flags to be tested in downstream with the current release Bazel
+    """
+    # Get bazel major version on CI, eg. 0.21 from "Build label: 0.21.0\n..."
+    output = subprocess.check_output(["bazel", "--nomaster_bazelrc", "--bazelrc=/dev/null", "version"]).decode("utf-8")
+    bazel_major_version = output.split()[2].rsplit(".", 1)[0]
+
+    output = subprocess.check_output(["curl", "https://api.github.com/search/issues?q=repo:bazelbuild/bazel+label:migration-%s+state:open" % bazel_major_version]).decode("utf-8")
+    issue_info = json.loads(output)
+
+    incompatible_flags = {}
+    for issue in issue_info["items"]:
+        flag = {}
+        # Every incompatible flags issue should start with "<incompatible flag name (without --)>:"
+        name = "--" + issue["title"].split(":")[0]
+        url = issue["html_url"]
+        if name.startswith("--incompatible_"):
+            incompatible_flags[name] = url
+        else:
+            eprint("%s is not recognized as an incompatible flag, please modify the issue title of %s to \"<incompatible flag name (without --)>:...\"" % (name, url))
+
+    return incompatible_flags
+
+
 def print_bazel_downstream_pipeline(configs, http_config, file_config, test_incompatible_flags, test_disabled_projects):
     if not configs:
         raise BuildkiteException("Bazel downstream pipeline configuration is empty.")
@@ -1360,10 +1399,11 @@ def print_bazel_downstream_pipeline(configs, http_config, file_config, test_inco
 
     incompatible_flags = None
     if test_incompatible_flags:
-        incompatible_flags = list(INCOMPATIBLE_FLAGS.keys())
-        print_expanded_group("Build and test with the following incompatible flags:")
-        for flag in incompatible_flags:
-            eprint("%s (%s)\n" % (flag, INCOMPATIBLE_FLAGS[flag]))
+        incompatible_flags_map = fetch_incompatible_flags_from_github()
+        info_box_step = print_incompatible_flags_info_box_step(incompatible_flags_map)
+        if info_box_step is not None:
+            pipeline_steps.append(info_box_step)
+        incompatible_flags = list(incompatible_flags_map.keys())
 
     for project, config in DOWNSTREAM_PROJECTS.items():
         disabled_reason = config.get("disabled_reason", None)

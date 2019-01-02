@@ -66,7 +66,7 @@ def get_failing_jobs(build_info):
 def print_steps_for_failing_jobs(build_number):
     build_info = get_build_info(build_number)
     failing_jobs = get_failing_jobs(build_info)
-    incompatible_flags = list(bazelci.INCOMPATIBLE_FLAGS.keys())
+    incompatible_flags = list(bazelci.fetch_incompatible_flags_from_github().keys())
     pipeline_steps = []
     for incompatible_flag in incompatible_flags:
         for job in failing_jobs:
