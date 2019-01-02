@@ -1334,6 +1334,25 @@ def print_disabled_projects_info_box_step():
     }
 
 
+def print_incompatible_flags_info_box_step(incompatible_flags_map):
+    info_text = ["Build and test with the following incompatible flags:"]
+
+    for flag in incompatible_flags_map:
+        info_text.append("* **%s**: %s" % (flag, incompatible_flags_map[flag]))
+
+    if len(info_text) == 1:
+        return None
+    return {
+        "label": "Incompatible flags info",
+        "command": [
+            "buildkite-agent annotate --style=info \"" + "\n".join(info_text) + "\"",
+        ],
+        "agents": {
+            "kind": "pipeline"
+        }
+    }
+
+
 def fetch_incompatible_flags_from_github():
     """
     Return a list of incompatible flags to be tested in downstream with the current release Bazel
@@ -1381,10 +1400,10 @@ def print_bazel_downstream_pipeline(configs, http_config, file_config, test_inco
     incompatible_flags = None
     if test_incompatible_flags:
         incompatible_flags_map = fetch_incompatible_flags_from_github()
+        info_box_step = print_incompatible_flags_info_box_step(incompatible_flags_map)
+        if info_box_step is not None:
+            pipeline_steps.append(info_box_step)
         incompatible_flags = list(incompatible_flags_map.keys())
-        print_expanded_group("Build and test with the following incompatible flags:")
-        for flag in incompatible_flags:
-            eprint("%s (%s)\n" % (flag, incompatible_flags_map[flag]))
 
     for project, config in DOWNSTREAM_PROJECTS.items():
         disabled_reason = config.get("disabled_reason", None)
