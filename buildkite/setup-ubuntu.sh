@@ -156,6 +156,10 @@ EOF
     # Required by our C++ coverage tests.
     lcov
     llvm
+
+    # Required for the Swift toolchain.
+    clang
+    libicu-dev
   )
 
   # Bazel dependencies.
@@ -490,6 +494,33 @@ export ANDROID_NDK_HOME="/opt/android-ndk-r15c"
 echo "Android NDK is at ${ANDROID_NDK_HOME}"
 EOF
 fi
+
+### Install Swift Toolchain (for rules_swift).
+{
+  mkdir -p /opt/swift
+  case ${config_os} in
+    ubuntu1404)
+      curl -sSL https://swift.org/builds/swift-4.2.1-release/ubuntu1804/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu18.04.tar.gz | \
+        tar xvz -C /opt/swift --strip 1
+      ;;
+    ubuntu1604)
+      curl -sSL https://swift.org/builds/swift-4.2.1-release/ubuntu1604/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu16.04.tar.gz | \
+        tar xvz -C /opt/swift --strip 1
+      ;;
+    ubuntu1804)
+      curl -sSL https://swift.org/builds/swift-4.2.1-release/ubuntu1404/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu14.04.tar.gz | \
+        tar xvz -C /opt/swift --strip 1
+      ;;
+    *)
+      echo "Unsupported operating system: $config_os"
+      exit 1
+  esac
+  cat >> /etc/buildkite-agent/hooks/environment <<'EOF'
+export SWIFT_HOME="/opt/swift"
+export PATH="$PATH:${SWIFT_HOME}/usr/bin"
+echo "Swift toolchain is at ${SWIFT_HOME}"
+EOF
+}
 
 ### Install tools required by the release process.
 {
