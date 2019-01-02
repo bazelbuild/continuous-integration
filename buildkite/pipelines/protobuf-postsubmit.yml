@@ -9,3 +9,6 @@ platforms:
   macos:
     test_targets:
     - "//:all"
+  windows:
+    test_targets:
+    - "//:all"
