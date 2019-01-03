@@ -508,7 +508,8 @@ def execute_commands(config, platform, git_repository, git_commit, git_repo_loca
                         platform, git_repository, commit, "pending", None)
                 execute_bazel_test(bazel_binary, platform, config.get("test_flags", []),
                                    config.get("test_targets", None), test_bep_file,
-                                   monitor_flaky_tests, incompatible_flags)
+                                   monitor_flaky_tests, incompatible_flags,
+                                   config.get("working_directory"))
                 if has_flaky_tests(test_bep_file):
                     if monitor_flaky_tests:
                         # Upload the BEP logs from Bazel builds for later analysis on flaky tests
@@ -979,7 +980,7 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file, incomp
             "bazel build failed with exit code {}".format(e.returncode))
 
 
-def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor_flaky_tests, incompatible_flags):
+def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor_flaky_tests, incompatible_flags, cwd=None):
     print_expanded_group(":bazel: Test")
 
     aggregated_flags = ["--flaky_test_attempts=3",
@@ -995,7 +996,7 @@ def execute_bazel_test(bazel_binary, platform, flags, targets, bep_file, monitor
                                       enable_remote_cache=not monitor_flaky_tests)
 
     try:
-        execute_command([bazel_binary] + common_startup_flags(platform) + ["test"] + aggregated_flags + targets)
+        execute_command([bazel_binary] + common_startup_flags(platform) + ["test"] + aggregated_flags + targets, cwd=cwd)
     except subprocess.CalledProcessError as e:
         raise BazelTestFailedException(
             "bazel test failed with exit code {}".format(e.returncode))
@@ -1077,9 +1078,14 @@ def test_logs_for_status(bep_file, status):
     return targets
 
 
-def execute_command(args, shell=False, fail_if_nonzero=True):
+def execute_command(args, shell=False, fail_if_nonzero=True, cwd=None):
     eprint(" ".join(args))
-    return subprocess.run(args, shell=shell, check=fail_if_nonzero, env=os.environ).returncode
+
+    wd = None
+    if cwd:
+        wd = os.path.join(os.getcwd(), cwd)
+
+    return subprocess.run(args, shell=shell, check=fail_if_nonzero, env=os.environ, cwd=wd).returncode
 
 
 def execute_command_background(args):
@@ -1626,6 +1632,7 @@ def main(argv=None):
     project_pipeline.add_argument("--incompatible_flag", type=str, action='append')
 
     runner = subparsers.add_parser("runner")
+    runner.add_argument("--task", type=str)
     runner.add_argument("--platform", action="store", choices=list(PLATFORMS))
     runner.add_argument("--file_config", type=str)
     runner.add_argument("--http_config", type=str)
@@ -1670,8 +1677,13 @@ def main(argv=None):
                                    use_but=args.use_but,
                                    incompatible_flags=args.incompatible_flag)
         elif args.subparsers_name == "runner":
-            configs = fetch_configs(args.http_config, args.file_config)
-            execute_commands(config=configs.get("platforms", None)[args.platform],
+            tasks = get_tasks(args)
+            # there can be multiple tasks for a platform
+            for name in tasks:
+                task = tasks[name]
+                if hasattr(task, "platform") and task.platform != args.platform:
+                    continue
+                execute_commands(config=task,
                              platform=args.platform,
                              git_repository=args.git_repository,
                              git_commit=args.git_commit,
@@ -1695,6 +1707,21 @@ def main(argv=None):
         return 1
     return 0
 
+# This allows having project tasks be configured like:
+# ---
+# tasks
+#   my_task:
+#     platform: ubuntu1604
+#     working_directory: <subdirectory under project root>
+#     ...
+#
+# working_directory right now is used only for test targets
+def get_tasks(args):
+    configs = fetch_configs(args.http_config, args.file_config)
+    tasks = configs.get("platforms", None)
+    if tasks:
+        return tasks
+    return configs.get("tasks", None)
 
 if __name__ == "__main__":
     sys.exit(main())
