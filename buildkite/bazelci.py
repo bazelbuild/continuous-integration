@@ -49,6 +49,11 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/googlesamples/android-testing/master/bazelci/buildkite-pipeline.yml",
         "pipeline_slug": "android-testing"
     },
+    "Bazel": {
+        "git_repository": "https://github.com/bazelbuild/bazel.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/postsubmit.yml",
+        "pipeline_slug": "bazel"
+    },
     "Bazel Remote Execution": {
         "git_repository": "https://github.com/bazelbuild/bazel.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml",
