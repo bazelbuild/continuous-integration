@@ -24,14 +24,19 @@ import re
 
 def wait_for_instance(instance_name, zone, status):
     while True:
-        result = gcloud.describe_instance(instance_name, zone=zone, format='json')
-        current_status = json.loads(result.stdout)['status']
+        result = gcloud.describe_instance(instance_name, zone=zone, format="json")
+        current_status = json.loads(result.stdout)["status"]
         if current_status == status:
-            gcloud.debug('wait_for_instance: {}/{} arrived at status {}'.format(zone, instance_name, status))
+            gcloud.debug(
+                "wait_for_instance: {}/{} arrived at status {}".format(zone, instance_name, status)
+            )
             break
         else:
-            gcloud.debug('wait_for_instance: Waiting for {}/{} to go from status {} to status {}'.format(
-                zone, instance_name, current_status, status))
+            gcloud.debug(
+                "wait_for_instance: Waiting for {}/{} to go from status {} to status {}".format(
+                    zone, instance_name, current_status, status
+                )
+            )
         time.sleep(5)
 
 
@@ -44,13 +49,13 @@ def prettify_logs(instance_name, log, with_prefix=True):
         # Filter for log lines printed by our startup script, ignore the rest.
         # Then drop the common prefix to make the output easier to read.
         # For unknown platforms, we just take every line unmodified.
-        if 'ubuntu' in instance_name:
-            match = re.match(r'.*INFO startup-script: (.*)', line)
+        if "ubuntu" in instance_name:
+            match = re.match(r".*INFO startup-script: (.*)", line)
             if not match:
                 continue
             line = match.group(1)
-        elif 'windows' in instance_name:
-            match = re.match(r'.*windows-startup-script-ps1: (.*)', line)
+        elif "windows" in instance_name:
+            match = re.match(r".*windows-startup-script-ps1: (.*)", line)
             if not match:
                 continue
             line = match.group(1)
@@ -62,29 +67,29 @@ def prettify_logs(instance_name, log, with_prefix=True):
 
 
 def print_pretty_logs(instance_name, log):
-    lines = ('\n'.join(prettify_logs(instance_name, log))).strip()
+    lines = ("\n".join(prettify_logs(instance_name, log))).strip()
     if lines:
         with gcloud.PRINT_LOCK:
             print(lines)
 
 
 def tail_serial_console(instance_name, zone, start=None, until=None):
-    next_start = start if start else '0'
+    next_start = start if start else "0"
     while True:
         try:
             result = gcloud.get_serial_port_output(instance_name, zone=zone, start=next_start)
         except subprocess.CalledProcessError as e:
-            if 'Could not fetch serial port output: TIMEOUT' in e.stderr:
-                gcloud.debug('tail_serial_console: Retrying after TIMEOUT')
+            if "Could not fetch serial port output: TIMEOUT" in e.stderr:
+                gcloud.debug("tail_serial_console: Retrying after TIMEOUT")
                 continue
-            gcloud.debug('tail_serial_console: Done, because got exception: {}'.format(e))
+            gcloud.debug("tail_serial_console: Done, because got exception: {}".format(e))
             if e.stdout:
-                gcloud.debug('stdout: ' + e.stdout)
+                gcloud.debug("stdout: " + e.stdout)
             if e.stderr:
-                gcloud.debug('stderr: ' + e.stderr)
+                gcloud.debug("stderr: " + e.stderr)
             break
         print_pretty_logs(instance_name, result.stdout)
-        next_start = re.search(r'--start=(\d*)', result.stderr).group(1)
+        next_start = re.search(r"--start=(\d*)", result.stderr).group(1)
         if until and until in result.stdout:
             gcloud.debug('tail_serial_console: Done, because found string "{}"'.format(until))
             break

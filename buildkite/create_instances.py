@@ -26,8 +26,8 @@ import yaml
 import gcloud
 
 
-CONFIG_URL = 'https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/instances.yml'
-LOCAL_CONFIG_FILE_NAME = 'instances.yml'
+CONFIG_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/instances.yml"
+LOCAL_CONFIG_FILE_NAME = "instances.yml"
 
 WORK_QUEUE = queue.Queue()
 
@@ -41,23 +41,27 @@ def worker():
             # We take three keys out of the config item. The rest is passed
             # as-is to create_instance_template() and thus to the gcloud
             # command line tool.
-            count = item.pop('count')
-            instance_group_name = item.pop('name')
-            zone = item.pop('zone')
+            count = item.pop("count")
+            instance_group_name = item.pop("name")
+            zone = item.pop("zone")
 
-            template_name = instance_group_name + '-template'
+            template_name = instance_group_name + "-template"
 
             if gcloud.delete_instance_group(instance_group_name, zone=zone).returncode == 0:
-                print('Deleted existing instance group: {}'.format(instance_group_name))
+                print("Deleted existing instance group: {}".format(instance_group_name))
 
             if gcloud.delete_instance_template(template_name).returncode == 0:
-                print('Deleted existing VM template: {}'.format(template_name))
+                print("Deleted existing VM template: {}".format(template_name))
 
             gcloud.create_instance_template(template_name, **item)
 
-            gcloud.create_instance_group(instance_group_name, zone=zone,
-                                         base_instance_name=instance_group_name,
-                                         template=template_name, size=count)
+            gcloud.create_instance_group(
+                instance_group_name,
+                zone=zone,
+                base_instance_name=instance_group_name,
+                template=template_name,
+                size=count,
+            )
         finally:
             WORK_QUEUE.task_done()
 
@@ -67,10 +71,10 @@ def read_config_file(use_local_config):
     if use_local_config:
         path = os.path.join(os.getcwd(), LOCAL_CONFIG_FILE_NAME)
         with open(path, "rb") as fd:
-            content = fd.read().decode('utf-8')
+            content = fd.read().decode("utf-8")
     else:
         with urllib.request.urlopen(CONFIG_URL) as resp:
-            content = resp.read().decode('utf-8')
+            content = resp.read().decode("utf-8")
     return yaml.safe_load(content)
 
 
@@ -79,36 +83,40 @@ def main(argv=None):
         argv = sys.argv[1:]
 
     parser = argparse.ArgumentParser(description="Bazel CI Instance Creation")
-    parser.add_argument('names', type=str, nargs='*',
-                        help='List of instance (group) names that should be created. '
-                             'These values must correspond to "name" entries in the '
-                             'Yaml configuration, e.g. "bk-pipeline-ubuntu1804-java8".')
-    parser.add_argument('--local_config', action="store_true",
-                        help='Whether to read the configuration from CWD/%s' % LOCAL_CONFIG_FILE_NAME)
+    parser.add_argument(
+        "names",
+        type=str,
+        nargs="*",
+        help="List of instance (group) names that should be created. "
+        'These values must correspond to "name" entries in the '
+        'Yaml configuration, e.g. "bk-pipeline-ubuntu1804-java8".',
+    )
+    parser.add_argument(
+        "--local_config",
+        action="store_true",
+        help="Whether to read the configuration from CWD/%s" % LOCAL_CONFIG_FILE_NAME,
+    )
 
     args = parser.parse_args(argv)
     config = read_config_file(args.local_config)
 
     # Verify names passed on the command-line.
-    valid_names = [item['name'] for item in config['instance_groups']]
+    valid_names = [item["name"] for item in config["instance_groups"]]
     for name in args.names:
         if name not in valid_names:
             print("Unknown instance name: {}!".format(name))
-            print("\nValid instance names are: {}".format(' '.join(valid_names)))
+            print("\nValid instance names are: {}".format(" ".join(valid_names)))
             return 1
     if not args.names:
         parser.print_help()
-        print("\nValid instance names are: {}".format(' '.join(valid_names)))
+        print("\nValid instance names are: {}".format(" ".join(valid_names)))
         return 1
 
     # Put VM creation instructions into the work queue.
-    for instance in config['instance_groups']:
-        if instance['name'] not in args.names:
+    for instance in config["instance_groups"]:
+        if instance["name"] not in args.names:
             continue
-        WORK_QUEUE.put({
-            **config['default_vm'],
-            **instance
-        })
+        WORK_QUEUE.put({**config["default_vm"], **instance})
 
     # Spawn worker threads that will create the VMs.
     threads = []
@@ -131,5 +139,5 @@ def main(argv=None):
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

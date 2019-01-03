@@ -28,11 +28,16 @@ BUILD_STATUS_API_URL = "https://api.buildkite.com/v2/organizations/bazel/pipelin
 
 
 def get_build_status_api_url(build_number):
-    return BUILD_STATUS_API_URL + "%s?access_token=%s" % (build_number, bazelci.fetch_buildkite_token())
+    return BUILD_STATUS_API_URL + "%s?access_token=%s" % (
+        build_number,
+        bazelci.fetch_buildkite_token(),
+    )
 
 
 def get_build_info(build_number):
-    output = subprocess.check_output(["curl", get_build_status_api_url(build_number)]).decode("utf-8")
+    output = subprocess.check_output(["curl", get_build_status_api_url(build_number)]).decode(
+        "utf-8"
+    )
     build_info = json.loads(output)
     return build_info
 
@@ -47,7 +52,9 @@ def get_failing_jobs(build_info):
                 continue
 
             # Get rid of the incompatible flags in the command line because we are going to test them individually
-            command_without_incompatible_flags = " ".join([i for i in command.split(" ") if not i.startswith("--incompatible_flag")])
+            command_without_incompatible_flags = " ".join(
+                [i for i in command.split(" ") if not i.startswith("--incompatible_flag")]
+            )
 
             # Recover a map for agent query rules
             agents = {}
@@ -55,11 +62,13 @@ def get_failing_jobs(build_info):
                 key, value = rule.split("=")
                 agents[key] = value
 
-            failing_jobs.append({
-                "name": job["name"],
-                "command": command_without_incompatible_flags.split("\n"),
-                "agents": agents,
-            })
+            failing_jobs.append(
+                {
+                    "name": job["name"],
+                    "command": command_without_incompatible_flags.split("\n"),
+                    "agents": agents,
+                }
+            )
     return failing_jobs
 
 
@@ -72,11 +81,13 @@ def print_steps_for_failing_jobs(build_number):
         for job in failing_jobs:
             command = list(job["command"])
             command[1] = command[1] + " --incompatible_flag=" + incompatible_flag
-            pipeline_steps.append({
-                "label": "%s: %s" % (incompatible_flag, job["name"]),
-                "command": command,
-                "agents": job["agents"].copy(),
-            })
+            pipeline_steps.append(
+                {
+                    "label": "%s: %s" % (incompatible_flag, job["name"]),
+                    "command": command,
+                    "agents": job["agents"].copy(),
+                }
+            )
     print(yaml.dump({"steps": pipeline_steps}))
 
 
@@ -84,7 +95,9 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
-    parser = argparse.ArgumentParser(description="Script for testing failing jobs with individual incompatible flag")
+    parser = argparse.ArgumentParser(
+        description="Script for testing failing jobs with individual incompatible flag"
+    )
     parser.add_argument("--build_number", type=str)
 
     args = parser.parse_args(argv)
@@ -99,6 +112,7 @@ def main(argv=None):
         bazelci.eprint(str(e))
         return 1
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
