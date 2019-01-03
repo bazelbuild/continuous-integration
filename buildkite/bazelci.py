@@ -52,7 +52,7 @@ DOWNSTREAM_PROJECTS = {
     "Bazel": {
         "git_repository": "https://github.com/bazelbuild/bazel.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/postsubmit.yml",
-        "pipeline_slug": "bazel"
+        "pipeline_slug": "bazel-bazel"
     },
     "Bazel Remote Execution": {
         "git_repository": "https://github.com/bazelbuild/bazel.git",
