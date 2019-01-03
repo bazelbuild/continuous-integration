@@ -1331,7 +1331,7 @@ def print_disabled_projects_info_box_step():
     return {
         "label": ":sadpanda:",
         "command": [
-            "buildkite-agent annotate --append --style=info \"" + "\n".join(info_text) + "\n\"",
+            "buildkite-agent annotate --append --style=info \"\n" + "\n".join(info_text) + "\n\"",
         ],
         "agents": {
             "kind": "pipeline"
@@ -1350,7 +1350,7 @@ def print_incompatible_flags_info_box_step(incompatible_flags_map):
     return {
         "label": "Incompatible flags info",
         "command": [
-            "buildkite-agent annotate --append --style=info \"" + "\n".join(info_text) + "\n\"",
+            "buildkite-agent annotate --append --style=info \"\n" + "\n".join(info_text) + "\n\"",
         ],
         "agents": {
             "kind": "pipeline"
