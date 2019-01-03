@@ -35,22 +35,22 @@ CPU_PLATFORMS = {
     # 'europe-west1-b': ['Intel Sandy Bridge'],
     # 'europe-west1-c': ['Intel Ivy Bridge'],
     # 'europe-west1-d': ['Intel Broadwell', 'Intel Haswell', 'Intel Skylake'],
-    'europe-west1-d': ['Intel Skylake'],
+    "europe-west1-d": ["Intel Skylake"]
 }
 MACHINE_TYPES = [
-    'n1-highmem-4',
-    'n1-highmem-8',
-    'n1-highmem-16',
-    'n1-standard-32',
+    "n1-highmem-4",
+    "n1-highmem-8",
+    "n1-highmem-16",
+    "n1-standard-32",
     # 'n1-standard-64'
 ]
-IMAGES = ['buildkite-ubuntu1604']
-#LOCAL_SSD = ['interface=nvme']
-LOCAL_SSD = ['']
-BOOT_DISK_SIZE = ['50GB']
+IMAGES = ["buildkite-ubuntu1604"]
+# LOCAL_SSD = ['interface=nvme']
+LOCAL_SSD = [""]
+BOOT_DISK_SIZE = ["50GB"]
 REPEATS = 10
 
-STARTUP_SCRIPT = 'startup-benchmark.sh'
+STARTUP_SCRIPT = "startup-benchmark.sh"
 
 PRINT_LOCK = threading.Lock()
 WORK_QUEUE = queue.Queue()
@@ -62,33 +62,35 @@ def debug(*args, **kwargs):
 
 
 def run(args, **kwargs):
-    debug('Running: {}'.format(' '.join(args)))
+    debug("Running: {}".format(" ".join(args)))
     return subprocess.run(args, **kwargs)
 
 
-def create_instance(instance_name, zone, cpu_platform, machine_type, image, local_ssd, boot_disk_size):
+def create_instance(
+    instance_name, zone, cpu_platform, machine_type, image, local_ssd, boot_disk_size
+):
     image = {
-        'boot_disk_size': boot_disk_size,
-        'boot_disk_type': 'pd-ssd',
-        'image_family': image,
-        'image_project': 'bazel-public',
-        'machine_type': machine_type,
-        'metadata_from_file': 'startup-script=' + STARTUP_SCRIPT,
-        'min_cpu_platform': cpu_platform,
-        'network': 'buildkite',
-        'scopes': 'cloud-platform',
-        'service_account': 'remote-account@bazel-public.iam.gserviceaccount.com',
-        'zone': zone,
+        "boot_disk_size": boot_disk_size,
+        "boot_disk_type": "pd-ssd",
+        "image_family": image,
+        "image_project": "bazel-public",
+        "machine_type": machine_type,
+        "metadata_from_file": "startup-script=" + STARTUP_SCRIPT,
+        "min_cpu_platform": cpu_platform,
+        "network": "buildkite",
+        "scopes": "cloud-platform",
+        "service_account": "remote-account@bazel-public.iam.gserviceaccount.com",
+        "zone": zone,
     }
     if local_ssd:
-        image['local_ssd'] = local_ssd
+        image["local_ssd"] = local_ssd
     gcloud.create_instance(instance_name, **image)
 
 
 def fetch_benchmark_log(instance_name, zone):
     raw_log = gcloud.get_serial_port_output(instance_name, zone=zone).stdout
     filtered_log = gcloud_utils.prettify_logs(instance_name, raw_log, with_prefix=False)
-    return '\n'.join(filtered_log)
+    return "\n".join(filtered_log)
 
 
 def parse_benchmark_log(instance_name, zone, log):
@@ -106,30 +108,36 @@ def parse_benchmark_log(instance_name, zone, log):
     bazel_clean_start = r"=== BAZEL CLEAN START @([\d.]+) ==="
     bazel_clean_end = r"=== BAZEL CLEAN DONE @([\d.]+) ==="
 
-    hardware_info = re.search(hardware_info_start + r'.*CPU_COUNT=(\d*).*RAM_GB=(\d*).*CPU_PLATFORM=(.*)' + hardware_info_end, log, re.DOTALL).groups()
-    bazel_info = re.search(bazel_info_start + '(.*?)' + bazel_info_end, log, re.DOTALL).groups()
-    bazel_fetch = re.search(bazel_fetch_start + '(.*?)' + bazel_fetch_end, log, re.DOTALL).groups()
-    bazel_build = re.search(bazel_build_start + '(.*?)' + bazel_build_end, log, re.DOTALL).groups()
-    bazel_test = re.search(bazel_test_start + '(.*?)' + bazel_test_end, log, re.DOTALL).groups()
-    bazel_clean = re.search(bazel_clean_start + '(.*?)' + bazel_clean_end, log, re.DOTALL).groups()
+    hardware_info = re.search(
+        hardware_info_start
+        + r".*CPU_COUNT=(\d*).*RAM_GB=(\d*).*CPU_PLATFORM=(.*)"
+        + hardware_info_end,
+        log,
+        re.DOTALL,
+    ).groups()
+    bazel_info = re.search(bazel_info_start + "(.*?)" + bazel_info_end, log, re.DOTALL).groups()
+    bazel_fetch = re.search(bazel_fetch_start + "(.*?)" + bazel_fetch_end, log, re.DOTALL).groups()
+    bazel_build = re.search(bazel_build_start + "(.*?)" + bazel_build_end, log, re.DOTALL).groups()
+    bazel_test = re.search(bazel_test_start + "(.*?)" + bazel_test_end, log, re.DOTALL).groups()
+    bazel_clean = re.search(bazel_clean_start + "(.*?)" + bazel_clean_end, log, re.DOTALL).groups()
 
     return {
-        'timestamp': int(time.time()),
-        'instance_name': instance_name,
-        'zone': zone,
-        'cpu_count': int(hardware_info[0]),
-        'ram_gb': int(hardware_info[1]),
-        'cpu_platform': hardware_info[2].strip(),
-        'bazel_info': bazel_info[1].strip(),
-        'bazel_info_duration_secs': float(bazel_info[2]) - float(bazel_info[0]),
-        'bazel_fetch': bazel_fetch[1].strip(),
-        'bazel_fetch_duration_secs': float(bazel_fetch[2]) - float(bazel_fetch[0]),
-        'bazel_build_log': bazel_build[1].strip(),
-        'bazel_build_duration_secs': float(bazel_build[2]) - float(bazel_build[0]),
-        'bazel_test_log': bazel_test[1].strip(),
-        'bazel_test_duration_secs': float(bazel_test[2]) - float(bazel_test[0]),
-        'bazel_clean_log': bazel_clean[1].strip(),
-        'bazel_clean_duration_secs': float(bazel_clean[2]) - float(bazel_clean[0]),
+        "timestamp": int(time.time()),
+        "instance_name": instance_name,
+        "zone": zone,
+        "cpu_count": int(hardware_info[0]),
+        "ram_gb": int(hardware_info[1]),
+        "cpu_platform": hardware_info[2].strip(),
+        "bazel_info": bazel_info[1].strip(),
+        "bazel_info_duration_secs": float(bazel_info[2]) - float(bazel_info[0]),
+        "bazel_fetch": bazel_fetch[1].strip(),
+        "bazel_fetch_duration_secs": float(bazel_fetch[2]) - float(bazel_fetch[0]),
+        "bazel_build_log": bazel_build[1].strip(),
+        "bazel_build_duration_secs": float(bazel_build[2]) - float(bazel_build[0]),
+        "bazel_test_log": bazel_test[1].strip(),
+        "bazel_test_duration_secs": float(bazel_test[2]) - float(bazel_test[0]),
+        "bazel_clean_log": bazel_clean[1].strip(),
+        "bazel_clean_duration_secs": float(bazel_clean[2]) - float(bazel_clean[0]),
     }
 
 
@@ -137,45 +145,51 @@ def workflow(zone, cpu_platform, machine_type, image, local_ssd, boot_disk_size)
     instance_name = "benchmark-ubuntu-" + str(uuid4())
     try:
         # Create the VM.
-        create_instance(instance_name, zone, cpu_platform, machine_type, image, local_ssd, boot_disk_size)
+        create_instance(
+            instance_name, zone, cpu_platform, machine_type, image, local_ssd, boot_disk_size
+        )
 
         # Wait for the VM to become ready.
-        gcloud_utils.wait_for_instance(instance_name, zone=zone, status='RUNNING')
+        gcloud_utils.wait_for_instance(instance_name, zone=zone, status="RUNNING")
 
         # Wait for benchmark to complete.
-        gcloud_utils.tail_serial_console(instance_name, zone=zone, until='=== BENCHMARK COMPLETE ===')
+        gcloud_utils.tail_serial_console(
+            instance_name, zone=zone, until="=== BENCHMARK COMPLETE ==="
+        )
 
         log = fetch_benchmark_log(instance_name, zone)
         results = parse_benchmark_log(instance_name, zone, log)
-        results['requested_cpu_platform'] = cpu_platform
-        results['machine_type'] = machine_type
-        results['image'] = image
-        results['local_ssd'] = local_ssd
-        results['boot_disk_size'] = boot_disk_size
+        results["requested_cpu_platform"] = cpu_platform
+        results["machine_type"] = machine_type
+        results["image"] = image
+        results["local_ssd"] = local_ssd
+        results["boot_disk_size"] = boot_disk_size
 
-        with open(os.path.join('results', instance_name + '.json'), 'w') as f:
+        with open(os.path.join("results", instance_name + ".json"), "w") as f:
             json.dump(results, f)
 
-        with open(os.path.join('results', 'combined.csv'), 'a', newline='') as f:
-            results_writer = csv.writer(f, )
-            results_writer.writerow([
-                results['timestamp'],
-                results['instance_name'],
-                results['zone'],
-                results['cpu_count'],
-                results['ram_gb'],
-                results['requested_cpu_platform'],
-                results['cpu_platform'],
-                results['machine_type'],
-                results['image'],
-                results['local_ssd'],
-                results['boot_disk_size'],
-                "{0:.4f}".format(results['bazel_info_duration_secs']),
-                "{0:.4f}".format(results['bazel_fetch_duration_secs']),
-                "{0:.4f}".format(results['bazel_build_duration_secs']),
-                "{0:.4f}".format(results['bazel_test_duration_secs']),
-                "{0:.4f}".format(results['bazel_clean_duration_secs'])
-            ])
+        with open(os.path.join("results", "combined.csv"), "a", newline="") as f:
+            results_writer = csv.writer(f)
+            results_writer.writerow(
+                [
+                    results["timestamp"],
+                    results["instance_name"],
+                    results["zone"],
+                    results["cpu_count"],
+                    results["ram_gb"],
+                    results["requested_cpu_platform"],
+                    results["cpu_platform"],
+                    results["machine_type"],
+                    results["image"],
+                    results["local_ssd"],
+                    results["boot_disk_size"],
+                    "{0:.4f}".format(results["bazel_info_duration_secs"]),
+                    "{0:.4f}".format(results["bazel_fetch_duration_secs"]),
+                    "{0:.4f}".format(results["bazel_build_duration_secs"]),
+                    "{0:.4f}".format(results["bazel_test_duration_secs"]),
+                    "{0:.4f}".format(results["bazel_clean_duration_secs"]),
+                ]
+            )
     finally:
         try:
             gcloud.delete_instance(instance_name)
@@ -208,14 +222,16 @@ def main(argv=None):
                     for local_ssd in LOCAL_SSD:
                         for boot_disk_size in BOOT_DISK_SIZE:
                             for _ in range(REPEATS):
-                                WORK_QUEUE.put({
-                                    'zone': zone,
-                                    'cpu_platform': cpu_platform,
-                                    'machine_type': machine_type,
-                                    'image': image,
-                                    'local_ssd': local_ssd,
-                                    'boot_disk_size': boot_disk_size
-                                })
+                                WORK_QUEUE.put(
+                                    {
+                                        "zone": zone,
+                                        "cpu_platform": cpu_platform,
+                                        "machine_type": machine_type,
+                                        "image": image,
+                                        "local_ssd": local_ssd,
+                                        "boot_disk_size": boot_disk_size,
+                                    }
+                                )
 
     # Spawn worker threads that will create the VMs.
     threads = []
@@ -238,5 +254,5 @@ def main(argv=None):
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
