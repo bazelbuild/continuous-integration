@@ -234,16 +234,16 @@ def main(argv=None):
         ).strip()
     except subprocess.CalledProcessError:
         print(
-            "Could not get current Git commit hash. You have to run "
-            "create_images.py from a Git repository.",
+            "Could not get current Git commit hash. You have to run create_images.py "
+            "from a Git repository.",
             file=sys.stderr,
         )
         return 1
 
     if subprocess.check_output(["git", "status", "--porcelain"], universal_newlines=True).strip():
         print(
-            "There are pending changes in your Git repository. You have to "
-            "commit them, before create_images.py can continue.",
+            "There are pending changes in your Git repository. You have to commit "
+            "them, before create_images.py can continue.",
             file=sys.stderr,
         )
         return 1
