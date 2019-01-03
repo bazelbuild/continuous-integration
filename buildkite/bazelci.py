@@ -636,6 +636,7 @@ def execute_commands(
                     test_bep_file,
                     monitor_flaky_tests,
                     incompatible_flags,
+                    task_config.get("working_directory"),
                 )
                 if has_flaky_tests(test_bep_file):
                     if monitor_flaky_tests:
@@ -1084,6 +1085,7 @@ def execute_bazel_test(
     bep_file,
     monitor_flaky_tests,
     incompatible_flags,
+    cwd=None,
 ):
     print_expanded_group(":bazel: Test ({})".format(bazel_version))
 
@@ -1101,7 +1103,8 @@ def execute_bazel_test(
 
     try:
         execute_command(
-            [bazel_binary] + common_startup_flags(platform) + ["test"] + aggregated_flags + targets
+            [bazel_binary] + common_startup_flags(platform) + ["test"] + aggregated_flags + targets,
+            cwd=cwd,
         )
     except subprocess.CalledProcessError as e:
         raise BuildkiteException("bazel test failed with exit code {}".format(e.returncode))
@@ -1198,9 +1201,16 @@ def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True):
     return process.stdout
 
 
-def execute_command(args, shell=False, fail_if_nonzero=True):
+def execute_command(args, shell=False, fail_if_nonzero=True, cwd=None):
     eprint(" ".join(args))
-    return subprocess.run(args, shell=shell, check=fail_if_nonzero, env=os.environ).returncode
+
+    wd = None
+    if cwd:
+        wd = os.path.join(os.getcwd(), cwd)
+
+    return subprocess.run(
+        args, shell=shell, check=fail_if_nonzero, env=os.environ, cwd=wd
+    ).returncode
 
 
 def execute_command_background(args):
