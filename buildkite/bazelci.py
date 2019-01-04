@@ -821,7 +821,7 @@ def common_build_flags(bep_file, platform):
         "--experimental_multi_threaded_digest",
     ]
 
-    if not is_windows(platform):
+    if platform != "windows":
         flags += ["--sandbox_tmpfs_path=/tmp"]
 
     if bep_file:
