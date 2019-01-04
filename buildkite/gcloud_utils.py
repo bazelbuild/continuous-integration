@@ -49,7 +49,7 @@ def prettify_logs(instance_name, log, with_prefix=True):
         # Filter for log lines printed by our startup script, ignore the rest.
         # Then drop the common prefix to make the output easier to read.
         # For unknown platforms, we just take every line unmodified.
-        if "ubuntu" in instance_name:
+        if "ubuntu" in instance_name or "docker" in instance_name:
             match = re.match(r".*INFO startup-script: (.*)", line)
             if not match:
                 continue

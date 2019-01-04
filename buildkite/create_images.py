@@ -42,6 +42,14 @@ IMAGE_CREATION_VMS = {
     #         'install-buildkite-agent.sh'
     #     ]
     # },
+    ("bk-docker",): {
+        "source_image_project": "ubuntu-os-cloud",
+        "source_image_family": "ubuntu-1804-lts",
+        "setup_script": "setup-docker.sh",
+        "licenses": [
+            "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
+        ],
+    },
     ("bk-worker-ubuntu1404-java8",): {
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-1404-lts",
