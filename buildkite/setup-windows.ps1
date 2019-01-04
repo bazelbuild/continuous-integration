@@ -155,7 +155,7 @@ $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 ## Install Python3
 Write-Host "Installing Python 3..."
 # FYI: choco adds "C:\python3\Scripts\;C:\python3\" to PATH.
-& choco install python3 --version 3.6.6 --params "/InstallDir:C:\python3"
+& choco install python3 --version 3.6.8 --params "/InstallDir:C:\python3"
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Install a couple of Python modules required by TensorFlow.

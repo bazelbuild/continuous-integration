@@ -176,10 +176,10 @@ EOF
 }
 
 ### Install required Python packages from pip for Tensorflow.
-if [[ "${config_os}" == "ubuntu1604" || "${config_os}" == "ubuntu1804" ]]; then
+{
   pip install keras_applications keras_preprocessing
   pip3 install keras_applications keras_preprocessing
-fi
+}
 
 ### Fetch and save image version to file.
 {
@@ -399,7 +399,7 @@ EOF
     packages+=("realpath")
     apt-get -qqy install zlib1g-dev libssl-dev
 
-    PYTHON_VERSION="3.6.5"
+    PYTHON_VERSION="3.6.8"
 
     mkdir -p /usr/local/src
     pushd /usr/local/src
@@ -500,7 +500,7 @@ fi
   mkdir -p /opt/swift
   case ${config_os} in
     ubuntu1404)
-      curl -sSL https://swift.org/builds/swift-4.2.1-release/ubuntu1804/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu18.04.tar.gz | \
+      curl -sSL https://swift.org/builds/swift-4.2.1-release/ubuntu1404/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu14.04.tar.gz | \
         tar xvz -C /opt/swift --strip 1
       ;;
     ubuntu1604)
@@ -508,7 +508,7 @@ fi
         tar xvz -C /opt/swift --strip 1
       ;;
     ubuntu1804)
-      curl -sSL https://swift.org/builds/swift-4.2.1-release/ubuntu1404/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu14.04.tar.gz | \
+      curl -sSL https://swift.org/builds/swift-4.2.1-release/ubuntu1804/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu18.04.tar.gz | \
         tar xvz -C /opt/swift --strip 1
       ;;
     *)
