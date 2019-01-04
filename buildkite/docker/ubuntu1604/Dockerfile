@@ -96,7 +96,7 @@ RUN mkdir -p /opt/android-sdk-linux && \
     curl -Lo android-sdk.zip https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip && \
     unzip android-sdk.zip > /dev/null && \
     rm android-sdk.zip && \
-    yes | tools/bin/sdkmanager --licenses && \
+    yes | tools/bin/sdkmanager --licenses > /dev/null && \
     tools/bin/sdkmanager --update && \
     tools/bin/sdkmanager \
     "build-tools;27.0.3" \
@@ -116,16 +116,16 @@ ENV SWIFT_HOME "/opt/swift"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
 RUN mkdir -p /opt/swift && \
     curl -L https://swift.org/builds/swift-4.2.1-release/ubuntu1604/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu16.04.tar.gz | \
-    tar xvz -C /opt/swift --strip 1
+    tar xz -C /opt/swift --strip 1
 
 ### Install tools required by the release process.
 RUN curl -L https://github.com/c4milo/github-release/releases/download/v1.1.0/github-release_v1.1.0_linux_amd64.tar.gz | \
-    tar xvz -C /usr/local/bin && \
+    tar xz -C /usr/local/bin && \
     chown root:root /usr/local/bin/github-release && \
     chmod 0755 /usr/local/bin/github-release
 
 ### Install Sauce Connect (for rules_webtesting).
 RUN curl -L https://saucelabs.com/downloads/sc-4.5.1-linux.tar.gz | \
-    tar xvz -C /opt && \
+    tar xz -C /opt && \
     chown -R root:root /opt/sc-4.5.1-linux && \
     ln -s /opt/sc-4.5.1-linux/bin/sc /usr/local/bin/sc
