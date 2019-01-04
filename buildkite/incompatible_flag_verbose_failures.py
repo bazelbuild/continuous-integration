@@ -15,23 +15,54 @@
 # limitations under the License.
 
 import argparse
+import base64
 import json
 import os
-import sys
-import subprocess
-import yaml
 import re
+import subprocess
+import sys
+import yaml
+
 import bazelci
 from bazelci import BuildkiteException
 
 BUILD_STATUS_API_URL = "https://api.buildkite.com/v2/organizations/bazel/pipelines/bazel-at-release-plus-incompatible-flags/builds/"
 
+ENCRYPTED_BUILDKITE_API_TOKEN = """
+CiQAFKMEShE9EMWmhqEpX4gPRLdVe8SgL84SVyMAWLTLXd6VssASUADXsQCefXM1gXeKWD5qLKVT
+VouWIY1h9jpCEd9bgy/UgMuf19M0dcklP4wpfPGL/+ZyuixQh0Ih+TfD8UAghCpN7VA6MLDNrV0D
+k/lpv7B5
+""".strip()
+
+
+def buildkite_token():
+    return (
+        subprocess.check_output(
+            [
+                bazelci.gcloud_command(),
+                "kms",
+                "decrypt",
+                "--location",
+                "global",
+                "--keyring",
+                "buildkite",
+                "--key",
+                "buildkite-api-token",
+                "--ciphertext-file",
+                "-",
+                "--plaintext-file",
+                "-",
+            ],
+            input=base64.b64decode(ENCRYPTED_BUILDKITE_API_TOKEN),
+            env=os.environ,
+        )
+        .decode("utf-8")
+        .strip()
+    )
+
 
 def get_build_status_api_url(build_number):
-    return BUILD_STATUS_API_URL + "%s?access_token=%s" % (
-        build_number,
-        bazelci.fetch_buildkite_token(),
-    )
+    return BUILD_STATUS_API_URL + "%s?access_token=%s" % (build_number, buildkite_token())
 
 
 def get_build_info(build_number):

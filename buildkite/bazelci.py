@@ -242,6 +242,7 @@ PLATFORMS = {
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
         "publish_binary": True,
         "java": "8",
+        "docker-image": "gcr.io/bazel-untrusted/ubuntu1404:java8",
     },
     "ubuntu1604": {
         "name": "Ubuntu 16.04, JDK 8",
@@ -249,6 +250,7 @@ PLATFORMS = {
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
         "publish_binary": False,
         "java": "8",
+        "docker-image": "gcr.io/bazel-untrusted/ubuntu1604:java8",
     },
     "ubuntu1804": {
         "name": "Ubuntu 18.04, JDK 8",
@@ -256,6 +258,7 @@ PLATFORMS = {
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
         "publish_binary": False,
         "java": "8",
+        "docker-image": "gcr.io/bazel-untrusted/ubuntu1804:java8",
     },
     "ubuntu1804_nojava": {
         "name": "Ubuntu 18.04, no JDK",
@@ -263,6 +266,7 @@ PLATFORMS = {
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
         "publish_binary": False,
         "java": "no",
+        "docker-image": "gcr.io/bazel-untrusted/ubuntu1804:nojava",
     },
     "ubuntu1804_java9": {
         "name": "Ubuntu 18.04, JDK 9",
@@ -270,6 +274,7 @@ PLATFORMS = {
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
         "publish_binary": False,
         "java": "9",
+        "docker-image": "gcr.io/bazel-untrusted/ubuntu1804:java9",
     },
     "ubuntu1804_java10": {
         "name": "Ubuntu 18.04, JDK 10",
@@ -277,6 +282,7 @@ PLATFORMS = {
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
         "publish_binary": False,
         "java": "10",
+        "docker-image": "gcr.io/bazel-untrusted/ubuntu1804:java10",
     },
     "macos": {
         "name": "macOS, JDK 8",
@@ -299,8 +305,18 @@ PLATFORMS = {
         "publish_binary": False,
         "host-platform": "ubuntu1604",
         "java": "8",
+        "docker-image": "gcr.io/bazel-untrusted/ubuntu1604:java8",
     },
 }
+
+# The platform used for various steps (e.g. stuff that formerly ran on the "pipeline" workers).
+DEFAULT_PLATFORM = "ubuntu1804"
+
+ENCRYPTED_SAUCELABS_TOKEN = """
+CiQAGuqy23f9LNPzp0AetddpO5CXjducZuBB/dfp6ccpX4LxM+8STQBj1BIUMJMXFAWd9BxYJmcM
+W7hzbbFFEfpDuqwVwzD2xF3KugY3Otwv+lPLf6K+8ZI55SbpryFFbt7eSlvVTJIBlElfwIU6OpuK
+OuI/
+""".strip()
 
 
 class BuildkiteException(Exception):
@@ -472,7 +488,7 @@ def execute_commands(
         if config.get("sauce", None):
             print_collapsed_group(":saucelabs: Starting Sauce Connect Proxy")
             os.environ["SAUCE_USERNAME"] = "bazel_rules_webtesting"
-            os.environ["SAUCE_ACCESS_KEY"] = fetch_saucelabs_token()
+            os.environ["SAUCE_ACCESS_KEY"] = saucelabs_token()
             os.environ["TUNNEL_IDENTIFIER"] = str(uuid.uuid4())
             os.environ["BUILD_TAG"] = str(uuid.uuid4())
             readyfile = os.path.join(tmpdir, "sc_is_ready")
@@ -548,89 +564,30 @@ def tests_with_status(bep_file, status):
     return set(label for label, _ in test_logs_for_status(bep_file, status=status))
 
 
-__saucelabs_token__ = None
-__buildkite_token__ = None
-
-
-def fetch_saucelabs_token():
-    global __saucelabs_token__
-    if __saucelabs_token__:
-        return __saucelabs_token__
-    try:
-        execute_command(
+def saucelabs_token():
+    return (
+        subprocess.check_output(
             [
-                gsutil_command(),
-                "cp",
-                "gs://bazel-encrypted-secrets/saucelabs-access-key.enc",
-                "saucelabs-access-key.enc",
-            ]
+                gcloud_command(),
+                "kms",
+                "decrypt",
+                "--location",
+                "global",
+                "--keyring",
+                "buildkite",
+                "--key",
+                "saucelabs-access-key",
+                "--ciphertext-file",
+                "-",
+                "--plaintext-file",
+                "-",
+            ],
+            input=base64.b64decode(ENCRYPTED_SAUCELABS_TOKEN),
+            env=os.environ,
         )
-        __saucelabs_token__ = (
-            subprocess.check_output(
-                [
-                    gcloud_command(),
-                    "kms",
-                    "decrypt",
-                    "--location",
-                    "global",
-                    "--keyring",
-                    "buildkite",
-                    "--key",
-                    "saucelabs-access-key",
-                    "--ciphertext-file",
-                    "saucelabs-access-key.enc",
-                    "--plaintext-file",
-                    "-",
-                ],
-                env=os.environ,
-            )
-            .decode("utf-8")
-            .strip()
-        )
-        return __saucelabs_token__
-    finally:
-        os.remove("saucelabs-access-key.enc")
-
-
-def fetch_buildkite_token():
-    """This function is used in buildkite/incompatible_flag_verbose_failures.py"""
-    global __buildkite_token__	
-    if __buildkite_token__:	
-        return __buildkite_token__	
-    try:	
-        execute_command(	
-            [	
-                gsutil_command(),	
-                "cp",	
-                "gs://bazel-encrypted-secrets/buildkite-api-token.enc",	
-                "buildkite-api-token.enc",	
-            ]	
-        )	
-        __buildkite_token__ = (	
-            subprocess.check_output(	
-                [	
-                    gcloud_command(),	
-                    "kms",	
-                    "decrypt",	
-                    "--location",	
-                    "global",	
-                    "--keyring",	
-                    "buildkite",	
-                    "--key",	
-                    "buildkite-api-token",	
-                    "--ciphertext-file",	
-                    "buildkite-api-token.enc",	
-                    "--plaintext-file",	
-                    "-",	
-                ],	
-                env=os.environ,	
-            )	
-            .decode("utf-8")	
-            .strip()	
-        )	
-        return __buildkite_token__	
-    finally:	
-        os.remove("buildkite-api-token.enc")
+        .decode("utf-8")
+        .strip()
+    )
 
 
 def is_pull_request():
@@ -822,7 +779,7 @@ def remote_caching_flags(platform):
         "--remote_max_connections=200",
         '--experimental_remote_platform_override=properties:{name:"platform" value:"%s"}'
         % platform,
-        "--remote_http_cache=https://storage.googleapis.com/bazel-buildkite-cache",
+        "--remote_http_cache=https://storage.googleapis.com/bazel-untrusted-buildkite-cache",
     ]
 
 
@@ -882,7 +839,7 @@ def rbe_flags(original_flags, accept_cached):
     # Enable remote execution via RBE.
     flags = [
         "--remote_executor=remotebuildexecution.googleapis.com",
-        "--remote_instance_name=projects/bazel-public/instances/default_instance",
+        "--remote_instance_name=projects/bazel-untrusted/instances/default_instance",
         "--remote_timeout=3600",
         "--spawn_strategy=remote",
         "--strategy=Javac=remote",
@@ -897,7 +854,7 @@ def rbe_flags(original_flags, accept_cached):
     flags += [
         "--bes_backend=buildeventservice.googleapis.com",
         "--bes_timeout=360s",
-        "--project_id=bazel-public",
+        "--project_id=bazel-untrusted",
     ]
 
     if not accept_cached:
@@ -1139,17 +1096,47 @@ def print_project_pipeline(
 
         # If all builds succeed, update the last green commit of this project
         pipeline_steps.append(
-            {
-                "label": "Try Update Last Green Commit",
-                "command": [
+            step(
+                label="Try Update Last Green Commit",
+                commands=[
                     fetch_bazelcipy_command(),
                     python_binary() + " bazelci.py try_update_last_green_commit",
                 ],
-                "agents": {"kind": "pipeline"},
-            }
+            )
         )
 
     print(yaml.dump({"steps": pipeline_steps}))
+
+
+def step(label, commands, platform=DEFAULT_PLATFORM):
+    host_platform = PLATFORMS[platform].get("host-platform", platform)
+    if "docker-image" in PLATFORMS[platform]:
+        return {
+            "label": label,
+            "command": commands,
+            "agents": {"kind": "docker", "os": "linux"},
+            "plugins": {
+                "philwo/docker": {
+                    "always-pull": True,
+                    "debug": True,
+                    "environment": ["BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "BUILDKITE_GS_ACL"],
+                    "image": PLATFORMS[platform]["docker-image"],
+                    "privileged": True,
+                    "propagate-environment": True,
+                    "tmpfs": ["/home/bazel/.cache:exec,uid=999,gid=999"],
+                }
+            },
+        }
+    else:
+        return {
+            "label": label,
+            "command": commands,
+            "agents": {
+                "kind": "worker",
+                "java": PLATFORMS[platform]["java"],
+                "os": rchop(host_platform, "_nojava", "_java8", "_java9", "_java10"),
+            },
+        }
 
 
 def runner_step(
@@ -1180,15 +1167,7 @@ def runner_step(
     for flag in incompatible_flags or []:
         command += " --incompatible_flag=" + flag
     label = create_label(platform, project_name)
-    return {
-        "label": label,
-        "command": [fetch_bazelcipy_command(), command],
-        "agents": {
-            "kind": "worker",
-            "java": PLATFORMS[platform]["java"],
-            "os": rchop(host_platform, "_nojava", "_java8", "_java9", "_java10"),
-        },
-    }
+    return step(label=label, commands=[fetch_bazelcipy_command(), command], platform=platform)
 
 
 def fetch_bazelcipy_command():
@@ -1218,11 +1197,10 @@ def upload_project_pipeline_step(
         pipeline_command += " --file_config=" + file_config
     pipeline_command += " | buildkite-agent pipeline upload"
 
-    return {
-        "label": "Setup {0}".format(project_name),
-        "command": [fetch_bazelcipy_command(), pipeline_command],
-        "agents": {"kind": "pipeline"},
-    }
+    return step(
+        label="Setup {0}".format(project_name),
+        commands=[fetch_bazelcipy_command(), pipeline_command],
+    )
 
 
 def create_label(platform, project_name, build_only=False, test_only=False):
@@ -1262,15 +1240,11 @@ def bazel_build_step(
         pipeline_command += " --file_config=" + file_config
     pipeline_command += " --platform=" + platform
 
-    return {
-        "label": create_label(platform, project_name, build_only, test_only),
-        "command": [fetch_bazelcipy_command(), pipeline_command],
-        "agents": {
-            "kind": "worker",
-            "java": PLATFORMS[platform]["java"],
-            "os": rchop(host_platform, "_nojava", "_java8", "_java9", "_java10"),
-        },
-    }
+    return step(
+        label=create_label(platform, project_name, build_only, test_only),
+        commands=[fetch_bazelcipy_command(), pipeline_command],
+        platform=platform,
+    )
 
 
 def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
@@ -1302,14 +1276,10 @@ def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
 
     # If all builds succeed, publish the Bazel binaries to GCS.
     pipeline_steps.append(
-        {
-            "label": "Publish Bazel Binaries",
-            "command": [
-                fetch_bazelcipy_command(),
-                python_binary() + " bazelci.py publish_binaries",
-            ],
-            "agents": {"kind": "pipeline"},
-        }
+        step(
+            label="Publish Bazel Binaries",
+            commands=[fetch_bazelcipy_command(), python_binary() + " bazelci.py publish_binaries"],
+        )
     )
 
     print(yaml.dump({"steps": pipeline_steps}))
@@ -1324,13 +1294,12 @@ def print_disabled_projects_info_box_step():
 
     if len(info_text) == 1:
         return None
-    return {
-        "label": ":sadpanda:",
-        "command": [
+    return step(
+        label=":sadpanda:",
+        commands=[
             'buildkite-agent annotate --append --style=info "\n' + "\n".join(info_text) + '\n"'
         ],
-        "agents": {"kind": "pipeline"},
-    }
+    )
 
 
 def print_incompatible_flags_info_box_step(incompatible_flags_map):
@@ -1341,13 +1310,12 @@ def print_incompatible_flags_info_box_step(incompatible_flags_map):
 
     if len(info_text) == 1:
         return None
-    return {
-        "label": "Incompatible flags info",
-        "command": [
+    return step(
+        label="Incompatible flags info",
+        commands=[
             'buildkite-agent annotate --append --style=info "\n' + "\n".join(info_text) + '\n"'
         ],
-        "agents": {"kind": "pipeline"},
-    }
+    )
 
 
 def fetch_incompatible_flags_from_github():
@@ -1441,17 +1409,16 @@ def print_bazel_downstream_pipeline(
         if not current_build_number:
             raise BuildkiteException("Not running inside Buildkite")
         pipeline_steps.append(
-            {
-                "label": "Test failing jobs with incompatible flag separately",
-                "command": [
+            step(
+                label="Test failing jobs with incompatible flag separately",
+                commands=[
                     fetch_bazelcipy_command(),
                     fetch_incompatible_flag_verbose_failures_command(),
                     python_binary()
                     + " incompatible_flag_verbose_failures.py --build_number=%s | buildkite-agent pipeline upload"
                     % current_build_number,
                 ],
-                "agents": {"kind": "pipeline"},
-            }
+            )
         )
 
     print(yaml.dump({"steps": pipeline_steps}))

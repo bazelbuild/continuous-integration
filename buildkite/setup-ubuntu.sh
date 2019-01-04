@@ -181,13 +181,6 @@ EOF
   pip3 install keras_applications keras_preprocessing
 }
 
-### Fetch and save image version to file.
-{
-  IMAGE_VERSION=$(curl -sS "http://metadata.google.internal/computeMetadata/v1/instance/attributes/image-version" -H "Metadata-Flavor: Google")
-  echo -n "${IMAGE_VERSION}" > /etc/image-version
-}
-
-
 ### Install Azul Zulu (OpenJDK).
 if [[ "${config_java}" != "no" ]]; then
   apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0x219BD9C9
@@ -219,7 +212,7 @@ fi
   cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
 token="xxx"
 name="%hostname-%n"
-tags="kind=${config_kind},os=${config_os},java=${config_java},image-version=${IMAGE_VERSION}"
+tags="kind=${config_kind},os=${config_os},java=${config_java}"
 build-path="/var/lib/buildkite-agent/builds"
 hooks-path="/etc/buildkite-agent/hooks"
 plugins-path="/etc/buildkite-agent/plugins"
