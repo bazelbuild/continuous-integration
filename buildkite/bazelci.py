@@ -774,9 +774,8 @@ def remote_caching_flags(platform):
         # or remove the `--disk_cache=` flag.
         "--disk_cache=",
         "--remote_max_connections=200",
-        '--experimental_remote_platform_override=properties:{name:"platform" value:"{}"}'.format(
-            platform
-        ),
+        '--experimental_remote_platform_override=properties:{name:"platform" value:"%s"}'
+        % platform,
         "--remote_http_cache=https://storage.googleapis.com/bazel-buildkite-cache",
     ]
 
