@@ -545,6 +545,7 @@ def tests_with_status(bep_file, status):
 
 
 __saucelabs_token__ = None
+__buildkite_token__ = None
 
 
 def fetch_saucelabs_token():
@@ -585,6 +586,46 @@ def fetch_saucelabs_token():
         return __saucelabs_token__
     finally:
         os.remove("saucelabs-access-key.enc")
+
+
+def fetch_buildkite_token():	
+    global __buildkite_token__	
+    if __buildkite_token__:	
+        return __buildkite_token__	
+    try:	
+        execute_command(	
+            [	
+                gsutil_command(),	
+                "cp",	
+                "gs://bazel-encrypted-secrets/buildkite-api-token.enc",	
+                "buildkite-api-token.enc",	
+            ]	
+        )	
+        __buildkite_token__ = (	
+            subprocess.check_output(	
+                [	
+                    gcloud_command(),	
+                    "kms",	
+                    "decrypt",	
+                    "--location",	
+                    "global",	
+                    "--keyring",	
+                    "buildkite",	
+                    "--key",	
+                    "buildkite-api-token",	
+                    "--ciphertext-file",	
+                    "buildkite-api-token.enc",	
+                    "--plaintext-file",	
+                    "-",	
+                ],	
+                env=os.environ,	
+            )	
+            .decode("utf-8")	
+            .strip()	
+        )	
+        return __buildkite_token__	
+    finally:	
+        os.remove("buildkite-api-token.enc")
 
 
 def is_pull_request():
