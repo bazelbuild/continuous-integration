@@ -85,7 +85,7 @@ Write-Host "Installing Git for Windows..."
 & choco install git --params "'/GitOnlyOnPath'"
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 # Don't convert the line endings when cloning the repository because that could break some tests
-& git config --global core.autocrlf false
+& git config --system core.autocrlf false
 
 ## Install MSYS2
 Write-Host "Installing MSYS2..."
