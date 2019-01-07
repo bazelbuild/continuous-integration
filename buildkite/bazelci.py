@@ -588,7 +588,8 @@ def fetch_saucelabs_token():
         os.remove("saucelabs-access-key.enc")
 
 
-def fetch_buildkite_token():	
+def fetch_buildkite_token():
+    """This function is used in buildkite/incompatible_flag_verbose_failures.py"""
     global __buildkite_token__	
     if __buildkite_token__:	
         return __buildkite_token__	
