@@ -202,7 +202,6 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_typescript.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_typescript/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-typescript-typescript",
-        "disabled_reason": "Re-enable once merged: https://github.com/bazelbuild/rules_typescript/pull/343",
     },
     "rules_webtesting": {
         "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
