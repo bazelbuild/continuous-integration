@@ -806,7 +806,7 @@ def remote_caching_flags(platform):
         "ubuntu1804_nojava",
         "ubuntu1804_java9",
         "ubuntu1804_java10",
-        "macos",
+        # "macos",
         # "windows",
     ]:
         return []
