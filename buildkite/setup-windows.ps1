@@ -271,6 +271,16 @@ if ($java -ne "no") {
     & "${android_sdk_root}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
 }
 
+## Download and unpack our Git snapshot.
+Write-Host "Downloading Git snapshot..."
+$bazelbuild_url = "https://storage.googleapis.com/bazel-git-mirror/bazelbuild.zip"
+$bazelbuild_zip = "c:\temp\bazelbuild.zip"
+$bazelbuild_root = "c:\buildkite"
+(New-Object Net.WebClient).DownloadFile($bazelbuild_url, $bazelbuild_zip)
+Write-Host "Unpacking Git snapshot..."
+Expand-Archive -LiteralPath $bazelbuild_zip -DestinationPath $bazelbuild_root -Force
+Remove-Item $bazelbuild_zip
+
 ## Download and install the Buildkite agent.
 Write-Host "Grabbing latest Buildkite Agent version number from GitHub..."
 $url = "https://github.com/buildkite/agent/releases/latest"

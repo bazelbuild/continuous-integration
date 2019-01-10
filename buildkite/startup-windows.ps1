@@ -47,16 +47,6 @@ Write-Host "Decrypting Buildkite Agent token using KMS..."
 $buildkite_agent_token = & gcloud kms decrypt --location global --keyring buildkite --key buildkite-agent-token --ciphertext-file $buildkite_agent_token_file --plaintext-file -
 Remove-Item $buildkite_agent_token_file
 
-## Download and unpack our Git snapshot.
-Write-Host "Downloading Git snapshot..."
-$bazelbuild_url = "https://storage.googleapis.com/bazel-git-mirror/bazelbuild.zip"
-$bazelbuild_zip = "c:\temp\bazelbuild.zip"
-$bazelbuild_root = "c:\buildkite"
-(New-Object Net.WebClient).DownloadFile($bazelbuild_url, $bazelbuild_zip)
-Write-Host "Unpacking Git snapshot..."
-Expand-Archive -LiteralPath $bazelbuild_zip -DestinationPath $bazelbuild_root -Force
-Remove-Item $bazelbuild_zip
-
 ## Configure the Buildkite agent.
 Write-Host "Configuring Buildkite Agent..."
 $buildkite_agent_root = "c:\buildkite"
