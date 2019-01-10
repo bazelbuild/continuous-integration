@@ -36,11 +36,10 @@ Write-Host "Setting environment variables..."
 $env:TEMP = [Environment]::GetEnvironmentVariable("TEMP", "Machine")
 $env:TMP = [Environment]::GetEnvironmentVariable("TMP", "Machine")
 
-## Download the Buildkite agent token.
-Write-Host "Getting Buildkite Agent token from GCS..."
-$buildkite_agent_token_url = "https://storage.googleapis.com/bazel-encrypted-secrets/buildkite-agent-token.enc"
+## Write encrypted buildkite agent token into a file.
+$encrypted_token = "CiQAXKKUGSqB6FEIwSA9a72I9LC0V/W9rcdAaxTvhnBRYBEODrUSWwCBW0AW86hdsxTwFmY5sLvoVxOYJcuxzHAyX2lf9fkWOD+9hcVy0zIbwrYZDa0yXTAWwjIGtSUYMiOkzwtO4zfQ6DuFFWX3Y2JQ6F+WU/g5WJsCCu7NZlRGMQA="
 $buildkite_agent_token_file = "d:\buildkite_agent_token.enc"
-(New-Object Net.WebClient).DownloadFile($buildkite_agent_token_url, $buildkite_agent_token_file)
+$encrypted_token | Out-File $buildkite_agent_token_file
 
 ## Decrypt the Buildkite agent token.
 Write-Host "Decrypting Buildkite Agent token using KMS..."
