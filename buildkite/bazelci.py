@@ -313,9 +313,9 @@ PLATFORMS = {
 DEFAULT_PLATFORM = "ubuntu1804"
 
 ENCRYPTED_SAUCELABS_TOKEN = """
-CiQAGuqy23f9LNPzp0AetddpO5CXjducZuBB/dfp6ccpX4LxM+8STQBj1BIUMJMXFAWd9BxYJmcM
-W7hzbbFFEfpDuqwVwzD2xF3KugY3Otwv+lPLf6K+8ZI55SbpryFFbt7eSlvVTJIBlElfwIU6OpuK
-OuI/
+CiQAry63sOlZtTNtuOT5DAOLkum0rGof+DOweppZY1aOWbat8zwSTQAL7Hu+rgHSOr6P4S1cu4YG
+/I1BHsWaOANqUgFt6ip9/CUGGJ1qggsPGXPrmhSbSPqNAIAkpxYzabQ3mfSIObxeBmhKg2dlILA/
+EDql
 """.strip()
 
 
@@ -571,6 +571,8 @@ def saucelabs_token():
                 gcloud_command(),
                 "kms",
                 "decrypt",
+                "--project",
+                "bazel-untrusted",
                 "--location",
                 "global",
                 "--keyring",
