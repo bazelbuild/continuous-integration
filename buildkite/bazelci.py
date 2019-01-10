@@ -1039,6 +1039,37 @@ def execute_command_background(args):
     return subprocess.Popen(args, env=os.environ)
 
 
+def create_step(label, commands, platform=DEFAULT_PLATFORM):
+    host_platform = PLATFORMS[platform].get("host-platform", platform)
+    if "docker-image" in PLATFORMS[platform]:
+        return {
+            "label": label,
+            "command": commands,
+            "agents": {"kind": "docker", "os": "linux"},
+            "plugins": {
+                "philwo/docker": {
+                    "always-pull": True,
+                    "debug": True,
+                    "environment": ["BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "BUILDKITE_GS_ACL"],
+                    "image": PLATFORMS[platform]["docker-image"],
+                    "privileged": True,
+                    "propagate-environment": True,
+                    "tmpfs": ["/home/bazel/.cache:exec,uid=999,gid=999"],
+                }
+            },
+        }
+    else:
+        return {
+            "label": label,
+            "command": commands,
+            "agents": {
+                "kind": "worker",
+                "java": PLATFORMS[platform]["java"],
+                "os": rchop(host_platform, "_nojava", "_java8", "_java9", "_java10"),
+            },
+        }
+
+
 def print_project_pipeline(
     platform_configs,
     project_name,
@@ -1096,7 +1127,7 @@ def print_project_pipeline(
 
         # If all builds succeed, update the last green commit of this project
         pipeline_steps.append(
-            step(
+            create_step(
                 label="Try Update Last Green Commit",
                 commands=[
                     fetch_bazelcipy_command(),
@@ -1106,37 +1137,6 @@ def print_project_pipeline(
         )
 
     print(yaml.dump({"steps": pipeline_steps}))
-
-
-def step(label, commands, platform=DEFAULT_PLATFORM):
-    host_platform = PLATFORMS[platform].get("host-platform", platform)
-    if "docker-image" in PLATFORMS[platform]:
-        return {
-            "label": label,
-            "command": commands,
-            "agents": {"kind": "docker", "os": "linux"},
-            "plugins": {
-                "philwo/docker": {
-                    "always-pull": True,
-                    "debug": True,
-                    "environment": ["BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "BUILDKITE_GS_ACL"],
-                    "image": PLATFORMS[platform]["docker-image"],
-                    "privileged": True,
-                    "propagate-environment": True,
-                    "tmpfs": ["/home/bazel/.cache:exec,uid=999,gid=999"],
-                }
-            },
-        }
-    else:
-        return {
-            "label": label,
-            "command": commands,
-            "agents": {
-                "kind": "worker",
-                "java": PLATFORMS[platform]["java"],
-                "os": rchop(host_platform, "_nojava", "_java8", "_java9", "_java10"),
-            },
-        }
 
 
 def runner_step(
@@ -1167,7 +1167,9 @@ def runner_step(
     for flag in incompatible_flags or []:
         command += " --incompatible_flag=" + flag
     label = create_label(platform, project_name)
-    return step(label=label, commands=[fetch_bazelcipy_command(), command], platform=platform)
+    return create_step(
+        label=label, commands=[fetch_bazelcipy_command(), command], platform=platform
+    )
 
 
 def fetch_bazelcipy_command():
@@ -1197,7 +1199,7 @@ def upload_project_pipeline_step(
         pipeline_command += " --file_config=" + file_config
     pipeline_command += " | buildkite-agent pipeline upload"
 
-    return step(
+    return create_step(
         label="Setup {0}".format(project_name),
         commands=[fetch_bazelcipy_command(), pipeline_command],
     )
@@ -1240,7 +1242,7 @@ def bazel_build_step(
         pipeline_command += " --file_config=" + file_config
     pipeline_command += " --platform=" + platform
 
-    return step(
+    return create_step(
         label=create_label(platform, project_name, build_only, test_only),
         commands=[fetch_bazelcipy_command(), pipeline_command],
         platform=platform,
@@ -1276,7 +1278,7 @@ def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
 
     # If all builds succeed, publish the Bazel binaries to GCS.
     pipeline_steps.append(
-        step(
+        create_step(
             label="Publish Bazel Binaries",
             commands=[fetch_bazelcipy_command(), python_binary() + " bazelci.py publish_binaries"],
         )
@@ -1294,7 +1296,7 @@ def print_disabled_projects_info_box_step():
 
     if len(info_text) == 1:
         return None
-    return step(
+    return create_step(
         label=":sadpanda:",
         commands=[
             'buildkite-agent annotate --append --style=info "\n' + "\n".join(info_text) + '\n"'
@@ -1310,7 +1312,7 @@ def print_incompatible_flags_info_box_step(incompatible_flags_map):
 
     if len(info_text) == 1:
         return None
-    return step(
+    return create_step(
         label="Incompatible flags info",
         commands=[
             'buildkite-agent annotate --append --style=info "\n' + "\n".join(info_text) + '\n"'
@@ -1409,7 +1411,7 @@ def print_bazel_downstream_pipeline(
         if not current_build_number:
             raise BuildkiteException("Not running inside Buildkite")
         pipeline_steps.append(
-            step(
+            create_step(
                 label="Test failing jobs with incompatible flag separately",
                 commands=[
                     fetch_bazelcipy_command(),

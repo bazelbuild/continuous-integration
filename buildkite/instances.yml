@@ -30,7 +30,7 @@ instance_groups:
     metadata_from_file: startup-script=startup-docker.sh
     restart-on-failure: False
   - name: bk-windows-java8
-    count: 8
+    count: 20
     project: bazel-untrusted
     region: europe-north1
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
