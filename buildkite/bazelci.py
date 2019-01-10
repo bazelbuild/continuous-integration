@@ -1320,10 +1320,20 @@ def print_incompatible_flags_info_box_step(incompatible_flags_map):
     )
 
 
-def fetch_incompatible_flags_from_github():
+def fetch_incompatible_flags():
     """
     Return a list of incompatible flags to be tested in downstream with the current release Bazel
     """
+    incompatible_flags = {}
+
+    # If INCOMPATIBLE_FLAGS environment variable is set, we get incompatible flags from it.
+    if "INCOMPATIBLE_FLAGS" in os.environ:
+        for flag in os.environ["INCOMPATIBLE_FLAGS"].split():
+            # We are not able to get the github link for this flag from INCOMPATIBLE_FLAGS,
+            # so just assign the url to empty string.
+            incompatible_flags[flag] = ""
+        return incompatible_flags
+
     # Get bazel major version on CI, eg. 0.21 from "Build label: 0.21.0\n..."
     output = subprocess.check_output(
         ["bazel", "--nomaster_bazelrc", "--bazelrc=/dev/null", "version"]
@@ -1339,7 +1349,6 @@ def fetch_incompatible_flags_from_github():
     ).decode("utf-8")
     issue_info = json.loads(output)
 
-    incompatible_flags = {}
     for issue in issue_info["items"]:
         # Every incompatible flags issue should start with "<incompatible flag name (without --)>:"
         name = "--" + issue["title"].split(":")[0]
@@ -1382,7 +1391,7 @@ def print_bazel_downstream_pipeline(
 
     incompatible_flags = None
     if test_incompatible_flags:
-        incompatible_flags_map = fetch_incompatible_flags_from_github()
+        incompatible_flags_map = fetch_incompatible_flags()
         info_box_step = print_incompatible_flags_info_box_step(incompatible_flags_map)
         if info_box_step is not None:
             pipeline_steps.append(info_box_step)
