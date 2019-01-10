@@ -52,7 +52,7 @@ IMAGE_CREATION_VMS = {
         ],
     },
     (
-        "bk-worker-windows-java8",
+        "bk-windows-java8",
         #  'bk-worker-windows-java9',
         #  'bk-worker-windows-java10',
     ): {
