@@ -37,6 +37,10 @@ def gcloud(*args, **kwargs):
     cmd = ["gcloud"]
     cmd += args
     for flag, value in kwargs.items():
+        # Optionally strip counter suffixes to make it possible to specify the same flag multiple
+        # times, even though it's passed here via a dict.
+        if re.search(r"_\d$", flag):
+            flag = flag[:-2]
         # Python uses underscores as word delimiters in kwargs, but gcloud wants dashes.
         flag = flag.replace("_", "-")
         if isinstance(value, bool):

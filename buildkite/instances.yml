@@ -14,63 +14,46 @@
 default_vm:
   boot_disk_size: 50GB
   boot_disk_type: pd-ssd
-  image_project: bazel-public
+  image_project: bazel-untrusted
   machine_type: n1-standard-32
   min_cpu_platform: Intel Skylake
   network: buildkite
   scopes: cloud-platform
-  service_account: remote-account@bazel-public.iam.gserviceaccount.com
-  zone: europe-west1-c
 instance_groups:
-  - name: bk-pipeline-ubuntu1804-java8
-    count: 1
-    image_family: bk-pipeline-ubuntu1804-java8
+  - name: bk-docker
+    count: 60
+    project: bazel-untrusted
+    region: europe-north1
+    service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
+    image_family: bk-docker
     local_ssd: interface=nvme
-    machine_type: n1-standard-8
-    metadata_from_file: startup-script=startup-ubuntu.sh
-  - name: bk-trusted-ubuntu1804-java8
-    count: 1
-    image_family: bk-trusted-ubuntu1804-java8
-    local_ssd: interface=nvme
-    machine_type: n1-standard-8
-    metadata_from_file: startup-script=startup-ubuntu.sh
-    service_account: bazel-release-process@bazel-public.iam.gserviceaccount.com
-  - name: bk-worker-ubuntu1404-java8
-    count: 12
-    image_family: bk-worker-ubuntu1404-java8
-    local_ssd: interface=nvme
-    metadata_from_file: startup-script=startup-ubuntu.sh
-  - name: bk-worker-ubuntu1604-java8
-    count: 16
-    image_family: bk-worker-ubuntu1604-java8
-    local_ssd: interface=nvme
-    metadata_from_file: startup-script=startup-ubuntu.sh
-  - name: bk-worker-ubuntu1804-java8
+    metadata_from_file: startup-script=startup-docker.sh
+    restart-on-failure: False
+  - name: bk-windows-java8
     count: 8
-    image_family: bk-worker-ubuntu1804-java8
-    local_ssd: interface=nvme
-    metadata_from_file: startup-script=startup-ubuntu.sh
-  - name: bk-worker-ubuntu1804-java9
-    count: 8
-    image_family: bk-worker-ubuntu1804-java9
-    local_ssd: interface=nvme
-    metadata_from_file: startup-script=startup-ubuntu.sh
-  - name: bk-worker-ubuntu1804-java10
-    count: 8
-    image_family: bk-worker-ubuntu1804-java10
-    local_ssd: interface=nvme
-    metadata_from_file: startup-script=startup-ubuntu.sh
-  - name: bk-worker-ubuntu1804-nojava
-    count: 8
-    image_family: bk-worker-ubuntu1804-nojava
-    local_ssd: interface=nvme
-    metadata_from_file: startup-script=startup-ubuntu.sh
-  - name: bk-worker-windows-java8
-    count: 8
+    project: bazel-untrusted
+    region: europe-north1
+    service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-worker-windows-java8
     local_ssd: interface=scsi
     metadata_from_file: windows-startup-script-ps1=startup-windows.ps1
     restart-on-failure: False
+  # - name: bk-trusted-docker
+  #   count: 1
+  #   image_family: bk-trusted-ubuntu1804-java8
+  #   local_ssd: interface=nvme
+  #   machine_type: n1-standard-8
+  #   metadata_from_file: startup-script=startup-ubuntu.sh
+  #   service_account: bazel-release-process@bazel-public.iam.gserviceaccount.com
+  #   region: europe-west1
+  #   zone: europe-west1-c
+  #   service_account: remote-account@bazel-public.iam.gserviceaccount.com
+  # - name: bk-trusted-windows-java8
+  #   count: 8
+  #   image_family: bk-worker-windows-java8
+  #   local_ssd: interface=scsi
+  #   metadata_from_file: windows-startup-script-ps1=startup-windows.ps1
+  #   restart-on-failure: False
 physical_clusters:
   - name: buildkite-imacpro
     count: 10

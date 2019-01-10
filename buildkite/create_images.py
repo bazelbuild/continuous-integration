@@ -29,7 +29,8 @@ import gcloud_utils
 
 DEBUG = False
 
-LOCATION = "europe-west1-c"
+PROJECT = "bazel-untrusted"
+LOCATION = "europe-north1-a"
 
 IMAGE_CREATION_VMS = {
     # Find the newest FreeBSD 11 image via:
@@ -46,37 +47,6 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
-        "licenses": [
-            "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
-        ],
-    },
-    ("bk-worker-ubuntu1404-java8",): {
-        "source_image_project": "ubuntu-os-cloud",
-        "source_image_family": "ubuntu-1404-lts",
-        "setup_script": "setup-ubuntu.sh",
-        "licenses": [
-            "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
-        ],
-    },
-    ("bk-worker-ubuntu1604-java8",): {
-        "source_image_project": "ubuntu-os-cloud",
-        "source_image_family": "ubuntu-1604-lts",
-        "setup_script": "setup-ubuntu.sh",
-        "licenses": [
-            "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
-        ],
-    },
-    (
-        "bk-pipeline-ubuntu1804-java8",
-        "bk-trusted-ubuntu1804-java8",
-        "bk-worker-ubuntu1804-nojava",
-        "bk-worker-ubuntu1804-java8",
-        "bk-worker-ubuntu1804-java9",
-        "bk-worker-ubuntu1804-java10",
-    ): {
-        "source_image_project": "ubuntu-os-cloud",
-        "source_image_family": "ubuntu-1804-lts",
-        "setup_script": "setup-ubuntu.sh",
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
@@ -113,7 +83,7 @@ def preprocess_setup_script(setup_script, is_windows):
     return output_file
 
 
-def create_instance(instance_name, params, git_commit):
+def create_instance(instance_name, params):
     is_windows = "windows" in instance_name
     setup_script = preprocess_setup_script(params["setup_script"], is_windows)
     try:
@@ -132,10 +102,10 @@ def create_instance(instance_name, params, git_commit):
 
         gcloud.create_instance(
             instance_name,
+            project=PROJECT,
             zone=LOCATION,
             machine_type="n1-standard-8",
             network="buildkite",
-            metadata="image-version={}".format(git_commit),
             metadata_from_file=startup_script,
             min_cpu_platform="Intel Skylake",
             boot_disk_type="pd-ssd",
@@ -154,11 +124,13 @@ def write_to_clipboard(output):
 
 def print_windows_instructions(instance_name):
     tail_start = gcloud_utils.tail_serial_console(
-        instance_name, zone=LOCATION, until="Finished running startup scripts"
+        instance_name, project=PROJECT, zone=LOCATION, until="Finished running startup scripts"
     )
 
     pw = json.loads(
-        gcloud.reset_windows_password(instance_name, format="json", zone=LOCATION).stdout
+        gcloud.reset_windows_password(
+            instance_name, format="json", project=PROJECT, zone=LOCATION
+        ).stdout
     )
     rdp_file = tempfile.mkstemp(suffix=".rdp")[1]
     with open(rdp_file, "w") as f:
@@ -172,7 +144,11 @@ def print_windows_instructions(instance_name):
 
     # Wait until the VM reboots once, then open RDP again.
     tail_start = gcloud_utils.tail_serial_console(
-        instance_name, zone=LOCATION, start=tail_start, until="Finished running startup scripts"
+        instance_name,
+        project=PROJECT,
+        zone=LOCATION,
+        start=tail_start,
+        until="Finished running startup scripts",
     )
     print("Connecting via RDP a second time to finish the setup...")
     write_to_clipboard(pw["password"])
@@ -180,37 +156,44 @@ def print_windows_instructions(instance_name):
     return tail_start
 
 
-def workflow(name, params, git_commit):
+def workflow(name, params):
     instance_name = "%s-image-%s" % (name, int(datetime.now().timestamp()))
     try:
         # Create the VM.
-        create_instance(instance_name, params, git_commit)
+        create_instance(instance_name, params)
 
         # Wait for the VM to become ready.
-        gcloud_utils.wait_for_instance(instance_name, zone=LOCATION, status="RUNNING")
+        gcloud_utils.wait_for_instance(
+            instance_name, project=PROJECT, zone=LOCATION, status="RUNNING"
+        )
 
         if "windows" in instance_name:
             # Wait for VM to be ready, then print setup instructions.
             tail_start = print_windows_instructions(instance_name)
             # Continue printing the serial console until the VM shuts down.
-            gcloud_utils.tail_serial_console(instance_name, zone=LOCATION, start=tail_start)
+            gcloud_utils.tail_serial_console(
+                instance_name, project=PROJECT, zone=LOCATION, start=tail_start
+            )
         else:
             # Continuously print the serial console.
-            gcloud_utils.tail_serial_console(instance_name, zone=LOCATION)
+            gcloud_utils.tail_serial_console(instance_name, project=PROJECT, zone=LOCATION)
 
         # Wait for the VM to completely shutdown.
-        gcloud_utils.wait_for_instance(instance_name, zone=LOCATION, status="TERMINATED")
+        gcloud_utils.wait_for_instance(
+            instance_name, project=PROJECT, zone=LOCATION, status="TERMINATED"
+        )
 
         # Create a new image from our VM.
         gcloud.create_image(
             instance_name,
+            project=PROJECT,
             family=name,
             source_disk=instance_name,
             source_disk_zone=LOCATION,
             licenses=params.get("licenses", []),
         )
     finally:
-        gcloud.delete_instance(instance_name, zone=LOCATION)
+        gcloud.delete_instance(instance_name, project=PROJECT, zone=LOCATION)
 
 
 def worker():
@@ -236,18 +219,6 @@ def main(argv=None):
         )
         return 1
 
-    try:
-        git_commit = subprocess.check_output(
-            ["git", "rev-parse", "--verify", "HEAD"], universal_newlines=True
-        ).strip()
-    except subprocess.CalledProcessError:
-        print(
-            "Could not get current Git commit hash. You have to run create_images.py "
-            "from a Git repository.",
-            file=sys.stderr,
-        )
-        return 1
-
     if subprocess.check_output(["git", "status", "--porcelain"], universal_newlines=True).strip():
         print(
             "There are pending changes in your Git repository. You have to commit "
@@ -261,7 +232,7 @@ def main(argv=None):
         for name in names:
             if argv and name not in argv:
                 continue
-            WORK_QUEUE.put({"name": name, "params": params, "git_commit": git_commit})
+            WORK_QUEUE.put({"name": name, "params": params})
 
     # Spawn worker threads that will create the VMs.
     threads = []

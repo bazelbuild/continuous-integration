@@ -18,13 +18,12 @@ import gcloud
 import json
 import subprocess
 import time
-import threading
 import re
 
 
-def wait_for_instance(instance_name, zone, status):
+def wait_for_instance(instance_name, project, zone, status):
     while True:
-        result = gcloud.describe_instance(instance_name, zone=zone, format="json")
+        result = gcloud.describe_instance(instance_name, project=project, zone=zone, format="json")
         current_status = json.loads(result.stdout)["status"]
         if current_status == status:
             gcloud.debug(
@@ -73,11 +72,13 @@ def print_pretty_logs(instance_name, log):
             print(lines)
 
 
-def tail_serial_console(instance_name, zone, start=None, until=None):
+def tail_serial_console(instance_name, project, zone, start=None, until=None):
     next_start = start if start else "0"
     while True:
         try:
-            result = gcloud.get_serial_port_output(instance_name, zone=zone, start=next_start)
+            result = gcloud.get_serial_port_output(
+                instance_name, project=project, zone=zone, start=next_start
+            )
         except subprocess.CalledProcessError as e:
             if "Could not fetch serial port output: TIMEOUT" in e.stderr:
                 gcloud.debug("tail_serial_console: Retrying after TIMEOUT")
