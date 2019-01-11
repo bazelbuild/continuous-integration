@@ -81,7 +81,7 @@ RUN dpkg --add-architecture i386 && \
     echo "Installing packages required by Envoy" && \
     apt-get -qqy install automake autotools-dev cmake libtool m4 && \
     echo "Installing packages required by Android emulator" && \
-    apt-get -qqy install cpu-checker qemu-system-x86 unzip xvfb && \
+    apt-get -qqy install cpu-checker qemu-kvm qemu-system-x86 unzip xvfb && \
     echo "Installing packages required by Bazel release process" && \
     apt-get -qqy install devscripts gnupg pandoc reprepro ssmtp && \
     echo "Installing packages required by C++ coverage tests" && \
@@ -179,7 +179,7 @@ RUN dpkg --add-architecture i386 && \
     echo "Installing packages required by Envoy" && \
     apt-get -qqy install automake autotools-dev cmake libtool m4 && \
     echo "Installing packages required by Android emulator" && \
-    apt-get -qqy install cpu-checker qemu-system-x86 unzip xvfb && \
+    apt-get -qqy install cpu-checker qemu-kvm qemu-system-x86 unzip xvfb && \
     echo "Installing packages required by Bazel release process" && \
     apt-get -qqy install devscripts gnupg pandoc reprepro ssmtp && \
     echo "Installing packages required by C++ coverage tests" && \
@@ -281,7 +281,7 @@ RUN dpkg --add-architecture i386 && \
     echo "Installing packages required by Envoy" && \
     apt-get -qqy install automake autotools-dev cmake libtool m4 && \
     echo "Installing packages required by Android emulator" && \
-    apt-get -qqy install cpu-checker qemu-system-x86 unzip xvfb && \
+    apt-get -qqy install cpu-checker qemu-kvm qemu-system-x86 unzip xvfb && \
     echo "Installing packages required by Bazel release process" && \
     apt-get -qqy install devscripts gnupg pandoc reprepro ssmtp && \
     echo "Installing packages required by C++ coverage tests" && \

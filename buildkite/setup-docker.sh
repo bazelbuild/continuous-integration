@@ -94,6 +94,12 @@ EOF
   systemctl disable docker
 }
 
+### Setup KVM.
+{
+  apt-get -qqy install qemu-kvm
+  usermod -a -G kvm buildkite-agent
+}
+
 ### Clean up and trim the filesystem (potentially reduces the final image size).
 {
   rm -rf /var/lib/apt/lists/*
