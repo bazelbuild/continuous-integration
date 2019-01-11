@@ -1176,11 +1176,11 @@ def runner_step(
 
 
 def fetch_bazelcipy_command():
-    return "curl -s {0} -o bazelci.py".format(bazelcipy_url())
+    return "curl -sS {0} -o bazelci.py".format(bazelcipy_url())
 
 
 def fetch_incompatible_flag_verbose_failures_command():
-    return "curl -s {0} -o incompatible_flag_verbose_failures.py".format(
+    return "curl -sS {0} -o incompatible_flag_verbose_failures.py".format(
         incompatible_flag_verbose_failures_url()
     )
 
