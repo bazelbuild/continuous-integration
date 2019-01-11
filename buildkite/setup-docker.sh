@@ -94,6 +94,14 @@ EOF
   systemctl disable docker
 }
 
+### Setup Bazelisk.
+# TODO: We can remove this, once we run the "Setup" step inside a Docker container, too.
+{
+  curl -Lo /usr/local/bin/bazel https://raw.githubusercontent.com/philwo/bazelisk/master/bazelisk.py
+  chown root:root /usr/local/bin/bazel
+  chmod 0755 /usr/local/bin/bazel
+}
+
 ### Setup KVM.
 {
   apt-get -qqy install qemu-kvm
