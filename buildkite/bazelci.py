@@ -18,6 +18,7 @@ import argparse
 import base64
 import codecs
 import datetime
+from distutils.version import LooseVersion
 import hashlib
 import json
 import multiprocessing
@@ -36,6 +37,7 @@ import urllib.request
 import uuid
 import yaml
 from urllib.request import url2pathname
+from urllib.request import urlopen
 from urllib.parse import urlparse
 
 # Initialize the random number generator.
@@ -308,6 +310,16 @@ PLATFORMS = {
         "docker-image": "gcr.io/bazel-untrusted/ubuntu1604:java8",
     },
 }
+
+LATEST_VERSION_PATTERN = re.compile(r"latest(-(?P<offset>\d+))?$")
+
+BUILDIFIER_RELEASE_PAGE = "https://api.github.com/repos/bazelbuild/buildtools/releases"
+
+BUILDIFIER_DEFAULT_VERSION = "latest"
+
+BUILDIFIER_DEFAULT_INPUT_FILES = ["BUILD", "*.bzl"]
+
+BUILDIFIER_DEFAULT_DOCKER_IMAGE = "gcr.io/bazel-untrusted/ubuntu1804:nojava"
 
 # The platform used for various steps (e.g. stuff that formerly ran on the "pipeline" workers).
 DEFAULT_PLATFORM = "ubuntu1804"
@@ -1052,28 +1064,7 @@ def execute_command_background(args):
 def create_step(label, commands, platform=DEFAULT_PLATFORM):
     host_platform = PLATFORMS[platform].get("host-platform", platform)
     if "docker-image" in PLATFORMS[platform]:
-        return {
-            "label": label,
-            "command": commands,
-            "agents": {"kind": "docker", "os": "linux"},
-            "plugins": {
-                "philwo/docker": {
-                    "always-pull": True,
-                    "debug": True,
-                    "environment": ["BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "BUILDKITE_GS_ACL"],
-                    "image": PLATFORMS[platform]["docker-image"],
-                    "privileged": True,
-                    "propagate-environment": True,
-                    "tmpfs": ["/home/bazel/.cache:exec,uid=999,gid=999"],
-                    "volumes": [
-                        ".:/workdir",
-                        "{0}:{0}".format("/var/lib/buildkite-agent/builds"),
-                        "{0}:{0}:ro".format("/var/lib/bazelbuild"),
-                    ],
-                    "workdir": "/workdir",
-                }
-            },
-        }
+        return create_docker_step(label, commands, PLATFORMS[platform]["docker-image"])
     else:
         return {
             "label": label,
@@ -1086,8 +1077,33 @@ def create_step(label, commands, platform=DEFAULT_PLATFORM):
         }
 
 
+def create_docker_step(label, commands, docker_image):
+    return {
+            "label": label,
+            "command": commands,
+            "agents": {"kind": "docker", "os": "linux"},
+            "plugins": {
+                "philwo/docker": {
+                    "always-pull": True,
+                    "debug": True,
+                    "environment": ["BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "BUILDKITE_GS_ACL"],
+                    "image": docker_image,
+                    "privileged": True,
+                    "propagate-environment": True,
+                    "tmpfs": ["/home/bazel/.cache:exec,uid=999,gid=999"],
+                    "volumes": [
+                        ".:/workdir",
+                        "{0}:{0}".format("/var/lib/buildkite-agent/builds"),
+                        "{0}:{0}:ro".format("/var/lib/bazelbuild"),
+                    ],
+                    "workdir": "/workdir",
+                }
+            },
+        }
+
+
 def print_project_pipeline(
-    platform_configs,
+    configs,
     project_name,
     http_config,
     file_config,
@@ -1096,6 +1112,7 @@ def print_project_pipeline(
     use_but,
     incompatible_flags,
 ):
+    platform_configs = configs.get("platforms", None)
     if not platform_configs:
         raise BuildkiteException("{0} pipeline configuration is empty.".format(project_name))
 
@@ -1121,6 +1138,10 @@ def print_project_pipeline(
             incompatible_flags,
         )
         pipeline_steps.append(step)
+
+    buildifier_step = get_buildifier_step_if_requested(configs)
+    if buildifier_step:
+        pipeline_steps.append(buildifier_step)
 
     pipeline_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
     all_downstream_pipeline_slugs = []
@@ -1196,6 +1217,71 @@ def fetch_incompatible_flag_verbose_failures_command():
     return "curl -sS {0} -o incompatible_flag_verbose_failures.py".format(
         incompatible_flag_verbose_failures_url()
     )
+
+
+def get_buildifier_step_if_requested(configs):
+    buildifier = configs.get("buildifier")
+    # An empty dictionary is allowed.
+    if buildifier is None:
+        return None
+
+    version_from_config = buildifier.get("version", BUILDIFIER_DEFAULT_VERSION)
+    version, url = get_buildifier_version_and_url(version_from_config)
+    files = buildifier.get("files", BUILDIFIER_DEFAULT_INPUT_FILES)
+    return create_buildifier_step(version, url, files)
+
+
+def get_buildifier_version_and_url(version_from_config):
+    releases = get_all_buildifier_releases()
+
+    requested_release = None
+    if "latest" in version_from_config:
+        requested_release = get_latest_buildifier_release(releases.values(), version_from_config)
+    else:
+        requested_release = releases.get(version_from_config)
+        if not requested_release:
+            raise BuildkiteException("There is no Buildifier version '{}'.".format(version_from_config))
+
+    urls = [a["browser_download_url"] for a in requested_release["assets"] if a["name"] == "buildifier"]
+    if not urls:
+        raise BuildkiteException("There is no download URL for Buildifier release '{}'.".format(version_from_config))
+
+    return requested_release["tag_name"], urls[0]
+
+
+def get_all_buildifier_releases():
+    res = urlopen("{}?{}".format(BUILDIFIER_RELEASE_PAGE, int(time.time()))).read()
+    return {r["tag_name"] : r for r in json.loads(res.decode('utf-8')) if not r['prerelease']}
+
+
+def get_latest_buildifier_release(releases, version_from_config):
+    match = LATEST_VERSION_PATTERN.match(version_from_config)
+    if not match:
+        raise BuildkiteException("Invalid version '{}'. In addition to using a version "
+                                 "number such as '0.20.0', you can use values such as "
+                                 "latest' and 'latest-N', with N being a non-negative "
+                                 "integer.".format(version_from_config))
+
+    offset = int(match.group("offset") or "0")
+    sorted_releases = sorted(releases, reverse=True, key= lambda r: LooseVersion(r["tag_name"]))
+    if offset >= len(sorted_releases):
+        version = "latest-{}".format(offset) if offset else "latest"
+        raise BuildkiteException("Cannot resolve version '{}': There are only {} Buildifier "
+                                 "releases.".format(version, len(sorted_releases))) 
+
+    return sorted_releases[offset]
+
+
+def create_buildifier_step(version, url, files, os="ubuntu1604"):
+    commands = [            "curl -L {} -o buildifier".format(url),
+            "chmod +x buildifier",
+            create_buildifier_command(files)        ]
+    return create_docker_step("Buildifier {}".format(version), commands, BUILDIFIER_DEFAULT_DOCKER_IMAGE)
+
+
+def create_buildifier_command(files_to_lint):
+    find_args = " -or ".join('-iname "{}"'.format(f) for f in files_to_lint)
+    return "./buildifier --lint=warn $$(find . -type f \\( {} \\)) | grep -q \".\"".format(find_args) 
 
 
 def upload_project_pipeline_step(
@@ -1745,7 +1831,7 @@ def main(argv=None):
         elif args.subparsers_name == "project_pipeline":
             configs = fetch_configs(args.http_config, args.file_config)
             print_project_pipeline(
-                platform_configs=configs.get("platforms", None),
+                configs=configs,
                 project_name=args.project_name,
                 http_config=args.http_config,
                 file_config=args.file_config,

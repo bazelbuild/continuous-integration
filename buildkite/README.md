@@ -115,3 +115,38 @@ BAD_BAZEL_COMMIT=91eb3d207714af0ab1e5812252a0f10f40d6e4a8
 ```
 
 Note: Bazel commit can only be set to commits after [63453bdbc6b05bd201375ee9e25b35010ae88aab](https://github.com/bazelbuild/bazel/commit/63453bdbc6b05bd201375ee9e25b35010ae88aab), Culprit Finder needs to download Bazel at specific commit, but we didn't prebuilt Bazel binaries before this commit.
+
+## Running Buildifier on CI
+
+For each pipeline you can enable [Buildifier](https://github.com/bazelbuild/buildtools/tree/master/buildifier) to check whether all BUILD and .bzl files comply with the standard formatting convention. Simply add the following code to the top of the particular pipeline Yaml configuration (either locally in `.bazelci/presubmit.yml` or in https://github.com/bazelbuild/continuous-integration/tree/master/buildkite/pipelines):
+
+```
+buildifier: {}
+```
+
+As a consequence, every future build for this pipeline will contain an additional "Buildifier" step that runs the latest version of Buildifier on all BUILD and .bzl files in "lint" mode.
+
+### Running a specific version of Buildifier
+
+You can also specify which version of Buildifier should be run:
+
+```
+buildifier:
+  version: latest
+```
+
+The configuration value can be a hardcoded version string such as "0.20.0" or a dynamic reference such as "latest", "latest-1", etc. The latest Buildifier version will be used if the configuration does not contain the "version" field.
+
+### Specifying the set of input files
+
+By default Buildifier only processes BUILD and .bzl files. This can be changed by adding the "files" field to the configuration:
+
+```
+buildifier:
+  files:
+  - "*.bzl"
+  - "BUILD.bazel"
+  - "BUILD"
+```
+
+All values must be valid input for [find(1)](https://linux.die.net/man/1/find).
