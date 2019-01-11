@@ -36,6 +36,9 @@ sysctl -w kernel.sched_wakeup_granularity_ns=15000000
 sysctl -w vm.dirty_ratio=40
 #echo always > /sys/kernel/mm/transparent_hugepage/enabled
 
+# Fix permissions of /dev/kvm.
+chmod -v 0666 /dev/kvm
+
 # Use the local SSDs as fast storage for Docker and the Buildkite agent.
 zpool destroy -f bazel || true
 zpool create -f \
