@@ -36,7 +36,7 @@ permissions:
 Print the logs of the last minute in an easily readable format:
 
 ```
-$ gcloud logging read --freshness 1m \
+$ gcloud logging read --project bazel-public --freshness 1m \
     --format 'value(receiveTimestamp,jsonPayload.data)' \
     'logName="projects/bazel-public/logs/gcplogs-docker-driver" AND
     jsonPayload.instance.name="gitsync"' | tail -r
