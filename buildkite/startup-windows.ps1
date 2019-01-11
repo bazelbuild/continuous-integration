@@ -37,9 +37,9 @@ $env:TEMP = [Environment]::GetEnvironmentVariable("TEMP", "Machine")
 $env:TMP = [Environment]::GetEnvironmentVariable("TMP", "Machine")
 
 ## Write encrypted buildkite agent token into a file.
-$encrypted_token = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("CiQA4iyQCY654VP8LoPAgFwjMDzRilLWQwNeqUIy6sz0A4gP4egSWwCyztU1sXJJGDLP0tL007Uvux9zYTpSQRFLRqyXOcOwXKz2Sk+1xe0KT8KjJN1njHBgRwGdCHczuZd8RKVCrtf1vkvR6mfC3xzS9cP2QOUhTSsnA4C/gvccXfE="))
+$encrypted_token = [System.Convert]::FromBase64String("CiQA4iyQCY654VP8LoPAgFwjMDzRilLWQwNeqUIy6sz0A4gP4egSWwCyztU1sXJJGDLP0tL007Uvux9zYTpSQRFLRqyXOcOwXKz2Sk+1xe0KT8KjJN1njHBgRwGdCHczuZd8RKVCrtf1vkvR6mfC3xzS9cP2QOUhTSsnA4C/gvccXfE=")
 $buildkite_agent_token_file = "d:\buildkite_agent_token.enc"
-$encrypted_token | Out-File $buildkite_agent_token_file
+$encrypted_token | Set-Content $buildkite_agent_token_file -Encoding Byte
 
 ## Decrypt the Buildkite agent token.
 Write-Host "Decrypting Buildkite Agent token using KMS..."
