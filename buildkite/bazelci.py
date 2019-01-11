@@ -771,7 +771,6 @@ def remote_caching_flags(platform):
         return []
 
     flags = [
-        "--experimental_guard_against_concurrent_changes",
         "--remote_timeout=60",
         # TODO(ulfjack): figure out how to resolve
         # https://github.com/bazelbuild/bazel/issues/5382 and as part of that keep
