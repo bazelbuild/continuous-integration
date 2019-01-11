@@ -1057,7 +1057,7 @@ def create_step(label, commands, platform=DEFAULT_PLATFORM):
                     "privileged": True,
                     "propagate-environment": True,
                     "tmpfs": ["/home/bazel/.cache:exec,uid=999,gid=999"],
-                    "volumes": ["{0}:{0}".format("/var/lib/buildkite-agent/builds")],
+                    "volumes": [".:/workdir", "{0}:{0}".format("/var/lib/buildkite-agent/builds")],
                 }
             },
         }
