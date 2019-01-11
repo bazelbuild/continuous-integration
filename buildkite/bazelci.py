@@ -770,13 +770,7 @@ def remote_caching_flags(platform):
     ]:
         return []
 
-    http_cache_url = "https://storage.googleapis.com/bazel-untrusted-buildkite-cache"
-    if platform == "macos":
-        # Use a local cache server for our macOS machines.
-        http_cache_url = "http://100.107.67.237:8080"
-
-    return [
-        "--google_default_credentials",
+    flags = [
         "--experimental_guard_against_concurrent_changes",
         "--remote_timeout=60",
         # TODO(ulfjack): figure out how to resolve
@@ -786,8 +780,18 @@ def remote_caching_flags(platform):
         "--remote_max_connections=200",
         '--experimental_remote_platform_override=properties:{name:"platform" value:"%s"}'
         % platform,
-        "--remote_http_cache=%s" % http_cache_url,
     ]
+
+    if platform == "macos":
+        # Use a local cache server for our macOS machines.
+        flags += ["--remote_http_cache=http://100.107.67.237:8080"]
+    else:
+        flags += [
+            "--google_default_credentials",
+            "--remote_http_cache=https://storage.googleapis.com/bazel-untrusted-buildkite-cache",
+        ]
+
+    return flags
 
 
 def remote_enabled(flags):
