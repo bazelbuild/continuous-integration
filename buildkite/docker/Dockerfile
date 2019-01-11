@@ -141,6 +141,7 @@ RUN mkdir -p /opt/swift && \
 RUN groupadd --gid 999 bazel && \
     useradd --gid 999 --uid 999 --create-home --shell /bin/bash bazel
 USER bazel
+RUN gcloud auth configure-docker --quiet
 RUN bazel version
 
 FROM ubuntu1404-nojava AS ubuntu1404-java8
@@ -243,6 +244,7 @@ RUN mkdir -p /opt/swift && \
 RUN groupadd --gid 999 bazel && \
     useradd --gid 999 --uid 999 --create-home --shell /bin/bash bazel
 USER bazel
+RUN gcloud auth configure-docker --quiet
 RUN bazel version
 
 FROM ubuntu1604-nojava AS ubuntu1604-java8
@@ -281,7 +283,7 @@ RUN dpkg --add-architecture i386 && \
     echo "Installing packages required by Envoy" && \
     apt-get -qqy install automake autotools-dev cmake libtool m4 && \
     echo "Installing packages required by Android emulator" && \
-    apt-get -qqy install cpu-checker qemu-kvm qemu-system-x86 unzip xvfb && \
+    apt-get -qqy install cpu-checker lsof qemu-kvm qemu-system-x86 unzip xvfb && \
     echo "Installing packages required by Bazel release process" && \
     apt-get -qqy install devscripts gnupg pandoc reprepro ssmtp && \
     echo "Installing packages required by C++ coverage tests" && \
@@ -329,6 +331,7 @@ RUN mkdir -p /opt/swift && \
 RUN groupadd --gid 999 bazel && \
     useradd --gid 999 --uid 999 --create-home --shell /bin/bash bazel
 USER bazel
+RUN gcloud auth configure-docker --quiet
 RUN bazel version
 
 FROM ubuntu1804-nojava AS ubuntu1804-java8
