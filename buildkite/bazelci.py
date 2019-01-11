@@ -765,15 +765,20 @@ def remote_caching_flags(platform):
         "ubuntu1804_nojava",
         "ubuntu1804_java9",
         "ubuntu1804_java10",
-        # "macos",
+        "macos",
         # "windows",
     ]:
         return []
 
+    http_cache_url = "https://storage.googleapis.com/bazel-untrusted-buildkite-cache"
+    if platform == "macos":
+        # Use a local cache server for our macOS machines.
+        http_cache_url = "http://100.107.67.237:8080"
+
     return [
         "--google_default_credentials",
         "--experimental_guard_against_concurrent_changes",
-        "--remote_timeout=10",
+        "--remote_timeout=60",
         # TODO(ulfjack): figure out how to resolve
         # https://github.com/bazelbuild/bazel/issues/5382 and as part of that keep
         # or remove the `--disk_cache=` flag.
@@ -781,7 +786,7 @@ def remote_caching_flags(platform):
         "--remote_max_connections=200",
         '--experimental_remote_platform_override=properties:{name:"platform" value:"%s"}'
         % platform,
-        "--remote_http_cache=https://storage.googleapis.com/bazel-untrusted-buildkite-cache",
+        "--remote_http_cache=%s" % http_cache_url,
     ]
 
 
