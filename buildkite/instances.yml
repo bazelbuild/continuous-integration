@@ -14,7 +14,6 @@
 default_vm:
   boot_disk_size: 50GB
   boot_disk_type: pd-ssd
-  image_project: bazel-untrusted
   machine_type: n1-standard-32
   min_cpu_platform: Intel Skylake
   network: buildkite
@@ -25,6 +24,7 @@ instance_groups:
     project: bazel-untrusted
     region: europe-north1
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
+    image_project: bazel-untrusted
     image_family: bk-docker
     local_ssd: interface=nvme
     metadata_from_file: startup-script=startup-docker.sh
@@ -34,7 +34,8 @@ instance_groups:
     project: bazel-untrusted
     region: europe-north1
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
-    image_family: bk-worker-windows-java8
+    image_project: bazel-untrusted
+    image_family: bk-windows-java8
     local_ssd: interface=scsi
     metadata_from_file: windows-startup-script-ps1=startup-windows.ps1
     restart-on-failure: False

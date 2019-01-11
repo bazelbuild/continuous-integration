@@ -37,13 +37,13 @@ $env:TEMP = [Environment]::GetEnvironmentVariable("TEMP", "Machine")
 $env:TMP = [Environment]::GetEnvironmentVariable("TMP", "Machine")
 
 ## Write encrypted buildkite agent token into a file.
-$encrypted_token = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("CiQAXKKUGSqB6FEIwSA9a72I9LC0V/W9rcdAaxTvhnBRYBEODrUSWwCBW0AW86hdsxTwFmY5sLvoVxOYJcuxzHAyX2lf9fkWOD+9hcVy0zIbwrYZDa0yXTAWwjIGtSUYMiOkzwtO4zfQ6DuFFWX3Y2JQ6F+WU/g5WJsCCu7NZlRGMQA="))
+$encrypted_token = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("CiQA4iyQCY654VP8LoPAgFwjMDzRilLWQwNeqUIy6sz0A4gP4egSWwCyztU1sXJJGDLP0tL007Uvux9zYTpSQRFLRqyXOcOwXKz2Sk+1xe0KT8KjJN1njHBgRwGdCHczuZd8RKVCrtf1vkvR6mfC3xzS9cP2QOUhTSsnA4C/gvccXfE="))
 $buildkite_agent_token_file = "d:\buildkite_agent_token.enc"
 $encrypted_token | Out-File $buildkite_agent_token_file
 
 ## Decrypt the Buildkite agent token.
 Write-Host "Decrypting Buildkite Agent token using KMS..."
-$buildkite_agent_token = & gcloud kms decrypt --location global --keyring buildkite --key buildkite-agent-token --ciphertext-file $buildkite_agent_token_file --plaintext-file -
+$buildkite_agent_token = & gcloud kms decrypt --project bazel-untrusted --location global --keyring buildkite --key buildkite-untrusted-agent-token --ciphertext-file $buildkite_agent_token_file --plaintext-file -
 Remove-Item $buildkite_agent_token_file
 
 ## Configure the Buildkite agent.
