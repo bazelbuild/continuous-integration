@@ -1062,6 +1062,7 @@ def create_step(label, commands, platform=DEFAULT_PLATFORM):
                     "debug": True,
                     "environment": ["BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "BUILDKITE_GS_ACL"],
                     "image": PLATFORMS[platform]["docker-image"],
+                    "network": "host",
                     "privileged": True,
                     "propagate-environment": True,
                     "volumes": [
