@@ -42,6 +42,8 @@ def buildkite_token():
                 bazelci.gcloud_command(),
                 "kms",
                 "decrypt",
+                "--project",
+                "bazel-untrusted",
                 "--location",
                 "global",
                 "--keyring",
