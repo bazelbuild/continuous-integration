@@ -783,7 +783,7 @@ def remote_caching_flags(platform):
 
     if platform == "macos":
         # Use a local cache server for our macOS machines.
-        flags += ["--remote_http_cache=http://100.107.67.237:8080"]
+        flags += ["--remote_http_cache=http://100.107.67.248:8080"]
     else:
         flags += [
             "--google_default_credentials",
