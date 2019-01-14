@@ -284,6 +284,14 @@ PLATFORMS = {
         "java": "10",
         "docker-image": "gcr.io/bazel-untrusted/ubuntu1804:java10",
     },
+    "ubuntu1804_java11": {
+        "name": "Ubuntu 18.04, JDK 11",
+        "emoji-name": ":ubuntu: 18.04 (JDK 11)",
+        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
+        "publish_binary": False,
+        "java": "11",
+        "docker-image": "gcr.io/bazel-untrusted/ubuntu1804:java11",
+    },
     "macos": {
         "name": "macOS, JDK 8",
         "emoji-name": ":darwin: (JDK 8)",
@@ -765,6 +773,7 @@ def remote_caching_flags(platform):
         "ubuntu1804_nojava",
         "ubuntu1804_java9",
         "ubuntu1804_java10",
+        "ubuntu1804_java11",
         "macos",
         # "windows",
     ]:
@@ -1081,7 +1090,7 @@ def create_step(label, commands, platform=DEFAULT_PLATFORM):
             "agents": {
                 "kind": "worker",
                 "java": PLATFORMS[platform]["java"],
-                "os": rchop(host_platform, "_nojava", "_java8", "_java9", "_java10"),
+                "os": rchop(host_platform, "_nojava", "_java8", "_java9", "_java10", "_java11"),
             },
         }
 
