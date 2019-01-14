@@ -62,15 +62,19 @@ def get_bazel_commits_between(first_commit, second_commit):
 
 def test_with_bazel_at_commit(project_name, platform_name, git_repo_location, bazel_commit):
     http_config = DOWNSTREAM_PROJECTS[project_name]["http_config"]
-    return_code = bazelci.main(
-        [
-            "runner",
-            "--platform=" + platform_name,
-            "--http_config=" + http_config,
-            "--git_repo_location=" + git_repo_location,
-            "--use_bazel_at_commit=" + bazel_commit,
-        ]
-    )
+    try:
+        return_code = bazelci.main(
+            [
+                "runner",
+                "--platform=" + platform_name,
+                "--http_config=" + http_config,
+                "--git_repo_location=" + git_repo_location,
+                "--use_bazel_at_commit=" + bazel_commit,
+            ]
+        )
+    except subprocess.CalledProcessError as e:
+        bazelci.eprint(str(e))
+        return False
     return return_code == 0
 
 
