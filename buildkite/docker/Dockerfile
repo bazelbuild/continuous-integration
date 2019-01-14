@@ -363,3 +363,11 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0x219BD9C9 && \
     apt-get -qqy update && \
     apt-get -qqy install zulu-10
 USER bazel
+
+FROM ubuntu1804-nojava AS ubuntu1804-java11
+USER root
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0x219BD9C9 && \
+    apt-add-repository 'deb http://repos.azulsystems.com/ubuntu stable main' && \
+    apt-get -qqy update && \
+    apt-get -qqy install zulu-11
+USER bazel
