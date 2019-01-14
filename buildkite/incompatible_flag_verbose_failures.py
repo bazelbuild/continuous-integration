@@ -29,9 +29,9 @@ from bazelci import BuildkiteException
 BUILD_STATUS_API_URL = "https://api.buildkite.com/v2/organizations/bazel/pipelines/bazel-at-release-plus-incompatible-flags/builds/"
 
 ENCRYPTED_BUILDKITE_API_TOKEN = """
-CiQAFKMEShE9EMWmhqEpX4gPRLdVe8SgL84SVyMAWLTLXd6VssASUADXsQCefXM1gXeKWD5qLKVT
-VouWIY1h9jpCEd9bgy/UgMuf19M0dcklP4wpfPGL/+ZyuixQh0Ih+TfD8UAghCpN7VA6MLDNrV0D
-k/lpv7B5
+CiQA4DEB9ldzC+E39KomywtqXfaQ86hhulgeDsicds2BuvbCYzsSUAAqwcvXZPh9IMWlwWh94J2F
+exosKKaWB0tSRJiPKnv2NPDfEqGul0ZwVjtWeASpugwxxKeLhFhPMcgHMPfndH6j2GEIY6nkKRbP
+uwoRMCwe
 """.strip()
 
 
@@ -49,7 +49,7 @@ def buildkite_token():
                 "--keyring",
                 "buildkite",
                 "--key",
-                "buildkite-api-token",
+                "buildkite-untrusted-api-token",
                 "--ciphertext-file",
                 "-",
                 "--plaintext-file",
