@@ -62,7 +62,6 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/bazel-watcher.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-watcher/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-watcher",
-        "disabled_reason": "Enable it in downstream pipeline if the build passes.",
     },
     "BUILD_file_generator": {
         "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
