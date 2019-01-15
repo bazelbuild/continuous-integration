@@ -58,6 +58,12 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml",
         "pipeline_slug": "remote-execution",
     },
+    "Bazel Watcher": {
+        "git_repository": "https://github.com/bazelbuild/bazel-watcher.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-watcher/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "bazel-watcher",
+        "disabled_reason": "Enable it in downstream pipeline if the build passes.",
+    },
     "BUILD_file_generator": {
         "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml",
