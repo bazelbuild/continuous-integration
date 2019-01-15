@@ -1501,6 +1501,7 @@ def try_update_last_green_commit():
     last_green_commit = get_last_green_commit(git_repository, pipeline_slug)
     current_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
     if last_green_commit:
+        execute_command(["git", "fetch", "-v", "origin", last_green_commit])
         result = (
             subprocess.check_output(
                 ["git", "rev-list", "%s..%s" % (last_green_commit, current_commit)]
