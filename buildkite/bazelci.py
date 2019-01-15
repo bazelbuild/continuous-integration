@@ -212,7 +212,6 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_webtesting/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-webtesting-saucelabs",
-        "disabled_reason": "Re-enable once fixed: https://github.com/bazelbuild/continuous-integration/issues/191",
     },
     "skydoc": {
         "git_repository": "https://github.com/bazelbuild/skydoc.git",
