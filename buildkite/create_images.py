@@ -29,9 +29,6 @@ import gcloud_utils
 
 DEBUG = False
 
-PROJECT = "bazel-untrusted"
-LOCATION = "europe-north1-a"
-
 IMAGE_CREATION_VMS = {
     # Find the newest FreeBSD 11 image via:
     # gcloud compute images list --project freebsd-org-cloud-dev \
@@ -43,7 +40,9 @@ IMAGE_CREATION_VMS = {
     #         'install-buildkite-agent.sh'
     #     ]
     # },
-    ("bk-docker",): {
+    "bk-docker": {
+        "project": "bazel-untrusted",
+        "zone": "europe-north1-a",
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
@@ -51,11 +50,26 @@ IMAGE_CREATION_VMS = {
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
     },
-    (
-        "bk-windows-java8",
-        #  'bk-worker-windows-java9',
-        #  'bk-worker-windows-java10',
-    ): {
+    "bk-trusted-docker": {
+        "project": "bazel-public",
+        "zone": "europe-west1-c",
+        "source_image_project": "ubuntu-os-cloud",
+        "source_image_family": "ubuntu-1804-lts",
+        "setup_script": "setup-docker.sh",
+        "licenses": [
+            "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
+        ],
+    },
+    "bk-windows-java8": {
+        "project": "bazel-untrusted",
+        "zone": "europe-north1-a",
+        "source_image_project": "windows-cloud",
+        "source_image_family": "windows-1803-core",
+        "setup_script": "setup-windows.ps1",
+    },
+    "bk-trusted-windows-java8": {
+        "project": "bazel-public",
+        "zone": "europe-west1-c",
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-1803-core",
         "setup_script": "setup-windows.ps1",
@@ -102,8 +116,8 @@ def create_instance(instance_name, params):
 
         gcloud.create_instance(
             instance_name,
-            project=PROJECT,
-            zone=LOCATION,
+            project=params["project"],
+            zone=params["zone"],
             machine_type="n1-standard-8",
             network="buildkite",
             metadata_from_file=startup_script,
@@ -122,14 +136,14 @@ def write_to_clipboard(output):
     process.communicate(output.encode("utf-8"))
 
 
-def print_windows_instructions(instance_name):
+def print_windows_instructions(project, zone, instance_name):
     tail_start = gcloud_utils.tail_serial_console(
-        instance_name, project=PROJECT, zone=LOCATION, until="Finished running startup scripts"
+        instance_name, project=project, zone=zone, until="Finished running startup scripts"
     )
 
     pw = json.loads(
         gcloud.reset_windows_password(
-            instance_name, format="json", project=PROJECT, zone=LOCATION
+            instance_name, format="json", project=project, zone=zone
         ).stdout
     )
     rdp_file = tempfile.mkstemp(suffix=".rdp")[1]
@@ -145,8 +159,8 @@ def print_windows_instructions(instance_name):
     # Wait until the VM reboots once, then open RDP again.
     tail_start = gcloud_utils.tail_serial_console(
         instance_name,
-        project=PROJECT,
-        zone=LOCATION,
+        project=project,
+        zone=zone,
         start=tail_start,
         until="Finished running startup scripts",
     )
@@ -158,42 +172,42 @@ def print_windows_instructions(instance_name):
 
 def workflow(name, params):
     instance_name = "%s-image-%s" % (name, int(datetime.now().timestamp()))
+    project = params["project"]
+    zone = params["zone"]
     try:
         # Create the VM.
         create_instance(instance_name, params)
 
         # Wait for the VM to become ready.
-        gcloud_utils.wait_for_instance(
-            instance_name, project=PROJECT, zone=LOCATION, status="RUNNING"
-        )
+        gcloud_utils.wait_for_instance(instance_name, project=project, zone=zone, status="RUNNING")
 
         if "windows" in instance_name:
             # Wait for VM to be ready, then print setup instructions.
-            tail_start = print_windows_instructions(instance_name)
+            tail_start = print_windows_instructions(project, zone, instance_name)
             # Continue printing the serial console until the VM shuts down.
             gcloud_utils.tail_serial_console(
-                instance_name, project=PROJECT, zone=LOCATION, start=tail_start
+                instance_name, project=project, zone=zone, start=tail_start
             )
         else:
             # Continuously print the serial console.
-            gcloud_utils.tail_serial_console(instance_name, project=PROJECT, zone=LOCATION)
+            gcloud_utils.tail_serial_console(instance_name, project=project, zone=zone)
 
         # Wait for the VM to completely shutdown.
         gcloud_utils.wait_for_instance(
-            instance_name, project=PROJECT, zone=LOCATION, status="TERMINATED"
+            instance_name, project=project, zone=zone, status="TERMINATED"
         )
 
         # Create a new image from our VM.
         gcloud.create_image(
             instance_name,
-            project=PROJECT,
+            project=project,
             family=name,
             source_disk=instance_name,
-            source_disk_zone=LOCATION,
+            source_disk_zone=zone,
             licenses=params.get("licenses", []),
         )
     finally:
-        gcloud.delete_instance(instance_name, project=PROJECT, zone=LOCATION)
+        gcloud.delete_instance(instance_name, project=project, zone=zone)
 
 
 def worker():
@@ -212,11 +226,7 @@ def main(argv=None):
         argv = sys.argv[1:]
 
     if not argv:
-        print(
-            "Usage: create_images.py {}".format(
-                " ".join(itertools.chain(*IMAGE_CREATION_VMS.keys()))
-            )
-        )
+        print("Usage: create_images.py {}".format(" ".join(IMAGE_CREATION_VMS.keys())))
         return 1
 
     if subprocess.check_output(["git", "status", "--porcelain"], universal_newlines=True).strip():
@@ -228,11 +238,10 @@ def main(argv=None):
         return 1
 
     # Put VM creation instructions into the work queue.
-    for names, params in IMAGE_CREATION_VMS.items():
-        for name in names:
-            if argv and name not in argv:
-                continue
-            WORK_QUEUE.put({"name": name, "params": params})
+    for name, params in IMAGE_CREATION_VMS.items():
+        if argv and name not in argv:
+            continue
+        WORK_QUEUE.put({"name": name, "params": params})
 
     # Spawn worker threads that will create the VMs.
     threads = []

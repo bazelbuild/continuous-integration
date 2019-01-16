@@ -67,10 +67,30 @@ zfs create -o mountpoint=/var/lib/docker bazel/docker
 chown root:root /var/lib/docker
 chmod 0711 /var/lib/docker
 
+# Get configuration parameters.
+case $(hostname) in
+  *trusted*)
+    PROJECT="bazel-public"
+    REGISTRY="docker-cache.europe-west1-c.c.${PROJECT}.internal:5000"
+    ARTIFACT_BUCKET="bazel-trusted-buildkite-artifacts"
+    # Get the Buildkite Token from GCS and decrypt it using KMS.
+    BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-trusted-encrypted-secrets/buildkite-trusted-agent-token.enc" | \
+        gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key buildkite-trusted-agent-token --ciphertext-file - --plaintext-file -)
+    ;;
+  *)
+    PROJECT="bazel-untrusted"
+    REGISTRY="docker-cache.europe-north1-a.c.${PROJECT}.internal:5000"
+    ARTIFACT_BUCKET="bazel-untrusted-buildkite-artifacts"
+    # Get the Buildkite Token from GCS and decrypt it using KMS.
+    BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-untrusted-encrypted-secrets/buildkite-untrusted-agent-token.enc" | \
+        gcloud kms decrypt --project bazel-untrusted --location global --keyring buildkite --key buildkite-untrusted-agent-token --ciphertext-file - --plaintext-file -)
+    ;;
+esac
+
 # Configure and start Docker.
-cat > /etc/docker/daemon.json <<'EOF'
+cat > /etc/docker/daemon.json <<EOF
 {
-  "insecure-registries" : ["docker-cache.europe-north1-a.c.bazel-untrusted.internal:5000"],
+  "insecure-registries" : ["${REGISTRY}"],
   "storage-driver": "zfs"
 }
 EOF
@@ -78,16 +98,15 @@ systemctl start docker
 
 # Pull some known images so that we don't have to download / extract them on each CI job.
 gcloud auth configure-docker --quiet
-docker pull gcr.io/bazel-untrusted/ubuntu1404:java8 &
-docker pull gcr.io/bazel-untrusted/ubuntu1604:java8 &
+docker pull "gcr.io/${PROJECT}/ubuntu1404:java8" &
+docker pull "gcr.io/${PROJECT}/ubuntu1604:java8" &
 for java in java8 java9 java10 java11 nojava; do
-  docker pull gcr.io/bazel-untrusted/ubuntu1804:$java &
+  docker pull "gcr.io/${PROJECT}/ubuntu1804:$java" &
 done
 wait
 
-# Get the Buildkite Token from GCS and decrypt it using KMS.
-BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-untrusted-encrypted-secrets/buildkite-untrusted-agent-token.enc" | \
-  gcloud kms decrypt --project bazel-untrusted --location global --keyring buildkite --key buildkite-untrusted-agent-token --ciphertext-file - --plaintext-file -)
+# Allow the Buildkite agent to access Docker images on our registry.
+sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
 
 # Write the Buildkite agent configuration.
 cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
@@ -101,13 +120,13 @@ git-clone-flags="-v --reference /var/lib/bazelbuild"
 EOF
 
 # Add the Buildkite agent hooks.
-cat > /etc/buildkite-agent/hooks/environment <<'EOF'
+cat > /etc/buildkite-agent/hooks/environment <<EOF
 #!/bin/bash
 
 set -euo pipefail
 
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/snap/google-cloud-sdk/current/bin"
-export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://bazel-untrusted-buildkite-artifacts/$BUILDKITE_JOB_ID"
+export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://${ARTIFACT_BUCKET}/\$BUILDKITE_JOB_ID"
 export BUILDKITE_GS_ACL="publicRead"
 EOF
 

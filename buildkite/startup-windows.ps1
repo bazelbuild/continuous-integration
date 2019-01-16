@@ -37,13 +37,32 @@ $env:TEMP = [Environment]::GetEnvironmentVariable("TEMP", "Machine")
 $env:TMP = [Environment]::GetEnvironmentVariable("TMP", "Machine")
 
 ## Write encrypted buildkite agent token into a file.
-$encrypted_token = [System.Convert]::FromBase64String("CiQA4iyQCY654VP8LoPAgFwjMDzRilLWQwNeqUIy6sz0A4gP4egSWwCyztU1sXJJGDLP0tL007Uvux9zYTpSQRFLRqyXOcOwXKz2Sk+1xe0KT8KjJN1njHBgRwGdCHczuZd8RKVCrtf1vkvR6mfC3xzS9cP2QOUhTSsnA4C/gvccXfE=")
+$myhostname = [System.Net.Dns]::GetHostName()
+if ($myhostname -like "*trusted*") {
+  $buildkite_agent_token_url = "https://storage.googleapis.com/bazel-trusted-encrypted-secrets/buildkite-trusted-agent-token.enc"
+  $project = "bazel-public"
+  $key = "buildkite-trusted-agent-token"
+} else {
+  $buildkite_agent_token_url = "https://storage.googleapis.com/bazel-untrusted-encrypted-secrets/buildkite-untrusted-agent-token.enc"
+  $project = "bazel-untrusted"
+  $key = "buildkite-untrusted-agent-token"
+}
 $buildkite_agent_token_file = "d:\buildkite_agent_token.enc"
-$encrypted_token | Set-Content $buildkite_agent_token_file -Encoding Byte
+Write-Host "Getting Buildkite Agent token from GCS..."
+while ($true) {
+  try {
+    (New-Object Net.WebClient).DownloadFile($buildkite_agent_token_url, $buildkite_agent_token_file)
+    break
+  } catch {
+    $msg = $_.Exception.Message
+    Write-Host "Failed to download token: $msg"
+    Start-Sleep -Seconds 10
+  }
+}
 
 ## Decrypt the Buildkite agent token.
 Write-Host "Decrypting Buildkite Agent token using KMS..."
-$buildkite_agent_token = & gcloud kms decrypt --project bazel-untrusted --location global --keyring buildkite --key buildkite-untrusted-agent-token --ciphertext-file $buildkite_agent_token_file --plaintext-file -
+$buildkite_agent_token = & gcloud kms decrypt --project $project --location global --keyring buildkite --key $key --ciphertext-file $buildkite_agent_token_file --plaintext-file -
 Remove-Item $buildkite_agent_token_file
 
 ## Configure the Buildkite agent.

@@ -307,9 +307,15 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine").replace(";;
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
 ## Create an environment hook for the Buildkite agent.
+if ($myhostname -like "*trusted*") {
+    $artifact_bucket = "bazel-trusted-buildkite-artifacts"
+} else {
+    $artifact_bucket = "bazel-untrusted-buildkite-artifacts"
+}
+
 Write-Host "Creating Buildkite agent environment hook..."
 $buildkite_environment_hook = @"
-SET BUILDKITE_ARTIFACT_UPLOAD_DESTINATION=gs://bazel-buildkite-artifacts/%BUILDKITE_JOB_ID%
+SET BUILDKITE_ARTIFACT_UPLOAD_DESTINATION=gs://${artifact_bucket}/%BUILDKITE_JOB_ID%
 SET BUILDKITE_GS_ACL=publicRead
 SET ANDROID_HOME=${env:ANDROID_HOME}
 SET ANDROID_NDK_HOME=${env:ANDROID_NDK_HOME}
