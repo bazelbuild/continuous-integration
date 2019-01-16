@@ -311,15 +311,9 @@ PLATFORMS = {
     },
 }
 
-LATEST_VERSION_PATTERN = re.compile(r"latest(-(?P<offset>\d+))?$")
+BUILDIFIER_INPUT_FILES = ["BUILD", "BUILD.bazel", "*.bzl"]
 
-BUILDIFIER_RELEASE_PAGE = "https://api.github.com/repos/bazelbuild/buildtools/releases"
-
-BUILDIFIER_DEFAULT_VERSION = "latest"
-
-BUILDIFIER_DEFAULT_INPUT_FILES = ["BUILD", "*.bzl"]
-
-BUILDIFIER_DEFAULT_DOCKER_IMAGE = "gcr.io/bazel-untrusted/ubuntu1804:nojava"
+BUILDIFIER_DOCKER_IMAGE = "gcr.io/bazel-untrusted/ubuntu1804:nojava"
 
 # The platform used for various steps (e.g. stuff that formerly ran on the "pipeline" workers).
 DEFAULT_PLATFORM = "ubuntu1804"
@@ -1220,82 +1214,15 @@ def fetch_incompatible_flag_verbose_failures_command():
 
 
 def get_buildifier_step_if_requested(configs):
-    buildifier = configs.get("buildifier")
-    # An empty dictionary is allowed.
-    if buildifier is None:
+    # There may be a "buildifier" entry in the config, but the value can be "false".
+    if not configs.get("buildifier"):
         return None
 
-    version_from_config = buildifier.get("version", BUILDIFIER_DEFAULT_VERSION)
-    version, url = get_buildifier_version_and_url(version_from_config)
-    files = buildifier.get("files", BUILDIFIER_DEFAULT_INPUT_FILES)
-    return create_buildifier_step(version, url, files)
-
-
-def get_buildifier_version_and_url(version_from_config):
-    releases = get_all_buildifier_releases()
-
-    requested_release = None
-    if "latest" in version_from_config:
-        requested_release = get_latest_buildifier_release(releases.values(), version_from_config)
-    else:
-        requested_release = releases.get(version_from_config)
-        if not requested_release:
-            raise BuildkiteException(
-                "There is no Buildifier version '{}'.".format(version_from_config)
-            )
-
-    urls = [
-        a["browser_download_url"] for a in requested_release["assets"] if a["name"] == "buildifier"
-    ]
-    if not urls:
-        raise BuildkiteException(
-            "There is no download URL for Buildifier release '{}'.".format(version_from_config)
-        )
-
-    return requested_release["tag_name"], urls[0]
-
-
-def get_all_buildifier_releases():
-    res = urlopen("{}?{}".format(BUILDIFIER_RELEASE_PAGE, int(time.time()))).read()
-    return {r["tag_name"]: r for r in json.loads(res.decode("utf-8")) if not r["prerelease"]}
-
-
-def get_latest_buildifier_release(releases, version_from_config):
-    match = LATEST_VERSION_PATTERN.match(version_from_config)
-    if not match:
-        raise BuildkiteException(
-            "Invalid version '{}'. In addition to using a version "
-            "number such as '0.20.0', you can use values such as "
-            "latest' and 'latest-N', with N being a non-negative "
-            "integer.".format(version_from_config)
-        )
-
-    offset = int(match.group("offset") or "0")
-    sorted_releases = sorted(releases, reverse=True, key=lambda r: LooseVersion(r["tag_name"]))
-    if offset >= len(sorted_releases):
-        version = "latest-{}".format(offset) if offset else "latest"
-        raise BuildkiteException(
-            "Cannot resolve version '{}': There are only {} Buildifier "
-            "releases.".format(version, len(sorted_releases))
-        )
-
-    return sorted_releases[offset]
-
-
-def create_buildifier_step(version, url, files, os="ubuntu1604"):
-    commands = [
-        "curl -L {} -o buildifier".format(url),
-        "chmod +x buildifier",
-        create_buildifier_command(files),
-    ]
-    return create_docker_step(
-        "Buildifier {}".format(version), commands, BUILDIFIER_DEFAULT_DOCKER_IMAGE
-    )
-
-
-def create_buildifier_command(files_to_lint):
-    find_args = " -or ".join('-iname "{}"'.format(f) for f in files_to_lint)
-    return './buildifier --lint=warn $$(find . -type f \\( {} \\)) | grep -q "."'.format(find_args)
+    find_args = " -or ".join('-iname "{}"'.format(f) for f in BUILDIFIER_INPUT_FILES)
+    command = (
+        'buildifier --lint=warn $$(find . -type f \\( {} \\)) | grep -q "."'
+    ).format(find_args)
+    return create_docker_step("Buildifier", [command], BUILDIFIER_DOCKER_IMAGE)
 
 
 def upload_project_pipeline_step(
@@ -1473,8 +1400,8 @@ def fetch_incompatible_flags():
             incompatible_flags[name] = url
         else:
             eprint(
-                f"{name} is not recognized as an incompatible flag, please modify the issue title "
-                f'of {url} to "<incompatible flag name (without --)>:..."'
+                "{name} is not recognized as an incompatible flag, please modify the issue title "
+                'of {url} to "<incompatible flag name (without --)>:..."'
             )
 
     return incompatible_flags
