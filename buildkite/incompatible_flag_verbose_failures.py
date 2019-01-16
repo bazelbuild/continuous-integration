@@ -89,17 +89,20 @@ def get_failing_jobs(build_info):
                 [i for i in command.split(" ") if not i.startswith("--incompatible_flag")]
             )
 
-            # Recover a map for agent query rules
-            agents = {}
-            for rule in job["agent_query_rules"]:
-                key, value = rule.split("=")
-                agents[key] = value
+            # Recover the platform name from job command
+            platform = None
+            for s in command.split(" "):
+                if s.startswith("--platform="):
+                    platform = s[len("--platform="):]
+
+            if not platform:
+                raise BuildkiteException("Cannot recongnize platform from job command: %s" % command)
 
             failing_jobs.append(
                 {
                     "name": job["name"],
                     "command": command_without_incompatible_flags.split("\n"),
-                    "agents": agents,
+                    "platform": platform,
                 }
             )
     return failing_jobs
@@ -112,15 +115,10 @@ def print_steps_for_failing_jobs(build_number):
     pipeline_steps = []
     for incompatible_flag in incompatible_flags:
         for job in failing_jobs:
+            label = "%s: %s" % (incompatible_flag, job["name"])
             command = list(job["command"])
             command[1] = command[1] + " --incompatible_flag=" + incompatible_flag
-            pipeline_steps.append(
-                {
-                    "label": "%s: %s" % (incompatible_flag, job["name"]),
-                    "command": command,
-                    "agents": job["agents"].copy(),
-                }
-            )
+            pipeline_steps.append(bazelci.create_step(label, command, job["platform"]))
     print(yaml.dump({"steps": pipeline_steps}))
 
 
