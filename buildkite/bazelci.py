@@ -1230,6 +1230,8 @@ def get_buildifier_step_if_requested(configs):
         return None
 
     find_args = " -or ".join('-iname "{}"'.format(f) for f in BUILDIFIER_INPUT_FILES)
+    # We need to escape the $ sign in order to not fail on Buildkite.
+    # https://buildkite.com/docs/agent/v3/cli-pipeline#environment-variable-substitution
     command = (
         'buildifier --lint=warn $$(find . -type f \\( {} \\)) | grep -q "."'
     ).format(find_args)
