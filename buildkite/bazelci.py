@@ -321,6 +321,10 @@ PLATFORMS = {
     },
 }
 
+BUILDIFIER_INPUT_FILES = ["BUILD", "BUILD.bazel", "*.bzl"]
+
+BUILDIFIER_DOCKER_IMAGE = "gcr.io/bazel-untrusted/ubuntu1804:nojava"
+
 # The platform used for various steps (e.g. stuff that formerly ran on the "pipeline" workers).
 DEFAULT_PLATFORM = "ubuntu1804"
 
@@ -1065,28 +1069,7 @@ def execute_command_background(args):
 def create_step(label, commands, platform=DEFAULT_PLATFORM):
     host_platform = PLATFORMS[platform].get("host-platform", platform)
     if "docker-image" in PLATFORMS[platform]:
-        return {
-            "label": label,
-            "command": commands,
-            "agents": {"kind": "docker", "os": "linux"},
-            "plugins": {
-                "philwo/docker": {
-                    "always-pull": True,
-                    "debug": True,
-                    "environment": ["BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "BUILDKITE_GS_ACL"],
-                    "image": PLATFORMS[platform]["docker-image"],
-                    "network": "host",
-                    "privileged": True,
-                    "propagate-environment": True,
-                    "volumes": [
-                        ".:/workdir",
-                        "{0}:{0}".format("/var/lib/buildkite-agent/builds"),
-                        "{0}:{0}:ro".format("/var/lib/bazelbuild"),
-                    ],
-                    "workdir": "/workdir",
-                }
-            },
-        }
+        return create_docker_step(label, commands, PLATFORMS[platform]["docker-image"])
     else:
         return {
             "label": label,
@@ -1099,8 +1082,33 @@ def create_step(label, commands, platform=DEFAULT_PLATFORM):
         }
 
 
+def create_docker_step(label, commands, docker_image):
+    return {
+        "label": label,
+        "command": commands,
+        "agents": {"kind": "docker", "os": "linux"},
+        "plugins": {
+            "philwo/docker": {
+                "always-pull": True,
+                "debug": True,
+                "environment": ["BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "BUILDKITE_GS_ACL"],
+                "image": docker_image,
+                "network": "host",
+                "privileged": True,
+                "propagate-environment": True,
+                "volumes": [
+                    ".:/workdir",
+                    "{0}:{0}".format("/var/lib/buildkite-agent/builds"),
+                    "{0}:{0}:ro".format("/var/lib/bazelbuild"),
+                ],
+                "workdir": "/workdir",
+            }
+        },
+    }
+
+
 def print_project_pipeline(
-    platform_configs,
+    configs,
     project_name,
     http_config,
     file_config,
@@ -1109,6 +1117,7 @@ def print_project_pipeline(
     use_but,
     incompatible_flags,
 ):
+    platform_configs = configs.get("platforms", None)
     if not platform_configs:
         raise BuildkiteException("{0} pipeline configuration is empty.".format(project_name))
 
@@ -1134,6 +1143,10 @@ def print_project_pipeline(
             incompatible_flags,
         )
         pipeline_steps.append(step)
+
+    buildifier_step = get_buildifier_step_if_requested(configs)
+    if buildifier_step:
+        pipeline_steps.append(buildifier_step)
 
     pipeline_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
     all_downstream_pipeline_slugs = []
@@ -1209,6 +1222,20 @@ def fetch_incompatible_flag_verbose_failures_command():
     return "curl -sS {0} -o incompatible_flag_verbose_failures.py".format(
         incompatible_flag_verbose_failures_url()
     )
+
+
+def get_buildifier_step_if_requested(configs):
+    # There may be a "buildifier" entry in the config, but the value can be "false".
+    if not configs.get("buildifier"):
+        return None
+
+    find_args = " -or ".join('-iname "{}"'.format(f) for f in BUILDIFIER_INPUT_FILES)
+    # We need to escape the $ sign in order to not fail on Buildkite.
+    # https://buildkite.com/docs/agent/v3/cli-pipeline#environment-variable-substitution
+    command = (
+        'buildifier --lint=warn $$(find . -type f \\( {} \\)) | grep -q "."'
+    ).format(find_args)
+    return create_docker_step("Buildifier", [command], BUILDIFIER_DOCKER_IMAGE)
 
 
 def upload_project_pipeline_step(
@@ -1760,7 +1787,7 @@ def main(argv=None):
         elif args.subparsers_name == "project_pipeline":
             configs = fetch_configs(args.http_config, args.file_config)
             print_project_pipeline(
-                platform_configs=configs.get("platforms", None),
+                configs=configs,
                 project_name=args.project_name,
                 http_config=args.http_config,
                 file_config=args.file_config,
