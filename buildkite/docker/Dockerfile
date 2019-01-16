@@ -39,6 +39,12 @@ RUN curl -Lo /usr/local/bin/bazel https://raw.githubusercontent.com/philwo/bazel
     chown root:root /usr/local/bin/bazel && \
     chmod 0755 /usr/local/bin/bazel
 
+FROM builder AS buildifier
+RUN LATEST_BUILDIFIER=$(curl -sSI https://github.com/bazelbuild/buildtools/releases/latest | grep '^Location: ' | sed 's|.*/||' | sed $'s/\r//') && \
+    curl -Lo /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/${LATEST_BUILDIFIER}/buildifier && \
+    chown root:root /usr/local/bin/buildifier && \
+    chmod 0755 /usr/local/bin/buildifier
+
 ### Install tools required by the release process.
 FROM builder AS github-release
 RUN curl -L https://github.com/c4milo/github-release/releases/download/v1.1.0/github-release_v1.1.0_linux_amd64.tar.gz | \
@@ -64,6 +70,7 @@ ENV DEBIAN_FRONTEND="noninteractive" \
 COPY --from=android_ndk /opt/android-ndk-r15c /opt/android-ndk-r15c/
 COPY --from=android_sdk /opt/android-sdk-linux /opt/android-sdk-linux/
 COPY --from=bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
+COPY --from=buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
 COPY --from=github-release /usr/local/bin/github-release /usr/local/bin/github-release
 COPY --from=saucelabs /usr/local/bin/sc /usr/local/bin/sc
 
@@ -165,6 +172,7 @@ ENV DEBIAN_FRONTEND="noninteractive" \
 COPY --from=android_ndk /opt/android-ndk-r15c /opt/android-ndk-r15c/
 COPY --from=android_sdk /opt/android-sdk-linux /opt/android-sdk-linux/
 COPY --from=bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
+COPY --from=buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
 COPY --from=github-release /usr/local/bin/github-release /usr/local/bin/github-release
 COPY --from=saucelabs /usr/local/bin/sc /usr/local/bin/sc
 
@@ -270,6 +278,7 @@ ENV DEBIAN_FRONTEND="noninteractive" \
 COPY --from=android_ndk /opt/android-ndk-r15c /opt/android-ndk-r15c/
 COPY --from=android_sdk /opt/android-sdk-linux /opt/android-sdk-linux/
 COPY --from=bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
+COPY --from=buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
 COPY --from=github-release /usr/local/bin/github-release /usr/local/bin/github-release
 COPY --from=saucelabs /usr/local/bin/sc /usr/local/bin/sc
 
