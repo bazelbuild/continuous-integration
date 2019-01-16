@@ -1411,12 +1411,13 @@ def print_bazel_downstream_pipeline(
     if info_box_step is not None:
         pipeline_steps.append(info_box_step)
 
-    for platform in configs:
-        pipeline_steps.append(
-            bazel_build_step(platform, "Bazel", http_config, file_config, build_only=True)
-        )
+    if not test_incompatible_flags:
+        for platform in configs:
+            pipeline_steps.append(
+                bazel_build_step(platform, "Bazel", http_config, file_config, build_only=True)
+            )
 
-    pipeline_steps.append("wait")
+        pipeline_steps.append("wait")
 
     incompatible_flags = None
     if test_incompatible_flags:
