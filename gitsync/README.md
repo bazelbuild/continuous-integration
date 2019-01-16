@@ -8,8 +8,9 @@ $ docker push gcr.io/bazel-public/gitsync
 # Starting the VM that hosts the Docker container
 
 ```
-$ gcloud compute instances delete gitsync
+$ gcloud compute instances delete --project bazel-public gitsync
 $ gcloud beta compute instances create-with-container \
+    --project bazel-public \
     --boot-disk-size 200GB \
     --container-image gcr.io/bazel-public/gitsync:latest \
     --machine-type n1-standard-1 \

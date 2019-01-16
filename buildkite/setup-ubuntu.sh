@@ -183,7 +183,7 @@ EOF
 
 ### Install Azul Zulu (OpenJDK).
 if [[ "${config_java}" != "no" ]]; then
-  apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0x219BD9C9
+  apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0xB1998361219BD9C9
   apt-add-repository 'deb http://repos.azulsystems.com/ubuntu stable main'
   apt-get -qqy update
   apt-get -qqy install zulu-${config_java} > /dev/null
