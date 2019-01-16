@@ -18,7 +18,6 @@ import argparse
 import base64
 import codecs
 import datetime
-from distutils.version import LooseVersion
 import hashlib
 import json
 import multiprocessing
@@ -37,7 +36,6 @@ import urllib.request
 import uuid
 import yaml
 from urllib.request import url2pathname
-from urllib.request import urlopen
 from urllib.parse import urlparse
 
 # Initialize the random number generator.
@@ -1400,8 +1398,8 @@ def fetch_incompatible_flags():
             incompatible_flags[name] = url
         else:
             eprint(
-                "{name} is not recognized as an incompatible flag, please modify the issue title "
-                'of {url} to "<incompatible flag name (without --)>:..."'
+                f"{name} is not recognized as an incompatible flag, please modify the issue title "
+                f'of {url} to "<incompatible flag name (without --)>:..."'
             )
 
     return incompatible_flags
