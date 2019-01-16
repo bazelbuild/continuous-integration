@@ -80,7 +80,7 @@ systemctl start docker
 gcloud auth configure-docker --quiet
 docker pull gcr.io/bazel-untrusted/ubuntu1404:java8 &
 docker pull gcr.io/bazel-untrusted/ubuntu1604:java8 &
-for java in java8 java9 java10 nojava; do
+for java in java8 java9 java10 java11 nojava; do
   docker pull gcr.io/bazel-untrusted/ubuntu1804:$java &
 done
 wait

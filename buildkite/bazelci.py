@@ -58,6 +58,11 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml",
         "pipeline_slug": "remote-execution",
     },
+    "Bazel Watcher": {
+        "git_repository": "https://github.com/bazelbuild/bazel-watcher.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-watcher/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "bazel-watcher",
+    },
     "BUILD_file_generator": {
         "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml",
@@ -212,7 +217,6 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_webtesting/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-webtesting-saucelabs",
-        "disabled_reason": "Re-enable once fixed: https://github.com/bazelbuild/continuous-integration/issues/191",
     },
     "skydoc": {
         "git_repository": "https://github.com/bazelbuild/skydoc.git",
@@ -283,6 +287,14 @@ PLATFORMS = {
         "publish_binary": False,
         "java": "10",
         "docker-image": "gcr.io/bazel-untrusted/ubuntu1804:java10",
+    },
+    "ubuntu1804_java11": {
+        "name": "Ubuntu 18.04, JDK 11",
+        "emoji-name": ":ubuntu: 18.04 (JDK 11)",
+        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
+        "publish_binary": False,
+        "java": "11",
+        "docker-image": "gcr.io/bazel-untrusted/ubuntu1804:java11",
     },
     "macos": {
         "name": "macOS, JDK 8",
@@ -769,6 +781,7 @@ def remote_caching_flags(platform):
         "ubuntu1804_nojava",
         "ubuntu1804_java9",
         "ubuntu1804_java10",
+        "ubuntu1804_java11",
         "macos",
         # "windows",
     ]:
@@ -787,7 +800,7 @@ def remote_caching_flags(platform):
 
     if platform == "macos":
         # Use a local cache server for our macOS machines.
-        flags += ["--remote_http_cache=http://100.107.67.237:8080"]
+        flags += ["--remote_http_cache=http://100.107.67.248:8080"]
     else:
         flags += [
             "--google_default_credentials",
@@ -1064,7 +1077,7 @@ def create_step(label, commands, platform=DEFAULT_PLATFORM):
             "agents": {
                 "kind": "worker",
                 "java": PLATFORMS[platform]["java"],
-                "os": rchop(host_platform, "_nojava", "_java8", "_java9", "_java10"),
+                "os": rchop(host_platform, "_nojava", "_java8", "_java9", "_java10", "_java11"),
             },
         }
 
@@ -1080,9 +1093,9 @@ def create_docker_step(label, commands, docker_image):
                 "debug": True,
                 "environment": ["BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "BUILDKITE_GS_ACL"],
                 "image": docker_image,
+                "network": "host",
                 "privileged": True,
                 "propagate-environment": True,
-                "tmpfs": ["/home/bazel/.cache:exec,uid=999,gid=999"],
                 "volumes": [
                     ".:/workdir",
                     "{0}:{0}".format("/var/lib/buildkite-agent/builds"),
@@ -1423,12 +1436,13 @@ def print_bazel_downstream_pipeline(
     if info_box_step is not None:
         pipeline_steps.append(info_box_step)
 
-    for platform in configs:
-        pipeline_steps.append(
-            bazel_build_step(platform, "Bazel", http_config, file_config, build_only=True)
-        )
+    if not test_incompatible_flags:
+        for platform in configs:
+            pipeline_steps.append(
+                bazel_build_step(platform, "Bazel", http_config, file_config, build_only=True)
+            )
 
-    pipeline_steps.append("wait")
+        pipeline_steps.append("wait")
 
     incompatible_flags = None
     if test_incompatible_flags:
@@ -1517,6 +1531,7 @@ def try_update_last_green_commit():
     last_green_commit = get_last_green_commit(git_repository, pipeline_slug)
     current_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
     if last_green_commit:
+        execute_command(["git", "fetch", "-v", "origin", last_green_commit])
         result = (
             subprocess.check_output(
                 ["git", "rev-list", "%s..%s" % (last_green_commit, current_commit)]
@@ -1735,7 +1750,7 @@ def main(argv=None):
         help="Use an existing repository instead of cloning from github",
     )
     runner.add_argument(
-        "--use_bazel_at_commit", type=str, help="Use Bazel binariy built at a specifc commit"
+        "--use_bazel_at_commit", type=str, help="Use Bazel binary built at a specific commit"
     )
     runner.add_argument("--use_but", type=bool, nargs="?", const=True)
     runner.add_argument("--save_but", type=bool, nargs="?", const=True)

@@ -62,15 +62,19 @@ def get_bazel_commits_between(first_commit, second_commit):
 
 def test_with_bazel_at_commit(project_name, platform_name, git_repo_location, bazel_commit):
     http_config = DOWNSTREAM_PROJECTS[project_name]["http_config"]
-    return_code = bazelci.main(
-        [
-            "runner",
-            "--platform=" + platform_name,
-            "--http_config=" + http_config,
-            "--git_repo_location=" + git_repo_location,
-            "--use_bazel_at_commit=" + bazel_commit,
-        ]
-    )
+    try:
+        return_code = bazelci.main(
+            [
+                "runner",
+                "--platform=" + platform_name,
+                "--http_config=" + http_config,
+                "--git_repo_location=" + git_repo_location,
+                "--use_bazel_at_commit=" + bazel_commit,
+            ]
+        )
+    except subprocess.CalledProcessError as e:
+        bazelci.eprint(str(e))
+        return False
     return return_code == 0
 
 
@@ -110,8 +114,7 @@ def start_bisecting(project_name, platform_name, git_repo_location, commits_list
 
 
 def print_culprit_finder_pipeline(project_name, platform_name, good_bazel_commit, bad_bazel_commit):
-    host_platform = PLATFORMS[platform_name].get("host-platform", platform_name)
-    pipeline_steps = []
+    label = PLATFORMS[platform_name]["emoji-name"] + " Bisecting for {0}".format(project_name)
     command = (
         '%s culprit_finder.py runner --project_name="%s" --platform_name=%s --good_bazel_commit=%s --bad_bazel_commit=%s'
         % (
@@ -122,22 +125,13 @@ def print_culprit_finder_pipeline(project_name, platform_name, good_bazel_commit
             bad_bazel_commit,
         )
     )
-    pipeline_steps.append(
-        {
-            "label": PLATFORMS[platform_name]["emoji-name"]
-            + " Bisecting for {0}".format(project_name),
-            "command": [
-                bazelci.fetch_bazelcipy_command(),
-                fetch_culprit_finder_py_command(),
-                command,
-            ],
-            "agents": {
-                "kind": "worker",
-                "java": PLATFORMS[platform_name]["java"],
-                "os": bazelci.rchop(host_platform, "_nojava", "_java8", "_java9", "_java10"),
-            },
-        }
-    )
+    commands = [
+        bazelci.fetch_bazelcipy_command(),
+        fetch_culprit_finder_py_command(),
+        command,
+    ]
+    pipeline_steps = []
+    pipeline_steps.append(bazelci.create_step(label, commands, platform_name))
     print(yaml.dump({"steps": pipeline_steps}))
 
 

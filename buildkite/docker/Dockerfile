@@ -39,6 +39,12 @@ RUN curl -Lo /usr/local/bin/bazel https://raw.githubusercontent.com/philwo/bazel
     chown root:root /usr/local/bin/bazel && \
     chmod 0755 /usr/local/bin/bazel
 
+FROM builder AS buildifier
+RUN LATEST_BUILDIFIER=$(curl -sSI https://github.com/bazelbuild/buildtools/releases/latest | grep '^Location: ' | sed 's|.*/||' | sed $'s/\r//') && \
+    curl -Lo /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/${LATEST_BUILDIFIER}/buildifier && \
+    chown root:root /usr/local/bin/buildifier && \
+    chmod 0755 /usr/local/bin/buildifier
+
 ### Install tools required by the release process.
 FROM builder AS github-release
 RUN curl -L https://github.com/c4milo/github-release/releases/download/v1.1.0/github-release_v1.1.0_linux_amd64.tar.gz | \
@@ -64,6 +70,7 @@ ENV DEBIAN_FRONTEND="noninteractive" \
 COPY --from=android_ndk /opt/android-ndk-r15c /opt/android-ndk-r15c/
 COPY --from=android_sdk /opt/android-sdk-linux /opt/android-sdk-linux/
 COPY --from=bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
+COPY --from=buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
 COPY --from=github-release /usr/local/bin/github-release /usr/local/bin/github-release
 COPY --from=saucelabs /usr/local/bin/sc /usr/local/bin/sc
 
@@ -81,13 +88,15 @@ RUN dpkg --add-architecture i386 && \
     echo "Installing packages required by Envoy" && \
     apt-get -qqy install automake autotools-dev cmake libtool m4 && \
     echo "Installing packages required by Android emulator" && \
-    apt-get -qqy install cpu-checker qemu-kvm qemu-system-x86 unzip xvfb && \
+    apt-get -qqy install cpio cpu-checker lsof qemu-kvm qemu-system-x86 unzip xvfb && \
     echo "Installing packages required by Bazel release process" && \
     apt-get -qqy install devscripts gnupg pandoc reprepro ssmtp && \
     echo "Installing packages required by C++ coverage tests" && \
     apt-get -qqy install lcov llvm && \
     echo "Installing packages required by Swift toolchain" && \
     apt-get -qqy install clang libicu-dev && \
+    echo "Installing packages required by rules_webtesting" && \
+    apt-get -qqy install python-urllib3 python3-urllib3 && \
     echo "Installing packages required by Bazel (Ubuntu 14.04 and 16.04 only)" && \
     apt-get -qqy install realpath libssl-dev && \
     apt-get -qqy purge apport && \
@@ -163,6 +172,7 @@ ENV DEBIAN_FRONTEND="noninteractive" \
 COPY --from=android_ndk /opt/android-ndk-r15c /opt/android-ndk-r15c/
 COPY --from=android_sdk /opt/android-sdk-linux /opt/android-sdk-linux/
 COPY --from=bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
+COPY --from=buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
 COPY --from=github-release /usr/local/bin/github-release /usr/local/bin/github-release
 COPY --from=saucelabs /usr/local/bin/sc /usr/local/bin/sc
 
@@ -180,13 +190,15 @@ RUN dpkg --add-architecture i386 && \
     echo "Installing packages required by Envoy" && \
     apt-get -qqy install automake autotools-dev cmake libtool m4 && \
     echo "Installing packages required by Android emulator" && \
-    apt-get -qqy install cpu-checker qemu-kvm qemu-system-x86 unzip xvfb && \
+    apt-get -qqy install cpio cpu-checker lsof qemu-kvm qemu-system-x86 unzip xvfb && \
     echo "Installing packages required by Bazel release process" && \
     apt-get -qqy install devscripts gnupg pandoc reprepro ssmtp && \
     echo "Installing packages required by C++ coverage tests" && \
     apt-get -qqy install lcov llvm && \
     echo "Installing packages required by Swift toolchain" && \
     apt-get -qqy install clang libicu-dev && \
+    echo "Installing packages required by rules_webtesting" && \
+    apt-get -qqy install python-urllib3 python3-urllib3 && \
     echo "Installing packages required by Bazel (Ubuntu 14.04 and 16.04 only)" && \
     apt-get -qqy install realpath libssl-dev && \
     apt-get -qqy purge apport && \
@@ -266,6 +278,7 @@ ENV DEBIAN_FRONTEND="noninteractive" \
 COPY --from=android_ndk /opt/android-ndk-r15c /opt/android-ndk-r15c/
 COPY --from=android_sdk /opt/android-sdk-linux /opt/android-sdk-linux/
 COPY --from=bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
+COPY --from=buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
 COPY --from=github-release /usr/local/bin/github-release /usr/local/bin/github-release
 COPY --from=saucelabs /usr/local/bin/sc /usr/local/bin/sc
 
@@ -283,13 +296,15 @@ RUN dpkg --add-architecture i386 && \
     echo "Installing packages required by Envoy" && \
     apt-get -qqy install automake autotools-dev cmake libtool m4 && \
     echo "Installing packages required by Android emulator" && \
-    apt-get -qqy install cpu-checker lsof qemu-kvm qemu-system-x86 unzip xvfb && \
+    apt-get -qqy install cpio cpu-checker lsof qemu-kvm qemu-system-x86 unzip xvfb && \
     echo "Installing packages required by Bazel release process" && \
     apt-get -qqy install devscripts gnupg pandoc reprepro ssmtp && \
     echo "Installing packages required by C++ coverage tests" && \
     apt-get -qqy install lcov llvm && \
     echo "Installing packages required by Swift toolchain" && \
     apt-get -qqy install clang libicu-dev && \
+    echo "Installing packages required by rules_webtesting" && \
+    apt-get -qqy install python-urllib3 python3-urllib3 && \
     apt-get -qqy purge apport && \
     rm -rf /var/lib/apt/lists/*
 
@@ -356,4 +371,12 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0x219BD9C9 && \
     apt-add-repository 'deb http://repos.azulsystems.com/ubuntu stable main' && \
     apt-get -qqy update && \
     apt-get -qqy install zulu-10
+USER bazel
+
+FROM ubuntu1804-nojava AS ubuntu1804-java11
+USER root
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0x219BD9C9 && \
+    apt-add-repository 'deb http://repos.azulsystems.com/ubuntu stable main' && \
+    apt-get -qqy update && \
+    apt-get -qqy install zulu-11
 USER bazel

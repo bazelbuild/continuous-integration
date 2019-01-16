@@ -27,6 +27,7 @@ REPOSITORIES=(
     "https://bazel.googlesource.com/eclipse <=> git@github.com:bazelbuild/eclipse.git eclipse"
     "https://bazel.googlesource.com/bazel-toolchains <=> git@github.com:bazelbuild/bazel-toolchains.git bazel-toolchains"
     "https://bazel.googlesource.com/rules_cc ==> git@github.com:bazelbuild/rules_cc.git rules_cc"
+    "https://bazel.googlesource.com/java_tools ==> git@github.com:bazelbuild/java_tools.git java_tools"
 )
 
 set -euxo pipefail

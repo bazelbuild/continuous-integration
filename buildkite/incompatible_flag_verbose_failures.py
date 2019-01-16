@@ -29,9 +29,9 @@ from bazelci import BuildkiteException
 BUILD_STATUS_API_URL = "https://api.buildkite.com/v2/organizations/bazel/pipelines/bazel-at-release-plus-incompatible-flags/builds/"
 
 ENCRYPTED_BUILDKITE_API_TOKEN = """
-CiQAFKMEShE9EMWmhqEpX4gPRLdVe8SgL84SVyMAWLTLXd6VssASUADXsQCefXM1gXeKWD5qLKVT
-VouWIY1h9jpCEd9bgy/UgMuf19M0dcklP4wpfPGL/+ZyuixQh0Ih+TfD8UAghCpN7VA6MLDNrV0D
-k/lpv7B5
+CiQA4DEB9ldzC+E39KomywtqXfaQ86hhulgeDsicds2BuvbCYzsSUAAqwcvXZPh9IMWlwWh94J2F
+exosKKaWB0tSRJiPKnv2NPDfEqGul0ZwVjtWeASpugwxxKeLhFhPMcgHMPfndH6j2GEIY6nkKRbP
+uwoRMCwe
 """.strip()
 
 
@@ -42,12 +42,14 @@ def buildkite_token():
                 bazelci.gcloud_command(),
                 "kms",
                 "decrypt",
+                "--project",
+                "bazel-untrusted",
                 "--location",
                 "global",
                 "--keyring",
                 "buildkite",
                 "--key",
-                "buildkite-api-token",
+                "buildkite-untrusted-api-token",
                 "--ciphertext-file",
                 "-",
                 "--plaintext-file",
@@ -87,17 +89,20 @@ def get_failing_jobs(build_info):
                 [i for i in command.split(" ") if not i.startswith("--incompatible_flag")]
             )
 
-            # Recover a map for agent query rules
-            agents = {}
-            for rule in job["agent_query_rules"]:
-                key, value = rule.split("=")
-                agents[key] = value
+            # Recover the platform name from job command
+            platform = None
+            for s in command.split(" "):
+                if s.startswith("--platform="):
+                    platform = s[len("--platform="):]
+
+            if not platform:
+                raise BuildkiteException("Cannot recongnize platform from job command: %s" % command)
 
             failing_jobs.append(
                 {
                     "name": job["name"],
                     "command": command_without_incompatible_flags.split("\n"),
-                    "agents": agents,
+                    "platform": platform,
                 }
             )
     return failing_jobs
@@ -110,15 +115,10 @@ def print_steps_for_failing_jobs(build_number):
     pipeline_steps = []
     for incompatible_flag in incompatible_flags:
         for job in failing_jobs:
+            label = "%s: %s" % (incompatible_flag, job["name"])
             command = list(job["command"])
             command[1] = command[1] + " --incompatible_flag=" + incompatible_flag
-            pipeline_steps.append(
-                {
-                    "label": "%s: %s" % (incompatible_flag, job["name"]),
-                    "command": command,
-                    "agents": job["agents"].copy(),
-                }
-            )
+            pipeline_steps.append(bazelci.create_step(label, command, job["platform"]))
     print(yaml.dump({"steps": pipeline_steps}))
 
 
