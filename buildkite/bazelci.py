@@ -1724,7 +1724,7 @@ def main(argv=None):
         help="Use an existing repository instead of cloning from github",
     )
     runner.add_argument(
-        "--use_bazel_at_commit", type=str, help="Use Bazel binariy built at a specifc commit"
+        "--use_bazel_at_commit", type=str, help="Use Bazel binary built at a specific commit"
     )
     runner.add_argument("--use_but", type=bool, nargs="?", const=True)
     runner.add_argument("--save_but", type=bool, nargs="?", const=True)
