@@ -80,8 +80,8 @@ def get_failing_jobs(build_info):
     for job in build_info["jobs"]:
         if "state" in job and job["state"] == "failed":
             command = job["command"]
-            # Skip if the job command doesn't contain --incompatible_flag
-            if command.find("--incompatible_flag") == -1:
+            # Skip if the job is not a runner job
+            if command.find("bazelci.py runner") == -1:
                 continue
 
             # Get rid of the incompatible flags in the command line because we are going to test them individually
