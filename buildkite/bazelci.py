@@ -676,14 +676,17 @@ def download_bazel_binary_at_commit(dest_dir, platform, bazel_git_commit):
     if "ubuntu" in PLATFORMS[platform].get("host-platform", platform):
         platform = "ubuntu1404"
     bazel_binary_path = os.path.join(dest_dir, "bazel.exe" if platform == "windows" else "bazel")
-    execute_command(
-        [
-            gsutil_command(),
-            "cp",
-            bazelci_builds_gs_url(platform, bazel_git_commit),
-            bazel_binary_path,
-        ]
-    )
+    try:
+        execute_command(
+            [
+                gsutil_command(),
+                "cp",
+                bazelci_builds_gs_url(platform, bazel_git_commit),
+                bazel_binary_path,
+            ]
+        )
+    except subprocess.CalledProcessError as e:
+        raise BuildkiteException("Failed to download Bazel binary at %s, error message:\n%s" % (bazel_git_commit, str(e)))
     st = os.stat(bazel_binary_path)
     os.chmod(bazel_binary_path, st.st_mode | stat.S_IEXEC)
     return bazel_binary_path
