@@ -965,7 +965,7 @@ def execute_bazel_clean(bazel_binary, platform):
 
     try:
         execute_command(
-            [bazel_binary] + common_startup_flags(platform) + ["clean"]
+            [bazel_binary] + common_startup_flags(platform) + ["clean", "--expunge"]
         )
     except subprocess.CalledProcessError as e:
         raise BuildkiteException("bazel clean failed with exit code {}".format(e.returncode))
