@@ -1521,7 +1521,8 @@ def bazelci_builds_metadata_url():
 
 
 def bazelci_last_green_commit_url(git_repository, pipeline_slug):
-    return "gs://bazel-builds/last_green_commit/%s/%s" % (
+    return "gs://%s/last_green_commit/%s/%s" % (
+        "bazel-builds" if CLOUD_PROJECT == "bazel-public" else "bazel-untrusted-builds",
         git_repository[len("https://") :],
         pipeline_slug,
     )
