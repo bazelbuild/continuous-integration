@@ -804,13 +804,22 @@ def remote_caching_flags(platform):
     ]
 
     if platform == "macos":
-        # Use a local cache server for our macOS machines.
-        flags += ["--remote_http_cache=http://100.107.67.248:8080"]
+        if CLOUD_PROJECT == "bazel-public":
+            # Use a local trusted cache server for our macOS machines.
+            flags += ["--remote_http_cache=http://100.107.67.248:8081"]
+        else:
+            # Use a local untrusted cache server for our macOS machines.
+            flags += ["--remote_http_cache=http://100.107.67.248:8080"]
     else:
-        flags += [
-            "--google_default_credentials",
-            "--remote_http_cache=https://storage.googleapis.com/bazel-untrusted-buildkite-cache",
-        ]
+        flags += ["--google_default_credentials"]
+        if CLOUD_PROJECT == "bazel-public":
+            flags += [
+                "--remote_http_cache=https://storage.googleapis.com/bazel-trusted-buildkite-cache"
+            ]
+        else:
+            flags += [
+                "--remote_http_cache=https://storage.googleapis.com/bazel-untrusted-buildkite-cache"
+            ]
 
     return flags
 
