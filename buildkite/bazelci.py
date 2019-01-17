@@ -457,7 +457,7 @@ def execute_commands(
     use_bazel_at_commit,
     use_but,
     save_but,
-    clean,
+    needs_clean,
     build_only,
     test_only,
     monitor_flaky_tests,
@@ -528,7 +528,7 @@ def execute_commands(
                 time.sleep(1)
             print("Sauce Connect Proxy is ready, continuing...")
 
-        if clean:
+        if needs_clean:
             execute_bazel_clean(bazel_binary, platform)
 
         if not test_only:
@@ -1789,7 +1789,7 @@ def main(argv=None):
     )
     runner.add_argument("--use_but", type=bool, nargs="?", const=True)
     runner.add_argument("--save_but", type=bool, nargs="?", const=True)
-    runner.add_argument("--clean", type=bool, nargs="?", const=True)
+    runner.add_argument("--needs_clean", type=bool, nargs="?", const=True)
     runner.add_argument("--build_only", type=bool, nargs="?", const=True)
     runner.add_argument("--test_only", type=bool, nargs="?", const=True)
     runner.add_argument("--monitor_flaky_tests", type=bool, nargs="?", const=True)
@@ -1841,7 +1841,7 @@ def main(argv=None):
                 use_bazel_at_commit=args.use_bazel_at_commit,
                 use_but=args.use_but,
                 save_but=args.save_but,
-                clean=args.clean,
+                needs_clean=args.needs_clean,
                 build_only=args.build_only,
                 test_only=args.test_only,
                 monitor_flaky_tests=args.monitor_flaky_tests,

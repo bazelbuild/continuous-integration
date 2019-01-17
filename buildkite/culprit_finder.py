@@ -60,7 +60,7 @@ def get_bazel_commits_between(first_commit, second_commit):
         )
 
 
-def test_with_bazel_at_commit(project_name, platform_name, git_repo_location, bazel_commit):
+def test_with_bazel_at_commit(project_name, platform_name, git_repo_location, bazel_commit, needs_clean):
     http_config = DOWNSTREAM_PROJECTS[project_name]["http_config"]
     try:
         return_code = bazelci.main(
@@ -70,8 +70,7 @@ def test_with_bazel_at_commit(project_name, platform_name, git_repo_location, ba
                 "--http_config=" + http_config,
                 "--git_repo_location=" + git_repo_location,
                 "--use_bazel_at_commit=" + bazel_commit,
-                "--clean",
-            ]
+            ] + (["--needs_clean"] if needs_clean else [])
         )
     except subprocess.CalledProcessError as e:
         bazelci.eprint(str(e))
@@ -87,7 +86,7 @@ def clone_git_repository(project_name, platform_name):
     return bazelci.clone_git_repository(git_repository, platform_name, git_commit)
 
 
-def start_bisecting(project_name, platform_name, git_repo_location, commits_list):
+def start_bisecting(project_name, platform_name, git_repo_location, commits_list, needs_clean):
     left = 0
     right = len(commits_list)
     while left < right:
@@ -97,7 +96,7 @@ def start_bisecting(project_name, platform_name, git_repo_location, commits_list
         bazelci.eprint("Remaining suspected commits are:\n")
         for i in range(left, right):
             bazelci.eprint(commits_list[i] + "\n")
-        if test_with_bazel_at_commit(project_name, platform_name, git_repo_location, mid_commit):
+        if test_with_bazel_at_commit(project_name, platform_name, git_repo_location, mid_commit, needs_clean):
             bazelci.print_collapsed_group(":bazel: Succeeded at " + mid_commit)
             left = mid + 1
         else:
@@ -114,16 +113,17 @@ def start_bisecting(project_name, platform_name, git_repo_location, commits_list
         bazelci.execute_command(["git", "--no-pager", "log", "-n", "1", first_bad_commit])
 
 
-def print_culprit_finder_pipeline(project_name, platform_name, good_bazel_commit, bad_bazel_commit):
+def print_culprit_finder_pipeline(project_name, platform_name, good_bazel_commit, bad_bazel_commit, needs_clean):
     label = PLATFORMS[platform_name]["emoji-name"] + " Bisecting for {0}".format(project_name)
     command = (
-        '%s culprit_finder.py runner --project_name="%s" --platform_name=%s --good_bazel_commit=%s --bad_bazel_commit=%s'
+        '%s culprit_finder.py runner --project_name="%s" --platform_name=%s --good_bazel_commit=%s --bad_bazel_commit=%s %s'
         % (
             bazelci.python_binary(platform_name),
             project_name,
             platform_name,
             good_bazel_commit,
             bad_bazel_commit,
+            "--needs_clean" if needs_clean else "",
         )
     )
     commands = [
@@ -151,6 +151,7 @@ def main(argv=None):
     runner.add_argument("--platform_name", type=str)
     runner.add_argument("--good_bazel_commit", type=str)
     runner.add_argument("--bad_bazel_commit", type=str)
+    runner.add_argument("--needs_clean", type=bool, nargs="?", const=True)
 
     args = parser.parse_args(argv)
     try:
@@ -162,6 +163,10 @@ def main(argv=None):
                 bad_bazel_commit = os.environ["BAD_BAZEL_COMMIT"]
             except KeyError as e:
                 raise BuildkiteException("Environment variable %s must be set" % str(e))
+
+            needs_clean = False
+            if "NEEDS_CLEAN" in os.environ["NEEDS_CLEAN"]:
+                needs_clean = True
 
             if project_name not in DOWNSTREAM_PROJECTS:
                 raise BuildkiteException(
@@ -179,6 +184,7 @@ def main(argv=None):
                 platform_name=platform_name,
                 good_bazel_commit=good_bazel_commit,
                 bad_bazel_commit=bad_bazel_commit,
+                needs_clean=needs_clean,
             )
         elif args.subparsers_name == "runner":
             git_repo_location = clone_git_repository(args.project_name, args.platform_name)
@@ -188,6 +194,7 @@ def main(argv=None):
                 platform_name=args.platform_name,
                 git_repo_location=git_repo_location,
                 bazel_commit=args.good_bazel_commit,
+                needs_clean = args.needs_clean,
             ):
                 raise BuildkiteException(
                     "Given good commit (%s) is not actually good, abort bisecting."
@@ -200,6 +207,7 @@ def main(argv=None):
                 commits_list=get_bazel_commits_between(
                     args.good_bazel_commit, args.bad_bazel_commit
                 ),
+                needs_clean = args.needs_clean,
             )
         else:
             parser.print_help()
