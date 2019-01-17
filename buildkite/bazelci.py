@@ -235,6 +235,11 @@ DOWNSTREAM_PROJECTS = {
     },
 }
 
+CLOUD_PROJECT = (
+    "bazel-public"
+    if os.environ["BUILDKITE_ORGANIZATION_SLUG"] == "bazel-trusted"
+    else "bazel-untrusted"
+)
 
 # A map containing all supported platform names as keys, with the values being
 # the platform name in a human readable format, and a the buildkite-agent's
@@ -246,7 +251,7 @@ PLATFORMS = {
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
         "publish_binary": True,
         "java": "8",
-        "docker-image": "gcr.io/bazel-untrusted/ubuntu1404:java8",
+        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1404:java8",
     },
     "ubuntu1604": {
         "name": "Ubuntu 16.04, JDK 8",
@@ -254,7 +259,7 @@ PLATFORMS = {
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
         "publish_binary": False,
         "java": "8",
-        "docker-image": "gcr.io/bazel-untrusted/ubuntu1604:java8",
+        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1604:java8",
     },
     "ubuntu1804": {
         "name": "Ubuntu 18.04, JDK 8",
@@ -262,7 +267,7 @@ PLATFORMS = {
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
         "publish_binary": False,
         "java": "8",
-        "docker-image": "gcr.io/bazel-untrusted/ubuntu1804:java8",
+        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:java8",
     },
     "ubuntu1804_nojava": {
         "name": "Ubuntu 18.04, no JDK",
@@ -270,7 +275,7 @@ PLATFORMS = {
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
         "publish_binary": False,
         "java": "no",
-        "docker-image": "gcr.io/bazel-untrusted/ubuntu1804:nojava",
+        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:nojava",
     },
     "ubuntu1804_java9": {
         "name": "Ubuntu 18.04, JDK 9",
@@ -278,7 +283,7 @@ PLATFORMS = {
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
         "publish_binary": False,
         "java": "9",
-        "docker-image": "gcr.io/bazel-untrusted/ubuntu1804:java9",
+        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:java9",
     },
     "ubuntu1804_java10": {
         "name": "Ubuntu 18.04, JDK 10",
@@ -286,7 +291,7 @@ PLATFORMS = {
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
         "publish_binary": False,
         "java": "10",
-        "docker-image": "gcr.io/bazel-untrusted/ubuntu1804:java10",
+        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:java10",
     },
     "ubuntu1804_java11": {
         "name": "Ubuntu 18.04, JDK 11",
@@ -294,7 +299,7 @@ PLATFORMS = {
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
         "publish_binary": False,
         "java": "11",
-        "docker-image": "gcr.io/bazel-untrusted/ubuntu1804:java11",
+        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:java11",
     },
     "macos": {
         "name": "macOS, JDK 8",
@@ -317,7 +322,7 @@ PLATFORMS = {
         "publish_binary": False,
         "host-platform": "ubuntu1604",
         "java": "8",
-        "docker-image": "gcr.io/bazel-untrusted/ubuntu1604:java8",
+        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1604:java8",
     },
 }
 
