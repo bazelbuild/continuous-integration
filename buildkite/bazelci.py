@@ -457,6 +457,7 @@ def execute_commands(
     use_bazel_at_commit,
     use_but,
     save_but,
+    clean,
     build_only,
     test_only,
     monitor_flaky_tests,
@@ -526,6 +527,9 @@ def execute_commands(
                     )
                 time.sleep(1)
             print("Sauce Connect Proxy is ready, continuing...")
+
+        if clean:
+            execute_bazel_clean(bazel_binary, platform)
 
         if not test_only:
             execute_bazel_build(
@@ -954,6 +958,17 @@ def compute_flags(platform, flags, incompatible_flags, bep_file, enable_remote_c
         aggregated_flags += incompatible_flags
 
     return aggregated_flags
+
+
+def execute_bazel_clean(bazel_binary, platform):
+    print_expanded_group(":bazel: Clean")
+
+    try:
+        execute_command(
+            [bazel_binary] + common_startup_flags(platform) + ["clean"]
+        )
+    except subprocess.CalledProcessError as e:
+        raise BuildkiteException("bazel clean failed with exit code {}".format(e.returncode))
 
 
 def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file, incompatible_flags):
@@ -1771,6 +1786,7 @@ def main(argv=None):
     )
     runner.add_argument("--use_but", type=bool, nargs="?", const=True)
     runner.add_argument("--save_but", type=bool, nargs="?", const=True)
+    runner.add_argument("--clean", type=bool, nargs="?", const=True)
     runner.add_argument("--build_only", type=bool, nargs="?", const=True)
     runner.add_argument("--test_only", type=bool, nargs="?", const=True)
     runner.add_argument("--monitor_flaky_tests", type=bool, nargs="?", const=True)
@@ -1822,6 +1838,7 @@ def main(argv=None):
                 use_bazel_at_commit=args.use_bazel_at_commit,
                 use_but=args.use_but,
                 save_but=args.save_but,
+                clean=args.clean,
                 build_only=args.build_only,
                 test_only=args.test_only,
                 monitor_flaky_tests=args.monitor_flaky_tests,

@@ -70,6 +70,7 @@ def test_with_bazel_at_commit(project_name, platform_name, git_repo_location, ba
                 "--http_config=" + http_config,
                 "--git_repo_location=" + git_repo_location,
                 "--use_bazel_at_commit=" + bazel_commit,
+                "--clean",
             ]
         )
     except subprocess.CalledProcessError as e:
