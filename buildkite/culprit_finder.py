@@ -165,7 +165,7 @@ def main(argv=None):
                 raise BuildkiteException("Environment variable %s must be set" % str(e))
 
             needs_clean = False
-            if "NEEDS_CLEAN" in os.environ["NEEDS_CLEAN"]:
+            if "NEEDS_CLEAN" in os.environ:
                 needs_clean = True
 
             if project_name not in DOWNSTREAM_PROJECTS:
