@@ -77,7 +77,7 @@ Create candidates with the release.sh script.
 1.  Update GitHub issue with the command that was run and the new candidate name
     (ie, 0.19.1rc3).
 
-1.  Check BuildKite results at https://buildkite.com/bazel/release. You should
+1.  Check BuildKite results at https://buildkite.com/bazel-trusted/bazel-release. You should
     see the `release-$RELEASE_NUMBER` branch here and a new build running for
     your release.
 
