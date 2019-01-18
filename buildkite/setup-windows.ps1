@@ -179,7 +179,8 @@ Write-Host "Installing Python packages..."
 ## CMake 3.12.2 (for rules_foreign_cc).
 Write-Host "Installing CMake..."
 & choco install cmake
-$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";C:\Program Files\CMake\bin"
+[Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
 ## Ninja 1.8.2 (for rules_foreign_cc).
 Write-Host "Installing Ninja 1.8.2..."
