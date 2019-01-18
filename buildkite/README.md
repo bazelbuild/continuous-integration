@@ -105,6 +105,7 @@ Create "New Build" in the [Culprit Finder](https://buildkite.com/bazel/culprit-f
 - PLATFORM_NAME (The platform name must exists in PLATFORMS in [bazelci.py](https://github.com/bazelbuild/continuous-integration/blob/master/buildkite/bazelci.py))
 - GOOD_BAZEL_COMMIT (A full Bazel commit, Bazel built at this commit still works for this project)
 - BAD_BAZEL_COMMIT (A full Bazel commit, Bazel built at this commit fails with this project)
+- (Optional) NEEDS_CLEAN (Set NEEDS_CLEAN to `true` to run `bazel clean --expunge` before each build, this will help reduce flakiness)
 
 eg.
 ```
