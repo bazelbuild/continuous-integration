@@ -15,7 +15,6 @@
 # limitations under the License.
 
 from datetime import datetime
-import itertools
 import json
 import os
 import queue
@@ -74,6 +73,14 @@ IMAGE_CREATION_VMS = {
         "source_image_family": "windows-1803-core",
         "setup_script": "setup-windows.ps1",
     },
+    "windows-playground": {
+        "project": "di-cloud-exp",
+        "zone": "europe-west1-c",
+        "network": "default",
+        "source_image_project": "windows-cloud",
+        "source_image_family": "windows-2019",
+        "setup_script": "setup-windows.ps1",
+    },
 }
 
 WORK_QUEUE = queue.Queue()
@@ -119,7 +126,7 @@ def create_instance(instance_name, params):
             project=params["project"],
             zone=params["zone"],
             machine_type="n1-standard-8",
-            network="buildkite",
+            network=params.get("network", "buildkite"),
             metadata_from_file=startup_script,
             min_cpu_platform="Intel Skylake",
             boot_disk_type="pd-ssd",
