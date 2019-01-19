@@ -41,6 +41,11 @@ from urllib.parse import urlparse
 # Initialize the random number generator.
 random.seed()
 
+CLOUD_PROJECT = (
+    "bazel-public"
+    if os.environ["BUILDKITE_ORGANIZATION_SLUG"] == "bazel-trusted"
+    else "bazel-untrusted"
+)
 
 DOWNSTREAM_PROJECTS = {
     "Android Testing": {
@@ -235,12 +240,6 @@ DOWNSTREAM_PROJECTS = {
     },
 }
 
-CLOUD_PROJECT = (
-    "bazel-public"
-    if os.environ["BUILDKITE_ORGANIZATION_SLUG"] == "bazel-trusted"
-    else "bazel-untrusted"
-)
-
 # A map containing all supported platform names as keys, with the values being
 # the platform name in a human readable format, and a the buildkite-agent's
 # working directory.
@@ -326,9 +325,7 @@ PLATFORMS = {
     },
 }
 
-BUILDIFIER_INPUT_FILES = ["BUILD", "BUILD.bazel", "*.bzl"]
-
-BUILDIFIER_DOCKER_IMAGE = "gcr.io/bazel-untrusted/ubuntu1804:nojava"
+BUILDIFIER_DOCKER_IMAGE = f"gcr.io/{CLOUD_PROJECT}/buildkite:buildifier"
 
 # The platform used for various steps (e.g. stuff that formerly ran on the "pipeline" workers).
 DEFAULT_PLATFORM = "ubuntu1804"
@@ -686,7 +683,9 @@ def download_bazel_binary_at_commit(dest_dir, platform, bazel_git_commit):
             ]
         )
     except subprocess.CalledProcessError as e:
-        raise BuildkiteException("Failed to download Bazel binary at %s, error message:\n%s" % (bazel_git_commit, str(e)))
+        raise BuildkiteException(
+            "Failed to download Bazel binary at %s, error message:\n%s" % (bazel_git_commit, str(e))
+        )
     st = os.stat(bazel_binary_path)
     os.chmod(bazel_binary_path, st.st_mode | stat.S_IEXEC)
     return bazel_binary_path
@@ -967,9 +966,7 @@ def execute_bazel_clean(bazel_binary, platform):
     print_expanded_group(":bazel: Clean")
 
     try:
-        execute_command(
-            [bazel_binary] + common_startup_flags(platform) + ["clean", "--expunge"]
-        )
+        execute_command([bazel_binary] + common_startup_flags(platform) + ["clean", "--expunge"])
     except subprocess.CalledProcessError as e:
         raise BuildkiteException("bazel clean failed with exit code {}".format(e.returncode))
 
@@ -1101,7 +1098,9 @@ def execute_command_background(args):
 def create_step(label, commands, platform=DEFAULT_PLATFORM):
     host_platform = PLATFORMS[platform].get("host-platform", platform)
     if "docker-image" in PLATFORMS[platform]:
-        return create_docker_step(label, commands, PLATFORMS[platform]["docker-image"])
+        return create_docker_step(
+            label, image=PLATFORMS[platform]["docker-image"], commands=commands
+        )
     else:
         return {
             "label": label,
@@ -1114,8 +1113,8 @@ def create_step(label, commands, platform=DEFAULT_PLATFORM):
         }
 
 
-def create_docker_step(label, commands, docker_image):
-    return {
+def create_docker_step(label, image, commands=None):
+    step = {
         "label": label,
         "command": commands,
         "agents": {"kind": "docker", "os": "linux"},
@@ -1124,7 +1123,7 @@ def create_docker_step(label, commands, docker_image):
                 "always-pull": True,
                 "debug": True,
                 "environment": ["BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "BUILDKITE_GS_ACL"],
-                "image": docker_image,
+                "image": image,
                 "network": "host",
                 "privileged": True,
                 "propagate-environment": True,
@@ -1137,6 +1136,9 @@ def create_docker_step(label, commands, docker_image):
             }
         },
     }
+    if not step["command"]:
+        del step["command"]
+    return step
 
 
 def print_project_pipeline(
@@ -1154,6 +1156,9 @@ def print_project_pipeline(
         raise BuildkiteException("{0} pipeline configuration is empty.".format(project_name))
 
     pipeline_steps = []
+
+    if configs.get("buildifier"):
+        pipeline_steps.append(create_docker_step("Buildifier", image=BUILDIFIER_DOCKER_IMAGE))
 
     # In Bazel Downstream Project pipelines, git_repository and project_name must be specified,
     # and we should test the project at the last green commit.
@@ -1175,10 +1180,6 @@ def print_project_pipeline(
             incompatible_flags,
         )
         pipeline_steps.append(step)
-
-    buildifier_step = get_buildifier_step_if_requested(configs)
-    if buildifier_step:
-        pipeline_steps.append(buildifier_step)
 
     pipeline_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
     all_downstream_pipeline_slugs = []
@@ -1254,20 +1255,6 @@ def fetch_incompatible_flag_verbose_failures_command():
     return "curl -sS {0} -o incompatible_flag_verbose_failures.py".format(
         incompatible_flag_verbose_failures_url()
     )
-
-
-def get_buildifier_step_if_requested(configs):
-    # There may be a "buildifier" entry in the config, but the value can be "false".
-    if not configs.get("buildifier"):
-        return None
-
-    find_args = " -or ".join('-iname "{}"'.format(f) for f in BUILDIFIER_INPUT_FILES)
-    # We need to escape the $ sign in order to not fail on Buildkite.
-    # https://buildkite.com/docs/agent/v3/cli-pipeline#environment-variable-substitution
-    command = ('buildifier --lint=warn $$(find . -type f \\( {} \\)) | grep -q "."').format(
-        find_args
-    )
-    return create_docker_step("Buildifier", [command], BUILDIFIER_DOCKER_IMAGE)
 
 
 def upload_project_pipeline_step(

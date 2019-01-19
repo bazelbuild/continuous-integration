@@ -121,11 +121,10 @@ Note: Bazel commit can only be set to commits after [63453bdbc6b05bd201375ee9e25
 
 For each pipeline you can enable [Buildifier](https://github.com/bazelbuild/buildtools/tree/master/buildifier) to check whether all BUILD, BUILD.bazel and .bzl files comply with the standard formatting convention. Simply add the following code to the top of the particular pipeline Yaml configuration (either locally in `.bazelci/presubmit.yml` or in https://github.com/bazelbuild/continuous-integration/tree/master/buildkite/pipelines):
 
-```
+```yaml
 ---
-buildifier: 1
+buildifier: true
 [...]
 ```
 
 As a consequence, every future build for this pipeline will contain an additional "Buildifier" step that runs the latest version of Buildifier in "lint" mode.
-
