@@ -3,6 +3,7 @@
 
 import fnmatch
 import html
+import locale
 import os.path
 import re
 import subprocess
@@ -28,7 +29,7 @@ def upload_output(output):
     eprint("+++ :buildkite: Uploading output via 'buildkite annotate'")
     result = subprocess.run(
         ["buildkite-agent", "annotate", "--style", "warning", "--context", "buildifier"],
-        input=output,
+        input=output.encode(locale.getpreferredencoding(False)),
     )
     if result.returncode != 0:
         eprint(
