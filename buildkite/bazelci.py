@@ -325,7 +325,7 @@ PLATFORMS = {
     },
 }
 
-BUILDIFIER_DOCKER_IMAGE = f"gcr.io/{CLOUD_PROJECT}/buildkite:buildifier"
+BUILDIFIER_DOCKER_IMAGE = f"gcr.io/{CLOUD_PROJECT}/buildkite"
 
 # The platform used for various steps (e.g. stuff that formerly ran on the "pipeline" workers).
 DEFAULT_PLATFORM = "ubuntu1804"
