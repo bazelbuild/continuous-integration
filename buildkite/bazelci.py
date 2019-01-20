@@ -805,7 +805,7 @@ def remote_caching_flags(platform):
         # or remove the `--disk_cache=` flag.
         "--disk_cache=",
         "--remote_max_connections=200",
-        '--experimental_remote_platform_override=properties:{name:"platform" value:"%s"}'
+        '--host_platform_remote_properties_override=properties:{name:"platform" value:"%s"}'
         % platform,
     ]
 
