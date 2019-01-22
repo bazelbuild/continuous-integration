@@ -106,6 +106,8 @@ EOF
 {
   apt-get -qqy install qemu-kvm
   usermod -a -G kvm buildkite-agent
+
+  echo 'KERNEL=="kvm", NAME="%k", GROUP="kvm", MODE="0666"' > /etc/udev/rules.d/65-kvm.rules
 }
 
 ### Clean up and trim the filesystem (potentially reduces the final image size).
