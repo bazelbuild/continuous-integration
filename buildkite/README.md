@@ -6,15 +6,6 @@ contains all the scripts and configuration files necessary to setup Bazel's CI o
 
 ## Bazel on Buildkite 101
 
-[Buildkite] currently does not support public viewing of build and test results (it's actively being
-[worked](https://github.com/buildkite/feedback/issues/137#issuecomment-360336774) on)
-and for now requires one to be logged in. In the meantime, we have set up a separate mechanism to
-view build and test results of [pull requests](#build-and-test-results) and so as a contributor to
-Bazel you typically don't need access to Buildkite. However, if you are a maintainer of a repository
-under the @bazelbuild organisation or a Bazel team member with sheriffing duties you probably do need
-access. Please ping either @buchgr, @philwo or @fweikert if you don't have access to Bazel on Buildkite
-but think you should.
-
 When you first log into [Buildkite] you are presented with a list of pipelines. A pipeline is a
 template of steps that are executed either in sequence or in parallel and that all need to succeed in
 order for the pipeline to succeed. The Bazel organisation has dozens of pipelines. Here are a selected
