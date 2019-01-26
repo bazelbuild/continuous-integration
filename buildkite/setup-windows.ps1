@@ -256,6 +256,7 @@ if ($java -ne "no") {
     ## Accept the Android SDK license agreement.
     New-Item "${android_sdk_root}\licenses" -ItemType "directory" -Force
     Add-Content -Value "`nd56f5187479451eabf01fb78af6dfcb131a6481e" -Path "${android_sdk_root}\licenses\android-sdk-license" -Encoding ASCII
+    Add-Content -Value "`n24333f8a63b6825ea9c5514f83c2829b004d1fee" -Path "${android_sdk_root}\licenses\android-sdk-license" -Encoding ASCII
     Add-Content -Value "`nd975f751698a77b662f1254ddbeed3901e976f5a" -Path "${android_sdk_root}\licenses\intel-android-extra-license" -Encoding ASCII
 
     ## Update the Android SDK tools.
