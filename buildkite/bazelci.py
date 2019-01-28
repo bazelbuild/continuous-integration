@@ -1314,12 +1314,12 @@ def create_label(platform_id, platform_type, project_name, build_only=False, tes
     else:
         label = ""
 
-    platform_label = ("{0} on {1}".format(platform_id, platform_type) if platform_id != platform_type else platform_id)
+    platform_label = ("{0} on {1}".format(platform_id, emoji_name) if platform_id != platform_type else emoji_name)
 
     if project_name:
         label += "{0} ({1})".format(project_name, platform_label)
     else:
-        label += emoji_name
+        label += platform_label
 
     return label
 
