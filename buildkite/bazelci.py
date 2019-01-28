@@ -43,7 +43,7 @@ random.seed()
 
 CLOUD_PROJECT = (
     "bazel-public"
-    if os.environ["BUILDKITE_ORGANIZATION_SLUG"] == "bazel-trusted"
+    if os.environ.get("BUILDKITE_ORGANIZATION_SLUG") == "bazel-trusted"
     else "bazel-untrusted"
 )
 
