@@ -164,7 +164,7 @@ Create candidates with the release.sh script.
     ```
 
 1.  A CI job is uploading the release artifacts to GitHub. Look for the release
-    workflow on https://buildkite.com/bazel/release/. Unblock the steps.
+    workflow on https://buildkite.com/bazel-trusted/bazel-release/. Unblock the steps.
 
 1.  Ensure all binaries were uploaded to GitHub properly.
     1.  **Why?** Sometimes binaries are uploaded incorrectly.
