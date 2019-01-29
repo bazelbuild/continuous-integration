@@ -1850,7 +1850,7 @@ def main(argv=None):
             )
         elif args.subparsers_name == "runner":
             configs = fetch_configs(args.http_config, args.file_config)
-            platform_configs = [p for p in configs.get("platforms", []) if p["id"] == args.platform]
+            platform_configs = [p for p in configs.get("platforms", []) if p.get("id") == args.platform]
             config = platform_configs[0] if platform_configs else None
             platform = config.get("type") if config else None
             execute_commands(
