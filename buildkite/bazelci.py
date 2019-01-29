@@ -336,6 +336,8 @@ CiQAry63sOlZtTNtuOT5DAOLkum0rGof+DOweppZY1aOWbat8zwSTQAL7Hu+rgHSOr6P4S1cu4YG
 EDql
 """.strip()
 
+BAZELISK_VERSION_ENV_VAR = "USE_BAZEL_VERSION"
+
 
 class BuildkiteException(Exception):
     """
@@ -471,6 +473,7 @@ def execute_commands(
     test_only,
     monitor_flaky_tests,
     incompatible_flags,
+    bazel_version=None
 ):
     build_only = build_only or "test_targets" not in config
     test_only = test_only or "build_targets" not in config
@@ -479,6 +482,13 @@ def execute_commands(
 
     if use_bazel_at_commit and use_but:
         raise BuildkiteException("use_bazel_at_commit cannot be set when use_but is true")
+
+    bazel_version = config.get("bazel") or bazel_version
+    if bazel_version:
+        if use_bazel_at_commit or use_but:
+            raise BuildkiteException("Cannot specify an explicit Bazel version when either use_bazel_at_commit or use_but is set.")
+
+        os.environ[BAZELISK_VERSION_ENV_VAR] = bazel_version
 
     tmpdir = tempfile.mkdtemp()
     sc_process = None
@@ -1905,6 +1915,7 @@ def main(argv=None):
                 test_only=args.test_only,
                 monitor_flaky_tests=args.monitor_flaky_tests,
                 incompatible_flags=args.incompatible_flag,
+                bazel_version=configs.get("bazel")
             )
         elif args.subparsers_name == "publish_binaries":
             publish_binaries()
