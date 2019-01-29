@@ -338,6 +338,7 @@ EDql
 
 BAZELISK_VERSION_ENV_VAR = "USE_BAZEL_VERSION"
 
+BUILD_LABEL_PATTERN = re.compile(r'^Build label: (\S)$', re.MULTILINE)
 
 class BuildkiteException(Exception):
     """
@@ -509,7 +510,7 @@ def execute_commands(
         else:
             bazel_binary = "bazel"
 
-        print_bazel_version_info(bazel_binary, platform)
+        bazel_version = print_bazel_version_info(bazel_binary, platform)
 
         print_environment_variables_info()
 
@@ -552,6 +553,7 @@ def execute_commands(
 
         if not test_only:
             execute_bazel_build(
+                bazel_version,
                 bazel_binary,
                 platform,
                 config.get("build_flags", []),
@@ -566,6 +568,7 @@ def execute_commands(
             test_bep_file = os.path.join(tmpdir, "test_bep.json")
             try:
                 execute_bazel_test(
+                    bazel_version,
                     bazel_binary,
                     platform,
                     config.get("test_flags", []),
@@ -647,7 +650,7 @@ def has_flaky_tests(bep_file):
 
 def print_bazel_version_info(bazel_binary, platform):
     print_collapsed_group(":information_source: Bazel Info")
-    execute_command(
+    version_output = execute_command(
         [bazel_binary]
         + common_startup_flags(platform)
         + ["--nomaster_bazelrc", "--bazelrc=/dev/null", "version"]
@@ -657,6 +660,9 @@ def print_bazel_version_info(bazel_binary, platform):
         + common_startup_flags(platform)
         + ["--nomaster_bazelrc", "--bazelrc=/dev/null", "info"]
     )
+
+    match = BUILD_LABEL_PATTERN.search(version_output)
+    return match.group(1) if match else "unreleased binary"
 
 
 def print_environment_variables_info():
@@ -993,8 +999,8 @@ def execute_bazel_clean(bazel_binary, platform):
         raise BuildkiteException("bazel clean failed with exit code {}".format(e.returncode))
 
 
-def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file, incompatible_flags):
-    print_expanded_group(":bazel: Build")
+def execute_bazel_build(bazel_version, bazel_binary, platform, flags, targets, bep_file, incompatible_flags):
+    print_expanded_group(":bazel: Build ({})".format(bazel_version))
 
     aggregated_flags = compute_flags(
         platform, flags, incompatible_flags, bep_file, enable_remote_cache=True
@@ -1008,9 +1014,9 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file, incomp
 
 
 def execute_bazel_test(
-    bazel_binary, platform, flags, targets, bep_file, monitor_flaky_tests, incompatible_flags
+    bazel_version, bazel_binary, platform, flags, targets, bep_file, monitor_flaky_tests, incompatible_flags
 ):
-    print_expanded_group(":bazel: Test")
+    print_expanded_group(":bazel: Test ({})".format(bazel_version))
 
     aggregated_flags = [
         "--flaky_test_attempts=3",
@@ -1109,8 +1115,8 @@ def test_logs_for_status(bep_file, status):
 
 def execute_command(args, shell=False, fail_if_nonzero=True):
     eprint(" ".join(args))
-    return subprocess.run(args, shell=shell, check=fail_if_nonzero, env=os.environ).returncode
-
+    process = subprocess.run(args, shell=shell, check=fail_if_nonzero, env=os.environ, stdout=subprocess.PIPE)
+    return process.stdout.decode("utf-8")
 
 def execute_command_background(args):
     eprint(" ".join(args))
