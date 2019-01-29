@@ -454,6 +454,7 @@ def transform_legacy_platform(platform, platform_config):
     # Legacy mode means that there is exactly one config per platform type (e.g. Ubuntu1604_nojdk), which means that we can use the same value for id and type.
     platform_config["id"] = platform
     platform_config["type"] = platform
+    platform_config["display_name"] = ""
     return platform_config
 
 
@@ -1191,6 +1192,7 @@ def print_project_pipeline(
         step = runner_step(
             platform_config["id"],
             platform_config["type"],
+            platform_config.get("display_name", ""),
             project_name,
             http_config,
             file_config,
@@ -1238,6 +1240,7 @@ def print_project_pipeline(
 def runner_step(
     platform_id,
     platform_type,
+    platform_display_name,
     project_name=None,
     http_config=None,
     file_config=None,
@@ -1263,7 +1266,7 @@ def runner_step(
         command += " --use_but"
     for flag in incompatible_flags or []:
         command += " --incompatible_flag=" + flag
-    label = create_label(platform_id, platform_type, project_name)
+    label = create_label(platform_type, project_name, platform_details=platform_display_name)
     return create_step(
         label=label, commands=[fetch_bazelcipy_command(), command], platform=platform_type
     )
@@ -1302,10 +1305,10 @@ def upload_project_pipeline_step(
     )
 
 
-def create_label(platform_id, platform_type, project_name, build_only=False, test_only=False):
+def create_label(platform, project_name, build_only=False, test_only=False, platform_details=""):
     if build_only and test_only:
         raise BuildkiteException("build_only and test_only cannot be true at the same time")
-    emoji_name = PLATFORMS[platform_type]["emoji-name"]
+    emoji_name = PLATFORMS[platform]["emoji-name"]
 
     if build_only:
         label = "Build "
@@ -1314,7 +1317,7 @@ def create_label(platform_id, platform_type, project_name, build_only=False, tes
     else:
         label = ""
 
-    platform_label = ("{0} on {1}".format(platform_id, emoji_name) if platform_id != platform_type else emoji_name)
+    platform_label = ("{0} on {1}".format(platform_details, emoji_name) if platform_details else emoji_name)
 
     if project_name:
         label += "{0} ({1})".format(project_name, platform_label)
