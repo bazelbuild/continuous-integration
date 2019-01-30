@@ -442,19 +442,18 @@ def load_config(http_url, file_config):
 
 
 def transform_legacy_platform_configs(config):
-    platforms = config.get("platforms")
-    if not platforms or not isinstance(platforms, dict):
+    platforms = config.pop("platforms", None)
+    if not platforms:
         return config
 
-    config['platforms'] = [transform_legacy_platform(p, pc) for p, pc in platforms.items()]
+    # Legacy mode means that there is exactly one task per platform (e.g. ubuntu1604_nojdk), which means that we can keep the key.
+    config["tasks"] = {p: transform_legacy_platform_to_task(p, pc) for p, pc in platforms.items()}
     return config
 
 
-def transform_legacy_platform(platform, platform_config):
-    # Legacy mode means that there is exactly one config per platform type (e.g. Ubuntu1604_nojdk), which means that we can use the same value for id and type.
-    platform_config["id"] = platform
-    platform_config["type"] = platform
-    platform_config["display_name"] = ""
+def transform_legacy_platform_to_task(platform, platform_config):
+    platform_config["name"] = ""
+    platform_config["platform"] = platform
     return platform_config
 
 
@@ -1172,8 +1171,8 @@ def print_project_pipeline(
     use_but,
     incompatible_flags,
 ):
-    platform_configs = configs.get("platforms", None)
-    if not platform_configs:
+    task_configs = configs.get("tasks", None)
+    if not task_configs:
         raise BuildkiteException("{0} pipeline configuration is empty.".format(project_name))
 
     pipeline_steps = []
@@ -1188,19 +1187,19 @@ def print_project_pipeline(
         git_commit = get_last_green_commit(
             git_repository, DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"]
         )
-    for platform_config in platform_configs:
+    for task_id, task_config in task_configs.items():
         step = runner_step(
-            platform_config["id"],
-            platform_config["type"],
-            platform_config.get("display_name", ""),
-            project_name,
-            http_config,
-            file_config,
-            git_repository,
-            git_commit,
-            monitor_flaky_tests,
-            use_but,
-            incompatible_flags,
+            platform=task_config.get("platform"),
+            task_id=task_id,
+            task_name=task_config.get("name"),
+            project_name=project_name,
+            http_config=http_config,
+            file_config=file_config,
+            git_repository=git_repository,
+            git_commit=git_commit,
+            monitor_flaky_tests=monitor_flaky_tests,
+            use_but=use_but,
+            incompatible_flags=incompatible_flags,
         )
         pipeline_steps.append(step)
 
@@ -1238,9 +1237,9 @@ def print_project_pipeline(
 
 
 def runner_step(
-    platform_id,
-    platform_type,
-    platform_display_name,
+    platform,
+    task_id,
+    task_name="",
     project_name=None,
     http_config=None,
     file_config=None,
@@ -1250,8 +1249,8 @@ def runner_step(
     use_but=False,
     incompatible_flags=None,
 ):
-    host_platform = PLATFORMS[platform_type].get("host-platform", platform_type)
-    command = python_binary(host_platform) + " bazelci.py runner --platform=" + platform_id
+    host_platform = PLATFORMS[platform].get("host-platform", platform)
+    command = python_binary(host_platform) + " bazelci.py runner --task=" + task_id
     if http_config:
         command += " --http_config=" + http_config
     if file_config:
@@ -1266,9 +1265,9 @@ def runner_step(
         command += " --use_but"
     for flag in incompatible_flags or []:
         command += " --incompatible_flag=" + flag
-    label = create_label(platform_type, project_name, platform_details=platform_display_name)
+    label = create_label(platform, project_name, task_name=task_name)
     return create_step(
-        label=label, commands=[fetch_bazelcipy_command(), command], platform=platform_type
+        label=label, commands=[fetch_bazelcipy_command(), command], platform=platform
     )
 
 
@@ -1305,7 +1304,7 @@ def upload_project_pipeline_step(
     )
 
 
-def create_label(platform, project_name, build_only=False, test_only=False, platform_details=""):
+def create_label(platform, project_name, build_only=False, test_only=False, task_name=""):
     if build_only and test_only:
         raise BuildkiteException("build_only and test_only cannot be true at the same time")
     emoji_name = PLATFORMS[platform]["emoji-name"]
@@ -1317,7 +1316,7 @@ def create_label(platform, project_name, build_only=False, test_only=False, plat
     else:
         label = ""
 
-    platform_label = ("{0} on {1}".format(platform_details, emoji_name) if platform_details else emoji_name)
+    platform_label = "{0} on {1}".format(task_name, emoji_name) if task_name else emoji_name
 
     if project_name:
         label += "{0} ({1})".format(project_name, platform_label)
@@ -1328,7 +1327,13 @@ def create_label(platform, project_name, build_only=False, test_only=False, plat
 
 
 def bazel_build_step(
-    platform, project_name, http_config=None, file_config=None, build_only=False, test_only=False
+    task,
+    platform,
+    project_name,
+    http_config=None,
+    file_config=None,
+    build_only=False,
+    test_only=False,
 ):
     host_platform = PLATFORMS[platform].get("host-platform", platform)
     pipeline_command = python_binary(host_platform) + " bazelci.py runner"
@@ -1342,7 +1347,7 @@ def bazel_build_step(
         pipeline_command += " --http_config=" + http_config
     if file_config:
         pipeline_command += " --file_config=" + file_config
-    pipeline_command += " --platform=" + platform
+    pipeline_command += " --task=" + task
 
     return create_step(
         label=create_label(platform, project_name, build_only, test_only),
@@ -1350,15 +1355,25 @@ def bazel_build_step(
         platform=platform,
     )
 
-    
+
 def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
     if not configs:
         raise BuildkiteException("Bazel publish binaries pipeline configuration is empty.")
 
-    relevant_platforms = set(pc["type"] for pc in configs if should_publish_binaries_for_platform(pc))
-    if relevant_platforms != set(
+    configured_platforms = set(
+        t["platform"] for t in configs.values() if should_publish_binaries_for_task(t)
+    )
+
+    if len(configs) != len(configured_platforms):
+        raise BuildkiteException(
+            "Configuration for Bazel publish binaries pipeline must contain exactly one task per platform."
+        )
+
+    expected_platforms = set(
         name for name, platform in PLATFORMS.items() if platform["publish_binary"]
-    ):
+    )
+
+    if configured_platforms != expected_platforms:
         raise BuildkiteException(
             "Bazel publish binaries pipeline needs to build Bazel for every commit on all publish_binary-enabled platforms."
         )
@@ -1366,9 +1381,16 @@ def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
     # Build Bazel
     pipeline_steps = []
 
-    for platform in relevant_platforms:
+    for task, task_config in task_configs.items():
         pipeline_steps.append(
-            bazel_build_step(platform, "Bazel", http_config, file_config, build_only=True)
+            bazel_build_step(
+                task,
+                task_config.get("platform"),
+                "Bazel",
+                http_config,
+                file_config,
+                build_only=True,
+            )
         )
 
     pipeline_steps.append("wait")
@@ -1384,11 +1406,11 @@ def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
     print(yaml.dump({"steps": pipeline_steps}))
 
 
-def should_publish_binaries_for_platform(platform_config):
-    platform = platform_config["type"]
+def should_publish_binaries_for_task(task_config):
+    platform = task_config.get("platform")
     if platform not in PLATFORMS:
         raise BuildkiteException("Unknown platform '{}'".format(platform))
-    
+
     return PLATFORMS[platform]["publish_binary"]
 
 
@@ -1470,12 +1492,12 @@ def fetch_incompatible_flags():
 
 
 def print_bazel_downstream_pipeline(
-    configs, http_config, file_config, test_incompatible_flags, test_disabled_projects
+    task_configs, http_config, file_config, test_incompatible_flags, test_disabled_projects
 ):
-    if not configs:
+    if not task_configs:
         raise BuildkiteException("Bazel downstream pipeline configuration is empty.")
 
-    configured_platforms = set(pc["type"] for pc in configs)
+    configured_platforms = set(t.get("platform") for t in task_configs)
     if configured_platforms != set(PLATFORMS):
         raise BuildkiteException(
             "Bazel downstream pipeline needs to build Bazel on all supported platforms (has=%s vs. want=%s)."
@@ -1489,9 +1511,16 @@ def print_bazel_downstream_pipeline(
         pipeline_steps.append(info_box_step)
 
     if not test_incompatible_flags:
-        for platform in configured_platforms:
+        for task, task_config in task_configs.items():
             pipeline_steps.append(
-                bazel_build_step(platform, "Bazel", http_config, file_config, build_only=True)
+                bazel_build_step(
+                    task,
+                    task_config.get("platform"),
+                    "Bazel",
+                    http_config,
+                    file_config,
+                    build_only=True,
+                )
             )
 
         pipeline_steps.append("wait")
@@ -1790,7 +1819,7 @@ def main(argv=None):
     project_pipeline.add_argument("--incompatible_flag", type=str, action="append")
 
     runner = subparsers.add_parser("runner")
-    runner.add_argument("--platform", action="store", choices=list(PLATFORMS))
+    runner.add_argument("--task", action="store")
     runner.add_argument("--file_config", type=str)
     runner.add_argument("--http_config", type=str)
     runner.add_argument("--git_repository", type=str)
@@ -1823,14 +1852,14 @@ def main(argv=None):
         if args.subparsers_name == "bazel_publish_binaries_pipeline":
             configs = fetch_configs(args.http_config, args.file_config)
             print_bazel_publish_binaries_pipeline(
-                configs=configs.get("platforms", None),
+                configs=configs.get("tasks", None),
                 http_config=args.http_config,
                 file_config=args.file_config,
             )
         elif args.subparsers_name == "bazel_downstream_pipeline":
             configs = fetch_configs(args.http_config, args.file_config)
             print_bazel_downstream_pipeline(
-                configs=configs.get("platforms", None),
+                task_configs=configs.get("tasks", None),
                 http_config=args.http_config,
                 file_config=args.file_config,
                 test_incompatible_flags=args.test_incompatible_flags,
@@ -1850,12 +1879,26 @@ def main(argv=None):
             )
         elif args.subparsers_name == "runner":
             configs = fetch_configs(args.http_config, args.file_config)
-            platform_configs = [p for p in configs.get("platforms", []) if p.get("id") == args.platform]
-            config = platform_configs[0] if platform_configs else None
-            platform = config.get("type") if config else None
+            tasks = configs.get("tasks", {})
+            task_config = tasks.get(args.task)
+            if not task_config:
+                raise BuildkiteException(
+                    "No such task '{}' in configuration. Available: {}".format(
+                        args.task, ", ".join(tasks)
+                    )
+                )
+
+            platform = task_config.get("platform")
+            if not platform:
+                raise BuildkiteException(
+                    "Configuration for task '{}' misses required field 'platform'.".format(
+                        args.task
+                    )
+                )
+
             execute_commands(
-                config=config,
-                platform=platform or args.platform,
+                config=task_config,
+                platform=platform,
                 git_repository=args.git_repository,
                 git_commit=args.git_commit,
                 git_repo_location=args.git_repo_location,
