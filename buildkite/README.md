@@ -108,9 +108,121 @@ BAD_BAZEL_COMMIT=91eb3d207714af0ab1e5812252a0f10f40d6e4a8
 
 Note: Bazel commit can only be set to commits after [63453bdbc6b05bd201375ee9e25b35010ae88aab](https://github.com/bazelbuild/bazel/commit/63453bdbc6b05bd201375ee9e25b35010ae88aab), Culprit Finder needs to download Bazel at specific commit, but we didn't prebuilt Bazel binaries before this commit.
 
-## Running Buildifier on CI
+## Configuring a Pipeline
 
-For each pipeline you can enable [Buildifier](https://github.com/bazelbuild/buildtools/tree/master/buildifier) to check whether all BUILD, BUILD.bazel and .bzl files comply with the standard formatting convention. Simply add the following code to the top of the particular pipeline Yaml configuration (either locally in `.bazelci/presubmit.yml` or in https://github.com/bazelbuild/continuous-integration/tree/master/buildkite/pipelines):
+Each pipeline is configured via a Yaml file. This file either lives in `$PROJECT_DIR/.bazelci/presubmit.yml` (for presubmits) or in an arbitrary location whose path or URL is passed to the CI script (as configured in the Buildkite settings of the respective pipeline). We store most postsubmit configurations in https://github.com/bazelbuild/continuous-integration/tree/master/buildkite/pipelines.
+
+### Basic Syntax
+
+The most important piece of the configuration file is the `tasks` dictionary. Each task has a unique key, a platform and usually some build and/or test targets:
+
+```yaml
+---
+tasks:
+  ubuntu_build_only:
+    platform: ubuntu1604
+    build_targets:
+    - "..."
+  windows:
+    platform: windows
+    build_targets:
+    - "..."
+    test_targets:
+    - "..."
+```
+
+If there is exactly one task per platform, you can omit the `platform` field and use its value as task ID instead. The following code snippet is equivalent to the previous one:
+
+```yaml
+---
+tasks:
+  ubuntu1604:
+    build_targets:
+    - "..."
+  windows:
+    build_targets:
+    - "..."
+    test_targets:
+    - "..."
+```
+
+### Advanced Features
+
+There are more advanced mechanisms for configuring individual tasks:
+
+- The CI script can run arbitrary commands before building or testing.
+  Simply add the `batch_commands` (Windows) or `shell_commands` field (all other platforms).
+- The `run_targets` field contains a list of Bazel targets that should be run before building.
+- The `build_flags` and `test_flags` fields contain lists of flags that should be used when building or testing (respectively).
+
+```yaml
+---
+tasks:
+  ubuntu1404:
+    shell_commands:
+    - rm -f obsolete_file
+    run_targets:
+    - "//whatever"
+    build_flags:
+    - "--define=ij_product=clion-latest"
+    build_targets:
+    - "..."
+    test_flags:
+    - "--define=ij_product=clion-latest"
+    test_targets:
+    - ":clwb_tests"
+  windows:
+    batch_commands:
+    - powershell -Command "..."
+    build_targets:
+    - "..."
+```
+
+### Legacy Format
+
+Most existing configuration use the legacy format with a "platforms" dictionary:
+
+```yaml
+---
+platforms:
+  ubuntu1404:
+    build_targets:
+    - "..."
+    test_targets:
+    - "..."
+```
+
+The new format expects a "tasks" dictionary instead:
+
+```yaml
+---
+tasks:
+  arbitrary_id:
+    platform: ubuntu1404
+    build_targets:
+    - "..."
+    test_targets:
+    - "..."
+```
+
+In this case we can omit the `platforms` field since there is a 1:1 mapping between tasks and platforms. Consequently, the format looks almost identical to the old one:
+
+```yaml
+---
+tasks:
+  ubuntu1404:
+    build_targets:
+    - "..."
+    test_targets:
+    - "..."
+```
+
+The CI script still supports the legacy format, too.
+
+
+### Running Buildifier on CI
+
+For each pipeline you can enable [Buildifier](https://github.com/bazelbuild/buildtools/tree/master/buildifier) to check whether all BUILD, BUILD.bazel and .bzl files comply with the standard formatting convention. Simply add the following code to the top of the particular pipeline configuration:
 
 ```yaml
 ---

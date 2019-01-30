@@ -1187,10 +1187,10 @@ def print_project_pipeline(
         git_commit = get_last_green_commit(
             git_repository, DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"]
         )
-    for task_id, task_config in task_configs.items():
+    for task, task_config in task_configs.items():
         step = runner_step(
-            platform=task_config.get("platform"),
-            task_id=task_id,
+            platform=get_platform_for_task(task, task_config),
+            task=task,
             task_name=task_config.get("name"),
             project_name=project_name,
             http_config=http_config,
@@ -1236,9 +1236,16 @@ def print_project_pipeline(
     print(yaml.dump({"steps": pipeline_steps}))
 
 
+def get_platform_for_task(task, task_config):
+    # Most pipeline configurations have exactly one task per platform, which makes it
+    # convenient to use the platform name as task ID. Consequently, we use the
+    # # task ID as platform if there is no explicit "platform" field.
+    return task_config.get("platform", task)
+
+
 def runner_step(
     platform,
-    task_id,
+    task,
     task_name="",
     project_name=None,
     http_config=None,
@@ -1250,7 +1257,7 @@ def runner_step(
     incompatible_flags=None,
 ):
     host_platform = PLATFORMS[platform].get("host-platform", platform)
-    command = python_binary(host_platform) + " bazelci.py runner --task=" + task_id
+    command = python_binary(host_platform) + " bazelci.py runner --task=" + task
     if http_config:
         command += " --http_config=" + http_config
     if file_config:
@@ -1356,13 +1363,12 @@ def bazel_build_step(
     )
 
 
-def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
-    if not configs:
+def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config):
+    if not task_configs:
         raise BuildkiteException("Bazel publish binaries pipeline configuration is empty.")
 
-    configured_platforms = set(
-        t["platform"] for t in configs.values() if should_publish_binaries_for_task(t)
-    )
+    platforms = [get_platform_for_task(t, tc) for t, tc in task_configs.items()]
+    configured_platforms = set(p for p in platforms if should_publish_binaries_for_platform(p))
 
     if len(configs) != len(configured_platforms):
         raise BuildkiteException(
@@ -1385,7 +1391,7 @@ def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
         pipeline_steps.append(
             bazel_build_step(
                 task,
-                task_config.get("platform"),
+                get_platform_for_task(task, task_config),
                 "Bazel",
                 http_config,
                 file_config,
@@ -1406,8 +1412,7 @@ def print_bazel_publish_binaries_pipeline(configs, http_config, file_config):
     print(yaml.dump({"steps": pipeline_steps}))
 
 
-def should_publish_binaries_for_task(task_config):
-    platform = task_config.get("platform")
+def should_publish_binaries_for_platform(platform):
     if platform not in PLATFORMS:
         raise BuildkiteException("Unknown platform '{}'".format(platform))
 
@@ -1497,7 +1502,7 @@ def print_bazel_downstream_pipeline(
     if not task_configs:
         raise BuildkiteException("Bazel downstream pipeline configuration is empty.")
 
-    configured_platforms = set(t.get("platform") for t in task_configs)
+    configured_platforms = set(get_platform_for_task(t, c) for t, c in task_configs.items())
     if configured_platforms != set(PLATFORMS):
         raise BuildkiteException(
             "Bazel downstream pipeline needs to build Bazel on all supported platforms (has=%s vs. want=%s)."
@@ -1515,7 +1520,7 @@ def print_bazel_downstream_pipeline(
             pipeline_steps.append(
                 bazel_build_step(
                     task,
-                    task_config.get("platform"),
+                    get_platform_for_task(task, task_config),
                     "Bazel",
                     http_config,
                     file_config,
@@ -1819,7 +1824,7 @@ def main(argv=None):
     project_pipeline.add_argument("--incompatible_flag", type=str, action="append")
 
     runner = subparsers.add_parser("runner")
-    runner.add_argument("--task", action="store")
+    runner.add_argument("--task", action="store", type=str, default="")
     runner.add_argument("--file_config", type=str)
     runner.add_argument("--http_config", type=str)
     runner.add_argument("--git_repository", type=str)
@@ -1852,7 +1857,7 @@ def main(argv=None):
         if args.subparsers_name == "bazel_publish_binaries_pipeline":
             configs = fetch_configs(args.http_config, args.file_config)
             print_bazel_publish_binaries_pipeline(
-                configs=configs.get("tasks", None),
+                task_configs=configs.get("tasks", None),
                 http_config=args.http_config,
                 file_config=args.file_config,
             )
@@ -1888,7 +1893,7 @@ def main(argv=None):
                     )
                 )
 
-            platform = task_config.get("platform")
+            platform = get_platform_for_task(args.task, task_config.get)
             if not platform:
                 raise BuildkiteException(
                     "Configuration for task '{}' misses required field 'platform'.".format(
