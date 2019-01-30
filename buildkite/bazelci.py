@@ -1893,7 +1893,7 @@ def main(argv=None):
                     )
                 )
 
-            platform = get_platform_for_task(args.task, task_config.get)
+            platform = get_platform_for_task(args.task, task_config)
             if not platform:
                 raise BuildkiteException(
                     "Configuration for task '{}' misses required field 'platform'.".format(
