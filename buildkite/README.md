@@ -154,6 +154,7 @@ There are more advanced mechanisms for configuring individual tasks:
   Simply add the `batch_commands` (Windows) or `shell_commands` field (all other platforms).
 - The `run_targets` field contains a list of Bazel targets that should be run before building.
 - The `build_flags` and `test_flags` fields contain lists of flags that should be used when building or testing (respectively).
+- You can specify a display name in the `name` field. The resulting job will display this value and an emoji that represents the platform.
 
 ```yaml
 ---
@@ -172,6 +173,7 @@ tasks:
     test_targets:
     - ":clwb_tests"
   windows:
+    name: "some :emoji:"
     batch_commands:
     - powershell -Command "..."
     build_targets:
