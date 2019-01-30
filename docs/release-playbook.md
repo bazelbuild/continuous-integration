@@ -28,6 +28,32 @@ Do these steps once per release.
          should be cherry-picked, any remaining issues should become release
          blockers.
 
+### Update the status of GitHub issues for incompatible changes
+
+In the below, _X.Y_ is a release you are cutting.
+
+#### Start new migration windows
+
+1. Search for all [open "incompatible-change" issues that have "migration-ready" labels](https://github.com/bazelbuild/bazel/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Aincompatible-change+label%3Amigration-ready)
+1. For each such issue:
+     1. Add a "migration-_X.Y_" label.
+     2. Add a "breaking-change-_X.Y+w_" label where _w_ is the length of migration window for that particular issue
+     2. Remove "migration-ready" label
+
+#### Review breaking changes
+
+1. Search for issues with label "breaking-change-_X.Y_".
+2. For all such issues that are **closed**, verify that the flag is flipped and release notes mention the breaking change.
+2. For all such issues that are still **open**:
+   1. remove the label "breaking-change-_X.Y_".
+   1. add a label "migration-_X.Y_" and "breaking-change-_X.Y+1_" (this prolongs the migration window by 1 release).
+   1. Reach out to the issue owner.
+   
+#### Prolong ongoing migration windows
+
+1. Search for issues with labels "migration-_X.Y-1_" that are not "breaking-change-_X.Y_"
+2. For all such issues, apply "migration-_X.Y_" label.
+
 ### Create a Candidate
 
 Create candidates with the release.sh script.
