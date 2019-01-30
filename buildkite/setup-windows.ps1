@@ -145,6 +145,10 @@ Remove-Item "c:\temp\visualcppbuildtools_full.exe"
 [Environment]::SetEnvironmentVariable("BAZEL_VC", "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC", "Machine")
 $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 
+# Add registry key required by MSBuild (see https://stackoverflow.com/a/51189977).
+New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0" -Name "VCTargetsPath" `
+    -PropertyType String -Value "`$(MSBuildExtensionsPath)\Microsoft.Cpp\v4.0\V140"
+
 ## Install Visual C++ 2017 Build Tools.
 # Write-Host "Installing Visual C++ 2017 Build Tools..."
 # & choco install microsoft-build-tools
