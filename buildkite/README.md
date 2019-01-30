@@ -221,7 +221,7 @@ tasks:
 
 The CI script still supports the legacy format, too.
 
-## Using a specific version of Bazel
+### Using a specific version of Bazel
 
 The CI uses [Bazelisk](https://github.com/philwo/bazelisk) to support older versions of Bazel, too. You can specify a Bazel version for each pipeline (or even for individual platforms) in the pipeline Yaml configuration:
 

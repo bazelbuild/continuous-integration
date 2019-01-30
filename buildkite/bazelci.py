@@ -338,7 +338,8 @@ EDql
 
 BAZELISK_VERSION_ENV_VAR = "USE_BAZEL_VERSION"
 
-BUILD_LABEL_PATTERN = re.compile(r'^Build label: (\S)$', re.MULTILINE)
+BUILD_LABEL_PATTERN = re.compile(r"^Build label: (\S+)$", re.MULTILINE)
+
 
 class BuildkiteException(Exception):
     """
@@ -474,7 +475,7 @@ def execute_commands(
     test_only,
     monitor_flaky_tests,
     incompatible_flags,
-    bazel_version=None
+    bazel_version=None,
 ):
     build_only = build_only or "test_targets" not in config
     test_only = test_only or "build_targets" not in config
@@ -487,7 +488,9 @@ def execute_commands(
     bazel_version = config.get("bazel") or bazel_version
     if bazel_version:
         if use_bazel_at_commit or use_but:
-            raise BuildkiteException("Cannot specify an explicit Bazel version when either use_bazel_at_commit or use_but is set.")
+            raise BuildkiteException(
+                "Cannot specify an explicit Bazel version when either use_bazel_at_commit or use_but is set."
+            )
 
         os.environ[BAZELISK_VERSION_ENV_VAR] = bazel_version
 
@@ -999,7 +1002,9 @@ def execute_bazel_clean(bazel_binary, platform):
         raise BuildkiteException("bazel clean failed with exit code {}".format(e.returncode))
 
 
-def execute_bazel_build(bazel_version, bazel_binary, platform, flags, targets, bep_file, incompatible_flags):
+def execute_bazel_build(
+    bazel_version, bazel_binary, platform, flags, targets, bep_file, incompatible_flags
+):
     print_expanded_group(":bazel: Build ({})".format(bazel_version))
 
     aggregated_flags = compute_flags(
@@ -1014,7 +1019,14 @@ def execute_bazel_build(bazel_version, bazel_binary, platform, flags, targets, b
 
 
 def execute_bazel_test(
-    bazel_version, bazel_binary, platform, flags, targets, bep_file, monitor_flaky_tests, incompatible_flags
+    bazel_version,
+    bazel_binary,
+    platform,
+    flags,
+    targets,
+    bep_file,
+    monitor_flaky_tests,
+    incompatible_flags,
 ):
     print_expanded_group(":bazel: Test ({})".format(bazel_version))
 
@@ -1115,8 +1127,11 @@ def test_logs_for_status(bep_file, status):
 
 def execute_command(args, shell=False, fail_if_nonzero=True):
     eprint(" ".join(args))
-    process = subprocess.run(args, shell=shell, check=fail_if_nonzero, env=os.environ, stdout=subprocess.PIPE)
+    process = subprocess.run(
+        args, shell=shell, check=fail_if_nonzero, env=os.environ, stdout=subprocess.PIPE
+    )
     return process.stdout.decode("utf-8")
+
 
 def execute_command_background(args):
     eprint(" ".join(args))
@@ -1921,7 +1936,7 @@ def main(argv=None):
                 test_only=args.test_only,
                 monitor_flaky_tests=args.monitor_flaky_tests,
                 incompatible_flags=args.incompatible_flag,
-                bazel_version=configs.get("bazel")
+                bazel_version=configs.get("bazel"),
             )
         elif args.subparsers_name == "publish_binaries":
             publish_binaries()
