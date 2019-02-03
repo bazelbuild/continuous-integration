@@ -336,6 +336,8 @@ CiQAry63sOlZtTNtuOT5DAOLkum0rGof+DOweppZY1aOWbat8zwSTQAL7Hu+rgHSOr6P4S1cu4YG
 EDql
 """.strip()
 
+BUILD_LABEL_PATTERN = re.compile(r"^Build label: (\S+)$", re.MULTILINE)
+
 
 class BuildkiteException(Exception):
     """
@@ -458,7 +460,7 @@ def print_expanded_group(name):
 
 
 def execute_commands(
-    config,
+    task_config,
     platform,
     git_repository,
     git_commit,
@@ -471,9 +473,10 @@ def execute_commands(
     test_only,
     monitor_flaky_tests,
     incompatible_flags,
+    bazel_version=None,
 ):
-    build_only = build_only or "test_targets" not in config
-    test_only = test_only or "build_targets" not in config
+    build_only = build_only or "test_targets" not in task_config
+    test_only = test_only or "build_targets" not in task_config
     if build_only and test_only:
         raise BuildkiteException("build_only and test_only cannot be true at the same time")
 
@@ -498,8 +501,12 @@ def execute_commands(
             bazel_binary = download_bazel_binary(tmpdir, platform)
         else:
             bazel_binary = "bazel"
+            if bazel_version:
+                # This will only work if the bazel binary in $PATH is actually a bazelisk binary
+                # (https://github.com/philwo/bazelisk).
+                os.environ["USE_BAZEL_VERSION"] = bazel_version
 
-        print_bazel_version_info(bazel_binary, platform)
+        bazel_version = print_bazel_version_info(bazel_binary, platform)
 
         print_environment_variables_info()
 
@@ -509,14 +516,14 @@ def execute_commands(
                 eprint(flag + "\n")
 
         if platform == "windows":
-            execute_batch_commands(config.get("batch_commands", None))
+            execute_batch_commands(task_config.get("batch_commands", None))
         else:
-            execute_shell_commands(config.get("shell_commands", None))
+            execute_shell_commands(task_config.get("shell_commands", None))
         execute_bazel_run(
-            bazel_binary, platform, config.get("run_targets", None), incompatible_flags
+            bazel_binary, platform, task_config.get("run_targets", None), incompatible_flags
         )
 
-        if config.get("sauce", None):
+        if task_config.get("sauce", None):
             print_collapsed_group(":saucelabs: Starting Sauce Connect Proxy")
             os.environ["SAUCE_USERNAME"] = "bazel_rules_webtesting"
             os.environ["SAUCE_ACCESS_KEY"] = saucelabs_token()
@@ -542,10 +549,11 @@ def execute_commands(
 
         if not test_only:
             execute_bazel_build(
+                bazel_version,
                 bazel_binary,
                 platform,
-                config.get("build_flags", []),
-                config.get("build_targets", None),
+                task_config.get("build_flags", []),
+                task_config.get("build_targets", None),
                 None,
                 incompatible_flags,
             )
@@ -556,10 +564,11 @@ def execute_commands(
             test_bep_file = os.path.join(tmpdir, "test_bep.json")
             try:
                 execute_bazel_test(
+                    bazel_version,
                     bazel_binary,
                     platform,
-                    config.get("test_flags", []),
-                    config.get("test_targets", None),
+                    task_config.get("test_flags", []),
+                    task_config.get("test_targets", None),
                     test_bep_file,
                     monitor_flaky_tests,
                     incompatible_flags,
@@ -637,7 +646,7 @@ def has_flaky_tests(bep_file):
 
 def print_bazel_version_info(bazel_binary, platform):
     print_collapsed_group(":information_source: Bazel Info")
-    execute_command(
+    version_output = execute_command(
         [bazel_binary]
         + common_startup_flags(platform)
         + ["--nomaster_bazelrc", "--bazelrc=/dev/null", "version"]
@@ -647,6 +656,9 @@ def print_bazel_version_info(bazel_binary, platform):
         + common_startup_flags(platform)
         + ["--nomaster_bazelrc", "--bazelrc=/dev/null", "info"]
     )
+
+    match = BUILD_LABEL_PATTERN.search(version_output)
+    return match.group(1) if match else "unreleased binary"
 
 
 def print_environment_variables_info():
@@ -983,8 +995,10 @@ def execute_bazel_clean(bazel_binary, platform):
         raise BuildkiteException("bazel clean failed with exit code {}".format(e.returncode))
 
 
-def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file, incompatible_flags):
-    print_expanded_group(":bazel: Build")
+def execute_bazel_build(
+    bazel_version, bazel_binary, platform, flags, targets, bep_file, incompatible_flags
+):
+    print_expanded_group(":bazel: Build ({})".format(bazel_version))
 
     aggregated_flags = compute_flags(
         platform, flags, incompatible_flags, bep_file, enable_remote_cache=True
@@ -998,9 +1012,16 @@ def execute_bazel_build(bazel_binary, platform, flags, targets, bep_file, incomp
 
 
 def execute_bazel_test(
-    bazel_binary, platform, flags, targets, bep_file, monitor_flaky_tests, incompatible_flags
+    bazel_version,
+    bazel_binary,
+    platform,
+    flags,
+    targets,
+    bep_file,
+    monitor_flaky_tests,
+    incompatible_flags,
 ):
-    print_expanded_group(":bazel: Test")
+    print_expanded_group(":bazel: Test ({})".format(bazel_version))
 
     aggregated_flags = [
         "--flaky_test_attempts=3",
@@ -1099,7 +1120,16 @@ def test_logs_for_status(bep_file, status):
 
 def execute_command(args, shell=False, fail_if_nonzero=True):
     eprint(" ".join(args))
-    return subprocess.run(args, shell=shell, check=fail_if_nonzero, env=os.environ).returncode
+    process = subprocess.run(
+        args,
+        shell=shell,
+        check=fail_if_nonzero,
+        env=os.environ,
+        stdout=subprocess.PIPE,
+        universal_newlines=True,
+    )
+    eprint(process.stdout)
+    return process.stdout
 
 
 def execute_command_background(args):
@@ -1892,7 +1922,7 @@ def main(argv=None):
             platform = get_platform_for_task(args.task, task_config)
 
             execute_commands(
-                config=task_config,
+                task_config=task_config,
                 platform=platform,
                 git_repository=args.git_repository,
                 git_commit=args.git_commit,
@@ -1905,6 +1935,7 @@ def main(argv=None):
                 test_only=args.test_only,
                 monitor_flaky_tests=args.monitor_flaky_tests,
                 incompatible_flags=args.incompatible_flag,
+                bazel_version=task_config.get("bazel") or configs.get("bazel"),
             )
         elif args.subparsers_name == "publish_binaries":
             publish_binaries()

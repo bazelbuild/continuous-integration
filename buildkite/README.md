@@ -221,6 +221,28 @@ tasks:
 
 The CI script still supports the legacy format, too.
 
+### Using a specific version of Bazel
+
+The CI uses [Bazelisk](https://github.com/philwo/bazelisk) to support older versions of Bazel, too. You can specify a Bazel version for each pipeline (or even for individual platforms) in the pipeline Yaml configuration:
+
+```yaml
+---
+bazel: 0.20.0
+platforms:
+  windows:
+    build_targets:
+    - "..."
+  macos:
+    build_targets:
+    - "..."
+  ubuntu1404:
+    bazel: 0.18.0
+    build_targets:
+    - "..."
+[...]
+```
+In this example the jobs on Windows and MacOS would use 0.20.0, whereas the job on Ubuntu would run 0.18.0.
+Please see the [Bazelisk documentation](https://github.com/philwo/bazelisk/blob/master/README.md#how-does-bazelisk-know-which-version-to-run) for a list of all supported version values.
 
 ### Running Buildifier on CI
 
