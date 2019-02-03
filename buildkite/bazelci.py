@@ -473,7 +473,7 @@ def execute_commands(
     test_only,
     monitor_flaky_tests,
     incompatible_flags,
-    bazel_version=None
+    bazel_version=None,
 ):
     build_only = build_only or "test_targets" not in task_config
     test_only = test_only or "build_targets" not in task_config
@@ -1935,7 +1935,7 @@ def main(argv=None):
                 test_only=args.test_only,
                 monitor_flaky_tests=args.monitor_flaky_tests,
                 incompatible_flags=args.incompatible_flag,
-                bazel_version = task_config.get("bazel") or configs.get("bazel")
+                bazel_version=task_config.get("bazel") or configs.get("bazel"),
             )
         elif args.subparsers_name == "publish_binaries":
             publish_binaries()
