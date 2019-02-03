@@ -110,7 +110,7 @@ Note: Bazel commit can only be set to commits after [63453bdbc6b05bd201375ee9e25
 
 ## Configuring a Pipeline
 
-Each pipeline is configured via a Yaml file. This file either lives in `$PROJECT_DIR/.bazelci/presubmit.yml` (for presubmits) or in an arbitrary location whose path or URL is passed to the CI script (as configured in the Buildkite settings of the respective pipeline). We store most postsubmit configurations in https://github.com/bazelbuild/continuous-integration/tree/master/buildkite/pipelines.
+Each pipeline is configured via a Yaml file. This file either lives in `$PROJECT_DIR/.bazelci/presubmit.yml` (for presubmits) or in an arbitrary location whose path or URL is passed to the CI script (as configured in the Buildkite settings of the respective pipeline). Projects should store the postsubmit configuration in their own repository, but we keep some configurations for downstream projects in https://github.com/bazelbuild/continuous-integration/tree/master/buildkite/pipelines.
 
 ### Basic Syntax
 

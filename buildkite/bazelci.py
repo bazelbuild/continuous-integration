@@ -426,8 +426,15 @@ def fetch_configs(http_url, file_config):
     if file_config is not None and http_url is not None:
         raise BuildkiteException("file_config and http_url cannot be set at the same time")
 
-    return transform_legacy_platform_configs(load_config(http_url, file_config))
+    config = load_config(http_url, file_config)
+    # Legacy mode means that there is exactly one task per platform (e.g. ubuntu1604_nojdk),
+    # which means that we can get away with using the platform name as task ID.
+    # No other updates are needed since get_platform_for_task() falls back to using the
+    # task ID as platform if there is no explicit "platforms" field.
+    if "platforms" in config:
+        config["tasks"] = config.pop("platform")
 
+    return config
 
 def load_config(http_url, file_config):
     if file_config is not None:
@@ -439,22 +446,6 @@ def load_config(http_url, file_config):
             return yaml.load(reader(resp))
     with open(".bazelci/presubmit.yml", "r") as fd:
         return yaml.load(fd)
-
-
-def transform_legacy_platform_configs(config):
-    platforms = config.pop("platforms", None)
-    if not platforms:
-        return config
-
-    # Legacy mode means that there is exactly one task per platform (e.g. ubuntu1604_nojdk), which means that we can keep the key.
-    config["tasks"] = {p: transform_legacy_platform_to_task(p, pc) for p, pc in platforms.items()}
-    return config
-
-
-def transform_legacy_platform_to_task(platform, platform_config):
-    platform_config["name"] = ""
-    platform_config["platform"] = platform
-    return platform_config
 
 
 def print_collapsed_group(name):
@@ -1239,7 +1230,7 @@ def print_project_pipeline(
 def get_platform_for_task(task, task_config):
     # Most pipeline configurations have exactly one task per platform, which makes it
     # convenient to use the platform name as task ID. Consequently, we use the
-    # # task ID as platform if there is no explicit "platform" field.
+    # task ID as platform if there is no explicit "platform" field.
     return task_config.get("platform", task)
 
 
