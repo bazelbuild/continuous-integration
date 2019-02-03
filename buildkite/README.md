@@ -241,7 +241,7 @@ platforms:
     - "..."
 [...]
 ```
-In this example the jobs on Windows and MacOS would use 0.20.0, wherease the job on Ubuntu would run 0.18.0.
+In this example the jobs on Windows and MacOS would use 0.20.0, whereas the job on Ubuntu would run 0.18.0.
 Please see the [Bazelisk documentation](https://github.com/philwo/bazelisk/blob/master/README.md#how-does-bazelisk-know-which-version-to-run) for a list of all supported version values.
 
 ### Running Buildifier on CI

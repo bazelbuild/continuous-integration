@@ -336,8 +336,6 @@ CiQAry63sOlZtTNtuOT5DAOLkum0rGof+DOweppZY1aOWbat8zwSTQAL7Hu+rgHSOr6P4S1cu4YG
 EDql
 """.strip()
 
-BAZELISK_VERSION_ENV_VAR = "USE_BAZEL_VERSION"
-
 BUILD_LABEL_PATTERN = re.compile(r"^Build label: (\S+)$", re.MULTILINE)
 
 
@@ -462,7 +460,7 @@ def print_expanded_group(name):
 
 
 def execute_commands(
-    config,
+    task_config,
     platform,
     git_repository,
     git_commit,
@@ -475,24 +473,15 @@ def execute_commands(
     test_only,
     monitor_flaky_tests,
     incompatible_flags,
-    bazel_version=None,
+    bazel_version=None
 ):
-    build_only = build_only or "test_targets" not in config
-    test_only = test_only or "build_targets" not in config
+    build_only = build_only or "test_targets" not in task_config
+    test_only = test_only or "build_targets" not in task_config
     if build_only and test_only:
         raise BuildkiteException("build_only and test_only cannot be true at the same time")
 
     if use_bazel_at_commit and use_but:
         raise BuildkiteException("use_bazel_at_commit cannot be set when use_but is true")
-
-    bazel_version = config.get("bazel") or bazel_version
-    if bazel_version:
-        if use_bazel_at_commit or use_but:
-            raise BuildkiteException(
-                "Cannot specify an explicit Bazel version when either use_bazel_at_commit or use_but is set."
-            )
-
-        os.environ[BAZELISK_VERSION_ENV_VAR] = bazel_version
 
     tmpdir = tempfile.mkdtemp()
     sc_process = None
@@ -512,6 +501,10 @@ def execute_commands(
             bazel_binary = download_bazel_binary(tmpdir, platform)
         else:
             bazel_binary = "bazel"
+            if bazel_version:
+                # This will only work if the bazel binary in $PATH is actually a bazelisk binary
+                # (https://github.com/philwo/bazelisk).
+                os.environ["USE_BAZEL_VERSION"] = bazel_version
 
         bazel_version = print_bazel_version_info(bazel_binary, platform)
 
@@ -523,14 +516,14 @@ def execute_commands(
                 eprint(flag + "\n")
 
         if platform == "windows":
-            execute_batch_commands(config.get("batch_commands", None))
+            execute_batch_commands(task_config.get("batch_commands", None))
         else:
-            execute_shell_commands(config.get("shell_commands", None))
+            execute_shell_commands(task_config.get("shell_commands", None))
         execute_bazel_run(
-            bazel_binary, platform, config.get("run_targets", None), incompatible_flags
+            bazel_binary, platform, task_config.get("run_targets", None), incompatible_flags
         )
 
-        if config.get("sauce", None):
+        if task_config.get("sauce", None):
             print_collapsed_group(":saucelabs: Starting Sauce Connect Proxy")
             os.environ["SAUCE_USERNAME"] = "bazel_rules_webtesting"
             os.environ["SAUCE_ACCESS_KEY"] = saucelabs_token()
@@ -559,8 +552,8 @@ def execute_commands(
                 bazel_version,
                 bazel_binary,
                 platform,
-                config.get("build_flags", []),
-                config.get("build_targets", None),
+                task_config.get("build_flags", []),
+                task_config.get("build_targets", None),
                 None,
                 incompatible_flags,
             )
@@ -574,8 +567,8 @@ def execute_commands(
                     bazel_version,
                     bazel_binary,
                     platform,
-                    config.get("test_flags", []),
-                    config.get("test_targets", None),
+                    task_config.get("test_flags", []),
+                    task_config.get("test_targets", None),
                     test_bep_file,
                     monitor_flaky_tests,
                     incompatible_flags,
@@ -1128,9 +1121,15 @@ def test_logs_for_status(bep_file, status):
 def execute_command(args, shell=False, fail_if_nonzero=True):
     eprint(" ".join(args))
     process = subprocess.run(
-        args, shell=shell, check=fail_if_nonzero, env=os.environ, stdout=subprocess.PIPE
+        args,
+        shell=shell,
+        check=fail_if_nonzero,
+        env=os.environ,
+        stdout=subprocess.PIPE,
+        universal_newlines=True,
     )
-    return process.stdout.decode("utf-8")
+    eprint(process.stdout)
+    return process.stdout
 
 
 def execute_command_background(args):
@@ -1923,7 +1922,7 @@ def main(argv=None):
             platform = get_platform_for_task(args.task, task_config)
 
             execute_commands(
-                config=task_config,
+                task_config=task_config,
                 platform=platform,
                 git_repository=args.git_repository,
                 git_commit=args.git_commit,
@@ -1936,7 +1935,7 @@ def main(argv=None):
                 test_only=args.test_only,
                 monitor_flaky_tests=args.monitor_flaky_tests,
                 incompatible_flags=args.incompatible_flag,
-                bazel_version=configs.get("bazel"),
+                bazel_version = task_config.get("bazel") or configs.get("bazel")
             )
         elif args.subparsers_name == "publish_binaries":
             publish_binaries()
