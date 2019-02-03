@@ -1237,7 +1237,7 @@ def get_platform_for_task(task, task_config):
 def runner_step(
     platform,
     task,
-    task_name="",
+    task_name=None,
     project_name=None,
     http_config=None,
     file_config=None,
@@ -1302,7 +1302,7 @@ def upload_project_pipeline_step(
     )
 
 
-def create_label(platform, project_name, build_only=False, test_only=False, task_name=""):
+def create_label(platform, project_name, build_only=False, test_only=False, task_name=None):
     if build_only and test_only:
         raise BuildkiteException("build_only and test_only cannot be true at the same time")
     emoji_name = PLATFORMS[platform]["emoji-name"]
