@@ -436,6 +436,7 @@ def fetch_configs(http_url, file_config):
 
     return config
 
+
 def load_config(http_url, file_config):
     if file_config is not None:
         with open(file_config, "r") as fd:
@@ -1305,7 +1306,7 @@ def upload_project_pipeline_step(
 def create_label(platform, project_name, build_only=False, test_only=False, task_name=None):
     if build_only and test_only:
         raise BuildkiteException("build_only and test_only cannot be true at the same time")
-    emoji_name = PLATFORMS[platform]["emoji-name"]
+    platform_display_name = PLATFORMS[platform]["emoji-name"]
 
     if build_only:
         label = "Build "
@@ -1314,7 +1315,11 @@ def create_label(platform, project_name, build_only=False, test_only=False, task
     else:
         label = ""
 
-    platform_label = "{0} on {1}".format(task_name, emoji_name) if task_name else emoji_name
+    platform_label = (
+        "{0} on {1}".format(task_name, platform_display_name)
+        if task_name
+        else platform_display_name
+    )
 
     if project_name:
         label += "{0} ({1})".format(project_name, platform_label)
@@ -1361,7 +1366,7 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
     platforms = [get_platform_for_task(t, tc) for t, tc in task_configs.items()]
     configured_platforms = set(p for p in platforms if should_publish_binaries_for_platform(p))
 
-    if len(configs) != len(configured_platforms):
+    if len(task_configs) != len(configured_platforms):
         raise BuildkiteException(
             "Configuration for Bazel publish binaries pipeline must contain exactly one task per platform."
         )
@@ -1885,12 +1890,6 @@ def main(argv=None):
                 )
 
             platform = get_platform_for_task(args.task, task_config)
-            if not platform:
-                raise BuildkiteException(
-                    "Configuration for task '{}' misses required field 'platform'.".format(
-                        args.task
-                    )
-                )
 
             execute_commands(
                 config=task_config,
