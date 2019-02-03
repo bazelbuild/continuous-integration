@@ -432,7 +432,7 @@ def fetch_configs(http_url, file_config):
     # No other updates are needed since get_platform_for_task() falls back to using the
     # task ID as platform if there is no explicit "platforms" field.
     if "platforms" in config:
-        config["tasks"] = config.pop("platform")
+        config["tasks"] = config.pop("platforms")
 
     return config
 
