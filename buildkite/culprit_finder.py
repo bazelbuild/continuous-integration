@@ -67,7 +67,7 @@ def test_with_bazel_at_commit(
         return_code = bazelci.main(
             [
                 "runner",
-                "--platform=" + platform_name,
+                "--task=" + platform_name,
                 "--http_config=" + http_config,
                 "--git_repo_location=" + git_repo_location,
                 "--use_bazel_at_commit=" + bazel_commit,
