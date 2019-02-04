@@ -92,11 +92,12 @@ def get_failing_jobs(build_info):
             # Recover the platform name from job command
             platform = None
             for s in command.split(" "):
-                if s.startswith("--platform="):
-                    platform = s[len("--platform="):]
+                # TODO(fweikert): Fix this once we use arbitrary task names.
+                if s.startswith("--task="):
+                    platform = s[len("--task="):]
 
             if not platform:
-                raise BuildkiteException("Cannot recongnize platform from job command: %s" % command)
+                raise BuildkiteException("Cannot recognize platform from job command: %s" % command)
 
             failing_jobs.append(
                 {
