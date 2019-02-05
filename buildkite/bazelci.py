@@ -167,6 +167,7 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_gwt/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-gwt",
+        "disabled_reason": "https://github.com/bazelbuild/rules_gwt/issues/19",
     },
     "rules_jsonnet": {
         "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
