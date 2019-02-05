@@ -95,6 +95,7 @@ DOWNSTREAM_PROJECTS = {
     },
     "cloud-robotics core": {
         "git_repository": "https://github.com/googlecloudrobotics/core.git",
+        "pipeline_slug": "cloud-robotics-core",
     },
     "Gerrit": {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
