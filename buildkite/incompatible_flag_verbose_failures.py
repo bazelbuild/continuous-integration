@@ -34,6 +34,10 @@ exosKKaWB0tSRJiPKnv2NPDfEqGul0ZwVjtWeASpugwxxKeLhFhPMcgHMPfndH6j2GEIY6nkKRbP
 uwoRMCwe
 """.strip()
 
+# Buildkite has a max jobs limit at 2000, but that includes jobs already
+# executed by the pipeline. Setting arbitrary lower number to make sure we fit
+# under.
+BUILDKITE_MAX_JOBS_LIMIT = 1500
 
 def buildkite_token():
     return (
@@ -117,19 +121,20 @@ def print_steps_for_failing_jobs(build_number):
     failing_jobs = get_failing_jobs(build_info)
     incompatible_flags = list(bazelci.fetch_incompatible_flags().keys())
     pipeline_steps = []
-    # We can only emit 2000 jobs (buildkite restriction)
     counter = 0
     for incompatible_flag in incompatible_flags:
         for job in failing_jobs:
             counter += 1
-            if counter > 2000:
+            if counter > BUILDKITE_MAX_JOBS_LIMIT:
                 continue
             label = "%s: %s" % (incompatible_flag, job["name"])
             command = list(job["command"])
             command[1] = command[1] + " --incompatible_flag=" + incompatible_flag
             pipeline_steps.append(bazelci.create_step(label, command, job["platform"]))
-    if counter > 2000:
-        bazelci.eprint("Buildkite only allows 2000 jobs to be registered at once, skipping " + str(counter - 2000) + " jobs.")
+    if counter > BUILDKITE_MAX_JOBS_LIMIT:
+        bazelci.eprint("We only allow " + str(BUILDKITE_MAX_JOBS_LIMIT) +
+                       " jobs to be registered at once, skipping " +
+                       str(counter - BUILDKITE_MAX_JOBS_LIMIT) + " jobs.")
     print(yaml.dump({"steps": pipeline_steps}))
 
 
