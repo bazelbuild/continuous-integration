@@ -95,6 +95,7 @@ DOWNSTREAM_PROJECTS = {
     },
     "cloud-robotics core": {
         "git_repository": "https://github.com/googlecloudrobotics/core.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/cloud-robotics-postsubmit.yml",
         "pipeline_slug": "cloud-robotics-core",
     },
     "Gerrit": {
