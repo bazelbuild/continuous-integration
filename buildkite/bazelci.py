@@ -647,7 +647,7 @@ def has_flaky_tests(bep_file):
 
 def print_bazel_version_info(bazel_binary, platform):
     print_collapsed_group(":information_source: Bazel Info")
-    version_output = execute_command(
+    version_output = execute_command_and_get_output(
         [bazel_binary]
         + common_startup_flags(platform)
         + ["--nomaster_bazelrc", "--bazelrc=/dev/null", "version"]
@@ -1119,7 +1119,7 @@ def test_logs_for_status(bep_file, status):
     return targets
 
 
-def execute_command(args, shell=False, fail_if_nonzero=True):
+def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True):
     eprint(" ".join(args))
     process = subprocess.run(
         args,
@@ -1128,11 +1128,16 @@ def execute_command(args, shell=False, fail_if_nonzero=True):
         env=os.environ,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        errors='replace',
+        errors="replace",
         universal_newlines=True,
     )
     eprint(process.stdout)
     return process.stdout
+
+
+def execute_command(args, shell=False, fail_if_nonzero=True):
+    eprint(" ".join(args))
+    return subprocess.run(args, shell=shell, check=fail_if_nonzero, env=os.environ).returncode
 
 
 def execute_command_background(args):
