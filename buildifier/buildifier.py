@@ -65,7 +65,7 @@ def main(argv=None):
     eprint("+++ :female-detective: Looking for BUILD, BUILD.bazel and *.bzl files")
     files = []
     build_bazel_found = False
-    for root, dirnames, filenames in os.walk("."):
+    for root, _, filenames in os.walk("."):
         for filename in filenames:
             if fnmatch.fnmatch(filename, "BUILD.bazel"):
                 build_bazel_found = True
@@ -76,7 +76,7 @@ def main(argv=None):
         eprint(
             "Found BUILD.bazel files in the workspace, thus ignoring BUILD files without suffix."
         )
-        files = [fname for fname in files if not fnmatch(os.path.basename(fname), "BUILD")]
+        files = [fname for fname in files if not fnmatch.fnmatch(os.path.basename(fname), "BUILD")]
     if not files:
         eprint("No files found, exiting.")
         return 0
