@@ -969,11 +969,6 @@ def rbe_flags(original_flags, accept_cached):
         if not found:
             flags += [platform_flag + "=" + value]
 
-    # Allow network access and privileged mode (for sandboxing).
-    flags += [
-        '--host_platform_remote_properties_override=\'properties: { name: "dockerNetwork" value: "standard" } properties: { name: "dockerPrivileged" value: "true" }\''
-    ]
-
     return flags
 
 
