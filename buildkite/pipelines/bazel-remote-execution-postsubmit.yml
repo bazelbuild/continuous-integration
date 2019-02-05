@@ -35,3 +35,5 @@ platforms:
       - "-//src/test/shell/integration:nonincremental_builds_test"
       - "-//src/test/shell/integration:discard_graph_edges_test"
       - "-//src/test/java/com/google/devtools/build/lib:sandbox-tests"
+      # Incompatible with RBE
+      - "-//src/test/shell/integration:linux_sandbox_network_test"
