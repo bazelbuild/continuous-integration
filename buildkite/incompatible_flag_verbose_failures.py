@@ -117,12 +117,19 @@ def print_steps_for_failing_jobs(build_number):
     failing_jobs = get_failing_jobs(build_info)
     incompatible_flags = list(bazelci.fetch_incompatible_flags().keys())
     pipeline_steps = []
+    # We can only emit 2000 jobs (buildkite restriction)
+    counter = 0
     for incompatible_flag in incompatible_flags:
         for job in failing_jobs:
+            counter += 1
+            if counter > 2000:
+                continue
             label = "%s: %s" % (incompatible_flag, job["name"])
             command = list(job["command"])
             command[1] = command[1] + " --incompatible_flag=" + incompatible_flag
             pipeline_steps.append(bazelci.create_step(label, command, job["platform"]))
+    if counter > 2000:
+        bazelci.eprint("Buildkite only allows 2000 jobs to be registered at once, skipping " + str(counter - 2000) + " jobs.")
     print(yaml.dump({"steps": pipeline_steps}))
 
 
