@@ -1,11 +1,27 @@
+#!/usr/bin/env python3
+#
+# Copyright 2019 The Bazel Authors. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
-import sys
 import yaml
 
 from config import CLOUD_PROJECT, DOWNSTREAM_PROJECTS
-from utils import fetch_bazelcipy_command
 from steps import runner_step, create_docker_step, create_step
-from update_last_green_commit import get_last_green_commit, python_binary
+from update_last_green_commit import get_last_green_commit
+from utils import fetch_bazelcipy_command
+from utils import python_binary
 
 
 def is_pull_request():
@@ -86,7 +102,3 @@ def main(
         )
 
     print(yaml.dump({"steps": pipeline_steps}))
-
-
-if __name__ == "__main__":
-    sys.exit(main())

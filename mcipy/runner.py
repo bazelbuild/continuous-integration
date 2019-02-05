@@ -1,3 +1,19 @@
+#!/usr/bin/env python3
+#
+# Copyright 2019 The Bazel Authors. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import base64
 import tempfile
 import os
@@ -6,7 +22,6 @@ import time
 import subprocess
 import stat
 import shutil
-import sys
 import multiprocessing
 import re
 import json
@@ -15,12 +30,14 @@ from urllib.parse import urlparse
 
 from config import CLOUD_PROJECT, PLATFORMS
 from utils import (
+    bazelci_builds_gs_url,
     create_label,
     eprint,
-    is_windows,
     execute_command,
+    gcloud_command,
     gsutil_command,
-    bazelci_builds_gs_url,
+    print_collapsed_group,
+    print_expanded_group,
 )
 
 
@@ -29,18 +46,6 @@ CiQAry63sOlZtTNtuOT5DAOLkum0rGof+DOweppZY1aOWbat8zwSTQAL7Hu+rgHSOr6P4S1cu4YG
 /I1BHsWaOANqUgFt6ip9/CUGGJ1qggsPGXPrmhSbSPqNAIAkpxYzabQ3mfSIObxeBmhKg2dlILA/
 EDql
 """.strip()
-
-
-def print_collapsed_group(name):
-    eprint("\n\n--- {0}\n\n".format(name))
-
-
-def print_expanded_group(name):
-    eprint("\n\n+++ {0}\n\n".format(name))
-
-
-def gcloud_command():
-    return "gcloud.cmd" if is_windows() else "gcloud"
 
 
 def saucelabs_token():
@@ -191,7 +196,7 @@ def execute_batch_commands(commands):
         return
     print_collapsed_group(":batch: Setup (Batch Commands)")
     batch_commands = "&".join(commands)
-    return subprocess.run(batch_commands, shell=True, check=True, env=os.environ).returncode
+    subprocess.run(batch_commands, shell=True, check=True, env=os.environ)
 
 
 def execute_shell_commands(commands):
@@ -344,9 +349,9 @@ def rbe_flags(original_flags, accept_cached):
 def concurrent_test_jobs(platform):
     if platform.startswith("rbe_"):
         return "75"
-    elif platform == "windows":
+    if platform == "windows":
         return "8"
-    elif platform == "macos":
+    if platform == "macos":
         return "8"
     return "12"
 
@@ -367,9 +372,6 @@ def remote_caching_flags(platform):
 
     flags = [
         "--remote_timeout=60",
-        # TODO(ulfjack): figure out how to resolve
-        # https://github.com/bazelbuild/bazel/issues/5382 and as part of that keep
-        # or remove the `--disk_cache=` flag.
         "--disk_cache=",
         "--remote_max_connections=200",
         '--host_platform_remote_properties_override=properties:{name:"platform" value:"%s"}'
@@ -688,7 +690,3 @@ def main(
                 sc_process.kill()
         if tmpdir:
             shutil.rmtree(tmpdir)
-
-
-if __name__ == "__main__":
-    sys.exit(main())

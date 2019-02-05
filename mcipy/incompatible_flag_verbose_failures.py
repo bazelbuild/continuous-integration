@@ -22,8 +22,9 @@ import subprocess
 import sys
 import yaml
 
-import bazelci
-from bazelci import BuildkiteException
+from print_bazel_downstream_pipeline import fetch_incompatible_flags
+from steps import create_step
+from utils import gcloud_command
 
 BUILD_STATUS_API_URL = "https://api.buildkite.com/v2/organizations/bazel/pipelines/bazel-at-release-plus-incompatible-flags/builds/"
 
@@ -38,7 +39,7 @@ def buildkite_token():
     return (
         subprocess.check_output(
             [
-                bazelci.gcloud_command(),
+                gcloud_command(),
                 "kms",
                 "decrypt",
                 "--project",
@@ -95,9 +96,7 @@ def get_failing_jobs(build_info):
                     platform = s[len("--platform=") :]
 
             if not platform:
-                raise BuildkiteException(
-                    "Cannot recongnize platform from job command: %s" % command
-                )
+                raise Exception("Cannot recongnize platform from job command: %s" % command)
 
             failing_jobs.append(
                 {
@@ -112,14 +111,14 @@ def get_failing_jobs(build_info):
 def print_steps_for_failing_jobs(build_number):
     build_info = get_build_info(build_number)
     failing_jobs = get_failing_jobs(build_info)
-    incompatible_flags = list(bazelci.fetch_incompatible_flags().keys())
+    incompatible_flags = list(fetch_incompatible_flags().keys())
     pipeline_steps = []
     for incompatible_flag in incompatible_flags:
         for job in failing_jobs:
             label = "%s: %s" % (incompatible_flag, job["name"])
             command = list(job["command"])
             command[1] = command[1] + " --incompatible_flag=" + incompatible_flag
-            pipeline_steps.append(bazelci.create_step(label, command, job["platform"]))
+            pipeline_steps.append(create_step(label, command, job["platform"]))
     print(yaml.dump({"steps": pipeline_steps}))
 
 
@@ -133,18 +132,10 @@ def main(argv=None):
     parser.add_argument("--build_number", type=str)
 
     args = parser.parse_args(argv)
-    try:
-        if args.build_number:
-            print_steps_for_failing_jobs(args.build_number)
-        else:
-            parser.print_help()
-            return 2
+    if args.build_number:
+        print_steps_for_failing_jobs(args.build_number)
+    else:
+        parser.print_help()
+        return 2
 
-    except BuildkiteException as e:
-        bazelci.eprint(str(e))
-        return 1
     return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
