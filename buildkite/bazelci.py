@@ -1207,16 +1207,20 @@ def print_project_pipeline(
 
     pipeline_steps = []
 
-    if configs.get("buildifier"):
+    # In Bazel Downstream Project pipelines, git_repository and project_name must be specified.
+    is_downstream_project = (use_but or incompatible_flags) and git_repository and project_name
+
+    # Skip Buildifier when we test downstream projects.
+    if not is_downstream_project and configs.get("buildifier"):
         pipeline_steps.append(create_docker_step("Buildifier", image=BUILDIFIER_DOCKER_IMAGE))
 
-    # In Bazel Downstream Project pipelines, git_repository and project_name must be specified,
-    # and we should test the project at the last green commit.
+    # In Bazel Downstream Project pipelines, we should test the project at the last green commit.
     git_commit = None
-    if (use_but or incompatible_flags) and git_repository and project_name:
+    if is_downstream_project:
         git_commit = get_last_green_commit(
             git_repository, DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"]
         )
+
     for task, task_config in task_configs.items():
         step = runner_step(
             platform=get_platform_for_task(task, task_config),
