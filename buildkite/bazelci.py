@@ -48,6 +48,11 @@ CLOUD_PROJECT = (
 )
 
 DOWNSTREAM_PROJECTS = {
+    "Android Studio Plugin": {
+        "git_repository": "https://github.com/bazelbuild/intellij.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/android-studio.yml",
+        "pipeline_slug": "android-studio-plugin",
+    },
     "Android Testing": {
         "git_repository": "https://github.com/googlesamples/android-testing.git",
         "http_config": "https://raw.githubusercontent.com/googlesamples/android-testing/master/bazelci/buildkite-pipeline.yml",
@@ -58,45 +63,70 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/postsubmit.yml",
         "pipeline_slug": "bazel-bazel",
     },
-    "Bazel Remote Execution": {
-        "git_repository": "https://github.com/bazelbuild/bazel.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml",
-        "pipeline_slug": "remote-execution",
+    "Bazel integration testing": {
+        "git_repository": "https://github.com/bazelbuild/bazel-integration-testing.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-integration-testing/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "bazel-integration-testing",
     },
-    "Bazel Watcher": {
-        "git_repository": "https://github.com/bazelbuild/bazel-watcher.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-watcher/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "bazel-watcher",
+    "Bazelisk": {
+        "git_repository": "https://github.com/philwo/bazelisk.git",
+        "http_config": "https://raw.githubusercontent.com/philwo/bazelisk/master/.bazelci/config.yml",
+        "pipeline_slug": "bazelisk",
     },
-    "BUILD_file_generator": {
-        "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "build-file-generator",
+    "Bazel Remote Cache": {
+        "git_repository": "https://github.com/buchgr/bazel-remote.git",
+        "http_config": "https://raw.githubusercontent.com/buchgr/bazel-remote/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "bazel-remote-cache",
     },
-    "bazel-toolchains": {
-        "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-toolchains/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "bazel-toolchains",
-    },
-    "bazel-skylib": {
+    "Bazel skylib": {
         "git_repository": "https://github.com/bazelbuild/bazel-skylib.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-skylib/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-skylib",
     },
-    "buildtools": {
+    "Bazel toolchains": {
+        "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-toolchains/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "bazel-toolchains",
+    },
+    "Bazel watcher": {
+        "git_repository": "https://github.com/bazelbuild/bazel-watcher.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-watcher/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "bazel-watcher",
+    },
+    "Buildfarm": {
+        "git_repository": "https://github.com/bazelbuild/bazel-buildfarm.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-buildfarm/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "buildfarm-male-farmer",
+    },
+    "BUILD file generator": {
+        "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "build-file-generator",
+    },
+    "Buildtools": {
         "git_repository": "https://github.com/bazelbuild/buildtools.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/buildtools/master/.bazelci/presubmit.yml",
         "pipeline_slug": "buildtools",
     },
+    "Cartographer": {
+        "git_repository": "https://github.com/googlecartographer/cartographer.git",
+        "http_config": "https://raw.githubusercontent.com/googlecartographer/cartographer/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "cartographer",
+    },
     "CLion Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/clion-postsubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/clion.yml",
         "pipeline_slug": "clion-plugin",
     },
     "Gerrit": {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml",
         "pipeline_slug": "gerrit",
+    },
+    "gmaven_rules": {
+        "git_repository": "https://github.com/bazelbuild/gmaven_rules.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/gmaven_rules/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "gmaven-rules",
     },
     "Google Logging": {
         "git_repository": "https://github.com/google/glog.git",
@@ -105,15 +135,20 @@ DOWNSTREAM_PROJECTS = {
     },
     "IntelliJ Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/intellij-postsubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/intellij.yml",
         "pipeline_slug": "intellij-plugin",
     },
-    "migration-tooling": {
+    "IntelliJ Plugin Aspect": {
+        "git_repository": "https://github.com/bazelbuild/intellij.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/aspect.yml",
+        "pipeline_slug": "intellij-plugin-aspect",
+    },
+    "Migration tooling": {
         "git_repository": "https://github.com/bazelbuild/migration-tooling.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/migration-tooling/master/.bazelci/presubmit.yml",
         "pipeline_slug": "migration-tooling",
     },
-    "protobuf": {
+    "Protobuf": {
         "git_repository": "https://github.com/google/protobuf.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/protobuf-postsubmit.yml",
         "pipeline_slug": "protobuf",
@@ -122,6 +157,16 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/google/re2.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/re2-postsubmit.yml",
         "pipeline_slug": "re2",
+    },
+    "Remote execution": {
+        "git_repository": "https://github.com/bazelbuild/bazel.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml",
+        "pipeline_slug": "remote-execution",
+    },
+    "rules_android": {
+        "git_repository": "https://github.com/bazelbuild/rules_android.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_android/master/.bazelci/postsubmit.yml",
+        "pipeline_slug": "rules-android",
     },
     "rules_appengine": {
         "git_repository": "https://github.com/bazelbuild/rules_appengine.git",
@@ -132,6 +177,11 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_apple.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_apple/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-apple-darwin",
+    },
+    "rules_cc": {
+        "git_repository": "https://github.com/bazelbuild/rules_cc.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_cc/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "rules-cc",
     },
     "rules_closure": {
         "git_repository": "https://github.com/bazelbuild/rules_closure.git",
@@ -174,15 +224,15 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jsonnet/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-jsonnet",
     },
-    "rules_kotlin": {
-        "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_kotlin/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-kotlin-kotlin",
-    },
     "rules_k8s": {
         "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_k8s/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-k8s-k8s",
+    },
+    "rules_kotlin": {
+        "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_kotlin/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "rules-kotlin-kotlin",
     },
     "rules_nodejs": {
         "git_repository": "https://github.com/bazelbuild/rules_nodejs.git",
@@ -214,6 +264,11 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_scala/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-scala-scala",
     },
+    "rules_swift": {
+        "git_repository": "https://github.com/bazelbuild/rules_swift.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_swift/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "rules-swift-swift",
+    },
     "rules_typescript": {
         "git_repository": "https://github.com/bazelbuild/rules_typescript.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_typescript/master/.bazelci/presubmit.yml",
@@ -224,12 +279,12 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_webtesting/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-webtesting-saucelabs",
     },
-    "skydoc": {
+    "Skydoc": {
         "git_repository": "https://github.com/bazelbuild/skydoc.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/skydoc/master/.bazelci/presubmit.yml",
         "pipeline_slug": "skydoc",
     },
-    "subpar": {
+    "Subpar": {
         "git_repository": "https://github.com/google/subpar.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/subpar-postsubmit.yml",
         "pipeline_slug": "subpar",
@@ -239,7 +294,13 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.yml",
         "pipeline_slug": "tensorflow",
     },
+    "Tulsi": {
+        "git_repository": "https://github.com/bazelbuild/tulsi.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/tulsi/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "tulsi-bazel-darwin",
+    },
 }
+
 
 # A map containing all supported platform names as keys, with the values being
 # the platform name in a human readable format, and a the buildkite-agent's
