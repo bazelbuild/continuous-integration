@@ -1127,6 +1127,8 @@ def execute_command(args, shell=False, fail_if_nonzero=True):
         check=fail_if_nonzero,
         env=os.environ,
         stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        errors='replace',
         universal_newlines=True,
     )
     eprint(process.stdout)
