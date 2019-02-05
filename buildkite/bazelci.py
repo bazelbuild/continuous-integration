@@ -937,11 +937,11 @@ def rbe_flags(original_flags, accept_cached):
         # updated in projects' WORKSPACE files.
         #
         # Toolchain related flags to append at the end of your .bazelrc file.
-        "--host_javabase=@bazel_toolchains//configs/ubuntu16_04_clang/latest:javabase",
-        "--javabase=@bazel_toolchains//configs/ubuntu16_04_clang/latest:javabase",
+        "--host_javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.1:jdk8",
+        "--javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.1:jdk8",
         "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
         "--java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
-        "--crosstool_top=@bazel_toolchains//configs/ubuntu16_04_clang/latest:crosstool_top_default",
+        "--crosstool_top=@bazel_toolchains//configs/ubuntu16_04_clang/1.1/bazel_0.22.0/default:toolchain",
         "--action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1",
     ]
 
@@ -955,10 +955,10 @@ def rbe_flags(original_flags, accept_cached):
     # More about platforms: https://docs.bazel.build/versions/master/platforms.html
     # Don't add platform flags if they are specified already.
     platform_flags = {
-        "--extra_toolchains": "@bazel_toolchains//configs/ubuntu16_04_clang/latest:toolchain_default",
-        "--extra_execution_platforms": "@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
-        "--host_platform": "@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
-        "--platforms": "@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
+        "--extra_toolchains": "@bazel_toolchains//configs/ubuntu16_04_clang/1.1/bazel_0.22.0/cpp:cc-toolchain-clang-x86_64-default",
+        "--extra_execution_platforms": "@bazel_toolchains//configs/ubuntu16_04_clang/1.1:rbe_ubuntu1604",
+        "--host_platform": "@bazel_toolchains//configs/ubuntu16_04_clang/1.1:rbe_ubuntu1604",
+        "--platforms": "@bazel_toolchains//configs/ubuntu16_04_clang/1.1:rbe_ubuntu1604",
     }
     for platform_flag, value in list(platform_flags.items()):
         found = False
@@ -968,6 +968,11 @@ def rbe_flags(original_flags, accept_cached):
                 break
         if not found:
             flags += [platform_flag + "=" + value]
+
+    # Allow network access and privileged mode (for sandboxing).
+    flags += [
+        '--host_platform_remote_properties_override=\'properties: { name: "dockerNetwork" value: "standard" } properties: { name: "dockerPrivileged" value: "true" }\''
+    ]
 
     return flags
 
