@@ -2,32 +2,36 @@
 platforms:
   rbe_ubuntu1604:
     test_flags:
-    - "--test_tag_filters=-slow"
-    # Bazel's tests depend on this feature being disabled. However, because it's
-    # enabled by default in the rbe_ubuntu1604 platform, we cannot simply remove
-    # this flag here, we have to explicitly override it with 0.
-    - "--action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=0"
+      - "--test_tag_filters=-slow"
+      # Enable networking and privileged mode.
+      - "--extra_execution_platforms=//:rbe_ubuntu1604_with_network_and_privileged"
+      - "--host_platform=//:rbe_ubuntu1604_with_network_and_privileged"
+      - "--platforms=//:rbe_ubuntu1604_with_network_and_privileged"
+      # Bazel's tests depend on this feature being disabled. However, because it's
+      # enabled by default in the rbe_ubuntu1604 platform, we cannot simply remove
+      # this flag here, we have to explicitly override it with 0.
+      - "--action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=0"
     test_targets:
-    - "--"
-    - "//scripts/..."
-    - "//src/test/..."
-    # See https://github.com/bazelbuild/bazel/issues/5234
-    - "-//src/test/py/..."
-    - "-//src/test/shell/bazel/android/..."
-    - "-//src/test/shell/bazel:bazel_execute_testlog"
-    - "-//src/test/shell/bazel:bazel_repository_cache_test"
-    - "-//src/test/shell/bazel:bazel_spawnstats_test"
-    - "-//src/test/shell/bazel:external_integration_test"
-    - "-//src/test/shell/bazel:external_patching_test"
-    - "-//src/test/shell/bazel:maven_test"
-    - "-//src/test/shell/integration:java_integration_test"
-    - "-//src/test/java/com/google/devtools/build/android/..."
-    - "-//src/test/java/com/google/devtools/build/lib/shell:CommandUsingLinuxSandboxTest"
-    # Flaky tests on RBE
-    - "-//src/test/java/com/google/devtools/build/lib:remote-tests"
-    - "-//src/test/shell/bazel:bazel_proto_library_test"
-    - "-//src/test/shell/integration:discard_analysis_cache_test"
-    - "-//src/test/shell/integration:execution_phase_tests"
-    - "-//src/test/shell/integration:nonincremental_builds_test"
-    - "-//src/test/shell/integration:discard_graph_edges_test"
-    - "-//src/test/java/com/google/devtools/build/lib:sandbox-tests"
+      - "--"
+      - "//scripts/..."
+      - "//src/test/..."
+      # See https://github.com/bazelbuild/bazel/issues/5234
+      - "-//src/test/py/..."
+      - "-//src/test/shell/bazel/android/..."
+      - "-//src/test/shell/bazel:bazel_execute_testlog"
+      - "-//src/test/shell/bazel:bazel_repository_cache_test"
+      - "-//src/test/shell/bazel:bazel_spawnstats_test"
+      - "-//src/test/shell/bazel:external_integration_test"
+      - "-//src/test/shell/bazel:external_patching_test"
+      - "-//src/test/shell/bazel:maven_test"
+      - "-//src/test/shell/integration:java_integration_test"
+      - "-//src/test/java/com/google/devtools/build/android/..."
+      - "-//src/test/java/com/google/devtools/build/lib/shell:CommandUsingLinuxSandboxTest"
+      # Flaky tests on RBE
+      - "-//src/test/java/com/google/devtools/build/lib:remote-tests"
+      - "-//src/test/shell/bazel:bazel_proto_library_test"
+      - "-//src/test/shell/integration:discard_analysis_cache_test"
+      - "-//src/test/shell/integration:execution_phase_tests"
+      - "-//src/test/shell/integration:nonincremental_builds_test"
+      - "-//src/test/shell/integration:discard_graph_edges_test"
+      - "-//src/test/java/com/google/devtools/build/lib:sandbox-tests"
