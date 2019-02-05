@@ -80,6 +80,9 @@ def get_failing_jobs(build_info):
     for job in build_info["jobs"]:
         if "state" in job and job["state"] == "failed":
             command = job["command"]
+            if not command:
+                print("'command' field not found in the job: " + str(job))
+                continue
             # Skip if the job is not a runner job
             if command.find("bazelci.py runner") == -1:
                 continue
