@@ -118,7 +118,7 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/clion.yml",
         "pipeline_slug": "clion-plugin",
     },
-    "cloud-robotics core": {
+    "Cloud Robotics Core": {
         "git_repository": "https://github.com/googlecloudrobotics/core.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/cloud-robotics-postsubmit.yml",
         "pipeline_slug": "cloud-robotics-core",
