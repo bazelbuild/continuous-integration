@@ -573,6 +573,8 @@ def execute_commands(
                 # (https://github.com/philwo/bazelisk).
                 os.environ["USE_BAZEL_VERSION"] = bazel_version
 
+        os.environ.update(task_config.get("environment", {}))
+
         bazel_version = print_bazel_version_info(bazel_binary, platform)
 
         print_environment_variables_info()
