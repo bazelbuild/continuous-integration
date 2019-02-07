@@ -148,11 +148,6 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/aspect.yml",
         "pipeline_slug": "intellij-plugin-aspect",
     },
-    "Migration tooling": {
-        "git_repository": "https://github.com/bazelbuild/migration-tooling.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/migration-tooling/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "migration-tooling",
-    },
     "Protobuf": {
         "git_repository": "https://github.com/google/protobuf.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/protobuf-postsubmit.yml",
