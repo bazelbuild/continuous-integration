@@ -1134,8 +1134,9 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
     git_commit = None
     if (use_but or incompatible_flags) and git_repository and project_name:
         git_commit = get_last_green_commit(git_repository, DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"])
-    for platform in platform_configs:
-        step = runner_step(platform, project_name, http_config, file_config,
+    for name, config in platform_configs.items():
+        platform = config["platform"]
+        step = runner_step(name, platform, project_name, http_config, file_config,
                            git_repository, git_commit, monitor_flaky_tests, use_but, incompatible_flags)
         pipeline_steps.append(step)
 
@@ -1167,10 +1168,12 @@ def print_project_pipeline(platform_configs, project_name, http_config, file_con
 
     print(yaml.dump({"steps": pipeline_steps}))
 
-def runner_step(platform, project_name=None, http_config=None, file_config=None,
+def runner_step(name, platform, project_name=None, http_config=None, file_config=None,
                 git_repository=None, git_commit=None, monitor_flaky_tests=False, use_but=False, incompatible_flags=None):
     host_platform = PLATFORMS[platform].get("host-platform", platform)
-    command = python_binary(host_platform) + " bazelci.py runner --platform=" + platform
+    command = python_binary(host_platform)\
+              + " bazelci.py runner --platform=" + platform\
+              + " --task=" + name
     if http_config:
         command += " --http_config=" + http_config
     if file_config:
@@ -1667,8 +1670,7 @@ def main(argv=None):
                                             test_incompatible_flags=args.test_incompatible_flags,
                                             test_disabled_projects=args.test_disabled_projects)
         elif args.subparsers_name == "project_pipeline":
-            configs = fetch_configs(args.http_config, args.file_config)
-            print_project_pipeline(platform_configs=configs.get("platforms", None),
+            print_project_pipeline(platform_configs=get_tasks(args),
                                    project_name=args.project_name,
                                    http_config=args.http_config,
                                    file_config=args.file_config,
@@ -1679,9 +1681,9 @@ def main(argv=None):
         elif args.subparsers_name == "runner":
             tasks = get_tasks(args)
             # there can be multiple tasks for a platform
-            for name in tasks:
-                task = tasks[name]
-                if hasattr(task, "platform") and task.platform != args.platform:
+            for name, task in tasks.items():
+                if task.platform != args.platform or\
+                  args.task and args.task != name:
                     continue
                 execute_commands(config=task,
                              platform=args.platform,
@@ -1720,6 +1722,8 @@ def get_tasks(args):
     configs = fetch_configs(args.http_config, args.file_config)
     tasks = configs.get("platforms", None)
     if tasks:
+        for platform, task in tasks.items():
+            task["platform"] = platform
         return tasks
     return configs.get("tasks", None)
 
