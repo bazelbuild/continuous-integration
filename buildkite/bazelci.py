@@ -570,6 +570,13 @@ def execute_commands(
 
         os.environ.update(task_config.get("environment", {}))
 
+        # Allow the config to override the current working directory.
+        required_prefix = os.getcwd()
+        requested_working_dir = os.path.abspath(task_config.get("working_directory", ""))
+        if os.path.commonpath([required_prefix, requested_working_dir]) != required_prefix:
+            raise BuildkiteException("working_directory refers to a path outside the workspace")
+        os.chdir(requested_working_dir)
+
         bazel_version = print_bazel_version_info(bazel_binary, platform)
 
         print_environment_variables_info()
@@ -583,6 +590,7 @@ def execute_commands(
             execute_batch_commands(task_config.get("batch_commands", None))
         else:
             execute_shell_commands(task_config.get("shell_commands", None))
+
         execute_bazel_run(
             bazel_binary, platform, task_config.get("run_targets", None), incompatible_flags
         )
