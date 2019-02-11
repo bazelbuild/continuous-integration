@@ -570,6 +570,13 @@ def execute_commands(
 
         os.environ.update(task_config.get("environment", {}))
 
+        # Allow the config to override the current working directory.
+        required_prefix = os.getcwd()
+        requested_working_dir = os.path.abspath(task_config.get("working_directory", ""))
+        if os.path.commonpath([required_prefix, requested_working_dir]) != required_prefix:
+            raise BuildkiteException("working_directory refers to a path outside the workspace")
+        os.chdir(requested_working_dir)
+
         bazel_version = print_bazel_version_info(bazel_binary, platform)
 
         print_environment_variables_info()
@@ -583,6 +590,7 @@ def execute_commands(
             execute_batch_commands(task_config.get("batch_commands", None))
         else:
             execute_shell_commands(task_config.get("shell_commands", None))
+
         execute_bazel_run(
             bazel_binary, platform, task_config.get("run_targets", None), incompatible_flags
         )
@@ -636,7 +644,6 @@ def execute_commands(
                     test_bep_file,
                     monitor_flaky_tests,
                     incompatible_flags,
-                    task_config.get("working_directory"),
                 )
                 if has_flaky_tests(test_bep_file):
                     if monitor_flaky_tests:
@@ -1085,7 +1092,6 @@ def execute_bazel_test(
     bep_file,
     monitor_flaky_tests,
     incompatible_flags,
-    cwd=None,
 ):
     print_expanded_group(":bazel: Test ({})".format(bazel_version))
 
@@ -1103,8 +1109,7 @@ def execute_bazel_test(
 
     try:
         execute_command(
-            [bazel_binary] + common_startup_flags(platform) + ["test"] + aggregated_flags + targets,
-            cwd=cwd,
+            [bazel_binary] + common_startup_flags(platform) + ["test"] + aggregated_flags + targets
         )
     except subprocess.CalledProcessError as e:
         raise BuildkiteException("bazel test failed with exit code {}".format(e.returncode))
@@ -1201,16 +1206,9 @@ def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True):
     return process.stdout
 
 
-def execute_command(args, shell=False, fail_if_nonzero=True, cwd=None):
+def execute_command(args, shell=False, fail_if_nonzero=True):
     eprint(" ".join(args))
-
-    wd = None
-    if cwd:
-        wd = os.path.join(os.getcwd(), cwd)
-
-    return subprocess.run(
-        args, shell=shell, check=fail_if_nonzero, env=os.environ, cwd=wd
-    ).returncode
+    return subprocess.run(args, shell=shell, check=fail_if_nonzero, env=os.environ).returncode
 
 
 def execute_command_background(args):
