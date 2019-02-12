@@ -890,7 +890,7 @@ def remote_caching_flags(platform):
         "ubuntu1804_java10",
         "ubuntu1804_java11",
         "macos",
-        # "windows",
+        "windows",
     ]:
         return []
 
