@@ -39,6 +39,7 @@ uwoRMCwe
 # under.
 BUILDKITE_MAX_JOBS_LIMIT = 1500
 
+
 def buildkite_token():
     return (
         subprocess.check_output(
@@ -100,24 +101,34 @@ def get_failing_jobs(build_info):
             flags = get_flags_from_command(command)
             task = flags.get("task")
             if not task:
-                raise BuildkiteException("The following command has no --task argument: %s." % command)
+                raise BuildkiteException(
+                    "The following command has no --task argument: %s." % command
+                )
 
             # Fetch the original job config to retrieve the platform name.
-            job_config = bazelci.load_config(http_url=flags.get("http_config"), file_config=flags.get("file_config"))
+            job_config = bazelci.load_config(
+                http_url=flags.get("http_config"), file_config=flags.get("file_config")
+            )
 
             # The config can either contain a "tasks" dict (new format) or a "platforms" dict (legacy format).
             all_tasks = job_config.get("tasks", job_config.get("platforms"))
             if not all_tasks:
-                raise BuildkiteException("Malformed configuration: No 'tasks' or 'platforms' entry found.")
+                raise BuildkiteException(
+                    "Malformed configuration: No 'tasks' or 'platforms' entry found."
+                )
 
             task_config = all_tasks.get(task)
             if not task_config:
-                raise BuildkiteException("Configuration does not contain an entry for task '%s'" % task)
+                raise BuildkiteException(
+                    "Configuration does not contain an entry for task '%s'" % task
+                )
 
             # Shortcut: Users can skip the "platform" field if its value equals the task name.
             platform = task_config.get("platform", task)
             if not platform:
-                raise BuildkiteException("Cannot determine platform based on job command: %s" % command)
+                raise BuildkiteException(
+                    "Cannot determine platform based on job command: %s" % command
+                )
 
             failing_jobs.append(
                 {
@@ -138,6 +149,7 @@ def get_flags_from_command(command):
 
     return flags
 
+
 def print_steps_for_failing_jobs(build_number):
     build_info = get_build_info(build_number)
     failing_jobs = get_failing_jobs(build_info)
@@ -154,9 +166,13 @@ def print_steps_for_failing_jobs(build_number):
             command[1] = command[1] + " --incompatible_flag=" + incompatible_flag
             pipeline_steps.append(bazelci.create_step(label, command, job["platform"]))
     if counter > BUILDKITE_MAX_JOBS_LIMIT:
-        bazelci.eprint("We only allow " + str(BUILDKITE_MAX_JOBS_LIMIT) +
-                       " jobs to be registered at once, skipping " +
-                       str(counter - BUILDKITE_MAX_JOBS_LIMIT) + " jobs.")
+        bazelci.eprint(
+            "We only allow "
+            + str(BUILDKITE_MAX_JOBS_LIMIT)
+            + " jobs to be registered at once, skipping "
+            + str(counter - BUILDKITE_MAX_JOBS_LIMIT)
+            + " jobs."
+        )
     print(yaml.dump({"steps": pipeline_steps}))
 
 
