@@ -96,15 +96,28 @@ def get_failing_jobs(build_info):
                 [i for i in command.split(" ") if not i.startswith("--incompatible_flag")]
             )
 
-            # Recover the platform name from job command
-            platform = None
-            for s in command.split(" "):
-                # TODO(fweikert): Fix this once we use arbitrary task names.
-                if s.startswith("--task="):
-                    platform = s[len("--task="):]
+            # Recover the task name from job command
+            flags = get_flags_from_command(command)
+            task = flags.get("task")
+            if not task:
+                raise BuildkiteException("The following command has no --task argument: %s." % command)
 
+            # Fetch the original job config to retrieve the platform name.
+            job_config = bazelci.load_config(http_url=flags.get("http_config"), file_config=flags.get("file_config"))
+
+            # The config can either contain a "tasks" dict (new format) or a "platforms" dict (legacy format).
+            all_tasks = job_config.get("tasks", job_config.get("platforms"))
+            if not all_tasks:
+                raise BuildkiteException("Malformed configuration: No 'tasks' or 'platforms' entry found.")
+
+            task_config = all_tasks.get(task)
+            if not task_config:
+                raise BuildkiteException("Configuration does not contain an entry for task '%s'" % task)
+
+            # Shortcut: Users can skip the "platform" field if its value equals the task name.
+            platform = task_config.get("platform", task)
             if not platform:
-                raise BuildkiteException("Cannot recognize platform from job command: %s" % command)
+                raise BuildkiteException("Cannot determine platform based on job command: %s" % command)
 
             failing_jobs.append(
                 {
@@ -115,6 +128,15 @@ def get_failing_jobs(build_info):
             )
     return failing_jobs
 
+
+def get_flags_from_command(command):
+    flags = {}
+    for entry in command.split(" "):
+        if entry.startswith("--") and "=" in entry:
+            key, _, value = entry[2:].partition("=")
+            flags[key] = value
+
+    return flags
 
 def print_steps_for_failing_jobs(build_number):
     build_info = get_build_info(build_number)
