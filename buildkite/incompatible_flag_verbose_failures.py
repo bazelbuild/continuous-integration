@@ -124,12 +124,7 @@ def get_failing_jobs(build_info):
                 )
 
             # Shortcut: Users can skip the "platform" field if its value equals the task name.
-            platform = task_config.get("platform", task)
-            if not platform:
-                raise BuildkiteException(
-                    "Cannot determine platform based on job command: %s" % command
-                )
-
+            platform = task_config.get("platform") or task
             failing_jobs.append(
                 {
                     "name": job["name"],
