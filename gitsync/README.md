@@ -9,7 +9,7 @@ $ docker push gcr.io/bazel-public/gitsync
 
 ```
 $ gcloud compute instances delete --project bazel-public gitsync
-$ gcloud beta compute instances create-with-container \
+$ gcloud compute instances create-with-container \
     --project bazel-public \
     --boot-disk-size 200GB \
     --container-image gcr.io/bazel-public/gitsync:latest \
