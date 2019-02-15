@@ -212,18 +212,18 @@ Write-Host "Installing Sauce Connect Proxy..."
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Get the latest release version number of Bazel.
-Write-Host "Grabbing latest Bazel version number from GitHub..."
-$url = "https://github.com/bazelbuild/bazel/releases/latest"
+Write-Host "Grabbing latest Bazelisk version number from GitHub..."
+$url = "https://github.com/philwo/bazelisk/releases/latest"
 $req = [system.Net.HttpWebRequest]::Create($url)
 $res = $req.getresponse()
 $res.Close()
-$bazel_version = $res.ResponseUri.AbsolutePath.TrimStart("/bazelbuild/bazel/releases/tag/")
+$bazelisk_version = $res.ResponseUri.AbsolutePath.TrimStart("/philwo/bazelisk/releases/tag/")
 
-## Download the latest Bazel.
-Write-Host "Downloading Bazel ${bazel_version}..."
-$bazel_url = "https://releases.bazel.build/${bazel_version}/release/bazel-${bazel_version}-windows-x86_64.exe"
+## Download the latest Bazelisk.
+Write-Host "Downloading Bazelisk ${bazelisk_version}..."
+$bazelisk_url = "https://github.com/philwo/bazelisk/releases/download/${bazelisk_version}/bazelisk-windows-amd64.exe"
 New-Item "c:\bazel" -ItemType "directory" -Force
-(New-Object Net.WebClient).DownloadFile($bazel_url, "c:\bazel\bazel.exe")
+(New-Object Net.WebClient).DownloadFile($bazelisk_url, "c:\bazel\bazel.exe")
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";c:\bazel"
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
