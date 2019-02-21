@@ -548,6 +548,9 @@ def execute_commands(
     tmpdir = tempfile.mkdtemp()
     sc_process = None
     try:
+        # If the CI worker runs Bazelisk, we need to forward all required env variables to the test.
+        # Otherwise any integration test that invokes Bazel (=Bazelisk in this case) will fail.
+        test_env_vars = ["HOME"]
         if git_repo_location:
             os.chdir(git_repo_location)
         elif git_repository:
@@ -567,6 +570,7 @@ def execute_commands(
                 # This will only work if the bazel binary in $PATH is actually a bazelisk binary
                 # (https://github.com/philwo/bazelisk).
                 os.environ["USE_BAZEL_VERSION"] = bazel_version
+                test_env_vars.append("USE_BAZEL_VERSION")
 
         os.environ.update(task_config.get("environment", {}))
 
@@ -633,13 +637,17 @@ def execute_commands(
                 upload_bazel_binary(platform)
 
         if not build_only:
+            test_flags = task_config.get("test_flags", [])
+            if test_env_vars:
+                test_flags += ["--test_env={}".format(v) for v in test_env_vars]
+
             test_bep_file = os.path.join(tmpdir, "test_bep.json")
             try:
                 execute_bazel_test(
                     bazel_version,
                     bazel_binary,
                     platform,
-                    task_config.get("test_flags", []),
+                    test_flags,
                     task_config.get("test_targets", None),
                     test_bep_file,
                     monitor_flaky_tests,
