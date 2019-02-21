@@ -548,7 +548,7 @@ def execute_commands(
     tmpdir = tempfile.mkdtemp()
     sc_process = None
     try:
-        pass_bazelisk_env_vars = False
+        pass_bazelisk_env_vars_to_test = False
         if git_repo_location:
             os.chdir(git_repo_location)
         elif git_repository:
