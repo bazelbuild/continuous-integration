@@ -548,7 +548,9 @@ def execute_commands(
     tmpdir = tempfile.mkdtemp()
     sc_process = None
     try:
-        test_env_vars = []
+        # If the CI worker runs Bazelisk, we need to forward all required env variables to the test.
+        # Otherwise any integration test that invokes Bazel (=Bazelisk in this case) will fail.
+        test_env_vars = ["HOME"]
         if git_repo_location:
             os.chdir(git_repo_location)
         elif git_repository:
@@ -568,9 +570,7 @@ def execute_commands(
                 # This will only work if the bazel binary in $PATH is actually a bazelisk binary
                 # (https://github.com/philwo/bazelisk).
                 os.environ["USE_BAZEL_VERSION"] = bazel_version
-                # If the CI worker runs Bazelisk, we need to forward all required env variables to the test.
-                # Otherwise any integration test that invokes Bazel (=Bazelisk in this case) will fail.
-                test_env_vars = ["HOME", "USE_BAZEL_VERSION"]
+                test_env_vars.append("USE_BAZEL_VERSION")
 
         os.environ.update(task_config.get("environment", {}))
 
