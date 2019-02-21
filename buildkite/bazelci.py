@@ -640,8 +640,8 @@ def execute_commands(
             # Otherwise any integration test that invokes Bazel (=Bazelisk in this case) will fail.
             if pass_bazelisk_env_vars_to_test:
                 test_flags += [
-                    "--test_env=HOME={}".format(os.environ.get("HOME")),
-                    "--test_env=USE_BAZEL_VERSION={}".format(bazel_version),
+                    create_test_env_flag("HOME"),
+                    create_test_env_flag("USE_BAZEL_VERSION"),
                 ]
 
             test_bep_file = os.path.join(tmpdir, "test_bep.json")
@@ -684,6 +684,10 @@ def execute_commands(
                 sc_process.kill()
         if tmpdir:
             shutil.rmtree(tmpdir)
+
+
+def create_test_env_flag(env_var_name):
+    return "--test_env={}={}".format(env_var_name, os.environ.get(env_var_name)),
 
 
 def tests_with_status(bep_file, status):
