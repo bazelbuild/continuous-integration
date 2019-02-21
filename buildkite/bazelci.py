@@ -687,7 +687,7 @@ def execute_commands(
 
 
 def create_test_env_flag(env_var_name):
-    return "--test_env={}={}".format(env_var_name, os.environ.get(env_var_name)),
+    return "--test_env={}".format(env_var_name),
 
 
 def tests_with_status(bep_file, status):
