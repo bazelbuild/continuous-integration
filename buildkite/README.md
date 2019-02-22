@@ -1,5 +1,9 @@
 # Bazel Continuous Integration
 
+<aside class="success">
+  Want to test your project on Bazel CI? Simply file a request via [this link](https://github.com/bazelbuild/continuous-integration/issues/new?template=adding-your-project-to-bazel-ci.md)!
+</aside>
+
 Bazel uses [Buildkite] for continuous integration. The user interface and the orchestration of CI
 builds is fully managed by Buildkite, but Bazel brings its own CI machines. The [buildkite folder]
 contains all the scripts and configuration files necessary to setup Bazel's CI on Buildkite.
