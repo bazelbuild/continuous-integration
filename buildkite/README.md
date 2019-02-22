@@ -262,7 +262,7 @@ As a consequence, every future build for this pipeline will contain an additiona
 
 Some projects may contain one or more `WORKSPACE` files in subdirectories, in addition to their top-level `WORKSPACE` file.
 All of these workspaces can be tested in a single pipeline by using the `working_directory` task property.
-Consider the configuration for a project that contains a second `WORKSPACE` file in the `examples/` directory:
+Consider the configuration for a project that contains a second `WORKSPACE` file in the `examples_dir/` directory:
 
 ```yaml
 ---
@@ -275,7 +275,7 @@ tasks:
   examples:
     name: Examples
     platform: ubuntu1804
-    working_directory: examples
+    working_directory: examples_dir
     test_targets:
     - //...
 ```
