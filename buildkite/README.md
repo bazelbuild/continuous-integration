@@ -257,3 +257,25 @@ buildifier: true
 ```
 
 As a consequence, every future build for this pipeline will contain an additional "Buildifier" step that runs the latest version of Buildifier in "lint" mode.
+
+### Using multiple Workspaces in a single Pipeline
+
+Some projects may contain one or more `WORKSPACE` files in subdirectories, in addition to their top-level `WORKSPACE` file.
+All of these workspaces can be tested in a single pipeline by using the `working_directory` task property.
+Consider the configuration for a project that contains a second `WORKSPACE` file in the `examples/` directory:
+
+```yaml
+---
+tasks:
+  production_code:
+    name: "My Project"
+    platform: ubuntu1804
+    test_targets:
+    - //...
+  examples:
+    name: Examples
+    platform: ubuntu1804
+    working_directory: examples
+    test_targets:
+    - //...
+```
