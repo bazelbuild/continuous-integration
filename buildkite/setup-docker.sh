@@ -96,8 +96,9 @@ EOF
 
 ### Setup Bazelisk.
 # TODO: We can remove this, once we run the "Setup" step inside a Docker container, too.
+# TODO: Automatically fetch the latest release.
 {
-  curl -Lo /usr/local/bin/bazel https://raw.githubusercontent.com/philwo/bazelisk/master/bazelisk.py
+  curl -Lo /usr/local/bin/bazel https://github.com/philwo/bazelisk/releases/download/v0.0.1/bazelisk-linux-amd64
   chown root:root /usr/local/bin/bazel
   chmod 0755 /usr/local/bin/bazel
 }
