@@ -641,8 +641,9 @@ def execute_commands(
             if test_env_vars:
                 test_flags += ["--test_env={}".format(v) for v in test_env_vars]
 
-            if not is_windows():
-                test_flags.append(get_sandbox_flag_for_bazelisk_cache(platform))
+            # TODO(https://github.com/bazelbuild/continuous-integration/issues/498): figure out when to add the flag.
+            # if not is_windows():
+            #    test_flags.append(get_sandbox_flag_for_bazelisk_cache(platform))
 
             test_bep_file = os.path.join(tmpdir, "test_bep.json")
             try:
