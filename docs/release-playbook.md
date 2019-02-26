@@ -255,6 +255,13 @@ As of November 2016, this is done by an external contributor,
 new release coming out.
 
 
+### Updating the Scoop pakage
+
+As of February 2019, this is done by an external contributor,
+[@excitoon](https://github.com/excitoon) on GitHub. [Ping him](http://telegram.me/excitoon) when there's a
+new release coming out.
+
+
 ### Updating the Fedora package
 
 This is done by an external contributor, [@vbatts](https://github.com/vbatts) on
