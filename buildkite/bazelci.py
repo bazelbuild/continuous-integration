@@ -640,9 +640,15 @@ def execute_commands(
             if test_env_vars:
                 test_flags += ["--test_env={}".format(v) for v in test_env_vars]
 
-            # TODO(https://github.com/bazelbuild/continuous-integration/issues/498): figure out when to add the flag.
-            # if not is_windows():
-            #    test_flags.append(get_sandbox_flag_for_bazelisk_cache(platform))
+            if not is_windows():
+                # On platforms that support sandboxing (Linux, MacOS) we have
+                # to allow access to Bazelisk's cache directory.
+                # However, the flag requires the directory to exist,
+                # so we create it here in order to not crash when a test
+                # does not invoke Bazelisk.
+                bazelisk_cache_dir = get_bazelisk_cache_directory(platform)
+                os.makedirs(bazelisk_cache_dir, mode=0o755, exist_ok=True)
+                test_flags.append("--sandbox_writable_path={}".format(bazelisk_cache_dir))
 
             test_bep_file = os.path.join(tmpdir, "test_bep.json")
             try:
@@ -686,12 +692,12 @@ def execute_commands(
             shutil.rmtree(tmpdir)
 
 
-def get_sandbox_flag_for_bazelisk_cache(platform):
-    # Makes Bazelisk's cache directory writable even if sandboxing is enabled.
-    # This function should not be called on Windows since there is no sandboxing.
-    # The path relies on the behavior of Go's os.UserCacheDir() and of the Go version of Bazelisk.
+def get_bazelisk_cache_directory(platform):
+    # The path relies on the behavior of Go's os.UserCacheDir()
+    # and of the Go version of Bazelisk.
     dir = "Library/Caches" if platform == "macos" else ".cache"
-    return "--sandbox_writable_path={}".format(os.path.join(os.environ.get("HOME"), dir, "bazelisk"))
+    return os.path.join(os.environ.get("HOME"), dir, "bazelisk")
+
 
 def tests_with_status(bep_file, status):
     return set(label for label, _ in test_logs_for_status(bep_file, status=status))
