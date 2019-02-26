@@ -647,7 +647,7 @@ def execute_commands(
                 # so we create it here in order to not crash when a test
                 # does not invoke Bazelisk.
                 bazelisk_cache_dir = get_bazelisk_cache_directory(platform)
-                os.makedirs(bazelisk_cache_dir, exist_ok=True)
+                os.makedirs(bazelisk_cache_dir, mode=0o755, exist_ok=True)
                 test_flags.append("--sandbox_writable_path={}".format(bazelisk_cache_dir))
 
             test_bep_file = os.path.join(tmpdir, "test_bep.json")
