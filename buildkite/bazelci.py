@@ -641,7 +641,7 @@ def execute_commands(
                 test_flags += ["--test_env={}".format(v) for v in test_env_vars]
 
             if not is_windows():
-                # On platforms that support sandboxing (Linux, Windows) we have
+                # On platforms that support sandboxing (Linux, MacOS) we have
                 # to allow access to Bazelisk's cache directory.
                 # However, the flag requires the directory to exist,
                 # so we create it here in order to not crash when a test
