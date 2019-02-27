@@ -906,15 +906,15 @@ def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags):
 
 def remote_caching_flags(platform):
     if platform not in [
-        "ubuntu1404",
-        "ubuntu1604",
-        "ubuntu1804",
-        "ubuntu1804_nojava",
-        "ubuntu1804_java9",
-        "ubuntu1804_java10",
-        "ubuntu1804_java11",
-        "macos",
-        "windows",
+        #"ubuntu1404",
+        #"ubuntu1604",
+        #"ubuntu1804",
+        #"ubuntu1804_nojava",
+        #"ubuntu1804_java9",
+        #"ubuntu1804_java10",
+        #"ubuntu1804_java11",
+        #"macos",
+        #"windows",
     ]:
         return []
 
