@@ -248,7 +248,7 @@ Please see the [Bazelisk documentation](https://github.com/philwo/bazelisk/blob/
 
 ### Running Buildifier on CI
 
-For each pipeline you can enable [Buildifier](https://github.com/bazelbuild/buildtools/tree/master/buildifier) to check whether all BUILD, BUILD.bazel and .bzl files comply with the standard formatting convention. Simply add the following code to the top of the particular pipeline configuration:
+For each pipeline you can enable [Buildifier](https://github.com/bazelbuild/buildtools/tree/master/buildifier) to check whether all WORKSPACE, BUILD, BUILD.bazel and .bzl files comply with the standard formatting convention. Simply add the following code to the top of the particular pipeline configuration:
 
 ```yaml
 ---

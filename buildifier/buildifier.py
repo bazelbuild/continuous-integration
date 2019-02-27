@@ -62,14 +62,14 @@ def main(argv=None):
         argv = sys.argv[1:]
 
     # Gather all files to process.
-    eprint("+++ :female-detective: Looking for BUILD, BUILD.bazel and *.bzl files")
+    eprint("+++ :female-detective: Looking for WORKSPACE, BUILD, BUILD.bazel and *.bzl files")
     files = []
     build_bazel_found = False
     for root, _, filenames in os.walk("."):
         for filename in filenames:
             if fnmatch.fnmatch(filename, "BUILD.bazel"):
                 build_bazel_found = True
-            for pattern in ("BUILD", "BUILD.bazel", "*.bzl"):
+            for pattern in ("WORKSPACE", "BUILD", "BUILD.bazel", "*.bzl"):
                 if fnmatch.fnmatch(filename, pattern):
                     files.append(os.path.relpath(os.path.join(root, filename)))
     if build_bazel_found:
@@ -113,7 +113,7 @@ def main(argv=None):
             upload_output(output)
             return result.returncode
 
-    output = "##### :bazel: buildifier: found {} problems in your BUILD and *.bzl files\n".format(
+    output = "##### :bazel: buildifier: found {} problems in your WORKSPACE, BUILD and *.bzl files\n".format(
         len(findings)
     )
     output += "<pre><code>"
