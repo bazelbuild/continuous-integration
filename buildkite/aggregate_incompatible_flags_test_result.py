@@ -113,9 +113,8 @@ def process_build_log(failed_jobs_per_flag, log, job):
         lines = log[index_failure:].split("\n")
         for line in lines:
             line = line.strip()
-            if line.startswith("--incompatible_"):
-                if line in failed_jobs_per_flag:
-                    failed_jobs_per_flag[line].append(job)
+            if line.startswith("--incompatible_") and line in failed_jobs_per_flag:
+                failed_jobs_per_flag[line].append(job)
 
 
 def get_html_link_text(content, link):
