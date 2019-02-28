@@ -557,7 +557,7 @@ def execute_commands(
     bazel_version=None,
 ):
     # If we want to test incompatible flags, we ignore bazel_version and always use
-    # the default Bazel installed on CI machines.
+    # the latest Bazel version through Bazelisk.
     if incompatible_flags:
         bazel_version = None
 
