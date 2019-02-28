@@ -157,7 +157,11 @@ def construct_failure_info(failed_jobs_per_flag):
 
 
 def print_info(context, style, info):
-    bazelci.execute_command(["buildkite-agent", "annotate", "--append", f"--context={context}", f"--style={style}", f"\n{info}\n"])
+    # CHUNK_SIZE is to prevent buildkite-agent "argument list too long" error
+    CHUNK_SIZE = 20
+    for i in range(0, len(info), CHUNK_SIZE):
+        info_str = "\n".join(info[i:i+CHUNK_SIZE])
+        bazelci.execute_command(["buildkite-agent", "annotate", "--append", f"--context={context}", f"--style={style}", f"\n{info_str}\n"])
 
 
 def print_result_info(build_number):
@@ -193,16 +197,13 @@ def print_result_info(build_number):
     failure_info = construct_failure_info(failed_jobs_per_flag)
 
     if success_info:
-        for info in success_info:
-            print_info("success", "success", info)
+        print_info("success", "success", success_info)
 
     if warning_info:
-        for info in warning_info:
-            print_info("warning", "warning", info)
+        print_info("warning", "warning", warning_info)
 
     if failure_info:
-        for info in failure_info:
-            print_info("failure", "error", info)
+        print_info("failure", "error", failure_info)
 
 
 def main(argv=None):
