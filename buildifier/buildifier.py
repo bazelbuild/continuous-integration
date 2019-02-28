@@ -57,6 +57,14 @@ def get_file_url(filename, line):
     return None
 
 
+def run_buildifier(flag, files, what):
+    eprint("+++ :bazel: Running buildifier ({})".format(what))
+    result = subprocess.run(
+        ["buildifier", flag] + files, capture_output=True, universal_newlines=True
+    )
+    return result.returncode, result.stderr
+
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
@@ -81,21 +89,30 @@ def main(argv=None):
         eprint("No files found, exiting.")
         return 0
 
-    # Run buildifier.
-    eprint("+++ :bazel: Running buildifier")
-    result = subprocess.run(
-        ["buildifier", "--lint=warn"] + sorted(files), capture_output=True, universal_newlines=True
-    )
+    files = sorted(files)
 
-    # If buildifier was happy, there's nothing left to do for us.
-    if result.returncode == 0:
+    # No need to check the exit code since buildifier -d returns 0 even when it finds unformatted files.
+    # It prints the names of all offending files, but appends a colon to every single one.
+    _, formatter_output = run_buildifier("-d", files, "format check")
+    unformatted_files = [l.rstrip(":") for l in formatter_output.splitlines()]
+
+    linter_return_code, linter_output = run_buildifier("--lint=warn", files, "lint checks")
+
+    if unformatted_files:
+        eprint(
+            "+++ :construction: Found {} file(s) that must be formatted".format(
+                len(unformatted_files)
+            )
+        )
+    elif linter_return_code == 0:
+        # If buildifier was happy, there's nothing left to do for us.
         eprint("+++ :tada: Buildifier found nothing to complain about")
-        return result.returncode
+        return linter_return_code
 
     # Parse output.
     eprint("+++ :gear: Parsing buildifier output")
     findings = []
-    for line in result.stderr.splitlines():
+    for line in linter_output.splitlines():
         # Skip empty lines.
         line = line.strip()
         if not line:
@@ -107,11 +124,11 @@ def main(argv=None):
             findings.append(match)
         else:
             output = "##### :bazel: buildifier: error while parsing output\n"
-            output += "<pre><code>" + html.escape(result.stderr) + "</code></pre>"
+            output += "<pre><code>" + html.escape(linter_output) + "</code></pre>"
             if "BUILDKITE_JOB_ID" in os.environ:
                 output += "\n\nSee [job {job}](#{job})\n".format(job=os.environ["BUILDKITE_JOB_ID"])
             upload_output(output)
-            return result.returncode
+            return linter_return_code
 
     output = "##### :bazel: buildifier: found {} problems in your WORKSPACE, BUILD and *.bzl files\n".format(
         len(findings)
@@ -131,10 +148,20 @@ def main(argv=None):
             finding["message_url"], finding["message_id"], finding["message"]
         )
     output = output.strip() + "</pre></code>"
+
+    if unformatted_files:
+        output += (
+            "<p/>There are also {} unformatted file(s) in the repository. "
+            "Please run the following command in your workspace:"
+            "<br/><code>buildifier {}</code>".format(
+                len(unformatted_files), " ".join(unformatted_files)
+            )
+        )
+
     upload_output(output)
 
     # Preserve buildifier's exit code.
-    return result.returncode
+    return linter_return_code
 
 
 if __name__ == "__main__":
