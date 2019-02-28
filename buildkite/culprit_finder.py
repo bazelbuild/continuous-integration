@@ -59,8 +59,14 @@ def get_bazel_commits_between(first_commit, second_commit):
         )
 
 
+def get_platform(project_name, task_name):
+    http_config = DOWNSTREAM_PROJECTS[project_name]["http_config"]
+    task_config = bazelci.fetch_configs(http_config, None).get("task")
+    return bazelci.get_platform_for_task(task_name, task_config)
+
+
 def test_with_bazel_at_commit(
-    project_name, platform_name, git_repo_location, bazel_commit, needs_clean, repeat_times
+    project_name, task_name, git_repo_location, bazel_commit, needs_clean, repeat_times
 ):
     http_config = DOWNSTREAM_PROJECTS[project_name]["http_config"]
     for i in range(1, repeat_times + 1):
@@ -70,7 +76,7 @@ def test_with_bazel_at_commit(
             return_code = bazelci.main(
                 [
                     "runner",
-                    "--task=" + platform_name,
+                    "--task=" + task_name,
                     "--http_config=" + http_config,
                     "--git_repo_location=" + git_repo_location,
                     "--use_bazel_at_commit=" + bazel_commit,
@@ -85,7 +91,8 @@ def test_with_bazel_at_commit(
     return True
 
 
-def clone_git_repository(project_name, platform_name):
+def clone_git_repository(project_name, task_name):
+    platform_name = get_platform(project_name, task_name)
     git_repository = DOWNSTREAM_PROJECTS[project_name]["git_repository"]
     git_commit = bazelci.get_last_green_commit(
         git_repository, DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"]
@@ -93,7 +100,7 @@ def clone_git_repository(project_name, platform_name):
     return bazelci.clone_git_repository(git_repository, platform_name, git_commit)
 
 
-def start_bisecting(project_name, platform_name, git_repo_location, commits_list, needs_clean, repeat_times):
+def start_bisecting(project_name, task_name, git_repo_location, commits_list, needs_clean, repeat_times):
     left = 0
     right = len(commits_list)
     while left < right:
@@ -104,7 +111,7 @@ def start_bisecting(project_name, platform_name, git_repo_location, commits_list
         for i in range(left, right):
             bazelci.eprint(commits_list[i] + "\n")
         if test_with_bazel_at_commit(
-            project_name, platform_name, git_repo_location, mid_commit, needs_clean, repeat_times
+            project_name, task_name, git_repo_location, mid_commit, needs_clean, repeat_times
         ):
             bazelci.print_collapsed_group(":bazel: Succeeded at " + mid_commit)
             left = mid + 1
@@ -123,15 +130,16 @@ def start_bisecting(project_name, platform_name, git_repo_location, commits_list
 
 
 def print_culprit_finder_pipeline(
-    project_name, platform_name, good_bazel_commit, bad_bazel_commit, needs_clean, repeat_times
+    project_name, task_name, good_bazel_commit, bad_bazel_commit, needs_clean, repeat_times
 ):
+    platform_name = get_platform(project_name, task_name)
     label = PLATFORMS[platform_name]["emoji-name"] + " Bisecting for {0}".format(project_name)
     command = (
-        '%s culprit_finder.py runner --project_name="%s" --platform_name=%s --good_bazel_commit=%s --bad_bazel_commit=%s %s %s'
+        '%s culprit_finder.py runner --project_name="%s" --task_name=%s --good_bazel_commit=%s --bad_bazel_commit=%s %s %s'
         % (
             bazelci.python_binary(platform_name),
             project_name,
-            platform_name,
+            task_name,
             good_bazel_commit,
             bad_bazel_commit,
             "--needs_clean" if needs_clean else "",
@@ -156,7 +164,7 @@ def main(argv=None):
 
     runner = subparsers.add_parser("runner")
     runner.add_argument("--project_name", type=str)
-    runner.add_argument("--platform_name", type=str)
+    runner.add_argument("--task_name", type=str)
     runner.add_argument("--good_bazel_commit", type=str)
     runner.add_argument("--bad_bazel_commit", type=str)
     runner.add_argument("--needs_clean", type=bool, nargs="?", const=True)
@@ -166,7 +174,8 @@ def main(argv=None):
     if args.subparsers_name == "culprit_finder":
         try:
             project_name = os.environ["PROJECT_NAME"]
-            platform_name = os.environ["PLATFORM_NAME"]
+            # For old config file, we can still set PLATFORM_NAME as task name.
+            task_name = os.environ.get("PLATFORM_NAME") or os.environ["TASK_NAME"]
             good_bazel_commit = os.environ["GOOD_BAZEL_COMMIT"]
             bad_bazel_commit = os.environ["BAD_BAZEL_COMMIT"]
         except KeyError as e:
@@ -186,25 +195,20 @@ def main(argv=None):
                 % (project_name, str((DOWNSTREAM_PROJECTS.keys())))
             )
 
-        # if platform_name not in PLATFORMS:
-        #     raise Exception(
-        #         "Platform name '%s' not recognized, available platforms are %s"
-        #         % (platform_name, str((PLATFORMS.keys())))
-        #     )
         print_culprit_finder_pipeline(
             project_name=project_name,
-            platform_name=platform_name,
+            task_name=task_name,
             good_bazel_commit=good_bazel_commit,
             bad_bazel_commit=bad_bazel_commit,
             needs_clean=needs_clean,
             repeat_times=repeat_times,
         )
     elif args.subparsers_name == "runner":
-        git_repo_location = clone_git_repository(args.project_name, args.platform_name)
+        git_repo_location = clone_git_repository(args.project_name, args.task_name)
         bazelci.print_collapsed_group("Check good bazel commit " + args.good_bazel_commit)
         if not test_with_bazel_at_commit(
             project_name=args.project_name,
-            platform_name=args.platform_name,
+            task_name=args.task_name,
             git_repo_location=git_repo_location,
             bazel_commit=args.good_bazel_commit,
             needs_clean=args.needs_clean,
@@ -216,7 +220,7 @@ def main(argv=None):
             )
         start_bisecting(
             project_name=args.project_name,
-            platform_name=args.platform_name,
+            task_name=args.task_name,
             git_repo_location=git_repo_location,
             commits_list=get_bazel_commits_between(args.good_bazel_commit, args.bad_bazel_commit),
             needs_clean=args.needs_clean,
