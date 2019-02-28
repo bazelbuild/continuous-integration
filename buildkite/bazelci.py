@@ -556,6 +556,11 @@ def execute_commands(
     incompatible_flags,
     bazel_version=None,
 ):
+    # If we want to test incompatible flags, we ignore bazel_version and always use
+    # the latest Bazel version through Bazelisk.
+    if incompatible_flags:
+        bazel_version = None
+
     # TODO(https://github.com/bazelbuild/bazel/issues/7555): remove this hack once the
     # latest Bazel release is no longer broken.
     bazel_version = bazel_version or "0.22.0"
