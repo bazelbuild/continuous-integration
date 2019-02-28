@@ -1,4 +1,4 @@
-# This file allows Bazel team member to mitigate outages by
+# This file allows Bazel team member to handle emergencies by
 # - Setting a warning message (and a link to a GitHub issue) that is displayed
 #   for every CI build
 # - Specifying a known good version of Bazel that will be used for

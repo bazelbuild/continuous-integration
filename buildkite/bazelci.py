@@ -399,7 +399,7 @@ SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
 CONFIG_FILE_EXTENSIONS = set([".yml", ".yaml"])
 
 
-OUTAGE_FILE_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/outage.yml"
+EMERGENCY_FILE_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/emergency.yml"
 
 
 class BuildkiteException(Exception):
@@ -623,12 +623,12 @@ def execute_commands(
     if incompatible_flags:
         bazel_version = None
     if not bazel_version:
-        # The last good version of Bazel can be specified in outage.yml.
+        # The last good version of Bazel can be specified in an emergency file.
         # However, we only use last_good_bazel for pipelines that do not
         # explicitly specify a version of Bazel.
         try:
-            outage = load_remote_yaml_file(OUTAGE_FILE_URL)
-            bazel_version = outage.get("last_good_bazel")
+            emergency_settings = load_remote_yaml_file(EMERGENCY_FILE_URL)
+            bazel_version = emergency_settings.get("last_good_bazel")
         except urllib.error.HTTPError:
             # Ignore this error. The Setup step will have already complained about
             # it by showing an error message.
@@ -1691,21 +1691,21 @@ def create_config_validation_steps():
 
 
 def print_pipeline_steps(pipeline_steps):
-    outage_step = create_outage_announcement_step_if_necessary()
-    if outage_step:
-        pipeline_steps.insert(0, outage_step)
+    emergency_step = create_emergency_announcement_step_if_necessary()
+    if emergency_step:
+        pipeline_steps.insert(0, emergency_step)
 
     print(yaml.dump({"steps": pipeline_steps}))
 
 
-def add_outage_announcement_step_if_necessary(pipeline_steps):
+def create_emergency_announcement_step_if_necessary():
     style = "error"
     message, issue_url, last_good_bazel = None, None, None
     try:
-        outage = load_remote_yaml_file(OUTAGE_FILE_URL)
-        message = outage.get("message")
-        issue_url = outage.get("issue_url")
-        last_good_bazel = outage.get("last_good_bazel")
+        emergency_settings = load_remote_yaml_file(EMERGENCY_FILE_URL)
+        message = emergency_settings.get("message")
+        issue_url = emergency_settings.get("issue_url")
+        last_good_bazel = emergency_settings.get("last_good_bazel")
     except urllib.error.HTTPError as ex:
         message = str(ex)
         style = "warning"
@@ -1713,7 +1713,7 @@ def add_outage_announcement_step_if_necessary(pipeline_steps):
     if not any([message, issue_url, last_good_bazel]):
         return
 
-    text = '<span class="h1">:rotating_light: Outage :rotating_light:</span>\n'
+    text = '<span class="h1">:rotating_light: Emergency :rotating_light:</span>\n'
     if message:
         text += "- {}\n".format(message)
     if issue_url:
@@ -1724,7 +1724,7 @@ def add_outage_announcement_step_if_necessary(pipeline_steps):
         )
 
     return create_step(
-        label=":rotating_light: Outage :rotating_light:",
+        label=":rotating_light: Emergency :rotating_light:",
         commands=['buildkite-agent annotate --append --style={} "{}"'.format(style, text)],
     )
 
