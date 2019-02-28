@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import fnmatch
-import html
 import locale
 import os.path
 import re
@@ -10,7 +9,8 @@ import subprocess
 import sys
 
 regex = re.compile(
-    r"(?P<filename>[^:]*):(?P<line>\d*):(?:(?P<column>\d*):)? (?P<message_id>[^:]*): (?P<message>.*) \((?P<message_url>.*)\)"
+    r"^(?P<filename>[^:]*):(?P<line>\d*):(?:(?P<column>\d*):)? (?P<message_id>[^:]*): (?P<message>.*) \((?P<message_url>.*)\)$",
+    re.MULTILINE,
 )
 
 
@@ -111,25 +111,7 @@ def main(argv=None):
 
     # Parse output.
     eprint("+++ :gear: Parsing buildifier output")
-    findings = []
-    for line in linter_output.splitlines():
-        # Skip empty lines.
-        line = line.strip()
-        if not line:
-            continue
-
-        # Try to parse as structured data.
-        match = regex.match(line)
-        if match:
-            findings.append(match)
-        else:
-            output = "##### :bazel: buildifier: error while parsing output\n"
-            output += "<pre><code>" + html.escape(linter_output) + "</code></pre>"
-            if "BUILDKITE_JOB_ID" in os.environ:
-                output += "\n\nSee [job {job}](#{job})\n".format(job=os.environ["BUILDKITE_JOB_ID"])
-            upload_output(output)
-            return linter_return_code
-
+    findings = list(regex.finditer(linter_output))
     output = "##### :bazel: buildifier: found {} problems in your WORKSPACE, BUILD and *.bzl files\n".format(
         len(findings)
     )
