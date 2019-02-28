@@ -399,6 +399,9 @@ SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
 CONFIG_FILE_EXTENSIONS = set([".yml", ".yaml"])
 
 
+OUTAGE_FILE_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/outage.yml"
+
+
 class BuildkiteException(Exception):
     """
     Raised whenever something goes wrong and we should exit with an error.
@@ -569,11 +572,15 @@ def load_config(http_url, file_config):
         with open(file_config, "r") as fd:
             return yaml.load(fd)
     if http_url is not None:
-        with urllib.request.urlopen(http_url) as resp:
-            reader = codecs.getreader("utf-8")
-            return yaml.load(reader(resp))
+        return load_remote_yaml_file(http_url)
     with open(".bazelci/presubmit.yml", "r") as fd:
         return yaml.load(fd)
+
+
+def load_remote_yaml_file(http_url):
+    with urllib.request.urlopen(http_url) as resp:
+        reader = codecs.getreader("utf-8")
+        return yaml.load(reader(resp))
 
 
 def print_collapsed_group(name):
@@ -615,6 +622,17 @@ def execute_commands(
     # the latest Bazel version through Bazelisk.
     if incompatible_flags:
         bazel_version = None
+    if not bazel_version:
+        # The last good version of Bazel can be specified in outage.yml.
+        # However, we only use last_good_bazel for pipelines that do not
+        # explicitly specify a version of Bazel.
+        try:
+            outage = load_remote_yaml_file(OUTAGE_FILE_URL)
+            bazel_version = outage.get("last_good_bazel")
+        except urllib.error.HTTPError:
+            # Ignore this error. The Setup step will have already complained about
+            # it by showing an error message.
+            pass
 
     if build_only and test_only:
         raise BuildkiteException("build_only and test_only cannot be true at the same time")
@@ -1670,6 +1688,33 @@ def create_config_validation_steps():
         )
         for f in config_files
     ]
+def add_outage_announcement_step_if_necessary(pipeline_steps):
+    style = "error"
+    try:
+        outage = load_remote_yaml_file(OUTAGE_FILE_URL)
+        message = outage.get("message")
+        issue_url = outage.get("issue_url")
+        last_good_bazel = outage.get("last_good_bazel")
+    except urllib.error.HTTPError as ex:
+        message = str(ex)
+        style = "warning"
+
+    if not any([message, issue_url, last_good_bazel]):
+        return
+
+    text = '<span class="h1">:rotating_light: Outage :rotating_light:</span>\n'
+    if message:
+        text += "- {}\n".format(message)
+    if issue_url:
+        text += '- Please check this <a href="{}">issue</a> for more details.\n'.format(issue_url)
+    if last_good_bazel:
+        text += "- Default Bazel version is {}".format(last_good_bazel)
+
+    step = create_step(
+        label=":rotating_light: Outage :rotating_light:",
+        commands=['buildkite-agent annotate --append --style={} "{}"'.format(style, text)],
+    )
+    return [step] + pipeline_steps
 
 
 def runner_step(
@@ -2368,6 +2413,10 @@ def str_presenter(dumper, data):
     if len(data.splitlines()) > 1:  # check for multiline string
         return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
     return dumper.represent_scalar("tag:yaml.org,2002:str", data)
+
+
+def show_outage_annotation(message, issue_url, good_bazel):
+    pass
 
 
 def main(argv=None):
