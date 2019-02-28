@@ -1700,6 +1700,7 @@ def print_pipeline_steps(pipeline_steps):
 
 def add_outage_announcement_step_if_necessary(pipeline_steps):
     style = "error"
+    message, issue_url, last_good_bazel = None, None, None
     try:
         outage = load_remote_yaml_file(OUTAGE_FILE_URL)
         message = outage.get("message")
@@ -2424,10 +2425,6 @@ def str_presenter(dumper, data):
     if len(data.splitlines()) > 1:  # check for multiline string
         return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
     return dumper.represent_scalar("tag:yaml.org,2002:str", data)
-
-
-def show_outage_annotation(message, issue_url, good_bazel):
-    pass
 
 
 def main(argv=None):
