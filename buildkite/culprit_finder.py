@@ -59,7 +59,8 @@ def get_bazel_commits_between(first_commit, second_commit):
 
 def get_platform(project_name, task_name):
     http_config = bazelci.DOWNSTREAM_PROJECTS[project_name]["http_config"]
-    task_config = bazelci.fetch_configs(http_config, None).get("task")
+    configs = bazelci.fetch_configs(http_config, None)
+    task_config = configs["tasks"][task_name]
     return bazelci.get_platform_for_task(task_name, task_config)
 
 
