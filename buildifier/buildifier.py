@@ -14,6 +14,9 @@ regex = re.compile(
 )
 
 
+BUILDIFIER_URL = "https://github.com/bazelbuild/buildtools/tree/master/buildifier"
+
+
 def eprint(*args, **kwargs):
     """
     Print to stderr and flush (just in case).
@@ -134,9 +137,10 @@ def main(argv=None):
     if unformatted_files:
         output += (
             "<p/>There are also {} unformatted file(s) in the repository. "
-            "Please run the following command in your workspace:"
+            'Please download <a href="{}">buildifier</a> and run the following '
+            "command in your workspace:"
             "<br/><code>buildifier {}</code>".format(
-                len(unformatted_files), " ".join(unformatted_files)
+                len(unformatted_files), BUILDIFIER_URL, " ".join(unformatted_files)
             )
         )
 
