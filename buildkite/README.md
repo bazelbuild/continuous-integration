@@ -225,7 +225,7 @@ The CI script still supports the legacy format, too.
 
 ### Using a specific version of Bazel
 
-The CI uses [Bazelisk](https://github.com/philwo/bazelisk) to support older versions of Bazel, too. You can specify a Bazel version for each pipeline (or even for individual platforms) in the pipeline Yaml configuration:
+The CI uses [Bazelisk](https://github.com/philwo/bazelisk) to support different versions of Bazel, too. You can specify a Bazel version for each pipeline (or even for individual platforms) in the pipeline Yaml configuration:
 
 ```yaml
 ---
@@ -244,6 +244,12 @@ platforms:
 [...]
 ```
 In this example the jobs on Windows and MacOS would use 0.20.0, whereas the job on Ubuntu would run 0.18.0.
+
+You can also use unreleased versions of Bazel:
+
+- `last_green` refers to the Bazel binary built at the latest green commit in the [Bazel pipeline](https://buildkite.com/bazel/bazel-bazel).
+- `commit` tells the pipeline to build a new Bazel binary at the current commit and to use that binary for all builds and tests.
+
 Please see the [Bazelisk documentation](https://github.com/philwo/bazelisk/blob/master/README.md#how-does-bazelisk-know-which-version-to-run) for a list of all supported version values.
 
 ### Running Buildifier on CI

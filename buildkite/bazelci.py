@@ -400,6 +400,9 @@ EDql
 BUILD_LABEL_PATTERN = re.compile(r"^Build label: (\S+)$", re.MULTILINE)
 
 
+BAZEL_TARGET = "//src:bazel"
+
+
 class BuildkiteException(Exception):
     """
     Raised whenever something goes wrong and we should exit with an error.
@@ -568,6 +571,7 @@ def execute_commands(
     if use_bazel_at_commit and use_but:
         raise BuildkiteException("use_bazel_at_commit cannot be set when use_but is true")
 
+    build_flags = task_config.get("build_flags", [])
     tmpdir = tempfile.mkdtemp()
     sc_process = None
     try:
@@ -587,6 +591,27 @@ def execute_commands(
         elif use_but:
             print_collapsed_group(":gcloud: Downloading Bazel Under Test")
             bazel_binary = download_bazel_binary(tmpdir, platform)
+        elif bazel_binary == "commit":
+            # Create a Bazel binary at the current commit that should execute all future steps.
+            # This case is intended for "normal" project pipelines. We cannot rely on
+            # use_bazel_at_commit or use_but here since these mechanisms were designed for
+            # downstream pipelines.
+            # TODO(fwe): resolve the Bazel version instead of printing "latest".
+            execute_bazel_build(
+                bazel_version="latest",
+                bazel_binary="bazel",
+                platform=platform,
+                flags=build_flags,
+                targets=[BAZEL_TARGET],
+                bep_file=None,
+                incompatible_flags=[],
+            )
+            # Copy the Bazel binary to a temporary location in order to survive a potential
+            # "bazel clean" below.
+            src_path = get_bazel_path_in_bazel_bin(platform)
+            bazel_binary = os.path.join(tmpdir, "bazel")
+            shutil.copyfile(src_path, bazel_binary)
+            make_file_executable(bazel_binary)
         else:
             bazel_binary = "bazel"
             if bazel_version:
@@ -604,7 +629,15 @@ def execute_commands(
             raise BuildkiteException("working_directory refers to a path outside the workspace")
         os.chdir(requested_working_dir)
 
-        bazel_version = print_bazel_version_info(bazel_binary, platform)
+        # Resolved given versions such as "latest" to an actual version number like 0.22.0.
+        # If the binary is not a release (candidate), the result will be "unreleased binary".
+        resolved_bazel_version = print_bazel_version_info(bazel_binary, platform)
+        if bazel_version == "commit":
+            # Replace resolved_bazel_version with more precise information
+            # since we know the exact commit.
+            # However, we keep the call to print_bazel_version_info() above
+            # to get its output into the log.
+            resolved_bazel_version = "commit {}".format(os.environ.get("BUILDKITE_COMMIT"))
 
         print_environment_variables_info()
 
@@ -648,10 +681,10 @@ def execute_commands(
 
         if not test_only:
             execute_bazel_build(
-                bazel_version,
+                resolved_bazel_version,
                 bazel_binary,
                 platform,
-                task_config.get("build_flags", []),
+                build_flags,
                 task_config.get("build_targets", None),
                 None,
                 incompatible_flags,
@@ -677,7 +710,7 @@ def execute_commands(
             test_bep_file = os.path.join(tmpdir, "test_bep.json")
             try:
                 execute_bazel_test(
-                    bazel_version,
+                    resolved_bazel_version,
                     bazel_binary,
                     platform,
                     test_flags,
@@ -789,25 +822,25 @@ def print_environment_variables_info():
 
 def upload_bazel_binary(platform):
     print_collapsed_group(":gcloud: Uploading Bazel Under Test")
-    binary_path = "bazel-bin/src/bazel"
-    if platform == "windows":
-        binary_path = r"bazel-bin\src\bazel"
-    execute_command(["buildkite-agent", "artifact", "upload", binary_path])
+    execute_command(
+        ["buildkite-agent", "artifact", "upload", get_bazel_path_in_bazel_bin(platform)]
+    )
+
+
+def get_bazel_path_in_bazel_bin(platform):
+    return r"bazel-bin\src\bazel" if platform == "windows" else "bazel-bin/src/bazel"
 
 
 def download_bazel_binary(dest_dir, platform):
     host_platform = PLATFORMS[platform].get("host-platform", platform)
-    binary_path = "bazel-bin/src/bazel"
-    if platform == "windows":
-        binary_path = r"bazel-bin\src\bazel"
+    binary_path = get_bazel_path_in_bazel_bin(platform)
 
     source_step = create_label(host_platform, "Bazel", build_only=True)
     execute_command(
         ["buildkite-agent", "artifact", "download", binary_path, dest_dir, "--step", source_step]
     )
     bazel_binary_path = os.path.join(dest_dir, binary_path)
-    st = os.stat(bazel_binary_path)
-    os.chmod(bazel_binary_path, st.st_mode | stat.S_IEXEC)
+    make_file_executable(bazel_binary_path)
     return bazel_binary_path
 
 
@@ -830,9 +863,13 @@ def download_bazel_binary_at_commit(dest_dir, platform, bazel_git_commit):
         raise BuildkiteException(
             "Failed to download Bazel binary at %s, error message:\n%s" % (bazel_git_commit, str(e))
         )
-    st = os.stat(bazel_binary_path)
-    os.chmod(bazel_binary_path, st.st_mode | stat.S_IEXEC)
+    make_file_executable(bazel_binary_path)
     return bazel_binary_path
+
+
+def make_file_executable(path):
+    st = os.stat(path)
+    os.chmod(path, st.st_mode | stat.S_IEXEC)
 
 
 def clone_git_repository(git_repository, platform, git_commit=None):
@@ -926,8 +963,9 @@ def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags):
             + common_build_flags(None, platform)
             # When using bazelisk --migrate to test incompatible flags,
             # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
-            + [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags
-            + [target]
+            + []
+            if (use_bazelisk_migrate() or not incompatible_flags)
+            else incompatible_flags + [target]
         )
 
 
@@ -1130,11 +1168,16 @@ def execute_bazel_build(
         # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
         [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags,
         bep_file,
-        enable_remote_cache=True
+        enable_remote_cache=True,
     )
     try:
         execute_command(
-            [bazel_binary] + bazelisk_flags() + common_startup_flags(platform) + ["build"] + aggregated_flags + targets
+            [bazel_binary]
+            + bazelisk_flags()
+            + common_startup_flags(platform)
+            + ["build"]
+            + aggregated_flags
+            + targets
         )
     except subprocess.CalledProcessError as e:
         raise BuildkiteException("bazel build failed with exit code {}".format(e.returncode))
@@ -1167,12 +1210,17 @@ def execute_bazel_test(
         # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
         [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags,
         bep_file,
-        enable_remote_cache=not monitor_flaky_tests
+        enable_remote_cache=not monitor_flaky_tests,
     )
 
     try:
         execute_command(
-            [bazel_binary] + bazelisk_flags() + common_startup_flags(platform) + ["test"] + aggregated_flags + targets
+            [bazel_binary]
+            + bazelisk_flags()
+            + common_startup_flags(platform)
+            + ["test"]
+            + aggregated_flags
+            + targets
         )
     except subprocess.CalledProcessError as e:
         raise BuildkiteException("bazel test failed with exit code {}".format(e.returncode))
