@@ -186,11 +186,11 @@ def main(argv=None):
                 % (project_name, str((DOWNSTREAM_PROJECTS.keys())))
             )
 
-        if platform_name not in PLATFORMS:
-            raise Exception(
-                "Platform name '%s' not recognized, available platforms are %s"
-                % (platform_name, str((PLATFORMS.keys())))
-            )
+        # if platform_name not in PLATFORMS:
+        #     raise Exception(
+        #         "Platform name '%s' not recognized, available platforms are %s"
+        #         % (platform_name, str((PLATFORMS.keys())))
+        #     )
         print_culprit_finder_pipeline(
             project_name=project_name,
             platform_name=platform_name,
