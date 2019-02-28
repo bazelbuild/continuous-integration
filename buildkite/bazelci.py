@@ -1655,7 +1655,7 @@ def print_project_pipeline(
     if "validate_config" in configs:
         pipeline_steps += create_config_validation_steps()
 
-    print(yaml.dump({"steps": pipeline_steps}))
+    print_pipeline_steps(pipeline_steps)
 
 
 def get_platform_for_task(task, task_config):
@@ -1688,6 +1688,16 @@ def create_config_validation_steps():
         )
         for f in config_files
     ]
+
+
+def print_pipeline_steps(pipeline_steps):
+    outage_step = create_outage_announcement_step_if_necessary()
+    if outage_step:
+        pipeline_steps.insert(0, outage_step)
+
+    print(yaml.dump({"steps": pipeline_steps}))
+
+
 def add_outage_announcement_step_if_necessary(pipeline_steps):
     style = "error"
     try:
@@ -1712,11 +1722,10 @@ def add_outage_announcement_step_if_necessary(pipeline_steps):
             last_good_bazel
         )
 
-    step = create_step(
+    return create_step(
         label=":rotating_light: Outage :rotating_light:",
         commands=['buildkite-agent annotate --append --style={} "{}"'.format(style, text)],
     )
-    return [step] + pipeline_steps
 
 
 def runner_step(
@@ -1953,7 +1962,7 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
         )
     )
 
-    print(yaml.dump({"steps": pipeline_steps}))
+    print_pipeline_steps(pipeline_steps)
 
 
 def should_publish_binaries_for_platform(platform):
@@ -2152,7 +2161,7 @@ def print_bazel_downstream_pipeline(
             )
         )
 
-    print(yaml.dump({"steps": pipeline_steps}))
+    print_pipeline_steps(pipeline_steps)
 
 
 def bazelci_builds_download_url(platform, git_commit):
