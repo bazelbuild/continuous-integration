@@ -21,8 +21,6 @@ import subprocess
 import time
 import yaml
 import bazelci
-from bazelci import DOWNSTREAM_PROJECTS
-from bazelci import PLATFORMS
 
 BAZEL_REPO_DIR = os.getcwd()
 
@@ -60,7 +58,7 @@ def get_bazel_commits_between(first_commit, second_commit):
 
 
 def get_platform(project_name, task_name):
-    http_config = DOWNSTREAM_PROJECTS[project_name]["http_config"]
+    http_config = bazelci.DOWNSTREAM_PROJECTS[project_name]["http_config"]
     task_config = bazelci.fetch_configs(http_config, None).get("task")
     return bazelci.get_platform_for_task(task_name, task_config)
 
@@ -68,7 +66,7 @@ def get_platform(project_name, task_name):
 def test_with_bazel_at_commit(
     project_name, task_name, git_repo_location, bazel_commit, needs_clean, repeat_times
 ):
-    http_config = DOWNSTREAM_PROJECTS[project_name]["http_config"]
+    http_config = bazelci.DOWNSTREAM_PROJECTS[project_name]["http_config"]
     for i in range(1, repeat_times + 1):
         if repeat_times > 1:
             bazelci.print_collapsed_group(":bazel: Try %s time" % i)
@@ -93,9 +91,9 @@ def test_with_bazel_at_commit(
 
 def clone_git_repository(project_name, task_name):
     platform_name = get_platform(project_name, task_name)
-    git_repository = DOWNSTREAM_PROJECTS[project_name]["git_repository"]
+    git_repository = bazelci.DOWNSTREAM_PROJECTS[project_name]["git_repository"]
     git_commit = bazelci.get_last_green_commit(
-        git_repository, DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"]
+        git_repository, bazelci.DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"]
     )
     return bazelci.clone_git_repository(git_repository, platform_name, git_commit)
 
@@ -133,7 +131,7 @@ def print_culprit_finder_pipeline(
     project_name, task_name, good_bazel_commit, bad_bazel_commit, needs_clean, repeat_times
 ):
     platform_name = get_platform(project_name, task_name)
-    label = PLATFORMS[platform_name]["emoji-name"] + " Bisecting for {0}".format(project_name)
+    label = bazelci.PLATFORMS[platform_name]["emoji-name"] + " Bisecting for {0}".format(project_name)
     command = (
         '%s culprit_finder.py runner --project_name="%s" --task_name=%s --good_bazel_commit=%s --bad_bazel_commit=%s %s %s'
         % (
@@ -189,10 +187,10 @@ def main(argv=None):
         if "REPEAT_TIMES" in os.environ:
             repeat_times = int(os.environ["REPEAT_TIMES"])
 
-        if project_name not in DOWNSTREAM_PROJECTS:
+        if project_name not in bazelci.DOWNSTREAM_PROJECTS:
             raise Exception(
                 "Project name '%s' not recognized, available projects are %s"
-                % (project_name, str((DOWNSTREAM_PROJECTS.keys())))
+                % (project_name, str((bazelci.DOWNSTREAM_PROJECTS.keys())))
             )
 
         print_culprit_finder_pipeline(
