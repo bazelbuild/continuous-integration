@@ -129,7 +129,7 @@ def construct_success_info(failed_jobs_per_flag):
             info_text.append(f"* **{flag}** " + get_html_link_text(":github:", github_url))
     if len(info_text) == 1:
         return None
-    return "\n".join(info_text)
+    return info_text
 
 
 def construct_warning_info(already_failing_jobs):
@@ -139,7 +139,7 @@ def construct_warning_info(already_failing_jobs):
         info_text.append(f"* {link_text}")
     if len(info_text) == 1:
         return None
-    return "\n".join(info_text)
+    return info_text
 
 
 def construct_failure_info(failed_jobs_per_flag):
@@ -153,9 +153,14 @@ def construct_failure_info(failed_jobs_per_flag):
                 info_text.append(f"  - {link_text}")
     if len(info_text) == 1:
         return None
-    return "\n".join(info_text)
+    return info_text
 
-def print_result_info_jobs(build_number):
+
+def print_info(context, style, info):
+    bazelci.execute_command(["buildkite-agent", "annotate", "--append", f"--context={context}", f"--style={style}", f"\n{info}\n"])
+
+
+def print_result_info(build_number):
     build_info = get_build_info(build_number)
 
     already_failing_jobs = []
@@ -187,29 +192,17 @@ def print_result_info_jobs(build_number):
 
     failure_info = construct_failure_info(failed_jobs_per_flag)
 
-    pipeline_steps = []
     if success_info:
-        pipeline_steps.append(bazelci.create_step(
-            label="Success Info",
-            commands=[
-                f'buildkite-agent annotate --context=success --style=success "\n{success_info}\n"'
-            ],
-        ))
+        for info in success_info:
+            print_info("success", "success", info)
+
     if warning_info:
-        pipeline_steps.append(bazelci.create_step(
-            label="Warning Info",
-            commands=[
-                f'buildkite-agent annotate --context=warning --style=warning "\n{warning_info}\n"'
-            ],
-        ))
+        for info in warning_info:
+            print_info("warning", "warning", info)
+
     if failure_info:
-        pipeline_steps.append(bazelci.create_step(
-            label="Failure Info",
-            commands=[
-                f'buildkite-agent annotate --context=failure --style=error "\n{failure_info}\n"'
-            ],
-        ))
-    print(yaml.dump({"steps": pipeline_steps}))
+        for info in failure_info:
+            print_info("failure", "error", info)
 
 
 def main(argv=None):
@@ -224,7 +217,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.build_number:
-            print_result_info_jobs(args.build_number)
+            print_result_info(args.build_number)
         else:
             parser.print_help()
             return 2
