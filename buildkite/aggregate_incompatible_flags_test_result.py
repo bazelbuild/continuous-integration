@@ -106,8 +106,8 @@ def process_build_log(failed_jobs_per_flag, log, job):
         return
 
     if "+++ Result" in log:
-        index_success = log.find("Command was successful with the following flags:")
-        index_failure = log.find("Migration is needed for the following flags:")
+        index_success = log.rfind("Command was successful with the following flags:")
+        index_failure = log.rfind("Migration is needed for the following flags:")
         if index_success== -1 or index_failure == -1:
             raise BuildkiteException("Cannot recognize log of " + job["web_url"])
         lines = log[index_failure:].split("\n")
