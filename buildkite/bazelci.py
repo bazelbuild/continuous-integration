@@ -1708,7 +1708,9 @@ def add_outage_announcement_step_if_necessary(pipeline_steps):
     if issue_url:
         text += '- Please check this <a href="{}">issue</a> for more details.\n'.format(issue_url)
     if last_good_bazel:
-        text += "- Default Bazel version is {}".format(last_good_bazel)
+        text += "- Default Bazel version is *{}*, unless the pipeline configuration explicitly specifies a version.".format(
+            last_good_bazel
+        )
 
     step = create_step(
         label=":rotating_light: Outage :rotating_light:",
