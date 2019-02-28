@@ -106,6 +106,7 @@ def main(argv=None):
         upload_output(output)
         return formatter_result.returncode
 
+    # Format: "<file name> # reformated"
     unformatted_files = [l.partition(" ")[0] for l in formatter_result.stdout.splitlines()]
     if unformatted_files:
         eprint(
