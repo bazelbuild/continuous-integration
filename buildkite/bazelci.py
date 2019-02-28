@@ -469,6 +469,15 @@ def incompatible_flag_verbose_failures_url():
     )
 
 
+def aggregate_incompatible_flags_test_result_url():
+    """
+    URL to the latest version of this script.
+    """
+    return "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/aggregate_incompatible_flags_test_result.py?{}".format(
+        int(time.time())
+    )
+
+
 def downstream_projects_root(platform):
     downstream_projects_dir = os.path.expandvars(
         "${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects"
@@ -518,6 +527,17 @@ def print_collapsed_group(name):
 
 def print_expanded_group(name):
     eprint("\n\n+++ {0}\n\n".format(name))
+
+
+def use_bazelisk_migrate():
+    """
+    If USE_BAZELISK_MIGRATE is set, we use `bazelisk --migrate` to test incompatible flags.
+    """
+    return os.environ.get("USE_BAZELISK_MIGRATE", None) != None
+
+
+def bazelisk_flags():
+    return ["--migrate"] if use_bazelisk_migrate() else []
 
 
 def execute_commands(
@@ -900,10 +920,13 @@ def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags):
     for target in targets:
         execute_command(
             [bazel_binary]
+            + bazelisk_flags()
             + common_startup_flags(platform)
             + ["run"]
             + common_build_flags(None, platform)
-            + (incompatible_flags or [])
+            # When using bazelisk --migrate to test incompatible flags,
+            # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
+            + [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags
             + [target]
         )
 
@@ -1101,11 +1124,17 @@ def execute_bazel_build(
     print_expanded_group(":bazel: Build ({})".format(bazel_version))
 
     aggregated_flags = compute_flags(
-        platform, flags, incompatible_flags, bep_file, enable_remote_cache=True
+        platform,
+        flags,
+        # When using bazelisk --migrate to test incompatible flags,
+        # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
+        [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags,
+        bep_file,
+        enable_remote_cache=True
     )
     try:
         execute_command(
-            [bazel_binary] + common_startup_flags(platform) + ["build"] + aggregated_flags + targets
+            [bazel_binary] + bazelisk_flags() + common_startup_flags(platform) + ["build"] + aggregated_flags + targets
         )
     except subprocess.CalledProcessError as e:
         raise BuildkiteException("bazel build failed with exit code {}".format(e.returncode))
@@ -1132,12 +1161,18 @@ def execute_bazel_test(
     # or flaky test monitoring is enabled, as remote caching makes tests look less flaky than
     # they are.
     aggregated_flags += compute_flags(
-        platform, flags, incompatible_flags, bep_file, enable_remote_cache=not monitor_flaky_tests
+        platform,
+        flags,
+        # When using bazelisk --migrate to test incompatible flags,
+        # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
+        [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags,
+        bep_file,
+        enable_remote_cache=not monitor_flaky_tests
     )
 
     try:
         execute_command(
-            [bazel_binary] + common_startup_flags(platform) + ["test"] + aggregated_flags + targets
+            [bazel_binary] + bazelisk_flags() + common_startup_flags(platform) + ["test"] + aggregated_flags + targets
         )
     except subprocess.CalledProcessError as e:
         raise BuildkiteException("bazel test failed with exit code {}".format(e.returncode))
@@ -1421,6 +1456,12 @@ def fetch_incompatible_flag_verbose_failures_command():
     )
 
 
+def fetch_aggregate_incompatible_flags_test_result_command():
+    return "curl -sS {0} -o aggregate_incompatible_flags_test_result.py".format(
+        aggregate_incompatible_flags_test_result_url()
+    )
+
+
 def upload_project_pipeline_step(
     project_name, git_repository, http_config, file_config, incompatible_flags
 ):
@@ -1693,22 +1734,37 @@ def print_bazel_downstream_pipeline(
             )
 
     if test_incompatible_flags:
-        pipeline_steps.append({"wait": "~", "continue_on_failure": "true"})
         current_build_number = os.environ.get("BUILDKITE_BUILD_NUMBER", None)
         if not current_build_number:
             raise BuildkiteException("Not running inside Buildkite")
-        pipeline_steps.append(
-            create_step(
-                label="Test failing jobs with incompatible flag separately",
-                commands=[
-                    fetch_bazelcipy_command(),
-                    fetch_incompatible_flag_verbose_failures_command(),
-                    python_binary()
-                    + " incompatible_flag_verbose_failures.py --build_number=%s | buildkite-agent pipeline upload"
-                    % current_build_number,
-                ],
+        if use_bazelisk_migrate():
+            pipeline_steps.append({"wait": "~", "continue_on_failure": "true"})
+            pipeline_steps.append(
+                create_step(
+                    label="Aggregate incompatible flags test result",
+                    commands=[
+                        fetch_bazelcipy_command(),
+                        fetch_aggregate_incompatible_flags_test_result_command(),
+                        python_binary()
+                        + " aggregate_incompatible_flags_test_result.py --build_number=%s | buildkite-agent pipeline upload"
+                        % current_build_number,
+                    ],
+                )
             )
-        )
+        else:
+            pipeline_steps.append({"wait": "~", "continue_on_failure": "true"})
+            pipeline_steps.append(
+                create_step(
+                    label="Test failing jobs with incompatible flag separately",
+                    commands=[
+                        fetch_bazelcipy_command(),
+                        fetch_incompatible_flag_verbose_failures_command(),
+                        python_binary()
+                        + " incompatible_flag_verbose_failures.py --build_number=%s | buildkite-agent pipeline upload"
+                        % current_build_number,
+                    ],
+                )
+            )
 
     print(yaml.dump({"steps": pipeline_steps}))
 
