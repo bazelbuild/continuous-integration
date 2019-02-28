@@ -1746,7 +1746,7 @@ def print_bazel_downstream_pipeline(
                         fetch_bazelcipy_command(),
                         fetch_aggregate_incompatible_flags_test_result_command(),
                         python_binary()
-                        + " aggregate_incompatible_flags_test_result.py --build_number=%s | buildkite-agent pipeline upload"
+                        + " aggregate_incompatible_flags_test_result.py --build_number=%s"
                         % current_build_number,
                     ],
                 )
