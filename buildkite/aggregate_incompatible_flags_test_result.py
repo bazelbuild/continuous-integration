@@ -97,15 +97,15 @@ def get_build_log(job):
 
 
 def process_build_log(failed_jobs_per_flag, log, job):
-    if log.find("Success: No migration needed.") != -1:
+    if "Success: No migration needed." in log:
         return
 
     # Remove this after Bazelisk returns non-zero when build fails without incompatible flags
     # See https://github.com/philwo/bazelisk/issues/34#issuecomment-467831202
-    if log.find("Failure: Command failed, even without incompatible flags.") != -1:
+    if "Failure: Command failed, even without incompatible flags." in log:
         return
 
-    if log.find("+++ Result") != -1:
+    if "+++ Result" in log:
         index_success = log.find("Command was successful with the following flags:")
         index_failure = log.find("Migration is needed for the following flags:")
         if index_success== -1 or index_failure == -1:
