@@ -629,7 +629,7 @@ def execute_commands(
             raise BuildkiteException("working_directory refers to a path outside the workspace")
         os.chdir(requested_working_dir)
 
-        # Resolved given versions such as "latest" to an actual version number like 0.22.0.
+        # Resolve the specified version (e.g. "latest") to an actual version number (e.g. 0.22.0).
         # If the binary is not a release (candidate), the result will be "unreleased binary".
         resolved_bazel_version = print_bazel_version_info(bazel_binary, platform)
         if bazel_version == "commit":
