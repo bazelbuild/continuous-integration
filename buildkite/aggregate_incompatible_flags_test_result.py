@@ -190,20 +190,20 @@ def print_result_info(build_number):
         thread.join()
         process_build_log(failed_jobs_per_flag, thread.log, thread.job)
 
-    success_info = construct_success_info(failed_jobs_per_flag)
+    failure_info = construct_failure_info(failed_jobs_per_flag)
 
     warning_info = construct_warning_info(already_failing_jobs)
 
-    failure_info = construct_failure_info(failed_jobs_per_flag)
+    success_info = construct_success_info(failed_jobs_per_flag)
 
-    if success_info:
-        print_info("success", "success", success_info)
+    if failure_info:
+        print_info("failure", "error", failure_info)
 
     if warning_info:
         print_info("warning", "warning", warning_info)
 
-    if failure_info:
-        print_info("failure", "error", failure_info)
+    if success_info:
+        print_info("success", "success", success_info)
 
 
 def main(argv=None):
