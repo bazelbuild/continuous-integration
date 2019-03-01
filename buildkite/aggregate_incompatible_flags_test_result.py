@@ -97,9 +97,6 @@ def get_build_log(job):
 
 
 def process_build_log(failed_jobs_per_flag, log, job):
-    if "Success: No migration needed." in log:
-        return
-
     # Remove this after Bazelisk returns non-zero when build fails without incompatible flags
     # See https://github.com/philwo/bazelisk/issues/34#issuecomment-467831202
     if "Failure: Command failed, even without incompatible flags." in log:
@@ -115,6 +112,10 @@ def process_build_log(failed_jobs_per_flag, log, job):
             line = line.strip()
             if line.startswith("--incompatible_") and line in failed_jobs_per_flag:
                 failed_jobs_per_flag[line].append(job)
+        return
+
+    if "Success: No migration needed." not in log:
+        raise BuildkiteException("Cannot recognize log of " + job["web_url"])
 
 
 def get_html_link_text(content, link):
