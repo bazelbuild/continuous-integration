@@ -922,6 +922,9 @@ def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags):
     if not targets:
         return
     print_collapsed_group("Setup (Run Targets)")
+    # When using bazelisk --migrate to test incompatible flags,
+    # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
+    incompatible_flags_to_use = [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags
     for target in targets:
         execute_command(
             [bazel_binary]
@@ -929,9 +932,7 @@ def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags):
             + common_startup_flags(platform)
             + ["run"]
             + common_build_flags(None, platform)
-            # When using bazelisk --migrate to test incompatible flags,
-            # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
-            + [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags
+            + incompatible_flags_to_use
             + [target]
         )
 
