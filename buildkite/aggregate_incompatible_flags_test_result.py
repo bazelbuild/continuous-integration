@@ -114,9 +114,6 @@ def process_build_log(failed_jobs_per_flag, log, job):
                 failed_jobs_per_flag[line].append(job)
         return
 
-    if "Success: No migration needed." not in log:
-        raise BuildkiteException("Cannot recognize log of " + job["web_url"])
-
 
 def get_html_link_text(content, link):
     return f"<a href=\"{link}\" target=\"_blank\">{content}</a>"
