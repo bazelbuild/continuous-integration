@@ -53,6 +53,7 @@ In the below, _X.Y_ is a release you are cutting.
 
 1. Search for issues with labels "migration-_X.Y-1_" that are not "breaking-change-_X.Y_"
 2. For all such issues, apply "migration-_X.Y_" label.
+   1. Do **not** remove any previous "migration-_X.Y-1_" labels.
 
 ### Create a Candidate
 
