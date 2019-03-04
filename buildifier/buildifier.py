@@ -18,6 +18,12 @@ regex = re.compile(
 BUILDIFIER_URL = "https://github.com/bazelbuild/buildtools/tree/master/buildifier"
 
 
+# https://github.com/bazelbuild/buildtools/blob/master/buildifier/buildifier.go#L333
+# Buildifier error code for "needs formatting". We should fail on all other error codes > 0
+# since they indicate a problem in how Buildifier is used.
+BUILDIFIER_FORMAT_ERROR_CODE = 4
+
+
 def eprint(*args, **kwargs):
     """
     Print to stderr and flush (just in case).
@@ -97,12 +103,12 @@ def main(argv=None):
     # Run formatter before linter since --lint=warn implies --mode=fix,
     # thus fixing any format issues.
     formatter_result = run_buildifier("--mode=check", files, "format check")
-    if formatter_result.returncode:
+    if formatter_result.returncode and formatter_result.returncode != BUILDIFIER_FORMAT_ERROR_CODE:
         output = "##### :bazel: buildifier: error while checking format:\n"
         output += "<pre><code>" + html.escape(formatter_result.stderr) + "</code></pre>"
         if "BUILDKITE_JOB_ID" in os.environ:
             output += "\n\nSee [job {job}](#{job})\n".format(job=os.environ["BUILDKITE_JOB_ID"])
-        
+
         upload_output(output)
         return formatter_result.returncode
 
