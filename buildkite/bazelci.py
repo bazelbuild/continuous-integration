@@ -562,10 +562,6 @@ def execute_commands(
     if incompatible_flags:
         bazel_version = None
 
-    # TODO(https://github.com/bazelbuild/bazel/issues/7555): remove this hack once the
-    # latest Bazel release is no longer broken.
-    bazel_version = bazel_version or "0.22.0"
-
     build_only = build_only or "test_targets" not in task_config
     test_only = test_only or "build_targets" not in task_config
     if build_only and test_only:
