@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import fnmatch
+import html
 import locale
 import os.path
 import re
@@ -62,10 +63,9 @@ def get_file_url(filename, line):
 
 def run_buildifier(flag, files, what):
     eprint("+++ :bazel: Running buildifier ({})".format(what))
-    result = subprocess.run(
+    return subprocess.run(
         ["buildifier", flag] + files, capture_output=True, universal_newlines=True
     )
-    return result.returncode, result.stderr
 
 
 def main(argv=None):
@@ -94,27 +94,36 @@ def main(argv=None):
 
     files = sorted(files)
 
-    # No need to check the exit code since buildifier -d returns 0 even when it finds unformatted files.
-    # It prints the names of all offending files, but appends a colon to every single one.
-    _, formatter_output = run_buildifier("-d", files, "format check")
-    unformatted_files = [l.rstrip(":") for l in formatter_output.splitlines()]
+    # Run formatter before linter since --lint=warn implies --mode=fix,
+    # thus fixing any format issues.
+    formatter_result = run_buildifier("--mode=check", files, "format check")
+    if formatter_result.returncode:
+        output = "##### :bazel: buildifier: error while checking format:\n"
+        output += "<pre><code>" + html.escape(formatter_result.stderr) + "</code></pre>"
+        if "BUILDKITE_JOB_ID" in os.environ:
+            output += "\n\nSee [job {job}](#{job})\n".format(job=os.environ["BUILDKITE_JOB_ID"])
+        
+        upload_output(output)
+        return formatter_result.returncode
 
-    linter_return_code, linter_output = run_buildifier("--lint=warn", files, "lint checks")
-
+    # Format: "<file name> # reformated"
+    unformatted_files = [l.partition(" ")[0] for l in formatter_result.stdout.splitlines()]
     if unformatted_files:
         eprint(
             "+++ :construction: Found {} file(s) that must be formatted".format(
                 len(unformatted_files)
             )
         )
-    elif linter_return_code == 0:
+
+    linter_result = run_buildifier("--lint=warn", files, "lint checks")
+    if linter_result.returncode == 0 and not unformatted_files:
         # If buildifier was happy, there's nothing left to do for us.
         eprint("+++ :tada: Buildifier found nothing to complain about")
-        return linter_return_code
+        return 0
 
     # Parse output.
     eprint("+++ :gear: Parsing buildifier output")
-    findings = list(regex.finditer(linter_output))
+    findings = list(regex.finditer(linter_result.stderr))
     output = "##### :bazel: buildifier: found {} problems in your WORKSPACE, BUILD and *.bzl files\n".format(
         len(findings)
     )
@@ -136,7 +145,7 @@ def main(argv=None):
 
     if unformatted_files:
         output += (
-            "<p/>There are also {} unformatted file(s) in the repository. "
+            "\n<p/>There are also {} unformatted file(s) in the repository. "
             'Please download <a href="{}">buildifier</a> and run the following '
             "command in your workspace:"
             "<br/><code>buildifier {}</code>".format(
@@ -147,7 +156,7 @@ def main(argv=None):
     upload_output(output)
 
     # Preserve buildifier's exit code.
-    return linter_return_code
+    return linter_result.returncode
 
 
 if __name__ == "__main__":
