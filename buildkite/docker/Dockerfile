@@ -35,7 +35,7 @@ RUN mkdir -p /opt/android-sdk-linux && \
     chown -R root:root /opt/android-sdk-linux
 
 FROM builder AS bazelisk
-RUN curl -Lo /usr/local/bin/bazel https://github.com/philwo/bazelisk/releases/download/v0.0.1/bazelisk-linux-amd64 && \
+RUN curl -Lo /usr/local/bin/bazel https://github.com/philwo/bazelisk/releases/download/v0.0.2/bazelisk-linux-amd64 && \
     chown root:root /usr/local/bin/bazel && \
     chmod 0755 /usr/local/bin/bazel
 
