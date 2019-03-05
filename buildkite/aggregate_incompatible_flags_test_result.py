@@ -111,6 +111,11 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
             line = line.strip()
             if line.startswith("--incompatible_") and line in failed_jobs_per_flag:
                 failed_jobs_per_flag[line].append(job)
+        return
+
+    # If the job failed for other reasons, we add it into already failing jobs.
+    if job["state"] == "failed":
+        already_failing_jobs.append(job)
 
 
 def get_html_link_text(content, link):
