@@ -96,10 +96,9 @@ def get_build_log(job):
     return output
 
 
-def process_build_log(failed_jobs_per_flag, log, job):
-    # Remove this after Bazelisk returns non-zero when build fails without incompatible flags
-    # See https://github.com/philwo/bazelisk/issues/34#issuecomment-467831202
+def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
     if "Failure: Command failed, even without incompatible flags." in log:
+        already_failing_jobs.append(job)
         return
 
     if "+++ Result" in log:
@@ -112,7 +111,6 @@ def process_build_log(failed_jobs_per_flag, log, job):
             line = line.strip()
             if line.startswith("--incompatible_") and line in failed_jobs_per_flag:
                 failed_jobs_per_flag[line].append(job)
-        return
 
 
 def get_html_link_text(content, link):
@@ -174,19 +172,14 @@ def print_result_info(build_number):
     threads = []
     for job in build_info["jobs"]:
         # Some irrelevant job has no "state" field
-        if not "state" in job:
-            continue
-        if job["state"] == "passed":
+        if "state" in job:
             thread = LogFetcher(job)
             threads.append(thread)
             thread.start()
-        # Bazelisk should return non-zero if project fails even without incompatible flags
-        elif job["state"] == "failed":
-            already_failing_jobs.append(job)
 
     for thread in threads:
         thread.join()
-        process_build_log(failed_jobs_per_flag, thread.log, thread.job)
+        process_build_log(failed_jobs_per_flag, already_failing_jobs, thread.log, thread.job)
 
     failure_info = construct_failure_info(failed_jobs_per_flag)
 
