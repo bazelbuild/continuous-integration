@@ -236,6 +236,15 @@ def main(argv=None):
         print("Usage: create_images.py {}".format(" ".join(IMAGE_CREATION_VMS.keys())))
         return 1
 
+    unknown_args = set(argv).difference(IMAGE_CREATION_VMS.keys())
+    if unknown_args:
+        print(
+            "Unknown platforms: {}\nAvailable platforms: {}".format(
+                ", ".join(unknown_args), ", ".join(IMAGE_CREATION_VMS.keys())
+            )
+        )
+        return 1
+
     if subprocess.check_output(["git", "status", "--porcelain"], universal_newlines=True).strip():
         print(
             "There are pending changes in your Git repository. You have to commit "
@@ -245,10 +254,8 @@ def main(argv=None):
         return 1
 
     # Put VM creation instructions into the work queue.
-    for name, params in IMAGE_CREATION_VMS.items():
-        if argv and name not in argv:
-            continue
-        WORK_QUEUE.put({"name": name, "params": params})
+    for name in argv:
+        WORK_QUEUE.put({"name": name, "params": IMAGE_CREATION_VMS[name]})
 
     # Spawn worker threads that will create the VMs.
     threads = []
