@@ -160,7 +160,7 @@ def main(argv=None):
         output += (
             "Please download <a href=\"{}\">buildifier</a> and run the following "
             "command in your workspace:<br/><pre><code>buildifier {}</code></pre>"
-            "<br/>\n".format(
+            "\n".format(
                 BUILDIFIER_URL, " ".join(unformatted_files)
             )
         )
