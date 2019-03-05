@@ -158,8 +158,9 @@ def main(argv=None):
     if unformatted_files:
         output = create_heading("format", len(unformatted_files))
         output += (
-            'Please download <a href="{}">buildifier</a> and run the following '
-            "command in your workspace:<br/><code>buildifier {}</code><br/>\n".format(
+            "Please download <a href=\"{}\">buildifier</a> and run the following "
+            "command in your workspace:<br/><pre><code>buildifier {}</code></pre>"
+            "<br/>\n".format(
                 BUILDIFIER_URL, " ".join(unformatted_files)
             )
         )
