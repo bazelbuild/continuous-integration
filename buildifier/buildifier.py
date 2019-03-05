@@ -88,6 +88,12 @@ def run_buildifier(flag, files=None, version=None, what=None):
     return subprocess.run(args, capture_output=True, universal_newlines=True)
 
 
+def create_heading(issue_type, issue_count):
+    return "##### :bazel: buildifier: found {} {} issue{} in your WORKSPACE, BUILD and *.bzl files\n".format(
+        issue_count, issue_type, "s" if issue_count > 1 else ""
+    )
+
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
@@ -148,12 +154,20 @@ def main(argv=None):
         eprint("+++ :tada: Buildifier found nothing to complain about")
         return 0
 
+    output = ""
+    if unformatted_files:
+        output = create_heading("format", len(unformatted_files))
+        output += (
+            'Please download <a href="{}">buildifier</a> and run the following '
+            "command in your workspace:<br/><code>buildifier {}</code><br/>\n".format(
+                BUILDIFIER_URL, " ".join(unformatted_files)
+            )
+        )
+
     # Parse output.
     eprint("+++ :gear: Parsing buildifier output")
     findings = list(regex.finditer(linter_result.stderr))
-    output = "##### :bazel: buildifier: found {} problems in your WORKSPACE, BUILD and *.bzl files\n".format(
-        len(findings)
-    )
+    output += create_heading("lint", len(findings))
     output += "<pre><code>"
     for finding in findings:
         file_url = get_file_url(finding["filename"], finding["line"])
@@ -169,17 +183,6 @@ def main(argv=None):
             finding["message_url"], finding["message_id"], finding["message"]
         )
     output = output.strip() + "</pre></code>"
-
-    if unformatted_files:
-        output += (
-            "\n<p/>There are also {} unformatted file(s) in the repository. "
-            'Please download <a href="{}">buildifier</a> and run the following '
-            "command in your workspace:"
-            "<br/><code>buildifier {}</code>".format(
-                len(unformatted_files), BUILDIFIER_URL, " ".join(unformatted_files)
-            )
-        )
-
     upload_output(output)
 
     # Preserve buildifier's exit code.
