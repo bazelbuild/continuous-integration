@@ -248,7 +248,7 @@ Please see the [Bazelisk documentation](https://github.com/philwo/bazelisk/blob/
 
 ### Running Buildifier on CI
 
-For each pipeline you can enable [Buildifier](https://github.com/bazelbuild/buildtools/tree/master/buildifier) to check whether all WORKSPACE, BUILD, BUILD.bazel and .bzl files comply with the standard formatting convention. Simply add the following code to the top of the particular pipeline configuration:
+For each pipeline you can enable [Buildifier](https://github.com/bazelbuild/buildtools/tree/master/buildifier) to check all WORKSPACE, BUILD, BUILD.bazel and .bzl files for lint warnings and formatting violations. Simply add the following code to the top of the particular pipeline configuration:
 
 ```yaml
 ---
@@ -256,7 +256,7 @@ buildifier: true
 [...]
 ```
 
-As a consequence, every future build for this pipeline will contain an additional "Buildifier" step that runs the latest version of Buildifier in "lint" mode.
+As a consequence, every future build for this pipeline will contain an additional "Buildifier" step that runs the latest version of Buildifier both in "lint" and "check" mode.
 
 ### Using multiple Workspaces in a single Pipeline
 
