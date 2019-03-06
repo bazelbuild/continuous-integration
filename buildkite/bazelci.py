@@ -922,15 +922,22 @@ def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags):
     # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
     incompatible_flags_to_use = [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags
     for target in targets:
-        execute_command(
-            [bazel_binary]
-            + bazelisk_flags()
-            + common_startup_flags(platform)
-            + ["run"]
-            + common_build_flags(None, platform)
-            + incompatible_flags_to_use
-            + [target]
-        )
+        try:
+            execute_command(
+                [bazel_binary]
+                + bazelisk_flags()
+                + common_startup_flags(platform)
+                + ["run"]
+                + common_build_flags(None, platform)
+                + incompatible_flags_to_use
+                + [target]
+            )
+        except subprocess.CalledProcessError as e:
+            msg = "bazel run failed with exit code {}".format(e.returncode)
+            if use_bazelisk_migrate():
+                print_collapsed_group(msg)
+            else:
+                raise BuildkiteException(msg)
 
 
 def remote_caching_flags(platform):
@@ -1139,7 +1146,11 @@ def execute_bazel_build(
             [bazel_binary] + bazelisk_flags() + common_startup_flags(platform) + ["build"] + aggregated_flags + targets
         )
     except subprocess.CalledProcessError as e:
-        raise BuildkiteException("bazel build failed with exit code {}".format(e.returncode))
+        msg = "bazel build failed with exit code {}".format(e.returncode)
+        if use_bazelisk_migrate():
+            print_collapsed_group(msg)
+        else:
+            raise BuildkiteException(msg)
 
 
 def execute_bazel_test(
@@ -1177,7 +1188,11 @@ def execute_bazel_test(
             [bazel_binary] + bazelisk_flags() + common_startup_flags(platform) + ["test"] + aggregated_flags + targets
         )
     except subprocess.CalledProcessError as e:
-        raise BuildkiteException("bazel test failed with exit code {}".format(e.returncode))
+        msg = "bazel test failed with exit code {}".format(e.returncode)
+        if use_bazelisk_migrate():
+            print_collapsed_group(msg)
+        else:
+            raise BuildkiteException(msg)
 
 
 def upload_test_logs(bep_file, tmpdir):
