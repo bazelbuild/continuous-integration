@@ -136,7 +136,9 @@ def get_releases():
 
 
 def get_release_urls(release):
-    buildifier_assets = [a for a in release["assets"] if a["name"] in ("buildifier", "buildifier.linux")]
+    buildifier_assets = [
+        a for a in release["assets"] if a["name"] in ("buildifier", "buildifier.linux")
+    ]
     if not buildifier_assets:
         raise Exception("There is no Buildifier binary for release {}".format(release["tag_name"]))
 
@@ -144,8 +146,7 @@ def get_release_urls(release):
 
 
 def download_buildifier(url):
-    tmpdir = tempfile.mkdtemp()
-    path = os.path.join(tmpdir, "buildifier")
+    path = os.path.join(tempfile.mkdtemp(), "buildifier")
     with closing(urlopen(url)) as response:
         with open(path, "wb") as out_file:
             shutil.copyfileobj(response, out_file)
@@ -230,7 +231,7 @@ def main(argv=None):
         output = create_heading("format", len(unformatted_files))
         display_version = " {}".format(version) if version else ""
         output += (
-            'Please download <a href="{}">buildifier{}</a> and run the following '
+            "Please download <a href=\'{}\'>buildifier{}</a> and run the following "
             "command in your workspace:<br/><pre><code>buildifier {}</code></pre>"
             "\n".format(display_url, display_version, " ".join(unformatted_files))
         )
