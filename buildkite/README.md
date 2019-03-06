@@ -252,11 +252,12 @@ For each pipeline you can enable [Buildifier](https://github.com/bazelbuild/buil
 
 ```yaml
 ---
-buildifier: true
+buildifier: latest
 [...]
 ```
 
 As a consequence, every future build for this pipeline will contain an additional "Buildifier" step that runs the latest version of Buildifier both in "lint" and "check" mode.
+Alternatively you can specify a particular Buildifier version such as "0.20.0".
 
 ### Using multiple Workspaces in a single Pipeline
 
