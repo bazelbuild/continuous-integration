@@ -15,69 +15,20 @@
 # limitations under the License.
 
 import argparse
-import base64
-import json
-import os
-import re
-import subprocess
 import sys
 import yaml
 
 import bazelci
 from bazelci import BuildkiteException
 
-BUILD_STATUS_API_URL = "https://api.buildkite.com/v2/organizations/bazel/pipelines/bazel-at-release-plus-incompatible-flags/builds/"
-
-ENCRYPTED_BUILDKITE_API_TOKEN = """
-CiQA4DEB9ldzC+E39KomywtqXfaQ86hhulgeDsicds2BuvbCYzsSUAAqwcvXZPh9IMWlwWh94J2F
-exosKKaWB0tSRJiPKnv2NPDfEqGul0ZwVjtWeASpugwxxKeLhFhPMcgHMPfndH6j2GEIY6nkKRbP
-uwoRMCwe
-""".strip()
-
 # Buildkite has a max jobs limit at 2000, but that includes jobs already
 # executed by the pipeline. Setting arbitrary lower number to make sure we fit
 # under.
 BUILDKITE_MAX_JOBS_LIMIT = 1500
 
+ORG = "bazel"
 
-def buildkite_token():
-    return (
-        subprocess.check_output(
-            [
-                bazelci.gcloud_command(),
-                "kms",
-                "decrypt",
-                "--project",
-                "bazel-untrusted",
-                "--location",
-                "global",
-                "--keyring",
-                "buildkite",
-                "--key",
-                "buildkite-untrusted-api-token",
-                "--ciphertext-file",
-                "-",
-                "--plaintext-file",
-                "-",
-            ],
-            input=base64.b64decode(ENCRYPTED_BUILDKITE_API_TOKEN),
-            env=os.environ,
-        )
-        .decode("utf-8")
-        .strip()
-    )
-
-
-def get_build_status_api_url(build_number):
-    return BUILD_STATUS_API_URL + "%s?access_token=%s" % (build_number, buildkite_token())
-
-
-def get_build_info(build_number):
-    output = subprocess.check_output(["curl", get_build_status_api_url(build_number)]).decode(
-        "utf-8"
-    )
-    build_info = json.loads(output)
-    return build_info
+PIPELINE = "bazel-at-release-plus-incompatible-flags"
 
 
 def get_failing_jobs(build_info):
@@ -145,8 +96,7 @@ def get_flags_from_command(command):
     return flags
 
 
-def print_steps_for_failing_jobs(build_number):
-    build_info = get_build_info(build_number)
+def print_steps_for_failing_jobs(build_info):
     failing_jobs = get_failing_jobs(build_info)
     incompatible_flags = list(bazelci.fetch_incompatible_flags().keys())
     pipeline_steps = []
@@ -183,7 +133,9 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.build_number:
-            print_steps_for_failing_jobs(args.build_number)
+            client = bazelci.BuildkiteClient(org=ORG, pipeline=PIPELINE)
+            build_info = client.get_build_info(args.build_number)
+            print_steps_for_failing_jobs(build_info)
         else:
             parser.print_help()
             return 2

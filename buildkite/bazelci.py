@@ -417,6 +417,61 @@ class BinaryUploadRaceException(Exception):
     pass
 
 
+class BuildkiteClient(object):
+
+    _ENCRYPTED_BUILDKITE_API_TOKEN = """
+CiQA4DEB9ldzC+E39KomywtqXfaQ86hhulgeDsicds2BuvbCYzsSUAAqwcvXZPh9IMWlwWh94J2F
+exosKKaWB0tSRJiPKnv2NPDfEqGul0ZwVjtWeASpugwxxKeLhFhPMcgHMPfndH6j2GEIY6nkKRbP
+uwoRMCwe
+""".strip()
+
+    _BUILD_STATUS_URL_TEMPLATE = ("https://api.buildkite.com/v2/"
+                                  "organizations/{}/pipelines/{}/builds/{}")
+
+    def __init__(self, org, pipeline):
+        self._org = org
+        self._pipeline = pipeline
+        self._token = self._get_buildkite_token()
+
+    def _get_buildkite_token(self):
+        return (
+            subprocess.check_output(
+                [
+                    gcloud_command(),
+                    "kms",
+                    "decrypt",
+                    "--project",
+                    "bazel-untrusted",
+                    "--location",
+                    "global",
+                    "--keyring",
+                    "buildkite",
+                    "--key",
+                    "buildkite-untrusted-api-token",
+                    "--ciphertext-file",
+                    "-",
+                    "--plaintext-file",
+                    "-",
+                ],
+                input=base64.b64decode(self._ENCRYPTED_BUILDKITE_API_TOKEN),
+                env=os.environ,
+            )
+            .decode("utf-8")
+            .strip()
+        )
+
+    def _open_url(self, url):
+        return urllib.request.urlopen("{}?access_token={}".format(url, self._token)).read().decode("utf-8")
+
+    def get_build_info(self, build_number):
+        url = self._BUILD_STATUS_URL_TEMPLATE.format(self._org, self._pipeline, build_number)
+        output = self._open_url(url)
+        return json.loads(output)
+
+    def get_build_log(self, job):
+        return self._open_url(job["raw_log_url"])
+
+
 def eprint(*args, **kwargs):
     """
     Print to stderr and flush (just in case).
