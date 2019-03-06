@@ -99,9 +99,10 @@ def get_build_log(job):
 def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
     if "Failure: Command failed, even without incompatible flags." in log:
         already_failing_jobs.append(job)
-        return
 
-    if "+++ Result" in log:
+    # bazelisk --migrate might run for multiple times for run / build / test,
+    # so there could be several "+++ Result" sections.
+    while "+++ Result" in log:
         index_success = log.rfind("Command was successful with the following flags:")
         index_failure = log.rfind("Migration is needed for the following flags:")
         if index_success== -1 or index_failure == -1:
@@ -111,7 +112,7 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
             line = line.strip()
             if line.startswith("--incompatible_") and line in failed_jobs_per_flag:
                 failed_jobs_per_flag[line].append(job)
-        return
+        log = log[0: log.rfind("+++ Result")]
 
     # If the job failed for other reasons, we add it into already failing jobs.
     if job["state"] == "failed":
