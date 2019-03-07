@@ -403,6 +403,9 @@ BUILD_LABEL_PATTERN = re.compile(r"^Build label: (\S+)$", re.MULTILINE)
 BUILDIFIER_VERSION_ENV_VAR = "BUILDIFIER_VERSION"
 
 
+BUILDIFIER_STEP_NAME = "Buildifier"
+
+
 class BuildkiteException(Exception):
     """
     Raised whenever something goes wrong and we should exit with an error.
@@ -428,8 +431,9 @@ exosKKaWB0tSRJiPKnv2NPDfEqGul0ZwVjtWeASpugwxxKeLhFhPMcgHMPfndH6j2GEIY6nkKRbP
 uwoRMCwe
 """.strip()
 
-    _BUILD_STATUS_URL_TEMPLATE = ("https://api.buildkite.com/v2/"
-                                  "organizations/{}/pipelines/{}/builds/{}")
+    _BUILD_STATUS_URL_TEMPLATE = (
+        "https://api.buildkite.com/v2/organizations/{}/pipelines/{}/builds/{}"
+    )
 
     def __init__(self, org, pipeline):
         self._org = org
@@ -464,7 +468,11 @@ uwoRMCwe
         )
 
     def _open_url(self, url):
-        return urllib.request.urlopen("{}?access_token={}".format(url, self._token)).read().decode("utf-8")
+        return (
+            urllib.request.urlopen("{}?access_token={}".format(url, self._token))
+            .read()
+            .decode("utf-8")
+        )
 
     def get_build_info(self, build_number):
         url = self._BUILD_STATUS_URL_TEMPLATE.format(self._org, self._pipeline, build_number)
@@ -591,7 +599,7 @@ def use_bazelisk_migrate():
     """
     If USE_BAZELISK_MIGRATE is set, we use `bazelisk --migrate` to test incompatible flags.
     """
-    return os.environ.get("USE_BAZELISK_MIGRATE", None) != None
+    return bool(os.environ.get("USE_BAZELISK_MIGRATE"))
 
 
 def bazelisk_flags():
@@ -1436,7 +1444,7 @@ def print_project_pipeline(
     if not is_downstream_project and buildifier_version:
         pipeline_steps.append(
             create_docker_step(
-                "Buildifier",
+                BUILDIFIER_STEP_NAME,
                 image=BUILDIFIER_DOCKER_IMAGE,
                 additional_env_vars={BUILDIFIER_VERSION_ENV_VAR: buildifier_version},
             )
@@ -1482,9 +1490,12 @@ def print_project_pipeline(
         or pipeline_slug not in all_downstream_pipeline_slugs
         or incompatible_flags
     ):
-        pipeline_steps.append("wait")
-
-        # If all builds succeed, update the last green commit of this project
+        # We need to call "Try Update Last Green Commit" even if there are failures,
+        # since we don't want a failing Buildifier step to block the update of
+        # the last green commit for this project.
+        # try_update_last_green_commit() ensures that we don't update the commit
+        # if any build or test steps fail.
+        pipeline_steps.append({"wait": None, "continue_on_failure": True})
         pipeline_steps.append(
             create_step(
                 label="Try Update Last Green Commit",
@@ -1900,7 +1911,30 @@ def get_last_green_commit(git_repository, pipeline_slug):
 
 
 def try_update_last_green_commit():
+    org_slug = os.getenv("BUILDKITE_ORGANIZATION_SLUG")
     pipeline_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
+    build_number = os.getenv("BUILDKITE_BUILD_NUMBER")
+    current_job_id = os.getenv("BUILDKITE_JOB_ID")
+
+    client = BuildkiteClient(org=org_slug, pipeline=pipeline_slug)
+    build_info = client.get_build_info(build_number)
+
+    # Find any failing steps other than Buildifier and "try update last green".
+    def HasFailed(job):
+        return (
+            job["state"] != "passed"
+            and job["id"] != current_job_id
+            and job["name"] != BUILDIFIER_STEP_NAME
+        )
+
+    failing_jobs = [j["name"] for j in build_info["jobs"] if HasFailed(j)]
+    if failing_jobs:
+        raise BuildkiteException(
+            "Cannot update last green commit due to {} failing step(s): {}".format(
+                len(failing_jobs), ", ".join(failing_jobs)
+            )
+        )
+
     git_repository = os.getenv("BUILDKITE_REPO")
     last_green_commit = get_last_green_commit(git_repository, pipeline_slug)
     current_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
