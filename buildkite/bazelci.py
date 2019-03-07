@@ -402,6 +402,8 @@ BUILD_LABEL_PATTERN = re.compile(r"^Build label: (\S+)$", re.MULTILINE)
 
 BUILDIFIER_VERSION_ENV_VAR = "BUILDIFIER_VERSION"
 
+BUILDIFIER_WARNINGS_ENV_VAR = "BUILDIFIER_WARNINGS"
+
 
 BUILDIFIER_STEP_NAME = "Buildifier"
 
@@ -1439,14 +1441,39 @@ def print_project_pipeline(
     # In Bazel Downstream Project pipelines, git_repository and project_name must be specified.
     is_downstream_project = (use_but or incompatible_flags) and git_repository and project_name
 
+    buildifier_config = configs.get("buildifier")
     # Skip Buildifier when we test downstream projects.
-    buildifier_version = configs.get("buildifier")
-    if not is_downstream_project and buildifier_version:
+    if buildifier_config and not is_downstream_project:
+        buildifier_env_vars = {}
+        if isinstance(buildifier_config, str):
+            # Simple format:
+            # ---
+            # buildifier: latest
+            buildifier_env_vars[BUILDIFIER_VERSION_ENV_VAR] = buildifier_config
+        else:
+            # Advanced format:
+            # ---
+            # buildifier:
+            #   version: latest
+            #   warnings: all
+
+            def SetEnvVar(config_key, env_var_name):
+                if config_key in buildifier_config:
+                    buildifier_env_vars[env_var_name] = buildifier_config[config_key]
+
+            SetEnvVar("version", BUILDIFIER_VERSION_ENV_VAR)
+            SetEnvVar("warnings", BUILDIFIER_WARNINGS_ENV_VAR)
+
+        if not buildifier_env_vars:
+            raise BuildkiteException(
+                'Invalid buildifier configuration entry "{}"'.format(buildifier_config)
+            )
+
         pipeline_steps.append(
             create_docker_step(
                 BUILDIFIER_STEP_NAME,
                 image=BUILDIFIER_DOCKER_IMAGE,
-                additional_env_vars={BUILDIFIER_VERSION_ENV_VAR: buildifier_version},
+                additional_env_vars=buildifier_env_vars,
             )
         )
 

@@ -259,6 +259,16 @@ buildifier: latest
 As a consequence, every future build for this pipeline will contain an additional "Buildifier" step that runs the latest version of Buildifier both in "lint" and "check" mode.
 Alternatively you can specify a particular Buildifier version such as "0.20.0".
 
+There is also a more advanced syntax that allows you to specify which [warnings](https://github.com/bazelbuild/buildtools/blob/master/WARNINGS.md) should be checked in [lint mode](https://github.com/bazelbuild/buildtools/tree/master/buildifier#linter):
+
+```yaml
+---
+buildifier:
+  version: latest
+  warnings: "positional-args,duplicated-name"
+[...]
+```
+
 ### Using multiple Workspaces in a single Pipeline
 
 Some projects may contain one or more `WORKSPACE` files in subdirectories, in addition to their top-level `WORKSPACE` file.
