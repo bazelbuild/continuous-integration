@@ -237,28 +237,30 @@ def main(argv=None):
         )
 
     # Parse output.
-    eprint("+++ :gear: Parsing buildifier output")
-    findings = list(regex.finditer(linter_result.stderr))
-    output += create_heading("lint", len(findings))
-    output += "<pre><code>"
-    for finding in findings:
-        file_url = get_file_url(finding["filename"], finding["line"])
-        if file_url:
-            output += '<a href="{}">{}:{}</a>:'.format(
-                file_url, finding["filename"], finding["line"]
+    if linter_result.returncode:
+        eprint("+++ :gear: Parsing buildifier output")
+        findings = list(regex.finditer(linter_result.stderr))
+        output += create_heading("lint", len(findings))
+        output += "<pre><code>"
+        for finding in findings:
+            file_url = get_file_url(finding["filename"], finding["line"])
+            if file_url:
+                output += '<a href="{}">{}:{}</a>:'.format(
+                    file_url, finding["filename"], finding["line"]
+                )
+            else:
+                output += "{}:{}:".format(finding["filename"], finding["line"])
+            if finding["column"]:
+                output += "{}:".format(finding["column"])
+            output += ' <a href="{}">{}</a>: {}\n'.format(
+                finding["message_url"], finding["message_id"], finding["message"]
             )
-        else:
-            output += "{}:{}:".format(finding["filename"], finding["line"])
-        if finding["column"]:
-            output += "{}:".format(finding["column"])
-        output += ' <a href="{}">{}</a>: {}\n'.format(
-            finding["message_url"], finding["message_id"], finding["message"]
-        )
-    output = output.strip() + "</pre></code>"
+        output = output.strip() + "</pre></code>"
+
     upload_output(output)
 
     # Preserve buildifier's exit code.
-    return linter_result.returncode
+    return max(linter_result.returncode, formatter_result.returncode)
 
 
 if __name__ == "__main__":
