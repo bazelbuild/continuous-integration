@@ -94,9 +94,13 @@ def construct_failure_info(failed_jobs_per_flag):
         if jobs:
             github_url = INCOMPATIBLE_FLAGS[flag]
             info_text.append(f"* **{flag}** " + get_html_link_text(":github:", github_url))
+            job_num = len(jobs)
+            s = ("" if job_num == 1 else "s")
+            info_text.append(f"    <details><summary>{job_num} job{s} broken</summary><ul>")
             for job in jobs.values():
                 link_text = get_html_link_text(job["name"], job["web_url"])
-                info_text.append(f"  - {link_text}")
+                info_text.append(f"        <li>{link_text}</li>")
+            info_text.append("    </ul></details>")
     if len(info_text) == 1:
         return None
     return info_text
