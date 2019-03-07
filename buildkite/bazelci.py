@@ -127,6 +127,7 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml",
         "pipeline_slug": "gerrit",
+        "disabled_reason": "https://bugs.chromium.org/p/gerrit/issues/detail?id=10570",
     },
     "gmaven_rules": {
         "git_repository": "https://github.com/bazelbuild/gmaven_rules.git",
