@@ -3,7 +3,7 @@
 Status: Work in progress
 
 This is the guide to conducting a Bazel release. This is especially relevant for
-release managers, but will be of interest ti anyone who is curious about the
+release managers, but will be of interest to anyone who is curious about the
 release process.
 
 Each release has a tracking bug (see the
