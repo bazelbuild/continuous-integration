@@ -432,7 +432,7 @@ uwoRMCwe
 """.strip()
 
     _BUILD_STATUS_URL_TEMPLATE = (
-        "https://api.buildkite.com/v2/" "organizations/{}/pipelines/{}/builds/{}"
+        "https://api.buildkite.com/v2/organizations/{}/pipelines/{}/builds/{}"
     )
 
     def __init__(self, org, pipeline):
