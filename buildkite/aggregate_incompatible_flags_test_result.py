@@ -54,7 +54,7 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
         lines = log[index_failure:].split("\n")
         for line in lines:
             line = line.strip()
-            if line.startswith("--incompatible_") and line in failed_jobs_per_flag:
+            if line.startswith("--incompatible_") and line in INCOMPATIBLE_FLAGS:
                 failed_jobs_per_flag[line][job["id"]] = job
         log = log[0: log.rfind("+++ Result")]
 
