@@ -400,6 +400,8 @@ EDql
 
 BUILD_LABEL_PATTERN = re.compile(r"^Build label: (\S+)$", re.MULTILINE)
 
+BUILDIFIER_VERSION_ENV_VAR = "BUILDIFIER_VERSION"
+
 
 class BuildkiteException(Exception):
     """
@@ -984,7 +986,9 @@ def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags):
     print_collapsed_group("Setup (Run Targets)")
     # When using bazelisk --migrate to test incompatible flags,
     # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
-    incompatible_flags_to_use = [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags
+    incompatible_flags_to_use = (
+        [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags
+    )
     for target in targets:
         try:
             execute_command(
@@ -1199,11 +1203,16 @@ def execute_bazel_build(
         # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
         [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags,
         bep_file,
-        enable_remote_cache=True
+        enable_remote_cache=True,
     )
     try:
         execute_command(
-            [bazel_binary] + bazelisk_flags() + common_startup_flags(platform) + ["build"] + aggregated_flags + targets
+            [bazel_binary]
+            + bazelisk_flags()
+            + common_startup_flags(platform)
+            + ["build"]
+            + aggregated_flags
+            + targets
         )
     except subprocess.CalledProcessError as e:
         handle_bazel_failure(e, "build")
@@ -1236,12 +1245,17 @@ def execute_bazel_test(
         # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
         [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags,
         bep_file,
-        enable_remote_cache=not monitor_flaky_tests
+        enable_remote_cache=not monitor_flaky_tests,
     )
 
     try:
         execute_command(
-            [bazel_binary] + bazelisk_flags() + common_startup_flags(platform) + ["test"] + aggregated_flags + targets
+            [bazel_binary]
+            + bazelisk_flags()
+            + common_startup_flags(platform)
+            + ["test"]
+            + aggregated_flags
+            + targets
         )
     except subprocess.CalledProcessError as e:
         handle_bazel_failure(e, "test")
@@ -1366,7 +1380,11 @@ def create_step(label, commands, platform=DEFAULT_PLATFORM):
         }
 
 
-def create_docker_step(label, image, commands=None):
+def create_docker_step(label, image, commands=None, additional_env_vars=None):
+    env = ["BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "BUILDKITE_GS_ACL"]
+    if additional_env_vars:
+        env += ["{}={}".format(k, v) for k, v in additional_env_vars.items()]
+
     step = {
         "label": label,
         "command": commands,
@@ -1375,7 +1393,7 @@ def create_docker_step(label, image, commands=None):
             "philwo/docker": {
                 "always-pull": True,
                 "debug": True,
-                "environment": ["BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "BUILDKITE_GS_ACL"],
+                "environment": env,
                 "image": image,
                 "network": "host",
                 "privileged": True,
@@ -1414,8 +1432,15 @@ def print_project_pipeline(
     is_downstream_project = (use_but or incompatible_flags) and git_repository and project_name
 
     # Skip Buildifier when we test downstream projects.
-    if not is_downstream_project and configs.get("buildifier"):
-        pipeline_steps.append(create_docker_step("Buildifier", image=BUILDIFIER_DOCKER_IMAGE))
+    buildifier_version = configs.get("buildifier")
+    if not is_downstream_project and buildifier_version:
+        pipeline_steps.append(
+            create_docker_step(
+                "Buildifier",
+                image=BUILDIFIER_DOCKER_IMAGE,
+                additional_env_vars={BUILDIFIER_VERSION_ENV_VAR: buildifier_version},
+            )
+        )
 
     # In Bazel Downstream Project pipelines, we should test the project at the last green commit.
     git_commit = None
