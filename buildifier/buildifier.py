@@ -30,6 +30,8 @@ BUILDIFIER_FORMAT_ERROR_CODE = 4
 
 VERSION_ENV_VAR = "BUILDIFIER_VERSION"
 
+WARNINGS_ENV_VAR = "BUILDIFIER_WARNINGS"
+
 BUILDIFIER_RELEASES_URL = "https://api.github.com/repos/bazelbuild/buildtools/releases"
 
 BUILDIFIER_DEFAULT_DISPLAY_URL = "https://github.com/bazelbuild/buildtools/tree/master/buildifier"
@@ -87,7 +89,7 @@ def get_file_url(filename, line):
     return None
 
 
-def run_buildifier(binary, flag, files=None, version=None, what=None):
+def run_buildifier(binary, flags, files=None, version=None, what=None):
     label = "+++ :bazel: Running "
     if version:
         label += "Buildifier " + version
@@ -98,7 +100,7 @@ def run_buildifier(binary, flag, files=None, version=None, what=None):
 
     eprint(label)
 
-    args = [binary, flag]
+    args = [binary] + flags
     if files:
         args += files
 
@@ -196,14 +198,14 @@ def main(argv=None):
     # Determine Buildifier version if the user did not request a specific version.
     if not version:
         eprint("+++ :female-detective: Detecting Buildifier version")
-        version_result = run_buildifier(buildifier_binary, "--version", what="Version info")
+        version_result = run_buildifier(buildifier_binary, ["--version"], what="Version info")
         match = BUILDIFIER_VERSION_PATTERN.search(version_result.stdout)
         version = match.group(1) if match and match.group(1) != "redacted" else None
 
     # Run formatter before linter since --lint=warn implies --mode=fix,
     # thus fixing any format issues.
     formatter_result = run_buildifier(
-        buildifier_binary, "--mode=check", files=files, version=version, what="Format check"
+        buildifier_binary, ["--mode=check"], files=files, version=version, what="Format check"
     )
     if formatter_result.returncode and formatter_result.returncode != BUILDIFIER_FORMAT_ERROR_CODE:
         print_error("checking format", formatter_result.stderr)
@@ -218,8 +220,14 @@ def main(argv=None):
             )
         )
 
+    lint_flags = ["--lint=warn"]
+    warnings = os.getenv(WARNINGS_ENV_VAR)
+    if warnings:
+        eprint("Running Buildifier with the following warnings: {}".format(warnings))
+        lint_flags.append("--warnings={}".format(warnings))
+
     linter_result = run_buildifier(
-        buildifier_binary, "--lint=warn", files=files, version=version, what="Lint checks"
+        buildifier_binary, lint_flags, files=files, version=version, what="Lint checks"
     )
     if linter_result.returncode == 0 and not unformatted_files:
         # If buildifier was happy, there's nothing left to do for us.
