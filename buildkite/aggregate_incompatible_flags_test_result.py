@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import argparse
+import collections
 import sys
 import threading
 
@@ -54,7 +55,7 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
         for line in lines:
             line = line.strip()
             if line.startswith("--incompatible_") and line in failed_jobs_per_flag:
-                failed_jobs_per_flag[line].append(job)
+                failed_jobs_per_flag[line][job["id"]] = job
         log = log[0: log.rfind("+++ Result")]
 
     # If the job failed for other reasons, we add it into already failing jobs.
@@ -68,8 +69,8 @@ def get_html_link_text(content, link):
 
 def construct_success_info(failed_jobs_per_flag):
     info_text = ["#### The following flags didn't break any passing jobs"]
-    for flag in failed_jobs_per_flag:
-        if not failed_jobs_per_flag[flag]:
+    for flag, jobs in failed_jobs_per_flag.items():
+        if not jobs:
             github_url = INCOMPATIBLE_FLAGS[flag]
             info_text.append(f"* **{flag}** " + get_html_link_text(":github:", github_url))
     if len(info_text) == 1:
@@ -89,11 +90,11 @@ def construct_warning_info(already_failing_jobs):
 
 def construct_failure_info(failed_jobs_per_flag):
     info_text = ["#### Downstream projects need to migrate for the following flags"]
-    for flag in failed_jobs_per_flag:
-        if failed_jobs_per_flag[flag]:
+    for flag, jobs in failed_jobs_per_flag.items():
+        if jobs:
             github_url = INCOMPATIBLE_FLAGS[flag]
             info_text.append(f"* **{flag}** " + get_html_link_text(":github:", github_url))
-            for job in failed_jobs_per_flag[flag]:
+            for job in jobs.values():
                 link_text = get_html_link_text(job["name"], job["web_url"])
                 info_text.append(f"  - {link_text}")
     if len(info_text) == 1:
@@ -114,9 +115,8 @@ def print_result_info(build_number, client):
 
     already_failing_jobs = []
 
-    failed_jobs_per_flag = {}
-    for flag in INCOMPATIBLE_FLAGS.keys():
-        failed_jobs_per_flag[flag] = []
+    # dict(flag name -> dict(job id -> job))
+    failed_jobs_per_flag = collections.defaultdict(dict)
 
     threads = []
     for job in build_info["jobs"]:
