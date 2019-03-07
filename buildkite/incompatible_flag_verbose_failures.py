@@ -26,7 +26,7 @@ from bazelci import BuildkiteException
 # under.
 BUILDKITE_MAX_JOBS_LIMIT = 1500
 
-ORG = "bazel"
+BUILDKITE_ORG = "bazel"
 
 PIPELINE = "bazel-at-release-plus-incompatible-flags"
 
@@ -133,7 +133,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.build_number:
-            client = bazelci.BuildkiteClient(org=ORG, pipeline=PIPELINE)
+            client = bazelci.BuildkiteClient(org=BUILDKITE_ORG, pipeline=PIPELINE)
             build_info = client.get_build_info(args.build_number)
             print_steps_for_failing_jobs(build_info)
         else:

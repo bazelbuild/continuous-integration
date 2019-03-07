@@ -22,7 +22,7 @@ import bazelci
 
 INCOMPATIBLE_FLAGS = bazelci.fetch_incompatible_flags()
 
-ORG = "bazel"
+BUILDKITE_ORG = "bazel"
 
 PIPELINE = "bazelisk-plus-incompatible-flags"
 
@@ -158,7 +158,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.build_number:
-            client = bazelci.BuildkiteClient(org=ORG, pipeline=PIPELINE)
+            client = bazelci.BuildkiteClient(org=BUILDKITE_ORG, pipeline=PIPELINE)
             print_result_info(args.build_number, client)
         else:
             parser.print_help()
