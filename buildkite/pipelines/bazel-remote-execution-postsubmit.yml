@@ -28,7 +28,6 @@ platforms:
       - "-//src/test/java/com/google/devtools/build/android/..."
       - "-//src/test/java/com/google/devtools/build/lib/shell:CommandUsingLinuxSandboxTest"
       # Flaky tests on RBE
-      - "-//src/test/java/com/google/devtools/build/lib:remote-tests"
       - "-//src/test/shell/bazel:bazel_proto_library_test"
       - "-//src/test/shell/integration:discard_analysis_cache_test"
       - "-//src/test/shell/integration:execution_phase_tests"
