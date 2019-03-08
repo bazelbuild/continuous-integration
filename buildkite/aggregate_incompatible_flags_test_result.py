@@ -66,26 +66,60 @@ def get_html_link_text(content, link):
     return f'<a href="{link}" target="_blank">{content}</a>'
 
 
-def construct_success_info(failed_jobs_per_flag):
+def print_flags_ready_to_flip(failed_jobs_per_flag):
     info_text = ["#### The following flags didn't break any passing jobs"]
     for flag in INCOMPATIBLE_FLAGS:
         if flag not in failed_jobs_per_flag:
             github_url = INCOMPATIBLE_FLAGS[flag]
             info_text.append(f"* **{flag}** " + get_html_link_text(":github:", github_url))
     if len(info_text) == 1:
-        return None
-    return info_text
+        return
+    print_info("flags_ready_to_flip", "success", info_text)
 
 
-def construct_warning_info(already_failing_jobs):
+def print_already_fail_jobs(already_failing_jobs):
     info_text = ["#### The following jobs already fail without incompatible flags"]
     info_text += merge_and_format_jobs(already_failing_jobs, "* ")
     if len(info_text) == 1:
-        return None
-    return info_text
+        return
+    print_info("already_fail_jobs", "warning", info_text)
 
 
-def construct_failure_info(failed_jobs_per_flag):
+def print_projects_need_to_migrate(failed_jobs_per_flag):
+    info_text = ["#### The following projects need migration"]
+    jobs_need_migration = set()
+    for _, jobs in failed_jobs_per_flag.items():
+        for job in jobs.values():
+            jobs_need_migration.add((job["name"], job["web_url"]))
+
+    job_list = list(jobs_need_migration)
+    job_list = sorted(job_list, key=lambda s: s[0].lower())
+
+    job_num = len(job_list)
+    s = "" if job_num == 1 else "s"
+    info_text.append(
+        f"<details><summary>{job_num} job{s} need migration, click to see details</summary><ul>"
+    )
+    for name, web_url in job_list:
+        link_text = get_html_link_text(name, web_url)
+        info_text.append(f"    <li>{link_text}</li>")
+    info_text.append("</ul></details>")
+    if len(info_text) == 3:
+        return
+    info_str = "\n".join(info_text)
+    bazelci.execute_command(
+        [
+            "buildkite-agent",
+            "annotate",
+            "--append",
+            f"--context=projects_need_migration",
+            f"--style=warning",
+            f"\n{info_str}\n",
+        ]
+    )
+
+
+def print_flags_need_to_migrate(failed_jobs_per_flag):
     info_text = ["#### Downstream projects need to migrate for the following flags"]
     for flag, jobs in failed_jobs_per_flag.items():
         if jobs:
@@ -93,8 +127,8 @@ def construct_failure_info(failed_jobs_per_flag):
             info_text.append(f"* **{flag}** " + get_html_link_text(":github:", github_url))
             info_text += merge_and_format_jobs(jobs.values(), "  - ")
     if len(info_text) == 1:
-        return None
-    return info_text
+        return
+    print_info("flags_need_to_migrate", "error", info_text)
 
 
 def merge_and_format_jobs(jobs, line_prefix):
@@ -156,20 +190,13 @@ def print_result_info(build_number, client):
         thread.join()
         process_build_log(failed_jobs_per_flag, already_failing_jobs, thread.log, thread.job)
 
-    failure_info = construct_failure_info(failed_jobs_per_flag)
+    print_flags_need_to_migrate(failed_jobs_per_flag)
 
-    warning_info = construct_warning_info(already_failing_jobs)
+    print_projects_need_to_migrate(failed_jobs_per_flag)
 
-    success_info = construct_success_info(failed_jobs_per_flag)
+    print_already_fail_jobs(already_failing_jobs)
 
-    if failure_info:
-        print_info("failure", "error", failure_info)
-
-    if warning_info:
-        print_info("warning", "warning", warning_info)
-
-    if success_info:
-        print_info("success", "success", success_info)
+    print_flags_ready_to_flip(failed_jobs_per_flag)
 
 
 def main(argv=None):
