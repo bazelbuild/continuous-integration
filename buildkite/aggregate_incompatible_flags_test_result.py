@@ -80,9 +80,7 @@ def construct_success_info(failed_jobs_per_flag):
 
 def construct_warning_info(already_failing_jobs):
     info_text = ["#### The following jobs already fail without incompatible flags"]
-    for job in already_failing_jobs:
-        link_text = get_html_link_text(job["name"], job["web_url"])
-        info_text.append(f"* {link_text}")
+    info_text += merge_and_format_jobs(already_failing_jobs, "* ")
     if len(info_text) == 1:
         return None
     return info_text
@@ -94,12 +92,32 @@ def construct_failure_info(failed_jobs_per_flag):
         if jobs:
             github_url = INCOMPATIBLE_FLAGS[flag]
             info_text.append(f"* **{flag}** " + get_html_link_text(":github:", github_url))
-            for job in jobs.values():
-                link_text = get_html_link_text(job["name"], job["web_url"])
-                info_text.append(f"  - {link_text}")
+            info_text += merge_and_format_jobs(jobs.values(), "  - ")
     if len(info_text) == 1:
         return None
     return info_text
+
+
+def merge_and_format_jobs(jobs, line_prefix):
+    # Merges all jobs for a single pipeline into one line.
+    # Example:
+    #   pipeline (platform1)
+    #   pipeline (platform2)
+    #   pipeline (platform3)
+    # with line_prefix ">> " becomes
+    #   >> pipeline: platform1, platform2, platform3
+    jobs_per_pipeline = collections.defaultdict([])
+    for job in jobs:
+        pipeline, platform = get_pipeline_and_platform(job)
+        jobs_per_pipeline[pipeline].append(get_html_link_text(platform, job["web_url"]))
+
+    return ["{}{}: {}".format(line_prefix, pipeline, ", ".join(platforms)) for pipeline, platforms in jobs_per_pipeline.items()]
+
+
+def get_pipeline_and_platform(job):
+    name, _, platform = job["name"].partition('(')
+    end = platform.rfind(")")
+    return name.strip(), platform[:end].strip()
 
 
 def print_info(context, style, info):
