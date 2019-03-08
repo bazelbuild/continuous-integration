@@ -69,8 +69,8 @@ def get_html_link_text(content, link):
 
 def construct_success_info(failed_jobs_per_flag):
     info_text = ["#### The following flags didn't break any passing jobs"]
-    for flag, jobs in failed_jobs_per_flag.items():
-        if not jobs:
+    for flag in INCOMPATIBLE_FLAGS:
+        if flag not in failed_jobs_per_flag:
             github_url = INCOMPATIBLE_FLAGS[flag]
             info_text.append(f"* **{flag}** " + get_html_link_text(":github:", github_url))
     if len(info_text) == 1:
