@@ -1971,7 +1971,7 @@ def try_update_last_green_commit():
         state = job.get("state")
         # Ignore steps that don't have a state (like "wait").
         return (
-            state != None and state != "passed"
+            state is not None and state != "passed"
             and job["id"] != current_job_id
             and job["name"] != BUILDIFIER_STEP_NAME
         )
