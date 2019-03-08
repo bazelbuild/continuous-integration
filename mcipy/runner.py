@@ -305,34 +305,51 @@ def rbe_flags(original_flags, accept_cached):
     if not accept_cached:
         flags += ["--noremote_accept_cached"]
 
-    # Copied from https://github.com/bazelbuild/bazel-toolchains/blob/master/configs/ubuntu16_04_clang/1.0/toolchain.bazelrc
+    # Copied from https://github.com/bazelbuild/bazel-toolchains/blob/master/bazelrc/.bazelrc
     flags += [
-        # These should NOT be modified before @bazel_toolchains repo pin is
-        # updated in projects' WORKSPACE files.
-        #
         # Toolchain related flags to append at the end of your .bazelrc file.
-        "--host_javabase=@bazel_toolchains//configs/ubuntu16_04_clang/latest:javabase",
-        "--javabase=@bazel_toolchains//configs/ubuntu16_04_clang/latest:javabase",
+        "--host_javabase=@buildkite_config//java:jdk",
+        "--javabase=@buildkite_config//java:jdk",
         "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
         "--java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
-        "--crosstool_top=@bazel_toolchains//configs/ubuntu16_04_clang/latest:crosstool_top_default",
+        "--crosstool_top=@buildkite_config//cc:toolchain",
         "--action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1",
     ]
 
     # Platform flags:
     # The toolchain container used for execution is defined in the target indicated
     # by "extra_execution_platforms", "host_platform" and "platforms".
-    # If you are using your own toolchain container, you need to create a platform
-    # target with "constraint_values" that allow for the toolchain specified with
-    # "extra_toolchains" to be selected (given constraints defined in
-    # "exec_compatible_with").
+    # Projects that use the rbe_ubuntu1604 config must have an
+    # rbe_autoconfig target in their WORKSPACE with name="buildkite_config".
+    # The generated @buildkite_config includes a platform that uses
+    # the latest rbe-ubuntu-1604 container
+    # (https://gcr.io/cloud-marketplace/google/rbe-ubuntu16-04)
+    #
+    # Note: If you run into issues with the rbe_ubuntu1604 config
+    # (e.g., CI complains that it requires docker to run the rule)
+    # update your pin to bazel-toolchains in the WORKSPACE to the latest release:
+    # https://releases.bazel.build/bazel-toolchains.html
+    # rbe_autoconfig docs are here:
+    # https://github.com/bazelbuild/bazel-toolchains/blob/c8133890211f9e8394af3272d47065787a9735e3/rules/rbe_repo.bzl
+    #
+    # Note: If your build requires a custom platform (i.e., it needs custom
+    # properties) or requires using a custom container you need to:
+    #   1. create a platform target that has
+    #      parents = ["@buildkite_config//config:platform"], and adds the
+    #      {PARENT_REMOTE_EXECUTION_PROPERTIES} to remote_execution_properties.
+    #      Example:
+    #      https://github.com/bazelbuild/bazel-toolchains/blob/c8133890211f9e8394af3272d47065787a9735e3/configs/ubuntu16_04_clang/BUILD#L31
+    #   2. Override the container in the rbe_autoconfig rule. Example:
+    #      https://github.com/bazelbuild/rules_docker/blob/f40c92d1b30ff758a66aba7578039cbf959aea62/WORKSPACE#L294
+    #   3. Pass flags to override the platforms defined below in your
+    #      .presubmit.yaml file.
     # More about platforms: https://docs.bazel.build/versions/master/platforms.html
     # Don't add platform flags if they are specified already.
     platform_flags = {
-        "--extra_toolchains": "@bazel_toolchains//configs/ubuntu16_04_clang/latest:toolchain_default",
-        "--extra_execution_platforms": "@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
-        "--host_platform": "@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
-        "--platforms": "@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
+        "--extra_toolchains": "@buildkite_config//config:cc-toolchain",
+        "--extra_execution_platforms": "@buildkite_config//config:platform",
+        "--host_platform": "@buildkite_config//config:platform",
+        "--platforms": "@buildkite_config//config:platform",
     }
     for platform_flag, value in list(platform_flags.items()):
         found = False
