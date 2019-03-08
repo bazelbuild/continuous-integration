@@ -1968,11 +1968,10 @@ def try_update_last_green_commit():
 
     # Find any failing steps other than Buildifier and "try update last green".
     def HasFailed(job):
-        # Some irrelevant job doesn't have "state" field.
-        if "state" not in job:
-            return True
+        state = job.get("state")
+        # Ignore steps that don't have a state (like "wait").
         return (
-            job["state"] != "passed"
+            state is not None and state != "passed"
             and job["id"] != current_job_id
             and job["name"] != BUILDIFIER_STEP_NAME
         )
