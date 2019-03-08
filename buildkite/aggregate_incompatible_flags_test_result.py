@@ -29,7 +29,6 @@ PIPELINE = "bazelisk-plus-incompatible-flags"
 
 
 class LogFetcher(threading.Thread):
-
     def __init__(self, job, client):
         threading.Thread.__init__(self)
         self.job = job
@@ -56,7 +55,7 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
             line = line.strip()
             if line.startswith("--incompatible_") and line in INCOMPATIBLE_FLAGS:
                 failed_jobs_per_flag[line][job["id"]] = job
-        log = log[0: log.rfind("+++ Result")]
+        log = log[0 : log.rfind("+++ Result")]
 
     # If the job failed for other reasons, we add it into already failing jobs.
     if job["state"] == "failed":
@@ -64,7 +63,7 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
 
 
 def get_html_link_text(content, link):
-    return f"<a href=\"{link}\" target=\"_blank\">{content}</a>"
+    return f'<a href="{link}" target="_blank">{content}</a>'
 
 
 def construct_success_info(failed_jobs_per_flag):
@@ -124,8 +123,17 @@ def print_info(context, style, info):
     # CHUNK_SIZE is to prevent buildkite-agent "argument list too long" error
     CHUNK_SIZE = 20
     for i in range(0, len(info), CHUNK_SIZE):
-        info_str = "\n".join(info[i:i + CHUNK_SIZE])
-        bazelci.execute_command(["buildkite-agent", "annotate", "--append", f"--context={context}", f"--style={style}", f"\n{info_str}\n"])
+        info_str = "\n".join(info[i : i + CHUNK_SIZE])
+        bazelci.execute_command(
+            [
+                "buildkite-agent",
+                "annotate",
+                "--append",
+                f"--context={context}",
+                f"--style={style}",
+                f"\n{info_str}\n",
+            ]
+        )
 
 
 def print_result_info(build_number, client):
