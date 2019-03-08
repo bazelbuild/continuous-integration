@@ -106,7 +106,7 @@ def merge_and_format_jobs(jobs, line_prefix):
     #   pipeline (platform3)
     # with line_prefix ">> " becomes
     #   >> pipeline: platform1, platform2, platform3
-    jobs_per_pipeline = collections.defaultdict([])
+    jobs_per_pipeline = collections.defaultdict(list)
     for job in jobs:
         pipeline, platform = get_pipeline_and_platform(job)
         jobs_per_pipeline[pipeline].append(get_html_link_text(platform, job["web_url"]))
