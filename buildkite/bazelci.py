@@ -673,6 +673,11 @@ def execute_commands(
             raise BuildkiteException("working_directory refers to a path outside the workspace")
         os.chdir(requested_working_dir)
 
+        if platform == "windows":
+            execute_batch_commands(task_config.get("batch_commands", None))
+        else:
+            execute_shell_commands(task_config.get("shell_commands", None))
+
         bazel_version = print_bazel_version_info(bazel_binary, platform)
 
         print_environment_variables_info()
@@ -681,11 +686,6 @@ def execute_commands(
             print_expanded_group("Build and test with the following incompatible flags:")
             for flag in incompatible_flags:
                 eprint(flag + "\n")
-
-        if platform == "windows":
-            execute_batch_commands(task_config.get("batch_commands", None))
-        else:
-            execute_shell_commands(task_config.get("shell_commands", None))
 
         execute_bazel_run(
             bazel_binary, platform, task_config.get("run_targets", None), incompatible_flags
