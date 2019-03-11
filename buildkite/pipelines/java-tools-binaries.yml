@@ -1,0 +1,11 @@
+---
+platforms:
+  ubuntu1804:
+    build_targets:
+    - "//third_party:java_tools_pkg-gz"
+  windows:
+    build_targets:
+    - "//third_party:java_tools_pkg-gz"
+  macos:
+    build_targets:
+    - "//third_party:java_tools_pkg-gz"
