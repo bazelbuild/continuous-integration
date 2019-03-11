@@ -88,7 +88,7 @@ def print_already_fail_jobs(already_failing_jobs):
 def print_projects_need_to_migrate(failed_jobs_per_flag):
     info_text = ["#### The following projects need migration"]
     jobs_need_migration = set()
-    for _, jobs in failed_jobs_per_flag.items():
+    for jobs in failed_jobs_per_flag.values():
         for job in jobs.values():
             jobs_need_migration.add((job["name"], job["web_url"]))
 
@@ -96,16 +96,18 @@ def print_projects_need_to_migrate(failed_jobs_per_flag):
     job_list = sorted(job_list, key=lambda s: s[0].lower())
 
     job_num = len(job_list)
+
+    entries = ["    <li>{}</li>".format(get_html_link_text(name, web_url)) for name, web_url in job_list]
+    if not entries:
+        return
+
     s = "" if job_num == 1 else "s"
     info_text.append(
         f"<details><summary>{job_num} job{s} need migration, click to see details</summary><ul>"
     )
-    for name, web_url in job_list:
-        link_text = get_html_link_text(name, web_url)
-        info_text.append(f"    <li>{link_text}</li>")
+    info_text += entries
     info_text.append("</ul></details>")
-    if len(info_text) == 3:
-        return
+
     info_str = "\n".join(info_text)
     bazelci.execute_command(
         [
