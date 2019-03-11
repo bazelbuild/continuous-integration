@@ -111,7 +111,7 @@ def merge_and_format_jobs(jobs, line_prefix):
         pipeline, platform = get_pipeline_and_platform(job)
         jobs_per_pipeline[pipeline].append(get_html_link_text(platform, job["web_url"]))
 
-    return ["{}{}: {}".format(line_prefix, pipeline, ", ".join(platforms)) for pipeline, platforms in jobs_per_pipeline.items()]
+    return ["{}**{}**: {}".format(line_prefix, pipeline, ", ".join(platforms)) for pipeline, platforms in jobs_per_pipeline.items()]
 
 
 def get_pipeline_and_platform(job):
