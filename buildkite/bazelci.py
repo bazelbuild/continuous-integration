@@ -130,9 +130,9 @@ DOWNSTREAM_PROJECTS = {
         "disabled_reason": "https://bugs.chromium.org/p/gerrit/issues/detail?id=10570",
     },
     "gmaven_rules": {
-        "git_repository": "https://github.com/bazelbuild/gmaven_rules.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/gmaven_rules/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "gmaven-rules",
+        "git_repository": "https://github.com/bazelbuild/rules_jvm_external.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jvm_external/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "rules-jvm-external",
     },
     "Google Logging": {
         "git_repository": "https://github.com/google/glog.git",
