@@ -82,7 +82,12 @@ for an example.
 [buildkite useful buttons]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/buildkite-useful-buttons.png
 
 
-### Culprit Finder
+## Presubmit for downstream projects
+
+You can preview the effect of an unmerged commit on downstream projects. See [Testing Local Changes With All Downstream Projects](https://github.com/bazelbuild/continuous-integration/blob/master/docs/downstream-testing.md).
+
+
+## Culprit Finder
 
 [Bazel downstream projects](https://buildkite.com/bazel/bazel-with-downstream-projects-bazel) is red? Use culprit finder to find out which bazel commit broke it!
 
@@ -108,7 +113,7 @@ GOOD_BAZEL_COMMIT=b6ea3b6caa7f379778e74da33d1bd0ff6477f963
 BAD_BAZEL_COMMIT=91eb3d207714af0ab1e5812252a0f10f40d6e4a8
 ```
 
-Note: Bazel commit can only be set to commits after [63453bdbc6b05bd201375ee9e25b35010ae88aab](https://github.com/bazelbuild/bazel/commit/63453bdbc6b05bd201375ee9e25b35010ae88aab), Culprit Finder needs to download Bazel at specific commit, but we didn't prebuilt Bazel binaries before this commit.
+Note: Bazel commit can only be set to commits after [63453bdbc6b05bd201375ee9e25b35010ae88aab](https://github.com/bazelbuild/bazel/commit/63453bdbc6b05bd201375ee9e25b35010ae88aab), Culprit Finder needs to download Bazel at specific commit, but we didn't prebuild Bazel binaries before this commit.
 
 ## Configuring a Pipeline
 
