@@ -1,6 +1,6 @@
 # Testing Local Changes With All Downstream Projects
 
-Bazel's [CI system](https://buildkite.com/bazel/) has a pipeline for building Bazel and then testing all configured downstream projects. This can be found at https://buildkite.com/bazel/bazel-with-downstream-projects-bazel/.
+Bazel's [CI system](https://buildkite.com/bazel/) has a pipeline for building Bazel and then testing all configured downstream projects. This can be found at https://buildkite.com/bazel/bazel-at-head-plus-downstream.
 
 If you don't have access to our BuildKite instance, you can request it by sending a message to [the bazel-dev mailing list](https://groups.google.com/forum/#!forum/bazel-dev).
 
