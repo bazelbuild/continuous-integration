@@ -97,12 +97,19 @@ def print_projects_need_to_migrate(failed_jobs_per_flag):
     if job_num == 0:
         return
 
-    entries = merge_and_format_jobs(job_list, "    <li><strong>{}</strong>: {}</li>")
+    projects = set()
+    for job in job_list:
+        project, _ = get_pipeline_and_platform(job)
+        projects.add(project)
+    project_num = len(projects)
 
-    s = "" if job_num == 1 else "s"
+    s1 = "" if project_num == 1 else "s"
+    s2 = "s" if project_num == 1 else ""
     info_text.append(
-        f"<details><summary>{job_num} job{s} need migration, click to see details</summary><ul>"
+        f"<details><summary>{project_num} project{s1} need{s2} migration, click to see details</summary><ul>"
     )
+
+    entries = merge_and_format_jobs(job_list, "    <li><strong>{}</strong>: {}</li>")
     info_text += entries
     info_text.append("</ul></details>")
 
