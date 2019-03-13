@@ -1,6 +1,16 @@
 ---
 platforms:
   rbe_ubuntu1604:
+    shell_commands:
+      - sed -i.bak -e 's/^# android_sdk_repository/android_sdk_repository/'
+        -e 's/^# android_ndk_repository/android_ndk_repository/'
+        -e 's/^# rbe_autoconfig/rbe_autoconfig/'
+        -e 's/^# load("@bazel_toolchains/load("@bazel_toolchains/' WORKSPACE
+      - rm -f WORKSPACE.bak
+      - sed -i.bak -e 's/^# parents = ["@buildkite_config/parents = ["@buildkite_config/'
+        -e 's/^# {PARENT_REMOTE_EXECUTION_PROPERTIES}/{PARENT_REMOTE_EXECUTION_PROPERTIES}/'
+        BUILD
+      - rm -f BUILD.bak
     test_flags:
       - "--test_tag_filters=-slow"
       # Enable networking and privileged mode.
