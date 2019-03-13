@@ -58,6 +58,7 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/googlesamples/android-testing.git",
         "http_config": "https://raw.githubusercontent.com/googlesamples/android-testing/master/bazelci/buildkite-pipeline.yml",
         "pipeline_slug": "android-testing",
+        "disabled_reason": "https://github.com/googlesamples/android-testing/issues/250",
     },
     "Bazel": {
         "git_repository": "https://github.com/bazelbuild/bazel.git",
