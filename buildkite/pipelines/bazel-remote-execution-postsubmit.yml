@@ -2,11 +2,8 @@
 platforms:
   rbe_ubuntu1604:
     shell_commands:
-      - sed -i.bak -e 's/^# android_sdk_repository/android_sdk_repository/'
-        -e 's/^# android_ndk_repository/android_ndk_repository/'
-        -e 's/^# rbe_autoconfig/rbe_autoconfig/'
-        -e 's/^# load("@bazel_toolchains/load("@bazel_toolchains/' WORKSPACE
-      - rm -f WORKSPACE.bak
+      - sed -i.bak -e 's/1.1:rbe_ubuntu1604/latest:platform/' BUILD
+      - rm BUILD.bak
     test_flags:
       - "--test_tag_filters=-slow"
       # Enable networking and privileged mode.
