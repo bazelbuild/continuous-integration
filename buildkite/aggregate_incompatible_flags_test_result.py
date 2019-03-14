@@ -92,7 +92,7 @@ def print_projects_need_to_migrate(failed_jobs_per_flag):
         for job in jobs.values():
             jobs_need_migration[job["name"]] = job
 
-    job_list = [i[1] for i in sorted(jobs_need_migration.items(), key=lambda s: s[0].lower())]
+    job_list = jobs_need_migration.values()
     job_num = len(job_list)
     if job_num == 0:
         return
@@ -146,6 +146,8 @@ def merge_and_format_jobs(jobs, line_pattern):
     #   pipeline (platform3)
     # with line_pattern ">> {}: {}" becomes
     #   >> pipeline: platform1, platform2, platform3
+    jobs = list(jobs)
+    jobs.sort(key=lambda s: s["name"].lower())
     jobs_per_pipeline = collections.defaultdict(list)
     for job in jobs:
         pipeline, platform = get_pipeline_and_platform(job)
