@@ -30,7 +30,7 @@ You need a machine with a recent version of MacOS and Microsoft Remote Desktop (
     1. Wait until the script has finished. At one point the VM will be rebooted, so the script has to open the remote connection again. This might take a long time.
     1. Login into the Google Cloud Console and check that the created images are no longer busy. Make sure to select the project that matches the image (e.g. `bazel-public` for `trusted` images, `bazel-untrusted` for "normal" images).
     1. If something fails, you can always run `create_images` again.
-1. Deploy CI workers with the newly created image by running `python3.6 create_instances.py --local_config`.
+1. Deploy CI workers with the newly created image by running `python3.6 create_instances.py --local_config <instance_group1> <instance_group2> <...>`. The available instances group names can be found in the [configuration file](https://github.com/bazelbuild/continuous-integration/blob/master/buildkite/instances.yml). For Windows you would usually pass `bk-windows-java8 bk-trusted-windows-java8` to the script.
 
 ### Linux
 
@@ -45,7 +45,7 @@ If you need to create and deploy new VM images, you can follow these steps:
 1. Clone the continuous-integration repository.
 1. `cd` into the `continuous-integration/buildkite` directory.
 1. Create new images by running `python3.6 create_images.py <platform1> <platform2> <...>`. For Linux, this usually means to include `bk-docker` and `bk-trusted-docker`. Hint: You can see a list of available platforms by running the script without any arguments.
-1. Deploy CI workers with the newly created image by running `python3.6 create_instances.py --local_config`.
+1. Deploy CI workers with the newly created image by running `python3.6 create_instances.py --local_config <instance_group1> <instance_group2> <...>`. The available instances group names can be found in the [configuration file](https://github.com/bazelbuild/continuous-integration/blob/master/buildkite/instances.yml). For Linux you would usually pass `bk-docker bk-trusted-docker` to the script.
 
 ### MacOS
 
