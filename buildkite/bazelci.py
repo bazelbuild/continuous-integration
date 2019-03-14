@@ -1851,7 +1851,7 @@ def print_bazel_downstream_pipeline(
     for project, config in DOWNSTREAM_PROJECTS.items():
         disabled_reason = config.get("disabled_reason", None)
         # If test_disabled_projects is true, we add configs for disabled projects.
-        # If test_disabled_projects is false, we add configs for not disbaled projects.
+        # If test_disabled_projects is false, we add configs for not disabled projects.
         if (test_disabled_projects and disabled_reason) or (
             not test_disabled_projects and not disabled_reason
         ):
