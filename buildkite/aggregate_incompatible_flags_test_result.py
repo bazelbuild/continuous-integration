@@ -120,7 +120,7 @@ def print_projects_need_to_migrate(failed_jobs_per_flag):
             "annotate",
             "--append",
             f"--context=projects_need_migration",
-            f"--style=warning",
+            f"--style=error",
             f"\n{info_str}\n",
         ]
     )
