@@ -52,7 +52,6 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/android-studio.yml",
         "pipeline_slug": "android-studio-plugin",
-        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/541",
     },
     "Android Testing": {
         "git_repository": "https://github.com/googlesamples/android-testing.git",
