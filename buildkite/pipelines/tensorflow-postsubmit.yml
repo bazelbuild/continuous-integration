@@ -32,6 +32,9 @@ platforms:
     - touch .bazelrc
     - "./tensorflow/tools/ci_build/builds/configured CPU"
     build_flags:
+    # TODO(pcloudy): Removing the following flag after we have
+    # a new release containing a fix for https://github.com/bazelbuild/bazel/issues/7607
+    - "--action_env=BAZEL_USE_CPP_ONLY_TOOLCHAIN=1"
     - "--config=opt"
     # TODO(laszlocsomor): remove "--cxxopt=--std=c++11" after cr/200219133
     # is merged to upstream TensorFlow, it's a temporary workaround for
