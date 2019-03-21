@@ -113,6 +113,7 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/googlecartographer/cartographer.git",
         "http_config": "https://raw.githubusercontent.com/googlecartographer/cartographer/master/.bazelci/presubmit.yml",
         "pipeline_slug": "cartographer",
+        "disabled_reason": "https://github.com/googlecartographer/cartographer/issues/1519",
     },
     "CLion Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
