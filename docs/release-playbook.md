@@ -200,7 +200,8 @@ Create candidates with the release.sh script.
         `https://storage.googleapis.com/bazel/$RELEASE_NUMBER/release/index.html`.
 1.  Update the release bug:
     1.  State the fact that you pushed the release
-    1.  Ask the package maintainers to update the package definitions: @vbatts @petemounce
+    1.  Ask the package maintainers to update the package definitions:
+        [@vbatts](https://github.com/vbatts) [@petemounce](https://github.com/petemounce) [@excitoon](https://github.com/excitoon)
     1.  Example: [https://github.com/bazelbuild/bazel/issues/3773#issuecomment-352692144]
 1.  Publish versioned documentation
     1.  Fetch the git tag for the release: `git fetch --tags`
