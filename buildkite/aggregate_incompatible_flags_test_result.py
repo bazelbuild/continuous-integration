@@ -127,7 +127,7 @@ def print_projects_need_to_migrate(failed_jobs_per_flag):
 
 
 def print_flags_need_to_migrate(failed_jobs_per_flag):
-    for flag, jobs in reversed(failed_jobs_per_flag.items()):
+    for flag, jobs in reversed(list(failed_jobs_per_flag.items())):
         if jobs:
             github_url = INCOMPATIBLE_FLAGS[flag]
             info_text = []
