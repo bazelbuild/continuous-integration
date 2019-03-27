@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"strings"
 )
 
 type Collector interface {
@@ -20,7 +21,12 @@ type DataSet struct {
 
 func (data *DataSet) AddRow(values ...interface{}) error {
 	if len(values) != len(data.Headers) {
-		return fmt.Errorf("DataSet has %d columns, but new row has %d.", len(data.Headers), len(values))
+		formattedValues := make([]string, len(values))
+		for i, v := range values {
+			formattedValues[i] = fmt.Sprintf("%v", v)
+		}
+
+		return fmt.Errorf("DataSet has %d columns (%s), but new row has %d (values: %s).", len(data.Headers), strings.Join(data.Headers, ", "), len(values), strings.Join(formattedValues, ", "))
 	}
 	data.Data = append(data.Data, values)
 	return nil
