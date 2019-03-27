@@ -21,7 +21,10 @@ func (wa WorkerAvailability) Collect() (*data.DataSet, error) {
 	}
 	result := data.CreateDataSet("timestamp", "platform", "idle_count", "busy_count")
 	for platform, counts := range allPlatforms {
-		result.AddRow(ts, platform, counts[0], counts[1])
+		err = result.AddRow(ts, platform, counts[0], counts[1])
+		if err != nil {
+			return nil, err
+		}
 	}
 	return result, nil
 }
