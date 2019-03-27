@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/fweikert/continuous-integration/metrics/clients"
 	"github.com/fweikert/continuous-integration/metrics/collectors"
@@ -36,11 +35,17 @@ func main() {
 
 	cloudSql := publishers.CreateCloudSqlPublisher()
 	presubmitPerformance := collectors.CreatePresubmitPerformanceCollector(bk, "google-bazel-presubmit")
+	workerAvailability := collectors.CreateWorkerAvailabilityCollector(bk)
 
 	srv := service.CreateService(handleError)
-	srv.AddMetric("presubmit_performance", 10, presubmitPerformance, cloudSql)
+	srv.AddMetric("presubmit_performance", 120, presubmitPerformance, cloudSql)
+	srv.AddMetric("worker_availability", 60, workerAvailability, cloudSql)
 
-	srv.Start()
-	time.Sleep(30 * time.Second)
-	srv.Stop()
+	ds, err := workerAvailability.Collect()
+	fmt.Println(ds)
+	fmt.Println(err)
+
+	//srv.Start()
+	//time.Sleep(30 * time.Second)
+	//srv.Stop()
 }
