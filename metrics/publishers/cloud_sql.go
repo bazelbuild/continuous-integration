@@ -1,12 +1,16 @@
 package publishers
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/fweikert/continuous-integration/metrics/data"
+)
 
 type CloudSql struct {
 }
 
-func (c CloudSql) Publish(metricName string, data map[string]interface{}) error {
-	fmt.Printf("Got %v from %s\n", data, metricName)
+func (c CloudSql) Publish(metricName string, newData *data.DataSet) error {
+	fmt.Printf("Got %v from %s\n", newData, metricName)
 	return nil
 }
 
