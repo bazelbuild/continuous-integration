@@ -35,7 +35,7 @@ func main() {
 	}
 
 	cloudSql := publishers.CreateCloudSqlPublisher()
-	presubmitPerformance := collectors.CreatePresubmitPerformanceCollector(bk)
+	presubmitPerformance := collectors.CreatePresubmitPerformanceCollector(bk, "google-bazel-presubmit")
 
 	srv := service.CreateService(handleError)
 	srv.AddMetric("presubmit_performance", 10, presubmitPerformance, cloudSql)

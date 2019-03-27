@@ -2,6 +2,7 @@ package collectors
 
 import (
 	"github.com/fweikert/continuous-integration/metrics/clients"
+	"github.com/fweikert/continuous-integration/metrics/data"
 )
 
 type PresubmitPerformance struct {
@@ -9,13 +10,14 @@ type PresubmitPerformance struct {
 	pipelines []string
 }
 
-func (pp PresubmitPerformance) Collect() (map[string]interface{}, error) {
-	data := make(map[string]interface{})
-	data["test"] = 2
+func (pp PresubmitPerformance) Collect() (*data.DataSet, error) {
+	data := data.CreateDataSet("test")
+	data.AddRow(1)
+	data.AddRow(3)
 	return data, nil
 }
 
-func CreatePresubmitPerformanceCollector(bk *clients.BuildkiteClient, pipelines []string) PresubmitPerformance {
+func CreatePresubmitPerformanceCollector(bk *clients.BuildkiteClient, pipelines ...string) PresubmitPerformance {
 	return PresubmitPerformance{bk: bk, pipelines: pipelines}
 }
 
