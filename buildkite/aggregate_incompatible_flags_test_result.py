@@ -68,7 +68,7 @@ def get_html_link_text(content, link):
 
 def print_flags_ready_to_flip(failed_jobs_per_flag):
     info_text = ["#### The following flags didn't break any passing jobs"]
-    for flag in INCOMPATIBLE_FLAGS:
+    for flag in sorted(list(INCOMPATIBLE_FLAGS.keys())):
         if flag not in failed_jobs_per_flag:
             github_url = INCOMPATIBLE_FLAGS[flag]
             info_text.append(f"* **{flag}** " + get_html_link_text(":github:", github_url))
@@ -127,14 +127,20 @@ def print_projects_need_to_migrate(failed_jobs_per_flag):
 
 
 def print_flags_need_to_migrate(failed_jobs_per_flag):
-    info_text = ["#### Downstream projects need to migrate for the following flags"]
-    for flag, jobs in failed_jobs_per_flag.items():
+    # The info box printed later is above info box printed before,
+    # so reverse the flag list to maintain the same order.
+    for flag in sorted(list(failed_jobs_per_flag.keys()), reverse = True):
+        jobs = failed_jobs_per_flag[flag]
         if jobs:
             github_url = INCOMPATIBLE_FLAGS[flag]
+            info_text = []
             info_text.append(f"* **{flag}** " + get_html_link_text(":github:", github_url))
             info_text += merge_and_format_jobs(jobs.values(), "  - **{}**: {}")
+            # Use flag as the context so that each flag gets a different info box.
+            print_info(flag, "error", info_text)
     if len(info_text) == 1:
         return
+    info_text = ["#### Downstream projects need to migrate for the following flags:"]
     print_info("flags_need_to_migrate", "error", info_text)
 
 
