@@ -128,14 +128,17 @@ def print_projects_need_to_migrate(failed_jobs_per_flag):
 
 def print_flags_need_to_migrate(failed_jobs_per_flag):
     info_text = ["#### Downstream projects need to migrate for the following flags"]
+    if failed_jobs_per_flag:
+        print_info("flags_need_to_migrate", "error", info_text)
     for flag, jobs in failed_jobs_per_flag.items():
         if jobs:
             github_url = INCOMPATIBLE_FLAGS[flag]
+            info_text = []
             info_text.append(f"* **{flag}** " + get_html_link_text(":github:", github_url))
             info_text += merge_and_format_jobs(jobs.values(), "  - **{}**: {}")
+            print_info(flag, "error", info_text)
     if len(info_text) == 1:
         return
-    print_info("flags_need_to_migrate", "error", info_text)
 
 
 def merge_and_format_jobs(jobs, line_pattern):
