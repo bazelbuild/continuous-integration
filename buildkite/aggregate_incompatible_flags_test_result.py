@@ -68,7 +68,7 @@ def get_html_link_text(content, link):
 
 def print_flags_ready_to_flip(failed_jobs_per_flag):
     info_text = ["#### The following flags didn't break any passing jobs"]
-    for flag in list(INCOMPATIBLE_FLAGS.keys()).sort():
+    for flag in sorted(list(INCOMPATIBLE_FLAGS.keys())):
         if flag not in failed_jobs_per_flag:
             github_url = INCOMPATIBLE_FLAGS[flag]
             info_text.append(f"* **{flag}** " + get_html_link_text(":github:", github_url))
@@ -129,7 +129,7 @@ def print_projects_need_to_migrate(failed_jobs_per_flag):
 def print_flags_need_to_migrate(failed_jobs_per_flag):
     # The info box printed later is above info box printed before,
     # so reverse the flag list to maintain the same order.
-    for flag in list(failed_jobs_per_flag.keys()).sort(reverse = True):
+    for flag in sorted(failed_jobs_per_flag.keys(), reverse = True):
         jobs = failed_jobs_per_flag[flag]
         if jobs:
             github_url = INCOMPATIBLE_FLAGS[flag]
