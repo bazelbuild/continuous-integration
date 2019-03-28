@@ -22,48 +22,72 @@ func CreateBuildkiteClient(org string, apiToken string, debug bool) (*BuildkiteC
 }
 
 func (client *BuildkiteClient) GetMostRecentBuilds(pipeline string, atLeastNBuilds int) ([]buildkite.Build, error) {
-	all_builds := make([]buildkite.Build, 0)
-	opt := buildkite.BuildsListOptions{ListOptions: buildkite.ListOptions{Page: 1, PerPage: 100}}
+	list := func(opt buildkite.ListOptions) ([]interface{}, *buildkite.Response, error) {
+		buildOpt := buildkite.BuildsListOptions{ListOptions: opt}
+		builds, response, err := client.client.Builds.ListByPipeline(client.org, pipeline, &buildOpt)
+		interfaces := make([]interface{}, len(builds))
+		for i, b := range builds {
+			interfaces[i] = b
+		}
+		return interfaces, response, err
+	}
+
+	results, err := client.getResults(list, atLeastNBuilds)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve builds for pipeline %s: %v", pipeline, err)
+	}
+
+	builds := make([]buildkite.Build, len(results))
+	for i, r := range results {
+		builds[i] = r.(buildkite.Build)
+	}
+	return builds, nil
+}
+
+func (client *BuildkiteClient) GetAgents() ([]buildkite.Agent, error) {
+	list := func(opt buildkite.ListOptions) ([]interface{}, *buildkite.Response, error) {
+		agentOpt := buildkite.AgentListOptions{ListOptions: opt}
+		agents, response, err := client.client.Agents.List(client.org, &agentOpt)
+		interfaces := make([]interface{}, len(agents))
+		for i, a := range agents {
+			interfaces[i] = a
+		}
+		return interfaces, response, err
+	}
+
+	results, err := client.getResults(list, -1)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve agents: %v", err)
+	}
+
+	agents := make([]buildkite.Agent, len(results))
+	for i, r := range results {
+		agents[i] = r.(buildkite.Agent)
+	}
+	return agents, nil
+}
+
+func (client *BuildkiteClient) getResults(listFunc func(opt buildkite.ListOptions) ([]interface{}, *buildkite.Response, error), minResults int) ([]interface{}, error) {
+	all_results := make([]interface{}, 0)
+	opt := buildkite.ListOptions{Page: 1, PerPage: 100}
 	currPage := 1
 	lastPage := 1
 
 	for currPage <= lastPage {
-		fmt.Printf("GET %d of %d", currPage, lastPage)
-		builds, response, err := client.client.Builds.ListByPipeline(client.org, pipeline, &opt)
+		results, response, err := listFunc(opt)
 		if err != nil {
-			return nil, fmt.Errorf("Could not get page %d of builds for pipeline %s: %v", currPage, pipeline, err)
+			return nil, fmt.Errorf("Could not get page %d: %v", currPage, err)
 		}
 
-		all_builds = append(all_builds, builds...)
+		all_results = append(all_results, results...)
 		currPage += 1
 		opt.Page = currPage
 		lastPage = response.LastPage
 
-		if atLeastNBuilds > -1 && len(all_builds) >= atLeastNBuilds {
+		if minResults > -1 && len(all_results) >= minResults {
 			break
 		}
 	}
 
-	return all_builds, nil
-}
-
-func (client *BuildkiteClient) GetAgents() ([]buildkite.Agent, error) {
-	all_agents := make([]buildkite.Agent, 0)
-	opt := buildkite.AgentListOptions{ListOptions: buildkite.ListOptions{Page: 1, PerPage: 100}}
-	currPage := 1
-	lastPage := 1
-
-	for currPage <= lastPage {
-		agents, response, err := client.client.Agents.List(client.org, &opt)
-		if err != nil {
-			return nil, fmt.Errorf("Could not get page %d of agents: %v", currPage, err)
-		}
-
-		all_agents = append(all_agents, agents...)
-		currPage += 1
-		opt.Page = currPage
-		lastPage = response.LastPage
-	}
-
-	return all_agents, nil
+	return all_results, nil
 }
