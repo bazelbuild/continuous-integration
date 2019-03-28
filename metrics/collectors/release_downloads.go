@@ -10,12 +10,11 @@ import (
 )
 
 type ReleaseDownloads struct {
-	org    string
-	repo   string
-	client *github.Client
+	org          string
+	repo         string
+	client       *github.Client
+	minSizeBytes int
 }
-
-const megaByte = 1024 * 1024
 
 func (rd ReleaseDownloads) Collect() (*data.DataSet, error) {
 	all_releases, err := rd.getReleases()
@@ -26,7 +25,7 @@ func (rd ReleaseDownloads) Collect() (*data.DataSet, error) {
 	result := data.CreateDataSet("release", "artifact", "downloads")
 	for _, release := range all_releases {
 		for _, asset := range release.Assets {
-			if *asset.Size >= megaByte {
+			if *asset.Size >= rd.minSizeBytes {
 				result.AddRow(*release.TagName, *asset.Name, *asset.DownloadCount)
 			}
 		}
@@ -56,7 +55,7 @@ func (rd ReleaseDownloads) getReleases() ([]*github.RepositoryRelease, error) {
 	return all_releases, nil
 }
 
-func CreateReleaseDownloadsCollector(org string, repo string, token string) ReleaseDownloads {
+func CreateReleaseDownloadsCollector(org string, repo string, token string, minSizeBytes int) ReleaseDownloads {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
@@ -64,5 +63,5 @@ func CreateReleaseDownloadsCollector(org string, repo string, token string) Rele
 	tc := oauth2.NewClient(ctx, ts)
 
 	client := github.NewClient(tc)
-	return ReleaseDownloads{org: org, repo: repo, client: client}
+	return ReleaseDownloads{org: org, repo: repo, client: client, minSizeBytes: minSizeBytes}
 }

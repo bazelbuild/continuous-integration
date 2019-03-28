@@ -25,6 +25,8 @@ var (
 	sqlInstance    = flag.String("sql_instance", "", "Instance name for the CloudSQL publisher.")
 )
 
+const megaByte = 1024 * 1024
+
 func handleError(metricName string, err error) {
 	fmt.Printf("[%s] %v", metricName, err)
 }
@@ -45,7 +47,7 @@ func main() {
 	cloudSql := publishers.CreateCloudSqlPublisher()
 	pipelinePerformance := collectors.CreatePipelinePerformanceCollector(bk, pipelines...)
 	workerAvailability := collectors.CreateWorkerAvailabilityCollector(bk)
-	releaseDownloads := collectors.CreateReleaseDownloadsCollector(*ghOrg, *ghRepo, *ghApiToken)
+	releaseDownloads := collectors.CreateReleaseDownloadsCollector(*ghOrg, *ghRepo, *ghApiToken, megaByte)
 
 	srv := service.CreateService(handleError)
 	srv.AddMetric("pipeline_performance", 120, pipelinePerformance, cloudSql)
