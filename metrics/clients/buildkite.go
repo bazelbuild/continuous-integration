@@ -13,7 +13,6 @@ type BuildkiteClient struct {
 
 func CreateBuildkiteClient(org string, apiToken string, debug bool) (*BuildkiteClient, error) {
 	tokenConfig, err := buildkite.NewTokenConfig(apiToken, debug)
-
 	if err != nil {
 		return nil, fmt.Errorf("Could not create Buildkite config: %v", err)
 	}
@@ -22,7 +21,9 @@ func CreateBuildkiteClient(org string, apiToken string, debug bool) (*BuildkiteC
 	return &BuildkiteClient{org: org, client: client}, nil
 }
 
-func (client *BuildkiteClient) GetMostRecentJobs(pipeline string, jobsPerPipeline uint) ([]interface{}, error) {
+func (client *BuildkiteClient) GetMostRecentJobs(pipeline string, lastNBuilds uint) ([]interface{}, error) {
+	// opt := buildkite.BuildsListOptions{ListOptions: buildkite.ListOptions{Page: 1, PerPage: 100}}
+	// builds, response, err := client.client.Builds.ListByPipeline(client.org, pipeline, &opt)
 	return nil, nil
 }
 
