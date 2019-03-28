@@ -21,10 +21,30 @@ func CreateBuildkiteClient(org string, apiToken string, debug bool) (*BuildkiteC
 	return &BuildkiteClient{org: org, client: client}, nil
 }
 
-func (client *BuildkiteClient) GetMostRecentJobs(pipeline string, lastNBuilds uint) ([]interface{}, error) {
-	// opt := buildkite.BuildsListOptions{ListOptions: buildkite.ListOptions{Page: 1, PerPage: 100}}
-	// builds, response, err := client.client.Builds.ListByPipeline(client.org, pipeline, &opt)
-	return nil, nil
+func (client *BuildkiteClient) GetMostRecentBuilds(pipeline string, atLeastNBuilds int) ([]buildkite.Build, error) {
+	all_builds := make([]buildkite.Build, 0)
+	opt := buildkite.BuildsListOptions{ListOptions: buildkite.ListOptions{Page: 1, PerPage: 100}}
+	currPage := 1
+	lastPage := 1
+
+	for currPage <= lastPage {
+		fmt.Printf("GET %d of %d", currPage, lastPage)
+		builds, response, err := client.client.Builds.ListByPipeline(client.org, pipeline, &opt)
+		if err != nil {
+			return nil, fmt.Errorf("Could not get page %d of builds for pipeline %s: %v", currPage, pipeline, err)
+		}
+
+		all_builds = append(all_builds, builds...)
+		currPage += 1
+		opt.Page = currPage
+		lastPage = response.LastPage
+
+		if atLeastNBuilds > -1 && len(all_builds) >= atLeastNBuilds {
+			break
+		}
+	}
+
+	return all_builds, nil
 }
 
 func (client *BuildkiteClient) GetAgents() ([]buildkite.Agent, error) {
