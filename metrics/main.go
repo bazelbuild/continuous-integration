@@ -13,10 +13,13 @@ import (
 )
 
 var (
-	org            = flag.String("buildkite_org", "bazel", "Buildkite orginization slug")
-	apiToken       = flag.String("buildkite_token", "", "Buildkite API access token that grants read access. See https://buildkite.com/docs/apis/rest-api#authentication")
-	debug          = flag.Bool("debug", false, "Enable debugging")
+	bkOrg          = flag.String("buildkite_org", "bazel", "Buildkite organization slug")
+	bkApiToken     = flag.String("buildkite_token", "", "Buildkite API access token that grants read access. See https://buildkite.com/docs/apis/rest-api#authentication")
+	bkDebug        = flag.Bool("debug", false, "Enable debugging")
 	pipelineString = flag.String("pipelines", "", "Comma separated list of slugs of pipelines whose performance statistics should be exported.")
+	ghOrg          = flag.String("github_org", "bazelbuild", "Name of the GitHub organization.")
+	ghRepo         = flag.String("github_repo", "bazelbuild", "Name of the GitHub repository.")
+	ghApiToken     = flag.String("github_token", "", "Access token for the GitHub API.")
 	sqlUser        = flag.String("sql_user", "", "User name for the CloudSQL publisher.")
 	sqlPassword    = flag.String("sql_password", "", "Password for the CloudSQL publisher.")
 	sqlInstance    = flag.String("sql_instance", "", "Instance name for the CloudSQL publisher.")
@@ -34,7 +37,7 @@ func main() {
 	}
 	pipelines := strings.Split(*pipelineString, ",")
 
-	bk, err := clients.CreateBuildkiteClient(*org, *apiToken, *debug)
+	bk, err := clients.CreateBuildkiteClient(*bkOrg, *bkApiToken, *bkDebug)
 	if err != nil {
 		log.Fatalf("Cannot create Buildkite client: %v", err)
 	}
@@ -42,12 +45,14 @@ func main() {
 	cloudSql := publishers.CreateCloudSqlPublisher()
 	pipelinePerformance := collectors.CreatePipelinePerformanceCollector(bk, pipelines...)
 	workerAvailability := collectors.CreateWorkerAvailabilityCollector(bk)
+	releaseDownloads := collectors.CreateReleaseDownloadsCollector(*ghOrg, *ghRepo, *ghApiToken)
 
 	srv := service.CreateService(handleError)
 	srv.AddMetric("pipeline_performance", 120, pipelinePerformance, cloudSql)
 	srv.AddMetric("worker_availability", 60, workerAvailability, cloudSql)
+	srv.AddMetric("release_downloads", 3600, releaseDownloads, cloudSql)
 
-	ds, err := pipelinePerformance.Collect()
+	ds, err := releaseDownloads.Collect()
 	fmt.Println(ds)
 	fmt.Println(err)
 
