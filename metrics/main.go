@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/fweikert/continuous-integration/metrics/clients"
 	"github.com/fweikert/continuous-integration/metrics/collectors"
@@ -12,13 +13,13 @@ import (
 )
 
 var (
-	org         = flag.String("buildkite_org", "bazel", "Buildkite orginization slug")
-	apiToken    = flag.String("buildkite_token", "", "Buildkite API access token that grants read access. See https://buildkite.com/docs/apis/rest-api#authentication")
-	debug       = flag.Bool("debug", false, "Enable debugging")
-	pipelines   = flag.String("pipelines", "", "Comma separated list of slugs of pipelines whose performance statistics should be exported.")
-	sqlUser     = flag.String("sql_user", "", "User name for the CloudSQL publisher.")
-	sqlPassword = flag.String("sql_password", "", "Password for the CloudSQL publisher.")
-	sqlInstance = flag.String("sql_instance", "", "Instance name for the CloudSQL publisher.")
+	org            = flag.String("buildkite_org", "bazel", "Buildkite orginization slug")
+	apiToken       = flag.String("buildkite_token", "", "Buildkite API access token that grants read access. See https://buildkite.com/docs/apis/rest-api#authentication")
+	debug          = flag.Bool("debug", false, "Enable debugging")
+	pipelineString = flag.String("pipelines", "", "Comma separated list of slugs of pipelines whose performance statistics should be exported.")
+	sqlUser        = flag.String("sql_user", "", "User name for the CloudSQL publisher.")
+	sqlPassword    = flag.String("sql_password", "", "Password for the CloudSQL publisher.")
+	sqlInstance    = flag.String("sql_instance", "", "Instance name for the CloudSQL publisher.")
 )
 
 func handleError(metricName string, err error) {
@@ -28,20 +29,25 @@ func handleError(metricName string, err error) {
 func main() {
 	flag.Parse()
 
+	if strings.TrimSpace(*pipelineString) == "" {
+		log.Fatalf("No pipelines were specified.")
+	}
+	pipelines := strings.Split(*pipelineString, ",")
+
 	bk, err := clients.CreateBuildkiteClient(*org, *apiToken, *debug)
 	if err != nil {
 		log.Fatalf("Cannot create Buildkite client: %v", err)
 	}
 
 	cloudSql := publishers.CreateCloudSqlPublisher()
-	presubmitPerformance := collectors.CreatePresubmitPerformanceCollector(bk, "google-bazel-presubmit")
+	pipelinePerformance := collectors.CreatePipelinePerformanceCollector(bk, pipelines...)
 	workerAvailability := collectors.CreateWorkerAvailabilityCollector(bk)
 
 	srv := service.CreateService(handleError)
-	srv.AddMetric("presubmit_performance", 120, presubmitPerformance, cloudSql)
+	srv.AddMetric("pipeline_performance", 120, pipelinePerformance, cloudSql)
 	srv.AddMetric("worker_availability", 60, workerAvailability, cloudSql)
 
-	ds, err := workerAvailability.Collect()
+	ds, err := pipelinePerformance.Collect()
 	fmt.Println(ds)
 	fmt.Println(err)
 
