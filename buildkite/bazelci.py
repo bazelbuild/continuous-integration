@@ -294,6 +294,7 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.yml",
         "pipeline_slug": "tensorflow",
+        "disabled_reason": "https://github.com/bazelbuild/bazel/issues/6867",
     },
     "Tulsi": {
         "git_repository": "https://github.com/bazelbuild/tulsi.git",
