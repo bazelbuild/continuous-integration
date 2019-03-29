@@ -254,6 +254,7 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_rust.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_rust/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-rust-rustlang",
+        "disabled_reason": "https://github.com/bazelbuild/rules_rust/issues/200",
     },
     "rules_sass": {
         "git_repository": "https://github.com/bazelbuild/rules_sass.git",
@@ -294,6 +295,7 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.yml",
         "pipeline_slug": "tensorflow",
+        "disabled_reason": "https://github.com/tensorflow/tensorflow/issues/26388",
     },
     "Tulsi": {
         "git_repository": "https://github.com/bazelbuild/tulsi.git",
