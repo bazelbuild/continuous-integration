@@ -34,7 +34,7 @@ var (
 const megaByte = 1024 * 1024
 
 func handleError(metricName string, err error) {
-	fmt.Printf("[%s] %v", metricName, err)
+	fmt.Printf("[%s] %v\n", metricName, err)
 }
 
 func main() {
@@ -55,14 +55,19 @@ func main() {
 		log.Fatalf("Failed to set up Cloud SQL publisher: %v", err)
 	}
 
-	pipelinePerformance := metrics.CreatePipelinePerformance(bk, pipelines...)
-	workerAvailability := metrics.CreateWorkerAvailability(bk)
-	releaseDownloads := metrics.CreateReleaseDownloads(*ghOrg, *ghRepo, *ghApiToken, megaByte)
-
 	srv := service.CreateService(handleError)
-	srv.AddMetric(pipelinePerformance, 120, cloudSql)
+
+	_ = pipelines
+	_ = bk
+	pipelinePerformance := metrics.CreatePipelinePerformance(bk, pipelines...)
+	srv.AddMetric(pipelinePerformance, 60, cloudSql)
+
+	releaseDownloads := metrics.CreateReleaseDownloads(*ghOrg, *ghRepo, *ghApiToken, megaByte)
+	srv.AddMetric(releaseDownloads, 12*60, cloudSql)
+
+	workerAvailability := metrics.CreateWorkerAvailability(bk)
 	srv.AddMetric(workerAvailability, 60, cloudSql)
-	srv.AddMetric(releaseDownloads, 3600, cloudSql)
+
 	srv.Start()
 
 	exitSignal := make(chan os.Signal)
