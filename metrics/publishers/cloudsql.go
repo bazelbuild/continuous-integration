@@ -42,9 +42,23 @@ func (c *CloudSql) prepareInsertStatement(metric metrics.Metric) error {
 		return fmt.Errorf("Metrics %s has already been registered for publisher %s.", name, c.Name())
 	}
 
-	headers := metric.Headers()
-	placeholder := strings.TrimRight(strings.Repeat("?, ", len(headers)), ", ")
-	insert := fmt.Sprintf(insertTemplate, name, strings.Join(headers, ", "), placeholder)
+	columnNames := metrics.GetColumnNames(metric.Columns())
+	placeholder := strings.TrimRight(strings.Repeat("?, ", len(columnNames)), ", ")
+	insert := fmt.Sprintf(insertTemplate, name, strings.Join(columnNames, ", "), placeholder)
+
+	nonKeyColumnNames := make([]string, 0)
+	for _, c := range metric.Columns() {
+		if !c.IsKey {
+			nonKeyColumnNames = append(nonKeyColumnNames, c.Name)
+		}
+	}
+	if len(nonKeyColumnNames) != len(columnNames) {
+		updates := make([]string, len(nonKeyColumnNames))
+		for i, c := range nonKeyColumnNames {
+			updates[i] = fmt.Sprintf("%s=VALUES(%s)", c, c)
+		}
+		insert = fmt.Sprintf("%s ON DUPLICATE KEY UPDATE %s", insert, strings.Join(updates, ", "))
+	}
 
 	stmt, err := c.conn.Prepare(insert)
 	if err != nil {
@@ -66,10 +80,6 @@ func (c *CloudSql) Publish(metricName string, newData *data.DataSet) error {
 			return fmt.Errorf("Could not insert new data for metric %s: %v", metricName, err)
 		}
 	}
-	// 2. insert row, ignore
-	// http://bogdan.org.ua/2007/10/18/mysql-insert-if-not-exists-syntax.html
-	// https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
-	// https://stackoverflow.com/questions/3164505/mysql-insert-record-if-not-exists-in-table
 	return nil
 }
 

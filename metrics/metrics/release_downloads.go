@@ -14,15 +14,15 @@ type ReleaseDownloads struct {
 	repo         string
 	client       *github.Client
 	minSizeBytes int
+	columns      []Column
 }
 
 func (rd ReleaseDownloads) Name() string {
 	return "release_downloads"
 }
 
-// CREATE TABLE release_downloads (release_name VARCHAR(255), artifact VARCHAR(255), downloads INT, PRIMARY KEY(release_name, artifact));
-func (rd ReleaseDownloads) Headers() []string {
-	return []string{"release_name", "artifact", "downloads"}
+func (rd ReleaseDownloads) Columns() []Column {
+	return rd.columns
 }
 
 func (rd ReleaseDownloads) Collect() (*data.DataSet, error) {
@@ -31,7 +31,7 @@ func (rd ReleaseDownloads) Collect() (*data.DataSet, error) {
 		return nil, fmt.Errorf("Failed to get releases for %s/%s: %v", rd.org, rd.repo, err)
 	}
 
-	result := data.CreateDataSet(rd.Headers())
+	result := data.CreateDataSet(GetColumnNames(rd.columns))
 	for _, release := range all_releases {
 		for _, asset := range release.Assets {
 			if *asset.Size >= rd.minSizeBytes {
@@ -64,6 +64,7 @@ func (rd ReleaseDownloads) getReleases() ([]*github.RepositoryRelease, error) {
 	return all_releases, nil
 }
 
+// CREATE TABLE release_downloads (release_name VARCHAR(255), artifact VARCHAR(255), downloads INT, PRIMARY KEY(release_name, artifact));
 func CreateReleaseDownloads(org string, repo string, token string, minSizeBytes int) ReleaseDownloads {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
@@ -72,5 +73,6 @@ func CreateReleaseDownloads(org string, repo string, token string, minSizeBytes 
 	tc := oauth2.NewClient(ctx, ts)
 
 	client := github.NewClient(tc)
-	return ReleaseDownloads{org: org, repo: repo, client: client, minSizeBytes: minSizeBytes}
+	columns := []Column{Column{"release_name", true}, Column{"artifact", true}, Column{"downloads", false}}
+	return ReleaseDownloads{org: org, repo: repo, client: client, minSizeBytes: minSizeBytes, columns: columns}
 }

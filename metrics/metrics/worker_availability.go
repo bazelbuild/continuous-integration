@@ -10,16 +10,16 @@ import (
 )
 
 type WorkerAvailability struct {
-	client *clients.BuildkiteClient
+	client  *clients.BuildkiteClient
+	columns []Column
 }
 
 func (wa WorkerAvailability) Name() string {
 	return "worker_availability"
 }
 
-// CREATE TABLE worker_availability (timestamp BIGINT, platform VARCHAR(255), idle_count INT, busy_count INT, PRIMARY KEY(timestamp));
-func (wa WorkerAvailability) Headers() []string {
-	return []string{"timestamp", "platform", "idle_count", "busy_count"}
+func (wa WorkerAvailability) Columns() []Column {
+	return wa.columns
 }
 
 func (wa WorkerAvailability) Collect() (*data.DataSet, error) {
@@ -28,7 +28,7 @@ func (wa WorkerAvailability) Collect() (*data.DataSet, error) {
 	if err != nil {
 		return nil, err
 	}
-	result := data.CreateDataSet(wa.Headers())
+	result := data.CreateDataSet(GetColumnNames(wa.columns))
 	for platform, counts := range allPlatforms {
 		err = result.AddRow(ts, platform, counts[0], counts[1])
 		if err != nil {
@@ -70,6 +70,8 @@ func getPlatform(hostName string) (string, error) {
 	return hostName[:pos], nil
 }
 
+// CREATE TABLE worker_availability (timestamp BIGINT, platform VARCHAR(255), idle_count INT, busy_count INT, PRIMARY KEY(timestamp));
 func CreateWorkerAvailability(client *clients.BuildkiteClient) WorkerAvailability {
-	return WorkerAvailability{client: client}
+	columns := []Column{Column{"timestamp", true}, Column{"platform", false}, Column{"idle_count", false}, Column{"busy_count", false}}
+	return WorkerAvailability{client: client, columns: columns}
 }
