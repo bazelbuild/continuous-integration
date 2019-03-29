@@ -48,6 +48,10 @@ func main() {
 	}
 
 	cloudSql, err := publishers.CreateCloudSqlPublisher(*sqlUser, *sqlPassword, *sqlInstance, *sqlDatabase, *sqlLocalPort)
+	if err != nil {
+		log.Fatalf("Failed to set up Cloud SQL publisher: %v", err)
+	}
+
 	pipelinePerformance := metrics.CreatePipelinePerformance(bk, pipelines...)
 	workerAvailability := metrics.CreateWorkerAvailability(bk)
 	releaseDownloads := metrics.CreateReleaseDownloads(*ghOrg, *ghRepo, *ghApiToken, megaByte)
@@ -58,8 +62,13 @@ func main() {
 	srv.AddMetric(releaseDownloads, 3600, cloudSql)
 
 	ds, err := releaseDownloads.Collect()
-	fmt.Println(ds)
-	fmt.Println(err)
+	if err != nil {
+		log.Fatalf("Could not collect download statistics: %v", err)
+	}
+	err = cloudSql.Publish(releaseDownloads.Name(), ds)
+	if err != nil {
+		log.Fatalf("Failed to publish download statistics: %v", err)
+	}
 
 	//srv.Start()
 	//time.Sleep(30 * time.Second)

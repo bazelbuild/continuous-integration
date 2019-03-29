@@ -9,6 +9,7 @@ import (
 	"github.com/fweikert/continuous-integration/metrics/metrics"
 
 	"github.com/fweikert/continuous-integration/metrics/data"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 const insertTemplate = "INSERT INTO %s (%s) VALUES (%s)"
@@ -54,8 +55,17 @@ func (c *CloudSql) prepareInsertStatement(metric metrics.Metric) error {
 }
 
 func (c *CloudSql) Publish(metricName string, newData *data.DataSet) error {
-	fmt.Printf("Got %v from %s\n", newData, metricName)
-	// 1. Lock table
+	stmt := c.statements[metricName]
+	if stmt == nil {
+		return fmt.Errorf("Could not find prepared insert statement for metric %s. Have you called RegisterMetric() first?", metricName)
+	}
+
+	for _, row := range newData.Data {
+		_, err := stmt.Exec(row...)
+		if err != nil {
+			return fmt.Errorf("Could not insert new data for metric %s: %v", metricName, err)
+		}
+	}
 	// 2. insert row, ignore
 	// http://bogdan.org.ua/2007/10/18/mysql-insert-if-not-exists-syntax.html
 	// https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
@@ -79,7 +89,7 @@ func CreateCloudSqlPublisher(user, password, instance, database string, localPor
 }
 
 func getConnectionString(user, password, instance, database string, localPort int) string {
-	cred := "%s:%s@"
+	cred := fmt.Sprintf("%s:%s@", user, password)
 	if os.Getenv("GAE_INSTANCE") != "" {
 		// Running in production.
 		return fmt.Sprintf("%sunix(/cloudsql/%s)/%s", cred, instance, database)
