@@ -1,4 +1,4 @@
-package collectors
+package metrics
 
 import (
 	"context"
@@ -16,13 +16,21 @@ type ReleaseDownloads struct {
 	minSizeBytes int
 }
 
+func (rd ReleaseDownloads) Name() string {
+	return "release_downloads"
+}
+
+func (rd ReleaseDownloads) Headers() []string {
+	return []string{"release", "artifact", "downloads"}
+}
+
 func (rd ReleaseDownloads) Collect() (*data.DataSet, error) {
 	all_releases, err := rd.getReleases()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get releases for %s/%s: %v", rd.org, rd.repo, err)
 	}
 
-	result := data.CreateDataSet("release", "artifact", "downloads")
+	result := data.CreateDataSet(rd.Headers())
 	for _, release := range all_releases {
 		for _, asset := range release.Assets {
 			if *asset.Size >= rd.minSizeBytes {
@@ -55,7 +63,7 @@ func (rd ReleaseDownloads) getReleases() ([]*github.RepositoryRelease, error) {
 	return all_releases, nil
 }
 
-func CreateReleaseDownloadsCollector(org string, repo string, token string, minSizeBytes int) ReleaseDownloads {
+func CreateReleaseDownloads(org string, repo string, token string, minSizeBytes int) ReleaseDownloads {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},

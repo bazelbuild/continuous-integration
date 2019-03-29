@@ -1,4 +1,4 @@
-package collectors
+package metrics
 
 import (
 	"fmt"
@@ -13,13 +13,21 @@ type WorkerAvailability struct {
 	client *clients.BuildkiteClient
 }
 
+func (wa WorkerAvailability) Name() string {
+	return "worker_availability"
+}
+
+func (wa WorkerAvailability) Headers() []string {
+	return []string{"timestamp", "platform", "idle_count", "busy_count"}
+}
+
 func (wa WorkerAvailability) Collect() (*data.DataSet, error) {
 	ts := time.Now().Unix()
 	allPlatforms, err := wa.getIdleAndBusyCountsPerPlatform()
 	if err != nil {
 		return nil, err
 	}
-	result := data.CreateDataSet("timestamp", "platform", "idle_count", "busy_count")
+	result := data.CreateDataSet(wa.Headers())
 	for platform, counts := range allPlatforms {
 		err = result.AddRow(ts, platform, counts[0], counts[1])
 		if err != nil {
@@ -61,6 +69,6 @@ func getPlatform(hostName string) (string, error) {
 	return hostName[:pos], nil
 }
 
-func CreateWorkerAvailabilityCollector(client *clients.BuildkiteClient) WorkerAvailability {
+func CreateWorkerAvailability(client *clients.BuildkiteClient) WorkerAvailability {
 	return WorkerAvailability{client: client}
 }

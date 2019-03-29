@@ -4,18 +4,57 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fweikert/continuous-integration/metrics/data"
+	"github.com/fweikert/continuous-integration/metrics/metrics"
+	"github.com/fweikert/continuous-integration/metrics/publishers"
 )
 
 type metricJob struct {
-	name       string
 	ticker     *time.Ticker
-	collector  data.Collector
-	publishers []data.Publisher
+	metric     metrics.Metric
+	publishers []publishers.Publisher
 }
 
-func createJob(name string, updateIntervalSeconds uint, collector data.Collector, publishers []data.Publisher) metricJob {
-	return metricJob{name: name, ticker: time.NewTicker(time.Duration(updateIntervalSeconds) * time.Second), collector: collector, publishers: publishers}
+func (job *metricJob) start(handler ErrorHandler) {
+	name := job.metric.Name()
+	err := job.initialize()
+	if err != nil {
+		handler(name, err)
+		return
+	}
+
+	go func() {
+		for range job.ticker.C {
+			newData, err := job.metric.Collect()
+			if err != nil {
+				handler(name, fmt.Errorf("Collection failed': %v", err))
+				return
+			}
+			for _, p := range job.publishers {
+				err = p.Publish(name, newData)
+				if err != nil {
+					handler(name, fmt.Errorf("Publishing to %s failed': %v", p.Name(), err))
+				}
+			}
+		}
+	}()
+}
+
+func (job *metricJob) initialize() error {
+	for _, publisher := range job.publishers {
+		err := publisher.RegisterMetric(job.metric)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (job *metricJob) stop() {
+	job.ticker.Stop()
+}
+
+func createJob(metric metrics.Metric, updateIntervalSeconds uint, publisherInstances []publishers.Publisher) metricJob {
+	return metricJob{metric: metric, ticker: time.NewTicker(time.Duration(updateIntervalSeconds) * time.Second), publishers: publisherInstances}
 }
 
 type ErrorHandler func(string, error)
@@ -29,11 +68,12 @@ func CreateService(handler ErrorHandler) *MetricService {
 	return &MetricService{jobs: make(map[string]metricJob), handler: handler}
 }
 
-func (srv *MetricService) AddMetric(name string, updateIntervalSeconds uint, collector data.Collector, publishers ...data.Publisher) error {
+func (srv *MetricService) AddMetric(metric metrics.Metric, updateIntervalSeconds uint, publisherInstances ...publishers.Publisher) error {
+	name := metric.Name()
 	if _, ok := srv.jobs[name]; ok {
-		return fmt.Errorf("There is already a job named '%s'", name)
+		return fmt.Errorf("There is already a job for metric '%s'", name)
 	}
-	srv.jobs[name] = createJob(name, updateIntervalSeconds, collector, publishers)
+	srv.jobs[name] = createJob(metric, updateIntervalSeconds, publisherInstances)
 	return nil
 }
 
@@ -47,27 +87,4 @@ func (srv *MetricService) Stop() {
 	for _, j := range srv.jobs {
 		j.stop()
 	}
-}
-
-func (job *metricJob) start(handler ErrorHandler) {
-	go func() {
-		for range job.ticker.C {
-			newData, err := job.collector.Collect()
-			if err != nil {
-				handler(job.name, fmt.Errorf("Collection failed': %v", err))
-				return
-			}
-
-			for _, p := range job.publishers {
-				err = p.Publish(job.name, newData)
-				if err != nil {
-					handler(job.name, fmt.Errorf("Publishing to %s failed': %v", p.Name(), err))
-				}
-			}
-		}
-	}()
-}
-
-func (j *metricJob) stop() {
-	j.ticker.Stop()
 }
