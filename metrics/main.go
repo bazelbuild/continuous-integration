@@ -57,8 +57,6 @@ func main() {
 
 	srv := service.CreateService(handleError)
 
-	_ = pipelines
-	_ = bk
 	pipelinePerformance := metrics.CreatePipelinePerformance(bk, pipelines...)
 	srv.AddMetric(pipelinePerformance, 60, cloudSql)
 
