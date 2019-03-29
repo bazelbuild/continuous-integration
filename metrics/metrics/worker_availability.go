@@ -17,6 +17,7 @@ func (wa WorkerAvailability) Name() string {
 	return "worker_availability"
 }
 
+// CREATE TABLE worker_availability (timestamp BIGINT, platform VARCHAR(255), idle_count INT, busy_count INT, PRIMARY KEY(timestamp));
 func (wa WorkerAvailability) Headers() []string {
 	return []string{"timestamp", "platform", "idle_count", "busy_count"}
 }

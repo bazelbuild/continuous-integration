@@ -61,6 +61,11 @@ func main() {
 	srv.AddMetric(workerAvailability, 60, cloudSql)
 	srv.AddMetric(releaseDownloads, 3600, cloudSql)
 
+	err = cloudSql.RegisterMetric(releaseDownloads)
+	if err != nil {
+		log.Fatalf("Could not register metric: %v", err)
+	}
+
 	ds, err := releaseDownloads.Collect()
 	if err != nil {
 		log.Fatalf("Could not collect download statistics: %v", err)

@@ -18,6 +18,7 @@ func (pp PipelinePerformance) Name() string {
 	return "pipeline_performance"
 }
 
+// CREATE TABLE pipeline_performance (pipeline VARCHAR(255), build INT, job VARCHAR(255), wait_time_seconds FLOAT, run_time_seconds FLOAT, PRIMARY KEY(pipeline, build, job));
 func (pp PipelinePerformance) Headers() []string {
 	return []string{"pipeline", "build", "job", "wait_time_seconds", "run_time_seconds"}
 }
