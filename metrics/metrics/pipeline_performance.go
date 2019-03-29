@@ -1,10 +1,11 @@
-package collectors
+package metrics
 
 import (
 	"fmt"
 
 	"github.com/fweikert/continuous-integration/metrics/clients"
 	"github.com/fweikert/continuous-integration/metrics/data"
+
 	"github.com/fweikert/go-buildkite/buildkite"
 )
 
@@ -13,8 +14,16 @@ type PipelinePerformance struct {
 	pipelines []string
 }
 
+func (pp PipelinePerformance) Name() string {
+	return "pipeline_performance"
+}
+
+func (pp PipelinePerformance) Headers() []string {
+	return []string{"pipeline", "build", "job", "wait_time_seconds", "run_time_seconds"}
+}
+
 func (pp PipelinePerformance) Collect() (*data.DataSet, error) {
-	result := data.CreateDataSet("pipeline", "build", "job", "wait_time_seconds", "run_time_seconds")
+	result := data.CreateDataSet(pp.Headers())
 	for _, pipeline := range pp.pipelines {
 		builds, err := pp.client.GetMostRecentBuilds(pipeline, 30)
 		if err != nil {
@@ -39,6 +48,6 @@ func getDifferenceSeconds(start *buildkite.Timestamp, end *buildkite.Timestamp) 
 	return end.Time.Sub(start.Time).Seconds()
 }
 
-func CreatePipelinePerformanceCollector(client *clients.BuildkiteClient, pipelines ...string) PipelinePerformance {
+func CreatePipelinePerformance(client *clients.BuildkiteClient, pipelines ...string) PipelinePerformance {
 	return PipelinePerformance{client: client, pipelines: pipelines}
 }

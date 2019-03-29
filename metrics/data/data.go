@@ -5,15 +5,6 @@ import (
 	"strings"
 )
 
-type Collector interface {
-	Collect() (*DataSet, error)
-}
-
-type Publisher interface {
-	Publish(metricName string, data *DataSet) error
-	Name() string
-}
-
 type DataSet struct {
 	Headers []string
 	Data    [][]interface{}
@@ -44,6 +35,6 @@ func getValuesAsStrings(values []interface{}) []string {
 	return stringValues
 }
 
-func CreateDataSet(headers ...string) *DataSet {
+func CreateDataSet(headers []string) *DataSet {
 	return &DataSet{Headers: headers, Data: make([][]interface{}, 0)}
 }

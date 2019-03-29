@@ -6,8 +6,9 @@ import (
 	"log"
 	"strings"
 
+	"github.com/fweikert/continuous-integration/metrics/metrics"
+
 	"github.com/fweikert/continuous-integration/metrics/clients"
-	"github.com/fweikert/continuous-integration/metrics/collectors"
 	"github.com/fweikert/continuous-integration/metrics/publishers"
 	"github.com/fweikert/continuous-integration/metrics/service"
 )
@@ -23,6 +24,8 @@ var (
 	sqlUser        = flag.String("sql_user", "", "User name for the CloudSQL publisher.")
 	sqlPassword    = flag.String("sql_password", "", "Password for the CloudSQL publisher.")
 	sqlInstance    = flag.String("sql_instance", "", "Instance name for the CloudSQL publisher.")
+	sqlDatabase    = flag.String("sql_database", "metrics", "Name of the SQL database.")
+	sqlLocalPort   = flag.Int("sql_local_port", 3306, "Port of the SQL database when testing locally. Requires the Cloud SQL proxy to be installed and running.")
 )
 
 const megaByte = 1024 * 1024
@@ -44,15 +47,15 @@ func main() {
 		log.Fatalf("Cannot create Buildkite client: %v", err)
 	}
 
-	cloudSql := publishers.CreateCloudSqlPublisher()
-	pipelinePerformance := collectors.CreatePipelinePerformanceCollector(bk, pipelines...)
-	workerAvailability := collectors.CreateWorkerAvailabilityCollector(bk)
-	releaseDownloads := collectors.CreateReleaseDownloadsCollector(*ghOrg, *ghRepo, *ghApiToken, megaByte)
+	cloudSql, err := publishers.CreateCloudSqlPublisher(*sqlUser, *sqlPassword, *sqlInstance, *sqlDatabase, *sqlLocalPort)
+	pipelinePerformance := metrics.CreatePipelinePerformance(bk, pipelines...)
+	workerAvailability := metrics.CreateWorkerAvailability(bk)
+	releaseDownloads := metrics.CreateReleaseDownloads(*ghOrg, *ghRepo, *ghApiToken, megaByte)
 
 	srv := service.CreateService(handleError)
-	srv.AddMetric("pipeline_performance", 120, pipelinePerformance, cloudSql)
-	srv.AddMetric("worker_availability", 60, workerAvailability, cloudSql)
-	srv.AddMetric("release_downloads", 3600, releaseDownloads, cloudSql)
+	srv.AddMetric(pipelinePerformance, 120, cloudSql)
+	srv.AddMetric(workerAvailability, 60, cloudSql)
+	srv.AddMetric(releaseDownloads, 3600, cloudSql)
 
 	ds, err := releaseDownloads.Collect()
 	fmt.Println(ds)
