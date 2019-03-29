@@ -61,18 +61,22 @@ func main() {
 	srv.AddMetric(workerAvailability, 60, cloudSql)
 	srv.AddMetric(releaseDownloads, 3600, cloudSql)
 
-	err = cloudSql.RegisterMetric(releaseDownloads)
-	if err != nil {
-		log.Fatalf("Could not register metric: %v", err)
-	}
+	// Test code - please delete later.
+	for _, m := range []metrics.Metric{pipelinePerformance, workerAvailability, releaseDownloads} {
+		name := m.Name()
+		err = cloudSql.RegisterMetric(m)
+		if err != nil {
+			log.Fatalf("Could not register metric %s: %v", name, err)
+		}
 
-	ds, err := releaseDownloads.Collect()
-	if err != nil {
-		log.Fatalf("Could not collect download statistics: %v", err)
-	}
-	err = cloudSql.Publish(releaseDownloads.Name(), ds)
-	if err != nil {
-		log.Fatalf("Failed to publish download statistics: %v", err)
+		ds, err := m.Collect()
+		if err != nil {
+			log.Fatalf("Could not collect data for metric %s: %v", name, err)
+		}
+		err = cloudSql.Publish(name, ds)
+		if err != nil {
+			log.Fatalf("Failed to publish metric %s: %v", name, err)
+		}
 	}
 
 	//srv.Start()
