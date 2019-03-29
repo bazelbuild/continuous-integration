@@ -4,7 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/fweikert/continuous-integration/metrics/metrics"
 
@@ -60,26 +63,11 @@ func main() {
 	srv.AddMetric(pipelinePerformance, 120, cloudSql)
 	srv.AddMetric(workerAvailability, 60, cloudSql)
 	srv.AddMetric(releaseDownloads, 3600, cloudSql)
+	srv.Start()
 
-	// Test code - please delete later.
-	for _, m := range []metrics.Metric{pipelinePerformance, releaseDownloads, workerAvailability} {
-		name := m.Name()
-		err = cloudSql.RegisterMetric(m)
-		if err != nil {
-			log.Fatalf("Could not register metric %s: %v", name, err)
-		}
+	exitSignal := make(chan os.Signal)
+	signal.Notify(exitSignal, syscall.SIGINT, syscall.SIGTERM)
+	<-exitSignal
 
-		ds, err := m.Collect()
-		if err != nil {
-			log.Fatalf("Could not collect data for metric %s: %v", name, err)
-		}
-		err = cloudSql.Publish(name, ds)
-		if err != nil {
-			log.Fatalf("Failed to publish metric %s: %v", name, err)
-		}
-	}
-
-	//srv.Start()
-	//time.Sleep(30 * time.Second)
-	//srv.Stop()
+	srv.Stop()
 }
