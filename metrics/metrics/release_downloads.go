@@ -20,8 +20,9 @@ func (rd ReleaseDownloads) Name() string {
 	return "release_downloads"
 }
 
+// CREATE TABLE release_downloads (release_name VARCHAR(255), artifact VARCHAR(255), downloads INT, PRIMARY KEY(release_name, artifact));
 func (rd ReleaseDownloads) Headers() []string {
-	return []string{"release", "artifact", "downloads"}
+	return []string{"release_name", "artifact", "downloads"}
 }
 
 func (rd ReleaseDownloads) Collect() (*data.DataSet, error) {
