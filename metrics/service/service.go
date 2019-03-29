@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/fweikert/continuous-integration/metrics/metrics"
@@ -24,12 +25,14 @@ func (job *metricJob) start(handler ErrorHandler) {
 
 	go func() {
 		for range job.ticker.C {
+			log.Printf("Collecting data for metric %s\n", job.metric.Name())
 			newData, err := job.metric.Collect()
 			if err != nil {
 				handler(name, fmt.Errorf("Collection failed': %v", err))
 				return
 			}
 			for _, p := range job.publishers {
+				log.Printf("Publishing data for metric %s to %s\n", job.metric.Name(), p.Name())
 				err = p.Publish(name, newData)
 				if err != nil {
 					handler(name, fmt.Errorf("Publishing to %s failed': %v", p.Name(), err))
