@@ -16,30 +16,30 @@ type metricJob struct {
 }
 
 func (job *metricJob) start(handler ErrorHandler) {
-	name := job.metric.Name()
 	err := job.initialize()
 	if err != nil {
-		handler(name, err)
+		handler(job.metric.Name(), err)
 		return
 	}
 
-	go func() {
-		for range job.ticker.C {
-			log.Printf("Collecting data for metric %s\n", job.metric.Name())
-			newData, err := job.metric.Collect()
+	go func(currentJob metricJob) {
+		name := currentJob.metric.Name()
+		for range currentJob.ticker.C {
+			log.Printf("Collecting data for metric %s\n", name)
+			newData, err := currentJob.metric.Collect()
 			if err != nil {
 				handler(name, fmt.Errorf("Collection failed': %v", err))
 				return
 			}
-			for _, p := range job.publishers {
-				log.Printf("Publishing data for metric %s to %s\n", job.metric.Name(), p.Name())
+			for _, p := range currentJob.publishers {
+				log.Printf("Publishing data for metric %s to %s\n", name, p.Name())
 				err = p.Publish(name, newData)
 				if err != nil {
 					handler(name, fmt.Errorf("Publishing to %s failed': %v", p.Name(), err))
 				}
 			}
 		}
-	}()
+	}(*job)
 }
 
 func (job *metricJob) initialize() error {
@@ -56,8 +56,8 @@ func (job *metricJob) stop() {
 	job.ticker.Stop()
 }
 
-func createJob(metric metrics.Metric, updateIntervalSeconds uint, publisherInstances []publishers.Publisher) metricJob {
-	return metricJob{metric: metric, ticker: time.NewTicker(time.Duration(updateIntervalSeconds) * time.Second), publishers: publisherInstances}
+func createJob(metric metrics.Metric, updateIntervalMinutes uint, publisherInstances []publishers.Publisher) metricJob {
+	return metricJob{metric: metric, ticker: time.NewTicker(time.Duration(updateIntervalMinutes) * time.Minute), publishers: publisherInstances}
 }
 
 type ErrorHandler func(string, error)
@@ -71,12 +71,12 @@ func CreateService(handler ErrorHandler) *MetricService {
 	return &MetricService{jobs: make(map[string]metricJob), handler: handler}
 }
 
-func (srv *MetricService) AddMetric(metric metrics.Metric, updateIntervalSeconds uint, publisherInstances ...publishers.Publisher) error {
+func (srv *MetricService) AddMetric(metric metrics.Metric, updateIntervalMinutes uint, publisherInstances ...publishers.Publisher) error {
 	name := metric.Name()
 	if _, ok := srv.jobs[name]; ok {
 		return fmt.Errorf("There is already a job for metric '%s'", name)
 	}
-	srv.jobs[name] = createJob(metric, updateIntervalSeconds, publisherInstances)
+	srv.jobs[name] = createJob(metric, updateIntervalMinutes, publisherInstances)
 	return nil
 }
 
