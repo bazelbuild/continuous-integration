@@ -14,9 +14,14 @@ import (
 
 const insertTemplate = "INSERT INTO %s (%s) VALUES (%s)"
 
+type statement struct {
+	prepared *sql.Stmt
+	text     string
+}
+
 type CloudSql struct {
 	conn       *sql.DB
-	statements map[string]*sql.Stmt
+	statements map[string]*statement
 }
 
 func (c *CloudSql) Name() string {
@@ -60,12 +65,20 @@ func (c *CloudSql) prepareInsertStatement(metric metrics.Metric) error {
 		insert = fmt.Sprintf("%s ON DUPLICATE KEY UPDATE %s", insert, strings.Join(updates, ", "))
 	}
 
-	stmt, err := c.conn.Prepare(insert)
+	stmt, err := c.createStatement(name, insert)
 	if err != nil {
-		return fmt.Errorf("Failed to prepare insert statement for metric %s: %v", name, err)
+		return err
 	}
 	c.statements[name] = stmt
 	return nil
+}
+
+func (c *CloudSql) createStatement(metricName string, text string) (*statement, error) {
+	stmt, err := c.conn.Prepare(text)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to prepare insert statement for metric %s: %v\n\tStatement: %s", metricName, err, text)
+	}
+	return &statement{prepared: stmt, text: text}, nil
 }
 
 func (c *CloudSql) Publish(metricName string, newData *data.DataSet) error {
@@ -75,9 +88,13 @@ func (c *CloudSql) Publish(metricName string, newData *data.DataSet) error {
 	}
 
 	for _, row := range newData.Data {
-		_, err := stmt.Exec(row...)
+		_, err := stmt.prepared.Exec(row...)
 		if err != nil {
-			return fmt.Errorf("Could not insert new data for metric %s: %v", metricName, err)
+			values := make([]string, len(row))
+			for i, v := range row {
+				values[i] = fmt.Sprintf("%v", v)
+			}
+			return fmt.Errorf("Could not insert new data for metric %s: %v\n\tStatement: %s\n\tValues: %s", metricName, err, stmt.text, strings.Join(values, ", "))
 		}
 	}
 	return nil
@@ -94,7 +111,7 @@ func CreateCloudSqlPublisher(user, password, instance, database string, localPor
 	}
 	return &CloudSql{
 		conn:       conn,
-		statements: make(map[string]*sql.Stmt),
+		statements: make(map[string]*statement),
 	}, nil
 }
 
