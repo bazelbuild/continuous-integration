@@ -4,30 +4,56 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/fweikert/continuous-integration/metrics/metrics"
 
 	"github.com/fweikert/continuous-integration/metrics/data"
 )
 
-const insertStatement = ""
+const insertTemplate = "INSERT INTO %s (%s) VALUES (%s)"
 
 type CloudSql struct {
-	conn   *sql.DB
-	insert *sql.Stmt
+	conn       *sql.DB
+	statements map[string]*sql.Stmt
 }
 
-func (c CloudSql) Name() string {
+func (c *CloudSql) Name() string {
 	return "Cloud SQL"
 }
 
-func (c CloudSql) RegisterMetric(metric metrics.Metric) error {
-	// 1. Prepare statemets
-	// 2. Check that table exists (or create onw)
+func (c *CloudSql) RegisterMetric(metric metrics.Metric) error {
+	err := c.ensureTableExists(metric)
+	if err != nil {
+		return err
+	}
+	return c.prepareInsertStatement(metric)
+}
+
+func (c *CloudSql) ensureTableExists(metric metrics.Metric) error {
+	// TODO(fweikert): implement
 	return nil
 }
 
-func (c CloudSql) Publish(metricName string, newData *data.DataSet) error {
+func (c *CloudSql) prepareInsertStatement(metric metrics.Metric) error {
+	name := metric.Name()
+	if _, ok := c.statements[name]; ok {
+		return fmt.Errorf("Metrics %s has already been registered for publisher %s.", name, c.Name())
+	}
+
+	headers := metric.Headers()
+	placeholder := strings.TrimRight(strings.Repeat("?, ", len(headers)), ", ")
+	insert := fmt.Sprintf(insertTemplate, name, strings.Join(headers, ", "), placeholder)
+
+	stmt, err := c.conn.Prepare(insert)
+	if err != nil {
+		return fmt.Errorf("Failed to prepare insert statement for metric %s: %v", name, err)
+	}
+	c.statements[name] = stmt
+	return nil
+}
+
+func (c *CloudSql) Publish(metricName string, newData *data.DataSet) error {
 	fmt.Printf("Got %v from %s\n", newData, metricName)
 	// 1. Lock table
 	// 2. insert row, ignore
@@ -46,15 +72,9 @@ func CreateCloudSqlPublisher(user, password, instance, database string, localPor
 		conn.Close()
 		return nil, fmt.Errorf("Connection to database is bad: %v", err)
 	}
-
-	insert, err := conn.Prepare(insertStatement)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to prepare insert statement: %v", err)
-	}
-
 	return &CloudSql{
-		conn:   conn,
-		insert: insert,
+		conn:       conn,
+		statements: make(map[string]*sql.Stmt),
 	}, nil
 }
 
