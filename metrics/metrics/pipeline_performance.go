@@ -12,19 +12,19 @@ import (
 type PipelinePerformance struct {
 	client    *clients.BuildkiteClient
 	pipelines []string
+	columns   []Column
 }
 
 func (pp PipelinePerformance) Name() string {
 	return "pipeline_performance"
 }
 
-// CREATE TABLE pipeline_performance (pipeline VARCHAR(255), build INT, job VARCHAR(255), wait_time_seconds FLOAT, run_time_seconds FLOAT, PRIMARY KEY(pipeline, build, job));
-func (pp PipelinePerformance) Headers() []string {
-	return []string{"pipeline", "build", "job", "wait_time_seconds", "run_time_seconds"}
+func (pp PipelinePerformance) Columns() []Column {
+	return pp.columns
 }
 
 func (pp PipelinePerformance) Collect() (*data.DataSet, error) {
-	result := data.CreateDataSet(pp.Headers())
+	result := data.CreateDataSet(GetColumnNames(pp.columns))
 	for _, pipeline := range pp.pipelines {
 		builds, err := pp.client.GetMostRecentBuilds(pipeline, 30)
 		if err != nil {
@@ -49,6 +49,8 @@ func getDifferenceSeconds(start *buildkite.Timestamp, end *buildkite.Timestamp) 
 	return end.Time.Sub(start.Time).Seconds()
 }
 
+// CREATE TABLE pipeline_performance (pipeline VARCHAR(255), build INT, job VARCHAR(255), wait_time_seconds FLOAT, run_time_seconds FLOAT, PRIMARY KEY(pipeline, build, job));
 func CreatePipelinePerformance(client *clients.BuildkiteClient, pipelines ...string) PipelinePerformance {
-	return PipelinePerformance{client: client, pipelines: pipelines}
+	columns := []Column{Column{"pipeline", true}, Column{"build", true}, Column{"job", true}, Column{"wait_time_seconds", false}, Column{"run_time_seconds", false}}
+	return PipelinePerformance{client: client, pipelines: pipelines, columns: columns}
 }
