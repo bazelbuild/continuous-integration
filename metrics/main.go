@@ -62,7 +62,7 @@ func main() {
 	srv.AddMetric(releaseDownloads, 3600, cloudSql)
 
 	// Test code - please delete later.
-	for _, m := range []metrics.Metric{pipelinePerformance, workerAvailability, releaseDownloads} {
+	for _, m := range []metrics.Metric{pipelinePerformance, releaseDownloads, workerAvailability} {
 		name := m.Name()
 		err = cloudSql.RegisterMetric(m)
 		if err != nil {

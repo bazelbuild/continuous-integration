@@ -70,8 +70,8 @@ func getPlatform(hostName string) (string, error) {
 	return hostName[:pos], nil
 }
 
-// CREATE TABLE worker_availability (timestamp BIGINT, platform VARCHAR(255), idle_count INT, busy_count INT, PRIMARY KEY(timestamp));
+// CREATE TABLE worker_availability (timestamp BIGINT, platform VARCHAR(255), idle_count INT, busy_count INT, PRIMARY KEY(timestamp, platform));
 func CreateWorkerAvailability(client *clients.BuildkiteClient) WorkerAvailability {
-	columns := []Column{Column{"timestamp", true}, Column{"platform", false}, Column{"idle_count", false}, Column{"busy_count", false}}
+	columns := []Column{Column{"timestamp", true}, Column{"platform", true}, Column{"idle_count", false}, Column{"busy_count", false}}
 	return WorkerAvailability{client: client, columns: columns}
 }
