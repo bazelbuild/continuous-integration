@@ -1484,9 +1484,10 @@ def print_project_pipeline(
     # In Bazel Downstream Project pipelines, we should test the project at the last green commit.
     git_commit = None
     if is_downstream_project:
-        git_commit = get_last_green_commit(
+        last_green_commit_url = bazelci_last_green_commit_url(
             git_repository, DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"]
         )
+        git_commit = get_last_green_commit(last_green_commit_url)
 
     for task, task_config in task_configs.items():
         step = runner_step(
@@ -1902,6 +1903,19 @@ def print_bazel_downstream_pipeline(
                 )
             )
 
+    if not test_disabled_projects and not test_incompatible_flags:
+        # Only update the last green downstream commit in the regular Bazel@HEAD + Downstream pipeline.
+        pipeline_steps.append("wait")
+        pipeline_steps.append(
+            create_step(
+                label="Try Update Last Green Downstream Commit",
+                commands=[
+                    fetch_bazelcipy_command(),
+                    python_binary() + " bazelci.py try_update_last_green_downstream_commit",
+                ],
+            )
+        )
+
     print(yaml.dump({"steps": pipeline_steps}))
 
 
@@ -1927,8 +1941,12 @@ def bazelci_last_green_commit_url(git_repository, pipeline_slug):
     )
 
 
-def get_last_green_commit(git_repository, pipeline_slug):
-    last_green_commit_url = bazelci_last_green_commit_url(git_repository, pipeline_slug)
+def bazelci_last_green_downstream_commit_url():
+    # Downstream pipeline runs in the unstrusted org
+    return "gs://bazel-untrusted-builds/last_green_commit/downstream_pipeline"
+
+
+def get_last_green_commit(last_green_commit_url):
     try:
         return (
             subprocess.check_output(
@@ -1955,7 +1973,8 @@ def try_update_last_green_commit():
         state = job.get("state")
         # Ignore steps that don't have a state (like "wait").
         return (
-            state is not None and state != "passed"
+            state is not None
+            and state != "passed"
             and job["id"] != current_job_id
             and job["name"] != BUILDIFIER_STEP_NAME
         )
@@ -1969,7 +1988,12 @@ def try_update_last_green_commit():
         )
 
     git_repository = os.getenv("BUILDKITE_REPO")
-    last_green_commit = get_last_green_commit(git_repository, pipeline_slug)
+    last_green_commit_url = bazelci_last_green_commit_url(git_repository, pipeline_slug)
+    update_last_green_commit_if_newer(last_green_commit_url)
+
+
+def update_last_green_commit_if_newer(last_green_commit_url):
+    last_green_commit = get_last_green_commit(last_green_commit_url)
     current_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
     if last_green_commit:
         execute_command(["git", "fetch", "-v", "origin", last_green_commit])
@@ -1985,14 +2009,7 @@ def try_update_last_green_commit():
     # commits, otherwise the output should be empty.
     if not last_green_commit or result:
         execute_command(
-            [
-                "echo %s | %s cp - %s"
-                % (
-                    current_commit,
-                    gsutil_command(),
-                    bazelci_last_green_commit_url(git_repository, pipeline_slug),
-                )
-            ],
+            ["echo %s | %s cp - %s" % (current_commit, gsutil_command(), last_green_commit_url)],
             shell=True,
         )
     else:
@@ -2000,6 +2017,11 @@ def try_update_last_green_commit():
             "Updating abandoned: last green commit (%s) is not older than current commit (%s)."
             % (last_green_commit, current_commit)
         )
+
+
+def try_update_last_green_downstream_commit():
+    last_green_commit_url = bazelci_last_green_downstream_commit_url()
+    update_last_green_commit_if_newer(last_green_commit_url)
 
 
 def latest_generation_and_build_number():
@@ -2204,6 +2226,7 @@ def main(argv=None):
     runner = subparsers.add_parser("publish_binaries")
 
     runner = subparsers.add_parser("try_update_last_green_commit")
+    runner = subparsers.add_parser("try_update_last_green_downstream_commit")
 
     args = parser.parse_args(argv)
 
@@ -2268,7 +2291,11 @@ def main(argv=None):
         elif args.subparsers_name == "publish_binaries":
             publish_binaries()
         elif args.subparsers_name == "try_update_last_green_commit":
+            # Update the last green commit of a project pipeline
             try_update_last_green_commit()
+        elif args.subparsers_name == "try_update_last_green_downstream_commit":
+            # Update the last green commit of the downstream pipeline
+            try_update_last_green_downstream_commit()
         else:
             parser.print_help()
             return 2
