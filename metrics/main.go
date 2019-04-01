@@ -6,29 +6,18 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
-	"github.com/fweikert/continuous-integration/metrics/metrics"
-
 	"github.com/fweikert/continuous-integration/metrics/clients"
+	"github.com/fweikert/continuous-integration/metrics/metrics"
 	"github.com/fweikert/continuous-integration/metrics/publishers"
 	"github.com/fweikert/continuous-integration/metrics/service"
 )
 
 var (
-	bkOrg          = flag.String("buildkite_org", "bazel", "Buildkite organization slug")
-	bkApiToken     = flag.String("buildkite_token", "", "Buildkite API access token that grants read access. See https://buildkite.com/docs/apis/rest-api#authentication")
-	bkDebug        = flag.Bool("debug", false, "Enable debugging")
-	pipelineString = flag.String("pipelines", "", "Comma separated list of slugs of pipelines whose performance statistics should be exported.")
-	ghOrg          = flag.String("github_org", "bazelbuild", "Name of the GitHub organization.")
-	ghRepo         = flag.String("github_repo", "bazelbuild", "Name of the GitHub repository.")
-	ghApiToken     = flag.String("github_token", "", "Access token for the GitHub API.")
-	sqlUser        = flag.String("sql_user", "", "User name for the CloudSQL publisher.")
-	sqlPassword    = flag.String("sql_password", "", "Password for the CloudSQL publisher.")
-	sqlInstance    = flag.String("sql_instance", "", "Instance name for the CloudSQL publisher.")
-	sqlDatabase    = flag.String("sql_database", "metrics", "Name of the SQL database.")
-	sqlLocalPort   = flag.Int("sql_local_port", 3306, "Port of the SQL database when testing locally. Requires the Cloud SQL proxy to be installed and running.")
+	projectID             = flag.String("project_id", "bazel-untrusted", "ID of the GCP project.")
+	datastoreSettingsName = flag.String("datastore_settings_name", "MetricSettings", "Name of the settings entity in Datastore.")
+	testMode              = flag.Bool("test", false, "If true, the service will collect and publish all metrics immediately and only once.")
 )
 
 const megaByte = 1024 * 1024
@@ -40,37 +29,47 @@ func handleError(metricName string, err error) {
 func main() {
 	flag.Parse()
 
-	if strings.TrimSpace(*pipelineString) == "" {
+	settings, err := ReadSettingsFromDatastore(*projectID, *datastoreSettingsName)
+	if err != nil {
+		log.Fatalf("Could not read settings from Datastore: %v", err)
+	}
+	if len(settings.BuildkitePipelines) == 0 {
 		log.Fatalf("No pipelines were specified.")
 	}
-	pipelines := strings.Split(*pipelineString, ",")
 
-	bk, err := clients.CreateBuildkiteClient(*bkOrg, *bkApiToken, *bkDebug)
+	bk, err := clients.CreateBuildkiteClient(settings.BuildkiteOrg, settings.BuildkiteApiToken, settings.BuildkiteDebug)
 	if err != nil {
 		log.Fatalf("Cannot create Buildkite client: %v", err)
 	}
 
-	cloudSql, err := publishers.CreateCloudSqlPublisher(*sqlUser, *sqlPassword, *sqlInstance, *sqlDatabase, *sqlLocalPort)
+	cloudSql, err := publishers.CreateCloudSqlPublisher(settings.CloudSqlUser, settings.CloudSqlPassword, settings.CloudSqlInstance, settings.CloudSqlDatabase, settings.CloudSqlLocalPort)
 	if err != nil {
 		log.Fatalf("Failed to set up Cloud SQL publisher: %v", err)
 	}
 
 	srv := service.CreateService(handleError)
 
-	pipelinePerformance := metrics.CreatePipelinePerformance(bk, pipelines...)
+	pipelinePerformance := metrics.CreatePipelinePerformance(bk, settings.BuildkitePipelines...)
 	srv.AddMetric(pipelinePerformance, 60, cloudSql)
 
-	releaseDownloads := metrics.CreateReleaseDownloads(*ghOrg, *ghRepo, *ghApiToken, megaByte)
+	releaseDownloads := metrics.CreateReleaseDownloads(settings.GitHubOrg,
+		settings.GitHubRepo,
+		settings.GitHubApiToken, megaByte)
 	srv.AddMetric(releaseDownloads, 12*60, cloudSql)
 
 	workerAvailability := metrics.CreateWorkerAvailability(bk)
 	srv.AddMetric(workerAvailability, 60, cloudSql)
 
-	srv.Start()
+	if *testMode {
+		log.Println("[Test mode] Running all jobs exactly once...")
+		srv.RunJobsOnce()
+	} else {
+		srv.Start()
 
-	exitSignal := make(chan os.Signal)
-	signal.Notify(exitSignal, syscall.SIGINT, syscall.SIGTERM)
-	<-exitSignal
+		exitSignal := make(chan os.Signal)
+		signal.Notify(exitSignal, syscall.SIGINT, syscall.SIGTERM)
+		<-exitSignal
 
-	srv.Stop()
+		srv.Stop()
+	}
 }
