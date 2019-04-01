@@ -1901,8 +1901,9 @@ def print_bazel_downstream_pipeline(
                     ],
                 )
             )
-    else:
-        # Only update the last green downstream commit in the regular Bazel@HEAD + Downstream pipeline (i.e. without incompatible flags).
+
+    if not test_disabled_projects and not test_incompatible_flags:
+        # Only update the last green downstream commit in the regular Bazel@HEAD + Downstream pipeline.
         pipeline_steps.append("wait")
         pipeline_steps.append(
             create_step(
