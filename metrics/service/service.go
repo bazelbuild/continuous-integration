@@ -23,21 +23,8 @@ func (job *metricJob) start(handler ErrorHandler) {
 	}
 
 	go func(currentJob metricJob) {
-		name := currentJob.metric.Name()
 		for range currentJob.ticker.C {
-			log.Printf("Collecting data for metric %s\n", name)
-			newData, err := currentJob.metric.Collect()
-			if err != nil {
-				handler(name, fmt.Errorf("Collection failed': %v", err))
-				return
-			}
-			for _, p := range currentJob.publishers {
-				log.Printf("Publishing data for metric %s to %s\n", name, p.Name())
-				err = p.Publish(name, newData)
-				if err != nil {
-					handler(name, fmt.Errorf("Publishing to %s failed': %v", p.Name(), err))
-				}
-			}
+			currentJob.run(handler)
 		}
 	}(*job)
 }
@@ -50,6 +37,23 @@ func (job *metricJob) initialize() error {
 		}
 	}
 	return nil
+}
+
+func (job *metricJob) run(handler ErrorHandler) {
+	name := job.metric.Name()
+	log.Printf("Collecting data for metric %s\n", name)
+	newData, err := job.metric.Collect()
+	if err != nil {
+		handler(name, fmt.Errorf("Collection failed': %v", err))
+		return
+	}
+	for _, p := range job.publishers {
+		log.Printf("Publishing data for metric %s to %s\n", name, p.Name())
+		err = p.Publish(name, newData)
+		if err != nil {
+			handler(name, fmt.Errorf("Publishing to %s failed': %v", p.Name(), err))
+		}
+	}
 }
 
 func (job *metricJob) stop() {
@@ -78,6 +82,17 @@ func (srv *MetricService) AddMetric(metric metrics.Metric, updateIntervalMinutes
 	}
 	srv.jobs[name] = createJob(metric, updateIntervalMinutes, publisherInstances)
 	return nil
+}
+
+func (srv *MetricService) RunJobsOnce() {
+	for _, j := range srv.jobs {
+		err := j.initialize()
+		if err != nil {
+			srv.handler(j.metric.Name(), err)
+			return
+		}
+		j.run(srv.handler)
+	}
 }
 
 func (srv *MetricService) Start() {
