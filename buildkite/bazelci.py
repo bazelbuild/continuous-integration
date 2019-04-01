@@ -1483,7 +1483,9 @@ def print_project_pipeline(
     # In Bazel Downstream Project pipelines, we should test the project at the last green commit.
     git_commit = None
     if is_downstream_project:
-        last_green_commit_url = bazelci_last_green_commit_url(git_repository, DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"])
+        last_green_commit_url = bazelci_last_green_commit_url(
+            git_repository, DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"]
+        )
         git_commit = get_last_green_commit(last_green_commit_url)
 
     for task, task_config in task_configs.items():
@@ -1969,7 +1971,8 @@ def try_update_last_green_commit():
         state = job.get("state")
         # Ignore steps that don't have a state (like "wait").
         return (
-            state is not None and state != "passed"
+            state is not None
+            and state != "passed"
             and job["id"] != current_job_id
             and job["name"] != BUILDIFIER_STEP_NAME
         )
@@ -2004,14 +2007,7 @@ def update_last_green_commit_if_newer(last_green_commit_url):
     # commits, otherwise the output should be empty.
     if not last_green_commit or result:
         execute_command(
-            [
-                "echo %s | %s cp - %s"
-                % (
-                    current_commit,
-                    gsutil_command(),
-                    last_green_commit_url,
-                )
-            ],
+            ["echo %s | %s cp - %s" % (current_commit, gsutil_command(), last_green_commit_url)],
             shell=True,
         )
     else:
