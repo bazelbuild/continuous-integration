@@ -77,7 +77,7 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/buchgr/bazel-remote.git",
         "http_config": "https://raw.githubusercontent.com/buchgr/bazel-remote/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-remote-cache",
-        "disabled_reason": "https://github.com/buchgr/bazel-remote/issues/82",
+        "disabled_reason", "https://github.com/buchgr/bazel-remote/issues/82",
     },
     "Bazel skylib": {
         "git_repository": "https://github.com/bazelbuild/bazel-skylib.git",
