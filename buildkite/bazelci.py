@@ -113,7 +113,6 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/googlecartographer/cartographer.git",
         "http_config": "https://raw.githubusercontent.com/googlecartographer/cartographer/master/.bazelci/presubmit.yml",
         "pipeline_slug": "cartographer",
-        "disabled_reason": "https://github.com/googlecartographer/cartographer/issues/1519",
     },
     "CLion Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
@@ -301,7 +300,7 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/tulsi.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/tulsi/master/.bazelci/presubmit.yml",
         "pipeline_slug": "tulsi-bazel-darwin",
-        "disable_reason": "https://github.com/bazelbuild/bazel/issues/7885",
+        "disabled_reason": "https://github.com/bazelbuild/bazel/issues/7885",
     },
 }
 
