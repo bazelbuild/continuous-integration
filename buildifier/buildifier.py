@@ -229,7 +229,7 @@ def main(argv=None):
     linter_result = run_buildifier(
         buildifier_binary, lint_flags, files=files, version=version, what="Lint checks"
     )
-    if linter_result.returncode == 0 and not unformatted_files:
+    if linter_result.returncode in (0, BUILDIFIER_FORMAT_ERROR_CODE) and not unformatted_files:
         # If buildifier was happy, there's nothing left to do for us.
         eprint("+++ :tada: Buildifier found nothing to complain about")
         return 0
