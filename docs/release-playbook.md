@@ -44,6 +44,8 @@ In the below, _X.Y_ is a release you are cutting.
 
 1. Search for issues with label "breaking-change-_X.Y_".
 2. For all such issues that are **closed**, verify that the flag is flipped and release notes mention the breaking change.
+   1. If the flag is not flipped, you probably need to reopen the issue and follow the steps as if the issue was open. Ping the author as well.
+   1. If the release notes do not mention the breaking change, manually add the flag to the release notes (under "Prepare the Release Announcement" section). 
 2. For all such issues that are still **open**:
    1. remove the label "breaking-change-_X.Y_".
    1. add a label "migration-_X.Y_" and "breaking-change-_X.Y+1_" (this prolongs the migration window by 1 release).
