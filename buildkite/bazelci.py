@@ -1900,7 +1900,11 @@ def print_bazel_downstream_pipeline(
                 )
             )
 
-    if not test_disabled_projects and not test_incompatible_flags:
+    if (
+        not test_disabled_projects
+        and not test_incompatible_flags
+        and os.getenv("BUILDKITE_BRANCH") == "master"
+    ):
         # Only update the last green downstream commit in the regular Bazel@HEAD + Downstream pipeline.
         pipeline_steps.append("wait")
         pipeline_steps.append(
