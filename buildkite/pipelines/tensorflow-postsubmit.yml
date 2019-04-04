@@ -29,6 +29,9 @@ platforms:
       echo '
       android_sdk_repository(name = "androidsdk")
       android_ndk_repository(name = "androidndk")' >>WORKSPACE
+    - pip install -U --user pip six numpy wheel setuptools mock
+    - pip install -U --user keras_applications==1.0.6 --no-deps
+    - pip install -U --user keras_preprocessing==1.0.5 --no-deps  
     - touch .bazelrc
     - "./tensorflow/tools/ci_build/builds/configured CPU"
     build_flags:
