@@ -42,23 +42,32 @@ func main() {
 		log.Fatalf("Cannot create Buildkite client: %v", err)
 	}
 
-	cloudSql, err := publishers.CreateCloudSqlPublisher(settings.CloudSqlUser, settings.CloudSqlPassword, settings.CloudSqlInstance, settings.CloudSqlDatabase, settings.CloudSqlLocalPort)
-	if err != nil {
-		log.Fatalf("Failed to set up Cloud SQL publisher: %v", err)
-	}
+	/*
+		cloudSql, err := publishers.CreateCloudSqlPublisher(settings.CloudSqlUser, settings.CloudSqlPassword, settings.CloudSqlInstance, settings.CloudSqlDatabase, settings.CloudSqlLocalPort)
+		if err != nil {
+			log.Fatalf("Failed to set up Cloud SQL publisher: %v", err)
+		}
+	*/
+
+	stdout := &publishers.Stdout{}
 
 	srv := service.CreateService(handleError)
 
-	pipelinePerformance := metrics.CreatePipelinePerformance(bk, settings.BuildkitePipelines...)
-	srv.AddMetric(pipelinePerformance, 60, cloudSql)
+	buildSuccess := metrics.CreateBuildSuccess(bk, 200, settings.BuildkitePipelines...)
+	srv.AddMetric(buildSuccess, 60, stdout)
 
-	releaseDownloads := metrics.CreateReleaseDownloads(settings.GitHubOrg,
-		settings.GitHubRepo,
-		settings.GitHubApiToken, megaByte)
-	srv.AddMetric(releaseDownloads, 12*60, cloudSql)
+	/*
+		pipelinePerformance := metrics.CreatePipelinePerformance(bk, settings.BuildkitePipelines...)
+		srv.AddMetric(pipelinePerformance, 60, stdout)
 
-	workerAvailability := metrics.CreateWorkerAvailability(bk)
-	srv.AddMetric(workerAvailability, 60, cloudSql)
+		releaseDownloads := metrics.CreateReleaseDownloads(settings.GitHubOrg,
+			settings.GitHubRepo,
+			settings.GitHubApiToken, megaByte)
+		srv.AddMetric(releaseDownloads, 12*60, stdout)
+
+		workerAvailability := metrics.CreateWorkerAvailability(bk)
+		srv.AddMetric(workerAvailability, 60, stdout)
+	*/
 
 	if *testMode {
 		log.Println("[Test mode] Running all jobs exactly once...")
