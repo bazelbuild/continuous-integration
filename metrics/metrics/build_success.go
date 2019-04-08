@@ -39,14 +39,14 @@ func (bs *BuildSuccess) Collect() (*data.DataSet, error) {
 					includeBuild = false
 					break
 				}
-				platform := getOperatingSystem(*job.Name)
+				platform := getPlatfrom(*job.Name)
 				if platform == "" {
 					continue
 				}
 				mergeState(platformStates, platform, *job.State)
 			}
 			if includeBuild {
-				err := result.AddRow(pipeline, *build.Number, platformStates["linux"], platformStates["macos"], platformStates["windows"])
+				err := result.AddRow(pipeline, *build.Number, platformStates["linux"], platformStates["macos"], platformStates["windows"], platformStates["rbe"])
 				if err != nil {
 					return nil, fmt.Errorf("Failed to add result for build %d: %v", *build.Number, err)
 				}
@@ -56,13 +56,15 @@ func (bs *BuildSuccess) Collect() (*data.DataSet, error) {
 	return result, nil
 }
 
-func getOperatingSystem(jobName string) string {
+func getPlatfrom(jobName string) string {
 	if strings.Contains(jobName, "ubuntu") {
 		return "linux"
 	} else if strings.Contains(jobName, "windows") {
 		return "windows"
 	} else if strings.Contains(jobName, "darwin") {
 		return "macos"
+	} else if strings.Contains(jobName, "gcloud") {
+		return "rbe"
 	} else {
 		return ""
 	}
@@ -81,8 +83,8 @@ func mergeState(platformStates map[string]string, platform, newState string) {
 	}
 }
 
-// CREATE TABLE build_success (pipeline VARCHAR(255), build INT, linux VARCHAR(255), macos VARCHAR(255), windows VARCHAR(255), PRIMARY KEY(pipeline, build));
+// CREATE TABLE build_success (pipeline VARCHAR(255), build INT, linux VARCHAR(255), macos VARCHAR(255), windows VARCHAR(255), rbe VARCHAR(255), PRIMARY KEY(pipeline, build));
 func CreateBuildSuccess(client *clients.BuildkiteClient, builds int, pipelines ...string) *BuildSuccess {
-	columns := []Column{Column{"pipeline", true}, Column{"build", true}, Column{"linux", false}, Column{"macos", false}, Column{"windows", false}}
+	columns := []Column{Column{"pipeline", true}, Column{"build", true}, Column{"linux", false}, Column{"macos", false}, Column{"windows", false}, Column{"rbe", false}}
 	return &BuildSuccess{client: client, pipelines: pipelines, columns: columns, builds: builds}
 }
