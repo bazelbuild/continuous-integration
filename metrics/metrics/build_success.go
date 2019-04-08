@@ -6,6 +6,7 @@ import (
 
 	"github.com/fweikert/continuous-integration/metrics/clients"
 	"github.com/fweikert/continuous-integration/metrics/data"
+	"github.com/fweikert/go-buildkite/buildkite"
 )
 
 type BuildSuccess struct {
@@ -33,7 +34,7 @@ func (bs *BuildSuccess) Collect() (*data.DataSet, error) {
 		for _, build := range builds {
 			platformStates := make(map[string]*state)
 			for _, job := range build.Jobs {
-				platform := getPlatfrom(*job.Name)
+				platform := getPlatfrom(job)
 				if platform == "" {
 					continue
 				}
@@ -48,14 +49,16 @@ func (bs *BuildSuccess) Collect() (*data.DataSet, error) {
 	return result, nil
 }
 
-func getPlatfrom(jobName string) string {
-	if strings.Contains(jobName, "ubuntu") {
+func getPlatfrom(job *buildkite.Job) string {
+	if job.Name == nil {
+		return ""
+	} else if strings.Contains(*job.Name, "ubuntu") {
 		return "linux"
-	} else if strings.Contains(jobName, "windows") {
+	} else if strings.Contains(*job.Name, "windows") {
 		return "windows"
-	} else if strings.Contains(jobName, "darwin") {
+	} else if strings.Contains(*job.Name, "darwin") {
 		return "macos"
-	} else if strings.Contains(jobName, "gcloud") {
+	} else if strings.Contains(*job.Name, "gcloud") {
 		return "rbe"
 	} else {
 		return ""
@@ -69,23 +72,28 @@ type state struct {
 
 var allStates = getAllStates()
 
+const canceledState = "canceled"
+const failedState = "failed"
+const passingState = "passed"
+const runningState = "running"
+
 func getAllStates() map[string]*state {
 	// Our states are different from the Buildkite states (e.g. our "canceled" states includes "canceled" and "canceling").
 	/// They also have a priority that defines how multiple states for a given platform are aggregated into a single state.
 	states := make(map[string]*state)
 
-	canceled := &state{"canceled", 3}
+	canceled := &state{canceledState, 3}
 	states["canceled"] = canceled
 	states["canceling"] = canceled
 
-	states["failed"] = &state{"failed", 2}
+	states["failed"] = &state{failedState, 2}
 
-	running := &state{"running", 1}
+	running := &state{runningState, 1}
 	states["running"] = running
 	states["scheduled"] = running
 	states["blocked"] = running
 
-	states["passed"] = &state{"passed", 0}
+	states["passed"] = &state{passingState, 0}
 
 	return states
 }

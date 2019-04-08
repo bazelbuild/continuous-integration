@@ -53,10 +53,13 @@ func main() {
 
 	srv := service.CreateService(handleError)
 
-	buildSuccess := metrics.CreateBuildSuccess(bk, 200, settings.BuildkitePipelines...)
-	srv.AddMetric(buildSuccess, 60, stdout)
+	platformSignificance := metrics.CreatePlatformSignificance(bk, 1000, settings.BuildkitePipelines...)
+	srv.AddMetric(platformSignificance, 24*60, stdout)
 
 	/*
+		buildSuccess := metrics.CreateBuildSuccess(bk, 200, settings.BuildkitePipelines...)
+		srv.AddMetric(buildSuccess, 60, stdout)
+
 		pipelinePerformance := metrics.CreatePipelinePerformance(bk, settings.BuildkitePipelines...)
 		srv.AddMetric(pipelinePerformance, 60, stdout)
 
