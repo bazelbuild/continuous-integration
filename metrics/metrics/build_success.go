@@ -12,6 +12,7 @@ type BuildSuccess struct {
 	client    *clients.BuildkiteClient
 	pipelines []string
 	columns   []Column
+	builds    int
 }
 
 func (bs *BuildSuccess) Name() string {
@@ -25,7 +26,7 @@ func (bs *BuildSuccess) Columns() []Column {
 func (bs *BuildSuccess) Collect() (*data.DataSet, error) {
 	result := data.CreateDataSet(GetColumnNames(bs.columns))
 	for _, pipeline := range bs.pipelines {
-		builds, err := bs.client.GetMostRecentBuilds(pipeline, 100)
+		builds, err := bs.client.GetMostRecentBuilds(pipeline, bs.builds)
 		if err != nil {
 			return nil, fmt.Errorf("Cannot collect build success statistics for pipeline %s: %v", pipeline, err)
 		}
@@ -81,7 +82,7 @@ func mergeState(platformStates map[string]string, platform, newState string) {
 }
 
 // CREATE TABLE build_success (pipeline VARCHAR(255), build INT, linux VARCHAR(255), macos VARCHAR(255), windows VARCHAR(255), PRIMARY KEY(pipeline, build));
-func CreateBuildSuccess(client *clients.BuildkiteClient, pipelines ...string) *BuildSuccess {
+func CreateBuildSuccess(client *clients.BuildkiteClient, builds int, pipelines ...string) *BuildSuccess {
 	columns := []Column{Column{"pipeline", true}, Column{"build", true}, Column{"linux", false}, Column{"macos", false}, Column{"windows", false}}
-	return &BuildSuccess{client: client, pipelines: pipelines, columns: columns}
+	return &BuildSuccess{client: client, pipelines: pipelines, columns: columns, builds: builds}
 }
