@@ -46,7 +46,7 @@ func (wa *WorkerAvailability) getIdleAndBusyCountsPerPlatform() (map[string]*[2]
 
 	allPlatforms := make(map[string]*[2]int)
 	for _, a := range agents {
-		platform, err := getPlatform(*a.Hostname)
+		platform, err := getPlatformForHost(*a.Hostname)
 		if err != nil {
 			return nil, err
 		}
@@ -62,7 +62,7 @@ func (wa *WorkerAvailability) getIdleAndBusyCountsPerPlatform() (map[string]*[2]
 	return allPlatforms, nil
 }
 
-func getPlatform(hostName string) (string, error) {
+func getPlatformForHost(hostName string) (string, error) {
 	pos := strings.LastIndex(hostName, "-")
 	if pos < 0 {
 		return "", fmt.Errorf("Unknown host name '%s' cannot be resolved to a platform.", hostName)
