@@ -2,11 +2,9 @@ package metrics
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/fweikert/continuous-integration/metrics/clients"
 	"github.com/fweikert/continuous-integration/metrics/data"
-	"github.com/fweikert/go-buildkite/buildkite"
 )
 
 type BuildSuccess struct {
@@ -47,22 +45,6 @@ func (bs *BuildSuccess) Collect() (*data.DataSet, error) {
 		}
 	}
 	return result, nil
-}
-
-func getPlatfrom(job *buildkite.Job) string {
-	if job.Name == nil {
-		return ""
-	} else if strings.Contains(*job.Name, "ubuntu") {
-		return "linux"
-	} else if strings.Contains(*job.Name, "windows") {
-		return "windows"
-	} else if strings.Contains(*job.Name, "darwin") {
-		return "macos"
-	} else if strings.Contains(*job.Name, "gcloud") {
-		return "rbe"
-	} else {
-		return ""
-	}
 }
 
 type state struct {

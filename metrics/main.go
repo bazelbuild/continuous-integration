@@ -53,7 +53,7 @@ func main() {
 
 	srv := service.CreateService(handleError)
 
-	platformSignificance := metrics.CreatePlatformSignificance(bk, 1000, settings.BuildkitePipelines...)
+	platformSignificance := metrics.CreatePlatformSignificance(bk, 100, settings.BuildkitePipelines...)
 	srv.AddMetric(platformSignificance, 24*60, stdout)
 
 	/*
