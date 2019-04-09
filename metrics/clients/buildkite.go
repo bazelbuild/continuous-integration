@@ -2,6 +2,7 @@ package clients
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/fweikert/go-buildkite/buildkite"
 )
@@ -85,6 +86,7 @@ func (client *BuildkiteClient) getResults(listFunc func(opt buildkite.ListOption
 	lastPage := 1
 
 	for currPage <= lastPage {
+		log.Printf("Retrieving page %d from Buildkite (last=%d).\n", currPage, lastPage)
 		results, response, err := listFunc(opt)
 		if err != nil {
 			return nil, fmt.Errorf("Could not get page %d: %v", currPage, err)

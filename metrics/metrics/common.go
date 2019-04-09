@@ -21,3 +21,10 @@ func getPlatfrom(job *buildkite.Job) string {
 		return ""
 	}
 }
+
+func getDifferenceSeconds(start *buildkite.Timestamp, end *buildkite.Timestamp) float64 {
+	if start == nil || end == nil {
+		return -1
+	}
+	return end.Time.Sub(start.Time).Seconds()
+}
