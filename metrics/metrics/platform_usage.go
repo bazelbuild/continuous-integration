@@ -49,8 +49,8 @@ func (pu *PlatformUsage) Collect() (*data.DataSet, error) {
 			usagePerPipeline[pipeline][platform] += diff
 		}
 	}
-	for pipeline, FOO := range usagePerPipeline {
-		for platform, usage_seconds := range FOO {
+	for pipeline, usagePerPlatform := range usagePerPipeline {
+		for platform, usage_seconds := range usagePerPlatform {
 			err := result.AddRow(pipeline, platform, usage_seconds)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to add result for pipeline %s and platform %s: %v", pipeline, platform, err)
