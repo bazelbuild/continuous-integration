@@ -53,7 +53,7 @@ func main() {
 
 	srv := service.CreateService(handleError)
 
-	platformUsage := metrics.CreatePlatformUsage(bk, 50000)
+	platformUsage := metrics.CreatePlatformUsage(bk, 100)
 	srv.AddMetric(platformUsage, 60, stdout)
 
 	/*

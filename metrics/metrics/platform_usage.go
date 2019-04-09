@@ -28,7 +28,6 @@ func (pu *PlatformUsage) Collect() (*data.DataSet, error) {
 		return nil, fmt.Errorf("Cannot collect platform usage: %v", err)
 	}
 
-	usagePerPipeline := make(map[string]map[string]float64)
 	for _, build := range builds {
 		pipeline := *build.Pipeline.Slug
 		for _, job := range build.Jobs {
@@ -40,18 +39,7 @@ func (pu *PlatformUsage) Collect() (*data.DataSet, error) {
 			if diff < 0 {
 				continue
 			}
-			if _, ok := usagePerPipeline[pipeline]; !ok {
-				usagePerPipeline[pipeline] = make(map[string]float64)
-			}
-			if _, ok := usagePerPipeline[pipeline][platform]; !ok {
-				usagePerPipeline[pipeline][platform] = 0
-			}
-			usagePerPipeline[pipeline][platform] += diff
-		}
-	}
-	for pipeline, usagePerPlatform := range usagePerPipeline {
-		for platform, usage_seconds := range usagePerPlatform {
-			err := result.AddRow(pipeline, platform, usage_seconds)
+			err := result.AddRow(pipeline, *build.Number, platform, diff)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to add result for pipeline %s and platform %s: %v", pipeline, platform, err)
 			}
@@ -60,8 +48,8 @@ func (pu *PlatformUsage) Collect() (*data.DataSet, error) {
 	return result, nil
 }
 
-// CREATE TABLE platform_usage (pipeline VARCHAR(255), platform VARCHAR(255), usage_seconds FLOAT, PRIMARY KEY(pipeline, platform));
+// CREATE TABLE platform_usage (pipeline VARCHAR(255), build INT, platform VARCHAR(255), usage_seconds FLOAT, PRIMARY KEY(pipeline, build, platform));
 func CreatePlatformUsage(client *clients.BuildkiteClient, builds int) *PlatformUsage {
-	columns := []Column{Column{"pipeline", true}, Column{"platform", true}, Column{"usage_seconds", false}}
+	columns := []Column{Column{"pipeline", true}, Column{"build", true}, Column{"platform", true}, Column{"usage_seconds", false}}
 	return &PlatformUsage{client: client, columns: columns, builds: builds}
 }
