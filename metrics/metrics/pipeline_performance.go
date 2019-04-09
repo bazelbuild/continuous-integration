@@ -5,8 +5,6 @@ import (
 
 	"github.com/fweikert/continuous-integration/metrics/clients"
 	"github.com/fweikert/continuous-integration/metrics/data"
-
-	"github.com/fweikert/go-buildkite/buildkite"
 )
 
 type PipelinePerformance struct {
@@ -40,13 +38,6 @@ func (pp *PipelinePerformance) Collect() (*data.DataSet, error) {
 		}
 	}
 	return result, nil
-}
-
-func getDifferenceSeconds(start *buildkite.Timestamp, end *buildkite.Timestamp) float64 {
-	if start == nil || end == nil {
-		return -1
-	}
-	return end.Time.Sub(start.Time).Seconds()
 }
 
 // CREATE TABLE pipeline_performance (pipeline VARCHAR(255), build INT, job VARCHAR(255), wait_time_seconds FLOAT, run_time_seconds FLOAT, PRIMARY KEY(pipeline, build, job));
