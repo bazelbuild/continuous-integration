@@ -42,9 +42,6 @@ func (bps *BuildsPerChange) Collect() (*data.DataSet, error) {
 			} else if change < 0 {
 				continue
 			}
-			if _, ok := buildsPerPipeline[pipeline]; !ok {
-				buildsPerPipeline[pipeline] = make(map[int]int)
-			}
 			if _, ok := buildsPerChange[change]; !ok {
 				buildsPerChange[change] = 0
 			}
