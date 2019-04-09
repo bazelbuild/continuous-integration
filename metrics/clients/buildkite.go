@@ -22,9 +22,20 @@ func CreateBuildkiteClient(org string, apiToken string, debug bool) (*BuildkiteC
 }
 
 func (client *BuildkiteClient) GetMostRecentBuilds(pipeline string, atLeastNBuilds int) ([]buildkite.Build, error) {
-	list := func(opt buildkite.ListOptions) ([]interface{}, *buildkite.Response, error) {
+	var listFunc func(opt *buildkite.BuildsListOptions) ([]buildkite.Build, *buildkite.Response, error)
+	if pipeline == "all" {
+		listFunc = func(opt *buildkite.BuildsListOptions) ([]buildkite.Build, *buildkite.Response, error) {
+			return client.client.Builds.ListByOrg(client.org, opt)
+		}
+	} else {
+		listFunc = func(opt *buildkite.BuildsListOptions) ([]buildkite.Build, *buildkite.Response, error) {
+			return client.client.Builds.ListByPipeline(client.org, pipeline, opt)
+		}
+	}
+
+	wrapperFunc := func(opt buildkite.ListOptions) ([]interface{}, *buildkite.Response, error) {
 		buildOpt := buildkite.BuildsListOptions{ListOptions: opt}
-		builds, response, err := client.client.Builds.ListByPipeline(client.org, pipeline, &buildOpt)
+		builds, response, err := listFunc(&buildOpt)
 		interfaces := make([]interface{}, len(builds))
 		for i, b := range builds {
 			interfaces[i] = b
@@ -32,7 +43,7 @@ func (client *BuildkiteClient) GetMostRecentBuilds(pipeline string, atLeastNBuil
 		return interfaces, response, err
 	}
 
-	results, err := client.getResults(list, atLeastNBuilds)
+	results, err := client.getResults(wrapperFunc, atLeastNBuilds)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to retrieve builds for pipeline %s: %v", pipeline, err)
 	}
