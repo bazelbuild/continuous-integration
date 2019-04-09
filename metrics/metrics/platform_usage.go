@@ -41,7 +41,7 @@ func (pu *PlatformUsage) Collect() (*data.DataSet, error) {
 			}
 			err := result.AddRow(pipeline, *build.Number, platform, diff)
 			if err != nil {
-				return nil, fmt.Errorf("Failed to add result for pipeline %s and platform %s: %v", pipeline, platform, err)
+				return nil, fmt.Errorf("Failed to add result for build %d in pipeline %s on platform %s: %v", *build.Number, pipeline, platform, err)
 			}
 		}
 	}
