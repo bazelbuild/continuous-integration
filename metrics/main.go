@@ -53,8 +53,8 @@ func main() {
 
 	srv := service.CreateService(handleError)
 
-	platformUsage := metrics.CreatePlatformUsage(bk, 100)
-	srv.AddMetric(platformUsage, 60, stdout)
+	buildsPerChange := metrics.CreateBuildsPerChange(bk, 500, settings.BuildkitePipelines...)
+	srv.AddMetric(buildsPerChange, 60, stdout)
 
 	/*
 		buildSuccess := metrics.CreateBuildSuccess(bk, 200, settings.BuildkitePipelines...)
@@ -65,6 +65,9 @@ func main() {
 
 		platformSignificance := metrics.CreatePlatformSignificance(bk, 100, settings.BuildkitePipelines...)
 		srv.AddMetric(platformSignificance, 24*60, stdout)
+
+		platformUsage := metrics.CreatePlatformUsage(bk, 100)
+		srv.AddMetric(platformUsage, 60, stdout)
 
 		releaseDownloads := metrics.CreateReleaseDownloads(settings.GitHubOrg,
 			settings.GitHubRepo,
