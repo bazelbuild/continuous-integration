@@ -214,7 +214,7 @@ tasks:
     - "..."
 ```
 
-In this case we can omit the `platforms` field since there is a 1:1 mapping between tasks and platforms. Consequently, the format looks almost identical to the old one:
+In this case we can omit the `platform` field since there is a 1:1 mapping between tasks and platforms. Consequently, the format looks almost identical to the old one:
 
 ```yaml
 ---
@@ -235,7 +235,7 @@ The CI uses [Bazelisk](https://github.com/philwo/bazelisk) to support older vers
 ```yaml
 ---
 bazel: 0.20.0
-platforms:
+tasks:
   windows:
     build_targets:
     - "..."
@@ -250,6 +250,34 @@ platforms:
 ```
 In this example the jobs on Windows and MacOS would use 0.20.0, whereas the job on Ubuntu would run 0.18.0.
 Please see the [Bazelisk documentation](https://github.com/philwo/bazelisk/blob/master/README.md#how-does-bazelisk-know-which-version-to-run) for a list of all supported version values.
+
+### macOS: Using a specific version of Xcode
+
+We upgrade the CI machines to the latest version of Xcode shortly after it is released and this
+version will then be used as the default Xcode version. If required, you can specify a fixed Xcode
+version to test against in your pipeline config.
+
+The general policy is to *not* specify a fixed Xcode version number, so that we can update the
+default version more easily and don't have to update every single CI configuration file out there.
+
+However, if you know that you need to test against multiple versions of Xcode or that newer versions
+frequently break you, you can use this feature.
+
+```yaml
+tasks:
+  # Test against the latest released Xcode version.
+  macos:
+    build_targets:
+    - "..."
+  # Ensure that we're still supporting Xcode 10.1.
+  macos_xcode_10_1:
+    platform: macos
+    xcode_version: "10.1"
+    build_targets:
+    - "..."
+```
+
+Take care to quote the version number, otherwise YAML will interpret it as a floating point number.
 
 ### Running Buildifier on CI
 
