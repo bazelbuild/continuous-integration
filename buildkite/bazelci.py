@@ -407,8 +407,9 @@ BUILDIFIER_VERSION_ENV_VAR = "BUILDIFIER_VERSION"
 
 BUILDIFIER_WARNINGS_ENV_VAR = "BUILDIFIER_WARNINGS"
 
-
 BUILDIFIER_STEP_NAME = "Buildifier"
+
+SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
 
 
 class BuildkiteException(Exception):
@@ -1485,6 +1486,7 @@ def print_project_pipeline(
         raise BuildkiteException("{0} pipeline configuration is empty.".format(project_name))
 
     pipeline_steps = []
+    task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
     # In Bazel Downstream Project pipelines, git_repository and project_name must be specified.
     is_downstream_project = (use_but or incompatible_flags) and git_repository and project_name
@@ -1722,9 +1724,69 @@ def bazel_build_step(
     )
 
 
+def filter_tasks_that_should_be_skipped(task_configs, pipeline_steps):
+    skip_tasks = get_skip_tasks()
+    if not skip_tasks:
+        eprint("No tasks to skip.")
+        return task_configs
+
+    actually_skipped = []
+    skip_tasks = set(skip_tasks)
+    for task in list(task_configs.keys()):
+        if task in skip_tasks:
+            actually_skipped.append(task)
+            del task_configs[task]
+            skip_tasks.remove(task)
+
+    if not task_configs:
+        raise BuildkiteException(
+            "Nothing to do since all tasks in the configuration should be skipped."
+        )
+
+    annotations = []
+    if actually_skipped:
+        annotations.append(
+            ("info", "Skipping the following task(s): {}".format(", ".join(actually_skipped)))
+        )
+
+    if skip_tasks:
+        annotations.append(
+            (
+                "warning",
+                (
+                    "The following tasks should have been skipped, "
+                    "but were not part of the configuration: {}"
+                ).format(", ".join(skip_tasks)),
+            )
+        )
+
+    if annotations:
+        print_skip_task_annotations(annotations, pipeline_steps)
+
+    return task_configs
+
+
+def get_skip_tasks():
+    value = os.getenv(SKIP_TASKS_ENV_VAR, "")
+    return [v for v in value.split(",") if v]
+
+
+def print_skip_task_annotations(annotations, pipeline_steps):
+    commands = [
+        "buildkite-agent annotate --style={} '{}'  --context 'ctx-{}'".format(s, t, hash(t))
+        for s, t in annotations
+    ]
+    pipeline_steps.append(
+        create_step(label=":pipeline: Print information about skipped tasks.", commands=commands)
+    )
+
+
 def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config):
     if not task_configs:
         raise BuildkiteException("Bazel publish binaries pipeline configuration is empty.")
+
+    pipeline_steps = []
+    task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
     platforms = [get_platform_for_task(t, tc) for t, tc in task_configs.items()]
     configured_platforms = set(p for p in platforms if should_publish_binaries_for_platform(p))
@@ -1744,8 +1806,6 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
         )
 
     # Build Bazel
-    pipeline_steps = []
-
     for task, task_config in task_configs.items():
         pipeline_steps.append(
             bazel_build_step(
@@ -1860,6 +1920,9 @@ def print_bazel_downstream_pipeline(
 ):
     if not task_configs:
         raise BuildkiteException("Bazel downstream pipeline configuration is empty.")
+
+    pipeline_steps = []
+    task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
     configured_platforms = set(get_platform_for_task(t, c) for t, c in task_configs.items())
     if configured_platforms != set(PLATFORMS):
