@@ -393,6 +393,9 @@ BUILDIFIER_DOCKER_IMAGE = f"gcr.io/{CLOUD_PROJECT}/buildifier"
 # The platform used for various steps (e.g. stuff that formerly ran on the "pipeline" workers).
 DEFAULT_PLATFORM = "ubuntu1804"
 
+DEFAULT_XCODE_VERSION = "10.2"
+XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
+
 ENCRYPTED_SAUCELABS_TOKEN = """
 CiQAry63sOlZtTNtuOT5DAOLkum0rGof+DOweppZY1aOWbat8zwSTQAL7Hu+rgHSOr6P4S1cu4YG
 /I1BHsWaOANqUgFt6ip9/CUGGJ1qggsPGXPrmhSbSPqNAIAkpxYzabQ3mfSIObxeBmhKg2dlILA/
@@ -641,6 +644,37 @@ def execute_commands(
     tmpdir = tempfile.mkdtemp()
     sc_process = None
     try:
+        # Activate the correct Xcode version on macOS machines.
+        if platform == "macos":
+            # Get the Xcode version from the config.
+            xcode_version = task_config.get("xcode_version", DEFAULT_XCODE_VERSION)
+            print_collapsed_group("Activating Xcode {}...".format(xcode_version))
+
+            # Ensure it's a valid version number.
+            if not isinstance(xcode_version, str):
+                raise BuildkiteException(
+                    "Version number '{}' is not a string. Did you forget to put it in quotes?".format(
+                        xcode_version
+                    )
+                )
+            if not XCODE_VERSION_REGEX.match(xcode_version):
+                raise BuildkiteException(
+                    "Invalid Xcode version format '{}', must match the format X.Y[.Z].".format(
+                        xcode_version
+                    )
+                )
+
+            # Check that the selected Xcode version is actually installed on the host.
+            xcode_path = "/Applications/Xcode {}.app".format(xcode_version)
+            if not os.path.exists(xcode_path):
+                raise BuildkiteException("Xcode not found at '{}'.".format(xcode_path))
+
+            # Now activate the specified Xcode version and let it install its required components.
+            # The CI machines have a sudoers config that allows the 'buildkite' user to run exactly
+            # these two commands, so don't change them without also modifying the file there.
+            execute_command(["/usr/bin/sudo", "/usr/bin/xcode-select", "--switch", xcode_path])
+            execute_command(["/usr/bin/sudo", "/usr/bin/xcodebuild", "-runFirstLaunch"])
+
         # If the CI worker runs Bazelisk, we need to forward all required env variables to the test.
         # Otherwise any integration test that invokes Bazel (=Bazelisk in this case) will fail.
         test_env_vars = ["LocalAppData"] if platform == "windows" else ["HOME"]
