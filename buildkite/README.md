@@ -257,16 +257,22 @@ We upgrade the CI machines to the latest version of Xcode shortly after it is re
 version will then be used as the default Xcode version. If required, you can specify a fixed Xcode
 version to test against in your pipeline config.
 
+The general policy is to *not* specify a fixed Xcode version number, so that we can update the
+default version more easily and don't have to update every single CI configuration file out there.
+
+However, if you know that you need to test against multiple versions of Xcode or that newer versions
+frequently break you, you can use this feature.
+
 ```yaml
 tasks:
+  # Test against the latest released Xcode version.
+  macos:
+    build_targets:
+    - "..."
+  # Ensure that we're still supporting Xcode 10.1.
   macos_xcode_10_1:
     platform: macos
     xcode_version: "10.1"
-    build_targets:
-    - "..."
-  macos_xcode_10_2:
-    platform: macos
-    xcode_version: "10.2"
     build_targets:
     - "..."
 ```

@@ -1063,6 +1063,20 @@ def remote_caching_flags(platform):
     ]:
         return []
 
+    platform_cache_key = [platform.encode("utf-8")]
+    if platform == "macos":
+        # macOS version:
+        platform_cache_key.append(subprocess.check_output(["/usr/bin/sw_vers", "-productVersion"]))
+        # Path to Xcode:
+        platform_cache_key.append(subprocess.check_output(["/usr/bin/xcode-select", "-p"]))
+        # Xcode version:
+        platform_cache_key.append(subprocess.check_output(["/usr/bin/xcodebuild", "-version"]))
+
+    platform_cache_digest = hashlib.sha256()
+    for key in platform_cache_key:
+        platform_cache_digest.update(key)
+        platform_cache_digest.update(b":")
+
     flags = [
         "--remote_timeout=60",
         # TODO(ulfjack): figure out how to resolve
@@ -1071,7 +1085,7 @@ def remote_caching_flags(platform):
         "--disk_cache=",
         "--remote_max_connections=200",
         '--host_platform_remote_properties_override=properties:{name:"platform" value:"%s"}'
-        % platform,
+        % platform_cache_digest.hexdigest(),
     ]
 
     if platform == "macos":
