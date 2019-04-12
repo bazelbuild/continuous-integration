@@ -665,7 +665,7 @@ def execute_commands(
                 )
 
             # Check that the selected Xcode version is actually installed on the host.
-            xcode_path = "/Applications/Xcode {}.app".format(xcode_version)
+            xcode_path = "/Applications/Xcode{}.app".format(xcode_version)
             if not os.path.exists(xcode_path):
                 raise BuildkiteException("Xcode not found at '{}'.".format(xcode_path))
 
