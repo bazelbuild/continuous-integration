@@ -18,7 +18,7 @@ from urllib.request import urlopen
 
 regex = re.compile(
     r"^(?P<filename>[^:]*):(?P<line>\d*):(?:(?P<column>\d*):)? (?P<message_id>[^:]*): (?P<message>.*) \((?P<message_url>.*)\)$",
-    re.MULTILINE,
+    re.MULTILINE | re.DOTALL
 )
 
 BUILDIFIER_VERSION_PATTERN = re.compile(r"^buildifier version: ([\.\w]+)$", re.MULTILINE)
