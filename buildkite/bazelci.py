@@ -1777,7 +1777,7 @@ def print_skip_task_annotations(annotations, pipeline_steps):
         for s, t in annotations
     ]
     pipeline_steps.append(
-        create_step(label=":pipeline: Print information about skipped tasks.", commands=commands)
+        create_step(label=":pipeline: Print information about skipped tasks", commands=commands)
     )
 
 
