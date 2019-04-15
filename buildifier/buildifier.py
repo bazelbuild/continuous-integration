@@ -17,7 +17,7 @@ from distutils.version import LooseVersion
 from urllib.request import urlopen
 
 regex = re.compile(
-    r"^(?P<filename>[^:]*):(?P<line>\d*):(?:(?P<column>\d*):)? (?P<message_id>[^:]*): (?P<message>.*) \((?P<message_url>.*)\)$",
+    r"^(?P<filename>[^:]*):(?P<line>\d*):(?:(?P<column>\d*):)? (?P<message_id>[^:]*): (?P<message>.*?) \((?P<message_url>.*)\)$",
     re.MULTILINE | re.DOTALL
 )
 
