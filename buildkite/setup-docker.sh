@@ -57,8 +57,7 @@ EOF
 [Service]
 Restart=always
 PermissionsStartOnly=true
-ExecStartPre=/usr/bin/docker container prune -f
-ExecStartPre=/bin/bash -c 'x="$(docker ps -a -q)"; test "$x" && docker kill $x'
+ExecStartPre=/bin/bash -c 'while [[ $(docker ps -q) ]]; do docker kill $(docker ps -q); done'
 ExecStartPre=/usr/bin/docker system prune -f --volumes
 # Disable tasks accounting, because Bazel is prone to run into resource limits there.
 # This fixes the "cgroup: fork rejected by pids controller" error that some CI jobs triggered.
