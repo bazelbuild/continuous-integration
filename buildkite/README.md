@@ -257,6 +257,8 @@ We upgrade the CI machines to the latest version of Xcode shortly after it is re
 version will then be used as the default Xcode version. If required, you can specify a fixed Xcode
 version to test against in your pipeline config.
 
+**Warning**: We might have to run jobs that specify an explicit Xcode version on separate, slower machines, so we really advise you to not use this feature unless necessary.
+
 The general policy is to *not* specify a fixed Xcode version number, so that we can update the
 default version more easily and don't have to update every single CI configuration file out there.
 
