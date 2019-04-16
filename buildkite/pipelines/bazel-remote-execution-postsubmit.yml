@@ -78,3 +78,4 @@ platforms:
     - "-//src/test/shell/bazel:bazel_sandboxing_cpp_test"
     - "-//src/test/shell/integration:java_integration_test"
     - "-//scripts/..."
+    - "-//src/test/java/com/google/devtools/build/lib:sandbox-tests"
