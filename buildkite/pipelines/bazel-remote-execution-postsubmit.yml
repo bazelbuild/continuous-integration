@@ -58,6 +58,7 @@ platforms:
     - "--remote_instance_name=projects/bazel-untrusted/instances/default_instance"
     - "--test_timeout=1200"
     test_targets:
+    - "--"
     - "//src/test/..."
     - "//src/tools/execlog/..."
     - "//src/tools/singlejar/..."
