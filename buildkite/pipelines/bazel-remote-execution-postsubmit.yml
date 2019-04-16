@@ -1,41 +1,78 @@
 ---
 platforms:
-  rbe_ubuntu1604:
+  ubuntu1604:
     shell_commands:
-      - sed -i.bak -e 's/1.1:rbe_ubuntu1604/latest:platform/' BUILD
-      - rm BUILD.bak
+    - sed -i.bak -e 's/^# android_sdk_repository/android_sdk_repository/' -e 's/^#
+      android_ndk_repository/android_ndk_repository/' WORKSPACE
+    - rm -f WORKSPACE.bak
+    build_flags:
+    - "--host_javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.2:jdk8"
+    - "--javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.2:jdk8"
+    - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8"
+    - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8"
+    - "--crosstool_top=@bazel_toolchains//configs/ubuntu16_04_clang/1.2/bazel_0.24.0/default:toolchain"
+    - "--extra_toolchains=@bazel_toolchains//configs/ubuntu16_04_clang/1.2/bazel_0.24.0/cpp:cc-toolchain-clang-x86_64-default"
+    - "--extra_execution_platforms=//:rbe_ubuntu1604_default"
+    - "--extra_execution_platforms=//:rbe_ubuntu1604_highcpu"
+    - "--host_platform=//:rbe_ubuntu1604_default"
+    - "--platforms=//:rbe_ubuntu1604_default"
+    - "--spawn_strategy=remote"
+    - "--strategy=Javac=remote"
+    - "--strategy=Closure=remote"
+    - "--strategy=Genrule=remote"
+    - "--define=EXECUTOR=remote"
+    - "--remote_cache=remotebuildexecution.googleapis.com"
+    - "--remote_executor=remotebuildexecution.googleapis.com"
+    - "--tls_enabled=true"
+    - "--action_env=PATH=/bin:/usr/bin:/usr/local/bin"
+    - "--remote_timeout=1200"
+    - "--jobs=100"
+    - "--google_default_credentials"
+    - "--remote_instance_name=projects/bazel-untrusted/instances/default_instance"
+    build_targets:
+    - "//src:bazel"
+    - "//src:bazel_jdk_minimal"
     test_flags:
-      - "--test_tag_filters=-slow"
-      # Enable networking and privileged mode.
-      - "--extra_execution_platforms=//:rbe_ubuntu1604_with_network_and_privileged"
-      - "--host_platform=//:rbe_ubuntu1604_with_network_and_privileged"
-      - "--platforms=//:rbe_ubuntu1604_with_network_and_privileged"
-      # Bazel's tests depend on this feature being disabled. However, because it's
-      # enabled by default in the rbe_ubuntu1604 platform, we cannot simply remove
-      # this flag here, we have to explicitly override it with 0.
-      - "--action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=0"
+    - "--host_javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.2:jdk8"
+    - "--javabase=@bazel_toolchains//configs/ubuntu16_04_clang/1.2:jdk8"
+    - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8"
+    - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8"
+    - "--crosstool_top=@bazel_toolchains//configs/ubuntu16_04_clang/1.2/bazel_0.24.0/default:toolchain"
+    - "--extra_toolchains=@bazel_toolchains//configs/ubuntu16_04_clang/1.2/bazel_0.24.0/cpp:cc-toolchain-clang-x86_64-default"
+    - "--extra_execution_platforms=//:rbe_ubuntu1604_default"
+    - "--extra_execution_platforms=//:rbe_ubuntu1604_highcpu"
+    - "--host_platform=//:rbe_ubuntu1604_default"
+    - "--platforms=//:rbe_ubuntu1604_default"
+    - "--spawn_strategy=remote"
+    - "--strategy=Javac=remote"
+    - "--strategy=Closure=remote"
+    - "--strategy=Genrule=remote"
+    - "--define=EXECUTOR=remote"
+    - "--remote_cache=remotebuildexecution.googleapis.com"
+    - "--remote_executor=remotebuildexecution.googleapis.com"
+    - "--tls_enabled=true"
+    - "--action_env=PATH=/bin:/usr/bin:/usr/local/bin"
+    - "--remote_timeout=1200"
+    - "--jobs=100"
+    - "--google_default_credentials"
+    - "--remote_instance_name=projects/bazel-untrusted/instances/default_instance"
+    - "--test_timeout=1200"
     test_targets:
-      - "--"
-      - "//scripts/..."
-      - "//src/test/..."
-      # See https://github.com/bazelbuild/bazel/issues/5234
-      - "-//src/test/py/..."
-      - "-//src/test/shell/bazel/android/..."
-      - "-//src/test/shell/bazel:bazel_execute_testlog"
-      - "-//src/test/shell/bazel:bazel_repository_cache_test"
-      - "-//src/test/shell/bazel:bazel_spawnstats_test"
-      - "-//src/test/shell/bazel:external_integration_test"
-      - "-//src/test/shell/bazel:external_patching_test"
-      - "-//src/test/shell/bazel:maven_test"
-      - "-//src/test/shell/integration:java_integration_test"
-      - "-//src/test/java/com/google/devtools/build/android/..."
-      - "-//src/test/java/com/google/devtools/build/lib/shell:CommandUsingLinuxSandboxTest"
-      # Flaky tests on RBE
-      - "-//src/test/shell/bazel:bazel_proto_library_test"
-      - "-//src/test/shell/integration:discard_analysis_cache_test"
-      - "-//src/test/shell/integration:execution_phase_tests"
-      - "-//src/test/shell/integration:nonincremental_builds_test"
-      - "-//src/test/shell/integration:discard_graph_edges_test"
-      - "-//src/test/java/com/google/devtools/build/lib:sandbox-tests"
-      # Incompatible with RBE
-      - "-//src/test/shell/integration:linux_sandbox_network_test"
+    - "//src/test/..."
+    - "//src/tools/execlog/..."
+    - "//src/tools/singlejar/..."
+    - "//src/tools/workspacelog/..."
+    - "//third_party/ijar/..."
+    - "//tools/aquery_differ/..."
+    # See https://github.com/bazelbuild/bazel/issues/8033
+    - "-//src/test/java/com/google/devtools/build/android/..."
+    - "-//tools/android/..."
+    - "-//src/test/shell/bazel/android/..."
+    - "-//src/tools/singlejar:output_jar_simple_test"
+    - "-//src/test/shell/bazel:bazel_coverage_java_test"
+    - "-//src/test/shell/bazel:bazel_cc_code_coverage_test"
+    - "-//src/test/shell/bazel:external_integration_test"
+    - "-//src/test/shell/bazel:maven_test"
+    - "-//src/test/shell/bazel:bazel_repository_cache_test"
+    - "-//src/test/shell/bazel:bazel_sandboxing_cpp_test"
+    - "-//scripts/..."
