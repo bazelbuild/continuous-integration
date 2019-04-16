@@ -124,7 +124,6 @@ set -euo pipefail
 
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/snap/google-cloud-sdk/current/bin"
 export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://${ARTIFACT_BUCKET}/\$BUILDKITE_JOB_ID"
-export BUILDKITE_GS_ACL="publicRead"
 EOF
 
 # Fix permissions of the Buildkite agent configuration files and hooks.

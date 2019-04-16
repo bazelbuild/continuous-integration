@@ -1448,7 +1448,7 @@ def create_step(label, commands, platform=DEFAULT_PLATFORM):
 
 
 def create_docker_step(label, image, commands=None, additional_env_vars=None):
-    env = ["BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "BUILDKITE_GS_ACL"]
+    env = ["BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"]
     if additional_env_vars:
         env += ["{}={}".format(k, v) for k, v in additional_env_vars.items()]
 

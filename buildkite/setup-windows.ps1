@@ -323,7 +323,6 @@ if ($myhostname -like "bk-*") {
     Write-Host "Creating Buildkite agent environment hook..."
     $buildkite_environment_hook = @"
 SET BUILDKITE_ARTIFACT_UPLOAD_DESTINATION=gs://${artifact_bucket}/%BUILDKITE_JOB_ID%
-SET BUILDKITE_GS_ACL=publicRead
 SET ANDROID_HOME=${env:ANDROID_HOME}
 SET ANDROID_NDK_HOME=${env:ANDROID_NDK_HOME}
 SET JAVA_HOME=${env:JAVA_HOME}
