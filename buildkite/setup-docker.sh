@@ -57,12 +57,29 @@ EOF
 [Service]
 Restart=always
 PermissionsStartOnly=true
-ExecStartPre=/bin/bash -c 'while [[ $(docker ps -q) ]]; do docker kill $(docker ps -q); done'
-ExecStartPre=/usr/bin/docker system prune -f --volumes
 # Disable tasks accounting, because Bazel is prone to run into resource limits there.
 # This fixes the "cgroup: fork rejected by pids controller" error that some CI jobs triggered.
 TasksAccounting=no
 EOF
+
+  cat > /etc/buildkite-agent/hooks/pre-exit <<'EOF'
+#!/bin/bash
+set -euxo pipefail
+
+while [[ $(docker ps -q) ]]; do
+  docker kill $(docker ps -q);
+done
+
+USED_DISK_PERCENT=$(df --output=pcent /var/lib/docker | tail +2 | cut -d'%' -f1 | tr -d ' ')
+
+if [[ $USED_DISK_PERCENT -ge 80 ]]; then
+  docker system prune -a -f --volumes
+else
+  docker system prune -f --volumes
+fi
+EOF
+  chown buildkite-agent:buildkite-agent /etc/buildkite-agent/hooks/*
+  chmod 0500 /etc/buildkite-agent/hooks/*
 }
 
 ### Install Docker.
@@ -82,15 +99,6 @@ EOF
   # /var/lib/docker first.
   systemctl disable containerd
   systemctl disable docker
-}
-
-### Setup Bazelisk.
-# TODO: We can remove this, once we run the "Setup" step inside a Docker container, too.
-# TODO: Automatically fetch the latest release.
-{
-  curl -Lo /usr/local/bin/bazel https://github.com/philwo/bazelisk/releases/download/v0.0.3/bazelisk-linux-amd64
-  chown root:root /usr/local/bin/bazel
-  chmod 0755 /usr/local/bin/bazel
 }
 
 ### Setup KVM.
