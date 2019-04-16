@@ -64,18 +64,20 @@ EOF
 
   cat > /etc/buildkite-agent/hooks/pre-exit <<'EOF'
 #!/bin/bash
-set -euxo pipefail
+set -euo pipefail
+
+echo_and_run() { echo "\$ $*" ; "$@" ; }
 
 while [[ $(docker ps -q) ]]; do
-  docker kill $(docker ps -q);
+  echo_and_run docker kill $(docker ps -q)
 done
 
 USED_DISK_PERCENT=$(df --output=pcent /var/lib/docker | tail +2 | cut -d'%' -f1 | tr -d ' ')
 
 if [[ $USED_DISK_PERCENT -ge 80 ]]; then
-  docker system prune -a -f --volumes
+  echo_and_run docker system prune -a -f --volumes
 else
-  docker system prune -f --volumes
+  echo_and_run docker system prune -f --volumes
 fi
 EOF
   chown buildkite-agent:buildkite-agent /etc/buildkite-agent/hooks/*
