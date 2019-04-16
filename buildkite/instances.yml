@@ -20,7 +20,7 @@ default_vm:
   scopes: cloud-platform
 instance_groups:
   - name: bk-docker
-    count: 80
+    count: 120
     project: bazel-untrusted
     region: europe-north1
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
