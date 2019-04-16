@@ -57,18 +57,8 @@ EOF
 [Service]
 Restart=always
 PermissionsStartOnly=true
-# Disable tasks accounting, because Bazel is prone to run into resource limits there.
-# This fixes the "cgroup: fork rejected by pids controller" error that some CI jobs triggered.
-TasksAccounting=no
-EOF
-
-  mkdir /etc/systemd/system/buildkite-agent@.service.d
-  cat > /etc/systemd/system/buildkite-agent@.service.d/override.conf <<'EOF'
-[Service]
-Restart=always
-PermissionsStartOnly=true
-Environment=BUILDKITE_AGENT_NAME=%%hostname-%i
-Environment=BUILDKITE_AGENT_PRIORITY=%i
+ExecStartPre=/bin/bash -c 'while [[ $(docker ps -q) ]]; do docker kill $(docker ps -q); done'
+ExecStartPre=/usr/bin/docker system prune -f --volumes
 # Disable tasks accounting, because Bazel is prone to run into resource limits there.
 # This fixes the "cgroup: fork rejected by pids controller" error that some CI jobs triggered.
 TasksAccounting=no

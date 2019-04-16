@@ -1461,6 +1461,7 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None):
                     ".:/workdir",
                     "{0}:{0}".format("/var/lib/buildkite-agent/builds"),
                     "{0}:{0}:ro".format("/var/lib/bazelbuild"),
+                    "{0}:{0}".format("/var/run/docker.sock"),
                 ],
                 "workdir": "/workdir",
             }
