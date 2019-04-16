@@ -1147,9 +1147,17 @@ def common_build_flags(bep_file, platform):
         "--jobs=" + concurrent_jobs(platform),
         "--announce_rc",
         "--experimental_multi_threaded_digest",
+        "--experimental_repository_cache_hardlinks",
     ]
 
-    if platform != "windows":
+    if platform == "windows":
+        pass
+    elif platform == "macos":
+        flags += [
+            "--sandbox_writable_path=/var/tmp/_bazel_buildkite/cache/repos/v1",
+            "--test_env=REPOSITORY_CACHE=/var/tmp/_bazel_buildkite/cache/repos/v1",
+        ]
+    else:
         flags += ["--sandbox_tmpfs_path=/tmp"]
 
     if bep_file:
