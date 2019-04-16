@@ -75,4 +75,5 @@ platforms:
     - "-//src/test/shell/bazel:maven_test"
     - "-//src/test/shell/bazel:bazel_repository_cache_test"
     - "-//src/test/shell/bazel:bazel_sandboxing_cpp_test"
+    - "-//src/shell/integration:java_integration_test"
     - "-//scripts/..."
