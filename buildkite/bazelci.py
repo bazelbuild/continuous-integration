@@ -772,8 +772,12 @@ def execute_commands(
             shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
             shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
             if shard_id > -1 and shard_count > -1:
-                expanded_test_targets = expand_test_target_patterns(bazel_binary, platform, test_targets)
-                test_targets = get_test_targets_for_shard(expanded_test_targets, shard_id, shard_count)
+                expanded_test_targets = expand_test_target_patterns(
+                    bazel_binary, platform, test_targets
+                )
+                test_targets = get_test_targets_for_shard(
+                    expanded_test_targets, shard_id, shard_count
+                )
                 if not test_targets:
                     return
 
