@@ -1065,6 +1065,8 @@ def remote_caching_flags(platform):
 
     platform_cache_key = [platform.encode("utf-8")]
     if platform == "macos":
+        # trusted vs. non-trusted:
+        platform_cache_key.append(CLOUD_PROJECT)
         # macOS version:
         platform_cache_key.append(subprocess.check_output(["/usr/bin/sw_vers", "-productVersion"]))
         # Path to Xcode:
@@ -1084,17 +1086,13 @@ def remote_caching_flags(platform):
         # or remove the `--disk_cache=` flag.
         "--disk_cache=",
         "--remote_max_connections=200",
-        '--host_platform_remote_properties_override=properties:{name:"platform" value:"%s"}'
-        % platform_cache_digest.hexdigest(),
     ]
 
     if platform == "macos":
-        if CLOUD_PROJECT == "bazel-public":
-            # Use a local trusted cache server for our macOS machines.
-            flags += ["--remote_http_cache=http://100.107.67.248:8081"]
-        else:
-            # Use a local untrusted cache server for our macOS machines.
-            flags += ["--remote_http_cache=http://100.107.67.248:8080"]
+        # Use a local cache server for our macOS machines.
+        flags += [
+            "--remote_http_cache=http://100.107.67.248/{}".format(platform_cache_digest.hexdigest())
+        ]
     else:
         flags += ["--google_default_credentials"]
         if CLOUD_PROJECT == "bazel-public":
