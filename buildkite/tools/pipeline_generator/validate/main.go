@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	apiToken   = flag.String("token", "", "Buildkite API access token that has 'read pipelines' privileges. See https://buildkite.com/docs/apis/rest-api#authentication")
+	apiToken   = flag.String("token", "", "Buildkite API access token that grants access to the GraphQL API. See https://buildkite.com/docs/apis/rest-api#authentication")
 	org        = flag.String("org", "bazel", "Buildkite orginization slug")
 	debug      = flag.Bool("debug", false, "Enable debugging")
 	configPath = flag.String("config", "", "Location to read the pipeline configuration from.")
