@@ -1250,6 +1250,9 @@ def execute_bazel_build(
 ):
     print_expanded_group(":bazel: Build ({})".format(bazel_version))
 
+    # TODO(fweikert): remove
+    return
+
     aggregated_flags = compute_flags(
         platform,
         flags,
@@ -1309,6 +1312,10 @@ def execute_bazel_test(
     incompatible_flags,
 ):
     print_expanded_group(":bazel: Test ({})".format(bazel_version))
+
+    # TODO(fweikert): remove
+    eprint(targets)
+    raise BuildkiteException("sharded")
 
     aggregated_flags = [
         "--flaky_test_attempts=3",
