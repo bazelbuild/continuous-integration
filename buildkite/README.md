@@ -249,7 +249,9 @@ tasks:
 [...]
 ```
 In this example the jobs on Windows and MacOS would use 0.20.0, whereas the job on Ubuntu would run 0.18.0.
-Please see the [Bazelisk documentation](https://github.com/philwo/bazelisk/blob/master/README.md#how-does-bazelisk-know-which-version-to-run) for a list of all supported version values.
+
+CI supports several magic version values such as `latest`, `last_green` and `last_downstream_green`.
+Please see the [Bazelisk documentation](https://github.com/philwo/bazelisk/blob/master/README.md#how-does-bazelisk-know-which-version-to-run) for more details.
 
 ### macOS: Using a specific version of Xcode
 
