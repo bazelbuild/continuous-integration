@@ -1736,7 +1736,6 @@ def bazel_build_step(
 def filter_tasks_that_should_be_skipped(task_configs, pipeline_steps):
     skip_tasks = get_skip_tasks()
     if not skip_tasks:
-        eprint("No tasks to skip.")
         return task_configs
 
     actually_skipped = []
