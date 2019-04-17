@@ -20,6 +20,7 @@ import codecs
 import datetime
 import hashlib
 import json
+import math
 import multiprocessing
 import os
 import os.path
@@ -766,13 +767,23 @@ def execute_commands(
                 test_flags.append("--sandbox_writable_path={}".format(bazelisk_cache_dir))
 
             test_bep_file = os.path.join(tmpdir, "test_bep.json")
+
+            test_targets = task_config.get("test_targets", None)
+            shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
+            shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
+            if shard_id > -1 and shard_count > -1:
+                expanded_test_targets = expand_test_target_patterns(bazel_binary, platform, test_targets)
+                test_targets = get_test_targets_for_shard(expanded_test_targets, shard_id, shard_count)
+                if not test_targets:
+                    return
+
             try:
                 execute_bazel_test(
                     bazel_version,
                     bazel_binary,
                     platform,
                     test_flags,
-                    task_config.get("test_targets", None),
+                    test_targets,
                     test_bep_file,
                     monitor_flaky_tests,
                     incompatible_flags,
@@ -1257,6 +1268,32 @@ def execute_bazel_build(
         handle_bazel_failure(e, "build")
 
 
+def expand_test_target_patterns(bazel_binary, platform, test_targets):
+    if not any(t for t in test_targets if t.endswith(":all") or t.endswith("...")):
+        return test_targets
+
+    print_collapsed_group(":female-detective: Resolving test targets via bazel query")
+    output = execute_command_and_get_output(
+        [bazel_binary]
+        + common_startup_flags(platform)
+        + [
+            "--nomaster_bazelrc",
+            "--bazelrc=/dev/null",
+            "query",
+            "'tests(set({}))'".format(" ".join(test_targets)),
+        ]
+    )
+    return sorted(output.split("\n"))
+
+
+def get_test_targets_for_shard(test_targets, shard_id, shard_count):
+    # TODO(fweikert): implement a more sophisticated algorithm
+    test_count = len(test_targets)
+    tests_per_shard = math.ceil(test_count / shard_count)
+    start_index = shard_id * tests_per_shard
+    return test_targets[start_index : start_index + tests_per_shard]
+
+
 def execute_bazel_test(
     bazel_version,
     bazel_binary,
@@ -1401,14 +1438,14 @@ def execute_command_background(args):
     return subprocess.Popen(args, env=os.environ)
 
 
-def create_step(label, commands, platform=DEFAULT_PLATFORM):
+def create_step(label, commands, platform=DEFAULT_PLATFORM, shards=1):
     host_platform = PLATFORMS[platform].get("host-platform", platform)
     if "docker-image" in PLATFORMS[platform]:
-        return create_docker_step(
+        step = create_docker_step(
             label, image=PLATFORMS[platform]["docker-image"], commands=commands
         )
     else:
-        return {
+        step = {
             "label": label,
             "command": commands,
             "agents": {
@@ -1417,6 +1454,12 @@ def create_step(label, commands, platform=DEFAULT_PLATFORM):
                 "os": rchop(host_platform, "_nojava", "_java8", "_java9", "_java10", "_java11"),
             },
         }
+
+    if shards > 1:
+        step["label"] += " (shard %n)"
+        step["parallelism"] = shards
+
+    return step
 
 
 def create_docker_step(label, image, commands=None, additional_env_vars=None):
@@ -1517,6 +1560,12 @@ def print_project_pipeline(
         git_commit = get_last_green_commit(last_green_commit_url)
 
     for task, task_config in task_configs.items():
+        shards = task_config.get("shards", "1")
+        try:
+            shards = int(shards)
+        except ValueError:
+            raise BuildkiteException("Task {} has invalid shard value '{}'".format(task, shards))
+
         step = runner_step(
             platform=get_platform_for_task(task, task_config),
             task=task,
@@ -1529,6 +1578,7 @@ def print_project_pipeline(
             monitor_flaky_tests=monitor_flaky_tests,
             use_but=use_but,
             incompatible_flags=incompatible_flags,
+            shards=shards,
         )
         pipeline_steps.append(step)
 
@@ -1618,6 +1668,7 @@ def runner_step(
     monitor_flaky_tests=False,
     use_but=False,
     incompatible_flags=None,
+    shards=1,
 ):
     host_platform = PLATFORMS[platform].get("host-platform", platform)
     command = python_binary(host_platform) + " bazelci.py runner --task=" + task
@@ -1637,7 +1688,7 @@ def runner_step(
         command += " --incompatible_flag=" + flag
     label = create_label(platform, project_name, task_name=task_name)
     return create_step(
-        label=label, commands=[fetch_bazelcipy_command(), command], platform=platform
+        label=label, commands=[fetch_bazelcipy_command(), command], platform=platform, shards=shards
     )
 
 
