@@ -1053,7 +1053,7 @@ def remote_caching_flags(platform):
     # Only enable caching for untrusted builds.
     if CLOUD_PROJECT != "bazel-untrusted":
         return []
-    
+
     # TODO(philwo) re-enable remote caching on Windows
     if platform == "windows":
         return []
@@ -2171,15 +2171,13 @@ def sha256_hexdigest(filename):
     return sha256.hexdigest()
 
 
-def try_publish_binaries(build_number, expected_generation):
-    now = datetime.datetime.now()
-    git_commit = os.environ["BUILDKITE_COMMIT"]
-    info = {
-        "build_number": build_number,
-        "build_time": now.strftime("%d-%m-%Y %H:%M"),
-        "git_commit": git_commit,
-        "platforms": {},
-    }
+def upload_bazel_binaries():
+    """
+    Uploads all Bazel binaries to a deterministic URL based on the current Git commit.
+
+    Returns a map of platform names to sha256 hashes of the corresponding Bazel binary.
+    """
+    hashes = {}
     for platform in (name for name in PLATFORMS if PLATFORMS[name]["publish_binary"]):
         tmpdir = tempfile.mkdtemp()
         try:
@@ -2189,15 +2187,33 @@ def try_publish_binaries(build_number, expected_generation):
                     gsutil_command(),
                     "cp",
                     bazel_binary_path,
-                    bazelci_builds_gs_url(platform, git_commit),
+                    bazelci_builds_gs_url(platform, os.environ["BUILDKITE_COMMIT"]),
                 ]
             )
-            info["platforms"][platform] = {
-                "url": bazelci_builds_download_url(platform, git_commit),
-                "sha256": sha256_hexdigest(bazel_binary_path),
-            }
+            hashes[platform] = sha256_hexdigest(bazel_binary_path)
         finally:
             shutil.rmtree(tmpdir)
+    return hashes
+
+
+def try_publish_binaries(hashes, build_number, expected_generation):
+    """
+    Uploads the info.json file that contains information about the latest Bazel commit that was
+    successfully built on CI.
+    """
+    now = datetime.datetime.now()
+    git_commit = os.environ["BUILDKITE_COMMIT"]
+    info = {
+        "build_number": build_number,
+        "build_time": now.strftime("%d-%m-%Y %H:%M"),
+        "git_commit": git_commit,
+        "platforms": {},
+    }
+    for platform in (name for name in PLATFORMS if PLATFORMS[name]["publish_binary"]):
+        info["platforms"][platform] = {
+            "url": bazelci_builds_download_url(platform, git_commit),
+            "sha256": hashes[platform],
+        }
     tmpdir = tempfile.mkdtemp()
     try:
         info_file = os.path.join(tmpdir, "info.json")
@@ -2232,6 +2248,11 @@ def publish_binaries():
         raise BuildkiteException("Not running inside Buildkite")
     current_build_number = int(current_build_number)
 
+    # Upload the Bazel binaries for this commit.
+    hashes = upload_bazel_binaries()
+
+    # Try to update the info.json with data about our build. This will fail (expectedly) if we're
+    # not the latest build.
     for _ in range(5):
         latest_generation, latest_build_number = latest_generation_and_build_number()
 
@@ -2245,7 +2266,7 @@ def publish_binaries():
             break
 
         try:
-            try_publish_binaries(current_build_number, latest_generation)
+            try_publish_binaries(hashes, current_build_number, latest_generation)
         except BinaryUploadRaceException:
             # Retry.
             continue
