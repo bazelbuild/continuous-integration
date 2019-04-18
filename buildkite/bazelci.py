@@ -20,7 +20,6 @@ import codecs
 import datetime
 import hashlib
 import json
-import math
 import multiprocessing
 import os
 import os.path
