@@ -270,10 +270,16 @@ RUN bazel version
 
 FROM ubuntu1604-nojava AS ubuntu1604-java8
 USER root
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0x219BD9C9 && \
-    apt-add-repository 'deb http://repos.azulsystems.com/ubuntu stable main' && \
-    apt-get -qqy update && \
-    apt-get -qqy install zulu-8
+RUN apt-get -qqy update && \
+    apt-get -qqy install openjdk-8-jdk && \
+    rm -rf /var/lib/apt/lists/*
+USER bazel
+
+FROM ubuntu1604-nojava AS ubuntu1604-java9
+USER root
+RUN apt-get -qqy update && \
+    apt-get -qqy install openjdk-9-jdk && \
+    rm -rf /var/lib/apt/lists/*
 USER bazel
 
 ###############################################################################
@@ -363,10 +369,9 @@ RUN bazel version
 
 FROM ubuntu1804-nojava AS ubuntu1804-java8
 USER root
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0x219BD9C9 && \
-    apt-add-repository 'deb http://repos.azulsystems.com/ubuntu stable main' && \
-    apt-get -qqy update && \
-    apt-get -qqy install zulu-8
+RUN apt-get -qqy update && \
+    apt-get -qqy install openjdk-8-jdk && \
+    rm -rf /var/lib/apt/lists/*
 USER bazel
 
 FROM ubuntu1804-nojava AS ubuntu1804-java9
@@ -374,7 +379,8 @@ USER root
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0x219BD9C9 && \
     apt-add-repository 'deb http://repos.azulsystems.com/ubuntu stable main' && \
     apt-get -qqy update && \
-    apt-get -qqy install zulu-9
+    apt-get -qqy install zulu-9 && \
+    rm -rf /var/lib/apt/lists/*
 USER bazel
 
 FROM ubuntu1804-nojava AS ubuntu1804-java10
@@ -382,13 +388,13 @@ USER root
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0x219BD9C9 && \
     apt-add-repository 'deb http://repos.azulsystems.com/ubuntu stable main' && \
     apt-get -qqy update && \
-    apt-get -qqy install zulu-10
+    apt-get -qqy install zulu-10 && \
+    rm -rf /var/lib/apt/lists/*
 USER bazel
 
 FROM ubuntu1804-nojava AS ubuntu1804-java11
 USER root
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0x219BD9C9 && \
-    apt-add-repository 'deb http://repos.azulsystems.com/ubuntu stable main' && \
-    apt-get -qqy update && \
-    apt-get -qqy install zulu-11
+RUN apt-get -qqy update && \
+    apt-get -qqy install openjdk-11-jdk && \
+    rm -rf /var/lib/apt/lists/*
 USER bazel
