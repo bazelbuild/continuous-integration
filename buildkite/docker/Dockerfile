@@ -74,6 +74,9 @@ COPY --from=buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
 COPY --from=github-release /usr/local/bin/github-release /usr/local/bin/github-release
 COPY --from=saucelabs /usr/local/bin/sc /usr/local/bin/sc
 
+RUN groupadd --gid 999 bazel && \
+    useradd --gid 999 --uid 999 --create-home --shell /bin/bash bazel
+
 ### Install required packages.
 RUN dpkg --add-architecture i386 && \
     apt-get -qqy update && \
@@ -112,7 +115,8 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Docker.
-RUN apt-get -qqy install apt-transport-https ca-certificates && \
+RUN apt-get -qqy update && \
+    apt-get -qqy install apt-transport-https ca-certificates && \
     curl -sSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
     apt-get -qqy update && \
@@ -151,8 +155,6 @@ RUN mkdir -p /opt/swift && \
     curl -L https://swift.org/builds/swift-4.2.1-release/ubuntu1404/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu14.04.tar.gz | \
     tar xz -C /opt/swift --strip 1
 
-RUN groupadd --gid 999 bazel && \
-    useradd --gid 999 --uid 999 --create-home --shell /bin/bash bazel
 USER bazel
 RUN gcloud auth configure-docker --quiet
 RUN bazel version
@@ -180,6 +182,9 @@ COPY --from=bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
 COPY --from=buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
 COPY --from=github-release /usr/local/bin/github-release /usr/local/bin/github-release
 COPY --from=saucelabs /usr/local/bin/sc /usr/local/bin/sc
+
+RUN groupadd --gid 999 bazel && \
+    useradd --gid 999 --uid 999 --create-home --shell /bin/bash bazel
 
 ### Install required packages.
 RUN dpkg --add-architecture i386 && \
@@ -223,7 +228,8 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Docker.
-RUN apt-get -qqy install apt-transport-https ca-certificates && \
+RUN apt-get -qqy update && \
+    apt-get -qqy install apt-transport-https ca-certificates && \
     curl -sSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
     apt-get -qqy update && \
@@ -262,8 +268,6 @@ RUN mkdir -p /opt/swift && \
     curl -L https://swift.org/builds/swift-4.2.1-release/ubuntu1604/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu16.04.tar.gz | \
     tar xz -C /opt/swift --strip 1
 
-RUN groupadd --gid 999 bazel && \
-    useradd --gid 999 --uid 999 --create-home --shell /bin/bash bazel
 USER bazel
 RUN gcloud auth configure-docker --quiet
 RUN bazel version
@@ -272,13 +276,6 @@ FROM ubuntu1604-nojava AS ubuntu1604-java8
 USER root
 RUN apt-get -qqy update && \
     apt-get -qqy install openjdk-8-jdk && \
-    rm -rf /var/lib/apt/lists/*
-USER bazel
-
-FROM ubuntu1604-nojava AS ubuntu1604-java9
-USER root
-RUN apt-get -qqy update && \
-    apt-get -qqy install openjdk-9-jdk && \
     rm -rf /var/lib/apt/lists/*
 USER bazel
 
@@ -296,6 +293,9 @@ COPY --from=bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
 COPY --from=buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
 COPY --from=github-release /usr/local/bin/github-release /usr/local/bin/github-release
 COPY --from=saucelabs /usr/local/bin/sc /usr/local/bin/sc
+
+RUN groupadd --gid 999 bazel && \
+    useradd --gid 999 --uid 999 --create-home --shell /bin/bash bazel
 
 ### Install required packages.
 RUN dpkg --add-architecture i386 && \
@@ -337,7 +337,8 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Docker.
-RUN apt-get -qqy install apt-transport-https ca-certificates && \
+RUN apt-get -qqy update && \
+    apt-get -qqy install apt-transport-https ca-certificates && \
     curl -sSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
     apt-get -qqy update && \
@@ -361,8 +362,6 @@ RUN mkdir -p /opt/swift && \
     curl -L https://swift.org/builds/swift-4.2.1-release/ubuntu1804/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu18.04.tar.gz | \
     tar xz -C /opt/swift --strip 1
 
-RUN groupadd --gid 999 bazel && \
-    useradd --gid 999 --uid 999 --create-home --shell /bin/bash bazel
 USER bazel
 RUN gcloud auth configure-docker --quiet
 RUN bazel version

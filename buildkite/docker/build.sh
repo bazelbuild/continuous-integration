@@ -10,7 +10,7 @@ for java in java8 nojava; do
   docker push gcr.io/bazel-untrusted/ubuntu1404:$java
 done
 
-for java in java8 java9 nojava; do
+for java in java8 nojava; do
   docker build --target ubuntu1604-java8 -t gcr.io/bazel-public/ubuntu1604:$java .
   docker push gcr.io/bazel-public/ubuntu1604:$java
 

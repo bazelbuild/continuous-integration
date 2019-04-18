@@ -322,14 +322,6 @@ PLATFORMS = {
         "java": "8",
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1604:java8",
     },
-    "ubuntu1604_java9": {
-        "name": "Ubuntu 16.04, JDK 9",
-        "emoji-name": ":ubuntu: 16.04 (JDK 9)",
-        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
-        "publish_binary": False,
-        "java": "9",
-        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1604:java9",
-    },
     "ubuntu1804": {
         "name": "Ubuntu 18.04, JDK 8",
         "emoji-name": ":ubuntu: 18.04 (JDK 8)",
