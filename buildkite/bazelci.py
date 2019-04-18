@@ -1289,7 +1289,8 @@ def expand_test_target_patterns(bazel_binary, platform, test_targets):
             "--bazelrc=/dev/null",
             "query",
             "tests(set({}))".format(" ".join("'{}'".format(t) for t in test_targets if t != "--")),
-        ]
+        ],
+        print_output=False,
     )
     return [t for t in output.split("\n") if t]
 
@@ -1442,7 +1443,7 @@ def test_logs_for_status(bep_file, status):
     return targets
 
 
-def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True):
+def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True, print_output=True):
     eprint(" ".join(args))
     process = subprocess.run(
         args,
@@ -1454,7 +1455,9 @@ def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True):
         errors="replace",
         universal_newlines=True,
     )
-    eprint(process.stdout)
+    if print_output:
+        eprint(process.stdout)
+
     return process.stdout
 
 
