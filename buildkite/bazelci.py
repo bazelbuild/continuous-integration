@@ -1289,7 +1289,7 @@ def expand_test_target_patterns(bazel_binary, platform, test_targets):
         ],
         print_output=False,
     )
-    return [t for t in output.split("\n") if t.startswith('//')]
+    return [t for t in output.split("\n") if t.startswith("//")]
 
 
 def get_targets_for_shard(build_targets, test_targets, shard_id, shard_count):
