@@ -1308,7 +1308,7 @@ def get_targets_for_shard(build_targets, test_targets, shard_id, shard_count):
     targets_for_this_shard = all_targets[start_index : start_index + targets_per_shard]
     eprint(
         "Actions for shard {} of {}:\n\t{}".format(
-            shard_id,
+            shard_id + 1,
             shard_count,
             "\n\t".join("{} {}".format(a, t) for a, t in targets_for_this_shard),
         )
