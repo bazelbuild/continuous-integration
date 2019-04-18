@@ -1291,7 +1291,7 @@ def expand_test_target_patterns(bazel_binary, platform, test_targets):
             "tests(set({}))".format(" ".join("'{}'".format(t) for t in test_targets if t != "--")),
         ]
     )
-    return sorted(output.split("\n"))
+    return [t for t in output.split("\n") if t]
 
 
 def get_test_targets_for_shard(test_targets, shard_id, shard_count):
