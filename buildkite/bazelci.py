@@ -1053,6 +1053,10 @@ def remote_caching_flags(platform):
     # Only enable caching for untrusted builds.
     if CLOUD_PROJECT != "bazel-untrusted":
         return []
+    
+    # TODO(philwo) re-enable remote caching on Windows
+    if platform == "windows":
+        return []
 
     if platform == "macos":
         platform_cache_key = [
