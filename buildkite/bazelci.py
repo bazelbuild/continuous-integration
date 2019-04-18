@@ -1058,29 +1058,28 @@ def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags):
 
 
 def remote_caching_flags(platform):
-    if platform not in [
-        "ubuntu1404",
-        "ubuntu1604",
-        "ubuntu1804",
-        "ubuntu1804_nojava",
-        "ubuntu1804_java9",
-        "ubuntu1804_java10",
-        "ubuntu1804_java11",
-        "macos",
-        "windows",
-    ]:
+    # Only enable caching for untrusted builds.
+    if CLOUD_PROJECT != "bazel-untrusted":
         return []
 
-    platform_cache_key = [platform.encode("utf-8")]
     if platform == "macos":
-        # trusted vs. non-trusted:
-        platform_cache_key.append(CLOUD_PROJECT)
-        # macOS version:
-        platform_cache_key.append(subprocess.check_output(["/usr/bin/sw_vers", "-productVersion"]))
-        # Path to Xcode:
-        platform_cache_key.append(subprocess.check_output(["/usr/bin/xcode-select", "-p"]))
-        # Xcode version:
-        platform_cache_key.append(subprocess.check_output(["/usr/bin/xcodebuild", "-version"]))
+        platform_cache_key = [
+            # macOS version:
+            subprocess.check_output(["/usr/bin/sw_vers", "-productVersion"]),
+            # Path to Xcode:
+            subprocess.check_output(["/usr/bin/xcode-select", "-p"]),
+            # Xcode version:
+            subprocess.check_output(["/usr/bin/xcodebuild", "-version"]),
+        ]
+        # Use a local cache server for our macOS machines.
+        cache_url = "http://100.107.67.248"
+    else:
+        platform_cache_key = [
+            # Platform name:
+            platform.encode("utf-8")
+        ]
+        # Use GCS for caching builds running on GCE.
+        cache_url = "https://storage.googleapis.com/bazel-untrusted-buildkite-cache"
 
     platform_cache_digest = hashlib.sha256()
     for key in platform_cache_key:
@@ -1089,28 +1088,13 @@ def remote_caching_flags(platform):
 
     flags = [
         "--remote_timeout=60",
-        # TODO(ulfjack): figure out how to resolve
-        # https://github.com/bazelbuild/bazel/issues/5382 and as part of that keep
-        # or remove the `--disk_cache=` flag.
-        "--disk_cache=",
         "--remote_max_connections=200",
+        "--remote_http_cache={}/{}".format(cache_url, platform_cache_digest.hexdigest()),
     ]
 
-    if platform == "macos":
-        # Use a local cache server for our macOS machines.
-        flags += [
-            "--remote_http_cache=http://100.107.67.248/{}".format(platform_cache_digest.hexdigest())
-        ]
-    else:
+    # Need to use the correct credentials when running on GCE.
+    if platform != "macos":
         flags += ["--google_default_credentials"]
-        if CLOUD_PROJECT == "bazel-public":
-            flags += [
-                "--remote_http_cache=https://storage.googleapis.com/bazel-trusted-buildkite-cache"
-            ]
-        else:
-            flags += [
-                "--remote_http_cache=https://storage.googleapis.com/bazel-untrusted-buildkite-cache"
-            ]
 
     return flags
 
@@ -1154,6 +1138,9 @@ def common_build_flags(bep_file, platform):
         "--announce_rc",
         "--experimental_multi_threaded_digest",
         "--experimental_repository_cache_hardlinks",
+        # Some projects set --disk_cache in their project-specific bazelrc, which we never want on
+        # CI, so let's just disable it explicitly.
+        "--disk_cache=",
     ]
 
     if platform == "windows":
