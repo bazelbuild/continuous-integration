@@ -1288,7 +1288,7 @@ def expand_test_target_patterns(bazel_binary, platform, test_targets):
             "--nomaster_bazelrc",
             "--bazelrc=/dev/null",
             "query",
-            "tests(set({}))".format(" ".join("'{}'".format(t) for t in test_targets)),
+            "tests(set({}))".format(" ".join("'{}'".format(t) for t in test_targets if t != "--")),
         ]
     )
     return sorted(output.split("\n"))
