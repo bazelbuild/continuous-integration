@@ -107,15 +107,18 @@ RUN dpkg --add-architecture i386 && \
 RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
     curl -L https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
-    apt-get -qqy update && apt-get -qqy install google-cloud-sdk && \
+    apt-get -qqy update && \
+    apt-get -qqy install google-cloud-sdk && \
     rm -rf /var/lib/apt/lists/*
 
 
 ### Install Node.js and packages required by Gerrit.
 ### (see https://gerrit.googlesource.com/gerrit/+show/master/polygerrit-ui/README.md)
 RUN curl -L https://deb.nodesource.com/setup_8.x | bash - && \
+    apt-get -qqy update && \
     apt-get -qqy install nodejs && \
-    npm install -g typescript fried-twinkie@0.0.15
+    npm install -g typescript fried-twinkie@0.0.15 && \
+    rm -rf /var/lib/apt/lists/*
 
 ### Install Python (required our own bazelci.py script).
 RUN export PYTHON_VERSION="3.6.8" && \
@@ -152,7 +155,8 @@ USER root
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0x219BD9C9 && \
     apt-add-repository 'deb http://repos.azulsystems.com/ubuntu stable main' && \
     apt-get -qqy update && \
-    apt-get -qqy install zulu-8
+    apt-get -qqy install zulu-8 && \
+    rm -rf /var/lib/apt/lists/*
 USER bazel
 
 ###############################################################################
@@ -207,14 +211,17 @@ RUN pip install keras_applications keras_preprocessing && \
 RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
     curl -L https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
-    apt-get -qqy update && apt-get -qqy install google-cloud-sdk && \
+    apt-get -qqy update && \
+    apt-get -qqy install google-cloud-sdk && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Node.js and packages required by Gerrit.
 ### (see https://gerrit.googlesource.com/gerrit/+show/master/polygerrit-ui/README.md)
 RUN curl -L https://deb.nodesource.com/setup_8.x | bash - && \
+    apt-get -qqy update && \
     apt-get -qqy install nodejs && \
-    npm install -g typescript fried-twinkie@0.0.15
+    npm install -g typescript fried-twinkie@0.0.15 && \
+    rm -rf /var/lib/apt/lists/*
 
 ### Install Python (required by our own bazelci.py script).
 RUN export PYTHON_VERSION="3.6.8" && \
@@ -304,14 +311,16 @@ RUN pip install keras_applications keras_preprocessing && \
 RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
     curl -L https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
-    apt-get -qqy update && apt-get -qqy install google-cloud-sdk && \
+    apt-get -qqy update && \
+    apt-get -qqy install google-cloud-sdk && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Node.js and packages required by Gerrit.
 ### (see https://gerrit.googlesource.com/gerrit/+show/master/polygerrit-ui/README.md)
 RUN curl -L https://deb.nodesource.com/setup_8.x | bash - && \
     apt-get -qqy install nodejs && \
-    npm install -g typescript fried-twinkie@0.0.15
+    npm install -g typescript fried-twinkie@0.0.15 && \
+    rm -rf /var/lib/apt/lists/*
 
 ### Install Python dependencies required by our own bazelci.py script.
 RUN pip3 install requests uritemplate pyyaml github3.py
