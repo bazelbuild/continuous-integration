@@ -1302,13 +1302,13 @@ def get_targets_for_shard(build_targets, test_targets, shard_id, shard_count):
     all_targets = [("build", t) for t in sorted(build_targets)] + [
         ("test", t) for t in sorted(test_targets)
     ]
+    targets_for_this_shard = []
+    index = shard_id
     target_count = len(all_targets)
-    targets_per_shard = math.ceil(target_count / shard_count)
-    start_index = shard_id * targets_per_shard
+    while index < target_count:
+        targets_for_this_shard.append(all_targets[index])
+        index += shard_count
 
-    build_targets_for_this_shard = []
-    test_targets_for_this_shard = []
-    targets_for_this_shard = all_targets[start_index : start_index + targets_per_shard]
     eprint(
         "Actions for shard {} of {}:\n\t{}".format(
             shard_id + 1,
@@ -1316,6 +1316,9 @@ def get_targets_for_shard(build_targets, test_targets, shard_id, shard_count):
             "\n\t".join("{} {}".format(a, t) for a, t in targets_for_this_shard),
         )
     )
+
+    build_targets_for_this_shard = []
+    test_targets_for_this_shard = []
     for a, t in targets_for_this_shard:
         dest = build_targets_for_this_shard if a == "build" else test_targets_for_this_shard
         dest.append(t)
