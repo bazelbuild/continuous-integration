@@ -622,8 +622,6 @@ def execute_commands(
     if incompatible_flags:
         bazel_version = None
 
-    build_only = build_only or "test_targets" not in task_config
-    test_only = test_only or "build_targets" not in task_config
     if build_only and test_only:
         raise BuildkiteException("build_only and test_only cannot be true at the same time")
 
@@ -739,20 +737,36 @@ def execute_commands(
         if needs_clean:
             execute_bazel_clean(bazel_binary, platform)
 
-        if not test_only:
+        build_targets = [] if test_only else task_config.get("build_targets", [])
+        test_targets = [] if build_only else task_config.get("test_targets", [])
+
+        shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
+        shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
+        if shard_id > -1 and shard_count > -1:
+            expanded_test_targets = expand_test_target_patterns(
+                bazel_binary, platform, test_targets
+            )
+            build_targets, test_targets = get_targets_for_shard(
+                build_targets, expanded_test_targets, shard_id, shard_count
+            )
+
+        if not build_targets and not test_targets:
+            raise BuildkiteException("There are neither build nor test targets")
+
+        if build_targets:
             execute_bazel_build(
                 bazel_version,
                 bazel_binary,
                 platform,
                 task_config.get("build_flags", []),
-                task_config.get("build_targets", None),
+                build_targets,
                 None,
                 incompatible_flags,
             )
             if save_but:
                 upload_bazel_binary(platform)
 
-        if not build_only:
+        if test_targets:
             test_flags = task_config.get("test_flags", [])
             if test_env_vars:
                 test_flags += ["--test_env={}".format(v) for v in test_env_vars]
@@ -768,20 +782,6 @@ def execute_commands(
                 test_flags.append("--sandbox_writable_path={}".format(bazelisk_cache_dir))
 
             test_bep_file = os.path.join(tmpdir, "test_bep.json")
-
-            test_targets = task_config.get("test_targets", None)
-            shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
-            shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
-            if shard_id > -1 and shard_count > -1:
-                expanded_test_targets = expand_test_target_patterns(
-                    bazel_binary, platform, test_targets
-                )
-                test_targets = get_test_targets_for_shard(
-                    expanded_test_targets, shard_id, shard_count
-                )
-                if not test_targets:
-                    return
-
             try:
                 execute_bazel_test(
                     bazel_version,
@@ -1294,12 +1294,30 @@ def expand_test_target_patterns(bazel_binary, platform, test_targets):
     return [t for t in output.split("\n") if t]
 
 
-def get_test_targets_for_shard(test_targets, shard_id, shard_count):
+def get_targets_for_shard(build_targets, test_targets, shard_id, shard_count):
     # TODO(fweikert): implement a more sophisticated algorithm
-    test_count = len(test_targets)
-    tests_per_shard = math.ceil(test_count / shard_count)
-    start_index = shard_id * tests_per_shard
-    return test_targets[start_index : start_index + tests_per_shard]
+    all_targets = [("build", t) for t in sorted(build_targets)] + [
+        ("test", t) for t in sorted(test_targets)
+    ]
+    target_count = len(all_targets)
+    targets_per_shard = math.ceil(target_count / shard_count)
+    start_index = shard_id * targets_per_shard
+
+    build_targets_for_this_shard = []
+    test_targets_for_this_shard = []
+    targets_for_this_shard = all_targets[start_index : start_index + targets_per_shard]
+    eprint(
+        "Actions for shard {} of {}:\n\t{}".format(
+            shard_id,
+            shard_count,
+            "\n\t".join("{} {}".format(a, t) for a, t in targets_for_this_shard),
+        )
+    )
+    for a, t in targets_for_this_shard:
+        dest = build_targets_for_this_shard if a == "build" else test_targets_for_this_shard
+        dest.append(t)
+
+    return build_targets_for_this_shard, test_targets_for_this_shard
 
 
 def execute_bazel_test(
