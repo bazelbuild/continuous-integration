@@ -515,8 +515,7 @@ def bazelcipy_url():
     """
     URL to the latest version of this script.
     """
-    # TODO(fweikert): change this
-    return "https://raw.githubusercontent.com/fweikert/continuous-integration/shard/buildkite/bazelci.py?{}".format(
+    return "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?{}".format(
         int(time.time())
     )
 
