@@ -2188,8 +2188,6 @@ def try_publish_binaries(build_number, expected_generation):
                 [
                     gsutil_command(),
                     "cp",
-                    "-a",
-                    "public-read",
                     bazel_binary_path,
                     bazelci_builds_gs_url(platform, git_commit),
                 ]
@@ -2215,8 +2213,6 @@ def try_publish_binaries(build_number, expected_generation):
                     "-h",
                     "Content-Type:application/json",
                     "cp",
-                    "-a",
-                    "public-read",
                     info_file,
                     bazelci_builds_metadata_url(),
                 ]

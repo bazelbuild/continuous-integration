@@ -25,8 +25,8 @@ git fetch --all
 git gc --aggressive
 
 cd ..
-tar c bazelbuild | gsutil cp -a public-read - "gs://bazel-git-mirror/bazelbuild.tar"
-zip -q0r - bazelbuild | gsutil cp -a public-read - "gs://bazel-git-mirror/bazelbuild.zip"
+tar c bazelbuild | gsutil cp - "gs://bazel-git-mirror/bazelbuild.tar"
+zip -q0r - bazelbuild | gsutil cp - "gs://bazel-git-mirror/bazelbuild.zip"
 
 # Verify that it works:
 # git clone --reference bazelbuild https://github.com/bazelbuild/bazel.git
