@@ -93,9 +93,10 @@ def test_with_bazel_at_commit(
 def clone_git_repository(project_name, task_name):
     platform_name = get_platform(project_name, task_name)
     git_repository = bazelci.DOWNSTREAM_PROJECTS[project_name]["git_repository"]
-    git_commit = bazelci.get_last_green_commit(
+    last_green_commit_url = bazelci.bazelci_last_green_commit_url(
         git_repository, bazelci.DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"]
     )
+    git_commit = bazelci.get_last_green_commit(last_green_commit_url)
     return bazelci.clone_git_repository(git_repository, platform_name, git_commit)
 
 
