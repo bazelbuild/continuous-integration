@@ -110,12 +110,6 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     apt-get -qqy update && apt-get -qqy install google-cloud-sdk && \
     rm -rf /var/lib/apt/lists/*
 
-### Install Mono (required by rules_dotnet).
-# RUN apt-get -qqy install apt-transport-https ca-certificates && \
-#     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
-#     add-apt-repository "deb https://download.mono-project.com/repo/ubuntu stable-$(lsb_release -cs) main" && \
-#     apt-get -qqy update && \
-#     apt-get -qqy install mono-devel mono-complete
 
 ### Install Node.js and packages required by Gerrit.
 ### (see https://gerrit.googlesource.com/gerrit/+show/master/polygerrit-ui/README.md)
@@ -216,13 +210,6 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     apt-get -qqy update && apt-get -qqy install google-cloud-sdk && \
     rm -rf /var/lib/apt/lists/*
 
-### Install Mono (required by rules_dotnet).
-# RUN apt-get -qqy install apt-transport-https ca-certificates && \
-#     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
-#     add-apt-repository "deb https://download.mono-project.com/repo/ubuntu stable-$(lsb_release -cs) main" && \
-#     apt-get -qqy update && \
-#     apt-get -qqy install mono-devel mono-complete
-
 ### Install Node.js and packages required by Gerrit.
 ### (see https://gerrit.googlesource.com/gerrit/+show/master/polygerrit-ui/README.md)
 RUN curl -L https://deb.nodesource.com/setup_8.x | bash - && \
@@ -319,13 +306,6 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     curl -L https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
     apt-get -qqy update && apt-get -qqy install google-cloud-sdk && \
     rm -rf /var/lib/apt/lists/*
-
-### Install Mono (required by rules_dotnet).
-# RUN apt-get -qqy install apt-transport-https ca-certificates && \
-#     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
-#     add-apt-repository "deb https://download.mono-project.com/repo/ubuntu stable-$(lsb_release -cs) main" && \
-#     apt-get -qqy update && \
-#     apt-get -qqy install mono-devel mono-complete
 
 ### Install Node.js and packages required by Gerrit.
 ### (see https://gerrit.googlesource.com/gerrit/+show/master/polygerrit-ui/README.md)
