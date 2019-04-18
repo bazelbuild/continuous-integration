@@ -743,6 +743,11 @@ def execute_commands(
         shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
         shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
         if shard_id > -1 and shard_count > -1:
+            print_collapsed_group(
+                ":female-detective: Calculating targets for shard {}/{}".format(
+                    shard_id + 1, shard_count
+                )
+            )
             expanded_test_targets = expand_test_target_patterns(
                 bazel_binary, platform, test_targets
             )
@@ -1277,7 +1282,7 @@ def expand_test_target_patterns(bazel_binary, platform, test_targets):
     if not any(t for t in test_targets if t.endswith(":all") or t.endswith("...")):
         return test_targets
 
-    print_collapsed_group(":female-detective: Resolving test targets via bazel query")
+    eprint("Resolving test targets via bazel query")
     output = execute_command_and_get_output(
         [bazel_binary]
         + common_startup_flags(platform)
