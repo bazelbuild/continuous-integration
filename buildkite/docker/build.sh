@@ -2,19 +2,19 @@
 
 set -euxo pipefail
 
-for java in java8 nojava; do
-  docker build --target ubuntu1404-java8 -t gcr.io/bazel-public/ubuntu1404:$java .
+for java in java8; do
+  docker build --target ubuntu1404-$java -t gcr.io/bazel-public/ubuntu1404:$java .
   docker push gcr.io/bazel-public/ubuntu1404:$java
 
-  docker build --target ubuntu1404-java8 -t gcr.io/bazel-untrusted/ubuntu1404:$java .
+  docker build --target ubuntu1404-$java -t gcr.io/bazel-untrusted/ubuntu1404:$java .
   docker push gcr.io/bazel-untrusted/ubuntu1404:$java
 done
 
-for java in java8 nojava; do
-  docker build --target ubuntu1604-java8 -t gcr.io/bazel-public/ubuntu1604:$java .
+for java in java8; do
+  docker build --target ubuntu1604-$java -t gcr.io/bazel-public/ubuntu1604:$java .
   docker push gcr.io/bazel-public/ubuntu1604:$java
 
-  docker build --target ubuntu1604-java8 -t gcr.io/bazel-untrusted/ubuntu1604:$java .
+  docker build --target ubuntu1604-$java -t gcr.io/bazel-untrusted/ubuntu1604:$java .
   docker push gcr.io/bazel-untrusted/ubuntu1604:$java
 done
 

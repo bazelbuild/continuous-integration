@@ -115,7 +115,9 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Docker.
-RUN apt-get -qqy update && \
+RUN groupadd -r -g 998 docker && \
+    usermod --append --groups docker bazel && \
+    apt-get -qqy update && \
     apt-get -qqy install apt-transport-https ca-certificates && \
     curl -sSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
@@ -228,7 +230,9 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Docker.
-RUN apt-get -qqy update && \
+RUN groupadd -r -g 998 docker && \
+    usermod --append --groups docker bazel && \
+    apt-get -qqy update && \
     apt-get -qqy install apt-transport-https ca-certificates && \
     curl -sSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
@@ -337,7 +341,9 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Docker.
-RUN apt-get -qqy update && \
+RUN groupadd -r -g 998 docker && \
+    usermod --append --groups docker bazel && \
+    apt-get -qqy update && \
     apt-get -qqy install apt-transport-https ca-certificates && \
     curl -sSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
