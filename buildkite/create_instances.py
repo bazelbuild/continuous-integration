@@ -73,8 +73,11 @@ def worker():
                     template_name, project=project).returncode == 0:
                 print("Deleted existing VM template: {}".format(template_name))
 
+            print("Creating a new template and then a new instance group for project {}".format(project))
+
             gcloud.create_instance_template(
                 template_name, project=project, **item)
+            print("Created instance template {}}".format(template_name))
 
             kwargs = {
                 "project": project,
@@ -87,6 +90,7 @@ def worker():
             elif region is not None:
                 kwargs["region"] = region
             gcloud.create_instance_group(instance_group_name, **kwargs)
+            print("Created instance group {}}".format(instance_group_name))
         finally:
             WORK_QUEUE.task_done()
 
