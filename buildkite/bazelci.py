@@ -338,22 +338,6 @@ PLATFORMS = {
         "java": "no",
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:nojava",
     },
-    "ubuntu1804_java9": {
-        "name": "Ubuntu 18.04, JDK 9",
-        "emoji-name": ":ubuntu: 18.04 (JDK 9)",
-        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
-        "publish_binary": False,
-        "java": "9",
-        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:java9",
-    },
-    "ubuntu1804_java10": {
-        "name": "Ubuntu 18.04, JDK 10",
-        "emoji-name": ":ubuntu: 18.04 (JDK 10)",
-        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
-        "publish_binary": False,
-        "java": "10",
-        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:java10",
-    },
     "ubuntu1804_java11": {
         "name": "Ubuntu 18.04, JDK 11",
         "emoji-name": ":ubuntu: 18.04 (JDK 11)",
