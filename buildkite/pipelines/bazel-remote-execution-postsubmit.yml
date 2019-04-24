@@ -7,11 +7,13 @@ platforms:
     - rm -f WORKSPACE.bak
     build_flags:
     - "--config=remote"
+    - "--remote_executor=remotebuildexecution.googleapis.com"
     build_targets:
     - "//src:bazel"
     - "//src:bazel_jdk_minimal"
     test_flags:
     - "--config=remote"
+    - "--remote_executor=remotebuildexecution.googleapis.com"
     test_targets:
     - "--"
     - "//src/test/..."
