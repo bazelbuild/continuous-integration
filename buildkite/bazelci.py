@@ -1592,7 +1592,7 @@ def print_project_pipeline(
         for f in config_files:
             pipeline_steps.append(
                 create_step(
-                    label="Validate {}".format(f),
+                    label=":cop: Validate {}".format(f),
                     commands=[
                         fetch_bazelcipy_command(),
                         "{} bazelci.py project_pipeline --file_config={}".format(
