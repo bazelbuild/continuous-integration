@@ -397,6 +397,10 @@ BUILDIFIER_STEP_NAME = "Buildifier"
 
 SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
 
+VALIDATE_CONFIG_OPTION = "validate_config"
+
+CONFIG_FILE_EXTENSIONS = set([".yml", ".yaml"])
+
 
 class BuildkiteException(Exception):
     """
@@ -1567,6 +1571,37 @@ def print_project_pipeline(
                 ],
             )
         )
+
+    if VALIDATE_CONFIG_OPTION in configs:
+        output = execute_command_and_get_output(
+            [
+                "git",
+                "diff-tree",
+                "--no-commit-id",
+                "--name-only",
+                "-r",
+                os.getenv("BUILDKITE_COMMIT"),
+            ]
+        )
+        config_files = [
+            l
+            for l in output.split("\n")
+            if l.startswith(".bazelci/") and os.path.splitext(l)[1] in CONFIG_FILE_EXTENSIONS
+        ]
+        platform = DEFAULT_PLATFORM
+        for f in config_files:
+            pipeline_steps.append(
+                create_step(
+                    label="Validate {}".format(f),
+                    commands=[
+                        fetch_bazelcipy_command(),
+                        "{} bazelci.py project_pipeline --file_config={}".format(
+                            python_binary(platform), f
+                        ),
+                    ],
+                    platform=platform,
+                )
+            )
 
     print(yaml.dump({"steps": pipeline_steps}))
 
