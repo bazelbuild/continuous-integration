@@ -397,8 +397,6 @@ BUILDIFIER_STEP_NAME = "Buildifier"
 
 SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
 
-VALIDATE_CONFIG_OPTION = "validate_config"
-
 CONFIG_FILE_EXTENSIONS = set([".yml", ".yaml"])
 
 
@@ -1572,7 +1570,7 @@ def print_project_pipeline(
             )
         )
 
-    if VALIDATE_CONFIG_OPTION in configs:
+    if "validate_config" in configs:
         output = execute_command_and_get_output(
             [
                 "git",
