@@ -324,12 +324,12 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1604:java8",
     },
     "ubuntu1804": {
-        "name": "Ubuntu 18.04, OpenJDK 8",
-        "emoji-name": ":ubuntu: 18.04 (OpenJDK 8)",
+        "name": "Ubuntu 18.04, OpenJDK 11",
+        "emoji-name": ":ubuntu: 18.04 (OpenJDK 11)",
         "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
         "publish_binary": False,
-        "java": "8",
-        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:java8",
+        "java": "11",
+        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:java11",
     },
     "ubuntu1804_nojava": {
         "name": "Ubuntu 18.04, no JDK",
@@ -338,14 +338,6 @@ PLATFORMS = {
         "publish_binary": False,
         "java": "no",
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:nojava",
-    },
-    "ubuntu1804_java11": {
-        "name": "Ubuntu 18.04, OpenJDK 11",
-        "emoji-name": ":ubuntu: 18.04 (OpenJDK 11)",
-        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
-        "publish_binary": False,
-        "java": "11",
-        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:java11",
     },
     "macos": {
         "name": "macOS, OpenJDK 8",

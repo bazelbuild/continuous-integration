@@ -2,31 +2,31 @@
 platforms:
   ubuntu1604:
     build_targets:
-    - "//:release"
+      - "//:release"
     test_flags:
-    - "--test_tag_filters=-slow,-flaky,-docker"
+      - "--test_tag_filters=-slow,-flaky,-docker"
     test_targets:
-    - "//..."
-  ubuntu1804_java11:
+      - "//..."
+  ubuntu1804:
     build_flags:
-    - "--define=ABSOLUTE_JAVABASE=/usr/lib/jvm/java-11-openjdk-amd64"
-    - "--host_javabase=@bazel_tools//tools/jdk:absolute_javabase"
-    - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla"
-    - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla"
+      - "--define=ABSOLUTE_JAVABASE=/usr/lib/jvm/java-11-openjdk-amd64"
+      - "--host_javabase=@bazel_tools//tools/jdk:absolute_javabase"
+      - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla"
+      - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla"
     build_targets:
-    - "//:release"
+      - "//:release"
     test_flags:
-    - "--define=ABSOLUTE_JAVABASE=/usr/lib/jvm/java-11-openjdk-amd64"
-    - "--host_javabase=@bazel_tools//tools/jdk:absolute_javabase"
-    - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla"
-    - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla"
-    - "--test_tag_filters=-slow,-flaky,-docker"
+      - "--define=ABSOLUTE_JAVABASE=/usr/lib/jvm/java-11-openjdk-amd64"
+      - "--host_javabase=@bazel_tools//tools/jdk:absolute_javabase"
+      - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla"
+      - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla"
+      - "--test_tag_filters=-slow,-flaky,-docker"
     test_targets:
-    - "//..."
+      - "//..."
   macos:
     build_targets:
-    - "//:release"
+      - "//:release"
     test_flags:
-    - "--test_tag_filters=-slow,-flaky,-docker"
+      - "--test_tag_filters=-slow,-flaky,-docker"
     test_targets:
-    - "//..."
+      - "//..."
