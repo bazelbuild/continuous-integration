@@ -208,7 +208,6 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_go.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_go/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-go-golang",
-        "disabled_reason": "https://github.com/bazelbuild/rules_go/issues/2039",
     },
     "rules_groovy": {
         "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
