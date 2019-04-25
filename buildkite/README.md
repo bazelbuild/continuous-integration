@@ -329,3 +329,19 @@ tasks:
     test_targets:
     - //...
 ```
+
+### Validating changes to pipeline configuration files
+
+You can set the top-level `validate_config` option to ensure that changes to pipeline configuration files in the `.bazelci` directory will be validated.
+With this option, every build for a commit that touches a configuration file will contain an additional validation step for each modified configuration file.
+
+Example usage:
+
+```yaml
+---
+validate_config: 1
+tasks:
+  macos:
+    build_targets:
+    - "..."
+```
