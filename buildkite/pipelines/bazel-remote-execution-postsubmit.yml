@@ -23,8 +23,6 @@ platforms:
     - "//third_party/ijar/..."
     - "//tools/aquery_differ/..."
     # See https://github.com/bazelbuild/bazel/issues/8033
-    - "-//src/test/java/com/google/devtools/build/android/..."
-    - "-//tools/android/..."
     - "-//src/tools/singlejar:output_jar_simple_test"
     - "-//src/test/shell/bazel/android/..."
     - "-//src/test/shell/bazel:external_integration_test"
