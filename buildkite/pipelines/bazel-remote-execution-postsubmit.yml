@@ -1,35 +1,28 @@
 ---
 platforms:
-  ubuntu1604:
+  ubuntu1804:
     shell_commands:
     - sed -i.bak -e 's/^# android_sdk_repository/android_sdk_repository/' -e 's/^#
       android_ndk_repository/android_ndk_repository/' WORKSPACE
     - rm -f WORKSPACE.bak
-    build_flags:
-    - "--config=remote"
-    - "--remote_executor=remotebuildexecution.googleapis.com"
-    - "--jobs=200"
-    build_targets:
-    - "//src:bazel"
-    - "//src:bazel_jdk_minimal"
     test_flags:
     - "--config=remote"
     - "--remote_executor=remotebuildexecution.googleapis.com"
     - "--jobs=200"
     test_targets:
-    - "--"
-    - "//src/test/..."
-    - "//src/tools/execlog/..."
-    - "//src/tools/singlejar/..."
-    - "//src/tools/workspacelog/..."
-    - "//third_party/ijar/..."
-    - "//tools/aquery_differ/..."
+#    - "--"
+#    - "//src/test/..."
+#    - "//src/tools/execlog/..."
+#    - "//src/tools/singlejar/..."
+#    - "//src/tools/workspacelog/..."
+#    - "//third_party/ijar/..."
+#    - "//tools/aquery_differ/..."
     # See https://github.com/bazelbuild/bazel/issues/8033
-    - "-//src/tools/singlejar:output_jar_simple_test"
-    - "-//src/test/shell/bazel:external_integration_test"
-    - "-//src/test/shell/bazel:maven_test"
-    - "-//src/test/shell/bazel:bazel_repository_cache_test"
-    - "-//src/test/shell/integration:java_integration_test"
-    - "-//src/test/java/com/google/devtools/build/lib:sandbox-tests"
-    - "-//scripts/..."
-    - "-//src/test/shell/bazel/android/..."
+#    - "-//src/tools/singlejar:output_jar_simple_test"
+#    - "-//src/test/shell/bazel:external_integration_test"
+#    - "-//src/test/shell/bazel:maven_test"
+#    - "-//src/test/shell/bazel:bazel_repository_cache_test"
+#    - "-//src/test/shell/integration:java_integration_test"
+#    - "-//src/test/java/com/google/devtools/build/lib:sandbox-tests"
+#    - "-//scripts/..."
+    - "//src/test/shell/bazel/android/..."
