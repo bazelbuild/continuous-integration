@@ -8,12 +8,14 @@ platforms:
     build_flags:
     - "--config=remote"
     - "--remote_executor=remotebuildexecution.googleapis.com"
+    - "--jobs=200"
     build_targets:
     - "//src:bazel"
     - "//src:bazel_jdk_minimal"
     test_flags:
     - "--config=remote"
     - "--remote_executor=remotebuildexecution.googleapis.com"
+    - "--jobs=200"
     test_targets:
     - "--"
     - "//src/test/..."
@@ -24,7 +26,6 @@ platforms:
     - "//tools/aquery_differ/..."
     # See https://github.com/bazelbuild/bazel/issues/8033
     - "-//src/tools/singlejar:output_jar_simple_test"
-    - "-//src/test/shell/bazel/android/..."
     - "-//src/test/shell/bazel:external_integration_test"
     - "-//src/test/shell/bazel:maven_test"
     - "-//src/test/shell/bazel:bazel_repository_cache_test"
