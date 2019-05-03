@@ -128,6 +128,9 @@ Create candidates with the release.sh script.
         apt-get repository. The github link is probably of the form:
         https://releases.bazel.build/0.25.0/rc1/index.html
 
+    *   If you don't have the permission, ask one of the Buildkite org admins
+        to add you to the [release-managers](https://buildkite.com/organizations/bazel-trusted/teams/release-managers/members) group.
+
 1.  If that worked, click "Unblock step" for the "Generate Announcement" step.
 
 1.  Prepare the release announcement on https://docs.google.com/document/d/1wDvulLlj4NAlPZamdlEVFORks3YXJonCjyuQMUQEmB0/edit.
