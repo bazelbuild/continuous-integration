@@ -155,24 +155,53 @@ tasks:
     - "..."
 ```
 
-### Advanced Features
+### Setting Environment Variables
 
-There are more advanced mechanisms for configuring individual tasks:
+You can set environment variables for each individual task via the `environment` field:
 
-- The CI script can run arbitrary commands before building or testing.
-  Simply add the `batch_commands` (Windows) or `shell_commands` field (all other platforms).
-- The `run_targets` field contains a list of Bazel targets that should be run before building.
-- The `build_flags` and `test_flags` fields contain lists of flags that should be used when building or testing (respectively).
-- You can specify a display name in the `name` field. The resulting job will display this value and an emoji that represents the platform.
+```yaml
+---
+tasks:
+  ubuntu1804:
+    environment:
+      CC: clang
+    build_targets:
+    - "..."
+```
+
+### Running Commands, Shell Scripts or Binary Targets
+
+The presubmit configuration allows you to specify a list of shell commands that are executed at the beginning of every job.
+Simply add the `batch_commands` (Windows) or `shell_commands` field (all other platforms).
+
+You can even run executable targets via the `run_targets` field.
+The following example demonstrates all of these features:
+
+```yaml
+---
+tasks:
+  ubuntu1804:
+    shell_commands:
+    - rm -f obsolete_file
+    run_targets:
+    - "//whatever"
+    build_targets:
+    - "..."
+  windows:
+    batch_commands:
+    - powershell -Command "..."
+    build_targets:
+    - "..."
+```
+
+### Using Specific Build & Test Flags
+
+The `build_flags` and `test_flags` fields contain lists of flags that should be used when building or testing (respectively):
 
 ```yaml
 ---
 tasks:
   ubuntu1404:
-    shell_commands:
-    - rm -f obsolete_file
-    run_targets:
-    - "//whatever"
     build_flags:
     - "--define=ij_product=clion-latest"
     build_targets:
@@ -181,10 +210,18 @@ tasks:
     - "--define=ij_product=clion-latest"
     test_targets:
     - ":clwb_tests"
+```
+
+### Specifying a Display Name
+
+Each task may have an optional display name that can include Emojis. This feature is especially useful if you have several tasks that run on the same platform, but use different Bazel binaries.
+Simply set the `name` field:
+
+```yaml
+---
+tasks:
   windows:
     name: "some :emoji:"
-    batch_commands:
-    - powershell -Command "..."
     build_targets:
     - "..."
 ```
