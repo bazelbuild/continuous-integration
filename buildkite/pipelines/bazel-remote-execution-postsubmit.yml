@@ -29,4 +29,8 @@ platforms:
     - "-//src/test/shell/bazel:bazel_repository_cache_test"
     - "-//src/test/shell/integration:java_integration_test"
     - "-//src/test/java/com/google/devtools/build/lib:sandbox-tests"
+    # See https://github.com/bazelbuild/bazel/issues/8235
     - "-//src/test/shell/bazel/android/..."
+    # See https://github.com/bazelbuild/bazel/issues/8162 (also disabled for local exec)
+    - "-//src/java_tools/buildjar/..."
+    - "-//src/java_tools/import_deps_checker/..."
