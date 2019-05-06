@@ -14,6 +14,8 @@ platforms:
     - "--experimental_inmemory_dotd_files"
     test_targets:
     - "--"
+    - "//scripts/..."
+    - "//src/java_tools/..."
     - "//src/test/..."
     - "//src/tools/execlog/..."
     - "//src/tools/singlejar/..."
