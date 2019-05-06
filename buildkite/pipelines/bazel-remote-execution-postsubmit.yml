@@ -29,5 +29,4 @@ platforms:
     - "-//src/test/shell/bazel:bazel_repository_cache_test"
     - "-//src/test/shell/integration:java_integration_test"
     - "-//src/test/java/com/google/devtools/build/lib:sandbox-tests"
-    - "-//scripts/..."
     - "-//src/test/shell/bazel/android/..."
