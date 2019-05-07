@@ -1280,6 +1280,13 @@ def expand_test_target_patterns(bazel_binary, platform, test_targets):
     if not any(t for t in test_targets if t.endswith(":all") or t.endswith("...")):
         return test_targets
 
+    included_targets, excluded_targets = partition_test_targets(test_targets)
+    excluded_string = (
+        " except set({})".format(" ".join("'{}'".format(t) for t in excluded_targets))
+        if excluded_targets
+        else ""
+    )
+
     eprint("Resolving test targets via bazel query")
     output = execute_command_and_get_output(
         [bazel_binary]
@@ -1288,11 +1295,26 @@ def expand_test_target_patterns(bazel_binary, platform, test_targets):
             "--nomaster_bazelrc",
             "--bazelrc=/dev/null",
             "query",
-            "tests(set({}))".format(" ".join("'{}'".format(t) for t in test_targets if t != "--")),
+            "tests(set({})){}".format(
+                " ".join("'{}'".format(t) for t in included_targets), excluded_string
+            ),
         ],
         print_output=False,
     )
     return [t for t in output.split("\n") if t.startswith("//")]
+
+
+def partition_test_targets(test_targets):
+    included_targets, excluded_targets = [], []
+    for target in test_targets:
+        if target == "--":
+            continue
+        elif target.startswith("-"):
+            excluded_targets.append(target[1:])
+        else:
+            included_targets.append(target)
+
+    return included_targets, excluded_targets
 
 
 def get_targets_for_shard(build_targets, test_targets, shard_id, shard_count):
