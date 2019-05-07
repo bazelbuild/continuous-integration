@@ -735,24 +735,9 @@ def execute_commands(
         if needs_clean:
             execute_bazel_clean(bazel_binary, platform)
 
-        build_targets = [] if test_only else task_config.get("build_targets", [])
-        test_targets = [] if build_only else task_config.get("test_targets", [])
-
-        shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
-        shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
-        if shard_id > -1 and shard_count > -1:
-            print_collapsed_group(
-                ":female-detective: Calculating targets for shard {}/{}".format(
-                    shard_id + 1, shard_count
-                )
-            )
-            expanded_test_targets = expand_test_target_patterns(
-                bazel_binary, platform, test_targets
-            )
-            build_targets, test_targets = get_targets_for_shard(
-                build_targets, expanded_test_targets, shard_id, shard_count
-            )
-
+        build_targets, test_targets = calculate_targets(
+            task_config, platform, bazel_binary, build_only, test_only
+        )
         if not build_targets and not test_targets:
             raise BuildkiteException("There are neither build nor test targets")
 
@@ -1315,6 +1300,26 @@ def partition_test_targets(test_targets):
             included_targets.append(target)
 
     return included_targets, excluded_targets
+
+
+def calculate_targets(task_config, platform, bazel_binary, build_only, test_only):
+    build_targets = [] if test_only else task_config.get("build_targets", [])
+    test_targets = [] if build_only else task_config.get("test_targets", [])
+
+    shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
+    shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
+    if shard_id > -1 and shard_count > -1:
+        print_collapsed_group(
+            ":female-detective: Calculating targets for shard {}/{}".format(
+                shard_id + 1, shard_count
+            )
+        )
+        expanded_test_targets = expand_test_target_patterns(bazel_binary, platform, test_targets)
+        build_targets, test_targets = get_targets_for_shard(
+            build_targets, expanded_test_targets, shard_id, shard_count
+        )
+
+    return build_targets, test_targets
 
 
 def get_targets_for_shard(build_targets, test_targets, shard_id, shard_count):
