@@ -1267,6 +1267,9 @@ def calculate_targets(task_config, platform, bazel_binary, build_only, test_only
 
     shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
     shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
+
+    print_collapsed_group("SHARD {} of {}".format(shard_id, shard_count))
+
     if shard_id > -1 and shard_count > -1:
         print_collapsed_group(
             ":female-detective: Calculating targets for shard {}/{}".format(
@@ -1287,7 +1290,7 @@ def expand_test_target_patterns(bazel_binary, platform, test_targets):
 
     included_targets, excluded_targets = partition_test_targets(test_targets)
     excluded_string = (
-        " except set({})".format(" ".join("'{}'".format(t) for t in excluded_targets))
+        " except tests(set({}))".format(" ".join("'{}'".format(t) for t in excluded_targets))
         if excluded_targets
         else ""
     )
