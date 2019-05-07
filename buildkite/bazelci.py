@@ -135,6 +135,11 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jvm_external/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-jvm-external",
     },
+    "rules_jvm_external - examples": {
+        "git_repository": "https://github.com/bazelbuild/rules_jvm_external.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jvm_external/master/.bazelci/examples.yml",
+        "pipeline_slug": "rules-jvm-external-examples",
+    },
     "Google Logging": {
         "git_repository": "https://github.com/google/glog.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/glog-postsubmit.yml",
