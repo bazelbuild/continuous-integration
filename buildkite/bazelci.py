@@ -1561,35 +1561,7 @@ def print_project_pipeline(
         )
 
     if "validate_config" in configs:
-        output = execute_command_and_get_output(
-            [
-                "git",
-                "diff-tree",
-                "--no-commit-id",
-                "--name-only",
-                "-r",
-                os.getenv("BUILDKITE_COMMIT"),
-            ]
-        )
-        config_files = [
-            l
-            for l in output.split("\n")
-            if l.startswith(".bazelci/") and os.path.splitext(l)[1] in CONFIG_FILE_EXTENSIONS
-        ]
-        platform = DEFAULT_PLATFORM
-        for f in config_files:
-            pipeline_steps.append(
-                create_step(
-                    label=":cop: Validate {}".format(f),
-                    commands=[
-                        fetch_bazelcipy_command(),
-                        "{} bazelci.py project_pipeline --file_config={}".format(
-                            python_binary(platform), f
-                        ),
-                    ],
-                    platform=platform,
-                )
-            )
+        pipeline_steps += create_config_validation_steps()
 
     print(yaml.dump({"steps": pipeline_steps}))
 
@@ -1599,6 +1571,31 @@ def get_platform_for_task(task, task_config):
     # convenient to use the platform name as task ID. Consequently, we use the
     # task ID as platform if there is no explicit "platform" field.
     return task_config.get("platform", task)
+
+
+def create_config_validation_steps():
+    output = execute_command_and_get_output(
+        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", os.getenv("BUILDKITE_COMMIT")]
+    )
+    config_files = [
+        l
+        for l in output.split("\n")
+        if l.startswith(".bazelci/") and os.path.splitext(l)[1] in CONFIG_FILE_EXTENSIONS
+    ]
+    platform = DEFAULT_PLATFORM
+    return [
+        create_step(
+            label=":cop: Validate {}".format(f),
+            commands=[
+                fetch_bazelcipy_command(),
+                "{} bazelci.py project_pipeline --file_config={}".format(
+                    python_binary(platform), f
+                ),
+            ],
+            platform=platform,
+        )
+        for f in config_files
+    ]
 
 
 def runner_step(
