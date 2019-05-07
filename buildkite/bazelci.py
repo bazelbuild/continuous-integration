@@ -103,6 +103,7 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml",
         "pipeline_slug": "build-file-generator",
+        "disabled_reason": "https://github.com/bazelbuild/BUILD_file_generator/issues/53",
     },
     "Buildtools": {
         "git_repository": "https://github.com/bazelbuild/buildtools.git",
@@ -218,6 +219,7 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_gwt/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-gwt",
+        "disabled_reason": "https://github.com/bazelbuild/rules_gwt/issues/23",
     },
     "rules_jsonnet": {
         "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
@@ -293,6 +295,7 @@ DOWNSTREAM_PROJECTS = {
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.yml",
         "pipeline_slug": "tensorflow",
+        "disabled_reason": "https://github.com/bazelbuild/continuous-integration/issues/602",
     },
     "Tulsi": {
         "git_repository": "https://github.com/bazelbuild/tulsi.git",
