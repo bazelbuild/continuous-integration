@@ -1297,29 +1297,8 @@ def expand_test_target_patterns(bazel_binary, platform, test_targets):
 
 def get_targets_for_shard(build_targets, test_targets, shard_id, shard_count):
     # TODO(fweikert): implement a more sophisticated algorithm
-    all_targets = [("build", t) for t in sorted(build_targets)] + [
-        ("test", t) for t in sorted(test_targets)
-    ]
-    targets_for_this_shard = []
-    index = shard_id
-    target_count = len(all_targets)
-    while index < target_count:
-        targets_for_this_shard.append(all_targets[index])
-        index += shard_count
-
-    eprint(
-        "Actions for shard {} of {}:\n\t{}".format(
-            shard_id + 1,
-            shard_count,
-            "\n\t".join("{} {}".format(a, t) for a, t in targets_for_this_shard),
-        )
-    )
-
-    build_targets_for_this_shard = []
-    test_targets_for_this_shard = []
-    for a, t in targets_for_this_shard:
-        dest = build_targets_for_this_shard if a == "build" else test_targets_for_this_shard
-        dest.append(t)
+    build_targets_for_this_shard = sorted(build_targets)[shard_id::shard_count]
+    test_targets_for_this_shard = sorted(test_targets)[shard_id::shard_count]
 
     return build_targets_for_this_shard, test_targets_for_this_shard
 
