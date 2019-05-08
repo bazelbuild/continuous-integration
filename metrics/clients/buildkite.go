@@ -81,7 +81,11 @@ func (client *BuildkiteClient) GetAgents() ([]buildkite.Agent, error) {
 
 func (client *BuildkiteClient) getResults(listFunc func(opt buildkite.ListOptions) ([]interface{}, *buildkite.Response, error), lastN int) ([]interface{}, error) {
 	all_results := make([]interface{}, 0)
-	opt := buildkite.ListOptions{Page: 1, PerPage: 100}
+	perPage := 100
+	if lastN < perPage {
+		perPage = lastN
+	}
+	opt := buildkite.ListOptions{Page: 1, PerPage: perPage}
 	currPage := 1
 	lastPage := 1
 
