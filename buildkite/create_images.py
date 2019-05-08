@@ -63,14 +63,14 @@ IMAGE_CREATION_VMS = {
         "project": "bazel-untrusted",
         "zone": "europe-north1-a",
         "source_image_project": "windows-cloud",
-        "source_image_family": "windows-1803-core",
+        "source_image_family": "windows-1809-core",
         "setup_script": "setup-windows.ps1",
     },
     "bk-trusted-windows-java8": {
         "project": "bazel-public",
         "zone": "europe-west1-c",
         "source_image_project": "windows-cloud",
-        "source_image_family": "windows-1803-core",
+        "source_image_family": "windows-1809-core",
         "setup_script": "setup-windows.ps1",
     },
     "windows-playground": {
