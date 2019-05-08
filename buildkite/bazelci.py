@@ -934,50 +934,17 @@ def clone_git_repository(git_repository, platform, git_commit=None):
         "Fetching %s sources at %s" % (project_name, git_commit if git_commit else "HEAD")
     )
 
-    mirror_path = re.sub(r"[^0-9A-Za-z]", "-", git_repository)
+    mirror_root = {
+        "macos": "/usr/local/var/bazelbuild/",
+        "windows": "c:\\buildkite\\bazelbuild\\",
+    }.get(platform, "/var/lib/bazelbuild/")
+
+    mirror_path = mirror_root + re.sub(r"[^0-9A-Za-z]", "-", git_repository)
 
     if not os.path.exists(clone_path):
-        if platform in [
-            "ubuntu1404",
-            "ubuntu1604",
-            "ubuntu1804",
-            "ubuntu1804_nojava",
-            "rbe_ubuntu1604",
-        ]:
+        if os.path.exists(mirror_path):
             execute_command(
-                [
-                    "git",
-                    "clone",
-                    "-v",
-                    "--reference-if-able",
-                    "/var/lib/bazelbuild/" + mirror_path,
-                    git_repository,
-                    clone_path,
-                ]
-            )
-        elif platform in ["macos"]:
-            execute_command(
-                [
-                    "git",
-                    "clone",
-                    "-v",
-                    "--reference-if-able",
-                    "/usr/local/var/bazelbuild/" + mirror_path,
-                    git_repository,
-                    clone_path,
-                ]
-            )
-        elif platform in ["windows"]:
-            execute_command(
-                [
-                    "git",
-                    "clone",
-                    "-v",
-                    "--reference-if-able",
-                    "c:\\buildkite\\bazelbuild\\" + mirror_path,
-                    git_repository,
-                    clone_path,
-                ]
+                ["git", "clone", "-v", "--reference", mirror_path, git_repository, clone_path]
             )
         else:
             execute_command(["git", "clone", "-v", git_repository, clone_path])
