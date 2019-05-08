@@ -8,9 +8,10 @@ import (
 )
 
 type PipelinePerformance struct {
-	client    *clients.BuildkiteClient
-	pipelines []string
-	columns   []Column
+	client      *clients.BuildkiteClient
+	pipelines   []string
+	columns     []Column
+	lastNBuilds int
 }
 
 func (pp *PipelinePerformance) Name() string {
@@ -24,7 +25,7 @@ func (pp *PipelinePerformance) Columns() []Column {
 func (pp *PipelinePerformance) Collect() (*data.DataSet, error) {
 	result := data.CreateDataSet(GetColumnNames(pp.columns))
 	for _, pipeline := range pp.pipelines {
-		builds, err := pp.client.GetMostRecentBuilds(pipeline, 30)
+		builds, err := pp.client.GetMostRecentBuilds(pipeline, pp.lastNBuilds)
 		if err != nil {
 			return nil, fmt.Errorf("Cannot collect performance statistics for pipeline %s: %v", pipeline, err)
 		}
@@ -41,7 +42,7 @@ func (pp *PipelinePerformance) Collect() (*data.DataSet, error) {
 }
 
 // CREATE TABLE pipeline_performance (pipeline VARCHAR(255), build INT, job VARCHAR(255), creation_time DATETIME, wait_time_seconds FLOAT, run_time_seconds FLOAT, PRIMARY KEY(pipeline, build, job));
-func CreatePipelinePerformance(client *clients.BuildkiteClient, pipelines ...string) *PipelinePerformance {
+func CreatePipelinePerformance(client *clients.BuildkiteClient, lastNBuilds int, pipelines ...string) *PipelinePerformance {
 	columns := []Column{Column{"pipeline", true}, Column{"build", true}, Column{"job", true}, Column{"creation_time", false}, Column{"wait_time_seconds", false}, Column{"run_time_seconds", false}}
-	return &PipelinePerformance{client: client, pipelines: pipelines, columns: columns}
+	return &PipelinePerformance{client: client, pipelines: pipelines, columns: columns, lastNBuilds: lastNBuilds}
 }
