@@ -1,0 +1,36 @@
+steps:
+  - command: |-
+      bazel build //:bazelisk
+      buildkite-agent artifact upload "./bazel-bin/linux_amd64_stripped/bazelisk"
+    label: ":ubuntu:"
+    agents:
+      - "kind=docker"
+      - "os=linux"
+    plugins:
+      philwo/docker:
+        always-pull: true
+        debug: true
+        environment: [BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, BUILDKITE_GS_ACL]
+        image: gcr.io/bazel-public/ubuntu1404:java8
+        network: host
+        privileged: true
+        propagate-environment: true
+        volumes:
+          - ".:/workdir"
+          - "/var/lib/buildkite-agent/builds:/var/lib/buildkite-agent/builds"
+          - "/var/lib/bazelbuild:/var/lib/bazelbuild:ro"
+        workdir: "/workdir"
+
+  - command: "powershell -Command \"bazel build //:bazelisk ; if (\\$LastExitCode -ne 0) { exit 1 } ; buildkite-agent artifact upload ./bazel-bin/windows_amd64_stripped/bazelisk.exe ; if (\\$LastExitCode -ne 0) { exit 1 } ;\""
+    label: ":windows:"
+    agents:
+      - "kind=worker"
+      - "os=windows"
+
+  - command: |-
+      bazel build //:bazelisk
+      buildkite-agent artifact upload "./bazel-bin/darwin_amd64_stripped/bazelisk"
+    label: ":darwin:"
+    agents:
+      - "kind=worker"
+      - "os=macos"

@@ -1,0 +1,33 @@
+steps:
+  - command: |-
+      bazel build -c opt --workspace_status_command="$$PWD/status.sh" unused_deps buildifier buildozer
+      buildkite-agent artifact upload "./bazel-bin/buildozer/darwin_amd64_stripped/buildozer"
+      buildkite-agent artifact upload "./bazel-bin/buildifier/darwin_amd64_stripped/buildifier"
+      buildkite-agent artifact upload "./bazel-bin/unused_deps/darwin_amd64_stripped/unused_deps"
+    label: ":darwin:"
+    agents:
+      - "kind=worker"
+      - "os=macos"
+  - command: |-
+      bazel build -c opt --workspace_status_command="$$PWD/status.sh" unused_deps buildifier buildozer
+      buildkite-agent artifact upload "./bazel-bin/buildozer/linux_amd64_stripped/buildozer"
+      buildkite-agent artifact upload "./bazel-bin/buildifier/linux_amd64_stripped/buildifier"
+      buildkite-agent artifact upload "./bazel-bin/unused_deps/linux_amd64_stripped/unused_deps"
+    label: ":ubuntu:"
+    agents:
+      - "kind=docker"
+      - "os=linux"
+    plugins:
+      philwo/docker:
+        always-pull: true
+        debug: true
+        environment: [BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, BUILDKITE_GS_ACL]
+        image: gcr.io/bazel-public/ubuntu1404:java8
+        network: host
+        privileged: true
+        propagate-environment: true
+        volumes:
+          - ".:/workdir"
+          - "/var/lib/buildkite-agent/builds:/var/lib/buildkite-agent/builds"
+          - "/var/lib/bazelbuild:/var/lib/bazelbuild:ro"
+        workdir: "/workdir"

@@ -1,0 +1,37 @@
+steps:
+  - command: |-
+      bazel --nomaster_bazelrc --bazelrc=/dev/null version
+      ./src/upload_all_java_tools.sh
+    label: ":ubuntu:"
+    agents:
+      - "kind=docker"
+      - "os=linux"
+    plugins:
+      philwo/docker:
+        always-pull: true
+        debug: true
+        environment: [BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, BUILDKITE_GS_ACL]
+        image: gcr.io/bazel-public/ubuntu1404:java8
+        network: host
+        privileged: true
+        propagate-environment: true
+        volumes:
+          - ".:/workdir"
+          - "/var/lib/buildkite-agent/builds:/var/lib/buildkite-agent/builds"
+          - "/var/lib/bazelbuild:/var/lib/bazelbuild:ro"
+        workdir: "/workdir"
+  - command: "powershell -Command \"bazel --nomaster_bazelrc --bazelrc=NUL version ; if (\\$LastExitCode -ne 0) { exit 1 } ; sh ./src/upload_all_java_tools.sh ; if (\\$LastExitCode -ne 0) { exit 1 } ;\""
+    label: ":windows:"
+    agents:
+      - "kind=worker"
+      - "os=windows"
+
+  - command: |-
+      bazel --nomaster_bazelrc --bazelrc=/dev/null version
+      ./src/upload_all_java_tools.sh
+    env:
+      BAZEL_USE_CPP_ONLY_TOOLCHAIN: "1"
+    label: ":darwin:"
+    agents:
+      - "kind=worker"
+      - "os=macos"

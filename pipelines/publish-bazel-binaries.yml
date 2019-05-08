@@ -1,0 +1,22 @@
+steps:
+  - command: |-
+      curl -s "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)" -o bazelci.py
+      python3.6 bazelci.py bazel_publish_binaries_pipeline --file_config=.bazelci/build_bazel_binaries.yml | buildkite-agent pipeline upload
+    label: "Setup"
+    agents:
+      - "kind=docker"
+      - "os=linux"
+    plugins:
+      philwo/docker:
+        always-pull: true
+        debug: true
+        environment: [BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, BUILDKITE_GS_ACL]
+        image: gcr.io/bazel-public/ubuntu1804:java8
+        network: host
+        privileged: true
+        propagate-environment: true
+        volumes:
+          - ".:/workdir"
+          - "/var/lib/buildkite-agent/builds:/var/lib/buildkite-agent/builds"
+          - "/var/lib/bazelbuild:/var/lib/bazelbuild:ro"
+        workdir: "/workdir"

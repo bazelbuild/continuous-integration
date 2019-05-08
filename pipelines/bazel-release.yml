@@ -1,0 +1,251 @@
+---
+steps:
+  - label: "Get release name"
+    agents:
+      - "kind=docker"
+      - "os=linux"
+    plugins:
+      philwo/docker:
+        always-pull: true
+        debug: true
+        environment: [BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, BUILDKITE_GS_ACL]
+        image: gcr.io/bazel-public/ubuntu1804:java8
+        network: host
+        privileged: true
+        propagate-environment: true
+        shell: ["/bin/bash", "-e", "-c"]
+        volumes:
+          - ".:/workdir"
+          - "/var/lib/buildkite-agent/builds:/var/lib/buildkite-agent/builds"
+          - "/var/lib/bazelbuild:/var/lib/bazelbuild:ro"
+        workdir: "/workdir"
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+      release_name=\$(source scripts/release/common.sh; get_full_release_name)
+      echo "release_name = \"\$release_name\""
+      buildkite-agent meta-data set "release_name" "\$release_name"
+  - wait
+  - label: "Ubuntu 14.04"
+    agents:
+      - "kind=docker"
+      - "os=linux"
+    plugins:
+      philwo/docker:
+        always-pull: true
+        debug: true
+        environment: [BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, BUILDKITE_GS_ACL]
+        image: gcr.io/bazel-public/ubuntu1404:java8
+        network: host
+        privileged: true
+        propagate-environment: true
+        shell: ["/bin/bash", "-e", "-c"]
+        volumes:
+          - ".:/workdir"
+          - "/var/lib/buildkite-agent/builds:/var/lib/buildkite-agent/builds"
+          - "/var/lib/bazelbuild:/var/lib/bazelbuild:ro"
+        workdir: "/workdir"
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+
+      release_name=$(buildkite-agent meta-data get "release_name")
+      echo "release_name = \"\$release_name\""
+
+      bazel build --sandbox_tmpfs_path=/tmp //src:bazel
+      mkdir output
+      cp bazel-bin/src/bazel output/bazel
+
+      output/bazel build -c opt --stamp --sandbox_tmpfs_path=/tmp --embed_label "\${release_name}" --workspace_status_command=scripts/ci/build_status_command.sh src/bazel scripts/packages/with-jdk/install.sh scripts/packages/debian/bazel-debian.deb scripts/packages/debian/bazel.dsc scripts/packages/debian/bazel.tar.gz bazel-distfile.zip
+
+      mkdir artifacts
+      cp "bazel-bin/src/bazel" "artifacts/bazel-\${release_name}-linux-x86_64"
+      cp "bazel-bin/scripts/packages/with-jdk/install.sh" "artifacts/bazel-\${release_name}-installer-linux-x86_64.sh"
+      cp "bazel-bin/scripts/packages/debian/bazel-debian.deb" "artifacts/bazel_\${release_name}-linux-x86_64.deb"
+      cp "bazel-genfiles/scripts/packages/debian/bazel.dsc" "artifacts/bazel_\${release_name}.dsc"
+      cp "bazel-genfiles/scripts/packages/debian/bazel.tar.gz" "artifacts/bazel_\${release_name}.tar.gz"
+      cp "bazel-genfiles/bazel-distfile.zip" "artifacts/bazel-\${release_name}-dist.zip"
+
+      cd artifacts
+      buildkite-agent artifact upload "*"
+  - label: macOS
+    agents:
+      - kind=worker
+      - os=macos
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+
+      release_name=$(buildkite-agent meta-data get "release_name")
+      echo "release_name = \"\$release_name\""
+
+      bazel build //src:bazel
+      mkdir output
+      cp bazel-bin/src/bazel output/bazel
+
+      output/bazel build --define IPHONE_SDK=1 -c opt --stamp --embed_label "\${release_name}" --workspace_status_command=scripts/ci/build_status_command.sh src/bazel scripts/packages/with-jdk/install.sh
+
+      mkdir artifacts
+      cp "bazel-bin/src/bazel" "artifacts/bazel-\${release_name}-darwin-x86_64"
+      cp "bazel-bin/scripts/packages/with-jdk/install.sh" "artifacts/bazel-\${release_name}-installer-darwin-x86_64.sh"
+
+      cd artifacts
+      buildkite-agent artifact upload "*"
+  - label: Windows
+    agents:
+      - kind=worker
+      - os=windows
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+
+      buildkite-agent meta-data get "release_name" > release_name.txt
+      SET /p RELEASE_NAME=<release_name.txt
+      DEL /q release_name.txt
+
+      echo Release: %RELEASE_NAME%
+
+      bazel build //src:bazel.exe
+      mkdir output
+      copy bazel-bin\src\bazel.exe output\bazel.exe
+
+      output\bazel build -c opt --copt=-w --host_copt=-w --stamp --embed_label %RELEASE_NAME% src/bazel scripts/packages/bazel.zip
+
+      mkdir artifacts
+      move bazel-bin\src\bazel artifacts\bazel-%RELEASE_NAME%-windows-x86_64.exe
+      move bazel-genfiles\scripts\packages\bazel.zip artifacts\bazel-%RELEASE_NAME%-windows-x86_64.zip
+
+      cd artifacts
+      buildkite-agent artifact upload "*"
+  - wait
+  - label: "Test on Ubuntu 14.04"
+    agents:
+      - "kind=docker"
+      - "os=linux"
+    plugins:
+      philwo/docker:
+        always-pull: true
+        debug: true
+        environment: [BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, BUILDKITE_GS_ACL]
+        image: gcr.io/bazel-public/ubuntu1404:java8
+        network: host
+        privileged: true
+        propagate-environment: true
+        shell: ["/bin/bash", "-e", "-c"]
+        volumes:
+          - ".:/workdir"
+          - "/var/lib/buildkite-agent/builds:/var/lib/buildkite-agent/builds"
+          - "/var/lib/bazelbuild:/var/lib/bazelbuild:ro"
+        workdir: "/workdir"
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+
+      release_name=$(buildkite-agent meta-data get "release_name")
+      echo "release_name = \"\$release_name\""
+
+      buildkite-agent artifact download "bazel-\${release_name}-linux-x86_64" .
+
+      chmod +x "bazel-\${release_name}-linux-x86_64"
+
+      "./bazel-\${release_name}-linux-x86_64" info
+  - label: "Test on macOS"
+    agents:
+      - kind=worker
+      - os=macos
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+
+      release_name=$(buildkite-agent meta-data get "release_name")
+      echo "release_name = \"\$release_name\""
+
+      buildkite-agent artifact download "bazel-\${release_name}-darwin-x86_64" .
+
+      chmod +x "bazel-\${release_name}-darwin-x86_64"
+
+      "./bazel-\${release_name}-darwin-x86_64" info
+  - label: "Test on Windows"
+    agents:
+      - kind=worker
+      - os=windows
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+
+      buildkite-agent meta-data get "release_name" > release_name.txt
+      SET /p RELEASE_NAME=<release_name.txt
+      DEL /q release_name.txt
+
+      echo Release: %RELEASE_NAME%
+
+      buildkite-agent artifact download bazel-%RELEASE_NAME%-windows-x86_64.exe .
+
+      bazel-%RELEASE_NAME%-windows-x86_64.exe info
+  - wait
+  - block: ":rocket: Deploy release artifacts"
+  - label: "Deploy release artifacts"
+    agents:
+      - "kind=docker"
+      - "os=linux"
+    plugins:
+      philwo/docker:
+        always-pull: true
+        debug: true
+        environment: [BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, BUILDKITE_GS_ACL]
+        image: gcr.io/bazel-public/ubuntu1804:java8
+        network: host
+        privileged: true
+        propagate-environment: true
+        shell: ["/bin/bash", "-e", "-c"]
+        volumes:
+          - ".:/workdir"
+          - "/var/lib/buildkite-agent/builds:/var/lib/buildkite-agent/builds"
+          - "/var/lib/bazelbuild:/var/lib/bazelbuild:ro"
+        workdir: "/workdir"
+    command: |
+      echo "+++ Fetching Git notes"
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+
+      echo "+++ Downloading release artifacts"
+      ARTIFACTS="$(mktemp -d)"
+      buildkite-agent artifact download "*" "\${ARTIFACTS}/"
+
+      echo "+++ Importing GPG release key"
+      keyfile="$(mktemp --tmpdir)"
+      chmod 0600 "\${keyfile}"
+      gsutil cat "gs://bazel-trusted-encrypted-secrets/release-key.gpg.enc" | gcloud kms decrypt --project "bazel-public" --location "global" --keyring "buildkite" --key "bazel-release-key" --ciphertext-file "-" --plaintext-file "\${keyfile}"
+      gpg --allow-secret-key-import --import "\${keyfile}"
+      rm -f "\${keyfile}"
+
+      echo "+++ Deploying release"
+      source scripts/ci/build.sh
+      deploy_release "\${ARTIFACTS}"
+  - wait
+  - block: ":e-mail: Generate announcement mail text"
+  - label: "Generate announcement mail text"
+    agents:
+      - "kind=docker"
+      - "os=linux"
+    plugins:
+      philwo/docker:
+        always-pull: true
+        debug: true
+        environment: [BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, BUILDKITE_GS_ACL]
+        image: gcr.io/bazel-public/ubuntu1804:java8
+        network: host
+        privileged: true
+        propagate-environment: true
+        shell: ["/bin/bash", "-e", "-c"]
+        volumes:
+          - ".:/workdir"
+          - "/var/lib/buildkite-agent/builds:/var/lib/buildkite-agent/builds"
+          - "/var/lib/bazelbuild:/var/lib/bazelbuild:ro"
+        workdir: "/workdir"
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+
+      source scripts/ci/build.sh
+      generate_email
