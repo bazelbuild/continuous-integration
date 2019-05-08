@@ -23,7 +23,7 @@ query ($org: ID!){
             edges {
               node {
                 team {
-                  name
+                  slug
                 }
                 accessLevel
               }
@@ -61,7 +61,7 @@ type response struct {
 						Edges []struct {
 							Node struct {
 								Team struct {
-									Name string `json:"name"`
+									Slug string `json:"slug"`
 								} `json:"team"`
 								AccessLevel string `json:"accessLevel"`
 							} `json:"node"`
@@ -88,7 +88,7 @@ type response struct {
 }
 
 type Access struct {
-	TeamName    string
+	TeamSlug    string
 	AccessLevel string
 }
 
@@ -104,9 +104,9 @@ type Schedule struct {
 }
 
 type PipelineAccessAndSchedules struct {
-	Name   string
-	Public bool
-	Access []Access
+	Name      string
+	Public    bool
+	Access    []Access
 	Schedules []Schedule
 }
 
@@ -146,7 +146,7 @@ func extractAccessAndSchedulesFromResponse(resp response) []*PipelineAccessAndSc
 		access := make([]Access, len(e.Node.Teams.Edges))
 		for ia, a := range e.Node.Teams.Edges {
 			access[ia] = Access{
-				TeamName:    a.Node.Team.Name,
+				TeamSlug:    a.Node.Team.Slug,
 				AccessLevel: a.Node.AccessLevel}
 		}
 

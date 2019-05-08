@@ -58,7 +58,7 @@ type Repository struct {
 }
 
 type TeamAccess struct {
-	Name        string `yaml:"name"`
+	Slug        string `yaml:"slug"`
 	AccessLevel string `yaml:"access_level"`
 }
 
@@ -142,7 +142,7 @@ func convertPipeline(pipeline *proxy.Pipeline) *Pipeline {
 	teams := make([]TeamAccess, len(pipeline.Details.Access))
 	for i, t := range pipeline.Details.Access {
 		teams[i] = TeamAccess{
-			Name:        t.TeamName,
+			Slug:        t.TeamSlug,
 			AccessLevel: t.AccessLevel}
 	}
 
