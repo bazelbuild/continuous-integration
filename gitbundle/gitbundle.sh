@@ -3,7 +3,7 @@
 set -euxo pipefail
 
 BUILDKITE_API_TOKEN=$(gsutil cat "gs://bazel-encrypted-secrets/buildkite-api-token.enc" | \
-    gcloud kms decrypt --location "global" --keyring "buildkite" --key "buildkite-api-token" --plaintext-file "-" --ciphertext-file "-")
+    gcloud kms decrypt --project "bazel-public" --location "global" --keyring "buildkite" --key "buildkite-api-token" --plaintext-file "-" --ciphertext-file "-")
 
 rm -rf bazelbuild
 gsutil cat "gs://bazel-git-mirror/bazelbuild-mirror.tar" | tar x
