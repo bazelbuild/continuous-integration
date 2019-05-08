@@ -154,7 +154,7 @@ RUN export PYTHON_VERSION="3.6.8" && \
 ENV SWIFT_HOME "/opt/swift"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
 RUN mkdir -p /opt/swift && \
-    curl -L https://swift.org/builds/swift-5.0.1-release/ubuntu1404/swift-5.0.1-RELEASE/swift-5.0.1-RELEASE-ubuntu14.04.tar.gz | \
+    curl -L https://swift.org/builds/swift-4.2.1-release/ubuntu1404/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu14.04.tar.gz | \
     tar xz -C /opt/swift --strip 1
 
 USER bazel
@@ -269,7 +269,7 @@ RUN export PYTHON_VERSION="3.6.8" && \
 ENV SWIFT_HOME "/opt/swift"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
 RUN mkdir -p /opt/swift && \
-    curl -L https://swift.org/builds/swift-5.0.1-release/ubuntu1604/swift-5.0.1-RELEASE/swift-5.0.1-RELEASE-ubuntu16.04.tar.gz | \
+    curl -L https://swift.org/builds/swift-4.2.1-release/ubuntu1604/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu16.04.tar.gz | \
     tar xz -C /opt/swift --strip 1
 
 USER bazel
@@ -365,7 +365,7 @@ RUN pip3 install requests uritemplate pyyaml github3.py
 ENV SWIFT_HOME "/opt/swift"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
 RUN mkdir -p /opt/swift && \
-    curl -L https://swift.org/builds/swift-5.0.1-release/ubuntu1804/swift-5.0.1-RELEASE/swift-5.0.1-RELEASE-ubuntu18.04.tar.gz | \
+    curl -L https://swift.org/builds/swift-4.2.1-release/ubuntu1804/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu18.04.tar.gz | \
     tar xz -C /opt/swift --strip 1
 
 USER bazel
