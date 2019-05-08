@@ -318,7 +318,7 @@ PLATFORMS = {
     "ubuntu1404": {
         "name": "Ubuntu 14.04, OpenJDK 8",
         "emoji-name": ":ubuntu: 14.04 (OpenJDK 8)",
-        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
+        "downstream-root": "/workdir/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": True,
         "java": "8",
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1404:java8",
@@ -326,7 +326,7 @@ PLATFORMS = {
     "ubuntu1604": {
         "name": "Ubuntu 16.04, OpenJDK 8",
         "emoji-name": ":ubuntu: 16.04 (OpenJDK 8)",
-        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
+        "downstream-root": "/workdir/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": False,
         "java": "8",
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1604:java8",
@@ -334,7 +334,7 @@ PLATFORMS = {
     "ubuntu1804": {
         "name": "Ubuntu 18.04, OpenJDK 11",
         "emoji-name": ":ubuntu: 18.04 (OpenJDK 11)",
-        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
+        "downstream-root": "/workdir/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": False,
         "java": "11",
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:java11",
@@ -342,7 +342,7 @@ PLATFORMS = {
     "ubuntu1804_nojava": {
         "name": "Ubuntu 18.04, no JDK",
         "emoji-name": ":ubuntu: 18.04 (no JDK)",
-        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
+        "downstream-root": "/workdir/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": False,
         "java": "no",
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:nojava",
@@ -350,21 +350,21 @@ PLATFORMS = {
     "macos": {
         "name": "macOS, OpenJDK 8",
         "emoji-name": ":darwin: (OpenJDK 8)",
-        "agent-directory": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}",
+        "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": True,
         "java": "8",
     },
     "windows": {
         "name": "Windows, OpenJDK 8",
         "emoji-name": ":windows: (OpenJDK 8)",
-        "agent-directory": "d:/b/${BUILDKITE_AGENT_NAME}",
+        "downstream-root": "d:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": True,
         "java": "8",
     },
     "rbe_ubuntu1604": {
         "name": "RBE (Ubuntu 16.04, OpenJDK 8)",
         "emoji-name": ":gcloud: (OpenJDK 8)",
-        "agent-directory": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}",
+        "downstream-root": "/workdir/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": False,
         "host-platform": "ubuntu1604",
         "java": "8",
@@ -538,14 +538,10 @@ def aggregate_incompatible_flags_test_result_url():
 
 
 def downstream_projects_root(platform):
-    downstream_projects_dir = os.path.expandvars(
-        "${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects"
-    )
-    agent_directory = os.path.expandvars(PLATFORMS[platform]["agent-directory"])
-    path = os.path.join(agent_directory, downstream_projects_dir)
-    if not os.path.exists(path):
-        os.makedirs(path)
-    return path
+    downstream_root = os.path.expandvars(PLATFORMS[platform]["downstream-root"])
+    if not os.path.exists(downstream_root):
+        os.makedirs(downstream_root)
+    return downstream_root
 
 
 def fetch_configs(http_url, file_config):
