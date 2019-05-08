@@ -280,8 +280,8 @@ if ($java -ne "no") {
 if ($myhostname -like "bk-*") {
     ## Download and unpack our Git snapshot.
     Write-Host "Downloading Git snapshot..."
-    $bazelbuild_url = "https://storage.googleapis.com/bazel-git-mirror/bazelbuild.zip"
-    $bazelbuild_zip = "c:\temp\bazelbuild.zip"
+    $bazelbuild_url = "https://storage.googleapis.com/bazel-git-mirror/bazelbuild-mirror.zip"
+    $bazelbuild_zip = "c:\temp\bazelbuild-mirror.zip"
     $bazelbuild_root = "c:\buildkite"
     (New-Object Net.WebClient).DownloadFile($bazelbuild_url, $bazelbuild_zip)
     Write-Host "Unpacking Git snapshot..."

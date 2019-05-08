@@ -72,10 +72,11 @@ $buildkite_agent_config = @"
 token="${buildkite_agent_token}"
 name="%hostname"
 tags="kind=worker,os=windows,java=8"
+experiment="git-mirrors"
 build-path="d:\b"
 hooks-path="c:\buildkite\hooks"
 plugins-path="c:\buildkite\plugins"
-git-clone-flags="-v --reference c:\buildkite\bazelbuild"
+git-mirrors-path="c:\buildkite\bazelbuild"
 disconnect-after-job=true
 disconnect-after-job-timeout=86400
 "@

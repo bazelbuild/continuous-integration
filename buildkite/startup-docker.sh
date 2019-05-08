@@ -36,7 +36,7 @@ sysctl -w kernel.sched_wakeup_granularity_ns=15000000
 sysctl -w vm.dirty_ratio=40
 #echo always > /sys/kernel/mm/transparent_hugepage/enabled
 
-# Use the local SSDs as fast storage for Docker and the Buildkite agent.
+# Use the local SSDs as fast storage.
 zpool destroy -f bazel || true
 zpool create -f \
     -o ashift=12 \
@@ -48,17 +48,33 @@ zpool create -f \
     -O xattr=sa \
     bazel /dev/nvme0n?
 
+# Create filesystem for the Git mirrors.
 rm -rf /var/lib/bazelbuild
 zfs create -o mountpoint=/var/lib/bazelbuild bazel/bazelbuild
-curl https://storage.googleapis.com/bazel-git-mirror/bazelbuild.tar | tar x -C /var/lib
-chown -R root:root /var/lib/bazelbuild
+curl https://storage.googleapis.com/bazel-git-mirror/bazelbuild-mirror.tar | tar x -C /var/lib
+chown -R buildkite-agent:buildkite-agent /var/lib/bazelbuild
 chmod -R 0755 /var/lib/bazelbuild
 
+# Create filesystem for Bazel's repository cache.
+BAZEL_HOME="/home/bazel/.cache/bazel/_bazel_bazel"
+rm -rf "${BAZEL_HOME}/cache"
+zfs create -o "mountpoint=${BAZEL_HOME}/cache" bazel/cache
+chown buildkite-agent:buildkite-agent "${BAZEL_HOME}/cache"
+chmod 0755 "${BAZEL_HOME}/cache"
+
+# Create filesystem for Bazel's install bases.
+rm -rf "${BAZEL_HOME}/install"
+zfs create -o mountpoint="${BAZEL_HOME}/install" bazel/install
+chown buildkite-agent:buildkite-agent "${BAZEL_HOME}/install"
+chmod 0755 "${BAZEL_HOME}/install"
+
+# Create filesystem for buildkite-agent's
 rm -rf /var/lib/buildkite-agent
 zfs create -o mountpoint=/var/lib/buildkite-agent bazel/buildkite-agent
 chown buildkite-agent:buildkite-agent /var/lib/buildkite-agent
 chmod 0755 /var/lib/buildkite-agent
 
+# Create filesystem for Docker.
 rm -rf /var/lib/docker
 zfs create -o mountpoint=/var/lib/docker bazel/docker
 chown root:root /var/lib/docker
@@ -97,9 +113,8 @@ systemctl start docker
 gcloud auth configure-docker --quiet
 docker pull "gcr.io/${PROJECT}/ubuntu1404:java8" &
 docker pull "gcr.io/${PROJECT}/ubuntu1604:java8" &
-for java in java8 java9 java10 java11 nojava; do
-  docker pull "gcr.io/${PROJECT}/ubuntu1804:$java" &
-done
+docker pull "gcr.io/${PROJECT}/ubuntu1804:java11" &
+docker pull "gcr.io/${PROJECT}/ubuntu1804:nojava" &
 wait
 
 # Allow the Buildkite agent to access Docker images on our registry.
@@ -110,10 +125,11 @@ cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
 token="${BUILDKITE_TOKEN}"
 name="%hostname"
 tags="kind=docker,os=linux"
+experiment="git-mirrors"
 build-path="/var/lib/buildkite-agent/builds"
+git-mirrors-path="/var/lib/bazelbuild"
 hooks-path="/etc/buildkite-agent/hooks"
 plugins-path="/etc/buildkite-agent/plugins"
-git-clone-flags="-v --reference /var/lib/bazelbuild"
 EOF
 
 # Add the Buildkite agent hooks.

@@ -934,18 +934,35 @@ def clone_git_repository(git_repository, platform, git_commit=None):
         "Fetching %s sources at %s" % (project_name, git_commit if git_commit else "HEAD")
     )
 
+    mirror_path = re.sub(r"[^0-9A-Za-z]", "-", git_repository)
+
     if not os.path.exists(clone_path):
-        if platform in ["ubuntu1404", "ubuntu1604", "ubuntu1804", "rbe_ubuntu1604"]:
+        if platform in [
+            "ubuntu1404",
+            "ubuntu1604",
+            "ubuntu1804",
+            "ubuntu1804_nojava",
+            "rbe_ubuntu1604",
+        ]:
             execute_command(
-                ["git", "clone", "--reference", "/var/lib/bazelbuild", git_repository, clone_path]
+                [
+                    "git",
+                    "clone",
+                    "-v",
+                    "--reference-if-able",
+                    "/var/lib/bazelbuild/" + mirror_path,
+                    git_repository,
+                    clone_path,
+                ]
             )
         elif platform in ["macos"]:
             execute_command(
                 [
                     "git",
                     "clone",
-                    "--reference",
-                    "/usr/local/var/bazelbuild",
+                    "-v",
+                    "--reference-if-able",
+                    "/usr/local/var/bazelbuild/" + mirror_path,
                     git_repository,
                     clone_path,
                 ]
@@ -955,14 +972,15 @@ def clone_git_repository(git_repository, platform, git_commit=None):
                 [
                     "git",
                     "clone",
-                    "--reference",
-                    "c:\\buildkite\\bazelbuild",
+                    "-v",
+                    "--reference-if-able",
+                    "c:\\buildkite\\bazelbuild\\" + mirror_path,
                     git_repository,
                     clone_path,
                 ]
             )
         else:
-            execute_command(["git", "clone", git_repository, clone_path])
+            execute_command(["git", "clone", "-v", git_repository, clone_path])
 
     os.chdir(clone_path)
     execute_command(["git", "remote", "set-url", "origin", git_repository])
@@ -1429,7 +1447,7 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None):
         "command": commands,
         "agents": {"kind": "docker", "os": "linux"},
         "plugins": {
-            "philwo/docker": {
+            "docker#v3.2.0": {
                 "always-pull": True,
                 "debug": True,
                 "environment": env,
@@ -1439,8 +1457,8 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None):
                 "propagate-environment": True,
                 "volumes": [
                     ".:/workdir",
-                    "{0}:{0}".format("/var/lib/buildkite-agent/builds"),
-                    "{0}:{0}:ro".format("/var/lib/bazelbuild"),
+                    "{0}:{0}".format("/home/bazel/.cache/bazel/_bazel_bazel/cache"),
+                    "{0}:{0}".format("/var/lib/bazelbuild"),
                     "{0}:{0}".format("/var/run/docker.sock"),
                 ],
                 "workdir": "/workdir",
