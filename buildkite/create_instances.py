@@ -50,34 +50,38 @@ def worker():
                 raise Exception("Invalid instance config, no project name set")
 
             if not zone and not region:
-                raise Exception(
-                    "Invalid instance config, either zone or region must be specified"
-                )
+                raise Exception("Invalid instance config, either zone or region must be specified")
 
             template_name = instance_group_name + "-template"
 
             if zone is not None:
-                if (gcloud.delete_instance_group(
-                        instance_group_name, project=project,
-                        zone=zone).returncode == 0):
-                    print("Deleted existing instance group: {}".format(
-                        instance_group_name))
+                if (
+                    gcloud.delete_instance_group(
+                        instance_group_name, project=project, zone=zone
+                    ).returncode
+                    == 0
+                ):
+                    print("Deleted existing instance group: {}".format(instance_group_name))
             elif region is not None:
-                if (gcloud.delete_instance_group(
-                        instance_group_name, project=project,
-                        region=region).returncode == 0):
-                    print("Deleted existing instance group: {}".format(
-                        instance_group_name))
+                if (
+                    gcloud.delete_instance_group(
+                        instance_group_name, project=project, region=region
+                    ).returncode
+                    == 0
+                ):
+                    print("Deleted existing instance group: {}".format(instance_group_name))
 
-            if gcloud.delete_instance_template(
-                    template_name, project=project).returncode == 0:
+            if gcloud.delete_instance_template(template_name, project=project).returncode == 0:
                 print("Deleted existing VM template: {}".format(template_name))
 
-            print("Creating a new template and then a new instance group for project {}".format(project))
+            print(
+                "Creating a new template and then a new instance group for project {}".format(
+                    project
+                )
+            )
 
-            gcloud.create_instance_template(
-                template_name, project=project, **item)
-            print("Created instance template {}}".format(template_name))
+            gcloud.create_instance_template(template_name, project=project, **item)
+            print("Created instance template {}".format(template_name))
 
             kwargs = {
                 "project": project,
@@ -90,7 +94,7 @@ def worker():
             elif region is not None:
                 kwargs["region"] = region
             gcloud.create_instance_group(instance_group_name, **kwargs)
-            print("Created instance group {}}".format(instance_group_name))
+            print("Created instance group {}".format(instance_group_name))
         finally:
             WORK_QUEUE.task_done()
 
@@ -123,8 +127,7 @@ def main(argv=None):
     parser.add_argument(
         "--local_config",
         action="store_true",
-        help="Whether to read the configuration from CWD/%s" %
-        LOCAL_CONFIG_FILE_NAME,
+        help="Whether to read the configuration from CWD/%s" % LOCAL_CONFIG_FILE_NAME,
     )
 
     args = parser.parse_args(argv)
@@ -135,8 +138,7 @@ def main(argv=None):
     for name in args.names:
         if name not in valid_names:
             print("Unknown instance name: {}!".format(name))
-            print("\nValid instance names are: {}".format(
-                " ".join(valid_names)))
+            print("\nValid instance names are: {}".format(" ".join(valid_names)))
             return 1
     if not args.names:
         parser.print_help()
