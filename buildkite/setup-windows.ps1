@@ -107,16 +107,10 @@ if ($myhostname -like "*nojava*") {
     $java = "no"
 } elseif ($myhostname -like "*java8*") {
     $java = "8"
-    $zulu_filename = "zulu8.33.0.1-jdk8.0.192-win_x64.zip"
-} elseif ($myhostname -like "*java9*") {
-    $java = "9"
-    $zulu_filename = "zulu9.0.7.1-jdk9.0.7-win_x64.zip"
-} elseif ($myhostname -like "*java10*") {
-    $java = "10"
-    $zulu_filename = "zulu10.3+5-jdk10.0.2-win_x64.zip"
+    $zulu_filename = "zulu8.38.0.13-ca-jdk8.0.212-win_x64.zip"
 } elseif ($myhostname -like "*java11*") {
     $java = "11"
-    $zulu_filename = "zulu11.2.3-jdk11.0.1-win_x64.zip"
+    $zulu_filename = "zulu11.31.11-ca-jdk11.0.3-win_x64.zip"
 } else {
     Throw "Could not deduce Java version from hostname: ${myhostname}!"
 }
@@ -156,6 +150,11 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0" -Na
 # [Environment]::SetEnvironmentVariable("BAZEL_VC", "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC", "Machine")
 # $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 
+## Install Python2
+Write-Host "Installing Python 2..."
+& choco install python2 --params "/InstallDir:C:\python2"
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+
 ## Install Python3
 Write-Host "Installing Python 3..."
 # FYI: choco adds "C:\python3\Scripts\;C:\python3\" to PATH.
@@ -164,6 +163,7 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Install a couple of Python modules required by TensorFlow.
 Write-Host "Updating Python package management tools..."
+& "C:\Python2\python.exe" -m pip install --upgrade pip setuptools wheel
 & "C:\Python3\python.exe" -m pip install --upgrade pip setuptools wheel
 
 Write-Host "Installing Python packages..."
@@ -252,10 +252,10 @@ if ($java -ne "no") {
     Remove-Item $android_sdk_zip
 
     ## Use OpenJDK 9 (and higher) compatibility flags.
-    if ($java -eq "9" -or $java -eq "10") {
-        [Environment]::SetEnvironmentVariable("SDKMANAGER_OPTS", "--add-modules java.se.ee", "Machine")
-        $env:SDKMANAGER_OPTS = [Environment]::GetEnvironmentVariable("SDKMANAGER_OPTS", "Machine")
-    }
+    # if ($java -eq "9" -or $java -eq "10") {
+    #     [Environment]::SetEnvironmentVariable("SDKMANAGER_OPTS", "--add-modules java.se.ee", "Machine")
+    #     $env:SDKMANAGER_OPTS = [Environment]::GetEnvironmentVariable("SDKMANAGER_OPTS", "Machine")
+    # }
 
     ## Accept the Android SDK license agreement.
     New-Item "${android_sdk_root}\licenses" -ItemType "directory" -Force
