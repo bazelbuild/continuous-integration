@@ -1282,9 +1282,6 @@ def calculate_targets(task_config, platform, bazel_binary, build_only, test_only
 
 
 def expand_test_target_patterns(bazel_binary, platform, test_targets):
-    if not any(t for t in test_targets if t.endswith(":all") or t.endswith("...")):
-        return test_targets
-
     included_targets, excluded_targets = partition_test_targets(test_targets)
     excluded_string = (
         " except tests(set({}))".format(" ".join("'{}'".format(t) for t in excluded_targets))
