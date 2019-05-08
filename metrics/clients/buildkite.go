@@ -79,7 +79,7 @@ func (client *BuildkiteClient) GetAgents() ([]buildkite.Agent, error) {
 	return agents, nil
 }
 
-func (client *BuildkiteClient) getResults(listFunc func(opt buildkite.ListOptions) ([]interface{}, *buildkite.Response, error), minResults int) ([]interface{}, error) {
+func (client *BuildkiteClient) getResults(listFunc func(opt buildkite.ListOptions) ([]interface{}, *buildkite.Response, error), lastN int) ([]interface{}, error) {
 	all_results := make([]interface{}, 0)
 	opt := buildkite.ListOptions{Page: 1, PerPage: 100}
 	currPage := 1
@@ -97,9 +97,13 @@ func (client *BuildkiteClient) getResults(listFunc func(opt buildkite.ListOption
 		opt.Page = currPage
 		lastPage = response.LastPage
 
-		if minResults > -1 && len(all_results) >= minResults {
+		if lastN > -1 && len(all_results) >= lastN {
 			break
 		}
+	}
+
+	if len(all_results) > lastN {
+		all_results = all_results[:lastN]
 	}
 
 	return all_results, nil
