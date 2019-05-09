@@ -49,7 +49,7 @@ func main() {
 		}
 	*/
 
-	stdout := &publishers.Stdout{}
+	stdout := publishers.CreateStdoutPublisher(publishers.Csv)
 
 	srv := service.CreateService(handleError)
 
