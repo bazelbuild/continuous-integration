@@ -53,7 +53,7 @@ func main() {
 
 	srv := service.CreateService(handleError)
 
-	pipelinePerformance := metrics.CreatePipelinePerformance(bk, 20, "macos", "google-bazel-presubmit") // TODO: settings.BuildkitePipelines...)
+	pipelinePerformance := metrics.CreatePipelinePerformance(bk, 20, "google-bazel-presubmit") // TODO: settings.BuildkitePipelines...)
 	srv.AddMetric(pipelinePerformance, 60, stdout)
 
 	/*
