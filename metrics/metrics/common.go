@@ -6,16 +6,16 @@ import (
 	"github.com/fweikert/go-buildkite/buildkite"
 )
 
-func getPlatfrom(job *buildkite.Job) string {
-	if job.Name == nil {
+func getPlatfrom(jobName *string) string {
+	if jobName == nil {
 		return ""
-	} else if strings.Contains(*job.Name, "ubuntu") {
+	} else if strings.Contains(*jobName, "ubuntu") {
 		return "linux"
-	} else if strings.Contains(*job.Name, "windows") {
+	} else if strings.Contains(*jobName, "windows") {
 		return "windows"
-	} else if strings.Contains(*job.Name, "darwin") {
+	} else if strings.Contains(*jobName, "darwin") {
 		return "macos"
-	} else if strings.Contains(*job.Name, "gcloud") {
+	} else if strings.Contains(*jobName, "gcloud") {
 		return "rbe"
 	} else {
 		return ""

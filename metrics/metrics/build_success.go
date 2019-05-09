@@ -32,7 +32,7 @@ func (bs *BuildSuccess) Collect() (*data.DataSet, error) {
 		for _, build := range builds {
 			platformStates := make(map[string]*state)
 			for _, job := range build.Jobs {
-				platform := getPlatfrom(job)
+				platform := getPlatfrom(job.Name)
 				if platform == "" {
 					continue
 				}
