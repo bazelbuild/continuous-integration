@@ -30,7 +30,11 @@ func (data *DataSet) String() string {
 func GetRowAsStrings(row []interface{}) []string {
 	stringValues := make([]string, len(row))
 	for i, v := range row {
-		stringValues[i] = fmt.Sprintf("%v", v)
+		if str, ok := v.(string); ok {
+			stringValues[i] = str
+		} else {
+			stringValues[i] = fmt.Sprintf("%v", v)
+		}
 	}
 	return stringValues
 }

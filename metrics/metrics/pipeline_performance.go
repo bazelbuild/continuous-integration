@@ -5,6 +5,7 @@ import (
 
 	"github.com/fweikert/continuous-integration/metrics/clients"
 	"github.com/fweikert/continuous-integration/metrics/data"
+	"github.com/fweikert/go-buildkite/buildkite"
 )
 
 const skipTasksEnvVar = "CI_SKIP_TASKS"
@@ -33,7 +34,7 @@ func (pp *PipelinePerformance) Collect() (*data.DataSet, error) {
 			return nil, fmt.Errorf("Cannot collect performance statistics for pipeline %s: %v", pipeline, err)
 		}
 		for _, build := range builds {
-			skippedTasks := build.Env[skipTasksEnvVar]
+			skippedTasks := getSkippedTasks(build)
 			for _, job := range build.Jobs {
 				if pp.platformFilter != "" && getPlatfrom(job) != pp.platformFilter {
 					continue
@@ -46,6 +47,15 @@ func (pp *PipelinePerformance) Collect() (*data.DataSet, error) {
 		}
 	}
 	return result, nil
+}
+
+func getSkippedTasks(build buildkite.Build) string {
+	if data, ok := build.Env[skipTasksEnvVar]; ok {
+		if skippedTasks, ok := data.(string); ok {
+			return skippedTasks
+		}
+	}
+	return ""
 }
 
 // CREATE TABLE pipeline_performance (pipeline VARCHAR(255), build INT, job VARCHAR(255), creation_time DATETIME, wait_time_seconds FLOAT, run_time_seconds FLOAT, skipped_tasks VARCHAR(255), PRIMARY KEY(pipeline, build, job));
