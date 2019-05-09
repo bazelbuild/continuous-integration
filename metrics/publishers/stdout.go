@@ -8,13 +8,13 @@ import (
 	"github.com/fweikert/continuous-integration/metrics/metrics"
 )
 
-type formatter func(*data.DataSet) string
+type formatter func(string, *data.DataSet) string
 
-func PlainText(newData *data.DataSet) string {
-	return newData.String()
+func PlainText(metricName string, newData *data.DataSet) string {
+	return fmt.Sprintf("Metric %s:\n%s\n", metricName, newData.String())
 }
 
-func Csv(newData *data.DataSet) string {
+func Csv(metricName string, newData *data.DataSet) string {
 	lines := make([]string, len(newData.Data))
 	for i, row := range newData.Data {
 		lines[i] = strings.Join(data.GetRowAsStrings(row), ";")
@@ -36,7 +36,7 @@ func (stdout *Stdout) RegisterMetric(metric metrics.Metric) error {
 }
 
 func (stdout *Stdout) Publish(metricName string, newData *data.DataSet) error {
-	fmt.Printf("Metric %s:\n%s\n", metricName, stdout.formatFunc(newData))
+	fmt.Println(stdout.formatFunc(metricName, newData))
 	return nil
 }
 
