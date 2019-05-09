@@ -53,8 +53,8 @@ func main() {
 
 	srv := service.CreateService(handleError)
 
-	pipelinePerformance := metrics.CreatePipelinePerformance(bk, 20, "google-bazel-presubmit") // TODO: settings.BuildkitePipelines...)
-	srv.AddMetric(pipelinePerformance, 60, stdout)
+	macPerformance := metrics.CreateMacPerformance(bk, 20, "google-bazel-presubmit") // TODO: settings.BuildkitePipelines...)
+	srv.AddMetric(macPerformance, 60, stdout)
 
 	/*
 		buildsPerChange := metrics.CreateBuildsPerChange(bk, 500, settings.BuildkitePipelines...)
@@ -62,6 +62,9 @@ func main() {
 
 		buildSuccess := metrics.CreateBuildSuccess(bk, 200, settings.BuildkitePipelines...)
 		srv.AddMetric(buildSuccess, 60, stdout)
+
+		pipelinePerformance := metrics.CreatePipelinePerformance(bk, 20, settings.BuildkitePipelines...)
+		srv.AddMetric(pipelinePerformance, 60, stdout)
 
 		platformSignificance := metrics.CreatePlatformSignificance(bk, 100, settings.BuildkitePipelines...)
 		srv.AddMetric(platformSignificance, 24*60, stdout)
