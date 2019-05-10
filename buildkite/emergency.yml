@@ -17,6 +17,6 @@
 # Please do not clear or delete this file when an incident is over.
 # Instead, simply replace all values with empty strings ("").
 ---
-message: "We had to disable Bazel 0.23.0 due to a problem with remote caching."
-issue_url: "https://github.com/bazelbuild/bazel/issues/7555"
-last_good_bazel: "0.22.0"
+message: ""
+issue_url: ""
+last_good_bazel: ""
