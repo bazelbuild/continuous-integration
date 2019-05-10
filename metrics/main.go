@@ -37,9 +37,16 @@ func main() {
 		log.Fatalf("No pipelines were specified.")
 	}
 
-	bk, err := clients.CreateBuildkiteClient(settings.BuildkiteOrg, settings.BuildkiteApiToken, settings.BuildkiteDebug)
+	/*
+		bk, err := clients.CreateBuildkiteClient(settings.BuildkiteOrg, settings.BuildkiteApiToken, settings.BuildkiteDebug)
+		if err != nil {
+			log.Fatalf("Cannot create Buildkite client: %v", err)
+		}
+	*/
+
+	gcs, err := clients.CreateGcsClient()
 	if err != nil {
-		log.Fatalf("Cannot create Buildkite client: %v", err)
+		log.Fatalf("Cannot create GCS client: %v", err)
 	}
 
 	/*
@@ -53,8 +60,9 @@ func main() {
 
 	srv := service.CreateService(handleError)
 
-	macPerformance := metrics.CreateMacPerformance(bk, 20, "google-bazel-presubmit") // TODO: settings.BuildkitePipelines...)
-	srv.AddMetric(macPerformance, 60, stdout)
+	// TODO(fweikert): use real settings instead of hardcoded values
+	flakiness := metrics.CreateFlakiness(gcs, "bazel-buildkite-stats", "flaky-tests-bep", "google-bazel-presubmit") // TODO: settings.BuildkitePipelines...)
+	srv.AddMetric(flakiness, 60, stdout)
 
 	/*
 		buildsPerChange := metrics.CreateBuildsPerChange(bk, 500, settings.BuildkitePipelines...)
@@ -62,6 +70,9 @@ func main() {
 
 		buildSuccess := metrics.CreateBuildSuccess(bk, 200, settings.BuildkitePipelines...)
 		srv.AddMetric(buildSuccess, 60, stdout)
+
+		macPerformance := metrics.CreateMacPerformance(bk, 20, "google-bazel-presubmit") // TODO: settings.BuildkitePipelines...)
+		srv.AddMetric(macPerformance, 60, stdout)
 
 		pipelinePerformance := metrics.CreatePipelinePerformance(bk, 20, settings.BuildkitePipelines...)
 		srv.AddMetric(pipelinePerformance, 60, stdout)
