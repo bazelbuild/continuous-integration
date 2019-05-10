@@ -17,6 +17,6 @@
 # Please do not clear or delete this file when an incident is over.
 # Instead, simply replace all values with empty strings ("").
 ---
-message: ""
+message: "All macOS machines are currently unavailable due to network maintenance."
 issue_url: ""
 last_good_bazel: ""
