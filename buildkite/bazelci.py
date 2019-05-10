@@ -398,6 +398,8 @@ SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
 
 CONFIG_FILE_EXTENSIONS = set([".yml", ".yaml"])
 
+SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py"
+
 
 class BuildkiteException(Exception):
     """
@@ -514,9 +516,7 @@ def bazelcipy_url():
     """
     URL to the latest version of this script.
     """
-    return "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?{}".format(
-        int(time.time())
-    )
+    return "{}?{}".format(SCRIPT_URL, int(time.time()))
 
 
 def incompatible_flag_verbose_failures_url():
@@ -2377,6 +2377,7 @@ def main(argv=None):
     yaml.add_representer(str, str_presenter)
 
     parser = argparse.ArgumentParser(description="Bazel Continuous Integration Script")
+    parser.add_argument("--script", type=str)
 
     subparsers = parser.add_subparsers(dest="subparsers_name")
 
@@ -2435,6 +2436,10 @@ def main(argv=None):
     runner = subparsers.add_parser("try_update_last_green_downstream_commit")
 
     args = parser.parse_args(argv)
+
+    if args.script:
+        global SCRIPT_URL
+        SCRIPT_URL = args.script
 
     try:
         if args.subparsers_name == "bazel_publish_binaries_pipeline":
