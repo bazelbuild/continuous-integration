@@ -26,11 +26,11 @@ You need a machine with a recent version of MacOS and Microsoft Remote Desktop (
     1. `cd` into the `continuous-integration/buildkite` directory.
     1. Create new images by running `python3.6 create_images.py <platform1> <platform2> <...>`. For Windows, this usually means to include `bk-windows-java8` and `bk-trusted-windows-java8`, whereas the `windows-playground` platform is optional. Hint: You can see a list of available platforms by running the script without any arguments.
     1. The script opens Microsoft Remote Desktop to establish a connection to the VM that is used for building the image. Accept any popups and log into the machine by pasting the password into the password field (the script already copied into the clipboard).
-    1. Run the setup script by navigating to `C:`, running `powershell` and then executing `.\ setup.ps1`.
-    1. Wait until the script has finished. At one point the VM will be rebooted, so the script has to open the remote connection again. This might take a long time.
+    1. Run the setup script by executing `\setup.ps1`.
+    1. Wait until the script has finished. At one point the VM will be rebooted, so the script has to open the remote connection again. The whole process can take up to 30 minutes.
     1. Login into the Google Cloud Console and check that the created images are no longer busy. Make sure to select the project that matches the image (e.g. `bazel-public` for `trusted` images, `bazel-untrusted` for "normal" images).
     1. If something fails, you can always run `create_images` again.
-1. Deploy CI workers with the newly created image by running `python3.6 create_instances.py --local_config <instance_group1> <instance_group2> <...>`. The available instances group names can be found in the [configuration file](https://github.com/bazelbuild/continuous-integration/blob/master/buildkite/instances.yml). For Windows you would usually pass `bk-windows-java8 bk-trusted-windows-java8` to the script.
+1. Deploy CI workers with the newly created image by running `python3.6 create_instances.py --local_config <instance_group1> <instance_group2> <...>`. The available instances group names can be found in the [configuration file](https://github.com/bazelbuild/continuous-integration/blob/master/buildkite/instances.yml). Moreover, you can run the script without any arguments to get a list of available instance groups or check the configuration file. For Windows you would usually pass `bk-windows-java8 bk-trusted-windows-java8` to the script.
 
 ### Linux
 
@@ -49,7 +49,7 @@ If you need to create and deploy new VM images, you can follow these steps:
 
 ### MacOS
 
-Unfortunately we have to operate a number of physical Mac machines in our office. Please see go/bazel-ci-playbook if you're in the Google network.
+We are operating a number of physical Mac machines in our office. Please see go/bazel-ci-playbook if you're in the Google network.
 
 ## Deploying a new Bazelisk version
 
