@@ -1,0 +1,22 @@
+# This file allows Bazel team member to handle emergencies by
+# - Setting a warning message (and a link to a GitHub issue) that is displayed
+#   for every CI build
+# - Specifying a known good version of Bazel that will be used for
+#   every pipeline and task that hasn't specified an explicit version in
+#   the respective pipeline configuration.
+#
+# Example:
+#
+# ---
+# message: "Bazel 0.20.0 is broken"
+# issue_url: "https://github.com/bazelbuild/bazel/issues/123"
+# last_good_bazel: "0.19.0"
+#
+#
+# ATTENTION:
+# Please do not clear or delete this file when an incident is over.
+# Instead, simply replace all values with empty strings ("").
+---
+message: ""
+issue_url: ""
+last_good_bazel: ""

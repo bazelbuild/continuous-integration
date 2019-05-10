@@ -401,6 +401,9 @@ CONFIG_FILE_EXTENSIONS = set([".yml", ".yaml"])
 SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py"
 
 
+EMERGENCY_FILE_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/emergency.yml"
+
+
 class BuildkiteException(Exception):
     """
     Raised whenever something goes wrong and we should exit with an error.
@@ -569,11 +572,15 @@ def load_config(http_url, file_config):
         with open(file_config, "r") as fd:
             return yaml.load(fd)
     if http_url is not None:
-        with urllib.request.urlopen(http_url) as resp:
-            reader = codecs.getreader("utf-8")
-            return yaml.load(reader(resp))
+        return load_remote_yaml_file(http_url)
     with open(".bazelci/presubmit.yml", "r") as fd:
         return yaml.load(fd)
+
+
+def load_remote_yaml_file(http_url):
+    with urllib.request.urlopen(http_url) as resp:
+        reader = codecs.getreader("utf-8")
+        return yaml.load(reader(resp))
 
 
 def print_collapsed_group(name):
@@ -615,6 +622,17 @@ def execute_commands(
     # the latest Bazel version through Bazelisk.
     if incompatible_flags:
         bazel_version = None
+    if not bazel_version:
+        # The last good version of Bazel can be specified in an emergency file.
+        # However, we only use last_good_bazel for pipelines that do not
+        # explicitly specify a version of Bazel.
+        try:
+            emergency_settings = load_remote_yaml_file(EMERGENCY_FILE_URL)
+            bazel_version = emergency_settings.get("last_good_bazel")
+        except urllib.error.HTTPError:
+            # Ignore this error. The Setup step will have already complained about
+            # it by showing an error message.
+            pass
 
     if build_only and test_only:
         raise BuildkiteException("build_only and test_only cannot be true at the same time")
@@ -1637,7 +1655,7 @@ def print_project_pipeline(
     if "validate_config" in configs:
         pipeline_steps += create_config_validation_steps()
 
-    print(yaml.dump({"steps": pipeline_steps}))
+    print_pipeline_steps(pipeline_steps)
 
 
 def get_platform_for_task(task, task_config):
@@ -1670,6 +1688,46 @@ def create_config_validation_steps():
         )
         for f in config_files
     ]
+
+
+def print_pipeline_steps(pipeline_steps):
+    emergency_step = create_emergency_announcement_step_if_necessary()
+    if emergency_step:
+        pipeline_steps.insert(0, emergency_step)
+
+    print(yaml.dump({"steps": pipeline_steps}))
+
+
+def create_emergency_announcement_step_if_necessary():
+    style = "error"
+    message, issue_url, last_good_bazel = None, None, None
+    try:
+        emergency_settings = load_remote_yaml_file(EMERGENCY_FILE_URL)
+        message = emergency_settings.get("message")
+        issue_url = emergency_settings.get("issue_url")
+        last_good_bazel = emergency_settings.get("last_good_bazel")
+    except urllib.error.HTTPError as ex:
+        message = str(ex)
+        style = "warning"
+
+    if not any([message, issue_url, last_good_bazel]):
+        return
+
+    text = '<span class="h1">:rotating_light: Emergency :rotating_light:</span>\n'
+    if message:
+        text += "- {}\n".format(message)
+    if issue_url:
+        text += '- Please check this <a href="{}">issue</a> for more details.\n'.format(issue_url)
+    if last_good_bazel:
+        text += (
+            "- Default Bazel version is *{}*, "
+            "unless the pipeline configuration specifies an explicit version."
+        ).format(last_good_bazel)
+
+    return create_step(
+        label=":rotating_light: Emergency :rotating_light:",
+        commands=['buildkite-agent annotate --append --style={} "{}"'.format(style, text)],
+    )
 
 
 def runner_step(
@@ -1906,7 +1964,7 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
         )
     )
 
-    print(yaml.dump({"steps": pipeline_steps}))
+    print_pipeline_steps(pipeline_steps)
 
 
 def should_publish_binaries_for_platform(platform):
@@ -2105,7 +2163,7 @@ def print_bazel_downstream_pipeline(
             )
         )
 
-    print(yaml.dump({"steps": pipeline_steps}))
+    print_pipeline_steps(pipeline_steps)
 
 
 def bazelci_builds_download_url(platform, git_commit):
