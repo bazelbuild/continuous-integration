@@ -1719,7 +1719,7 @@ def create_emergency_announcement_step_if_necessary():
     if issue_url:
         text += '- Please check this <a href="{}">issue</a> for more details.\n'.format(issue_url)
     if last_good_bazel:
-        text += "- Default Bazel version is *{}*, unless the pipeline configuration explicitly specifies a version.".format(
+        text += "- Default Bazel version is *{}*, unless the pipeline configuration specifies an explicit version.".format(
             last_good_bazel
         )
 
