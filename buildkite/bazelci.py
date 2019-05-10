@@ -798,7 +798,7 @@ def execute_commands(
                 if has_flaky_tests(test_bep_file):
                     if monitor_flaky_tests:
                         # Upload the BEP logs from Bazel builds for later analysis on flaky tests
-                        build_id = os.getenv("BUILDKITE_BUILD_ID")
+                        build_number = os.getenv("BUILDKITE_BUILD_NUMBER")
                         pipeline_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
                         execute_command(
                             [
@@ -808,7 +808,7 @@ def execute_commands(
                                 "gs://bazel-buildkite-stats/flaky-tests-bep/"
                                 + pipeline_slug
                                 + "/"
-                                + build_id
+                                + build_number
                                 + ".json",
                             ]
                         )
