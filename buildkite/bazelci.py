@@ -377,7 +377,7 @@ BUILDIFIER_DOCKER_IMAGE = f"gcr.io/{CLOUD_PROJECT}/buildifier"
 # The platform used for various steps (e.g. stuff that formerly ran on the "pipeline" workers).
 DEFAULT_PLATFORM = "ubuntu1804"
 
-DEFAULT_XCODE_VERSION = "10.2"
+DEFAULT_XCODE_VERSION = "10.2.1"
 XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
 
 ENCRYPTED_SAUCELABS_TOKEN = """
