@@ -1655,7 +1655,7 @@ def print_project_pipeline(
     if "validate_config" in configs:
         pipeline_steps += create_config_validation_steps()
 
-    print_pipeline_steps(pipeline_steps)
+    print_pipeline_steps(pipeline_steps, handle_emergencies=!is_downstream_project)
 
 
 def get_platform_for_task(task, task_config):
@@ -1690,10 +1690,11 @@ def create_config_validation_steps():
     ]
 
 
-def print_pipeline_steps(pipeline_steps):
-    emergency_step = create_emergency_announcement_step_if_necessary()
-    if emergency_step:
-        pipeline_steps.insert(0, emergency_step)
+def print_pipeline_steps(pipeline_steps, handle_emergencies=True):
+    if handle_emergencies:
+        emergency_step = create_emergency_announcement_step_if_necessary()
+        if emergency_step:
+            pipeline_steps.insert(0, emergency_step)
 
     print(yaml.dump({"steps": pipeline_steps}))
 
