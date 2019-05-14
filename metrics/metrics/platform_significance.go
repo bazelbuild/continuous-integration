@@ -53,7 +53,7 @@ func (ps *PlatformSignificance) Collect() (data.DataSet, error) {
 
 func collectPipelineResults(buildResult data.DataSet) (map[string]*pipelineStats, error) {
 	stats := make(map[string]*pipelineStats)
-	for _, row := range buildResult.GetData() {
+	for _, row := range buildResult.GetData().Data {
 		values, err := toString(row)
 		if err != nil {
 			return nil, fmt.Errorf("Could not process build_success results: %v", err)

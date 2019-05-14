@@ -31,7 +31,7 @@ func (mp *MacPerformance) Collect() (data.DataSet, error) {
 
 	result := data.CreateDataSet(GetColumnNames(mp.columns))
 	var lastAdded string
-	for _, row := range perfData.GetData() {
+	for _, row := range perfData.GetData().Data {
 		str := data.GetRowAsStrings(row)
 		build := str[1]
 		jobName := str[2]

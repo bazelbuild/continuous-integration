@@ -11,12 +11,13 @@ import (
 type formatter func(string, data.DataSet) string
 
 func PlainText(metricName string, newData data.DataSet) string {
-	return fmt.Sprintf("Metric %s:\n%s\n", metricName, newData.String())
+	return fmt.Sprintf("Metric %s:\n%s\n", metricName, newData.GetData().String())
 }
 
 func Csv(metricName string, newData data.DataSet) string {
-	lines := make([]string, len(newData.GetData()))
-	for i, row := range newData.GetData() {
+	rows := newData.GetData().Data
+	lines := make([]string, len(rows))
+	for i, row := range rows {
 		lines[i] = strings.Join(data.GetRowAsStrings(row), ";")
 	}
 	return strings.Join(lines, "\n")
