@@ -69,8 +69,8 @@ DOWNSTREAM_PROJECTS = {
         "pipeline_slug": "bazel-integration-testing",
     },
     "Bazelisk": {
-        "git_repository": "https://github.com/philwo/bazelisk.git",
-        "http_config": "https://raw.githubusercontent.com/philwo/bazelisk/master/.bazelci/config.yml",
+        "git_repository": "https://github.com/bazelbuild/bazelisk.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazelisk/master/.bazelci/config.yml",
         "pipeline_slug": "bazelisk",
     },
     "Bazel Remote Cache": {
@@ -694,7 +694,7 @@ def execute_commands(
             bazel_binary = "bazel"
             if bazel_version:
                 # This will only work if the bazel binary in $PATH is actually a bazelisk binary
-                # (https://github.com/philwo/bazelisk).
+                # (https://github.com/bazelbuild/bazelisk).
                 os.environ["USE_BAZEL_VERSION"] = bazel_version
                 test_env_vars.append("USE_BAZEL_VERSION")
 

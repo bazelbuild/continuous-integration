@@ -213,15 +213,15 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Get the latest release version number of Bazel.
 Write-Host "Grabbing latest Bazelisk version number from GitHub..."
-$url = "https://github.com/philwo/bazelisk/releases/latest"
+$url = "https://github.com/bazelbuild/bazelisk/releases/latest"
 $req = [system.Net.HttpWebRequest]::Create($url)
 $res = $req.getresponse()
 $res.Close()
-$bazelisk_version = $res.ResponseUri.AbsolutePath.TrimStart("/philwo/bazelisk/releases/tag/")
+$bazelisk_version = $res.ResponseUri.AbsolutePath.TrimStart("/bazelbuild/bazelisk/releases/tag/")
 
 ## Download the latest Bazelisk.
 Write-Host "Downloading Bazelisk ${bazelisk_version}..."
-$bazelisk_url = "https://github.com/philwo/bazelisk/releases/download/${bazelisk_version}/bazelisk-windows-amd64.exe"
+$bazelisk_url = "https://github.com/bazelbuild/bazelisk/releases/download/${bazelisk_version}/bazelisk-windows-amd64.exe"
 New-Item "c:\bazel" -ItemType "directory" -Force
 (New-Object Net.WebClient).DownloadFile($bazelisk_url, "c:\bazel\bazel.exe")
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";c:\bazel"

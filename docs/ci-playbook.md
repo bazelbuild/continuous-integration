@@ -53,7 +53,7 @@ We are operating a number of physical Mac machines in our office. Please see go/
 
 ## Deploying a new Bazelisk version
 
-1. Create a [new Bazelisk release](https://github.com/philwo/bazelisk/releases). This step has to be done on a Mac machine (due to [cross-compilation problems](https://github.com/golang/go/issues/22510)), and requires permissions to create a release.
+1. Create a [new Bazelisk release](https://github.com/bazelbuild/bazelisk/releases). This step has to be done on a Mac machine (due to [cross-compilation problems](https://github.com/golang/go/issues/22510)), and requires permissions to create a release.
 1. To deploy this release on MacOS:
     1. Update the [Bazelisk Homebrew formula](https://github.com/fweikert/homebrew-tap/blob/master/Formula/bazelisk.rb).
     1. SSH into the machines and update them via Homebrew (see internal instructions for more details).
