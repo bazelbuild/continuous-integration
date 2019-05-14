@@ -37,17 +37,17 @@ func main() {
 		log.Fatalf("No pipelines were specified.")
 	}
 
+	bk, err := clients.CreateBuildkiteClient(settings.BuildkiteOrg, settings.BuildkiteApiToken, settings.BuildkiteDebug)
+	if err != nil {
+		log.Fatalf("Cannot create Buildkite client: %v", err)
+	}
+
 	/*
-		bk, err := clients.CreateBuildkiteClient(settings.BuildkiteOrg, settings.BuildkiteApiToken, settings.BuildkiteDebug)
+		gcs, err := clients.CreateGcsClient()
 		if err != nil {
-			log.Fatalf("Cannot create Buildkite client: %v", err)
+			log.Fatalf("Cannot create GCS client: %v", err)
 		}
 	*/
-
-	gcs, err := clients.CreateGcsClient()
-	if err != nil {
-		log.Fatalf("Cannot create GCS client: %v", err)
-	}
 
 	/*
 		cloudSql, err := publishers.CreateCloudSqlPublisher(settings.CloudSqlUser, settings.CloudSqlPassword, settings.CloudSqlInstance, settings.CloudSqlDatabase, settings.CloudSqlLocalPort)
@@ -60,16 +60,18 @@ func main() {
 
 	srv := service.CreateService(handleError)
 
-	// TODO(fweikert): use real settings instead of hardcoded values
-	flakiness := metrics.CreateFlakiness(gcs, "bazel-buildkite-stats", "flaky-tests-bep", "google-bazel-presubmit") // TODO: settings.BuildkitePipelines...)
-	srv.AddMetric(flakiness, 60, stdout)
-
+	platformLoad := metrics.CreatePlatformLoad(bk, 100)
+	srv.AddMetric(platformLoad, 60, stdout)
 	/*
 		buildsPerChange := metrics.CreateBuildsPerChange(bk, 500, settings.BuildkitePipelines...)
 		srv.AddMetric(buildsPerChange, 60, stdout)
 
 		buildSuccess := metrics.CreateBuildSuccess(bk, 200, settings.BuildkitePipelines...)
 		srv.AddMetric(buildSuccess, 60, stdout)
+
+		// TODO(fweikert): use real settings instead of hardcoded values
+		flakiness := metrics.CreateFlakiness(gcs, "bazel-buildkite-stats", "flaky-tests-bep", "google-bazel-presubmit") // TODO: settings.BuildkitePipelines...)
+		srv.AddMetric(flakiness, 60, stdout)
 
 		macPerformance := metrics.CreateMacPerformance(bk, 20, "google-bazel-presubmit") // TODO: settings.BuildkitePipelines...)
 		srv.AddMetric(macPerformance, 60, stdout)
