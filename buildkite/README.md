@@ -269,7 +269,7 @@ The CI script still supports the legacy format, too.
 
 ### Using a specific version of Bazel
 
-The CI uses [Bazelisk](https://github.com/philwo/bazelisk) to support older versions of Bazel, too. You can specify a Bazel version for each pipeline (or even for individual platforms) in the pipeline Yaml configuration:
+The CI uses [Bazelisk](https://github.com/bazelbuild/bazelisk) to support older versions of Bazel, too. You can specify a Bazel version for each pipeline (or even for individual platforms) in the pipeline Yaml configuration:
 
 ```yaml
 ---
@@ -290,7 +290,7 @@ tasks:
 In this example the jobs on Windows and MacOS would use 0.20.0, whereas the job on Ubuntu would run 0.18.0.
 
 CI supports several magic version values such as `latest`, `last_green` and `last_downstream_green`.
-Please see the [Bazelisk documentation](https://github.com/philwo/bazelisk/blob/master/README.md#how-does-bazelisk-know-which-version-to-run) for more details.
+Please see the [Bazelisk documentation](https://github.com/bazelbuild/bazelisk/blob/master/README.md#how-does-bazelisk-know-which-version-to-run) for more details.
 
 ### macOS: Using a specific version of Xcode
 
