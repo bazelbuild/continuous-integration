@@ -15,14 +15,14 @@ default_vm:
   boot_disk_size: 50GB
   boot_disk_type: pd-ssd
   machine_type: n1-standard-32
-  min_cpu_platform: Intel Skylake
   network: buildkite
   scopes: cloud-platform
 instance_groups:
   - name: bk-docker
-    count: 120
+    count: 100
     project: bazel-untrusted
     region: europe-north1
+    zone: europe-north1-b
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_project: bazel-untrusted
     image_family: bk-docker
@@ -44,6 +44,7 @@ instance_groups:
     count: 20
     project: bazel-untrusted
     region: europe-north1
+    zone: europe-north1-c
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_project: bazel-untrusted
     image_family: bk-windows-java8

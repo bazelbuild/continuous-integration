@@ -37,6 +37,41 @@ Write-Host "Setting environment variables..."
 $env:TEMP = [Environment]::GetEnvironmentVariable("TEMP", "Machine")
 $env:TMP = [Environment]::GetEnvironmentVariable("TMP", "Machine")
 
+## Enable support for symlinks.
+Write-Host "Enabling SECreateSymbolicLinkPrivilege permission..."
+$ntprincipal = New-Object System.Security.Principal.NTAccount "b"
+$sid = $ntprincipal.Translate([System.Security.Principal.SecurityIdentifier])
+$sidstr = $sid.Value.ToString()
+
+$tmp = [System.IO.Path]::GetTempFileName()
+& secedit.exe /export /cfg "$($tmp)"
+$currentConfig = Get-Content -Path "$tmp"
+$currentSetting = ""
+foreach ($s in $currentConfig) {
+    if ($s -like "SECreateSymbolicLinkPrivilege*") {
+        $x = $s.split("=",[System.StringSplitOptions]::RemoveEmptyEntries)
+        $currentSetting = $x[1].Trim()
+    }
+}
+
+if ([string]::IsNullOrEmpty($currentSetting)) {
+    $currentSetting = "*$($sidstr)"
+} else {
+    $currentSetting = "*$($sidstr),$($currentSetting)"
+}
+$outfile = @"
+[Unicode]
+Unicode=yes
+[Version]
+signature="`$CHICAGO`$"
+Revision=1
+[Privilege Rights]
+SECreateSymbolicLinkPrivilege = $($currentSetting)
+"@
+$outfile | Set-Content -Path $tmp -Encoding Unicode -Force
+& secedit.exe /configure /db "secedit.sdb" /cfg "$($tmp)" /areas USER_RIGHTS
+Remove-Item -Path "$tmp"
+
 ## Write encrypted buildkite agent token into a file.
 $myhostname = [System.Net.Dns]::GetHostName()
 if ($myhostname -like "*trusted*") {
