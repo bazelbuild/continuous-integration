@@ -26,7 +26,7 @@ func (bps *BuildsPerChange) Columns() []Column {
 
 const changelistMetaDataKey = "PiperOrigin-RevId"
 
-func (bps *BuildsPerChange) Collect() (*data.DataSet, error) {
+func (bps *BuildsPerChange) Collect() (data.DataSet, error) {
 	result := data.CreateDataSet(GetColumnNames(bps.columns))
 	buildsPerPipeline := make(map[string]map[int]int)
 	for _, pipeline := range bps.pipelines {

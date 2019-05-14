@@ -21,7 +21,7 @@ func (pu *PlatformUsage) Columns() []Column {
 	return pu.columns
 }
 
-func (pu *PlatformUsage) Collect() (*data.DataSet, error) {
+func (pu *PlatformUsage) Collect() (data.DataSet, error) {
 	result := data.CreateDataSet(GetColumnNames(pu.columns))
 	builds, err := pu.client.GetMostRecentBuilds("all", pu.builds)
 	if err != nil {

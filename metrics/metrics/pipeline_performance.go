@@ -25,7 +25,7 @@ func (pp *PipelinePerformance) Columns() []Column {
 	return pp.columns
 }
 
-func (pp *PipelinePerformance) Collect() (*data.DataSet, error) {
+func (pp *PipelinePerformance) Collect() (data.DataSet, error) {
 	result := data.CreateDataSet(GetColumnNames(pp.columns))
 	for _, pipeline := range pp.pipelines {
 		builds, err := pp.client.GetMostRecentBuilds(pipeline, pp.lastNBuilds)

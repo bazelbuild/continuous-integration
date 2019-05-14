@@ -12,7 +12,7 @@ type Column struct {
 type Metric interface {
 	Name() string
 	Columns() []Column
-	Collect() (*data.DataSet, error)
+	Collect() (data.DataSet, error)
 }
 
 func GetColumnNames(columns []Column) []string {

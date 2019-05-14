@@ -22,7 +22,7 @@ func (wa *WorkerAvailability) Columns() []Column {
 	return wa.columns
 }
 
-func (wa *WorkerAvailability) Collect() (*data.DataSet, error) {
+func (wa *WorkerAvailability) Collect() (data.DataSet, error) {
 	ts := time.Now().Unix()
 	allPlatforms, err := wa.getIdleAndBusyCountsPerPlatform()
 	if err != nil {

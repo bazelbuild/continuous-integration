@@ -81,13 +81,13 @@ func (c *CloudSql) createStatement(metricName string, text string) (*statement, 
 	return &statement{prepared: stmt, text: text}, nil
 }
 
-func (c *CloudSql) Publish(metricName string, newData *data.DataSet) error {
+func (c *CloudSql) Publish(metricName string, newData data.DataSet) error {
 	stmt := c.statements[metricName]
 	if stmt == nil {
 		return fmt.Errorf("Could not find prepared insert statement for metric %s. Have you called RegisterMetric() first?", metricName)
 	}
 
-	for _, row := range newData.Data {
+	for _, row := range newData.GetData() {
 		_, err := stmt.prepared.Exec(row...)
 		if err != nil {
 			values := make([]string, len(row))

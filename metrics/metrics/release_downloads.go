@@ -25,7 +25,7 @@ func (rd *ReleaseDownloads) Columns() []Column {
 	return rd.columns
 }
 
-func (rd *ReleaseDownloads) Collect() (*data.DataSet, error) {
+func (rd *ReleaseDownloads) Collect() (data.DataSet, error) {
 	all_releases, err := rd.getReleases()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get releases for %s/%s: %v", rd.org, rd.repo, err)
