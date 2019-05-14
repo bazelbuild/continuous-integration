@@ -6,7 +6,11 @@ import (
 	"github.com/fweikert/go-buildkite/buildkite"
 )
 
-func getPlatfrom(jobName *string) string {
+func getPlatform(job *buildkite.Job) string {
+	return getPlatformFromJobName(job.Name)
+}
+
+func getPlatformFromJobName(jobName *string) string {
 	if jobName == nil {
 		return ""
 	} else if strings.Contains(*jobName, "ubuntu") {

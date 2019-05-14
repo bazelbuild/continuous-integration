@@ -31,7 +31,7 @@ func (pu *PlatformUsage) Collect() (*data.DataSet, error) {
 	for _, build := range builds {
 		pipeline := *build.Pipeline.Slug
 		for _, job := range build.Jobs {
-			platform := getPlatfrom(job.Name)
+			platform := getPlatform(job)
 			if platform == "" {
 				continue
 			}
