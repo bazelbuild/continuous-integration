@@ -49,6 +49,11 @@ func main() {
 		}
 	*/
 
+	stackdriverClient, err := clients.CreateStackdriverClient()
+	if err != nil {
+		log.Fatalf("Cannot create Stackdriver client: %v", err)
+	}
+
 	/*
 		cloudSql, err := publishers.CreateCloudSqlPublisher(settings.CloudSqlUser, settings.CloudSqlPassword, settings.CloudSqlInstance, settings.CloudSqlDatabase, settings.CloudSqlLocalPort)
 		if err != nil {
@@ -56,7 +61,7 @@ func main() {
 		}
 	*/
 
-	stackdriver := publishers.CreateStackdriverPublisher()
+	stackdriver := publishers.CreateStackdriverPublisher(stackdriverClient, "bazel-untrusted")
 	stdout := publishers.CreateStdoutPublisher(publishers.Csv)
 
 	srv := service.CreateService(handleError)

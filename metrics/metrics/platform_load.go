@@ -6,6 +6,10 @@ import (
 
 	"github.com/fweikert/continuous-integration/metrics/clients"
 	"github.com/fweikert/continuous-integration/metrics/data"
+	timestamp "github.com/golang/protobuf/ptypes/timestamp"
+	metricpb "google.golang.org/genproto/googleapis/api/metric"
+	monitoredres "google.golang.org/genproto/googleapis/api/monitoredres"
+	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
 )
 
 type PlatformLoad struct {
@@ -88,4 +92,48 @@ func (lds *loadDataSet) GetData() *data.LegacyDataSet {
 		rawSet.Data = append(rawSet.Data, rawRow)
 	}
 	return rawSet
+}
+
+func (lds *loadDataSet) CreateTimeSeriesRequest(projectID string) *monitoringpb.CreateTimeSeriesRequest {
+	ts := &timestamp.Timestamp{
+		Seconds: lds.ts.Unix(),
+	}
+	series := make([]*monitoringpb.TimeSeries, len(lds.rows))
+	for _, row := range lds.rows {
+		series = append(series, row.createTimeSeries("required_workers", ts))
+	}
+	return &monitoringpb.CreateTimeSeriesRequest{
+		Name:       "projects/" + projectID,
+		TimeSeries: series,
+	}
+}
+
+func (ldr *loadDataRow) createTimeSeries(metricType string, ts *timestamp.Timestamp) *monitoringpb.TimeSeries {
+	return &monitoringpb.TimeSeries{
+		Metric: &metricpb.Metric{
+			Type: metricType,
+			Labels: map[string]string{
+				"platform": ldr.platform,
+			},
+		},
+		// TODO(fweikert): Fix
+		Resource: &monitoredres.MonitoredResource{
+			Type: "gce_instance",
+			Labels: map[string]string{
+				"instance_id": "test-instance",
+				"zone":        "us-central1-f",
+			},
+		},
+		Points: []*monitoringpb.Point{{
+			Interval: &monitoringpb.TimeInterval{
+				StartTime: ts,
+				EndTime:   ts,
+			},
+			Value: &monitoringpb.TypedValue{
+				Value: &monitoringpb.TypedValue_Int64Value{
+					Int64Value: int64(ldr.waitingJobs + ldr.runningJobs),
+				},
+			},
+		}},
+	}
 }
