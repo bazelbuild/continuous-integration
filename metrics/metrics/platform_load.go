@@ -22,14 +22,13 @@ func (pl *PlatformLoad) Columns() []Column {
 	return pl.columns
 }
 
-func (pl *PlatformLoad) Collect() (*data.DataSet, error) {
-	result := data.CreateDataSet(GetColumnNames(pl.columns))
+func (pl *PlatformLoad) Collect() (data.DataSet, error) {
 	builds, err := pl.client.GetMostRecentBuilds("all", pl.builds)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot get builds to determine platform load: %v", err)
 	}
 
-	timestamp := time.Now()
+	result := &loadDataSet{headers: GetColumnNames(pl.columns), ts: time.Now()}
 	allPlatforms := make(map[string]bool)
 	waiting := make(map[string]int)
 	running := make(map[string]int)
@@ -56,11 +55,10 @@ func (pl *PlatformLoad) Collect() (*data.DataSet, error) {
 		}
 	}
 
+	result.rows = make([]loadDataRow, len(allPlatforms))
 	for platform := range allPlatforms {
-		err := result.AddRow(timestamp, platform, waiting[platform], running[platform])
-		if err != nil {
-			return nil, fmt.Errorf("Failed to add result for platform %s: %v", platform, err)
-		}
+		row := loadDataRow{platform: platform, waitingJobs: waiting[platform], runningJobs: running[platform]}
+		result.rows = append(result.rows, row)
 	}
 	return result, nil
 }
@@ -69,4 +67,25 @@ func (pl *PlatformLoad) Collect() (*data.DataSet, error) {
 func CreatePlatformLoad(client *clients.BuildkiteClient, builds int) *PlatformLoad {
 	columns := []Column{Column{"timestamp", true}, Column{"platform", true}, Column{"waiting_jobs", false}, Column{"running_jobs", false}}
 	return &PlatformLoad{client: client, columns: columns, builds: builds}
+}
+
+type loadDataRow struct {
+	platform    string
+	waitingJobs int
+	runningJobs int
+}
+
+type loadDataSet struct {
+	headers []string
+	ts      time.Time
+	rows    []loadDataRow
+}
+
+func (lds *loadDataSet) GetData() *data.LegacyDataSet {
+	rawSet := data.CreateDataSet(lds.headers)
+	for _, row := range lds.rows {
+		rawRow := []interface{}{lds.ts, row.platform, row.waitingJobs, row.runningJobs}
+		rawSet.Data = append(rawSet.Data, rawRow)
+	}
+	return rawSet
 }

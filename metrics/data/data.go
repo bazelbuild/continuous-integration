@@ -6,40 +6,37 @@ import (
 )
 
 type DataSet interface {
-	AddRow(values ...interface{}) error
-	GetHeaders() []string
-	GetData() [][]interface{}
-	String() string
+	GetData() *LegacyDataSet
 }
 
-type DefaultDataSet struct {
-	headers []string
-	data    [][]interface{}
+type LegacyDataSet struct {
+	Headers []string
+	Data    [][]interface{}
 }
 
-func (data *DefaultDataSet) AddRow(values ...interface{}) error {
-	if len(values) != len(data.headers) {
-		return fmt.Errorf("DataSet has %d columns (%s), but new row has %d (values: %s).", len(data.headers), strings.Join(data.headers, ", "), len(values), strings.Join(GetRowAsStrings(values), ", "))
-	}
-	data.data = append(data.data, values)
-	return nil
-}
-
-func (data *DefaultDataSet) GetHeaders() []string {
-	return data.headers
-}
-
-func (data *DefaultDataSet) GetData() [][]interface{} {
-	return data.data
-}
-
-func (data *DefaultDataSet) String() string {
-	lines := make([]string, len(data.data)+1)
-	lines[0] = strings.Join(data.headers, "\t")
-	for i, row := range data.data {
+func (data *LegacyDataSet) String() string {
+	lines := make([]string, len(data.Data)+1)
+	lines[0] = strings.Join(data.Headers, "\t")
+	for i, row := range data.Data {
 		lines[i+1] = strings.Join(GetRowAsStrings(row), "\t")
 	}
 	return strings.Join(lines, "\n")
+}
+
+func CreateDataSet(headers []string) *LegacyDataSet {
+	return &LegacyDataSet{Headers: headers, Data: make([][]interface{}, 0)}
+}
+
+func (lds *LegacyDataSet) GetData() *LegacyDataSet {
+	return lds
+}
+
+func (lds *LegacyDataSet) AddRow(values ...interface{}) error {
+	if len(values) != len(lds.Headers) {
+		return fmt.Errorf("DataSet has %d columns (%s), but new row has %d (values: %s).", len(lds.Headers), strings.Join(lds.Headers, ", "), len(values), strings.Join(GetRowAsStrings(values), ", "))
+	}
+	lds.Data = append(lds.Data, values)
+	return nil
 }
 
 func GetRowAsStrings(row []interface{}) []string {
@@ -52,8 +49,4 @@ func GetRowAsStrings(row []interface{}) []string {
 		}
 	}
 	return stringValues
-}
-
-func CreateDataSet(headers []string) DataSet {
-	return &DefaultDataSet{headers: headers, data: make([][]interface{}, 0)}
 }

@@ -56,12 +56,13 @@ func main() {
 		}
 	*/
 
+	stackdriver := publishers.CreateStackdriverPublisher()
 	stdout := publishers.CreateStdoutPublisher(publishers.Csv)
 
 	srv := service.CreateService(handleError)
 
 	platformLoad := metrics.CreatePlatformLoad(bk, 100)
-	srv.AddMetric(platformLoad, 60, stdout)
+	srv.AddMetric(platformLoad, 60, stdout, stackdriver)
 	/*
 		buildsPerChange := metrics.CreateBuildsPerChange(bk, 500, settings.BuildkitePipelines...)
 		srv.AddMetric(buildsPerChange, 60, stdout)

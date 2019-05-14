@@ -87,7 +87,7 @@ func (c *CloudSql) Publish(metricName string, newData data.DataSet) error {
 		return fmt.Errorf("Could not find prepared insert statement for metric %s. Have you called RegisterMetric() first?", metricName)
 	}
 
-	for _, row := range newData.GetData() {
+	for _, row := range newData.GetData().Data {
 		_, err := stmt.prepared.Exec(row...)
 		if err != nil {
 			values := make([]string, len(row))
