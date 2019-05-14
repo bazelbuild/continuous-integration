@@ -67,6 +67,10 @@ Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
 # Add-WUServiceManager -ServiceID 7971f918-a847-4430-9279-4a52d1efe18d
 # Get-WindowsUpdate -Install -MicrosoftUpdate -AcceptAll -AutoReboot
 
+## Install support for managing NTFS ACLs in PowerShell.
+Write-Host "Installing NTFSSecurity module..."
+Install-Module NTFSSecurity
+
 ## Install Chocolatey
 Write-Host "Installing Chocolatey..."
 # Chocolatey adds "C:\ProgramData\chocolatey\bin" to global PATH.
@@ -332,12 +336,38 @@ SET TMP=D:\temp
 "@
     [System.IO.File]::WriteAllLines("${buildkite_agent_root}\hooks\environment.bat", $buildkite_environment_hook)
 
+    ## Create an unprivileged user that we'll run the Buildkite agent as.
+    # The password used here is not relevant for security, as the server is behind a
+    # firewall blocking all incoming access and locally we run the CI jobs as that
+    # user anyway.
+    Write-Host "Creating Buildkite service user..."
+    $buildkite_username = "b"
+    $buildkite_password = "Bu1ldk1t3"
+    $buildkite_secure_password = ConvertTo-SecureString $buildkite_password -AsPlainText -Force
+    New-LocalUser -Name $buildkite_username -Password $buildkite_secure_password -UserMayNotChangePassword
+    Add-NTFSAccess -Path "C:\buildkite" -Account "b" -AccessRights FullControl
+
     ## Allow the Buildkite agent to store SSH host keys in this folder.
     Write-Host "Creating C:\buildkite\.ssh folder..."
     New-Item "c:\buildkite\.ssh" -ItemType "directory"
 
     Write-Host "Creating C:\buildkite\logs folder..."
     New-Item "c:\buildkite\logs" -ItemType "directory"
+
+    ## Create a service for the Buildkite agent.
+    & choco install nssm
+
+    Write-Host "Creating Buildkite Agent service..."
+    nssm install "buildkite-agent" `
+        "c:\buildkite\buildkite-agent.exe" `
+        "start"
+    nssm set "buildkite-agent" "AppDirectory" "c:\buildkite"
+    nssm set "buildkite-agent" "DisplayName" "Buildkite Agent"
+    nssm set "buildkite-agent" "Start" "SERVICE_DEMAND_START"
+    nssm set "buildkite-agent" "ObjectName" ".\${buildkite_username}" "$buildkite_password"
+    nssm set "buildkite-agent" "AppExit" "Default" "Exit"
+    nssm set "buildkite-agent" "AppStdout" "COM1"
+    nssm set "buildkite-agent" "AppStderr" "COM1"
 } else {
     ## Remove empty folders (";;") from PATH.
     $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine").replace(";;", ";")
