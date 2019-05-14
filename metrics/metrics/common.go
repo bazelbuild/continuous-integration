@@ -7,7 +7,21 @@ import (
 )
 
 func getPlatform(job *buildkite.Job) string {
-	return getPlatformFromJobName(job.Name)
+	platform := getPlatformFromJobName(job.Name)
+	if platform == "" {
+		platform = getPlatformFromAgentQueryRules(job.AgentQueryRules)
+	}
+	return platform
+}
+
+func getPlatformFromAgentQueryRules(rules []string) string {
+	for _, r := range rules {
+		parts := strings.Split(r, "=")
+		if len(parts) == 2 && parts[0] == "os" {
+			return parts[1]
+		}
+	}
+	return ""
 }
 
 func getPlatformFromJobName(jobName *string) string {
