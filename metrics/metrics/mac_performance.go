@@ -39,7 +39,7 @@ func (mp *MacPerformance) Collect() (*data.DataSet, error) {
 
 		if build != lastAdded {
 			err = nil
-			if getPlatfrom(&jobName) == macPlatform {
+			if getPlatformFromJobName(&jobName) == macPlatform {
 				err = result.AddRow(row[0], row[1], row[4], row[5], false)
 				lastAdded = build
 			} else if strings.Contains(skipped_tasks, macPlatform) {
