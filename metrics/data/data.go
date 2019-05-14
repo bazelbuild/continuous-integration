@@ -3,6 +3,8 @@ package data
 import (
 	"fmt"
 	"strings"
+
+	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
 )
 
 type DataSet interface {
@@ -49,4 +51,8 @@ func GetRowAsStrings(row []interface{}) []string {
 		}
 	}
 	return stringValues
+}
+
+type StackDriverTimeSeriesDataSet interface {
+	CreateTimeSeriesRequest(projectID string) *monitoringpb.CreateTimeSeriesRequest
 }
