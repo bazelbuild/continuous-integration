@@ -24,7 +24,7 @@ func (f *Flakiness) Columns() []Column {
 	return f.columns
 }
 
-func (f *Flakiness) Collect() (*data.DataSet, error) {
+func (f *Flakiness) Collect() (data.DataSet, error) {
 	result := data.CreateDataSet(GetColumnNames(f.columns))
 	for _, pipeline := range f.pipelines {
 		contents, err := f.client.ReadAllFiles(f.gcsBucket, f.gcsSuffix+pipeline)

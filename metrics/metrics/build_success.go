@@ -22,7 +22,7 @@ func (bs *BuildSuccess) Columns() []Column {
 	return bs.columns
 }
 
-func (bs *BuildSuccess) Collect() (*data.DataSet, error) {
+func (bs *BuildSuccess) Collect() (data.DataSet, error) {
 	result := data.CreateDataSet(GetColumnNames(bs.columns))
 	for _, pipeline := range bs.pipelines {
 		builds, err := bs.client.GetMostRecentBuilds(pipeline, bs.builds)

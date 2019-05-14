@@ -23,7 +23,7 @@ func (mp *MacPerformance) Columns() []Column {
 	return mp.columns
 }
 
-func (mp *MacPerformance) Collect() (*data.DataSet, error) {
+func (mp *MacPerformance) Collect() (data.DataSet, error) {
 	perfData, err := mp.perfMetric.Collect()
 	if err != nil {
 		return nil, fmt.Errorf("Cannot calculate macOS metrics: %v", err)
@@ -31,7 +31,7 @@ func (mp *MacPerformance) Collect() (*data.DataSet, error) {
 
 	result := data.CreateDataSet(GetColumnNames(mp.columns))
 	var lastAdded string
-	for _, row := range perfData.Data {
+	for _, row := range perfData.GetData() {
 		str := data.GetRowAsStrings(row)
 		build := str[1]
 		jobName := str[2]

@@ -33,7 +33,7 @@ type pipelineStats struct {
 	multiPlatformFailures int
 }
 
-func (ps *PlatformSignificance) Collect() (*data.DataSet, error) {
+func (ps *PlatformSignificance) Collect() (data.DataSet, error) {
 	buildResult, err := ps.buildSuccess.Collect()
 	if err != nil {
 		return nil, err
@@ -51,9 +51,9 @@ func (ps *PlatformSignificance) Collect() (*data.DataSet, error) {
 	return result, nil
 }
 
-func collectPipelineResults(buildResult *data.DataSet) (map[string]*pipelineStats, error) {
+func collectPipelineResults(buildResult data.DataSet) (map[string]*pipelineStats, error) {
 	stats := make(map[string]*pipelineStats)
-	for _, row := range buildResult.Data {
+	for _, row := range buildResult.GetData() {
 		values, err := toString(row)
 		if err != nil {
 			return nil, fmt.Errorf("Could not process build_success results: %v", err)
