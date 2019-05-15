@@ -100,21 +100,22 @@ func (lds *loadDataSet) CreateTimeSeriesRequest(projectID string) *monitoringpb.
 	ts := &timestamp.Timestamp{
 		Seconds: lds.ts.Unix(),
 	}
-	series := make([]*monitoringpb.TimeSeries, len(lds.rows))
+	series := make([]*monitoringpb.TimeSeries, len(lds.rows)*3)
 	for i, row := range lds.rows {
-		series[i] = row.createTimeSeries(ts)
+		series[3*i] = createTimeSeries(ts, row.platform, "waiting_jobs", row.waitingJobs)
+		series[3*i+1] = createTimeSeries(ts, row.platform, "running_jobs", row.runningJobs)
+		series[3*i+2] = createTimeSeries(ts, row.platform, "unfinished_jobs", row.waitingJobs+row.runningJobs)
 	}
-
 	return &monitoringpb.CreateTimeSeriesRequest{
 		Name:       "projects/" + projectID,
 		TimeSeries: series,
 	}
 }
 
-func (ldr *loadDataRow) createTimeSeries(ts *timestamp.Timestamp) *monitoringpb.TimeSeries {
+func createTimeSeries(ts *timestamp.Timestamp, platform, metricType string, value int) *monitoringpb.TimeSeries {
 	return &monitoringpb.TimeSeries{
 		Metric: &metricpb.Metric{
-			Type: fmt.Sprintf("%s/%s/required_workers", baseMetricType, ldr.platform),
+			Type: fmt.Sprintf("%s/%s/%s", baseMetricType, platform, metricType),
 		},
 		Resource: &monitoredres.MonitoredResource{
 			Type: "global",
@@ -126,7 +127,7 @@ func (ldr *loadDataRow) createTimeSeries(ts *timestamp.Timestamp) *monitoringpb.
 			},
 			Value: &monitoringpb.TypedValue{
 				Value: &monitoringpb.TypedValue_Int64Value{
-					Int64Value: int64(ldr.waitingJobs + ldr.runningJobs),
+					Int64Value: int64(value),
 				},
 			},
 		}},
