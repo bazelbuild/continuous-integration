@@ -59,7 +59,7 @@ func (pl *PlatformLoad) Collect() (data.DataSet, error) {
 		}
 	}
 
-	result.rows = make([]loadDataRow, len(allPlatforms))
+	result.rows = make([]loadDataRow, 0)
 	for platform := range allPlatforms {
 		row := loadDataRow{platform: platform, waitingJobs: waiting[platform], runningJobs: running[platform]}
 		result.rows = append(result.rows, row)
@@ -99,9 +99,10 @@ func (lds *loadDataSet) CreateTimeSeriesRequest(projectID string) *monitoringpb.
 		Seconds: lds.ts.Unix(),
 	}
 	series := make([]*monitoringpb.TimeSeries, len(lds.rows))
-	for _, row := range lds.rows {
-		series = append(series, row.createTimeSeries("required_workers", ts))
+	for i, row := range lds.rows {
+		series[i] = row.createTimeSeries("required_workers", ts)
 	}
+
 	return &monitoringpb.CreateTimeSeriesRequest{
 		Name:       "projects/" + projectID,
 		TimeSeries: series,
