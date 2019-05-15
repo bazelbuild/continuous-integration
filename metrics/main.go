@@ -4,14 +4,14 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/fweikert/continuous-integration/metrics/clients"
 	"github.com/fweikert/continuous-integration/metrics/metrics"
 	"github.com/fweikert/continuous-integration/metrics/publishers"
 	"github.com/fweikert/continuous-integration/metrics/service"
+	"google.golang.org/appengine"
 )
 
 var (
@@ -24,6 +24,10 @@ const megaByte = 1024 * 1024
 
 func handleError(metricName string, err error) {
 	fmt.Printf("[%s] %v\n", metricName, err)
+}
+
+func handleRequest(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "You should try https://bazel.build")
 }
 
 func main() {
@@ -106,13 +110,10 @@ func main() {
 	if *testMode {
 		log.Println("[Test mode] Running all jobs exactly once...")
 		srv.RunJobsOnce()
-	} else {
-		srv.Start()
-
-		exitSignal := make(chan os.Signal)
-		signal.Notify(exitSignal, syscall.SIGINT, syscall.SIGTERM)
-		<-exitSignal
-
-		srv.Stop()
+		os.Exit(0)
 	}
+
+	srv.Start()
+	http.HandleFunc("/", handleRequest)
+	appengine.Main()
 }

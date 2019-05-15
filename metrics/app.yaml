@@ -3,3 +3,7 @@ api_version: go1
 
 beta_settings:
   cloud_sql_instances: bazel-untrusted:europe-west1:metrics
+
+handlers:
+- url: /.*
+  script: _go_app
