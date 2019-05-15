@@ -102,8 +102,8 @@ func (lds *loadDataSet) CreateTimeSeriesRequest(projectID string) *monitoringpb.
 	}
 	series := make([]*monitoringpb.TimeSeries, len(lds.rows)*2)
 	for i, row := range lds.rows {
-		series[i] = createTimeSeries(ts, row.platform, "waiting_jobs", row.waitingJobs)
-		series[i] = createTimeSeries(ts, row.platform, "running_jobs", row.runningJobs)
+		series[2*i] = createTimeSeries(ts, row.platform, "waiting_jobs", row.waitingJobs)
+		series[2*i+1] = createTimeSeries(ts, row.platform, "running_jobs", row.runningJobs)
 	}
 
 	return &monitoringpb.CreateTimeSeriesRequest{
