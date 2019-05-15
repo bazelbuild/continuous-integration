@@ -117,12 +117,10 @@ func (ldr *loadDataRow) createTimeSeries(metricType string, ts *timestamp.Timest
 				"platform": ldr.platform,
 			},
 		},
-		// TODO(fweikert): Fix
 		Resource: &monitoredres.MonitoredResource{
-			Type: "gce_instance",
+			Type: "global",
 			Labels: map[string]string{
-				"instance_id": "test-instance",
-				"zone":        "us-central1-f",
+				"platform": ldr.platform,
 			},
 		},
 		Points: []*monitoringpb.Point{{
