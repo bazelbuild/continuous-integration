@@ -61,7 +61,7 @@ func main() {
 		}
 	*/
 
-	stackdriver := publishers.CreateStackdriverPublisher(stackdriverClient, "bazel-untrusted")
+	stackdriver := publishers.CreateStackdriverPublisher(stackdriverClient, *projectID)
 	stdout := publishers.CreateStdoutPublisher(publishers.Csv)
 
 	srv := service.CreateService(handleError)
