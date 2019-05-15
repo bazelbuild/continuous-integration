@@ -12,6 +12,8 @@ import (
 	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
 )
 
+const baseMetricType = "custom.googleapis.com/bazel/ci"
+
 type PlatformLoad struct {
 	client  *clients.BuildkiteClient
 	columns []Column
@@ -98,9 +100,10 @@ func (lds *loadDataSet) CreateTimeSeriesRequest(projectID string) *monitoringpb.
 	ts := &timestamp.Timestamp{
 		Seconds: lds.ts.Unix(),
 	}
-	series := make([]*monitoringpb.TimeSeries, len(lds.rows))
+	series := make([]*monitoringpb.TimeSeries, len(lds.rows)*2)
 	for i, row := range lds.rows {
-		series[i] = row.createTimeSeries("required_workers", ts)
+		series[i] = createTimeSeries(ts, row.platform, "waiting_jobs", row.waitingJobs)
+		series[i] = createTimeSeries(ts, row.platform, "running_jobs", row.runningJobs)
 	}
 
 	return &monitoringpb.CreateTimeSeriesRequest{
@@ -109,19 +112,13 @@ func (lds *loadDataSet) CreateTimeSeriesRequest(projectID string) *monitoringpb.
 	}
 }
 
-func (ldr *loadDataRow) createTimeSeries(metricType string, ts *timestamp.Timestamp) *monitoringpb.TimeSeries {
+func createTimeSeries(ts *timestamp.Timestamp, platform, metricSuffix string, value int) *monitoringpb.TimeSeries {
 	return &monitoringpb.TimeSeries{
 		Metric: &metricpb.Metric{
-			Type: metricType,
-			Labels: map[string]string{
-				"platform": ldr.platform,
-			},
+			Type: fmt.Sprintf("%s/%s/%s", baseMetricType, platform, metricSuffix),
 		},
 		Resource: &monitoredres.MonitoredResource{
 			Type: "global",
-			Labels: map[string]string{
-				"platform": ldr.platform,
-			},
 		},
 		Points: []*monitoringpb.Point{{
 			Interval: &monitoringpb.TimeInterval{
@@ -130,7 +127,7 @@ func (ldr *loadDataRow) createTimeSeries(metricType string, ts *timestamp.Timest
 			},
 			Value: &monitoringpb.TypedValue{
 				Value: &monitoringpb.TypedValue_Int64Value{
-					Int64Value: int64(ldr.waitingJobs + ldr.runningJobs),
+					Int64Value: int64(value),
 				},
 			},
 		}},
