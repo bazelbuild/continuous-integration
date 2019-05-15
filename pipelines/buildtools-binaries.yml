@@ -8,7 +8,7 @@ steps:
     agents:
       - "kind=worker"
       - "os=macos"
-  - command: "powershell -Command \"bazel build -c opt --workspace_status_command='status.py' unused_deps buildifier buildozer ; if (\\$LastExitCode -ne 0) { exit 1 } ; Get-ChildItem -Path ./bazel-bin -Force -Recurse; buildkite-agent artifact upload ./bazel-bin/windows_amd64_stripped/buildozer.exe ; if (\\$LastExitCode -ne 0) { exit 1 } ; buildkite-agent artifact upload ./bazel-bin/windows_amd64_stripped/buildifier.exe ; if (\\$LastExitCode -ne 0) { exit 1 } ; buildkite-agent artifact upload ./bazel-bin/windows_amd64_stripped/unused_deps.exe ; if (\\$LastExitCode -ne 0) { exit 1 } ;\""
+  - command: "powershell -Command \"bazel build -c opt --workspace_status_command='status.py' unused_deps buildifier buildozer ; if (\\$LastExitCode -ne 0) { exit 1 } ; buildkite-agent artifact upload ./bazel-bin/buildozer/windows_amd64_stripped/buildozer.exe ; if (\\$LastExitCode -ne 0) { exit 1 } ; buildkite-agent artifact upload ./bazel-bin/buildifier/windows_amd64_stripped/buildifier.exe ; if (\\$LastExitCode -ne 0) { exit 1 } ; buildkite-agent artifact upload ./bazel-bin/unused_deps/windows_amd64_stripped/unused_deps.exe ; if (\\$LastExitCode -ne 0) { exit 1 } ;\""
     label: ":windows:"
     agents:
       - "kind=worker"
