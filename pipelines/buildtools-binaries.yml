@@ -1,6 +1,6 @@
 steps:
   - command: |-
-      bazel build -c opt --workspace_status_command="$$PWD/status.sh" unused_deps buildifier buildozer
+      bazel build -c opt --workspace_status_command="$$PWD/status.py" unused_deps buildifier buildozer
       buildkite-agent artifact upload "./bazel-bin/buildozer/darwin_amd64_stripped/buildozer"
       buildkite-agent artifact upload "./bazel-bin/buildifier/darwin_amd64_stripped/buildifier"
       buildkite-agent artifact upload "./bazel-bin/unused_deps/darwin_amd64_stripped/unused_deps"
@@ -8,8 +8,13 @@ steps:
     agents:
       - "kind=worker"
       - "os=macos"
+  - command: "powershell -Command \"bazel build -c opt --workspace_status_command='status.py' unused_deps buildifier buildozer ; if (\\$LastExitCode -ne 0) { exit 1 } ; buildkite-agent artifact upload ./bazel-bin/windows_amd64_stripped/buildozer.exe ; if (\\$LastExitCode -ne 0) { exit 1 } ; buildkite-agent artifact upload ./bazel-bin/windows_amd64_stripped/buildifier.exe ; if (\\$LastExitCode -ne 0) { exit 1 } ; buildkite-agent artifact upload ./bazel-bin/windows_amd64_stripped/unused_deps.exe ; if (\\$LastExitCode -ne 0) { exit 1 } ;\""
+    label: ":windows:"
+    agents:
+      - "kind=worker"
+      - "os=windows"
   - command: |-
-      bazel build -c opt --workspace_status_command="$$PWD/status.sh" unused_deps buildifier buildozer
+      bazel build -c opt --workspace_status_command="$$PWD/status.py" unused_deps buildifier buildozer
       buildkite-agent artifact upload "./bazel-bin/buildozer/linux_amd64_stripped/buildozer"
       buildkite-agent artifact upload "./bazel-bin/buildifier/linux_amd64_stripped/buildifier"
       buildkite-agent artifact upload "./bazel-bin/unused_deps/linux_amd64_stripped/unused_deps"
