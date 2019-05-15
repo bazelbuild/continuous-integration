@@ -132,7 +132,7 @@ DOWNSTREAM_PROJECTS = {
     },
     "Envoy": {
         "git_repository": "https://github.com/envoyproxy/envoy.git",
-        "http_config": "https://github.com/envoyproxy/envoy/blob/master/.bazelci/presubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/envoyproxy/envoy/master/.bazelci/presubmit.yml",
         "pipeline_slug": "envoy",
     },
     "Gerrit": {
