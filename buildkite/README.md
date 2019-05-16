@@ -382,3 +382,26 @@ tasks:
     build_targets:
     - "..."
 ```
+
+### Exporting JSON profiles of builds and tests
+
+[Bazel's JSON Profile](https://docs.bazel.build/versions/master/skylark/performance.html#json-profile) is a useful tool to investigate the performance of Bazel. You can configure your pipeline to export these JSON profiles on builds and tests using the `include_json_profile` option.
+
+Example usage:
+
+```yaml
+---
+platforms:
+  ubuntu1604:
+    include_json_profile:
+    - build
+    - test
+    build_targets:
+    - "..."
+    test_targets:
+    - "..."
+```
+
+When `include_json_profile` is specified with `build`, the builds will be carried out with the extra JSON profile flags. Similarly for `test`. Other values will be ignored.
+
+The exported JSON profiles are available as artifacts after each run.
