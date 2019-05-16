@@ -1736,7 +1736,9 @@ def create_emergency_announcement_step_if_necessary():
 
     return create_step(
         label=":rotating_light: Emergency :rotating_light:",
-        commands=['buildkite-agent annotate --append --style={} --context "omg" "{}"'.format(style, text)],
+        commands=[
+            'buildkite-agent annotate --append --style={} --context "omg" "{}"'.format(style, text)
+        ],
     )
 
 
