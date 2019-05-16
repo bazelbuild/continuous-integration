@@ -200,7 +200,7 @@ RUN dpkg --add-architecture i386 && \
     echo "Installing packages required by Tensorflow" && \
     apt-get -qqy install libcurl3-dev swig python-enum34 python-mock python-numpy python-pip python-wheel python3-mock python3-numpy python3-pip python3-wheel && \
     echo "Installing packages required by Envoy" && \
-    apt-get -qqy install automake autotools-dev cmake libtool m4 && \
+    apt-get -qqy install automake autotools-dev cmake libtool m4 ninja-build && \
     echo "Installing packages required by Android emulator" && \
     apt-get -qqy install cpio cpu-checker lsof qemu-kvm qemu-system-x86 unzip xvfb && \
     echo "Installing packages required by Bazel release process" && \
@@ -313,7 +313,7 @@ RUN dpkg --add-architecture i386 && \
     echo "Installing packages required by Tensorflow" && \
     apt-get -qqy install libcurl3-dev swig python-enum34 python-mock python-numpy python-pip python-wheel python3-mock python3-numpy python3-pip python3-wheel && \
     echo "Installing packages required by Envoy" && \
-    apt-get -qqy install automake autotools-dev cmake libtool m4 && \
+    apt-get -qqy install automake autotools-dev cmake libtool m4 ninja-build && \
     echo "Installing packages required by Android emulator" && \
     apt-get -qqy install cpio cpu-checker lsof qemu-kvm qemu-system-x86 unzip xvfb && \
     echo "Installing packages required by Bazel release process" && \
