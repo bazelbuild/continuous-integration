@@ -1528,7 +1528,7 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None):
                 "propagate-environment": True,
                 "volumes": [
                     ".:/workdir",
-                    "{0}:{0}".format("/home/bazel/.cache/bazel/_bazel_bazel/cache"),
+                    "/var/lib/docker/bazel-cache:/home/bazel/.cache/bazel/_bazel_bazel/cache",
                     "{0}:{0}".format("/var/lib/bazelbuild"),
                     "{0}:{0}".format("/var/run/docker.sock"),
                 ],

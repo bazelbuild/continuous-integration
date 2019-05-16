@@ -55,13 +55,6 @@ curl https://storage.googleapis.com/bazel-git-mirror/bazelbuild-mirror.tar | tar
 chown -R buildkite-agent:buildkite-agent /var/lib/bazelbuild
 chmod -R 0755 /var/lib/bazelbuild
 
-# Create filesystem for Bazel's repository cache.
-BAZEL_HOME="/home/bazel/.cache/bazel/_bazel_bazel"
-rm -rf "${BAZEL_HOME}/cache"
-zfs create -o "mountpoint=${BAZEL_HOME}/cache" bazel/cache
-chown buildkite-agent:buildkite-agent "${BAZEL_HOME}/cache"
-chmod 0755 "${BAZEL_HOME}/cache"
-
 # Create filesystem for Bazel's install bases.
 rm -rf "${BAZEL_HOME}/install"
 zfs create -o mountpoint="${BAZEL_HOME}/install" bazel/install
@@ -79,6 +72,10 @@ rm -rf /var/lib/docker
 zfs create -o mountpoint=/var/lib/docker bazel/docker
 chown root:root /var/lib/docker
 chmod 0711 /var/lib/docker
+
+mkdir /var/lib/docker/bazel-cache
+chown buildkite-agent:buildkite-agent /var/lib/docker/bazel-cache
+chmod 0755 /var/lib/docker/bazel-cache
 
 # Get configuration parameters.
 case $(hostname) in
