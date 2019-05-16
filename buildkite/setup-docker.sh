@@ -128,6 +128,14 @@ EOF
   echo 'KERNEL=="kvm", NAME="%k", GROUP="kvm", MODE="0666"' > /etc/udev/rules.d/65-kvm.rules
 }
 
+# Preseed our Git mirrors.
+{
+  mkdir -p /var/lib/bazelbuild
+  curl https://storage.googleapis.com/bazel-git-mirror/bazelbuild-mirror.tar | tar x -C /var/lib
+  chown -R buildkite-agent:buildkite-agent /var/lib/bazelbuild
+  chmod -R 0755 /var/lib/bazelbuild
+}
+
 ### Clean up and trim the filesystem (potentially reduces the final image size).
 {
   rm -rf /var/lib/apt/lists/*

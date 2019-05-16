@@ -48,13 +48,6 @@ zpool create -f \
     -O xattr=sa \
     bazel /dev/nvme0n?
 
-# Create filesystem for the Git mirrors.
-rm -rf /var/lib/bazelbuild
-zfs create -o mountpoint=/var/lib/bazelbuild bazel/bazelbuild
-curl https://storage.googleapis.com/bazel-git-mirror/bazelbuild-mirror.tar | tar x -C /var/lib
-chown -R buildkite-agent:buildkite-agent /var/lib/bazelbuild
-chmod -R 0755 /var/lib/bazelbuild
-
 # Create filesystem for buildkite-agent's
 rm -rf /var/lib/buildkite-agent
 zfs create -o mountpoint=/var/lib/buildkite-agent bazel/buildkite-agent
