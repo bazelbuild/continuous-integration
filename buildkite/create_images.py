@@ -128,7 +128,6 @@ def create_instance(instance_name, params):
             machine_type="n1-standard-8",
             network=params.get("network", "buildkite"),
             metadata_from_file=startup_script,
-            min_cpu_platform="Intel Skylake",
             boot_disk_type="pd-ssd",
             boot_disk_size="50GB",
             **image,
