@@ -770,7 +770,7 @@ def execute_commands(
             json_profile_flags = []
             include_json_profile_build = "build" in include_json_profile
             if include_json_profile_build:
-                json_profile_out_build = os.path.join(tmpdir, "build.profile")
+                json_profile_out_build = os.path.join(tmpdir, "build.profile.gz")
                 json_profile_flags = get_json_profile_flags(json_profile_out_build)
 
             try:
@@ -793,7 +793,7 @@ def execute_commands(
             json_profile_flags = []
             include_json_profile_test = "test" in include_json_profile
             if include_json_profile_test:
-                json_profile_out_test = os.path.join(tmpdir, "test.profile")
+                json_profile_out_test = os.path.join(tmpdir, "test.profile.gz")
                 json_profile_flags = get_json_profile_flags(json_profile_out_test)
 
             test_flags = task_config.get("test_flags", []) + json_profile_flags
