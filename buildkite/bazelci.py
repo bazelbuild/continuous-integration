@@ -1073,6 +1073,7 @@ def remote_caching_flags(platform):
         flags = [
             "--google_default_credentials",
             "--remote_cache=remotebuildexecution.googleapis.com",
+            "--remote_instance_name=projects/{}/instances/default_instance".format(CLOUD_PROJECT),
             "--tls_enabled=true",
         ]
 
