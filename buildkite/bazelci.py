@@ -1069,18 +1069,22 @@ def remote_caching_flags(platform):
             # Platform name:
             platform.encode("utf-8")
         ]
-        # Use GCS for caching builds running on GCE.
-        cache_url = "https://storage.googleapis.com/bazel-untrusted-buildkite-cache"
+        # Use RBE for caching builds running on GCE.
+        cache_url = "grpcs://remotebuildexecution.googleapis.com"
 
     platform_cache_digest = hashlib.sha256()
     for key in platform_cache_key:
+        eprint("Adding to platform cache key: {}".format(key))
         platform_cache_digest.update(key)
         platform_cache_digest.update(b":")
 
     flags = [
         "--remote_timeout=60",
         "--remote_max_connections=200",
-        "--remote_http_cache={}/{}".format(cache_url, platform_cache_digest.hexdigest()),
+        "--remote_cache={}".format(cache_url),
+        '--remote_default_platform_properties=properties:{name:"cache-silo-key" value:"{}"}'.format(
+            platform_cache_digest.hexdigest()
+        ),
     ]
 
     # Need to use the correct credentials when running on GCE.
@@ -1245,8 +1249,7 @@ def execute_bazel_clean(bazel_binary, platform):
 def execute_bazel_build(
     bazel_version, bazel_binary, platform, flags, targets, bep_file, incompatible_flags
 ):
-    print_expanded_group(":bazel: Build ({})".format(bazel_version))
-
+    print_collapsed_group(":bazel: Computing flags for build step")
     aggregated_flags = compute_flags(
         platform,
         flags,
@@ -1256,6 +1259,8 @@ def execute_bazel_build(
         bep_file,
         enable_remote_cache=True,
     )
+
+    print_expanded_group(":bazel: Build ({})".format(bazel_version))
     try:
         execute_command(
             [bazel_binary]
@@ -1346,8 +1351,6 @@ def execute_bazel_test(
     monitor_flaky_tests,
     incompatible_flags,
 ):
-    print_expanded_group(":bazel: Test ({})".format(bazel_version))
-
     aggregated_flags = [
         "--flaky_test_attempts=3",
         "--build_tests_only",
@@ -1356,6 +1359,7 @@ def execute_bazel_test(
     # Don't enable remote caching if the user enabled remote execution / caching themselves
     # or flaky test monitoring is enabled, as remote caching makes tests look less flaky than
     # they are.
+    print_collapsed_group(":bazel: Computing flags for test step")
     aggregated_flags += compute_flags(
         platform,
         flags,
@@ -1366,6 +1370,7 @@ def execute_bazel_test(
         enable_remote_cache=not monitor_flaky_tests,
     )
 
+    print_expanded_group(":bazel: Test ({})".format(bazel_version))
     try:
         execute_command(
             [bazel_binary]
