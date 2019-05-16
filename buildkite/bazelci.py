@@ -1082,9 +1082,8 @@ def remote_caching_flags(platform):
         "--remote_timeout=60",
         "--remote_max_connections=200",
         "--remote_cache={}".format(cache_url),
-        '--remote_default_platform_properties=properties:{name:"cache-silo-key" value:"{}"}'.format(
-            platform_cache_digest.hexdigest()
-        ),
+        '--remote_default_platform_properties=properties:{name:"cache-silo-key" value:"%s"}'
+        % platform_cache_digest.hexdigest(),
     ]
 
     # Need to use the correct credentials when running on GCE.
