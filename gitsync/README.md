@@ -15,7 +15,7 @@ $ gcloud compute instances create-with-container \
     --container-image gcr.io/bazel-public/gitsync:latest \
     --machine-type n1-standard-1 \
     --network buildkite \
-    --zone europe-west1-d \
+    --zone us-central1-a \
     --image-project cos-cloud \
     --image-family cos-stable \
     --metadata cos-metrics-enabled=true \
