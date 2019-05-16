@@ -55,12 +55,6 @@ curl https://storage.googleapis.com/bazel-git-mirror/bazelbuild-mirror.tar | tar
 chown -R buildkite-agent:buildkite-agent /var/lib/bazelbuild
 chmod -R 0755 /var/lib/bazelbuild
 
-# Create filesystem for Bazel's install bases.
-rm -rf "${BAZEL_HOME}/install"
-zfs create -o mountpoint="${BAZEL_HOME}/install" bazel/install
-chown buildkite-agent:buildkite-agent "${BAZEL_HOME}/install"
-chmod 0755 "${BAZEL_HOME}/install"
-
 # Create filesystem for buildkite-agent's
 rm -rf /var/lib/buildkite-agent
 zfs create -o mountpoint=/var/lib/buildkite-agent bazel/buildkite-agent
