@@ -180,7 +180,7 @@ Create candidates with the release.sh script.
 ## Push a release
 
 1.  Verify that the following conditions **all apply**:
-    1.  at least **2 weeks passed since you pushed RC1**, and
+    1.  at least **1 weeks passed since you pushed RC1**, and
     1.  at least **2 business days passed since you pushed the last RC**, and
     1.  there are **no open ["Release blocking" Bazel bugs](https://github.com/bazelbuild/bazel/labels/Release%20blocker)** on GitHub.
 1.  Generate a new identifier: https://bazel.googlesource.com/new-password (and paste the code in your shell).
