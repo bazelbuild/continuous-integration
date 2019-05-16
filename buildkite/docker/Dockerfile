@@ -1,38 +1,8 @@
-### Install Android NDK.
 FROM ubuntu AS builder
 ENV DEBIAN_FRONTEND="noninteractive"
 RUN apt-get -qqy update && \
     apt-get -qqy install curl openjdk-8-jre-headless unzip && \
     rm -rf /var/lib/apt/lists/*
-
-FROM builder AS android_ndk
-RUN cd /opt && \
-    curl -Lo android-ndk.zip https://dl.google.com/android/repository/android-ndk-r15c-linux-x86_64.zip && \
-    unzip android-ndk.zip > /dev/null && \
-    rm android-ndk.zip && \
-    chown -R root:root /opt/android-ndk-r15c
-
-FROM builder AS android_sdk
-RUN mkdir -p /opt/android-sdk-linux && \
-    cd /opt/android-sdk-linux && \
-    curl -Lo android-sdk.zip https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip && \
-    unzip android-sdk.zip > /dev/null && \
-    rm android-sdk.zip && \
-    yes | tools/bin/sdkmanager --licenses > /dev/null && \
-    tools/bin/sdkmanager --update && \
-    tools/bin/sdkmanager \
-    "build-tools;27.0.3" \
-    "build-tools;28.0.2" \
-    "emulator" \
-    "extras;android;m2repository" \
-    "platform-tools" \
-    "platforms;android-24" \
-    "platforms;android-28" \
-    "system-images;android-19;default;x86" \
-    "system-images;android-21;default;x86" \
-    "system-images;android-22;default;x86" \
-    "system-images;android-23;default;x86" && \
-    chown -R root:root /opt/android-sdk-linux
 
 FROM builder AS bazelisk
 RUN curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v0.0.4/bazelisk-linux-amd64 && \
@@ -64,11 +34,7 @@ RUN curl -L https://saucelabs.com/downloads/sc-4.5.3-linux.tar.gz | \
 ###############################################################################
 
 FROM ubuntu:14.04 as ubuntu1404-nojava
-ENV DEBIAN_FRONTEND="noninteractive" \
-    ANDROID_HOME="/opt/android-sdk-linux" \
-    ANDROID_NDK_HOME="/opt/android-ndk-r15c"
-COPY --from=android_ndk /opt/android-ndk-r15c /opt/android-ndk-r15c/
-COPY --from=android_sdk /opt/android-sdk-linux /opt/android-sdk-linux/
+ENV DEBIAN_FRONTEND="noninteractive"
 COPY --from=bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
 COPY --from=buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
 COPY --from=github-release /usr/local/bin/github-release /usr/local/bin/github-release
@@ -175,11 +141,7 @@ USER bazel
 ###############################################################################
 
 FROM ubuntu:16.04 as ubuntu1604-nojava
-ENV DEBIAN_FRONTEND="noninteractive" \
-    ANDROID_HOME="/opt/android-sdk-linux" \
-    ANDROID_NDK_HOME="/opt/android-ndk-r15c"
-COPY --from=android_ndk /opt/android-ndk-r15c /opt/android-ndk-r15c/
-COPY --from=android_sdk /opt/android-sdk-linux /opt/android-sdk-linux/
+ENV DEBIAN_FRONTEND="noninteractive"
 COPY --from=bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
 COPY --from=buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
 COPY --from=github-release /usr/local/bin/github-release /usr/local/bin/github-release
@@ -288,11 +250,7 @@ USER bazel
 ###############################################################################
 
 FROM ubuntu:18.04 as ubuntu1804-nojava
-ENV DEBIAN_FRONTEND="noninteractive" \
-    ANDROID_HOME="/opt/android-sdk-linux" \
-    ANDROID_NDK_HOME="/opt/android-ndk-r15c"
-COPY --from=android_ndk /opt/android-ndk-r15c /opt/android-ndk-r15c/
-COPY --from=android_sdk /opt/android-sdk-linux /opt/android-sdk-linux/
+ENV DEBIAN_FRONTEND="noninteractive"
 COPY --from=bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
 COPY --from=buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
 COPY --from=github-release /usr/local/bin/github-release /usr/local/bin/github-release

@@ -30,6 +30,23 @@ export DEBIAN_FRONTEND="noninteractive"
   apt-get -qqy update
   apt-get -qqy dist-upgrade
   apt-get -qqy install zfsutils-linux
+  apt-get -qqy install nfs-common
+}
+
+### Add our Cloud Filestore volume to the fstab.
+{
+  case $(hostname -f) in
+    *.bazel-public.*)
+      cat >> /etc/fstab <<'EOF'
+10.93.166.218:/buildkite /opt nfs defaults 0 2
+EOF
+      ;;
+    *.bazel-untrusted.*)
+      cat >> /etc/fstab <<'EOF'
+10.76.94.74:/buildkite /opt nfs defaults 0 2
+EOF
+;;
+  esac
 }
 
 ### Increase file descriptor limits

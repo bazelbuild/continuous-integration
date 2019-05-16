@@ -1509,7 +1509,7 @@ def create_step(label, commands, platform=DEFAULT_PLATFORM, shards=1):
 
 
 def create_docker_step(label, image, commands=None, additional_env_vars=None):
-    env = ["BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"]
+    env = ["ANDROID_HOME", "ANDROID_NDK_HOME", "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"]
     if additional_env_vars:
         env += ["{}={}".format(k, v) for k, v in additional_env_vars.items()]
 
@@ -1529,6 +1529,7 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None):
                 "volumes": [
                     ".:/workdir",
                     "/var/lib/docker/bazel-cache:/home/bazel/.cache/bazel/_bazel_bazel/cache",
+                    "{0}:{0}:ro".format("/opt"),
                     "{0}:{0}".format("/var/lib/bazelbuild"),
                     "{0}:{0}".format("/var/run/docker.sock"),
                 ],

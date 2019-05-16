@@ -133,6 +133,8 @@ cat > /etc/buildkite-agent/hooks/environment <<EOF
 set -euo pipefail
 
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/snap/google-cloud-sdk/current/bin"
+export ANDROID_HOME=/opt/android-sdk-linux
+export ANDROID_NDK_HOME=/opt/android-ndk-r15c
 export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://${ARTIFACT_BUCKET}/\$BUILDKITE_JOB_ID"
 EOF
 
