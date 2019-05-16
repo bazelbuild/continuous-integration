@@ -796,7 +796,7 @@ def execute_commands(
                 json_profile_out_test = os.path.join(tmpdir, "test.profile")
                 json_profile_flags = get_json_profile_flags(json_profile_out_test)
 
-            test_flags = task_config.get("test_flags", []) + json_profile_path
+            test_flags = task_config.get("test_flags", []) + json_profile_flags
             if test_env_vars:
                 test_flags += ["--test_env={}".format(v) for v in test_env_vars]
 
