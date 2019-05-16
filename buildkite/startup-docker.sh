@@ -46,6 +46,9 @@ mkdir /var/lib/docker/bazel-cache
 chown buildkite-agent:buildkite-agent /var/lib/docker/bazel-cache
 chmod 0755 /var/lib/docker/bazel-cache
 
+# Let 'localhost' resolve to '::1', otherwise one of Envoy's tests fails.
+sed -i 's/^::1 .*/::1 localhost ip6-localhost ip6-loopback/' /etc/hosts
+
 # Get configuration parameters.
 case $(hostname -f) in
   *.bazel-public.*)
