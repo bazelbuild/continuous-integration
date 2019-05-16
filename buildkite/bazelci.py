@@ -768,11 +768,10 @@ def execute_commands(
 
         if build_targets:
             json_profile_flags = []
-            include_json_profile_build = 'build' in include_json_profile
+            include_json_profile_build = "build" in include_json_profile
             if include_json_profile_build:
                 json_profile_out_build = os.path.join(tmpdir, "build.profile")
-                json_profile_flags = get_json_profile_flags(
-                    json_profile_out_build)
+                json_profile_flags = get_json_profile_flags(json_profile_out_build)
 
             try:
                 execute_bazel_build(
@@ -788,15 +787,14 @@ def execute_commands(
                     upload_bazel_binary(platform)
             finally:
                 if include_json_profile_build:
-                  upload_json_profile(json_profile_out_build, tmpdir)
+                    upload_json_profile(json_profile_out_build, tmpdir)
 
         if test_targets:
             json_profile_flags = []
-            include_json_profile_test = 'test' in include_json_profile
+            include_json_profile_test = "test" in include_json_profile
             if include_json_profile_test:
                 json_profile_out_test = os.path.join(tmpdir, "test.profile")
-                json_profile_flags = get_json_profile_flags(
-                    json_profile_out_test)
+                json_profile_flags = get_json_profile_flags(json_profile_out_test)
 
             test_flags = task_config.get("test_flags", []) + json_profile_path
             if test_env_vars:
@@ -844,7 +842,7 @@ def execute_commands(
             finally:
                 upload_test_logs(test_bep_file, tmpdir)
                 if include_json_profile_test:
-                  upload_json_profile(json_profile_out_test, tmpdir)
+                    upload_json_profile(json_profile_out_test, tmpdir)
     finally:
         if sc_process:
             sc_process.terminate()
@@ -1406,7 +1404,7 @@ def get_json_profile_flags(out_file):
         "--experimental_generate_json_trace_profile",
         "--experimental_profile_cpu_usage",
         "--experimental_json_trace_compression",
-        "--profile={}".format(out_file)
+        "--profile={}".format(out_file),
     ]
 
 
@@ -1430,9 +1428,7 @@ def upload_json_profile(json_profile_path, tmpdir):
     if not os.path.exists(json_profile_path):
         return
     print_collapsed_group(":gcloud: Uploading JSON Profile")
-    execute_command(
-        ["buildkite-agent", "artifact", "upload", json_profile_path],
-        cwd=tmpdir)
+    execute_command(["buildkite-agent", "artifact", "upload", json_profile_path], cwd=tmpdir)
 
 
 def test_logs_to_upload(bep_file, tmpdir):
@@ -1516,7 +1512,9 @@ def execute_command_and_get_output(
 
 def execute_command(args, shell=False, fail_if_nonzero=True, cwd=None):
     eprint(" ".join(args))
-    return subprocess.run(args, shell=shell, check=fail_if_nonzero, env=os.environ, cwd=cwd).returncode
+    return subprocess.run(
+        args, shell=shell, check=fail_if_nonzero, env=os.environ, cwd=cwd
+    ).returncode
 
 
 def execute_command_background(args):
