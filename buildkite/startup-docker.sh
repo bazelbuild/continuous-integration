@@ -27,7 +27,7 @@ snap wait system seed.loaded
 export DEBIAN_FRONTEND="noninteractive"
 
 # Ubuntu 18.04 installs gcloud, gsutil, etc. commands in /snap/bin
-export PATH=$PATH:/snap/bin:/snap/google-cloud-sdk/current/bin
+export PATH="$PATH:/snap/bin:/snap/google-cloud-sdk/current/bin"
 
 # Optimize the CPU scheduler for throughput.
 # (see https://unix.stackexchange.com/questions/466722/how-to-change-the-length-of-time-slices-used-by-the-linux-cpu-scheduler/466723)
@@ -47,15 +47,15 @@ chown buildkite-agent:buildkite-agent /var/lib/docker/bazel-cache
 chmod 0755 /var/lib/docker/bazel-cache
 
 # Get configuration parameters.
-case $(hostname) in
-  *trusted*)
+case $(hostname -f) in
+  *.bazel-public.*)
     PROJECT="bazel-public"
     ARTIFACT_BUCKET="bazel-trusted-buildkite-artifacts"
     # Get the Buildkite Token from GCS and decrypt it using KMS.
     BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-trusted-encrypted-secrets/buildkite-trusted-agent-token.enc" | \
         gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key buildkite-trusted-agent-token --ciphertext-file - --plaintext-file -)
     ;;
-  *)
+  *.bazel-untrusted.*)
     PROJECT="bazel-untrusted"
     ARTIFACT_BUCKET="bazel-untrusted-buildkite-artifacts"
     # Get the Buildkite Token from GCS and decrypt it using KMS.
@@ -69,11 +69,6 @@ systemctl start docker
 
 # Pull some known images so that we don't have to download / extract them on each CI job.
 gcloud auth configure-docker --quiet
-docker pull "gcr.io/${PROJECT}/ubuntu1404:java8" &
-docker pull "gcr.io/${PROJECT}/ubuntu1604:java8" &
-docker pull "gcr.io/${PROJECT}/ubuntu1804:java11" &
-docker pull "gcr.io/${PROJECT}/ubuntu1804:nojava" &
-wait
 
 # Allow the Buildkite agent to access Docker images on GCR.
 sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
@@ -96,10 +91,10 @@ cat > /etc/buildkite-agent/hooks/environment <<EOF
 
 set -euo pipefail
 
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/snap/google-cloud-sdk/current/bin"
 export ANDROID_HOME=/opt/android-sdk-linux
 export ANDROID_NDK_HOME=/opt/android-ndk-r15c
 export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://${ARTIFACT_BUCKET}/\$BUILDKITE_JOB_ID"
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/snap/google-cloud-sdk/current/bin"
 EOF
 
 # Fix permissions of the Buildkite agent configuration files and hooks.

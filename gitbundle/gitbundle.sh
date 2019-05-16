@@ -13,8 +13,8 @@ function mirror() {
     repo="$1"
     remote_name="$(echo -n $repo | tr -C '[[:alnum:]]' '-')"
     if [[ -d $remote_name ]]; then
-        git --git-dir "${remote_name}" remote set-url origin "${repo}"
-        git --git-dir "${remote_name}" remote update --prune
+        git -C "${remote_name}" remote set-url origin "${repo}"
+        git -C "${remote_name}" remote update --prune
     else
         git clone --mirror "${repo}" "${remote_name}"
     fi
@@ -22,12 +22,14 @@ function mirror() {
 
 for repo in $(curl -sS -H "Authorization: Bearer ${BUILDKITE_API_TOKEN}" "https://api.buildkite.com/v2/organizations/bazel/pipelines?per_page=100" \
     | jq '.[] | .repository' | sort -u | sed -e 's/^"//' -e 's/"$//'); do
-    mirror "$repo"
+    mirror "$repo" &
 done
 
 for repo in $(fgrep '"git_repository": "' ../buildkite/bazelci.py | cut -d'"' -f4 | sort -u); do
-    mirror "$repo"
+    mirror "$repo" &
 done
+
+wait
 
 cd ..
 tar c bazelbuild | gsutil cp - "gs://bazel-git-mirror/bazelbuild-mirror.tar"

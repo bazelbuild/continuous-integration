@@ -50,7 +50,7 @@ EOF
 
 ### Increase file descriptor limits
 {
-cat >> /etc/security/limits.conf <<EOF
+  cat >> /etc/security/limits.conf <<'EOF'
 *                soft    nofile          100000
 *                hard    nofile          100000
 EOF
