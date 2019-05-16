@@ -1063,14 +1063,14 @@ def remote_caching_flags(platform):
             subprocess.check_output(["/usr/bin/xcodebuild", "-version"]),
         ]
         # Use a local cache server for our macOS machines.
-        cache_url = "http://100.107.73.186"
+        flags = ["--remote_cache=http://100.107.73.186"]
     else:
         platform_cache_key = [
             # Platform name:
             platform.encode("utf-8")
         ]
         # Use RBE for caching builds running on GCE.
-        cache_url = "grpcs://remotebuildexecution.googleapis.com"
+        flags = ["--remote_cache=remotebuildexecution.googleapis.com", "--tls_enabled=true"]
 
     platform_cache_digest = hashlib.sha256()
     for key in platform_cache_key:
@@ -1081,7 +1081,6 @@ def remote_caching_flags(platform):
     flags = [
         "--remote_timeout=60",
         "--remote_max_connections=200",
-        "--remote_cache={}".format(cache_url),
         '--remote_default_platform_properties=properties:{name:"cache-silo-key" value:"%s"}'
         % platform_cache_digest.hexdigest(),
     ]
