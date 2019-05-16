@@ -81,7 +81,6 @@ chmod 0755 /var/lib/docker/bazel-cache
 case $(hostname) in
   *trusted*)
     PROJECT="bazel-public"
-    REGISTRY="docker-cache.europe-west1-c.c.${PROJECT}.internal:5000"
     ARTIFACT_BUCKET="bazel-trusted-buildkite-artifacts"
     # Get the Buildkite Token from GCS and decrypt it using KMS.
     BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-trusted-encrypted-secrets/buildkite-trusted-agent-token.enc" | \
@@ -89,7 +88,6 @@ case $(hostname) in
     ;;
   *)
     PROJECT="bazel-untrusted"
-    REGISTRY="docker-cache.europe-north1-a.c.${PROJECT}.internal:5000"
     ARTIFACT_BUCKET="bazel-untrusted-buildkite-artifacts"
     # Get the Buildkite Token from GCS and decrypt it using KMS.
     BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-untrusted-encrypted-secrets/buildkite-untrusted-agent-token.enc" | \
@@ -100,7 +98,6 @@ esac
 # Configure and start Docker.
 cat > /etc/docker/daemon.json <<EOF
 {
-  "insecure-registries" : ["${REGISTRY}"],
   "storage-driver": "zfs"
 }
 EOF
@@ -114,7 +111,7 @@ docker pull "gcr.io/${PROJECT}/ubuntu1804:java11" &
 docker pull "gcr.io/${PROJECT}/ubuntu1804:nojava" &
 wait
 
-# Allow the Buildkite agent to access Docker images on our registry.
+# Allow the Buildkite agent to access Docker images on GCR.
 sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
 
 # Write the Buildkite agent configuration.
