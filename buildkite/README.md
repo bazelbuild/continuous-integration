@@ -391,7 +391,7 @@ Example usage:
 
 ```yaml
 ---
-platforms:
+tasks:
   ubuntu1604:
     include_json_profile:
     - build
