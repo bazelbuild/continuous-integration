@@ -765,17 +765,16 @@ def execute_commands(
         if not build_targets and not test_targets:
             raise BuildkiteException("There are neither build nor test targets")
 
+        include_json_profile = task_config.get("include_json_profile", [])
+
         if build_targets:
             json_profile_flags = []
-            include_json_profile = task_config.get("include_json_profile", False)
+            include_json_profile_build = 'build' in include_json_profile
+            if include_json_profile_build:
+                json_profile_out_build = os.path.join(tmpdir, "build.profile")
+                json_profile_flags = get_json_profile_flags(
+                    json_profile_out_build)
 
-            if include_json_profile:
-                json_profile_temp_out = os.path.join(tmpdir, "build.profile")
-                json_profile_flags = [
-                    "--experimental_generate_json_trace_profile",
-                    "--experimental_profile_cpu_usage",
-                    "--profile={}".format(json_profile_temp_out)
-                ]
             try:
                 execute_bazel_build(
                     bazel_version,
@@ -789,11 +788,18 @@ def execute_commands(
                 if save_but:
                     upload_bazel_binary(platform)
             finally:
-                if include_json_profile:
-                  upload_json_profile(json_profile_temp_out, tmpdir)
+                if include_json_profile_build:
+                  upload_json_profile(json_profile_out_build, tmpdir)
 
         if test_targets:
-            test_flags = task_config.get("test_flags", [])
+            json_profile_flags = []
+            include_json_profile_test = 'test' in include_json_profile
+            if include_json_profile_test:
+                json_profile_out_test = os.path.join(tmpdir, "test.profile")
+                json_profile_flags = get_json_profile_flags(
+                    json_profile_out_test)
+
+            test_flags = task_config.get("test_flags", []) + json_profile_path
             if test_env_vars:
                 test_flags += ["--test_env={}".format(v) for v in test_env_vars]
 
@@ -838,6 +844,8 @@ def execute_commands(
                         )
             finally:
                 upload_test_logs(test_bep_file, tmpdir)
+                if include_json_profile_test:
+                  upload_json_profile(json_profile_out_test, tmpdir)
     finally:
         if sc_process:
             sc_process.terminate()
@@ -1392,6 +1400,15 @@ def execute_bazel_test(
         )
     except subprocess.CalledProcessError as e:
         handle_bazel_failure(e, "test")
+
+
+def get_json_profile_flags(out_file):
+    return [
+        "--experimental_generate_json_trace_profile",
+        "--experimental_profile_cpu_usage",
+        "--experimental_json_trace_compression",
+        "--profile={}".format(out_file)
+    ]
 
 
 def upload_test_logs(bep_file, tmpdir):
