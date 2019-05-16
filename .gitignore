@@ -4,3 +4,4 @@
 /target/
 __pycache__
 .vscode
+/gitbundle/bazelbuild/
