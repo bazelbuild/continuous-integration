@@ -99,6 +99,10 @@ fi
 EOF
   chown buildkite-agent:buildkite-agent /etc/buildkite-agent/hooks/*
   chmod 0500 /etc/buildkite-agent/hooks/*
+
+  mkdir -p /var/lib/buildkite-agent
+  chown buildkite-agent:buildkite-agent /var/lib/buildkite-agent
+  chmod 0755 /var/lib/buildkite-agent
 }
 
 ### Install Docker.

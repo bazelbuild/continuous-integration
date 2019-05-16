@@ -12,7 +12,7 @@
 #
 ---
 default_vm:
-  boot_disk_size: 50GB
+  boot_disk_size: 100GB
   boot_disk_type: pd-ssd
   machine_type: n1-standard-32
   network: buildkite

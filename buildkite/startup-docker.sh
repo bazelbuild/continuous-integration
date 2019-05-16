@@ -48,12 +48,6 @@ zpool create -f \
     -O xattr=sa \
     bazel /dev/nvme0n?
 
-# Create filesystem for buildkite-agent's
-rm -rf /var/lib/buildkite-agent
-zfs create -o mountpoint=/var/lib/buildkite-agent bazel/buildkite-agent
-chown buildkite-agent:buildkite-agent /var/lib/buildkite-agent
-chmod 0755 /var/lib/buildkite-agent
-
 # Create filesystem for Docker.
 rm -rf /var/lib/docker
 zfs create -o mountpoint=/var/lib/docker bazel/docker
