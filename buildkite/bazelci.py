@@ -1070,7 +1070,11 @@ def remote_caching_flags(platform):
             platform.encode("utf-8")
         ]
         # Use RBE for caching builds running on GCE.
-        flags = ["--remote_cache=remotebuildexecution.googleapis.com", "--tls_enabled=true"]
+        flags = [
+            "--google_default_credentials",
+            "--remote_cache=remotebuildexecution.googleapis.com",
+            "--tls_enabled=true",
+        ]
 
     platform_cache_digest = hashlib.sha256()
     for key in platform_cache_key:
@@ -1078,16 +1082,12 @@ def remote_caching_flags(platform):
         platform_cache_digest.update(key)
         platform_cache_digest.update(b":")
 
-    flags = [
+    flags += [
         "--remote_timeout=60",
         "--remote_max_connections=200",
         '--remote_default_platform_properties=properties:{name:"cache-silo-key" value:"%s"}'
         % platform_cache_digest.hexdigest(),
     ]
-
-    # Need to use the correct credentials when running on GCE.
-    if platform != "macos":
-        flags += ["--google_default_credentials"]
 
     return flags
 
