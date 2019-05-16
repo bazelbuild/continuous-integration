@@ -36,21 +36,9 @@ sysctl -w kernel.sched_wakeup_granularity_ns=15000000
 sysctl -w vm.dirty_ratio=40
 #echo always > /sys/kernel/mm/transparent_hugepage/enabled
 
-# Use the local SSDs as fast storage.
-zpool destroy -f bazel || true
-zpool create -f \
-    -o ashift=12 \
-    -O canmount=off \
-    -O compression=lz4 \
-    -O normalization=formD \
-    -O relatime=on \
-    -O sync=disabled \
-    -O xattr=sa \
-    bazel /dev/nvme0n?
-
-# Create filesystem for Docker.
-rm -rf /var/lib/docker
-zfs create -o mountpoint=/var/lib/docker bazel/docker
+# Use the local SSDs as fast Docker storage.
+mkfs.ext4 -F /dev/nvme0n1
+mount /dev/nvme0n1 /var/lib/docker
 chown root:root /var/lib/docker
 chmod 0711 /var/lib/docker
 
@@ -77,11 +65,6 @@ case $(hostname) in
 esac
 
 # Configure and start Docker.
-cat > /etc/docker/daemon.json <<EOF
-{
-  "storage-driver": "zfs"
-}
-EOF
 systemctl start docker
 
 # Pull some known images so that we don't have to download / extract them on each CI job.

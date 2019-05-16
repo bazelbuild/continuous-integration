@@ -29,7 +29,6 @@ export DEBIAN_FRONTEND="noninteractive"
 {
   apt-get -qqy update
   apt-get -qqy dist-upgrade
-  apt-get -qqy install zfsutils-linux
   apt-get -qqy install nfs-common
 }
 
