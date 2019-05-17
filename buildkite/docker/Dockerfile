@@ -117,11 +117,8 @@ RUN export PYTHON_VERSION="3.6.8" && \
     rm -rf "/usr/local/src/Python-${PYTHON_VERSION}"
 
 ### Install Swift toolchain (required by rules_swift).
-ENV SWIFT_HOME "/opt/swift"
+ENV SWIFT_HOME "/opt/swift-4.2.1-RELEASE-ubuntu14.04"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
-RUN mkdir -p /opt/swift && \
-    curl -L https://swift.org/builds/swift-4.2.1-release/ubuntu1404/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu14.04.tar.gz | \
-    tar xz -C /opt/swift --strip 1
 
 USER bazel
 RUN gcloud auth configure-docker --quiet
@@ -228,11 +225,8 @@ RUN export PYTHON_VERSION="3.6.8" && \
     rm -rf "/usr/local/src/Python-${PYTHON_VERSION}"
 
 ### Install Swift toolchain (required by rules_swift).
-ENV SWIFT_HOME "/opt/swift"
+ENV SWIFT_HOME "/opt/swift-4.2.1-RELEASE-ubuntu16.04"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
-RUN mkdir -p /opt/swift && \
-    curl -L https://swift.org/builds/swift-4.2.1-release/ubuntu1604/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu16.04.tar.gz | \
-    tar xz -C /opt/swift --strip 1
 
 USER bazel
 RUN gcloud auth configure-docker --quiet
@@ -320,11 +314,8 @@ RUN curl -L https://deb.nodesource.com/setup_8.x | bash - && \
 RUN pip3 install requests uritemplate pyyaml github3.py
 
 ### Install Swift toolchain (required by rules_swift).
-ENV SWIFT_HOME "/opt/swift"
+ENV SWIFT_HOME "/opt/swift-4.2.1-RELEASE-ubuntu18.04"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
-RUN mkdir -p /opt/swift && \
-    curl -L https://swift.org/builds/swift-4.2.1-release/ubuntu1804/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu18.04.tar.gz | \
-    tar xz -C /opt/swift --strip 1
 
 USER bazel
 RUN gcloud auth configure-docker --quiet
