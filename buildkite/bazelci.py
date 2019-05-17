@@ -1089,12 +1089,10 @@ def remote_caching_flags(platform):
             # Platform name:
             platform.encode("utf-8")
         ]
-        # Use RBE for caching builds running on GCE.
+        # Use GCS for caching builds running on GCE.
         flags = [
             "--google_default_credentials",
-            "--remote_cache=remotebuildexecution.googleapis.com",
-            "--remote_instance_name=projects/{}/instances/default_instance".format(CLOUD_PROJECT),
-            "--tls_enabled=true",
+            "--remote_cache=https://storage.googleapis.com/bazel-untrusted-buildkite-cache",
         ]
 
     platform_cache_digest = hashlib.sha256()
