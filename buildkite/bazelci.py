@@ -375,7 +375,6 @@ PLATFORMS = {
         "emoji-name": ":gcloud: (OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": False,
-        "host-platform": "ubuntu1604",
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1604:java8",
         "python": "python3.6",
     },
@@ -495,13 +494,6 @@ def eprint(*args, **kwargs):
     Print to stderr and flush (just in case).
     """
     print(*args, flush=True, file=sys.stderr, **kwargs)
-
-
-def rchop(string_, *endings):
-    for ending in endings:
-        if string_.endswith(ending):
-            return string_[: -len(ending)]
-    return string_
 
 
 def is_windows():
@@ -926,12 +918,11 @@ def upload_bazel_binary(platform):
 
 
 def download_bazel_binary(dest_dir, platform):
-    host_platform = PLATFORMS[platform].get("host-platform", platform)
     binary_path = "bazel-bin/src/bazel"
     if platform == "windows":
         binary_path = r"bazel-bin\src\bazel"
 
-    source_step = create_label(host_platform, "Bazel", build_only=True)
+    source_step = create_label(platform, "Bazel", build_only=True)
     execute_command(
         ["buildkite-agent", "artifact", "download", binary_path, dest_dir, "--step", source_step]
     )
@@ -944,7 +935,7 @@ def download_bazel_binary(dest_dir, platform):
 def download_bazel_binary_at_commit(dest_dir, platform, bazel_git_commit):
     # We only build bazel binary on ubuntu14.04 for every bazel commit.
     # It should be OK to use it on other ubuntu platforms.
-    if "ubuntu" in PLATFORMS[platform].get("host-platform", platform):
+    if "ubuntu" in platform:
         platform = "ubuntu1404"
     bazel_binary_path = os.path.join(dest_dir, "bazel.exe" if platform == "windows" else "bazel")
     try:
@@ -1517,7 +1508,6 @@ def execute_command_background(args):
 
 
 def create_step(label, commands, platform=DEFAULT_PLATFORM, shards=1):
-    host_platform = PLATFORMS[platform].get("host-platform", platform)
     if "docker-image" in PLATFORMS[platform]:
         step = create_docker_step(
             label, image=PLATFORMS[platform]["docker-image"], commands=commands
@@ -1790,7 +1780,6 @@ def runner_step(
     incompatible_flags=None,
     shards=1,
 ):
-    host_platform = PLATFORMS[platform].get("host-platform", platform)
     command = PLATFORMS[platform]["python"] + " bazelci.py runner --task=" + task
     if http_config:
         command += " --http_config=" + http_config
@@ -1886,12 +1875,9 @@ def bazel_build_step(
     build_only=False,
     test_only=False,
 ):
-    host_platform = PLATFORMS[platform].get("host-platform", platform)
     pipeline_command = PLATFORMS[platform]["python"] + " bazelci.py runner"
     if build_only:
-        pipeline_command += " --build_only"
-        if "host-platform" not in PLATFORMS[platform]:
-            pipeline_command += " --save_but"
+        pipeline_command += " --build_only --save_but"
     if test_only:
         pipeline_command += " --test_only"
     if http_config:
