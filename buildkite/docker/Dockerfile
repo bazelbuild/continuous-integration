@@ -81,9 +81,7 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Docker.
-RUN groupadd -r -g 998 docker && \
-    usermod --append --groups docker bazel && \
-    apt-get -qqy update && \
+RUN apt-get -qqy update && \
     apt-get -qqy install apt-transport-https ca-certificates && \
     curl -sSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
@@ -120,9 +118,18 @@ RUN export PYTHON_VERSION="3.6.8" && \
 ENV SWIFT_HOME "/opt/swift-4.2.1-RELEASE-ubuntu14.04"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
 
+RUN gcloud auth configure-docker --quiet
+RUN bazel version
+RUN mkdir /root/.cache/bazel/_bazel_root/cache && \
+    chown root:root /root/.cache/bazel/_bazel_root/cache && \
+    chmod 0755 /root/.cache/bazel/_bazel_root/cache
+
 USER bazel
 RUN gcloud auth configure-docker --quiet
 RUN bazel version
+RUN mkdir /home/bazel/.cache/bazel/_bazel_bazel/cache && \
+    chown bazel:bazel /home/bazel/.cache/bazel/_bazel_bazel/cache && \
+    chmod 0755 /home/bazel/.cache/bazel/_bazel_bazel/cache
 
 FROM ubuntu1404-nojava AS ubuntu1404-java8
 USER root
@@ -189,9 +196,7 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Docker.
-RUN groupadd -r -g 998 docker && \
-    usermod --append --groups docker bazel && \
-    apt-get -qqy update && \
+RUN apt-get -qqy update && \
     apt-get -qqy install apt-transport-https ca-certificates && \
     curl -sSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
@@ -228,9 +233,18 @@ RUN export PYTHON_VERSION="3.6.8" && \
 ENV SWIFT_HOME "/opt/swift-4.2.1-RELEASE-ubuntu16.04"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
 
+RUN gcloud auth configure-docker --quiet
+RUN bazel version
+RUN mkdir /root/.cache/bazel/_bazel_root/cache && \
+    chown root:root /root/.cache/bazel/_bazel_root/cache && \
+    chmod 0755 /root/.cache/bazel/_bazel_root/cache
+
 USER bazel
 RUN gcloud auth configure-docker --quiet
 RUN bazel version
+RUN mkdir /home/bazel/.cache/bazel/_bazel_bazel/cache && \
+    chown bazel:bazel /home/bazel/.cache/bazel/_bazel_bazel/cache && \
+    chmod 0755 /home/bazel/.cache/bazel/_bazel_bazel/cache
 
 FROM ubuntu1604-nojava AS ubuntu1604-java8
 USER root
@@ -293,9 +307,7 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Docker.
-RUN groupadd -r -g 998 docker && \
-    usermod --append --groups docker bazel && \
-    apt-get -qqy update && \
+RUN apt-get -qqy update && \
     apt-get -qqy install apt-transport-https ca-certificates && \
     curl -sSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
@@ -317,9 +329,18 @@ RUN pip3 install requests uritemplate pyyaml github3.py
 ENV SWIFT_HOME "/opt/swift-4.2.1-RELEASE-ubuntu18.04"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
 
+RUN gcloud auth configure-docker --quiet
+RUN bazel version
+RUN mkdir /root/.cache/bazel/_bazel_root/cache && \
+    chown root:root /root/.cache/bazel/_bazel_root/cache && \
+    chmod 0755 /root/.cache/bazel/_bazel_root/cache
+
 USER bazel
 RUN gcloud auth configure-docker --quiet
 RUN bazel version
+RUN mkdir /home/bazel/.cache/bazel/_bazel_bazel/cache && \
+    chown bazel:bazel /home/bazel/.cache/bazel/_bazel_bazel/cache && \
+    chmod 0755 /home/bazel/.cache/bazel/_bazel_bazel/cache
 
 FROM ubuntu1804-nojava AS ubuntu1804-java11
 USER root

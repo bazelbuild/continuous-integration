@@ -29,7 +29,7 @@ export DEBIAN_FRONTEND="noninteractive"
 {
   apt-get -qqy update
   apt-get -qqy dist-upgrade
-  apt-get -qqy install nfs-common
+  apt-get -qqy install nfs-common zfsutils-linux
 }
 
 ### Add our Cloud Filestore volume to the fstab.
@@ -37,12 +37,12 @@ export DEBIAN_FRONTEND="noninteractive"
   case $(hostname -f) in
     *.bazel-public.*)
       cat >> /etc/fstab <<'EOF'
-10.93.166.218:/buildkite /opt nfs defaults 0 2
+10.93.166.218:/buildkite /opt nfs defaults,ro 0 2
 EOF
       ;;
     *.bazel-untrusted.*)
       cat >> /etc/fstab <<'EOF'
-10.76.94.74:/buildkite /opt nfs defaults 0 2
+10.76.94.74:/buildkite /opt nfs defaults,ro 0 2
 EOF
 ;;
   esac
@@ -58,11 +58,20 @@ EOF
 
 ### Install the Buildkite Agent on production images.
 {
+
+  groupmod -g 990 systemd-coredump
+  usermod -g 990 -u 990 systemd-coredump
+
   apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 \
       --recv-keys 32A37959C2FA5C3C99EFBC32A79206696452D198
   add-apt-repository -y "deb https://apt.buildkite.com/buildkite-agent stable main"
   apt-get -qqy update
   apt-get -qqy install buildkite-agent
+
+  grep "buildkite-agent:x:999:999:" /etc/passwd >/dev/null || {
+    echo "Fatal error: buildkite-agent user does not have expected UID and GID."
+    exit 1
+  }
 
   # Disable the Buildkite agent service, as the startup script has to mount /var/lib/buildkite-agent
   # first.
@@ -98,10 +107,6 @@ fi
 EOF
   chown buildkite-agent:buildkite-agent /etc/buildkite-agent/hooks/*
   chmod 0500 /etc/buildkite-agent/hooks/*
-
-  mkdir -p /var/lib/buildkite-agent
-  chown buildkite-agent:buildkite-agent /var/lib/buildkite-agent
-  chmod 0755 /var/lib/buildkite-agent
 }
 
 ### Install Docker.
@@ -109,34 +114,38 @@ EOF
   apt-get -qqy install apt-transport-https ca-certificates
 
   curl -sSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-  add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) test"
 
   apt-get -qqy update
   apt-get -qqy install docker-ce
 
-  # Allow the buildkite-agent user access to Docker.
-  usermod -aG docker buildkite-agent
+  # Allow everyone access to the Docker socket. Usually this would be insane from a security point
+  # of view, but these are untrusted throw-away machines anyway, so the risk is acceptable.
+  mkdir /etc/systemd/system/docker.socket.d
+  cat > /etc/systemd/system/docker.socket.d/override.conf <<'EOF'
+[Socket]
+SocketMode=0666
+EOF
 
-  # Disable the Docker service and related stuff, as the startup script has to mount
-  # /var/lib/docker first.
-  systemctl disable containerd
+  # Disable the Docker service, as the startup script has to mount /var/lib/docker first.
   systemctl disable docker
 }
 
 ### Setup KVM.
 {
   apt-get -qqy install qemu-kvm
-  usermod -a -G kvm buildkite-agent
 
+  # Allow everyone access to the KVM device. As above, this would usually not be a good idea, but
+  # these machines are untrusted anyway...
   echo 'KERNEL=="kvm", NAME="%k", GROUP="kvm", MODE="0666"' > /etc/udev/rules.d/65-kvm.rules
 }
 
 # Preseed our Git mirrors.
 {
-  mkdir -p /var/lib/bazelbuild
-  curl https://storage.googleapis.com/bazel-git-mirror/bazelbuild-mirror.tar | tar x -C /var/lib
-  chown -R buildkite-agent:buildkite-agent /var/lib/bazelbuild
-  chmod -R 0755 /var/lib/bazelbuild
+  mkdir -p /var/lib/gitmirrors
+  curl https://storage.googleapis.com/bazel-git-mirror/bazelbuild-mirror.tar | tar x -C /var/lib/gitmirrors --strip=1
+  chown -R buildkite-agent:buildkite-agent /var/lib/gitmirrors
+  chmod -R 0755 /var/lib/gitmirrors
 }
 
 ### Clean up and trim the filesystem (potentially reduces the final image size).

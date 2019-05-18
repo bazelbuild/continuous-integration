@@ -36,15 +36,45 @@ sysctl -w kernel.sched_wakeup_granularity_ns=15000000
 sysctl -w vm.dirty_ratio=40
 #echo always > /sys/kernel/mm/transparent_hugepage/enabled
 
-# Use the local SSDs as fast Docker storage.
-mkfs.ext4 -F /dev/nvme0n1
-mount /dev/nvme0n1 /var/lib/docker
+# Use the local SSDs as fast storage.
+zpool destroy -f bazel || true
+zpool create -f \
+    -o ashift=12 \
+    -O canmount=off \
+    -O checksum=sha512 \
+    -O compression=lz4 \
+    -O dedup=on \
+    -O dnodesize=auto \
+    -O normalization=formD \
+    -O redundant_metadata=most \
+    -O relatime=on \
+    -O sync=disabled \
+    -O xattr=sa \
+    bazel /dev/nvme0n?
+
+# Create filesystem for buildkite-agent's home.
+rm -rf /var/lib/buildkite-agent
+zfs create -o mountpoint=/var/lib/buildkite-agent bazel/buildkite-agent
+chown buildkite-agent:buildkite-agent /var/lib/buildkite-agent
+chmod 0755 /var/lib/buildkite-agent
+
+# Create filesystem for Bazel's repository cache.
+rm -rf /var/lib/bazel-cache
+zfs create -o mountpoint=/var/lib/bazel-cache bazel/bazel-cache
+chown buildkite-agent:buildkite-agent /var/lib/bazel-cache
+chmod 0755 /var/lib/bazel-cache
+
+# Create filesystem for Bazel's repository cache for containers that run as root.
+rm -rf /var/lib/bazel-root-cache
+zfs create -o mountpoint=/var/lib/bazel-root-cache bazel/bazel-root-cache
+chown root:root /var/lib/bazel-root-cache
+chmod 0755 /var/lib/bazel-root-cache
+
+# Create filesystem for Docker.
+rm -rf /var/lib/docker
+zfs create -o mountpoint=/var/lib/docker bazel/docker
 chown root:root /var/lib/docker
 chmod 0711 /var/lib/docker
-
-mkdir /var/lib/docker/bazel-cache
-chown buildkite-agent:buildkite-agent /var/lib/docker/bazel-cache
-chmod 0755 /var/lib/docker/bazel-cache
 
 # Let 'localhost' resolve to '::1', otherwise one of Envoy's tests fails.
 sed -i 's/^::1 .*/::1 localhost ip6-localhost ip6-loopback/' /etc/hosts
@@ -83,7 +113,7 @@ name="%hostname"
 tags="kind=docker,os=linux"
 experiment="git-mirrors"
 build-path="/var/lib/buildkite-agent/builds"
-git-mirrors-path="/var/lib/bazelbuild"
+git-mirrors-path="/var/lib/gitmirrors"
 hooks-path="/etc/buildkite-agent/hooks"
 plugins-path="/etc/buildkite-agent/plugins"
 EOF

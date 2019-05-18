@@ -1567,13 +1567,12 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None):
                 "privileged": True,
                 "propagate-environment": True,
                 "volumes": [
-                    ".:/workdir",
-                    "/var/lib/docker/bazel-cache:/home/bazel/.cache/bazel/_bazel_bazel/cache",
-                    "{0}:{0}:ro".format("/opt"),
-                    "{0}:{0}".format("/var/lib/bazelbuild"),
-                    "{0}:{0}".format("/var/run/docker.sock"),
+                    "/opt:/opt:ro",
+                    "/var/lib/bazel-cache:/home/bazel/.cache/bazel/_bazel_bazel/cache",
+                    "/var/lib/bazel-root-cache:/root/.cache/bazel/_bazel_root/cache",
+                    "/var/lib/gitmirrors:/var/lib/gitmirrors:ro",
+                    "/var/run/docker.sock:/var/run/docker.sock",
                 ],
-                "workdir": "/workdir",
             }
         },
     }
