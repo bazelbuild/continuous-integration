@@ -1525,6 +1525,7 @@ def create_step(label, commands, platform, shards=1):
     step["timeout_in_minutes"] = 8 * 60
 
     # Automatically retry when an agent got lost (usually due to an infra flake).
+    step["retry"] = {}
     step["retry"]["automatic"] = {"exit_status": -1, "limit": 3}
 
     return step
