@@ -4,8 +4,7 @@ steps:
       ./src/upload_all_java_tools.sh
     label: ":ubuntu:"
     agents:
-      - "kind=docker"
-      - "os=linux"
+      - "queue=linux-docker"
     plugins:
       philwo/docker:
         always-pull: true
@@ -23,8 +22,7 @@ steps:
   - command: "powershell -Command \"bazel --nomaster_bazelrc --bazelrc=NUL version ; if (\\$LastExitCode -ne 0) { exit 1 } ; sh ./src/upload_all_java_tools.sh ; if (\\$LastExitCode -ne 0) { exit 1 } ;\""
     label: ":windows:"
     agents:
-      - "kind=worker"
-      - "os=windows"
+      - "queue=windows"
 
   - command: |-
       bazel --nomaster_bazelrc --bazelrc=/dev/null version
@@ -33,5 +31,4 @@ steps:
       BAZEL_USE_CPP_ONLY_TOOLCHAIN: "1"
     label: ":darwin:"
     agents:
-      - "kind=worker"
-      - "os=macos"
+      - "queue=macos"

@@ -2,8 +2,7 @@
 steps:
   - label: "Get release name"
     agents:
-      - "kind=docker"
-      - "os=linux"
+      - "queue=linux-docker"
     plugins:
       philwo/docker:
         always-pull: true
@@ -28,8 +27,7 @@ steps:
   - wait
   - label: "Ubuntu 14.04"
     agents:
-      - "kind=docker"
-      - "os=linux"
+      - "queue=linux-docker"
     plugins:
       philwo/docker:
         always-pull: true
@@ -70,8 +68,7 @@ steps:
       buildkite-agent artifact upload "*"
   - label: macOS
     agents:
-      - kind=worker
-      - os=macos
+      - queue=macos
     command: |
       git fetch origin master
       git fetch --force origin refs/notes/*:refs/notes/*
@@ -93,8 +90,7 @@ steps:
       buildkite-agent artifact upload "*"
   - label: Windows
     agents:
-      - kind=worker
-      - os=windows
+      - queue=windows
     command: |
       git fetch origin master
       git fetch --force origin refs/notes/*:refs/notes/*
@@ -120,8 +116,7 @@ steps:
   - wait
   - label: "Test on Ubuntu 14.04"
     agents:
-      - "kind=docker"
-      - "os=linux"
+      - "queue=linux-docker"
     plugins:
       philwo/docker:
         always-pull: true
@@ -151,8 +146,7 @@ steps:
       "./bazel-\${release_name}-linux-x86_64" info
   - label: "Test on macOS"
     agents:
-      - kind=worker
-      - os=macos
+      - queue=macos
     command: |
       git fetch origin master
       git fetch --force origin refs/notes/*:refs/notes/*
@@ -167,8 +161,7 @@ steps:
       "./bazel-\${release_name}-darwin-x86_64" info
   - label: "Test on Windows"
     agents:
-      - kind=worker
-      - os=windows
+      - queue=windows
     command: |
       git fetch origin master
       git fetch --force origin refs/notes/*:refs/notes/*
@@ -186,8 +179,7 @@ steps:
   - block: ":rocket: Deploy release artifacts"
   - label: "Deploy release artifacts"
     agents:
-      - "kind=docker"
-      - "os=linux"
+      - "queue=linux-docker"
     plugins:
       philwo/docker:
         always-pull: true
@@ -226,8 +218,7 @@ steps:
   - block: ":e-mail: Generate announcement mail text"
   - label: "Generate announcement mail text"
     agents:
-      - "kind=docker"
-      - "os=linux"
+      - "queue=linux-docker"
     plugins:
       philwo/docker:
         always-pull: true

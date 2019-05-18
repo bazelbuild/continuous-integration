@@ -6,13 +6,11 @@ steps:
       buildkite-agent artifact upload "./bazel-bin/unused_deps/darwin_amd64_stripped/unused_deps"
     label: ":darwin:"
     agents:
-      - "kind=worker"
-      - "os=macos"
+      - "queue=macos"
   - command: "powershell -Command \"bazel build -c opt --workspace_status_command='status.py' unused_deps buildifier buildozer ; if (\\$LastExitCode -ne 0) { exit 1 } ; buildkite-agent artifact upload ./bazel-bin/buildozer/windows_amd64_stripped/buildozer.exe ; if (\\$LastExitCode -ne 0) { exit 1 } ; buildkite-agent artifact upload ./bazel-bin/buildifier/windows_amd64_stripped/buildifier.exe ; if (\\$LastExitCode -ne 0) { exit 1 } ; buildkite-agent artifact upload ./bazel-bin/unused_deps/windows_amd64_stripped/unused_deps.exe ; if (\\$LastExitCode -ne 0) { exit 1 } ;\""
     label: ":windows:"
     agents:
-      - "kind=worker"
-      - "os=windows"
+      - "queue=windows"
   - command: |-
       bazel build -c opt --workspace_status_command="$$PWD/status.py" unused_deps buildifier buildozer
       buildkite-agent artifact upload "./bazel-bin/buildozer/linux_amd64_stripped/buildozer"
@@ -20,8 +18,7 @@ steps:
       buildkite-agent artifact upload "./bazel-bin/unused_deps/linux_amd64_stripped/unused_deps"
     label: ":ubuntu:"
     agents:
-      - "kind=docker"
-      - "os=linux"
+      - "queue=linux-docker"
     plugins:
       philwo/docker:
         always-pull: true

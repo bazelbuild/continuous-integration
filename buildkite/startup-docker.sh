@@ -102,7 +102,7 @@ sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
 cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
 token="${BUILDKITE_TOKEN}"
 name="%hostname"
-tags="kind=docker,os=linux"
+tags="queue=linux-docker,kind=docker,os=linux"
 experiment="git-mirrors"
 build-path="/var/lib/buildkite-agent/builds"
 git-mirrors-path="/var/lib/gitmirrors"
