@@ -5,7 +5,7 @@ RUN apt-get -qqy update && \
     rm -rf /var/lib/apt/lists/*
 
 FROM builder AS bazelisk
-RUN curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v0.0.4/bazelisk-linux-amd64 && \
+RUN curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v0.0.5/bazelisk-linux-amd64 && \
     chown root:root /usr/local/bin/bazel && \
     chmod 0755 /usr/local/bin/bazel
 
@@ -39,9 +39,6 @@ COPY --from=bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
 COPY --from=buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
 COPY --from=github-release /usr/local/bin/github-release /usr/local/bin/github-release
 COPY --from=saucelabs /usr/local/bin/sc /usr/local/bin/sc
-
-RUN groupadd --gid 999 bazel && \
-    useradd --gid 999 --uid 999 --create-home --shell /bin/bash bazel
 
 ### Install required packages.
 RUN dpkg --add-architecture i386 && \
@@ -118,27 +115,12 @@ RUN export PYTHON_VERSION="3.6.8" && \
 ENV SWIFT_HOME "/opt/swift-4.2.1-RELEASE-ubuntu14.04"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
 
-RUN gcloud auth configure-docker --quiet
-RUN bazel version
-RUN mkdir /root/.cache/bazel/_bazel_root/cache && \
-    chown root:root /root/.cache/bazel/_bazel_root/cache && \
-    chmod 0755 /root/.cache/bazel/_bazel_root/cache
-
-USER bazel
-RUN gcloud auth configure-docker --quiet
-RUN bazel version
-RUN mkdir /home/bazel/.cache/bazel/_bazel_bazel/cache && \
-    chown bazel:bazel /home/bazel/.cache/bazel/_bazel_bazel/cache && \
-    chmod 0755 /home/bazel/.cache/bazel/_bazel_bazel/cache
-
 FROM ubuntu1404-nojava AS ubuntu1404-java8
-USER root
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0x219BD9C9 && \
     apt-add-repository 'deb http://repos.azulsystems.com/ubuntu stable main' && \
     apt-get -qqy update && \
     apt-get -qqy install zulu-8 && \
     rm -rf /var/lib/apt/lists/*
-USER bazel
 
 ###############################################################################
 ### UBUNTU 16.04 ##############################################################
@@ -150,9 +132,6 @@ COPY --from=bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
 COPY --from=buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
 COPY --from=github-release /usr/local/bin/github-release /usr/local/bin/github-release
 COPY --from=saucelabs /usr/local/bin/sc /usr/local/bin/sc
-
-RUN groupadd --gid 999 bazel && \
-    useradd --gid 999 --uid 999 --create-home --shell /bin/bash bazel
 
 ### Install required packages.
 RUN dpkg --add-architecture i386 && \
@@ -233,25 +212,10 @@ RUN export PYTHON_VERSION="3.6.8" && \
 ENV SWIFT_HOME "/opt/swift-4.2.1-RELEASE-ubuntu16.04"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
 
-RUN gcloud auth configure-docker --quiet
-RUN bazel version
-RUN mkdir /root/.cache/bazel/_bazel_root/cache && \
-    chown root:root /root/.cache/bazel/_bazel_root/cache && \
-    chmod 0755 /root/.cache/bazel/_bazel_root/cache
-
-USER bazel
-RUN gcloud auth configure-docker --quiet
-RUN bazel version
-RUN mkdir /home/bazel/.cache/bazel/_bazel_bazel/cache && \
-    chown bazel:bazel /home/bazel/.cache/bazel/_bazel_bazel/cache && \
-    chmod 0755 /home/bazel/.cache/bazel/_bazel_bazel/cache
-
 FROM ubuntu1604-nojava AS ubuntu1604-java8
-USER root
 RUN apt-get -qqy update && \
     apt-get -qqy install openjdk-8-jdk && \
     rm -rf /var/lib/apt/lists/*
-USER bazel
 
 ###############################################################################
 ### UBUNTU 18.04 ##############################################################
@@ -263,9 +227,6 @@ COPY --from=bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
 COPY --from=buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
 COPY --from=github-release /usr/local/bin/github-release /usr/local/bin/github-release
 COPY --from=saucelabs /usr/local/bin/sc /usr/local/bin/sc
-
-RUN groupadd --gid 999 bazel && \
-    useradd --gid 999 --uid 999 --create-home --shell /bin/bash bazel
 
 ### Install required packages.
 RUN dpkg --add-architecture i386 && \
@@ -329,22 +290,7 @@ RUN pip3 install requests uritemplate pyyaml github3.py
 ENV SWIFT_HOME "/opt/swift-4.2.1-RELEASE-ubuntu18.04"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
 
-RUN gcloud auth configure-docker --quiet
-RUN bazel version
-RUN mkdir /root/.cache/bazel/_bazel_root/cache && \
-    chown root:root /root/.cache/bazel/_bazel_root/cache && \
-    chmod 0755 /root/.cache/bazel/_bazel_root/cache
-
-USER bazel
-RUN gcloud auth configure-docker --quiet
-RUN bazel version
-RUN mkdir /home/bazel/.cache/bazel/_bazel_bazel/cache && \
-    chown bazel:bazel /home/bazel/.cache/bazel/_bazel_bazel/cache && \
-    chmod 0755 /home/bazel/.cache/bazel/_bazel_bazel/cache
-
 FROM ubuntu1804-nojava AS ubuntu1804-java11
-USER root
 RUN apt-get -qqy update && \
     apt-get -qqy install openjdk-11-jdk && \
     rm -rf /var/lib/apt/lists/*
-USER bazel
