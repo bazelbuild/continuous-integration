@@ -329,7 +329,6 @@ PLATFORMS = {
         "emoji-name": ":ubuntu: 14.04 (OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": True,
-        "java": "8",
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1404:java8",
     },
     "ubuntu1604": {
@@ -337,7 +336,6 @@ PLATFORMS = {
         "emoji-name": ":ubuntu: 16.04 (OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": False,
-        "java": "8",
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1604:java8",
     },
     "ubuntu1804": {
@@ -345,7 +343,6 @@ PLATFORMS = {
         "emoji-name": ":ubuntu: 18.04 (OpenJDK 11)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": False,
-        "java": "11",
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:java11",
     },
     "ubuntu1804_nojava": {
@@ -353,7 +350,6 @@ PLATFORMS = {
         "emoji-name": ":ubuntu: 18.04 (no JDK)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": False,
-        "java": "no",
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:nojava",
     },
     "macos": {
@@ -361,14 +357,12 @@ PLATFORMS = {
         "emoji-name": ":darwin: (OpenJDK 8)",
         "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": True,
-        "java": "8",
     },
     "windows": {
         "name": "Windows, OpenJDK 8",
         "emoji-name": ":windows: (OpenJDK 8)",
         "downstream-root": "d:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": True,
-        "java": "8",
     },
     "rbe_ubuntu1604": {
         "name": "RBE (Ubuntu 16.04, OpenJDK 8)",
@@ -376,7 +370,6 @@ PLATFORMS = {
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": False,
         "host-platform": "ubuntu1604",
-        "java": "8",
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1604:java8",
     },
 }
@@ -1536,7 +1529,6 @@ def create_step(label, commands, platform=DEFAULT_PLATFORM, shards=1):
             "command": commands,
             "agents": {
                 "kind": "worker",
-                "java": PLATFORMS[platform]["java"],
                 "os": rchop(host_platform, "_nojava", "_java8", "_java9", "_java10", "_java11"),
             },
         }
