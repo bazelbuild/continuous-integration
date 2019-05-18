@@ -56,7 +56,7 @@ rm -rf "${AGENT_HOME}"
 zfs create -o "mountpoint=${AGENT_HOME}" bazel/buildkite-agent
 mkdir -p "${AGENT_HOME}"/.cache/bazel/_bazel_buildkite-agent
 mkdir -p "${AGENT_HOME}"/.cache/bazelisk
-chown buildkite-agent:buildkite-agent "${AGENT_HOME}"
+chown -R buildkite-agent:buildkite-agent "${AGENT_HOME}"
 chmod 0755 "${AGENT_HOME}"
 
 # Create filesystem for Docker.

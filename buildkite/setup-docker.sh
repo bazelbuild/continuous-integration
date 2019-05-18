@@ -107,7 +107,8 @@ fi
 
 # Delete all Bazel output bases (but leave the cache and install bases).
 echo_and_run find /var/lib/buildkite-agent/.cache/bazel/_bazel_buildkite-agent \
-    -mindepth 1 -maxdepth 1 ! -name 'cache' ! -name 'install' -exec rm -rf {} +
+    -mindepth 1 -maxdepth 1 ! -name 'cache' ! -name 'install' -exec chmod -R 0777 {} + \
+    -exec rm -rf {} +
 EOF
   chown buildkite-agent:buildkite-agent /etc/buildkite-agent/hooks/*
   chmod 0500 /etc/buildkite-agent/hooks/*
