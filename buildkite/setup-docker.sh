@@ -97,13 +97,17 @@ while [[ $(docker ps -q) ]]; do
   echo_and_run docker kill $(docker ps -q)
 done
 
-USED_DISK_PERCENT=$(df --output=pcent /var/lib/docker | tail +2 | cut -d'%' -f1 | tr -d ' ')
+USED_DISK_PERCENT=$(zpool list -H -o capacity bazel | cut -d'%' -f1)
 
 if [[ $USED_DISK_PERCENT -ge 80 ]]; then
   echo_and_run docker system prune -a -f --volumes
 else
   echo_and_run docker system prune -f --volumes
 fi
+
+# Delete all Bazel output bases (but leave the cache and install bases).
+echo_and_run find /var/lib/buildkite-agent/.cache/bazel/_bazel_buildkite-agent \
+    -mindepth 1 -maxdepth 1 ! -name 'cache' ! -name 'install' -exec rm -rf {} +
 EOF
   chown buildkite-agent:buildkite-agent /etc/buildkite-agent/hooks/*
   chmod 0500 /etc/buildkite-agent/hooks/*
