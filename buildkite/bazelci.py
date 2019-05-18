@@ -330,6 +330,7 @@ PLATFORMS = {
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": True,
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1404:java8",
+        "python": "python3.6",
     },
     "ubuntu1604": {
         "name": "Ubuntu 16.04, OpenJDK 8",
@@ -337,6 +338,7 @@ PLATFORMS = {
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": False,
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1604:java8",
+        "python": "python3.6",
     },
     "ubuntu1804": {
         "name": "Ubuntu 18.04, OpenJDK 11",
@@ -344,6 +346,7 @@ PLATFORMS = {
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": False,
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:java11",
+        "python": "python3.6",
     },
     "ubuntu1804_nojava": {
         "name": "Ubuntu 18.04, no JDK",
@@ -351,18 +354,21 @@ PLATFORMS = {
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": False,
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:nojava",
+        "python": "python3.6",
     },
     "macos": {
         "name": "macOS, OpenJDK 8",
         "emoji-name": ":darwin: (OpenJDK 8)",
         "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": True,
+        "python": "python3.7",
     },
     "windows": {
         "name": "Windows, OpenJDK 8",
         "emoji-name": ":windows: (OpenJDK 8)",
         "downstream-root": "d:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": True,
+        "python": "python.exe",
     },
     "rbe_ubuntu1604": {
         "name": "RBE (Ubuntu 16.04, OpenJDK 8)",
@@ -371,6 +377,7 @@ PLATFORMS = {
         "publish_binary": False,
         "host-platform": "ubuntu1604",
         "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1604:java8",
+        "python": "python3.6",
     },
 }
 
@@ -495,14 +502,6 @@ def rchop(string_, *endings):
         if string_.endswith(ending):
             return string_[: -len(ending)]
     return string_
-
-
-def python_binary(platform=None):
-    if platform == "windows":
-        return "python.exe"
-    if platform == "macos":
-        return "python3.7"
-    return "python3.6"
 
 
 def is_windows():
@@ -1690,7 +1689,8 @@ def print_project_pipeline(
                 label="Try Update Last Green Commit",
                 commands=[
                     fetch_bazelcipy_command(),
-                    python_binary() + " bazelci.py try_update_last_green_commit",
+                    PLATFORMS[DEFAULT_PLATFORM]["python"]
+                    + " bazelci.py try_update_last_green_commit",
                 ],
             )
         )
@@ -1724,7 +1724,7 @@ def create_config_validation_steps():
             commands=[
                 fetch_bazelcipy_command(),
                 "{} bazelci.py project_pipeline --file_config={}".format(
-                    python_binary(platform), f
+                    PLATFORMS[DEFAULT_PLATFORM]["python"], f
                 ),
             ],
             platform=platform,
@@ -1791,7 +1791,7 @@ def runner_step(
     shards=1,
 ):
     host_platform = PLATFORMS[platform].get("host-platform", platform)
-    command = python_binary(host_platform) + " bazelci.py runner --task=" + task
+    command = PLATFORMS[platform]["python"] + " bazelci.py runner --task=" + task
     if http_config:
         command += " --http_config=" + http_config
     if file_config:
@@ -1833,7 +1833,7 @@ def upload_project_pipeline_step(
 ):
     pipeline_command = (
         '{0} bazelci.py project_pipeline --project_name="{1}" ' + "--git_repository={2}"
-    ).format(python_binary(), project_name, git_repository)
+    ).format(PLATFORMS[DEFAULT_PLATFORM]["python"], project_name, git_repository)
     if incompatible_flags is None:
         pipeline_command += " --use_but"
     else:
@@ -1887,7 +1887,7 @@ def bazel_build_step(
     test_only=False,
 ):
     host_platform = PLATFORMS[platform].get("host-platform", platform)
-    pipeline_command = python_binary(host_platform) + " bazelci.py runner"
+    pipeline_command = PLATFORMS[platform]["python"] + " bazelci.py runner"
     if build_only:
         pipeline_command += " --build_only"
         if "host-platform" not in PLATFORMS[platform]:
@@ -2006,7 +2006,10 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
     pipeline_steps.append(
         create_step(
             label="Publish Bazel Binaries",
-            commands=[fetch_bazelcipy_command(), python_binary() + " bazelci.py publish_binaries"],
+            commands=[
+                fetch_bazelcipy_command(),
+                PLATFORMS[DEFAULT_PLATFORM]["python"] + " bazelci.py publish_binaries",
+            ],
         )
     )
 
@@ -2171,7 +2174,7 @@ def print_bazel_downstream_pipeline(
                     commands=[
                         fetch_bazelcipy_command(),
                         fetch_aggregate_incompatible_flags_test_result_command(),
-                        python_binary()
+                        PLATFORMS[DEFAULT_PLATFORM]["python"]
                         + " aggregate_incompatible_flags_test_result.py --build_number=%s"
                         % current_build_number,
                     ],
@@ -2185,7 +2188,7 @@ def print_bazel_downstream_pipeline(
                     commands=[
                         fetch_bazelcipy_command(),
                         fetch_incompatible_flag_verbose_failures_command(),
-                        python_binary()
+                        PLATFORMS[DEFAULT_PLATFORM]["python"]
                         + " incompatible_flag_verbose_failures.py --build_number=%s | buildkite-agent pipeline upload"
                         % current_build_number,
                     ],
@@ -2204,7 +2207,8 @@ def print_bazel_downstream_pipeline(
                 label="Try Update Last Green Downstream Commit",
                 commands=[
                     fetch_bazelcipy_command(),
-                    python_binary() + " bazelci.py try_update_last_green_downstream_commit",
+                    PLATFORMS[DEFAULT_PLATFORM]["python"]
+                    + " bazelci.py try_update_last_green_downstream_commit",
                 ],
             )
         )
