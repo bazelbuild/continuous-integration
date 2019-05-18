@@ -565,17 +565,17 @@ def fetch_configs(http_url, file_config):
 def load_config(http_url, file_config):
     if file_config is not None:
         with open(file_config, "r") as fd:
-            return yaml.load(fd)
+            return yaml.safe_load(fd)
     if http_url is not None:
         return load_remote_yaml_file(http_url)
     with open(".bazelci/presubmit.yml", "r") as fd:
-        return yaml.load(fd)
+        return yaml.safe_load(fd)
 
 
 def load_remote_yaml_file(http_url):
     with urllib.request.urlopen(http_url) as resp:
         reader = codecs.getreader("utf-8")
-        return yaml.load(reader(resp))
+        return yaml.safe_load(reader(resp))
 
 
 def print_collapsed_group(name):
