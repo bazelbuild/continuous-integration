@@ -1515,7 +1515,7 @@ def create_step(label, commands, platform, shards=1):
             label, image=PLATFORMS[platform]["docker-image"], commands=commands
         )
     else:
-        step = {"label": label, "command": commands, "agents": {"queue": platform["queue"]}}
+        step = {"label": label, "command": commands, "agents": {"queue": PLATFORMS[platform]["queue"]}}
 
     if shards > 1:
         step["label"] += " (shard %n)"
