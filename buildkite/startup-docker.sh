@@ -41,15 +41,13 @@ zpool destroy -f bazel || true
 zpool create -f \
     -o ashift=12 \
     -O canmount=off \
-    -O checksum=sha512 \
+    -O checksum=on \
     -O compression=lz4 \
-    -O dedup=on \
-    -O dnodesize=auto \
     -O normalization=formD \
     -O redundant_metadata=most \
     -O relatime=on \
     -O sync=disabled \
-    -O xattr=sa \
+    -O xattr=off \
     bazel /dev/nvme0n?
 
 # Create filesystem for buildkite-agent's home.
@@ -92,10 +90,8 @@ esac
 # Configure and start Docker.
 systemctl start docker
 
-# Pull some known images so that we don't have to download / extract them on each CI job.
-gcloud auth configure-docker --quiet
-
 # Allow the Buildkite agent to access Docker images on GCR.
+gcloud auth configure-docker --quiet
 sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
 
 # Write the Buildkite agent configuration.
