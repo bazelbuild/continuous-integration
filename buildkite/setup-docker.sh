@@ -89,8 +89,6 @@ EOF
 
   cat > /etc/buildkite-agent/hooks/pre-exit <<'EOF'
 #!/bin/bash
-set -euo pipefail
-
 echo_and_run() { echo "\$ $*" ; "$@" ; }
 
 while [[ $(docker ps -q) ]]; do
