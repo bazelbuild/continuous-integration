@@ -29,7 +29,7 @@ export DEBIAN_FRONTEND="noninteractive"
 {
   apt-get -qqy update
   apt-get -qqy dist-upgrade
-  apt-get -qqy install nfs-common zfsutils-linux
+  apt-get -qqy install python nfs-common zfsutils-linux
 }
 
 ### Add our Cloud Filestore volume to the fstab.
