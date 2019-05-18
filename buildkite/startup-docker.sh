@@ -53,28 +53,20 @@ zpool create -f \
     bazel /dev/nvme0n?
 
 # Create filesystem for buildkite-agent's home.
-rm -rf /var/lib/buildkite-agent
-zfs create -o mountpoint=/var/lib/buildkite-agent bazel/buildkite-agent
-chown buildkite-agent:buildkite-agent /var/lib/buildkite-agent
-chmod 0755 /var/lib/buildkite-agent
-
-# Create filesystem for Bazel's repository cache.
-rm -rf /var/lib/bazel-cache
-zfs create -o mountpoint=/var/lib/bazel-cache bazel/bazel-cache
-chown buildkite-agent:buildkite-agent /var/lib/bazel-cache
-chmod 0755 /var/lib/bazel-cache
-
-# Create filesystem for Bazel's repository cache for containers that run as root.
-rm -rf /var/lib/bazel-root-cache
-zfs create -o mountpoint=/var/lib/bazel-root-cache bazel/bazel-root-cache
-chown root:root /var/lib/bazel-root-cache
-chmod 0755 /var/lib/bazel-root-cache
+AGENT_HOME="/var/lib/buildkite-agent"
+rm -rf "${AGENT_HOME}"
+zfs create -o "mountpoint=${AGENT_HOME}" bazel/buildkite-agent
+mkdir -p "${AGENT_HOME}"/.cache/bazel/_bazel_buildkite-agent
+mkdir -p "${AGENT_HOME}"/.cache/bazelisk
+chown buildkite-agent:buildkite-agent "${AGENT_HOME}"
+chmod 0755 "${AGENT_HOME}"
 
 # Create filesystem for Docker.
-rm -rf /var/lib/docker
-zfs create -o mountpoint=/var/lib/docker bazel/docker
-chown root:root /var/lib/docker
-chmod 0711 /var/lib/docker
+DOCKER_HOME="/var/lib/docker"
+rm -rf "${DOCKER_HOME}"
+zfs create -o "mountpoint=${DOCKER_HOME}" bazel/docker
+chown root:root "${DOCKER_HOME}"
+chmod 0711 "${DOCKER_HOME}"
 
 # Let 'localhost' resolve to '::1', otherwise one of Envoy's tests fails.
 sed -i 's/^::1 .*/::1 localhost ip6-localhost ip6-loopback/' /etc/hosts
