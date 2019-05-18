@@ -361,6 +361,7 @@ PLATFORMS = {
         "emoji-name": ":darwin: (OpenJDK 8)",
         "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": True,
+        "queue": "macos",
         "python": "python3.7",
     },
     "windows": {
@@ -368,6 +369,7 @@ PLATFORMS = {
         "emoji-name": ":windows: (OpenJDK 8)",
         "downstream-root": "d:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": True,
+        "queue": "windows",
         "python": "python.exe",
     },
     "rbe_ubuntu1604": {
@@ -1507,20 +1509,13 @@ def execute_command_background(args):
     return subprocess.Popen(args, env=os.environ)
 
 
-def create_step(label, commands, platform=DEFAULT_PLATFORM, shards=1):
+def create_step(label, commands, platform, shards=1):
     if "docker-image" in PLATFORMS[platform]:
         step = create_docker_step(
             label, image=PLATFORMS[platform]["docker-image"], commands=commands
         )
     else:
-        step = {
-            "label": label,
-            "command": commands,
-            "agents": {
-                "kind": "worker",
-                "os": rchop(host_platform, "_nojava", "_java8", "_java9", "_java10", "_java11"),
-            },
-        }
+        step = {"label": label, "command": commands, "agents": {"queue": platform["queue"]}}
 
     if shards > 1:
         step["label"] += " (shard %n)"
@@ -1537,7 +1532,7 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None):
     step = {
         "label": label,
         "command": commands,
-        "agents": {"kind": "docker", "os": "linux"},
+        "agents": {"queue": "linux-docker"},
         "plugins": {
             "docker#v3.2.0": {
                 "always-pull": True,
@@ -1682,6 +1677,7 @@ def print_project_pipeline(
                     PLATFORMS[DEFAULT_PLATFORM]["python"]
                     + " bazelci.py try_update_last_green_commit",
                 ],
+                platform=DEFAULT_PLATFORM,
             )
         )
 
@@ -1707,7 +1703,6 @@ def create_config_validation_steps():
         for l in output.split("\n")
         if l.startswith(".bazelci/") and os.path.splitext(l)[1] in CONFIG_FILE_EXTENSIONS
     ]
-    platform = DEFAULT_PLATFORM
     return [
         create_step(
             label=":cop: Validate {}".format(f),
@@ -1717,7 +1712,7 @@ def create_config_validation_steps():
                     PLATFORMS[DEFAULT_PLATFORM]["python"], f
                 ),
             ],
-            platform=platform,
+            platform=DEFAULT_PLATFORM,
         )
         for f in config_files
     ]
@@ -1763,6 +1758,7 @@ def create_emergency_announcement_step_if_necessary():
         commands=[
             'buildkite-agent annotate --append --style={} --context "omg" "{}"'.format(style, text)
         ],
+        platform=DEFAULT_PLATFORM,
     )
 
 
@@ -1837,6 +1833,7 @@ def upload_project_pipeline_step(
     return create_step(
         label="Setup {0}".format(project_name),
         commands=[fetch_bazelcipy_command(), pipeline_command],
+        platform=DEFAULT_PLATFORM,
     )
 
 
@@ -1945,7 +1942,11 @@ def print_skip_task_annotations(annotations, pipeline_steps):
         for s, t in annotations
     ]
     pipeline_steps.append(
-        create_step(label=":pipeline: Print information about skipped tasks", commands=commands)
+        create_step(
+            label=":pipeline: Print information about skipped tasks",
+            commands=commands,
+            platform=DEFAULT_PLATFORM,
+        )
     )
 
 
@@ -1996,6 +1997,7 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
                 fetch_bazelcipy_command(),
                 PLATFORMS[DEFAULT_PLATFORM]["python"] + " bazelci.py publish_binaries",
             ],
+            platform=DEFAULT_PLATFORM,
         )
     )
 
@@ -2023,6 +2025,7 @@ def print_disabled_projects_info_box_step():
         commands=[
             'buildkite-agent annotate --append --style=info "\n' + "\n".join(info_text) + '\n"'
         ],
+        platform=DEFAULT_PLATFORM,
     )
 
 
@@ -2039,6 +2042,7 @@ def print_incompatible_flags_info_box_step(incompatible_flags_map):
         commands=[
             'buildkite-agent annotate --append --style=info "\n' + "\n".join(info_text) + '\n"'
         ],
+        platform=DEFAULT_PLATFORM,
     )
 
 
@@ -2164,6 +2168,7 @@ def print_bazel_downstream_pipeline(
                         + " aggregate_incompatible_flags_test_result.py --build_number=%s"
                         % current_build_number,
                     ],
+                    platform=DEFAULT_PLATFORM,
                 )
             )
         else:
@@ -2178,6 +2183,7 @@ def print_bazel_downstream_pipeline(
                         + " incompatible_flag_verbose_failures.py --build_number=%s | buildkite-agent pipeline upload"
                         % current_build_number,
                     ],
+                    platform=DEFAULT_PLATFORM,
                 )
             )
 
@@ -2196,6 +2202,7 @@ def print_bazel_downstream_pipeline(
                     PLATFORMS[DEFAULT_PLATFORM]["python"]
                     + " bazelci.py try_update_last_green_downstream_commit",
                 ],
+                platform=DEFAULT_PLATFORM,
             )
         )
 
