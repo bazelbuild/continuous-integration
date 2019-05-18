@@ -1538,7 +1538,7 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None):
     step = {
         "label": label,
         "command": commands,
-        "agents": {"queue": "linux-docker"},
+        "agents": {"queue": "default"},
         "plugins": {
             "docker#v3.2.0": {
                 "always-pull": True,
