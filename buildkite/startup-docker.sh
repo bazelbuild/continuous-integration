@@ -46,6 +46,7 @@ swapon -s
 # Create filesystem for buildkite-agent's home.
 AGENT_HOME="/var/lib/buildkite-agent"
 mount -t tmpfs -o size=375G tmpfs "${AGENT_HOME}"
+mkdir -p "${AGENT_HOME}/.cache/bazel/_bazel_buildkite-agent"
 chown -R buildkite-agent:buildkite-agent "${AGENT_HOME}"
 chmod 0755 "${AGENT_HOME}"
 
