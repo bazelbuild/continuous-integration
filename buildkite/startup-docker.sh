@@ -37,33 +37,22 @@ sysctl -w vm.dirty_ratio=40
 #echo always > /sys/kernel/mm/transparent_hugepage/enabled
 
 # Use the local SSDs as fast storage.
-zpool destroy -f bazel || true
-zpool create -f \
-    -o ashift=12 \
-    -O canmount=off \
-    -O compression=lz4 \
-    -O dedup=skein \
-    -O normalization=formD \
-    -O redundant_metadata=most \
-    -O relatime=on \
-    -O sync=disabled \
-    -O xattr=off \
-    bazel /dev/nvme0n?
+for device in /dev/nvme0n?; do
+  mkswap $device
+  swapon --discard -p0 $device
+done
+swapon -s
 
 # Create filesystem for buildkite-agent's home.
 AGENT_HOME="/var/lib/buildkite-agent"
-rm -rf "${AGENT_HOME}"
-zfs create -o "mountpoint=${AGENT_HOME}" bazel/buildkite-agent
-mkdir -p "${AGENT_HOME}"/.cache/bazel/_bazel_buildkite-agent
-mkdir -p "${AGENT_HOME}"/.cache/bazelisk
+mount -t tmpfs -o size=375G tmpfs "${AGENT_HOME}"
 chown -R buildkite-agent:buildkite-agent "${AGENT_HOME}"
 chmod 0755 "${AGENT_HOME}"
 
 # Create filesystem for Docker.
 DOCKER_HOME="/var/lib/docker"
-rm -rf "${DOCKER_HOME}"
-zfs create -o "mountpoint=${DOCKER_HOME}" bazel/docker
-chown root:root "${DOCKER_HOME}"
+mount -t tmpfs -o size=375G tmpfs "${DOCKER_HOME}"
+chown -R root:root "${DOCKER_HOME}"
 chmod 0711 "${DOCKER_HOME}"
 
 # Let 'localhost' resolve to '::1', otherwise one of Envoy's tests fails.

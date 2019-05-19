@@ -29,7 +29,7 @@ export DEBIAN_FRONTEND="noninteractive"
 {
   apt-get -qqy update
   apt-get -qqy dist-upgrade
-  apt-get -qqy install python nfs-common zfsutils-linux
+  apt-get -qqy install python nfs-common
 }
 
 ### Add our Cloud Filestore volume to the fstab.
@@ -58,19 +58,11 @@ EOF
 
 ### Install the Buildkite Agent on production images.
 {
-  groupmod -g 990 systemd-coredump
-  usermod -g 990 -u 990 systemd-coredump
-
   apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 \
       --recv-keys 32A37959C2FA5C3C99EFBC32A79206696452D198
   add-apt-repository -y "deb https://apt.buildkite.com/buildkite-agent stable main"
   apt-get -qqy update
   apt-get -qqy install buildkite-agent
-
-  grep "buildkite-agent:x:999:999:" /etc/passwd >/dev/null || {
-    echo "Fatal error: buildkite-agent user does not have expected UID and GID."
-    exit 1
-  }
 
   # Disable the Buildkite agent service, as the startup script has to mount /var/lib/buildkite-agent
   # first.
@@ -94,7 +86,7 @@ while [[ $(docker ps -q) ]]; do
   echo_and_run docker kill $(docker ps -q)
 done
 
-USED_DISK_PERCENT=$(zpool list -H -o capacity bazel | cut -d'%' -f1)
+USED_DISK_PERCENT=$(df --output=pcent /var/lib/docker | tail +2 | cut -d'%' -f1 | tr -d ' ')
 
 if [[ $USED_DISK_PERCENT -ge 80 ]]; then
   echo_and_run docker system prune -a -f --volumes
@@ -133,6 +125,12 @@ EOF
   systemctl disable docker
   systemctl stop docker
 }
+
+### Install Stackdriver Monitoring Agent.
+# {
+#   curl -sSO https://dl.google.com/cloudagents/install-monitoring-agent.sh
+#   bash install-monitoring-agent.sh
+# }
 
 ### Setup KVM.
 {
