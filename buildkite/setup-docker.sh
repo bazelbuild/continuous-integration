@@ -58,7 +58,6 @@ EOF
 
 ### Install the Buildkite Agent on production images.
 {
-
   groupmod -g 990 systemd-coredump
   usermod -g 990 -u 990 systemd-coredump
 
@@ -132,6 +131,7 @@ EOF
 
   # Disable the Docker service, as the startup script has to mount /var/lib/docker first.
   systemctl disable docker
+  systemctl stop docker
 }
 
 ### Setup KVM.

@@ -41,8 +41,8 @@ zpool destroy -f bazel || true
 zpool create -f \
     -o ashift=12 \
     -O canmount=off \
-    -O checksum=on \
     -O compression=lz4 \
+    -O dedup=skein \
     -O normalization=formD \
     -O redundant_metadata=most \
     -O relatime=on \
@@ -90,15 +90,22 @@ esac
 # Configure and start Docker.
 systemctl start docker
 
-# Allow the Buildkite agent to access Docker images on GCR.
+# Pull some known images so that we don't have to download / extract them on each CI job.
 gcloud auth configure-docker --quiet
+docker pull "gcr.io/${PROJECT}/ubuntu1404:java8" &
+docker pull "gcr.io/${PROJECT}/ubuntu1604:java8" &
+docker pull "gcr.io/${PROJECT}/ubuntu1804:java11" &
+docker pull "gcr.io/${PROJECT}/ubuntu1804:nojava" &
+wait
+
+# Allow the Buildkite agent to access Docker images on GCR.
 sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
 
 # Write the Buildkite agent configuration.
 cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
 token="${BUILDKITE_TOKEN}"
 name="%hostname"
-tags="queue=default,kind=docker,os=linux"
+tags="queue=default"
 experiment="git-mirrors"
 build-path="/var/lib/buildkite-agent/builds"
 git-mirrors-path="/var/lib/gitmirrors"
