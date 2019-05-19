@@ -11,7 +11,7 @@ fi
 
 OS_VERSION=$(sw_vers -productVersion)
 MACHINE_TYPE=$(system_profiler SPHardwareDataType | grep 'Model Name' | cut -d':' -f2 | tr -d ' ' | tr '[:upper:]' '[:lower:]')
-TAGS="queue=macos,os-version=${OS_VERSION},machine-type=${MACHINE_TYPE}"
+TAGS="queue=macos,kind=worker,os=macos,os-version=${OS_VERSION},machine-type=${MACHINE_TYPE}"
 sed -i '' "s/^tags=.*/tags=${TAGS}/" /usr/local/etc/buildkite-agent/buildkite-agent.cfg
 echo "Set tags to $(cat /usr/local/etc/buildkite-agent/buildkite-agent.cfg | grep '^tags=')"
 
