@@ -4,7 +4,7 @@ steps:
       buildkite-agent artifact upload "./bazel-bin/linux_amd64_stripped/bazelisk"
     label: ":ubuntu:"
     agents:
-      - "queue=linux-docker"
+      - "queue=default"
     plugins:
       philwo/docker:
         always-pull: true

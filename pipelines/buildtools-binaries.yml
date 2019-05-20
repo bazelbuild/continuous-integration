@@ -18,7 +18,7 @@ steps:
       buildkite-agent artifact upload "./bazel-bin/unused_deps/linux_amd64_stripped/unused_deps"
     label: ":ubuntu:"
     agents:
-      - "queue=linux-docker"
+      - "queue=default"
     plugins:
       philwo/docker:
         always-pull: true

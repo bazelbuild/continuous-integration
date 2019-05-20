@@ -2,7 +2,7 @@
 steps:
   - label: "Get release name"
     agents:
-      - "queue=linux-docker"
+      - "queue=default"
     plugins:
       philwo/docker:
         always-pull: true
@@ -27,7 +27,7 @@ steps:
   - wait
   - label: "Ubuntu 14.04"
     agents:
-      - "queue=linux-docker"
+      - "queue=default"
     plugins:
       philwo/docker:
         always-pull: true
@@ -116,7 +116,7 @@ steps:
   - wait
   - label: "Test on Ubuntu 14.04"
     agents:
-      - "queue=linux-docker"
+      - "queue=default"
     plugins:
       philwo/docker:
         always-pull: true
@@ -179,7 +179,7 @@ steps:
   - block: ":rocket: Deploy release artifacts"
   - label: "Deploy release artifacts"
     agents:
-      - "queue=linux-docker"
+      - "queue=default"
     plugins:
       philwo/docker:
         always-pull: true
@@ -218,7 +218,7 @@ steps:
   - block: ":e-mail: Generate announcement mail text"
   - label: "Generate announcement mail text"
     agents:
-      - "queue=linux-docker"
+      - "queue=default"
     plugins:
       philwo/docker:
         always-pull: true

@@ -7,7 +7,7 @@ steps:
       gsutil cp ./bazel-genfiles/src/allmodules_jdk.tar.gz gs://bazel-mirror/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-linux_x64-allmodules-$(git rev-parse HEAD)-$(date +%s).tar.gz
     label: ":ubuntu:"
     agents:
-      - "queue=linux-docker"
+      - "queue=default"
     plugins:
       philwo/docker:
         always-pull: true

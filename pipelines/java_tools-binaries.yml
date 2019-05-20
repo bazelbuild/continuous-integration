@@ -4,7 +4,7 @@ steps:
       ./src/upload_all_java_tools.sh
     label: ":ubuntu:"
     agents:
-      - "queue=linux-docker"
+      - "queue=default"
     plugins:
       philwo/docker:
         always-pull: true
