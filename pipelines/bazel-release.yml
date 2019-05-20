@@ -8,7 +8,7 @@ steps:
         always-pull: true
         debug: true
         environment: [BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, BUILDKITE_GS_ACL]
-        image: gcr.io/bazel-public/ubuntu1804:java8
+        image: gcr.io/bazel-public/ubuntu1804:java11
         network: host
         privileged: true
         propagate-environment: true
@@ -185,7 +185,7 @@ steps:
         always-pull: true
         debug: true
         environment: [BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, BUILDKITE_GS_ACL]
-        image: gcr.io/bazel-public/ubuntu1804:java8
+        image: gcr.io/bazel-public/ubuntu1804:java11
         network: host
         privileged: true
         propagate-environment: true
@@ -224,7 +224,7 @@ steps:
         always-pull: true
         debug: true
         environment: [BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, BUILDKITE_GS_ACL]
-        image: gcr.io/bazel-public/ubuntu1804:java8
+        image: gcr.io/bazel-public/ubuntu1804:java11
         network: host
         privileged: true
         propagate-environment: true
