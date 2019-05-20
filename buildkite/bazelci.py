@@ -1543,7 +1543,6 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None):
         "plugins": {
             "docker#v3.2.0": {
                 "always-pull": True,
-                "debug": True,
                 "environment": env,
                 "image": image,
                 "network": "host",

@@ -4,45 +4,57 @@ steps:
     agents:
       - "queue=default"
     plugins:
-      philwo/docker:
+      docker#v3.2.0:
         always-pull: true
-        debug: true
-        environment: [BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, BUILDKITE_GS_ACL]
+        environment:
+          - ANDROID_HOME
+          - ANDROID_NDK_HOME
+          - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
         image: gcr.io/bazel-public/ubuntu1804:java11
         network: host
         privileged: true
         propagate-environment: true
+        propagate-uid-gid: true
         shell: ["/bin/bash", "-e", "-c"]
         volumes:
-          - ".:/workdir"
-          - "/var/lib/buildkite-agent/builds:/var/lib/buildkite-agent/builds"
-          - "/var/lib/bazelbuild:/var/lib/bazelbuild:ro"
-        workdir: "/workdir"
+          - "/etc/group:/etc/group:ro"
+          - "/etc/passwd:/etc/passwd:ro"
+          - "/opt:/opt:ro"
+          - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+          - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+          - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
       git fetch origin master
       git fetch --force origin refs/notes/*:refs/notes/*
       release_name=\$(source scripts/release/common.sh; get_full_release_name)
       echo "release_name = \"\$release_name\""
       buildkite-agent meta-data set "release_name" "\$release_name"
+
   - wait
+
   - label: "Ubuntu 14.04"
     agents:
       - "queue=default"
     plugins:
-      philwo/docker:
+      docker#v3.2.0:
         always-pull: true
-        debug: true
-        environment: [BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, BUILDKITE_GS_ACL]
-        image: gcr.io/bazel-public/ubuntu1404:java8
+        environment:
+          - ANDROID_HOME
+          - ANDROID_NDK_HOME
+          - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+        image: gcr.io/bazel-public/ubuntu1804:java11
         network: host
         privileged: true
         propagate-environment: true
+        propagate-uid-gid: true
         shell: ["/bin/bash", "-e", "-c"]
         volumes:
-          - ".:/workdir"
-          - "/var/lib/buildkite-agent/builds:/var/lib/buildkite-agent/builds"
-          - "/var/lib/bazelbuild:/var/lib/bazelbuild:ro"
-        workdir: "/workdir"
+          - "/etc/group:/etc/group:ro"
+          - "/etc/passwd:/etc/passwd:ro"
+          - "/opt:/opt:ro"
+          - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+          - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+          - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
       git fetch origin master
       git fetch --force origin refs/notes/*:refs/notes/*
@@ -66,6 +78,7 @@ steps:
 
       cd artifacts
       buildkite-agent artifact upload "*"
+
   - label: macOS
     agents:
       - queue=macos
@@ -88,6 +101,7 @@ steps:
 
       cd artifacts
       buildkite-agent artifact upload "*"
+
   - label: Windows
     agents:
       - queue=windows
@@ -113,25 +127,32 @@ steps:
 
       cd artifacts
       buildkite-agent artifact upload "*"
+
   - wait
+
   - label: "Test on Ubuntu 14.04"
     agents:
       - "queue=default"
     plugins:
-      philwo/docker:
+      docker#v3.2.0:
         always-pull: true
-        debug: true
-        environment: [BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, BUILDKITE_GS_ACL]
-        image: gcr.io/bazel-public/ubuntu1404:java8
+        environment:
+          - ANDROID_HOME
+          - ANDROID_NDK_HOME
+          - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+        image: gcr.io/bazel-public/ubuntu1804:java11
         network: host
         privileged: true
         propagate-environment: true
+        propagate-uid-gid: true
         shell: ["/bin/bash", "-e", "-c"]
         volumes:
-          - ".:/workdir"
-          - "/var/lib/buildkite-agent/builds:/var/lib/buildkite-agent/builds"
-          - "/var/lib/bazelbuild:/var/lib/bazelbuild:ro"
-        workdir: "/workdir"
+          - "/etc/group:/etc/group:ro"
+          - "/etc/passwd:/etc/passwd:ro"
+          - "/opt:/opt:ro"
+          - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+          - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+          - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
       git fetch origin master
       git fetch --force origin refs/notes/*:refs/notes/*
@@ -144,6 +165,7 @@ steps:
       chmod +x "bazel-\${release_name}-linux-x86_64"
 
       "./bazel-\${release_name}-linux-x86_64" info
+
   - label: "Test on macOS"
     agents:
       - queue=macos
@@ -175,26 +197,34 @@ steps:
       buildkite-agent artifact download bazel-%RELEASE_NAME%-windows-x86_64.exe .
 
       bazel-%RELEASE_NAME%-windows-x86_64.exe info
+
   - wait
+
   - block: ":rocket: Deploy release artifacts"
+
   - label: "Deploy release artifacts"
     agents:
       - "queue=default"
     plugins:
-      philwo/docker:
+      docker#v3.2.0:
         always-pull: true
-        debug: true
-        environment: [BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, BUILDKITE_GS_ACL]
+        environment:
+          - ANDROID_HOME
+          - ANDROID_NDK_HOME
+          - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
         image: gcr.io/bazel-public/ubuntu1804:java11
         network: host
         privileged: true
         propagate-environment: true
+        propagate-uid-gid: true
         shell: ["/bin/bash", "-e", "-c"]
         volumes:
-          - ".:/workdir"
-          - "/var/lib/buildkite-agent/builds:/var/lib/buildkite-agent/builds"
-          - "/var/lib/bazelbuild:/var/lib/bazelbuild:ro"
-        workdir: "/workdir"
+          - "/etc/group:/etc/group:ro"
+          - "/etc/passwd:/etc/passwd:ro"
+          - "/opt:/opt:ro"
+          - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+          - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+          - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
       echo "+++ Fetching Git notes"
       git fetch origin master
@@ -214,26 +244,34 @@ steps:
       echo "+++ Deploying release"
       source scripts/ci/build.sh
       deploy_release "\${ARTIFACTS}"
+
   - wait
+
   - block: ":e-mail: Generate announcement mail text"
+
   - label: "Generate announcement mail text"
     agents:
       - "queue=default"
     plugins:
-      philwo/docker:
+      docker#v3.2.0:
         always-pull: true
-        debug: true
-        environment: [BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, BUILDKITE_GS_ACL]
+        environment:
+          - ANDROID_HOME
+          - ANDROID_NDK_HOME
+          - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
         image: gcr.io/bazel-public/ubuntu1804:java11
         network: host
         privileged: true
         propagate-environment: true
+        propagate-uid-gid: true
         shell: ["/bin/bash", "-e", "-c"]
         volumes:
-          - ".:/workdir"
-          - "/var/lib/buildkite-agent/builds:/var/lib/buildkite-agent/builds"
-          - "/var/lib/bazelbuild:/var/lib/bazelbuild:ro"
-        workdir: "/workdir"
+          - "/etc/group:/etc/group:ro"
+          - "/etc/passwd:/etc/passwd:ro"
+          - "/opt:/opt:ro"
+          - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+          - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+          - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
       git fetch origin master
       git fetch --force origin refs/notes/*:refs/notes/*
