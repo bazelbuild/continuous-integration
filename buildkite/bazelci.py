@@ -145,6 +145,11 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml",
         "pipeline_slug": "gerrit",
     },
+    "Kythe": {
+        "git_repository": "https://github.com/kythe/kythe.git",
+        "http_config": "https://raw.githubusercontent.com/kythe/kythe/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "kythe",
+    },
     "rules_jvm_external": {
         "git_repository": "https://github.com/bazelbuild/rules_jvm_external.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jvm_external/master/.bazelci/presubmit.yml",
