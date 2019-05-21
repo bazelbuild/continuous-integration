@@ -137,7 +137,7 @@ def print_culprit_finder_pipeline(
     command = (
         '%s culprit_finder.py runner --project_name="%s" --task_name=%s --good_bazel_commit=%s --bad_bazel_commit=%s %s %s'
         % (
-            bazelci.python_binary(platform_name),
+            bazelci.PLATFORMS[platform_name]["python"],
             project_name,
             task_name,
             good_bazel_commit,
