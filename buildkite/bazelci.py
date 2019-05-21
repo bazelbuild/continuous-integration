@@ -135,6 +135,11 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/envoyproxy/envoy/master/.bazelci/presubmit.yml",
         "pipeline_slug": "envoy",
     },
+    "Flogger": {
+        "git_repository": "https://github.com/google/flogger.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/flogger.yml",
+        "pipeline_slug": "flogger",
+    },
     "Gerrit": {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml",
@@ -1512,7 +1517,11 @@ def create_step(label, commands, platform, shards=1):
             label, image=PLATFORMS[platform]["docker-image"], commands=commands
         )
     else:
-        step = {"label": label, "command": commands, "agents": {"queue": PLATFORMS[platform]["queue"]}}
+        step = {
+            "label": label,
+            "command": commands,
+            "agents": {"queue": PLATFORMS[platform]["queue"]},
+        }
 
     if shards > 1:
         step["label"] += " (shard %n)"
