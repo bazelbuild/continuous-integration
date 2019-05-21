@@ -1165,11 +1165,7 @@ def rbe_flags(original_flags, accept_cached):
         "--remote_instance_name=projects/bazel-untrusted/instances/default_instance",
         "--remote_timeout=3600",
         # TODO(pcloudy): Remove this flag after upgrading Bazel to 0.27.0
-        "--incompatible_list_based_execution_strategy_selection=true",
-        "--spawn_strategy=remote,worker,linux-sandbox,local",
-        "--strategy=Javac=remote,worker,linux-sandbox,local",
-        "--strategy=Closure=remote,worker,linux-sandbox,local",
-        "--genrule_strategy=remote,worker,linux-sandbox,local",
+        "--incompatible_list_based_execution_strategy_selection",
         "--experimental_strict_action_env",
         "--tls_enabled=true",
         "--google_default_credentials",
