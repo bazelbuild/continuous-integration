@@ -1134,7 +1134,6 @@ def common_build_flags(bep_file, platform):
         "--curses=yes",
         "--color=yes",
         "--verbose_failures",
-        "--keep_going",
         "--jobs=" + concurrent_jobs(platform),
         "--announce_rc",
         "--experimental_multi_threaded_digest",
