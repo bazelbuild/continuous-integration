@@ -179,7 +179,8 @@ Create candidates with the release.sh script.
 
 ## Push a release
 
-1.  Verify that the following conditions **all apply**:
+1.  Verify that the [conditions outlined in our policy](https://bazel.build/support.html#policy) **all apply**. As of
+    May 2019 those were the following, but _double check_ that they have not changed since then.
     1.  at least **1 weeks passed since you pushed RC1**, and
     1.  at least **2 business days passed since you pushed the last RC**, and
     1.  there are **no open ["Release blocking" Bazel bugs](https://github.com/bazelbuild/bazel/labels/Release%20blocker)** on GitHub.
