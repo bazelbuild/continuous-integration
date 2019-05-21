@@ -77,30 +77,6 @@ PermissionsStartOnly=true
 # This fixes the "cgroup: fork rejected by pids controller" error that some CI jobs triggered.
 TasksAccounting=no
 EOF
-
-  cat > /etc/buildkite-agent/hooks/pre-exit <<'EOF'
-#!/bin/bash
-echo_and_run() { echo "\$ $*" ; "$@" ; }
-
-while [[ $(docker ps -q) ]]; do
-  echo_and_run docker kill $(docker ps -q)
-done
-
-USED_DISK_PERCENT=$(df --output=pcent /var/lib/docker | tail +2 | cut -d'%' -f1 | tr -d ' ')
-
-if [[ $USED_DISK_PERCENT -ge 80 ]]; then
-  echo_and_run docker system prune -a -f --volumes
-else
-  echo_and_run docker system prune -f --volumes
-fi
-
-# Delete all Bazel output bases (but leave the cache and install bases).
-echo_and_run find /var/lib/buildkite-agent/.cache/bazel/_bazel_buildkite-agent \
-    -mindepth 1 -maxdepth 1 ! -name 'cache' ! -name 'install' -exec chmod -R 0777 {} + \
-    -exec rm -rf {} +
-EOF
-  chown buildkite-agent:buildkite-agent /etc/buildkite-agent/hooks/*
-  chmod 0500 /etc/buildkite-agent/hooks/*
 }
 
 ### Install Docker.
