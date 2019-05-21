@@ -321,6 +321,11 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/tulsi/master/.bazelci/presubmit.yml",
         "pipeline_slug": "tulsi-bazel-darwin",
     },
+    "upb": {
+        "git_repository": "https://github.com/protocolbuffers/upb.git",
+        "http_config": "https://raw.githubusercontent.com/protocolbuffers/upb/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "upb",
+    },
 }
 
 
