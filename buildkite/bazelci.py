@@ -1331,7 +1331,6 @@ def expand_test_target_patterns(bazel_binary, platform, test_targets):
             ),
         ],
         print_output=False,
-        capture_stderr=False,
     )
     return output.split("\n")
 
@@ -1491,9 +1490,7 @@ def test_logs_for_status(bep_file, status):
     return targets
 
 
-def execute_command_and_get_output(
-    args, shell=False, fail_if_nonzero=True, print_output=True, capture_stderr=True
-):
+def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True, print_output=True):
     eprint(" ".join(args))
     process = subprocess.run(
         args,
@@ -1501,7 +1498,6 @@ def execute_command_and_get_output(
         check=fail_if_nonzero,
         env=os.environ,
         stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT if capture_stderr else None,
         errors="replace",
         universal_newlines=True,
     )
