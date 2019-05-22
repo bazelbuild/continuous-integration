@@ -9,14 +9,9 @@ platforms:
       echo '
       android_sdk_repository(name = "androidsdk")
       android_ndk_repository(name = "androidndk")' >>WORKSPACE
-    - touch .bazelrc
-    - "./tensorflow/tools/ci_build/builds/configured CPU"
+    - "yes '' | ./configure"
     build_flags:
     - "--config=opt"
-    # TODO(laszlocsomor): remove "--cxxopt=--std=c++11" after cr/200219133
-    # is merged to upstream TensorFlow, it's a temporary workaround for
-    # https://github.com/bazelbuild/bazel/issues/5365.
-    - "--cxxopt=--std=c++11"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
     # - "//tensorflow/examples/android:tensorflow_demo"
@@ -33,17 +28,9 @@ platforms:
     - pip install -U --user pip six numpy wheel setuptools mock
     - pip install -U --user keras_applications==1.0.6 --no-deps
     - pip install -U --user keras_preprocessing==1.0.5 --no-deps  
-    - touch .bazelrc
-    - "./tensorflow/tools/ci_build/builds/configured CPU"
+    - "yes '' | ./configure"
     build_flags:
-    # TODO(pcloudy): Removing the following flag after we have
-    # a new release containing a fix for https://github.com/bazelbuild/bazel/issues/7607
-    - "--action_env=BAZEL_USE_CPP_ONLY_TOOLCHAIN=1"
     - "--config=opt"
-    # TODO(laszlocsomor): remove "--cxxopt=--std=c++11" after cr/200219133
-    # is merged to upstream TensorFlow, it's a temporary workaround for
-    # https://github.com/bazelbuild/bazel/issues/5365.
-    - "--cxxopt=--std=c++11"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
   windows:
@@ -51,11 +38,5 @@ platforms:
     - "echo.| python ./configure.py"
     build_flags:
     - "--config=opt"
-    # NOTE(laszlocsomor): Regarding https://github.com/bazelbuild/bazel/issues/5365
-    # and the "--cxxopt=--std=c++11" flag on other platforms: Visual C++
-    # does not understand "--std=c++11", its syntax for C++ standard
-    # is "/std:c++14" or "/std:c++latest". It does not support "/std:c++11" so
-    # it is probably compiling for c++11 by default, therefore no flag is
-    # necessary.
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
