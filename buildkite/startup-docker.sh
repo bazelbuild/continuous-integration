@@ -62,14 +62,12 @@ sed -i 's/^::1 .*/::1 localhost ip6-localhost ip6-loopback/' /etc/hosts
 # Get configuration parameters.
 case $(hostname -f) in
   *.bazel-public.*)
-    PROJECT="bazel-public"
     ARTIFACT_BUCKET="bazel-trusted-buildkite-artifacts"
     # Get the Buildkite Token from GCS and decrypt it using KMS.
     BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-trusted-encrypted-secrets/buildkite-trusted-agent-token.enc" | \
         gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key buildkite-trusted-agent-token --ciphertext-file - --plaintext-file -)
     ;;
   *.bazel-untrusted.*)
-    PROJECT="bazel-untrusted"
     ARTIFACT_BUCKET="bazel-untrusted-buildkite-artifacts"
     # Get the Buildkite Token from GCS and decrypt it using KMS.
     BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-untrusted-encrypted-secrets/buildkite-untrusted-agent-token.enc" | \
@@ -82,10 +80,10 @@ systemctl start docker
 
 # Pull some known images so that we don't have to download / extract them on each CI job.
 gcloud auth configure-docker --quiet
-docker pull "gcr.io/${PROJECT}/ubuntu1404:java8" &
-docker pull "gcr.io/${PROJECT}/ubuntu1604:java8" &
-docker pull "gcr.io/${PROJECT}/ubuntu1804:java11" &
-docker pull "gcr.io/${PROJECT}/ubuntu1804:nojava" &
+docker pull "gcr.io/bazel-public/ubuntu1404:java8" &
+docker pull "gcr.io/bazel-public/ubuntu1604:java8" &
+docker pull "gcr.io/bazel-public/ubuntu1804:java11" &
+docker pull "gcr.io/bazel-public/ubuntu1804:nojava" &
 wait
 
 # Allow the Buildkite agent to access Docker images on GCR.

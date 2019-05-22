@@ -343,7 +343,7 @@ PLATFORMS = {
         "emoji-name": ":ubuntu: 14.04 (OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": True,
-        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1404:java8",
+        "docker-image": "gcr.io/bazel-public/ubuntu1404:java8",
         "python": "python3.6",
     },
     "ubuntu1604": {
@@ -351,7 +351,7 @@ PLATFORMS = {
         "emoji-name": ":ubuntu: 16.04 (OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": False,
-        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1604:java8",
+        "docker-image": "gcr.io/bazel-public/ubuntu1604:java8",
         "python": "python3.6",
     },
     "ubuntu1804": {
@@ -359,7 +359,7 @@ PLATFORMS = {
         "emoji-name": ":ubuntu: 18.04 (OpenJDK 11)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": False,
-        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:java11",
+        "docker-image": "gcr.io/bazel-public/ubuntu1804:java11",
         "python": "python3.6",
     },
     "ubuntu1804_nojava": {
@@ -367,7 +367,7 @@ PLATFORMS = {
         "emoji-name": ":ubuntu: 18.04 (no JDK)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": False,
-        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1804:nojava",
+        "docker-image": "gcr.io/bazel-public/ubuntu1804:nojava",
         "python": "python3.6",
     },
     "macos": {
@@ -391,12 +391,12 @@ PLATFORMS = {
         "emoji-name": ":gcloud: (OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": False,
-        "docker-image": f"gcr.io/{CLOUD_PROJECT}/ubuntu1604:java8",
+        "docker-image": "gcr.io/bazel-public/ubuntu1604:java8",
         "python": "python3.6",
     },
 }
 
-BUILDIFIER_DOCKER_IMAGE = f"gcr.io/{CLOUD_PROJECT}/buildifier"
+BUILDIFIER_DOCKER_IMAGE = "gcr.io/bazel-public/buildifier"
 
 # The platform used for various steps (e.g. stuff that formerly ran on the "pipeline" workers).
 DEFAULT_PLATFORM = "ubuntu1804"
@@ -1069,11 +1069,13 @@ def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags):
 
 def remote_caching_flags(platform):
     # Only enable caching for untrusted builds.
-    if CLOUD_PROJECT != "bazel-untrusted":
+    if CLOUD_PROJECT not in ["bazel-untrusted"]:
         return []
 
+    platform_cache_key = [os.environ.get("BUILDKITE_ORGANIZATION_SLUG", "unknown").encode("utf-8")]
+
     if platform == "macos":
-        platform_cache_key = [
+        platform_cache_key += [
             # macOS version:
             subprocess.check_output(["/usr/bin/sw_vers", "-productVersion"]),
             # Path to Xcode:
@@ -1084,7 +1086,7 @@ def remote_caching_flags(platform):
         # Use a local cache server for our macOS machines.
         flags = ["--remote_cache=http://100.107.73.186"]
     else:
-        platform_cache_key = [
+        platform_cache_key += [
             # Platform name:
             platform.encode("utf-8")
         ]
@@ -1673,15 +1675,17 @@ def print_project_pipeline(
     for _, config in DOWNSTREAM_PROJECTS.items():
         all_downstream_pipeline_slugs.append(config["pipeline_slug"])
     # We don't need to update last green commit in the following cases:
-    #   1. This job is a github pull request
-    #   2. This job uses a custom built Bazel binary (In Bazel Downstream Projects pipeline)
-    #   3. This job doesn't run on master branch (Could be a custom build launched manually)
-    #   4. We don't intend to run the same job in downstream with Bazel@HEAD (eg. google-bazel-presubmit)
-    #   5. We are testing incompatible flags
+    #   1. This job is a GitHub pull request
+    #   2. This job uses a custom built Bazel binary (in Bazel Downstream Projects pipeline)
+    #   3. This job doesn't run on master branch (could be a custom build launched manually)
+    #   4. This job doesn't run on Bazel's main Buildkite organization (e.g. could be the testing org)
+    #   5. We don't intend to run the same job in downstream with Bazel@HEAD (eg. google-bazel-presubmit)
+    #   6. We are testing incompatible flags
     if not (
         is_pull_request()
         or use_but
         or os.getenv("BUILDKITE_BRANCH") != "master"
+        or os.getenv("BUILDKITE_ORGANIZATION_SLUG") != "bazel"
         or pipeline_slug not in all_downstream_pipeline_slugs
         or incompatible_flags
     ):
@@ -2246,8 +2250,7 @@ def bazelci_builds_metadata_url():
 
 
 def bazelci_last_green_commit_url(git_repository, pipeline_slug):
-    return "gs://%s/last_green_commit/%s/%s" % (
-        "bazel-builds" if CLOUD_PROJECT == "bazel-public" else "bazel-untrusted-builds",
+    return "gs://bazel-untrusted-builds/last_green_commit/%s/%s" % (
         git_repository[len("https://") :],
         pipeline_slug,
     )
