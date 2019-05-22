@@ -65,7 +65,7 @@ DOWNSTREAM_PROJECTS = {
     },
     "Bazel Bench": {
         "git_repository": "https://github.com/bazelbuild/bazel-bench.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-bench/master/.bazelci/presubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-bench/master/.bazelci/postsubmit.yml",
         "pipeline_slug": "bazel-bench",
     },
     "Bazel integration testing": {
