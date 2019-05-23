@@ -972,6 +972,15 @@ def download_bazel_binary_at_commit(dest_dir, platform, bazel_git_commit):
     return bazel_binary_path
 
 
+def get_mirror_path(git_repository, platform):
+    mirror_root = {
+        "macos": "/usr/local/var/bazelbuild/",
+        "windows": "c:\\buildkite\\bazelbuild\\",
+    }.get(platform, "/var/lib/bazelbuild/")
+
+    return mirror_root + re.sub(r"[^0-9A-Za-z]", "-", git_repository)
+
+
 def clone_git_repository(git_repository, platform, git_commit=None):
     root = downstream_projects_root(platform)
     project_name = re.search(r"/([^/]+)\.git$", git_repository).group(1)
@@ -980,12 +989,7 @@ def clone_git_repository(git_repository, platform, git_commit=None):
         "Fetching %s sources at %s" % (project_name, git_commit if git_commit else "HEAD")
     )
 
-    mirror_root = {
-        "macos": "/usr/local/var/bazelbuild/",
-        "windows": "c:\\buildkite\\bazelbuild\\",
-    }.get(platform, "/var/lib/bazelbuild/")
-
-    mirror_path = mirror_root + re.sub(r"[^0-9A-Za-z]", "-", git_repository)
+    mirror_path = get_mirror_path(git_repository, platform)
 
     if not os.path.exists(clone_path):
         if os.path.exists(mirror_path):
