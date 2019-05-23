@@ -706,7 +706,7 @@ def execute_commands(
             bazel_binary, platform, task_config.get("run_targets", None), incompatible_flags
         )
 
-        if task_config.get("sauce", None):
+        if task_config.get("sauce"):
             sc_process = start_sauce_connect_proxy(platform, tmpdir)
 
         if needs_clean:
