@@ -652,36 +652,8 @@ def execute_commands(
     tmpdir = tempfile.mkdtemp()
     sc_process = None
     try:
-        # Activate the correct Xcode version on macOS machines.
         if platform == "macos":
-            # Get the Xcode version from the config.
-            xcode_version = task_config.get("xcode_version", DEFAULT_XCODE_VERSION)
-            print_collapsed_group("Activating Xcode {}...".format(xcode_version))
-
-            # Ensure it's a valid version number.
-            if not isinstance(xcode_version, str):
-                raise BuildkiteException(
-                    "Version number '{}' is not a string. Did you forget to put it in quotes?".format(
-                        xcode_version
-                    )
-                )
-            if not XCODE_VERSION_REGEX.match(xcode_version):
-                raise BuildkiteException(
-                    "Invalid Xcode version format '{}', must match the format X.Y[.Z].".format(
-                        xcode_version
-                    )
-                )
-
-            # Check that the selected Xcode version is actually installed on the host.
-            xcode_path = "/Applications/Xcode{}.app".format(xcode_version)
-            if not os.path.exists(xcode_path):
-                raise BuildkiteException("Xcode not found at '{}'.".format(xcode_path))
-
-            # Now activate the specified Xcode version and let it install its required components.
-            # The CI machines have a sudoers config that allows the 'buildkite' user to run exactly
-            # these two commands, so don't change them without also modifying the file there.
-            execute_command(["/usr/bin/sudo", "/usr/bin/xcode-select", "--switch", xcode_path])
-            execute_command(["/usr/bin/sudo", "/usr/bin/xcodebuild", "-runFirstLaunch"])
+            activate_xcode(task_config)
 
         # If the CI worker runs Bazelisk, we need to forward all required env variables to the test.
         # Otherwise any integration test that invokes Bazel (=Bazelisk in this case) will fail.
@@ -735,25 +707,7 @@ def execute_commands(
         )
 
         if task_config.get("sauce", None):
-            print_collapsed_group(":saucelabs: Starting Sauce Connect Proxy")
-            os.environ["SAUCE_USERNAME"] = "bazel_rules_webtesting"
-            os.environ["SAUCE_ACCESS_KEY"] = saucelabs_token()
-            os.environ["TUNNEL_IDENTIFIER"] = str(uuid.uuid4())
-            os.environ["BUILD_TAG"] = str(uuid.uuid4())
-            readyfile = os.path.join(tmpdir, "sc_is_ready")
-            if platform == "windows":
-                cmd = ["sauce-connect.exe", "/i", os.environ["TUNNEL_IDENTIFIER"], "/f", readyfile]
-            else:
-                cmd = ["sc", "-i", os.environ["TUNNEL_IDENTIFIER"], "-f", readyfile]
-            sc_process = execute_command_background(cmd)
-            wait_start = time.time()
-            while not os.path.exists(readyfile):
-                if time.time() - wait_start > 30:
-                    raise BuildkiteException(
-                        "Sauce Connect Proxy is still not ready after 30 seconds, aborting!"
-                    )
-                time.sleep(1)
-            print("Sauce Connect Proxy is ready, continuing...")
+            sc_process = start_sauce_connect_proxy(platform, tmpdir)
 
         if needs_clean:
             execute_bazel_clean(bazel_binary, platform)
@@ -822,23 +776,8 @@ def execute_commands(
                     monitor_flaky_tests,
                     incompatible_flags,
                 )
-                if has_flaky_tests(test_bep_file):
-                    if monitor_flaky_tests:
-                        # Upload the BEP logs from Bazel builds for later analysis on flaky tests
-                        build_number = os.getenv("BUILDKITE_BUILD_NUMBER")
-                        pipeline_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
-                        execute_command(
-                            [
-                                gsutil_command(),
-                                "cp",
-                                test_bep_file,
-                                "gs://bazel-buildkite-stats/flaky-tests-bep/"
-                                + pipeline_slug
-                                + "/"
-                                + build_number
-                                + ".json",
-                            ]
-                        )
+                if monitor_flaky_tests:
+                    upload_bep_logs_for_flaky_tests(test_bep_file)
             finally:
                 upload_test_logs(test_bep_file, tmpdir)
                 if include_json_profile_test:
@@ -854,6 +793,37 @@ def execute_commands(
             shutil.rmtree(tmpdir)
 
 
+def activate_xcode(task_config):
+    # Get the Xcode version from the config.
+    xcode_version = task_config.get("xcode_version", DEFAULT_XCODE_VERSION)
+    print_collapsed_group("Activating Xcode {}...".format(xcode_version))
+
+    # Ensure it's a valid version number.
+    if not isinstance(xcode_version, str):
+        raise BuildkiteException(
+            "Version number '{}' is not a string. Did you forget to put it in quotes?".format(
+                xcode_version
+            )
+        )
+    if not XCODE_VERSION_REGEX.match(xcode_version):
+        raise BuildkiteException(
+            "Invalid Xcode version format '{}', must match the format X.Y[.Z].".format(
+                xcode_version
+            )
+        )
+
+    # Check that the selected Xcode version is actually installed on the host.
+    xcode_path = "/Applications/Xcode{}.app".format(xcode_version)
+    if not os.path.exists(xcode_path):
+        raise BuildkiteException("Xcode not found at '{}'.".format(xcode_path))
+
+    # Now activate the specified Xcode version and let it install its required components.
+    # The CI machines have a sudoers config that allows the 'buildkite' user to run exactly
+    # these two commands, so don't change them without also modifying the file there.
+    execute_command(["/usr/bin/sudo", "/usr/bin/xcode-select", "--switch", xcode_path])
+    execute_command(["/usr/bin/sudo", "/usr/bin/xcodebuild", "-runFirstLaunch"])
+
+
 def get_bazelisk_cache_directory(platform):
     # The path relies on the behavior of Go's os.UserCacheDir()
     # and of the Go version of Bazelisk.
@@ -863,6 +833,29 @@ def get_bazelisk_cache_directory(platform):
 
 def tests_with_status(bep_file, status):
     return set(label for label, _ in test_logs_for_status(bep_file, status=status))
+
+
+def start_sauce_connect_proxy(platform, tmpdir):
+    print_collapsed_group(":saucelabs: Starting Sauce Connect Proxy")
+    os.environ["SAUCE_USERNAME"] = "bazel_rules_webtesting"
+    os.environ["SAUCE_ACCESS_KEY"] = saucelabs_token()
+    os.environ["TUNNEL_IDENTIFIER"] = str(uuid.uuid4())
+    os.environ["BUILD_TAG"] = str(uuid.uuid4())
+    readyfile = os.path.join(tmpdir, "sc_is_ready")
+    if platform == "windows":
+        cmd = ["sauce-connect.exe", "/i", os.environ["TUNNEL_IDENTIFIER"], "/f", readyfile]
+    else:
+        cmd = ["sc", "-i", os.environ["TUNNEL_IDENTIFIER"], "-f", readyfile]
+    sc_process = execute_command_background(cmd)
+    wait_start = time.time()
+    while not os.path.exists(readyfile):
+        if time.time() - wait_start > 30:
+            raise BuildkiteException(
+                "Sauce Connect Proxy is still not ready after 30 seconds, aborting!"
+            )
+        time.sleep(1)
+    print("Sauce Connect Proxy is ready, continuing...")
+    return sc_process
 
 
 def saucelabs_token():
@@ -1406,6 +1399,24 @@ def get_json_profile_flags(out_file):
         "--experimental_json_trace_compression",
         "--profile={}".format(out_file),
     ]
+
+
+def upload_bep_logs_for_flaky_tests(test_bep_file):
+    if has_flaky_tests(test_bep_file):
+        build_number = os.getenv("BUILDKITE_BUILD_NUMBER")
+        pipeline_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
+        execute_command(
+            [
+                gsutil_command(),
+                "cp",
+                test_bep_file,
+                "gs://bazel-buildkite-stats/flaky-tests-bep/"
+                + pipeline_slug
+                + "/"
+                + build_number
+                + ".json",
+            ]
+        )
 
 
 def upload_test_logs(bep_file, tmpdir):
