@@ -78,6 +78,10 @@ if ($myhostname -like "*trusted*") {
   $buildkite_agent_token_url = "https://storage.googleapis.com/bazel-trusted-encrypted-secrets/buildkite-trusted-agent-token.enc"
   $project = "bazel-public"
   $key = "buildkite-trusted-agent-token"
+} elseif ($myhostname -like "*testing*") {
+  $buildkite_agent_token_url = "https://storage.googleapis.com/bazel-untrusted-encrypted-secrets/buildkite-testing-agent-token.enc"
+  $project = "bazel-untrusted"
+  $key = "buildkite-testing-agent-token"
 } else {
   $buildkite_agent_token_url = "https://storage.googleapis.com/bazel-untrusted-encrypted-secrets/buildkite-untrusted-agent-token.enc"
   $project = "bazel-untrusted"

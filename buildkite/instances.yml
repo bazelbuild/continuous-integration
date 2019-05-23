@@ -31,6 +31,16 @@ instance_groups:
       - interface=nvme
       - interface=nvme
     metadata_from_file: startup-script=startup-docker.sh
+  - name: bk-testing-docker
+    count: 20
+    project: bazel-untrusted
+    service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
+    image_project: bazel-untrusted
+    image_family: bk-docker
+    local_ssd:
+      - interface=nvme
+      - interface=nvme
+    metadata_from_file: startup-script=startup-docker.sh
   - name: bk-trusted-docker
     count: 8
     project: bazel-public
@@ -49,6 +59,14 @@ instance_groups:
     image_family: bk-windows-java8
     local_ssd: interface=scsi
     metadata_from_file: windows-startup-script-ps1=startup-windows.ps1
+  - name: bk-testing-windows-java8
+    count: 4
+    project: bazel-untrusted
+    service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
+    image_project: bazel-untrusted
+    image_family: bk-windows-java8
+    local_ssd: interface=scsi
+    metadata_from_file: windows-startup-script-ps1=startup-windows.ps1
   - name: bk-trusted-windows-java8
     count: 4
     project: bazel-public
@@ -60,7 +78,7 @@ instance_groups:
 physical_clusters:
   - name: buildkite-imacpro
     count: 20
-  - name: buildkite-macpro
+  - name: bk-testing-macpro
     count: 4
   - name: bk-trusted-macpro
     count: 4
