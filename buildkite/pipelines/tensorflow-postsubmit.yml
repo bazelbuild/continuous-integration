@@ -2,7 +2,7 @@
 platforms:
   ubuntu1804:
     environment:
-      TF_IGNORE_MAX_BAZEL_VERSION: "true"
+      TF_IGNORE_MAX_BAZEL_VERSION: 1
     shell_commands:
     - |-
       echo '
@@ -21,7 +21,7 @@ platforms:
     # - "//tensorflow/examples/android:tensorflow_demo"
   macos:
     environment:
-      TF_IGNORE_MAX_BAZEL_VERSION: "true"
+      TF_IGNORE_MAX_BAZEL_VERSION: 1
     shell_commands:
     - |-
       echo '
@@ -43,7 +43,7 @@ platforms:
     - "//tensorflow/tools/pip_package:build_pip_package"
   windows:
     environment:
-      TF_IGNORE_MAX_BAZEL_VERSION: "true"
+      TF_IGNORE_MAX_BAZEL_VERSION: 1
     batch_commands:
     - echo.| python ./configure.py
     build_flags:
