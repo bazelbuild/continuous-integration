@@ -24,18 +24,17 @@ import bazelci
 
 BAZEL_REPO_DIR = os.getcwd()
 
+BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
 
-def bazel_culprit_finder_py_url():
-    """
-    URL to the latest version of this script.
-    """
-    return "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/culprit_finder.py?{}".format(
-        int(time.time())
-    )
+SCRIPT_URL = {
+    "bazel-testing": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/culprit_finder.py",
+    "bazel-trusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/culprit_finder.py",
+    "bazel": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/culprit_finder.py",
+}[BUILDKITE_ORG] + "?{}".format(int(time.time()))
 
 
 def fetch_culprit_finder_py_command():
-    return "curl -s {0} -o culprit_finder.py".format(bazel_culprit_finder_py_url())
+    return "curl -s {0} -o culprit_finder.py".format(SCRIPT_URL)
 
 
 def get_bazel_commits_between(first_commit, second_commit):

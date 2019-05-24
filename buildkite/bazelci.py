@@ -41,13 +41,41 @@ from urllib.parse import urlparse
 # Initialize the random number generator.
 random.seed()
 
-CLOUD_PROJECT = (
-    "bazel-public"
-    if os.environ.get("BUILDKITE_ORGANIZATION_SLUG") == "bazel-trusted"
-    else "bazel-untrusted"
+BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
+THIS_IS_PRODUCTION = BUILDKITE_ORG == "bazel-untrusted"
+THIS_IS_TESTING = BUILDKITE_ORG == "bazel-testing"
+THIS_IS_TRUSTED = BUILDKITE_ORG == "bazel-trusted"
+THIS_IS_SPARTA = True
+
+CLOUD_PROJECT = "bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"
+
+GITHUB_BRANCH = {"bazel": "master", "bazel-trusted": "master", "bazel-testing": "testing"}[
+    BUILDKITE_ORG
+]
+
+SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazelci.py?{}".format(
+    GITHUB_BRANCH, int(time.time())
 )
 
-DOWNSTREAM_PROJECTS = {
+INCOMPATIBLE_FLAG_VERBOSE_FAILURES_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/incompatible_flag_verbose_failures.py?{}".format(
+    GITHUB_BRANCH, int(time.time())
+)
+
+AGGREGATE_INCOMPATIBLE_TEST_RESULT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/aggregate_incompatible_flags_test_result.py?{}".format(
+    GITHUB_BRANCH, int(time.time())
+)
+
+EMERGENCY_FILE_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/emergency.yml?{}".format(
+    GITHUB_BRANCH, int(time.time())
+)
+
+FLAKY_TESTS_BUCKET = {
+    "bazel-testing": "gs://bazel-testing-buildkite-stats/flaky-tests-bep/",
+    "bazel-trusted": "gs://bazel-buildkite-stats/flaky-tests-bep/",
+    "bazel": "gs://bazel-buildkite-stats/flaky-tests-bep/",
+}[BUILDKITE_ORG]
+
+DOWNSTREAM_PROJECTS_PRODUCTION = {
     "Android Studio Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/android-studio.yml",
@@ -340,6 +368,19 @@ DOWNSTREAM_PROJECTS = {
     },
 }
 
+DOWNSTREAM_PROJECTS_TESTING = {
+    "Bazelisk": {
+        "git_repository": "https://github.com/bazelbuild/bazelisk.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazelisk/master/.bazelci/config.yml",
+        "pipeline_slug": "bazelisk",
+    }
+}
+
+DOWNSTREAM_PROJECTS = {
+    "bazel-testing": DOWNSTREAM_PROJECTS_TESTING,
+    "bazel-trusted": {},
+    "bazel": DOWNSTREAM_PROJECTS_PRODUCTION,
+}[BUILDKITE_ORG]
 
 # A map containing all supported platform names as keys, with the values being
 # the platform name in a human readable format, and a the buildkite-agent's
@@ -429,11 +470,6 @@ SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
 
 CONFIG_FILE_EXTENSIONS = set([".yml", ".yaml"])
 
-SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py"
-
-
-EMERGENCY_FILE_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/emergency.yml"
-
 
 class BuildkiteException(Exception):
     """
@@ -460,6 +496,12 @@ exosKKaWB0tSRJiPKnv2NPDfEqGul0ZwVjtWeASpugwxxKeLhFhPMcgHMPfndH6j2GEIY6nkKRbP
 uwoRMCwe
 """.strip()
 
+    _ENCRYPTED_BUILDKITE_API_TESTING_TOKEN = """
+CiQAMTBkWjL1C+F5oon3+cC1vmum5+c1y5+96WQY44p0Lxd0PeASUQAy7iU0c6E3W5EOSFYfD5fA
+MWy/SHaMno1NQSUa4xDOl5yc2kizrtxPPVkX4x9pLNuGUY/xwAn2n1DdiUdWZNWlY1bX2C4ex65e
+P9w8kNhEbw==
+""".strip()
+
     _BUILD_STATUS_URL_TEMPLATE = (
         "https://api.buildkite.com/v2/organizations/{}/pipelines/{}/builds/{}"
     )
@@ -483,13 +525,19 @@ uwoRMCwe
                     "--keyring",
                     "buildkite",
                     "--key",
-                    "buildkite-untrusted-api-token",
+                    "buildkite-testing-api-token"
+                    if THIS_IS_TESTING
+                    else "buildkite-untrusted-api-token",
                     "--ciphertext-file",
                     "-",
                     "--plaintext-file",
                     "-",
                 ],
-                input=base64.b64decode(self._ENCRYPTED_BUILDKITE_API_TOKEN),
+                input=base64.b64decode(
+                    self._ENCRYPTED_BUILDKITE_API_TESTING_TOKEN
+                    if THIS_IS_TESTING
+                    else self._ENCRYPTED_BUILDKITE_API_TOKEN
+                ),
                 env=os.environ,
             )
             .decode("utf-8")
@@ -529,31 +577,6 @@ def gsutil_command():
 
 def gcloud_command():
     return "gcloud.cmd" if is_windows() else "gcloud"
-
-
-def bazelcipy_url():
-    """
-    URL to the latest version of this script.
-    """
-    return "{}?{}".format(SCRIPT_URL, int(time.time()))
-
-
-def incompatible_flag_verbose_failures_url():
-    """
-    URL to the latest version of this script.
-    """
-    return "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/incompatible_flag_verbose_failures.py?{}".format(
-        int(time.time())
-    )
-
-
-def aggregate_incompatible_flags_test_result_url():
-    """
-    URL to the latest version of this script.
-    """
-    return "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/aggregate_incompatible_flags_test_result.py?{}".format(
-        int(time.time())
-    )
 
 
 def downstream_projects_root(platform):
@@ -842,11 +865,7 @@ def execute_commands(
                                 gsutil_command(),
                                 "cp",
                                 test_bep_file,
-                                "gs://bazel-buildkite-stats/flaky-tests-bep/"
-                                + pipeline_slug
-                                + "/"
-                                + build_number
-                                + ".json",
+                                FLAKY_TESTS_BUCKET + pipeline_slug + "/" + build_number + ".json",
                             ]
                         )
             finally:
@@ -1082,11 +1101,11 @@ def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags):
 
 
 def remote_caching_flags(platform):
-    # Only enable caching for untrusted builds.
+    # Only enable caching for untrusted and testing builds.
     if CLOUD_PROJECT not in ["bazel-untrusted"]:
         return []
 
-    platform_cache_key = [os.environ.get("BUILDKITE_ORGANIZATION_SLUG", "unknown").encode("utf-8")]
+    platform_cache_key = [BUILDKITE_ORG.encode("utf-8")]
 
     if platform == "macos":
         platform_cache_key += [
@@ -1688,14 +1707,12 @@ def print_project_pipeline(
     #   1. This job is a GitHub pull request
     #   2. This job uses a custom built Bazel binary (in Bazel Downstream Projects pipeline)
     #   3. This job doesn't run on master branch (could be a custom build launched manually)
-    #   4. This job doesn't run on Bazel's main Buildkite organization (e.g. could be the testing org)
-    #   5. We don't intend to run the same job in downstream with Bazel@HEAD (eg. google-bazel-presubmit)
-    #   6. We are testing incompatible flags
+    #   4. We don't intend to run the same job in downstream with Bazel@HEAD (eg. google-bazel-presubmit)
+    #   5. We are testing incompatible flags
     if not (
         is_pull_request()
         or use_but
         or os.getenv("BUILDKITE_BRANCH") != "master"
-        or os.getenv("BUILDKITE_ORGANIZATION_SLUG") != "bazel"
         or pipeline_slug not in all_downstream_pipeline_slugs
         or incompatible_flags
     ):
@@ -1834,18 +1851,18 @@ def runner_step(
 
 
 def fetch_bazelcipy_command():
-    return "curl -sS {0} -o bazelci.py".format(bazelcipy_url())
+    return "curl -sS {0} -o bazelci.py".format(SCRIPT_URL)
 
 
 def fetch_incompatible_flag_verbose_failures_command():
     return "curl -sS {0} -o incompatible_flag_verbose_failures.py".format(
-        incompatible_flag_verbose_failures_url()
+        INCOMPATIBLE_FLAG_VERBOSE_FAILURES_URL
     )
 
 
 def fetch_aggregate_incompatible_flags_test_result_command():
     return "curl -sS {0} -o aggregate_incompatible_flags_test_result.py".format(
-        aggregate_incompatible_flags_test_result_url()
+        AGGREGATE_INCOMPATIBLE_TEST_RESULT_URL
     )
 
 
@@ -2246,29 +2263,32 @@ def print_bazel_downstream_pipeline(
 
 
 def bazelci_builds_download_url(platform, git_commit):
-    return "https://storage.googleapis.com/bazel-builds/artifacts/{0}/{1}/bazel".format(
-        platform, git_commit
+    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-builds"
+    return "https://storage.googleapis.com/{}/artifacts/{}/{}/bazel".format(
+        bucket_name, platform, git_commit
     )
 
 
 def bazelci_builds_gs_url(platform, git_commit):
-    return "gs://bazel-builds/artifacts/{0}/{1}/bazel".format(platform, git_commit)
+    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-builds"
+    return "gs://{}/artifacts/{}/{}/bazel".format(bucket_name, platform, git_commit)
 
 
 def bazelci_builds_metadata_url():
-    return "gs://bazel-builds/metadata/latest.json"
+    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-builds"
+    return "gs://{}/metadata/latest.json".format(bucket_name)
 
 
 def bazelci_last_green_commit_url(git_repository, pipeline_slug):
-    return "gs://bazel-untrusted-builds/last_green_commit/%s/%s" % (
-        git_repository[len("https://") :],
-        pipeline_slug,
+    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-untrusted-builds"
+    return "gs://{}/last_green_commit/{}/{}".format(
+        bucket_name, git_repository[len("https://") :], pipeline_slug
     )
 
 
 def bazelci_last_green_downstream_commit_url():
-    # Downstream pipeline runs in the unstrusted org
-    return "gs://bazel-untrusted-builds/last_green_commit/downstream_pipeline"
+    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-untrusted-builds"
+    return "gs://{}/last_green_commit/downstream_pipeline".format(bucket_name)
 
 
 def get_last_green_commit(last_green_commit_url):

@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import argparse
+import os
 import sys
 import yaml
 
@@ -26,7 +27,7 @@ from bazelci import BuildkiteException
 # under.
 BUILDKITE_MAX_JOBS_LIMIT = 1500
 
-BUILDKITE_ORG = "bazel"
+BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
 
 PIPELINE = "bazel-at-release-plus-incompatible-flags"
 
