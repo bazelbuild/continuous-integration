@@ -708,7 +708,7 @@ def execute_commands(
                 os.environ["USE_BAZEL_VERSION"] = bazel_version
                 test_env_vars.append("USE_BAZEL_VERSION")
 
-        for key, value in task_config.get("environment", {}):
+        for key, value in task_config.get("environment", {}).items():
             # We have to explicitly convert the value to a string, because sometimes YAML tries to
             # be smart and converts strings like "true" and "false" to booleans.
             os.environ[key] = str(value)
