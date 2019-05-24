@@ -11,7 +11,7 @@ platforms:
       android_ndk_repository(name = "androidndk")' >>WORKSPACE
     - "yes '' | ./configure"
     build_flags:
-    - "--output_filter=DONT_MATCH_ANYTHING"
+    - "--output_filter=^$"
     - "--config=opt"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
@@ -32,7 +32,7 @@ platforms:
     - "yes '' | python3 ./configure.py"
     build_flags:
     - "--config=opt"
-    - "--output_filter=DONT_MATCH_ANYTHING"
+    - "--output_filter=^$"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
   windows:
