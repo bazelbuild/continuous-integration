@@ -9,7 +9,8 @@ platforms:
       echo '
       android_sdk_repository(name = "androidsdk")
       android_ndk_repository(name = "androidndk")' >>WORKSPACE
-    - "yes '' | ./configure"
+    - export TF_IGNORE_MAX_BAZEL_VERSION=1
+    - yes '' | ./configure
     build_flags:
     - "--config=opt"
     # Suppress warning messages from all actions
@@ -30,7 +31,8 @@ platforms:
     - pip install -U --user pip six numpy wheel setuptools mock
     - pip install -U --user keras_applications==1.0.6 --no-deps
     - pip install -U --user keras_preprocessing==1.0.5 --no-deps  
-    - "yes '' | python3 ./configure.py"
+    - export TF_IGNORE_MAX_BAZEL_VERSION=1
+    - yes '' | python3 ./configure.py
     build_flags:
     - "--config=opt"
     # Suppress warning messages from all actions
@@ -39,7 +41,8 @@ platforms:
     - "//tensorflow/tools/pip_package:build_pip_package"
   windows:
     batch_commands:
-    - "echo.| python ./configure.py"
+    - set TF_IGNORE_MAX_BAZEL_VERSION=1
+    - echo.| python ./configure.py
     build_flags:
     - "--config=opt"
     # Suppress warning messages from all actions
