@@ -13,7 +13,7 @@ platforms:
     build_flags:
     - "--config=opt"
     # Suppress warning messages from all actions
-    - "--auto_output_filter=all"
+    - "--output_filter=^$"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
     # - "//tensorflow/examples/android:tensorflow_demo"
@@ -34,7 +34,7 @@ platforms:
     build_flags:
     - "--config=opt"
     # Suppress warning messages from all actions
-    - "--auto_output_filter=all"
+    - "--output_filter=^$"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
   windows:
@@ -43,6 +43,6 @@ platforms:
     build_flags:
     - "--config=opt"
     # Suppress warning messages from all actions
-    - "--auto_output_filter=all"
+    - "--output_filter=^$"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
