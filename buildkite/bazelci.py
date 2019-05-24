@@ -708,7 +708,10 @@ def execute_commands(
                 os.environ["USE_BAZEL_VERSION"] = bazel_version
                 test_env_vars.append("USE_BAZEL_VERSION")
 
-        os.environ.update(task_config.get("environment", {}))
+        for key, value in task_config.get("environment", {}):
+            # We have to explicitly convert the value to a string, because sometimes YAML tries to
+            # be smart and converts strings like "true" and "false" to booleans.
+            os.environ[key] = str(value)
 
         # Allow the config to override the current working directory.
         required_prefix = os.getcwd()
