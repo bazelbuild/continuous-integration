@@ -12,6 +12,8 @@ platforms:
     - "yes '' | ./configure"
     build_flags:
     - "--config=opt"
+    # Suppress warning messages from all actions
+    - "--output_filter=^$"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
     # - "//tensorflow/examples/android:tensorflow_demo"
@@ -31,6 +33,8 @@ platforms:
     - "yes '' | python3 ./configure.py"
     build_flags:
     - "--config=opt"
+    # Suppress warning messages from all actions
+    - "--output_filter=^$"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
   windows:
@@ -38,5 +42,7 @@ platforms:
     - "echo.| python ./configure.py"
     build_flags:
     - "--config=opt"
+    # Suppress warning messages from all actions
+    - "--output_filter=^$"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
