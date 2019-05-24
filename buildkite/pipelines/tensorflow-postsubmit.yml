@@ -1,6 +1,8 @@
 ---
 platforms:
   ubuntu1804:
+    environment:
+      TF_IGNORE_MAX_BAZEL_VERSION: true
     shell_commands:
     - |-
       echo '
@@ -9,7 +11,6 @@ platforms:
       echo '
       android_sdk_repository(name = "androidsdk")
       android_ndk_repository(name = "androidndk")' >>WORKSPACE
-    - export TF_IGNORE_MAX_BAZEL_VERSION=1
     - yes '' | ./configure
     build_flags:
     - "--config=opt"
@@ -19,6 +20,8 @@ platforms:
     - "//tensorflow/tools/pip_package:build_pip_package"
     # - "//tensorflow/examples/android:tensorflow_demo"
   macos:
+    environment:
+      TF_IGNORE_MAX_BAZEL_VERSION: true
     shell_commands:
     - |-
       echo '
@@ -31,7 +34,6 @@ platforms:
     - pip install -U --user pip six numpy wheel setuptools mock
     - pip install -U --user keras_applications==1.0.6 --no-deps
     - pip install -U --user keras_preprocessing==1.0.5 --no-deps  
-    - export TF_IGNORE_MAX_BAZEL_VERSION=1
     - yes '' | python3 ./configure.py
     build_flags:
     - "--config=opt"
@@ -40,8 +42,9 @@ platforms:
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
   windows:
+    environment:
+      TF_IGNORE_MAX_BAZEL_VERSION: true
     batch_commands:
-    - set TF_IGNORE_MAX_BAZEL_VERSION=1
     - echo.| python ./configure.py
     build_flags:
     - "--config=opt"
