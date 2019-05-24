@@ -11,8 +11,9 @@ platforms:
       android_ndk_repository(name = "androidndk")' >>WORKSPACE
     - "yes '' | ./configure"
     build_flags:
-    - "--output_filter=^$"
     - "--config=opt"
+    # Suppress warning messages from all actions
+    - "--auto_output_filter=all"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
     # - "//tensorflow/examples/android:tensorflow_demo"
@@ -32,7 +33,8 @@ platforms:
     - "yes '' | python3 ./configure.py"
     build_flags:
     - "--config=opt"
-    - "--output_filter=^$"
+    # Suppress warning messages from all actions
+    - "--auto_output_filter=all"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
   windows:
@@ -40,6 +42,7 @@ platforms:
     - "echo.| python ./configure.py"
     build_flags:
     - "--config=opt"
-    - "--output_filter=DONT_MATCH_ANYTHING"
+    # Suppress warning messages from all actions
+    - "--auto_output_filter=all"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
