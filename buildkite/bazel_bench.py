@@ -17,6 +17,7 @@ Runs bazel-bench on the defined projects, on every platforms the project runs
 on.
 """
 
+import argparse
 import bazelci
 import datetime
 import os
@@ -67,7 +68,7 @@ def get_bazel_commits(day):
   args = [
       "git",
       "log",
-      "--pretty=format:'%h'",
+      "--pretty=format:'%H'",
       "--after='%s'" % day.strftime("%Y-%m-%d 00:00"),
       "--until='%s'" % day_plus_one.strftime("%Y-%m-%d 00:00"),
       "--reverse"
@@ -89,7 +90,7 @@ def get_platforms(project_name):
     http_config = bazelci.DOWNSTREAM_PROJECTS[project_name]["http_config"]
     configs = bazelci.fetch_configs(http_config, None)
     tasks = configs["tasks"]
-    return list(map(lambda k: bazelci.get_platform_for_task(k, tasks), tasks))
+    return list(map(lambda k: bazelci.get_platform_for_task(k, tasks[k]), tasks))
 
 
 def ci_step_for_platform_and_commits(bazel_commits, platform, project):
@@ -123,9 +124,10 @@ def ci_step_for_platform_and_commits(bazel_commits, platform, project):
       "run",
       "benchmark",
       "--",
-      "--bazel_commits=%s" % ",".join(commits),
+      "--bazel_commits=%s" % ",".join(bazel_commits),
       "--bazel_source=%s" % bazel_mirror_path,
       "--project_source=%s" % project_mirror_path,
+      "--platform=%s" % platform,
       "--collect_memory",
       "--runs=%s" % RUNS,
       "--data_directory=%s" % DATA_DIRECTORY,
@@ -134,17 +136,23 @@ def ci_step_for_platform_and_commits(bazel_commits, platform, project):
       project["bazel_command"]
   ]
 
-  label = (bazelci.PLATFORMS[platform_name]["emoji-name"]
+  label = (bazelci.PLATFORMS[platform]["emoji-name"]
            + " Running bazel-bench on project: %s" % project)
   return bazelci.create_step(label, " ".join(args), platform)
 
 
 def main(argv=None):
-  # Unused
-  del argv
+  if argv is None:
+    argv = sys.argv[1:]
+
+  parser = argparse.ArgumentParser(description="Bazel Bench CI Pipeline")
+  parser.add_argument("--day", type=str)
+  args = parser.parse_args(argv)
 
   bazel_bench_ci_steps = []
-  bazel_commits = get_bazel_commits(datetime.date.today())
+  day = (datetime.datetime.strptime(args.day, "%Y-%m-%d").date() if args.day
+         else datetime.date.today())
+  bazel_commits = get_bazel_commits(day)
   for project in PROJECTS:
     for platform in get_platforms(project["name"]):
       # bazel-bench doesn't support Windows for now.
