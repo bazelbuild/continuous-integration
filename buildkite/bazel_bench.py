@@ -73,7 +73,8 @@ def get_bazel_commits(day):
       "--reverse"
   ]
   command = subprocess.Popen(args, stdout=subprocess.PIPE)
-  return [line.decode('utf-8').strip() for line in command.stdout]
+  return [
+      line.decode('utf-8').rstrip("\n").strip("'") for line in command.stdout]
 
 
 def get_platforms(project_name):
@@ -105,9 +106,6 @@ def ci_step_for_platform_and_commits(bazel_commits, platform, project):
     An object: the result of applying bazelci.create_step to wrap the
       command to be executed by buildkite-agent.
   """
-  # Get Bazel commits during the day
-  bazel_commits = get_bazel_commits(datetime.date.today())
-
   # Download the binaries already built.
   # Bazel-bench won"t try to build these binaries again, since they exist.
   for bazel_commit in bazel_commits:
