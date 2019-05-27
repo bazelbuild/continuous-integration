@@ -1571,7 +1571,7 @@ def create_step(label, commands, platform, shards=1):
 
     # Automatically retry when an agent got lost (usually due to an infra flake).
     step["retry"] = {}
-    step["retry"]["automatic"] = {"exit_status": -1, "limit": 3}
+    step["retry"]["automatic"] = [{"exit_status": -1, "limit": 3}, {"exit_status": 137, "limit": 3}]
 
     return step
 

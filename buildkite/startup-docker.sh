@@ -45,14 +45,14 @@ swapon -s
 
 # Create filesystem for buildkite-agent's home.
 AGENT_HOME="/var/lib/buildkite-agent"
-mount -t tmpfs -o size=375G tmpfs "${AGENT_HOME}"
+mount -t tmpfs -o size=250G tmpfs "${AGENT_HOME}"
 mkdir -p "${AGENT_HOME}/.cache/bazel/_bazel_buildkite-agent"
 chown -R buildkite-agent:buildkite-agent "${AGENT_HOME}"
 chmod 0755 "${AGENT_HOME}"
 
 # Create filesystem for Docker.
 DOCKER_HOME="/var/lib/docker"
-mount -t tmpfs -o size=375G tmpfs "${DOCKER_HOME}"
+mount -t tmpfs -o size=250G tmpfs "${DOCKER_HOME}"
 chown -R root:root "${DOCKER_HOME}"
 chmod 0711 "${DOCKER_HOME}"
 
