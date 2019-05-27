@@ -117,6 +117,9 @@ def ci_step_for_platform_and_commits(
   # Download the binaries already built.
   # Bazel-bench won"t try to build these binaries again, since they exist.
   for bazel_commit in bazel_commits:
+    destination = BAZEL_BINARY_BASE_PATH + bazel_commit
+    if os.path.exists(destination):
+      continue
     bazelci.download_bazel_binary_at_commit(
         BAZEL_BINARY_BASE_PATH + bazel_commit,
         platform,
