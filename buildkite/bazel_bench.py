@@ -50,7 +50,6 @@ PROJECTS = [
 BAZEL_REPOSITORY = "https://github.com/bazelbuild/bazel.git"
 DATA_DIRECTORY = _platform_path_str("%s/.bazel-bench/out/" % TMP)
 RUNS = 3
-BIGQUERY_TABLE = "bazel_playground:bazel_bench:europe-west2"
 
 
 def get_bazel_commits(day, bazel_repo_path):
@@ -114,7 +113,12 @@ def ci_step_for_platform_and_commits(
   # out commits.
   project_clone_path = bazelci.get_mirror_path(
       project["git_repository"], platform)
+  if not os.path.exists(project_clone_path):
+    bazelci.clone_git_repository(project["git_repository"], platform)
+
   bazel_clone_path = bazelci.get_mirror_path(BAZEL_REPOSITORY, platform)
+  if not os.path.exists(bazel_clone_path):
+    bazelci.clone_git_repository(BAZEL_REPOSITORY, platform)
 
   # Download the binaries already built.
   # Bazel-bench won"t try to build these binaries again, since they exist.
@@ -140,7 +144,6 @@ def ci_step_for_platform_and_commits(
       "--collect_memory",
       "--runs=%s" % RUNS,
       "--data_directory=%s" % DATA_DIRECTORY,
-      "--upload_data_to=%s" % BIGQUERY_TABLE,
       extra_options,
       "--",
       project["bazel_command"]
