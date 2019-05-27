@@ -89,7 +89,7 @@ def get_platforms(project_name):
     return list(map(lambda k: bazelci.get_platform_for_task(k, tasks), tasks))
 
 
-def bazel_bench_for_commits(bazel_commits, platform, project):
+def ci_step_for_platform_and_commits(bazel_commits, platform, project):
   """Perform bazel-bench for the platform-project combination.
   Uploads results to BigQuery.
 
@@ -100,7 +100,8 @@ def bazel_bench_for_commits(bazel_commits, platform, project):
       tested on.
 
   Return:
-    A string: the command to be executed by buildkite-agent to run bazel-bench.
+    An object: the result of applying bazelci.create_step to wrap the
+      command to be executed by buildkite-agent.
   """
   # Get Bazel commits during the day
   bazel_commits = get_bazel_commits(datetime.date.today())
@@ -133,24 +134,26 @@ def bazel_bench_for_commits(bazel_commits, platform, project):
       project["bazel_command"]
   ]
 
-  return " ".join(args)
+  label = (bazelci.PLATFORMS[platform_name]["emoji-name"]
+           + " Running bazel-bench on project: %s" % project)
+  return bazelci.create_step(label, " ".join(args), platform)
 
 
 def main(argv):
   if len(argv) > 1:
     raise app.UsageError("Too many command-line arguments.")
 
-  bazel_bench_commands = []
+  bazel_bench_ci_steps = []
   for project in PROJECTS:
     for platform in get_platforms(project["name"]):
       # bazel-bench doesn't support Windows for now.
       if platform == "windows":
         continue
-      bazel_bench_commands.append(
-          bazel_bench_for_commits(bazel_commits, platform, project))
+      bazel_bench_ci_steps.append(
+          ci_step_for_platform_and_commits(bazel_commits, platform, project))
 
   # Print the commands
-  print(yaml.dump({"steps": bazel_bench_commands}))
+  print(yaml.dump({"steps": bazel_bench_ci_steps}))
 
 if __name__ == "__main__":
   sys.exit(main())
