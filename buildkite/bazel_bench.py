@@ -67,7 +67,7 @@ def get_bazel_commits(day):
   args = [
       "git",
       "log",
-      "--pretty=format:'%H'",
+      "--pretty=format:'%h'",
       "--after='%s'" % day.strftime("%Y-%m-%d 00:00"),
       "--until='%s'" % day_plus_one.strftime("%Y-%m-%d 00:00"),
       "--reverse"
