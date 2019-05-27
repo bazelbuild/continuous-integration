@@ -1,6 +1,6 @@
 steps:
   - command: |-
-      curl -s "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)" -o bazelci.py
+      curl -s "https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)" -o bazelci.py
       python3.6 bazelci.py bazel_publish_binaries_pipeline --file_config=.bazelci/build_bazel_binaries.yml | buildkite-agent pipeline upload
     label: "Setup"
     agents:
