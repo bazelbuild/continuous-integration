@@ -53,13 +53,14 @@ RUNS = 3
 BIGQUERY_TABLE = "bazel_playground:bazel_bench:europe-west2"
 
 
-def get_bazel_commits(day):
+def get_bazel_commits(day, bazel_repo_path):
   """Get the commits from a particular day.
 
   Get the commits from 00:00 of day to 00:00 of day + 1.
 
   Args:
     day: a datetime.date the day to get commits.
+    bazel_repo_path: the path to a local clone of bazelbuild/bazel.
 
   Return:
     A list of string (commit hashes).
@@ -73,7 +74,7 @@ def get_bazel_commits(day):
       "--until='%s'" % day_plus_one.strftime("%Y-%m-%d 00:00"),
       "--reverse"
   ]
-  command = subprocess.Popen(args, stdout=subprocess.PIPE)
+  command = subprocess.Popen(args, stdout=subprocess.PIPE, cwd=bazel_repo_path)
   return [
       line.decode('utf-8').rstrip("\n").strip("'") for line in command.stdout]
 
@@ -107,6 +108,10 @@ def ci_step_for_platform_and_commits(bazel_commits, platform, project):
     An object: the result of applying bazelci.create_step to wrap the
       command to be executed by buildkite-agent.
   """
+  project_clone_path = bazelci.clone_git_repository(
+      project["git_repository"], platform)
+  bazel_clone_path = bazelci.clone_git_repository(BAZEL_REPOSITORY, platform)
+
   # Download the binaries already built.
   # Bazel-bench won"t try to build these binaries again, since they exist.
   for bazel_commit in bazel_commits:
@@ -115,9 +120,6 @@ def ci_step_for_platform_and_commits(bazel_commits, platform, project):
         platform,
         bazel_commit
     )
-  project_mirror_path = bazelci.get_mirror_path(
-      project["git_repository"], platform)
-  bazel_mirror_path = bazelci.get_mirror_path(BAZEL_REPOSITORY, platform)
 
   args = [
       "bazel",
@@ -125,8 +127,8 @@ def ci_step_for_platform_and_commits(bazel_commits, platform, project):
       "benchmark",
       "--",
       "--bazel_commits=%s" % ",".join(bazel_commits),
-      "--bazel_source=%s" % bazel_mirror_path,
-      "--project_source=%s" % project_mirror_path,
+      "--bazel_source=%s" % bazel_clone_path,
+      "--project_source=%s" % project_clone_path,
       "--platform=%s" % platform,
       "--collect_memory",
       "--runs=%s" % RUNS,
@@ -152,12 +154,18 @@ def main(argv=None):
   bazel_bench_ci_steps = []
   day = (datetime.datetime.strptime(args.day, "%Y-%m-%d").date() if args.day
          else datetime.date.today())
-  bazel_commits = get_bazel_commits(day)
+  bazel_commits = None
   for project in PROJECTS:
     for platform in get_platforms(project["name"]):
       # bazel-bench doesn't support Windows for now.
       if platform == "windows":
         continue
+
+      # When running on the first platform, get the bazel commits.
+      bazel_clone_path = bazelci.clone_git_repository(BAZEL_REPOSITORY, platform)
+      if not bazel_commits:
+        bazel_commits = get_bazel_commits(day, bazel_clone_path)
+
       bazel_bench_ci_steps.append(
           ci_step_for_platform_and_commits(bazel_commits, platform, project))
 
