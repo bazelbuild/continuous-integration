@@ -110,9 +110,11 @@ def ci_step_for_platform_and_commits(
     An object: the result of applying bazelci.create_step to wrap the
       command to be executed by buildkite-agent.
   """
-  project_clone_path = bazelci.clone_git_repository(
+  # It's ok to use mirror path as bazel-bench will take care of pulling/checking
+  # out commits.
+  project_clone_path = bazelci.get_mirror_path(
       project["git_repository"], platform)
-  bazel_clone_path = bazelci.clone_git_repository(BAZEL_REPOSITORY, platform)
+  bazel_clone_path = bazelci.get_mirror_path(BAZEL_REPOSITORY, platform)
 
   # Download the binaries already built.
   # Bazel-bench won"t try to build these binaries again, since they exist.
