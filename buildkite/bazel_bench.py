@@ -114,11 +114,11 @@ def ci_step_for_platform_and_commits(
   project_clone_path = bazelci.get_mirror_path(
       project["git_repository"], platform)
   if not os.path.exists(project_clone_path):
-    bazelci.clone_git_repository(project["git_repository"], platform)
+    project_clone_path = bazelci.clone_git_repository(project["git_repository"], platform)
 
   bazel_clone_path = bazelci.get_mirror_path(BAZEL_REPOSITORY, platform)
   if not os.path.exists(bazel_clone_path):
-    bazelci.clone_git_repository(BAZEL_REPOSITORY, platform)
+    bazel_clone_path = bazelci.clone_git_repository(BAZEL_REPOSITORY, platform)
 
   # Download the binaries already built.
   # Bazel-bench won"t try to build these binaries again, since they exist.
