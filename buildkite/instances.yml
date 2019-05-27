@@ -34,9 +34,9 @@ instance_groups:
   - name: bk-testing-docker
     count: 20
     project: bazel-untrusted
-    service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
+    service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
     image_project: bazel-untrusted
-    image_family: bk-docker
+    image_family: bk-testing-docker
     local_ssd:
       - interface=nvme
       - interface=nvme
@@ -62,9 +62,9 @@ instance_groups:
   - name: bk-testing-windows-java8
     count: 4
     project: bazel-untrusted
-    service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
+    service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
     image_project: bazel-untrusted
-    image_family: bk-windows-java8
+    image_family: bk-testing-windows-java8
     local_ssd: interface=scsi
     metadata_from_file: windows-startup-script-ps1=startup-windows.ps1
   - name: bk-trusted-windows-java8

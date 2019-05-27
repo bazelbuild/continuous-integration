@@ -49,6 +49,16 @@ IMAGE_CREATION_VMS = {
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
     },
+    "bk-testing-docker": {
+        "project": "bazel-untrusted",
+        "zone": "us-central1-a",
+        "source_image_project": "ubuntu-os-cloud",
+        "source_image_family": "ubuntu-1904",
+        "setup_script": "setup-docker.sh",
+        "licenses": [
+            "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
+        ],
+    },
     "bk-trusted-docker": {
         "project": "bazel-public",
         "zone": "us-central1-a",
@@ -60,6 +70,13 @@ IMAGE_CREATION_VMS = {
         ],
     },
     "bk-windows-java8": {
+        "project": "bazel-untrusted",
+        "zone": "us-central1-a",
+        "source_image_project": "windows-cloud",
+        "source_image_family": "windows-1809-core",
+        "setup_script": "setup-windows.ps1",
+    },
+    "bk-testing-windows-java8": {
         "project": "bazel-untrusted",
         "zone": "us-central1-a",
         "source_image_project": "windows-cloud",

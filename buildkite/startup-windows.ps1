@@ -79,7 +79,7 @@ if ($myhostname -like "*trusted*") {
   $project = "bazel-public"
   $key = "buildkite-trusted-agent-token"
 } elseif ($myhostname -like "*testing*") {
-  $buildkite_agent_token_url = "https://storage.googleapis.com/bazel-untrusted-encrypted-secrets/buildkite-testing-agent-token.enc"
+  $buildkite_agent_token_url = "https://storage.googleapis.com/bazel-testing-encrypted-secrets/buildkite-testing-agent-token.enc"
   $project = "bazel-untrusted"
   $key = "buildkite-testing-agent-token"
 } else {
