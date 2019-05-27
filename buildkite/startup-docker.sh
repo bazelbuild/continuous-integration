@@ -67,13 +67,14 @@ case $(hostname -f) in
         gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key buildkite-trusted-agent-token --ciphertext-file - --plaintext-file -)
     ;;
   *.bazel-untrusted.*)
-    ARTIFACT_BUCKET="bazel-untrusted-buildkite-artifacts"
     case $(hostname -f) in
       *-testing-*)
-        BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-untrusted-encrypted-secrets/buildkite-testing-agent-token.enc" | \
+        ARTIFACT_BUCKET="bazel-testing-buildkite-artifacts"
+        BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-testing-encrypted-secrets/buildkite-testing-agent-token.enc" | \
             gcloud kms decrypt --project bazel-untrusted --location global --keyring buildkite --key buildkite-testing-agent-token --ciphertext-file - --plaintext-file -)
         ;;
       *)
+        ARTIFACT_BUCKET="bazel-untrusted-buildkite-artifacts"
         BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-untrusted-encrypted-secrets/buildkite-untrusted-agent-token.enc" | \
             gcloud kms decrypt --project bazel-untrusted --location global --keyring buildkite --key buildkite-untrusted-agent-token --ciphertext-file - --plaintext-file -)
         ;;

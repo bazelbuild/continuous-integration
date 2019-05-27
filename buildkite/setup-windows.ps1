@@ -320,6 +320,8 @@ if ($myhostname -like "bk-*") {
     ## Create an environment hook for the Buildkite agent.
     if ($myhostname -like "*trusted*") {
         $artifact_bucket = "bazel-trusted-buildkite-artifacts"
+    } elif ($myhostname -like "*testing*") {
+        $artifact_bucket = "bazel-testing-buildkite-artifacts"
     } else {
         $artifact_bucket = "bazel-untrusted-buildkite-artifacts"
     }
