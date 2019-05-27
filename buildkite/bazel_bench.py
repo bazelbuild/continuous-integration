@@ -162,6 +162,7 @@ def main(argv=None):
         continue
 
       # When running on the first platform, get the bazel commits.
+      # The bazel commits should be the same regardless of platform.
       bazel_clone_path = bazelci.clone_git_repository(BAZEL_REPOSITORY, platform)
       if not bazel_commits:
         bazel_commits = get_bazel_commits(day, bazel_clone_path)
