@@ -160,12 +160,13 @@ def ci_step_for_platform_and_commits(
       "--collect_memory",
       "--runs=%s" % RUNS,
       "--data_directory=%s" % DATA_DIRECTORY,
+      extra_options,
       "--",
       project["bazel_command"]
   ]
 
   label = (bazelci.PLATFORMS[platform]["emoji-name"]
-           + " Running bazel-bench on project: %s" % project)
+           + " Running bazel-bench on project: %s" % project["name"])
   return bazelci.create_step(label, " ".join(args), platform)
 
 
@@ -200,6 +201,7 @@ def main(argv=None):
               bazel_commits, platform, project, args.bazel_bench_options))
 
   # Print the commands
+  bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
   print(yaml.dump({"steps": bazel_bench_ci_steps}))
 
 if __name__ == "__main__":
