@@ -168,8 +168,8 @@ RUN dpkg --add-architecture i386 && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Python packages required by Tensorflow.
-RUN pip install keras_applications keras_preprocessing && \
-    pip3 install keras_applications keras_preprocessing
+RUN pip install keras_applications keras_preprocessing future && \
+    pip3 install keras_applications keras_preprocessing future
 
 ### Install Google Cloud SDK.
 ### https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
@@ -265,8 +265,8 @@ RUN dpkg --add-architecture i386 && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Python packages required by Tensorflow.
-RUN pip install keras_applications keras_preprocessing && \
-    pip3 install keras_applications keras_preprocessing
+RUN pip install keras_applications keras_preprocessing future && \
+    pip3 install keras_applications keras_preprocessing future
 
 ### Install Google Cloud SDK.
 ### https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
