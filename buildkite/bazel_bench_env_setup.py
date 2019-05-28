@@ -50,13 +50,17 @@ def main(argv=None):
     destination = BAZEL_BINARY_BASE_PATH + '/' + bazel_commit
     if os.path.exists(destination):
       continue
-
-    bazelci.download_bazel_binary_at_commit(
-      destination,
-      args.platform,
-      bazel_commit
-    )
+    try:
+      bazelci.download_bazel_binary_at_commit(
+        destination,
+        args.platform,
+        bazel_commit
+      )
+    except bazelci.BuildkiteException:
+      # Carry on.
+      bazelci.eprint("Binary for Bazel commit %s not found." % bazel_commit)
 
 
 if __name__ == "__main__":
   sys.exit(main())
+
