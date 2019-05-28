@@ -206,7 +206,7 @@ def main(argv=None):
 
   # Print the commands
   bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
-  print(yaml.dump({"steps": bazel_bench_ci_steps}))
+  print(yaml.dump({"steps": bazel_bench_ci_steps}), flush=True)
 
 if __name__ == "__main__":
   sys.exit(main())
