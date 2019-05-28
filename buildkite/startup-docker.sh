@@ -45,14 +45,14 @@ swapon -s
 
 # Create filesystem for buildkite-agent's home.
 AGENT_HOME="/var/lib/buildkite-agent"
-mount -t tmpfs -o size=375G tmpfs "${AGENT_HOME}"
+mount -t tmpfs -o size=250G tmpfs "${AGENT_HOME}"
 mkdir -p "${AGENT_HOME}/.cache/bazel/_bazel_buildkite-agent"
 chown -R buildkite-agent:buildkite-agent "${AGENT_HOME}"
 chmod 0755 "${AGENT_HOME}"
 
 # Create filesystem for Docker.
 DOCKER_HOME="/var/lib/docker"
-mount -t tmpfs -o size=375G tmpfs "${DOCKER_HOME}"
+mount -t tmpfs -o size=250G tmpfs "${DOCKER_HOME}"
 chown -R root:root "${DOCKER_HOME}"
 chmod 0711 "${DOCKER_HOME}"
 
@@ -67,13 +67,14 @@ case $(hostname -f) in
         gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key buildkite-trusted-agent-token --ciphertext-file - --plaintext-file -)
     ;;
   *.bazel-untrusted.*)
-    ARTIFACT_BUCKET="bazel-untrusted-buildkite-artifacts"
     case $(hostname -f) in
       *-testing-*)
-        BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-untrusted-encrypted-secrets/buildkite-testing-agent-token.enc" | \
+        ARTIFACT_BUCKET="bazel-testing-buildkite-artifacts"
+        BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-testing-encrypted-secrets/buildkite-testing-agent-token.enc" | \
             gcloud kms decrypt --project bazel-untrusted --location global --keyring buildkite --key buildkite-testing-agent-token --ciphertext-file - --plaintext-file -)
         ;;
       *)
+        ARTIFACT_BUCKET="bazel-untrusted-buildkite-artifacts"
         BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-untrusted-encrypted-secrets/buildkite-untrusted-agent-token.enc" | \
             gcloud kms decrypt --project bazel-untrusted --location global --keyring buildkite --key buildkite-untrusted-agent-token --ciphertext-file - --plaintext-file -)
         ;;

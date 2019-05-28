@@ -1,6 +1,8 @@
 ---
 platforms:
   ubuntu1804:
+    environment:
+      TF_IGNORE_MAX_BAZEL_VERSION: 1
     shell_commands:
     - |-
       echo '
@@ -9,13 +11,17 @@ platforms:
       echo '
       android_sdk_repository(name = "androidsdk")
       android_ndk_repository(name = "androidndk")' >>WORKSPACE
-    - "yes '' | ./configure"
+    - yes '' | ./configure
     build_flags:
     - "--config=opt"
+    # Suppress warning messages from all actions
+    - "--output_filter=^$"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
     # - "//tensorflow/examples/android:tensorflow_demo"
   macos:
+    environment:
+      TF_IGNORE_MAX_BAZEL_VERSION: 1
     shell_commands:
     - |-
       echo '
@@ -28,15 +34,21 @@ platforms:
     - pip install -U --user pip six numpy wheel setuptools mock
     - pip install -U --user keras_applications==1.0.6 --no-deps
     - pip install -U --user keras_preprocessing==1.0.5 --no-deps  
-    - "yes '' | python3 ./configure.py"
+    - yes '' | python3 ./configure.py
     build_flags:
     - "--config=opt"
+    # Suppress warning messages from all actions
+    - "--output_filter=^$"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
   windows:
+    environment:
+      TF_IGNORE_MAX_BAZEL_VERSION: 1
     batch_commands:
-    - "echo.| python ./configure.py"
+    - echo.| python ./configure.py
     build_flags:
     - "--config=opt"
+    # Suppress warning messages from all actions
+    - "--output_filter=^$"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"

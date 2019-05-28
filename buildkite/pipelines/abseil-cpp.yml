@@ -3,15 +3,21 @@ tasks:
   ubuntu1804:
     build_targets:
       - "//absl/..."
+    test_flags:
+      - "--test_tag_filters=-benchmark"
     test_targets:
       - "//absl/..."
   macos:
     build_targets:
       - "//absl/..."
+    test_flags:
+      - "--test_tag_filters=-benchmark"
     test_targets:
       - "//absl/..."
   windows:
     build_targets:
       - "//absl/..."
+    test_flags:
+      - "--test_tag_filters=-benchmark"
     test_targets:
       - "//absl/..."
