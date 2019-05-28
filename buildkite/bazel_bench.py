@@ -186,7 +186,7 @@ def main(argv=None):
   for project in PROJECTS:
     for platform in get_platforms(project["name"]):
       # bazel-bench doesn't support Windows for now.
-      if platform in ["windows", "macos"]:
+      if platform in ["windows", "macos", "rbe_ubuntu1604"]:
         continue
 
       # When running on the first platform, get the bazel commits.
