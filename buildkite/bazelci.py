@@ -50,33 +50,33 @@ THIS_IS_SPARTA = True
 CLOUD_PROJECT = "bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"
 
 SCRIPT_URL = {
-    "bazel-public": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py",
-    "bazel-untrusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py",
     "bazel-testing": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py",
+    "bazel-trusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py",
+    "bazel": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py",
 }[BUILDKITE_ORG] + "?{}".format(int(time.time()))
 
 INCOMPATIBLE_FLAG_VERBOSE_FAILURES_URL = {
-    "bazel-public": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/incompatible_flag_verbose_failures.py",
-    "bazel-untrusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/incompatible_flag_verbose_failures.py",
     "bazel-testing": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/incompatible_flag_verbose_failures.py",
+    "bazel-trusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/incompatible_flag_verbose_failures.py",
+    "bazel": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/incompatible_flag_verbose_failures.py",
 }[BUILDKITE_ORG] + "?{}".format(int(time.time()))
 
 AGGREGATE_INCOMPATIBLE_TEST_RESULT_URL = {
-    "bazel-public": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/aggregate_incompatible_flags_test_result.py",
-    "bazel-untrusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/aggregate_incompatible_flags_test_result.py",
     "bazel-testing": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/aggregate_incompatible_flags_test_result.py",
+    "bazel-trusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/aggregate_incompatible_flags_test_result.py",
+    "bazel": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/aggregate_incompatible_flags_test_result.py",
 }[BUILDKITE_ORG] + "?{}".format(int(time.time()))
 
 EMERGENCY_FILE_URL = {
-    "bazel-public": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/emergency.yml",
-    "bazel-untrusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/emergency.yml",
     "bazel-testing": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/emergency.yml",
+    "bazel-trusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/emergency.yml",
+    "bazel": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/emergency.yml",
 }[BUILDKITE_ORG] + "?{}".format(int(time.time()))
 
 FLAKY_TESTS_BUCKET = {
-    "bazel-public": "gs://bazel-buildkite-stats/flaky-tests-bep/",
-    "bazel-untrusted": "gs://bazel-buildkite-stats/flaky-tests-bep/",
     "bazel-testing": "gs://bazel-testing-buildkite-stats/flaky-tests-bep/",
+    "bazel-trusted": "gs://bazel-buildkite-stats/flaky-tests-bep/",
+    "bazel": "gs://bazel-buildkite-stats/flaky-tests-bep/",
 }[BUILDKITE_ORG]
 
 DOWNSTREAM_PROJECTS_PRODUCTION = {
@@ -375,9 +375,9 @@ DOWNSTREAM_PROJECTS_TESTING = {
 }
 
 DOWNSTREAM_PROJECTS = {
-    "bazel-public": {},
-    "bazel-untrusted": DOWNSTREAM_PROJECTS_PRODUCTION,
     "bazel-testing": DOWNSTREAM_PROJECTS_TESTING,
+    "bazel-trusted": {},
+    "bazel": DOWNSTREAM_PROJECTS_PRODUCTION,
 }[BUILDKITE_ORG]
 
 # A map containing all supported platform names as keys, with the values being
