@@ -18,6 +18,7 @@ Clones the repository and downloads available bazel binaries.
 """
 import argparse
 import bazelci
+import os
 import sys
 import tempfile
 
