@@ -25,6 +25,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import yaml
 
 
@@ -38,8 +39,6 @@ def _platform_path_str(posix_path):
 # TODO(leba): Make these configurable via flags to the script.
 # TMP has different values, depending on the platform.
 TMP = tempfile.gettempdir()
-# The path to the directory that stores the bazel binaries.
-BAZEL_BINARY_BASE_PATH = _platform_path_str("%s/.bazel-bench/bazel-bin/" % TMP)
 PROJECTS = [
     {
         "name": "Bazel",
@@ -52,7 +51,21 @@ DATA_DIRECTORY = _platform_path_str("%s/.bazel-bench/out/" % TMP)
 RUNS = 3
 
 
-def get_bazel_commits(day, bazel_repo_path):
+def _bazel_bench_env_setup_command(platform, bazel_commits):
+    bazel_bench_env_setup_py_url = (
+        "https://raw.githubusercontent.com/joeleba/continuous-integration"
+        "/bb-patch/buildkite/bazel_bench_env_setup.py?%s"
+        % int(time.time()))
+    download_command = (
+        "curl -s %s -o bazel_bench_env_setup.py"
+        % bazel_bench_env_setup_py_url)
+    exec_command = (
+        "%s bazel_bench_env_setup.py --platform=%s --bazel_commits=%s"
+        % (bazelci.PLATFORMS[platform_name]["python"], platform, bazel_commits))
+    return [download_command, exec_command]
+
+
+def _get_bazel_commits(day, bazel_repo_path):
   """Get the commits from a particular day.
 
   Get the commits from 00:00 of day to 00:00 of day + 1.
@@ -111,9 +124,7 @@ def get_clone_path(repository, platform):
     bazelci.eprint("Found mirror for %s on %s." % repository, platform)
     return mirror_path
 
-  # bazelci.clone_git_repository will not re-clone the project if it already
-  # exists.
-  return bazelci.clone_git_repository(repository, platform)
+  return repository
 
 
 def ci_step_for_platform_and_commits(
@@ -136,19 +147,7 @@ def ci_step_for_platform_and_commits(
   project_clone_path = get_clone_path(project["git_repository"], platform)
   bazel_clone_path = get_clone_path(BAZEL_REPOSITORY, platform)
 
-  # Download the binaries already built.
-  # Bazel-bench won"t try to build these binaries again, since they exist.
-  for bazel_commit in bazel_commits:
-    destination = BAZEL_BINARY_BASE_PATH + bazel_commit
-    if os.path.exists(destination):
-      continue
-    bazelci.download_bazel_binary_at_commit(
-        BAZEL_BINARY_BASE_PATH + bazel_commit,
-        platform,
-        bazel_commit
-    )
-
-  args = [
+  bazel_bench_command = " ".join([
       "bazel",
       "run",
       "benchmark",
@@ -163,11 +162,17 @@ def ci_step_for_platform_and_commits(
       extra_options,
       "--",
       project["bazel_command"]
-  ]
+  ])
 
+  commands = set_up_env() + [bazel_bench_command]
+  commands = [
+      bazelci.fetch_bazelcipy_command(),
+      _bazel_bench_env_setup_command(platform, ",".join(bazel_commits)),
+      bazel_bench_command
+  ]
   label = (bazelci.PLATFORMS[platform]["emoji-name"]
            + " Running bazel-bench on project: %s" % project["name"])
-  return bazelci.create_step(label, " ".join(args), platform)
+  return bazelci.create_step(label, commands, platform)
 
 
 def main(argv=None):
@@ -194,7 +199,7 @@ def main(argv=None):
       if not bazel_commits:
         bazel_clone_path = bazelci.clone_git_repository(
             BAZEL_REPOSITORY, platform)
-        bazel_commits = get_bazel_commits(day, bazel_clone_path)
+        bazel_commits = _get_bazel_commits(day, bazel_clone_path)
 
       bazel_bench_ci_steps.append(
           ci_step_for_platform_and_commits(
