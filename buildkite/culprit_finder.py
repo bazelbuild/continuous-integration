@@ -27,9 +27,9 @@ BAZEL_REPO_DIR = os.getcwd()
 BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
 
 SCRIPT_URL = {
-    "bazel-public": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/culprit_finder.py",
-    "bazel-untrusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/culprit_finder.py",
     "bazel-testing": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/culprit_finder.py",
+    "bazel-trusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/culprit_finder.py",
+    "bazel": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/culprit_finder.py",
 }[BUILDKITE_ORG] + "?{}".format(int(time.time()))
 
 
