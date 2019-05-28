@@ -57,7 +57,7 @@ def _bazel_bench_env_setup_command(platform, bazel_commits):
       "/bb-patch/buildkite/bazel_bench_env_setup.py?%s"
       % int(time.time()))
   download_command = (
-      "curl -sS %s -o bazel_bench_env_setup.py"
+      'curl -sS "%s" -o bazel_bench_env_setup.py'
       % bazel_bench_env_setup_py_url)
   exec_command = (
       "%s bazel_bench_env_setup.py --platform=%s --bazel_commits=%s"
@@ -165,7 +165,7 @@ def ci_step_for_platform_and_commits(
   ])
 
   commands = ([bazelci.fetch_bazelcipy_command()]
-              + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
+             #+ _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
               + [bazel_bench_command])
   label = (bazelci.PLATFORMS[platform]["emoji-name"]
            + " Running bazel-bench on project: %s" % project["name"])
