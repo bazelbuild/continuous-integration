@@ -53,7 +53,7 @@ def main(argv=None):
 
     bazelci.download_bazel_binary_at_commit(
       destination,
-      platform,
+      args.platform,
       bazel_commit
     )
 
