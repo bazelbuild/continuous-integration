@@ -164,7 +164,6 @@ def ci_step_for_platform_and_commits(
       project["bazel_command"]
   ])
 
-  commands = set_up_env() + [bazel_bench_command]
   commands = [
       bazelci.fetch_bazelcipy_command(),
       _bazel_bench_env_setup_command(platform, ",".join(bazel_commits)),
