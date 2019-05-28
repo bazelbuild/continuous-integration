@@ -185,21 +185,20 @@ def main(argv=None):
             project_name = os.environ["PROJECT_NAME"]
 
             # For old config file, we can still set PLATFORM_NAME as task name.
-            if "PLATFORM_NAME" in os.environ or "TASK_NAME" in os.environ:
-                tasks = [os.environ.get("PLATFORM_NAME") or os.environ["TASK_NAME"]]
+            task = os.environ.get("PLATFORM_NAME") or os.environ.get("TASK_NAME")
+            if task:
+                tasks = [task]
             else:
                 tasks = get_tasks(project_name)
 
-            if "GOOD_BAZEL_COMMIT" in os.environ:
-                good_bazel_commit = os.environ["GOOD_BAZEL_COMMIT"]
-            else:
+            good_bazel_commit = os.environ.get("GOOD_BAZEL_COMMIT")
+            if not good_bazel_commit:
                 # If GOOD_BAZEL_COMMIT is not set, use recorded last bazel green commit for downstream project
                 last_green_commit_url = bazelci.bazelci_last_green_downstream_commit_url()
                 good_bazel_commit = bazelci.get_last_green_commit(last_green_commit_url)
 
-            if "BAD_BAZEL_COMMIT" in os.environ:
-                bad_bazel_commit = os.environ["BAD_BAZEL_COMMIT"]
-            else:
+            bad_bazel_commit = os.environ.get("BAD_BAZEL_COMMIT")
+            if not bad_bazel_commit:
                 # If BAD_BAZEL_COMMIT is not set, use HEAD commit.
                 bad_bazel_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
         except KeyError as e:
