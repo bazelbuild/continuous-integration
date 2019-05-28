@@ -1228,17 +1228,18 @@ def rbe_flags(original_flags, accept_cached):
     if not accept_cached:
         flags += ["--noremote_accept_cached"]
 
-    # Copied from https://github.com/bazelbuild/bazel-toolchains/blob/master/configs/ubuntu16_04_clang/1.0/toolchain.bazelrc
+    # Adapted from https://github.com/bazelbuild/bazel-toolchains/blob/master/bazelrc/.bazelrc
     flags += [
-        # These should NOT be modified before @bazel_toolchains repo pin is
-        # updated in projects' WORKSPACE files.
+        # These should NOT longer need to be modified.
+        # All that is needed is updating the @bazel_toolchains repo pin
+        # in projects' WORKSPACE files.
         #
         # Toolchain related flags to append at the end of your .bazelrc file.
-        "--host_javabase=@bazel_toolchains//configs/ubuntu16_04_clang/latest:javabase",
-        "--javabase=@bazel_toolchains//configs/ubuntu16_04_clang/latest:javabase",
+        "--host_javabase=@buildkite_config//java:jdk",
+        "--javabase=@buildkite_config//java:jdk",
         "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
         "--java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
-        "--crosstool_top=@bazel_toolchains//configs/ubuntu16_04_clang/latest:crosstool_top_default",
+        "--crosstool_top=@buildkite_config//cc:toolchain",
         "--action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1",
     ]
 
@@ -1252,10 +1253,10 @@ def rbe_flags(original_flags, accept_cached):
     # More about platforms: https://docs.bazel.build/versions/master/platforms.html
     # Don't add platform flags if they are specified already.
     platform_flags = {
-        "--extra_toolchains": "@bazel_toolchains//configs/ubuntu16_04_clang/latest:toolchain_default",
-        "--extra_execution_platforms": "@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
-        "--host_platform": "@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
-        "--platforms": "@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
+        "--extra_toolchains": "@buildkite_config//config:cc-toolchain",
+        "--extra_execution_platforms": "@buildkite_config//config:platform",
+        "--host_platform": "@buildkite_config//config:platform",
+        "--platforms": "@buildkite_config//config:platform",
     }
     for platform_flag, value in list(platform_flags.items()):
         found = False
