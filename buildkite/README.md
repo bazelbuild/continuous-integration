@@ -100,9 +100,9 @@ If a project is green with release Bazel but red with Bazel nightly, it means so
 Create "New Build" in the [Culprit Finder](https://buildkite.com/bazel/culprit-finder) project with the following environment variable:
 
 - PROJECT_NAME (The project name must exist in DOWNSTREAM_PROJECTS in [bazelci.py](https://github.com/bazelbuild/continuous-integration/blob/master/buildkite/bazelci.py))
-- TASK_NAME (The task name must exist in the project's config file, eg. [macos_latest](https://github.com/bazelbuild/rules_apple/blob/master/.bazelci/presubmit.yml#L3)). For old config syntax where platform name is essentially the task name, you can also set PLATFORM_NAME instead of TASK_NAME.
-- GOOD_BAZEL_COMMIT (A full Bazel commit, Bazel built at this commit still works for this project)
-- BAD_BAZEL_COMMIT (A full Bazel commit, Bazel built at this commit fails with this project)
+- (Optional) TASK_NAME (The task name must exist in the project's config file, eg. [macos_latest](https://github.com/bazelbuild/rules_apple/blob/master/.bazelci/presubmit.yml#L3)). For old config syntax where platform name is essentially the task name, you can also set PLATFORM_NAME instead of TASK_NAME. If not set, culprit finder will bisect for all tasks of the specified project.
+- (Optional) GOOD_BAZEL_COMMIT (A full Bazel commit, Bazel built at this commit still works for this project). If not set, culprit finder will use the last green bazel commit in downstream pipeline as the good bazel commit.
+- (Optional) BAD_BAZEL_COMMIT (A full Bazel commit, Bazel built at this commit fails with this project). If not set, culprit finder will use the lastest Bazel commit as the bad bazel commit.
 - (Optional) NEEDS_CLEAN (Set NEEDS_CLEAN to `true` to run `bazel clean --expunge` before each build, this will help reduce flakiness)
 - (Optional) REPEAT_TIMES (Set REPEAT_TIMES to run the build multiple times to detect flaky build failure, if at least one build fails we consider the commit as bad)
 
