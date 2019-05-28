@@ -1169,6 +1169,7 @@ def common_build_flags(bep_file, platform):
         "--curses=yes",
         "--color=yes",
         "--terminal_columns=143",
+        "--show_timestamps",
         "--verbose_failures",
         "--keep_going",
         "--jobs=" + concurrent_jobs(platform),
