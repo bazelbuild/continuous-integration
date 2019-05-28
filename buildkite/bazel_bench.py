@@ -206,7 +206,7 @@ def main(argv=None):
 
   # Print the commands
   bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
-  sys.stdout.write(yaml.dump({"steps": bazel_bench_ci_steps}), flush=True)
+  sys.stdout.write(yaml.dump({"steps": bazel_bench_ci_steps}))
   bazelci.eprint("After print")
 
 
