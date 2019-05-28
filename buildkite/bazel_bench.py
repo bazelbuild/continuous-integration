@@ -61,7 +61,7 @@ def _bazel_bench_env_setup_command(platform, bazel_commits):
         % bazel_bench_env_setup_py_url)
     exec_command = (
         "%s bazel_bench_env_setup.py --platform=%s --bazel_commits=%s"
-        % (bazelci.PLATFORMS[platform_name]["python"], platform, bazel_commits))
+        % (bazelci.PLATFORMS[platform]["python"], platform, bazel_commits))
     return [download_command, exec_command]
 
 
