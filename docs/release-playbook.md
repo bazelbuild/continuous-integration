@@ -109,11 +109,6 @@ Create candidates with the release.sh script.
     see the `release-$RELEASE_NUMBER` branch here and a new build running for
     your release.
 
-    *   If the build fails with "Build creator not allowed", simply start a new
-        one by clicking on the "New build" button in the top right corner
-        ([Issue
-        #281](https://github.com/bazelbuild/continuous-integration/issues/281)).
-
 1.  Check the postsubmit test run for the release branch to ensure that all
     tests on all platforms pass with the version you're about to release.
 
