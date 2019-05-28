@@ -56,6 +56,7 @@ def get_bazel_commits_between(first_commit, second_commit):
             % (first_commit, second_commit, str(e))
         )
 
+
 def get_configs(project_name):
     http_config = bazelci.DOWNSTREAM_PROJECTS[project_name]["http_config"]
     configs = bazelci.fetch_configs(http_config, None)
@@ -71,6 +72,7 @@ def get_platform(project_name, task_name):
 def get_tasks(project_name):
     configs = get_configs(project_name)
     return configs["tasks"].keys()
+
 
 def test_with_bazel_at_commit(
     project_name, task_name, git_repo_location, bazel_commit, needs_clean, repeat_times
@@ -108,7 +110,9 @@ def clone_git_repository(project_name, task_name):
     return bazelci.clone_git_repository(git_repository, platform_name, git_commit)
 
 
-def start_bisecting(project_name, task_name, git_repo_location, commits_list, needs_clean, repeat_times):
+def start_bisecting(
+    project_name, task_name, git_repo_location, commits_list, needs_clean, repeat_times
+):
     left = 0
     right = len(commits_list)
     while left < right:
@@ -143,7 +147,9 @@ def print_culprit_finder_pipeline(
     pipeline_steps = []
     for task_name in tasks:
         platform_name = get_platform(project_name, task_name)
-        label = bazelci.PLATFORMS[platform_name]["emoji-name"] + " Bisecting for {0}".format(project_name)
+        label = bazelci.PLATFORMS[platform_name]["emoji-name"] + " Bisecting for {0}".format(
+            project_name
+        )
         command = (
             '%s culprit_finder.py runner --project_name="%s" --task_name=%s --good_bazel_commit=%s --bad_bazel_commit=%s %s %s'
             % (
@@ -200,7 +206,9 @@ def main(argv=None):
             bad_bazel_commit = os.environ.get("BAD_BAZEL_COMMIT")
             if not bad_bazel_commit:
                 # If BAD_BAZEL_COMMIT is not set, use HEAD commit.
-                bad_bazel_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
+                bad_bazel_commit = (
+                    subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
+                )
         except KeyError as e:
             raise Exception("Environment variable %s must be set" % str(e))
 
