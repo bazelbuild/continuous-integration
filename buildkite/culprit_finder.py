@@ -70,7 +70,7 @@ def get_platform(project_name, task_name):
 
 def get_tasks(project_name):
     configs = get_configs(project_name)
-    return configs.keys()
+    return configs["tasks"].keys()
 
 def test_with_bazel_at_commit(
     project_name, task_name, git_repo_location, bazel_commit, needs_clean, repeat_times
@@ -184,7 +184,7 @@ def main(argv=None):
             project_name = os.environ["PROJECT_NAME"]
 
             # For old config file, we can still set PLATFORM_NAME as task name.
-            if "PLATFORMS_NAME" in os.environ or "TASK_NAME" in os.environ:
+            if "PLATFORM_NAME" in os.environ or "TASK_NAME" in os.environ:
                 tasks = [os.environ.get("PLATFORM_NAME") or os.environ["TASK_NAME"]]
             else:
                 tasks = get_tasks(project_name)
