@@ -41,13 +41,41 @@ from urllib.parse import urlparse
 # Initialize the random number generator.
 random.seed()
 
-CLOUD_PROJECT = (
-    "bazel-public"
-    if os.environ.get("BUILDKITE_ORGANIZATION_SLUG") == "bazel-trusted"
-    else "bazel-untrusted"
+BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
+THIS_IS_PRODUCTION = BUILDKITE_ORG == "bazel-untrusted"
+THIS_IS_TESTING = BUILDKITE_ORG == "bazel-testing"
+THIS_IS_TRUSTED = BUILDKITE_ORG == "bazel-trusted"
+THIS_IS_SPARTA = True
+
+CLOUD_PROJECT = "bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"
+
+GITHUB_BRANCH = {"bazel": "master", "bazel-trusted": "master", "bazel-testing": "testing"}[
+    BUILDKITE_ORG
+]
+
+SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazelci.py?{}".format(
+    GITHUB_BRANCH, int(time.time())
 )
 
-DOWNSTREAM_PROJECTS = {
+INCOMPATIBLE_FLAG_VERBOSE_FAILURES_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/incompatible_flag_verbose_failures.py?{}".format(
+    GITHUB_BRANCH, int(time.time())
+)
+
+AGGREGATE_INCOMPATIBLE_TEST_RESULT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/aggregate_incompatible_flags_test_result.py?{}".format(
+    GITHUB_BRANCH, int(time.time())
+)
+
+EMERGENCY_FILE_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/emergency.yml?{}".format(
+    GITHUB_BRANCH, int(time.time())
+)
+
+FLAKY_TESTS_BUCKET = {
+    "bazel-testing": "gs://bazel-testing-buildkite-stats/flaky-tests-bep/",
+    "bazel-trusted": "gs://bazel-buildkite-stats/flaky-tests-bep/",
+    "bazel": "gs://bazel-buildkite-stats/flaky-tests-bep/",
+}[BUILDKITE_ORG]
+
+DOWNSTREAM_PROJECTS_PRODUCTION = {
     "Android Studio Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/android-studio.yml",
@@ -340,6 +368,19 @@ DOWNSTREAM_PROJECTS = {
     },
 }
 
+DOWNSTREAM_PROJECTS_TESTING = {
+    "Bazelisk": {
+        "git_repository": "https://github.com/bazelbuild/bazelisk.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazelisk/master/.bazelci/config.yml",
+        "pipeline_slug": "bazelisk",
+    }
+}
+
+DOWNSTREAM_PROJECTS = {
+    "bazel-testing": DOWNSTREAM_PROJECTS_TESTING,
+    "bazel-trusted": {},
+    "bazel": DOWNSTREAM_PROJECTS_PRODUCTION,
+}[BUILDKITE_ORG]
 
 # A map containing all supported platform names as keys, with the values being
 # the platform name in a human readable format, and a the buildkite-agent's
@@ -429,11 +470,6 @@ SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
 
 CONFIG_FILE_EXTENSIONS = set([".yml", ".yaml"])
 
-SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py"
-
-
-EMERGENCY_FILE_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/emergency.yml"
-
 
 class BuildkiteException(Exception):
     """
@@ -460,6 +496,12 @@ exosKKaWB0tSRJiPKnv2NPDfEqGul0ZwVjtWeASpugwxxKeLhFhPMcgHMPfndH6j2GEIY6nkKRbP
 uwoRMCwe
 """.strip()
 
+    _ENCRYPTED_BUILDKITE_API_TESTING_TOKEN = """
+CiQAMTBkWjL1C+F5oon3+cC1vmum5+c1y5+96WQY44p0Lxd0PeASUQAy7iU0c6E3W5EOSFYfD5fA
+MWy/SHaMno1NQSUa4xDOl5yc2kizrtxPPVkX4x9pLNuGUY/xwAn2n1DdiUdWZNWlY1bX2C4ex65e
+P9w8kNhEbw==
+""".strip()
+
     _BUILD_STATUS_URL_TEMPLATE = (
         "https://api.buildkite.com/v2/organizations/{}/pipelines/{}/builds/{}"
     )
@@ -483,13 +525,19 @@ uwoRMCwe
                     "--keyring",
                     "buildkite",
                     "--key",
-                    "buildkite-untrusted-api-token",
+                    "buildkite-testing-api-token"
+                    if THIS_IS_TESTING
+                    else "buildkite-untrusted-api-token",
                     "--ciphertext-file",
                     "-",
                     "--plaintext-file",
                     "-",
                 ],
-                input=base64.b64decode(self._ENCRYPTED_BUILDKITE_API_TOKEN),
+                input=base64.b64decode(
+                    self._ENCRYPTED_BUILDKITE_API_TESTING_TOKEN
+                    if THIS_IS_TESTING
+                    else self._ENCRYPTED_BUILDKITE_API_TOKEN
+                ),
                 env=os.environ,
             )
             .decode("utf-8")
@@ -529,31 +577,6 @@ def gsutil_command():
 
 def gcloud_command():
     return "gcloud.cmd" if is_windows() else "gcloud"
-
-
-def bazelcipy_url():
-    """
-    URL to the latest version of this script.
-    """
-    return "{}?{}".format(SCRIPT_URL, int(time.time()))
-
-
-def incompatible_flag_verbose_failures_url():
-    """
-    URL to the latest version of this script.
-    """
-    return "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/incompatible_flag_verbose_failures.py?{}".format(
-        int(time.time())
-    )
-
-
-def aggregate_incompatible_flags_test_result_url():
-    """
-    URL to the latest version of this script.
-    """
-    return "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/aggregate_incompatible_flags_test_result.py?{}".format(
-        int(time.time())
-    )
 
 
 def downstream_projects_root(platform):
@@ -659,36 +682,8 @@ def execute_commands(
     tmpdir = tempfile.mkdtemp()
     sc_process = None
     try:
-        # Activate the correct Xcode version on macOS machines.
         if platform == "macos":
-            # Get the Xcode version from the config.
-            xcode_version = task_config.get("xcode_version", DEFAULT_XCODE_VERSION)
-            print_collapsed_group("Activating Xcode {}...".format(xcode_version))
-
-            # Ensure it's a valid version number.
-            if not isinstance(xcode_version, str):
-                raise BuildkiteException(
-                    "Version number '{}' is not a string. Did you forget to put it in quotes?".format(
-                        xcode_version
-                    )
-                )
-            if not XCODE_VERSION_REGEX.match(xcode_version):
-                raise BuildkiteException(
-                    "Invalid Xcode version format '{}', must match the format X.Y[.Z].".format(
-                        xcode_version
-                    )
-                )
-
-            # Check that the selected Xcode version is actually installed on the host.
-            xcode_path = "/Applications/Xcode{}.app".format(xcode_version)
-            if not os.path.exists(xcode_path):
-                raise BuildkiteException("Xcode not found at '{}'.".format(xcode_path))
-
-            # Now activate the specified Xcode version and let it install its required components.
-            # The CI machines have a sudoers config that allows the 'buildkite' user to run exactly
-            # these two commands, so don't change them without also modifying the file there.
-            execute_command(["/usr/bin/sudo", "/usr/bin/xcode-select", "--switch", xcode_path])
-            execute_command(["/usr/bin/sudo", "/usr/bin/xcodebuild", "-runFirstLaunch"])
+            activate_xcode(task_config)
 
         # If the CI worker runs Bazelisk, we need to forward all required env variables to the test.
         # Otherwise any integration test that invokes Bazel (=Bazelisk in this case) will fail.
@@ -744,26 +739,8 @@ def execute_commands(
             bazel_binary, platform, task_config.get("run_targets", None), incompatible_flags
         )
 
-        if task_config.get("sauce", None):
-            print_collapsed_group(":saucelabs: Starting Sauce Connect Proxy")
-            os.environ["SAUCE_USERNAME"] = "bazel_rules_webtesting"
-            os.environ["SAUCE_ACCESS_KEY"] = saucelabs_token()
-            os.environ["TUNNEL_IDENTIFIER"] = str(uuid.uuid4())
-            os.environ["BUILD_TAG"] = str(uuid.uuid4())
-            readyfile = os.path.join(tmpdir, "sc_is_ready")
-            if platform == "windows":
-                cmd = ["sauce-connect.exe", "/i", os.environ["TUNNEL_IDENTIFIER"], "/f", readyfile]
-            else:
-                cmd = ["sc", "-i", os.environ["TUNNEL_IDENTIFIER"], "-f", readyfile]
-            sc_process = execute_command_background(cmd)
-            wait_start = time.time()
-            while not os.path.exists(readyfile):
-                if time.time() - wait_start > 30:
-                    raise BuildkiteException(
-                        "Sauce Connect Proxy is still not ready after 30 seconds, aborting!"
-                    )
-                time.sleep(1)
-            print("Sauce Connect Proxy is ready, continuing...")
+        if task_config.get("sauce"):
+            sc_process = start_sauce_connect_proxy(platform, tmpdir)
 
         if needs_clean:
             execute_bazel_clean(bazel_binary, platform)
@@ -832,23 +809,8 @@ def execute_commands(
                     monitor_flaky_tests,
                     incompatible_flags,
                 )
-                if has_flaky_tests(test_bep_file):
-                    if monitor_flaky_tests:
-                        # Upload the BEP logs from Bazel builds for later analysis on flaky tests
-                        build_number = os.getenv("BUILDKITE_BUILD_NUMBER")
-                        pipeline_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
-                        execute_command(
-                            [
-                                gsutil_command(),
-                                "cp",
-                                test_bep_file,
-                                "gs://bazel-buildkite-stats/flaky-tests-bep/"
-                                + pipeline_slug
-                                + "/"
-                                + build_number
-                                + ".json",
-                            ]
-                        )
+                if monitor_flaky_tests:
+                    upload_bep_logs_for_flaky_tests(test_bep_file)
             finally:
                 upload_test_logs(test_bep_file, tmpdir)
                 if include_json_profile_test:
@@ -864,6 +826,37 @@ def execute_commands(
             shutil.rmtree(tmpdir)
 
 
+def activate_xcode(task_config):
+    # Get the Xcode version from the config.
+    xcode_version = task_config.get("xcode_version", DEFAULT_XCODE_VERSION)
+    print_collapsed_group("Activating Xcode {}...".format(xcode_version))
+
+    # Ensure it's a valid version number.
+    if not isinstance(xcode_version, str):
+        raise BuildkiteException(
+            "Version number '{}' is not a string. Did you forget to put it in quotes?".format(
+                xcode_version
+            )
+        )
+    if not XCODE_VERSION_REGEX.match(xcode_version):
+        raise BuildkiteException(
+            "Invalid Xcode version format '{}', must match the format X.Y[.Z].".format(
+                xcode_version
+            )
+        )
+
+    # Check that the selected Xcode version is actually installed on the host.
+    xcode_path = "/Applications/Xcode{}.app".format(xcode_version)
+    if not os.path.exists(xcode_path):
+        raise BuildkiteException("Xcode not found at '{}'.".format(xcode_path))
+
+    # Now activate the specified Xcode version and let it install its required components.
+    # The CI machines have a sudoers config that allows the 'buildkite' user to run exactly
+    # these two commands, so don't change them without also modifying the file there.
+    execute_command(["/usr/bin/sudo", "/usr/bin/xcode-select", "--switch", xcode_path])
+    execute_command(["/usr/bin/sudo", "/usr/bin/xcodebuild", "-runFirstLaunch"])
+
+
 def get_bazelisk_cache_directory(platform):
     # The path relies on the behavior of Go's os.UserCacheDir()
     # and of the Go version of Bazelisk.
@@ -873,6 +866,29 @@ def get_bazelisk_cache_directory(platform):
 
 def tests_with_status(bep_file, status):
     return set(label for label, _ in test_logs_for_status(bep_file, status=status))
+
+
+def start_sauce_connect_proxy(platform, tmpdir):
+    print_collapsed_group(":saucelabs: Starting Sauce Connect Proxy")
+    os.environ["SAUCE_USERNAME"] = "bazel_rules_webtesting"
+    os.environ["SAUCE_ACCESS_KEY"] = saucelabs_token()
+    os.environ["TUNNEL_IDENTIFIER"] = str(uuid.uuid4())
+    os.environ["BUILD_TAG"] = str(uuid.uuid4())
+    readyfile = os.path.join(tmpdir, "sc_is_ready")
+    if platform == "windows":
+        cmd = ["sauce-connect.exe", "/i", os.environ["TUNNEL_IDENTIFIER"], "/f", readyfile]
+    else:
+        cmd = ["sc", "-i", os.environ["TUNNEL_IDENTIFIER"], "-f", readyfile]
+    sc_process = execute_command_background(cmd)
+    wait_start = time.time()
+    while not os.path.exists(readyfile):
+        if time.time() - wait_start > 30:
+            raise BuildkiteException(
+                "Sauce Connect Proxy is still not ready after 30 seconds, aborting!"
+            )
+        time.sleep(1)
+    print("Sauce Connect Proxy is ready, continuing...")
+    return sc_process
 
 
 def saucelabs_token():
@@ -1082,11 +1098,11 @@ def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags):
 
 
 def remote_caching_flags(platform):
-    # Only enable caching for untrusted builds.
+    # Only enable caching for untrusted and testing builds.
     if CLOUD_PROJECT not in ["bazel-untrusted"]:
         return []
 
-    platform_cache_key = [os.environ.get("BUILDKITE_ORGANIZATION_SLUG", "unknown").encode("utf-8")]
+    platform_cache_key = [BUILDKITE_ORG.encode("utf-8")]
 
     if platform == "macos":
         platform_cache_key += [
@@ -1422,6 +1438,20 @@ def get_json_profile_flags(out_file):
     ]
 
 
+def upload_bep_logs_for_flaky_tests(test_bep_file):
+    if has_flaky_tests(test_bep_file):
+        build_number = os.getenv("BUILDKITE_BUILD_NUMBER")
+        pipeline_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
+        execute_command(
+            [
+                gsutil_command(),
+                "cp",
+                test_bep_file,
+                FLAKY_TESTS_BUCKET + pipeline_slug + "/" + build_number + ".json",
+            ]
+        )
+
+
 def upload_test_logs(bep_file, tmpdir):
     if not os.path.exists(bep_file):
         return
@@ -1688,14 +1718,12 @@ def print_project_pipeline(
     #   1. This job is a GitHub pull request
     #   2. This job uses a custom built Bazel binary (in Bazel Downstream Projects pipeline)
     #   3. This job doesn't run on master branch (could be a custom build launched manually)
-    #   4. This job doesn't run on Bazel's main Buildkite organization (e.g. could be the testing org)
-    #   5. We don't intend to run the same job in downstream with Bazel@HEAD (eg. google-bazel-presubmit)
-    #   6. We are testing incompatible flags
+    #   4. We don't intend to run the same job in downstream with Bazel@HEAD (eg. google-bazel-presubmit)
+    #   5. We are testing incompatible flags
     if not (
         is_pull_request()
         or use_but
         or os.getenv("BUILDKITE_BRANCH") != "master"
-        or os.getenv("BUILDKITE_ORGANIZATION_SLUG") != "bazel"
         or pipeline_slug not in all_downstream_pipeline_slugs
         or incompatible_flags
     ):
@@ -1834,18 +1862,18 @@ def runner_step(
 
 
 def fetch_bazelcipy_command():
-    return "curl -sS {0} -o bazelci.py".format(bazelcipy_url())
+    return "curl -sS {0} -o bazelci.py".format(SCRIPT_URL)
 
 
 def fetch_incompatible_flag_verbose_failures_command():
     return "curl -sS {0} -o incompatible_flag_verbose_failures.py".format(
-        incompatible_flag_verbose_failures_url()
+        INCOMPATIBLE_FLAG_VERBOSE_FAILURES_URL
     )
 
 
 def fetch_aggregate_incompatible_flags_test_result_command():
     return "curl -sS {0} -o aggregate_incompatible_flags_test_result.py".format(
-        aggregate_incompatible_flags_test_result_url()
+        AGGREGATE_INCOMPATIBLE_TEST_RESULT_URL
     )
 
 
@@ -2246,29 +2274,32 @@ def print_bazel_downstream_pipeline(
 
 
 def bazelci_builds_download_url(platform, git_commit):
-    return "https://storage.googleapis.com/bazel-builds/artifacts/{0}/{1}/bazel".format(
-        platform, git_commit
+    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-builds"
+    return "https://storage.googleapis.com/{}/artifacts/{}/{}/bazel".format(
+        bucket_name, platform, git_commit
     )
 
 
 def bazelci_builds_gs_url(platform, git_commit):
-    return "gs://bazel-builds/artifacts/{0}/{1}/bazel".format(platform, git_commit)
+    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-builds"
+    return "gs://{}/artifacts/{}/{}/bazel".format(bucket_name, platform, git_commit)
 
 
 def bazelci_builds_metadata_url():
-    return "gs://bazel-builds/metadata/latest.json"
+    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-builds"
+    return "gs://{}/metadata/latest.json".format(bucket_name)
 
 
 def bazelci_last_green_commit_url(git_repository, pipeline_slug):
-    return "gs://bazel-untrusted-builds/last_green_commit/%s/%s" % (
-        git_repository[len("https://") :],
-        pipeline_slug,
+    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-untrusted-builds"
+    return "gs://{}/last_green_commit/{}/{}".format(
+        bucket_name, git_repository[len("https://") :], pipeline_slug
     )
 
 
 def bazelci_last_green_downstream_commit_url():
-    # Downstream pipeline runs in the unstrusted org
-    return "gs://bazel-untrusted-builds/last_green_commit/downstream_pipeline"
+    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-untrusted-builds"
+    return "gs://{}/last_green_commit/downstream_pipeline".format(bucket_name)
 
 
 def get_last_green_commit(last_green_commit_url):
