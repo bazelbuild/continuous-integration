@@ -35,7 +35,7 @@ TMP = tempfile.gettempdir()
 # The path to the directory that stores the bazel binaries.
 BAZEL_BINARY_BASE_PATH = _platform_path_str("%s/.bazel-bench/bazel-bin" % TMP)
 
-def main(argv):
+def main(argv=None):
   if argv is None:
     argv = sys.argv[1:]
 
