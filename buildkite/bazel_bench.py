@@ -52,17 +52,17 @@ RUNS = 3
 
 
 def _bazel_bench_env_setup_command(platform, bazel_commits):
-    bazel_bench_env_setup_py_url = (
-        "https://raw.githubusercontent.com/joeleba/continuous-integration"
-        "/bb-patch/buildkite/bazel_bench_env_setup.py?%s"
-        % int(time.time()))
-    download_command = (
-        "curl -s %s -o bazel_bench_env_setup.py"
-        % bazel_bench_env_setup_py_url)
-    exec_command = (
-        "%s bazel_bench_env_setup.py --platform=%s --bazel_commits=%s"
-        % (bazelci.PLATFORMS[platform]["python"], platform, bazel_commits))
-    return [download_command, exec_command]
+  bazel_bench_env_setup_py_url = (
+      "https://raw.githubusercontent.com/joeleba/continuous-integration"
+      "/bb-patch/buildkite/bazel_bench_env_setup.py?%s"
+      % int(time.time()))
+  download_command = (
+      "curl -s %s -o bazel_bench_env_setup.py"
+      % bazel_bench_env_setup_py_url)
+  exec_command = (
+      "%s bazel_bench_env_setup.py --platform=%s --bazel_commits=%s"
+      % (bazelci.PLATFORMS[platform]["python"], platform, bazel_commits))
+  return [download_command, exec_command]
 
 
 def _get_bazel_commits(day, bazel_repo_path):
@@ -92,18 +92,18 @@ def _get_bazel_commits(day, bazel_repo_path):
 
 
 def get_platforms(project_name):
-    """Get the platforms on which this project is run on BazelCI.
+  """Get the platforms on which this project is run on BazelCI.
 
-    Args:
-      project_name: a string: the name of the project. e.g. "Bazel".
+  Args:
+    project_name: a string: the name of the project. e.g. "Bazel".
 
-    Returns:
-      A list of string: the platforms for this project.
-    """
-    http_config = bazelci.DOWNSTREAM_PROJECTS[project_name]["http_config"]
-    configs = bazelci.fetch_configs(http_config, None)
-    tasks = configs["tasks"]
-    return list(map(lambda k: bazelci.get_platform_for_task(k, tasks[k]), tasks))
+  Returns:
+    A list of string: the platforms for this project.
+  """
+  http_config = bazelci.DOWNSTREAM_PROJECTS[project_name]["http_config"]
+  configs = bazelci.fetch_configs(http_config, None)
+  tasks = configs["tasks"]
+  return list(map(lambda k: bazelci.get_platform_for_task(k, tasks[k]), tasks))
 
 
 def get_clone_path(repository, platform):
