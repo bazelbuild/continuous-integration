@@ -93,6 +93,29 @@ def get_platforms(project_name):
     return list(map(lambda k: bazelci.get_platform_for_task(k, tasks[k]), tasks))
 
 
+def get_clone_path(repository, platform):
+  """Returns the path to a local clone of the project.
+
+  If there's a mirror available, use that. bazel-bench will take care of
+  pulling/checking out commits. Else, clone the repo.
+
+  Args:
+    repository: the URL to the git repository.
+    platform: the platform on which to build the project.
+
+  Returns:
+    A path to the local clone.
+  """
+  mirror_path = bazelci.get_mirror_path(repository, platform)
+  if os.path.exists(mirror_path):
+    bazelci.eprint("Found mirror for %s on %s." % repository, platform)
+    return mirror_path
+
+  # bazelci.clone_git_repository will not re-clone the project if it already
+  # exists.
+  return bazelci.clone_git_repository(repository, platform)
+
+
 def ci_step_for_platform_and_commits(
     bazel_commits, platform, project, extra_options):
   """Perform bazel-bench for the platform-project combination.
@@ -110,16 +133,8 @@ def ci_step_for_platform_and_commits(
       command to be executed by buildkite-agent.
   """
   bazelci.eprint("platform: %s" % platform)
-  # It's ok to use mirror path as bazel-bench will take care of pulling/checking
-  # out commits.
-  project_clone_path = bazelci.get_mirror_path(
-      project["git_repository"], platform)
-  if not os.path.exists(project_clone_path):
-    project_clone_path = bazelci.clone_git_repository(project["git_repository"], platform)
-
-  bazel_clone_path = bazelci.get_mirror_path(BAZEL_REPOSITORY, platform)
-  if not os.path.exists(bazel_clone_path):
-    bazel_clone_path = bazelci.clone_git_repository(BAZEL_REPOSITORY, platform)
+  project_clone_path = get_clone_path(project["git_repository"], platform)
+  bazel_clone_path = get_clone_path(BAZEL_REPOSITORY, platform)
 
   # Download the binaries already built.
   # Bazel-bench won"t try to build these binaries again, since they exist.
