@@ -32,6 +32,13 @@ export DEBIAN_FRONTEND="noninteractive"
   apt-get -qqy install python nfs-common
 }
 
+### Disable automatic upgrades, as they can interfere with our startup scripts.
+{
+  cat > /etc/apt/apt.conf.d/10periodic <<'EOF'
+APT::Periodic::Enable "0";
+EOF
+}
+
 ### Add our Cloud Filestore volume to the fstab.
 {
   case $(hostname -f) in
