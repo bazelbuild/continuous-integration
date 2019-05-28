@@ -1175,6 +1175,7 @@ def common_build_flags(bep_file, platform):
         "--show_progress_rate_limit=5",
         "--curses=yes",
         "--color=yes",
+        "--terminal_columns=143",
         "--verbose_failures",
         "--keep_going",
         "--jobs=" + concurrent_jobs(platform),
