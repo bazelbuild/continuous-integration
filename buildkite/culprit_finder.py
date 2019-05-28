@@ -138,25 +138,26 @@ def start_bisecting(project_name, task_name, git_repo_location, commits_list, ne
 
 
 def print_culprit_finder_pipeline(
-    project_name, task_name, good_bazel_commit, bad_bazel_commit, needs_clean, repeat_times
+    project_name, tasks, good_bazel_commit, bad_bazel_commit, needs_clean, repeat_times
 ):
-    platform_name = get_platform(project_name, task_name)
-    label = bazelci.PLATFORMS[platform_name]["emoji-name"] + " Bisecting for {0}".format(project_name)
-    command = (
-        '%s culprit_finder.py runner --project_name="%s" --task_name=%s --good_bazel_commit=%s --bad_bazel_commit=%s %s %s'
-        % (
-            bazelci.PLATFORMS[platform_name]["python"],
-            project_name,
-            task_name,
-            good_bazel_commit,
-            bad_bazel_commit,
-            "--needs_clean" if needs_clean else "",
-            ("--repeat_times=" + str(repeat_times)) if repeat_times else "",
-        )
-    )
-    commands = [bazelci.fetch_bazelcipy_command(), fetch_culprit_finder_py_command(), command]
     pipeline_steps = []
-    pipeline_steps.append(bazelci.create_step(label, commands, platform_name))
+    for task_name in tasks:
+        platform_name = get_platform(project_name, task_name)
+        label = bazelci.PLATFORMS[platform_name]["emoji-name"] + " Bisecting for {0}".format(project_name)
+        command = (
+            '%s culprit_finder.py runner --project_name="%s" --task_name=%s --good_bazel_commit=%s --bad_bazel_commit=%s %s %s'
+            % (
+                bazelci.PLATFORMS[platform_name]["python"],
+                project_name,
+                task_name,
+                good_bazel_commit,
+                bad_bazel_commit,
+                "--needs_clean" if needs_clean else "",
+                ("--repeat_times=" + str(repeat_times)) if repeat_times else "",
+            )
+        )
+        commands = [bazelci.fetch_bazelcipy_command(), fetch_culprit_finder_py_command(), command]
+        pipeline_steps.append(bazelci.create_step(label, commands, platform_name))
     print(yaml.dump({"steps": pipeline_steps}))
 
 
@@ -218,15 +219,14 @@ def main(argv=None):
                 % (project_name, str((bazelci.DOWNSTREAM_PROJECTS.keys())))
             )
 
-        for task_name in tasks:
-            print_culprit_finder_pipeline(
-                project_name=project_name,
-                task_name=task_name,
-                good_bazel_commit=good_bazel_commit,
-                bad_bazel_commit=bad_bazel_commit,
-                needs_clean=needs_clean,
-                repeat_times=repeat_times,
-            )
+        print_culprit_finder_pipeline(
+            project_name=project_name,
+            tasks=tasks,
+            good_bazel_commit=good_bazel_commit,
+            bad_bazel_commit=bad_bazel_commit,
+            needs_clean=needs_clean,
+            repeat_times=repeat_times,
+        )
     elif args.subparsers_name == "runner":
         git_repo_location = clone_git_repository(args.project_name, args.task_name)
         bazelci.print_collapsed_group("Check good bazel commit " + args.good_bazel_commit)
