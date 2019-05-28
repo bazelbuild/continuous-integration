@@ -68,6 +68,12 @@ DOWNSTREAM_PROJECTS = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-bench/master/.bazelci/postsubmit.yml",
         "pipeline_slug": "bazel-bench",
     },
+    "Bazel Codelabs": {
+        "git_repository": "https://github.com/bazelbuild/codelabs.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/codelabs/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "bazel-codelabs",
+        "disabled_reason": "https://github.com/bazelbuild/continuous-integration/issues/676",
+    },
     "Bazel integration testing": {
         "git_repository": "https://github.com/bazelbuild/bazel-integration-testing.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-integration-testing/master/.bazelci/presubmit.yml",
