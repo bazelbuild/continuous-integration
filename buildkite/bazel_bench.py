@@ -160,7 +160,6 @@ def ci_step_for_platform_and_commits(
       "--collect_memory",
       "--runs=%s" % RUNS,
       "--data_directory=%s" % DATA_DIRECTORY,
-      extra_options,
       "--",
       project["bazel_command"]
   ]
