@@ -56,13 +56,21 @@ def get_bazel_commits_between(first_commit, second_commit):
             % (first_commit, second_commit, str(e))
         )
 
-
-def get_platform(project_name, task_name):
+def get_configs(project_name):
     http_config = bazelci.DOWNSTREAM_PROJECTS[project_name]["http_config"]
     configs = bazelci.fetch_configs(http_config, None)
+    return configs
+
+
+def get_platform(project_name, task_name):
+    configs = get_configs(project_name)
     task_config = configs["tasks"][task_name]
     return bazelci.get_platform_for_task(task_name, task_config)
 
+
+def get_tasks(project_name):
+    configs = get_configs(project_name)
+    return configs.keys()
 
 def test_with_bazel_at_commit(
     project_name, task_name, git_repo_location, bazel_commit, needs_clean, repeat_times
@@ -174,10 +182,25 @@ def main(argv=None):
     if args.subparsers_name == "culprit_finder":
         try:
             project_name = os.environ["PROJECT_NAME"]
+
             # For old config file, we can still set PLATFORM_NAME as task name.
-            task_name = os.environ.get("PLATFORM_NAME") or os.environ["TASK_NAME"]
-            good_bazel_commit = os.environ["GOOD_BAZEL_COMMIT"]
-            bad_bazel_commit = os.environ["BAD_BAZEL_COMMIT"]
+            if "PLATFORMS_NAME" in os.environ or "TASK_NAME" in os.environ:
+                tasks = [os.environ.get("PLATFORM_NAME") or os.environ["TASK_NAME"]]
+            else:
+                tasks = get_tasks(project_name)
+
+            if "GOOD_BAZEL_COMMIT" in os.environ:
+                good_bazel_commit = os.environ["GOOD_BAZEL_COMMIT"]
+            else:
+                # If GOOD_BAZEL_COMMIT is not set, use recorded last bazel green commit for downstream project
+                last_green_commit_url = bazelci.bazelci_last_green_downstream_commit_url()
+                good_bazel_commit = bazelci.get_last_green_commit(last_green_commit_url)
+
+            if "BAD_BAZEL_COMMIT" in os.environ:
+                bad_bazel_commit = os.environ["BAD_BAZEL_COMMIT"]
+            else:
+                # If BAD_BAZEL_COMMIT is not set, use HEAD commit.
+                bad_bazel_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
         except KeyError as e:
             raise Exception("Environment variable %s must be set" % str(e))
 
@@ -195,14 +218,15 @@ def main(argv=None):
                 % (project_name, str((bazelci.DOWNSTREAM_PROJECTS.keys())))
             )
 
-        print_culprit_finder_pipeline(
-            project_name=project_name,
-            task_name=task_name,
-            good_bazel_commit=good_bazel_commit,
-            bad_bazel_commit=bad_bazel_commit,
-            needs_clean=needs_clean,
-            repeat_times=repeat_times,
-        )
+        for task_name in tasks:
+            print_culprit_finder_pipeline(
+                project_name=project_name,
+                task_name=task_name,
+                good_bazel_commit=good_bazel_commit,
+                bad_bazel_commit=bad_bazel_commit,
+                needs_clean=needs_clean,
+                repeat_times=repeat_times,
+            )
     elif args.subparsers_name == "runner":
         git_repo_location = clone_git_repository(args.project_name, args.task_name)
         bazelci.print_collapsed_group("Check good bazel commit " + args.good_bazel_commit)
