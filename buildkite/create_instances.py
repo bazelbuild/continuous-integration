@@ -19,14 +19,9 @@ import os
 import queue
 import sys
 import threading
-import urllib.error
-import urllib.request
 import yaml
 
 import gcloud
-
-CONFIG_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/instances.yml"
-LOCAL_CONFIG_FILE_NAME = "instances.yml"
 
 WORK_QUEUE = queue.Queue()
 
@@ -99,15 +94,10 @@ def worker():
             WORK_QUEUE.task_done()
 
 
-def read_config_file(use_local_config):
-    content = None
-    if use_local_config:
-        path = os.path.join(os.getcwd(), LOCAL_CONFIG_FILE_NAME)
-        with open(path, "rb") as fd:
-            content = fd.read().decode("utf-8")
-    else:
-        with urllib.request.urlopen(CONFIG_URL) as resp:
-            content = resp.read().decode("utf-8")
+def read_config_file():
+    path = os.path.join(os.getcwd(), "instances.yml")
+    with open(path, "rb") as fd:
+        content = fd.read().decode("utf-8")
     return yaml.safe_load(content)
 
 
@@ -124,14 +114,9 @@ def main(argv=None):
         'These values must correspond to "name" entries in the '
         'Yaml configuration, e.g. "bk-pipeline-ubuntu1804-java8".',
     )
-    parser.add_argument(
-        "--local_config",
-        action="store_true",
-        help="Whether to read the configuration from CWD/%s" % LOCAL_CONFIG_FILE_NAME,
-    )
 
     args = parser.parse_args(argv)
-    config = read_config_file(args.local_config)
+    config = read_config_file()
 
     # Verify names passed on the command-line.
     valid_names = [item["name"] for item in config["instance_groups"]]
