@@ -50,7 +50,6 @@ PROJECTS = [
 ]
 BAZEL_REPOSITORY = "https://github.com/bazelbuild/bazel.git"
 DATA_DIRECTORY = _platform_path_str("%s/.bazel-bench/out/" % TMP)
-RUNS = 3
 
 
 def _bazel_bench_env_setup_command(platform, bazel_commits):
@@ -159,7 +158,6 @@ def ci_step_for_platform_and_commits(
       "--project_source=%s" % project_clone_path,
       "--platform=%s" % platform,
       "--collect_memory",
-      "--runs=%s" % RUNS,
       "--data_directory=%s" % DATA_DIRECTORY,
       extra_options,
       "--",
