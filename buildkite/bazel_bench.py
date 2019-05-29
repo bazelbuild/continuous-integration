@@ -174,17 +174,18 @@ def ci_step_for_platform_and_commits(
   return bazelci.create_step(label, commands, platform)
 
 
-def main(argv=None):
-  if argv is None:
-    argv = sys.argv[1:]
+def main(args=None):
+  if args is None:
+    args = sys.argv[1:]
 
   parser = argparse.ArgumentParser(description="Bazel Bench CI Pipeline")
   parser.add_argument("--day", type=str)
   parser.add_argument("--bazel_bench_options", type=str, default="")
-  args = parser.parse_args(argv)
+  parsed_args = parser.parse_args(args)
 
   bazel_bench_ci_steps = []
-  day = (datetime.datetime.strptime(args.day, "%Y-%m-%d").date() if args.day
+  day = (datetime.datetime.strptime(parsed_args.day, "%Y-%m-%d").date()
+         if parsed_args.day
          else datetime.date.today())
   bazel_commits = None
   for project in PROJECTS:
@@ -202,7 +203,10 @@ def main(argv=None):
 
       bazel_bench_ci_steps.append(
           ci_step_for_platform_and_commits(
-              bazel_commits, platform, project, args.bazel_bench_options))
+              bazel_commits,
+              platform,
+              project,
+              parsed_args.bazel_bench_options))
 
   bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
   buildkite_pipeline_cmd = (
