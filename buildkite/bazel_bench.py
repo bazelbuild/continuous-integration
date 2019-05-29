@@ -37,7 +37,6 @@ def _platform_path_str(posix_path):
   return posix_path
 
 
-# TODO(leba): Make these configurable via flags to the script.
 # TMP has different values, depending on the platform.
 TMP = tempfile.gettempdir()
 PROJECTS = [
@@ -91,7 +90,7 @@ def _get_bazel_commits(day, bazel_repo_path):
       line.decode('utf-8').rstrip("\n").strip("'") for line in command.stdout]
 
 
-def get_platforms(project_name):
+def _get_platforms(project_name):
   """Get the platforms on which this project is run on BazelCI.
 
   Args:
@@ -106,7 +105,7 @@ def get_platforms(project_name):
   return list(map(lambda k: bazelci.get_platform_for_task(k, tasks[k]), tasks))
 
 
-def get_clone_path(repository, platform):
+def _get_clone_path(repository, platform):
   """Returns the path to a local clone of the project.
 
   If there's a mirror available, use that. bazel-bench will take care of
@@ -127,7 +126,7 @@ def get_clone_path(repository, platform):
   return repository
 
 
-def ci_step_for_platform_and_commits(
+def _ci_step_for_platform_and_commits(
     bazel_commits, platform, project, extra_options):
   """Perform bazel-bench for the platform-project combination.
   Uploads results to BigQuery.
@@ -143,8 +142,8 @@ def ci_step_for_platform_and_commits(
     An object: the result of applying bazelci.create_step to wrap the
       command to be executed by buildkite-agent.
   """
-  project_clone_path = get_clone_path(project["git_repository"], platform)
-  bazel_clone_path = get_clone_path(BAZEL_REPOSITORY, platform)
+  project_clone_path = _get_clone_path(project["git_repository"], platform)
+  bazel_clone_path = _get_clone_path(BAZEL_REPOSITORY, platform)
 
   bazel_bench_command = " ".join([
       "bazel",
@@ -185,7 +184,7 @@ def main(args=None):
          else datetime.date.today())
   bazel_commits = None
   for project in PROJECTS:
-    for platform in get_platforms(project["name"]):
+    for platform in _get_platforms(project["name"]):
       # bazel-bench doesn't support Windows for now.
       if platform in ["windows"]:
         continue
@@ -198,7 +197,7 @@ def main(args=None):
         bazel_commits = _get_bazel_commits(day, bazel_clone_path)
 
       bazel_bench_ci_steps.append(
-          ci_step_for_platform_and_commits(
+          _ci_step_for_platform_and_commits(
               bazel_commits,
               platform,
               project,
