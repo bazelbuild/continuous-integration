@@ -139,7 +139,7 @@ def ci_step_for_platform_and_commits(bazel_commits, platform, project):
       project["bazel_command"]
   ]
 
-  label = (bazelci.PLATFORMS[platform_name]["emoji-name"]
+  label = (bazelci.PLATFORMS[platform]["emoji-name"]
            + " Running bazel-bench on project: %s" % project)
   return bazelci.create_step(label, " ".join(args), platform)
 
