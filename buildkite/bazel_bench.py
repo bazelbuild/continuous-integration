@@ -141,17 +141,19 @@ def ci_step_for_platform_and_commits(bazel_commits, platform, project):
   return bazelci.create_step(label, " ".join(args), platform)
 
 
-def main(argv=None):
-  if agrv is None:
-    argv = sys.argv[1:]
+def main(args=None):
+  if agrs is None:
+    args = sys.argv[1:]
 
   parser = argparse.ArgumentParser(description="Bazel Bench CI Pipeline")
   parser.add_argument("--day", type=str)
-  args = parser.parse_args(argv)
+  parsed_args = parser.parse_args(args)
 
   bazel_bench_ci_steps = []
-  day = (datetime.datetime.strptime(args.day, "%Y-%m-%d").date() if args.day
-         else datetime.date.today())
+  day = (
+      datetime.datetime.strptime(parsed_args.day, "%Y-%m-%d").date()
+      if parsed_args.day
+      else datetime.date.today())
   bazel_commits = get_bazel_commits(day)
   for project in PROJECTS:
     for platform in get_platforms(project["name"]):
