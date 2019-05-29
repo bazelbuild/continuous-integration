@@ -51,7 +51,6 @@ PROJECTS = [
 BAZEL_REPOSITORY = "https://github.com/bazelbuild/bazel.git"
 DATA_DIRECTORY = _platform_path_str("%s/.bazel-bench/out/" % TMP)
 RUNS = 3
-BIGQUERY_TABLE = "bazel_playground:bazel_bench:europe-west2"
 
 
 def get_bazel_commits(day):
@@ -94,7 +93,8 @@ def get_platforms(project_name):
     return list(map(lambda k: bazelci.get_platform_for_task(k, tasks), tasks))
 
 
-def ci_step_for_platform_and_commits(bazel_commits, platform, project):
+def ci_step_for_platform_and_commits(
+    bazel_commits, platform, project, extra_options):
   """Perform bazel-bench for the platform-project combination.
   Uploads results to BigQuery.
 
@@ -103,6 +103,7 @@ def ci_step_for_platform_and_commits(bazel_commits, platform, project):
     platform: a string: the platform to benchmark on.
     project: an object: contains the information of the project to be
       tested on.
+    extra_options: a string: extra bazel-bench options.
 
   Return:
     An object: the result of applying bazelci.create_step to wrap the
@@ -131,13 +132,13 @@ def ci_step_for_platform_and_commits(bazel_commits, platform, project):
       "--collect_memory",
       "--runs=%s" % RUNS,
       "--data_directory=%s" % DATA_DIRECTORY,
-      "--upload_data_to=%s" % BIGQUERY_TABLE,
+      extra_options,
       "--",
       project["bazel_command"]
   ]
 
   label = (bazelci.PLATFORMS[platform]["emoji-name"]
-           + " Running bazel-bench on project: %s" % project)
+           + " Running bazel-bench on project: %s" % project["name"])
   return bazelci.create_step(label, " ".join(args), platform)
 
 
@@ -147,6 +148,7 @@ def main(args=None):
 
   parser = argparse.ArgumentParser(description="Bazel Bench CI Pipeline")
   parser.add_argument("--day", type=str)
+  parser.add_argument("--bazel_bench_options", type=str, default="")
   parsed_args = parser.parse_args(args)
 
   bazel_bench_ci_steps = []
@@ -161,7 +163,11 @@ def main(args=None):
       if platform == "windows":
         continue
       bazel_bench_ci_steps.append(
-          ci_step_for_platform_and_commits(bazel_commits, platform, project))
+          ci_step_for_platform_and_commits(
+              bazel_commits,
+              platform,
+              project,
+              parsed_args.bazel_bench_options))
 
   # Print the commands
   print(yaml.dump({"steps": bazel_bench_ci_steps}))
