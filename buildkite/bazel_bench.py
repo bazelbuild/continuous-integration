@@ -190,7 +190,7 @@ def main(argv=None):
   for project in PROJECTS:
     for platform in get_platforms(project["name"]):
       # bazel-bench doesn't support Windows for now.
-      if platform in ["windows", "macos", "rbe_ubuntu1604"]:
+      if platform in ["windows"]:
         continue
 
       # When running on the first platform, get the bazel commits.
@@ -204,12 +204,11 @@ def main(argv=None):
           ci_step_for_platform_and_commits(
               bazel_commits, platform, project, args.bazel_bench_options))
 
-  # Print the commands
   bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
-  buildkit_pipeline_cmd = (
+  buildkite_pipeline_cmd = (
       'cat <<EOF | buildkite-agent pipeline upload\n%s\nEOF'
       % yaml.dump({"steps": bazel_bench_ci_steps}))
-  subprocess.call(buildkit_pipeline_cmd, shell=True)
+  subprocess.call(buildkite_pipeline_cmd, shell=True)
 
 
 if __name__ == "__main__":
