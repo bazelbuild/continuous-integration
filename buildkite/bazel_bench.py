@@ -206,8 +206,10 @@ def main(argv=None):
 
   # Print the commands
   bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
-  yaml.dump({"steps": bazel_bench_ci_steps}, sys.stdout)
-  bazelci.eprint("After print")
+  buildkit_pipeline_cmd = (
+      "%s | buildkite pipeline upload"
+      % yaml.dump({"steps": bazel_bench_ci_steps}))
+  subprocess.call(buildkit_pipeline_cmd, shell=True)
 
 
 if __name__ == "__main__":
