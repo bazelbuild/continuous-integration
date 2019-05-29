@@ -52,8 +52,8 @@ DATA_DIRECTORY = _platform_path_str("%s/.bazel-bench/out/" % TMP)
 
 def _bazel_bench_env_setup_command(platform, bazel_commits):
   bazel_bench_env_setup_py_url = (
-      "https://raw.githubusercontent.com/joeleba/continuous-integration"
-      "/bb-patch/buildkite/bazel_bench_env_setup.py?%s"
+      "https://raw.githubusercontent.com/bazelbuild/continuous-integration"
+      "/master/buildkite/bazel_bench_env_setup.py?%s"
       % int(time.time()))
   download_command = (
       'curl -sS "%s" -o bazel_bench_env_setup.py'
