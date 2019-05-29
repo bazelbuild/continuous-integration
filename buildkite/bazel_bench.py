@@ -207,7 +207,7 @@ def main(argv=None):
   # Print the commands
   bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
   buildkit_pipeline_cmd = (
-      'cat <<EOF | buildkite pipeline upload\n%s\nEOF'
+      'cat <<EOF | buildkite-agent pipeline upload\n%s\nEOF'
       % yaml.dump({"steps": bazel_bench_ci_steps}))
   subprocess.call(buildkit_pipeline_cmd, shell=True)
 
