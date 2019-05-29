@@ -108,9 +108,6 @@ def ci_step_for_platform_and_commits(bazel_commits, platform, project):
     An object: the result of applying bazelci.create_step to wrap the
       command to be executed by buildkite-agent.
   """
-  # Get Bazel commits during the day
-  bazel_commits = get_bazel_commits(datetime.date.today())
-
   # Download the binaries already built.
   # Bazel-bench won"t try to build these binaries again, since they exist.
   for bazel_commit in bazel_commits:
