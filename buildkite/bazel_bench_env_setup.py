@@ -29,7 +29,6 @@ def _platform_path_str(posix_path):
   return posix_path
 
 
-# TODO(leba): Make these configurable via flags to the script.
 # TMP has different values, depending on the platform.
 TMP = tempfile.gettempdir()
 # The path to the directory that stores the bazel binaries.
