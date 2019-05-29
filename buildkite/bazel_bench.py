@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright 2019 The Bazel Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,10 +18,13 @@ Runs bazel-bench on the defined projects, on every platforms the project runs
 on.
 """
 
+import argparse
 import bazelci
 import datetime
+import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import yaml
 
@@ -70,8 +74,9 @@ def get_bazel_commits(day):
       "--until='%s'" % day_plus_one.strftime("%Y-%m-%d 00:00"),
       "--reverse"
   ]
-  command = subprocess.Popen(args, shell=True, stdoud=subprocess.PIPE)
-  return [line.strip() for line in command.stdout]
+  command = subprocess.Popen(args, stdout=subprocess.PIPE)
+  return [
+      line.decode("utf-8").rstrip("\n").strip("'") for line in command.stdout]
 
 
 def get_platforms(project_name):
@@ -112,7 +117,7 @@ def ci_step_for_platform_and_commits(bazel_commits, platform, project):
     bazelci.download_bazel_binary_at_commit(
         BAZEL_BINARY_BASE_PATH + bazel_commit,
         platform,
-        commit
+        bazel_commit
     )
   project_mirror_path = bazelci.get_mirror_path(
       project["git_repository"], platform)
@@ -139,11 +144,18 @@ def ci_step_for_platform_and_commits(bazel_commits, platform, project):
   return bazelci.create_step(label, " ".join(args), platform)
 
 
-def main(argv):
-  if len(argv) > 1:
-    raise app.UsageError("Too many command-line arguments.")
+def main(argv=None):
+  if agrv is None:
+    argv = sys.argv[1:]
+
+  parser = argparse.ArgumentParser(description="Bazel Bench CI Pipeline")
+  parser.add_argument("--day", type=str)
+  args = parser.parse_args(argv)
 
   bazel_bench_ci_steps = []
+  day = (datetime.datetime.strptime(args.day, "%Y-%m-%d").date() if args.day
+         else datetime.date.today())
+  bazel_commits = get_bazel_commits(day)
   for project in PROJECTS:
     for platform in get_platforms(project["name"]):
       # bazel-bench doesn't support Windows for now.
