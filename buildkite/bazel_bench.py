@@ -23,7 +23,6 @@ import argparse
 import bazelci
 import datetime
 import os
-import shutil
 import subprocess
 import sys
 import tempfile
