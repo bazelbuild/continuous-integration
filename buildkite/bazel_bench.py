@@ -144,7 +144,6 @@ def ci_step_for_platform_and_commits(
     An object: the result of applying bazelci.create_step to wrap the
       command to be executed by buildkite-agent.
   """
-  bazelci.eprint("platform: %s" % platform)
   project_clone_path = get_clone_path(project["git_repository"], platform)
   bazel_clone_path = get_clone_path(BAZEL_REPOSITORY, platform)
 
