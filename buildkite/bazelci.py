@@ -637,7 +637,7 @@ def load_imported_tasks(import_name, http_url, file_config):
         raise BuildkiteException("Invalid import '%s'" % import_name)
 
     old_path = http_url or file_config
-    new_path = "%s/%s" % (old_path[: old_path.rfind("/")], import_name)
+    new_path = "%s%s" % (old_path[: old_path.rfind("/") + 1], import_name)
     if http_url:
         http_url = new_path
     else:
