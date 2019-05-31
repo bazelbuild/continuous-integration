@@ -595,7 +595,18 @@ def fetch_configs(http_url, file_config):
     if file_config is not None and http_url is not None:
         raise BuildkiteException("file_config and http_url cannot be set at the same time")
 
-    config = load_config(http_url, file_config)
+    return load_config(http_url, file_config)
+
+
+def load_config(http_url, file_config, allow_imports=True):
+    config = None
+    if http_url:
+        config = load_remote_yaml_file(http_url)
+
+    file_config = file_config or ".bazelci/presubmit.yml"
+    with open(file_config, "r") as fd:
+        config = yaml.safe_load(fd)
+
     # Legacy mode means that there is exactly one task per platform (e.g. ubuntu1604_nojdk),
     # which means that we can get away with using the platform name as task ID.
     # No other updates are needed since get_platform_for_task() falls back to using the
@@ -603,23 +614,46 @@ def fetch_configs(http_url, file_config):
     if "platforms" in config:
         config["tasks"] = config.pop("platforms")
 
+    imports = config.pop("imports")
+    if imports:
+        if not allow_imports:
+            raise BuildkiteException("Nested imports are not allowed")
+
+        for i in imports:
+            imported_tasks = load_imported_tasks(i, http_url, file_config)
+            config["tasks"].update(imported_tasks)
+
     return config
-
-
-def load_config(http_url, file_config):
-    if file_config is not None:
-        with open(file_config, "r") as fd:
-            return yaml.safe_load(fd)
-    if http_url is not None:
-        return load_remote_yaml_file(http_url)
-    with open(".bazelci/presubmit.yml", "r") as fd:
-        return yaml.safe_load(fd)
 
 
 def load_remote_yaml_file(http_url):
     with urllib.request.urlopen(http_url) as resp:
         reader = codecs.getreader("utf-8")
         return yaml.safe_load(reader(resp))
+
+
+def load_imported_tasks(import_name, http_url, file_config):
+    if "/" in import_name:
+        raise BuildkiteException("Invalid import '%s'" % import_name)
+
+    old_path = http_url or file_config
+    new_path = "%s/%s" % (old_path[: old_path.rfind("/")], import_name)
+    if http_url:
+        http_url = new_path
+    else:
+        file_config = new_path
+
+    imported_config = load_config(http_url=http_url, file_config=file_config, allow_imports=False)
+
+    namespace = import_name.partition(".")[0]
+    tasks = {}
+    for task_name, task_config in imported_config.items():
+        if "platform" not in task_config:
+            task_config["platform"] = task_name
+
+        tasks["%s_%s" % (namespace, task_name)] = task_config
+
+    return tasks
 
 
 def print_collapsed_group(name):
