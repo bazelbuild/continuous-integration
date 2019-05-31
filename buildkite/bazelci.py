@@ -602,10 +602,10 @@ def load_config(http_url, file_config, allow_imports=True):
     config = None
     if http_url:
         config = load_remote_yaml_file(http_url)
-
-    file_config = file_config or ".bazelci/presubmit.yml"
-    with open(file_config, "r") as fd:
-        config = yaml.safe_load(fd)
+    else:
+        file_config = file_config or ".bazelci/presubmit.yml"
+        with open(file_config, "r") as fd:
+            config = yaml.safe_load(fd)
 
     # Legacy mode means that there is exactly one task per platform (e.g. ubuntu1604_nojdk),
     # which means that we can get away with using the platform name as task ID.
