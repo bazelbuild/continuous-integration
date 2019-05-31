@@ -614,7 +614,7 @@ def load_config(http_url, file_config, allow_imports=True):
     if "platforms" in config:
         config["tasks"] = config.pop("platforms")
 
-    imports = config.pop("imports")
+    imports = config.pop("imports", None)
     if imports:
         if not allow_imports:
             raise BuildkiteException("Nested imports are not allowed")
