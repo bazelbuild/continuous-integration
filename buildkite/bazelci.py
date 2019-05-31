@@ -368,7 +368,12 @@ DOWNSTREAM_PROJECTS_TESTING = {
         "git_repository": "https://github.com/bazelbuild/bazelisk.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazelisk/master/.bazelci/config.yml",
         "pipeline_slug": "bazelisk",
-    }
+    },
+    "Federation": {
+        "git_repository": "https://github.com/fweikert/bazel-federation.git",
+        "http_config": "https://raw.githubusercontent.com/fweikert/bazel-federation/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "bazel-federation",
+    },
 }
 
 DOWNSTREAM_PROJECTS = {
