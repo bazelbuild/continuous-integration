@@ -66,7 +66,19 @@ steps:
       mkdir output
       cp bazel-bin/src/bazel output/bazel
 
-      output/bazel build -c opt --stamp --sandbox_tmpfs_path=/tmp --embed_label "\${release_name}" --workspace_status_command=scripts/ci/build_status_command.sh src/bazel scripts/packages/with-jdk/install.sh scripts/packages/debian/bazel-debian.deb scripts/packages/debian/bazel.dsc scripts/packages/debian/bazel.tar.gz bazel-distfile.zip
+      output/bazel build \
+          -c opt \
+          --stamp \
+          --sandbox_tmpfs_path=/tmp \
+          --embed_label "\${release_name}" \
+          --workspace_status_command=scripts/ci/build_status_command.sh \
+          --host_force_python=PY2 \
+          src/bazel \
+          scripts/packages/with-jdk/install.sh \
+          scripts/packages/debian/bazel-debian.deb \
+          scripts/packages/debian/bazel.dsc \
+          scripts/packages/debian/bazel.tar.gz \
+          bazel-distfile.zip
 
       mkdir artifacts
       cp "bazel-bin/src/bazel" "artifacts/bazel-\${release_name}-linux-x86_64"
@@ -93,7 +105,14 @@ steps:
       mkdir output
       cp bazel-bin/src/bazel output/bazel
 
-      output/bazel build --define IPHONE_SDK=1 -c opt --stamp --embed_label "\${release_name}" --workspace_status_command=scripts/ci/build_status_command.sh src/bazel scripts/packages/with-jdk/install.sh
+      output/bazel build \
+          --define IPHONE_SDK=1 \
+          -c opt \
+          --stamp \
+          --embed_label "\${release_name}" \
+          --workspace_status_command=scripts/ci/build_status_command.sh \
+          src/bazel \
+          scripts/packages/with-jdk/install.sh
 
       mkdir artifacts
       cp "bazel-bin/src/bazel" "artifacts/bazel-\${release_name}-darwin-x86_64"
