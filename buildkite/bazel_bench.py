@@ -85,8 +85,8 @@ def _get_bazel_commits(day, bazel_repo_path):
         "--until='%s'" % day_plus_one.strftime("%Y-%m-%d 00:00"),
         "--reverse",
     ]
-    command = subprocess.Popen(args, stdout=subprocess.PIPE, cwd=bazel_repo_path)
-    return [line.decode("utf-8").rstrip("\n").strip("'") for line in command.stdout]
+    command_output = subprocess.check_output(args, cwd=bazel_repo_path)
+    return [line.decode("utf-8").rstrip("\n").strip("'") for line in command_output]
 
 
 def _get_platforms(project_name):
