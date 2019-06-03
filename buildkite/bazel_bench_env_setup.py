@@ -22,11 +22,12 @@ import os
 import sys
 import tempfile
 
+
 def _platform_path_str(posix_path):
-  """Converts the path to the appropriate format for platform."""
-  if os.name == "nt":
-    return posix_path.replace("/", "\\")
-  return posix_path
+    """Converts the path to the appropriate format for platform."""
+    if os.name == "nt":
+        return posix_path.replace("/", "\\")
+    return posix_path
 
 
 # TMP has different values, depending on the platform.
@@ -34,32 +35,28 @@ TMP = tempfile.gettempdir()
 # The path to the directory that stores the bazel binaries.
 BAZEL_BINARY_BASE_PATH = _platform_path_str("%s/.bazel-bench/bazel-bin" % TMP)
 
+
 def main(argv=None):
-  if argv is None:
-    argv = sys.argv[1:]
+    if argv is None:
+        argv = sys.argv[1:]
 
-  parser = argparse.ArgumentParser(description="Bazel Bench Environment Setup")
-  parser.add_argument("--platform", type=str)
-  parser.add_argument("--bazel_commits", type=str)
-  args = parser.parse_args(argv)
+    parser = argparse.ArgumentParser(description="Bazel Bench Environment Setup")
+    parser.add_argument("--platform", type=str)
+    parser.add_argument("--bazel_commits", type=str)
+    args = parser.parse_args(argv)
 
-  bazel_commits = args.bazel_commits.split(",")
+    bazel_commits = args.bazel_commits.split(",")
 
-  for bazel_commit in bazel_commits:
-    destination = BAZEL_BINARY_BASE_PATH + '/' + bazel_commit
-    if os.path.exists(destination):
-      continue
-    try:
-      bazelci.download_bazel_binary_at_commit(
-        destination,
-        args.platform,
-        bazel_commit
-      )
-    except bazelci.BuildkiteException:
-      # Carry on.
-      bazelci.eprint("Binary for Bazel commit %s not found." % bazel_commit)
+    for bazel_commit in bazel_commits:
+        destination = BAZEL_BINARY_BASE_PATH + "/" + bazel_commit
+        if os.path.exists(destination):
+            continue
+        try:
+            bazelci.download_bazel_binary_at_commit(destination, args.platform, bazel_commit)
+        except bazelci.BuildkiteException:
+            # Carry on.
+            bazelci.eprint("Binary for Bazel commit %s not found." % bazel_commit)
 
 
 if __name__ == "__main__":
-  sys.exit(main())
-
+    sys.exit(main())
