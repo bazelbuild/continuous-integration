@@ -86,12 +86,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/googlesamples/android-testing/master/bazelci/buildkite-pipeline.yml",
         "pipeline_slug": "android-testing",
     },
-    "BUILD file generator": {
-        "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "build-file-generator",
-        "disabled_reason": "https://github.com/bazelbuild/BUILD_file_generator/issues/53",
-    },
     "Bazel": {
         "git_repository": "https://github.com/bazelbuild/bazel.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/postsubmit.yml",
