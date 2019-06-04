@@ -760,12 +760,13 @@ def execute_commands(
                 json_profile_out_build = os.path.join(tmpdir, "build.profile.gz")
                 json_profile_flags = get_json_profile_flags(json_profile_out_build)
 
+            build_flags = task_config.get("build_flags") or []
             try:
                 execute_bazel_build(
                     bazel_version,
                     bazel_binary,
                     platform,
-                    task_config.get("build_flags", []) + json_profile_flags,
+                    build_flags + json_profile_flags,
                     build_targets,
                     None,
                     incompatible_flags,
@@ -783,7 +784,8 @@ def execute_commands(
                 json_profile_out_test = os.path.join(tmpdir, "test.profile.gz")
                 json_profile_flags = get_json_profile_flags(json_profile_out_test)
 
-            test_flags = task_config.get("test_flags", []) + json_profile_flags
+            test_flags = task_config.get("test_flags") or []
+            test_flags += json_profile_flags
             if test_env_vars:
                 test_flags += ["--test_env={}".format(v) for v in test_env_vars]
 
