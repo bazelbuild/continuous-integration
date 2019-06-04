@@ -217,6 +217,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.yml",
         "pipeline_slug": "tensorflow",
+        "disabled_reason": "Waiting for fix from protobuf: https://github.com/protocolbuffers/protobuf/pull/6207",
     },
     "Tulsi": {
         "git_repository": "https://github.com/bazelbuild/tulsi.git",
