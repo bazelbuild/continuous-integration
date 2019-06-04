@@ -1745,7 +1745,19 @@ def print_project_pipeline(
         )
         git_commit = get_last_green_commit(last_green_commit_url)
 
+    config_hashes = set()
     for task, task_config in task_configs.items():
+        # We override the Bazel version in downstream pipelines. This means that two tasks that
+        # only differ in the value of their explicit "bazel" field will be identical in the
+        # downstream pipeline, thus leading to duplicate work.
+        # Consequently, we filter those duplicate tasks here.
+        if is_downstream_project:
+            h = hash_task_config(task, task_config)
+            if h in config_hashes:
+                continue
+            
+            config_hashes.add(h)
+
         shards = task_config.get("shards", "1")
         try:
             shards = int(shards)
@@ -1807,6 +1819,24 @@ def print_project_pipeline(
         pipeline_steps += create_config_validation_steps()
 
     print_pipeline_steps(pipeline_steps, handle_emergencies=not is_downstream_project)
+
+
+def hash_task_config(task_name, task_config):
+    # Two task configs c1 and c2 have the same hash iff they lead to two functionally identical jobs
+    # in the downstream pipeline. This function discards the "bazel" field (since it's being
+    # overriden) and the "name" field (since it has no effect on the actual work).
+    # Moreover, it adds an explicit "platform" field if that's missing.
+    cpy = task_config.copy()
+    cpy.pop("bazel", None)
+    cpy.pop("name", None)
+    if "platform" not in cpy:
+        cpy["platform"] = task_name
+
+    m = hashlib.md5()
+    for key in sorted(cpy):
+        m.update("%s:%s;" % (key, cpy[key]))
+
+    return m.digest()
 
 
 def get_platform_for_task(task, task_config):
