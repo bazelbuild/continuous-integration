@@ -1770,7 +1770,8 @@ def hash_task_config(task_name, task_config):
 
     m = hashlib.md5()
     for key in sorted(cpy):
-        m.update("%s:%s;" % (key, cpy[key]))
+        value = "%s:%s;" % (key, cpy[key])
+        m.update(value.encode("utf-8"))
 
     return m.digest()
 
