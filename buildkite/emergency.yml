@@ -17,6 +17,6 @@
 # Please do not clear or delete this file when an incident is over.
 # Instead, simply replace all values with empty strings ("").
 ---
-message: "Pipelines using the 'last green' Bazel version crash with a 404 HTTP error due to GCE problems."
-issue_url: "https://github.com/bazelbuild/continuous-integration/issues/702"
+message: ""
+issue_url: ""
 last_good_bazel: ""
