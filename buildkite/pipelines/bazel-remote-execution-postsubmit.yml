@@ -7,7 +7,7 @@ platforms:
     - rm -f WORKSPACE.bak
     test_flags:
     - "--config=remote"
-    - "--remote_executor=remotebuildexecution.googleapis.com"
+    - "--remote_executor=grpcs://remotebuildexecution.googleapis.com"
     - "--jobs=200"
     - "--experimental_remote_download_outputs=minimal"
     - "--experimental_inmemory_jdeps_files"
