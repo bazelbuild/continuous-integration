@@ -9,9 +9,7 @@ Each release has a tracking bug (see the
 The bug includes a "Target RC date". On that day, create a new release
 candidate.
 
-## Creating a new release candidate
-
-### Setup
+## Setup
 
 Do these steps once per release.
 
@@ -26,11 +24,11 @@ Do these steps once per release.
          should be cherry-picked, any remaining issues should become release
          blockers.
 
-### Update the status of GitHub issues for incompatible changes
+## Update the status of GitHub issues for incompatible changes
 
 In the below, _X.Y_ is a release you are cutting.
 
-#### Start new migration windows
+### Start new migration windows
 
 1. Search for all [open "incompatible-change" issues that have "migration-ready" labels](https://github.com/bazelbuild/bazel/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Aincompatible-change+label%3Amigration-ready)
 1. For each such issue:
@@ -38,7 +36,7 @@ In the below, _X.Y_ is a release you are cutting.
      2. Add a "breaking-change-_X.Y+w_" label where _w_ is the length of migration window for that particular issue
      2. Remove "migration-ready" label
 
-#### Review breaking changes
+### Review breaking changes
 
 1. Search for issues with label "breaking-change-_X.Y_".
 2. For all such issues that are **closed**, verify that the flag is flipped and release notes mention the breaking change.
@@ -49,16 +47,16 @@ In the below, _X.Y_ is a release you are cutting.
    1. add a label "migration-_X.Y_" and "breaking-change-_X.Y+1_" (this prolongs the migration window by 1 release).
    1. Reach out to the issue owner.
 
-#### Prolong ongoing migration windows
+### Prolong ongoing migration windows
 
 1. Search for issues with labels "migration-_X.Y-1_" that are not "migration-_X.Y_" and not "breaking-change-_X.Y_"
 2. For all such issues, apply "migration-_X.Y_" label. Do **not** remove any previous "migration-_X.Y-1_" labels.
 
-### Create a Candidate
+## Create a Candidate
 
-Create candidates with the release.sh script.
+Create candidates with the `release.sh` script.
 
-1.  If it's the first candidate for this version, run:
+*  If it's the first candidate for this version, run:
 
     ```bash
     RELEASE_NUMBER=<CURRENT RELEASE NUMBER x.yy.z>
@@ -70,7 +68,7 @@ Create candidates with the release.sh script.
 
     Note that the three-digit version is important: "0.19.0". not "0.19".
 
-1.  For cherry-picks, you need `--force_rc=N` where `N` is the number of the
+*  For cherry-picks, you need `--force_rc=N` where `N` is the number of the
     release candidate of `$RELEASE_NUMBER`. For example, the first time you do a
     cherry-pick (after the initial candidate), N will be 2.
 
@@ -78,7 +76,7 @@ Create candidates with the release.sh script.
     scripts/release/release.sh create --force_rc=2 $RELEASE_NUMBER $BASELINE_COMMIT [CHERRY_PICKS...]
     ```
 
-1.  If you already did some cherry-picks and you want to add more, use "git log"
+*  If you already did some cherry-picks and you want to add more, use "git log"
     to find the latest commit (this corresponds to the last cherry-pick commit).
     Use that as the new baseline and list the new cherry-picks to add on top. Or
     simply re-use the same baseline and cherrypicks from the previous candidate,
@@ -88,10 +86,12 @@ Create candidates with the release.sh script.
     scripts/release/release.sh create --force_rc=3 $RELEASE_NUMBER NEW_BASELINE_COMMIT [NEW_CHERRY_PICKS...]
     ```
 
-1.  Resolve conflicts if there are any, type `exit` when you are done, then the script will continue.
-    *   WARNING: `release.sh create` handles conflicts in a subshell (which is why you need to type `exit`).
+Resolve conflicts if there are any, type `exit` when you are done, then the script will continue.
+WARNING: `release.sh create` handles conflicts in a subshell (which is why you need to type `exit`).
 
-1.  Check/edit release notes.
+Editing the release notes is not needed (it will be done later).
+
+## Push the candidate
 
 1.  Run `release.sh push`. This uploads the candidate and starts the release
     process on BuildKite.
@@ -116,7 +116,7 @@ Create candidates with the release.sh script.
         automatically run. Make sure that it passes.
 
 1.  When it all looks good, go back to the job in the release pipeline, click
-    "Unblock step" for the deployment step. 
+    "Unblock step" for the deployment step.
 
     *   This will upload the release candidate binaries to GitHub and our 
         apt-get repository. The github link is probably of the form:
@@ -126,13 +126,8 @@ Create candidates with the release.sh script.
         to add you to the [release-managers](https://buildkite.com/organizations/bazel-trusted/teams/release-managers/members) group.
 
 1.  If that worked, click "Unblock step" for the "Generate Announcement" step.
-
-1.  Prepare the release announcement on https://docs.google.com/document/d/1wDvulLlj4NAlPZamdlEVFORks3YXJonCjyuQMUQEmB0/edit.
-    *   Create a new section for the release. Populate using the generated text
-        (from the "generate announcement" step).
-    *   Reorganize the notes per category (C++, Java, etc.)
-    *   Add a comment with "+[spomorski@google.com](mailto:spomorski@google.com)" so that he takes a look.
-    *   Send an email to [bazel-dev](https://groups.google.com/forum/#!forum/bazel-dev) asking for reviewers.
+    If it's the first release candidate, prepare the release announcement (see
+    next section).
 
 1.  Copy & paste the generated text into a new e-mail and send it. If you're
     creating a new release candidate, reply to the previous e-mail to keep all
@@ -174,18 +169,29 @@ Create candidates with the release.sh script.
 
 1.  Once issues are fixed, create a new candidate with the relevant cherry-picks.
 
-## Announcement
+## Release announcement
 
 The release manager is responsible for the [draft release
 announcement](https://docs.google.com/document/d/1wDvulLlj4NAlPZamdlEVFORks3YXJonCjyuQMUQEmB0/edit).
 
-1.  Make sure that the announcement is clear and follows the [recommendations for
-    release notes](https://www.bazel.build/release-notes.html).
-1.  Use versioned links whenever possible: `/versions/0.21.0/foo.html`
-    instead of `/versions/master/foo.html`.
-1.  Make sure all flags, function names, and important concepts are links to the
-    relevant documentation.
-1.  Make sure all comments have been resolved.
+Once the first candidate is available:
+
+1.  Open the doc, create a new section with your release number, add a link to
+    the GitHub issue.
+1.  Copy & paste the generated text from the "Generate Announcement" step.
+1.  Reorganize the notes per category (C++, Java, etc.).
+1.  For each category, add a comment and assign it to the corresponding
+    [team contact](https://www.bazel.build/maintainers-guide.html#team-labels):
+    "+person for review (see guidelines at the top of the doc)".
+1.  Send an email to [bazel-dev](https://groups.google.com/forum/#!forum/bazel-dev) for
+    additional reviews.
+1.  Assign a comment to "+[spomorski@google.com](mailto:spomorski@google.com)"
+    for a global review.
+
+After a few days of iteration:
+
+1.  Make sure all comments have been resolved, and the text follows the
+    guidelines (see "How to review the notes?" in the document).
 1.  Send a pull request to [bazel-blog](https://github.com/bazelbuild/bazel-blog/).
 
 ## Release requirements
