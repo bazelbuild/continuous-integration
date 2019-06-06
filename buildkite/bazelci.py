@@ -650,6 +650,8 @@ def load_imported_tasks(import_name, http_url, file_config):
     for task_name, task_config in imported_config["tasks"].items():
         if "platform" not in task_config:
             task_config["platform"] = task_name
+        if "name" not in task_config:
+            task_config["name"] = namespace
 
         tasks["%s_%s" % (namespace, task_name)] = task_config
 
