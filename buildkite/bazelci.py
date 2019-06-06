@@ -364,11 +364,16 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
 }
 
 DOWNSTREAM_PROJECTS_TESTING = {
+    "Bazel": {
+        "git_repository": "https://github.com/bazelbuild/bazel.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/postsubmit.yml",
+        "pipeline_slug": "bazel-bazel",
+    },
     "Bazelisk": {
         "git_repository": "https://github.com/bazelbuild/bazelisk.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazelisk/master/.bazelci/config.yml",
         "pipeline_slug": "bazelisk",
-    }
+    },
 }
 
 DOWNSTREAM_PROJECTS = {
