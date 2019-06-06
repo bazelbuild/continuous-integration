@@ -112,7 +112,7 @@ Create "New Build" in the [Culprit Finder](https://buildkite.com/bazel/culprit-f
 eg.
 ```
 PROJECT_NAME=rules_go
-PLATFORM_NAME=ubuntu1404
+PLATFORM_NAME=ubuntu1604
 GOOD_BAZEL_COMMIT=b6ea3b6caa7f379778e74da33d1bd0ff6477f963
 BAD_BAZEL_COMMIT=91eb3d207714af0ab1e5812252a0f10f40d6e4a8
 ```
@@ -203,7 +203,7 @@ The `build_flags` and `test_flags` fields contain lists of flags that should be 
 ```yaml
 ---
 tasks:
-  ubuntu1404:
+  ubuntu1804:
     build_flags:
     - "--define=ij_product=clion-latest"
     build_targets:
@@ -235,7 +235,7 @@ Most existing configuration use the legacy format with a "platforms" dictionary:
 ```yaml
 ---
 platforms:
-  ubuntu1404:
+  ubuntu1804:
     build_targets:
     - "..."
     test_targets:
@@ -248,7 +248,7 @@ The new format expects a "tasks" dictionary instead:
 ---
 tasks:
   arbitrary_id:
-    platform: ubuntu1404
+    platform: ubuntu1804
     build_targets:
     - "..."
     test_targets:
@@ -260,7 +260,7 @@ In this case we can omit the `platform` field since there is a 1:1 mapping betwe
 ```yaml
 ---
 tasks:
-  ubuntu1404:
+  ubuntu1804:
     build_targets:
     - "..."
     test_targets:
@@ -283,7 +283,7 @@ tasks:
   macos:
     build_targets:
     - "..."
-  ubuntu1404:
+  ubuntu1804:
     bazel: 0.18.0
     build_targets:
     - "..."

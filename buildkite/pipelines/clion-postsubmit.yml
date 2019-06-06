@@ -1,29 +1,20 @@
 ---
 platforms:
-  ubuntu1404:
-    build_flags:
-    - "--define=ij_product=clion-latest"
-    build_targets:
-    - clwb:clwb_bazel
-    test_flags:
-    - "--define=ij_product=clion-latest"
-    test_targets:
-    - ":clwb_tests"
   ubuntu1604:
     build_flags:
-    - "--define=ij_product=clion-latest"
+      - "--define=ij_product=clion-latest"
     build_targets:
-    - clwb:clwb_bazel
+      - clwb:clwb_bazel
     test_flags:
-    - "--define=ij_product=clion-latest"
+      - "--define=ij_product=clion-latest"
     test_targets:
-    - ":clwb_tests"
+      - ":clwb_tests"
   macos:
     build_flags:
-    - "--define=ij_product=clion-latest"
+      - "--define=ij_product=clion-latest"
     build_targets:
-    - clwb:clwb_bazel
+      - clwb:clwb_bazel
     test_flags:
-    - "--define=ij_product=clion-latest"
+      - "--define=ij_product=clion-latest"
     test_targets:
-    - ":clwb_tests"
+      - ":clwb_tests"

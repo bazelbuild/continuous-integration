@@ -393,7 +393,7 @@ PLATFORMS = {
         "name": "Ubuntu 16.04, OpenJDK 8",
         "emoji-name": ":ubuntu: 16.04 (OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": False,
+        "publish_binary": True,
         "docker-image": "gcr.io/bazel-public/ubuntu1604:java8",
         "python": "python3.6",
     },
@@ -401,7 +401,7 @@ PLATFORMS = {
         "name": "Ubuntu 18.04, OpenJDK 11",
         "emoji-name": ":ubuntu: 18.04 (OpenJDK 11)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": False,
+        "publish_binary": True,
         "docker-image": "gcr.io/bazel-public/ubuntu1804:java11",
         "python": "python3.6",
     },
@@ -972,10 +972,10 @@ def download_bazel_binary(dest_dir, platform):
 
 
 def download_bazel_binary_at_commit(dest_dir, platform, bazel_git_commit):
-    # We only build bazel binary on ubuntu14.04 for every bazel commit.
-    # It should be OK to use it on other ubuntu platforms.
-    if "ubuntu" in platform:
-        platform = "ubuntu1404"
+    # We have a few Ubuntu platforms for which we don't build binaries. It should be OK to use the
+    # ones from Ubuntu 16.04 on them.
+    if "ubuntu" in platform and not should_publish_binaries_for_platform(platform):
+        platform = "ubuntu1604"
     bazel_binary_path = os.path.join(dest_dir, "bazel.exe" if platform == "windows" else "bazel")
     try:
         execute_command(
