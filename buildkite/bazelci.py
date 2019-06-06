@@ -390,7 +390,7 @@ PLATFORMS = {
         "name": "Ubuntu 14.04, OpenJDK 8",
         "emoji-name": ":ubuntu: 14.04 (OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": True,
+        "publish_binary": [],
         "docker-image": "gcr.io/bazel-public/ubuntu1404:java8",
         "python": "python3.6",
     },
@@ -398,7 +398,7 @@ PLATFORMS = {
         "name": "Ubuntu 16.04, OpenJDK 8",
         "emoji-name": ":ubuntu: 16.04 (OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": True,
+        "publish_binary": ["ubuntu1404", "ubuntu1604", "linux"],
         "docker-image": "gcr.io/bazel-public/ubuntu1604:java8",
         "python": "python3.6",
     },
@@ -406,7 +406,7 @@ PLATFORMS = {
         "name": "Ubuntu 18.04, OpenJDK 11",
         "emoji-name": ":ubuntu: 18.04 (OpenJDK 11)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": True,
+        "publish_binary": ["ubuntu1804"],
         "docker-image": "gcr.io/bazel-public/ubuntu1804:java11",
         "python": "python3.6",
     },
@@ -414,7 +414,7 @@ PLATFORMS = {
         "name": "Ubuntu 18.04, no JDK",
         "emoji-name": ":ubuntu: 18.04 (no JDK)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": False,
+        "publish_binary": [],
         "docker-image": "gcr.io/bazel-public/ubuntu1804:nojava",
         "python": "python3.6",
     },
@@ -422,7 +422,7 @@ PLATFORMS = {
         "name": "macOS, OpenJDK 8",
         "emoji-name": ":darwin: (OpenJDK 8)",
         "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": True,
+        "publish_binary": ["macos"],
         "queue": "macos",
         "python": "python3.7",
     },
@@ -430,7 +430,7 @@ PLATFORMS = {
         "name": "Windows, OpenJDK 8",
         "emoji-name": ":windows: (OpenJDK 8)",
         "downstream-root": "d:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": True,
+        "publish_binary": ["windows"],
         "queue": "windows",
         "python": "python.exe",
     },
@@ -438,7 +438,7 @@ PLATFORMS = {
         "name": "RBE (Ubuntu 16.04, OpenJDK 8)",
         "emoji-name": ":gcloud: (OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": False,
+        "publish_binary": [],
         "docker-image": "gcr.io/bazel-public/ubuntu1604:java8",
         "python": "python3.6",
     },
@@ -2026,18 +2026,19 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
     task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
     platforms = [get_platform_for_task(t, tc) for t, tc in task_configs.items()]
-    configured_platforms = set(p for p in platforms if should_publish_binaries_for_platform(p))
+
+    # These are the platforms that the bazel_publish_binaries.yml config is actually building.
+    configured_platforms = set(filter(should_publish_binaries_for_platform, platforms))
 
     if len(task_configs) != len(configured_platforms):
         raise BuildkiteException(
             "Configuration for Bazel publish binaries pipeline must contain exactly one task per platform."
         )
 
-    expected_platforms = set(
-        name for name, platform in PLATFORMS.items() if platform["publish_binary"]
-    )
+    # These are the platforms that we want to build and publish according to this script.
+    expected_platforms = set(filter(should_publish_binaries_for_platform, PLATFORMS))
 
-    if configured_platforms != expected_platforms:
+    if expected_platforms.issubset(configured_platforms):
         raise BuildkiteException(
             "Bazel publish binaries pipeline needs to build Bazel for every commit on all publish_binary-enabled platforms."
         )
@@ -2430,19 +2431,25 @@ def upload_bazel_binaries():
     Returns a map of platform names to sha256 hashes of the corresponding Bazel binary.
     """
     hashes = {}
-    for platform in (name for name in PLATFORMS if PLATFORMS[name]["publish_binary"]):
+    for platform_name, platform in PLATFORMS:
+        if not should_publish_binaries_for_platform(platform_name):
+            continue
         tmpdir = tempfile.mkdtemp()
         try:
-            bazel_binary_path = download_bazel_binary(tmpdir, platform)
-            execute_command(
-                [
-                    gsutil_command(),
-                    "cp",
-                    bazel_binary_path,
-                    bazelci_builds_gs_url(platform, os.environ["BUILDKITE_COMMIT"]),
-                ]
-            )
-            hashes[platform] = sha256_hexdigest(bazel_binary_path)
+            bazel_binary_path = download_bazel_binary(tmpdir, platform_name)
+            # One platform that we build on can generate binaries for multiple platforms, e.g.
+            # the ubuntu1604 platform generates binaries for the "ubuntu1604" platform, but also
+            # for the generic "linux" platform.
+            for target_platform_name in platform["publish_binary"]:
+                execute_command(
+                    [
+                        gsutil_command(),
+                        "cp",
+                        bazel_binary_path,
+                        bazelci_builds_gs_url(target_platform_name, os.environ["BUILDKITE_COMMIT"]),
+                    ]
+                )
+                hashes[target_platform_name] = sha256_hexdigest(bazel_binary_path)
         finally:
             shutil.rmtree(tmpdir)
     return hashes
@@ -2461,10 +2468,10 @@ def try_publish_binaries(hashes, build_number, expected_generation):
         "git_commit": git_commit,
         "platforms": {},
     }
-    for platform in (name for name in PLATFORMS if PLATFORMS[name]["publish_binary"]):
+    for platform, sha256 in hashes.items():
         info["platforms"][platform] = {
             "url": bazelci_builds_download_url(platform, git_commit),
-            "sha256": hashes[platform],
+            "sha256": sha256,
         }
     tmpdir = tempfile.mkdtemp()
     try:
