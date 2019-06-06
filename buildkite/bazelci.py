@@ -740,8 +740,6 @@ def execute_commands(
         build_targets, test_targets = calculate_targets(
             task_config, platform, bazel_binary, build_only, test_only
         )
-        if not build_targets and not test_targets:
-            raise BuildkiteException("There are neither build nor test targets")
 
         include_json_profile = task_config.get("include_json_profile", [])
 
