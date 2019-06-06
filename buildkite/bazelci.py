@@ -2030,11 +2030,6 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
     # These are the platforms that the bazel_publish_binaries.yml config is actually building.
     configured_platforms = set(filter(should_publish_binaries_for_platform, platforms))
 
-    if len(task_configs) != len(configured_platforms):
-        raise BuildkiteException(
-            "Configuration for Bazel publish binaries pipeline must contain exactly one task per platform."
-        )
-
     # These are the platforms that we want to build and publish according to this script.
     expected_platforms = set(filter(should_publish_binaries_for_platform, PLATFORMS))
 
