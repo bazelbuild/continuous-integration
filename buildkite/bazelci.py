@@ -2418,7 +2418,7 @@ def upload_bazel_binaries():
     Returns a map of platform names to sha256 hashes of the corresponding Bazel binary.
     """
     hashes = {}
-    for platform_name, platform in PLATFORMS:
+    for platform_name, platform in PLATFORMS.items():
         if not should_publish_binaries_for_platform(platform_name):
             continue
         tmpdir = tempfile.mkdtemp()
