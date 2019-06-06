@@ -86,7 +86,6 @@ systemctl start docker
 
 # Pull some known images so that we don't have to download / extract them on each CI job.
 gcloud auth configure-docker --quiet
-docker pull "gcr.io/bazel-public/ubuntu1404:java8" &
 docker pull "gcr.io/bazel-public/ubuntu1604:java8" &
 docker pull "gcr.io/bazel-public/ubuntu1804:java11" &
 docker pull "gcr.io/bazel-public/ubuntu1804:nojava" &

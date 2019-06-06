@@ -386,14 +386,6 @@ DOWNSTREAM_PROJECTS = {
 # the platform name in a human readable format, and a the buildkite-agent's
 # working directory.
 PLATFORMS = {
-    "ubuntu1404": {
-        "name": "Ubuntu 14.04, OpenJDK 8",
-        "emoji-name": ":ubuntu: 14.04 (OpenJDK 8)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": [],
-        "docker-image": "gcr.io/bazel-public/ubuntu1404:java8",
-        "python": "python3.6",
-    },
     "ubuntu1604": {
         "name": "Ubuntu 16.04, OpenJDK 8",
         "emoji-name": ":ubuntu: 16.04 (OpenJDK 8)",
