@@ -2025,7 +2025,7 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
     # These are the platforms that we want to build and publish according to this script.
     expected_platforms = set(filter(should_publish_binaries_for_platform, PLATFORMS))
 
-    if expected_platforms.issubset(configured_platforms):
+    if not expected_platforms.issubset(configured_platforms):
         raise BuildkiteException(
             "Bazel publish binaries pipeline needs to build Bazel for every commit on all publish_binary-enabled platforms."
         )
