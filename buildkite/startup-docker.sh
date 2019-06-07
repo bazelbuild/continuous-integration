@@ -95,6 +95,18 @@ wait
 # Allow the Buildkite agent to access Docker images on GCR.
 sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
 
+# Write the Buildkite agent's systemd configuration.
+mkdir -p /etc/systemd/system/buildkite-agent.service.d
+cat > /etc/systemd/system/buildkite-agent.service.d/override.conf <<'EOF'
+[Service]
+# This allows us to run ExecStartPre and ExecStartPost steps with root permissions.
+PermissionsStartOnly=true
+# Disable tasks accounting, because Bazel is prone to run into resource limits there.
+# This fixes the "cgroup: fork rejected by pids controller" error that some CI jobs triggered.
+TasksAccounting=no
+EOF
+systemctl daemon-reload
+
 # Write the Buildkite agent configuration.
 cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
 token="${BUILDKITE_TOKEN}"
@@ -105,6 +117,8 @@ build-path="/var/lib/buildkite-agent/builds"
 git-mirrors-path="/var/lib/gitmirrors"
 hooks-path="/etc/buildkite-agent/hooks"
 plugins-path="/etc/buildkite-agent/plugins"
+disconnect-after-job=false
+disconnect-after-idle-timeout=900
 EOF
 
 # Add the Buildkite agent hooks.

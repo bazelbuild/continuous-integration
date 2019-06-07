@@ -117,19 +117,11 @@ build-path="d:\b"
 hooks-path="c:\buildkite\hooks"
 plugins-path="c:\buildkite\plugins"
 git-mirrors-path="c:\buildkite\bazelbuild"
-disconnect-after-job=true
-disconnect-after-job-timeout=900
+disconnect-after-job=false
+disconnect-after-idle-timeout=900
 "@
 [System.IO.File]::WriteAllLines("${buildkite_agent_root}\buildkite-agent.cfg", $buildkite_agent_config)
 
 ## Start the Buildkite agent service.
-try {
-    Write-Host "Starting Buildkite agent as user ${buildkite_username}..."
-    & nssm start "buildkite-agent"
-
-    Write-Host "Waiting for Buildkite agent to exit..."
-    While ((Get-Service "buildkite-agent").Status -eq "Running") { Start-Sleep -Seconds 1 }
-} finally {
-    Write-Host "Buildkite agent has exited, shutting down."
-    Stop-Computer -Force
-}
+Write-Host "Starting Buildkite agent as user ${buildkite_username}..."
+& nssm start "buildkite-agent"

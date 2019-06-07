@@ -715,6 +715,7 @@ def execute_commands(
     # the latest Bazel version through Bazelisk.
     if incompatible_flags:
         bazel_version = None
+
     if not bazel_version:
         # The last good version of Bazel can be specified in an emergency file.
         # However, we only use last_good_bazel for pipelines that do not
@@ -790,6 +791,9 @@ def execute_commands(
 
         print_environment_variables_info()
 
+        if platform == "windows" or needs_clean:
+            execute_bazel_clean(bazel_binary, platform)
+
         if incompatible_flags:
             print_expanded_group("Build and test with the following incompatible flags:")
             for flag in incompatible_flags:
@@ -801,9 +805,6 @@ def execute_commands(
 
         if task_config.get("sauce"):
             sc_process = start_sauce_connect_proxy(platform, tmpdir)
-
-        if needs_clean:
-            execute_bazel_clean(bazel_binary, platform)
 
         build_targets, test_targets = calculate_targets(
             task_config, platform, bazel_binary, build_only, test_only
@@ -1349,12 +1350,11 @@ def compute_flags(platform, flags, incompatible_flags, bep_file, enable_remote_c
 
 
 def execute_bazel_clean(bazel_binary, platform):
-    print_expanded_group(":bazel: Clean")
-
+    print_collapsed_group(':sparkles: Running "bazel clean"')
     try:
         execute_command([bazel_binary] + common_startup_flags(platform) + ["clean", "--expunge"])
     except subprocess.CalledProcessError as e:
-        raise BuildkiteException("bazel clean failed with exit code {}".format(e.returncode))
+        handle_bazel_failure(e, "clean")
 
 
 def execute_bazel_build(
