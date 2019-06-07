@@ -56,7 +56,7 @@ RUN dpkg --add-architecture i386 && \
     echo "Installing packages required by Android emulator" && \
     apt-get -qqy install cpio cpu-checker lsof qemu-kvm qemu-system-x86 unzip xvfb && \
     echo "Installing packages required by Bazel release process" && \
-    apt-get -qqy install devscripts gnupg pandoc reprepro ssmtp && \
+    apt-get -qqy install devscripts gnupg pandoc reprepro && \
     echo "Installing packages required by C++ coverage tests" && \
     apt-get -qqy install lcov llvm && \
     echo "Installing packages required by Swift toolchain" && \
@@ -161,7 +161,7 @@ RUN dpkg --add-architecture i386 && \
     echo "Installing packages required by Android emulator" && \
     apt-get -qqy install cpio cpu-checker lsof qemu-kvm qemu-system-x86 unzip xvfb && \
     echo "Installing packages required by Bazel release process" && \
-    apt-get -qqy install devscripts gnupg pandoc reprepro ssmtp && \
+    apt-get -qqy install devscripts gnupg pandoc reprepro && \
     echo "Installing packages required by C++ coverage tests" && \
     apt-get -qqy install lcov llvm && \
     echo "Installing packages required by Swift toolchain" && \
