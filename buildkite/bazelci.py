@@ -363,21 +363,20 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
 }
 
 DOWNSTREAM_PROJECTS_TESTING = {
-    "Bazel": {
-        "git_repository": "https://github.com/bazelbuild/bazel.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/postsubmit.yml",
-        "pipeline_slug": "bazel-bazel",
-    },
-    "Bazelisk": {
-        "git_repository": "https://github.com/bazelbuild/bazelisk.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazelisk/master/.bazelci/config.yml",
-        "pipeline_slug": "bazelisk",
-    },
+    "Bazel": DOWNSTREAM_PROJECTS_PRODUCTION["Bazel"],
+    "Bazelisk": DOWNSTREAM_PROJECTS_PRODUCTION["Bazelisk"],
     "Federation": {
         "git_repository": "https://github.com/fweikert/bazel-federation.git",
         "http_config": "https://raw.githubusercontent.com/fweikert/bazel-federation/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-federation",
     },
+    "rules_docker": DOWNSTREAM_PROJECTS_PRODUCTION["rules_docker"],
+    "rules_go": DOWNSTREAM_PROJECTS_PRODUCTION["rules_go"],
+    "rules_groovy": DOWNSTREAM_PROJECTS_PRODUCTION["rules_groovy"],
+    "rules_kotlin": DOWNSTREAM_PROJECTS_PRODUCTION["rules_kotlin"],
+    "rules_nodejs": DOWNSTREAM_PROJECTS_PRODUCTION["rules_nodejs"],
+    "rules_rust": DOWNSTREAM_PROJECTS_PRODUCTION["rules_rust"],
+    "rules_scala": DOWNSTREAM_PROJECTS_PRODUCTION["rules_scala"],
 }
 
 DOWNSTREAM_PROJECTS = {
