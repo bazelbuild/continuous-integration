@@ -1206,14 +1206,6 @@ def remote_caching_flags(platform):
         % platform_cache_digest.hexdigest(),
     ]
 
-    # Use "Remote Builds without the Bytes" to increase performance.
-    # (See https://blog.bazel.build/2019/05/07/builds-without-bytes.html)
-    flags += [
-        "--experimental_inmemory_jdeps_files",
-        "--experimental_inmemory_dotd_files",
-        "--experimental_remote_download_outputs=toplevel",
-    ]
-
     return flags
 
 
@@ -1318,14 +1310,6 @@ def rbe_flags(original_flags, accept_cached):
         "--java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
         "--crosstool_top=@buildkite_config//cc:toolchain",
         "--action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1",
-    ]
-
-    # Use "Remote Builds without the Bytes" to increase performance.
-    # (See https://blog.bazel.build/2019/05/07/builds-without-bytes.html)
-    flags += [
-        "--experimental_inmemory_jdeps_files",
-        "--experimental_inmemory_dotd_files",
-        "--experimental_remote_download_outputs=toplevel",
     ]
 
     # Platform flags:
