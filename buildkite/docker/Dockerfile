@@ -123,6 +123,12 @@ RUN export PYTHON_VERSION="3.6.8" && \
 ENV SWIFT_HOME "/opt/swift-4.2.1-RELEASE-ubuntu16.04"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
 
+### Install Go.
+RUN curl -L https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz | tar -C /usr/local -xz
+ENV GO_HOME "/usr/local/go"
+ENV PATH "${PATH}:${GO_HOME}/bin"
+RUN go version
+
 FROM ubuntu1604-nojava AS ubuntu1604-java8
 RUN apt-get -qqy update && \
     apt-get -qqy install openjdk-8-jdk && \
@@ -204,6 +210,12 @@ RUN pip3 install requests uritemplate pyyaml github3.py
 ### Install Swift toolchain (required by rules_swift).
 ENV SWIFT_HOME "/opt/swift-4.2.1-RELEASE-ubuntu18.04"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
+
+### Install Go.
+RUN curl -L https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz | tar -C /usr/local -xz
+ENV GO_HOME "/usr/local/go"
+ENV PATH "${PATH}:${GO_HOME}/bin"
+RUN go version
 
 FROM ubuntu1804-nojava AS ubuntu1804-java11
 RUN apt-get -qqy update && \
