@@ -1111,10 +1111,12 @@ def remote_caching_flags(platform):
             # Platform name:
             platform.encode("utf-8")
         ]
-        # Use GCS for caching builds running on GCE.
+        # Use RBE for caching builds running on GCE.
         flags = [
             "--google_default_credentials",
-            "--remote_cache=https://storage.googleapis.com/bazel-untrusted-buildkite-cache",
+            "--remote_cache=remotebuildexecution.googleapis.com",
+            "--remote_instance_name=projects/{}/instances/default_instance".format(CLOUD_PROJECT),
+            "--tls_enabled=true",
         ]
 
     platform_cache_digest = hashlib.sha256()
@@ -1690,7 +1692,6 @@ def print_project_pipeline(
             h = hash_task_config(task, task_config)
             if h in config_hashes:
                 continue
-            
             config_hashes.add(h)
 
         shards = task_config.get("shards", "1")
