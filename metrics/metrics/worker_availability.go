@@ -11,6 +11,7 @@ import (
 
 type WorkerAvailability struct {
 	client  *clients.BuildkiteClient
+	orgs    []string
 	columns []Column
 }
 
@@ -24,22 +25,24 @@ func (wa *WorkerAvailability) Columns() []Column {
 
 func (wa *WorkerAvailability) Collect() (data.DataSet, error) {
 	ts := time.Now().Unix()
-	allPlatforms, err := wa.getIdleAndBusyCountsPerPlatform()
-	if err != nil {
-		return nil, err
-	}
 	result := data.CreateDataSet(GetColumnNames(wa.columns))
-	for platform, counts := range allPlatforms {
-		err = result.AddRow(ts, platform, counts[0], counts[1])
+	for _, org := range wa.orgs {
+		allPlatforms, err := wa.getIdleAndBusyCountsPerPlatform(org)
 		if err != nil {
 			return nil, err
+		}
+		for platform, counts := range allPlatforms {
+			err = result.AddRow(ts, platform, counts[0], counts[1])
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	return result, nil
 }
 
-func (wa *WorkerAvailability) getIdleAndBusyCountsPerPlatform() (map[string]*[2]int, error) {
-	agents, err := wa.client.GetAgents()
+func (wa *WorkerAvailability) getIdleAndBusyCountsPerPlatform(org string) (map[string]*[2]int, error) {
+	agents, err := wa.client.GetAgents(org)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot retrieve agents from Buildkite: %v", err)
 	}
@@ -70,8 +73,8 @@ func getPlatformForHost(hostName string) (string, error) {
 	return hostName[:pos], nil
 }
 
-// CREATE TABLE worker_availability (timestamp BIGINT, platform VARCHAR(255), idle_count INT, busy_count INT, PRIMARY KEY(timestamp, platform));
-func CreateWorkerAvailability(client *clients.BuildkiteClient) *WorkerAvailability {
-	columns := []Column{Column{"timestamp", true}, Column{"platform", true}, Column{"idle_count", false}, Column{"busy_count", false}}
-	return &WorkerAvailability{client: client, columns: columns}
+// CREATE TABLE worker_availability (timestamp BIGINT, org VARCHAR(255), platform VARCHAR(255), idle_count INT, busy_count INT, PRIMARY KEY(timestamp, org, platform));
+func CreateWorkerAvailability(client *clients.BuildkiteClient, orgs ...string) *WorkerAvailability {
+	columns := []Column{Column{"timestamp", true}, Column{"org", true}, Column{"platform", true}, Column{"idle_count", false}, Column{"busy_count", false}}
+	return &WorkerAvailability{client: client, orgs: orgs, columns: columns}
 }

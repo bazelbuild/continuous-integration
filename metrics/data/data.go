@@ -56,3 +56,20 @@ func GetRowAsStrings(row []interface{}) []string {
 type StackDriverTimeSeriesDataSet interface {
 	CreateTimeSeriesRequest(projectID string) *monitoringpb.CreateTimeSeriesRequest
 }
+
+type PipelineID struct {
+	Org  string
+	Slug string
+}
+
+func CreatePipelineID(value string) (*PipelineID, error) {
+	parts := strings.Split(value, "/")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("Invalid pipeline ID '%s'. Pipelines must be specified as 'org_slug/pipeline_slug'.", value)
+	}
+	return &PipelineID{Org: parts[0], Slug: parts[1]}, nil
+}
+
+func (pid *PipelineID) String() string {
+	return fmt.Sprintf("%s/%s", pid.Org, pid.Slug)
+}

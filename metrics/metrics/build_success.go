@@ -9,7 +9,7 @@ import (
 
 type BuildSuccess struct {
 	client    *clients.BuildkiteClient
-	pipelines []string
+	pipelines []*data.PipelineID
 	columns   []Column
 	builds    int
 }
@@ -38,7 +38,7 @@ func (bs *BuildSuccess) Collect() (data.DataSet, error) {
 				}
 				mergeState(platformStates, platform, *job.State)
 			}
-			err := result.AddRow(pipeline, *build.Number, getState(platformStates, "linux"), getState(platformStates, "macos"), getState(platformStates, "windows"), getState(platformStates, "rbe"))
+			err := result.AddRow(pipeline.Org, pipeline.Slug, *build.Number, getState(platformStates, "linux"), getState(platformStates, "macos"), getState(platformStates, "windows"), getState(platformStates, "rbe"))
 			if err != nil {
 				return nil, fmt.Errorf("Failed to add result for build %d: %v", *build.Number, err)
 			}
@@ -103,8 +103,8 @@ func getState(platformStates map[string]*state, platform string) string {
 	return state.Name
 }
 
-// CREATE TABLE build_success (pipeline VARCHAR(255), build INT, linux VARCHAR(255), macos VARCHAR(255), windows VARCHAR(255), rbe VARCHAR(255), PRIMARY KEY(pipeline, build));
-func CreateBuildSuccess(client *clients.BuildkiteClient, builds int, pipelines ...string) *BuildSuccess {
-	columns := []Column{Column{"pipeline", true}, Column{"build", true}, Column{"linux", false}, Column{"macos", false}, Column{"windows", false}, Column{"rbe", false}}
+// CREATE TABLE build_success (org VARCHAR(255), pipeline VARCHAR(255), build INT, linux VARCHAR(255), macos VARCHAR(255), windows VARCHAR(255), rbe VARCHAR(255), PRIMARY KEY(org, pipeline, build));
+func CreateBuildSuccess(client *clients.BuildkiteClient, builds int, pipelines ...*data.PipelineID) *BuildSuccess {
+	columns := []Column{Column{"org", true}, Column{"pipeline", true}, Column{"build", true}, Column{"linux", false}, Column{"macos", false}, Column{"windows", false}, Column{"rbe", false}}
 	return &BuildSuccess{client: client, pipelines: pipelines, columns: columns, builds: builds}
 }
