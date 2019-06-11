@@ -55,9 +55,9 @@ func (mp *MacPerformance) Collect() (data.DataSet, error) {
 	return result, nil
 }
 
-// CREATE TABLE mac_performance (pipeline VARCHAR(255), build INT, wait_time_seconds FLOAT, run_time_seconds FLOAT, skipped BOOL, PRIMARY KEY(pipeline, build));
-func CreateMacPerformance(client *clients.BuildkiteClient, lastNBuilds int, pipelines ...string) *MacPerformance {
-	columns := []Column{Column{"pipeline", true}, Column{"build", true}, Column{"wait_time_seconds", false}, Column{"run_time_seconds", false}, Column{"skipped", false}}
+// CREATE TABLE mac_performance (org VARCHAR(255), pipeline VARCHAR(255), build INT, wait_time_seconds FLOAT, run_time_seconds FLOAT, skipped BOOL, PRIMARY KEY(org, pipeline, build));
+func CreateMacPerformance(client *clients.BuildkiteClient, lastNBuilds int, pipelines ...*data.PipelineID) *MacPerformance {
+	columns := []Column{Column{"org", true}, Column{"pipeline", true}, Column{"build", true}, Column{"wait_time_seconds", false}, Column{"run_time_seconds", false}, Column{"skipped", false}}
 	perfMetric := CreatePipelinePerformance(client, lastNBuilds, pipelines...)
 	return &MacPerformance{perfMetric: perfMetric, columns: columns}
 }

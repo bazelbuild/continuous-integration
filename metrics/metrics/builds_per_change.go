@@ -12,7 +12,7 @@ import (
 type BuildsPerChange struct {
 	client    *clients.BuildkiteClient
 	columns   []Column
-	pipelines []string
+	pipelines []*data.PipelineID
 	builds    int
 }
 
@@ -47,11 +47,14 @@ func (bps *BuildsPerChange) Collect() (data.DataSet, error) {
 			}
 			buildsPerChange[change] += 1
 		}
-		buildsPerPipeline[pipeline] = buildsPerChange
+		buildsPerPipeline[pipeline.String()] = buildsPerChange
 	}
 	for pipeline, buildsPerChange := range buildsPerPipeline {
 		for change, builds := range buildsPerChange {
-			err := result.AddRow(pipeline, change, builds)
+			pid, err := data.CreatePipelineID(pipeline)
+			if err != nil {
+				err = result.AddRow(pid.Org, pid.Slug, change, builds)
+			}
 			if err != nil {
 				return nil, fmt.Errorf("Failed to add result for change %d and pipeline %s: %v", change, pipeline, err)
 			}
@@ -78,7 +81,7 @@ func getChangeNumber(build buildkite.Build) (int, error) {
 }
 
 // CREATE TABLE builds_per_change (pipeline VARCHAR(255), change INT, builds INT, PRIMARY KEY(pipeline, change));
-func CreateBuildsPerChange(client *clients.BuildkiteClient, builds int, pipelines ...string) *BuildsPerChange {
+func CreateBuildsPerChange(client *clients.BuildkiteClient, builds int, pipelines ...*data.PipelineID) *BuildsPerChange {
 	columns := []Column{Column{"pipeline", true}, Column{"change", true}, Column{"builds", false}}
 	return &BuildsPerChange{client: client, pipelines: pipelines, columns: columns, builds: builds}
 }

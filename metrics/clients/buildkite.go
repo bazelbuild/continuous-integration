@@ -4,33 +4,34 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/fweikert/continuous-integration/metrics/data"
+
 	"github.com/fweikert/go-buildkite/buildkite"
 )
 
 type BuildkiteClient struct {
-	org    string
 	client *buildkite.Client
 }
 
-func CreateBuildkiteClient(org string, apiToken string, debug bool) (*BuildkiteClient, error) {
+func CreateBuildkiteClient(apiToken string, debug bool) (*BuildkiteClient, error) {
 	tokenConfig, err := buildkite.NewTokenConfig(apiToken, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Could not create Buildkite config: %v", err)
 	}
 
 	client := buildkite.NewClient(tokenConfig.Client())
-	return &BuildkiteClient{org: org, client: client}, nil
+	return &BuildkiteClient{client: client}, nil
 }
 
-func (client *BuildkiteClient) GetMostRecentBuilds(pipeline string, atLeastNBuilds int) ([]buildkite.Build, error) {
+func (client *BuildkiteClient) GetMostRecentBuilds(pipeline *data.PipelineID, atLeastNBuilds int) ([]buildkite.Build, error) {
 	var listFunc func(opt *buildkite.BuildsListOptions) ([]buildkite.Build, *buildkite.Response, error)
-	if pipeline == "all" {
+	if pipeline.Slug == "all" {
 		listFunc = func(opt *buildkite.BuildsListOptions) ([]buildkite.Build, *buildkite.Response, error) {
-			return client.client.Builds.ListByOrg(client.org, opt)
+			return client.client.Builds.ListByOrg(pipeline.Org, opt)
 		}
 	} else {
 		listFunc = func(opt *buildkite.BuildsListOptions) ([]buildkite.Build, *buildkite.Response, error) {
-			return client.client.Builds.ListByPipeline(client.org, pipeline, opt)
+			return client.client.Builds.ListByPipeline(pipeline.Org, pipeline.Slug, opt)
 		}
 	}
 
@@ -56,10 +57,10 @@ func (client *BuildkiteClient) GetMostRecentBuilds(pipeline string, atLeastNBuil
 	return builds, nil
 }
 
-func (client *BuildkiteClient) GetAgents() ([]buildkite.Agent, error) {
+func (client *BuildkiteClient) GetAgents(org string) ([]buildkite.Agent, error) {
 	list := func(opt buildkite.ListOptions) ([]interface{}, *buildkite.Response, error) {
 		agentOpt := buildkite.AgentListOptions{ListOptions: opt}
-		agents, response, err := client.client.Agents.List(client.org, &agentOpt)
+		agents, response, err := client.client.Agents.List(org, &agentOpt)
 		interfaces := make([]interface{}, len(agents))
 		for i, a := range agents {
 			interfaces[i] = a

@@ -13,7 +13,7 @@ type Flakiness struct {
 	columns   []Column
 	gcsBucket string
 	gcsSuffix string
-	pipelines []string
+	pipelines []*data.PipelineID
 }
 
 func (f *Flakiness) Name() string {
@@ -27,7 +27,7 @@ func (f *Flakiness) Columns() []Column {
 func (f *Flakiness) Collect() (data.DataSet, error) {
 	result := data.CreateDataSet(GetColumnNames(f.columns))
 	for _, pipeline := range f.pipelines {
-		contents, err := f.client.ReadAllFiles(f.gcsBucket, f.gcsSuffix+pipeline)
+		contents, err := f.client.ReadAllFiles(f.gcsBucket, f.gcsSuffix+pipeline.Slug)
 		if err != nil {
 			return nil, err
 		}
@@ -45,7 +45,7 @@ func (f *Flakiness) Collect() (data.DataSet, error) {
 
 // TODO(fweikert): use "build INT" once we store build numbers instead of build IDs.
 // CREATE TABLE flakiness (pipeline VARCHAR(255), build VARCHAR(255), target VARCHAR(255), passed_count INT, failed_count INT, PRIMARY KEY(pipeline, build, target));
-func CreateFlakiness(client *clients.GcsClient, gcsBucket, gcsBasePath string, pipelines ...string) *Flakiness {
+func CreateFlakiness(client *clients.GcsClient, gcsBucket, gcsBasePath string, pipelines ...*data.PipelineID) *Flakiness {
 	columns := []Column{Column{"pipeline", true}, Column{"build", true}, Column{"target", true}, Column{"passed_count", false}, Column{"failed_count", false}}
 	gcsSuffix := gcsBasePath
 	if !strings.HasSuffix(gcsBasePath, "/") {
