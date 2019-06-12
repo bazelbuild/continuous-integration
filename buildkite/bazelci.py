@@ -400,6 +400,14 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7:java8",
         "python": "python3.6",
     },
+    "debian10": {
+        "name": "Debian Buster, OpenJDK 11",
+        "emoji-name": ":debian: Buster (OpenJDK 11)",
+        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian10:java11",
+        "python": "python3.7",
+    },
     "ubuntu1604": {
         "name": "Ubuntu 16.04, OpenJDK 8",
         "emoji-name": ":ubuntu: 16.04 (OpenJDK 8)",

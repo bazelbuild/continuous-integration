@@ -1,4 +1,4 @@
-FROM debian:unstable as debian-unstable-nojava
+FROM debian:10 as debian10-nojava
 ENV DEBIAN_FRONTEND="noninteractive"
 ARG BUILDARCH
 COPY --from=gcr.io/bazel-public/base:bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
@@ -21,6 +21,8 @@ RUN dpkg --add-architecture i386 && \
     apt-get -qqy install automake autotools-dev cmake libtool m4 ninja-build && \
     echo "Installing packages required by Android emulator" && \
     apt-get -qqy install cpio cpu-checker lsof qemu-kvm qemu-system-x86 unzip xvfb && \
+    echo "Installing packages required by Bazel release process" && \
+    apt-get -qqy install devscripts gnupg pandoc reprepro && \
     echo "Installing packages required by C++ coverage tests" && \
     apt-get -qqy install lcov llvm && \
     echo "Installing packages required by Swift toolchain" && \
@@ -83,7 +85,7 @@ ENV PATH "${PATH}:${GO_HOME}/bin"
 ENV SWIFT_HOME "/opt/swift-4.2.1-RELEASE-ubuntu18.04"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
 
-FROM debian-unstable-nojava AS debian-unstable-java11
+FROM debian10-nojava AS debian10-java11
 RUN apt-get -qqy update && \
     apt-get -qqy install openjdk-11-jdk && \
     rm -rf /var/lib/apt/lists/*
