@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/fweikert/continuous-integration/metrics/data"
-
 	"github.com/fweikert/continuous-integration/metrics/clients"
 	"github.com/fweikert/continuous-integration/metrics/metrics"
 	"github.com/fweikert/continuous-integration/metrics/publishers"
@@ -69,11 +67,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to set up Cloud SQL publisher: %v", err)
 		}
-	*/
 
-	pid := &data.PipelineID{Org: "bazel", Slug: "google-bazel-presubmit"}
-
-	/*
 		stackdriver := publishers.CreateStackdriverPublisher(stackdriverClient, *projectID)
 	*/
 
@@ -94,10 +88,12 @@ func main() {
 	*/
 
 	// TODO(fweikert): use real settings instead of hardcoded values
-	flakiness := metrics.CreateFlakiness(gcs, "bazel-buildkite-stats", "flaky-tests-bep", pid) // TODO: pipelines...)
+	flakiness := metrics.CreateFlakiness(gcs, "bazel-buildkite-stats", "flaky-tests-bep", pipelines...)
 	srv.AddMetric(flakiness, 60, stdout)
 
 	/*
+		pid := &data.PipelineID{Org: "bazel", Slug: "google-bazel-presubmit"}
+
 		macPerformance := metrics.CreateMacPerformance(bk, 20, pid) // TODO: pipelines...)
 		srv.AddMetric(macPerformance, 60, stdout)
 
