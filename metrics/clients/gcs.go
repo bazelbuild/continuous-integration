@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 
 	"cloud.google.com/go/storage"
 	"google.golang.org/api/iterator"
@@ -23,6 +24,7 @@ func CreateGcsClient() (*GcsClient, error) {
 }
 
 func (g *GcsClient) ReadAllFiles(bucket, directory string) (map[string][]byte, error) {
+	log.Printf("Reading all files in bucket %s and directory %s", bucket, directory)
 	files, err := g.listFiles(bucket, directory)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to list files in directory %s in bucket %s: %v", directory, bucket, err)
