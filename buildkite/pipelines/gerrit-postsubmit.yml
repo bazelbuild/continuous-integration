@@ -1,6 +1,8 @@
 ---
 platforms:
   ubuntu1604:
+    shell_commands:
+      - "npm install"
     build_targets:
       - "//:release"
     test_flags:
@@ -8,6 +10,8 @@ platforms:
     test_targets:
       - "//..."
   ubuntu1804:
+    shell_commands:
+      - "npm install"
     build_flags:
       - "--define=ABSOLUTE_JAVABASE=/usr/lib/jvm/java-11-openjdk-amd64"
       - "--host_javabase=@bazel_tools//tools/jdk:absolute_javabase"
@@ -24,6 +28,8 @@ platforms:
     test_targets:
       - "//..."
   macos:
+    shell_commands:
+      - "npm install"
     build_targets:
       - "//:release"
     test_flags:
