@@ -47,22 +47,24 @@ func main() {
 		log.Fatalf("No pipelines were specified.")
 	}
 
-	bk, err := clients.CreateBuildkiteClient(settings.BuildkiteApiToken, settings.BuildkiteDebug)
-	if err != nil {
-		log.Fatalf("Cannot create Buildkite client: %v", err)
-	}
+	/*
+		bk, err := clients.CreateBuildkiteClient(settings.BuildkiteApiToken, settings.BuildkiteDebug)
+		if err != nil {
+			log.Fatalf("Cannot create Buildkite client: %v", err)
+		}
+	*/
 
 	gcs, err := clients.CreateGcsClient()
 	if err != nil {
 		log.Fatalf("Cannot create GCS client: %v", err)
 	}
 
-	stackdriverClient, err := clients.CreateStackdriverClient()
-	if err != nil {
-		log.Fatalf("Cannot create Stackdriver client: %v", err)
-	}
-
 	/*
+		stackdriverClient, err := clients.CreateStackdriverClient()
+		if err != nil {
+			log.Fatalf("Cannot create Stackdriver client: %v", err)
+		}
+
 		cloudSql, err := publishers.CreateCloudSqlPublisher(settings.CloudSqlUser, settings.CloudSqlPassword, settings.CloudSqlInstance, settings.CloudSqlDatabase, settings.CloudSqlLocalPort)
 		if err != nil {
 			log.Fatalf("Failed to set up Cloud SQL publisher: %v", err)
@@ -71,45 +73,51 @@ func main() {
 
 	pid := &data.PipelineID{Org: "bazel", Slug: "google-bazel-presubmit"}
 
-	stackdriver := publishers.CreateStackdriverPublisher(stackdriverClient, *projectID)
+	/*
+		stackdriver := publishers.CreateStackdriverPublisher(stackdriverClient, *projectID)
+	*/
 
 	stdout := publishers.CreateStdoutPublisher(publishers.Csv)
 
 	srv := service.CreateService(handleError)
 
-	// TODO: support multiple organizations
-	platformLoad := metrics.CreatePlatformLoad(bk, 100, settings.BuildkiteOrgs...)
-	srv.AddMetric(platformLoad, 60, stackdriver)
+	/*
+		// TODO: support multiple organizations
+		platformLoad := metrics.CreatePlatformLoad(bk, 100, settings.BuildkiteOrgs...)
+		srv.AddMetric(platformLoad, 60, stackdriver)
 
-	buildsPerChange := metrics.CreateBuildsPerChange(bk, 500, pipelines...)
-	srv.AddMetric(buildsPerChange, 60, stdout)
+		buildsPerChange := metrics.CreateBuildsPerChange(bk, 500, pipelines...)
+		srv.AddMetric(buildsPerChange, 60, stdout)
 
-	buildSuccess := metrics.CreateBuildSuccess(bk, 200, pipelines...)
-	srv.AddMetric(buildSuccess, 60, stdout)
+		buildSuccess := metrics.CreateBuildSuccess(bk, 200, pipelines...)
+		srv.AddMetric(buildSuccess, 60, stdout)
+	*/
 
 	// TODO(fweikert): use real settings instead of hardcoded values
 	flakiness := metrics.CreateFlakiness(gcs, "bazel-buildkite-stats", "flaky-tests-bep", pid) // TODO: pipelines...)
 	srv.AddMetric(flakiness, 60, stdout)
 
-	macPerformance := metrics.CreateMacPerformance(bk, 20, pid) // TODO: pipelines...)
-	srv.AddMetric(macPerformance, 60, stdout)
+	/*
+		macPerformance := metrics.CreateMacPerformance(bk, 20, pid) // TODO: pipelines...)
+		srv.AddMetric(macPerformance, 60, stdout)
 
-	pipelinePerformance := metrics.CreatePipelinePerformance(bk, 20, pipelines...)
-	srv.AddMetric(pipelinePerformance, 60, stdout)
+		pipelinePerformance := metrics.CreatePipelinePerformance(bk, 20, pipelines...)
+		srv.AddMetric(pipelinePerformance, 60, stdout)
 
-	platformSignificance := metrics.CreatePlatformSignificance(bk, 100, pipelines...)
-	srv.AddMetric(platformSignificance, 24*60, stdout)
+		platformSignificance := metrics.CreatePlatformSignificance(bk, 100, pipelines...)
+		srv.AddMetric(platformSignificance, 24*60, stdout)
 
-	platformUsage := metrics.CreatePlatformUsage(bk, 100, settings.BuildkiteOrgs...)
-	srv.AddMetric(platformUsage, 60, stdout)
+		platformUsage := metrics.CreatePlatformUsage(bk, 100, settings.BuildkiteOrgs...)
+		srv.AddMetric(platformUsage, 60, stdout)
 
-	releaseDownloads := metrics.CreateReleaseDownloads(settings.GitHubOrg,
-		settings.GitHubRepo,
-		settings.GitHubApiToken, megaByte)
-	srv.AddMetric(releaseDownloads, 12*60, stdout)
+		releaseDownloads := metrics.CreateReleaseDownloads(settings.GitHubOrg,
+			settings.GitHubRepo,
+			settings.GitHubApiToken, megaByte)
+		srv.AddMetric(releaseDownloads, 12*60, stdout)
 
-	workerAvailability := metrics.CreateWorkerAvailability(bk, settings.BuildkiteOrgs...)
-	srv.AddMetric(workerAvailability, 60, stdout)
+		workerAvailability := metrics.CreateWorkerAvailability(bk, settings.BuildkiteOrgs...)
+		srv.AddMetric(workerAvailability, 60, stdout)
+	*/
 
 	if *testMode {
 		log.Println("[Test mode] Running all jobs exactly once...")
