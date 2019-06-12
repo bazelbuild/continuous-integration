@@ -91,7 +91,7 @@ func getBuildNumber(fileName string) (int, error) {
 			return build, nil
 		}
 	}
-	return 0, fmt.Errorf("Flakiness data file names must be 'some_path/<build_number.json>. Invalid given value: %s", fileName)
+	return 0, fmt.Errorf("Flakiness data file names must be 'some_path/<build_number.json>'. Invalid given value: '%s'", fileName)
 }
 
 type message struct {
