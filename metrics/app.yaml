@@ -4,7 +4,6 @@ api_version: go1
 
 beta_settings:
   cloud_sql_instances: bazel-untrusted:europe-west1:metrics
-  enable_app_engine_apis: true
 
 handlers:
 - url: /.*

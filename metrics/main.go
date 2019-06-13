@@ -87,7 +87,6 @@ func main() {
 		srv.AddMetric(buildSuccess, 60, stdout)
 	*/
 
-	// TODO(fweikert): use real settings instead of hardcoded values
 	flakiness := metrics.CreateFlakiness(gcs, "bazel-buildkite-stats", "flaky-tests-bep", pipelines...)
 	srv.AddMetric(flakiness, 60, stdout)
 
