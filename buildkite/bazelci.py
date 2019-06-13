@@ -161,6 +161,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/envoyproxy/envoy.git",
         "http_config": "https://raw.githubusercontent.com/envoyproxy/envoy/master/.bazelci/presubmit.yml",
         "pipeline_slug": "envoy",
+        "disabled_reason": "https://github.com/bazelbuild/bazel/issues/8626",
     },
     "Flogger": {
         "git_repository": "https://github.com/google/flogger.git",
@@ -171,6 +172,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml",
         "pipeline_slug": "gerrit",
+        "disabled_reason": "https://bugs.chromium.org/p/gerrit/issues/detail?id=11021",
     },
     "Google Logging": {
         "git_repository": "https://github.com/google/glog.git",
@@ -191,6 +193,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/kythe/kythe.git",
         "http_config": "https://raw.githubusercontent.com/kythe/kythe/master/.bazelci/presubmit.yml",
         "pipeline_slug": "kythe",
+        "disabled_reason": "https://github.com/kythe/kythe/issues/3816",
     },
     "Protobuf": {
         "git_repository": "https://github.com/google/protobuf.git",
