@@ -49,7 +49,7 @@ If you need to create and deploy new VM images, you can follow these steps:
 
 ### MacOS
 
-We are operating a number of physical Mac machines in our office. Please see go/bazel-ci-playbook if you're in the Google network.
+We are operating a number of physical Mac machines in our office. Please see [go/bazel-ci-playbook](go/bazel-ci-playbook) if you're in the Google network.
 
 ## Deploying a new Bazelisk version
 
