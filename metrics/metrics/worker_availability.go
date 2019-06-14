@@ -32,7 +32,7 @@ func (wa *WorkerAvailability) Collect() (data.DataSet, error) {
 			return nil, err
 		}
 		for platform, counts := range allPlatforms {
-			err = result.AddRow(ts, platform, counts[0], counts[1])
+			err = result.AddRow(ts, org, platform, counts[0], counts[1])
 			if err != nil {
 				return nil, err
 			}
