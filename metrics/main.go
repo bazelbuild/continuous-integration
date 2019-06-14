@@ -44,12 +44,10 @@ func main() {
 		log.Fatalf("No pipelines were specified.")
 	}
 
-	/*
-		bk, err := clients.CreateBuildkiteClient(settings.BuildkiteApiToken, settings.BuildkiteDebug)
-		if err != nil {
-			log.Fatalf("Cannot create Buildkite client: %v", err)
-		}
-	*/
+	bk, err := clients.CreateBuildkiteClient(settings.BuildkiteApiToken, settings.BuildkiteDebug)
+	if err != nil {
+		log.Fatalf("Cannot create Buildkite client: %v", err)
+	}
 
 	gcs, err := clients.CreateGcsClient()
 	if err != nil {
@@ -76,44 +74,37 @@ func main() {
 
 	srv := service.CreateService(handleError)
 
-	/*
-		// TODO: support multiple organizations
-		platformLoad := metrics.CreatePlatformLoad(bk, 100, settings.BuildkiteOrgs...)
-		srv.AddMetric(platformLoad, 60, stackdriver)
+	platformLoad := metrics.CreatePlatformLoad(bk, 100, settings.BuildkiteOrgs...)
+	srv.AddMetric(platformLoad, 60, cloudSql)
 
-		buildsPerChange := metrics.CreateBuildsPerChange(bk, 500, pipelines...)
-		srv.AddMetric(buildsPerChange, 60, stdout)
+	buildsPerChange := metrics.CreateBuildsPerChange(bk, 500, pipelines...)
+	srv.AddMetric(buildsPerChange, 60, cloudSql)
 
-		buildSuccess := metrics.CreateBuildSuccess(bk, 200, pipelines...)
-		srv.AddMetric(buildSuccess, 60, stdout)
-	*/
+	buildSuccess := metrics.CreateBuildSuccess(bk, 200, pipelines...)
+	srv.AddMetric(buildSuccess, 60, cloudSql)
 
 	flakiness := metrics.CreateFlakiness(gcs, "bazel-buildkite-stats", "flaky-tests-bep", pipelines...)
 	srv.AddMetric(flakiness, 60, cloudSql)
 
-	/*
-		pid := &data.PipelineID{Org: "bazel", Slug: "google-bazel-presubmit"}
+	macPerformance := metrics.CreateMacPerformance(bk, 20, pipelines...)
+	srv.AddMetric(macPerformance, 60, cloudSql)
 
-		macPerformance := metrics.CreateMacPerformance(bk, 20, pid) // TODO: pipelines...)
-		srv.AddMetric(macPerformance, 60, stdout)
+	pipelinePerformance := metrics.CreatePipelinePerformance(bk, 20, pipelines...)
+	srv.AddMetric(pipelinePerformance, 60, cloudSql)
 
-		pipelinePerformance := metrics.CreatePipelinePerformance(bk, 20, pipelines...)
-		srv.AddMetric(pipelinePerformance, 60, stdout)
+	platformSignificance := metrics.CreatePlatformSignificance(bk, 100, pipelines...)
+	srv.AddMetric(platformSignificance, 24*60, cloudSql)
 
-		platformSignificance := metrics.CreatePlatformSignificance(bk, 100, pipelines...)
-		srv.AddMetric(platformSignificance, 24*60, stdout)
+	platformUsage := metrics.CreatePlatformUsage(bk, 100, settings.BuildkiteOrgs...)
+	srv.AddMetric(platformUsage, 60, cloudSql)
 
-		platformUsage := metrics.CreatePlatformUsage(bk, 100, settings.BuildkiteOrgs...)
-		srv.AddMetric(platformUsage, 60, stdout)
+	releaseDownloads := metrics.CreateReleaseDownloads(settings.GitHubOrg,
+		settings.GitHubRepo,
+		settings.GitHubApiToken, megaByte)
+	srv.AddMetric(releaseDownloads, 12*60, cloudSql)
 
-		releaseDownloads := metrics.CreateReleaseDownloads(settings.GitHubOrg,
-			settings.GitHubRepo,
-			settings.GitHubApiToken, megaByte)
-		srv.AddMetric(releaseDownloads, 12*60, stdout)
-
-		workerAvailability := metrics.CreateWorkerAvailability(bk, settings.BuildkiteOrgs...)
-		srv.AddMetric(workerAvailability, 60, stdout)
-	*/
+	workerAvailability := metrics.CreateWorkerAvailability(bk, settings.BuildkiteOrgs...)
+	srv.AddMetric(workerAvailability, 60, cloudSql)
 
 	if *testMode {
 		log.Println("[Test mode] Running all jobs exactly once...")
