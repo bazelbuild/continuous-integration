@@ -107,7 +107,7 @@ func (client *BuildkiteClient) getResults(listFunc func(opt buildkite.ListOption
 		}
 	}
 
-	if len(all_results) > lastN {
+	if 0 < lastN && lastN < len(all_results) {
 		all_results = all_results[:lastN]
 	}
 
