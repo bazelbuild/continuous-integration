@@ -11,7 +11,6 @@ import (
 	"github.com/fweikert/continuous-integration/metrics/metrics"
 	"github.com/fweikert/continuous-integration/metrics/publishers"
 	"github.com/fweikert/continuous-integration/metrics/service"
-	"google.golang.org/appengine"
 )
 
 var (
@@ -122,5 +121,5 @@ func main() {
 
 	srv.Start()
 	http.HandleFunc("/", handleRequest)
-	appengine.Main()
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
