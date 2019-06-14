@@ -23,5 +23,5 @@ CREATE TABLE worker_availability (timestamp BIGINT, org VARCHAR(255), platform V
 
 ## Service Deployment
 
-- `gcloud app deploy --stop-previous-version`
+- `gcloud app deploy metrics/app.yaml --stop-previous-version`
 - `gcloud app logs tail -s default`
