@@ -23,25 +23,15 @@ func CreateGcsClient() (*GcsClient, error) {
 	return &GcsClient{client: client}, nil
 }
 
-func (g *GcsClient) ReadAllFiles(bucket, directory string) (map[string][]byte, error) {
+func (g *GcsClient) ReadAllFiles(bucket, directory string) (*gcsFileIter, error) {
 	log.Printf("Reading all files in bucket %s and directory %s", bucket, directory)
 	files, err := g.listFiles(bucket, directory)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to list files in directory %s in bucket %s: %v", directory, bucket, err)
 	}
 
-	data := make(map[string][]byte)
-	for _, f := range files {
-		content, err := g.readFile(bucket, f)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to read file %s in bucket %s: %v", f, bucket, err)
-		}
-		data[f] = content
-
-		// TODO(fweikert): remove
-		break
-	}
-	return data, nil
+	iter := &gcsFileIter{client: g.client, bucket: bucket, files: files}
+	return iter, nil
 }
 
 func (g *GcsClient) listFiles(bucket, directory string) ([]string, error) {
@@ -61,9 +51,35 @@ func (g *GcsClient) listFiles(bucket, directory string) ([]string, error) {
 	return names, nil
 }
 
-func (g *GcsClient) readFile(bucket, object string) ([]byte, error) {
+type gcsFileIter struct {
+	client *storage.Client
+	bucket string
+	files  []string
+	pos    int
+}
+
+func (iter *gcsFileIter) HasNext() bool {
+	return iter.pos < len(iter.files)
+}
+
+func (iter *gcsFileIter) Get() (string, []byte, error) {
+	pos := iter.pos
+	if pos >= len(iter.files) {
+		pos = len(iter.files) - 1
+	}
+	iter.pos += 1
+
+	name := iter.files[pos]
+	content, err := iter.readFile(name)
+	if err != nil {
+		err = fmt.Errorf("Failed to read file %s in bucket %s: %v", name, iter.bucket, err)
+	}
+	return name, content, err
+}
+
+func (iter *gcsFileIter) readFile(object string) ([]byte, error) {
 	ctx := context.Background()
-	rc, err := g.client.Bucket(bucket).Object(object).NewReader(ctx)
+	rc, err := iter.client.Bucket(iter.bucket).Object(object).NewReader(ctx)
 	if err != nil {
 		return nil, err
 	}

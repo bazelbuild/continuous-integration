@@ -33,16 +33,21 @@ func (f *Flakiness) Collect() (data.DataSet, error) {
 	result := data.CreateDataSet(GetColumnNames(f.columns))
 	for _, pipeline := range f.pipelines {
 		gcsPath := f.gcsSuffix + pipeline.Slug
-		contents, err := f.client.ReadAllFiles(f.gcsBucket, gcsPath)
+		iter, err := f.client.ReadAllFiles(f.gcsBucket, gcsPath)
 		if err != nil {
 			return nil, err
 		}
-		if len(contents) == 0 {
+		if !iter.HasNext() {
 			log.Printf("There is no flakiness data for pipeline %s in GCS location %s/%s", pipeline, f.gcsBucket, gcsPath)
 			continue
 		}
 
-		for fileName, content := range contents {
+		for iter.HasNext() {
+			fileName, content, err := iter.Get()
+			if err != nil {
+				return nil, fmt.Errorf("Failed to read flakiness data for pipeline %s: %v", pipeline, err)
+			}
+
 			build, err := getBuildNumber(fileName)
 			if err != nil {
 				return nil, fmt.Errorf("Invalid flaky data file %s in %s/%s: %v", fileName, f.gcsBucket, gcsPath, err)
