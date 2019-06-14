@@ -62,15 +62,17 @@ func main() {
 			log.Fatalf("Cannot create Stackdriver client: %v", err)
 		}
 
-		cloudSql, err := publishers.CreateCloudSqlPublisher(settings.CloudSqlUser, settings.CloudSqlPassword, settings.CloudSqlInstance, settings.CloudSqlDatabase, settings.CloudSqlLocalPort)
-		if err != nil {
-			log.Fatalf("Failed to set up Cloud SQL publisher: %v", err)
-		}
-
 		stackdriver := publishers.CreateStackdriverPublisher(stackdriverClient, *projectID)
 	*/
 
-	stdout := publishers.CreateStdoutPublisher(publishers.Csv)
+	cloudSql, err := publishers.CreateCloudSqlPublisher(settings.CloudSqlUser, settings.CloudSqlPassword, settings.CloudSqlInstance, settings.CloudSqlDatabase, settings.CloudSqlLocalPort)
+	if err != nil {
+		log.Fatalf("Failed to set up Cloud SQL publisher: %v", err)
+	}
+
+	/*
+		stdout := publishers.CreateStdoutPublisher(publishers.Csv)
+	*/
 
 	srv := service.CreateService(handleError)
 
@@ -87,7 +89,7 @@ func main() {
 	*/
 
 	flakiness := metrics.CreateFlakiness(gcs, "bazel-buildkite-stats", "flaky-tests-bep", pipelines...)
-	srv.AddMetric(flakiness, 60, stdout)
+	srv.AddMetric(flakiness, 60, cloudSql)
 
 	/*
 		pid := &data.PipelineID{Org: "bazel", Slug: "google-bazel-presubmit"}
