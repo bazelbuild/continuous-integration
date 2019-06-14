@@ -16,6 +16,7 @@
 
 import argparse
 import collections
+import os
 import sys
 import threading
 
@@ -23,7 +24,7 @@ import bazelci
 
 INCOMPATIBLE_FLAGS = bazelci.fetch_incompatible_flags()
 
-BUILDKITE_ORG = "bazel"
+BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
 
 PIPELINE = "bazelisk-plus-incompatible-flags"
 
@@ -129,7 +130,7 @@ def print_projects_need_to_migrate(failed_jobs_per_flag):
 def print_flags_need_to_migrate(failed_jobs_per_flag):
     # The info box printed later is above info box printed before,
     # so reverse the flag list to maintain the same order.
-    for flag in sorted(list(failed_jobs_per_flag.keys()), reverse = True):
+    for flag in sorted(list(failed_jobs_per_flag.keys()), reverse=True):
         jobs = failed_jobs_per_flag[flag]
         if jobs:
             github_url = INCOMPATIBLE_FLAGS[flag]
@@ -159,11 +160,14 @@ def merge_and_format_jobs(jobs, line_pattern):
         pipeline, platform = get_pipeline_and_platform(job)
         jobs_per_pipeline[pipeline].append(get_html_link_text(platform, job["web_url"]))
 
-    return [line_pattern.format(pipeline, ", ".join(platforms)) for pipeline, platforms in jobs_per_pipeline.items()]
+    return [
+        line_pattern.format(pipeline, ", ".join(platforms))
+        for pipeline, platforms in jobs_per_pipeline.items()
+    ]
 
 
 def get_pipeline_and_platform(job):
-    name, _, platform = job["name"].partition('(')
+    name, _, platform = job["name"].partition("(")
     end = platform.rfind(")")
     return name.strip(), platform[:end].strip()
 

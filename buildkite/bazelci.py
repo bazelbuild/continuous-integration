@@ -100,23 +100,17 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/codelabs.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/codelabs/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-codelabs",
-        "disabled_reason": "https://github.com/bazelbuild/continuous-integration/issues/676",
-    },
-    "Bazel integration testing": {
-        "git_repository": "https://github.com/bazelbuild/bazel-integration-testing.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-integration-testing/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "bazel-integration-testing",
-    },
-    "Bazelisk": {
-        "git_repository": "https://github.com/bazelbuild/bazelisk.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazelisk/master/.bazelci/config.yml",
-        "pipeline_slug": "bazelisk",
     },
     "Bazel Remote Cache": {
         "git_repository": "https://github.com/buchgr/bazel-remote.git",
         "http_config": "https://raw.githubusercontent.com/buchgr/bazel-remote/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-remote-cache",
         "disabled_reason": "https://github.com/buchgr/bazel-remote/issues/82",
+    },
+    "Bazel integration testing": {
+        "git_repository": "https://github.com/bazelbuild/bazel-integration-testing.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-integration-testing/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "bazel-integration-testing",
     },
     "Bazel skylib": {
         "git_repository": "https://github.com/bazelbuild/bazel-skylib.git",
@@ -133,31 +127,30 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-watcher/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-watcher",
     },
+    "Bazelisk": {
+        "git_repository": "https://github.com/bazelbuild/bazelisk.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazelisk/master/.bazelci/config.yml",
+        "pipeline_slug": "bazelisk",
+    },
     "Buildfarm": {
         "git_repository": "https://github.com/bazelbuild/bazel-buildfarm.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-buildfarm/master/.bazelci/presubmit.yml",
         "pipeline_slug": "buildfarm-male-farmer",
-    },
-    "BUILD file generator": {
-        "git_repository": "https://github.com/bazelbuild/BUILD_file_generator.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/BUILD_file_generator/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "build-file-generator",
-        "disabled_reason": "https://github.com/bazelbuild/BUILD_file_generator/issues/53",
     },
     "Buildtools": {
         "git_repository": "https://github.com/bazelbuild/buildtools.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/buildtools/master/.bazelci/presubmit.yml",
         "pipeline_slug": "buildtools",
     },
-    "Cartographer": {
-        "git_repository": "https://github.com/googlecartographer/cartographer.git",
-        "http_config": "https://raw.githubusercontent.com/googlecartographer/cartographer/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "cartographer",
-    },
     "CLion Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/clion.yml",
         "pipeline_slug": "clion-plugin",
+    },
+    "Cartographer": {
+        "git_repository": "https://github.com/googlecartographer/cartographer.git",
+        "http_config": "https://raw.githubusercontent.com/googlecartographer/cartographer/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "cartographer",
     },
     "Cloud Robotics Core": {
         "git_repository": "https://github.com/googlecloudrobotics/core.git",
@@ -168,6 +161,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/envoyproxy/envoy.git",
         "http_config": "https://raw.githubusercontent.com/envoyproxy/envoy/master/.bazelci/presubmit.yml",
         "pipeline_slug": "envoy",
+        "disabled_reason": "https://github.com/bazelbuild/bazel/issues/8626",
     },
     "Flogger": {
         "git_repository": "https://github.com/google/flogger.git",
@@ -178,21 +172,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml",
         "pipeline_slug": "gerrit",
-    },
-    "Kythe": {
-        "git_repository": "https://github.com/kythe/kythe.git",
-        "http_config": "https://raw.githubusercontent.com/kythe/kythe/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "kythe",
-    },
-    "rules_jvm_external": {
-        "git_repository": "https://github.com/bazelbuild/rules_jvm_external.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jvm_external/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-jvm-external",
-    },
-    "rules_jvm_external - examples": {
-        "git_repository": "https://github.com/bazelbuild/rules_jvm_external.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jvm_external/master/.bazelci/examples.yml",
-        "pipeline_slug": "rules-jvm-external-examples",
+        "disabled_reason": "https://bugs.chromium.org/p/gerrit/issues/detail?id=11021",
     },
     "Google Logging": {
         "git_repository": "https://github.com/google/glog.git",
@@ -209,20 +189,42 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/aspect.yml",
         "pipeline_slug": "intellij-plugin-aspect",
     },
+    "Kythe": {
+        "git_repository": "https://github.com/kythe/kythe.git",
+        "http_config": "https://raw.githubusercontent.com/kythe/kythe/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "kythe",
+        "disabled_reason": "https://github.com/kythe/kythe/issues/3816",
+    },
     "Protobuf": {
         "git_repository": "https://github.com/google/protobuf.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/protobuf-postsubmit.yml",
         "pipeline_slug": "protobuf",
     },
+    "Skydoc": {
+        "git_repository": "https://github.com/bazelbuild/skydoc.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/skydoc/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "skydoc",
+    },
+    "Subpar": {
+        "git_repository": "https://github.com/google/subpar.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/subpar-postsubmit.yml",
+        "pipeline_slug": "subpar",
+    },
+    "TensorFlow": {
+        "git_repository": "https://github.com/tensorflow/tensorflow.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.yml",
+        "pipeline_slug": "tensorflow",
+        "disabled_reason": "Waiting for fix from protobuf: https://github.com/protocolbuffers/protobuf/pull/6207",
+    },
+    "Tulsi": {
+        "git_repository": "https://github.com/bazelbuild/tulsi.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/tulsi/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "tulsi-bazel-darwin",
+    },
     "re2": {
         "git_repository": "https://github.com/google/re2.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/re2-postsubmit.yml",
         "pipeline_slug": "re2",
-    },
-    "Remote execution": {
-        "git_repository": "https://github.com/bazelbuild/bazel.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/bazel-remote-execution-postsubmit.yml",
-        "pipeline_slug": "remote-execution",
     },
     "rules_android": {
         "git_repository": "https://github.com/bazelbuild/rules_android.git",
@@ -285,6 +287,16 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jsonnet/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-jsonnet",
     },
+    "rules_jvm_external": {
+        "git_repository": "https://github.com/bazelbuild/rules_jvm_external.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jvm_external/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "rules-jvm-external",
+    },
+    "rules_jvm_external - examples": {
+        "git_repository": "https://github.com/bazelbuild/rules_jvm_external.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jvm_external/master/.bazelci/examples.yml",
+        "pipeline_slug": "rules-jvm-external-examples",
+    },
     "rules_k8s": {
         "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_k8s/master/.bazelci/presubmit.yml",
@@ -340,26 +352,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_webtesting/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-webtesting-saucelabs",
     },
-    "Skydoc": {
-        "git_repository": "https://github.com/bazelbuild/skydoc.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/skydoc/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "skydoc",
-    },
-    "Subpar": {
-        "git_repository": "https://github.com/google/subpar.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/subpar-postsubmit.yml",
-        "pipeline_slug": "subpar",
-    },
-    "TensorFlow": {
-        "git_repository": "https://github.com/tensorflow/tensorflow.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.yml",
-        "pipeline_slug": "tensorflow",
-    },
-    "Tulsi": {
-        "git_repository": "https://github.com/bazelbuild/tulsi.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/tulsi/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "tulsi-bazel-darwin",
-    },
     "upb": {
         "git_repository": "https://github.com/protocolbuffers/upb.git",
         "http_config": "https://raw.githubusercontent.com/protocolbuffers/upb/master/.bazelci/presubmit.yml",
@@ -369,11 +361,20 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
 }
 
 DOWNSTREAM_PROJECTS_TESTING = {
-    "Bazelisk": {
-        "git_repository": "https://github.com/bazelbuild/bazelisk.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazelisk/master/.bazelci/config.yml",
-        "pipeline_slug": "bazelisk",
-    }
+    "Bazel": DOWNSTREAM_PROJECTS_PRODUCTION["Bazel"],
+    "Bazelisk": DOWNSTREAM_PROJECTS_PRODUCTION["Bazelisk"],
+    "Federation": {
+        "git_repository": "https://github.com/fweikert/bazel-federation.git",
+        "http_config": "https://raw.githubusercontent.com/fweikert/bazel-federation/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "bazel-federation",
+    },
+    "rules_docker": DOWNSTREAM_PROJECTS_PRODUCTION["rules_docker"],
+    "rules_go": DOWNSTREAM_PROJECTS_PRODUCTION["rules_go"],
+    "rules_groovy": DOWNSTREAM_PROJECTS_PRODUCTION["rules_groovy"],
+    "rules_kotlin": DOWNSTREAM_PROJECTS_PRODUCTION["rules_kotlin"],
+    "rules_nodejs": DOWNSTREAM_PROJECTS_PRODUCTION["rules_nodejs"],
+    "rules_rust": DOWNSTREAM_PROJECTS_PRODUCTION["rules_rust"],
+    "rules_scala": DOWNSTREAM_PROJECTS_PRODUCTION["rules_scala"],
 }
 
 DOWNSTREAM_PROJECTS = {
@@ -386,19 +387,11 @@ DOWNSTREAM_PROJECTS = {
 # the platform name in a human readable format, and a the buildkite-agent's
 # working directory.
 PLATFORMS = {
-    "ubuntu1404": {
-        "name": "Ubuntu 14.04, OpenJDK 8",
-        "emoji-name": ":ubuntu: 14.04 (OpenJDK 8)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": True,
-        "docker-image": "gcr.io/bazel-public/ubuntu1404:java8",
-        "python": "python3.6",
-    },
     "ubuntu1604": {
         "name": "Ubuntu 16.04, OpenJDK 8",
         "emoji-name": ":ubuntu: 16.04 (OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": False,
+        "publish_binary": ["ubuntu1404", "ubuntu1604", "linux"],
         "docker-image": "gcr.io/bazel-public/ubuntu1604:java8",
         "python": "python3.6",
     },
@@ -406,7 +399,7 @@ PLATFORMS = {
         "name": "Ubuntu 18.04, OpenJDK 11",
         "emoji-name": ":ubuntu: 18.04 (OpenJDK 11)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": False,
+        "publish_binary": ["ubuntu1804"],
         "docker-image": "gcr.io/bazel-public/ubuntu1804:java11",
         "python": "python3.6",
     },
@@ -414,7 +407,7 @@ PLATFORMS = {
         "name": "Ubuntu 18.04, no JDK",
         "emoji-name": ":ubuntu: 18.04 (no JDK)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": False,
+        "publish_binary": [],
         "docker-image": "gcr.io/bazel-public/ubuntu1804:nojava",
         "python": "python3.6",
     },
@@ -422,7 +415,7 @@ PLATFORMS = {
         "name": "macOS, OpenJDK 8",
         "emoji-name": ":darwin: (OpenJDK 8)",
         "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": True,
+        "publish_binary": ["macos"],
         "queue": "macos",
         "python": "python3.7",
     },
@@ -430,7 +423,7 @@ PLATFORMS = {
         "name": "Windows, OpenJDK 8",
         "emoji-name": ":windows: (OpenJDK 8)",
         "downstream-root": "d:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": True,
+        "publish_binary": ["windows"],
         "queue": "windows",
         "python": "python.exe",
     },
@@ -438,7 +431,7 @@ PLATFORMS = {
         "name": "RBE (Ubuntu 16.04, OpenJDK 8)",
         "emoji-name": ":gcloud: (OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": False,
+        "publish_binary": [],
         "docker-image": "gcr.io/bazel-public/ubuntu1604:java8",
         "python": "python3.6",
     },
@@ -748,8 +741,6 @@ def execute_commands(
         build_targets, test_targets = calculate_targets(
             task_config, platform, bazel_binary, build_only, test_only
         )
-        if not build_targets and not test_targets:
-            raise BuildkiteException("There are neither build nor test targets")
 
         include_json_profile = task_config.get("include_json_profile", [])
 
@@ -760,12 +751,13 @@ def execute_commands(
                 json_profile_out_build = os.path.join(tmpdir, "build.profile.gz")
                 json_profile_flags = get_json_profile_flags(json_profile_out_build)
 
+            build_flags = task_config.get("build_flags") or []
             try:
                 execute_bazel_build(
                     bazel_version,
                     bazel_binary,
                     platform,
-                    task_config.get("build_flags", []) + json_profile_flags,
+                    build_flags + json_profile_flags,
                     build_targets,
                     None,
                     incompatible_flags,
@@ -783,7 +775,8 @@ def execute_commands(
                 json_profile_out_test = os.path.join(tmpdir, "test.profile.gz")
                 json_profile_flags = get_json_profile_flags(json_profile_out_test)
 
-            test_flags = task_config.get("test_flags", []) + json_profile_flags
+            test_flags = task_config.get("test_flags") or []
+            test_flags += json_profile_flags
             if test_env_vars:
                 test_flags += ["--test_env={}".format(v) for v in test_env_vars]
 
@@ -975,10 +968,10 @@ def download_bazel_binary(dest_dir, platform):
 
 
 def download_bazel_binary_at_commit(dest_dir, platform, bazel_git_commit):
-    # We only build bazel binary on ubuntu14.04 for every bazel commit.
-    # It should be OK to use it on other ubuntu platforms.
-    if "ubuntu" in platform:
-        platform = "ubuntu1404"
+    # We have a few Ubuntu platforms for which we don't build binaries. It should be OK to use the
+    # ones from Ubuntu 16.04 on them.
+    if "ubuntu" in platform and not should_publish_binaries_for_platform(platform):
+        platform = "ubuntu1604"
     bazel_binary_path = os.path.join(dest_dir, "bazel.exe" if platform == "windows" else "bazel")
     try:
         execute_command(
@@ -1120,10 +1113,12 @@ def remote_caching_flags(platform):
             # Platform name:
             platform.encode("utf-8")
         ]
-        # Use GCS for caching builds running on GCE.
+        # Use RBE for caching builds running on GCE.
         flags = [
             "--google_default_credentials",
-            "--remote_cache=https://storage.googleapis.com/bazel-untrusted-buildkite-cache",
+            "--remote_cache=remotebuildexecution.googleapis.com",
+            "--remote_instance_name=projects/{}/instances/default_instance".format(CLOUD_PROJECT),
+            "--tls_enabled=true",
         ]
 
     platform_cache_digest = hashlib.sha256()
@@ -1175,6 +1170,8 @@ def common_build_flags(bep_file, platform):
         "--show_progress_rate_limit=5",
         "--curses=yes",
         "--color=yes",
+        "--terminal_columns=143",
+        "--show_timestamps",
         "--verbose_failures",
         "--keep_going",
         "--jobs=" + concurrent_jobs(platform),
@@ -1228,17 +1225,18 @@ def rbe_flags(original_flags, accept_cached):
     if not accept_cached:
         flags += ["--noremote_accept_cached"]
 
-    # Copied from https://github.com/bazelbuild/bazel-toolchains/blob/master/configs/ubuntu16_04_clang/1.0/toolchain.bazelrc
+    # Adapted from https://github.com/bazelbuild/bazel-toolchains/blob/master/bazelrc/.bazelrc
     flags += [
-        # These should NOT be modified before @bazel_toolchains repo pin is
-        # updated in projects' WORKSPACE files.
+        # These should NOT longer need to be modified.
+        # All that is needed is updating the @bazel_toolchains repo pin
+        # in projects' WORKSPACE files.
         #
         # Toolchain related flags to append at the end of your .bazelrc file.
-        "--host_javabase=@bazel_toolchains//configs/ubuntu16_04_clang/latest:javabase",
-        "--javabase=@bazel_toolchains//configs/ubuntu16_04_clang/latest:javabase",
+        "--host_javabase=@buildkite_config//java:jdk",
+        "--javabase=@buildkite_config//java:jdk",
         "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
         "--java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
-        "--crosstool_top=@bazel_toolchains//configs/ubuntu16_04_clang/latest:crosstool_top_default",
+        "--crosstool_top=@buildkite_config//cc:toolchain",
         "--action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1",
     ]
 
@@ -1252,10 +1250,10 @@ def rbe_flags(original_flags, accept_cached):
     # More about platforms: https://docs.bazel.build/versions/master/platforms.html
     # Don't add platform flags if they are specified already.
     platform_flags = {
-        "--extra_toolchains": "@bazel_toolchains//configs/ubuntu16_04_clang/latest:toolchain_default",
-        "--extra_execution_platforms": "@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
-        "--host_platform": "@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
-        "--platforms": "@bazel_toolchains//configs/ubuntu16_04_clang/latest:platform",
+        "--extra_toolchains": "@buildkite_config//config:cc-toolchain",
+        "--extra_execution_platforms": "@buildkite_config//config:platform",
+        "--host_platform": "@buildkite_config//config:platform",
+        "--platforms": "@buildkite_config//config:platform",
     }
     for platform_flag, value in list(platform_flags.items()):
         found = False
@@ -1687,7 +1685,18 @@ def print_project_pipeline(
         )
         git_commit = get_last_green_commit(last_green_commit_url)
 
+    config_hashes = set()
     for task, task_config in task_configs.items():
+        # We override the Bazel version in downstream pipelines. This means that two tasks that
+        # only differ in the value of their explicit "bazel" field will be identical in the
+        # downstream pipeline, thus leading to duplicate work.
+        # Consequently, we filter those duplicate tasks here.
+        if is_downstream_project:
+            h = hash_task_config(task, task_config)
+            if h in config_hashes:
+                continue
+            config_hashes.add(h)
+
         shards = task_config.get("shards", "1")
         try:
             shards = int(shards)
@@ -1749,6 +1758,25 @@ def print_project_pipeline(
         pipeline_steps += create_config_validation_steps()
 
     print_pipeline_steps(pipeline_steps, handle_emergencies=not is_downstream_project)
+
+
+def hash_task_config(task_name, task_config):
+    # Two task configs c1 and c2 have the same hash iff they lead to two functionally identical jobs
+    # in the downstream pipeline. This function discards the "bazel" field (since it's being
+    # overriden) and the "name" field (since it has no effect on the actual work).
+    # Moreover, it adds an explicit "platform" field if that's missing.
+    cpy = task_config.copy()
+    cpy.pop("bazel", None)
+    cpy.pop("name", None)
+    if "platform" not in cpy:
+        cpy["platform"] = task_name
+
+    m = hashlib.md5()
+    for key in sorted(cpy):
+        value = "%s:%s;" % (key, cpy[key])
+        m.update(value.encode("utf-8"))
+
+    return m.digest()
 
 
 def get_platform_for_task(task, task_config):
@@ -2022,18 +2050,14 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
     task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
     platforms = [get_platform_for_task(t, tc) for t, tc in task_configs.items()]
-    configured_platforms = set(p for p in platforms if should_publish_binaries_for_platform(p))
 
-    if len(task_configs) != len(configured_platforms):
-        raise BuildkiteException(
-            "Configuration for Bazel publish binaries pipeline must contain exactly one task per platform."
-        )
+    # These are the platforms that the bazel_publish_binaries.yml config is actually building.
+    configured_platforms = set(filter(should_publish_binaries_for_platform, platforms))
 
-    expected_platforms = set(
-        name for name, platform in PLATFORMS.items() if platform["publish_binary"]
-    )
+    # These are the platforms that we want to build and publish according to this script.
+    expected_platforms = set(filter(should_publish_binaries_for_platform, PLATFORMS))
 
-    if configured_platforms != expected_platforms:
+    if not expected_platforms.issubset(configured_platforms):
         raise BuildkiteException(
             "Bazel publish binaries pipeline needs to build Bazel for every commit on all publish_binary-enabled platforms."
         )
@@ -2426,19 +2450,25 @@ def upload_bazel_binaries():
     Returns a map of platform names to sha256 hashes of the corresponding Bazel binary.
     """
     hashes = {}
-    for platform in (name for name in PLATFORMS if PLATFORMS[name]["publish_binary"]):
+    for platform_name, platform in PLATFORMS.items():
+        if not should_publish_binaries_for_platform(platform_name):
+            continue
         tmpdir = tempfile.mkdtemp()
         try:
-            bazel_binary_path = download_bazel_binary(tmpdir, platform)
-            execute_command(
-                [
-                    gsutil_command(),
-                    "cp",
-                    bazel_binary_path,
-                    bazelci_builds_gs_url(platform, os.environ["BUILDKITE_COMMIT"]),
-                ]
-            )
-            hashes[platform] = sha256_hexdigest(bazel_binary_path)
+            bazel_binary_path = download_bazel_binary(tmpdir, platform_name)
+            # One platform that we build on can generate binaries for multiple platforms, e.g.
+            # the ubuntu1604 platform generates binaries for the "ubuntu1604" platform, but also
+            # for the generic "linux" platform.
+            for target_platform_name in platform["publish_binary"]:
+                execute_command(
+                    [
+                        gsutil_command(),
+                        "cp",
+                        bazel_binary_path,
+                        bazelci_builds_gs_url(target_platform_name, os.environ["BUILDKITE_COMMIT"]),
+                    ]
+                )
+                hashes[target_platform_name] = sha256_hexdigest(bazel_binary_path)
         finally:
             shutil.rmtree(tmpdir)
     return hashes
@@ -2457,10 +2487,10 @@ def try_publish_binaries(hashes, build_number, expected_generation):
         "git_commit": git_commit,
         "platforms": {},
     }
-    for platform in (name for name in PLATFORMS if PLATFORMS[name]["publish_binary"]):
+    for platform, sha256 in hashes.items():
         info["platforms"][platform] = {
             "url": bazelci_builds_download_url(platform, git_commit),
-            "sha256": hashes[platform],
+            "sha256": sha256,
         }
     tmpdir = tempfile.mkdtemp()
     try:
