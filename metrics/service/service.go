@@ -23,7 +23,7 @@ func (job *metricJob) start(handler ErrorHandler) {
 	}
 
 	go func(currentJob metricJob) {
-		for range currentJob.ticker.C {
+		for ; true; <-currentJob.ticker.C {
 			currentJob.run(handler)
 		}
 	}(*job)
