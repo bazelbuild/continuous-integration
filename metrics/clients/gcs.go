@@ -37,6 +37,9 @@ func (g *GcsClient) ReadAllFiles(bucket, directory string) (map[string][]byte, e
 			return nil, fmt.Errorf("Failed to read file %s in bucket %s: %v", f, bucket, err)
 		}
 		data[f] = content
+
+		// TODO(fweikert): remove
+		break
 	}
 	return data, nil
 }
