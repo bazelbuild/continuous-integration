@@ -90,7 +90,7 @@ func main() {
 	srv.AddMetric(pipelinePerformance, 60, cloudSql)
 
 	platformLoad := metrics.CreatePlatformLoad(bk, 100, settings.BuildkiteOrgs...)
-	srv.AddMetric(platformLoad, 60, cloudSql)
+	srv.AddMetric(platformLoad, 5, cloudSql)
 
 	platformSignificance := metrics.CreatePlatformSignificance(bk, 100, pipelines...)
 	srv.AddMetric(platformSignificance, 24*60, cloudSql)
@@ -104,7 +104,7 @@ func main() {
 	srv.AddMetric(releaseDownloads, 12*60, cloudSql)
 
 	workerAvailability := metrics.CreateWorkerAvailability(bk, settings.BuildkiteOrgs...)
-	srv.AddMetric(workerAvailability, 60, cloudSql)
+	srv.AddMetric(workerAvailability, 5, cloudSql)
 
 	if *testMode {
 		log.Println("[Test mode] Running all jobs exactly once...")
