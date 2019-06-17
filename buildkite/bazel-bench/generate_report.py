@@ -41,86 +41,85 @@ def _platform_path_str(posix_path):
         return posix_path.replace("/", "\\")
     return posix_path
 
+
 # For the event markers in JSON profiles.
 # TODO(leba): Include JSON profiles data.
 EVENTS_ORDER = [
-    "Launch Blaze", "Initialize command", "Load packages",
-    "Analyze dependencies", "Analyze licenses", "Prepare for build",
-    "Build artifacts", "Complete build"]
+    "Launch Blaze",
+    "Initialize command",
+    "Load packages",
+    "Analyze dependencies",
+    "Analyze licenses",
+    "Prepare for build",
+    "Build artifacts",
+    "Complete build",
+]
 TMP = tempfile.gettempdir()
 REPORTS_DIRECTORY = _platform_path_str("{}/.bazel_bench/reports".format(TMP))
 
+
 def _upload_to_storage(src_file_path, storage_bucket, destination_dir):
-  """Uploads the file from src_file_path to the specified location on Storage.
+    """Uploads the file from src_file_path to the specified location on Storage.
   """
-  args = [
-      "gsutil", "cp", src_file_path,
-      "gs://{}/{}".format(storage_bucket, destination_dir)]
-  subprocess.run(args)
+    args = ["gsutil", "cp", src_file_path, "gs://{}/{}".format(storage_bucket, destination_dir)]
+    subprocess.run(args)
 
 
 def _load_csv_from_remote_file(http_url):
-  with urllib.request.urlopen(http_url) as resp:
-    reader = csv.DictReader(io.TextIOWrapper(resp))
-    return [row for row in reader]
+    with urllib.request.urlopen(http_url) as resp:
+        reader = csv.DictReader(io.TextIOWrapper(resp))
+        return [row for row in reader]
 
 
 def _load_json_from_remote_file(http_url):
-  with urllib.request.urlopen(http_url) as resp:
-    data = resp.read()
-    encoding = resp.info().get_content_charset("utf-8")
-    return json.loads(data.decode(encoding))
+    with urllib.request.urlopen(http_url) as resp:
+        data = resp.read()
+        encoding = resp.info().get_content_charset("utf-8")
+        return json.loads(data.decode(encoding))
 
 
 def _get_storage_url(storage_bucket, dated_subdir):
-  return "https://{}.storage.googleapis.com/{}".format(
-      storage_bucket, dated_subdir)
+    return "https://{}.storage.googleapis.com/{}".format(storage_bucket, dated_subdir)
 
 
 def _get_dated_subdir_for_project(project, date):
-  return "{}/{}".format(project, date.strftime("%Y/%m/%d"))
+    return "{}/{}".format(project, date.strftime("%Y/%m/%d"))
 
 
 def _prepare_data_for_graph(performance_data):
-  """Massage the data to fit a format suitable for graph generation.
+    """Massage the data to fit a format suitable for graph generation.
   """
-  ordered_commit_to_readings = collections.OrderedDict()
-  for entry in performance_data:
-    bazel_commit = entry["bazel_commit"]
-    if bazel_commit not in ordered_commit_to_readings:
-      ordered_commit_to_readings[bazel_commit] = {
-          "bazel_commit": bazel_commit,
-          "wall_readings": [],
-          "memory_readings": []
-      }
-    ordered_commit_to_readings[bazel_commit]["wall_readings"].append(
-        float(entry["wall"]))
-    ordered_commit_to_readings[bazel_commit]["memory_readings"].append(
-        float(entry["memory"]))
+    ordered_commit_to_readings = collections.OrderedDict()
+    for entry in performance_data:
+        bazel_commit = entry["bazel_commit"]
+        if bazel_commit not in ordered_commit_to_readings:
+            ordered_commit_to_readings[bazel_commit] = {
+                "bazel_commit": bazel_commit,
+                "wall_readings": [],
+                "memory_readings": [],
+            }
+        ordered_commit_to_readings[bazel_commit]["wall_readings"].append(float(entry["wall"]))
+        ordered_commit_to_readings[bazel_commit]["memory_readings"].append(float(entry["memory"]))
 
-  wall_data = [["Bazel Commit", "Wall Time (ms)"]]
-  memory_data = [["Bazel Commit", "Memory (MB)"]]
+    wall_data = [["Bazel Commit", "Wall Time (ms)"]]
+    memory_data = [["Bazel Commit", "Memory (MB)"]]
 
-  for obj in ordered_commit_to_readings.values():
-    wall_data.append([
-        obj["bazel_commit"], statistics.median(obj["wall_readings"])
-    ])
-    memory_data.append([
-        obj["bazel_commit"], statistics.median(obj["memory_readings"])
-    ])
+    for obj in ordered_commit_to_readings.values():
+        wall_data.append([obj["bazel_commit"], statistics.median(obj["wall_readings"])])
+        memory_data.append([obj["bazel_commit"], statistics.median(obj["memory_readings"])])
 
-  return wall_data, memory_data
+    return wall_data, memory_data
 
 
 def _single_graph(metric, metric_label, data, platform):
-  """Returns the HTML <div> component of a single graph.
+    """Returns the HTML <div> component of a single graph.
   """
-  title = "[{}] Bar Chart of {} vs Bazel commits".format(platform, metric_label)
-  vAxis = "Bazel Commits (chronological order)"
-  hAxis = metric_label
-  chart_id = "{}-{}".format(platform, metric)
+    title = "[{}] Bar Chart of {} vs Bazel commits".format(platform, metric_label)
+    vAxis = "Bazel Commits (chronological order)"
+    hAxis = metric_label
+    chart_id = "{}-{}".format(platform, metric)
 
-  return '''
+    return """
 <script type="text/javascript">
     google.charts.setOnLoadCallback(drawChart);
     function drawChart() {{
@@ -147,17 +146,15 @@ def _single_graph(metric, metric_label, data, platform):
   }}
   </script>
 <div id="{chart_id}" style="width: 800px; height: 500px;"></div>
-'''.format(
-    title=title,
-    data=data,
-    hAxis=hAxis,
-    vAxis=vAxis,
-    chart_id=chart_id)
+""".format(
+        title=title, data=data, hAxis=hAxis, vAxis=vAxis, chart_id=chart_id
+    )
+
 
 def _full_report(date, graph_components):
-  """Returns the full HTML of a complete report, from the graph components.
+    """Returns the full HTML of a complete report, from the graph components.
   """
-  return '''
+    return """
 <html>
   <head>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -170,86 +167,93 @@ def _full_report(date, graph_components):
     {graphs}
   </body>
 </html>
-'''.format(date=date, graphs=graph_components)
+""".format(
+        date=date, graphs=graph_components
+    )
 
 
 def _generate_report_for_date(project, date, storage_bucket):
-  """Generates a html report for the specified date & project.
+    """Generates a html report for the specified date & project.
 
   Args:
     project: the project to generate report for. Check out bazel_bench.py.
     date: the date to generate report for.
     storage_bucket: the Storage bucket to upload the report to.
   """
-  dated_subdir = _get_dated_subdir_for_project(project, date)
-  root_storage_url = _get_storage_url(storage_bucket, dated_subdir)
-  metadata_file_url = "{}/METADATA".format(root_storage_url)
-  metadata = _load_json_from_remote_file(metadata_file_url)
+    dated_subdir = _get_dated_subdir_for_project(project, date)
+    root_storage_url = _get_storage_url(storage_bucket, dated_subdir)
+    metadata_file_url = "{}/METADATA".format(root_storage_url)
+    metadata = _load_json_from_remote_file(metadata_file_url)
 
-  graph_components = []
-  for platform_measurement in metadata["platforms"]:
-      # Get the data
-      performance_data = _load_csv_from_remote_file(
-          "{}/{}".format(root_storage_url, platform_measurement["perf_data"]))
-      wall_data, memory_data = _prepare_data_for_graph(performance_data)
+    graph_components = []
+    for platform_measurement in metadata["platforms"]:
+        # Get the data
+        performance_data = _load_csv_from_remote_file(
+            "{}/{}".format(root_storage_url, platform_measurement["perf_data"])
+        )
+        wall_data, memory_data = _prepare_data_for_graph(performance_data)
 
-      # Generate a graph for that platform.
-      graph_components.append(
-          _single_graph(
-              metric="wall",
-              metric_label="Wall Time (ms)",
-              data=wall_data,
-              platform=platform_measurement["platform"]))
+        # Generate a graph for that platform.
+        graph_components.append(
+            _single_graph(
+                metric="wall",
+                metric_label="Wall Time (ms)",
+                data=wall_data,
+                platform=platform_measurement["platform"],
+            )
+        )
 
-      graph_components.append(
-          _single_graph(
-              metric="memory",
-              metric_label="Memory (MB)",
-              data=memory_data,
-              platform=platform_measurement["platform"]))
+        graph_components.append(
+            _single_graph(
+                metric="memory",
+                metric_label="Memory (MB)",
+                data=memory_data,
+                platform=platform_measurement["platform"],
+            )
+        )
 
-  content = _full_report(date, "\n".join(graph_components))
+    content = _full_report(date, "\n".join(graph_components))
 
-  if not os.path.exists(REPORTS_DIRECTORY):
-    os.makedirs(REPORTS_DIRECTORY)
+    if not os.path.exists(REPORTS_DIRECTORY):
+        os.makedirs(REPORTS_DIRECTORY)
 
-  report_tmp_file = "{}/report_{}_{}.html".format(
-      REPORTS_DIRECTORY, project, date.strftime("%Y%m%d"))
-  with open(report_tmp_file, "w") as fo:
-    fo.write(content)
+    report_tmp_file = "{}/report_{}_{}.html".format(
+        REPORTS_DIRECTORY, project, date.strftime("%Y%m%d")
+    )
+    with open(report_tmp_file, "w") as fo:
+        fo.write(content)
 
-  if storage_bucket:
-    _upload_to_storage(
-        report_tmp_file, storage_bucket, dated_subdir + "/report.html")
-  else:
-    print(content)
+    if storage_bucket:
+        _upload_to_storage(report_tmp_file, storage_bucket, dated_subdir + "/report.html")
+    else:
+        print(content)
 
 
 def main(args=None):
-  if args is None:
-    args = sys.argv[1:]
+    if args is None:
+        args = sys.argv[1:]
 
-  parser = argparse.ArgumentParser(description="Bazel Bench Daily Report")
-  parser.add_argument("--date", type=str, help="Date in YYYY-mm-dd format.")
-  parser.add_argument(
-      "--project",
-      action="append",
-      help=("Projects to generate report for. Use the storage_subdir defined"
-            "in bazel_bench.py."))
-  parser.add_argument(
-      "--storage_bucket",
-      help="The GCP Storage bucket to upload the reports to.")
-  parsed_args = parser.parse_args(args)
+    parser = argparse.ArgumentParser(description="Bazel Bench Daily Report")
+    parser.add_argument("--date", type=str, help="Date in YYYY-mm-dd format.")
+    parser.add_argument(
+        "--project",
+        action="append",
+        help=(
+            "Projects to generate report for. Use the storage_subdir defined" "in bazel_bench.py."
+        ),
+    )
+    parser.add_argument("--storage_bucket", help="The GCP Storage bucket to upload the reports to.")
+    parsed_args = parser.parse_args(args)
 
-  date = (
-      datetime.datetime.strptime(parsed_args.date, "%Y-%m-%d").date()
-      if parsed_args.date
-      else datetime.date.today()
-  )
+    date = (
+        datetime.datetime.strptime(parsed_args.date, "%Y-%m-%d").date()
+        if parsed_args.date
+        else datetime.date.today()
+    )
 
-  for project in parsed_args.project:
-    _generate_report_for_date(project, date, parsed_args.storage_bucket)
+    for project in parsed_args.project:
+        _generate_report_for_date(project, date, parsed_args.storage_bucket)
 
 
 if __name__ == "__main__":
-  sys.exit(main())
+    sys.exit(main())
