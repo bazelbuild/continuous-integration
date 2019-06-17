@@ -101,7 +101,7 @@ def _prepare_data_for_graph(performance_data):
         ordered_commit_to_readings[bazel_commit]["wall_readings"].append(float(entry["wall"]))
         ordered_commit_to_readings[bazel_commit]["memory_readings"].append(float(entry["memory"]))
 
-    wall_data = [["Bazel Commit", "Wall Time (ms)"]]
+    wall_data = [["Bazel Commit", "Wall Time (s)"]]
     memory_data = [["Bazel Commit", "Memory (MB)"]]
 
     for obj in ordered_commit_to_readings.values():
