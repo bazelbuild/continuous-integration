@@ -60,7 +60,7 @@ REPORTS_DIRECTORY = _platform_path_str("{}/.bazel_bench/reports".format(TMP))
 
 def _upload_to_storage(src_file_path, storage_bucket, destination_dir):
     """Uploads the file from src_file_path to the specified location on Storage.
-  """
+    """
     args = ["gsutil", "cp", src_file_path, "gs://{}/{}".format(storage_bucket, destination_dir)]
     subprocess.run(args)
 
@@ -88,7 +88,7 @@ def _get_dated_subdir_for_project(project, date):
 
 def _prepare_data_for_graph(performance_data):
     """Massage the data to fit a format suitable for graph generation.
-  """
+    """
     ordered_commit_to_readings = collections.OrderedDict()
     for entry in performance_data:
         bazel_commit = entry["bazel_commit"]
@@ -113,7 +113,7 @@ def _prepare_data_for_graph(performance_data):
 
 def _single_graph(metric, metric_label, data, platform):
     """Returns the HTML <div> component of a single graph.
-  """
+    """
     title = "[{}] Bar Chart of {} vs Bazel commits".format(platform, metric_label)
     vAxis = "Bazel Commits (chronological order)"
     hAxis = metric_label
@@ -153,7 +153,7 @@ def _single_graph(metric, metric_label, data, platform):
 
 def _full_report(date, graph_components):
     """Returns the full HTML of a complete report, from the graph components.
-  """
+    """
     return """
 <html>
   <head>
@@ -175,11 +175,11 @@ def _full_report(date, graph_components):
 def _generate_report_for_date(project, date, storage_bucket):
     """Generates a html report for the specified date & project.
 
-  Args:
-    project: the project to generate report for. Check out bazel_bench.py.
-    date: the date to generate report for.
-    storage_bucket: the Storage bucket to upload the report to.
-  """
+    Args:
+      project: the project to generate report for. Check out bazel_bench.py.
+      date: the date to generate report for.
+      storage_bucket: the Storage bucket to upload the report to.
+    """
     dated_subdir = _get_dated_subdir_for_project(project, date)
     root_storage_url = _get_storage_url(storage_bucket, dated_subdir)
     metadata_file_url = "{}/METADATA".format(root_storage_url)
