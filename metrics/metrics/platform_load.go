@@ -30,7 +30,7 @@ func (pl *PlatformLoad) Columns() []Column {
 }
 
 func (pl *PlatformLoad) Collect() (data.DataSet, error) {
-	result := &loadDataSet{headers: GetColumnNames(pl.columns), ts: time.Now()}
+	result := &loadDataSet{headers: GetColumnNames(pl.columns), ts: time.Now(), rows: make([]*loadDataRow, 0)}
 	for _, org := range pl.orgs {
 		pid := &data.PipelineID{Org: org, Slug: "all"}
 		builds, err := pl.client.GetMostRecentBuilds(pid, pl.builds)
@@ -64,9 +64,8 @@ func (pl *PlatformLoad) Collect() (data.DataSet, error) {
 			}
 		}
 
-		result.rows = make([]loadDataRow, 0)
 		for platform := range allPlatforms {
-			row := loadDataRow{org: org, platform: platform, waitingJobs: waiting[platform], runningJobs: running[platform]}
+			row := &loadDataRow{org: org, platform: platform, waitingJobs: waiting[platform], runningJobs: running[platform]}
 			result.rows = append(result.rows, row)
 		}
 	}
@@ -89,7 +88,7 @@ type loadDataRow struct {
 type loadDataSet struct {
 	headers []string
 	ts      time.Time
-	rows    []loadDataRow
+	rows    []*loadDataRow
 }
 
 func (lds *loadDataSet) GetData() *data.LegacyDataSet {

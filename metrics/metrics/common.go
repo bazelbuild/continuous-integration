@@ -17,8 +17,12 @@ func getPlatform(job *buildkite.Job) string {
 func getPlatformFromAgentQueryRules(rules []string) string {
 	for _, r := range rules {
 		parts := strings.Split(r, "=")
-		if len(parts) == 2 && parts[0] == "os" {
-			return parts[1]
+		if len(parts) == 2 && parts[0] == "queue" {
+			if parts[1] == "default" {
+				return "linux"
+			} else {
+				return parts[1]
+			}
 		}
 	}
 	return ""
