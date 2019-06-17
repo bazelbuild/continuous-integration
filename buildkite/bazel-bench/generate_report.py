@@ -35,13 +35,6 @@ import tempfile
 import urllib.request
 
 
-def _platform_path_str(posix_path):
-    """Converts the path to the appropriate format for platform."""
-    if os.name == "nt":
-        return posix_path.replace("/", "\\")
-    return posix_path
-
-
 # TODO(leba): Include JSON profiles data.
 TMP = tempfile.gettempdir()
 REPORTS_DIRECTORY = os.path.join(TMP, ".bazel_bench", "reports")
