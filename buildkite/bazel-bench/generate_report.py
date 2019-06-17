@@ -197,7 +197,7 @@ def _generate_report_for_date(project, date, storage_bucket):
         graph_components.append(
             _single_graph(
                 metric="wall",
-                metric_label="Wall Time (ms)",
+                metric_label="Wall Time (s)",
                 data=wall_data,
                 platform=platform_measurement["platform"],
             )
