@@ -44,7 +44,7 @@ def _platform_path_str(posix_path):
 
 # TODO(leba): Include JSON profiles data.
 TMP = tempfile.gettempdir()
-REPORTS_DIRECTORY = _platform_path_str("{}/.bazel_bench/reports".format(TMP))
+REPORTS_DIRECTORY = os.path.join(TMP, ".bazel_bench", "reports")
 
 
 def _upload_to_storage(src_file_path, storage_bucket, destination_dir):
