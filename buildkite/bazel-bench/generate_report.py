@@ -151,7 +151,7 @@ def _single_graph(metric, metric_label, data, platform):
     )
 
 
-def _full_report(date, graph_components):
+def _full_report(project, date, graph_components):
     """Returns the full HTML of a complete report, from the graph components.
     """
     return """
@@ -163,12 +163,12 @@ def _full_report(date, graph_components):
     </script>
   </head>
   <body style="font-family: Roboto;">
-    <h1>Report for {date}</h1>
+    <h1>[{project}] Report for {date}</h1>
     {graphs}
   </body>
 </html>
 """.format(
-        date=date, graphs=graph_components
+        project=project, date=date, graphs=graph_components
     )
 
 
@@ -212,7 +212,7 @@ def _generate_report_for_date(project, date, storage_bucket):
             )
         )
 
-    content = _full_report(date, "\n".join(graph_components))
+    content = _full_report(project, date, "\n".join(graph_components))
 
     if not os.path.exists(REPORTS_DIRECTORY):
         os.makedirs(REPORTS_DIRECTORY)
