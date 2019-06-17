@@ -42,18 +42,7 @@ def _platform_path_str(posix_path):
     return posix_path
 
 
-# For the event markers in JSON profiles.
 # TODO(leba): Include JSON profiles data.
-EVENTS_ORDER = [
-    "Launch Blaze",
-    "Initialize command",
-    "Load packages",
-    "Analyze dependencies",
-    "Analyze licenses",
-    "Prepare for build",
-    "Build artifacts",
-    "Complete build",
-]
 TMP = tempfile.gettempdir()
 REPORTS_DIRECTORY = _platform_path_str("{}/.bazel_bench/reports".format(TMP))
 
@@ -88,6 +77,7 @@ def _get_dated_subdir_for_project(project, date):
 
 def _prepare_data_for_graph(performance_data):
     """Massage the data to fit a format suitable for graph generation.
+    TODO(leba): Add hyperlink to each bazel commit.
     """
     ordered_commit_to_readings = collections.OrderedDict()
     for entry in performance_data:
