@@ -42,6 +42,7 @@ TMP = tempfile.gettempdir()
 PROJECTS = [
     {
         "name": "Bazel",
+        "storage_subdir": "bazel",
         "git_repository": "https://github.com/bazelbuild/bazel.git",
         "bazel_command": "build ...",
     }
