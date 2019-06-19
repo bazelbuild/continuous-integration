@@ -63,16 +63,16 @@ def _bazel_bench_env_setup_command(platform, bazel_commits):
 def _get_bazel_commits(date, bazel_repo_path):
     """Get the commits from a particular date.
 
-  Get the commits from 00:00 of date to 00:00 of date + 1.
+    Get the commits from 00:00 of date to 00:00 of date + 1.
 
-  Args:
-    date: a datetime.date the date to get commits.
-    bazel_repo_path: the path to a local clone of bazelbuild/bazel.
+    Args:
+      date: a datetime.date the date to get commits.
+      bazel_repo_path: the path to a local clone of bazelbuild/bazel.
 
-  Return:
-    A list of string (commit hashes).
-  """
-    date_plus_one = date + datetime.timedelta(day=1)
+    Return:
+      A list of string (commit hashes).
+    """
+    date_plus_one = date + datetime.timedelta(days=1)
     args = [
         "git",
         "log",
@@ -88,12 +88,12 @@ def _get_bazel_commits(date, bazel_repo_path):
 def _get_platforms(project_name):
     """Get the platforms on which this project is run on BazelCI.
 
-  Args:
-    project_name: a string: the name of the project. e.g. "Bazel".
+    Args:
+      project_name: a string: the name of the project. e.g. "Bazel".
 
-  Returns:
-    A list of string: the platforms for this project.
-  """
+    Returns:
+      A list of string: the platforms for this project.
+    """
     http_config = bazelci.DOWNSTREAM_PROJECTS_PRODUCTION[project_name]["http_config"]
     configs = bazelci.fetch_configs(http_config, None)
     tasks = configs["tasks"]
@@ -103,16 +103,16 @@ def _get_platforms(project_name):
 def _get_clone_path(repository, platform):
     """Returns the path to a local clone of the project.
 
-  If there's a mirror available, use that. bazel-bench will take care of
-  pulling/checking out commits. Else, clone the repo.
+    If there's a mirror available, use that. bazel-bench will take care of
+    pulling/checking out commits. Else, clone the repo.
 
-  Args:
-    repository: the URL to the git repository.
-    platform: the platform on which to build the project.
+    Args:
+      repository: the URL to the git repository.
+      platform: the platform on which to build the project.
 
-  Returns:
-    A path to the local clone.
-  """
+    Returns:
+      A path to the local clone.
+    """
     mirror_path = bazelci.get_mirror_path(repository, platform)
     if os.path.exists(mirror_path):
         bazelci.eprint("Found mirror for %s on %s." % repository, platform)
