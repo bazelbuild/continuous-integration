@@ -1019,7 +1019,7 @@ def clone_git_repository(git_repository, platform, git_commit=None):
     os.chdir(clone_path)
     execute_command(["git", "remote", "set-url", "origin", git_repository])
     execute_command(["git", "clean", "-fdqx"])
-    execute_command(["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"])
+    execute_command(["git", "submodule", "foreach", "--recursive", "git clean -fdqx"])
     execute_command(["git", "fetch", "origin"])
     if git_commit:
         # sync to a specific commit of this repository
@@ -1034,9 +1034,9 @@ def clone_git_repository(git_repository, platform, git_commit=None):
         execute_command(["git", "reset", remote_head, "--hard"])
     execute_command(["git", "submodule", "sync", "--recursive"])
     execute_command(["git", "submodule", "update", "--init", "--recursive", "--force"])
-    execute_command(["git", "submodule", "foreach", "--recursive", "git", "reset", "--hard"])
+    execute_command(["git", "submodule", "foreach", "--recursive", "git reset --hard"])
     execute_command(["git", "clean", "-fdqx"])
-    execute_command(["git", "submodule", "foreach", "--recursive", "git", "clean", "-fdqx"])
+    execute_command(["git", "submodule", "foreach", "--recursive", "git clean -fdqx"])
     return clone_path
 
 
