@@ -164,18 +164,26 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
     # Upload the raw data in the csv file to BigQuery.
     upload_result_bq_command = " ".join(
         [
-            "bazel", "run", "//utils:bigquery_upload", "--",
+            "bazel",
+            "run",
+            "//utils:bigquery_upload",
+            "--",
             "-upload_to_bigquery=blaze-perf:bazel_playground:bazel_bench:europe-west2",
-            "--", "{}/{}".format(DATA_DIRECTORY, BAZEL_BENCH_RESULT_FILENAME)
+            "--",
+            "{}/{}".format(DATA_DIRECTORY, BAZEL_BENCH_RESULT_FILENAME),
         ]
     )
 
     # Upload the aggregated JSON profile to BigQuery.
     upload_json_prof_aggr_bq_command = " ".join(
         [
-            "bazel", "run", "//utils:bigquery_upload", "--",
+            "bazel",
+            "run",
+            "//utils:bigquery_upload",
+            "--",
             "-upload_to_bigquery=blaze-perf:bazel_playground:json_profiles_aggr:europe-west2",
-            "--", "{}/{}".format(DATA_DIRECTORY, JSON_PROFILES_AGGR_FILENAME)
+            "--",
+            "{}/{}".format(DATA_DIRECTORY, JSON_PROFILES_AGGR_FILENAME),
         ]
     )
 
@@ -183,21 +191,28 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
     # This includes the raw data, aggr JSON profile and the JSON profiles
     # themselves.
     storage_subdir = "{}/{}/{}/".format(
-            project["storage_subdir"], date.strftime("%Y/%m/%d"), platform)
+        project["storage_subdir"], date.strftime("%Y/%m/%d"), platform
+    )
     upload_output_files_storage_command = " ".join(
         [
-            "bazel", "run", "//utils:storage_upload", "--",
+            "bazel",
+            "run",
+            "//utils:storage_upload",
+            "--",
             "-upload_to_storage=blaze-perf:bazel-bench:{}".format(storage_subdir),
-            "--", "{}/*".format(DATA_DIRECTORY)
+            "--",
+            "{}/*".format(DATA_DIRECTORY),
         ]
     )
     commands = (
         [bazelci.fetch_bazelcipy_command()]
         + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
-        + [bazel_bench_command,
-           upload_result_bq_command,
-           upload_result_storage_command,
-           upload_output_files_storage_command]
+        + [
+            bazel_bench_command,
+            upload_result_bq_command,
+            upload_result_storage_command,
+            upload_output_files_storage_command,
+        ]
     )
     label = (
         bazelci.PLATFORMS[platform]["emoji-name"]
@@ -218,7 +233,8 @@ def _metadata_file_content(project_label, command, date, platforms):
         The content of the METADATA file for the project on that date.
     """
     data_root = "https://bazel-bench.storage.googleapis.com/{}/{}".format(
-            project_label, date.strftime("%Y/%m/%d"))
+        project_label, date.strftime("%Y/%m/%d")
+    )
 
     return {
         "name": project_label,
@@ -228,9 +244,10 @@ def _metadata_file_content(project_label, command, date, platforms):
             {
                 "platform": platform,
                 "perf_data": "{}/{}".format(platform, BAZEL_BENCH_RESULT_FILENAME),
-                "json_profiles_aggr": "{}/{}".format(platform, JSON_PROFILES_AGGR_FILENAME)
-            } for platform in platforms
-        ]
+                "json_profiles_aggr": "{}/{}".format(platform, JSON_PROFILES_AGGR_FILENAME),
+            }
+            for platform in platforms
+        ],
     }
 
 
@@ -247,21 +264,19 @@ def _create_and_upload_metadata(project_label, command, date, platforms):
         date: the date of the runs.
         platform: the platform the runs were performed on.
     """
-   metadata_file_path = "{}/{}-metadata".format(TMP, project_label)
+    metadata_file_path = "{}/{}-metadata".format(TMP, project_label)
 
     with open(metadata_file_path, "w") as f:
         data = _metadata_file_content(project_label, command, date, platforms)
         json.dump(data, f)
 
-    destination = "gs://bazel-bench/{}/{}/METADATA".format(
-            project_label, date.strftime("%Y/%m/%d"))
+    destination = "gs://bazel-bench/{}/{}/METADATA".format(project_label, date.strftime("%Y/%m/%d"))
     args = ["gsutil", "cp", metadata_file_path, destination]
 
     try:
         subprocess.check_output(args)
-        eprint("Uploaded {}'s METADATA to {}.".format(
-                project_label, destination))
-    except subprocess.CalledProcessError e:
+        eprint("Uploaded {}'s METADATA to {}.".format(project_label, destination))
+    except subprocess.CalledProcessError as e:
         eprint("Error uploading: {}".format(e))
 
 
@@ -297,18 +312,15 @@ def main(args=None):
 
             bazel_bench_ci_steps.append(
                 _ci_step_for_platform_and_commits(
-                    bazel_commits,
-                    platform,
-                    project,
-                    parsed_args.bazel_bench_options,
-                    date
+                    bazel_commits, platform, project, parsed_args.bazel_bench_options, date
                 )
             )
         _create_and_upload_metadata(
-                project_label=project["storage_subdir"),
-                command=project["bazel_command"],
-                date=date,
-                platforms=platforms)
+            project_label=project["storage_subdir"],
+            command=project["bazel_command"],
+            date=date,
+            platforms=platforms,
+        )
 
     bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
     buildkite_pipeline_cmd = "cat <<EOF | buildkite-agent pipeline upload\n%s\nEOF" % yaml.dump(
