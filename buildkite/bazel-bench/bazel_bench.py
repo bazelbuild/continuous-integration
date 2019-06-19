@@ -49,7 +49,7 @@ JSON_PROFILES_AGGR_FILENAME = "json_profiles_aggr.csv"
 
 def _bazel_bench_env_setup_command(platform, bazel_commits):
     bazel_bench_env_setup_py_url = (
-        "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel_bench_env_setup.py?%s"
+        "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-bench/bazel_bench_env_setup.py?%s"
         % int(time.time())
     )
     download_command = 'curl -sS "%s" -o bazel_bench_env_setup.py' % bazel_bench_env_setup_py_url
