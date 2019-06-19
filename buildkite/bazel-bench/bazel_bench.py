@@ -39,7 +39,16 @@ PROJECTS = [
         "storage_subdir": "bazel",
         "git_repository": "https://github.com/bazelbuild/bazel.git",
         "bazel_command": "build //src:bazel-bin",
-    }
+        "active": False
+    },
+    {
+        "name": "rules_cc",
+        "storage_subdir": "rules_cc",
+        "git_repository": "https://github.com/bazelbuild/rules_cc.git",
+        "bazel_command": "build ...",
+        "active": True
+    },
+
 ]
 BAZEL_REPOSITORY = "https://github.com/bazelbuild/bazel.git"
 DATA_DIRECTORY = os.path.join(TMP, ".bazel-bench", "out")
@@ -301,6 +310,8 @@ def main(args=None):
     bazel_commits = None
 
     for project in PROJECTS:
+        if not project["active"]:
+          continue
         platforms = _get_platforms(project["name"])
         for platform in platforms:
             # bazel-bench doesn't support Windows for now.
