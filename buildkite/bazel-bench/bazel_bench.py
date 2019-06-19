@@ -22,6 +22,7 @@ on.
 import argparse
 import bazelci
 import datetime
+import json
 import os
 import subprocess
 import sys
@@ -210,7 +211,7 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
         + [
             bazel_bench_command,
             upload_result_bq_command,
-            upload_result_storage_command,
+            upload_json_prof_aggr_bq_command,
             upload_output_files_storage_command,
         ]
     )
@@ -275,9 +276,9 @@ def _create_and_upload_metadata(project_label, command, date, platforms):
 
     try:
         subprocess.check_output(args)
-        eprint("Uploaded {}'s METADATA to {}.".format(project_label, destination))
+        bazelci.eprint("Uploaded {}'s METADATA to {}.".format(project_label, destination))
     except subprocess.CalledProcessError as e:
-        eprint("Error uploading: {}".format(e))
+        bazelci.eprint("Error uploading: {}".format(e))
 
 
 def main(args=None):
