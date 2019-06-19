@@ -30,13 +30,6 @@ import time
 import yaml
 
 
-def _platform_path_str(posix_path):
-    """Converts the path to the appropriate format for platform."""
-    if os.name == "nt":
-        return posix_path.replace("/", "\\")
-    return posix_path
-
-
 # TMP has different values, depending on the platform.
 TMP = tempfile.gettempdir()
 PROJECTS = [
@@ -44,11 +37,13 @@ PROJECTS = [
         "name": "Bazel",
         "storage_subdir": "bazel",
         "git_repository": "https://github.com/bazelbuild/bazel.git",
-        "bazel_command": "build ...",
+        "bazel_command": "build //src:bazel-bin",
     }
 ]
 BAZEL_REPOSITORY = "https://github.com/bazelbuild/bazel.git"
-DATA_DIRECTORY = _platform_path_str("%s/.bazel-bench/out/" % TMP)
+DATA_DIRECTORY = os.path.join(TMP, ".bazel-bench", "out")
+BAZEL_BENCH_RESULT_FILENAME = "perf_data.csv"
+JSON_PROFILES_AGGR_FILENAME = "json_profiles_aggr.csv"
 
 
 def _bazel_bench_env_setup_command(platform, bazel_commits):
@@ -65,25 +60,25 @@ def _bazel_bench_env_setup_command(platform, bazel_commits):
     return [download_command, exec_command]
 
 
-def _get_bazel_commits(day, bazel_repo_path):
-    """Get the commits from a particular day.
+def _get_bazel_commits(date, bazel_repo_path):
+    """Get the commits from a particular date.
 
-  Get the commits from 00:00 of day to 00:00 of day + 1.
+  Get the commits from 00:00 of date to 00:00 of date + 1.
 
   Args:
-    day: a datetime.date the day to get commits.
+    date: a datetime.date the date to get commits.
     bazel_repo_path: the path to a local clone of bazelbuild/bazel.
 
   Return:
     A list of string (commit hashes).
   """
-    day_plus_one = day + datetime.timedelta(days=1)
+    date_plus_one = date + datetime.timedelta(day=1)
     args = [
         "git",
         "log",
         "--pretty=format:'%H'",
-        "--after='%s'" % day.strftime("%Y-%m-%d 00:00"),
-        "--until='%s'" % day_plus_one.strftime("%Y-%m-%d 00:00"),
+        "--after='%s'" % date.strftime("%Y-%m-%d 00:00"),
+        "--until='%s'" % date_plus_one.strftime("%Y-%m-%d 00:00"),
         "--reverse",
     ]
     command_output = subprocess.check_output(args, cwd=bazel_repo_path)
@@ -126,21 +121,22 @@ def _get_clone_path(repository, platform):
     return repository
 
 
-def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_options):
+def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_options, date):
     """Perform bazel-bench for the platform-project combination.
-  Uploads results to BigQuery.
+    Uploads results to BigQuery.
 
-  Args:
-    bazel_commits: a list of strings: bazel commits to be benchmarked.
-    platform: a string: the platform to benchmark on.
-    project: an object: contains the information of the project to be
-      tested on.
-    extra_options: a string: extra bazel-bench options.
+    Args:
+        bazel_commits: a list of strings: bazel commits to be benchmarked.
+        platform: a string: the platform to benchmark on.
+        project: an object: contains the information of the project to be
+          tested on.
+        extra_options: a string: extra bazel-bench options.
+        date: the date of the commits.
 
-  Return:
-    An object: the result of applying bazelci.create_step to wrap the
-      command to be executed by buildkite-agent.
-  """
+    Return:
+        An object: the result of applying bazelci.create_step to wrap the
+          command to be executed by buildkite-agent.
+    """
     project_clone_path = _get_clone_path(project["git_repository"], platform)
     bazel_clone_path = _get_clone_path(BAZEL_REPOSITORY, platform)
 
@@ -156,16 +152,52 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
             "--platform=%s" % platform,
             "--collect_memory",
             "--data_directory=%s" % DATA_DIRECTORY,
+            "--csv_file_name=%s" % BAZEL_BENCH_RESULT_FILENAME,
+            "--collect_json_profile",
+            "--aggregate_json_profiles",
             extra_options,
             "--",
             project["bazel_command"],
         ]
     )
 
+    # Upload the raw data in the csv file to BigQuery.
+    upload_result_bq_command = " ".join(
+        [
+            "bazel", "run", "//utils:bigquery_upload", "--",
+            "-upload_to_bigquery=blaze-perf:bazel_playground:bazel_bench:europe-west2",
+            "--", "{}/{}".format(DATA_DIRECTORY, BAZEL_BENCH_RESULT_FILENAME)
+        ]
+    )
+
+    # Upload the aggregated JSON profile to BigQuery.
+    upload_json_prof_aggr_bq_command = " ".join(
+        [
+            "bazel", "run", "//utils:bigquery_upload", "--",
+            "-upload_to_bigquery=blaze-perf:bazel_playground:json_profiles_aggr:europe-west2",
+            "--", "{}/{}".format(DATA_DIRECTORY, JSON_PROFILES_AGGR_FILENAME)
+        ]
+    )
+
+    # Upload everything under DATA_DIRECTORY to Storage.
+    # This includes the raw data, aggr JSON profile and the JSON profiles
+    # themselves.
+    storage_subdir = "{}/{}/{}/".format(
+            project["storage_subdir"], date.strftime("%Y/%m/%d"), platform)
+    upload_output_files_storage_command = " ".join(
+        [
+            "bazel", "run", "//utils:storage_upload", "--",
+            "-upload_to_storage=blaze-perf:bazel-bench:{}".format(storage_subdir),
+            "--", "{}/*".format(DATA_DIRECTORY)
+        ]
+    )
     commands = (
         [bazelci.fetch_bazelcipy_command()]
         + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
-        + [bazel_bench_command]
+        + [bazel_bench_command,
+           upload_result_bq_command,
+           upload_result_storage_command,
+           upload_output_files_storage_command]
     )
     label = (
         bazelci.PLATFORMS[platform]["emoji-name"]
@@ -174,24 +206,85 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
     return bazelci.create_step(label, commands, platform)
 
 
+def _metadata_file_content(project_label, command, date, platforms):
+    """Generate the METADATA file for each project.
+
+    Args:
+        project_label: the label of the project on Storage.
+        command: the bazel command executed during the runs e.g. bazel build ...
+        date: the date of the runs.
+        platform: the platform the runs were performed on.
+    Returns:
+        The content of the METADATA file for the project on that date.
+    """
+    data_root = "https://bazel-bench.storage.googleapis.com/{}/{}".format(
+            project_label, date.strftime("%Y/%m/%d"))
+
+    return {
+        "name": project_label,
+        "command": command,
+        "data_root": data_root,
+        "platforms": [
+            {
+                "platform": platform,
+                "perf_data": "{}/{}".format(platform, BAZEL_BENCH_RESULT_FILENAME),
+                "json_profiles_aggr": "{}/{}".format(platform, JSON_PROFILES_AGGR_FILENAME)
+            } for platform in platforms
+        ]
+    }
+
+
+def _create_and_upload_metadata(project_label, command, date, platforms):
+    """Generate the METADATA file for each project & upload to Storage.
+
+    METADATA provides information about the runs and where to get the
+    measurements. It is later used by the script that generates the daily report
+    to construct the graphs.
+
+    Args:
+        project_label: the label of the project on Storage.
+        command: the bazel command executed during the runs e.g. bazel build ...
+        date: the date of the runs.
+        platform: the platform the runs were performed on.
+    """
+   metadata_file_path = "{}/{}-metadata".format(TMP, project_label)
+
+    with open(metadata_file_path, "w") as f:
+        data = _metadata_file_content(project_label, command, date, platforms)
+        json.dump(data, f)
+
+    destination = "gs://bazel-bench/{}/{}/METADATA".format(
+            project_label, date.strftime("%Y/%m/%d"))
+    args = ["gsutil", "cp", metadata_file_path, destination]
+
+    try:
+        subprocess.check_output(args)
+        eprint("Uploaded {}'s METADATA to {}.".format(
+                project_label, destination))
+    except subprocess.CalledProcessError e:
+        eprint("Error uploading: {}".format(e))
+
+
 def main(args=None):
     if args is None:
         args = sys.argv[1:]
 
     parser = argparse.ArgumentParser(description="Bazel Bench CI Pipeline")
-    parser.add_argument("--day", type=str)
+    parser.add_argument("--date", type=str)
     parser.add_argument("--bazel_bench_options", type=str, default="")
     parsed_args = parser.parse_args(args)
 
     bazel_bench_ci_steps = []
-    day = (
-        datetime.datetime.strptime(parsed_args.day, "%Y-%m-%d").date()
-        if parsed_args.day
+    date = (
+        datetime.datetime.strptime(parsed_args.date, "%Y-%m-%d").date()
+        if parsed_args.date
         else datetime.date.today()
     )
     bazel_commits = None
+
     for project in PROJECTS:
-        for platform in _get_platforms(project["name"]):
+        platforms = _get_platforms(project["name"])
+        for platform in platforms:
             # bazel-bench doesn't support Windows for now.
             if platform in ["windows"]:
                 continue
@@ -200,13 +293,22 @@ def main(args=None):
             # The bazel commits should be the same regardless of platform.
             if not bazel_commits:
                 bazel_clone_path = bazelci.clone_git_repository(BAZEL_REPOSITORY, platform)
-                bazel_commits = _get_bazel_commits(day, bazel_clone_path)
+                bazel_commits = _get_bazel_commits(date, bazel_clone_path)
 
             bazel_bench_ci_steps.append(
                 _ci_step_for_platform_and_commits(
-                    bazel_commits, platform, project, parsed_args.bazel_bench_options
+                    bazel_commits,
+                    platform,
+                    project,
+                    parsed_args.bazel_bench_options,
+                    date
                 )
             )
+        _create_and_upload_metadata(
+                project_label=project["storage_subdir"),
+                command=project["bazel_command"],
+                date=date,
+                platforms=platforms)
 
     bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
     buildkite_pipeline_cmd = "cat <<EOF | buildkite-agent pipeline upload\n%s\nEOF" % yaml.dump(
