@@ -83,7 +83,9 @@ def _get_bazel_commits(date, bazel_repo_path):
         "--reverse",
     ]
     command_output = subprocess.check_output(args, cwd=bazel_repo_path)
-    return [line.decode("utf-8").rstrip("\n").strip("'") for line in command_output]
+    decoded = command_output.decode("utf-8").split("\n")
+
+    return [line.strip("'") for line in decoded]
 
 
 def _get_platforms(project_name):
