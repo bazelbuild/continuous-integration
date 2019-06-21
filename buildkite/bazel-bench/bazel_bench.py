@@ -172,6 +172,7 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
             project["bazel_command"],
         ]
     )
+    # TODO(leba): Upload to BigQuery too.
 
     # Upload everything under DATA_DIRECTORY to Storage.
     # This includes the raw data, aggr JSON profile and the JSON profiles
