@@ -223,7 +223,7 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
         [bazelci.fetch_bazelcipy_command()]
         + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
         + [
-            bazel_bench_command,
+            #bazel_bench_command,
             upload_result_bq_command,
             upload_json_prof_aggr_bq_command,
             upload_output_files_storage_command,
