@@ -178,7 +178,6 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
         [
             "bazel",
             "run",
-            "--host_force_python=PY3",
             "//utils:bigquery_upload",
             "--",
             "-upload_to_bigquery=blaze-perf:bazel_playground:bazel_bench:europe-west2",
@@ -222,6 +221,7 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
         + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
         + [
             #bazel_bench_command,
+            "python3 --version",
             upload_result_bq_command,
             upload_json_prof_aggr_bq_command,
             upload_output_files_storage_command,
