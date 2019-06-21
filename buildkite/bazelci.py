@@ -385,6 +385,14 @@ DOWNSTREAM_PROJECTS = {
 # the platform name in a human readable format, and a the buildkite-agent's
 # working directory.
 PLATFORMS = {
+    "centos7": {
+        "name": "CentOS 7, Java 8",
+        "emoji-name": ":centos: 7 (Java 8)",
+        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
+        "publish_binary": [],
+        "docker-image": "gcr.io/bazel-public/centos7:java8",
+        "python": "python3.6",
+    },
     "ubuntu1604": {
         "name": "Ubuntu 16.04, OpenJDK 8",
         "emoji-name": ":ubuntu: 16.04 (OpenJDK 8)",
