@@ -38,17 +38,9 @@ PROJECTS = [
         "name": "Bazel",
         "storage_subdir": "bazel",
         "git_repository": "https://github.com/bazelbuild/bazel.git",
-        "bazel_command": "build //src:bazel-bin",
-        "active": False
-    },
-    {
-        "name": "rules_cc",
-        "storage_subdir": "rules_cc",
-        "git_repository": "https://github.com/bazelbuild/rules_cc.git",
-        "bazel_command": "build ...",
+        "bazel_command": "build //src:bazel",
         "active": True
     },
-
 ]
 BAZEL_REPOSITORY = "https://github.com/bazelbuild/bazel.git"
 DATA_DIRECTORY = os.path.join(TMP, ".bazel-bench", "out")
@@ -317,3 +309,4 @@ def main(args=None):
 
 if __name__ == "__main__":
     sys.exit(main())
+
