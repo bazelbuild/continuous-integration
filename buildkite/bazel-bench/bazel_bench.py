@@ -33,6 +33,7 @@ import yaml
 
 # TMP has different values, depending on the platform.
 TMP = tempfile.gettempdir()
+# TODO(leba): Move this to a separate config file.
 PROJECTS = [
     {
         "name": "Bazel",
@@ -165,6 +166,7 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
         ]
     )
     # TODO(leba): Upload to BigQuery too.
+    # TODO(leba): Use GCP Python client instead of gsutil.
 
     # Upload everything under DATA_DIRECTORY to Storage.
     # This includes the raw data, aggr JSON profile and the JSON profiles
