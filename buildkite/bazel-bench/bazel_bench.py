@@ -173,32 +173,6 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
         ]
     )
 
-    # Upload the raw data in the csv file to BigQuery.
-    upload_result_bq_command = " ".join(
-        [
-            "bazel",
-            "run",
-            "//utils:bigquery_upload",
-            "--",
-            "-upload_to_bigquery=blaze-perf:bazel_playground:bazel_bench:europe-west2",
-            "--",
-            "{}/{}".format(DATA_DIRECTORY, BAZEL_BENCH_RESULT_FILENAME),
-        ]
-    )
-
-    # Upload the aggregated JSON profile to BigQuery.
-    upload_json_prof_aggr_bq_command = " ".join(
-        [
-            "bazel",
-            "run",
-            "//utils:bigquery_upload",
-            "--",
-            "-upload_to_bigquery=blaze-perf:bazel_playground:json_profiles_aggr:europe-west2",
-            "--",
-            "{}/{}".format(DATA_DIRECTORY, JSON_PROFILES_AGGR_FILENAME),
-        ]
-    )
-
     # Upload everything under DATA_DIRECTORY to Storage.
     # This includes the raw data, aggr JSON profile and the JSON profiles
     # themselves.
@@ -207,13 +181,12 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
     )
     upload_output_files_storage_command = " ".join(
         [
-            "bazel",
-            "run",
-            "//utils:storage_upload",
-            "--",
-            "-upload_to_storage=blaze-perf:bazel-bench:{}".format(storage_subdir),
-            "--",
+            "gsutil",
+            "-m",
+            "cp",
+            "-r",
             "{}/*".format(DATA_DIRECTORY),
+            "gs://bazel-bench/{}".format(storage_subdir)
         ]
     )
     commands = (
@@ -221,9 +194,6 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
         + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
         + [
             #bazel_bench_command,
-            "python3 --version",
-            upload_result_bq_command,
-            upload_json_prof_aggr_bq_command,
             upload_output_files_storage_command,
         ]
     )
