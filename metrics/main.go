@@ -80,6 +80,9 @@ func main() {
 	buildSuccess := metrics.CreateBuildSuccess(bk, 200, pipelines...)
 	srv.AddMetric(buildSuccess, 60, cloudSql)
 
+	criticalPath := metrics.CreateCriticalPath(bk, 20, pipelines...)
+	srv.AddMetric(criticalPath, 60, cloudSql)
+
 	flakiness := metrics.CreateFlakiness(gcs, "bazel-buildkite-stats", "flaky-tests-bep", pipelines...)
 	srv.AddMetric(flakiness, 60, cloudSql)
 
