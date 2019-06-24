@@ -9,17 +9,17 @@ platforms:
       - "//..."
   ubuntu1804:
     build_flags:
-      - "--host_javabase=@bazel_tools//tools/jdk:remote_jdk11"
-      - "--javabase=@bazel_tools//tools/jdk:remote_jdk11"
-      - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_java11"
-      - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_java11"
+      - "--define=ABSOLUTE_JAVABASE=/usr/lib/jvm/java-11-openjdk-amd64"
+      - "--host_javabase=@bazel_tools//tools/jdk:absolute_javabase"
+      - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla"
+      - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla"
     build_targets:
       - "//:release"
     test_flags:
-      - "--host_javabase=@bazel_tools//tools/jdk:remote_jdk11"
-      - "--javabase=@bazel_tools//tools/jdk:remote_jdk11"
-      - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_java11"
-      - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_java11"
+      - "--define=ABSOLUTE_JAVABASE=/usr/lib/jvm/java-11-openjdk-amd64"
+      - "--host_javabase=@bazel_tools//tools/jdk:absolute_javabase"
+      - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla"
+      - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla"
       - "--test_tag_filters=-slow,-flaky,-docker"
     test_targets:
       - "//..."
