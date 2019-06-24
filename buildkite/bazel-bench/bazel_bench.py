@@ -46,7 +46,7 @@ PROJECTS = [
 BAZEL_REPOSITORY = "https://github.com/bazelbuild/bazel.git"
 DATA_DIRECTORY = os.path.join(TMP, ".bazel-bench", "out")
 BAZEL_BENCH_RESULT_FILENAME = "perf_data.csv"
-JSON_PROFILES_AGGR_FILENAME = "aggr_json_profiles.csv"
+AGGR_JSON_PROFILES_FILENAME = "aggr_json_profiles.csv"
 
 
 def _bazel_bench_env_setup_command(platform, bazel_commits):
@@ -222,7 +222,7 @@ def _metadata_file_content(project_label, command, date, platforms):
             {
                 "platform": platform,
                 "perf_data": "{}/{}".format(platform, BAZEL_BENCH_RESULT_FILENAME),
-                "json_profiles_aggr": "{}/{}".format(platform, JSON_PROFILES_AGGR_FILENAME),
+                "aggr_json_profiles": "{}/{}".format(platform, AGGR_JSON_PROFILES_FILENAME),
             }
             for platform in platforms
         ],
