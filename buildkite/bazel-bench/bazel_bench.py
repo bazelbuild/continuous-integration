@@ -46,7 +46,7 @@ PROJECTS = [
 BAZEL_REPOSITORY = "https://github.com/bazelbuild/bazel.git"
 DATA_DIRECTORY = os.path.join(TMP, ".bazel-bench", "out")
 BAZEL_BENCH_RESULT_FILENAME = "perf_data.csv"
-JSON_PROFILES_AGGR_FILENAME = "json_profiles_aggr.csv"
+JSON_PROFILES_AGGR_FILENAME = "aggr_json_profiles.csv"
 
 
 def _bazel_bench_env_setup_command(platform, bazel_commits):
