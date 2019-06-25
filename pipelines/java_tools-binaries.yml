@@ -12,7 +12,7 @@ steps:
           - ANDROID_HOME
           - ANDROID_NDK_HOME
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/ubuntu1604:java8
+        image: gcr.io/bazel-public/centos7:java8
         network: host
         privileged: true
         propagate-environment: true

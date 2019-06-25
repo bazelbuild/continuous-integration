@@ -89,6 +89,7 @@ gcloud auth configure-docker --quiet
 docker pull "gcr.io/bazel-public/ubuntu1604:java8" &
 docker pull "gcr.io/bazel-public/ubuntu1804:java11" &
 docker pull "gcr.io/bazel-public/ubuntu1804:nojava" &
+docker pull "gcr.io/bazel-public/centos7:java8" &
 wait
 
 # Allow the Buildkite agent to access Docker images on GCR.

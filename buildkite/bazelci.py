@@ -386,7 +386,7 @@ PLATFORMS = {
         "name": "CentOS 7, Java 8",
         "emoji-name": ":centos: 7 (Java 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": [],
+        "publish_binary": ["ubuntu1404", "centos7", "linux"],
         "docker-image": "gcr.io/bazel-public/centos7:java8",
         "python": "python3.6",
     },
@@ -394,7 +394,7 @@ PLATFORMS = {
         "name": "Ubuntu 16.04, OpenJDK 8",
         "emoji-name": ":ubuntu: 16.04 (OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": ["ubuntu1404", "ubuntu1604", "linux"],
+        "publish_binary": ["ubuntu1604"],
         "docker-image": "gcr.io/bazel-public/ubuntu1604:java8",
         "python": "python3.6",
     },
@@ -444,6 +444,11 @@ BUILDIFIER_DOCKER_IMAGE = "gcr.io/bazel-public/buildifier"
 
 # The platform used for various steps (e.g. stuff that formerly ran on the "pipeline" workers).
 DEFAULT_PLATFORM = "ubuntu1804"
+
+# In order to test that "the one Linux binary" that we build for our official releases actually
+# works on all Linux distributions that we test on, we use the Linux binary built on our official
+# release platform for all Linux downstream tests.
+LINUX_BINARY_PLATFORM = "centos7"
 
 DEFAULT_XCODE_VERSION = "10.2.1"
 XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
@@ -691,12 +696,18 @@ def execute_commands(
         else:
             git_repository = os.getenv("BUILDKITE_REPO")
 
+        # We use one binary for all Linux platforms (because we also just release one binary for all
+        # Linux versions and we have to ensure that it works on all of them).
+        binary_platform = platform if platform in ["macos", "windows"] else LINUX_BINARY_PLATFORM
+
         if use_bazel_at_commit:
             print_collapsed_group(":gcloud: Downloading Bazel built at " + use_bazel_at_commit)
-            bazel_binary = download_bazel_binary_at_commit(tmpdir, platform, use_bazel_at_commit)
+            bazel_binary = download_bazel_binary_at_commit(
+                tmpdir, binary_platform, use_bazel_at_commit
+            )
         elif use_but:
             print_collapsed_group(":gcloud: Downloading Bazel Under Test")
-            bazel_binary = download_bazel_binary(tmpdir, platform)
+            bazel_binary = download_bazel_binary(tmpdir, binary_platform)
         else:
             bazel_binary = "bazel"
             if bazel_version:
@@ -971,10 +982,6 @@ def download_bazel_binary(dest_dir, platform):
 
 
 def download_bazel_binary_at_commit(dest_dir, platform, bazel_git_commit):
-    # We have a few Ubuntu platforms for which we don't build binaries. It should be OK to use the
-    # ones from Ubuntu 16.04 on them.
-    if "ubuntu" in platform and not should_publish_binaries_for_platform(platform):
-        platform = "ubuntu1604"
     bazel_binary_path = os.path.join(dest_dir, "bazel.exe" if platform == "windows" else "bazel")
     try:
         execute_command(
@@ -2190,13 +2197,6 @@ def print_bazel_downstream_pipeline(
     pipeline_steps = []
     task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
-    configured_platforms = set(get_platform_for_task(t, c) for t, c in task_configs.items())
-    if configured_platforms != set(PLATFORMS):
-        raise BuildkiteException(
-            "Bazel downstream pipeline needs to build Bazel on all supported platforms (has=%s vs. want=%s)."
-            % (sorted(configured_platforms), sorted(set(PLATFORMS)))
-        )
-
     pipeline_steps = []
 
     info_box_step = print_disabled_projects_info_box_step()
@@ -2460,7 +2460,7 @@ def upload_bazel_binaries():
         try:
             bazel_binary_path = download_bazel_binary(tmpdir, platform_name)
             # One platform that we build on can generate binaries for multiple platforms, e.g.
-            # the ubuntu1604 platform generates binaries for the "ubuntu1604" platform, but also
+            # the centos7 platform generates binaries for the "centos7" platform, but also
             # for the generic "linux" platform.
             for target_platform_name in platform["publish_binary"]:
                 execute_command(
