@@ -2197,13 +2197,6 @@ def print_bazel_downstream_pipeline(
     pipeline_steps = []
     task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
-    configured_platforms = set(get_platform_for_task(t, c) for t, c in task_configs.items())
-    if configured_platforms != set(PLATFORMS):
-        raise BuildkiteException(
-            "Bazel downstream pipeline needs to build Bazel on all supported platforms (has=%s vs. want=%s)."
-            % (sorted(configured_platforms), sorted(set(PLATFORMS)))
-        )
-
     pipeline_steps = []
 
     info_box_step = print_disabled_projects_info_box_step()
