@@ -171,7 +171,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml",
         "pipeline_slug": "gerrit",
-        "disabled_reason": "https://bugs.chromium.org/p/gerrit/issues/detail?id=11021",
     },
     "Google Logging": {
         "git_repository": "https://github.com/google/glog.git",
@@ -212,7 +211,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.yml",
         "pipeline_slug": "tensorflow",
-        "disabled_reason": "Waiting for fix from protobuf: https://github.com/protocolbuffers/protobuf/pull/6207",
     },
     "Tulsi": {
         "git_repository": "https://github.com/bazelbuild/tulsi.git",
@@ -278,7 +276,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_gwt/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-gwt",
-        "disabled_reason": "https://github.com/bazelbuild/rules_gwt/issues/23",
     },
     "rules_jsonnet": {
         "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
