@@ -60,8 +60,8 @@ func (job *metricJob) stop() {
 	job.ticker.Stop()
 }
 
-func createJob(metric metrics.Metric, updateIntervalMinutes uint, publisherInstances []publishers.Publisher) metricJob {
-	return metricJob{metric: metric, ticker: time.NewTicker(time.Duration(updateIntervalMinutes) * time.Minute), publishers: publisherInstances}
+func createJob(metric metrics.Metric, updateInterval time.Duration, publisherInstances []publishers.Publisher) metricJob {
+	return metricJob{metric: metric, ticker: time.NewTicker(updateInterval), publishers: publisherInstances}
 }
 
 type ErrorHandler func(string, error)
@@ -75,12 +75,12 @@ func CreateService(handler ErrorHandler) *MetricService {
 	return &MetricService{jobs: make(map[string]metricJob), handler: handler}
 }
 
-func (srv *MetricService) AddMetric(metric metrics.Metric, updateIntervalMinutes uint, publisherInstances ...publishers.Publisher) error {
+func (srv *MetricService) AddMetric(metric metrics.Metric, updateInterval time.Duration, publisherInstances ...publishers.Publisher) error {
 	name := metric.Name()
 	if _, ok := srv.jobs[name]; ok {
 		return fmt.Errorf("There is already a job for metric '%s'", name)
 	}
-	srv.jobs[name] = createJob(metric, updateIntervalMinutes, publisherInstances)
+	srv.jobs[name] = createJob(metric, updateInterval, publisherInstances)
 	return nil
 }
 
