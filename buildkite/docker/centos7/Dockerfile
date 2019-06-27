@@ -5,10 +5,7 @@ COPY --from=gcr.io/bazel-public/base:buildifier /usr/local/bin/buildifier /usr/l
 COPY --from=gcr.io/bazel-public/base:github-release /usr/local/bin/github-release /usr/local/bin/github-release
 COPY --from=gcr.io/bazel-public/base:saucelabs /usr/local/bin/sc /usr/local/bin/sc
 
-# Ensure that Bazel can use its beloved ISO-8859-1 locale.
-RUN localedef -i en_US -f ISO-8859-1 en_US.ISO-8859-1
-
-### Install required packages.
+# Install required packages.
 COPY google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
 RUN echo "Enabling EPEL repository..." && \
     yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
@@ -25,5 +22,9 @@ RUN echo "Enabling EPEL repository..." && \
     echo "Cleaning up..." && \
     yum clean all
 
-RUN curl -o https://release.bazel.build/0.27.0/release/bazel-0.27.0-centos7-x86_64 /usr/local/bin/bazel && \
+# Ensure that Bazel can use its beloved ISO-8859-1 locale.
+RUN localedef -i en_US -f ISO-8859-1 en_US.ISO-8859-1
+
+# Temporarily use a pre-compiled version of Bazel, because the latest release doesn't run on CentOS 7.
+RUN curl -o /usr/local/bin/bazel https://releases.bazel.build/0.27.0/release/bazel-0.27.0-centos7-x86_64 && \
     chmod 0755 /usr/local/bin/bazel
