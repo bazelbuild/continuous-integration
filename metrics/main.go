@@ -34,6 +34,10 @@ func minutes(value int) time.Duration {
 	return time.Duration(value) * time.Minute
 }
 
+func logInTestMode(message string) {
+	log.Printf("[Test mode] %s\n", message)
+}
+
 func main() {
 	flag.Parse()
 
@@ -68,56 +72,60 @@ func main() {
 		stackdriver := publishers.CreateStackdriverPublisher(stackdriverClient, *projectID)
 	*/
 
-	cloudSql, err := publishers.CreateCloudSqlPublisher(settings.CloudSqlUser, settings.CloudSqlPassword, settings.CloudSqlInstance, settings.CloudSqlDatabase, settings.CloudSqlLocalPort)
-	if err != nil {
-		log.Fatalf("Failed to set up Cloud SQL publisher: %v", err)
-	}
+	stdout := publishers.CreateStdoutPublisher(publishers.Csv)
 
-	/*
-		stdout := publishers.CreateStdoutPublisher(publishers.Csv)
-	*/
+	var defaultPublisher publishers.Publisher
+	if *testMode {
+		logInTestMode("Using stdout publisher for all metrics.")
+		defaultPublisher = stdout
+	} else {
+		defaultPublisher, err = publishers.CreateCloudSqlPublisher(settings.CloudSqlUser, settings.CloudSqlPassword, settings.CloudSqlInstance, settings.CloudSqlDatabase, settings.CloudSqlLocalPort)
+		if err != nil {
+			log.Fatalf("Failed to set up Cloud SQL publisher: %v", err)
+		}
+	}
 
 	srv := service.CreateService(handleError)
 
 	buildsPerChange := metrics.CreateBuildsPerChange(bk, 500, pipelines...)
-	srv.AddMetric(buildsPerChange, minutes(60), cloudSql)
+	srv.AddMetric(buildsPerChange, minutes(60), defaultPublisher)
 
 	buildSuccess := metrics.CreateBuildSuccess(bk, 200, pipelines...)
-	srv.AddMetric(buildSuccess, minutes(60), cloudSql)
+	srv.AddMetric(buildSuccess, minutes(60), defaultPublisher)
 
 	criticalPath := metrics.CreateCriticalPath(bk, 20, pipelines...)
-	srv.AddMetric(criticalPath, minutes(60), cloudSql)
+	srv.AddMetric(criticalPath, minutes(60), defaultPublisher)
 
 	flakiness := metrics.CreateFlakiness(gcs, "bazel-buildkite-stats", "flaky-tests-bep", pipelines...)
-	srv.AddMetric(flakiness, minutes(60), cloudSql)
+	srv.AddMetric(flakiness, minutes(60), defaultPublisher)
 
 	macPerformance := metrics.CreateMacPerformance(bk, 20, pipelines...)
-	srv.AddMetric(macPerformance, minutes(60), cloudSql)
+	srv.AddMetric(macPerformance, minutes(60), defaultPublisher)
 
 	/*
 		pipelinePerformance := metrics.CreatePipelinePerformance(bk, 20, pipelines...)
-		srv.AddMetric(pipelinePerformance, minutes(60), cloudSql)
+		srv.AddMetric(pipelinePerformance, minutes(60), defaultPublisher)
 	*/
 
 	platformLoad := metrics.CreatePlatformLoad(bk, 100, settings.BuildkiteOrgs...)
-	srv.AddMetric(platformLoad, minutes(5), cloudSql)
+	srv.AddMetric(platformLoad, minutes(5), defaultPublisher)
 
 	platformSignificance := metrics.CreatePlatformSignificance(bk, 100, pipelines...)
-	srv.AddMetric(platformSignificance, minutes(24*60), cloudSql)
+	srv.AddMetric(platformSignificance, minutes(24*60), defaultPublisher)
 
 	platformUsage := metrics.CreatePlatformUsage(bk, 100, settings.BuildkiteOrgs...)
-	srv.AddMetric(platformUsage, minutes(60), cloudSql)
+	srv.AddMetric(platformUsage, minutes(60), defaultPublisher)
 
 	releaseDownloads := metrics.CreateReleaseDownloads(settings.GitHubOrg,
 		settings.GitHubRepo,
 		settings.GitHubApiToken, megaByte)
-	srv.AddMetric(releaseDownloads, minutes(12*60), cloudSql)
+	srv.AddMetric(releaseDownloads, minutes(12*60), defaultPublisher)
 
 	workerAvailability := metrics.CreateWorkerAvailability(bk, settings.BuildkiteOrgs...)
-	srv.AddMetric(workerAvailability, minutes(5), cloudSql)
+	srv.AddMetric(workerAvailability, minutes(5), defaultPublisher)
 
 	if *testMode {
-		log.Println("[Test mode] Running all jobs exactly once...")
+		logInTestMode("Running all jobs exactly once...")
 		srv.RunJobsOnce()
 		os.Exit(0)
 	}
