@@ -3,6 +3,7 @@ package metrics
 import (
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/fweikert/continuous-integration/metrics/clients"
 	"github.com/fweikert/continuous-integration/metrics/data"
@@ -116,13 +117,14 @@ func toString(row []interface{}) ([]string, error) {
 	result := make([]string, len(row)-1)
 	to := 0
 	for i, v := range row {
-		if i == 1 {
-			// Skip build numnber.
-			continue
-		}
-		str, ok := v.(string)
-		if !ok {
-			return nil, fmt.Errorf("Expected string in column %v: %s", i, v)
+		var str string
+		if number, ok := v.(int); ok {
+			str = strconv.Itoa(number)
+		} else {
+			str, ok = v.(string)
+			if !ok {
+				return nil, fmt.Errorf("Expected string in column %v: %s", i, v)
+			}
 		}
 		result[to] = str
 		to += 1
