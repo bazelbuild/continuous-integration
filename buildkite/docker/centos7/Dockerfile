@@ -28,3 +28,16 @@ RUN localedef -i en_US -f ISO-8859-1 en_US.ISO-8859-1
 # Temporarily use a pre-compiled version of Bazel, because the latest release doesn't run on CentOS 7.
 RUN curl -o /usr/local/bin/bazel https://releases.bazel.build/0.27.0/release/bazel-0.27.0-centos7-x86_64 && \
     chmod 0755 /usr/local/bin/bazel
+
+FROM centos7-java8 AS centos7-releaser
+
+# dpkg-source needs a newer GNU tar version that supports --sort=name.
+RUN pushd /usr/local/src && \
+    curl http://ftp.gnu.org/gnu/tar/tar-1.32.tar.bz2 | tar xvj && \
+    cd tar-1.32 && \
+    FORCE_UNSAFE_CONFIGURE=1 ./configure && \
+    make -j && \
+    make install && \
+    popd && \
+    rm -rf /usr/local/src/tar-1.32 && \
+    ln -s tar /usr/local/bin/gtar
