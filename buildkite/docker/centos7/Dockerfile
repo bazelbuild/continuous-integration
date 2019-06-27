@@ -13,7 +13,7 @@ COPY google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
 RUN echo "Enabling EPEL repository..." && \
     yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
     echo "Installing packages required by Bazel..." && \
-    yum install -y ed file gcc gcc-c++ git iproute java-1.8.0-openjdk-devel lcov openssl-perl patch python python-six python36 python36-PyYAML python36-six unzip which zip && \
+    yum install -y dpkg-dev ed file gcc gcc-c++ git iproute java-1.8.0-openjdk-devel lcov openssl-perl patch python python-six python36 python36-PyYAML python36-six unzip which zip && \
     echo "Installing packages required by Android SDK..." && \
     yum install -y bzip2-libs.i686 ncurses-libs.i686 zlib.i686 && \
     echo "Installing Docker..." && \
