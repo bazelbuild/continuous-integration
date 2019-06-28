@@ -99,12 +99,6 @@ EOF
   systemctl stop docker
 }
 
-### Install Stackdriver Monitoring Agent.
-# {
-#   curl -sSO https://dl.google.com/cloudagents/install-monitoring-agent.sh
-#   bash install-monitoring-agent.sh
-# }
-
 ### Setup KVM.
 {
   apt-get -qqy install qemu-kvm
