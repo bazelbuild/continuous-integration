@@ -274,14 +274,6 @@ def main(argv=None):
         )
         return 1
 
-    if subprocess.check_output(["git", "status", "--porcelain"], universal_newlines=True).strip():
-        print(
-            "There are pending changes in your Git repository. You have to commit "
-            "them, before create_images.py can continue.",
-            file=sys.stderr,
-        )
-        return 1
-
     # Put VM creation instructions into the work queue.
     for name in argv:
         WORK_QUEUE.put({"name": name, "params": IMAGE_CREATION_VMS[name]})
