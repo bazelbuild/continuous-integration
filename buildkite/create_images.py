@@ -43,7 +43,7 @@ IMAGE_CREATION_VMS = {
         "project": "bazel-untrusted",
         "zone": "us-central1-a",
         "source_image_project": "ubuntu-os-cloud",
-        "source_image_family": "ubuntu-1904",
+        "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
@@ -53,7 +53,7 @@ IMAGE_CREATION_VMS = {
         "project": "bazel-untrusted",
         "zone": "us-central1-a",
         "source_image_project": "ubuntu-os-cloud",
-        "source_image_family": "ubuntu-1904",
+        "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
@@ -63,7 +63,7 @@ IMAGE_CREATION_VMS = {
         "project": "bazel-public",
         "zone": "us-central1-a",
         "source_image_project": "ubuntu-os-cloud",
-        "source_image_family": "ubuntu-1904",
+        "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
