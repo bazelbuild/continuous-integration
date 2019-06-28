@@ -115,7 +115,7 @@ EOF
 
   # Allow everyone access to the KVM device. As above, this would usually not be a good idea, but
   # these machines are untrusted anyway...
-  echo 'KERNEL=="kvm", NAME="%k", GROUP="kvm", MODE="0666"' > /etc/udev/rules.d/65-kvm.rules
+  echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' > /etc/udev/rules.d/65-kvm.rules
 }
 
 # Preseed our Git mirrors.
