@@ -52,7 +52,7 @@ func (pl *PlatformLoad) Collect() (data.DataSet, error) {
 				switch *job.State {
 				case "running":
 					running[platform] += 1
-				case "scheduled":
+				case "scheduled", "runnable":
 					/*
 						State "scheduled" = waiting for a worker to become available
 						State "waiting" / "waiting_failed" = waiting for another task to finish
@@ -61,6 +61,7 @@ func (pl *PlatformLoad) Collect() (data.DataSet, error) {
 					*/
 					waiting[platform] += 1
 				}
+
 			}
 		}
 
