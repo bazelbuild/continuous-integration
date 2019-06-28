@@ -40,8 +40,8 @@ PROJECTS = [
         "storage_subdir": "bazel",
         "git_repository": "https://github.com/bazelbuild/bazel.git",
         "bazel_command": "build //src:bazel",
-        "active": True
-    },
+        "active": True,
+    }
 ]
 BAZEL_REPOSITORY = "https://github.com/bazelbuild/bazel.git"
 DATA_DIRECTORY = os.path.join(TMP, ".bazel-bench", "out")
@@ -167,6 +167,7 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
     )
     # TODO(leba): Upload to BigQuery too.
     # TODO(leba): Use GCP Python client instead of gsutil.
+    # TODO(https://github.com/bazelbuild/bazel-bench/issues/46): Include task-specific shell commands and build flags.
 
     # Upload everything under DATA_DIRECTORY to Storage.
     # This includes the raw data, aggr JSON profile and the JSON profiles
@@ -181,16 +182,13 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
             "cp",
             "-r",
             "{}/*".format(DATA_DIRECTORY),
-            "gs://bazel-bench/{}".format(storage_subdir)
+            "gs://bazel-bench/{}".format(storage_subdir),
         ]
     )
     commands = (
         [bazelci.fetch_bazelcipy_command()]
         + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
-        + [
-            bazel_bench_command,
-            upload_output_files_storage_command,
-        ]
+        + [bazel_bench_command, upload_output_files_storage_command]
     )
     label = (
         bazelci.PLATFORMS[platform]["emoji-name"]
@@ -277,7 +275,7 @@ def main(args=None):
 
     for project in PROJECTS:
         if not project["active"]:
-          continue
+            continue
         platforms = _get_platforms(project["name"])
         for platform in platforms:
             # bazel-bench doesn't support Windows for now.
@@ -311,4 +309,3 @@ def main(args=None):
 
 if __name__ == "__main__":
     sys.exit(main())
-
