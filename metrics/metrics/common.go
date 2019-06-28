@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"log"
 	"strings"
 
 	"github.com/fweikert/go-buildkite/buildkite"
@@ -48,5 +49,14 @@ func getDifferenceSeconds(start *buildkite.Timestamp, end *buildkite.Timestamp) 
 	if start == nil || end == nil {
 		return -1
 	}
-	return end.Time.Sub(start.Time).Seconds()
+	seconds := end.Time.Sub(start.Time).Seconds()
+	if seconds < 0 {
+		if seconds > -1 {
+			// Some timestamps don't include milliseconds, which is probably a bug in the Buildkite API.
+			// For now we ignore any differences that are smaller than a second.
+			return 0
+		}
+		log.Fatalf("TIME ERROR: start %v is later than end %v: %v\n", start, end, seconds)
+	}
+	return seconds
 }
