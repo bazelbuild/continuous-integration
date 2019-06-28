@@ -48,7 +48,7 @@ def worker():
             if not zone and not region:
                 raise Exception("Invalid instance config, either zone or region must be specified")
 
-            timestamp = datetime.datetime.now().strftime("%Y%m%dt%H%M%S")
+            timestamp = datetime.now().strftime("%Y%m%dt%H%M%S")
             template_name = "{}-{}".format(instance_group_name, timestamp)
 
             # Create the new instance template.

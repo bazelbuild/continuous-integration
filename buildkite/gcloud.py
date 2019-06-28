@@ -100,7 +100,7 @@ def delete_instance_group(name, **kwargs):
         return e
 
 
-def rolling_update_instance_groups(name, **kwargs):
+def rolling_update_instance_group(name, **kwargs):
     try:
         return gcloud(
             "compute",
