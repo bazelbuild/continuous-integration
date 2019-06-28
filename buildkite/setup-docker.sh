@@ -91,7 +91,7 @@ EOF
   apt-get -qqy install apt-transport-https ca-certificates
 
   curl -sSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-  add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) test"
+  add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 
   apt-get -qqy update
   apt-get -qqy install docker-ce
