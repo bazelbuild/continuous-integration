@@ -45,6 +45,7 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
+        "boot_disk_size": "10GB",
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
@@ -55,6 +56,7 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
+        "boot_disk_size": "10GB",
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
@@ -65,6 +67,7 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
+        "boot_disk_size": "10GB",
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
@@ -75,6 +78,7 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-1809-core",
         "setup_script": "setup-windows.ps1",
+        "boot_disk_size": "32GB",
     },
     "bk-testing-windows-java8": {
         "project": "bazel-untrusted",
@@ -82,6 +86,7 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-1809-core",
         "setup_script": "setup-windows.ps1",
+        "boot_disk_size": "32GB",
     },
     "bk-trusted-windows-java8": {
         "project": "bazel-public",
@@ -97,6 +102,7 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-2019",
         "setup_script": "setup-windows.ps1",
+        "boot_disk_size": "50GB",
     },
 }
 
@@ -146,7 +152,7 @@ def create_instance(instance_name, params):
             network=params.get("network", "buildkite"),
             metadata_from_file=startup_script,
             boot_disk_type="pd-ssd",
-            boot_disk_size="50GB",
+            boot_disk_size=params.get("boot_disk_size", "50GB"),
             **image,
         )
     finally:
