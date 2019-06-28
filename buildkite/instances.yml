@@ -27,8 +27,6 @@ instance_groups:
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_project: bazel-untrusted
     image_family: bk-docker
-    local_ssd:
-      - interface=nvme
     metadata_from_file: startup-script=startup-docker.sh
   - name: bk-testing-docker
     count: 20
@@ -36,8 +34,6 @@ instance_groups:
     service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
     image_project: bazel-untrusted
     image_family: bk-testing-docker
-    local_ssd:
-      - interface=nvme
     metadata_from_file: startup-script=startup-docker.sh
   - name: bk-trusted-docker
     count: 8
@@ -45,8 +41,6 @@ instance_groups:
     service_account: buildkite-trusted@bazel-public.iam.gserviceaccount.com
     image_project: bazel-public
     image_family: bk-trusted-docker
-    local_ssd:
-      - interface=nvme
     metadata_from_file: startup-script=startup-docker.sh
   - name: bk-windows-java8
     count: 20
