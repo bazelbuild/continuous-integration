@@ -31,7 +31,7 @@ platforms:
       android_sdk_repository(name = "androidsdk")
       android_ndk_repository(name = "androidndk")' >>WORKSPACE
     - easy_install pip
-    - pip install -U --user pip six numpy wheel setuptools mock
+    - pip install -U --user pip six numpy wheel setuptools mock future
     - pip install -U --user keras_applications==1.0.6 --no-deps
     - pip install -U --user keras_preprocessing==1.0.5 --no-deps  
     - yes '' | python3 ./configure.py
