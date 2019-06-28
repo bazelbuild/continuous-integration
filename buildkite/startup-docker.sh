@@ -95,21 +95,18 @@ esac
 # Configure and start Docker.
 systemctl start docker
 
-# Pull some known images so that we don't have to download / extract them on each CI job.
+# Ensure that Docker images can be downloaded from GCR.
 gcloud auth configure-docker --quiet
-docker pull "gcr.io/bazel-public/ubuntu1604:java8" &
-docker pull "gcr.io/bazel-public/ubuntu1804:java11" &
-docker pull "gcr.io/bazel-public/ubuntu1804:nojava" &
-docker pull "gcr.io/bazel-public/centos7:java8" &
-wait
-
-# Allow the Buildkite agent to access Docker images on GCR.
 sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
 
 # Write the Buildkite agent's systemd configuration.
 mkdir -p /etc/systemd/system/buildkite-agent.service.d
 cat > /etc/systemd/system/buildkite-agent.service.d/override.conf <<'EOF'
 [Service]
+Restart=no
+# SuccessAction=poweroff-immediate
+# FailureAction=poweroff-immediate
+ExecStopPost=/bin/systemctl poweroff -ff
 # This allows us to run ExecStartPre and ExecStartPost steps with root permissions.
 PermissionsStartOnly=true
 # Disable tasks accounting, because Bazel is prone to run into resource limits there.
@@ -128,7 +125,7 @@ build-path="/var/lib/buildkite-agent/builds"
 git-mirrors-path="/var/lib/gitmirrors"
 hooks-path="/etc/buildkite-agent/hooks"
 plugins-path="/etc/buildkite-agent/plugins"
-disconnect-after-job=false
+disconnect-after-job=true
 disconnect-after-idle-timeout=900
 EOF
 
@@ -143,28 +140,6 @@ export ANDROID_NDK_HOME=/opt/android-ndk-r15c
 export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://${ARTIFACT_BUCKET}/\$BUILDKITE_JOB_ID"
 export CLOUDSDK_PYTHON="/usr/bin/python"
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/snap/google-cloud-sdk/current/bin"
-EOF
-
-cat > /etc/buildkite-agent/hooks/pre-exit <<'EOF'
-#!/bin/bash
-echo_and_run() { echo "\$ $*" ; "$@" ; }
-
-while [[ $(docker ps -q) ]]; do
-  echo_and_run docker kill $(docker ps -q)
-done
-
-USED_DISK_PERCENT=$(df --output=pcent /var/lib/docker | tail +2 | cut -d'%' -f1 | tr -d ' ')
-
-if [[ $USED_DISK_PERCENT -ge 80 ]]; then
-  echo_and_run docker system prune -a -f --volumes
-else
-  echo_and_run docker system prune -f --volumes
-fi
-
-# Delete all Bazel output bases (but leave the cache and install bases).
-echo_and_run find /var/lib/buildkite-agent/.cache/bazel/_bazel_buildkite-agent \
-    -mindepth 1 -maxdepth 1 ! -name 'cache' ! -name 'install' -exec chmod -R 0777 {} + \
-    -exec rm -rf {} +
 EOF
 
 # Fix permissions of the Buildkite agent configuration files and hooks.
