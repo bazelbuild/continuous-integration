@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import argparse
+from datetime import datetime
 import os
 import queue
 import sys
@@ -47,7 +48,8 @@ def worker():
             if not zone and not region:
                 raise Exception("Invalid instance config, either zone or region must be specified")
 
-            template_name = instance_group_name + "-template"
+            timestamp = datetime.now().strftime("%Y%m%dt%H%M%S")
+            template_name = "{}-{}".format(instance_group_name, timestamp)
 
             if zone is not None:
                 if (
@@ -66,18 +68,11 @@ def worker():
                 ):
                     print("Deleted existing instance group: {}".format(instance_group_name))
 
-            if gcloud.delete_instance_template(template_name, project=project).returncode == 0:
-                print("Deleted existing VM template: {}".format(template_name))
-
-            print(
-                "Creating a new template and then a new instance group for project {}".format(
-                    project
-                )
-            )
-
+            # Create the new instance template.
             gcloud.create_instance_template(template_name, project=project, **item)
             print("Created instance template {}".format(template_name))
 
+            # Create instance groups with the new template.
             kwargs = {
                 "project": project,
                 "base_instance_name": instance_group_name,
