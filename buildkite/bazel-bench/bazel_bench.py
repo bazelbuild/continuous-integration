@@ -47,6 +47,7 @@ BAZEL_REPOSITORY = "https://github.com/bazelbuild/bazel.git"
 DATA_DIRECTORY = os.path.join(TMP, ".bazel-bench", "out")
 BAZEL_BENCH_RESULT_FILENAME = "perf_data.csv"
 AGGR_JSON_PROFILES_FILENAME = "aggr_json_profiles.csv"
+PLATFORMS_WHITELIST = ['macos', 'ubuntu1604', 'ubuntu1804', 'rbe_ubuntu1604']
 
 
 def _bazel_bench_env_setup_command(platform, bazel_commits):
@@ -278,8 +279,7 @@ def main(args=None):
             continue
         platforms = _get_platforms(project["name"])
         for platform in platforms:
-            # bazel-bench doesn't support Windows for now.
-            if platform in ["windows"]:
+            if platform not in PLATFORMS_WHITELIST:
                 continue
 
             # When running on the first platform, get the bazel commits.
