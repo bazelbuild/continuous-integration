@@ -162,6 +162,11 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/envoyproxy/envoy/master/.bazelci/presubmit.yml",
         "pipeline_slug": "envoy",
     },
+    "FlatBuffers": {
+        "git_repository": "https://github.com/google/flatbuffers.git",
+        "http_config": "https://raw.githubusercontent.com/google/flatbuffers/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "flatbuffers",
+    },
     "Flogger": {
         "git_repository": "https://github.com/google/flogger.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/flogger.yml",
