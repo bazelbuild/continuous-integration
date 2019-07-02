@@ -114,8 +114,7 @@ func collectPipelineResults(buildResult data.DataSet) (map[string]*pipelineStats
 }
 
 func toString(row []interface{}) ([]string, error) {
-	result := make([]string, len(row)-1)
-	to := 0
+	result := make([]string, 0)
 	for i, v := range row {
 		var str string
 		if number, ok := v.(int); ok {
@@ -126,8 +125,7 @@ func toString(row []interface{}) ([]string, error) {
 				return nil, fmt.Errorf("Expected string in column %v: %s", i, v)
 			}
 		}
-		result[to] = str
-		to += 1
+		result = append(result, str)
 	}
 	return result, nil
 }
