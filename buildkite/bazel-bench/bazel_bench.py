@@ -48,6 +48,7 @@ DATA_DIRECTORY = os.path.join(TMP, ".bazel-bench", "out")
 BAZEL_BENCH_RESULT_FILENAME = "perf_data.csv"
 AGGR_JSON_PROFILES_FILENAME = "aggr_json_profiles.csv"
 PLATFORMS_WHITELIST = ['macos', 'ubuntu1604', 'ubuntu1804', 'rbe_ubuntu1604']
+REPORT_GENERATION_PLATFORM = 'ubuntu1804'
 
 
 def _bazel_bench_env_setup_command(platform, bazel_commits):
@@ -233,7 +234,8 @@ def _metadata_file_content(project_label, project_source, command, date, platfor
     }
 
 
-def _create_and_upload_metadata(project_label, command, date, platforms, bucket):
+def _create_and_upload_metadata(
+    project_label, project_source, command, date, platforms, bucket):
     """Generate the METADATA file for each project & upload to Storage.
 
     METADATA provides information about the runs and where to get the
@@ -264,6 +266,19 @@ def _create_and_upload_metadata(project_label, command, date, platforms, bucket)
         bazelci.eprint("Uploaded {}'s METADATA to {}.".format(project_label, destination))
     except subprocess.CalledProcessError as e:
         bazelci.eprint("Error uploading: {}".format(e))
+
+
+def _report_generation_step(date, project_label, bucket, platform):
+    commands = " ".join([
+        "python3.6",
+        "report/generate_report.py",
+        "--date={}".format(date),
+        "--project={}".format(project_label),
+        "--storage_bucket={}".format(bucket)
+    ])
+    label = "Generating report on {} for project: {}.".format(
+        date, project_label)
+    return bazelci.create_step(label, commands, platform)
 
 
 def main(args=None):
@@ -313,11 +328,18 @@ def main(args=None):
             bucket=parsed_args.bucket
         )
 
-    bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
-    buildkite_pipeline_cmd = "cat <<EOF | buildkite-agent pipeline upload\n%s\nEOF" % yaml.dump(
-        {"steps": bazel_bench_ci_steps}
-    )
-    subprocess.call(buildkite_pipeline_cmd, shell=True)
+        bazel_bench_ci_steps.append("wait")
+        # If all the above steps succeed, generate the report.
+        bazel_bench_ci_steps.append(
+            _report_generation_step(
+                date, project["storage_subdir"],
+                parsed_args.bucket, REPORT_GENERATION_PLATFORM))
+
+        bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
+        buildkite_pipeline_cmd = "cat <<EOF | buildkite-agent pipeline upload\n%s\nEOF" % yaml.dump(
+            {"steps": bazel_bench_ci_steps}
+        )
+        subprocess.call(buildkite_pipeline_cmd, shell=True)
 
 
 if __name__ == "__main__":
