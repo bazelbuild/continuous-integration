@@ -54,10 +54,10 @@ func (pl *PlatformLoad) Collect() (data.DataSet, error) {
 					running[platform] += 1
 				case "scheduled", "runnable":
 					/*
-						State "scheduled" = waiting for a worker to become available
+						State "scheduled" / "runnable" = waiting for a worker to become available
 						State "waiting" / "waiting_failed" = waiting for another task to finish
 
-						We're only interested in "scheduled" jobs since they may indicate a shortage of workers.
+						We're only interested in "scheduled" and "runnable" jobs since they may indicate a shortage of workers.
 					*/
 					waiting[platform] += 1
 				}
