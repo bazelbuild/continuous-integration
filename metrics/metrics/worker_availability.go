@@ -24,7 +24,7 @@ func (wa *WorkerAvailability) Columns() []Column {
 }
 
 func (wa *WorkerAvailability) Collect() (data.DataSet, error) {
-	ts := time.Now().Unix()
+	ts := time.Now()
 	result := data.CreateDataSet(GetColumnNames(wa.columns))
 	for _, org := range wa.orgs {
 		allPlatforms, err := wa.getIdleAndBusyCountsPerPlatform(org)
@@ -73,7 +73,7 @@ func getPlatformForHost(hostName string) (string, error) {
 	return hostName[:pos], nil
 }
 
-// CREATE TABLE worker_availability (timestamp BIGINT, org VARCHAR(255), platform VARCHAR(255), idle_count INT, busy_count INT, PRIMARY KEY(timestamp, org, platform));
+// CREATE TABLE worker_availability (timestamp DATETIME, org VARCHAR(255), platform VARCHAR(255), idle_count INT, busy_count INT, PRIMARY KEY(timestamp, org, platform));
 func CreateWorkerAvailability(client *clients.BuildkiteClient, orgs ...string) *WorkerAvailability {
 	columns := []Column{Column{"timestamp", true}, Column{"org", true}, Column{"platform", true}, Column{"idle_count", false}, Column{"busy_count", false}}
 	return &WorkerAvailability{client: client, orgs: orgs, columns: columns}

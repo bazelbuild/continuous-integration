@@ -19,7 +19,7 @@ CREATE TABLE platform_load (timestamp DATETIME, org VARCHAR(255), platform VARCH
 CREATE TABLE platform_significance (org VARCHAR(255), pipeline VARCHAR(255), total_builds INT, passing_builds INT, canceled_builds INT, setup_failed INT, linux_failures INT, macos_failures INT, windows_failures INT, rbe_failures INT, multi_platform_failures INT, PRIMARY KEY(org, pipeline));
 CREATE TABLE platform_usage (org VARCHAR(255), pipeline VARCHAR(255), build INT, platform VARCHAR(255), usage_seconds FLOAT, PRIMARY KEY(org, pipeline, build, platform));
 CREATE TABLE release_downloads (release_name VARCHAR(255), artifact VARCHAR(255), downloads INT, PRIMARY KEY(release_name, artifact));
-CREATE TABLE worker_availability (timestamp BIGINT, org VARCHAR(255), platform VARCHAR(255), idle_count INT, busy_count INT, PRIMARY KEY(timestamp, org, platform));
+CREATE TABLE worker_availability (timestamp DATETIME, org VARCHAR(255), platform VARCHAR(255), idle_count INT, busy_count INT, PRIMARY KEY(timestamp, org, platform));
 ```
 
 ## Service Deployment
