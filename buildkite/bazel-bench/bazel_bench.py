@@ -200,11 +200,12 @@ def _ci_step_for_platform_and_commits(
     return bazelci.create_step(label, commands, platform)
 
 
-def _metadata_file_content(project_label, command, date, platforms, bucket):
+def _metadata_file_content(project_label, project_source, command, date, platforms, bucket):
     """Generate the METADATA file for each project.
 
     Args:
         project_label: the label of the project on Storage.
+        project_source: the source of the project. e.g. a GitHub link.
         command: the bazel command executed during the runs e.g. bazel build ...
         date: the date of the runs.
         platform: the platform the runs were performed on.
@@ -218,6 +219,7 @@ def _metadata_file_content(project_label, command, date, platforms, bucket):
 
     return {
         "name": project_label,
+        "project_source": project_source,
         "command": command,
         "data_root": data_root,
         "platforms": [
@@ -240,6 +242,7 @@ def _create_and_upload_metadata(project_label, command, date, platforms, bucket)
 
     Args:
         project_label: the label of the project on Storage.
+        project_source: the source of the project. e.g. a GitHub link.
         command: the bazel command executed during the runs e.g. bazel build ...
         date: the date of the runs.
         platform: the platform the runs were performed on.
@@ -249,7 +252,7 @@ def _create_and_upload_metadata(project_label, command, date, platforms, bucket)
 
     with open(metadata_file_path, "w") as f:
         data = _metadata_file_content(
-            project_label, command, date, platforms, bucket)
+            project_label, project_source, command, date, platforms, bucket)
         json.dump(data, f)
 
     destination = "gs://{}/{}/{}/METADATA".format(
@@ -303,6 +306,7 @@ def main(args=None):
             )
         _create_and_upload_metadata(
             project_label=project["storage_subdir"],
+            project_source=project["git_repository"],
             command=project["bazel_command"],
             date=date,
             platforms=platforms,
