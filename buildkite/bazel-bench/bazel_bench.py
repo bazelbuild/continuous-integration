@@ -127,7 +127,8 @@ def _get_clone_path(repository, platform):
     return repository
 
 
-def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_options, date):
+def _ci_step_for_platform_and_commits(
+    bazel_commits, platform, project, extra_options, date, bucket):
     """Perform bazel-bench for the platform-project combination.
     Uploads results to BigQuery.
 
@@ -138,6 +139,7 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
           tested on.
         extra_options: a string: extra bazel-bench options.
         date: the date of the commits.
+        bucket: the GCP Storage bucket to upload data to.
 
     Return:
         An object: the result of applying bazelci.create_step to wrap the
@@ -183,7 +185,7 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
             "cp",
             "-r",
             "{}/*".format(DATA_DIRECTORY),
-            "gs://bazel-bench/{}".format(storage_subdir),
+            "gs://{}/{}".format(bucket, storage_subdir),
         ]
     )
     commands = (
@@ -198,7 +200,7 @@ def _ci_step_for_platform_and_commits(bazel_commits, platform, project, extra_op
     return bazelci.create_step(label, commands, platform)
 
 
-def _metadata_file_content(project_label, command, date, platforms):
+def _metadata_file_content(project_label, command, date, platforms, bucket):
     """Generate the METADATA file for each project.
 
     Args:
@@ -206,11 +208,12 @@ def _metadata_file_content(project_label, command, date, platforms):
         command: the bazel command executed during the runs e.g. bazel build ...
         date: the date of the runs.
         platform: the platform the runs were performed on.
+        bucket: the GCP Storage bucket to load METADATA from.
     Returns:
         The content of the METADATA file for the project on that date.
     """
-    data_root = "https://bazel-bench.storage.googleapis.com/{}/{}".format(
-        project_label, date.strftime("%Y/%m/%d")
+    data_root = "https://{}.storage.googleapis.com/{}/{}".format(
+        bucket, project_label, date.strftime("%Y/%m/%d")
     )
 
     return {
@@ -228,7 +231,7 @@ def _metadata_file_content(project_label, command, date, platforms):
     }
 
 
-def _create_and_upload_metadata(project_label, command, date, platforms):
+def _create_and_upload_metadata(project_label, command, date, platforms, bucket):
     """Generate the METADATA file for each project & upload to Storage.
 
     METADATA provides information about the runs and where to get the
@@ -240,14 +243,17 @@ def _create_and_upload_metadata(project_label, command, date, platforms):
         command: the bazel command executed during the runs e.g. bazel build ...
         date: the date of the runs.
         platform: the platform the runs were performed on.
+        bucket: the GCP Storage bucket to upload data to.
     """
     metadata_file_path = "{}/{}-metadata".format(TMP, project_label)
 
     with open(metadata_file_path, "w") as f:
-        data = _metadata_file_content(project_label, command, date, platforms)
+        data = _metadata_file_content(
+            project_label, command, date, platforms, bucket)
         json.dump(data, f)
 
-    destination = "gs://bazel-bench/{}/{}/METADATA".format(project_label, date.strftime("%Y/%m/%d"))
+    destination = "gs://{}/{}/{}/METADATA".format(
+        bucket, project_label, date.strftime("%Y/%m/%d"))
     args = ["gsutil", "cp", metadata_file_path, destination]
 
     try:
@@ -264,6 +270,7 @@ def main(args=None):
     parser = argparse.ArgumentParser(description="Bazel Bench CI Pipeline")
     parser.add_argument("--date", type=str)
     parser.add_argument("--bazel_bench_options", type=str, default="")
+    parser.add_argument("--bucket", type=str, default="")
     parsed_args = parser.parse_args(args)
 
     bazel_bench_ci_steps = []
@@ -290,7 +297,8 @@ def main(args=None):
 
             bazel_bench_ci_steps.append(
                 _ci_step_for_platform_and_commits(
-                    bazel_commits, platform, project, parsed_args.bazel_bench_options, date
+                    bazel_commits, platform, project,
+                    parsed_args.bazel_bench_options, date, parsed_args.bucket
                 )
             )
         _create_and_upload_metadata(
@@ -298,6 +306,7 @@ def main(args=None):
             command=project["bazel_command"],
             date=date,
             platforms=platforms,
+            bucket=parsed_args.bucket
         )
 
     bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
