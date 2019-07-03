@@ -94,7 +94,7 @@ def _get_bazel_commits(date, bazel_repo_path):
 
 def _get_platforms(project_name, whitelist):
     """Get the platforms on which this project is run on BazelCI.
-    Filter the results with a whitelist.
+    Filter the results with a whitelist & remove duplicates.
 
     Args:
       project_name: a string: the name of the project. e.g. "Bazel".
@@ -109,7 +109,7 @@ def _get_platforms(project_name, whitelist):
     ci_platforms_for_project = list(
         map(lambda k: bazelci.get_platform_for_task(k, tasks[k]), tasks))
 
-    return list(filter(lambda p: p in whitelist, ci_platforms_for_project))
+    return list(set(filter(lambda p: p in whitelist, ci_platforms_for_project)))
 
 
 def _get_clone_path(repository, platform):
