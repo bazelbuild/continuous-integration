@@ -92,11 +92,13 @@ def _get_bazel_commits(date, bazel_repo_path):
     return [line.strip("'") for line in decoded]
 
 
-def _get_platforms(project_name):
+def _get_platforms(project_name, whitelist):
     """Get the platforms on which this project is run on BazelCI.
+    Filter the results with a whitelist.
 
     Args:
       project_name: a string: the name of the project. e.g. "Bazel".
+      whitelist: a list of string denoting the whitelist of supported platforms.
 
     Returns:
       A list of string: the platforms for this project.
@@ -104,7 +106,10 @@ def _get_platforms(project_name):
     http_config = bazelci.DOWNSTREAM_PROJECTS_PRODUCTION[project_name]["http_config"]
     configs = bazelci.fetch_configs(http_config, None)
     tasks = configs["tasks"]
-    return list(map(lambda k: bazelci.get_platform_for_task(k, tasks[k]), tasks))
+    ci_platforms_for_project = list(
+        map(lambda k: bazelci.get_platform_for_task(k, tasks[k]), tasks))
+
+    return list(filter(lambda p: p in whitelist, ci_platforms_for_project))
 
 
 def _get_clone_path(repository, platform):
@@ -302,11 +307,9 @@ def main(args=None):
     for project in PROJECTS:
         if not project["active"]:
             continue
-        platforms = _get_platforms(project["name"])
+        platforms = _get_platforms(
+            project["name"], whitelist=PLATFORMS_WHITELIST)
         for platform in platforms:
-            if platform not in PLATFORMS_WHITELIST:
-                continue
-
             # When running on the first platform, get the bazel commits.
             # The bazel commits should be the same regardless of platform.
             if not bazel_commits:
