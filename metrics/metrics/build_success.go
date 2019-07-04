@@ -8,7 +8,7 @@ import (
 )
 
 type BuildSuccess struct {
-	client    *clients.BuildkiteClient
+	client    clients.BuildkiteClient
 	pipelines []*data.PipelineID
 	columns   []Column
 	builds    int
@@ -104,7 +104,7 @@ func getState(platformStates map[string]*state, platform string) string {
 }
 
 // CREATE TABLE build_success (org VARCHAR(255), pipeline VARCHAR(255), build INT, linux VARCHAR(255), macos VARCHAR(255), windows VARCHAR(255), rbe VARCHAR(255), PRIMARY KEY(org, pipeline, build));
-func CreateBuildSuccess(client *clients.BuildkiteClient, builds int, pipelines ...*data.PipelineID) *BuildSuccess {
+func CreateBuildSuccess(client clients.BuildkiteClient, builds int, pipelines ...*data.PipelineID) *BuildSuccess {
 	columns := []Column{Column{"org", true}, Column{"pipeline", true}, Column{"build", true}, Column{"linux", false}, Column{"macos", false}, Column{"windows", false}, Column{"rbe", false}}
 	return &BuildSuccess{client: client, pipelines: pipelines, columns: columns, builds: builds}
 }

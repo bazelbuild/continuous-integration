@@ -15,7 +15,7 @@ import (
 const baseMetricType = "custom.googleapis.com/bazel/ci"
 
 type PlatformLoad struct {
-	client  *clients.BuildkiteClient
+	client  clients.BuildkiteClient
 	orgs    []string
 	columns []Column
 	builds  int
@@ -74,7 +74,7 @@ func (pl *PlatformLoad) Collect() (data.DataSet, error) {
 }
 
 // CREATE TABLE platform_load (timestamp DATETIME, org VARCHAR(255), platform VARCHAR(255), waiting_jobs INT, running_jobs INT, PRIMARY KEY(org, timestamp, platform));
-func CreatePlatformLoad(client *clients.BuildkiteClient, builds int, orgs ...string) *PlatformLoad {
+func CreatePlatformLoad(client clients.BuildkiteClient, builds int, orgs ...string) *PlatformLoad {
 	columns := []Column{Column{"timestamp", true}, Column{"org", true}, Column{"platform", true}, Column{"waiting_jobs", false}, Column{"running_jobs", false}}
 	return &PlatformLoad{client: client, orgs: orgs, columns: columns, builds: builds}
 }

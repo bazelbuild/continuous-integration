@@ -10,7 +10,7 @@ import (
 )
 
 type CriticalPath struct {
-	client      *clients.BuildkiteClient
+	client      clients.BuildkiteClient
 	pipelines   []*data.PipelineID
 	columns     []Column
 	lastNBuilds int
@@ -106,7 +106,7 @@ func analyzeJobs(scheduleTime *buildkite.Timestamp, jobs []*buildkite.Job) (wait
 }
 
 // CREATE TABLE critical_path (org VARCHAR(255), pipeline VARCHAR(255), build INT, wait_time_seconds FLOAT, run_time_seconds FLOAT, longest_task_name VARCHAR(255), longest_task_time_seconds FLOAT, result VARCHAR(255), PRIMARY KEY(org, pipeline, build));
-func CreateCriticalPath(client *clients.BuildkiteClient, lastNBuilds int, pipelines ...*data.PipelineID) *CriticalPath {
+func CreateCriticalPath(client clients.BuildkiteClient, lastNBuilds int, pipelines ...*data.PipelineID) *CriticalPath {
 	columns := []Column{Column{"org", true}, Column{"pipeline", true}, Column{"build", true}, Column{"wait_time_seconds", false}, Column{"run_time_seconds", false}, Column{"longest_task_name", false}, Column{"longest_task_time_seconds", false}, Column{"result", false}}
 	return &CriticalPath{client: client, pipelines: pipelines, columns: columns, lastNBuilds: lastNBuilds, debug: false}
 }

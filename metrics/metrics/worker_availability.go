@@ -10,7 +10,7 @@ import (
 )
 
 type WorkerAvailability struct {
-	client  *clients.BuildkiteClient
+	client  clients.BuildkiteClient
 	orgs    []string
 	columns []Column
 }
@@ -74,7 +74,7 @@ func getPlatformForHost(hostName string) (string, error) {
 }
 
 // CREATE TABLE worker_availability (timestamp DATETIME, org VARCHAR(255), platform VARCHAR(255), idle_count INT, busy_count INT, PRIMARY KEY(timestamp, org, platform));
-func CreateWorkerAvailability(client *clients.BuildkiteClient, orgs ...string) *WorkerAvailability {
+func CreateWorkerAvailability(client clients.BuildkiteClient, orgs ...string) *WorkerAvailability {
 	columns := []Column{Column{"timestamp", true}, Column{"org", true}, Column{"platform", true}, Column{"idle_count", false}, Column{"busy_count", false}}
 	return &WorkerAvailability{client: client, orgs: orgs, columns: columns}
 }

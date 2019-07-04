@@ -8,7 +8,7 @@ import (
 )
 
 type PlatformUsage struct {
-	client  *clients.BuildkiteClient
+	client  clients.BuildkiteClient
 	orgs    []string
 	columns []Column
 	builds  int
@@ -53,7 +53,7 @@ func (pu *PlatformUsage) Collect() (data.DataSet, error) {
 }
 
 // CREATE TABLE platform_usage (org VARCHAR(255), pipeline VARCHAR(255), build INT, platform VARCHAR(255), usage_seconds FLOAT, PRIMARY KEY(org, pipeline, build, platform));
-func CreatePlatformUsage(client *clients.BuildkiteClient, builds int, orgs ...string) *PlatformUsage {
+func CreatePlatformUsage(client clients.BuildkiteClient, builds int, orgs ...string) *PlatformUsage {
 	columns := []Column{Column{"org", true}, Column{"pipeline", true}, Column{"build", true}, Column{"platform", true}, Column{"usage_seconds", false}}
 	return &PlatformUsage{client: client, orgs: orgs, columns: columns, builds: builds}
 }

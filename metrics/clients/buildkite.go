@@ -9,21 +9,26 @@ import (
 	"github.com/fweikert/go-buildkite/buildkite"
 )
 
-type BuildkiteClient struct {
+type BuildkiteClient interface {
+	GetMostRecentBuilds(*data.PipelineID, int) ([]buildkite.Build, error)
+	GetAgents(string) ([]buildkite.Agent, error)
+}
+
+type SimpleBuildkiteClient struct {
 	client *buildkite.Client
 }
 
-func CreateBuildkiteClient(apiToken string, debug bool) (*BuildkiteClient, error) {
+func CreateBuildkiteClient(apiToken string, debug bool) (BuildkiteClient, error) {
 	tokenConfig, err := buildkite.NewTokenConfig(apiToken, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Could not create Buildkite config: %v", err)
 	}
 
 	client := buildkite.NewClient(tokenConfig.Client())
-	return &BuildkiteClient{client: client}, nil
+	return &SimpleBuildkiteClient{client: client}, nil
 }
 
-func (client *BuildkiteClient) GetMostRecentBuilds(pipeline *data.PipelineID, atLeastNBuilds int) ([]buildkite.Build, error) {
+func (client *SimpleBuildkiteClient) GetMostRecentBuilds(pipeline *data.PipelineID, atLeastNBuilds int) ([]buildkite.Build, error) {
 	var listFunc func(opt *buildkite.BuildsListOptions) ([]buildkite.Build, *buildkite.Response, error)
 	if pipeline.Slug == "all" {
 		listFunc = func(opt *buildkite.BuildsListOptions) ([]buildkite.Build, *buildkite.Response, error) {
@@ -57,7 +62,7 @@ func (client *BuildkiteClient) GetMostRecentBuilds(pipeline *data.PipelineID, at
 	return builds, nil
 }
 
-func (client *BuildkiteClient) GetAgents(org string) ([]buildkite.Agent, error) {
+func (client *SimpleBuildkiteClient) GetAgents(org string) ([]buildkite.Agent, error) {
 	list := func(opt buildkite.ListOptions) ([]interface{}, *buildkite.Response, error) {
 		agentOpt := buildkite.AgentListOptions{ListOptions: opt}
 		agents, response, err := client.client.Agents.List(org, &agentOpt)
@@ -80,7 +85,7 @@ func (client *BuildkiteClient) GetAgents(org string) ([]buildkite.Agent, error) 
 	return agents, nil
 }
 
-func (client *BuildkiteClient) getResults(listFunc func(opt buildkite.ListOptions) ([]interface{}, *buildkite.Response, error), lastN int) ([]interface{}, error) {
+func (client *SimpleBuildkiteClient) getResults(listFunc func(opt buildkite.ListOptions) ([]interface{}, *buildkite.Response, error), lastN int) ([]interface{}, error) {
 	all_results := make([]interface{}, 0)
 	perPage := 100
 	if 0 < lastN && lastN < perPage {

@@ -10,7 +10,7 @@ import (
 )
 
 type BuildsPerChange struct {
-	client    *clients.BuildkiteClient
+	client    clients.BuildkiteClient
 	columns   []Column
 	pipelines []*data.PipelineID
 	builds    int
@@ -81,7 +81,7 @@ func getChangeNumber(build buildkite.Build) (int, error) {
 }
 
 // CREATE TABLE builds_per_change (org VARCHAR(255), pipeline VARCHAR(255), changelist INT, builds INT, PRIMARY KEY(org, pipeline, changelist));
-func CreateBuildsPerChange(client *clients.BuildkiteClient, builds int, pipelines ...*data.PipelineID) *BuildsPerChange {
+func CreateBuildsPerChange(client clients.BuildkiteClient, builds int, pipelines ...*data.PipelineID) *BuildsPerChange {
 	columns := []Column{Column{"org", true}, Column{"pipeline", true}, Column{"changelist", true}, Column{"builds", false}}
 	return &BuildsPerChange{client: client, pipelines: pipelines, columns: columns, builds: builds}
 }
