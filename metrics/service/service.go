@@ -49,7 +49,7 @@ func (job *metricJob) run(handler ErrorHandler) {
 	}
 	for _, p := range job.publishers {
 		log.Printf("Publishing data for metric %s to %s\n", name, p.Name())
-		err = p.Publish(name, newData)
+		err = p.Publish(job.metric, newData)
 		if err != nil {
 			handler(name, fmt.Errorf("Publishing to %s failed': %v", p.Name(), err))
 		}
