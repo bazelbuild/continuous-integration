@@ -94,19 +94,21 @@ func collectPipelineResults(buildResult data.DataSet) (map[string]*pipelineStats
 		} else if len(failures) > 1 {
 			stats[pipeline].multiPlatformFailures += 1
 		} else if len(failures) == 1 {
+			// TODO(fweikert): improve data struct?
+			id := fmt.Sprintf("%s/%s/%d", row[0], row[1], row[2])
 			switch failures[0] {
 			case 1:
 				stats[pipeline].linuxFailures += 1
-				log.Printf("Linux only: %s/%d\n", pipeline, row[1])
+				log.Printf("Linux only: %s\n", id)
 			case 2:
 				stats[pipeline].macosFailures += 1
-				log.Printf("MacOS only: %s/%d\n", pipeline, row[1])
+				log.Printf("MacOS only: %s\n", id)
 			case 3:
 				stats[pipeline].windowsFailures += 1
-				log.Printf("Windows only: %s/%d\n", pipeline, row[1])
+				log.Printf("Windows only: %s\n", id)
 			case 4:
 				stats[pipeline].rbeFailures += 1
-				log.Printf("RBE only: %s/%d\n", pipeline, row[1])
+				log.Printf("RBE only: %s\n", id)
 			}
 		}
 	}
