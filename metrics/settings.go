@@ -11,18 +11,19 @@ import (
 const settingsName = ""
 
 type Settings struct {
-	BuildkiteOrgs      []string
-	BuildkiteApiToken  string
-	BuildkiteDebug     bool
-	BuildkitePipelines []string // TODO: make this field private
-	GitHubOrg          string
-	GitHubRepo         string
-	GitHubApiToken     string
-	CloudSqlUser       string
-	CloudSqlPassword   string
-	CloudSqlInstance   string
-	CloudSqlDatabase   string
-	CloudSqlLocalPort  int
+	BuildkiteOrgs                []string
+	BuildkiteApiToken            string
+	BuildkiteDebug               bool
+	BuildkitePipelines           []string // TODO: make this field private
+	BuildkiteCacheTimeoutMinutes int
+	GitHubOrg                    string
+	GitHubRepo                   string
+	GitHubApiToken               string
+	CloudSqlUser                 string
+	CloudSqlPassword             string
+	CloudSqlInstance             string
+	CloudSqlDatabase             string
+	CloudSqlLocalPort            int
 }
 
 func ReadSettingsFromDatastore(projectID, settingsName string) (*Settings, error) {

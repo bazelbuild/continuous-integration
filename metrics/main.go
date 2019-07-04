@@ -53,7 +53,7 @@ func main() {
 		log.Fatalf("No pipelines were specified.")
 	}
 
-	bk, err := clients.CreateBuildkiteClient(settings.BuildkiteApiToken, settings.BuildkiteDebug)
+	bk, err := clients.CreateBuildkiteClient(settings.BuildkiteApiToken, settings.BuildkiteDebug, time.Duration(settings.BuildkiteCacheTimeoutMinutes)*time.Minute)
 	if err != nil {
 		log.Fatalf("Cannot create Buildkite client: %v", err)
 	}

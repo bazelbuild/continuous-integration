@@ -3,6 +3,8 @@ package clients
 import (
 	"fmt"
 	"log"
+	"sync"
+	"time"
 
 	"github.com/fweikert/continuous-integration/metrics/data"
 
@@ -14,18 +16,32 @@ type BuildkiteClient interface {
 	GetAgents(string) ([]buildkite.Agent, error)
 }
 
-type SimpleBuildkiteClient struct {
-	client *buildkite.Client
+type cacheEntry struct {
+	sampled time.Time
+	values  []interface{}
 }
 
-func CreateBuildkiteClient(apiToken string, debug bool) (BuildkiteClient, error) {
+type SimpleBuildkiteClient struct {
+	client *buildkite.Client
+
+	mu           sync.Mutex
+	cacheTimeout time.Duration
+	agentCache   map[string]cacheEntry
+	buildCache   map[string]cacheEntry
+}
+
+func CreateBuildkiteClient(apiToken string, debug bool, cacheTimeout time.Duration) (BuildkiteClient, error) {
 	tokenConfig, err := buildkite.NewTokenConfig(apiToken, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Could not create Buildkite config: %v", err)
 	}
-
-	client := buildkite.NewClient(tokenConfig.Client())
-	return &SimpleBuildkiteClient{client: client}, nil
+	return &SimpleBuildkiteClient{
+			client:       buildkite.NewClient(tokenConfig.Client()),
+			cacheTimeout: cacheTimeout,
+			agentCache:   make(map[string]cacheEntry),
+			buildCache:   make(map[string]cacheEntry),
+		},
+		nil
 }
 
 func (client *SimpleBuildkiteClient) GetMostRecentBuilds(pipeline *data.PipelineID, atLeastNBuilds int) ([]buildkite.Build, error) {
@@ -50,7 +66,7 @@ func (client *SimpleBuildkiteClient) GetMostRecentBuilds(pipeline *data.Pipeline
 		return interfaces, response, err
 	}
 
-	results, err := client.getResults(wrapperFunc, atLeastNBuilds)
+	results, err := client.getResults(wrapperFunc, atLeastNBuilds, client.buildCache, pipeline.String())
 	if err != nil {
 		return nil, fmt.Errorf("Failed to retrieve builds for pipeline %s: %v", pipeline, err)
 	}
@@ -73,7 +89,7 @@ func (client *SimpleBuildkiteClient) GetAgents(org string) ([]buildkite.Agent, e
 		return interfaces, response, err
 	}
 
-	results, err := client.getResults(list, -1)
+	results, err := client.getResults(list, -1, client.agentCache, org)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to retrieve agents: %v", err)
 	}
@@ -85,7 +101,28 @@ func (client *SimpleBuildkiteClient) GetAgents(org string) ([]buildkite.Agent, e
 	return agents, nil
 }
 
-func (client *SimpleBuildkiteClient) getResults(listFunc func(opt buildkite.ListOptions) ([]interface{}, *buildkite.Response, error), lastN int) ([]interface{}, error) {
+func (client *SimpleBuildkiteClient) getResults(listFunc func(opt buildkite.ListOptions) ([]interface{}, *buildkite.Response, error), lastN int, cache map[string]cacheEntry, cacheKey string) ([]interface{}, error) {
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	if entry, ok := cache[cacheKey]; ok {
+		if time.Since(entry.sampled) <= client.cacheTimeout && len(entry.values) >= lastN {
+			return entry.values[:lastN], nil
+		}
+		delete(cache, cacheKey)
+	}
+
+	results, err := client.getUncachedResults(listFunc, lastN)
+	if err != nil {
+		return nil, err
+	}
+	cache[cacheKey] = cacheEntry{
+		values:  results,
+		sampled: time.Now(),
+	}
+	return results, nil
+}
+
+func (client *SimpleBuildkiteClient) getUncachedResults(listFunc func(opt buildkite.ListOptions) ([]interface{}, *buildkite.Response, error), lastN int) ([]interface{}, error) {
 	all_results := make([]interface{}, 0)
 	perPage := 100
 	if 0 < lastN && lastN < perPage {
