@@ -15,6 +15,12 @@ type Metric interface {
 	Collect() (data.DataSet, error)
 }
 
+type GarbageCollectedMetric interface {
+	Metric
+	SortColumnIndex() int
+	RelevantDelta() int
+}
+
 func GetColumnNames(columns []Column) []string {
 	names := make([]string, len(columns))
 	for i, c := range columns {

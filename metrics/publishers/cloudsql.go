@@ -3,6 +3,7 @@ package publishers
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -22,6 +23,7 @@ type statement struct {
 type CloudSql struct {
 	conn       *sql.DB
 	statements map[string]*statement
+	gc         *CloudSqlGc
 }
 
 func (c *CloudSql) Name() string {
@@ -76,19 +78,21 @@ func (c *CloudSql) prepareInsertStatement(metric metrics.Metric) error {
 func (c *CloudSql) createStatement(metricName string, text string) (*statement, error) {
 	stmt, err := c.conn.Prepare(text)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to prepare insert statement for metric %s: %v\n\tStatement: %s", metricName, err, text)
+		return nil, fmt.Errorf("Failed to prepare statement for metric %s: %v\n\tStatement: %s", metricName, err, text)
 	}
 	return &statement{prepared: stmt, text: text}, nil
 }
 
-func (c *CloudSql) Publish(metricName string, newData data.DataSet) error {
+func (c *CloudSql) Publish(metric metrics.Metric, newData data.DataSet) error {
+	metricName := metric.Name()
 	stmt := c.statements[metricName]
 	if stmt == nil {
 		return fmt.Errorf("Could not find prepared insert statement for metric %s. Have you called RegisterMetric() first?", metricName)
 	}
 
 	for _, row := range newData.GetData().Data {
-		_, err := stmt.prepared.Exec(row...)
+		// _, err := stmt.prepared.Exec(row...)
+		var err error
 		if err != nil {
 			values := make([]string, len(row))
 			for i, v := range row {
@@ -96,6 +100,14 @@ func (c *CloudSql) Publish(metricName string, newData data.DataSet) error {
 			}
 			return fmt.Errorf("Could not insert new data for metric %s: %v\n\tStatement: %s\n\tValues: %s", metricName, err, stmt.text, strings.Join(values, ", "))
 		}
+	}
+
+	if gcm, ok := metric.(metrics.GarbageCollectedMetric); ok {
+		collected, err := c.gc.Run(gcm)
+		if err != nil {
+			return err
+		}
+		log.Printf("Cloud SQL: Garbage collection deleted %d entries for metric %s", collected, metricName)
 	}
 	return nil
 }
@@ -109,9 +121,16 @@ func CreateCloudSqlPublisher(user, password, instance, database string, localPor
 		conn.Close()
 		return nil, fmt.Errorf("Connection to database is bad: %v", err)
 	}
+
+	gc, err := CreateCloudSqlGc(conn)
+	if err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("Failed to create garbage collection module for Cloud SQL: %v", err)
+	}
 	return &CloudSql{
 		conn:       conn,
 		statements: make(map[string]*statement),
+		gc:         gc,
 	}, nil
 }
 

@@ -23,7 +23,8 @@ func (sd *Stackdriver) RegisterMetric(metric metrics.Metric) error {
 	return nil
 }
 
-func (sd *Stackdriver) Publish(metricName string, newData data.DataSet) error {
+func (sd *Stackdriver) Publish(metric metrics.Metric, newData data.DataSet) error {
+	metricName := metric.Name()
 	set, ok := newData.(data.StackDriverTimeSeriesDataSet)
 	if !ok {
 		return fmt.Errorf("Metric '%s' does not produce a valid StackDriverTimeSeriesDataSet instance", metricName)
