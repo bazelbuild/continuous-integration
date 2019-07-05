@@ -27,6 +27,7 @@ CREATE TABLE worker_availability (timestamp DATETIME, org VARCHAR(255), platform
 You need to install the following dependencies in order to build the service:
 
 ```bash
+get github.com/buildkite/go-buildkite/buildkite
 go get github.com/google/go-github/github
 go get golang.org/x/oauth2
 go get github.com/go-sql-driver/mysql
