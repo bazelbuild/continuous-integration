@@ -22,7 +22,29 @@ CREATE TABLE release_downloads (release_name VARCHAR(255), artifact VARCHAR(255)
 CREATE TABLE worker_availability (timestamp DATETIME, org VARCHAR(255), platform VARCHAR(255), idle_count INT, busy_count INT, PRIMARY KEY(timestamp, org, platform));
 ```
 
+## Dependencies
+
+You need to install the following dependencies in order to build the service:
+
+```bash
+go get github.com/google/go-github/github
+go get golang.org/x/oauth2
+go get github.com/go-sql-driver/mysql
+go get cloud.google.com/go/datastore
+```
+
 ## Service Deployment
 
 - `gcloud app deploy metrics/app.yaml --stop-previous-version`
 - `gcloud app logs tail -s default`
+
+## Running the service locally
+
+The following steps allow you to run the service locally:
+
+1. Ask an EngProd team member for access to a GCP service account.
+2. Download the credentials for the service account (json file).
+3. Set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point at the credentials: `export GOOGLE_APPLICATION_CREDENTIALS="path/to/file.json"`
+4. Download the [Cloud SQL-Proxy](https://cloud.google.com/sql/docs/mysql/sql-proxy).
+5. Start the proxy via `./cloud_sql_proxy -instances="bazel-untrusted:europe-west1:metrics"=tcp:3306`
+6. Run the app via `go run metrics/main.go metrics/settings.go --test=true`. The `test`parameter means that all metrics are collected immediately, and all results are published to stdout instead of being written to Cloud SQL.
