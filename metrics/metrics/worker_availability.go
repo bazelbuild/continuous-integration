@@ -23,6 +23,14 @@ func (wa *WorkerAvailability) Columns() []Column {
 	return wa.columns
 }
 
+func (wa *WorkerAvailability) Index() *Column {
+	return &wa.columns[0] // timestamp
+}
+
+func (wa *WorkerAvailability) RelevantDelta() int {
+	return 24 * 60 * 60 // 24 hours
+}
+
 func (wa *WorkerAvailability) Collect() (data.DataSet, error) {
 	ts := time.Now()
 	result := data.CreateDataSet(GetColumnNames(wa.columns))

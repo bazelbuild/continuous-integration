@@ -3,11 +3,12 @@ package publishers
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/fweikert/continuous-integration/metrics/metrics"
 )
 
-const columnTypeQuery = "SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '?' AND COLUMN_NAME = '?';"
+const columnTypeQuery = "SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = ? AND COLUMN_NAME = ?;"
 
 type CloudSqlGc struct {
 	conn *sql.DB
@@ -22,25 +23,51 @@ func CreateCloudSqlGc(conn *sql.DB) (*CloudSqlGc, error) {
 	return &CloudSqlGc{conn, stmt}, nil
 }
 
-func (gc *CloudSqlGc) Run(metric metrics.GarbageCollectedMetric) (int, error) {
-	prefix := fmt.Sprintf("Failed to run Cloud SQL GC for metric %s: ", metric.Name())
-	colType, err := gc.resolveIndexColumnType(metric)
-	if err != nil {
-		return 0, fmt.Errorf("%s%v", prefix, err)
+func (gc *CloudSqlGc) Run(metric metrics.GarbageCollectedMetric) (int64, error) {
+	handleError := func(err error) error {
+		return fmt.Errorf("Failed to run Cloud SQL GC for metric %s: %v", metric.Name(), err)
 	}
+	query, err := gc.createDeleteQuery(metric)
+	if err != nil {
+		return 0, handleError(err)
+	}
+	result, err := gc.conn.Exec(query)
+	if err != nil {
+		return 0, handleError(err)
 
-	_ = colType
-	fmt.Println(colType)
-	/*
-		TODO:
-		- draft query based on colType
-		- delete records based on query
-	*/
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return 0, handleError(err)
 
-	return 0, nil
+	}
+	return rows, nil
 }
 
-//select timestampdiff(second, str_to_date("2019-02-01 09:15:00", GET_FORMAT(DATETIME,'ISO')), str_to_date("2019-02-02 09:15:01", GET_FORMAT(DATETIME,'ISO'))) as foo;
+//delete t from worker_availability t join ( select max(timestamp) as latest from worker_availability) m on timestampdiff(second, t.timestamp, latest) > 3600*24;
+//delete t from worker_availability t join ( select max(build) as latest from worker_availability) m on latest - t.build > 3600*24;
+
+func (gc *CloudSqlGc) createDeleteQuery(metric metrics.GarbageCollectedMetric) (string, error) {
+	colType, err := gc.resolveIndexColumnType(metric)
+	if err != nil {
+		return "", err
+	}
+
+	table := metric.Name()
+	column := metric.Index().Name
+	var pattern string
+	switch strings.ToUpper(colType) {
+	case "DATETIME":
+		pattern = "timestampdiff(second, t.%s, latest)"
+	case "TINYINT", "SMALLINT", "MEDIUMINT", "INT", "INTEGER", "BIGINT":
+		pattern = "latest - t.%s"
+	default:
+		return "", fmt.Errorf("Unsupported type '%s' for column '%s'", colType, metric.Index().Name)
+	}
+
+	query := fmt.Sprintf("delete t from %[1]s t join (select max(%[2]s) as latest from %[1]s) m on %[3]s > %d;", table, column, fmt.Sprintf(pattern, column), metric.RelevantDelta())
+	return query, nil
+}
 
 func (gc *CloudSqlGc) resolveIndexColumnType(metric metrics.GarbageCollectedMetric) (string, error) {
 	table := metric.Name()
