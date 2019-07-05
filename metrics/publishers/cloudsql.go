@@ -91,8 +91,7 @@ func (c *CloudSql) Publish(metric metrics.Metric, newData data.DataSet) error {
 	}
 
 	for _, row := range newData.GetData().Data {
-		// _, err := stmt.prepared.Exec(row...)
-		var err error
+		_, err := stmt.prepared.Exec(row...)
 		if err != nil {
 			values := make([]string, len(row))
 			for i, v := range row {
