@@ -17,7 +17,7 @@ type Metric interface {
 
 type GarbageCollectedMetric interface {
 	Metric
-	SortColumnIndex() int
+	Index() *Column
 	RelevantDelta() int
 }
 

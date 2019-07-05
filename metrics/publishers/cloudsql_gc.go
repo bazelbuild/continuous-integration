@@ -30,6 +30,7 @@ func (gc *CloudSqlGc) Run(metric metrics.GarbageCollectedMetric) (int, error) {
 	}
 
 	_ = colType
+	fmt.Println(colType)
 	/*
 		TODO:
 		- draft query based on colType
@@ -43,7 +44,7 @@ func (gc *CloudSqlGc) Run(metric metrics.GarbageCollectedMetric) (int, error) {
 
 func (gc *CloudSqlGc) resolveIndexColumnType(metric metrics.GarbageCollectedMetric) (string, error) {
 	table := metric.Name()
-	column := metric.Columns()[metric.SortColumnIndex()].Name
+	column := metric.Index().Name
 
 	var colType string
 	err := gc.stmt.QueryRow(table, column).Scan(&colType)
