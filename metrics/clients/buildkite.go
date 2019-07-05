@@ -111,7 +111,7 @@ func (client *SimpleBuildkiteClient) getResults(listFunc func(opt buildkite.List
 		delete(cache, cacheKey)
 	}
 
-	results, err := client.getUncachedResults(listFunc, lastN)
+	results, err := client.getUncachedResults(listFunc, lastN, cacheKey)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func (client *SimpleBuildkiteClient) getResults(listFunc func(opt buildkite.List
 	return results, nil
 }
 
-func (client *SimpleBuildkiteClient) getUncachedResults(listFunc func(opt buildkite.ListOptions) ([]interface{}, *buildkite.Response, error), lastN int) ([]interface{}, error) {
+func (client *SimpleBuildkiteClient) getUncachedResults(listFunc func(opt buildkite.ListOptions) ([]interface{}, *buildkite.Response, error), lastN int, cacheKey string) ([]interface{}, error) {
 	all_results := make([]interface{}, 0)
 	perPage := 100
 	if 0 < lastN && lastN < perPage {
@@ -133,7 +133,7 @@ func (client *SimpleBuildkiteClient) getUncachedResults(listFunc func(opt buildk
 	lastPage := 1
 
 	for currPage <= lastPage {
-		log.Printf("Retrieving page %d from Buildkite (last=%d).\n", currPage, lastPage)
+		log.Printf("Buildkite: Fetching page %d for '%s' (last=%d).\n", currPage, cacheKey, lastPage)
 		results, response, err := listFunc(opt)
 		if err != nil {
 			return nil, fmt.Errorf("Could not get page %d: %v", currPage, err)
