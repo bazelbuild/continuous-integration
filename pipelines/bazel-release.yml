@@ -146,6 +146,8 @@ steps:
       move bazel-bin\src\bazel artifacts\bazel-%RELEASE_NAME%-windows-x86_64.exe
       move bazel-genfiles\scripts\packages\bazel.zip artifacts\bazel-%RELEASE_NAME%-windows-x86_64.zip
 
+      powershell scripts\packages\msi\make_msi.ps1 artifacts\bazel-%RELEASE_NAME%-windows-x86_64.exe
+
       cd artifacts
       buildkite-agent artifact upload "*"
 
