@@ -44,8 +44,8 @@ func (gc *CloudSqlGc) Run(metric metrics.GarbageCollectedMetric) (int64, error) 
 	return rows, nil
 }
 
-//delete t from worker_availability t join ( select max(timestamp) as latest from worker_availability) m on timestampdiff(second, t.timestamp, latest) > 3600*24;
-//delete t from worker_availability t join ( select max(build) as latest from worker_availability) m on latest - t.build > 3600*24;
+//delete t from worker_availability t join (select max(timestamp) as latest from worker_availability) m on timestampdiff(second, t.timestamp, latest) > 3600*24;
+//select * from platform_usage t join (select org, pipeline, max(build) as latest from platform_usage group by org, pipeline) m on t.org = m.org and t.pipeline = m.pipeline and latest - t.build > 100;
 
 func (gc *CloudSqlGc) createDeleteQuery(metric metrics.GarbageCollectedMetric) (string, error) {
 	colType, err := gc.resolveIndexColumnType(metric)
