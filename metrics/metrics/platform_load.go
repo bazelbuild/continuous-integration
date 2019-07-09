@@ -29,6 +29,14 @@ func (pl *PlatformLoad) Columns() []Column {
 	return pl.columns
 }
 
+func (*PlatformLoad) Type() MetricType {
+	return BuildBasedMetric
+}
+
+func (*PlatformLoad) RelevantDelta() int {
+	return 200 // builds
+}
+
 func (pl *PlatformLoad) Collect() (data.DataSet, error) {
 	result := &loadDataSet{headers: GetColumnNames(pl.columns), ts: time.Now(), rows: make([]*loadDataRow, 0)}
 	for _, org := range pl.orgs {

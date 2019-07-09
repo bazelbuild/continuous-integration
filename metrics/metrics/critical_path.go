@@ -25,6 +25,14 @@ func (cp *CriticalPath) Columns() []Column {
 	return cp.columns
 }
 
+func (*CriticalPath) Type() MetricType {
+	return BuildBasedMetric
+}
+
+func (*CriticalPath) RelevantDelta() int {
+	return 200 // builds
+}
+
 func (cp *CriticalPath) Collect() (data.DataSet, error) {
 	result := data.CreateDataSet(GetColumnNames(cp.columns))
 	for _, pipeline := range cp.pipelines {
