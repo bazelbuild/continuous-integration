@@ -22,6 +22,14 @@ func (pu *PlatformUsage) Columns() []Column {
 	return pu.columns
 }
 
+func (*PlatformUsage) Type() MetricType {
+	return BuildBasedMetric
+}
+
+func (*PlatformUsage) RelevantDelta() int {
+	return 200 // builds
+}
+
 func (pu *PlatformUsage) Collect() (data.DataSet, error) {
 	result := data.CreateDataSet(GetColumnNames(pu.columns))
 	for _, org := range pu.orgs {

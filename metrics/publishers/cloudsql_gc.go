@@ -121,7 +121,7 @@ func (gc *CloudSqlGc) executeStrategy(metric metrics.GarbageCollectedMetric, str
 
 type gcStrategy interface {
 	RequiredColumns() map[string]string
-	DeletionQuery(table string, FOO_range int) string
+	DeletionQuery(string, int) string
 }
 
 // Deletes all rows that were created more than X seconds ago
