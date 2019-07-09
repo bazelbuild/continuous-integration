@@ -15,9 +15,16 @@ type Metric interface {
 	Collect() (data.DataSet, error)
 }
 
+type MetricType int
+
+const (
+	TimeBasedMetric MetricType = iota
+	BuildBasedMetric
+)
+
 type GarbageCollectedMetric interface {
 	Metric
-	Index() *Column
+	Type() MetricType
 	RelevantDelta() int
 }
 

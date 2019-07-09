@@ -23,8 +23,8 @@ func (wa *WorkerAvailability) Columns() []Column {
 	return wa.columns
 }
 
-func (wa *WorkerAvailability) Index() *Column {
-	return &wa.columns[0] // timestamp
+func (wa *WorkerAvailability) Type() MetricType {
+	return TimeBasedMetric
 }
 
 func (wa *WorkerAvailability) RelevantDelta() int {
