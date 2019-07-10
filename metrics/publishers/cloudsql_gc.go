@@ -8,19 +8,15 @@ import (
 	"github.com/fweikert/continuous-integration/metrics/metrics"
 )
 
-const columnTypeQuery = "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND COLUMN_NAME IN ?;"
+const columnTypeQueryPattern = "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '%s' AND COLUMN_NAME IN ('%s');"
 
 type CloudSqlGc struct {
 	conn *sql.DB
-	stmt *sql.Stmt
 }
 
 func CreateCloudSqlGc(conn *sql.DB) (*CloudSqlGc, error) {
-	stmt, err := conn.Prepare(columnTypeQuery)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to prepare statement: %v\n\tStatement: %s", err, columnTypeQuery)
-	}
-	return &CloudSqlGc{conn, stmt}, nil
+	// TODO(fweikert): prepare statements?
+	return &CloudSqlGc{conn}, nil
 }
 
 func (gc *CloudSqlGc) Run(metric metrics.GarbageCollectedMetric) (int64, error) {
@@ -77,9 +73,8 @@ func (gc *CloudSqlGc) ensureRequiredColumnsExist(metric metrics.GarbageCollected
 
 func (gc *CloudSqlGc) readActualColumns(metric metrics.GarbageCollectedMetric, strategy gcStrategy) (map[string]string, error) {
 	keys := getKeys(strategy.RequiredColumns())
-	// TODO(fweikert): check if this actually works with prepared statements
-	columnString := fmt.Sprintf("('%s')", strings.Join(keys, "', '"))
-	rows, err := gc.stmt.Query(metric.Name(), columnString)
+	query := fmt.Sprintf(columnTypeQueryPattern, metric.Name(), strings.Join(keys, "', '"))
+	rows, err := gc.conn.Query(query)
 	if err != nil {
 		return nil, err
 	}
