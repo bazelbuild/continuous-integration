@@ -4,13 +4,13 @@ ENV DEBIAN_FRONTEND="noninteractive"
 RUN dpkg --add-architecture i386 && \
     apt-get -qqy update && \
     echo "Installing base packages" && \
-    apt-get -qqy install apt-utils curl lsb-release software-properties-common && \
+    apt-get -qqy install --no-install-recommends apt-utils curl lsb-release software-properties-common && \
     echo "Installing packages required by Bazel" && \
-    apt-get -qqy install build-essential coreutils clang curl ed expect git iproute2 iputils-ping libbz2-1.0:i386 libncurses5:i386 libssl-dev libstdc++6:i386 libz1:i386 less netcat-openbsd python python-dev python-six python3 python3-dev python3-six unzip wget xvfb zip zlib1g-dev && \
+    apt-get -qqy install --no-install-recommends build-essential coreutils clang curl ed expect git iproute2 iputils-ping libbz2-1.0:i386 libncurses5:i386 libssl-dev libstdc++6:i386 libz1:i386 less netcat-openbsd python python-dev python-six python3 python3-dev python3-six unzip wget xvfb zip zlib1g-dev && \
     echo "Installing packages required by C++ coverage tests" && \
-    apt-get -qqy install lcov llvm && \
+    apt-get -qqy install --no-install-recommends lcov llvm && \
     echo "Installing packages required by Bazel (Ubuntu 16.04 only)" && \
-    apt-get -qqy install realpath && \
+    apt-get -qqy install --no-install-recommends realpath && \
     apt-get -qqy purge apport && \
     rm -rf /var/lib/apt/lists/*
 
