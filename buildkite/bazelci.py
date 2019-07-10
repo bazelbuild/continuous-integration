@@ -443,9 +443,17 @@ PLATFORMS = {
         "queue": "windows",
         "python": "python.exe",
     },
+    "rbe_macos": {
+        "name": "RBE (macOS, OpenJDK 8)",
+        "emoji-name": ":gcloud::darwin: (OpenJDK 8)",
+        "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
+        "publish_binary": [],
+        "queue": "macos",
+        "python": "python3.7",
+    },
     "rbe_ubuntu1604": {
         "name": "RBE (Ubuntu 16.04, OpenJDK 8)",
-        "emoji-name": ":gcloud: (OpenJDK 8)",
+        "emoji-name": ":gcloud::ubuntu: (OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": "gcr.io/bazel-public/ubuntu1604:java8",
