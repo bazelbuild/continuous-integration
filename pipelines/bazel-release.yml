@@ -146,7 +146,15 @@ steps:
       move bazel-bin\src\bazel artifacts\bazel-%RELEASE_NAME%-windows-x86_64.exe
       move bazel-genfiles\scripts\packages\bazel.zip artifacts\bazel-%RELEASE_NAME%-windows-x86_64.zip
 
-      powershell scripts\packages\msi\make_msi.ps1 artifacts\bazel-%RELEASE_NAME%-windows-x86_64.exe
+      @rem  The scripts directory is taken from the release branch.
+      @rem  Commit 874fe75428 contains a vital bugfix for make_msi_lib.ps1, so only build the .msi
+      @rem  if the release branch has that commit.
+      @rem  TODO(laszlocsomor): remove this version check and build the .msi unconditionally after
+      @rem  Bazel 0.29 (the first version whose release branch will have 874fe75428) is released.
+      git merge-base --is-ancestor 874fe754282651bdf006c06147842cbb226c6ae9 HEAD 2>nul
+      if "%errorlevel%" equ "0" (
+        powershell scripts\packages\msi\make_msi.ps1 artifacts\bazel-%RELEASE_NAME%-windows-x86_64.exe
+      )
 
       cd artifacts
       buildkite-agent artifact upload "*"
