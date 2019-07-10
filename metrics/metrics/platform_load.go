@@ -30,11 +30,11 @@ func (pl *PlatformLoad) Columns() []Column {
 }
 
 func (*PlatformLoad) Type() MetricType {
-	return BuildBasedMetric
+	return TimeBasedMetric
 }
 
 func (*PlatformLoad) RelevantDelta() int {
-	return 200 // builds
+	return 2 * 24 * 60 * 60 // Two days in seconds
 }
 
 func (pl *PlatformLoad) Collect() (data.DataSet, error) {
