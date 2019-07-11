@@ -111,7 +111,7 @@ def _get_bazel_commits(date, bazel_repo_path, max_commits=None):
     ]
     command_output = subprocess.check_output(args, cwd=bazel_repo_path)
     decoded = command_output.decode("utf-8").split("\n")
-    full_list = [line.strip("'") for line in decoded]
+    full_list = [line.strip("'") for line in decoded if line]
 
     return _evenly_spaced_sample(full_list, max_commits)
 
