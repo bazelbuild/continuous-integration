@@ -449,6 +449,14 @@ PLATFORMS = {
         "queue": "windows",
         "python": "python.exe",
     },
+    "rbe_macos": {
+        "name": "RBE (macOS, OpenJDK 8)",
+        "emoji-name": ":gcloud::darwin: (OpenJDK 8)",
+        "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
+        "publish_binary": [],
+        "queue": "macos",
+        "python": "python3.7",
+    },
     "rbe_ubuntu1604": {
         "name": "RBE (Ubuntu 16.04, OpenJDK 8)",
         "emoji-name": "RBE (:ubuntu: 16.04, OpenJDK 8)",
@@ -1559,6 +1567,7 @@ def upload_json_profile(json_profile_path, tmpdir):
     print_collapsed_group(":gcloud: Uploading JSON Profile")
     execute_command(["buildkite-agent", "artifact", "upload", json_profile_path], cwd=tmpdir)
 
+
 def rename_test_logs_for_upload(test_logs, tmpdir):
     # Rename the test.log files to the target that created them
     # so that it's easy to associate test.log and target.
@@ -1602,10 +1611,10 @@ def test_logs_for_status(bep_file, status):
     pos = 0
     while pos < len(raw_data):
         try:
-          bep_obj, size = decoder.raw_decode(raw_data[pos:])
+            bep_obj, size = decoder.raw_decode(raw_data[pos:])
         except ValueError as e:
-          eprint("JSON decoding error({0}): {1}".format(e.errno, e.strerror))
-          return targets
+            eprint("JSON decoding error({0}): {1}".format(e.errno, e.strerror))
+            return targets
         if "testSummary" in bep_obj:
             test_target = bep_obj["id"]["testSummary"]["label"]
             test_status = bep_obj["testSummary"]["overallStatus"]
