@@ -102,16 +102,23 @@ esac
 # Configure and start Docker.
 systemctl start docker
 
-# Pull some known images so that we don't have to download / extract them on each CI job.
+# Ensure that Docker images can be downloaded from GCR.
 gcloud auth configure-docker --quiet
-docker pull "gcr.io/bazel-public/ubuntu1604:java8" &
-docker pull "gcr.io/bazel-public/ubuntu1804:java11" &
-docker pull "gcr.io/bazel-public/ubuntu1804:nojava" &
-docker pull "gcr.io/bazel-public/centos7:java8" &
-wait
-
-# Allow the Buildkite agent to access Docker images on GCR.
 sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
+
+# Write the Buildkite agent's systemd configuration.
+mkdir -p /etc/systemd/system/buildkite-agent.service.d
+cat > /etc/systemd/system/buildkite-agent.service.d/override.conf <<'EOF'
+[Service]
+Restart=no
+ExecStopPost=/bin/systemctl poweroff
+# This allows us to run ExecStartPre and ExecStartPost steps with root permissions.
+PermissionsStartOnly=true
+# Disable tasks accounting, because Bazel is prone to run into resource limits there.
+# This fixes the "cgroup: fork rejected by pids controller" error that some CI jobs triggered.
+TasksAccounting=no
+EOF
+systemctl daemon-reload
 
 # Write the Buildkite agent configuration.
 cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF

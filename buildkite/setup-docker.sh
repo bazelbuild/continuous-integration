@@ -74,16 +74,6 @@ EOF
   # Disable the Buildkite agent service, as the startup script has to mount /var/lib/buildkite-agent
   # first.
   systemctl disable buildkite-agent
-
-  mkdir /etc/systemd/system/buildkite-agent.service.d
-  cat > /etc/systemd/system/buildkite-agent.service.d/override.conf <<'EOF'
-[Service]
-Restart=always
-PermissionsStartOnly=true
-# Disable tasks accounting, because Bazel is prone to run into resource limits there.
-# This fixes the "cgroup: fork rejected by pids controller" error that some CI jobs triggered.
-TasksAccounting=no
-EOF
 }
 
 ### Install Docker.
