@@ -221,7 +221,7 @@ def _metadata_file_content(project_label, project_source, command, date, platfor
     """
     data_root = "https://{}.storage.googleapis.com/{}/{}".format(
         bucket, project_label, date.strftime("%Y/%m/%d")
-    )
+   )
 
     return {
         "name": project_label,
@@ -254,7 +254,7 @@ def _create_and_upload_metadata(
         date: the date of the runs.
         platform: the platform the runs were performed on.
         bucket: the GCP Storage bucket to upload data to.
-    """
+   """
     metadata_file_path = "{}/{}-metadata".format(TMP, project_label)
 
     with open(metadata_file_path, "w") as f:

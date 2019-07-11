@@ -91,7 +91,7 @@ EOF
   apt-get -qqy install apt-transport-https ca-certificates
 
   curl -sSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-  add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) test"
+  add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 
   apt-get -qqy update
   apt-get -qqy install docker-ce
@@ -109,19 +109,13 @@ EOF
   systemctl stop docker
 }
 
-### Install Stackdriver Monitoring Agent.
-# {
-#   curl -sSO https://dl.google.com/cloudagents/install-monitoring-agent.sh
-#   bash install-monitoring-agent.sh
-# }
-
 ### Setup KVM.
 {
   apt-get -qqy install qemu-kvm
 
   # Allow everyone access to the KVM device. As above, this would usually not be a good idea, but
   # these machines are untrusted anyway...
-  echo 'KERNEL=="kvm", NAME="%k", GROUP="kvm", MODE="0666"' > /etc/udev/rules.d/65-kvm.rules
+  echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' > /etc/udev/rules.d/65-kvm.rules
 }
 
 # Preseed our Git mirrors.

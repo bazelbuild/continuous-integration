@@ -43,8 +43,10 @@ IMAGE_CREATION_VMS = {
         "project": "bazel-untrusted",
         "zone": "us-central1-a",
         "source_image_project": "ubuntu-os-cloud",
-        "source_image_family": "ubuntu-1904",
+        "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
+        "boot_disk_size": "10GB",
+        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
@@ -53,8 +55,10 @@ IMAGE_CREATION_VMS = {
         "project": "bazel-untrusted",
         "zone": "us-central1-a",
         "source_image_project": "ubuntu-os-cloud",
-        "source_image_family": "ubuntu-1904",
+        "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
+        "boot_disk_size": "10GB",
+        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
@@ -63,8 +67,10 @@ IMAGE_CREATION_VMS = {
         "project": "bazel-public",
         "zone": "us-central1-a",
         "source_image_project": "ubuntu-os-cloud",
-        "source_image_family": "ubuntu-1904",
+        "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
+        "boot_disk_size": "10GB",
+        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
@@ -75,6 +81,8 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-1809-core",
         "setup_script": "setup-windows.ps1",
+        "boot_disk_size": "32GB",
+        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
     },
     "bk-testing-windows-java8": {
         "project": "bazel-untrusted",
@@ -82,6 +90,8 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-1809-core",
         "setup_script": "setup-windows.ps1",
+        "boot_disk_size": "32GB",
+        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
     },
     "bk-trusted-windows-java8": {
         "project": "bazel-public",
@@ -97,6 +107,8 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-2019",
         "setup_script": "setup-windows.ps1",
+        "boot_disk_size": "50GB",
+        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
     },
 }
 
@@ -146,7 +158,7 @@ def create_instance(instance_name, params):
             network=params.get("network", "buildkite"),
             metadata_from_file=startup_script,
             boot_disk_type="pd-ssd",
-            boot_disk_size="50GB",
+            boot_disk_size=params.get("boot_disk_size", "50GB"),
             **image,
         )
     finally:
@@ -228,6 +240,7 @@ def workflow(name, params):
             source_disk=instance_name,
             source_disk_zone=zone,
             licenses=params.get("licenses", []),
+            guest_os_features=params.get("guest_os_features", []),
         )
     finally:
         gcloud.delete_instance(instance_name, project=project, zone=zone)
@@ -258,14 +271,6 @@ def main(argv=None):
             "Unknown platforms: {}\nAvailable platforms: {}".format(
                 ", ".join(unknown_args), ", ".join(IMAGE_CREATION_VMS.keys())
             )
-        )
-        return 1
-
-    if subprocess.check_output(["git", "status", "--porcelain"], universal_newlines=True).strip():
-        print(
-            "There are pending changes in your Git repository. You have to commit "
-            "them, before create_images.py can continue.",
-            file=sys.stderr,
         )
         return 1
 
