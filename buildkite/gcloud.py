@@ -100,6 +100,28 @@ def delete_instance_group(name, **kwargs):
         return e
 
 
+def rolling_update_instance_group(name, **kwargs):
+    try:
+        return gcloud(
+            "compute",
+            "instance-groups",
+            "managed",
+            "rolling-action",
+            "start-update",
+            name,
+            **kwargs,
+        )
+    except subprocess.CalledProcessError as e:
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
+
+
+def set_autoscaling_instance_groups(name, **kwargs):
+    try:
+        return gcloud("compute", "instance-groups", "managed", "set-autoscaling", name, **kwargs)
+    except subprocess.CalledProcessError as e:
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
+
+
 def create_instance_template(name, **kwargs):
     try:
         return gcloud("compute", "instance-templates", "create", name, **kwargs)

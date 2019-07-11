@@ -36,7 +36,7 @@ def worker():
             # We take a few keys out of the config item. The rest is passed
             # as-is to create_instance_template() and thus to the gcloud
             # command line tool.
-            count = item.pop("count")
+            del item["count"]
             instance_group_name = item.pop("name")
             project = item.pop("project")
             zone = item.pop("zone", None)
@@ -51,40 +51,27 @@ def worker():
             timestamp = datetime.now().strftime("%Y%m%dt%H%M%S")
             template_name = "{}-{}".format(instance_group_name, timestamp)
 
-            if zone is not None:
-                if (
-                    gcloud.delete_instance_group(
-                        instance_group_name, project=project, zone=zone
-                    ).returncode
-                    == 0
-                ):
-                    print("Deleted existing instance group: {}".format(instance_group_name))
-            elif region is not None:
-                if (
-                    gcloud.delete_instance_group(
-                        instance_group_name, project=project, region=region
-                    ).returncode
-                    == 0
-                ):
-                    print("Deleted existing instance group: {}".format(instance_group_name))
-
             # Create the new instance template.
             gcloud.create_instance_template(template_name, project=project, **item)
             print("Created instance template {}".format(template_name))
 
-            # Create instance groups with the new template.
+            # Update the instance group to the new template.
             kwargs = {
                 "project": project,
-                "base_instance_name": instance_group_name,
-                "size": count,
-                "template": template_name,
+                "version": "template=" + template_name,
+                "max_unavailable": "100%",
             }
             if zone is not None:
                 kwargs["zone"] = zone
             elif region is not None:
                 kwargs["region"] = region
-            gcloud.create_instance_group(instance_group_name, **kwargs)
-            print("Created instance group {}".format(instance_group_name))
+
+            gcloud.rolling_update_instance_group(instance_group_name, **kwargs)
+            print(
+                "Updating instance group {} to template {}".format(
+                    instance_group_name, template_name
+                )
+            )
         finally:
             WORK_QUEUE.task_done()
 
