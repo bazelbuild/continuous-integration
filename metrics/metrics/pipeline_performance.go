@@ -25,6 +25,14 @@ func (pp *PipelinePerformance) Columns() []Column {
 	return pp.columns
 }
 
+func (*PipelinePerformance) Type() MetricType {
+	return BuildBasedMetric
+}
+
+func (*PipelinePerformance) RelevantDelta() int {
+	return 100 // builds
+}
+
 func (pp *PipelinePerformance) Collect() (data.DataSet, error) {
 	result := data.CreateDataSet(GetColumnNames(pp.columns))
 	for _, pipeline := range pp.pipelines {

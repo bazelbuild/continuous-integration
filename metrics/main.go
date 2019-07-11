@@ -103,10 +103,8 @@ func main() {
 	macPerformance := metrics.CreateMacPerformance(bk, 20, pipelines...)
 	srv.AddMetric(macPerformance, minutes(60), defaultPublisher)
 
-	/*
-		pipelinePerformance := metrics.CreatePipelinePerformance(bk, 20, pipelines...)
-		srv.AddMetric(pipelinePerformance, minutes(60), defaultPublisher)
-	*/
+	pipelinePerformance := metrics.CreatePipelinePerformance(bk, 20, pipelines...)
+	srv.AddMetric(pipelinePerformance, minutes(10), defaultPublisher)
 
 	platformLoad := metrics.CreatePlatformLoad(bk, 100, settings.BuildkiteOrgs...)
 	srv.AddMetric(platformLoad, minutes(5), defaultPublisher)
