@@ -10,6 +10,12 @@ for target in bazelisk buildifier github-release saucelabs; do
     docker build -f base/Dockerfile --target $target -t gcr.io/bazel-public/base:$target .
 done
 
+# Build docker images that only contain what Bazel and its test suite needs.
+# This is used for using the presubmit with remote execution.
+docker build -f ubuntu1604/Dockerfile --target ubuntu1604-bazel-java8 -t gcr.io/bazel-public/ubuntu1604/bazel:java8 ubuntu1604
+docker build -f ubuntu1804/Dockerfile --target ubuntu1804-bazel-java11 -t gcr.io/bazel-public/ubuntu1804/bazel:java11 ubuntu1804
+docker build -f ubuntu1804/Dockerfile --target ubuntu1804-bazel-nojava -t gcr.io/bazel-public/ubuntu1804/bazel:nojava ubuntu1804
+
 docker build -f ubuntu1604/Dockerfile --target ubuntu1604-java8 -t gcr.io/bazel-public/ubuntu1604:java8 ubuntu1604
 docker build -f ubuntu1804/Dockerfile --target ubuntu1804-java11 -t gcr.io/bazel-public/ubuntu1804:java11 ubuntu1804
 docker build -f ubuntu1804/Dockerfile --target ubuntu1804-nojava -t gcr.io/bazel-public/ubuntu1804:nojava ubuntu1804
