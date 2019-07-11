@@ -29,7 +29,7 @@ import sys
 import tempfile
 import time
 import yaml
-
+import math
 
 # TMP has different values, depending on the platform.
 TMP = tempfile.gettempdir()
@@ -65,7 +65,29 @@ def _bazel_bench_env_setup_command(platform, bazel_commits):
     return [download_command, exec_command]
 
 
-def _get_bazel_commits(date, bazel_repo_path):
+def _evenly_spaced_sample(lst, num_elem):
+    if not num_elem or len(lst) < num_elem:
+        return lst
+    sample = []
+    i = len(lst) - 1
+    step_size = math.ceil(len(lst) / num_elem)
+
+    # We sample from the back because we always want changes from every commit
+    # in the day to be covered in the benchmark (i.e. always include the last
+    # commit).
+    while i >= 0:
+        # If the number of remaining elements <= the number of remaining
+        # slots: flush all remaining elements to the sample.
+        if i + 1 <= num_elem - len(sample):
+            sample.extend(lst[i::-1])
+            break
+        sample.append(lst[i])
+        i -= step_size
+    # Reverse the list to preserve chronological order.
+    return sample[::-1]
+
+
+def _get_bazel_commits(date, bazel_repo_path, max_commits=None):
     """Get the commits from a particular date.
 
     Get the commits from 00:00 of date to 00:00 of date + 1.
@@ -73,6 +95,7 @@ def _get_bazel_commits(date, bazel_repo_path):
     Args:
       date: a datetime.date the date to get commits.
       bazel_repo_path: the path to a local clone of bazelbuild/bazel.
+      max_commits: the maximum number of commits to consider for benchmarking.
 
     Return:
       A list of string (commit hashes).
@@ -88,8 +111,9 @@ def _get_bazel_commits(date, bazel_repo_path):
     ]
     command_output = subprocess.check_output(args, cwd=bazel_repo_path)
     decoded = command_output.decode("utf-8").split("\n")
+    full_list = [line.strip("'") for line in decoded]
 
-    return [line.strip("'") for line in decoded]
+    return _evenly_spaced_sample(full_list, max_commits)
 
 
 def _get_platforms(project_name, whitelist):
@@ -294,6 +318,7 @@ def main(args=None):
     parser.add_argument("--date", type=str)
     parser.add_argument("--bazel_bench_options", type=str, default="")
     parser.add_argument("--bucket", type=str, default="")
+    parser.add_argument("--max_commits", type=int, default="")
     parsed_args = parser.parse_args(args)
 
     bazel_bench_ci_steps = []
@@ -314,7 +339,8 @@ def main(args=None):
             # The bazel commits should be the same regardless of platform.
             if not bazel_commits:
                 bazel_clone_path = bazelci.clone_git_repository(BAZEL_REPOSITORY, platform)
-                bazel_commits = _get_bazel_commits(date, bazel_clone_path)
+                bazel_commits = _get_bazel_commits(
+                    date, bazel_clone_path, parsed_args.max_commits)
 
             bazel_bench_ci_steps.append(
                 _ci_step_for_platform_and_commits(
