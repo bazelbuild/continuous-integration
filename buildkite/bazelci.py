@@ -105,7 +105,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/buchgr/bazel-remote.git",
         "http_config": "https://raw.githubusercontent.com/buchgr/bazel-remote/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-remote-cache",
-        "disabled_reason": "https://github.com/buchgr/bazel-remote/issues/82",
     },
     "Bazel integration testing": {
         "git_repository": "https://github.com/bazelbuild/bazel-integration-testing.git",
@@ -161,6 +160,11 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/envoyproxy/envoy.git",
         "http_config": "https://raw.githubusercontent.com/envoyproxy/envoy/master/.bazelci/presubmit.yml",
         "pipeline_slug": "envoy",
+    },
+    "FlatBuffers": {
+        "git_repository": "https://github.com/google/flatbuffers.git",
+        "http_config": "https://raw.githubusercontent.com/google/flatbuffers/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "flatbuffers",
     },
     "Flogger": {
         "git_repository": "https://github.com/google/flogger.git",
