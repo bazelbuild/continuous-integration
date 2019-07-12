@@ -98,7 +98,8 @@ def _get_bazel_commits(date, bazel_repo_path, max_commits=None):
       max_commits: the maximum number of commits to consider for benchmarking.
 
     Return:
-      A list of string (commit hashes).
+      A tuple: (list of strings: all commits during that day,
+        list of strings: commits to benchmark).
     """
     date_plus_one = date + datetime.timedelta(days=1)
     args = [
@@ -113,7 +114,7 @@ def _get_bazel_commits(date, bazel_repo_path, max_commits=None):
     decoded = command_output.decode("utf-8").splitlines()
     full_list = [line.strip("'") for line in decoded if line]
 
-    return _evenly_spaced_sample(full_list, max_commits)
+    return full_list, _evenly_spaced_sample(full_list, max_commits)
 
 
 def _get_platforms(project_name, whitelist):
@@ -230,7 +231,9 @@ def _ci_step_for_platform_and_commits(
     return bazelci.create_step(label, commands, platform)
 
 
-def _metadata_file_content(project_label, project_source, command, date, platforms, bucket):
+def _metadata_file_content(
+    project_label, project_source, command, date, platforms,
+    bucket, all_commits, benchmarked_commits):
     """Generate the METADATA file for each project.
 
     Args:
@@ -240,6 +243,8 @@ def _metadata_file_content(project_label, project_source, command, date, platfor
         date: the date of the runs.
         platform: the platform the runs were performed on.
         bucket: the GCP Storage bucket to load METADATA from.
+        all_commits: the full list of Bazel commits that day.
+        benchmarked_commits: the commits picked for benchmarking.
     Returns:
         The content of the METADATA file for the project on that date.
     """
@@ -252,6 +257,8 @@ def _metadata_file_content(project_label, project_source, command, date, platfor
         "project_source": project_source,
         "command": command,
         "data_root": data_root,
+        "all_commits": all_commits,
+        "benchmarked_commits": benchmarked_commits,
         "platforms": [
             {
                 "platform": platform,
@@ -264,7 +271,8 @@ def _metadata_file_content(project_label, project_source, command, date, platfor
 
 
 def _create_and_upload_metadata(
-    project_label, project_source, command, date, platforms, bucket):
+    project_label, project_source, command, date, platforms,
+    bucket, all_commits, benchmarked_commits):
     """Generate the METADATA file for each project & upload to Storage.
 
     METADATA provides information about the runs and where to get the
@@ -278,12 +286,15 @@ def _create_and_upload_metadata(
         date: the date of the runs.
         platform: the platform the runs were performed on.
         bucket: the GCP Storage bucket to upload data to.
+        all_commits: the full list of Bazel commits that day.
+        benchmarked_commits: the commits picked for benchmarking.
    """
     metadata_file_path = "{}/{}-metadata".format(TMP, project_label)
 
     with open(metadata_file_path, "w") as f:
         data = _metadata_file_content(
-            project_label, project_source, command, date, platforms, bucket)
+            project_label, project_source, command, date, platforms,
+            bucket, all_commits, benchmarked_commits)
         json.dump(data, f)
 
     destination = "gs://{}/{}/{}/METADATA".format(
@@ -327,7 +338,8 @@ def main(args=None):
         if parsed_args.date
         else datetime.date.today()
     )
-    bazel_commits = None
+    bazel_commits_full_list = None
+    bazel_commits_to_benchmark = None
 
     for project in PROJECTS:
         if not project["active"]:
@@ -337,14 +349,14 @@ def main(args=None):
         for platform in platforms:
             # When running on the first platform, get the bazel commits.
             # The bazel commits should be the same regardless of platform.
-            if not bazel_commits:
+            if not bazel_commits_to_benchmark:
                 bazel_clone_path = bazelci.clone_git_repository(BAZEL_REPOSITORY, platform)
-                bazel_commits = _get_bazel_commits(
+                bazel_commits_full_list, bazel_commits_to_benchmark = _get_bazel_commits(
                     date, bazel_clone_path, parsed_args.max_commits)
 
             bazel_bench_ci_steps.append(
                 _ci_step_for_platform_and_commits(
-                    bazel_commits, platform, project,
+                    bazel_commits_to_benchmark, platform, project,
                     parsed_args.bazel_bench_options, date, parsed_args.bucket
                 )
             )
@@ -354,7 +366,9 @@ def main(args=None):
             command=project["bazel_command"],
             date=date,
             platforms=platforms,
-            bucket=parsed_args.bucket
+            bucket=parsed_args.bucket,
+            all_commits=bazel_commits_full_list,
+            benchmarked_commits=bazel_commits_to_benchmark
         )
 
         bazel_bench_ci_steps.append("wait")
