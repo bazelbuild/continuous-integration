@@ -379,7 +379,9 @@ def main(args=None):
                 parsed_args.bucket, REPORT_GENERATION_PLATFORM))
 
         bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
-        subprocess.run(["buildkite-agent", "pipeline", "upload"], input=yaml.dump({"steps": bazel_bench_ci_steps}))
+        subprocess.run(
+            ["buildkite-agent", "pipeline", "upload"],
+            input=yaml.dump({"steps": bazel_bench_ci_steps}, encoding="utf-8"))
 
 
 if __name__ == "__main__":
