@@ -132,7 +132,7 @@ def _get_platforms(project_name, whitelist):
     configs = bazelci.fetch_configs(http_config, None)
     tasks = configs["tasks"]
     ci_platforms_for_project = [
-        bazelci.get_platform_for_task(k, tasks[k]), tasks) for k in tasks]
+        bazelci.get_platform_for_task(k, tasks[k]) for k in tasks]
 
     return set([p for p in ci_platforms_for_project if p in whitelist])
 
