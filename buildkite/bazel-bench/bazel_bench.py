@@ -110,7 +110,7 @@ def _get_bazel_commits(date, bazel_repo_path, max_commits=None):
         "--reverse",
     ]
     command_output = subprocess.check_output(args, cwd=bazel_repo_path)
-    decoded = command_output.decode("utf-8").split("\n")
+    decoded = command_output.decode("utf-8").splitlines()
     full_list = [line.strip("'") for line in decoded if line]
 
     return _evenly_spaced_sample(full_list, max_commits)
@@ -125,15 +125,15 @@ def _get_platforms(project_name, whitelist):
       whitelist: a list of string denoting the whitelist of supported platforms.
 
     Returns:
-      A list of string: the platforms for this project.
+      A set of string: the platforms for this project.
     """
     http_config = bazelci.DOWNSTREAM_PROJECTS_PRODUCTION[project_name]["http_config"]
     configs = bazelci.fetch_configs(http_config, None)
     tasks = configs["tasks"]
-    ci_platforms_for_project = list(
-        map(lambda k: bazelci.get_platform_for_task(k, tasks[k]), tasks))
+    ci_platforms_for_project = [
+        bazelci.get_platform_for_task(k, tasks[k]), tasks) for k in tasks]
 
-    return list(set(filter(lambda p: p in whitelist, ci_platforms_for_project)))
+    return set([p for p in ci_platforms_for_project if p in whitelist])
 
 
 def _get_clone_path(repository, platform):
@@ -365,10 +365,7 @@ def main(args=None):
                 parsed_args.bucket, REPORT_GENERATION_PLATFORM))
 
         bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
-        buildkite_pipeline_cmd = "cat <<EOF | buildkite-agent pipeline upload\n%s\nEOF" % yaml.dump(
-            {"steps": bazel_bench_ci_steps}
-        )
-        subprocess.call(buildkite_pipeline_cmd, shell=True)
+        subprocess.run(["buildkite-agent", "pipeline", "upload"], input=yaml.dump({"steps": bazel_bench_ci_steps}))
 
 
 if __name__ == "__main__":
