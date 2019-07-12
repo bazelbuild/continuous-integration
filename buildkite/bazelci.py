@@ -382,6 +382,12 @@ DOWNSTREAM_PROJECTS = {
     "bazel": DOWNSTREAM_PROJECTS_PRODUCTION,
 }[BUILDKITE_ORG]
 
+DOCKER_REGISTRY_PREFIX = {
+    "bazel-testing": "bazel-public/testing",
+    "bazel-trusted": "bazel-public",
+    "bazel": "bazel-public",
+}[BUILDKITE_ORG]
+
 # A map containing all supported platform names as keys, with the values being
 # the platform name in a human readable format, and a the buildkite-agent's
 # working directory.
@@ -391,7 +397,7 @@ PLATFORMS = {
         "emoji-name": ":centos: 7 (Java 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["ubuntu1404", "centos7", "linux"],
-        "docker-image": "gcr.io/bazel-public/centos7:java8",
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7:java8",
         "python": "python3.6",
     },
     "ubuntu1604": {
@@ -399,7 +405,7 @@ PLATFORMS = {
         "emoji-name": ":ubuntu: 16.04 (OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["ubuntu1604"],
-        "docker-image": "gcr.io/bazel-public/ubuntu1604:java8",
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1604:java8",
         "python": "python3.6",
     },
     "ubuntu1804": {
@@ -407,7 +413,7 @@ PLATFORMS = {
         "emoji-name": ":ubuntu: 18.04 (OpenJDK 11)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["ubuntu1804"],
-        "docker-image": "gcr.io/bazel-public/ubuntu1804:java11",
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1804:java11",
         "python": "python3.6",
     },
     "ubuntu1804_nojava": {
@@ -415,7 +421,7 @@ PLATFORMS = {
         "emoji-name": ":ubuntu: 18.04 (no JDK)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
-        "docker-image": "gcr.io/bazel-public/ubuntu1804:nojava",
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1804:nojava",
         "python": "python3.6",
     },
     "macos": {
@@ -439,7 +445,7 @@ PLATFORMS = {
         "emoji-name": ":gcloud: (OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
-        "docker-image": "gcr.io/bazel-public/ubuntu1604:java8",
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1604:java8",
         "python": "python3.6",
     },
 }

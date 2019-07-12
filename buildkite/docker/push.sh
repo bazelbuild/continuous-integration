@@ -2,12 +2,24 @@
 
 set -euxo pipefail
 
-docker push gcr.io/bazel-public/ubuntu1604/bazel:java8
-docker push gcr.io/bazel-public/ubuntu1804/bazel:java11
-docker push gcr.io/bazel-public/ubuntu1804/bazel:nojava
-docker push gcr.io/bazel-public/ubuntu1604:java8
-docker push gcr.io/bazel-public/ubuntu1804:java11
-docker push gcr.io/bazel-public/ubuntu1804:nojava
-docker push gcr.io/bazel-public/debian-unstable:java11
-docker push gcr.io/bazel-public/centos7:java8
-docker push gcr.io/bazel-public/centos7:releaser
+case $(git symbolic-ref --short HEAD) in
+    master)
+        PREFIX="bazel-public"
+        ;;
+    testing)
+        PREFIX="bazel-public/testing"
+        ;;
+    *)
+        echo "You must build Docker images either from the master or the testing branch!"
+        exit 1
+esac
+
+docker push "gcr.io/$PREFIX/ubuntu1604/bazel:java8"
+docker push "gcr.io/$PREFIX/ubuntu1804/bazel:java11"
+docker push "gcr.io/$PREFIX/ubuntu1804/bazel:nojava"
+docker push "gcr.io/$PREFIX/ubuntu1604:java8"
+docker push "gcr.io/$PREFIX/ubuntu1804:java11"
+docker push "gcr.io/$PREFIX/ubuntu1804:nojava"
+docker push "gcr.io/$PREFIX/debian-unstable:java11"
+docker push "gcr.io/$PREFIX/centos7:java8"
+docker push "gcr.io/$PREFIX/centos7:releaser"
