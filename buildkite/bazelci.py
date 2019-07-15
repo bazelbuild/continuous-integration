@@ -862,34 +862,47 @@ def execute_commands(
                 os.makedirs(bazelisk_cache_dir, mode=0o755, exist_ok=True)
                 test_flags.append("--sandbox_writable_path={}".format(bazelisk_cache_dir))
 
-            test_bep_file = os.path.join(tmpdir, "test_bep.json")
             try:
-                execute_bazel_test(
-                    bazel_version,
-                    bazel_binary,
-                    platform,
-                    test_flags,
-                    test_targets,
-                    test_bep_file,
-                    monitor_flaky_tests,
-                    incompatible_flags,
-                )
-                if monitor_flaky_tests:
-                    upload_bep_logs_for_flaky_tests(test_bep_file)
+                test_bep_file = os.path.join(tmpdir, "test_bep.json")
+                stop_file = os.path.join(tmpdir, "stop")
+                upload_process = start_test_log_upload(test_bep_file, stop_file)
+                try:
+                    execute_bazel_test(
+                        bazel_version,
+                        bazel_binary,
+                        platform,
+                        test_flags,
+                        test_targets,
+                        test_bep_file,
+                        monitor_flaky_tests,
+                        incompatible_flags,
+                    )
+                    if monitor_flaky_tests:
+                        upload_bep_logs_for_flaky_tests(test_bep_file)
+                finally:
+                    if include_json_profile_test:
+                        upload_json_profile(json_profile_out_test, tmpdir)
             finally:
-                upload_test_logs(test_bep_file, tmpdir)
-                if include_json_profile_test:
-                    upload_json_profile(json_profile_out_test, tmpdir)
+                # Create the stop file to signal the test log uploader to terminate
+                open(stop_file, 'a').close()
+                try:
+                    stdout, stderr = upload_process.communicate(timeout=30)
+                    print(stdout)
+                    print(stderr, file=sys.stderr)
+                except TimeoutExpired:
+                    terminate_background_process(upload_process)
     finally:
-        if sc_process:
-            sc_process.terminate()
-            try:
-                sc_process.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                sc_process.kill()
+        terminate_background_process(sc_process)
         if tmpdir:
             shutil.rmtree(tmpdir)
 
+def start_test_log_upload(bep_file, stop_file):
+    return execute_command_background([sys.executable,
+        sys.argv[0],
+        "upload_test_logs_from_bep",
+        "--build_event_json_file=" + test_bep_file,
+        "--stop_file=" + stop_file,
+    ])
 
 def activate_xcode(task_config):
     # Get the Xcode version from the config.
@@ -1518,21 +1531,32 @@ def upload_bep_logs_for_flaky_tests(test_bep_file):
         )
 
 
-def upload_test_logs(bep_file, tmpdir):
+def upload_test_logs_from_bep(bep_file, stop_file):
     if not os.path.exists(bep_file):
         return
-    test_logs = test_logs_to_upload(bep_file, tmpdir)
-    if test_logs:
-        cwd = os.getcwd()
-        try:
-            os.chdir(tmpdir)
-            test_logs = [os.path.relpath(test_log, tmpdir) for test_log in test_logs]
-            test_logs = sorted(test_logs)
-            print_collapsed_group(":gcloud: Uploading Test Logs")
-            execute_command(["buildkite-agent", "artifact", "upload", ";".join(test_logs)])
-        finally:
-            os.chdir(cwd)
+    try:
+        tmpdir = tempfile.mkdtemp()
+        uploaded_targets = set()
+        while not os.path.exists(stop_file):
+            all_test_logs = filter_test_logs_to_upload(bep_file)
+            test_logs_to_upload = [(target, files) for target, files in all_test_logs if target not in uploaded_targets]
 
+            if test_logs_to_upload:
+                files_to_upload = rename_test_logs_for_upload(test_logs_to_upload, tmpdir)
+                cwd = os.getcwd()
+                try:
+                    os.chdir(tmpdir)
+                    test_logs = [os.path.relpath(file, tmpdir) for file in files_to_upload]
+                    test_logs = sorted(test_logs)
+                    execute_command(["buildkite-agent", "artifact", "upload", ";".join(test_logs)])
+                finally:
+                    uploaded_targets.update([target for target, _ in test_logs_to_upload])
+                    os.chdir(cwd)
+            time.sleep(0.2)
+        print("Uploading of test logs finished")
+    finally:
+        if tmpdir:
+            shutil.rmtree(tmpdir)
 
 def upload_json_profile(json_profile_path, tmpdir):
     if not os.path.exists(json_profile_path):
@@ -1541,18 +1565,22 @@ def upload_json_profile(json_profile_path, tmpdir):
     execute_command(["buildkite-agent", "artifact", "upload", json_profile_path], cwd=tmpdir)
 
 
-def test_logs_to_upload(bep_file, tmpdir):
+def filter_test_logs_to_upload(bep_file):
     failed = test_logs_for_status(bep_file, status="FAILED")
     timed_out = test_logs_for_status(bep_file, status="TIMEOUT")
     flaky = test_logs_for_status(bep_file, status="FLAKY")
+    return failed + timed_out + flaky
+
+
+def rename_test_logs_for_upload(test_logs, tmpdir):
     # Rename the test.log files to the target that created them
     # so that it's easy to associate test.log and target.
     new_paths = []
-    for label, test_logs in failed + timed_out + flaky:
+    for label, files in test_logs:
         attempt = 0
-        if len(test_logs) > 1:
+        if len(files) > 1:
             attempt = 1
-        for test_log in test_logs:
+        for test_log in files:
             try:
                 new_path = test_label_to_path(tmpdir, label, attempt)
                 os.makedirs(os.path.dirname(new_path), exist_ok=True)
@@ -1580,6 +1608,7 @@ def test_label_to_path(tmpdir, label, attempt):
 def test_logs_for_status(bep_file, status):
     targets = []
     raw_data = ""
+    bep_complete = False
     with open(bep_file, encoding="utf-8") as f:
         raw_data = f.read()
     decoder = json.JSONDecoder()
@@ -1628,6 +1657,13 @@ def execute_command_background(args):
     eprint(" ".join(args))
     return subprocess.Popen(args, env=os.environ)
 
+def terminate_background_process(process):
+    if process:
+        process.terminate()
+        try:
+            process.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            process.kill()
 
 def create_step(label, commands, platform, shards=1):
     if "docker-image" in PLATFORMS[platform]:
@@ -2619,7 +2655,6 @@ def publish_binaries():
     else:
         raise BuildkiteException("Could not publish binaries, ran out of attempts.")
 
-
 # This is so that multiline python strings are represented as YAML
 # block strings.
 def str_presenter(dumper, data):
@@ -2693,6 +2728,10 @@ def main(argv=None):
     runner = subparsers.add_parser("try_update_last_green_commit")
     runner = subparsers.add_parser("try_update_last_green_downstream_commit")
 
+    runner = subparsers.add_parser("upload_test_logs_from_bep")
+    runner.add_argument("--build_event_json_file", type=str)
+    runner.add_argument("--stop_file", type=str)
+
     args = parser.parse_args(argv)
 
     if args.script:
@@ -2765,6 +2804,8 @@ def main(argv=None):
         elif args.subparsers_name == "try_update_last_green_downstream_commit":
             # Update the last green commit of the downstream pipeline
             try_update_last_green_downstream_commit()
+        elif args.subparsers_name == "upload_test_logs_from_bep":
+            upload_test_logs_from_bep(args.build_event_json_file, args.stop_file)
         else:
             parser.print_help()
             return 2
