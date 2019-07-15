@@ -250,7 +250,7 @@ def _metadata_file_content(
     """
     data_root = "https://{}.storage.googleapis.com/{}/{}".format(
         bucket, project_label, date.strftime("%Y/%m/%d")
-   )
+    )
 
     return {
         "name": project_label,
