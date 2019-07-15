@@ -118,6 +118,18 @@ EOF
   echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' > /etc/udev/rules.d/65-kvm.rules
 }
 
+### Get rid of Ubuntu's snapd stuff and install the Google Cloud SDK the traditional way.
+{
+  apt-get -qqy remove --purge snapd
+  echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | \
+      tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+  apt-get -qqy install apt-transport-https ca-certificates
+  curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
+      apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+  apt-get -qqy update
+  apt-get -qqy install google-cloud-sdk
+}
+
 # Preseed our Git mirrors.
 {
   mkdir -p /var/lib/gitmirrors
