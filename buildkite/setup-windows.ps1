@@ -47,25 +47,10 @@ Write-Host "Enabling developer mode..."
 Write-Host "Enabling long paths..."
 & reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem" /t REG_DWORD /f /v "LongPathsEnabled" /d "1"
 
-## Enable running unsigned PowerShell scripts.
-# Write-Host "Setting PowerShell Execution Policy..."
-# Set-ExecutionPolicy -ExecutionPolicy Undefined -Scope CurrentUser -Force
-# Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope LocalMachine -Force
-# Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine -Force
-
 ## Enable Microsoft Updates.
 Write-Host "Enabling PowerShell Gallery provider..."
 Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-
-## Enable Microsoft Updates.
-# Write-Host "Installing all available Windows Updates (this can take ~30 minutes)..."
-# Install-Module PSWindowsUpdate
-# Get-Command -Module PSWindowsUpdate
-# Get-WindowsUpdate -Install -AcceptAll -AutoReboot
-# This fails with: https://gist.github.com/philwo/010bb5dffc62eccb391cd916c3bee2be
-# Add-WUServiceManager -ServiceID 7971f918-a847-4430-9279-4a52d1efe18d
-# Get-WindowsUpdate -Install -MicrosoftUpdate -AcceptAll -AutoReboot
 
 ## Install support for managing NTFS ACLs in PowerShell.
 Write-Host "Installing NTFSSecurity module..."
@@ -200,16 +185,6 @@ Remove-Item $ninja_zip
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${ninja_root}"
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
-## Mono (for rules_dotnet)
-Write-Host "Installing Mono..."
-& choco install mono
-$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
-
-## .NET Framework 4.6.2 Devpack (for rules_dotnet)
-Write-Host "Installing .NET Framework 4.6.2 Devpack..."
-& choco install netfx-4.6.2-devpack
-$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
-
 ## Install Sauce Connect (for rules_webtesting).
 Write-Host "Installing Sauce Connect Proxy..."
 & choco install sauce-connect
@@ -254,12 +229,6 @@ if ($java -ne "no") {
     [Environment]::SetEnvironmentVariable("ANDROID_HOME", $android_sdk_root, "Machine")
     $env:ANDROID_HOME = [Environment]::GetEnvironmentVariable("ANDROID_HOME", "Machine")
     Remove-Item $android_sdk_zip
-
-    ## Use OpenJDK 9 (and higher) compatibility flags.
-    # if ($java -eq "9" -or $java -eq "10") {
-    #     [Environment]::SetEnvironmentVariable("SDKMANAGER_OPTS", "--add-modules java.se.ee", "Machine")
-    #     $env:SDKMANAGER_OPTS = [Environment]::GetEnvironmentVariable("SDKMANAGER_OPTS", "Machine")
-    # }
 
     ## Accept the Android SDK license agreement.
     New-Item "${android_sdk_root}\licenses" -ItemType "directory" -Force
