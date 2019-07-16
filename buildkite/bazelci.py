@@ -867,8 +867,9 @@ def execute_commands(
             try:
                 test_bep_file = os.path.join(tmpdir, "test_bep.json")
                 stop_request = threading.Event()
-                upload_thread = threading.Thread(target = upload_test_logs_from_bep,
-                    args = (test_bep_file, tmpdir, stop_request,))
+                upload_thread = threading.Thread(
+                    target=upload_test_logs_from_bep, args=(test_bep_file, tmpdir, stop_request)
+                )
                 upload_thread.start()
                 try:
                     execute_bazel_test(
@@ -893,6 +894,7 @@ def execute_commands(
         terminate_background_process(sc_process)
         if tmpdir:
             shutil.rmtree(tmpdir)
+
 
 def activate_xcode(task_config):
     # Get the Xcode version from the config.
@@ -1527,7 +1529,9 @@ def upload_test_logs_from_bep(bep_file, tmpdir, stop_request):
         done = stop_request.isSet()
         if os.path.exists(bep_file):
             all_test_logs = filter_test_logs_to_upload(bep_file)
-            test_logs_to_upload = [(target, files) for target, files in all_test_logs if target not in uploaded_targets]
+            test_logs_to_upload = [
+                (target, files) for target, files in all_test_logs if target not in uploaded_targets
+            ]
 
             if test_logs_to_upload:
                 files_to_upload = rename_test_logs_for_upload(test_logs_to_upload, tmpdir)
@@ -1543,6 +1547,7 @@ def upload_test_logs_from_bep(bep_file, tmpdir, stop_request):
         if done:
             break
         time.sleep(0.2)
+
 
 def upload_json_profile(json_profile_path, tmpdir):
     if not os.path.exists(json_profile_path):
@@ -1642,6 +1647,7 @@ def execute_command_background(args):
     eprint(" ".join(args))
     return subprocess.Popen(args, env=os.environ)
 
+
 def terminate_background_process(process):
     if process:
         process.terminate()
@@ -1649,6 +1655,7 @@ def terminate_background_process(process):
             process.wait(timeout=10)
         except subprocess.TimeoutExpired:
             process.kill()
+
 
 def create_step(label, commands, platform, shards=1):
     if "docker-image" in PLATFORMS[platform]:
@@ -2639,6 +2646,7 @@ def publish_binaries():
         break
     else:
         raise BuildkiteException("Could not publish binaries, ran out of attempts.")
+
 
 # This is so that multiline python strings are represented as YAML
 # block strings.
