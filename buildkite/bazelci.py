@@ -964,7 +964,8 @@ def get_bazelisk_cache_directory(platform):
 
 
 def tests_with_status(bep_file, status):
-    return set(label for label, _ in test_logs_for_status(bep_file, status=[status]))
+    test_logs, _ = test_logs_for_status(bep_file, status=[status])
+    return set(label for label, _ in test_logs)
 
 
 def start_sauce_connect_proxy(platform, tmpdir):
@@ -1024,7 +1025,8 @@ def is_pull_request():
 
 
 def has_flaky_tests(bep_file):
-    return len(test_logs_for_status(bep_file, status=["FLAKY"])) > 0
+    test_logs, _ = test_logs_for_status(bep_file, status=["FLAKY"])
+    return len(test_logs) > 0
 
 
 def print_bazel_version_info(bazel_binary, platform):
@@ -1556,10 +1558,13 @@ def upload_bep_logs_for_flaky_tests(test_bep_file):
 
 def upload_test_logs_from_bep(bep_file, tmpdir, stop_request):
     uploaded_targets = set()
+    pos = 0
     while True:
         done = stop_request.isSet()
         if os.path.exists(bep_file):
-            all_test_logs = test_logs_for_status(bep_file, status=["FAILED", "TIMEOUT", "FLAKY"])
+            all_test_logs, pos = test_logs_for_status(
+                bep_file=bep_file, status=["FAILED", "TIMEOUT", "FLAKY"], file_pos=pos
+            )
             test_logs_to_upload = [
                 (target, files) for target, files in all_test_logs if target not in uploaded_targets
             ]
@@ -1577,7 +1582,7 @@ def upload_test_logs_from_bep(bep_file, tmpdir, stop_request):
                     os.chdir(cwd)
         if done:
             break
-        time.sleep(0.2)
+        time.sleep(1)
 
 
 def upload_json_profile(json_profile_path, tmpdir):
@@ -1620,19 +1625,20 @@ def test_label_to_path(tmpdir, label, attempt):
     return os.path.join(tmpdir, path)
 
 
-def test_logs_for_status(bep_file, status):
+def test_logs_for_status(bep_file, status, file_pos=0):
     targets = []
     with open(bep_file, encoding="utf-8") as f:
+        f.seek(file_pos)
         raw_data = f.read()
     decoder = json.JSONDecoder()
 
-    pos = 0
-    while pos < len(raw_data):
+    buffer_pos = 0
+    while buffer_pos < len(raw_data):
         try:
-            bep_obj, size = decoder.raw_decode(raw_data[pos:])
+            bep_obj, size = decoder.raw_decode(raw_data[buffer_pos:])
         except ValueError as e:
             eprint("JSON decoding error: " + str(e))
-            return targets
+            return targets, file_pos + buffer_pos
         if "testSummary" in bep_obj:
             test_target = bep_obj["id"]["testSummary"]["label"]
             test_status = bep_obj["testSummary"]["overallStatus"]
@@ -1642,8 +1648,8 @@ def test_logs_for_status(bep_file, status):
                 for output in outputs:
                     test_logs.append(url2pathname(urlparse(output["uri"]).path))
                 targets.append((test_target, test_logs))
-        pos += size + 1
-    return targets
+        buffer_pos += size + 1
+    return targets, file_pos + buffer_pos
 
 
 def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True, print_output=True):
