@@ -34,7 +34,6 @@ export PATH="$PATH:/snap/bin:/snap/google-cloud-sdk/current/bin"
 sysctl -w kernel.sched_min_granularity_ns=10000000
 sysctl -w kernel.sched_wakeup_granularity_ns=15000000
 sysctl -w vm.dirty_ratio=40
-#echo always > /sys/kernel/mm/transparent_hugepage/enabled
 
 # Use the local SSDs as fast storage.
 for device in /dev/nvme0n?; do
@@ -43,16 +42,35 @@ for device in /dev/nvme0n?; do
 done
 swapon -s
 
-# Create filesystem for buildkite-agent's home.
+# Create a tmpfs.
+mkdir -p /tmpfs
+mount -t tmpfs -o size=375G tmpfs /tmpfs
+mkdir /tmpfs/{buildkite-agent,docker}
+
+# Mount tmpfs to buildkite-agent's home.
 AGENT_HOME="/var/lib/buildkite-agent"
-mount -t tmpfs -o size=250G tmpfs "${AGENT_HOME}"
+mount --bind /tmpfs/buildkite-agent "${AGENT_HOME}"
 mkdir -p "${AGENT_HOME}/.cache/bazel/_bazel_buildkite-agent"
 chown -R buildkite-agent:buildkite-agent "${AGENT_HOME}"
 chmod 0755 "${AGENT_HOME}"
 
-# Create filesystem for Docker.
+# Mount a shared NFS repository cache.
+REPOCACHE="/var/lib/buildkite-agent/.cache/bazel/_bazel_buildkite-agent/cache/repos"
+mkdir -p "${REPOCACHE}"
+case $(hostname -f) in
+  *.bazel-public.*)
+    mount -t nfs 10.112.185.98:/repocache "${REPOCACHE}"
+    ;;
+  *.bazel-untrusted.*)
+    mount -t nfs 10.163.211.226:/repocache "${REPOCACHE}"
+    ;;
+esac
+chown buildkite-agent:buildkite-agent "${REPOCACHE}"
+chmod 0755 "${REPOCACHE}"
+
+# Mount tmpfs to Docker's working directory.
 DOCKER_HOME="/var/lib/docker"
-mount -t tmpfs -o size=250G tmpfs "${DOCKER_HOME}"
+mount --bind /tmpfs/docker "${DOCKER_HOME}"
 chown -R root:root "${DOCKER_HOME}"
 chmod 0711 "${DOCKER_HOME}"
 
@@ -146,6 +164,9 @@ EOF
 chmod 0400 /etc/buildkite-agent/buildkite-agent.cfg
 chmod 0500 /etc/buildkite-agent/hooks/*
 chown -R buildkite-agent:buildkite-agent /etc/buildkite-agent
+
+# Update our gitmirror.
+sudo -H -u buildkite-agent gsutil -qm rsync -rd gs://bazel-git-mirror/mirrors/ /var/lib/gitmirrors/
 
 # Start the Buildkite agent service.
 systemctl start buildkite-agent

@@ -122,6 +122,7 @@ EOF
 {
   mkdir -p /var/lib/gitmirrors
   curl https://storage.googleapis.com/bazel-git-mirror/bazelbuild-mirror.tar | tar x -C /var/lib/gitmirrors --strip=1
+  gsutil -qm rsync -rd gs://bazel-git-mirror/mirrors/ /var/lib/gitmirrors/
   chown -R buildkite-agent:buildkite-agent /var/lib/gitmirrors
   chmod -R 0755 /var/lib/gitmirrors
 }

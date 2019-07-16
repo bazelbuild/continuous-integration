@@ -324,18 +324,17 @@ def _report_generation_step(date, project_label, bucket, platform):
     ]))
 
     # Copy the generated report to a special path on GCS that's reserved for
-    # "latest" reports.
-    # GCS doesn't support symlink.
+    # "latest" reports. GCS doesn't support symlink.
     date_dir = datetime.datetime.strtptime(date, "%Y-%m-%d").strftime("%Y/%m/%d")
     report_dated_path_gcs = "gs://{}/{}/{}/report.html".format(
         bucket, project_label, date_dir)
-    report_lastest_path_gcs = "gs://{}/{}/report_latest.html".format(
+    report_latest_path_gcs = "gs://{}/{}/report_latest.html".format(
         bucket, project_label)
     commands.append(" ".join([
         "gsutil",
         "cp",
         report_dated_path_gcs,
-        report_lastest_path_gcs
+        report_latest_path_gcs
     ]))
     label = "Generating report on {} for project: {}.".format(
         date, project_label)

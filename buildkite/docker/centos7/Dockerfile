@@ -25,10 +25,6 @@ RUN echo "Enabling EPEL repository..." && \
 # Ensure that Bazel can use its beloved ISO-8859-1 locale.
 RUN localedef -i en_US -f ISO-8859-1 en_US.ISO-8859-1
 
-# Temporarily use a pre-compiled version of Bazel, because the latest release doesn't run on CentOS 7.
-RUN curl -o /usr/local/bin/bazel https://releases.bazel.build/0.27.0/release/bazel-0.27.0-centos7-x86_64 && \
-    chmod 0755 /usr/local/bin/bazel
-
 FROM centos7-java8 AS centos7-releaser
 
 # dpkg-source needs a newer GNU tar version that supports --sort=name.
