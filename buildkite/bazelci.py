@@ -943,7 +943,7 @@ def get_bazelisk_cache_directory(platform):
 
 
 def tests_with_status(bep_file, status):
-    return set(label for label, _ in test_logs_for_status(bep_file, status=status))
+    return set(label for label, _ in test_logs_for_status(bep_file, status=[status]))
 
 
 def start_sauce_connect_proxy(platform, tmpdir):
@@ -1003,7 +1003,7 @@ def is_pull_request():
 
 
 def has_flaky_tests(bep_file):
-    return len(test_logs_for_status(bep_file, status="FLAKY")) > 0
+    return len(test_logs_for_status(bep_file, status=["FLAKY"])) > 0
 
 
 def print_bazel_version_info(bazel_binary, platform):
@@ -1540,7 +1540,7 @@ def upload_test_logs_from_bep(bep_file, tmpdir, stop_request):
     while True:
         done = stop_request.isSet()
         if os.path.exists(bep_file):
-            all_test_logs = filter_test_logs_to_upload(bep_file)
+            all_test_logs = test_logs_for_status(bep_file, status=["FAILED", "TIMEOUT", "FLAKY"])
             test_logs_to_upload = [
                 (target, files) for target, files in all_test_logs if target not in uploaded_targets
             ]
@@ -1566,14 +1566,6 @@ def upload_json_profile(json_profile_path, tmpdir):
         return
     print_collapsed_group(":gcloud: Uploading JSON Profile")
     execute_command(["buildkite-agent", "artifact", "upload", json_profile_path], cwd=tmpdir)
-
-
-def filter_test_logs_to_upload(bep_file):
-    failed = test_logs_for_status(bep_file, status="FAILED")
-    timed_out = test_logs_for_status(bep_file, status="TIMEOUT")
-    flaky = test_logs_for_status(bep_file, status="FLAKY")
-    return failed + timed_out + flaky
-
 
 def rename_test_logs_for_upload(test_logs, tmpdir):
     # Rename the test.log files to the target that created them
@@ -1627,7 +1619,7 @@ def test_logs_for_status(bep_file, status):
         if "testSummary" in bep_obj:
             test_target = bep_obj["id"]["testSummary"]["label"]
             test_status = bep_obj["testSummary"]["overallStatus"]
-            if test_status == status:
+            if test_status in status:
                 outputs = bep_obj["testSummary"]["failed"]
                 test_logs = []
                 for output in outputs:
