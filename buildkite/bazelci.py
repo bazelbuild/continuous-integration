@@ -1605,8 +1605,6 @@ def test_logs_for_status(bep_file, status):
 
     pos = 0
     while pos < len(raw_data):
-        bep_obj = None
-        size = 0
         try:
           bep_obj, size = decoder.raw_decode(raw_data[pos:])
         except ValueError as e:
