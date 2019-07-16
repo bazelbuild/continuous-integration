@@ -51,6 +51,7 @@ PLATFORMS_WHITELIST = ['macos', 'ubuntu1604', 'ubuntu1804', 'rbe_ubuntu1604']
 REPORT_GENERATION_PLATFORM = 'ubuntu1804'
 STARTER_JOB_PLATFORM = 'ubuntu1804'
 
+
 def _bazel_bench_env_setup_command(platform, bazel_commits):
     bazel_bench_env_setup_py_url = (
         "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-bench/bazel_bench_env_setup.py?%s"
@@ -309,13 +310,32 @@ def _create_and_upload_metadata(
 
 
 def _report_generation_step(date, project_label, bucket, platform):
-    commands = " ".join([
+    """Generate the daily report.
+
+    Also update the path reserved for the latest report of each project.
+    """
+    commands = []
+    commands.append(" ".join([
         "python3.6",
         "report/generate_report.py",
         "--date={}".format(date),
         "--project={}".format(project_label),
         "--storage_bucket={}".format(bucket)
-    ])
+    ]))
+
+    # Copy the generated report to a special path on GCS that's reserved for
+    # "latest" reports. GCS doesn't support symlink.
+    date_dir = datetime.datetime.strtptime(date, "%Y-%m-%d").strftime("%Y/%m/%d")
+    report_dated_path_gcs = "gs://{}/{}/{}/report.html".format(
+        bucket, project_label, date_dir)
+    report_latest_path_gcs = "gs://{}/{}/report_latest.html".format(
+        bucket, project_label)
+    commands.append(" ".join([
+        "gsutil",
+        "cp",
+        report_dated_path_gcs,
+        report_latest_path_gcs
+    ]))
     label = "Generating report on {} for project: {}.".format(
         date, project_label)
     return bazelci.create_step(label, commands, platform)
