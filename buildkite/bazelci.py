@@ -1617,7 +1617,13 @@ def test_logs_for_status(bep_file, status):
 
     pos = 0
     while pos < len(raw_data):
-        bep_obj, size = decoder.raw_decode(raw_data[pos:])
+        bep_obj = None
+        size = 0
+        try:
+          bep_obj, size = decoder.raw_decode(raw_data[pos:])
+        except ValueError as e:
+          eprint("JSON decoding error({0}): {1}".format(e.errno, e.strerror))
+          return []
         if "testSummary" in bep_obj:
             test_target = bep_obj["id"]["testSummary"]["label"]
             test_status = bep_obj["testSummary"]["overallStatus"]
