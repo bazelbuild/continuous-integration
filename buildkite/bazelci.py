@@ -1531,7 +1531,7 @@ def upload_test_logs_from_bep(bep_file, tmpdir, stop_request):
     while True:
         done = stop_request.isSet()
         if os.path.exists(bep_file):
-            all_test_logs, pos = test_logs_for_status(bep_file, status=["FAILED", "TIMEOUT", "FLAKY"], pos)
+            all_test_logs, pos = test_logs_for_status(bep_file=bep_file, status=["FAILED", "TIMEOUT", "FLAKY"], file_pos=pos)
             test_logs_to_upload = [
                 (target, files) for target, files in all_test_logs if target not in uploaded_targets
             ]
