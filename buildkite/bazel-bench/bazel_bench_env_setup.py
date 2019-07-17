@@ -20,20 +20,11 @@ import argparse
 import bazelci
 import os
 import sys
-import tempfile
 
 
-def _platform_path_str(posix_path):
-    """Converts the path to the appropriate format for platform."""
-    if os.name == "nt":
-        return posix_path.replace("/", "\\")
-    return posix_path
-
-
-# TMP has different values, depending on the platform.
-TMP = tempfile.gettempdir()
+BB_ROOT = os.path.join(os.path.expanduser("~"), ".bazel-bench")
 # The path to the directory that stores the bazel binaries.
-BAZEL_BINARY_BASE_PATH = _platform_path_str("%s/.bazel-bench/bazel-bin" % TMP)
+BAZEL_BINARY_BASE_PATH = os.path.join(BB_ROOT, "bazel-bin")
 
 
 def main(argv=None):
@@ -46,13 +37,19 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     bazel_commits = args.bazel_commits.split(",")
+    # We use one binary for all Linux platforms.
+    # Context: https://github.com/bazelbuild/continuous-integration/blob/master/buildkite/bazelci.py
+    binary_platform = (args.platform if args.platform in ["macos", "windows"]
+                       else bazelci.LINUX_BINARY_PLATFORM)
+    bazel_bin_dir = BAZEL_BINARY_BASE_PATH + "/" + binary_platform
 
     for bazel_commit in bazel_commits:
-        destination = BAZEL_BINARY_BASE_PATH + "/" + bazel_commit
+        destination = bazel_bin_dir + "/" + bazel_commit
         if os.path.exists(destination):
             continue
         try:
-            bazelci.download_bazel_binary_at_commit(destination, args.platform, bazel_commit)
+            bazelci.download_bazel_binary_at_commit(
+                destination, binary_platform, bazel_commit)
         except bazelci.BuildkiteException:
             # Carry on.
             bazelci.eprint("Binary for Bazel commit %s not found." % bazel_commit)

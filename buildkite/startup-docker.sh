@@ -20,14 +20,8 @@
 # Fail when any command in a pipe fails.
 set -euxo pipefail
 
-# Wait for all snaps to become available.
-snap wait system seed.loaded
-
 # Prevent dpkg / apt-get / debconf from trying to access stdin.
 export DEBIAN_FRONTEND="noninteractive"
-
-# Ubuntu 18.04 installs gcloud, gsutil, etc. commands in /snap/bin
-export PATH="$PATH:/snap/bin:/snap/google-cloud-sdk/current/bin"
 
 # Optimize the CPU scheduler for throughput.
 # (see https://unix.stackexchange.com/questions/466722/how-to-change-the-length-of-time-slices-used-by-the-linux-cpu-scheduler/466723)
@@ -142,7 +136,7 @@ export ANDROID_HOME=/opt/android-sdk-linux
 export ANDROID_NDK_HOME=/opt/android-ndk-r15c
 export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://${ARTIFACT_BUCKET}/\$BUILDKITE_JOB_ID"
 export CLOUDSDK_PYTHON="/usr/bin/python"
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/snap/google-cloud-sdk/current/bin"
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 EOF
 
 cat > /etc/buildkite-agent/hooks/pre-exit <<'EOF'

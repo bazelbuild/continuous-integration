@@ -31,6 +31,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import urllib.request
 import uuid
@@ -870,31 +871,35 @@ def execute_commands(
                 os.makedirs(bazelisk_cache_dir, mode=0o755, exist_ok=True)
                 test_flags.append("--sandbox_writable_path={}".format(bazelisk_cache_dir))
 
-            test_bep_file = os.path.join(tmpdir, "test_bep.json")
+            upload_thread = None
             try:
-                execute_bazel_test(
-                    bazel_version,
-                    bazel_binary,
-                    platform,
-                    test_flags,
-                    test_targets,
-                    test_bep_file,
-                    monitor_flaky_tests,
-                    incompatible_flags,
+                test_bep_file = os.path.join(tmpdir, "test_bep.json")
+                stop_request = threading.Event()
+                upload_thread = threading.Thread(
+                    target=upload_test_logs_from_bep, args=(test_bep_file, tmpdir, stop_request)
                 )
-                if monitor_flaky_tests:
-                    upload_bep_logs_for_flaky_tests(test_bep_file)
+                upload_thread.start()
+                try:
+                    execute_bazel_test(
+                        bazel_version,
+                        bazel_binary,
+                        platform,
+                        test_flags,
+                        test_targets,
+                        test_bep_file,
+                        monitor_flaky_tests,
+                        incompatible_flags,
+                    )
+                    if monitor_flaky_tests:
+                        upload_bep_logs_for_flaky_tests(test_bep_file)
+                finally:
+                    if include_json_profile_test:
+                        upload_json_profile(json_profile_out_test, tmpdir)
             finally:
-                upload_test_logs(test_bep_file, tmpdir)
-                if include_json_profile_test:
-                    upload_json_profile(json_profile_out_test, tmpdir)
+                stop_request.set()
+                upload_thread.join()
     finally:
-        if sc_process:
-            sc_process.terminate()
-            try:
-                sc_process.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                sc_process.kill()
+        terminate_background_process(sc_process)
         if tmpdir:
             shutil.rmtree(tmpdir)
 
@@ -938,7 +943,7 @@ def get_bazelisk_cache_directory(platform):
 
 
 def tests_with_status(bep_file, status):
-    return set(label for label, _ in test_logs_for_status(bep_file, status=status))
+    return set(label for label, _ in test_logs_for_status(bep_file, status=[status]))
 
 
 def start_sauce_connect_proxy(platform, tmpdir):
@@ -998,7 +1003,7 @@ def is_pull_request():
 
 
 def has_flaky_tests(bep_file):
-    return len(test_logs_for_status(bep_file, status="FLAKY")) > 0
+    return len(test_logs_for_status(bep_file, status=["FLAKY"])) > 0
 
 
 def print_bazel_version_info(bazel_binary, platform):
@@ -1530,20 +1535,30 @@ def upload_bep_logs_for_flaky_tests(test_bep_file):
         )
 
 
-def upload_test_logs(bep_file, tmpdir):
-    if not os.path.exists(bep_file):
-        return
-    test_logs = test_logs_to_upload(bep_file, tmpdir)
-    if test_logs:
-        cwd = os.getcwd()
-        try:
-            os.chdir(tmpdir)
-            test_logs = [os.path.relpath(test_log, tmpdir) for test_log in test_logs]
-            test_logs = sorted(test_logs)
-            print_collapsed_group(":gcloud: Uploading Test Logs")
-            execute_command(["buildkite-agent", "artifact", "upload", ";".join(test_logs)])
-        finally:
-            os.chdir(cwd)
+def upload_test_logs_from_bep(bep_file, tmpdir, stop_request):
+    uploaded_targets = set()
+    while True:
+        done = stop_request.isSet()
+        if os.path.exists(bep_file):
+            all_test_logs = test_logs_for_status(bep_file, status=["FAILED", "TIMEOUT", "FLAKY"])
+            test_logs_to_upload = [
+                (target, files) for target, files in all_test_logs if target not in uploaded_targets
+            ]
+
+            if test_logs_to_upload:
+                files_to_upload = rename_test_logs_for_upload(test_logs_to_upload, tmpdir)
+                cwd = os.getcwd()
+                try:
+                    os.chdir(tmpdir)
+                    test_logs = [os.path.relpath(file, tmpdir) for file in files_to_upload]
+                    test_logs = sorted(test_logs)
+                    execute_command(["buildkite-agent", "artifact", "upload", ";".join(test_logs)])
+                finally:
+                    uploaded_targets.update([target for target, _ in test_logs_to_upload])
+                    os.chdir(cwd)
+        if done:
+            break
+        time.sleep(0.2)
 
 
 def upload_json_profile(json_profile_path, tmpdir):
@@ -1552,19 +1567,15 @@ def upload_json_profile(json_profile_path, tmpdir):
     print_collapsed_group(":gcloud: Uploading JSON Profile")
     execute_command(["buildkite-agent", "artifact", "upload", json_profile_path], cwd=tmpdir)
 
-
-def test_logs_to_upload(bep_file, tmpdir):
-    failed = test_logs_for_status(bep_file, status="FAILED")
-    timed_out = test_logs_for_status(bep_file, status="TIMEOUT")
-    flaky = test_logs_for_status(bep_file, status="FLAKY")
+def rename_test_logs_for_upload(test_logs, tmpdir):
     # Rename the test.log files to the target that created them
     # so that it's easy to associate test.log and target.
     new_paths = []
-    for label, test_logs in failed + timed_out + flaky:
+    for label, files in test_logs:
         attempt = 0
-        if len(test_logs) > 1:
+        if len(files) > 1:
             attempt = 1
-        for test_log in test_logs:
+        for test_log in files:
             try:
                 new_path = test_label_to_path(tmpdir, label, attempt)
                 os.makedirs(os.path.dirname(new_path), exist_ok=True)
@@ -1598,11 +1609,17 @@ def test_logs_for_status(bep_file, status):
 
     pos = 0
     while pos < len(raw_data):
-        bep_obj, size = decoder.raw_decode(raw_data[pos:])
+        bep_obj = None
+        size = 0
+        try:
+          bep_obj, size = decoder.raw_decode(raw_data[pos:])
+        except ValueError as e:
+          eprint("JSON decoding error({0}): {1}".format(e.errno, e.strerror))
+          return []
         if "testSummary" in bep_obj:
             test_target = bep_obj["id"]["testSummary"]["label"]
             test_status = bep_obj["testSummary"]["overallStatus"]
-            if test_status == status:
+            if test_status in status:
                 outputs = bep_obj["testSummary"]["failed"]
                 test_logs = []
                 for output in outputs:
@@ -1639,6 +1656,15 @@ def execute_command(args, shell=False, fail_if_nonzero=True, cwd=None):
 def execute_command_background(args):
     eprint(" ".join(args))
     return subprocess.Popen(args, env=os.environ)
+
+
+def terminate_background_process(process):
+    if process:
+        process.terminate()
+        try:
+            process.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            process.kill()
 
 
 def create_step(label, commands, platform, shards=1):
