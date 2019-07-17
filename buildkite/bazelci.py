@@ -451,7 +451,7 @@ PLATFORMS = {
     },
     "rbe_ubuntu1604": {
         "name": "RBE (Ubuntu 16.04, OpenJDK 8)",
-        "emoji-name": ":gcloud: (OpenJDK 8)",
+        "emoji-name": "RBE (:ubuntu: 16.04, OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1604:java8",
