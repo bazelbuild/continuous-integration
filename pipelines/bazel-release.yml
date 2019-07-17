@@ -127,25 +127,35 @@ steps:
     agents:
       - queue=windows
     command: |
+      echo on
+      echo DEBUG 1 git fetch
       git fetch origin master
       git fetch --force origin refs/notes/*:refs/notes/*
 
+      echo DEBUG 2 buildkit-agent
       buildkite-agent meta-data get "release_name" > release_name.txt
       SET /p RELEASE_NAME=<release_name.txt
       DEL /q release_name.txt
 
+      echo DEBUG 3 print release name
       echo Release: %RELEASE_NAME%
 
+      echo DEBUG 4 build
       bazel build //src:bazel.exe
+
+      echo DEBUG 5 copy output
       mkdir output
       copy bazel-bin\src\bazel.exe output\bazel.exe
 
+      echo DEBUG 6 build
       output\bazel build -c opt --copt=-w --host_copt=-w --stamp --embed_label %RELEASE_NAME% src/bazel scripts/packages/bazel.zip
 
+      echo DEBUG 7 move artifacts
       mkdir artifacts
       move bazel-bin\src\bazel artifacts\bazel-%RELEASE_NAME%-windows-x86_64.exe
       move bazel-genfiles\scripts\packages\bazel.zip artifacts\bazel-%RELEASE_NAME%-windows-x86_64.zip
 
+      echo DEBUG 8 git merge-base
       @rem  The scripts directory is taken from the release branch.
       @rem  Commit 874fe75428 contains a vital bugfix for make_msi_lib.ps1, so only build the .msi
       @rem  if the release branch has that commit.
@@ -153,11 +163,16 @@ steps:
       @rem  Bazel 0.29 (the first version whose release branch will have 874fe75428) is released.
       git merge-base --is-ancestor 874fe754282651bdf006c06147842cbb226c6ae9 HEAD 2>nul
       if "%errorlevel%" equ "0" (
+        echo DEBUG 9 build msi
         powershell scripts\packages\msi\make_msi.ps1 artifacts\bazel-%RELEASE_NAME%-windows-x86_64.exe
+        echo DEBUG 10 build msi done
       )
 
+      echo DEBUG 11 upload
       cd artifacts
       buildkite-agent artifact upload "*"
+
+      echo DEBUG 12 done
 
   - wait
 
