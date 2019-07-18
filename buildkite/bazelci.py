@@ -33,6 +33,7 @@ import sys
 import tempfile
 import threading
 import time
+import urllib.error
 import urllib.request
 import uuid
 import yaml
@@ -488,7 +489,7 @@ BUILDIFIER_STEP_NAME = "Buildifier"
 
 SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
 
-CONFIG_FILE_EXTENSIONS = set([".yml", ".yaml"])
+CONFIG_FILE_EXTENSIONS = {".yml", ".yaml"}
 
 
 class BuildkiteException(Exception):
@@ -619,7 +620,6 @@ def fetch_configs(http_url, file_config):
 
 
 def load_config(http_url, file_config, allow_imports=True):
-    config = None
     if http_url:
         config = load_remote_yaml_file(http_url)
     else:
@@ -752,8 +752,6 @@ def execute_commands(
             os.chdir(git_repo_location)
         elif git_repository:
             clone_git_repository(git_repository, platform, git_commit)
-        else:
-            git_repository = os.getenv("BUILDKITE_REPO")
 
         # We use one binary for all Linux platforms (because we also just release one binary for all
         # Linux versions and we have to ensure that it works on all of them).
@@ -820,6 +818,7 @@ def execute_commands(
         if build_targets:
             json_profile_flags = []
             include_json_profile_build = "build" in include_json_profile
+            json_profile_out_build = None
             if include_json_profile_build:
                 json_profile_out_build = os.path.join(tmpdir, "build.profile.gz")
                 json_profile_flags = get_json_profile_flags(json_profile_out_build)
@@ -844,6 +843,7 @@ def execute_commands(
         if test_targets:
             json_profile_flags = []
             include_json_profile_test = "test" in include_json_profile
+            json_profile_out_test = None
             if include_json_profile_test:
                 json_profile_out_test = os.path.join(tmpdir, "test.profile.gz")
                 json_profile_flags = get_json_profile_flags(json_profile_out_test)
@@ -863,13 +863,12 @@ def execute_commands(
                 os.makedirs(bazelisk_cache_dir, mode=0o755, exist_ok=True)
                 test_flags.append("--sandbox_writable_path={}".format(bazelisk_cache_dir))
 
-            upload_thread = None
+            test_bep_file = os.path.join(tmpdir, "test_bep.json")
+            stop_request = threading.Event()
+            upload_thread = threading.Thread(
+                target=upload_test_logs_from_bep, args=(test_bep_file, tmpdir, stop_request)
+            )
             try:
-                test_bep_file = os.path.join(tmpdir, "test_bep.json")
-                stop_request = threading.Event()
-                upload_thread = threading.Thread(
-                    target=upload_test_logs_from_bep, args=(test_bep_file, tmpdir, stop_request)
-                )
                 upload_thread.start()
                 try:
                     execute_bazel_test(
@@ -930,8 +929,8 @@ def activate_xcode(task_config):
 def get_bazelisk_cache_directory(platform):
     # The path relies on the behavior of Go's os.UserCacheDir()
     # and of the Go version of Bazelisk.
-    dir = "Library/Caches" if platform == "macos" else ".cache"
-    return os.path.join(os.environ.get("HOME"), dir, "bazelisk")
+    cache_dir = "Library/Caches" if platform == "macos" else ".cache"
+    return os.path.join(os.environ.get("HOME"), cache_dir, "bazelisk")
 
 
 def tests_with_status(bep_file, status):
@@ -1591,7 +1590,6 @@ def test_label_to_path(tmpdir, label, attempt):
 
 def test_logs_for_status(bep_file, status):
     targets = []
-    raw_data = ""
     with open(bep_file, encoding="utf-8") as f:
         raw_data = f.read()
     decoder = json.JSONDecoder()
@@ -1601,7 +1599,7 @@ def test_logs_for_status(bep_file, status):
         try:
             bep_obj, size = decoder.raw_decode(raw_data[pos:])
         except ValueError as e:
-            eprint("JSON decoding error({0}): {1}".format(e.errno, e.strerror))
+            eprint("JSON decoding error: " + str(e))
             return targets
         if "testSummary" in bep_obj:
             test_target = bep_obj["id"]["testSummary"]["label"]
@@ -1755,12 +1753,12 @@ def print_project_pipeline(
             #   version: latest
             #   warnings: all
 
-            def SetEnvVar(config_key, env_var_name):
+            def set_env_var(config_key, env_var_name):
                 if config_key in buildifier_config:
                     buildifier_env_vars[env_var_name] = buildifier_config[config_key]
 
-            SetEnvVar("version", BUILDIFIER_VERSION_ENV_VAR)
-            SetEnvVar("warnings", BUILDIFIER_WARNINGS_ENV_VAR)
+            set_env_var("version", BUILDIFIER_VERSION_ENV_VAR)
+            set_env_var("warnings", BUILDIFIER_WARNINGS_ENV_VAR)
 
         if not buildifier_env_vars:
             raise BuildkiteException(
@@ -1861,7 +1859,7 @@ def print_project_pipeline(
 def hash_task_config(task_name, task_config):
     # Two task configs c1 and c2 have the same hash iff they lead to two functionally identical jobs
     # in the downstream pipeline. This function discards the "bazel" field (since it's being
-    # overriden) and the "name" field (since it has no effect on the actual work).
+    # overridden) and the "name" field (since it has no effect on the actual work).
     # Moreover, it adds an explicit "platform" field if that's missing.
     cpy = task_config.copy()
     cpy.pop("bazel", None)
@@ -2440,7 +2438,7 @@ def try_update_last_green_commit():
     build_info = client.get_build_info(build_number)
 
     # Find any failing steps other than Buildifier and "try update last green".
-    def HasFailed(job):
+    def has_failed(job):
         state = job.get("state")
         # Ignore steps that don't have a state (like "wait").
         return (
@@ -2450,7 +2448,7 @@ def try_update_last_green_commit():
             and job["name"] != BUILDIFIER_STEP_NAME
         )
 
-    failing_jobs = [j["name"] for j in build_info["jobs"] if HasFailed(j)]
+    failing_jobs = [j["name"] for j in build_info["jobs"] if has_failed(j)]
     if failing_jobs:
         raise BuildkiteException(
             "Cannot update last green commit due to {} failing step(s): {}".format(
@@ -2475,6 +2473,8 @@ def update_last_green_commit_if_newer(last_green_commit_url):
             .decode("utf-8")
             .strip()
         )
+    else:
+        result = None
 
     # If current_commit is newer that last_green_commit, `git rev-list A..B` will output a bunch of
     # commits, otherwise the output should be empty.
@@ -2496,9 +2496,9 @@ def try_update_last_green_downstream_commit():
 
 
 def latest_generation_and_build_number():
+    generation = None
     output = None
-    attempt = 0
-    while attempt < 5:
+    for attempt in range(5):
         output = subprocess.check_output(
             [gsutil_command(), "stat", bazelci_builds_metadata_url()], env=os.environ
         )
@@ -2521,9 +2521,8 @@ def latest_generation_and_build_number():
 
         if expected_md5hash == actual_md5hash:
             break
-        attempt += 1
     info = json.loads(output.decode("utf-8"))
-    return (generation, info["build_number"])
+    return generation, info["build_number"]
 
 
 def sha256_hexdigest(filename):
@@ -2718,10 +2717,9 @@ def main(argv=None):
     runner.add_argument("--monitor_flaky_tests", type=bool, nargs="?", const=True)
     runner.add_argument("--incompatible_flag", type=str, action="append")
 
-    runner = subparsers.add_parser("publish_binaries")
-
-    runner = subparsers.add_parser("try_update_last_green_commit")
-    runner = subparsers.add_parser("try_update_last_green_downstream_commit")
+    subparsers.add_parser("publish_binaries")
+    subparsers.add_parser("try_update_last_green_commit")
+    subparsers.add_parser("try_update_last_green_downstream_commit")
 
     args = parser.parse_args(argv)
 
