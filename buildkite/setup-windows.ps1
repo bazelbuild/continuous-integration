@@ -140,9 +140,9 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0" -Na
     -PropertyType String -Value "`$(MSBuildExtensionsPath)\Microsoft.Cpp\v4.0\V140"
 
 ## Install Visual C++ 2017 Build Tools.
-# Write-Host "Installing Visual C++ 2017 Build Tools..."
-# & choco install microsoft-build-tools
-# & choco install visualstudio2017-workload-vctools
+Write-Host "Installing Visual C++ 2017 Build Tools..."
+& choco install microsoft-build-tools
+& choco install visualstudio2017-workload-vctools
 # [Environment]::SetEnvironmentVariable("BAZEL_VC", "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC", "Machine")
 # $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 
