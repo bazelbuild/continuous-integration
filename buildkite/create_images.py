@@ -41,7 +41,7 @@ IMAGE_CREATION_VMS = {
     # },
     "bk-docker": {
         "project": "bazel-untrusted",
-        "zone": "us-central1-b",
+        "zone": "us-central1-a",
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
@@ -53,7 +53,7 @@ IMAGE_CREATION_VMS = {
     },
     "bk-testing-docker": {
         "project": "bazel-untrusted",
-        "zone": "us-central1-c",
+        "zone": "us-central1-a",
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
@@ -65,7 +65,7 @@ IMAGE_CREATION_VMS = {
     },
     "bk-trusted-docker": {
         "project": "bazel-public",
-        "zone": "us-central1-c",
+        "zone": "us-central1-a",
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
@@ -77,7 +77,7 @@ IMAGE_CREATION_VMS = {
     },
     "bk-windows-java8": {
         "project": "bazel-untrusted",
-        "zone": "us-central1-b",
+        "zone": "us-central1-a",
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-1809-core",
         "setup_script": "setup-windows.ps1",
@@ -85,7 +85,7 @@ IMAGE_CREATION_VMS = {
     },
     "bk-testing-windows-java8": {
         "project": "bazel-untrusted",
-        "zone": "us-central1-c",
+        "zone": "us-central1-a",
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-1809-core",
         "setup_script": "setup-windows.ps1",
@@ -93,7 +93,7 @@ IMAGE_CREATION_VMS = {
     },
     "bk-trusted-windows-java8": {
         "project": "bazel-public",
-        "zone": "us-central1-c",
+        "zone": "us-central1-a",
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-1809-core",
         "setup_script": "setup-windows.ps1",
@@ -151,7 +151,7 @@ def create_instance(instance_name, params):
             instance_name,
             project=params["project"],
             zone=params["zone"],
-            machine_type="c2-standard-8",
+            machine_type="n1-standard-8",
             network=params.get("network", "buildkite"),
             metadata_from_file=startup_script,
             boot_disk_type="pd-ssd",
