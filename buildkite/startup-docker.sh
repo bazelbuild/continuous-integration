@@ -117,6 +117,8 @@ build-path="/var/lib/buildkite-agent/builds"
 git-mirrors-path="/var/lib/gitmirrors"
 hooks-path="/etc/buildkite-agent/hooks"
 plugins-path="/etc/buildkite-agent/plugins"
+disconnect-after-job=true
+disconnect-after-idle-timeout=900
 EOF
 
 # Add the Buildkite agent hooks.
@@ -132,35 +134,13 @@ export CLOUDSDK_PYTHON="/usr/bin/python"
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 EOF
 
-cat > /etc/buildkite-agent/hooks/pre-exit <<'EOF'
-#!/bin/bash
-echo_and_run() { echo "\$ $*" ; "$@" ; }
-
-while [[ $(docker ps -q) ]]; do
-  echo_and_run docker kill $(docker ps -q)
-done
-
-USED_DISK_PERCENT=$(df --output=pcent /var/lib/docker | tail +2 | cut -d'%' -f1 | tr -d ' ')
-
-if [[ $USED_DISK_PERCENT -ge 80 ]]; then
-  echo_and_run docker system prune -a -f --volumes
-else
-  echo_and_run docker system prune -f --volumes
-fi
-
-# Delete all Bazel output bases (but leave the cache and install bases).
-echo_and_run find /var/lib/buildkite-agent/.cache/bazel/_bazel_buildkite-agent \
-    -mindepth 1 -maxdepth 1 ! -name 'cache' ! -name 'install' -exec chmod -R 0777 {} + \
-    -exec rm -rf {} +
-EOF
-
 # Fix permissions of the Buildkite agent configuration files and hooks.
 chmod 0400 /etc/buildkite-agent/buildkite-agent.cfg
 chmod 0500 /etc/buildkite-agent/hooks/*
 chown -R buildkite-agent:buildkite-agent /etc/buildkite-agent
 
 # Update our gitmirror.
-sudo -H -u buildkite-agent gsutil -qm rsync -rd gs://bazel-git-mirror/mirrors/ /var/lib/gitmirrors/
+# sudo -H -u buildkite-agent gsutil -qm rsync -rd gs://bazel-git-mirror/mirrors/ /var/lib/gitmirrors/
 
 # Start the Buildkite agent service.
 systemctl start buildkite-agent
