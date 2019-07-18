@@ -60,14 +60,14 @@ def gcloud(*args, **kwargs):
 
 def create_instance(name, **kwargs):
     try:
-        return gcloud("compute", "instances", "create", name, **kwargs)
+        return gcloud("beta", "compute", "instances", "create", name, **kwargs)
     except subprocess.CalledProcessError as e:
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
 def delete_instance(name, **kwargs):
     try:
-        return gcloud("compute", "instances", "delete", name, "--quiet", **kwargs)
+        return gcloud("beta", "compute", "instances", "delete", name, "--quiet", **kwargs)
     except subprocess.CalledProcessError as e:
         # It's not an error if 'delete' failed, because the object didn't exist in the first place.
         # But we do want to error out on other unexpected errors.
@@ -78,21 +78,23 @@ def delete_instance(name, **kwargs):
 
 def describe_instance(name, **kwargs):
     try:
-        return gcloud("compute", "instances", "describe", name, **kwargs)
+        return gcloud("beta", "compute", "instances", "describe", name, **kwargs)
     except subprocess.CalledProcessError as e:
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
 def create_instance_group(name, **kwargs):
     try:
-        return gcloud("compute", "instance-groups", "managed", "create", name, **kwargs)
+        return gcloud("beta", "compute", "instance-groups", "managed", "create", name, **kwargs)
     except subprocess.CalledProcessError as e:
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
 def delete_instance_group(name, **kwargs):
     try:
-        return gcloud("compute", "instance-groups", "managed", "delete", name, "--quiet", **kwargs)
+        return gcloud(
+            "beta", "compute", "instance-groups", "managed", "delete", name, "--quiet", **kwargs
+        )
     except subprocess.CalledProcessError as e:
         # It's not an error if 'delete' failed, because the object didn't exist in the first place.
         # But we do want to error out on other unexpected errors.
@@ -104,6 +106,7 @@ def delete_instance_group(name, **kwargs):
 def rolling_update_instance_group(name, **kwargs):
     try:
         return gcloud(
+            "beta",
             "compute",
             "instance-groups",
             "managed",
@@ -118,21 +121,23 @@ def rolling_update_instance_group(name, **kwargs):
 
 def set_autoscaling_instance_groups(name, **kwargs):
     try:
-        return gcloud("compute", "instance-groups", "managed", "set-autoscaling", name, **kwargs)
+        return gcloud(
+            "beta", "compute", "instance-groups", "managed", "set-autoscaling", name, **kwargs
+        )
     except subprocess.CalledProcessError as e:
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
 def create_instance_template(name, **kwargs):
     try:
-        return gcloud("compute", "instance-templates", "create", name, **kwargs)
+        return gcloud("beta", "compute", "instance-templates", "create", name, **kwargs)
     except subprocess.CalledProcessError as e:
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
 def delete_instance_template(name, **kwargs):
     try:
-        return gcloud("compute", "instance-templates", "delete", name, "--quiet", **kwargs)
+        return gcloud("beta", "compute", "instance-templates", "delete", name, "--quiet", **kwargs)
     except subprocess.CalledProcessError as e:
         # It's not an error if 'delete' failed, because the object didn't exist in the first place.
         # But we do want to error out on other unexpected errors.
@@ -143,17 +148,17 @@ def delete_instance_template(name, **kwargs):
 
 def create_image(name, **kwargs):
     try:
-        return gcloud("compute", "images", "create", name, **kwargs)
+        return gcloud("beta", "compute", "images", "create", name, **kwargs)
     except subprocess.CalledProcessError as e:
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
 def reset_windows_password(name, **kwargs):
     try:
-        return gcloud("compute", "reset-windows-password", name, "--quiet", **kwargs)
+        return gcloud("beta", "compute", "reset-windows-password", name, "--quiet", **kwargs)
     except subprocess.CalledProcessError as e:
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
 def get_serial_port_output(name, **kwargs):
-    return gcloud("compute", "instances", "get-serial-port-output", name, **kwargs)
+    return gcloud("beta", "compute", "instances", "get-serial-port-output", name, **kwargs)
