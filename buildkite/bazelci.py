@@ -1555,6 +1555,7 @@ def upload_json_profile(json_profile_path, tmpdir):
     print_collapsed_group(":gcloud: Uploading JSON Profile")
     execute_command(["buildkite-agent", "artifact", "upload", json_profile_path], cwd=tmpdir)
 
+
 def rename_test_logs_for_upload(test_logs, tmpdir):
     # Rename the test.log files to the target that created them
     # so that it's easy to associate test.log and target.
@@ -1598,10 +1599,10 @@ def test_logs_for_status(bep_file, status):
     pos = 0
     while pos < len(raw_data):
         try:
-          bep_obj, size = decoder.raw_decode(raw_data[pos:])
+            bep_obj, size = decoder.raw_decode(raw_data[pos:])
         except ValueError as e:
-          eprint("JSON decoding error({0}): {1}".format(e.errno, e.strerror))
-          return targets
+            eprint("JSON decoding error({0}): {1}".format(e.errno, e.strerror))
+            return targets
         if "testSummary" in bep_obj:
             test_target = bep_obj["id"]["testSummary"]["label"]
             test_status = bep_obj["testSummary"]["overallStatus"]
@@ -1674,7 +1675,11 @@ def create_step(label, commands, platform, shards=1):
 
     # Automatically retry when an agent got lost (usually due to an infra flake).
     step["retry"] = {}
-    step["retry"]["automatic"] = [{"exit_status": -1, "limit": 3}, {"exit_status": 137, "limit": 3}]
+    step["retry"]["automatic"] = [
+        {"exit_status": -1, "limit": 3},   # Buildkite internal "agent lost" exit code
+        {"exit_status": 137, "limit": 3},  # SIGKILL
+        {"exit_status": 143, "limit": 3},  # SIGTERM
+    ]
 
     return step
 
