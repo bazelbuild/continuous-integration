@@ -72,6 +72,7 @@ Write-Host "Installing curl..."
 Write-Host "Installing llvm..."
 # FYI: choco installs clang in C:\Program Files\LLVM\bin (which is not on the PATH).
 & choco install llvm
+[Environment]::SetEnvironmentVariable("BAZEL_LLVM", "C:\Program Files\LLVM", "Machine")
 
 ## Install Git for Windows.
 Write-Host "Installing Git for Windows..."
