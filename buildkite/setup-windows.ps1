@@ -68,6 +68,13 @@ Write-Host "Installing curl..."
 # FYI: choco installs curl.exe in C:\ProgramData\chocolatey\bin (which is on the PATH).
 & choco install curl
 
+## Install LLVM/Clang
+Write-Host "Installing llvm..."
+# FYI: choco installs clang in C:\Program Files\LLVM\bin (which is not on the PATH).
+& choco install llvm
+[Environment]::SetEnvironmentVariable("BAZEL_LLVM", "C:\Program Files\LLVM", "Machine")
+$env:BAZEL_LLVM = [Environment]::GetEnvironmentVariable("BAZEL_LLVM", "Machine")
+
 ## Install Git for Windows.
 Write-Host "Installing Git for Windows..."
 # FYI: choco adds "C:\Program Files\Git\cmd" to global PATH.
