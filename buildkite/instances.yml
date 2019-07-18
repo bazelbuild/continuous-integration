@@ -14,15 +14,15 @@
 default_vm:
   boot_disk_size: 50GB
   boot_disk_type: pd-ssd
-  machine_type: n1-highmem-32
+  machine_type: c2-standard-30
   network: buildkite
   region: us-central1
   restart-on-failure: False
   scopes: cloud-platform
-  zone: us-central1-a
+  zone: us-central1-b
 instance_groups:
   - name: bk-docker
-    count: 100
+    count: 50
     project: bazel-untrusted
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_project: bazel-untrusted
@@ -49,7 +49,7 @@ instance_groups:
       - interface=nvme
     metadata_from_file: startup-script=startup-docker.sh
   - name: bk-windows-java8
-    count: 20
+    count: 10
     project: bazel-untrusted
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_project: bazel-untrusted
