@@ -16,25 +16,16 @@
 
 import argparse
 import os
-import sys
 import subprocess
-import time
+import sys
+
 import yaml
+
 import bazelci
 
 BAZEL_REPO_DIR = os.getcwd()
 
 BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
-
-SCRIPT_URL = {
-    "bazel-testing": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/culprit_finder.py",
-    "bazel-trusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/culprit_finder.py",
-    "bazel": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/culprit_finder.py",
-}[BUILDKITE_ORG] + "?{}".format(int(time.time()))
-
-
-def fetch_culprit_finder_py_command():
-    return "curl -s {0} -o culprit_finder.py".format(SCRIPT_URL)
 
 
 def get_bazel_commits_between(first_commit, second_commit):
@@ -46,13 +37,14 @@ def get_bazel_commits_between(first_commit, second_commit):
     try:
         os.chdir(BAZEL_REPO_DIR)
         output = subprocess.check_output(
-            ["git", "log", "--pretty=tformat:%H", "%s..%s" % (first_commit, second_commit)]
+            ["git", "log", "--pretty=tformat:%H", "{}..{}".format(first_commit, second_commit)]
         )
         return [i for i in reversed(output.decode("utf-8").split("\n")) if i]
     except subprocess.CalledProcessError as e:
         raise bazelci.BazelBuildFailedException(
-            "Failed to get bazel commits between %s..%s:\n%s"
-            % (first_commit, second_commit, str(e))
+            "Failed to get bazel commits between {}..{}:\n{}".format(
+                first_commit, second_commit, str(e)
+            )
         )
 
 
@@ -79,7 +71,7 @@ def test_with_bazel_at_commit(
     http_config = bazelci.DOWNSTREAM_PROJECTS[project_name]["http_config"]
     for i in range(1, repeat_times + 1):
         if repeat_times > 1:
-            bazelci.print_collapsed_group(":bazel: Try %s time" % i)
+            bazelci.print_collapsed_group(":bazel: Try {} time".format(i))
         try:
             return_code = bazelci.main(
                 [
@@ -149,20 +141,20 @@ def print_culprit_finder_pipeline(
         label = bazelci.PLATFORMS[platform_name]["emoji-name"] + " Bisecting for {0}".format(
             project_name
         )
-        command = (
-            '%s culprit_finder.py runner --project_name="%s" --task_name=%s --good_bazel_commit=%s --bad_bazel_commit=%s %s %s'
-            % (
-                bazelci.PLATFORMS[platform_name]["python"],
-                project_name,
-                task_name,
-                good_bazel_commit,
-                bad_bazel_commit,
-                "--needs_clean" if needs_clean else "",
-                ("--repeat_times=" + str(repeat_times)) if repeat_times else "",
+        command = 'culprit_finder runner --project_name="{}" --task_name={} --good_bazel_commit={} --bad_bazel_commit={} {} {}'.format(
+            project_name,
+            task_name,
+            good_bazel_commit,
+            bad_bazel_commit,
+            "--needs_clean" if needs_clean else "",
+            ("--repeat_times=" + str(repeat_times)) if repeat_times else "",
+        )
+        commands = [command]
+        pipeline_steps.append(
+            bazelci.create_step(
+                label=label, commands=commands, platform=platform_name, use_bazelci_py=True
             )
         )
-        commands = [bazelci.fetch_bazelcipy_command(), fetch_culprit_finder_py_command(), command]
-        pipeline_steps.append(bazelci.create_step(label, commands, platform_name))
     print(yaml.dump({"steps": pipeline_steps}))
 
 
@@ -209,7 +201,7 @@ def main(argv=None):
                     subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
                 )
         except KeyError as e:
-            raise Exception("Environment variable %s must be set" % str(e))
+            raise Exception("Environment variable {} must be set".format(str(e)))
 
         needs_clean = False
         if "NEEDS_CLEAN" in os.environ:
@@ -221,8 +213,9 @@ def main(argv=None):
 
         if project_name not in bazelci.DOWNSTREAM_PROJECTS:
             raise Exception(
-                "Project name '%s' not recognized, available projects are %s"
-                % (project_name, str((bazelci.DOWNSTREAM_PROJECTS.keys())))
+                "Project name '{}' not recognized, available projects are {}".format(
+                    project_name, str((bazelci.DOWNSTREAM_PROJECTS.keys()))
+                )
             )
 
         print_culprit_finder_pipeline(
@@ -245,8 +238,9 @@ def main(argv=None):
             repeat_times=args.repeat_times,
         ):
             raise Exception(
-                "Given good commit (%s) is not actually good, abort bisecting."
-                % args.good_bazel_commit
+                "Given good commit ({}) is not actually good, abort bisecting.".format(
+                    args.good_bazel_commit
+                )
             )
         start_bisecting(
             project_name=args.project_name,

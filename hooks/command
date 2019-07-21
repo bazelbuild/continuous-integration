@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+
+# Disable MSYS2's path conversion on Windows.
+if [[ "$OSTYPE" =~ ^(win|msys|cygwin) ]]; then
+    export MSYS_NO_PATHCONV=1
+    PYTHON="py.exe"
+else
+    PYTHON="python3"
+fi
+
+# Workaround for https://github.com/buildkite/agent/issues/1052.
+case "$BUILDKITE_PLUGINS" in
+    *docker-buildkite-plugin*)
+        echo "Skipping, because this build also uses the Docker plug-in."
+        exit 0
+        ;;
+esac
+
+# Buildkite gives us the command to execute as a shell-quoted string stored in
+# an environment variable. Turning this into an arguments list that we can
+# safely pass to the script we want to run is quite an exercise.
+#
+# See: https://stackoverflow.com/a/31485948
+function shlex_split() {
+  $PYTHON -c '
+#!/usr/bin/env python3
+import shlex, sys
+for item in shlex.split(sys.stdin.read()):
+    sys.stdout.write(item + "\0")
+'
+}
+
+args=()
+while IFS= read -r -d ''; do
+    args+=("$REPLY")
+done < <(shlex_split <<<"$BUILDKITE_COMMAND")
+
+export BAZELCI_PLUGIN="true"
+
+case ${args[0]} in
+    "aggregate_incompatible_flags_test_result")
+        exec $PYTHON "${DIR}/../buildkite/aggregate_incompatible_flags_test_result.py" "${args[@]:1}"
+        ;;
+    "incompatible_flag_verbose_failures")
+        exec $PYTHON "${DIR}/../buildkite/incompatible_flag_verbose_failures.py" "${args[@]:1}"
+        ;;
+    "culprit_finder")
+        exec $PYTHON "${DIR}/../buildkite/culprit_finder.py" "${args[@]:1}"
+        ;;
+    *)
+        exec $PYTHON "${DIR}/../buildkite/bazelci.py" "${args[@]}"
+        ;;
+esac

@@ -1,0 +1,7 @@
+name: Bazel CI
+description: Tests your Bazel project on Buildkite
+author: https://github.com/philwo
+requirements: []
+configuration:
+  properties: {}
+  additionalProperties: false

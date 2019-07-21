@@ -71,6 +71,12 @@ EMERGENCY_FILE_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-in
     GITHUB_BRANCH, int(time.time())
 )
 
+PLUGIN_REPO = {
+    "bazel-testing": "https://github.com/bazelbuild/continuous-integration#philwo-bkplugin",
+    "bazel-trusted": "https://github.com/bazelbuild/continuous-integration#master",
+    "bazel": "https://github.com/bazelbuild/continuous-integration#master",
+}[BUILDKITE_ORG]
+
 FLAKY_TESTS_BUCKET = {
     "bazel-testing": "gs://bazel-testing-buildkite-stats/flaky-tests-bep/",
     "bazel-trusted": "gs://bazel-buildkite-stats/flaky-tests-bep/",
@@ -986,7 +992,7 @@ def start_sauce_connect_proxy(platform, tmpdir):
                 "Sauce Connect Proxy is still not ready after 60 seconds, aborting!"
             )
         time.sleep(1)
-    print("Sauce Connect Proxy is ready, continuing...")
+    eprint("Sauce Connect Proxy is ready, continuing...")
     return sc_process
 
 
@@ -1684,10 +1690,13 @@ def terminate_background_process(process):
             process.kill()
 
 
-def create_step(label, commands, platform, shards=1):
+def create_step(label, commands, platform, use_bazelci_py, shards=1):
     if "docker-image" in PLATFORMS[platform]:
         step = create_docker_step(
-            label, image=PLATFORMS[platform]["docker-image"], commands=commands
+            label=label,
+            image=PLATFORMS[platform]["docker-image"],
+            use_bazelci_py=use_bazelci_py,
+            commands=commands,
         )
     else:
         step = {
@@ -1695,6 +1704,9 @@ def create_step(label, commands, platform, shards=1):
             "command": commands,
             "agents": {"queue": PLATFORMS[platform]["queue"]},
         }
+
+    if use_bazelci_py:
+        step["plugins"] = step.get("plugins", []) + [{PLUGIN_REPO: None}]
 
     if shards > 1:
         step["label"] += " (shard %n)"
@@ -1715,37 +1727,55 @@ def create_step(label, commands, platform, shards=1):
     return step
 
 
-def create_docker_step(label, image, commands=None, additional_env_vars=None):
+def create_docker_step(label, image, use_bazelci_py, commands=None, additional_env_vars=None):
     env = ["ANDROID_HOME", "ANDROID_NDK_HOME", "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"]
     if additional_env_vars:
         env += ["{}={}".format(k, v) for k, v in additional_env_vars.items()]
+
+    docker_plugin = "docker#v3.3.0"
 
     step = {
         "label": label,
         "command": commands,
         "agents": {"queue": "default"},
-        "plugins": {
-            "docker#v3.2.0": {
-                "always-pull": True,
-                "environment": env,
-                "image": image,
-                "network": "host",
-                "privileged": True,
-                "propagate-environment": True,
-                "propagate-uid-gid": True,
-                "volumes": [
-                    "/etc/group:/etc/group:ro",
-                    "/etc/passwd:/etc/passwd:ro",
-                    "/opt:/opt:ro",
-                    "/var/lib/buildkite-agent:/var/lib/buildkite-agent",
-                    "/var/lib/gitmirrors:/var/lib/gitmirrors:ro",
-                    "/var/run/docker.sock:/var/run/docker.sock",
-                ],
+        "plugins": [
+            {
+                docker_plugin: {
+                    "always-pull": True,
+                    "environment": env,
+                    "image": image,
+                    "network": "host",
+                    "privileged": True,
+                    "propagate-environment": True,
+                    "propagate-uid-gid": True,
+                    "volumes": [
+                        "/etc/group:/etc/group:ro",
+                        "/etc/passwd:/etc/passwd:ro",
+                        "/opt:/opt:ro",
+                        "/var/lib/buildkite-agent:/var/lib/buildkite-agent",
+                        "/var/lib/gitmirrors:/var/lib/gitmirrors:ro",
+                        "/var/run/docker.sock:/var/run/docker.sock",
+                    ],
+                }
             }
-        },
+        ],
     }
+
     if not step["command"]:
         del step["command"]
+
+    if use_bazelci_py:
+        bazelci_plugin_path = (
+            # Replace all special chars with "-" and strip the https:// prefix.
+            "/etc/buildkite-agent/plugins/{}".format(re.sub(r"[^0-9A-Za-z]", "-", PLUGIN_REPO)[8:])
+        )
+        step["plugins"][0][docker_plugin]["entrypoint"] = os.path.join(
+            bazelci_plugin_path, "hooks/command"
+        )
+        step["plugins"][0][docker_plugin]["volumes"].append(
+            "{0}:{0}:ro".format(bazelci_plugin_path)
+        )
+
     return step
 
 
@@ -1799,8 +1829,9 @@ def print_project_pipeline(
 
         pipeline_steps.append(
             create_docker_step(
-                BUILDIFIER_STEP_NAME,
+                label=BUILDIFIER_STEP_NAME,
                 image=BUILDIFIER_DOCKER_IMAGE,
+                use_bazelci_py=False,
                 additional_env_vars=buildifier_env_vars,
             )
         )
@@ -1873,12 +1904,9 @@ def print_project_pipeline(
         pipeline_steps.append(
             create_step(
                 label="Try Update Last Green Commit",
-                commands=[
-                    fetch_bazelcipy_command(),
-                    PLATFORMS[DEFAULT_PLATFORM]["python"]
-                    + " bazelci.py try_update_last_green_commit",
-                ],
+                commands=["try_update_last_green_commit"],
                 platform=DEFAULT_PLATFORM,
+                use_bazelci_py=True,
             )
         )
 
@@ -1926,13 +1954,9 @@ def create_config_validation_steps():
     return [
         create_step(
             label=":cop: Validate {}".format(f),
-            commands=[
-                fetch_bazelcipy_command(),
-                "{} bazelci.py project_pipeline --file_config={}".format(
-                    PLATFORMS[DEFAULT_PLATFORM]["python"], f
-                ),
-            ],
+            commands=["project_pipeline --file_config={}".format(f)],
             platform=DEFAULT_PLATFORM,
+            use_bazelci_py=True,
         )
         for f in config_files
     ]
@@ -1944,7 +1968,15 @@ def print_pipeline_steps(pipeline_steps, handle_emergencies=True):
         if emergency_step:
             pipeline_steps.insert(0, emergency_step)
 
-    print(yaml.dump({"steps": pipeline_steps}))
+    if os.environ.get("BAZELCI_PLUGIN") == "true" and os.environ.get("BUILDKITE") == "true":
+        subprocess.run(
+            ["buildkite-agent", "pipeline", "upload"],
+            input=yaml.dump({"steps": pipeline_steps}),
+            check=True,
+            universal_newlines=True,
+        )
+    else:
+        print(yaml.dump({"steps": pipeline_steps}))
 
 
 def create_emergency_announcement_step_if_necessary():
@@ -1979,6 +2011,7 @@ def create_emergency_announcement_step_if_necessary():
             'buildkite-agent annotate --append --style={} --context "omg" "{}"'.format(style, text)
         ],
         platform=DEFAULT_PLATFORM,
+        use_bazelci_py=False,
     )
 
 
@@ -1996,7 +2029,7 @@ def runner_step(
     incompatible_flags=None,
     shards=1,
 ):
-    command = PLATFORMS[platform]["python"] + " bazelci.py runner --task=" + task
+    command = "runner --task=" + task
     if http_config:
         command += " --http_config=" + http_config
     if file_config:
@@ -2013,32 +2046,16 @@ def runner_step(
         command += " --incompatible_flag=" + flag
     label = create_label(platform, project_name, task_name=task_name)
     return create_step(
-        label=label, commands=[fetch_bazelcipy_command(), command], platform=platform, shards=shards
-    )
-
-
-def fetch_bazelcipy_command():
-    return "curl -sS {0} -o bazelci.py".format(SCRIPT_URL)
-
-
-def fetch_incompatible_flag_verbose_failures_command():
-    return "curl -sS {0} -o incompatible_flag_verbose_failures.py".format(
-        INCOMPATIBLE_FLAG_VERBOSE_FAILURES_URL
-    )
-
-
-def fetch_aggregate_incompatible_flags_test_result_command():
-    return "curl -sS {0} -o aggregate_incompatible_flags_test_result.py".format(
-        AGGREGATE_INCOMPATIBLE_TEST_RESULT_URL
+        label=label, commands=[command], platform=platform, use_bazelci_py=True, shards=shards
     )
 
 
 def upload_project_pipeline_step(
     project_name, git_repository, http_config, file_config, incompatible_flags
 ):
-    pipeline_command = (
-        '{0} bazelci.py project_pipeline --project_name="{1}" ' + "--git_repository={2}"
-    ).format(PLATFORMS[DEFAULT_PLATFORM]["python"], project_name, git_repository)
+    pipeline_command = ('project_pipeline --project_name="{}" --git_repository={}').format(
+        project_name, git_repository
+    )
     if incompatible_flags is None:
         pipeline_command += " --use_but"
     else:
@@ -2048,12 +2065,12 @@ def upload_project_pipeline_step(
         pipeline_command += " --http_config=" + http_config
     if file_config:
         pipeline_command += " --file_config=" + file_config
-    pipeline_command += " | buildkite-agent pipeline upload"
 
     return create_step(
-        label="Setup {0}".format(project_name),
-        commands=[fetch_bazelcipy_command(), pipeline_command],
+        label="Setup {}".format(project_name),
+        commands=[pipeline_command],
         platform=DEFAULT_PLATFORM,
+        use_bazelci_py=True,
     )
 
 
@@ -2092,7 +2109,7 @@ def bazel_build_step(
     build_only=False,
     test_only=False,
 ):
-    pipeline_command = PLATFORMS[platform]["python"] + " bazelci.py runner"
+    pipeline_command = "runner"
     if build_only:
         pipeline_command += " --build_only --save_but"
     if test_only:
@@ -2105,8 +2122,9 @@ def bazel_build_step(
 
     return create_step(
         label=create_label(platform, project_name, build_only, test_only),
-        commands=[fetch_bazelcipy_command(), pipeline_command],
+        commands=[pipeline_command],
         platform=platform,
+        use_bazelci_py=True,
     )
 
 
@@ -2166,6 +2184,7 @@ def print_skip_task_annotations(annotations, pipeline_steps):
             label=":pipeline: Print information about skipped tasks",
             commands=commands,
             platform=DEFAULT_PLATFORM,
+            use_bazelci_py=False,
         )
     )
 
@@ -2209,11 +2228,9 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
     pipeline_steps.append(
         create_step(
             label="Publish Bazel Binaries",
-            commands=[
-                fetch_bazelcipy_command(),
-                PLATFORMS[DEFAULT_PLATFORM]["python"] + " bazelci.py publish_binaries",
-            ],
+            commands=["publish_binaries"],
             platform=DEFAULT_PLATFORM,
+            use_bazelci_py=True,
         )
     )
 
@@ -2242,6 +2259,7 @@ def print_disabled_projects_info_box_step():
             'buildkite-agent annotate --append --style=info "\n' + "\n".join(info_text) + '\n"'
         ],
         platform=DEFAULT_PLATFORM,
+        use_bazelci_py=False,
     )
 
 
@@ -2259,6 +2277,7 @@ def print_incompatible_flags_info_box_step(incompatible_flags_map):
             'buildkite-agent annotate --append --style=info "\n' + "\n".join(info_text) + '\n"'
         ],
         platform=DEFAULT_PLATFORM,
+        use_bazelci_py=False,
     )
 
 
@@ -2371,13 +2390,11 @@ def print_bazel_downstream_pipeline(
                 create_step(
                     label="Aggregate incompatible flags test result",
                     commands=[
-                        fetch_bazelcipy_command(),
-                        fetch_aggregate_incompatible_flags_test_result_command(),
-                        PLATFORMS[DEFAULT_PLATFORM]["python"]
-                        + " aggregate_incompatible_flags_test_result.py --build_number=%s"
-                        % current_build_number,
+                        "aggregate_incompatible_flags_test_result --build_number=%s"
+                        % current_build_number
                     ],
                     platform=DEFAULT_PLATFORM,
+                    use_bazelci_py=True,
                 )
             )
         else:
@@ -2386,13 +2403,11 @@ def print_bazel_downstream_pipeline(
                 create_step(
                     label="Test failing jobs with incompatible flag separately",
                     commands=[
-                        fetch_bazelcipy_command(),
-                        fetch_incompatible_flag_verbose_failures_command(),
-                        PLATFORMS[DEFAULT_PLATFORM]["python"]
-                        + " incompatible_flag_verbose_failures.py --build_number=%s | buildkite-agent pipeline upload"
-                        % current_build_number,
+                        "incompatible_flag_verbose_failures --build_number=%s"
+                        % current_build_number
                     ],
                     platform=DEFAULT_PLATFORM,
+                    use_bazelci_py=True,
                 )
             )
 
@@ -2406,12 +2421,9 @@ def print_bazel_downstream_pipeline(
         pipeline_steps.append(
             create_step(
                 label="Try Update Last Green Downstream Commit",
-                commands=[
-                    fetch_bazelcipy_command(),
-                    PLATFORMS[DEFAULT_PLATFORM]["python"]
-                    + " bazelci.py try_update_last_green_downstream_commit",
-                ],
+                commands=["try_update_last_green_downstream_commit"],
                 platform=DEFAULT_PLATFORM,
+                use_bazelci_py=True,
             )
         )
 
@@ -2696,7 +2708,6 @@ def main(argv=None):
     yaml.add_representer(str, str_presenter)
 
     parser = argparse.ArgumentParser(description="Bazel Continuous Integration Script")
-    parser.add_argument("--script", type=str)
 
     subparsers = parser.add_subparsers(dest="subparsers_name")
 
@@ -2754,10 +2765,6 @@ def main(argv=None):
     subparsers.add_parser("try_update_last_green_downstream_commit")
 
     args = parser.parse_args(argv)
-
-    if args.script:
-        global SCRIPT_URL
-        SCRIPT_URL = args.script
 
     try:
         if args.subparsers_name == "bazel_publish_binaries_pipeline":
