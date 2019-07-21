@@ -1,7 +1,13 @@
+# Byte-compiled / optimized / DLL files.
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyCharm project files.
+.idea/workspace.xml
+
+# Bazel output files.
 /bazel-*
-/base/*.tar
-/jenkins/*.tar
-/target/
-__pycache__
-.vscode
+
+# Intermediate files created by the gitbundle tool.
 /gitbundle/bazelbuild/
