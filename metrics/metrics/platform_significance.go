@@ -5,8 +5,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/fweikert/continuous-integration/metrics/clients"
-	"github.com/fweikert/continuous-integration/metrics/data"
+	"github.com/bazelbuild/continuous-integration/metrics/clients"
+	"github.com/bazelbuild/continuous-integration/metrics/data"
 )
 
 type PlatformSignificance struct {

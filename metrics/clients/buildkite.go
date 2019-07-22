@@ -6,9 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fweikert/continuous-integration/metrics/data"
-
-	"github.com/fweikert/go-buildkite/buildkite"
+	"github.com/bazelbuild/continuous-integration/metrics/data"
+	"github.com/buildkite/go-buildkite/buildkite"
 )
 
 type BuildkiteClient interface {

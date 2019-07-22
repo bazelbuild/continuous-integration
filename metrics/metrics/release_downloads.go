@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fweikert/continuous-integration/metrics/data"
+	"github.com/bazelbuild/continuous-integration/metrics/data"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 )

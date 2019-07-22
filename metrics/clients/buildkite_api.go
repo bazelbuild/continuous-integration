@@ -3,7 +3,7 @@ package clients
 import (
 	"fmt"
 
-	"github.com/fweikert/go-buildkite/buildkite"
+	"github.com/buildkite/go-buildkite/buildkite"
 )
 
 type BuildkiteAPI interface {

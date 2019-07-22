@@ -5,9 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fweikert/continuous-integration/metrics/data"
-
-	"github.com/fweikert/go-buildkite/buildkite"
+	"github.com/bazelbuild/continuous-integration/metrics/data"
+	"github.com/buildkite/go-buildkite/buildkite"
 )
 
 func TestAgentCacheExpiration(t *testing.T) {

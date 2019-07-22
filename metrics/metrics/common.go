@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/fweikert/go-buildkite/buildkite"
+	"github.com/buildkite/go-buildkite/buildkite"
 )
 
 func getPlatform(job *buildkite.Job) string {

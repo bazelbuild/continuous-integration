@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/datastore"
-	"github.com/fweikert/continuous-integration/metrics/data"
+	"github.com/bazelbuild/continuous-integration/metrics/data"
 )
 
 const settingsName = ""

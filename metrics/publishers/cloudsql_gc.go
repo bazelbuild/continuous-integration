@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fweikert/continuous-integration/metrics/metrics"
+	"github.com/bazelbuild/continuous-integration/metrics/metrics"
 )
 
 const columnTypeQueryPattern = "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '%s' AND COLUMN_NAME IN ('%s');"

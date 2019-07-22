@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/fweikert/continuous-integration/metrics/clients"
-	"github.com/fweikert/continuous-integration/metrics/data"
-	"github.com/fweikert/go-buildkite/buildkite"
+	"github.com/bazelbuild/continuous-integration/metrics/clients"
+	"github.com/bazelbuild/continuous-integration/metrics/data"
+	"github.com/buildkite/go-buildkite/buildkite"
 )
 
 type CriticalPath struct {

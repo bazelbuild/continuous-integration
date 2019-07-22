@@ -7,9 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/fweikert/continuous-integration/metrics/metrics"
-
-	"github.com/fweikert/continuous-integration/metrics/data"
+	"github.com/bazelbuild/continuous-integration/metrics/data"
+	"github.com/bazelbuild/continuous-integration/metrics/metrics"
 	_ "github.com/go-sql-driver/mysql"
 )
 
