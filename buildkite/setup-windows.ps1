@@ -146,6 +146,10 @@ Write-Host "Installing Visual C++ 2017 Build Tools..."
 # [Environment]::SetEnvironmentVariable("BAZEL_VC", "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC", "Machine")
 # $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 
+## Install Windows 10 SDK
+## https://github.com/bazelbuild/continuous-integration/issues/768
+& choco install windows-sdk-10.0
+
 ## Install Python2
 Write-Host "Installing Python 2..."
 & choco install python2 --params "/InstallDir:C:\python2"
