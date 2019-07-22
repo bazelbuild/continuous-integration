@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fweikert/continuous-integration/metrics/clients"
-	"github.com/fweikert/continuous-integration/metrics/data"
+	"github.com/bazelbuild/continuous-integration/metrics/clients"
+	"github.com/bazelbuild/continuous-integration/metrics/data"
 	timestamp "github.com/golang/protobuf/ptypes/timestamp"
 	metricpb "google.golang.org/genproto/googleapis/api/metric"
 	monitoredres "google.golang.org/genproto/googleapis/api/monitoredres"

@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/fweikert/continuous-integration/metrics/metrics"
-	"github.com/fweikert/continuous-integration/metrics/publishers"
+	"github.com/bazelbuild/continuous-integration/metrics/metrics"
+	"github.com/bazelbuild/continuous-integration/metrics/publishers"
 )
 
 type metricJob struct {

@@ -1,8 +1,8 @@
 package publishers
 
 import (
-	"github.com/fweikert/continuous-integration/metrics/data"
-	"github.com/fweikert/continuous-integration/metrics/metrics"
+	"github.com/bazelbuild/continuous-integration/metrics/data"
+	"github.com/bazelbuild/continuous-integration/metrics/metrics"
 )
 
 type Publisher interface {

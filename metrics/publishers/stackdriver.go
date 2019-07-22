@@ -3,10 +3,9 @@ package publishers
 import (
 	"fmt"
 
-	"github.com/fweikert/continuous-integration/metrics/clients"
-
-	"github.com/fweikert/continuous-integration/metrics/data"
-	"github.com/fweikert/continuous-integration/metrics/metrics"
+	"github.com/bazelbuild/continuous-integration/metrics/clients"
+	"github.com/bazelbuild/continuous-integration/metrics/data"
+	"github.com/bazelbuild/continuous-integration/metrics/metrics"
 )
 
 type Stackdriver struct {

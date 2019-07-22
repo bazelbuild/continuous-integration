@@ -22,18 +22,6 @@ CREATE TABLE release_downloads (release_name VARCHAR(255), artifact VARCHAR(255)
 CREATE TABLE worker_availability (timestamp DATETIME, org VARCHAR(255), platform VARCHAR(255), idle_count INT, busy_count INT, PRIMARY KEY(timestamp, org, platform));
 ```
 
-## Dependencies
-
-You need to install the following dependencies in order to build the service:
-
-```bash
-get github.com/buildkite/go-buildkite/buildkite
-go get github.com/google/go-github/github
-go get golang.org/x/oauth2
-go get github.com/go-sql-driver/mysql
-go get cloud.google.com/go/datastore
-```
-
 ## Service Deployment
 
 - `gcloud app deploy metrics/app.yaml --stop-previous-version`

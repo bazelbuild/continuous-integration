@@ -8,10 +8,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/fweikert/continuous-integration/metrics/clients"
-	"github.com/fweikert/continuous-integration/metrics/metrics"
-	"github.com/fweikert/continuous-integration/metrics/publishers"
-	"github.com/fweikert/continuous-integration/metrics/service"
+	"github.com/bazelbuild/continuous-integration/metrics/clients"
+	"github.com/bazelbuild/continuous-integration/metrics/metrics"
+	"github.com/bazelbuild/continuous-integration/metrics/publishers"
+	"github.com/bazelbuild/continuous-integration/metrics/service"
 )
 
 var (

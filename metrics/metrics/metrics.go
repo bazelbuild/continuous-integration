@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"github.com/fweikert/continuous-integration/metrics/data"
+	"github.com/bazelbuild/continuous-integration/metrics/data"
 )
 
 type Column struct {

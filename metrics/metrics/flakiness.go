@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fweikert/continuous-integration/metrics/clients"
-	"github.com/fweikert/continuous-integration/metrics/data"
+	"github.com/bazelbuild/continuous-integration/metrics/clients"
+	"github.com/bazelbuild/continuous-integration/metrics/data"
 )
 
 type Flakiness struct {

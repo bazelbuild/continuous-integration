@@ -3,9 +3,9 @@ package metrics
 import (
 	"fmt"
 
-	"github.com/fweikert/continuous-integration/metrics/clients"
-	"github.com/fweikert/continuous-integration/metrics/data"
-	"github.com/fweikert/go-buildkite/buildkite"
+	"github.com/bazelbuild/continuous-integration/metrics/clients"
+	"github.com/bazelbuild/continuous-integration/metrics/data"
+	"github.com/buildkite/go-buildkite/buildkite"
 )
 
 const skipTasksEnvVar = "CI_SKIP_TASKS"
@@ -43,7 +43,7 @@ func (pp *PipelinePerformance) Collect() (data.DataSet, error) {
 		for _, build := range builds {
 			skippedTasks := getSkippedTasks(build)
 			for _, job := range build.Jobs {
-				if job.Name == nil {
+				if job.Name == nil || job.FinishedAt == nil {
 					continue
 				}
 
