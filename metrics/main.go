@@ -59,9 +59,9 @@ func main() {
 	}
 	bk := clients.CreateCachedBuildkiteClient(bkAPI, time.Duration(settings.BuildkiteCacheTimeoutMinutes)*time.Minute)
 
-	gcs, err := clients.CreateGcsClient()
+	storageClient, err := clients.CreateCloudStorageClient()
 	if err != nil {
-		log.Fatalf("Cannot create GCS client: %v", err)
+		log.Fatalf("Cannot create Cloud Storage client: %v", err)
 	}
 
 	/*
@@ -97,7 +97,7 @@ func main() {
 	criticalPath := metrics.CreateCriticalPath(bk, 20, pipelines...)
 	srv.AddMetric(criticalPath, minutes(60), defaultPublisher)
 
-	flakiness := metrics.CreateFlakiness(gcs, "bazel-buildkite-stats", "flaky-tests-bep", pipelines...)
+	flakiness := metrics.CreateFlakiness(storageClient, "bazel-buildkite-stats", "flaky-tests-bep", pipelines...)
 	srv.AddMetric(flakiness, minutes(60), defaultPublisher)
 
 	macPerformance := metrics.CreateMacPerformance(bk, 20, pipelines...)

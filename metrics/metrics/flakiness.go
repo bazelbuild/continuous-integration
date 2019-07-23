@@ -14,7 +14,7 @@ import (
 )
 
 type Flakiness struct {
-	client    *clients.GcsClient
+	client    *clients.CloudStorageClient
 	columns   []Column
 	gcsBucket string
 	gcsSuffix string
@@ -113,7 +113,7 @@ type message struct {
 }
 
 // CREATE TABLE flakiness (org VARCHAR(255), pipeline VARCHAR(255), build INT, target VARCHAR(255), passed_count INT, failed_count INT, PRIMARY KEY(org, pipeline, build, target));
-func CreateFlakiness(client *clients.GcsClient, gcsBucket, gcsBasePath string, pipelines ...*data.PipelineID) *Flakiness {
+func CreateFlakiness(client *clients.CloudStorageClient, gcsBucket, gcsBasePath string, pipelines ...*data.PipelineID) *Flakiness {
 	columns := []Column{Column{"org", true}, Column{"pipeline", true}, Column{"build", true}, Column{"target", true}, Column{"passed_count", false}, Column{"failed_count", false}}
 	gcsSuffix := gcsBasePath
 	if !strings.HasSuffix(gcsBasePath, "/") {
