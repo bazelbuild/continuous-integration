@@ -268,6 +268,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_foreign_cc/master/.bazelci/config.yaml",
         "pipeline_slug": "rules-foreign-cc",
+        "disabled_reason": "https://github.com/bazelbuild/rules_foreign_cc/issues/299",
     },
     "rules_go": {
         "git_repository": "https://github.com/bazelbuild/rules_go.git",
