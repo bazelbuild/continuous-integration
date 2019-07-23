@@ -10,35 +10,35 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-type GcsClient struct {
+type CloudStorageClient struct {
 	client *storage.Client
 }
 
-func CreateGcsClient() (*GcsClient, error) {
+func CreateCloudStorageClient() (*CloudStorageClient, error) {
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &GcsClient{client: client}, nil
+	return &CloudStorageClient{client: client}, nil
 }
 
-func (g *GcsClient) ReadAllFiles(bucket, directory string) (*gcsFileIter, error) {
+func (c *CloudStorageClient) ReadAllFiles(bucket, directory string) (*cloudStorageFileIter, error) {
 	log.Printf("Reading all files in bucket %s and directory %s", bucket, directory)
-	files, err := g.listFiles(bucket, directory)
+	files, err := c.listFiles(bucket, directory)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to list files in directory %s in bucket %s: %v", directory, bucket, err)
 	}
 
-	iter := &gcsFileIter{client: g.client, bucket: bucket, files: files}
+	iter := &cloudStorageFileIter{client: c.client, bucket: bucket, files: files}
 	return iter, nil
 }
 
-func (g *GcsClient) listFiles(bucket, directory string) ([]string, error) {
+func (c *CloudStorageClient) listFiles(bucket, directory string) ([]string, error) {
 	names := make([]string, 0)
 	ctx := context.Background()
 	q := &storage.Query{Prefix: directory}
-	it := g.client.Bucket(bucket).Objects(ctx, q)
+	it := c.client.Bucket(bucket).Objects(ctx, q)
 	for {
 		attrs, err := it.Next()
 		if err == iterator.Done {
@@ -51,18 +51,18 @@ func (g *GcsClient) listFiles(bucket, directory string) ([]string, error) {
 	return names, nil
 }
 
-type gcsFileIter struct {
+type cloudStorageFileIter struct {
 	client *storage.Client
 	bucket string
 	files  []string
 	pos    int
 }
 
-func (iter *gcsFileIter) HasNext() bool {
+func (iter *cloudStorageFileIter) HasNext() bool {
 	return iter.pos < len(iter.files)
 }
 
-func (iter *gcsFileIter) Get() (string, []byte, error) {
+func (iter *cloudStorageFileIter) Get() (string, []byte, error) {
 	pos := iter.pos
 	if pos >= len(iter.files) {
 		pos = len(iter.files) - 1
@@ -77,7 +77,7 @@ func (iter *gcsFileIter) Get() (string, []byte, error) {
 	return name, content, err
 }
 
-func (iter *gcsFileIter) readFile(object string) ([]byte, error) {
+func (iter *cloudStorageFileIter) readFile(object string) ([]byte, error) {
 	ctx := context.Background()
 	rc, err := iter.client.Bucket(iter.bucket).Object(object).NewReader(ctx)
 	if err != nil {
