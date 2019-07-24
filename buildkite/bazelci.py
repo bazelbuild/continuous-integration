@@ -117,7 +117,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/bazel-skylib.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-skylib/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-skylib",
-        "disabled_reason": "https://github.com/bazelbuild/bazel-skylib/issues/173",
     },
     "Bazel toolchains": {
         "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
@@ -268,7 +267,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_foreign_cc/master/.bazelci/config.yaml",
         "pipeline_slug": "rules-foreign-cc",
-        "disabled_reason": "https://github.com/bazelbuild/rules_foreign_cc/issues/299",
     },
     "rules_go": {
         "git_repository": "https://github.com/bazelbuild/rules_go.git",
