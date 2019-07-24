@@ -81,7 +81,6 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-1809-core",
         "setup_script": "setup-windows.ps1",
-        "boot_disk_size": "32GB",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
     },
     "bk-testing-windows-java8": {
@@ -90,7 +89,6 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-1809-core",
         "setup_script": "setup-windows.ps1",
-        "boot_disk_size": "32GB",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
     },
     "bk-trusted-windows-java8": {
@@ -107,7 +105,6 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-2019",
         "setup_script": "setup-windows.ps1",
-        "boot_disk_size": "50GB",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
     },
 }
