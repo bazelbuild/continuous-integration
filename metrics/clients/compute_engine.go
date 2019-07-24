@@ -32,7 +32,7 @@ func CreateComputeEngineClient() (*ComputeEngineClient, error) {
 func (c *ComputeEngineClient) GetAllInstances(projects []string) ([]*ComputeInstance, error) {
 	allInstances := make([]*ComputeInstance, 0)
 	for _, project := range projects {
-		projectInstances, err := c.GetAllInstanceForProject(project)
+		projectInstances, err := c.getAllInstancesForProject(project)
 		if err != nil {
 			return nil, err
 		}
@@ -41,7 +41,7 @@ func (c *ComputeEngineClient) GetAllInstances(projects []string) ([]*ComputeInst
 	return allInstances, nil
 }
 
-func (c *ComputeEngineClient) GetAllInstanceForProject(project string) ([]*ComputeInstance, error) {
+func (c *ComputeEngineClient) getAllInstancesForProject(project string) ([]*ComputeInstance, error) {
 	instances := make([]*ComputeInstance, 0)
 	request := c.service.Instances.AggregatedList(project)
 	for {
