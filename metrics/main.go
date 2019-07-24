@@ -59,6 +59,11 @@ func main() {
 	}
 	bk := clients.CreateCachedBuildkiteClient(bkAPI, time.Duration(settings.BuildkiteCacheTimeoutMinutes)*time.Minute)
 
+	computeClient, err := clients.CreateComputeEngineClient()
+	if err != nil {
+		log.Fatalf("Cannot create Compute Engine client: %v", err)
+	}
+
 	storageClient, err := clients.CreateCloudStorageClient()
 	if err != nil {
 		log.Fatalf("Cannot create Cloud Storage client: %v", err)
@@ -122,6 +127,10 @@ func main() {
 
 	workerAvailability := metrics.CreateWorkerAvailability(bk, settings.BuildkiteOrgs...)
 	srv.AddMetric(workerAvailability, minutes(5), defaultPublisher)
+
+	// TODO(fweikert): Read gracePeriod from Datastore
+	zombieInstances := metrics.CreateZombieInstances(computeClient, settings.CloudProjects, bk, settings.BuildkiteOrgs, minutes(3))
+	srv.AddMetric(zombieInstances, minutes(5), defaultPublisher)
 
 	if *testMode {
 		logInTestMode("Running all jobs exactly once...")

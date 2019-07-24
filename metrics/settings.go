@@ -24,6 +24,7 @@ type Settings struct {
 	CloudSqlInstance             string
 	CloudSqlDatabase             string
 	CloudSqlLocalPort            int
+	CloudProjects                []string
 }
 
 func ReadSettingsFromDatastore(projectID, settingsName string) (*Settings, error) {
