@@ -55,7 +55,7 @@ func (zi *ZombieInstances) Collect() (data.DataSet, error) {
 			// VM was started only very recently
 			continue
 		}
-		err = result.AddRow(time.Now(), instance.Project, instance.Zone, instance.Name, instance.Status, onlineTime.Seconds())
+		err = result.AddRow(instance.Project, instance.Zone, instance.Name, instance.Status, onlineTime.Seconds(), time.Now())
 		if err != nil {
 			return nil, err
 		}
@@ -91,8 +91,8 @@ func (zi *ZombieInstances) getAgentHostNameIndex() (map[string]bool, error) {
 	return hostNameIndex, nil
 }
 
-// CREATE TABLE zombie_instances (timestamp DATETIME, cloud_project VARCHAR(255), zone VARCHAR(255), instance VARCHAR(255), status VARCHAR(255), seconds_online FLOAT, PRIMARY KEY(timestamp, cloud_project, zone, instance));
+// CREATE TABLE zombie_instances (cloud_project VARCHAR(255), zone VARCHAR(255), instance VARCHAR(255), status VARCHAR(255), seconds_online FLOAT, timestamp DATETIME, PRIMARY KEY(cloud_project, zone, instance));
 func CreateZombieInstances(computeClient *clients.ComputeEngineClient, cloudProjects []string, bkClient clients.BuildkiteClient, bkOrgs []string, gracePeriod time.Duration) *ZombieInstances {
-	columns := []Column{Column{"timestamp", true}, Column{"cloud_project", true}, Column{"zone", true}, Column{"instance", true}, Column{"status", false}, Column{"seconds_online", false}}
+	columns := []Column{Column{"cloud_project", true}, Column{"zone", true}, Column{"instance", true}, Column{"status", false}, Column{"seconds_online", false}, Column{"timestamp", false}}
 	return &ZombieInstances{computeClient: computeClient, cloudProjects: cloudProjects, bkClient: bkClient, bkOrgs: bkOrgs, columns: columns, gracePeriod: gracePeriod}
 }
