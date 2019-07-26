@@ -30,6 +30,14 @@ func (zi *ZombieInstances) Columns() []Column {
 	return zi.columns
 }
 
+func (*ZombieInstances) Type() MetricType {
+	return TimeBasedMetric
+}
+
+func (*ZombieInstances) RelevantDelta() int {
+	return 10 * 60 // 10 minutes in seconds
+}
+
 func (zi *ZombieInstances) Collect() (data.DataSet, error) {
 	agentHostNameIndex, err := zi.getAgentHostNameIndex()
 	if err != nil {
