@@ -39,6 +39,8 @@ instance_groups:
     service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
     image_project: bazel-untrusted
     image_family: bk-testing-docker
+    health_check: buildkite-check
+    initial_delay: 60
     local_ssd:
       - interface=nvme
     metadata_from_file: startup-script=startup-docker.sh

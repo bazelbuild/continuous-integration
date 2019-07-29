@@ -52,6 +52,10 @@ github.com/machinebox/graphql v0.2.2 h1:dWKpJligYKhYKO5A2gvNhkJdQMNZeChZYyBbrZkB
 github.com/machinebox/graphql v0.2.2/go.mod h1:F+kbVMHuwrQ5tYgU9JXlnskM8nOaFxCAEolaQybkjWA=
 github.com/matryer/is v1.2.0 h1:92UTHpy8CDwaJ08GqLDzhhuixiBUUD1p3AU6PHddz4A=
 github.com/matryer/is v1.2.0/go.mod h1:2fLPjFQM9rhQ15aVEtbuwhJinnOqrmgXPNdZsdwlWXA=
+github.com/philwo/go-buildkite v2.2.0+incompatible h1:yZcBvUFJmnNE0Q4aDPxeBxp8DWw9XNyvxfIqo7gt/Hc=
+github.com/philwo/go-buildkite v2.2.0+incompatible/go.mod h1:/T9T0XNGIgySFMO/xEeIRKdA+enpTFj3X5nsY5EnVrE=
+github.com/philwo/go-buildkite v2.2.1+incompatible h1:SsMHLF/GRgyZHnlyqCqBAzNzyX6mRsV4KPJNp0yWpCQ=
+github.com/philwo/go-buildkite v2.2.1+incompatible/go.mod h1:/T9T0XNGIgySFMO/xEeIRKdA+enpTFj3X5nsY5EnVrE=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
