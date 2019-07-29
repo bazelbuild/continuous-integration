@@ -127,35 +127,26 @@ steps:
     agents:
       - queue=windows
     command: |
-      echo on
-      echo DEBUG 1 git fetch
       git fetch origin master
       git fetch --force origin refs/notes/*:refs/notes/*
 
-      echo DEBUG 2 buildkit-agent
       buildkite-agent meta-data get "release_name" > release_name.txt
       SET /p RELEASE_NAME=<release_name.txt
       DEL /q release_name.txt
 
-      echo DEBUG 3 print release name
       echo Release: %RELEASE_NAME%
 
-      echo DEBUG 4 build
       bazel build //src:bazel.exe
 
-      echo DEBUG 5 copy output
       mkdir output
       copy bazel-bin\src\bazel.exe output\bazel.exe
 
-      echo DEBUG 6 build
       output\bazel build -c opt --copt=-w --host_copt=-w --stamp --embed_label %RELEASE_NAME% src/bazel scripts/packages/bazel.zip
 
-      echo DEBUG 7 move artifacts
       mkdir artifacts
       move bazel-bin\src\bazel artifacts\bazel-%RELEASE_NAME%-windows-x86_64.exe
       move bazel-genfiles\scripts\packages\bazel.zip artifacts\bazel-%RELEASE_NAME%-windows-x86_64.zip
 
-      echo DEBUG 8 write run-msi.bat
       echo @echo off >run-msi.bat
       @rem  The scripts directory is taken from the release branch.
       @rem  Commit 874fe75428 contains a vital bugfix for make_msi_lib.ps1, so only build the .msi
@@ -169,16 +160,11 @@ steps:
       set _release_name_=RELEASE_NAME
       echo if "%%_errorlevel_%%" equ "0" (powershell scripts\packages\msi\make_msi.ps1 artifacts\bazel-%%_release_name_%%-windows-x86_64.exe) >>run-msi.bat
       echo exit /b 0 >>run-msi.bat
-      echo DEBUG 9 contents of run-msi.bat
       type run-msi.bat
-      echo DEBUG 10 run the msi creation
       run-msi.bat
 
-      echo DEBUG 11 upload
       cd artifacts
       buildkite-agent artifact upload "*"
-
-      echo DEBUG 12 done
 
   - wait
 
