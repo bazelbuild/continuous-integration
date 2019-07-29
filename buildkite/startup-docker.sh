@@ -75,20 +75,29 @@ sed -i 's/^::1 .*/::1 localhost ip6-localhost ip6-loopback/' /etc/hosts
 case $(hostname -f) in
   *.bazel-public.*)
     ARTIFACT_BUCKET="bazel-trusted-buildkite-artifacts"
-    BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-trusted-encrypted-secrets/buildkite-trusted-agent-token.enc" | \
+    BUILDKITE_AGENT_TOKEN=$(gsutil cat "gs://bazel-trusted-encrypted-secrets/buildkite-trusted-agent-token.enc" | \
         gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key buildkite-trusted-agent-token --ciphertext-file - --plaintext-file -)
+    BUILDKITE_API_TOKEN=$(gsutil cat "gs://bazel-trusted-encrypted-secrets/buildkite-trusted-api-token.enc" | \
+        gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key buildkite-trusted-api-token --ciphertext-file - --plaintext-file -)
+    BUILDKITE_ORG="bazel-trusted"
     ;;
   *.bazel-untrusted.*)
     case $(hostname -f) in
       *-testing-*)
         ARTIFACT_BUCKET="bazel-testing-buildkite-artifacts"
-        BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-testing-encrypted-secrets/buildkite-testing-agent-token.enc" | \
+        BUILDKITE_AGENT_TOKEN=$(gsutil cat "gs://bazel-testing-encrypted-secrets/buildkite-testing-agent-token.enc" | \
             gcloud kms decrypt --project bazel-untrusted --location global --keyring buildkite --key buildkite-testing-agent-token --ciphertext-file - --plaintext-file -)
+        BUILDKITE_API_TOKEN=$(gsutil cat "gs://bazel-testing-encrypted-secrets/buildkite-testing-api-token.enc" | \
+            gcloud kms decrypt --project bazel-untrusted --location global --keyring buildkite --key buildkite-testing-api-token --ciphertext-file - --plaintext-file -)
+        BUILDKITE_ORG="bazel-testing"
         ;;
       *)
         ARTIFACT_BUCKET="bazel-untrusted-buildkite-artifacts"
-        BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-untrusted-encrypted-secrets/buildkite-untrusted-agent-token.enc" | \
+        BUILDKITE_AGENT_TOKEN=$(gsutil cat "gs://bazel-untrusted-encrypted-secrets/buildkite-untrusted-agent-token.enc" | \
             gcloud kms decrypt --project bazel-untrusted --location global --keyring buildkite --key buildkite-untrusted-agent-token --ciphertext-file - --plaintext-file -)
+        BUILDKITE_API_TOKEN=$(gsutil cat "gs://bazel-untrusted-encrypted-secrets/buildkite-untrusted-api-token.enc" | \
+            gcloud kms decrypt --project bazel-untrusted --location global --keyring buildkite --key buildkite-untrusted-api-token --ciphertext-file - --plaintext-file -)
+        BUILDKITE_ORG="bazel"
         ;;
     esac
 esac
@@ -116,7 +125,7 @@ systemctl daemon-reload
 
 # Write the Buildkite agent configuration.
 cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
-token="${BUILDKITE_TOKEN}"
+token="${BUILDKITE_AGENT_TOKEN}"
 name="%hostname"
 tags="queue=default,kind=docker,os=linux"
 experiment="git-mirrors"
@@ -149,7 +158,40 @@ chown -R buildkite-agent:buildkite-agent /etc/buildkite-agent
 # Update our gitmirror.
 # sudo -H -u buildkite-agent gsutil -qm rsync -rd gs://bazel-git-mirror/mirrors/ /var/lib/gitmirrors/
 
-# Start the Buildkite agent service.
+# Setup the healthcheck service.
+curl \
+  --retry 10 \
+  --fail \
+  --output /usr/local/bin/healthcheck \
+  --silent \
+  --show-error \
+  --location \
+  https://storage.googleapis.com/bazel-ci/healthcheck/healthcheck-linux-amd64
+chmod +x /usr/local/bin/healthcheck
+
+cat > /etc/default/healthcheck <<EOF
+BUILDKITE_API_TOKEN=${BUILDKITE_API_TOKEN}
+BUILDKITE_ORG=${BUILDKITE_ORG}
+EOF
+chmod 0600 /etc/default/healthcheck
+
+cat > /etc/systemd/system/healthcheck.service <<'EOF'
+[Unit]
+Description=Bazel CI Health Check Service
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/default/healthcheck
+ExecStart=/usr/local/bin/healthcheck
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Start the services.
+systemctl daemon-reload
 systemctl start buildkite-agent
+systemctl start healthcheck
 
 exit 0

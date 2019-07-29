@@ -14,6 +14,7 @@ require (
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.2.0 // indirect
+	github.com/philwo/go-buildkite v2.2.1+incompatible
 	github.com/pkg/errors v0.8.1 // indirect
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
