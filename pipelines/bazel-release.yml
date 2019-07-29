@@ -172,7 +172,7 @@ steps:
       echo DEBUG 9 contents of run-msi.bat
       type run-msi.bat
       echo DEBUG 10 run the msi creation
-      run-msi.bat
+      call run-msi.bat
 
       echo DEBUG 11 upload
       cd artifacts
