@@ -146,6 +146,25 @@ steps:
       move bazel-bin\src\bazel artifacts\bazel-%RELEASE_NAME%-windows-x86_64.exe
       move bazel-genfiles\scripts\packages\bazel.zip artifacts\bazel-%RELEASE_NAME%-windows-x86_64.zip
 
+      rem # The "scripts" directory is taken from the release branch.
+      rem # Commit 874fe75428 contains a vital bugfix for make_msi_lib.ps1, so only build the .msi
+      rem # if the release branch has that commit.
+      rem # TODO(laszlocsomor) remove this version check and build the .msi unconditionally after
+      rem # Bazel 0.29 (the first version whose release branch will have 874fe75428) is released.
+      rem #
+      rem # git merge-base fails if the commit is not an ancestor. While this is expected, it fails
+      rem # the whole pipeline because BuildKite checks ERRORLEVEL after every command. So we wrap
+      rem # the git call in a batch file.
+      echo git merge-base --is-ancestor 874fe754282651bdf006c06147842cbb226c6ae9 HEAD 2^>nul >>check-rev.bat
+      echo if "%%ERRORLEVEL%%" equ "0" (echo y^>run_ps.txt) else (echo n^>run_ps.txt) >>check-rev.bat
+      echo exit /b 0 >>check-rev.bat
+
+      call check-rev.bat
+      SET /p RUN_PS_VALUE=<run_ps.txt
+      DEL /q run_ps.txt
+
+      if "%RUN_PS_VALUE%" equ "y" (call powershell scripts\packages\msi\make_msi.ps1 artifacts\bazel-%%RELEASE_NAME%%-windows-x86_64.exe)
+
       cd artifacts
       buildkite-agent artifact upload "*"
 
