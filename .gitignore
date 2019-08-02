@@ -6,6 +6,9 @@ __pycache__/
 # PyCharm project files.
 .idea/workspace.xml
 
+# VS.Code project files.
+.vscode/
+
 # Bazel output files.
 /bazel-*
 
