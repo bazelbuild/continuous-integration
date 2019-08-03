@@ -45,7 +45,6 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
-        "boot_disk_size": "10GB",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
@@ -57,7 +56,6 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
-        "boot_disk_size": "10GB",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
@@ -69,7 +67,6 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
-        "boot_disk_size": "10GB",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"

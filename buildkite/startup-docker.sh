@@ -48,20 +48,6 @@ mkdir -p "${AGENT_HOME}/.cache/bazel/_bazel_buildkite-agent"
 chown -R buildkite-agent:buildkite-agent "${AGENT_HOME}"
 chmod 0755 "${AGENT_HOME}"
 
-# Mount a shared NFS repository cache.
-REPOCACHE="/var/lib/buildkite-agent/.cache/bazel/_bazel_buildkite-agent/cache/repos"
-mkdir -p "${REPOCACHE}"
-case $(hostname -f) in
-  *.bazel-public.*)
-    mount -t nfs 10.112.185.98:/repocache "${REPOCACHE}"
-    ;;
-  *.bazel-untrusted.*)
-    mount -t nfs 10.163.211.226:/repocache "${REPOCACHE}"
-    ;;
-esac
-chown buildkite-agent:buildkite-agent "${REPOCACHE}"
-chmod 0755 "${REPOCACHE}"
-
 # Mount tmpfs to Docker's working directory.
 DOCKER_HOME="/var/lib/docker"
 mount --bind /tmpfs/docker "${DOCKER_HOME}"

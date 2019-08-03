@@ -52,7 +52,10 @@ def gcloud(*args, **kwargs):
         else:
             cmd += ["--" + flag, str(value)]
     # Throws `subprocess.CalledProcessError` if the process exits with return code > 0.
-    debug("Running: " + " ".join(cmd))
+
+    if not "get-serial-port-output" in cmd:
+        debug("Running: " + " ".join(cmd))
+
     return subprocess.run(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, check=True
     )
