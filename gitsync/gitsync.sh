@@ -23,7 +23,6 @@
 #   direction can be ==> or <=>
 REPOSITORIES=(
     "https://bazel.googlesource.com/bazel ==> git@github.com:bazelbuild/bazel.git bazel"
-    "https://bazel.googlesource.com/java_tools ==> git@github.com:bazelbuild/java_tools.git java_tools"
     "https://bazel.googlesource.com/tulsi ==> git@github.com:bazelbuild/tulsi.git tulsi"
 )
 
