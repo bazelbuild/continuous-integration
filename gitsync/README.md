@@ -13,8 +13,7 @@ $ gcloud compute instances create-with-container \
     --project bazel-public \
     --boot-disk-size 200GB \
     --container-image gcr.io/bazel-public/gitsync:latest \
-    --machine-type n1-standard-1 \
-    --network buildkite \
+    --machine-type n1-standard-2 \
     --zone us-central1-a \
     --image-project cos-cloud \
     --image-family cos-stable \
