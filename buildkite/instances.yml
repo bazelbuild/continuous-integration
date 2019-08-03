@@ -15,7 +15,7 @@ default_vm:
   boot_disk_size: 50GB
   boot_disk_type: pd-ssd
   machine_type: c2-standard-30
-  network: buildkite
+  network: default
   region: us-central1
   restart-on-failure: False
   scopes: cloud-platform

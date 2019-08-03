@@ -152,7 +152,7 @@ def create_instance(instance_name, params):
             project=params["project"],
             zone=params["zone"],
             machine_type="c2-standard-8",
-            network=params.get("network", "buildkite"),
+            network=params.get("network", "default"),
             metadata_from_file=startup_script,
             boot_disk_type="pd-ssd",
             boot_disk_size=params.get("boot_disk_size", "50GB"),
