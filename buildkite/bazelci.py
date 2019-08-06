@@ -1169,6 +1169,8 @@ def remote_caching_flags(platform):
         return []
 
     platform_cache_key = [BUILDKITE_ORG.encode("utf-8")]
+    # Whenever the remote cache was known to have been poisoned increase the number below
+    platform_cache_key += ["cache-poisoning-1"]
 
     if platform == "macos":
         platform_cache_key += [
