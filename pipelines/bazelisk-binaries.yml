@@ -1,7 +1,11 @@
 steps:
   - command: |-
-      bazel build //:bazelisk
-      buildkite-agent artifact upload "./bazel-bin/linux_amd64_stripped/bazelisk"
+      echo "+++ Building Bazelisk binaries"
+      ./build.sh
+      echo "+++ Printing Bazelisk version"
+      bin/bazelisk-linux-amd64 version
+      echo "+++ Uploading Bazelisk binaries to Buildkite"
+      buildkite-agent artifact upload "bin/*"
     label: ":ubuntu:"
     agents:
       - "queue=default"
@@ -25,15 +29,3 @@ steps:
           - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
           - "/var/run/docker.sock:/var/run/docker.sock"
-
-  - command: "powershell -Command \"bazel build //:bazelisk ; if (\\$LastExitCode -ne 0) { exit 1 } ; buildkite-agent artifact upload ./bazel-bin/windows_amd64_stripped/bazelisk.exe ; if (\\$LastExitCode -ne 0) { exit 1 } ;\""
-    label: ":windows:"
-    agents:
-      - "queue=windows"
-
-  - command: |-
-      bazel build //:bazelisk
-      buildkite-agent artifact upload "./bazel-bin/darwin_amd64_stripped/bazelisk"
-    label: ":darwin:"
-    agents:
-      - "queue=macos"
