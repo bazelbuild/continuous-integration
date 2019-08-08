@@ -103,6 +103,11 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/codelabs/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-codelabs",
     },
+    "Bazel Examples": {
+        "git_repository": "https://github.com/bazelbuild/examples.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/examples/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "bazel-bazel-examples",
+    },
     "Bazel Remote Cache": {
         "git_repository": "https://github.com/buchgr/bazel-remote.git",
         "http_config": "https://raw.githubusercontent.com/buchgr/bazel-remote/master/.bazelci/presubmit.yml",
