@@ -672,15 +672,27 @@ def load_imported_tasks(import_name, http_url, file_config):
     namespace = import_name.partition(".")[0]
     tasks = {}
     for task_name, task_config in imported_config["tasks"].items():
-        if "platform" not in task_config:
-            task_config["platform"] = task_name
-        for field in ["name", "working_directory"]:
-            if field not in task_config:
-                task_config[field] = namespace
-
+        fix_imported_task_platform(task_name, task_config)
+        fix_imported_task_name(namespace, task_config)
+        fix_imported_task_working_directory(namespace, task_config)
         tasks["%s_%s" % (namespace, task_name)] = task_config
 
     return tasks
+
+
+def fix_imported_task_platform(task_name, task_config):
+    if "platform" not in task_config:
+        task_config["platform"] = task_name
+
+
+def fix_imported_task_name(namespace, task_config):
+    old_name = task_config.get("name")
+    task_config["name"] = "%s (%s)" % (namespace, old_name) if old_name else namespace
+
+
+def fix_imported_task_working_directory(namespace, task_config):
+    old_dir = task_config.get("working_directory")
+    task_config["working_directory"] = os.path.join(namespace, old_dir) if old_dir else namespace
 
 
 def print_collapsed_group(name):
