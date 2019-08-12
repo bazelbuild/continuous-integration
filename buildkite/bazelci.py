@@ -323,6 +323,11 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_perl/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-perl",
     },
+    "rules_proto": {
+        "git_repository": "https://github.com/bazelbuild/rules_proto.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_proto/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "rules-proto",
+    },
     "rules_python": {
         "git_repository": "https://github.com/bazelbuild/rules_python.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_python/master/.bazelci/presubmit.yml",
