@@ -108,6 +108,11 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/examples/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-bazel-examples",
     },
+    "Bazel Federation": {
+        "git_repository": "https://github.com/bazelbuild/bazel-federation.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-federation/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "bazel-federation",
+    },
     "Bazel Remote Cache": {
         "git_repository": "https://github.com/buchgr/bazel-remote.git",
         "http_config": "https://raw.githubusercontent.com/buchgr/bazel-remote/master/.bazelci/presubmit.yml",
