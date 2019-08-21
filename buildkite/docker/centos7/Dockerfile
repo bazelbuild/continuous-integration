@@ -6,7 +6,6 @@ COPY --from=gcr.io/bazel-public/base:github-release /usr/local/bin/github-releas
 COPY --from=gcr.io/bazel-public/base:saucelabs /usr/local/bin/sc /usr/local/bin/sc
 
 # Install required packages.
-COPY google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
 RUN echo "Enabling EPEL repository..." && \
     yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
     echo "Installing packages required by Bazel..." && \
@@ -17,7 +16,13 @@ RUN echo "Enabling EPEL repository..." && \
     yum install -y yum-utils && \
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
     yum install -y containerd.io docker-ce docker-ce-cli && \
-    echo "Installing Google Cloud SDK..." && \
+    echo "Installing gnupg2..." && \
+    yum install -y gnupg2 && \
+    echo "Cleaning up..." && \
+    yum clean all
+
+COPY google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
+RUN echo "Installing Google Cloud SDK..." && \
     yum install -y google-cloud-sdk && \
     echo "Cleaning up..." && \
     yum clean all
