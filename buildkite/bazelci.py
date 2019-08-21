@@ -2286,7 +2286,7 @@ def fetch_incompatible_flags():
     output = subprocess.check_output(
         [
             "curl",
-            "https://api.github.com/search/issues?per_page=100&q=repo:bazelbuild/bazel+label:migration-%s+state:open"
+            "https://api.github.com/search/issues?per_page=100&q=repo:bazelbuild/bazel+label:migration-%s"
             % bazel_major_version,
         ]
     ).decode("utf-8")
