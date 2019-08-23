@@ -135,6 +135,14 @@ chown -R buildkite-agent:buildkite-agent /etc/buildkite-agent
 # Update our gitmirror.
 # sudo -H -u buildkite-agent gsutil -qm rsync -rd gs://bazel-git-mirror/mirrors/ /var/lib/gitmirrors/
 
+# Wait until we have at least one minute of uptime to prevent exponential
+# backoff for instance recreation from kicking in.
+uptime="$(cat /proc/uptime | cut -d' ' -f1 | cut -d'.' -f1)"
+timetosleep="$(( 60 - $uptime ))"
+if [[ $timetosleep -gt 0 ]]; then
+    sleep "$timetosleep"
+fi
+
 # Start the Buildkite agent service.
 systemctl start buildkite-agent
 

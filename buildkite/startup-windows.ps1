@@ -122,6 +122,15 @@ disconnect-after-job-timeout=900
 "@
 [System.IO.File]::WriteAllLines("${buildkite_agent_root}\buildkite-agent.cfg", $buildkite_agent_config)
 
+## Wait until the machine has been running for at least one minute, in order to
+## prevent exponential backoff from happening when it terminates too early.
+$up = (Get-CimInstance -ClassName win32_operatingsystem).LastBootUpTime
+$uptime = ((Get-Date) - $up).TotalSeconds
+$timetosleep = 60 - $uptime
+if ($timetosleep -gt 0) {
+    Start-Sleep -Seconds $timetosleep
+}
+
 ## Start the Buildkite agent service.
 try {
     Write-Host "Starting Buildkite agent as user ${buildkite_username}..."
