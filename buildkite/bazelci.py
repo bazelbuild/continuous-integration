@@ -976,15 +976,15 @@ def start_sauce_connect_proxy(platform, tmpdir):
     os.environ["BUILD_TAG"] = str(uuid.uuid4())
     readyfile = os.path.join(tmpdir, "sc_is_ready")
     if platform == "windows":
-        cmd = ["sauce-connect.exe", "/i", os.environ["TUNNEL_IDENTIFIER"], "/f", readyfile]
+        cmd = ["sauce-connect.exe", "-i", os.environ["TUNNEL_IDENTIFIER"], "-f", readyfile]
     else:
         cmd = ["sc", "-i", os.environ["TUNNEL_IDENTIFIER"], "-f", readyfile]
     sc_process = execute_command_background(cmd)
     wait_start = time.time()
     while not os.path.exists(readyfile):
-        if time.time() - wait_start > 30:
+        if time.time() - wait_start > 60:
             raise BuildkiteException(
-                "Sauce Connect Proxy is still not ready after 30 seconds, aborting!"
+                "Sauce Connect Proxy is still not ready after 60 seconds, aborting!"
             )
         time.sleep(1)
     print("Sauce Connect Proxy is ready, continuing...")
