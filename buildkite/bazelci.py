@@ -367,7 +367,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_webtesting/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-webtesting-saucelabs",
-        "disabled_reason": "https://github.com/bazelbuild/rules_webtesting/issues/364",
     },
     "upb": {
         "git_repository": "https://github.com/protocolbuffers/upb.git",
