@@ -107,6 +107,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/examples.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/examples/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-bazel-examples",
+        "disabled_reason": "https://github.com/bazelbuild/examples/issues/114",
     },
     "Bazel Federation": {
         "git_repository": "https://github.com/bazelbuild/bazel-federation.git",
@@ -277,6 +278,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_foreign_cc/master/.bazelci/config.yaml",
         "pipeline_slug": "rules-foreign-cc",
+        "disabled_reason": "https://github.com/bazelbuild/rules_foreign_cc/issues/308",
     },
     "rules_go": {
         "git_repository": "https://github.com/bazelbuild/rules_go.git",
