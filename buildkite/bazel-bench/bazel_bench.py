@@ -354,7 +354,7 @@ def main(args=None):
     parser.add_argument("--bucket", type=str, default="")
     parser.add_argument("--max_commits", type=int, default="")
     parser.add_argument("--report_name", type=str, default="report")
-    parser.add_argument("--update_latest", type=bool, default=False)
+    parser.add_argument("--update_latest", action="store_true", default=False)
     parsed_args = parser.parse_args(args)
 
     bazel_bench_ci_steps = []
