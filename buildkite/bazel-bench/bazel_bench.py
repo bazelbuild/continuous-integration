@@ -309,7 +309,8 @@ def _create_and_upload_metadata(
         bazelci.eprint("Error uploading: {}".format(e))
 
 
-def _report_generation_step(date, project_label, bucket, platform):
+def _report_generation_step(
+    date, project_label, bucket, platform, report_name, update_latest=False):
     """Generate the daily report.
 
     Also update the path reserved for the latest report of each project.
@@ -320,22 +321,24 @@ def _report_generation_step(date, project_label, bucket, platform):
         "report/generate_report.py",
         "--date={}".format(date),
         "--project={}".format(project_label),
-        "--storage_bucket={}".format(bucket)
+        "--storage_bucket={}".format(bucket),
+        "--report_name={}".format(report_name)
     ]))
 
     # Copy the generated report to a special path on GCS that's reserved for
     # "latest" reports. GCS doesn't support symlink.
-    date_dir = date.strftime("%Y/%m/%d")
-    report_dated_path_gcs = "gs://{}/{}/{}/report.html".format(
-        bucket, project_label, date_dir)
-    report_latest_path_gcs = "gs://{}/{}/report_latest.html".format(
-        bucket, project_label)
-    commands.append(" ".join([
-        "gsutil",
-        "cp",
-        report_dated_path_gcs,
-        report_latest_path_gcs
-    ]))
+    if update_latest:
+        date_dir = date.strftime("%Y/%m/%d")
+        report_dated_path_gcs = "gs://{}/{}/{}/{}.html".format(
+            bucket, project_label, date_dir, report_name)
+        report_latest_path_gcs = "gs://{}/{}/report_latest.html".format(
+            bucket, project_label)
+        commands.append(" ".join([
+            "gsutil",
+            "cp",
+            report_dated_path_gcs,
+            report_latest_path_gcs
+        ]))
     label = "Generating report on {} for project: {}.".format(
         date, project_label)
     return bazelci.create_step(label, commands, platform)
@@ -350,6 +353,8 @@ def main(args=None):
     parser.add_argument("--bazel_bench_options", type=str, default="")
     parser.add_argument("--bucket", type=str, default="")
     parser.add_argument("--max_commits", type=int, default="")
+    parser.add_argument("--report_name", type=str, default="report")
+    parser.add_argument("--update_latest", type=bool, default=False)
     parsed_args = parser.parse_args(args)
 
     bazel_bench_ci_steps = []
@@ -392,7 +397,8 @@ def main(args=None):
         bazel_bench_ci_steps.append(
             _report_generation_step(
                 date, project["storage_subdir"],
-                parsed_args.bucket, REPORT_GENERATION_PLATFORM))
+                parsed_args.bucket, REPORT_GENERATION_PLATFORM,
+                parsed_args.report_name, parsed_args.update_latest))
 
         bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
         subprocess.run(
