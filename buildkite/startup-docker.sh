@@ -20,44 +20,44 @@
 # Fail when any command in a pipe fails.
 set -euxo pipefail
 
-# Prevent dpkg / apt-get / debconf from trying to access stdin.
+### Prevent dpkg / apt-get / debconf from trying to access stdin.
 export DEBIAN_FRONTEND="noninteractive"
 
-# Optimize the CPU scheduler for throughput.
-# (see https://unix.stackexchange.com/questions/466722/how-to-change-the-length-of-time-slices-used-by-the-linux-cpu-scheduler/466723)
+### Optimize the CPU scheduler for throughput.
+### (see https://unix.stackexchange.com/questions/466722/how-to-change-the-length-of-time-slices-used-by-the-linux-cpu-scheduler/466723)
 sysctl -w kernel.sched_min_granularity_ns=10000000
 sysctl -w kernel.sched_wakeup_granularity_ns=15000000
 sysctl -w vm.dirty_ratio=40
 
-# Use the local SSDs as fast storage.
+### Use the local SSDs as fast storage.
 for device in /dev/nvme0n?; do
   mkswap $device
   swapon --discard -p0 $device
 done
 swapon -s
 
-# Create a tmpfs.
+### Create a tmpfs.
 mkdir -p /tmpfs
 mount -t tmpfs -o size=375G tmpfs /tmpfs
 mkdir /tmpfs/{buildkite-agent,docker}
 
-# Mount tmpfs to buildkite-agent's home.
+### Mount tmpfs to buildkite-agent's home.
 AGENT_HOME="/var/lib/buildkite-agent"
 mount --bind /tmpfs/buildkite-agent "${AGENT_HOME}"
 mkdir -p "${AGENT_HOME}/.cache/bazel/_bazel_buildkite-agent"
 chown -R buildkite-agent:buildkite-agent "${AGENT_HOME}"
 chmod 0755 "${AGENT_HOME}"
 
-# Mount tmpfs to Docker's working directory.
+### Mount tmpfs to Docker's working directory.
 DOCKER_HOME="/var/lib/docker"
 mount --bind /tmpfs/docker "${DOCKER_HOME}"
 chown -R root:root "${DOCKER_HOME}"
 chmod 0711 "${DOCKER_HOME}"
 
-# Let 'localhost' resolve to '::1', otherwise one of Envoy's tests fails.
+### Let 'localhost' resolve to '::1', otherwise one of Envoy's tests fails.
 sed -i 's/^::1 .*/::1 localhost ip6-localhost ip6-loopback/' /etc/hosts
 
-# Get configuration parameters.
+### Get configuration parameters.
 case $(hostname -f) in
   *.bazel-public.*)
     ARTIFACT_BUCKET="bazel-trusted-buildkite-artifacts"
@@ -79,14 +79,14 @@ case $(hostname -f) in
     esac
 esac
 
-# Configure and start Docker.
+### Configure and start Docker.
 systemctl start docker
 
-# Ensure that Docker images can be downloaded from GCR.
+### Ensure that Docker images can be downloaded from GCR.
 gcloud auth configure-docker --quiet
 sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
 
-# Write the Buildkite agent's systemd configuration.
+### Write the Buildkite agent's systemd configuration.
 mkdir -p /etc/systemd/system/buildkite-agent.service.d
 cat > /etc/systemd/system/buildkite-agent.service.d/override.conf <<'EOF'
 [Service]
@@ -100,7 +100,7 @@ TasksAccounting=no
 EOF
 systemctl daemon-reload
 
-# Write the Buildkite agent configuration.
+### Write the Buildkite agent configuration.
 cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
 token="${BUILDKITE_TOKEN}"
 name="%hostname"
@@ -111,10 +111,10 @@ git-mirrors-path="/var/lib/gitmirrors"
 hooks-path="/etc/buildkite-agent/hooks"
 plugins-path="/etc/buildkite-agent/plugins"
 disconnect-after-job=true
-disconnect-after-idle-timeout=900
+health-check-addr=0.0.0.0:8080
 EOF
 
-# Add the Buildkite agent hooks.
+### Add the Buildkite agent hooks.
 cat > /etc/buildkite-agent/hooks/environment <<EOF
 #!/bin/bash
 
@@ -127,23 +127,15 @@ export CLOUDSDK_PYTHON="/usr/bin/python"
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 EOF
 
-# Fix permissions of the Buildkite agent configuration files and hooks.
+### Fix permissions of the Buildkite agent configuration files and hooks.
 chmod 0400 /etc/buildkite-agent/buildkite-agent.cfg
 chmod 0500 /etc/buildkite-agent/hooks/*
 chown -R buildkite-agent:buildkite-agent /etc/buildkite-agent
 
-# Update our gitmirror.
+### Update our gitmirror.
 # sudo -H -u buildkite-agent gsutil -qm rsync -rd gs://bazel-git-mirror/mirrors/ /var/lib/gitmirrors/
 
-# Wait until we have at least one minute of uptime to prevent exponential
-# backoff for instance recreation from kicking in.
-uptime="$(cat /proc/uptime | cut -d' ' -f1 | cut -d'.' -f1)"
-timetosleep="$(( 60 - $uptime ))"
-if [[ $timetosleep -gt 0 ]]; then
-    sleep "$timetosleep"
-fi
-
-# Start the Buildkite agent service.
+### Start the Buildkite agent service.
 systemctl start buildkite-agent
 
 exit 0

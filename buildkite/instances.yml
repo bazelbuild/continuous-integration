@@ -20,6 +20,9 @@ default_vm:
   restart-on-failure: False
   scopes: cloud-platform
   zone: us-central1-a
+  tags: health-check
+  health_check: buildkite-check
+  initial_delay: 60
 instance_groups:
   - name: bk-docker
     count: 100

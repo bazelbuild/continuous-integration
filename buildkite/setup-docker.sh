@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Setup script for an Ubuntu 18.04 LTS based Docker host.
+### Setup script for an Ubuntu 18.04 LTS based Docker host.
 
 # Fail on errors.
 # Fail when using undefined variables.
@@ -22,7 +22,7 @@
 # Fail when any command in a pipe fails.
 set -euxo pipefail
 
-# Prevent dpkg / apt-get / debconf from trying to access stdin.
+### Prevent dpkg / apt-get / debconf from trying to access stdin.
 export DEBIAN_FRONTEND="noninteractive"
 
 ### Install base packages.
@@ -54,6 +54,11 @@ EOF
   add-apt-repository -y "deb https://apt.buildkite.com/buildkite-agent stable main"
   apt-get -y update
   apt-get -y install buildkite-agent
+
+  # Install our custom Buildkite Agent version that includes the health check patch.
+  curl -fsSL -o /usr/bin/buildkite-agent \
+      https://github.com/philwo/agent/releases/download/v3.13.2.bazel1/buildkite-agent-linux-amd64
+  chmod +x /usr/bin/buildkite-agent
 
   # Disable the Buildkite agent service, as the startup script has to mount /var/lib/buildkite-agent
   # first.
@@ -92,6 +97,24 @@ EOF
   echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' > /etc/udev/rules.d/65-kvm.rules
 }
 
+## Add our minimum uptime enforcer.
+{
+  cat > /etc/systemd/system/minimum-uptime.service <<'EOF'
+[Unit]
+Description=Ensures that the VM is running for at least one minute.
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/nohup sleep 60
+TimeoutSec=60
+KillSignal=SIGHUP
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  systemctl enable minimum-uptime.service
+}
+
 ### Get rid of Ubuntu's snapd stuff and install the Google Cloud SDK the traditional way.
 {
   apt-get -y remove --purge snapd
@@ -104,7 +127,7 @@ EOF
   apt-get -y install google-cloud-sdk
 }
 
-# Preseed our Git mirrors.
+### Preseed our Git mirrors.
 {
   mkdir -p /var/lib/gitmirrors
   curl -fsSL https://storage.googleapis.com/bazel-git-mirror/bazelbuild-mirror.tar | \
@@ -114,7 +137,7 @@ EOF
   chmod -R 0755 /var/lib/gitmirrors
 }
 
-# Install Swift toolchains.
+### Install Swift toolchains.
 {
   curl -fsSL https://swift.org/builds/swift-4.2.1-release/ubuntu1404/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu14.04.tar.gz | \
       tar xz -C /opt
@@ -124,14 +147,14 @@ EOF
       tar xz -C /opt
 }
 
-# Install Go.
+### Install Go.
 {
   mkdir /opt/go1.12.6.linux-amd64
   curl -fsSL https://dl.google.com/go/go1.12.6.linux-amd64.tar.gz | \
       tar xz -C /opt/go1.12.6.linux-amd64 --strip=1
 }
 
-# Install Android NDK.
+### Install Android NDK.
 {
   cd /opt
   curl -fsSL -o android-ndk.zip https://dl.google.com/android/repository/android-ndk-r15c-linux-x86_64.zip
@@ -139,7 +162,7 @@ EOF
   rm android-ndk.zip
 }
 
-# Install Android SDK.
+### Install Android SDK.
 {
   mkdir -p /opt/android-sdk-linux
   cd /opt/android-sdk-linux
@@ -162,7 +185,7 @@ EOF
       "system-images;android-23;default;x86"
 }
 
-# Fix permissions in /opt.
+### Fix permissions in /opt.
 {
   chown -R root:root /opt
 }

@@ -41,6 +41,8 @@ def worker():
             project = item.pop("project")
             zone = item.pop("zone", None)
             region = item.pop("region", None)
+            del item["health_check"]
+            del item["initial_delay"]
 
             if not project:
                 raise Exception("Invalid instance config, no project name set")

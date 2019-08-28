@@ -41,6 +41,8 @@ def worker():
             project = item.pop("project")
             zone = item.pop("zone", None)
             region = item.pop("region", None)
+            health_check = item.pop("health_check", None)
+            initial_delay = item.pop("initial_delay", None)
 
             if not project:
                 raise Exception("Invalid instance config, no project name set")
@@ -79,10 +81,14 @@ def worker():
                 "size": count,
                 "template": template_name,
             }
-            if zone is not None:
+            if zone:
                 kwargs["zone"] = zone
-            elif region is not None:
+            elif region:
                 kwargs["region"] = region
+            if health_check:
+                kwargs["health_check"] = health_check
+            if initial_delay:
+                kwargs["initial_delay"] = initial_delay
             gcloud.create_instance_group(instance_group_name, **kwargs)
             print("Created instance group {}".format(instance_group_name))
         finally:

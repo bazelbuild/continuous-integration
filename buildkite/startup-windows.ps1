@@ -2,6 +2,9 @@
 $ErrorActionPreference = "Stop"
 $ConfirmPreference = "None"
 
+## Use TLS1.2 for HTTPS (fixes an issue where later steps can't connect to github.com)
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 ## Initialize, partition and format the local SSD.
 Write-Host "Initializing local SSD..."
 if ((Get-Disk -Number 1).PartitionStyle -ne "RAW") {
@@ -118,27 +121,43 @@ hooks-path="c:\buildkite\hooks"
 plugins-path="c:\buildkite\plugins"
 git-mirrors-path="c:\buildkite\bazelbuild"
 disconnect-after-job=true
-disconnect-after-job-timeout=900
+health-check-addr=0.0.0.0:8080
 "@
 [System.IO.File]::WriteAllLines("${buildkite_agent_root}\buildkite-agent.cfg", $buildkite_agent_config)
 
-## Wait until the machine has been running for at least one minute, in order to
-## prevent exponential backoff from happening when it terminates too early.
-$up = (Get-CimInstance -ClassName win32_operatingsystem).LastBootUpTime
-$uptime = ((Get-Date) - $up).TotalSeconds
-$timetosleep = 60 - $uptime
-if ($timetosleep -gt 0) {
-    Start-Sleep -Seconds $timetosleep
+## Download our custom Buildkite Agent binary with the health check patch.
+Write-Host "Downloading Buildkite Agent..."
+$buildkite_agent_url = "https://github.com/philwo/agent/releases/download/v3.13.2.bazel1/buildkite-agent-windows-amd64.exe"
+$buildkite_agent_exe = "c:\buildkite\buildkite-agent.exe"
+while ($true) {
+  try {
+    (New-Object Net.WebClient).DownloadFile($buildkite_agent_url, $buildkite_agent_exe)
+    break
+  } catch {
+    $msg = $_.Exception.Message
+    Write-Host "Failed to download agent: $msg"
+    Start-Sleep -Seconds 10
+  }
 }
 
 ## Start the Buildkite agent service.
 try {
-    Write-Host "Starting Buildkite agent as user ${buildkite_username}..."
-    & nssm start "buildkite-agent"
+  Write-Host "Starting Buildkite agent as user ${buildkite_username}..."
+  & nssm start "buildkite-agent"
 
-    Write-Host "Waiting for Buildkite agent to exit..."
-    While ((Get-Service "buildkite-agent").Status -eq "Running") { Start-Sleep -Seconds 1 }
+  Write-Host "Waiting for Buildkite agent to exit..."
+  While ((Get-Service "buildkite-agent").Status -eq "Running") { Start-Sleep -Seconds 1 }
 } finally {
-    Write-Host "Buildkite agent has exited, shutting down."
-    Stop-Computer -Force
+  Write-Host "Buildkite agent has exited, shutting down."
+  
+  ## Wait until the machine has been running for at least one minute, in order to
+  ## prevent exponential backoff from happening when it terminates too early.
+  $up = (Get-CimInstance -ClassName win32_operatingsystem).LastBootUpTime
+  $uptime = ((Get-Date) - $up).TotalSeconds
+  $timetosleep = 60 - $uptime
+  if ($timetosleep -gt 0) {
+    Start-Sleep -Seconds $timetosleep
+  }
+
+  Stop-Computer -Force
 }
