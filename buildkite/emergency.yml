@@ -17,6 +17,6 @@
 # Please do not clear or delete this file when an incident is over.
 # Instead, simply replace all values with empty strings ("").
 ---
-message: ""
+message: "Bazel 0.29.0 is broken with remote execution"
 issue_url: "https://github.com/bazelbuild/bazel/issues/9284"
 last_good_bazel: "0.28.1"
