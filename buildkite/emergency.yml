@@ -19,4 +19,4 @@
 ---
 message: ""
 issue_url: ""
-last_good_bazel: ""
+last_good_bazel: "0.28.1"
