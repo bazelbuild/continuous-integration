@@ -18,5 +18,5 @@
 # Instead, simply replace all values with empty strings ("").
 ---
 message: ""
-issue_url: ""
+issue_url: "https://github.com/bazelbuild/bazel/issues/9284"
 last_good_bazel: "0.28.1"
