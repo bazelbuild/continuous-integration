@@ -61,7 +61,7 @@ instance_groups:
       - interface=scsi
     metadata_from_file: windows-startup-script-ps1=startup-windows.ps1
   - name: bk-testing-windows-java8
-    count: 4
+    count: 10
     project: bazel-untrusted
     service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
     image_project: bazel-untrusted

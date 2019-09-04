@@ -127,7 +127,7 @@ health-check-addr=0.0.0.0:8080
 
 ## Download our custom Buildkite Agent binary with the health check patch.
 Write-Host "Downloading Buildkite Agent..."
-$buildkite_agent_url = "https://github.com/philwo/agent/releases/download/v3.13.2.bazel1/buildkite-agent-windows-amd64.exe"
+$buildkite_agent_url = "https://storage.googleapis.com/bazel-ci/buildkite-agent/v3.13.2.bazel1/buildkite-agent-windows-amd64.exe"
 $buildkite_agent_exe = "c:\buildkite\buildkite-agent.exe"
 while ($true) {
   try {
@@ -142,14 +142,16 @@ while ($true) {
 
 ## Start the Buildkite agent service.
 try {
-  Write-Host "Starting Buildkite agent as user ${buildkite_username}..."
-  & nssm start "buildkite-agent"
+  Write-Host "Starting Buildkite agent..."
+  Start-Service -Name "buildkite-agent"
 
+  Write-Host "Waiting for Buildkite agent to start..."
+  (Get-Service -Name "buildkite-agent").WaitForStatus([ServiceProcess.ServiceControllerStatus]::Running)
   Write-Host "Waiting for Buildkite agent to exit..."
-  While ((Get-Service "buildkite-agent").Status -eq "Running") { Start-Sleep -Seconds 1 }
+  (Get-Service -Name "buildkite-agent").WaitForStatus([ServiceProcess.ServiceControllerStatus]::Stopped)
+  Write-Host "Buildkite agent has exited."
 } finally {
-  Write-Host "Buildkite agent has exited, shutting down."
-  
+  Write-Host "Waiting for at least one minute of uptime..."
   ## Wait until the machine has been running for at least one minute, in order to
   ## prevent exponential backoff from happening when it terminates too early.
   $up = (Get-CimInstance -ClassName win32_operatingsystem).LastBootUpTime
@@ -159,5 +161,6 @@ try {
     Start-Sleep -Seconds $timetosleep
   }
 
-  Stop-Computer -Force
+  Write-Host "Shutting down..."
+  Stop-Computer
 }
