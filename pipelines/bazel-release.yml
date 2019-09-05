@@ -79,13 +79,18 @@ steps:
           scripts/packages/debian/bazel.tar.gz \
           bazel-distfile.zip
 
+      if [ -f "bazel-genfiles" ]; then
+         BAZEL_GENFILES=bazel-genfiles         
+      else
+         BAZEL_GENFILES=bazel-bin
+      endif
       mkdir artifacts
       cp "bazel-bin/src/bazel" "artifacts/bazel-\${release_name}-linux-x86_64"
       cp "bazel-bin/scripts/packages/with-jdk/install.sh" "artifacts/bazel-\${release_name}-installer-linux-x86_64.sh"
       cp "bazel-bin/scripts/packages/debian/bazel-debian.deb" "artifacts/bazel_\${release_name}-linux-x86_64.deb"
-      cp "bazel-genfiles/scripts/packages/debian/bazel.dsc" "artifacts/bazel_\${release_name}.dsc"
-      cp "bazel-genfiles/scripts/packages/debian/bazel.tar.gz" "artifacts/bazel_\${release_name}.tar.gz"
-      cp "bazel-genfiles/bazel-distfile.zip" "artifacts/bazel-\${release_name}-dist.zip"
+      cp "$BAZEL_GENFILES/scripts/packages/debian/bazel.dsc" "artifacts/bazel_\${release_name}.dsc"
+      cp "$BAZEL_GENFILES/scripts/packages/debian/bazel.tar.gz" "artifacts/bazel_\${release_name}.tar.gz"
+      cp "$BAZEL_GENFILES/bazel-distfile.zip" "artifacts/bazel-\${release_name}-dist.zip"
 
       cd artifacts
       buildkite-agent artifact upload "*"
@@ -138,10 +143,15 @@ steps:
       copy bazel-bin\src\bazel.exe output\bazel.exe
 
       output\bazel build -c opt --copt=-w --host_copt=-w --stamp --embed_label %RELEASE_NAME% src/bazel scripts/packages/bazel.zip
-
+      
+      if [ -f "bazel-genfiles" ]; then
+         BAZEL_GENFILES=bazel-genfiles         
+      else
+         BAZEL_GENFILES=bazel-bin
+      endif
       mkdir artifacts
       move bazel-bin\src\bazel artifacts\bazel-%RELEASE_NAME%-windows-x86_64.exe
-      move bazel-genfiles\scripts\packages\bazel.zip artifacts\bazel-%RELEASE_NAME%-windows-x86_64.zip
+      move "$BAZEL_GENFILES"\scripts\packages\bazel.zip artifacts\bazel-%RELEASE_NAME%-windows-x86_64.zip
 
       cd artifacts
       buildkite-agent artifact upload "*"
