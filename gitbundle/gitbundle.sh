@@ -34,9 +34,11 @@ wait
 find . -name .DS_Store -delete
 
 cd ..
+
+# Verify that it works:
+git clone --reference bazelbuild/https---github-com-bazelbuild-bazel-git https://github.com/bazelbuild/bazel.git bazel-test
+
 tar c bazelbuild | gsutil cp - "gs://bazel-git-mirror/bazelbuild-mirror.tar"
 zip -q0r - bazelbuild | gsutil cp - "gs://bazel-git-mirror/bazelbuild-mirror.zip"
 gsutil -m rsync -rd "bazelbuild/" "gs://bazel-git-mirror/mirrors/"
 
-# Verify that it works:
-# git clone --reference bazelbuild https://github.com/bazelbuild/bazel.git
