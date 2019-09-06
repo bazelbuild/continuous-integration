@@ -11,7 +11,6 @@ gcloud compute instances create \
     --project bazel-public \
     --boot-disk-size 20GB \
     --machine-type n1-standard-1 \
-    --network buildkite \
     --zone us-central1-a \
     --image-project=ubuntu-os-cloud \
     --image-family=ubuntu-1804-lts \

@@ -22,7 +22,7 @@ EOF
 
 # Download the latest buildkite-agent-metrics release.
 curl -fsSL -o /usr/local/bin/buildkite-agent-metrics \
-    https://github.com/buildkite/buildkite-agent-metrics/releases/download/v5.1.0/buildkite-agent-metrics-linux-amd64
+    https://storage.googleapis.com/bazel-ci/buildkite-agent-metrics/20190906-8188dca2affcd2ffd45875af6761adacbe60bf28/buildkite-agent-metrics-linux-amd64
 chmod +x /usr/local/bin/buildkite-agent-metrics
 
 # Create systemd unit files for each service.
