@@ -128,7 +128,7 @@ func (lds *loadDataSet) CreateTimeSeriesRequest(projectID string) *monitoringpb.
 func createTimeSeries(ts *timestamp.Timestamp, org, platform, metricType string, value int) *monitoringpb.TimeSeries {
 	return &monitoringpb.TimeSeries{
 		Metric: &metricpb.Metric{
-			Type: fmt.Sprintf("%s/%s/%s%s", baseMetricType, org, platform, metricType),
+			Type: fmt.Sprintf("%s/%s/%s/%s", baseMetricType, org, platform, metricType),
 		},
 		Resource: &monitoredres.MonitoredResource{
 			Type: "global",
