@@ -2,6 +2,8 @@ package metrics
 
 import (
 	"fmt"
+	"log"
+	"strings"
 	"time"
 
 	"github.com/bazelbuild/continuous-integration/metrics/clients"
@@ -126,9 +128,12 @@ func (lds *loadDataSet) CreateTimeSeriesRequest(projectID string) *monitoringpb.
 }
 
 func createTimeSeries(ts *timestamp.Timestamp, org, platform, metricType string, value int) *monitoringpb.TimeSeries {
+	t := fmt.Sprintf("%s/%s/%s/%s", baseMetricType, org, platform, metricType)
+	t = strings.ReplaceAll(t, "-", "_")
+	log.Printf("Publishing time series for metric '%s'\n", t)
 	return &monitoringpb.TimeSeries{
 		Metric: &metricpb.Metric{
-			Type: fmt.Sprintf("%s/%s/%s/%s", baseMetricType, org, platform, metricType),
+			Type: t,
 		},
 		Resource: &monitoredres.MonitoredResource{
 			Type: "global",
