@@ -69,14 +69,12 @@ func main() {
 		log.Fatalf("Cannot create Cloud Storage client: %v", err)
 	}
 
-	/*
-		stackdriverClient, err := clients.CreateStackdriverClient()
-		if err != nil {
-			log.Fatalf("Cannot create Stackdriver client: %v", err)
-		}
+	stackdriverClient, err := clients.CreateStackdriverClient()
+	if err != nil {
+		log.Fatalf("Cannot create Stackdriver client: %v", err)
+	}
 
-		stackdriver := publishers.CreateStackdriverPublisher(stackdriverClient, *projectID)
-	*/
+	stackdriver := publishers.CreateStackdriverPublisher(stackdriverClient, *projectID)
 
 	stdout := publishers.CreateStdoutPublisher(publishers.Csv)
 
@@ -112,7 +110,7 @@ func main() {
 	srv.AddMetric(pipelinePerformance, minutes(10), defaultPublisher)
 
 	platformLoad := metrics.CreatePlatformLoad(bk, 100, settings.BuildkiteOrgs...)
-	srv.AddMetric(platformLoad, minutes(5), defaultPublisher)
+	srv.AddMetric(platformLoad, minutes(5), defaultPublisher, stackdriver)
 
 	platformSignificance := metrics.CreatePlatformSignificance(bk, 100, pipelines...)
 	srv.AddMetric(platformSignificance, minutes(24*60), defaultPublisher)
