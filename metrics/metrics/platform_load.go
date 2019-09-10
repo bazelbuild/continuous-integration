@@ -129,7 +129,7 @@ func (lds *loadDataSet) CreateTimeSeriesRequest(projectID string) *monitoringpb.
 
 func createTimeSeries(ts *timestamp.Timestamp, org, platform, metricType string, value int) *monitoringpb.TimeSeries {
 	t := fmt.Sprintf("%s/%s/%s/%s", baseMetricType, org, platform, metricType)
-	t = strings.ReplaceAll(t, "-", "_")
+	t = strings.Replace(t, "-", "_", -1)
 	log.Printf("Publishing time series for metric '%s'\n", t)
 	return &monitoringpb.TimeSeries{
 		Metric: &metricpb.Metric{
