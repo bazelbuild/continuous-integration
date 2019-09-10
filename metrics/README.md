@@ -25,6 +25,8 @@ CREATE TABLE zombie_instances (cloud_project VARCHAR(255), zone VARCHAR(255), in
 
 ## Service Deployment
 
+Make sure you have access to the `staging.bazel-untrusted.appspot.com` GCS bucket, then run:
+
 - `gcloud app deploy metrics/app.yaml --stop-previous-version`
 - `gcloud app logs tail -s default`
 
