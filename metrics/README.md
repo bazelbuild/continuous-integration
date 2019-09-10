@@ -11,6 +11,7 @@ USE metrics;
 
 CREATE TABLE build_success (org VARCHAR(255), pipeline VARCHAR(255), build INT, linux VARCHAR(255), macos VARCHAR(255), windows VARCHAR(255), rbe VARCHAR(255), PRIMARY KEY(org, pipeline, build));
 CREATE TABLE builds_per_change (org VARCHAR(255), pipeline VARCHAR(255), changelist INT, builds INT, PRIMARY KEY(org, pipeline, changelist));
+CREATE TABLE cloud_build_status (timestamp DATETIME, build VARCHAR(255), source VARCHAR(255), success BOOL, PRIMARY KEY(timestamp, build));
 CREATE TABLE critical_path (org VARCHAR(255), pipeline VARCHAR(255), build INT, wait_time_seconds FLOAT, run_time_seconds FLOAT, longest_task_name VARCHAR(255), longest_task_time_seconds FLOAT, result VARCHAR(255), PRIMARY KEY(org, pipeline, build));
 CREATE TABLE flakiness (org VARCHAR(255), pipeline VARCHAR(255), build INT, target VARCHAR(255), passed_count INT, failed_count INT, PRIMARY KEY(org, pipeline, build, target));
 CREATE TABLE mac_performance (org VARCHAR(255), pipeline VARCHAR(255), build INT, wait_time_seconds FLOAT, run_time_seconds FLOAT, skipped BOOL, PRIMARY KEY(org, pipeline, build));
@@ -22,6 +23,20 @@ CREATE TABLE release_downloads (release_name VARCHAR(255), artifact VARCHAR(255)
 CREATE TABLE worker_availability (timestamp DATETIME, org VARCHAR(255), platform VARCHAR(255), idle_count INT, busy_count INT, PRIMARY KEY(timestamp, org, platform));
 CREATE TABLE zombie_instances (cloud_project VARCHAR(255), zone VARCHAR(255), instance VARCHAR(255), status VARCHAR(255), seconds_online FLOAT, timestamp DATETIME, PRIMARY KEY(cloud_project, zone, instance));
 ```
+
+## PubSub Setup for Cloud Build Status
+
+The `cloud_build_status` metric requires a PubSub subscription to the `cloud-builds` topic in the `bazel-public` project.
+Moreover, the service account needs to have `Pub/Sub Subscriber` permissions in the `bazel-public` project.
+
+Run the following commands to see if there is already a subscription:
+
+- `gcloud config set project bazel-public`
+- `gcloud pubsub subscriptions list | grep build-status`
+
+The output should contain `projects/bazel-public/subscriptions/build-status`. If that's not the case, please run
+
+- `gcloud pubsub subscriptions create build-status --topic cloud-builds`
 
 ## Service Deployment
 
