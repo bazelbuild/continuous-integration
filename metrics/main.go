@@ -110,7 +110,7 @@ func main() {
 	srv.AddMetric(pipelinePerformance, minutes(10), defaultPublisher)
 
 	platformLoad := metrics.CreatePlatformLoad(bk, 100, settings.BuildkiteOrgs...)
-	srv.AddMetric(platformLoad, minutes(5), defaultPublisher, stackdriver)
+	srv.AddMetric(platformLoad, minutes(1), defaultPublisher, stackdriver)
 
 	platformSignificance := metrics.CreatePlatformSignificance(bk, 100, pipelines...)
 	srv.AddMetric(platformSignificance, minutes(24*60), defaultPublisher)
