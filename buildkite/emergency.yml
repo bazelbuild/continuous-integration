@@ -17,6 +17,6 @@
 # Please do not clear or delete this file when an incident is over.
 # Instead, simply replace all values with empty strings ("").
 ---
-message: "Bazel 0.29.0 might cause broken builds, but there's no workaround at the moment. We hope to have a patch release later today."
-issue_url: "https://github.com/bazelbuild/bazel/issues/9284"
+message: ""
+issue_url: ""
 last_good_bazel: ""
