@@ -98,7 +98,13 @@ func CreateCloudBuildStatus(ctx context.Context, projectID, subscriptionID strin
 	subscription := fmt.Sprintf("projects/%s/subscriptions/%s", projectID, subscriptionID)
 	results := make([]*buildResult, 0)
 	errors := make([]string, 0)
-	cbs := &CloudBuildStatus{subscriber: subscriber, subscription: subscription, columns: columns, results: results, errors: errors}
+	cbs := &CloudBuildStatus{
+		subscriber:   subscriber,
+		subscription: subscription,
+		columns:      columns,
+		results:      results,
+		errors:       errors,
+	}
 	go cbs.listen(ctx)
 	return cbs, nil
 }
