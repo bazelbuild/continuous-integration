@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"cloud.google.com/go/datastore"
 	"github.com/bazelbuild/continuous-integration/metrics/data"
@@ -39,7 +40,11 @@ func ReadSettingsFromDatastore(projectID, settingsName string) (*Settings, error
 
 	_, err = client.GetAll(ctx, q, &settings)
 	if err != nil {
-		return nil, fmt.Errorf("Could not list Datastore entities with name %s in project %s: %v", settingsName, projectID, err)
+		if efm, ok := err.(*datastore.ErrFieldMismatch); ok {
+			log.Printf("Datastore: ignoring unexpected field '%s'\n", efm.FieldName)
+		} else {
+			return nil, fmt.Errorf("Could not list Datastore entities with name %s in project %s: %v", settingsName, projectID, err)
+		}
 	}
 	if len(settings) != 1 {
 		return nil, fmt.Errorf("Expected exactly one Datastore entry with name %s in project %s, but got %d.", settingsName, projectID, len(settings))
