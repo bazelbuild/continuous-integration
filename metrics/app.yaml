@@ -5,6 +5,10 @@ api_version: go1
 beta_settings:
   cloud_sql_instances: bazel-untrusted:europe-west1:metrics
 
+automatic_scaling:
+  min_num_instances: 1
+  max_num_instances: 1
+
 handlers:
 - url: /.*
   script: _go_app
