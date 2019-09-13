@@ -32,6 +32,8 @@ RUN dpkg --add-architecture i386 && \
     apt-get -qqy install bison flex uuid-dev asciidoc graphviz source-highlight && \
     echo "Installing packages required by upb" && \
     apt-get -qqy install libreadline-dev && \
+    echo "Installing packages required by rules_haskell" && \
+    apt-get -qqy install libgmp-dev && \
     echo "Installing packages required by Bazel (Ubuntu 14.04 and 16.04 only)" && \
     apt-get -qqy install realpath libssl-dev && \
     apt-get -qqy purge apport && \

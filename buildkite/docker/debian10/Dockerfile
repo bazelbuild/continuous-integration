@@ -33,6 +33,8 @@ RUN dpkg --add-architecture i386 && \
     apt-get -qqy install bison flex uuid-dev asciidoc graphviz source-highlight && \
     echo "Installing packages required by upb" && \
     apt-get -qqy install libreadline-dev && \
+    echo "Installing packages required by rules_haskell" && \
+    apt-get -qqy install libgmp-dev && \
     apt-get -qqy purge apport && \
     rm -rf /var/lib/apt/lists/*
 
