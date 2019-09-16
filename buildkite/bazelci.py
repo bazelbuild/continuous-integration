@@ -292,7 +292,12 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_gwt/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-gwt",
-    },
+    },    
+    "rules_haskell": {
+        "git_repository": "https://github.com/tweag/rules_haskell.git",
+        "http_config": "https://raw.githubusercontent.com/tweag/rules_haskell/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "rules-haskell-haskell",
+    },    
     "rules_jsonnet": {
         "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jsonnet/master/.bazelci/presubmit.yml",
