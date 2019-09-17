@@ -2,6 +2,7 @@ package publishers
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/bazelbuild/continuous-integration/metrics/clients"
 	"github.com/bazelbuild/continuous-integration/metrics/data"
@@ -29,7 +30,13 @@ func (sd *Stackdriver) Publish(metric metrics.Metric, newData data.DataSet) erro
 		return fmt.Errorf("Metric '%s' does not produce a valid StackDriverTimeSeriesDataSet instance", metricName)
 	}
 
-	err := sd.client.WriteTimeSeries(set.CreateTimeSeriesRequest(sd.projectID))
+	req := set.CreateTimeSeriesRequest(sd.projectID)
+	if len(req.TimeSeries) == 0 {
+		log.Printf("No new data points for metric %s\n", metric.Name())
+		return nil
+	}
+
+	err := sd.client.WriteTimeSeries(req)
 	if err != nil {
 		return fmt.Errorf("Could not write time series for metric '%s' in project '%s': %v", metricName, sd.projectID, err)
 	}
