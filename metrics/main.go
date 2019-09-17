@@ -98,6 +98,13 @@ func main() {
 	buildSuccess := metrics.CreateBuildSuccess(bk, 200, pipelines...)
 	srv.AddMetric(buildSuccess, minutes(60), defaultPublisher)
 
+	ctx := context.Background()
+	cloudBuildStatus, err := metrics.CreateCloudBuildStatus(ctx, settings.CloudBuildProject, settings.CloudBuildSubscription)
+	if err != nil {
+		log.Fatalf("Failed to set up CloudBuildStatus metric: %v", err)
+	}
+	srv.AddMetric(cloudBuildStatus, minutes(5), defaultPublisher, stackdriver)
+
 	criticalPath := metrics.CreateCriticalPath(bk, 20, pipelines...)
 	srv.AddMetric(criticalPath, minutes(60), defaultPublisher)
 
@@ -130,13 +137,6 @@ func main() {
 	// TODO(fweikert): Read gracePeriod from Datastore
 	zombieInstances := metrics.CreateZombieInstances(computeClient, settings.CloudProjects, bk, settings.BuildkiteOrgs, minutes(3))
 	srv.AddMetric(zombieInstances, minutes(5), defaultPublisher)
-
-	ctx := context.Background()
-	cloudBuildStatus, err := metrics.CreateCloudBuildStatus(ctx, settings.CloudBuildProject, settings.CloudBuildSubscription)
-	if err != nil {
-		log.Fatalf("Failed to set up CloudBuildStatus metric: %v", err)
-	}
-	srv.AddMetric(cloudBuildStatus, minutes(5), defaultPublisher, stackdriver)
 
 	if *testMode {
 		logInTestMode("Running all jobs exactly once...")
