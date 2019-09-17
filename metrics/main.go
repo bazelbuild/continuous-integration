@@ -18,7 +18,8 @@ import (
 var (
 	projectID             = flag.String("project_id", "bazel-untrusted", "ID of the GCP project.")
 	datastoreSettingsName = flag.String("datastore_settings_name", "MetricSettings", "Name of the settings entity in Datastore.")
-	testMode              = flag.Bool("test", false, "If true, the service will collect and publish all metrics immediately and only once.")
+	testMode              = flag.Bool("test", false, "If true, the service will collect and publish all metrics to stdout immediately and only once. No metric will be published to CloudSQL or Stackdriver.")
+	testStackdriver       = flag.Bool("always_enable_stackdriver", false, "If true, all metrics that normally publish to Stackdriver will do so even if test mode is enabled.")
 )
 
 const megaByte = 1024 * 1024
@@ -75,7 +76,8 @@ func main() {
 		log.Fatalf("Cannot create Stackdriver client: %v", err)
 	}
 
-	stackdriver := publishers.CreateStackdriverPublisher(stackdriverClient, *projectID)
+	// Use type Publisher so that we can assign publishers.DevNull if necessary
+	var stackdriver publishers.Publisher = publishers.CreateStackdriverPublisher(stackdriverClient, *projectID)
 
 	stdout := publishers.CreateStdoutPublisher(publishers.Csv)
 
@@ -83,6 +85,12 @@ func main() {
 	if *testMode {
 		logInTestMode("Using stdout publisher for all metrics.")
 		defaultPublisher = stdout
+		if *testStackdriver {
+			logInTestMode("Enabling Stackdriver publisher for test mode.")
+		} else {
+			logInTestMode("Disabling Stackdriver logging.")
+			stackdriver = &publishers.DevNull{}
+		}
 	} else {
 		defaultPublisher, err = publishers.CreateCloudSqlPublisher(settings.CloudSqlUser, settings.CloudSqlPassword, settings.CloudSqlInstance, settings.CloudSqlDatabase, settings.CloudSqlLocalPort)
 		if err != nil {
