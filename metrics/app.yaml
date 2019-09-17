@@ -1,6 +1,5 @@
 runtime: go
 env: flex
-api_version: go1
 
 beta_settings:
   cloud_sql_instances: bazel-untrusted:europe-west1:metrics
