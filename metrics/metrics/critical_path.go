@@ -80,9 +80,13 @@ type event struct {
 func analyzeJobs(scheduleTime *buildkite.Timestamp, jobs []*buildkite.Job) (wait_time_seconds float64, longest_task_name string, longest_task_time_seconds float64, err error) {
 	events := make([]event, 0)
 	for _, job := range jobs {
-		if job.Name == nil || job.FinishedAt == nil {
+		// Name == nil -> "wait" step
+		// StartedAt == nil -> step was cancelled while waiting for an agent
+		// FinishedAt == nil -> step is still running
+		if job.Name == nil || job.StartedAt == nil || job.FinishedAt == nil {
 			continue
 		}
+
 		// Job lifecycle: scheduled -> created -> runnable -> started -> finished
 		// wait time = started - runnable
 		// run time = finished - started
