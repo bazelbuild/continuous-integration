@@ -292,12 +292,12 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_gwt/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-gwt",
-    },    
+    },
     "rules_haskell": {
         "git_repository": "https://github.com/tweag/rules_haskell.git",
         "http_config": "https://raw.githubusercontent.com/tweag/rules_haskell/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-haskell-haskell",
-    },    
+    },
     "rules_jsonnet": {
         "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jsonnet/master/.bazelci/presubmit.yml",
@@ -1421,6 +1421,7 @@ def execute_bazel_build(
             + common_startup_flags(platform)
             + ["build"]
             + aggregated_flags
+            + ["--"]
             + targets
         )
     except subprocess.CalledProcessError as e:
@@ -1430,6 +1431,11 @@ def execute_bazel_build(
 def calculate_targets(task_config, platform, bazel_binary, build_only, test_only):
     build_targets = [] if test_only else task_config.get("build_targets", [])
     test_targets = [] if build_only else task_config.get("test_targets", [])
+
+    # Remove the "--" argument splitter from the list that some configs explicitly
+    # include. We'll add it back again later where needed.
+    build_targets = [x.strip() for x in build_targets if x.strip() != "--"]
+    test_targets = [x.strip() for x in test_targets if x.strip() != "--"]
 
     shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
     shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
@@ -1448,11 +1454,15 @@ def calculate_targets(task_config, platform, bazel_binary, build_only, test_only
 
 
 def expand_test_target_patterns(bazel_binary, platform, test_targets):
-    included_targets, excluded_targets = partition_test_targets(test_targets)
+    included_targets, excluded_targets = partition_targets(test_targets)
     excluded_string = (
         " except tests(set({}))".format(" ".join("'{}'".format(t) for t in excluded_targets))
         if excluded_targets
         else ""
+    )
+
+    exclude_manual = ' except tests(attr("tags", "manual", set({})))'.format(
+        " ".join("'{}'".format(t) for t in included_targets)
     )
 
     eprint("Resolving test targets via bazel query")
@@ -1463,21 +1473,21 @@ def expand_test_target_patterns(bazel_binary, platform, test_targets):
             "--nomaster_bazelrc",
             "--bazelrc=/dev/null",
             "query",
-            "tests(set({})){}".format(
-                " ".join("'{}'".format(t) for t in included_targets), excluded_string
+            "tests(set({})){}{}".format(
+                " ".join("'{}'".format(t) for t in included_targets),
+                excluded_string,
+                exclude_manual,
             ),
         ],
         print_output=False,
     )
-    return output.split("\n")
+    return output.strip().split("\n")
 
 
-def partition_test_targets(test_targets):
+def partition_targets(targets):
     included_targets, excluded_targets = [], []
-    for target in test_targets:
-        if target == "--":
-            continue
-        elif target.startswith("-"):
+    for target in targets:
+        if target.startswith("-"):
             excluded_targets.append(target[1:])
         else:
             included_targets.append(target)
@@ -1487,7 +1497,10 @@ def partition_test_targets(test_targets):
 
 def get_targets_for_shard(build_targets, test_targets, shard_id, shard_count):
     # TODO(fweikert): implement a more sophisticated algorithm
-    build_targets_for_this_shard = sorted(build_targets)[shard_id::shard_count]
+    included_build_targets, excluded_build_targets = partition_targets(build_targets)
+    build_targets_for_this_shard = sorted(included_build_targets)[shard_id::shard_count] + [
+        "-" + x for x in excluded_build_targets
+    ]
     test_targets_for_this_shard = sorted(test_targets)[shard_id::shard_count]
 
     return build_targets_for_this_shard, test_targets_for_this_shard
@@ -1530,6 +1543,7 @@ def execute_bazel_test(
             + common_startup_flags(platform)
             + ["test"]
             + aggregated_flags
+            + ["--"]
             + targets
         )
     except subprocess.CalledProcessError as e:
