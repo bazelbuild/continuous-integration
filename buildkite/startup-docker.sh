@@ -135,6 +135,27 @@ chown -R buildkite-agent:buildkite-agent /etc/buildkite-agent
 ### Update our gitmirror.
 # sudo -H -u buildkite-agent gsutil -qm rsync -rd gs://bazel-git-mirror/mirrors/ /var/lib/gitmirrors/
 
+### Pull a few popular Docker images in advance.
+case $(hostname -f) in
+    *-testing-*)
+        PREFIX="bazel-public/testing"
+        ;;
+    *)
+        PREFIX="bazel-public"
+        ;;
+esac
+
+docker pull "gcr.io/$PREFIX/ubuntu1604/bazel:java8" &
+docker pull "gcr.io/$PREFIX/ubuntu1804/bazel:java11" &
+docker pull "gcr.io/$PREFIX/ubuntu1804/bazel:nojava" &
+docker pull "gcr.io/$PREFIX/ubuntu1604:java8" &
+docker pull "gcr.io/$PREFIX/ubuntu1804:java11" &
+docker pull "gcr.io/$PREFIX/ubuntu1804:nojava" &
+docker pull "gcr.io/$PREFIX/debian10:java11" &
+docker pull "gcr.io/$PREFIX/centos7:java8" &
+docker pull "gcr.io/$PREFIX/centos7:releaser" &
+wait
+
 ### Start the Buildkite agent service.
 systemctl start buildkite-agent
 
