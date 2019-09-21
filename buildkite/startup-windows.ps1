@@ -127,7 +127,7 @@ health-check-addr=0.0.0.0:8080
 
 ## Download our custom Buildkite Agent binary with the health check patch.
 Write-Host "Downloading Buildkite Agent..."
-$buildkite_agent_url = "https://storage.googleapis.com/bazel-ci/buildkite-agent/v3.13.2.bazel1/buildkite-agent-windows-amd64.exe"
+$buildkite_agent_url = "https://storage.googleapis.com/bazel-ci/buildkite-agent/v3.14.0.bazel1/buildkite-agent-windows-amd64.exe"
 $buildkite_agent_exe = "c:\buildkite\buildkite-agent.exe"
 while ($true) {
   try {

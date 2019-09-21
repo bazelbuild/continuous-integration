@@ -57,7 +57,7 @@ EOF
 
   # Install our custom Buildkite Agent version that includes the health check patch.
   curl -fsSL -o /usr/bin/buildkite-agent \
-      https://github.com/philwo/agent/releases/download/v3.13.2.bazel1/buildkite-agent-linux-amd64
+      https://storage.googleapis.com/bazel-ci/buildkite-agent/v3.14.0.bazel1/buildkite-agent-linux-amd64
   chmod +x /usr/bin/buildkite-agent
 
   # Disable the Buildkite agent service, as the startup script has to mount /var/lib/buildkite-agent
