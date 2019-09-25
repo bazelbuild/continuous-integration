@@ -167,7 +167,7 @@ def merge_and_format_jobs(jobs, line_pattern):
 
 
 def get_pipeline_and_platform(job):
-    name, _, platform = job["name"].partition("(")
+    name, _, platform = job["name"].rpartition("(")
     end = platform.rfind(")")
     return name.strip(), platform[:end].strip()
 
