@@ -217,7 +217,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.yml",
         "pipeline_slug": "tensorflow",
-        "disabled_reason": "https://github.com/tensorflow/tensorflow/issues/32835"
+        "disabled_reason": "https://github.com/tensorflow/tensorflow/issues/32835",
     },
     "Tulsi": {
         "git_repository": "https://github.com/bazelbuild/tulsi.git",
@@ -2068,20 +2068,20 @@ def create_bazelci_command(platform, script_org, script_branch, args):
 
 
 def fetch_bazelcipy_command(script_org, script_branch):
-    return "curl -sS {0} -o bazelci.py".format(
-        get_script_url(script_org, script_branch, "bazelci.py")
-    )
+    return fetch_script_command(script_org, script_branch, "bazelci.py")
 
 
 def fetch_incompatible_flag_verbose_failures_command(script_org, script_branch):
-    return "curl -sS {0} -o incompatible_flag_verbose_failures.py".format(
-        get_script_url(script_org, script_branch, "incompatible_flag_verbose_failures.py")
-    )
+    return fetch_script_command(script_org, script_branch, "incompatible_flag_verbose_failures.py")
 
 
 def fetch_aggregate_incompatible_flags_test_result_command(script_org, script_branch):
-    return "curl -sS {0} -o aggregate_incompatible_flags_test_result.py".format(
-        get_script_url(script_org, script_branch, "aggregate_incompatible_flags_test_result.py")
+    return fetch_script_command(script_org, script_branch, "aggregate_incompatible_flags_test_result.py")
+
+
+def fetch_script_command(script_org, script_branch, basename):
+    return "curl -sS {0} -o {1}".format(
+        get_script_url(script_org, script_branch, basename), basename
     )
 
 
@@ -2459,11 +2459,13 @@ def print_bazel_downstream_pipeline(
                     label="Aggregate incompatible flags test result",
                     commands=[
                         fetch_bazelci_command,
-                        fetch_aggregate_incompatible_flags_test_result_command(script_org, script_branch),
+                        fetch_aggregate_incompatible_flags_test_result_command(
+                            script_org, script_branch
+                        ),
                         " ".join(parts),
                     ],
                     platform=DEFAULT_PLATFORM,
-                ),
+                )
             )
         else:
             pipeline_steps.append({"wait": "~", "continue_on_failure": "true"})
