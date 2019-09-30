@@ -350,7 +350,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_rust.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_rust/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-rust-rustlang",
-        "disabled_reason": "https://github.com/bazelbuild/rules_rust/pull/252",
     },
     "rules_sass": {
         "git_repository": "https://github.com/bazelbuild/rules_sass.git",
