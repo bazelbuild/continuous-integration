@@ -1321,8 +1321,6 @@ def rbe_flags(original_flags, accept_cached):
         "--remote_executor=remotebuildexecution.googleapis.com",
         "--remote_instance_name=projects/bazel-untrusted/instances/default_instance",
         "--remote_timeout=3600",
-        # TODO(pcloudy): Remove this flag after upgrading Bazel to 0.27.0
-        "--incompatible_list_based_execution_strategy_selection",
         "--experimental_strict_action_env",
         "--tls_enabled=true",
         "--google_default_credentials",
