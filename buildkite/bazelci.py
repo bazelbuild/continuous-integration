@@ -207,6 +207,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/kythe/kythe.git",
         "http_config": "https://raw.githubusercontent.com/kythe/kythe/master/.bazelci/presubmit.yml",
         "pipeline_slug": "kythe",
+        "disabled_reason": "https://github.com/kythe/kythe/issues/4108"
     },
     "Protobuf": {
         "git_repository": "https://github.com/google/protobuf.git",
