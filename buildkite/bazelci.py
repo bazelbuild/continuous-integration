@@ -274,6 +274,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_docker.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_docker/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-docker-docker",
+        "disabled_reason": "https://github.com/bazelbuild/rules_docker/pull/1168"
     },
     "rules_foreign_cc": {
         "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
