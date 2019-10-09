@@ -174,6 +174,7 @@ EOF
   tools/bin/sdkmanager \
       "build-tools;27.0.3" \
       "build-tools;28.0.2" \
+      "build-tools;28.0.3" \
       "emulator" \
       "extras;android;m2repository" \
       "platform-tools" \
