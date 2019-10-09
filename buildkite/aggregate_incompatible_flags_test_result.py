@@ -26,7 +26,7 @@ INCOMPATIBLE_FLAGS = bazelci.fetch_incompatible_flags()
 
 BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
 
-PIPELINE = "bazelisk-plus-incompatible-flags"
+PIPELINE = os.environ["BUILDKITE_PIPELINE_SLUG"]
 
 
 class LogFetcher(threading.Thread):
