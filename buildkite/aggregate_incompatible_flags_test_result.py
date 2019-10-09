@@ -26,7 +26,7 @@ INCOMPATIBLE_FLAGS = bazelci.fetch_incompatible_flags()
 
 BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
 
-PIPELINE = "bazelisk-plus-incompatible-flags"
+PIPELINE = os.environ["BUILDKITE_PIPELINE_SLUG"]
 
 
 class LogFetcher(threading.Thread):
@@ -225,13 +225,12 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         description="Script to aggregate `bazelisk --migrate` test result for incompatible flags and generate pretty Buildkite info messages."
     )
-    parser.add_argument("--build_number", type=str, required=True)
-    parser.add_argument("--pipeline", type=str)
+    parser.add_argument("--build_number", type=str)
 
     args = parser.parse_args(argv)
     try:
         if args.build_number:
-            client = bazelci.BuildkiteClient(org=BUILDKITE_ORG, pipeline=args.pipeline or PIPELINE)
+            client = bazelci.BuildkiteClient(org=BUILDKITE_ORG, pipeline=PIPELINE)
             print_result_info(args.build_number, client)
         else:
             parser.print_help()
