@@ -266,7 +266,8 @@ After a few days of iteration:
                "sha256": "<i>result of `sha256sum bazel-bin/site/jekyll-tree.tar`</i>",
             },
             </pre>
-          1. After the changes are submitted, it will take 30 mins-1 hour for them to show up on bazel.build.
+
+         1. After the changes are submitted, it will take 30 mins-1 hour for them to show up on bazel.build.
         
 1.  Merge the blog post pull request.
 1.  Send email to [bazel-discuss+release@googlegroups.com](mailto:bazel-discuss+release@googlegroups.com)
