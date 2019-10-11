@@ -23,8 +23,8 @@ Do these steps once per release.
 
 Each release has a tracking bug (see the
 [list](https://github.com/bazelbuild/bazel/issues?utf8=%E2%9C%93&q=label%3Arelease+)).
-The bug includes a "Target RC date". On that day, create a new release
-candidate.
+The last and the next releases should be pinned. The bug includes a "Target RC
+date". On that day, create a new release candidate.
 
 The release manager adds a comment to the issue with the following content:
 
