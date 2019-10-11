@@ -257,10 +257,17 @@ After a few days of iteration:
           release.
         * If the tarball has already been pushed to GCS, this script will not
           overwrite the existing tarball.
-    1.  Add `$RELEASE_NUMBER` to `site/_config.yml` and
-        `scripts/docs/doc_versions.bzl`, and submit these changes. After ~30
-        minutes to an hour, the new release will show up on the documentation
-        site.
+    1.  Update `site/_config.yml` and `scripts/docs/doc_versions.bzl` with `$RELEASE_NUMBER`.
+         1. `site/_config.yml`: set `version:` to `$RELEASE_NUMBER` and add `$RELEASE_NUMBER` to `doc_versions:`.
+         1. `scripts/docs/doc_versions.bzl`: add the following list item to `DOC_VERSIONS`
+            <pre>
+            {
+               "version": "<i>$RELEASE_NUMBER</i>",
+               "sha256": "<i>result of `sha256sum bazel-bin/site/jekyll-tree.tar`</i>",
+            },
+            </pre>
+          1. After the changes are submitted, it will take 30 mins-1 hour for them to show up on bazel.build.
+        
 1.  Merge the blog post pull request.
 1.  Send email to [bazel-discuss+release@googlegroups.com](mailto:bazel-discuss+release@googlegroups.com)
     with a link to the blog post.
