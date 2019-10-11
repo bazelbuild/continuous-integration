@@ -4,11 +4,6 @@ This is the guide to conducting a Bazel release. This is especially relevant for
 release managers, but will be of interest to anyone who is curious about the
 release process.
 
-Each release has a tracking bug (see the
-[list](https://github.com/bazelbuild/bazel/issues?utf8=%E2%9C%93&q=label%3Arelease+)).
-The bug includes a "Target RC date". On that day, create a new release
-candidate.
-
 ## Setup
 
 Do these steps once per release.
@@ -24,6 +19,41 @@ Do these steps once per release.
          should be cherry-picked, any remaining issues should become release
          blockers.
 
+## Release issue
+
+Each release has a tracking bug (see the
+[list](https://github.com/bazelbuild/bazel/issues?utf8=%E2%9C%93&q=label%3Arelease+)).
+The bug includes a "Target RC date". On that day, create a new release
+candidate.
+
+The release manager adds a comment to the issue with the following content:
+
+```
+# Status of Bazel X.Y
+
+- Target baseline: [date]
+- Expected release date: [date]
+- [List of release blockers](https://github.com/bazelbuild/bazel/labels/Release%20blocker)
+
+To report a release-blocking bug, please file a bug using the `Release blocker` label, and cc me.
+
+Task list:
+
+- [ ] Update GitHub issues for incompatible changes
+- [ ] Pick release baseline:
+- [ ] Create release candidate:
+- [ ] Check downstream projects:
+- [ ] [Create draft release announcement](https://docs.google.com/document/d/1wDvulLlj4NAlPZamdlEVFORks3YXJonCjyuQMUQEmB0/edit)
+- [ ] Send for review the release announcement PR:
+- [ ] Push the release, notify package maintainers:
+- [ ] Update the documentation
+- [ ] Push the blog post
+- [ ] Update the [release page](https://github.com/bazelbuild/bazel/releases/)
+```
+
+Keep the task list updated and check boxes as you follow the release process. [Example](https://github.com/bazelbuild/bazel/issues/7816#issuecomment-497037232).
+
+
 ## Update the status of GitHub issues for incompatible changes
 
 In the below, _X.Y_ is a release you are cutting.
@@ -37,6 +67,8 @@ In the below, _X.Y_ is a release you are cutting.
      2. Remove "migration-ready" label
 
 ### Review breaking changes
+
+(skip this section if you're not creating a major release)
 
 1. Search for issues with label "breaking-change-_X.Y_".
 2. For all such issues that are **closed**, verify that the flag is flipped and release notes mention the breaking change.
@@ -185,7 +217,7 @@ Once the first candidate is available:
     "+person for review (see guidelines at the top of the doc)".
 1.  Send an email to [bazel-dev](https://groups.google.com/forum/#!forum/bazel-dev) for
     additional reviews.
-1.  Assign a comment to "+[spomorski@google.com](mailto:spomorski@google.com)"
+1.  Assign a comment to "+[aiuto@google.com](mailto:aiuto@google.com)"
     for a global review.
 
 After a few days of iteration:
@@ -266,12 +298,11 @@ After a few days of iteration:
                "sha256": "<i>result of `sha256sum bazel-bin/site/jekyll-tree.tar`</i>",
             },
             </pre>
-
          1. After the changes are submitted, it will take 30 mins-1 hour for them to show up on bazel.build.
-        
+
 1.  Merge the blog post pull request.
-1.  Send email to [bazel-discuss+release@googlegroups.com](mailto:bazel-discuss+release@googlegroups.com)
-    with a link to the blog post.
+1.  Update the [release page](https://github.com/bazelbuild/bazel/releases/) to
+    replace the generated notes with a link to the blog post.
 1.  Close the release-tracking bug. If you need to do a patch release, create a
     new tracking bug.
 
