@@ -804,6 +804,7 @@ def execute_commands(
                 # This will only work if the bazel binary in $PATH is actually a bazelisk binary
                 # (https://github.com/bazelbuild/bazelisk).
                 os.environ["USE_BAZEL_VERSION"] = bazel_version
+            if "USE_BAZEL_VERSION" in os.environ:
                 test_env_vars.append("USE_BAZEL_VERSION")
 
         for key, value in task_config.get("environment", {}).items():
