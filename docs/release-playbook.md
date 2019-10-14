@@ -185,7 +185,7 @@ Once the first candidate is available:
     "+person for review (see guidelines at the top of the doc)".
 1.  Send an email to [bazel-dev](https://groups.google.com/forum/#!forum/bazel-dev) for
     additional reviews.
-1.  Assign a comment to "+[spomorski@google.com](mailto:spomorski@google.com)"
+1.  Assign a comment to "+[aiuto@google.com](mailto:aiuto@google.com)"
     for a global review.
 
 After a few days of iteration:
