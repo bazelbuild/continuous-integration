@@ -1063,14 +1063,14 @@ def upload_bazel_binary(platform):
     print_collapsed_group(":gcloud: Uploading Bazel Under Test")
     binary_path = "bazel-bin/src/bazel"
     if platform == "windows":
-        binary_path = r"bazel-bin\src\bazel"
+        binary_path = r"bazel-bin\src\bazel.exe"
     execute_command(["buildkite-agent", "artifact", "upload", binary_path])
 
 
 def download_bazel_binary(dest_dir, platform):
     binary_path = "bazel-bin/src/bazel"
     if platform == "windows":
-        binary_path = r"bazel-bin\src\bazel"
+        binary_path = r"bazel-bin\src\bazel.exe"
 
     source_step = create_label(platform, "Bazel", build_only=True)
     execute_command(
