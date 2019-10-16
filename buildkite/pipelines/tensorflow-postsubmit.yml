@@ -3,6 +3,7 @@ platforms:
   ubuntu1804:
     environment:
       TF_IGNORE_MAX_BAZEL_VERSION: 1
+      USE_BAZEL_VERSION: latest
     shell_commands:
     - |-
       echo '
@@ -22,6 +23,7 @@ platforms:
   macos:
     environment:
       TF_IGNORE_MAX_BAZEL_VERSION: 1
+      USE_BAZEL_VERSION: latest
     shell_commands:
     - |-
       echo '
@@ -44,6 +46,7 @@ platforms:
   windows:
     environment:
       TF_IGNORE_MAX_BAZEL_VERSION: 1
+      USE_BAZEL_VERSION: latest
       BAZEL_VC: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC"
     batch_commands:
     - echo.| python ./configure.py
