@@ -172,9 +172,7 @@ EOF
   yes | tools/bin/sdkmanager --licenses > /dev/null || true
   tools/bin/sdkmanager --update
   tools/bin/sdkmanager \
-      "build-tools;27.0.3" \
-      "build-tools;28.0.2" \
-      "build-tools;28.0.3" \
+      "build-tools;29.0.2" \
       "emulator" \
       "extras;android;m2repository" \
       "platform-tools" \
