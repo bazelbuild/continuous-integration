@@ -28,7 +28,7 @@ BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
 
 PIPELINE = os.environ["BUILDKITE_PIPELINE_SLUG"]
 
-FAIL_IF_MIGRATION_REQUIRED = os.environ.get("USE_BAZELISK_MIGRATE") == "FAIL"
+FAIL_IF_MIGRATION_REQUIRED = os.environ.get("USE_BAZELISK_MIGRATE", "").upper() == "FAIL"
 
 
 class LogFetcher(threading.Thread):
