@@ -2441,7 +2441,6 @@ def get_steps_for_aggregating_migration_results(current_build_number):
         PLATFORMS[DEFAULT_PLATFORM]["python"],
         "aggregate_incompatible_flags_test_result.py",
         "--build_number=%s" % current_build_number,
-        "--pipeline=%s" % os.getenv("BUILDKITE_PIPELINE_SLUG"),
     ]
     return [
         {"wait": "~", "continue_on_failure": "true"},
