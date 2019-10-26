@@ -1912,9 +1912,7 @@ def print_project_pipeline(
         # the USE_BAZELISK_MIGRATE env var, but that are not being run as part of a
         # downstream pipeline.
         number = os.getenv("BUILDKITE_BUILD_NUMBER")
-        pipeline_steps += get_steps_for_aggregating_migration_results(
-            number, script_org, script_branch
-        )
+        pipeline_steps += get_steps_for_aggregating_migration_results(number)
 
     print_pipeline_steps(pipeline_steps, handle_emergencies=not is_downstream_project)
 
