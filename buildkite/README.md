@@ -302,6 +302,29 @@ In this example the jobs on Windows and MacOS would use 0.20.0, whereas the job 
 CI supports several magic version values such as `latest`, `last_green` and `last_downstream_green`.
 Please see the [Bazelisk documentation](https://github.com/bazelbuild/bazelisk/blob/master/README.md#how-does-bazelisk-know-which-version-to-run) for more details.
 
+### Testing with incompatible flags
+
+Similar to the aforementioned downstream pipeline you can configure individual pipelines to run with
+[`bazelisk --migrate`](https://github.com/bazelbuild/bazelisk#other-features). As a result, the pipeline
+runs your targets with all incompatible flags that will be flipped in the next major Bazel release and
+prints detailed information about which flags need to be migrated.
+
+You can enable this feature by adding the following code to the top of the pipeline configuration:
+
+```yaml
+---
+env:
+  USE_BAZELISK_MIGRATE: true
+```
+
+ If you want your pipeline to fail if at least one flag needs migration, you need to add this code instead:
+
+```yaml
+---
+env:
+  USE_BAZELISK_MIGRATE: FAIL
+```
+
 ### macOS: Using a specific version of Xcode
 
 We upgrade the CI machines to the latest version of Xcode shortly after it is released and this
