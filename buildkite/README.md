@@ -329,7 +329,7 @@ If you want to enable this feature for a single build, but not for the entire pi
 you can follow these steps instead:
 
 1. Navigate to your pipeline in Buildkite.
-1. Click on the "New Build" in the top-right corner.
+1. Click on the "New Build" button in the top right corner.
 1. Expand the pipeline options via a click on "Options".
 1. Enter `USE_BAZELISK_MIGRATE=FAIL` into the "Environment Variables" text field.
 1. Click on "Create Build".
