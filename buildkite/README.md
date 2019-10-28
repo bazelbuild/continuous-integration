@@ -309,7 +309,7 @@ Similar to the aforementioned downstream pipeline you can configure individual p
 runs your targets with all incompatible flags that will be flipped in the next major Bazel release and
 prints detailed information about which flags need to be migrated.
 
-You can enable this feature by adding the following code to the top of the pipeline configuration:
+You can enable this feature by adding the following code to the top of the pipeline steps in Buildkite at https://buildkite.com/bazel/YOUR_PIPELINE_SLUG/settings, **not** in the pipeline configuration yaml file:
 
 ```yaml
 ---
@@ -324,6 +324,15 @@ env:
 env:
   USE_BAZELISK_MIGRATE: FAIL
 ```
+
+If you want to enable this feature for a single build, but not for the entire pipeline,
+you can follow these steps instead:
+
+1. Navigate to your pipeline in Buildkite.
+1. Click on the "New Build" button in the top right corner.
+1. Expand the pipeline options via a click on "Options".
+1. Enter `USE_BAZELISK_MIGRATE=FAIL` into the "Environment Variables" text field.
+1. Click on "Create Build".
 
 ### macOS: Using a specific version of Xcode
 
