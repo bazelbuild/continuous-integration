@@ -2535,14 +2535,25 @@ def update_last_green_commit_if_newer(last_green_commit_url):
     last_green_commit = get_last_green_commit(last_green_commit_url)
     current_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
     if last_green_commit:
-        execute_command(["git", "fetch", "-v", "origin", last_green_commit])
-        result = (
-            subprocess.check_output(
-                ["git", "rev-list", "%s..%s" % (last_green_commit, current_commit)]
-            )
-            .decode("utf-8")
-            .strip()
-        )
+        success = False
+        try:
+            execute_command(["git", "fetch", "-v", "origin", last_green_commit])
+            success = True
+        except subprocess.CalledProcessError:
+            # If there was an error fetching the commit it typically means
+            # that the commit does not exist anymore - due to a force push. In
+            # order to recover from that assume that the current commit is the
+            # newest commit.
+            result = [current_commit]
+        finally:
+            if success:
+                result = (
+                    subprocess.check_output(
+                        ["git", "rev-list", "%s..%s" % (last_green_commit, current_commit)]
+                    )
+                    .decode("utf-8")
+                    .strip()
+                )
     else:
         result = None
 
