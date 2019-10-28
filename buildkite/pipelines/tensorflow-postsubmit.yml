@@ -5,13 +5,13 @@ platforms:
       TF_IGNORE_MAX_BAZEL_VERSION: 1
       USE_BAZEL_VERSION: latest
     shell_commands:
-    - |-
-      echo '
-      import %workspace%/.bazelrc' >>bazel.bazelrc
-    - |-
-      echo '
-      android_sdk_repository(name = "androidsdk")
-      android_ndk_repository(name = "androidndk")' >>WORKSPACE
+    # - |-
+    #   echo '
+    #   import %workspace%/.bazelrc' >>bazel.bazelrc
+    # - |-
+    #   echo '
+    #   android_sdk_repository(name = "androidsdk")
+    #   android_ndk_repository(name = "androidndk")' >>WORKSPACE
     - yes '' | ./configure
     build_flags:
     - "--config=opt"
@@ -25,13 +25,13 @@ platforms:
       TF_IGNORE_MAX_BAZEL_VERSION: 1
       USE_BAZEL_VERSION: latest
     shell_commands:
-    - |-
-      echo '
-      import %workspace%/.bazelrc' >>bazel.bazelrc
-    - |-
-      echo '
-      android_sdk_repository(name = "androidsdk")
-      android_ndk_repository(name = "androidndk")' >>WORKSPACE
+    # - |-
+    #   echo '
+    #   import %workspace%/.bazelrc' >>bazel.bazelrc
+    # - |-
+    #   echo '
+    #   android_sdk_repository(name = "androidsdk")
+    #   android_ndk_repository(name = "androidndk")' >>WORKSPACE
     - easy_install pip
     - pip3 install -U --user pip six numpy wheel setuptools mock 'future>=0.17.1'
     - pip3 install -U --user keras_applications==1.0.6 --no-deps
