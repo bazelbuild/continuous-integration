@@ -28,6 +28,8 @@ BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
 
 PIPELINE = os.environ["BUILDKITE_PIPELINE_SLUG"]
 
+FAIL_IF_MIGRATION_REQUIRED = os.environ.get("USE_BAZELISK_MIGRATE", "").upper() == "FAIL"
+
 
 class LogFetcher(threading.Thread):
     def __init__(self, job, client):
@@ -216,6 +218,8 @@ def print_result_info(build_number, client):
     print_already_fail_jobs(already_failing_jobs)
 
     print_flags_ready_to_flip(failed_jobs_per_flag)
+    
+    return bool(failed_jobs_per_flag)
 
 
 def main(argv=None):
@@ -231,7 +235,10 @@ def main(argv=None):
     try:
         if args.build_number:
             client = bazelci.BuildkiteClient(org=BUILDKITE_ORG, pipeline=PIPELINE)
-            print_result_info(args.build_number, client)
+            migration_required = print_result_info(args.build_number, client)
+            if migration_required and FAIL_IF_MIGRATION_REQUIRED:
+                bazelci.eprint("Exiting with code 3 since a migration is required.")
+                return 3
         else:
             parser.print_help()
             return 2
