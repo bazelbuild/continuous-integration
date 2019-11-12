@@ -352,7 +352,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_sass.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_sass/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-sass",
-        "disabled_reason": "https://github.com/bazelbuild/rules_sass/pull/105",
     },
     "rules_scala": {
         "git_repository": "https://github.com/bazelbuild/rules_scala.git",
