@@ -11,7 +11,7 @@ RUN dpkg --add-architecture i386 && \
     echo "Installing base packages" && \
     apt-get -qqy install apt-utils curl lsb-release software-properties-common && \
     echo "Installing packages required by Bazel" && \
-    apt-get -qqy install build-essential clang curl ed git iproute2 iputils-ping netcat-openbsd python python-dev python3 python3-dev unzip wget xvfb zip zlib1g-dev && \
+    apt-get -qqy install bind9-host build-essential clang curl dig ed git iproute2 iputils-ping netcat-openbsd python python-dev python3 python3-dev unzip wget xvfb zip zlib1g-dev && \
     echo "Installing packages required by Android SDK" && \
     apt-get -qqy install expect libbz2-1.0:i386 libncurses5:i386 libstdc++6:i386 libz1:i386 && \
     echo "Installing packages required by Tensorflow" && \

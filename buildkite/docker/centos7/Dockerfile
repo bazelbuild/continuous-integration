@@ -9,7 +9,7 @@ COPY --from=gcr.io/bazel-public/base:saucelabs /usr/local/bin/sc /usr/local/bin/
 RUN echo "Enabling EPEL repository..." && \
     yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
     echo "Installing packages required by Bazel..." && \
-    yum install -y dpkg-dev ed file gcc gcc-c++ git iproute java-1.8.0-openjdk-devel lcov openssl-perl patch python python-six python36 python36-PyYAML python36-six unzip which zip && \
+    yum install -y bind-utils dpkg-dev ed file gcc gcc-c++ git iproute java-1.8.0-openjdk-devel lcov openssl-perl patch python python-six python36 python36-PyYAML python36-six unzip which zip && \
     echo "Installing packages required by Android SDK..." && \
     yum install -y bzip2-libs.i686 ncurses-libs.i686 zlib.i686 && \
     echo "Installing Docker..." && \
