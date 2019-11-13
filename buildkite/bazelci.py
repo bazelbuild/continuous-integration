@@ -490,7 +490,7 @@ DEFAULT_PLATFORM = "ubuntu1804"
 # release platform for all Linux downstream tests.
 LINUX_BINARY_PLATFORM = "centos7"
 
-DEFAULT_XCODE_VERSION = "10.2.1"
+DEFAULT_XCODE_VERSION = "11.0"
 XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
 
 ENCRYPTED_SAUCELABS_TOKEN = """
