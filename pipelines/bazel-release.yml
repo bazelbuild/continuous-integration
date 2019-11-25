@@ -100,6 +100,11 @@ steps:
       release_name=$(buildkite-agent meta-data get "release_name")
       echo "release_name = \"\$release_name\""
 
+      # Switch to Xcode 10.2.1 so that the Bazel release we build is still
+      # compatible with macOS High Sierra.
+      /usr/bin/sudo /usr/bin/xcode-select --switch /Applications/Xcode10.2.1.app
+      /usr/bin/sudo /usr/bin/xcodebuild -runFirstLaunch
+
       bazel build //src:bazel
       mkdir output
       cp bazel-bin/src/bazel output/bazel
