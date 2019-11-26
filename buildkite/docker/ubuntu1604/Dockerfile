@@ -95,7 +95,7 @@ RUN export PYTHON_VERSION="3.6.8" && \
     rm -rf "/usr/local/src/Python-${PYTHON_VERSION}"
 
 ### Install Go.
-ENV GO_HOME "/opt/go1.12.6.linux-amd64"
+ENV GO_HOME "/opt/go1.13.4.linux-amd64"
 ENV PATH "${PATH}:${GO_HOME}/bin"
 
 ### Install Swift toolchain (required by rules_swift).
