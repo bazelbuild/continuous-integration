@@ -28,8 +28,3 @@ RUN curl -L https://saucelabs.com/downloads/sc-4.5.4-linux.tar.gz | \
     tar xz -C /usr/local --strip=1 sc-4.5.4-linux/bin/sc && \
     chown root:root /usr/local/bin/sc && \
     chmod 0755 /usr/local/bin/sc
-
-### Install Go.
-# FROM builder AS go
-# RUN curl -L https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz | \
-#     tar xz -C /usr/local
