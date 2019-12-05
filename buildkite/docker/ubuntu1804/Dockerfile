@@ -79,7 +79,7 @@ RUN curl -L https://deb.nodesource.com/setup_10.x | bash - && \
 RUN pip3 install requests uritemplate pyyaml github3.py
 
 ### Install Go.
-ENV GO_HOME "/opt/go1.13.4.linux-amd64"
+ENV GO_HOME "/opt/go1.13.5.linux-amd64"
 ENV PATH "${PATH}:${GO_HOME}/bin"
 
 ### Install Swift toolchain (required by rules_swift).
