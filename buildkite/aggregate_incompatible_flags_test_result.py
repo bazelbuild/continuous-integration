@@ -169,9 +169,17 @@ def merge_and_format_jobs(jobs, line_pattern):
 
 
 def get_pipeline_and_platform(job):
-    name, _, platform = job["name"].rpartition("(")
-    end = platform.rfind(")")
-    return name.strip(), platform[:end].strip()
+    name = job["name"]
+    platform = ""
+    for p in bazelci.PLATFORMS.values():
+        platform_label = p.get("emoji-name")
+        if platform_label in name:
+            platform = platform_label
+            name = name.replace(platform_label, "")
+            break
+
+    name = name.partition("-")[0].partition("(")[0].strip()
+    return name, platform
 
 
 def print_info(context, style, info):
