@@ -553,36 +553,13 @@ P9w8kNhEbw==
         self._token = self._get_buildkite_token()
 
     def _get_buildkite_token(self):
-        return (
-            subprocess.check_output(
-                [
-                    gcloud_command(),
-                    "kms",
-                    "decrypt",
-                    "--project",
-                    "bazel-untrusted",
-                    "--location",
-                    "global",
-                    "--keyring",
-                    "buildkite",
-                    "--key",
-                    "buildkite-testing-api-token"
-                    if THIS_IS_TESTING
-                    else "buildkite-untrusted-api-token",
-                    "--ciphertext-file",
-                    "-",
-                    "--plaintext-file",
-                    "-",
-                ],
-                input=base64.b64decode(
-                    self._ENCRYPTED_BUILDKITE_API_TESTING_TOKEN
-                    if THIS_IS_TESTING
-                    else self._ENCRYPTED_BUILDKITE_API_TOKEN
-                ),
-                env=os.environ,
-            )
-            .decode("utf-8")
-            .strip()
+        return decrypt_token(
+            encrypted_token=self._ENCRYPTED_BUILDKITE_API_TESTING_TOKEN
+            if THIS_IS_TESTING
+            else self._ENCRYPTED_BUILDKITE_API_TOKEN,
+            kms_key="buildkite-testing-api-token"
+            if THIS_IS_TESTING
+            else "buildkite-untrusted-api-token",
         )
 
     def _open_url(self, url):
@@ -599,6 +576,34 @@ P9w8kNhEbw==
 
     def get_build_log(self, job):
         return self._open_url(job["raw_log_url"])
+
+
+def decrypt_token(encrypted_token, kms_key):
+    return (
+        subprocess.check_output(
+            [
+                gcloud_command(),
+                "kms",
+                "decrypt",
+                "--project",
+                "bazel-untrusted",
+                "--location",
+                "global",
+                "--keyring",
+                "buildkite",
+                "--key",
+                kms_key,
+                "--ciphertext-file",
+                "-",
+                "--plaintext-file",
+                "-",
+            ],
+            input=base64.b64decode(encrypted_token),
+            env=os.environ,
+        )
+        .decode("utf-8")
+        .strip()
+    )
 
 
 def eprint(*args, **kwargs):
@@ -999,30 +1004,9 @@ def start_sauce_connect_proxy(platform, tmpdir):
 
 
 def saucelabs_token():
-    return (
-        subprocess.check_output(
-            [
-                gcloud_command(),
-                "kms",
-                "decrypt",
-                "--project",
-                "bazel-untrusted",
-                "--location",
-                "global",
-                "--keyring",
-                "buildkite",
-                "--key",
-                "saucelabs-access-key",
-                "--ciphertext-file",
-                "-",
-                "--plaintext-file",
-                "-",
-            ],
-            input=base64.b64decode(ENCRYPTED_SAUCELABS_TOKEN),
-            env=os.environ,
-        )
-        .decode("utf-8")
-        .strip()
+    return decrypt_token(
+        encrypted_token=ENCRYPTED_SAUCELABS_TOKEN,
+        kms_key="saucelabs-access-key"
     )
 
 
