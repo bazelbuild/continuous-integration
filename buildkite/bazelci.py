@@ -565,11 +565,14 @@ P9w8kNhEbw==
         )
 
     def _open_url(self, url):
-        return (
-            urllib.request.urlopen("{}?access_token={}".format(url, self._token))
-            .read()
-            .decode("utf-8")
-        )
+        try:
+            return (
+                urllib.request.urlopen("{}?access_token={}".format(url, self._token))
+                .read()
+                .decode("utf-8")
+            )
+        except urllib.error.HTTPError as ex:
+            raise BuildkiteException("Failed to open {}: {} - {}".format(url, ex.code, ex.reason))
 
     def get_build_info(self, build_number):
         url = self._BUILD_STATUS_URL_TEMPLATE.format(self._org, self._pipeline, build_number)
@@ -1007,10 +1010,7 @@ def start_sauce_connect_proxy(platform, tmpdir):
 
 
 def saucelabs_token():
-    return decrypt_token(
-        encrypted_token=ENCRYPTED_SAUCELABS_TOKEN,
-        kms_key="saucelabs-access-key"
-    )
+    return decrypt_token(encrypted_token=ENCRYPTED_SAUCELABS_TOKEN, kms_key="saucelabs-access-key")
 
 
 def is_pull_request():
