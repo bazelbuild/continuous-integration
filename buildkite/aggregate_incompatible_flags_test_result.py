@@ -41,6 +41,8 @@ Please see the following CI builds for more information:
 {links}
 
 Questions? Please file an issue in https://github.com/bazelbuild/continuous-integration
+
+**Important**: Please do NOT modify the issue title since that might break our tools.
 """
 
 GITHUB_ISSUE_REPORTER = "bazel-flag-bot"
