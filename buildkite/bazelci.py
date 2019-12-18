@@ -511,6 +511,8 @@ SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
 
 CONFIG_FILE_EXTENSIONS = {".yml", ".yaml"}
 
+BAZEL_VERSION_METADATA_KEY = "bazel_version"
+
 
 class BuildkiteException(Exception):
     """
@@ -563,11 +565,14 @@ P9w8kNhEbw==
         )
 
     def _open_url(self, url):
-        return (
-            urllib.request.urlopen("{}?access_token={}".format(url, self._token))
-            .read()
-            .decode("utf-8")
-        )
+        try:
+            return (
+                urllib.request.urlopen("{}?access_token={}".format(url, self._token))
+                .read()
+                .decode("utf-8")
+            )
+        except urllib.error.HTTPError as ex:
+            raise BuildkiteException("Failed to open {}: {} - {}".format(url, ex.code, ex.reason))
 
     def get_build_info(self, build_number):
         url = self._BUILD_STATUS_URL_TEMPLATE.format(self._org, self._pipeline, build_number)
@@ -834,6 +839,7 @@ def execute_commands(
             execute_shell_commands(task_config.get("shell_commands", None))
 
         bazel_version = print_bazel_version_info(bazel_binary, platform)
+        store_bazel_version(bazel_version)
 
         print_environment_variables_info()
 
@@ -1004,10 +1010,7 @@ def start_sauce_connect_proxy(platform, tmpdir):
 
 
 def saucelabs_token():
-    return decrypt_token(
-        encrypted_token=ENCRYPTED_SAUCELABS_TOKEN,
-        kms_key="saucelabs-access-key"
-    )
+    return decrypt_token(encrypted_token=ENCRYPTED_SAUCELABS_TOKEN, kms_key="saucelabs-access-key")
 
 
 def is_pull_request():
@@ -1034,6 +1037,15 @@ def print_bazel_version_info(bazel_binary, platform):
 
     match = BUILD_LABEL_PATTERN.search(version_output)
     return match.group(1) if match else "unreleased binary"
+
+
+def store_bazel_version(bazel_version):
+    code = execute_command(
+        ["buildkite-agent", "meta-data", "set", BAZEL_VERSION_METADATA_KEY, bazel_version],
+        fail_if_nonzero=False,
+    )
+    if code:
+        eprint("Unable to store Bazel version")
 
 
 def print_environment_variables_info():
@@ -1762,6 +1774,7 @@ def print_project_pipeline(
     monitor_flaky_tests,
     use_but,
     incompatible_flags,
+    notify,
 ):
     task_configs = configs.get("tasks", None)
     if not task_configs:
@@ -1896,7 +1909,7 @@ def print_project_pipeline(
         # the USE_BAZELISK_MIGRATE env var, but that are not being run as part of a
         # downstream pipeline.
         number = os.getenv("BUILDKITE_BUILD_NUMBER")
-        pipeline_steps += get_steps_for_aggregating_migration_results(number)
+        pipeline_steps += get_steps_for_aggregating_migration_results(number, notify)
 
     print_pipeline_steps(pipeline_steps, handle_emergencies=not is_downstream_project)
 
@@ -2320,7 +2333,7 @@ def fetch_incompatible_flags():
 
 
 def print_bazel_downstream_pipeline(
-    task_configs, http_config, file_config, test_incompatible_flags, test_disabled_projects
+    task_configs, http_config, file_config, test_incompatible_flags, test_disabled_projects, notify
 ):
     if not task_configs:
         raise BuildkiteException("Bazel downstream pipeline configuration is empty.")
@@ -2380,7 +2393,7 @@ def print_bazel_downstream_pipeline(
             raise BuildkiteException("Not running inside Buildkite")
         if use_bazelisk_migrate():
             pipeline_steps += get_steps_for_aggregating_migration_results(
-                current_build_number
+                current_build_number, notify
             )
         else:
             pipeline_steps.append({"wait": "~", "continue_on_failure": "true"})
@@ -2420,12 +2433,14 @@ def print_bazel_downstream_pipeline(
     print_pipeline_steps(pipeline_steps)
 
 
-def get_steps_for_aggregating_migration_results(current_build_number):
+def get_steps_for_aggregating_migration_results(current_build_number, notify):
     parts = [
         PLATFORMS[DEFAULT_PLATFORM]["python"],
         "aggregate_incompatible_flags_test_result.py",
         "--build_number=%s" % current_build_number,
     ]
+    if notify:
+        parts.append("--notify")
     return [
         {"wait": "~", "continue_on_failure": "true"},
         create_step(
@@ -2748,6 +2763,7 @@ def main(argv=None):
     bazel_downstream_pipeline.add_argument(
         "--test_disabled_projects", type=bool, nargs="?", const=True
     )
+    bazel_downstream_pipeline.add_argument("--notify", type=bool, nargs="?", const=True)
 
     project_pipeline = subparsers.add_parser("project_pipeline")
     project_pipeline.add_argument("--project_name", type=str)
@@ -2757,6 +2773,7 @@ def main(argv=None):
     project_pipeline.add_argument("--monitor_flaky_tests", type=bool, nargs="?", const=True)
     project_pipeline.add_argument("--use_but", type=bool, nargs="?", const=True)
     project_pipeline.add_argument("--incompatible_flag", type=str, action="append")
+    project_pipeline.add_argument("--notify", type=bool, nargs="?", const=True)
 
     runner = subparsers.add_parser("runner")
     runner.add_argument("--task", action="store", type=str, default="")
@@ -2808,6 +2825,7 @@ def main(argv=None):
                 file_config=args.file_config,
                 test_incompatible_flags=args.test_incompatible_flags,
                 test_disabled_projects=args.test_disabled_projects,
+                notify=args.notify,
             )
         elif args.subparsers_name == "project_pipeline":
             configs = fetch_configs(args.http_config, args.file_config)
@@ -2820,6 +2838,7 @@ def main(argv=None):
                 monitor_flaky_tests=args.monitor_flaky_tests,
                 use_but=args.use_but,
                 incompatible_flags=args.incompatible_flag,
+                notify=args.notify,
             )
         elif args.subparsers_name == "runner":
             configs = fetch_configs(args.http_config, args.file_config)
