@@ -50,6 +50,8 @@ Please check the following CI builds for build and test results:
 
 {links}
 
+Never heard of incompatible flags before? We have [documentation](https://docs.bazel.build/versions/master/backward-compatibility.html) that explains everything.
+
 If you don't want to receive any future issues for {project} or if you have any questions,
 please file an issue in https://github.com/bazelbuild/continuous-integration
 
