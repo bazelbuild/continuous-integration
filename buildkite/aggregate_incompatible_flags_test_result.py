@@ -328,7 +328,7 @@ def collect_notification_links(failed_jobs_per_flag):
         for job in job_data.values():
             project_label, platform = get_pipeline_and_platform(job)
             link = get_html_link_text(platform, job["web_url"])
-            links_per_project_and_flag[(project_label, flag)].add("[{}]({})".format(platform, link))
+            links_per_project_and_flag[(project_label, flag)].add(link)
 
     return links_per_project_and_flag
 
