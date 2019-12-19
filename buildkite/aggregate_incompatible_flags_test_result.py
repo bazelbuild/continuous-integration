@@ -83,6 +83,10 @@ class GitHubIssueClient(object):
                 return i["number"]
 
     def create_issue(self, repo_owner, repo_name, title, body):
+        # TODO(fweikert): Remove once the script is stable (#869)
+        repo_owner = "fweikert"
+        repo_name = "bugs"
+
         json_data = self._send_request(
             repo_owner,
             repo_name,
