@@ -38,9 +38,15 @@ EMOJI_PATTERN = re.compile(r":([\w+-]+):")
 
 EMOJI_IMAGE_TEMPLATE = '<img src="https://raw.githubusercontent.com/buildkite/emojis/master/img-buildkite-64/{}.png" height="16"/>'
 
+INCOMPATIBLE_FLAG_LINE_PATTERN = re.compile(
+    r"\s*(?P<flag>--incompatible_\S+)\s*(\(Bazel\s+(?P<version>[^:]+):\s+(?P<url>[^\)]+)\))?"
+)
+
 ISSUE_TEMPLATE = """Incompatible flag {flag} will be enabled by default in Bazel {version}, thus breaking {project}.
 
-Please see the following CI builds for more information:
+The flag is documented here: {issue_url}
+
+Please check the following CI builds for build and test results:
 
 {links}
 
@@ -58,6 +64,9 @@ ENCRYPTED_GITHUB_API_TOKEN = """
 CiQA6OLsm2YFaO2fOFkdj3TCxCihvMNmf6HYKWXVSKnfDQtuYEsSUQBsAAJAI9UgPCsJZCQMC+QB/g4eFd
 02IGzaOhSuCYyllc9Lr332wYAt7P52vXgmAU1zLfzGsm0iJ1KzjFW82BsYA6rgeSq4dCPTa8csRqND9Q==
 """.strip()
+
+
+FlagDetails = collections.namedtuple("FlagDetails", ["bazel_version", "issue_url"])
 
 
 class GitHubError(Exception):
@@ -120,7 +129,7 @@ class LogFetcher(threading.Thread):
         self.log = self.client.get_build_log(self.job)
 
 
-def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
+def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job, details_per_flag):
     if "Failure: Command failed, even without incompatible flags." in log:
         already_failing_jobs.append(job)
 
@@ -133,9 +142,13 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
             raise bazelci.BuildkiteException("Cannot recognize log of " + job["web_url"])
         lines = log[index_failure:].split("\n")
         for line in lines:
-            line = line.strip()
-            if line.startswith("--incompatible_") and line in INCOMPATIBLE_FLAGS:
-                failed_jobs_per_flag[line][job["id"]] = job
+            match = INCOMPATIBLE_FLAG_LINE_PATTERN.match(line)
+            if match:
+                flag = match.group("flag")
+                failed_jobs_per_flag[flag][job["id"]] = job
+                details_per_flag[flag] = FlagDetails(
+                    bazel_version=match.group("version"), issue_url=match.group("url")
+                )
         log = log[0 : log.rfind("+++ Result")]
 
     # If the job failed for other reasons, we add it into already failing jobs.
@@ -285,6 +298,8 @@ def analyze_logs(build_number, client):
 
     # dict(flag name -> dict(job id -> job))
     failed_jobs_per_flag = collections.defaultdict(dict)
+    # dict(flag name -> (Bazel version where it's flipped, GitHub issue URL))
+    details_per_flag = {}
 
     threads = []
     for job in build_info["jobs"]:
@@ -296,9 +311,11 @@ def analyze_logs(build_number, client):
 
     for thread in threads:
         thread.join()
-        process_build_log(failed_jobs_per_flag, already_failing_jobs, thread.log, thread.job)
+        process_build_log(
+            failed_jobs_per_flag, already_failing_jobs, thread.log, thread.job, details_per_flag
+        )
 
-    return already_failing_jobs, failed_jobs_per_flag
+    return already_failing_jobs, failed_jobs_per_flag, details_per_flag
 
 
 def print_result_info(already_failing_jobs, failed_jobs_per_flag):
@@ -313,21 +330,9 @@ def print_result_info(already_failing_jobs, failed_jobs_per_flag):
     return bool(failed_jobs_per_flag)
 
 
-def notify_projects(failed_jobs_per_flag):
-    bazel_version = get_bazel_version()
-    if not bazel_version or bazel_version == "unreleased binary":
-        raise bazelci.BuildkiteException(
-            "Notifications: Invalid Bazel version '{}'".format(bazel_version)
-        )
-
+def notify_projects(failed_jobs_per_flag, details_per_flag):
     links_per_project_and_flag = collect_notification_links(failed_jobs_per_flag)
-    create_all_issues(bazel_version, links_per_project_and_flag)
-
-
-def get_bazel_version():
-    return bazelci.execute_command_and_get_output(
-        ["buildkite-agent", "meta-data", "get", bazelci.BAZEL_VERSION_METADATA_KEY, "--default", ""]
-    )
+    create_all_issues(details_per_flag, links_per_project_and_flag)
 
 
 def collect_notification_links(failed_jobs_per_flag):
@@ -352,25 +357,38 @@ def get_link_for_build(platform, url):
     return get_html_link_text(text, url)
 
 
-def create_all_issues(bazel_version, links_per_project_and_flag):
+def create_all_issues(details_per_flag, links_per_project_and_flag):
     errors = []
     issue_client = get_github_client()
     for (project_label, flag), links in links_per_project_and_flag.items():
         try:
+            details = details_per_flag.get(flag, (None, None))
+            if details.bazel_version in (None, "unreleased binary"):
+                raise bazelci.BuildkiteException(
+                    "Notifications: Invalid Bazel version '{}' for flag {}".format(
+                        details.bazel_version or "", flag
+                    )
+                )
+
+            if not details.issue_url:
+                raise bazelci.BuildkiteException(
+                    "Notifications: Missing GitHub issue URL for flag {}".format(flag)
+                )
+
             repo_owner, repo_name, do_not_notify = get_project_details(project_label)
             if do_not_notify:
                 bazelci.eprint("{} has opted out of notifications.".format(project_label))
                 continue
 
-            title = get_issue_title(project_label, bazel_version, flag)
+            title = get_issue_title(project_label, details.bazel_version, flag)
             if issue_client.get_issue(repo_owner, repo_name, title):
                 bazelci.eprint(
                     "There is already an issue in {}/{} for project {}, flag {} and Bazel {}".format(
-                        repo_owner, repo_name, project_label, flag, bazel_version
+                        repo_owner, repo_name, project_label, flag, details.bazel_version
                     )
                 )
             else:
-                body = create_issue_body(project_label, bazel_version, flag, links)
+                body = create_issue_body(project_label, flag, details, links)
                 issue_client.create_issue(repo_owner, repo_name, title, body)
         except (bazelci.BuildkiteException, GitHubError) as ex:
             errors.append("Could not notify project '{}': {}".format(project_label, ex))
@@ -410,10 +428,11 @@ def get_issue_title(project_label, bazel_version, flag):
     return "Flag {} will break {} in Bazel {}".format(flag, project_label, bazel_version)
 
 
-def create_issue_body(project_label, bazel_version, flag, links):
+def create_issue_body(project_label, flag, details, links):
     return ISSUE_TEMPLATE.format(
         project=project_label,
-        version=bazel_version,
+        version=details.bazel_version,
+        issue_url=details.issue_url,
         flag=flag,
         links="\n".join("* {}".format(l) for l in links),
     )
@@ -433,11 +452,13 @@ def main(argv=None):
     try:
         if args.build_number:
             client = bazelci.BuildkiteClient(org=BUILDKITE_ORG, pipeline=PIPELINE)
-            already_failing_jobs, failed_jobs_per_flag = analyze_logs(args.build_number, client)
+            already_failing_jobs, failed_jobs_per_flag, details_per_flag = analyze_logs(
+                args.build_number, client
+            )
             migration_required = print_result_info(already_failing_jobs, failed_jobs_per_flag)
 
             if args.notify:
-                notify_projects(failed_jobs_per_flag)
+                notify_projects(failed_jobs_per_flag, details_per_flag)
 
             if migration_required and FAIL_IF_MIGRATION_REQUIRED:
                 bazelci.eprint("Exiting with code 3 since a migration is required.")
