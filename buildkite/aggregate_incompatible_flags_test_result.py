@@ -34,7 +34,7 @@ FAIL_IF_MIGRATION_REQUIRED = os.environ.get("USE_BAZELISK_MIGRATE", "").upper() 
 
 REPO_PATTERN = re.compile(r"https?://github.com/(?P<owner>[^/]+)/(?P<repo>[^/]+).git")
 
-ISSUE_TEMPLATE = """Incompatible flag {flag} will break {project} once Bazel {version} is released.
+ISSUE_TEMPLATE = """Incompatible flag {flag} will be enabled by default in Bazel {version}, thus breaking {project}.
 
 Please see the following CI builds for more information:
 
