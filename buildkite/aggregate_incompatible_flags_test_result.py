@@ -40,7 +40,8 @@ Please see the following CI builds for more information:
 
 {links}
 
-Questions? Please file an issue in https://github.com/bazelbuild/continuous-integration
+If you don't want to receive any future issues for {project} or if you have any questions,
+please file an issue in https://github.com/bazelbuild/continuous-integration
 
 **Important**: Please do NOT modify the issue title since that might break our tools.
 """
@@ -337,7 +338,11 @@ def create_all_issues(bazel_version, links_per_project_and_flag):
     issue_client = get_github_client()
     for (project_label, flag), links in links_per_project_and_flag.items():
         try:
-            repo_owner, repo_name = get_project_owner_and_repo(project_label)
+            repo_owner, repo_name, do_not_notify = get_project_details(project_label)
+            if do_not_notify:
+                bazelci.eprint("{} has opted out of notifications.".format(project_label))
+                continue
+
             title = get_issue_title(project_label, bazel_version, flag)
             if issue_client.get_issue(repo_owner, repo_name, title):
                 bazelci.eprint(
@@ -366,8 +371,9 @@ def get_github_client():
     return GitHubIssueClient(reporter=GITHUB_ISSUE_REPORTER, oauth_token=github_token)
 
 
-def get_project_owner_and_repo(project_label):
-    full_repo = bazelci.DOWNSTREAM_PROJECTS.get(project_label, {}).get("git_repository", "")
+def get_project_details(project_label):
+    entry = bazelci.DOWNSTREAM_PROJECTS.get(project_label, {})
+    full_repo = entry.get("git_repository", "")
     if not full_repo:
         raise bazelci.BuildkiteException(
             "Could not retrieve Git repository for project '{}'".format(project_label)
@@ -378,7 +384,7 @@ def get_project_owner_and_repo(project_label):
             "Hosts other than GitHub are currently not supported ({})".format(full_repo)
         )
 
-    return match.group("owner"), match.group("repo")
+    return match.group("owner"), match.group("repo"), entry.get("do_not_notify", False)
 
 
 def get_issue_title(project_label, bazel_version, flag):

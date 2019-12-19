@@ -77,6 +77,7 @@ FLAKY_TESTS_BUCKET = {
     "bazel": "gs://bazel-buildkite-stats/flaky-tests-bep/",
 }[BUILDKITE_ORG]
 
+# Projects can opt out of receiving GitHub issues from --notify by adding `"do_not_notify": True` to their respective downstream entry.
 DOWNSTREAM_PROJECTS_PRODUCTION = {
     "Android Studio Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
