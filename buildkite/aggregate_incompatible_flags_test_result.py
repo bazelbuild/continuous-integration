@@ -148,9 +148,10 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job, deta
             if match:
                 flag = match.group("flag")
                 failed_jobs_per_flag[flag][job["id"]] = job
-                details_per_flag[flag] = FlagDetails(
-                    bazel_version=match.group("version"), issue_url=match.group("url")
-                )
+                if details_per_flag.get(flag, (None, None)) == (None, None):
+                    details_per_flag[flag] = FlagDetails(
+                        bazel_version=match.group("version"), issue_url=match.group("url")
+                    )
         log = log[0 : log.rfind("+++ Result")]
 
     # If the job failed for other reasons, we add it into already failing jobs.
