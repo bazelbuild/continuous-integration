@@ -34,9 +34,9 @@ FAIL_IF_MIGRATION_REQUIRED = os.environ.get("USE_BAZELISK_MIGRATE", "").upper() 
 
 REPO_PATTERN = re.compile(r"https?://github.com/(?P<owner>[^/]+)/(?P<repo>[^/]+).git")
 
-EMOJI_PATTERN = re.compile(r":([^:\s]+):")
+EMOJI_PATTERN = re.compile(r":([\w+-]+):")
 
-EMOJI_IMAGE_TEMPLATE = '<img src="https://github.com/buildkite/emojis/blob/master/img-buildkite-64/{}.png?raw=true" height="16"/>'
+EMOJI_IMAGE_TEMPLATE = '<img src="https://raw.githubusercontent.com/buildkite/emojis/master/img-buildkite-64/{}.png" height="16"/>'
 
 ISSUE_TEMPLATE = """Incompatible flag {flag} will be enabled by default in Bazel {version}, thus breaking {project}.
 
