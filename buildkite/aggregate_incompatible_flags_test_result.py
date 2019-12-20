@@ -34,6 +34,10 @@ FAIL_IF_MIGRATION_REQUIRED = os.environ.get("USE_BAZELISK_MIGRATE", "").upper() 
 
 REPO_PATTERN = re.compile(r"https?://github.com/(?P<owner>[^/]+)/(?P<repo>[^/]+).git")
 
+EMOJI_PATTERN = re.compile(r":([\w+-]+):")
+
+EMOJI_IMAGE_TEMPLATE = '<img src="https://raw.githubusercontent.com/buildkite/emojis/master/img-buildkite-64/{}.png" height="16"/>'
+
 ISSUE_TEMPLATE = """Incompatible flag {flag} will be enabled by default in Bazel {version}, thus breaking {project}.
 
 Please see the following CI builds for more information:
@@ -331,10 +335,21 @@ def collect_notification_links(failed_jobs_per_flag):
     for flag, job_data in failed_jobs_per_flag.items():
         for job in job_data.values():
             project_label, platform = get_pipeline_and_platform(job)
-            link = get_html_link_text(platform, job["web_url"])
+            link = get_link_for_build(platform, job["web_url"])
             links_per_project_and_flag[(project_label, flag)].add(link)
 
     return links_per_project_and_flag
+
+
+def get_link_for_build(platform, url):
+    names = [v["name"] for v in bazelci.PLATFORMS.values() if v["emoji-name"] == platform]
+    display_name = names[0] if names else ""
+
+    match = EMOJI_PATTERN.search(platform)
+    img = EMOJI_IMAGE_TEMPLATE.format(match.group(1)) if match else ""
+
+    text = (img + display_name) or platform
+    return get_html_link_text(text, url)
 
 
 def create_all_issues(bazel_version, links_per_project_and_flag):
