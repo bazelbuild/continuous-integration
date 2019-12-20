@@ -512,8 +512,6 @@ SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
 
 CONFIG_FILE_EXTENSIONS = {".yml", ".yaml"}
 
-BAZEL_VERSION_METADATA_KEY = "bazel_version"
-
 
 class BuildkiteException(Exception):
     """
@@ -840,7 +838,6 @@ def execute_commands(
             execute_shell_commands(task_config.get("shell_commands", None))
 
         bazel_version = print_bazel_version_info(bazel_binary, platform)
-        store_bazel_version(bazel_version)
 
         print_environment_variables_info()
 
@@ -1038,15 +1035,6 @@ def print_bazel_version_info(bazel_binary, platform):
 
     match = BUILD_LABEL_PATTERN.search(version_output)
     return match.group(1) if match else "unreleased binary"
-
-
-def store_bazel_version(bazel_version):
-    code = execute_command(
-        ["buildkite-agent", "meta-data", "set", BAZEL_VERSION_METADATA_KEY, bazel_version],
-        fail_if_nonzero=False,
-    )
-    if code:
-        eprint("Unable to store Bazel version")
 
 
 def print_environment_variables_info():
