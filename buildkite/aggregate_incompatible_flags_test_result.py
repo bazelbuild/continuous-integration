@@ -39,7 +39,7 @@ EMOJI_PATTERN = re.compile(r":([\w+-]+):")
 EMOJI_IMAGE_TEMPLATE = '<img src="https://raw.githubusercontent.com/buildkite/emojis/master/img-buildkite-64/{}.png" height="16"/>'
 
 INCOMPATIBLE_FLAG_LINE_PATTERN = re.compile(
-    r"\s*(?P<flag>--incompatible_\S+)\s*(\(Bazel\s+(?P<version>[^:]+):\s+(?P<url>[^\)]+)\))?"
+    r"\s*(?P<flag>--incompatible_\S+)\s*(\(Bazel (?P<version>.+?): (?P<url>.+?)\))?"
 )
 
 ISSUE_TEMPLATE = """Incompatible flag {flag} will be enabled by default in Bazel {version}, thus breaking {project}.
