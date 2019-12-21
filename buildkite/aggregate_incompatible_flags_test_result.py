@@ -147,6 +147,16 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job, deta
             match = INCOMPATIBLE_FLAG_LINE_PATTERN.match(line)
             if match:
                 flag = match.group("flag")
+                if flag not in INCOMPATIBLE_FLAGS:
+                    # INCOMPATIBLE_FLAGS only contains flags that are being flipped in future
+                    # releases, but Bazelisk may also return already flipped flags if a
+                    # project fixes its Bazel version via a .bazelversion file
+                    # (e.g. 0.29.0 in Buildfarm).
+                    # TODO(fweikert): display notification for such projects
+                    # TODO(fweikert): remove INCOMPATIBLE_FLAGS and get all information from
+                    # Bazelisk's output
+                    continue
+
                 failed_jobs_per_flag[flag][job["id"]] = job
                 if details_per_flag.get(flag, (None, None)) == (None, None):
                     details_per_flag[flag] = FlagDetails(
