@@ -24,8 +24,6 @@ import threading
 
 import bazelci
 
-INCOMPATIBLE_FLAGS = bazelci.fetch_incompatible_flags()
-
 BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
 
 PIPELINE = os.environ["BUILDKITE_PIPELINE_SLUG"]
@@ -131,6 +129,11 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job, deta
     if "Failure: Command failed, even without incompatible flags." in log:
         already_failing_jobs.append(job)
 
+    def handle_failing_flags(line, details_per_flag):
+        flag = extract_flag_details(line, details_per_flag)
+        if flag:
+            failed_jobs_per_flag[flag][job["id"]] = job
+
     # bazelisk --migrate might run for multiple times for run / build / test,
     # so there could be several "+++ Result" sections.
     while "+++ Result" in log:
@@ -138,26 +141,9 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job, deta
         index_failure = log.rfind("Migration is needed for the following flags:")
         if index_success == -1 or index_failure == -1:
             raise bazelci.BuildkiteException("Cannot recognize log of " + job["web_url"])
-        lines = log[index_failure:].split("\n")
-        for line in lines:
-            match = INCOMPATIBLE_FLAG_LINE_PATTERN.match(line)
-            if match:
-                flag = match.group("flag")
-                if flag not in INCOMPATIBLE_FLAGS:
-                    # INCOMPATIBLE_FLAGS only contains flags that are being flipped in future
-                    # releases, but Bazelisk may also return already flipped flags if a
-                    # project fixes its Bazel version via a .bazelversion file
-                    # (e.g. 0.29.0 in Buildfarm).
-                    # TODO(fweikert): display notification for such projects
-                    # TODO(fweikert): remove INCOMPATIBLE_FLAGS and get all information from
-                    # Bazelisk's output
-                    continue
 
-                failed_jobs_per_flag[flag][job["id"]] = job
-                if details_per_flag.get(flag, (None, None)) == (None, None):
-                    details_per_flag[flag] = FlagDetails(
-                        bazel_version=match.group("version"), issue_url=match.group("url")
-                    )
+        extract_all_flags(log[index_success:index_failure], extract_flag_details, details_per_flag)
+        extract_all_flags(log[index_failure:], handle_failing_flags, details_per_flag)
         log = log[0 : log.rfind("+++ Result")]
 
     # If the job failed for other reasons, we add it into already failing jobs.
@@ -165,15 +151,32 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job, deta
         already_failing_jobs.append(job)
 
 
+def extract_all_flags(log, line_callback, details_per_flag):
+    for line in log.split("\n"):
+        line_callback(line, details_per_flag)
+
+
+def extract_flag_details(line, details_per_flag):
+    match = INCOMPATIBLE_FLAG_LINE_PATTERN.match(line)
+    if match:
+        flag = match.group("flag")
+        if details_per_flag.get(flag, (None, None)) == (None, None):
+            details_per_flag[flag] = FlagDetails(
+                bazel_version=match.group("version"), issue_url=match.group("url")
+            )
+
+        return flag
+
+
 def get_html_link_text(content, link):
     return f'<a href="{link}" target="_blank">{content}</a>'
 
 
-def print_flags_ready_to_flip(failed_jobs_per_flag):
+def print_flags_ready_to_flip(failed_jobs_per_flag, details_per_flag):
     info_text = ["#### The following flags didn't break any passing jobs"]
-    for flag in sorted(list(INCOMPATIBLE_FLAGS.keys())):
+    for flag in sorted(list(details_per_flag.keys())):
         if flag not in failed_jobs_per_flag:
-            github_url = INCOMPATIBLE_FLAGS[flag]
+            github_url = details_per_flag[flag].issue_url
             info_text.append(f"* **{flag}** " + get_html_link_text(":github:", github_url))
     if len(info_text) == 1:
         return
@@ -229,14 +232,14 @@ def print_projects_need_to_migrate(failed_jobs_per_flag):
     )
 
 
-def print_flags_need_to_migrate(failed_jobs_per_flag):
+def print_flags_need_to_migrate(failed_jobs_per_flag, details_per_flag):
     # The info box printed later is above info box printed before,
     # so reverse the flag list to maintain the same order.
     printed_flag_boxes = False
     for flag in sorted(list(failed_jobs_per_flag.keys()), reverse=True):
         jobs = failed_jobs_per_flag[flag]
         if jobs:
-            github_url = INCOMPATIBLE_FLAGS[flag]
+            github_url = details_per_flag[flag].issue_url
             info_text = [f"* **{flag}** " + get_html_link_text(":github:", github_url)]
             info_text += merge_and_format_jobs(jobs.values(), "  - **{}**: {}")
             # Use flag as the context so that each flag gets a different info box.
@@ -327,14 +330,35 @@ def analyze_logs(build_number, client):
     return already_failing_jobs, failed_jobs_per_flag, details_per_flag
 
 
-def print_result_info(already_failing_jobs, failed_jobs_per_flag):
-    print_flags_need_to_migrate(failed_jobs_per_flag)
+def handle_already_flipped_flags(details_per_flag):
+    # Process and remove all flags that have already been flipped.
+    # Bazelisk may return already flipped flags if a project uses an old Bazel version
+    # via its .bazelversion file.
+    current_major_version = bazelci.get_bazel_major_version()
+    result = {}
+    for flag, details in details_per_flag.items():
+        if details.bazel_version < current_major_version:
+            # TOOD(fweikert): maybe display a Buildkite annotation
+            bazelci.eprint(
+                "Ignoring {} since it has already been flipped in Bazel {} (latest is {}).".format(
+                    flag, details.bazel_version, current_major_version
+                )
+            )
+            continue
+
+        result[flag] = details
+
+    return result
+
+
+def print_result_info(already_failing_jobs, failed_jobs_per_flag, details_per_flag):
+    print_flags_need_to_migrate(failed_jobs_per_flag, details_per_flag)
 
     print_projects_need_to_migrate(failed_jobs_per_flag)
 
     print_already_fail_jobs(already_failing_jobs)
 
-    print_flags_ready_to_flip(failed_jobs_per_flag)
+    print_flags_ready_to_flip(failed_jobs_per_flag, details_per_flag)
 
     return bool(failed_jobs_per_flag)
 
@@ -469,7 +493,10 @@ def main(argv=None):
             already_failing_jobs, failed_jobs_per_flag, details_per_flag = analyze_logs(
                 args.build_number, client
             )
-            migration_required = print_result_info(already_failing_jobs, failed_jobs_per_flag)
+            details_per_flag = handle_already_flipped_flags(details_per_flag)
+            migration_required = print_result_info(
+                already_failing_jobs, failed_jobs_per_flag, details_per_flag
+            )
 
             if args.notify:
                 notify_projects(failed_jobs_per_flag, details_per_flag)

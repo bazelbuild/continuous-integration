@@ -2291,11 +2291,7 @@ def fetch_incompatible_flags():
             incompatible_flags[flag] = ""
         return incompatible_flags
 
-    # Get bazel major version on CI, eg. 0.21 from "Build label: 0.21.0\n..."
-    output = subprocess.check_output(
-        ["bazel", "--nomaster_bazelrc", "--bazelrc=/dev/null", "version"]
-    ).decode("utf-8")
-    bazel_major_version = output.split()[2].rsplit(".", 1)[0]
+    bazel_major_version = get_bazel_major_version()
 
     output = subprocess.check_output(
         [
@@ -2319,6 +2315,14 @@ def fetch_incompatible_flags():
             )
 
     return incompatible_flags
+
+
+def get_bazel_major_version():
+    # Get bazel major version on CI, eg. 0.21 from "Build label: 0.21.0\n..."
+    output = subprocess.check_output(
+        ["bazel", "--nomaster_bazelrc", "--bazelrc=/dev/null", "version"]
+    ).decode("utf-8")
+    return output.split()[2].rsplit(".", 1)[0]
 
 
 def print_bazel_downstream_pipeline(
