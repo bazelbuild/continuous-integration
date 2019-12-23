@@ -404,7 +404,7 @@ def get_link_for_build(platform, url):
 
 
 def create_all_issues(details_per_flag, links_per_project_and_flag):
-    errors = []
+    errors = set()
     issue_client = get_github_client()
     for (project_label, flag), links in links_per_project_and_flag.items():
         try:
@@ -454,7 +454,7 @@ def create_all_issues(details_per_flag, links_per_project_and_flag):
                     title = final_title if has_target_release else temporary_title
                     issue_client.create_issue(repo_owner, repo_name, title, body)
         except (bazelci.BuildkiteException, GitHubError) as ex:
-            errors.append("Could not notify project '{}': {}".format(project_label, ex))
+            errors.add("Could not notify project '{}': {}".format(project_label, ex))
 
     if errors:
         print_info("notify_errors", "error", errors)
