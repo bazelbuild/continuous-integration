@@ -98,10 +98,6 @@ class GitHubIssueClient(object):
                 return i["number"]
 
     def create_issue(self, repo_owner, repo_name, title, body):
-        # TODO(fweikert): Remove once the script is stable (#869)
-        repo_owner = "fweikert"
-        repo_name = "bugs"
-
         json_data = self._send_request(
             repo_owner,
             repo_name,
@@ -394,6 +390,11 @@ def create_all_issues(details_per_flag, links_per_project_and_flag):
                 continue
 
             title = get_issue_title(project_label, details.bazel_version, flag)
+
+            # TODO(fweikert): Remove once the script is stable (#869)
+            repo_owner = "fweikert"
+            repo_name = "bugs"
+
             if issue_client.get_issue(repo_owner, repo_name, title):
                 bazelci.eprint(
                     "There is already an issue in {}/{} for project {}, flag {} and Bazel {}".format(
