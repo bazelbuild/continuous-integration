@@ -42,7 +42,7 @@ INCOMPATIBLE_FLAG_LINE_PATTERN = re.compile(
     r"\s*(?P<flag>--incompatible_\S+)\s*(\(Bazel (?P<version>.+?): (?P<url>.+?)\))?"
 )
 
-ISSUE_TEMPLATE = """Incompatible flag {flag} will be enabled by default in Bazel {version}, thus breaking {project}.
+ISSUE_TEMPLATE = """Incompatible flag {flag} will be enabled by default in {version}, thus breaking {project}.
 
 The flag is documented here: {issue_url}
 
@@ -56,6 +56,7 @@ If you don't want to receive any future issues for {project} or if you have any 
 please file an issue in https://github.com/bazelbuild/continuous-integration
 
 **Important**: Please do NOT modify the issue title since that might break our tools.
+{version_footnote}
 """
 
 GITHUB_ISSUE_REPORTER = "bazel-flag-bot"
@@ -101,14 +102,22 @@ class GitHubIssueClient(object):
         json_data = self._send_request(
             repo_owner,
             repo_name,
-            post=True,
+            verb="post",
             json={"title": title, "body": body, "assignee": None, "labels": [], "milestone": None},
         )
         return json_data.get("number", "")
 
-    def _send_request(self, repo_owner, repo_name, post=False, **kwargs):
+    def update_title(self, repo_owner, repo_name, issue_number, title):
+        self._send_request(
+            repo_owner, repo_name, issue=issue_number, verb="patch", json={"title": title}
+        )
+
+    def _send_request(self, repo_owner, repo_name, issue=None, verb="get", **kwargs):
         url = "https://api.github.com/repos/{}/{}/issues".format(repo_owner, repo_name)
-        method = self._session.post if post else self._session.get
+        if issue:
+            url = os.path.join(url, str(issue))
+
+        method = getattr(self._session, verb)
         response = method(url, **kwargs)
         if response.status_code // 100 != 2:
             raise GitHubError(response.status_code, response.content)
@@ -389,21 +398,33 @@ def create_all_issues(details_per_flag, links_per_project_and_flag):
                 bazelci.eprint("{} has opted out of notifications.".format(project_label))
                 continue
 
-            title = get_issue_title(project_label, details.bazel_version, flag)
-
             # TODO(fweikert): Remove once the script is stable (#869)
             repo_owner = "fweikert"
             repo_name = "bugs"
 
-            if issue_client.get_issue(repo_owner, repo_name, title):
+            temporary_title = get_temporary_issue_title(project_label, flag)
+            final_title = get_final_issue_title(project_label, details.bazel_version, flag)
+            has_target_release = details.bazel_version != "TBD"
+
+            # Three possible scenarios:
+            # 1. There is already an issue with the target release in the title -> do nothing
+            # 2. There is an issue, but without the target release, and we now know the target release -> update title
+            # 3. There is no issue -> create one
+            if issue_client.get_issue(repo_owner, repo_name, final_title):
                 bazelci.eprint(
                     "There is already an issue in {}/{} for project {}, flag {} and Bazel {}".format(
                         repo_owner, repo_name, project_label, flag, details.bazel_version
                     )
                 )
             else:
-                body = create_issue_body(project_label, flag, details, links)
-                issue_client.create_issue(repo_owner, repo_name, title, body)
+                number = issue_client.get_issue(repo_owner, repo_name, temporary_title)
+                if number:
+                    if has_target_release:
+                        issue_client.update_title(repo_owner, repo_name, number, final_title)
+                else:
+                    body = create_issue_body(project_label, flag, details, links)
+                    title = final_title if has_target_release else temporary_title
+                    issue_client.create_issue(repo_owner, repo_name, title, body)
         except (bazelci.BuildkiteException, GitHubError) as ex:
             errors.append("Could not notify project '{}': {}".format(project_label, ex))
 
@@ -438,14 +459,29 @@ def get_project_details(project_label):
     return match.group("owner"), match.group("repo"), entry.get("do_not_notify", False)
 
 
-def get_issue_title(project_label, bazel_version, flag):
+def get_temporary_issue_title(project_label, flag):
+    return "Flag {} will break {} in a future Bazel release".format(flag, project_label)
+
+
+def get_final_issue_title(project_label, bazel_version, flag):
     return "Flag {} will break {} in Bazel {}".format(flag, project_label, bazel_version)
 
 
 def create_issue_body(project_label, flag, details, links):
+    if details.bazel_version == "TBD":
+        version = "a future Bazel release [1]"
+        version_footnote = (
+            "\n[1] The target release hasn't been determined yet. "
+            "Our tool will update the issue title once the flag flip has been scheduled."
+        )
+    else:
+        version = "Bazel {}".format(details.bazel_version)
+        version_footnote = ""
+
     return ISSUE_TEMPLATE.format(
         project=project_label,
-        version=details.bazel_version,
+        version=version,
+        version_footnote=version_footnote,
         issue_url=details.issue_url,
         flag=flag,
         links="\n".join("* {}".format(l) for l in links),
