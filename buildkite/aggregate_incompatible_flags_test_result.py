@@ -461,7 +461,7 @@ def create_all_issues(details_per_flag, links_per_project_and_flag):
             errors.add("Could not notify project '{}': {}".format(project_label, ex))
 
     if errors:
-        print_info("notify_errors", "error", errors)
+        print_info("notify_errors", "error", list(errors))
 
 
 def get_github_client():
