@@ -360,7 +360,11 @@ def get_link_for_build(platform, url):
     display_name = names[0] if names else ""
 
     match = EMOJI_PATTERN.search(platform)
-    img = EMOJI_IMAGE_TEMPLATE.format(match.group(1)) if match else ""
+    img = ""
+    if match:
+        # darwin emoji has image mac.png
+        emoji = match.group(1).replace("darwin", "mac")
+        img = EMOJI_IMAGE_TEMPLATE.format(emoji)
 
     text = (img + display_name) or platform
     return get_html_link_text(text, url)
