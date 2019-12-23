@@ -339,12 +339,14 @@ def analyze_logs(build_number, client):
     return already_failing_jobs, failed_jobs_per_flag, details_per_flag
 
 
-def handle_already_flipped_flags(details_per_flag):
+def handle_already_flipped_flags(failed_jobs_per_flag, details_per_flag):
     # Process and remove all flags that have already been flipped.
     # Bazelisk may return already flipped flags if a project uses an old Bazel version
     # via its .bazelversion file.
     current_major_version = bazelci.get_bazel_major_version()
-    result = {}
+    failed_jobs_for_new_flags = {}
+    details_for_new_flags = {}
+
     for flag, details in details_per_flag.items():
         if details.bazel_version < current_major_version:
             # TOOD(fweikert): maybe display a Buildkite annotation
@@ -355,9 +357,11 @@ def handle_already_flipped_flags(details_per_flag):
             )
             continue
 
-        result[flag] = details
-
-    return result
+        details_for_new_flags[flag] = details
+        if flag in failed_jobs_per_flag:
+            failed_jobs_for_new_flags[flag] = failed_jobs_per_flag[flag]
+        
+    return failed_jobs_for_new_flags, details_for_new_flags
 
 
 def print_result_info(already_failing_jobs, failed_jobs_per_flag, details_per_flag):
@@ -533,7 +537,9 @@ def main(argv=None):
             already_failing_jobs, failed_jobs_per_flag, details_per_flag = analyze_logs(
                 args.build_number, client
             )
-            details_per_flag = handle_already_flipped_flags(details_per_flag)
+            failed_jobs_per_flag, details_per_flag = handle_already_flipped_flags(
+                failed_jobs_per_flag, details_per_flag
+            )
             migration_required = print_result_info(
                 already_failing_jobs, failed_jobs_per_flag, details_per_flag
             )
