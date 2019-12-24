@@ -92,14 +92,9 @@ class GitHubIssueClient(object):
     def get_issue(self, repo_owner, repo_name, title):
         # Returns an arbitrary matching issue if multiple matching issues exist.
         json_data = self._send_request(repo_owner, repo_name, params={"creator": self._reporter})
-        # TODO(fweikert): remove debug output
-        bazelci.eprint("WANT': >>%s<< (%s)", title, type(title))
         for i in json_data:
-            bazelci.eprint("HAS': >>%s<< (%s)", i["title"], type(i["title"]))
             if i["title"] == title:
-                bazelci.eprint("MATCH: %s", i["number"])
                 return i["number"]
-        bazelci.eprint("NO MATCH")
 
     def create_issue(self, repo_owner, repo_name, title, body):
         json_data = self._send_request(
