@@ -78,6 +78,9 @@ class GitHubError(Exception):
 
 
 class GitHubIssueClient(object):
+
+    LINK_PATTERN = re.compile(r'<(?P<url>.*?)>; rel="(?P<type>\w+)"')
+
     def __init__(self, reporter, oauth_token):
         self._reporter = reporter
         self._session = requests.Session()
@@ -91,19 +94,20 @@ class GitHubIssueClient(object):
 
     def get_issue(self, repo_owner, repo_name, title):
         # Returns an arbitrary matching issue if multiple matching issues exist.
-        json_data = self._send_request(repo_owner, repo_name, params={"creator": self._reporter})
-        for i in json_data:
-            if i["title"] == title:
-                return i["number"]
+        generator = self._send_request(repo_owner, repo_name, params={"creator": self._reporter})
+        for issue_subset in generator:
+            for i in issue_subset:
+                if i["title"] == title:
+                    return i["number"]
 
     def create_issue(self, repo_owner, repo_name, title, body):
-        json_data = self._send_request(
+        generator = self._send_request(
             repo_owner,
             repo_name,
             verb="post",
             json={"title": title, "body": body, "assignee": None, "labels": [], "milestone": None},
         )
-        return json_data.get("number", "")
+        return list(generator)[0].get("number", "")
 
     def update_title(self, repo_owner, repo_name, issue_number, title):
         self._send_request(
@@ -116,11 +120,21 @@ class GitHubIssueClient(object):
             url = os.path.join(url, str(issue))
 
         method = getattr(self._session, verb)
-        response = method(url, **kwargs)
-        if response.status_code // 100 != 2:
-            raise GitHubError(response.status_code, response.content)
 
-        return response.json()
+        while url:
+            response = method(url, **kwargs)
+            if response.status_code // 100 != 2:
+                raise GitHubError(response.status_code, response.content)
+
+            url = self.get_next_page_url(response.headers)
+            yield response.json()
+
+    def get_next_page_url(self, headers):
+        link = headers.get("Link")
+        for part in link.split(","):
+            match = self.LINK_PATTERN.match(part.strip())
+            if match and match.group("type") == "next":
+                return match.group("url")
 
 
 class LogFetcher(threading.Thread):
@@ -360,7 +374,7 @@ def handle_already_flipped_flags(failed_jobs_per_flag, details_per_flag):
         details_for_new_flags[flag] = details
         if flag in failed_jobs_per_flag:
             failed_jobs_for_new_flags[flag] = failed_jobs_per_flag[flag]
-        
+
     return failed_jobs_for_new_flags, details_for_new_flags
 
 
