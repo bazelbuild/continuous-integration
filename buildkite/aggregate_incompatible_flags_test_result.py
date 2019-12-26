@@ -444,10 +444,6 @@ def create_all_issues(details_per_flag, links_per_project_and_flag):
                 bazelci.eprint("{} has opted out of notifications.".format(project_label))
                 continue
 
-            # TODO(fweikert): Remove once the script is stable (#869)
-            repo_owner = "fweikert"
-            repo_name = "bugs"
-
             temporary_title = get_temporary_issue_title(project_label, flag)
             final_title = get_final_issue_title(project_label, details.bazel_version, flag)
             has_target_release = details.bazel_version != "TBD"
