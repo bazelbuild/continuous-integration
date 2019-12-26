@@ -130,7 +130,7 @@ class GitHubIssueClient(object):
             yield response.json()
 
     def get_next_page_url(self, headers):
-        link = headers.get("Link")
+        link = headers.get("Link", "")
         for part in link.split(","):
             match = self.LINK_PATTERN.match(part.strip())
             if match and match.group("type") == "next":
