@@ -363,6 +363,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_swift.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_swift/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-swift-swift",
+        "do_not_notify": "https://github.com/bazelbuild/continuous-integration/issues/915"
     },
     "rules_typescript": {
         "git_repository": "https://github.com/bazelbuild/rules_typescript.git",
