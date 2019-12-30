@@ -107,7 +107,7 @@ class GitHubIssueClient(object):
             verb="post",
             json={"title": title, "body": body, "assignee": None, "labels": [], "milestone": None},
         )
-        return list(generator)[0].get("number", "")
+        return next(generator).get("number", "")
 
     def update_title(self, repo_owner, repo_name, issue_number, title):
         self._send_request(
