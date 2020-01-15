@@ -813,7 +813,7 @@ def execute_commands(
             bazel_binary = "bazel"
             if bazel_version:
                 os.environ["USE_BAZEL_VERSION"] = bazel_version
-        if "USE_BAZEL_VERSION" in os.environ and task_config.get("skip_use_bazel_version_for_test", "") != "true":
+        if "USE_BAZEL_VERSION" in os.environ and not task_config.get("skip_use_bazel_version_for_test", False):
             # This will only work if the bazel binary in $PATH is actually a bazelisk binary
             # (https://github.com/bazelbuild/bazelisk).
             test_env_vars.append("USE_BAZEL_VERSION")
