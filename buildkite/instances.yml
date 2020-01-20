@@ -52,7 +52,7 @@ instance_groups:
       - interface=nvme
     metadata_from_file: startup-script=startup-docker.sh
   - name: bk-windows-java8
-    count: 20
+    count: 30
     project: bazel-untrusted
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_project: bazel-untrusted
