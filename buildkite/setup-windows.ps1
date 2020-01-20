@@ -75,14 +75,6 @@ Write-Host "Installing llvm..."
 [Environment]::SetEnvironmentVariable("BAZEL_LLVM", "C:\Program Files\LLVM", "Machine")
 $env:BAZEL_LLVM = [Environment]::GetEnvironmentVariable("BAZEL_LLVM", "Machine")
 
-## Install Git for Windows.
-Write-Host "Installing Git for Windows..."
-# FYI: choco adds "C:\Program Files\Git\cmd" to global PATH.
-& choco install git --params "'/GitOnlyOnPath'"
-$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
-# Don't convert the line endings when cloning the repository because that could break some tests
-& git config --system core.autocrlf false
-
 ## Install MSYS2
 Write-Host "Installing MSYS2..."
 & choco install msys2
@@ -95,7 +87,16 @@ Set-Alias bash "c:\tools\msys64\usr\bin\bash.exe"
 
 ## Install MSYS2 packages required by Bazel.
 Write-Host "Installing required MSYS2 packages..."
+& bash -lc "pacman --noconfirm -Syuu"
 & bash -lc "pacman --noconfirm --needed -S curl zip unzip gcc tar diffutils patch perl mingw-w64-x86_64-gcc"
+
+## Install Git for Windows.
+Write-Host "Installing Git for Windows..."
+# FYI: choco adds "C:\Program Files\Git\cmd" to global PATH.
+& choco install git --params "'/GitOnlyOnPath'"
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+# Don't convert the line endings when cloning the repository because that could break some tests
+& git config --system core.autocrlf false
 
 ## Install Azul Zulu.
 $myhostname = [System.Net.Dns]::GetHostName()
