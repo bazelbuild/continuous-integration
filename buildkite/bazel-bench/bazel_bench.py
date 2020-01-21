@@ -160,7 +160,7 @@ def _get_clone_path(repository, platform):
 
 
 def _ci_step_for_platform_and_commits(
-    bazel_commits, platform, project, extra_options, date, bucket):
+    bazel_commits, platform, project, extra_options, date, bucket, bigquery_table):
     """Perform bazel-bench for the platform-project combination.
     Uploads results to BigQuery.
 
@@ -172,6 +172,7 @@ def _ci_step_for_platform_and_commits(
         extra_options: a string: extra bazel-bench options.
         date: the date of the commits.
         bucket: the GCP Storage bucket to upload data to.
+        bigquery_table: the table to upload data to. In the form `project:table_identifier`.
 
     Return:
         An object: the result of applying bazelci.create_step to wrap the
@@ -200,7 +201,6 @@ def _ci_step_for_platform_and_commits(
             project["bazel_command"],
         ]
     )
-    # TODO(leba): Upload to BigQuery too.
     # TODO(leba): Use GCP Python client instead of gsutil.
     # TODO(https://github.com/bazelbuild/bazel-bench/issues/46): Include task-specific shell commands and build flags.
 
@@ -223,18 +223,18 @@ def _ci_step_for_platform_and_commits(
     upload_to_big_query_command = " ".join(
         [
             "bq",
-            "-m",
-            "cp",
-            "-r",
-            "{}/*".format(DATA_DIRECTORY),
-            "gs://{}/{}".format(bucket, storage_subdir),
+            "load",
+            "--skip_leading_rows=1",
+            "--source_format=CSV",
+            bigquery_table,
+            "{}/perf_data.csv".format(DATA_DIRECTORY),
         ]
     )
 
     commands = (
         [bazelci.fetch_bazelcipy_command()]
         + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
-        + [bazel_bench_command, upload_output_files_storage_command]
+        + [bazel_bench_command, upload_output_files_storage_command, upload_to_big_query_command]
     )
     label = (
         bazelci.PLATFORMS[platform]["emoji-name"]
@@ -395,7 +395,8 @@ def main(args=None):
             bazel_bench_ci_steps.append(
                 _ci_step_for_platform_and_commits(
                     bazel_commits_to_benchmark, platform, project,
-                    parsed_args.bazel_bench_options, date, parsed_args.bucket
+                    parsed_args.bazel_bench_options, date, parsed_args.bucket,
+                    parsed_args.bigquery_table
                 )
             )
         _create_and_upload_metadata(
