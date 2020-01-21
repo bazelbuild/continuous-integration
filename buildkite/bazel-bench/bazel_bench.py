@@ -220,6 +220,17 @@ def _ci_step_for_platform_and_commits(
             "gs://{}/{}".format(bucket, storage_subdir),
         ]
     )
+    upload_to_big_query_command = " ".join(
+        [
+            "bq",
+            "-m",
+            "cp",
+            "-r",
+            "{}/*".format(DATA_DIRECTORY),
+            "gs://{}/{}".format(bucket, storage_subdir),
+        ]
+    )
+
     commands = (
         [bazelci.fetch_bazelcipy_command()]
         + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
@@ -310,18 +321,21 @@ def _create_and_upload_metadata(
 
 
 def _report_generation_step(
-    date, project_label, bucket, platform, report_name, update_latest=False):
+    date, project_label, bucket, bigquery_table, platform, report_name, update_latest=False):
     """Generate the daily report.
 
     Also update the path reserved for the latest report of each project.
     """
     commands = []
     commands.append(" ".join([
-        "python3.6",
-        "report/generate_report.py",
+        "bazel",
+        "run",
+        "report:generate_report",
+        "--",
         "--date={}".format(date),
         "--project={}".format(project_label),
         "--storage_bucket={}".format(bucket),
+        "--bigquery_table={}".format(bigquery_table),
         "--report_name={}".format(report_name)
     ]))
 
@@ -355,6 +369,9 @@ def main(args=None):
     parser.add_argument("--max_commits", type=int, default="")
     parser.add_argument("--report_name", type=str, default="report")
     parser.add_argument("--update_latest", action="store_true", default=False)
+    parser.add_argument(
+      "--bigquery_table",
+      help="The BigQuery table to fetch data from. In the format: project:table_identifier.")
     parsed_args = parser.parse_args(args)
 
     bazel_bench_ci_steps = []
@@ -397,7 +414,7 @@ def main(args=None):
         bazel_bench_ci_steps.append(
             _report_generation_step(
                 date, project["storage_subdir"],
-                parsed_args.bucket, REPORT_GENERATION_PLATFORM,
+                parsed_args.bucket, parsed_args.bigquery_table, REPORT_GENERATION_PLATFORM,
                 parsed_args.report_name, parsed_args.update_latest))
 
         bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
