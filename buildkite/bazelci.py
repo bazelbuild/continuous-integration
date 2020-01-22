@@ -1386,7 +1386,8 @@ def compute_flags(
             aggregated_flags[i] = flag.replace("$HOME", home)
         if "$OUTPUT_BASE" in flag:
             output_base = execute_command_and_get_output(
-                [bazel_binary, "info", "output_base"], print_output=False
+                [bazel_binary] + common_startup_flags(platform) + ["info", "output_base"],
+                print_output=False,
             ).strip()
             aggregated_flags[i] = flag.replace("$OUTPUT_BASE", output_base)
 
