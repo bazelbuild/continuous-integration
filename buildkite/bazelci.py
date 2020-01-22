@@ -813,7 +813,9 @@ def execute_commands(
             bazel_binary = "bazel"
             if bazel_version:
                 os.environ["USE_BAZEL_VERSION"] = bazel_version
-        if "USE_BAZEL_VERSION" in os.environ and not task_config.get("skip_use_bazel_version_for_test", False):
+        if "USE_BAZEL_VERSION" in os.environ and not task_config.get(
+            "skip_use_bazel_version_for_test", False
+        ):
             # This will only work if the bazel binary in $PATH is actually a bazelisk binary
             # (https://github.com/bazelbuild/bazelisk).
             test_env_vars.append("USE_BAZEL_VERSION")
@@ -1363,7 +1365,9 @@ def rbe_flags(original_flags, accept_cached):
     return flags
 
 
-def compute_flags(platform, flags, incompatible_flags, bep_file, enable_remote_cache=False):
+def compute_flags(
+    platform, flags, incompatible_flags, bep_file, bazel_binary, enable_remote_cache=False
+):
     aggregated_flags = common_build_flags(bep_file, platform)
     if not remote_enabled(flags):
         if platform.startswith("rbe_"):
@@ -1373,6 +1377,18 @@ def compute_flags(platform, flags, incompatible_flags, bep_file, enable_remote_c
     aggregated_flags += flags
     if incompatible_flags:
         aggregated_flags += incompatible_flags
+
+    for i, flag in enumerate(aggregated_flags):
+        if "$HOME" in flag:
+            home = {"windows": "D:", "macos": "/Users/buildkite"}.get(
+                platform, "/var/lib/buildkite-agent"
+            )
+            aggregated_flags[i] = flag.replace("$HOME", home)
+        if "$OUTPUT_BASE" in flag:
+            output_base = execute_command_and_get_output(
+                [bazel_binary, "info", "output_base"], print_output=False
+            ).strip()
+            aggregated_flags[i] = flag.replace("$OUTPUT_BASE", output_base)
 
     return aggregated_flags
 
@@ -1397,6 +1413,7 @@ def execute_bazel_build(
         # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
         [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags,
         bep_file,
+        bazel_binary,
         enable_remote_cache=True,
     )
 
@@ -1433,9 +1450,7 @@ def calculate_targets(task_config, platform, bazel_binary, build_only, test_only
             )
         )
         expanded_test_targets = expand_test_target_patterns(bazel_binary, platform, test_targets)
-        build_targets, test_targets = get_targets_for_shard(
-            build_targets, expanded_test_targets, shard_id, shard_count
-        )
+        test_targets = get_targets_for_shard(expanded_test_targets, shard_id, shard_count)
 
     return build_targets, test_targets
 
@@ -1482,15 +1497,9 @@ def partition_targets(targets):
     return included_targets, excluded_targets
 
 
-def get_targets_for_shard(build_targets, test_targets, shard_id, shard_count):
+def get_targets_for_shard(test_targets, shard_id, shard_count):
     # TODO(fweikert): implement a more sophisticated algorithm
-    included_build_targets, excluded_build_targets = partition_targets(build_targets)
-    build_targets_for_this_shard = sorted(included_build_targets)[shard_id::shard_count] + [
-        "-" + x for x in excluded_build_targets
-    ]
-    test_targets_for_this_shard = sorted(test_targets)[shard_id::shard_count]
-
-    return build_targets_for_this_shard, test_targets_for_this_shard
+    return sorted(test_targets)[shard_id::shard_count]
 
 
 def execute_bazel_test(
@@ -1519,6 +1528,7 @@ def execute_bazel_test(
         # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
         [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags,
         bep_file,
+        bazel_binary,
         enable_remote_cache=not monitor_flaky_tests,
     )
 
