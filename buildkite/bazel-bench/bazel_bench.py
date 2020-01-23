@@ -321,7 +321,7 @@ def _create_and_upload_metadata(
 
 
 def _report_generation_step(
-    date, project_label, bucket, bigquery_table, platform, report_name, update_latest=False):
+    date, project_label, bucket, bigquery_table, platform, report_name, update_latest=False, upload_report=False):
     """Generate the daily report.
 
     Also update the path reserved for the latest report of each project.
@@ -336,12 +336,13 @@ def _report_generation_step(
         "--project={}".format(project_label),
         "--storage_bucket={}".format(bucket),
         "--bigquery_table={}".format(bigquery_table),
-        "--report_name={}".format(report_name)
+        "--report_name={}".format(report_name),
+        "--upload_report={}".format(upload_report)
     ]))
 
     # Copy the generated report to a special path on GCS that's reserved for
     # "latest" reports. GCS doesn't support symlink.
-    if update_latest:
+    if upload_report and update_latest:
         date_dir = date.strftime("%Y/%m/%d")
         report_dated_path_gcs = "gs://{}/{}/{}/{}.html".format(
             bucket, project_label, date_dir, report_name)
@@ -369,6 +370,7 @@ def main(args=None):
     parser.add_argument("--max_commits", type=int, default="")
     parser.add_argument("--report_name", type=str, default="report")
     parser.add_argument("--update_latest", action="store_true", default=False)
+    parser.add_argument("--upload_report", action="store_true", default=False)
     parser.add_argument(
       "--bigquery_table",
       help="The BigQuery table to fetch data from. In the format: project:table_identifier.")
