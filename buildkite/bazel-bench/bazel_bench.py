@@ -418,7 +418,7 @@ def main(args=None):
             _report_generation_step(
                 date, project["storage_subdir"],
                 parsed_args.bucket, parsed_args.bigquery_table, REPORT_GENERATION_PLATFORM,
-                parsed_args.report_name, parsed_args.update_latest))
+                parsed_args.report_name, parsed_args.update_latest, parsed_args.upload_report))
 
         bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
         subprocess.run(
