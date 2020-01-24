@@ -169,7 +169,7 @@ def _get_clone_path(repository, platform):
 
 
 def _ci_step_for_platform_and_commits(
-    bazel_commits, platform, project, extra_options, date, bucket, bigquery_table, prerun_command):
+    bazel_commits, platform, project, extra_options, date, bucket, bigquery_table):
     """Perform bazel-bench for the platform-project combination.
     Uploads results to BigQuery.
 
@@ -182,7 +182,6 @@ def _ci_step_for_platform_and_commits(
         date: the date of the commits.
         bucket: the GCP Storage bucket to upload data to.
         bigquery_table: the table to upload data to. In the form `project:table_identifier`.
-        prerun_command: the command that will be executed before then benchmarking begins.
 
     Return:
         An object: the result of applying bazelci.create_step to wrap the
@@ -244,7 +243,7 @@ def _ci_step_for_platform_and_commits(
     commands = (
         [bazelci.fetch_bazelcipy_command()]
         + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
-        + prerun_command
+        + project["prerun_command"]
         + [bazel_bench_command, upload_output_files_storage_command, upload_to_big_query_command]
     )
     label = (
