@@ -40,6 +40,15 @@ PROJECTS = [
         "storage_subdir": "bazel",
         "git_repository": "https://github.com/bazelbuild/bazel.git",
         "bazel_command": "build //src:bazel",
+        "prerun_command": "",
+        "active": True,
+    },
+    {
+        "name": "TensorFlow",
+        "storage_subdir": "tensorflow",
+        "git_repository": "https://github.com/tensorflow/tensorflow.git",
+        "bazel_command": "build //tensorflow/tools/pip_package:build_pip_package",
+        "prerun_command": "export TF_IGNORE_MAX_BAZEL_VERSION=1"
         "active": True,
     }
 ]
@@ -160,7 +169,7 @@ def _get_clone_path(repository, platform):
 
 
 def _ci_step_for_platform_and_commits(
-    bazel_commits, platform, project, extra_options, date, bucket, bigquery_table):
+    bazel_commits, platform, project, extra_options, date, bucket, bigquery_table, prerun_command):
     """Perform bazel-bench for the platform-project combination.
     Uploads results to BigQuery.
 
@@ -173,6 +182,7 @@ def _ci_step_for_platform_and_commits(
         date: the date of the commits.
         bucket: the GCP Storage bucket to upload data to.
         bigquery_table: the table to upload data to. In the form `project:table_identifier`.
+        prerun_command: the command that will be executed before then benchmarking begins.
 
     Return:
         An object: the result of applying bazelci.create_step to wrap the
@@ -234,6 +244,7 @@ def _ci_step_for_platform_and_commits(
     commands = (
         [bazelci.fetch_bazelcipy_command()]
         + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
+        + prerun_command
         + [bazel_bench_command, upload_output_files_storage_command, upload_to_big_query_command]
     )
     label = (
