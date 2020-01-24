@@ -48,7 +48,7 @@ PROJECTS = [
         "storage_subdir": "tensorflow",
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
         "bazel_command": "build //tensorflow/tools/pip_package:build_pip_package",
-        "prerun_command": "export TF_IGNORE_MAX_BAZEL_VERSION=1"
+        "prerun_command": "export TF_IGNORE_MAX_BAZEL_VERSION=1",
         "active": True,
     }
 ]
