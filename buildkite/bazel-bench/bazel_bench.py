@@ -243,8 +243,7 @@ def _ci_step_for_platform_and_commits(
     commands = (
         [bazelci.fetch_bazelcipy_command()]
         + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
-        + project["prerun_command"]
-        + [bazel_bench_command, upload_output_files_storage_command, upload_to_big_query_command]
+        + [project["prerun_command"], bazel_bench_command, upload_output_files_storage_command, upload_to_big_query_command]
     )
     label = (
         bazelci.PLATFORMS[platform]["emoji-name"]
