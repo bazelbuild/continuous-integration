@@ -40,7 +40,7 @@ PROJECTS = [
         "storage_subdir": "bazel",
         "git_repository": "https://github.com/bazelbuild/bazel.git",
         "bazel_command": "build //src:bazel",
-        "bazel_bench_extra_options": "",
+        "bazel_bench_extra_options": {},
         "active": False,
     },
     {
@@ -48,7 +48,10 @@ PROJECTS = [
         "storage_subdir": "tensorflow",
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
         "bazel_command": "build //tensorflow/tools/pip_package:build_pip_package",
-        "bazel_bench_extra_options": "--env_configure=\"yes '' | ./configure\"",
+        "bazel_bench_extra_options": {
+            "ubuntu1804": "--output_filter=^$ --env_configure=\"yes '' | ./configure\"",
+            "macos": "--output_filter=^$ --env_configure=\"yes '' | python3 ./configure.py\"",
+        }
         # "bazel_bench_extra_options": "https://raw.githubusercontent.com/joeleba/continuous-integration/tf/buildkite/pipelines/tensorflow-bazel-bench.yml",
         "active": True,
     }
@@ -419,13 +422,17 @@ def main(args=None):
             continue
         platforms = _get_platforms(
             project["name"], whitelist=PLATFORMS_WHITELIST)
-        project_extra_bazel_bench_options = " ".join([project["bazel_bench_extra_options"], parsed_args.bazel_bench_options])
-
+        
         for platform in platforms:
+            if (project["bazel_bench_extra_options"] and platform in project["bazel_bench_extra_options"]):
+                project_specific_bazel_bench_options = " ".join([project["bazel_bench_extra_options"][platform], parsed_args.bazel_bench_options])
+            else:
+                project_specific_bazel_bench_options = parsed_args.bazel_bench_options
+
             bazel_bench_ci_steps.append(
                 _ci_step_for_platform_and_commits(
                     bazel_commits_to_benchmark, platform, project,
-                    project_extra_bazel_bench_options, date, parsed_args.bucket,
+                    project_specific_bazel_bench_options, date, parsed_args.bucket,
                     parsed_args.bigquery_table
                 )
             )
