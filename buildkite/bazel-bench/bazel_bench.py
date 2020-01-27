@@ -77,17 +77,17 @@ def _bazel_bench_env_setup_command(platform, bazel_commits, project_clone_path, 
         "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?%s"
         % int(time.time())
     )
-    download_bazelci_command = 'curl -sS "%s" -o bazelci.py' % bazelci_env_setup_url
-    exec_bazelci_command = (
-        "{python}  bazelci.py runner --task={platform} --http_config={bazel_bench_env_config} "
-        "--git_repo_location={project_clone_path}"
-        ).format(
-            python=bazelci.PLATFORMS[platform]["python"],
-            platform=platform,
-            bazel_bench_env_config=bazel_bench_env_config,
-            project_clone_path=project_clone_path,
-    )
-    return [download_bb_command, exec_bb_command, download_bazelci_command, exec_bazelci_command]
+    # download_bazelci_command = 'curl -sS "%s" -o bazelci.py' % bazelci_env_setup_url
+    # exec_bazelci_command = (
+    #     "{python}  bazelci.py runner --task={platform} --http_config={bazel_bench_env_config} "
+    #     "--git_repo_location={project_clone_path}"
+    #     ).format(
+    #         python=bazelci.PLATFORMS[platform]["python"],
+    #         platform=platform,
+    #         bazel_bench_env_config=bazel_bench_env_config,
+    #         project_clone_path=project_clone_path,
+    # )
+    return [download_bb_command, exec_bb_command]#, download_bazelci_command, exec_bazelci_command]
 
 
 def _evenly_spaced_sample(lst, num_elem):
