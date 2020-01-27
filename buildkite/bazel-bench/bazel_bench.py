@@ -50,10 +50,10 @@ PROJECTS = [
         "bazel_command": "build --output_filter=^\$ //tensorflow/tools/pip_package:build_pip_package",
         "bazel_bench_extra_options": {
             "ubuntu1804": "--env_configure=\"yes '' | ./configure\"",
-            "macos": ("--env_configure=\"python --version && python -m pip install -U --user pip six numpy wheel setuptools mock 'future>=0.17.1' "
-                "&& python -m pip install -U --user keras_applications==1.0.6 --no-deps "
-                "&& python -m pip install -U --user keras_preprocessing==1.0.5 --no-deps "
-                "&& yes '' | python ./configure.py\""),
+            "macos": ("--env_configure=\"python3 --version && python3 -m pip3 install -U --user pip six numpy wheel setuptools mock 'future>=0.17.1' "
+                "&& python3 -m pip3 install -U --user keras_applications==1.0.6 --no-deps "
+                "&& python3 -m pip3 install -U --user keras_preprocessing==1.0.5 --no-deps "
+                "&& yes '' | python3 ./configure.py\""),
         },
         # "bazel_bench_extra_options": "https://raw.githubusercontent.com/joeleba/continuous-integration/tf/buildkite/pipelines/tensorflow-bazel-bench.yml",
         "active": True,
