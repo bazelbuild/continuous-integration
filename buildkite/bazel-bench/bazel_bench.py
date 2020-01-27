@@ -160,7 +160,7 @@ def _get_clone_path(repository, platform):
 
 
 def _ci_step_for_platform_and_commits(
-    bazel_commits, platform, project, extra_options, date, bucket):
+    bazel_commits, platform, project, extra_options, date, bucket, bigquery_table):
     """Perform bazel-bench for the platform-project combination.
     Uploads results to BigQuery.
 
@@ -172,6 +172,7 @@ def _ci_step_for_platform_and_commits(
         extra_options: a string: extra bazel-bench options.
         date: the date of the commits.
         bucket: the GCP Storage bucket to upload data to.
+        bigquery_table: the table to upload data to. In the form `project:table_identifier`.
 
     Return:
         An object: the result of applying bazelci.create_step to wrap the
@@ -200,7 +201,6 @@ def _ci_step_for_platform_and_commits(
             project["bazel_command"],
         ]
     )
-    # TODO(leba): Upload to BigQuery too.
     # TODO(leba): Use GCP Python client instead of gsutil.
     # TODO(https://github.com/bazelbuild/bazel-bench/issues/46): Include task-specific shell commands and build flags.
 
@@ -220,10 +220,21 @@ def _ci_step_for_platform_and_commits(
             "gs://{}/{}".format(bucket, storage_subdir),
         ]
     )
+    upload_to_big_query_command = " ".join(
+        [
+            "bq",
+            "load",
+            "--skip_leading_rows=1",
+            "--source_format=CSV",
+            bigquery_table,
+            "{}/perf_data.csv".format(DATA_DIRECTORY),
+        ]
+    )
+
     commands = (
         [bazelci.fetch_bazelcipy_command()]
         + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
-        + [bazel_bench_command, upload_output_files_storage_command]
+        + [bazel_bench_command, upload_output_files_storage_command, upload_to_big_query_command]
     )
     label = (
         bazelci.PLATFORMS[platform]["emoji-name"]
@@ -310,24 +321,28 @@ def _create_and_upload_metadata(
 
 
 def _report_generation_step(
-    date, project_label, bucket, platform, report_name, update_latest=False):
+    date, project_label, bucket, bigquery_table, platform, report_name, update_latest=False, upload_report=False):
     """Generate the daily report.
 
     Also update the path reserved for the latest report of each project.
     """
     commands = []
     commands.append(" ".join([
-        "python3.6",
-        "report/generate_report.py",
+        "bazel",
+        "run",
+        "report:generate_report",
+        "--",
         "--date={}".format(date),
         "--project={}".format(project_label),
         "--storage_bucket={}".format(bucket),
-        "--report_name={}".format(report_name)
+        "--bigquery_table={}".format(bigquery_table),
+        "--report_name={}".format(report_name),
+        "--upload_report={}".format(upload_report)
     ]))
 
     # Copy the generated report to a special path on GCS that's reserved for
     # "latest" reports. GCS doesn't support symlink.
-    if update_latest:
+    if upload_report and update_latest:
         date_dir = date.strftime("%Y/%m/%d")
         report_dated_path_gcs = "gs://{}/{}/{}/{}.html".format(
             bucket, project_label, date_dir, report_name)
@@ -355,6 +370,10 @@ def main(args=None):
     parser.add_argument("--max_commits", type=int, default="")
     parser.add_argument("--report_name", type=str, default="report")
     parser.add_argument("--update_latest", action="store_true", default=False)
+    parser.add_argument("--upload_report", action="store_true", default=False)
+    parser.add_argument(
+      "--bigquery_table",
+      help="The BigQuery table to fetch data from. In the format: project:table_identifier.")
     parsed_args = parser.parse_args(args)
 
     bazel_bench_ci_steps = []
@@ -378,7 +397,8 @@ def main(args=None):
             bazel_bench_ci_steps.append(
                 _ci_step_for_platform_and_commits(
                     bazel_commits_to_benchmark, platform, project,
-                    parsed_args.bazel_bench_options, date, parsed_args.bucket
+                    parsed_args.bazel_bench_options, date, parsed_args.bucket,
+                    parsed_args.bigquery_table
                 )
             )
         _create_and_upload_metadata(
@@ -397,8 +417,8 @@ def main(args=None):
         bazel_bench_ci_steps.append(
             _report_generation_step(
                 date, project["storage_subdir"],
-                parsed_args.bucket, REPORT_GENERATION_PLATFORM,
-                parsed_args.report_name, parsed_args.update_latest))
+                parsed_args.bucket, parsed_args.bigquery_table, REPORT_GENERATION_PLATFORM,
+                parsed_args.report_name, parsed_args.update_latest, parsed_args.upload_report))
 
         bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
         subprocess.run(
