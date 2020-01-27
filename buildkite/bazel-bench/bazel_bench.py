@@ -51,7 +51,7 @@ PROJECTS = [
         "bazel_bench_extra_options": {
             "ubuntu1804": "--output_filter=^$ --env_configure=\"yes '' | ./configure\"",
             "macos": "--output_filter=^$ --env_configure=\"yes '' | python3 ./configure.py\"",
-        }
+        },
         # "bazel_bench_extra_options": "https://raw.githubusercontent.com/joeleba/continuous-integration/tf/buildkite/pipelines/tensorflow-bazel-bench.yml",
         "active": True,
     }
