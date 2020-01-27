@@ -40,7 +40,7 @@ PROJECTS = [
         "storage_subdir": "bazel",
         "git_repository": "https://github.com/bazelbuild/bazel.git",
         "bazel_command": "build //src:bazel",
-        "prerun_command": "",
+        "bazel_bench_env_config": "",
         "active": False,
     },
     {
@@ -48,7 +48,7 @@ PROJECTS = [
         "storage_subdir": "tensorflow",
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
         "bazel_command": "build //tensorflow/tools/pip_package:build_pip_package",
-        "prerun_command": "export TF_IGNORE_MAX_BAZEL_VERSION=1",
+        "bazel_bench_env_config": "https://raw.githubusercontent.com/joeleba/continuous-integration/tf/buildkite/pipelines/tensorflow-bazel-bench.yml",
         "active": True,
     }
 ]
@@ -61,18 +61,33 @@ REPORT_GENERATION_PLATFORM = 'ubuntu1804'
 STARTER_JOB_PLATFORM = 'ubuntu1804'
 
 
-def _bazel_bench_env_setup_command(platform, bazel_commits):
-    bazel_bench_env_setup_py_url = (
-        "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-bench/bazel_bench_env_setup.py?%s"
+def _bazel_bench_env_setup_command(platform, bazel_commits, project_clone_path, bazel_bench_env_config):
+    bazel_binaries_setup_url = (
+        "https://raw.githubusercontent.com/joeleba/continuous-integration/tf/buildkite/bazel-bench/bazel_binaries_setup.py?%s"
         % int(time.time())
     )
-    download_command = 'curl -sS "%s" -o bazel_bench_env_setup.py' % bazel_bench_env_setup_py_url
-    exec_command = "%s bazel_bench_env_setup.py --platform=%s --bazel_commits=%s" % (
-        bazelci.PLATFORMS[platform]["python"],
-        platform,
-        bazel_commits,
+    download_bb_command = 'curl -sS "%s" -o bazel_bench_env_setup.py' % bazel_binaries_setup_url
+    exec_bb_command = "{python} bazel_bench_env_setup.py --platform={platform} --bazel_commits={bazel_commits}".format(
+        python=bazelci.PLATFORMS[platform]["python"],
+        platform=platform,
+        bazel_commits=bazel_commits
     )
-    return [download_command, exec_command]
+
+    bazelci_env_setup_url = (
+        "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?%s"
+        % int(time.time())
+    )
+    download_bazelci_command = 'curl -sS "%s" -o bazelci.py' % bazelci_env_setup_url
+    exec_bazelci_command = (
+        "{python}  bazelci.py runner --task={platform} --http_config={bazel_bench_env_config} "
+        "--git_repo_location={project_clone_path}"
+        ).format(
+            python=bazelci.PLATFORMS[platform]["python"],
+            platform=platform,
+            bazel_bench_env_config=bazel_bench_env_config,
+            project_clone_path=project_clone_path,
+    )
+    return [download_bb_command, exec_bb_command, download_bazelci_command, exec_bazelci_command]
 
 
 def _evenly_spaced_sample(lst, num_elem):
@@ -242,8 +257,9 @@ def _ci_step_for_platform_and_commits(
 
     commands = (
         [bazelci.fetch_bazelcipy_command()]
-        + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
-        + [project["prerun_command"], bazel_bench_command, upload_output_files_storage_command, upload_to_big_query_command]
+        + _bazel_bench_env_setup_command(
+            platform, ",".join(bazel_commits), project_clone_path, project["bazel_bench_env_config"])
+        + [bazel_bench_command, upload_output_files_storage_command, upload_to_big_query_command]
     )
     label = (
         bazelci.PLATFORMS[platform]["emoji-name"]
