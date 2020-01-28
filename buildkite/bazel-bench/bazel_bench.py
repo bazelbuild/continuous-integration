@@ -53,7 +53,7 @@ PROJECTS = [
             "macos": ("--env_configure=\"python3 --version && unset PYTHONPATH && pip3 install -U --user pip six numpy wheel setuptools mock 'future>=0.17.1' "
                 "&& pip3 install -U --user keras_applications==1.0.6 --no-deps "
                 "&& pip3 install -U --user keras_preprocessing==1.0.5 --no-deps "
-                "&& yes '' | python3 ./configure.py\""),
+                "&& yes '' | ./configure\""),
         },
         # "bazel_bench_extra_options": "https://raw.githubusercontent.com/joeleba/continuous-integration/tf/buildkite/pipelines/tensorflow-bazel-bench.yml",
         "active": True,
