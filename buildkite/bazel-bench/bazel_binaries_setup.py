@@ -42,7 +42,7 @@ def main(argv=None):
     binary_platform = (
         args.platform if args.platform in ["macos", "windows"] else bazelci.LINUX_BINARY_PLATFORM
     )
-    bazel_bin_dir = BAZEL_BINARY_BASE_PATH + "/" + binary_platform
+    bazel_bin_dir = BAZEL_BINARY_BASE_PATH + "/" + args.platform
 
     for bazel_commit in bazel_commits:
         destination = bazel_bin_dir + "/" + bazel_commit
