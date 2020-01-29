@@ -494,6 +494,11 @@ LINUX_BINARY_PLATFORM = "centos7"
 
 DEFAULT_XCODE_VERSION = "11.1"
 XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
+XCODE_VERSION_OVERRIDES = {
+    "10.2.1": "10.3",
+    "11.2": "11.2.1",
+    "11.3": "11.3.1",
+}
 
 ENCRYPTED_SAUCELABS_TOKEN = """
 CiQAry63sOlZtTNtuOT5DAOLkum0rGof+DOweppZY1aOWbat8zwSTQAL7Hu+rgHSOr6P4S1cu4YG
@@ -963,6 +968,9 @@ def activate_xcode(task_config):
                 xcode_version
             )
         )
+
+    # This is used to replace e.g. 11.2 with 11.2.1 without having to update all configs.
+    xcode_version = XCODE_VERSION_OVERRIDES.get(xcode_version, xcode_version)
 
     # Check that the selected Xcode version is actually installed on the host.
     xcode_path = "/Applications/Xcode{}.app".format(xcode_version)
