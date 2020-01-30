@@ -43,10 +43,9 @@ func (pp *PipelinePerformance) Collect() (data.DataSet, error) {
 		for _, build := range builds {
 			skippedTasks := getSkippedTasks(build)
 			for _, job := range build.Jobs {
-				if job.Name == nil || job.FinishedAt == nil {
+				if job.Name == nil || job.FinishedAt == nil || job.RunnableAt == nil {
 					continue
 				}
-
 				err := result.AddRow(pipeline.Org, pipeline.Slug, *build.Number, *job.Name, job.RunnableAt.Time, getDifferenceSeconds(job.RunnableAt, job.StartedAt), getDifferenceSeconds(job.StartedAt, job.FinishedAt), skippedTasks)
 				if err != nil {
 					return nil, fmt.Errorf("Failed to add result for job %s of build %d: %v", *job.Name, *build.Number, err)
