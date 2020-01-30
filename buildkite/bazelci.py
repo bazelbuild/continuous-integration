@@ -879,12 +879,17 @@ def execute_commands(
                 json_profile_flags = get_json_profile_flags(json_profile_out_build)
 
             build_flags = task_config.get("build_flags") or []
+            build_flags += json_profile_flags
+            # We have to add --test_env flags to `build`, too, otherwise Bazel
+            # discards its analysis cache between `build` and `test`.
+            if test_env_vars:
+                build_flags += ["--test_env={}".format(v) for v in test_env_vars]
             try:
                 execute_bazel_build(
                     bazel_version,
                     bazel_binary,
                     platform,
-                    build_flags + json_profile_flags,
+                    build_flags,
                     build_targets,
                     None,
                     incompatible_flags,
