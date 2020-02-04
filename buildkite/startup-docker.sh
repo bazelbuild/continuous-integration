@@ -35,7 +35,7 @@ if [[ -e /dev/nvme0n1 ]]; then
     mkswap $device
     swapon --discard -p0 $device
   done
-done
+fi
 swapon -s
 
 ### Create a tmpfs.
