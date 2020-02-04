@@ -30,7 +30,7 @@ sysctl -w kernel.sched_wakeup_granularity_ns=15000000
 sysctl -w vm.dirty_ratio=40
 
 ### Use the local SSDs as fast storage.
-if [[ -e /dev/nvme0n1 ]]; do
+if [[ -e /dev/nvme0n1 ]]; then
   for device in /dev/nvme0n?; do
     mkswap $device
     swapon --discard -p0 $device
