@@ -1061,22 +1061,23 @@ def print_environment_variables_info():
 
 def upload_bazel_binary(platform):
     print_collapsed_group(":gcloud: Uploading Bazel Under Test")
-    binary_path = "bazel-bin/src/bazel"
     if platform == "windows":
-        binary_path = r"bazel-bin\src\bazel.exe"
-    execute_command(["buildkite-agent", "artifact", "upload", binary_path])
+        binary_dir = r"bazel-bin\src"
+        binary_name = r"bazel.exe"
+    else:
+        binary_dir = "bazel-bin/src"
+        binary_name = "bazel"
+    execute_command(["buildkite-agent", "artifact", "upload", binary_name], cwd=binary_dir)
 
 
 def download_bazel_binary(dest_dir, platform):
-    binary_path = "bazel-bin/src/bazel"
-    if platform == "windows":
-        binary_path = r"bazel-bin\src\bazel.exe"
+    binary_name = "bazel.exe" if platform == "windows" else "bazel"
 
     source_step = create_label(platform, "Bazel", build_only=True)
     execute_command(
-        ["buildkite-agent", "artifact", "download", binary_path, dest_dir, "--step", source_step]
+        ["buildkite-agent", "artifact", "download", binary_name, dest_dir, "--step", source_step]
     )
-    bazel_binary_path = os.path.join(dest_dir, binary_path)
+    bazel_binary_path = os.path.join(dest_dir, binary_name)
     st = os.stat(bazel_binary_path)
     os.chmod(bazel_binary_path, st.st_mode | stat.S_IEXEC)
     return bazel_binary_path
