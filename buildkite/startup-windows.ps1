@@ -120,6 +120,7 @@ build-path="d:\b"
 hooks-path="c:\buildkite\hooks"
 plugins-path="c:\buildkite\plugins"
 git-mirrors-path="c:\buildkite\bazelbuild"
+git-clone-mirror-flags="-v --bare"
 disconnect-after-job=true
 health-check-addr=0.0.0.0:8080
 "@

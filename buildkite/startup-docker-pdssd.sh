@@ -89,6 +89,7 @@ tags="queue=default,kind=docker,os=linux"
 experiment="git-mirrors"
 build-path="/var/lib/buildkite-agent/builds"
 git-mirrors-path="/var/lib/gitmirrors"
+git-clone-mirror-flags="-v --bare"
 hooks-path="/etc/buildkite-agent/hooks"
 plugins-path="/etc/buildkite-agent/plugins"
 disconnect-after-job=true
