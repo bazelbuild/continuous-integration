@@ -15,6 +15,10 @@ New-Partition -DiskNumber 1 -UseMaximumSize -DriveLetter D
 Format-Volume -DriveLetter D -ShortFileNameSupport $true
 Add-NTFSAccess "D:\" -Account "b" -AccessRights FullControl
 
+## Make the local SSD available as C:\b, too.
+New-Item -ItemType Directory -Path "C:\b"
+Add-PartitionAccessPath -DriveLetter D -AccessPath "C:\b"
+
 ## Load PowerShell support for ZIP files.
 Write-Host "Loading support for ZIP files..."
 Add-Type -AssemblyName "System.IO.Compression.FileSystem"
@@ -125,21 +129,6 @@ disconnect-after-job=true
 health-check-addr=0.0.0.0:8080
 "@
 [System.IO.File]::WriteAllLines("${buildkite_agent_root}\buildkite-agent.cfg", $buildkite_agent_config)
-
-## Download our custom Buildkite Agent binary with the health check patch.
-Write-Host "Downloading Buildkite Agent..."
-$buildkite_agent_url = "https://storage.googleapis.com/bazel-ci/buildkite-agent/v3.14.0.bazel1/buildkite-agent-windows-amd64.exe"
-$buildkite_agent_exe = "c:\buildkite\buildkite-agent.exe"
-while ($true) {
-  try {
-    (New-Object Net.WebClient).DownloadFile($buildkite_agent_url, $buildkite_agent_exe)
-    break
-  } catch {
-    $msg = $_.Exception.Message
-    Write-Host "Failed to download agent: $msg"
-    Start-Sleep -Seconds 10
-  }
-}
 
 ## Start the Buildkite agent service.
 try {
