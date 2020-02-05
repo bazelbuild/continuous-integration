@@ -15,10 +15,6 @@ New-Partition -DiskNumber 1 -UseMaximumSize -DriveLetter D
 Format-Volume -DriveLetter D -ShortFileNameSupport $true
 Add-NTFSAccess "D:\" -Account "b" -AccessRights FullControl
 
-## Make the local SSD available as C:\b, too.
-New-Item -ItemType Directory -Path "C:\b"
-Add-PartitionAccessPath -DriveLetter D -AccessPath "C:\b"
-
 ## Load PowerShell support for ZIP files.
 Write-Host "Loading support for ZIP files..."
 Add-Type -AssemblyName "System.IO.Compression.FileSystem"

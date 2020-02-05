@@ -467,7 +467,7 @@ PLATFORMS = {
     "windows": {
         "name": "Windows, OpenJDK 8",
         "emoji-name": ":windows: (OpenJDK 8)",
-        "downstream-root": "d:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
+        "downstream-root": "c:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["windows"],
         "queue": "windows",
         "python": "python.exe",
@@ -637,6 +637,10 @@ def gcloud_command():
 
 def downstream_projects_root(platform):
     downstream_root = os.path.expandvars(PLATFORMS[platform]["downstream-root"])
+    if platform == "windows" and os.path.exists("d:/b"):
+        # If this is a Windows machine with a local SSD, the build directory is
+        # on drive D.
+        downstream_root = downstream_root.replace("c:/b/", "d:/b/")
     if not os.path.exists(downstream_root):
         os.makedirs(downstream_root)
     return downstream_root
@@ -1276,7 +1280,14 @@ def concurrent_test_jobs(platform):
 
 
 def common_startup_flags(platform):
-    return ["--output_user_root=D:/b"] if platform == "windows" else []
+    if platform == "windows":
+        if os.path.exists("D:/b"):
+            # This machine has a local SSD mounted as drive D.
+            return ["--output_user_root=D:/b"]
+        else:
+            # This machine uses its PD-SSD as the build directory.
+            return ["--output_user_root=C:/b"]
+    return []
 
 
 def common_build_flags(bep_file, platform):
@@ -1394,9 +1405,15 @@ def compute_flags(
 
     for i, flag in enumerate(aggregated_flags):
         if "$HOME" in flag:
-            home = {"windows": "D:", "macos": "/Users/buildkite"}.get(
-                platform, "/var/lib/buildkite-agent"
-            )
+            if platform == "windows":
+                if os.path.exists("D:/"):
+                    home = "D:"
+                else:
+                    home = "C:/b"
+            elif platform == "macos":
+                home = "/Users/buildkite"
+            else:
+                home = "/var/lib/buildkite-agent"
             aggregated_flags[i] = flag.replace("$HOME", home)
         if "$OUTPUT_BASE" in flag:
             output_base = execute_command_and_get_output(
