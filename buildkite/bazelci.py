@@ -1608,7 +1608,7 @@ def upload_test_logs_from_bep(bep_file, tmpdir, stop_request):
                     os.chdir(cwd)
         if done:
             break
-        time.sleep(0.2)
+        time.sleep(5)
 
 
 def upload_json_profile(json_profile_path, tmpdir):
