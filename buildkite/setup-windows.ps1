@@ -128,28 +128,16 @@ if ($java -ne "no") {
     [Environment]::SetEnvironmentVariable("JAVA_HOME", $env:JAVA_HOME, "Machine")
 }
 
-## Install Visual C++ 2015 Build Tools (Update 3).
-Write-Host "Installing Visual C++ 2015 Build Tools..."
-(New-Object Net.WebClient).DownloadFile("http://go.microsoft.com/fwlink/?LinkId=691126", "c:\temp\visualcppbuildtools_full.exe")
-Start-Process -Wait "c:\temp\visualcppbuildtools_full.exe" -ArgumentList "/Passive", "/NoRestart"
-Remove-Item "c:\temp\visualcppbuildtools_full.exe"
-[Environment]::SetEnvironmentVariable("BAZEL_VC", "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC", "Machine")
-$env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
-
-# Add registry key required by MSBuild (see https://stackoverflow.com/a/51189977).
-New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0" -Name "VCTargetsPath" `
-    -PropertyType String -Value "`$(MSBuildExtensionsPath)\Microsoft.Cpp\v4.0\V140"
-
 ## Install Visual C++ 2017 Build Tools.
 Write-Host "Installing Visual C++ 2017 Build Tools..."
 & choco install microsoft-build-tools
 & choco install visualstudio2017-workload-vctools
-# [Environment]::SetEnvironmentVariable("BAZEL_VC", "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC", "Machine")
-# $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
+[Environment]::SetEnvironmentVariable("BAZEL_VC", "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC", "Machine")
+$env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 
 ## Install Windows 10 SDK
 ## https://github.com/bazelbuild/continuous-integration/issues/768
-& choco install windows-sdk-10.0
+& choco install windows-sdk-10.1
 
 ## Install Python2
 Write-Host "Installing Python 2..."
@@ -158,7 +146,6 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Install Python3
 Write-Host "Installing Python 3..."
-# FYI: choco adds "C:\python3\Scripts\;C:\python3\" to PATH.
 & choco install python3 --version 3.6.8 --params "/InstallDir:C:\python3"
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
@@ -181,7 +168,7 @@ Write-Host "Installing Python packages..."
     keras_applications `
     keras_preprocessing
 
-## CMake 3.12.2 (for rules_foreign_cc).
+## CMake (for rules_foreign_cc).
 Write-Host "Installing CMake..."
 & choco install cmake
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";C:\Program Files\CMake\bin"
@@ -202,7 +189,7 @@ Write-Host "Installing Sauce Connect Proxy..."
 & choco install sauce-connect
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
-## Get the latest release version number of Bazel.
+## Get the latest release version number of Bazelisk.
 Write-Host "Grabbing latest Bazelisk version number from GitHub..."
 $url = "https://github.com/bazelbuild/bazelisk/releases/latest"
 $req = [system.Net.HttpWebRequest]::Create($url)
