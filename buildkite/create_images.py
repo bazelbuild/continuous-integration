@@ -149,11 +149,11 @@ def create_instance(instance_name, params):
             instance_name,
             project=params["project"],
             zone=params["zone"],
-            machine_type="n1-standard-8",
+            machine_type="c2-standard-8",
             network=params.get("network", "default"),
             metadata_from_file=startup_script,
             boot_disk_type="pd-ssd",
-            boot_disk_size=params.get("boot_disk_size", "50GB"),
+            boot_disk_size=params.get("boot_disk_size", "500GB"),
             **image,
         )
     finally:
