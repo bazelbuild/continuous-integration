@@ -63,9 +63,8 @@ instance_groups:
     service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
     image_project: bazel-untrusted
     image_family: bk-testing-windows-java8
-    local_ssd:
-      - interface=scsi
-    metadata_from_file: windows-startup-script-ps1=startup-windows.ps1
+    machine_type: c2-standard-30
+    metadata_from_file: windows-startup-script-ps1=startup-windows-pdssd.ps1
   - name: bk-trusted-windows-java8
     count: 4
     project: bazel-public
