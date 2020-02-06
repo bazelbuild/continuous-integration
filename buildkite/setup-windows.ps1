@@ -304,6 +304,17 @@ nssm set "buildkite-agent" "AppExit" "Default" "Exit"
 nssm set "buildkite-agent" "AppStdout" "COM1"
 nssm set "buildkite-agent" "AppStderr" "COM1"
 
+## Setup pagefile.sys, because otherwise we might run out of memory.
+## The JVM uses 25% of the physical RAM as its default heap size and doesn't return free memory
+## to the operating system. Windows doesn't overcommit memory, so we might get "unlucky" during
+## some CI runs and run out of available heap space. Setting up a pagefile.sys is a hack to give
+## Windows some breathing room, while we figure out how to use a more reasonable default heap size
+## in Bazel.
+$pagefile = Get-WmiObject -Query "SELECT * FROM Win32_PageFileSetting";
+$pagefile.InitialSize = 4 * 1024;
+$pagefile.MaximumSize = 64 * 1024;
+$pagefile.Put();
+
 Write-Host "All done, adding GCESysprep to RunOnce and rebooting..."
 Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "GCESysprep" -Value "c:\Program Files\Google\Compute Engine\sysprep\gcesysprep.bat"
 Restart-Computer

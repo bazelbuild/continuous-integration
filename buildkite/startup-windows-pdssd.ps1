@@ -44,6 +44,12 @@ SET TMP=${env:TEMP}
 "@
 [System.IO.File]::WriteAllLines("c:\buildkite\hooks\environment.bat", $buildkite_environment_hook)
 
+Write-Host "Creating Buildkite agent pre-exit hook..."
+$buildkite_preexit_hook = @"
+wmic pagefile list /format:list
+"@
+[System.IO.File]::WriteAllLines("c:\buildkite\hooks\pre-exit.bat", $buildkite_preexit_hook)
+
 ## Enable support for symlinks.
 Write-Host "Enabling SECreateSymbolicLinkPrivilege permission..."
 $ntprincipal = New-Object System.Security.Principal.NTAccount "b"

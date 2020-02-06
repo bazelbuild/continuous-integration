@@ -35,13 +35,14 @@ instance_groups:
     count: 30
     project: bazel-untrusted
     service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
-    image_family: bk-testing-docker
+    image_family: bk-docker
     metadata_from_file: startup-script=startup-docker-pdssd.sh
   - name: bk-trusted-docker
     count: 8
     project: bazel-public
     service_account: buildkite-trusted@bazel-public.iam.gserviceaccount.com
-    image_family: bk-trusted-docker
+    image_family: bk-docker
+    machine_type: e2-standard-16
     metadata_from_file: startup-script=startup-docker-pdssd.sh
   - name: bk-windows
     count: 30
@@ -53,13 +54,14 @@ instance_groups:
     count: 10
     project: bazel-untrusted
     service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
-    image_family: bk-testing-windows
+    image_family: bk-windows
     metadata_from_file: windows-startup-script-ps1=startup-windows-pdssd.ps1
   - name: bk-trusted-windows
     count: 4
     project: bazel-public
     service_account: buildkite-trusted@bazel-public.iam.gserviceaccount.com
-    image_family: bk-trusted-windows
+    image_family: bk-windows
+    machine_type: e2-standard-16
     metadata_from_file: windows-startup-script-ps1=startup-windows-pdssd.ps1
 physical_clusters:
   - name: buildkite-imacpro
