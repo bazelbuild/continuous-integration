@@ -99,34 +99,20 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 & git config --system core.autocrlf false
 
 ## Install Azul Zulu.
-$myhostname = [System.Net.Dns]::GetHostName()
-if ($myhostname -like "*nojava*") {
-    $java = "no"
-} elseif ($myhostname -like "*java8*") {
-    $java = "8"
-    $zulu_filename = "zulu8.38.0.13-ca-jdk8.0.212-win_x64.zip"
-} elseif ($myhostname -like "*java11*") {
-    $java = "11"
-    $zulu_filename = "zulu11.31.11-ca-jdk11.0.3-win_x64.zip"
-} else {
-    Throw "Could not deduce Java version from hostname: ${myhostname}!"
-}
-
-if ($java -ne "no") {
-    Write-Host "Installing Zulu ${java}..."
-    $zulu_url = "https://cdn.azul.com/zulu/bin/${zulu_filename}"
-    $zulu_zip = "c:\temp\${zulu_filename}"
-    $zulu_extracted_path = "c:\temp\" + [IO.Path]::GetFileNameWithoutExtension($zulu_zip)
-    $zulu_root = "c:\openjdk"
-    (New-Object Net.WebClient).DownloadFile($zulu_url, $zulu_zip)
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($zulu_zip, "c:\temp")
-    Move-Item $zulu_extracted_path -Destination $zulu_root
-    Remove-Item $zulu_zip
-    $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${zulu_root}\bin"
-    [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
-    $env:JAVA_HOME = $zulu_root
-    [Environment]::SetEnvironmentVariable("JAVA_HOME", $env:JAVA_HOME, "Machine")
-}
+Write-Host "Installing OpenJDK..."
+$zulu_filename = "zulu8.44.0.11-ca-jdk8.0.242-win_x64.zip"
+$zulu_url = "https://cdn.azul.com/zulu/bin/${zulu_filename}"
+$zulu_zip = "c:\temp\${zulu_filename}"
+$zulu_extracted_path = "c:\temp\" + [IO.Path]::GetFileNameWithoutExtension($zulu_zip)
+$zulu_root = "c:\openjdk"
+(New-Object Net.WebClient).DownloadFile($zulu_url, $zulu_zip)
+[System.IO.Compression.ZipFile]::ExtractToDirectory($zulu_zip, "c:\temp")
+Move-Item $zulu_extracted_path -Destination $zulu_root
+Remove-Item $zulu_zip
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${zulu_root}\bin"
+[Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
+$env:JAVA_HOME = $zulu_root
+[Environment]::SetEnvironmentVariable("JAVA_HOME", $env:JAVA_HOME, "Machine")
 
 ## Install Visual C++ 2017 Build Tools.
 Write-Host "Installing Visual C++ 2017 Build Tools..."
@@ -205,53 +191,52 @@ New-Item "c:\bazel" -ItemType "directory" -Force
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";c:\bazel"
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
-if ($java -ne "no") {
-    ## Download the Android NDK and install into C:\android-ndk-r15c.
-    $android_ndk_url = "https://dl.google.com/android/repository/android-ndk-r15c-windows-x86_64.zip"
-    $android_ndk_zip = "c:\temp\android_ndk.zip"
-    $android_ndk_root = "c:\android_ndk"
-    New-Item $android_ndk_root -ItemType "directory" -Force
-    (New-Object Net.WebClient).DownloadFile($android_ndk_url, $android_ndk_zip)
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($android_ndk_zip, $android_ndk_root)
-    Rename-Item "${android_ndk_root}\android-ndk-r15c" -NewName "r15c"
-    [Environment]::SetEnvironmentVariable("ANDROID_NDK_HOME", "${android_ndk_root}\r15c", "Machine")
-    $env:ANDROID_NDK_HOME = [Environment]::GetEnvironmentVariable("ANDROID_NDK_HOME", "Machine")
-    Remove-Item $android_ndk_zip
+## Download the Android NDK and install into C:\android-ndk-r15c.
+$android_ndk_url = "https://dl.google.com/android/repository/android-ndk-r15c-windows-x86_64.zip"
+$android_ndk_zip = "c:\temp\android_ndk.zip"
+$android_ndk_root = "c:\android_ndk"
+New-Item $android_ndk_root -ItemType "directory" -Force
+(New-Object Net.WebClient).DownloadFile($android_ndk_url, $android_ndk_zip)
+[System.IO.Compression.ZipFile]::ExtractToDirectory($android_ndk_zip, $android_ndk_root)
+Rename-Item "${android_ndk_root}\android-ndk-r15c" -NewName "r15c"
+[Environment]::SetEnvironmentVariable("ANDROID_NDK_HOME", "${android_ndk_root}\r15c", "Machine")
+$env:ANDROID_NDK_HOME = [Environment]::GetEnvironmentVariable("ANDROID_NDK_HOME", "Machine")
+Remove-Item $android_ndk_zip
 
-    ## Download the Android SDK and install into C:\android_sdk.
-    $android_sdk_url = "https://dl.google.com/android/repository/sdk-tools-windows-4333796.zip"
-    $android_sdk_zip = "c:\temp\android_sdk.zip"
-    $android_sdk_root = "c:\android_sdk"
-    New-Item $android_sdk_root -ItemType "directory" -Force
-    (New-Object Net.WebClient).DownloadFile($android_sdk_url, $android_sdk_zip)
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($android_sdk_zip, $android_sdk_root)
-    [Environment]::SetEnvironmentVariable("ANDROID_HOME", $android_sdk_root, "Machine")
-    $env:ANDROID_HOME = [Environment]::GetEnvironmentVariable("ANDROID_HOME", "Machine")
-    Remove-Item $android_sdk_zip
+## Download the Android SDK and install into C:\android_sdk.
+$android_sdk_url = "https://dl.google.com/android/repository/sdk-tools-windows-4333796.zip"
+$android_sdk_zip = "c:\temp\android_sdk.zip"
+$android_sdk_root = "c:\android_sdk"
+New-Item $android_sdk_root -ItemType "directory" -Force
+(New-Object Net.WebClient).DownloadFile($android_sdk_url, $android_sdk_zip)
+[System.IO.Compression.ZipFile]::ExtractToDirectory($android_sdk_zip, $android_sdk_root)
+[Environment]::SetEnvironmentVariable("ANDROID_HOME", $android_sdk_root, "Machine")
+$env:ANDROID_HOME = [Environment]::GetEnvironmentVariable("ANDROID_HOME", "Machine")
+Remove-Item $android_sdk_zip
 
-    ## Accept the Android SDK license agreement.
-    New-Item "${android_sdk_root}\licenses" -ItemType "directory" -Force
-    Add-Content -Value "`nd56f5187479451eabf01fb78af6dfcb131a6481e" -Path "${android_sdk_root}\licenses\android-sdk-license" -Encoding ASCII
-    Add-Content -Value "`n24333f8a63b6825ea9c5514f83c2829b004d1fee" -Path "${android_sdk_root}\licenses\android-sdk-license" -Encoding ASCII
-    Add-Content -Value "`nd975f751698a77b662f1254ddbeed3901e976f5a" -Path "${android_sdk_root}\licenses\intel-android-extra-license" -Encoding ASCII
+## Accept the Android SDK license agreement.
+New-Item "${android_sdk_root}\licenses" -ItemType "directory" -Force
+Add-Content -Value "`nd56f5187479451eabf01fb78af6dfcb131a6481e" -Path "${android_sdk_root}\licenses\android-sdk-license" -Encoding ASCII
+Add-Content -Value "`n24333f8a63b6825ea9c5514f83c2829b004d1fee" -Path "${android_sdk_root}\licenses\android-sdk-license" -Encoding ASCII
+Add-Content -Value "`nd975f751698a77b662f1254ddbeed3901e976f5a" -Path "${android_sdk_root}\licenses\intel-android-extra-license" -Encoding ASCII
 
-    ## Update the Android SDK tools.
-    Rename-Item "${android_sdk_root}\tools" "${android_sdk_root}\tools.old"
-    & "${android_sdk_root}\tools.old\bin\sdkmanager" "tools"
-    Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
+## Update the Android SDK tools.
+Rename-Item "${android_sdk_root}\tools" "${android_sdk_root}\tools.old"
+& "${android_sdk_root}\tools.old\bin\sdkmanager" "tools"
+Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
 
-    ## Install all required Android SDK components.
-    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platform-tools"
-    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;28.0.2"
-    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;28.0.3"
-    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;29.0.0"
-    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;29.0.2"
-    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;29.0.3"
-    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-24"
-    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-28"
-    & "${android_sdk_root}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
-}
+## Install all required Android SDK components.
+& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platform-tools"
+& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;28.0.2"
+& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;28.0.3"
+& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;29.0.0"
+& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;29.0.2"
+& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;29.0.3"
+& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-24"
+& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-28"
+& "${android_sdk_root}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
 
+$myhostname = [System.Net.Dns]::GetHostName()
 if ($myhostname -like "bk-*") {
     ## Download and unpack our Git snapshot.
     Write-Host "Downloading Git snapshot..."
@@ -287,27 +272,6 @@ if ($myhostname -like "bk-*") {
     ## Remove empty folders (";;") from PATH.
     $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine").replace(";;", ";")
     [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
-
-    ## Create an environment hook for the Buildkite agent.
-    if ($myhostname -like "*trusted*") {
-        $artifact_bucket = "bazel-trusted-buildkite-artifacts"
-    } elseif ($myhostname -like "*testing*") {
-        $artifact_bucket = "bazel-testing-buildkite-artifacts"
-    } else {
-        $artifact_bucket = "bazel-untrusted-buildkite-artifacts"
-    }
-
-    Write-Host "Creating Buildkite agent environment hook..."
-    $buildkite_environment_hook = @"
-SET BUILDKITE_ARTIFACT_UPLOAD_DESTINATION=gs://${artifact_bucket}/%BUILDKITE_JOB_ID%
-SET ANDROID_HOME=${env:ANDROID_HOME}
-SET ANDROID_NDK_HOME=${env:ANDROID_NDK_HOME}
-SET JAVA_HOME=${env:JAVA_HOME}
-SET PATH=${env:PATH}
-SET TEMP=D:\temp
-SET TMP=D:\temp
-"@
-    [System.IO.File]::WriteAllLines("${buildkite_agent_root}\hooks\environment.bat", $buildkite_environment_hook)
 
     ## Create an unprivileged user that we'll run the Buildkite agent as.
     # The password used here is not relevant for security, as the server is behind a

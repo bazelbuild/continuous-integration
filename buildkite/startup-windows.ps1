@@ -33,12 +33,35 @@ Write-Host "Creating build folder on local SSD..."
 Remove-Item "D:\b" -Recurse -Force -ErrorAction Ignore
 New-Item "D:\b" -ItemType "directory"
 
-## Setup the TEMP and TMP environment variables.
+## Setup environment variables.
 Write-Host "Setting environment variables..."
 [Environment]::SetEnvironmentVariable("TEMP", "D:\temp", "Machine")
 [Environment]::SetEnvironmentVariable("TMP", "D:\temp", "Machine")
 $env:TEMP = [Environment]::GetEnvironmentVariable("TEMP", "Machine")
 $env:TMP = [Environment]::GetEnvironmentVariable("TMP", "Machine")
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+
+## Create an environment hook for the Buildkite agent.
+$myhostname = [System.Net.Dns]::GetHostName()
+if ($myhostname -like "*trusted*") {
+  $artifact_bucket = "bazel-trusted-buildkite-artifacts"
+} elseif ($myhostname -like "*testing*") {
+  $artifact_bucket = "bazel-testing-buildkite-artifacts"
+} else {
+  $artifact_bucket = "bazel-untrusted-buildkite-artifacts"
+}
+
+Write-Host "Creating Buildkite agent environment hook..."
+$buildkite_environment_hook = @"
+SET BUILDKITE_ARTIFACT_UPLOAD_DESTINATION=gs://${artifact_bucket}/%BUILDKITE_JOB_ID%
+SET ANDROID_HOME=${env:ANDROID_HOME}
+SET ANDROID_NDK_HOME=${env:ANDROID_NDK_HOME}
+SET JAVA_HOME=${env:JAVA_HOME}
+SET PATH=${env:PATH}
+SET TEMP=${env:TEMP}
+SET TMP=${env:TEMP}
+"@
+[System.IO.File]::WriteAllLines("c:\buildkite\hooks\environment.bat", $buildkite_environment_hook)
 
 ## Enable support for symlinks.
 Write-Host "Enabling SECreateSymbolicLinkPrivilege permission..."
