@@ -96,7 +96,7 @@ def main(argv=None):
         nargs="*",
         help="List of instance (group) names that should be created. "
         'These values must correspond to "name" entries in the '
-        'Yaml configuration, e.g. "bk-pipeline-ubuntu1804-java8".',
+        'Yaml configuration, e.g. "bk-docker".',
     )
 
     args = parser.parse_args(argv)

@@ -72,7 +72,7 @@ IMAGE_CREATION_VMS = {
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
     },
-    "bk-windows-java8": {
+    "bk-windows": {
         "project": "bazel-untrusted",
         "zone": "us-central1-a",
         "source_image_project": "windows-cloud",
@@ -80,7 +80,7 @@ IMAGE_CREATION_VMS = {
         "setup_script": "setup-windows.ps1",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
     },
-    "bk-testing-windows-java8": {
+    "bk-testing-windows": {
         "project": "bazel-untrusted",
         "zone": "us-central1-a",
         "source_image_project": "windows-cloud",
@@ -88,7 +88,7 @@ IMAGE_CREATION_VMS = {
         "setup_script": "setup-windows.ps1",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
     },
-    "bk-trusted-windows-java8": {
+    "bk-trusted-windows": {
         "project": "bazel-public",
         "zone": "us-central1-a",
         "source_image_project": "windows-cloud",
