@@ -3,9 +3,21 @@ platforms:
   ubuntu1604:
     test_targets:
       - "//:all"
+      # `cc_proto_blacklist_test` only works as `@com_google_protobuf//:cc_proto_blacklist_test`.
+      # https://github.com/bazelbuild/bazel/issues/10590
+      - "-//:cc_proto_blacklist_test"
+      - "@com_google_protobuf//:cc_proto_blacklist_test"
   macos:
     test_targets:
       - "//:all"
+      # `cc_proto_blacklist_test` only works as `@com_google_protobuf//:cc_proto_blacklist_test`.
+      # https://github.com/bazelbuild/bazel/issues/10590
+      - "-//:cc_proto_blacklist_test"
+      - "@com_google_protobuf//:cc_proto_blacklist_test"
   windows:
     test_targets:
       - "//:all"
+      # `cc_proto_blacklist_test` only works as `@com_google_protobuf//:cc_proto_blacklist_test`.
+      # https://github.com/bazelbuild/bazel/issues/10590
+      - "-//:cc_proto_blacklist_test"
+      - "@com_google_protobuf//:cc_proto_blacklist_test"
