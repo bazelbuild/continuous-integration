@@ -14,12 +14,13 @@
 default_vm:
   boot_disk_size: 500GB
   boot_disk_type: pd-ssd
-  machine_type: n1-highmem-32
+  machine_type: c2-standard-30
   network: default
   region: us-central1
   restart-on-failure: False
   scopes: cloud-platform
   zone: us-central1-f
+  image_project: bazel-public
   tags: health-check
   health_check: buildkite-check
   initial_delay: 60
@@ -28,52 +29,38 @@ instance_groups:
     count: 100
     project: bazel-untrusted
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
-    image_project: bazel-untrusted
     image_family: bk-docker
-    machine_type: c2-standard-30
     metadata_from_file: startup-script=startup-docker-pdssd.sh
   - name: bk-testing-docker
     count: 30
     project: bazel-untrusted
     service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
-    image_project: bazel-untrusted
     image_family: bk-testing-docker
-    machine_type: c2-standard-30
     metadata_from_file: startup-script=startup-docker-pdssd.sh
   - name: bk-trusted-docker
     count: 8
     project: bazel-public
     service_account: buildkite-trusted@bazel-public.iam.gserviceaccount.com
-    image_project: bazel-public
     image_family: bk-trusted-docker
-    machine_type: c2-standard-30
     metadata_from_file: startup-script=startup-docker-pdssd.sh
   - name: bk-windows
     count: 30
     project: bazel-untrusted
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
-    image_project: bazel-untrusted
     image_family: bk-windows
-    local_ssd:
-      - interface=scsi
-    metadata_from_file: windows-startup-script-ps1=startup-windows.ps1
+    metadata_from_file: windows-startup-script-ps1=startup-windows-pdssd.ps1
   - name: bk-testing-windows
     count: 10
     project: bazel-untrusted
     service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
-    image_project: bazel-untrusted
     image_family: bk-testing-windows
-    machine_type: c2-standard-30
     metadata_from_file: windows-startup-script-ps1=startup-windows-pdssd.ps1
   - name: bk-trusted-windows
     count: 4
     project: bazel-public
     service_account: buildkite-trusted@bazel-public.iam.gserviceaccount.com
-    image_project: bazel-public
     image_family: bk-trusted-windows
-    local_ssd:
-      - interface=scsi
-    metadata_from_file: windows-startup-script-ps1=startup-windows.ps1
+    metadata_from_file: windows-startup-script-ps1=startup-windows-pdssd.ps1
 physical_clusters:
   - name: buildkite-imacpro
     count: 20

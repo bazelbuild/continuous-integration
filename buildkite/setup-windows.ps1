@@ -236,80 +236,73 @@ Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-28"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
 
-$myhostname = [System.Net.Dns]::GetHostName()
-if ($myhostname -like "bk-*") {
-    ## Download and unpack our Git snapshot.
-    Write-Host "Downloading Git snapshot..."
-    $bazelbuild_url = "https://storage.googleapis.com/bazel-git-mirror/bazelbuild-mirror.zip"
-    $bazelbuild_zip = "c:\temp\bazelbuild-mirror.zip"
-    $bazelbuild_root = "c:\buildkite"
-    (New-Object Net.WebClient).DownloadFile($bazelbuild_url, $bazelbuild_zip)
-    Write-Host "Unpacking Git snapshot..."
-    Expand-Archive -LiteralPath $bazelbuild_zip -DestinationPath $bazelbuild_root -Force
-    Remove-Item $bazelbuild_zip
+## Download and unpack our Git snapshot.
+Write-Host "Downloading Git snapshot..."
+$bazelbuild_url = "https://storage.googleapis.com/bazel-git-mirror/bazelbuild-mirror.zip"
+$bazelbuild_zip = "c:\temp\bazelbuild-mirror.zip"
+$bazelbuild_root = "c:\buildkite"
+(New-Object Net.WebClient).DownloadFile($bazelbuild_url, $bazelbuild_zip)
+Write-Host "Unpacking Git snapshot..."
+Expand-Archive -LiteralPath $bazelbuild_zip -DestinationPath $bazelbuild_root -Force
+Remove-Item $bazelbuild_zip
 
-    ## Download and install the Buildkite agent.
-    Write-Host "Grabbing latest Buildkite Agent version number from GitHub..."
-    $url = "https://github.com/buildkite/agent/releases/latest"
-    $req = [system.Net.HttpWebRequest]::Create($url)
-    $res = $req.getresponse()
-    $res.Close()
-    $buildkite_agent_version = $res.ResponseUri.AbsolutePath.TrimStart("/buildkite/agent/releases/tag/v")
+## Download and install the Buildkite agent.
+Write-Host "Grabbing latest Buildkite Agent version number from GitHub..."
+$url = "https://github.com/buildkite/agent/releases/latest"
+$req = [system.Net.HttpWebRequest]::Create($url)
+$res = $req.getresponse()
+$res.Close()
+$buildkite_agent_version = $res.ResponseUri.AbsolutePath.TrimStart("/buildkite/agent/releases/tag/v")
 
-    Write-Host "Downloading Buildkite agent..."
-    $buildkite_agent_url = "https://github.com/buildkite/agent/releases/download/v${buildkite_agent_version}/buildkite-agent-windows-amd64-${buildkite_agent_version}.zip"
-    $buildkite_agent_zip = "c:\temp\buildkite-agent.zip"
-    $buildkite_agent_root = "c:\buildkite"
-    New-Item $buildkite_agent_root -ItemType "directory" -Force
-    (New-Object Net.WebClient).DownloadFile($buildkite_agent_url, $buildkite_agent_zip)
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($buildkite_agent_zip, $buildkite_agent_root)
-    Remove-Item $buildkite_agent_zip
-    New-Item "${buildkite_agent_root}\hooks" -ItemType "directory" -Force
-    New-Item "${buildkite_agent_root}\plugins" -ItemType "directory" -Force
-    $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${buildkite_agent_root}"
-    [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
+Write-Host "Downloading Buildkite agent..."
+$buildkite_agent_url = "https://github.com/buildkite/agent/releases/download/v${buildkite_agent_version}/buildkite-agent-windows-amd64-${buildkite_agent_version}.zip"
+$buildkite_agent_zip = "c:\temp\buildkite-agent.zip"
+$buildkite_agent_root = "c:\buildkite"
+New-Item $buildkite_agent_root -ItemType "directory" -Force
+(New-Object Net.WebClient).DownloadFile($buildkite_agent_url, $buildkite_agent_zip)
+[System.IO.Compression.ZipFile]::ExtractToDirectory($buildkite_agent_zip, $buildkite_agent_root)
+Remove-Item $buildkite_agent_zip
+New-Item "${buildkite_agent_root}\hooks" -ItemType "directory" -Force
+New-Item "${buildkite_agent_root}\plugins" -ItemType "directory" -Force
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${buildkite_agent_root}"
+[Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
-    ## Remove empty folders (";;") from PATH.
-    $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine").replace(";;", ";")
-    [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
+## Remove empty folders (";;") from PATH.
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine").replace(";;", ";")
+[Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
-    ## Create an unprivileged user that we'll run the Buildkite agent as.
-    # The password used here is not relevant for security, as the server is behind a
-    # firewall blocking all incoming access and locally we run the CI jobs as that
-    # user anyway.
-    Write-Host "Creating Buildkite service user..."
-    $buildkite_username = "b"
-    $buildkite_password = "Bu1ldk1t3"
-    $buildkite_secure_password = ConvertTo-SecureString $buildkite_password -AsPlainText -Force
-    New-LocalUser -Name $buildkite_username -Password $buildkite_secure_password -UserMayNotChangePassword
-    Add-NTFSAccess -Path "C:\buildkite" -Account "b" -AccessRights FullControl
+## Create an unprivileged user that we'll run the Buildkite agent as.
+# The password used here is not relevant for security, as the server is behind a
+# firewall blocking all incoming access and locally we run the CI jobs as that
+# user anyway.
+Write-Host "Creating Buildkite service user..."
+$buildkite_username = "b"
+$buildkite_password = "Bu1ldk1t3"
+$buildkite_secure_password = ConvertTo-SecureString $buildkite_password -AsPlainText -Force
+New-LocalUser -Name $buildkite_username -Password $buildkite_secure_password -UserMayNotChangePassword
+Add-NTFSAccess -Path "C:\buildkite" -Account "b" -AccessRights FullControl
 
-    ## Allow the Buildkite agent to store SSH host keys in this folder.
-    Write-Host "Creating C:\buildkite\.ssh folder..."
-    New-Item "c:\buildkite\.ssh" -ItemType "directory"
+## Allow the Buildkite agent to store SSH host keys in this folder.
+Write-Host "Creating C:\buildkite\.ssh folder..."
+New-Item "c:\buildkite\.ssh" -ItemType "directory"
 
-    Write-Host "Creating C:\buildkite\logs folder..."
-    New-Item "c:\buildkite\logs" -ItemType "directory"
+Write-Host "Creating C:\buildkite\logs folder..."
+New-Item "c:\buildkite\logs" -ItemType "directory"
 
-    ## Create a service for the Buildkite agent.
-    & choco install nssm
+## Create a service for the Buildkite agent.
+& choco install nssm
 
-    Write-Host "Creating Buildkite Agent service..."
-    nssm install "buildkite-agent" `
-        "c:\buildkite\buildkite-agent.exe" `
-        "start"
-    nssm set "buildkite-agent" "AppDirectory" "c:\buildkite"
-    nssm set "buildkite-agent" "DisplayName" "Buildkite Agent"
-    nssm set "buildkite-agent" "Start" "SERVICE_DEMAND_START"
-    nssm set "buildkite-agent" "ObjectName" ".\${buildkite_username}" "$buildkite_password"
-    nssm set "buildkite-agent" "AppExit" "Default" "Exit"
-    nssm set "buildkite-agent" "AppStdout" "COM1"
-    nssm set "buildkite-agent" "AppStderr" "COM1"
-} else {
-    ## Remove empty folders (";;") from PATH.
-    $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine").replace(";;", ";")
-    [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
-}
+Write-Host "Creating Buildkite Agent service..."
+nssm install "buildkite-agent" `
+    "c:\buildkite\buildkite-agent.exe" `
+    "start"
+nssm set "buildkite-agent" "AppDirectory" "c:\buildkite"
+nssm set "buildkite-agent" "DisplayName" "Buildkite Agent"
+nssm set "buildkite-agent" "Start" "SERVICE_DEMAND_START"
+nssm set "buildkite-agent" "ObjectName" ".\${buildkite_username}" "$buildkite_password"
+nssm set "buildkite-agent" "AppExit" "Default" "Exit"
+nssm set "buildkite-agent" "AppStdout" "COM1"
+nssm set "buildkite-agent" "AppStderr" "COM1"
 
 Write-Host "All done, adding GCESysprep to RunOnce and rebooting..."
 Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "GCESysprep" -Value "c:\Program Files\Google\Compute Engine\sysprep\gcesysprep.bat"
