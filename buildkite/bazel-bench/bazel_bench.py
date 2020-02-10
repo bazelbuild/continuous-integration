@@ -38,6 +38,7 @@ PROJECTS = [
     {
         "name": "Bazel",
         "storage_subdir": "bazel",
+        "project_label": "bazel",
         "git_repository": "https://github.com/bazelbuild/bazel.git",
         "bazel_command": "build //src:bazel",
         "bazel_bench_extra_options": {},
@@ -45,9 +46,10 @@ PROJECTS = [
     },
     {
         "name": "TensorFlow",
-        "storage_subdir": "tensorflow",
+        "storage_subdir": "tensorflow-cc",
+        "project_label": "tensorflow-cc",
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
-        "bazel_command": "build --output_filter=^\$ //tensorflow/tools/pip_package:build_pip_package",
+        "bazel_command": "build //tensorflow/core:core",
         "bazel_bench_extra_options": {
             "ubuntu1804": "--env_configure=\"unset PYTHONPATH && yes '' | python3 ./configure.py\"",
             "macos": ("--env_configure=\"python3 --version && unset PYTHONPATH && pip3 install -U --user pip six numpy wheel setuptools mock 'future>=0.17.1' "
@@ -63,7 +65,7 @@ BAZEL_REPOSITORY = "https://github.com/bazelbuild/bazel.git"
 DATA_DIRECTORY = os.path.join(TMP, ".bazel-bench", "out")
 BAZEL_BENCH_RESULT_FILENAME = "perf_data.csv"
 AGGR_JSON_PROFILES_FILENAME = "aggr_json_profiles.csv"
-PLATFORMS_WHITELIST = ['macos', 'ubuntu1604', 'ubuntu1804', 'rbe_ubuntu1604']
+PLATFORMS_WHITELIST = ['macos', 'ubuntu1804']
 REPORT_GENERATION_PLATFORM = 'ubuntu1804'
 STARTER_JOB_PLATFORM = 'ubuntu1804'
 
@@ -221,6 +223,7 @@ def _ci_step_for_platform_and_commits(
             "--bazel_commits=%s" % ",".join(bazel_commits),
             "--bazel_source=%s" % bazel_clone_path,
             "--project_source=%s" % project_clone_path,
+            "--project_label=%s" % project["project_label"],
             "--platform=%s" % platform,
             "--collect_memory",
             "--data_directory=%s" % DATA_DIRECTORY,
