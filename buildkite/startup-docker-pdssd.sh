@@ -29,32 +29,11 @@ sysctl -w kernel.sched_min_granularity_ns=10000000
 sysctl -w kernel.sched_wakeup_granularity_ns=15000000
 sysctl -w vm.dirty_ratio=40
 
-### Use the local SSDs as fast storage.
-if [[ -e /dev/nvme0n1 ]]; then
-  for device in /dev/nvme0n?; do
-    mkswap $device
-    swapon --discard -p0 $device
-  done
-fi
-swapon -s
-
-### Create a tmpfs.
-mkdir -p /tmpfs
-mount -t tmpfs -o size=375G tmpfs /tmpfs
-mkdir /tmpfs/{buildkite-agent,docker}
-
 ### Mount tmpfs to buildkite-agent's home.
 AGENT_HOME="/var/lib/buildkite-agent"
-mount --bind /tmpfs/buildkite-agent "${AGENT_HOME}"
 mkdir -p "${AGENT_HOME}/.cache/bazel/_bazel_buildkite-agent"
 chown -R buildkite-agent:buildkite-agent "${AGENT_HOME}"
 chmod 0755 "${AGENT_HOME}"
-
-### Mount tmpfs to Docker's working directory.
-DOCKER_HOME="/var/lib/docker"
-mount --bind /tmpfs/docker "${DOCKER_HOME}"
-chown -R root:root "${DOCKER_HOME}"
-chmod 0711 "${DOCKER_HOME}"
 
 ### Let 'localhost' resolve to '::1', otherwise one of Envoy's tests fails.
 sed -i 's/^::1 .*/::1 localhost ip6-localhost ip6-loopback/' /etc/hosts

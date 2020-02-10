@@ -467,7 +467,7 @@ PLATFORMS = {
     "windows": {
         "name": "Windows, OpenJDK 8",
         "emoji-name": ":windows: (OpenJDK 8)",
-        "downstream-root": "d:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
+        "downstream-root": "c:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["windows"],
         "queue": "windows",
         "python": "python.exe",
@@ -494,6 +494,11 @@ LINUX_BINARY_PLATFORM = "centos7"
 
 DEFAULT_XCODE_VERSION = "11.1"
 XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
+XCODE_VERSION_OVERRIDES = {
+    "10.2.1": "10.3",
+    "11.2": "11.2.1",
+    "11.3": "11.3.1",
+}
 
 ENCRYPTED_SAUCELABS_TOKEN = """
 CiQAry63sOlZtTNtuOT5DAOLkum0rGof+DOweppZY1aOWbat8zwSTQAL7Hu+rgHSOr6P4S1cu4YG
@@ -632,6 +637,10 @@ def gcloud_command():
 
 def downstream_projects_root(platform):
     downstream_root = os.path.expandvars(PLATFORMS[platform]["downstream-root"])
+    if platform == "windows" and os.path.exists("d:/b"):
+        # If this is a Windows machine with a local SSD, the build directory is
+        # on drive D.
+        downstream_root = downstream_root.replace("c:/b/", "d:/b/")
     if not os.path.exists(downstream_root):
         os.makedirs(downstream_root)
     return downstream_root
@@ -813,7 +822,9 @@ def execute_commands(
             bazel_binary = "bazel"
             if bazel_version:
                 os.environ["USE_BAZEL_VERSION"] = bazel_version
-        if "USE_BAZEL_VERSION" in os.environ and not task_config.get("skip_use_bazel_version_for_test", False):
+        if "USE_BAZEL_VERSION" in os.environ and not task_config.get(
+            "skip_use_bazel_version_for_test", False
+        ):
             # This will only work if the bazel binary in $PATH is actually a bazelisk binary
             # (https://github.com/bazelbuild/bazelisk).
             test_env_vars.append("USE_BAZEL_VERSION")
@@ -872,12 +883,17 @@ def execute_commands(
                 json_profile_flags = get_json_profile_flags(json_profile_out_build)
 
             build_flags = task_config.get("build_flags") or []
+            build_flags += json_profile_flags
+            # We have to add --test_env flags to `build`, too, otherwise Bazel
+            # discards its analysis cache between `build` and `test`.
+            if test_env_vars:
+                build_flags += ["--test_env={}".format(v) for v in test_env_vars]
             try:
                 execute_bazel_build(
                     bazel_version,
                     bazel_binary,
                     platform,
-                    build_flags + json_profile_flags,
+                    build_flags,
                     build_targets,
                     None,
                     incompatible_flags,
@@ -961,6 +977,9 @@ def activate_xcode(task_config):
                 xcode_version
             )
         )
+
+    # This is used to replace e.g. 11.2 with 11.2.1 without having to update all configs.
+    xcode_version = XCODE_VERSION_OVERRIDES.get(xcode_version, xcode_version)
 
     # Check that the selected Xcode version is actually installed on the host.
     xcode_path = "/Applications/Xcode{}.app".format(xcode_version)
@@ -1046,22 +1065,23 @@ def print_environment_variables_info():
 
 def upload_bazel_binary(platform):
     print_collapsed_group(":gcloud: Uploading Bazel Under Test")
-    binary_path = "bazel-bin/src/bazel"
     if platform == "windows":
-        binary_path = r"bazel-bin\src\bazel.exe"
-    execute_command(["buildkite-agent", "artifact", "upload", binary_path])
+        binary_dir = r"bazel-bin\src"
+        binary_name = r"bazel.exe"
+    else:
+        binary_dir = "bazel-bin/src"
+        binary_name = "bazel"
+    execute_command(["buildkite-agent", "artifact", "upload", binary_name], cwd=binary_dir)
 
 
 def download_bazel_binary(dest_dir, platform):
-    binary_path = "bazel-bin/src/bazel"
-    if platform == "windows":
-        binary_path = r"bazel-bin\src\bazel.exe"
+    binary_name = "bazel.exe" if platform == "windows" else "bazel"
 
     source_step = create_label(platform, "Bazel", build_only=True)
     execute_command(
-        ["buildkite-agent", "artifact", "download", binary_path, dest_dir, "--step", source_step]
+        ["buildkite-agent", "artifact", "download", binary_name, dest_dir, "--step", source_step]
     )
-    bazel_binary_path = os.path.join(dest_dir, binary_path)
+    bazel_binary_path = os.path.join(dest_dir, binary_name)
     st = os.stat(bazel_binary_path)
     os.chmod(bazel_binary_path, st.st_mode | stat.S_IEXEC)
     return bazel_binary_path
@@ -1260,7 +1280,14 @@ def concurrent_test_jobs(platform):
 
 
 def common_startup_flags(platform):
-    return ["--output_user_root=D:/b"] if platform == "windows" else []
+    if platform == "windows":
+        if os.path.exists("D:/b"):
+            # This machine has a local SSD mounted as drive D.
+            return ["--output_user_root=D:/b"]
+        else:
+            # This machine uses its PD-SSD as the build directory.
+            return ["--output_user_root=C:/b"]
+    return []
 
 
 def common_build_flags(bep_file, platform):
@@ -1363,7 +1390,9 @@ def rbe_flags(original_flags, accept_cached):
     return flags
 
 
-def compute_flags(platform, flags, incompatible_flags, bep_file, enable_remote_cache=False):
+def compute_flags(
+    platform, flags, incompatible_flags, bep_file, bazel_binary, enable_remote_cache=False
+):
     aggregated_flags = common_build_flags(bep_file, platform)
     if not remote_enabled(flags):
         if platform.startswith("rbe_"):
@@ -1373,6 +1402,25 @@ def compute_flags(platform, flags, incompatible_flags, bep_file, enable_remote_c
     aggregated_flags += flags
     if incompatible_flags:
         aggregated_flags += incompatible_flags
+
+    for i, flag in enumerate(aggregated_flags):
+        if "$HOME" in flag:
+            if platform == "windows":
+                if os.path.exists("D:/"):
+                    home = "D:"
+                else:
+                    home = "C:/b"
+            elif platform == "macos":
+                home = "/Users/buildkite"
+            else:
+                home = "/var/lib/buildkite-agent"
+            aggregated_flags[i] = flag.replace("$HOME", home)
+        if "$OUTPUT_BASE" in flag:
+            output_base = execute_command_and_get_output(
+                [bazel_binary] + common_startup_flags(platform) + ["info", "output_base"],
+                print_output=False,
+            ).strip()
+            aggregated_flags[i] = flag.replace("$OUTPUT_BASE", output_base)
 
     return aggregated_flags
 
@@ -1397,6 +1445,7 @@ def execute_bazel_build(
         # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
         [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags,
         bep_file,
+        bazel_binary,
         enable_remote_cache=True,
     )
 
@@ -1433,9 +1482,7 @@ def calculate_targets(task_config, platform, bazel_binary, build_only, test_only
             )
         )
         expanded_test_targets = expand_test_target_patterns(bazel_binary, platform, test_targets)
-        build_targets, test_targets = get_targets_for_shard(
-            build_targets, expanded_test_targets, shard_id, shard_count
-        )
+        test_targets = get_targets_for_shard(expanded_test_targets, shard_id, shard_count)
 
     return build_targets, test_targets
 
@@ -1482,15 +1529,9 @@ def partition_targets(targets):
     return included_targets, excluded_targets
 
 
-def get_targets_for_shard(build_targets, test_targets, shard_id, shard_count):
+def get_targets_for_shard(test_targets, shard_id, shard_count):
     # TODO(fweikert): implement a more sophisticated algorithm
-    included_build_targets, excluded_build_targets = partition_targets(build_targets)
-    build_targets_for_this_shard = sorted(included_build_targets)[shard_id::shard_count] + [
-        "-" + x for x in excluded_build_targets
-    ]
-    test_targets_for_this_shard = sorted(test_targets)[shard_id::shard_count]
-
-    return build_targets_for_this_shard, test_targets_for_this_shard
+    return sorted(test_targets)[shard_id::shard_count]
 
 
 def execute_bazel_test(
@@ -1519,6 +1560,7 @@ def execute_bazel_test(
         # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
         [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags,
         bep_file,
+        bazel_binary,
         enable_remote_cache=not monitor_flaky_tests,
     )
 
@@ -1583,7 +1625,7 @@ def upload_test_logs_from_bep(bep_file, tmpdir, stop_request):
                     os.chdir(cwd)
         if done:
             break
-        time.sleep(0.2)
+        time.sleep(5)
 
 
 def upload_json_profile(json_profile_path, tmpdir):

@@ -5,38 +5,19 @@ $ConfirmPreference = "None"
 ## Use TLS1.2 for HTTPS (fixes an issue where later steps can't connect to github.com)
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-## Initialize, partition and format the local SSD.
-Write-Host "Initializing local SSD..."
-if ((Get-Disk -Number 1).PartitionStyle -ne "RAW") {
-  Clear-Disk -Number 1 -RemoveData -RemoveOEM
-}
-Initialize-Disk -Number 1
-New-Partition -DiskNumber 1 -UseMaximumSize -DriveLetter D
-Format-Volume -DriveLetter D -ShortFileNameSupport $true
-Add-NTFSAccess "D:\" -Account "b" -AccessRights FullControl
-
 ## Load PowerShell support for ZIP files.
 Write-Host "Loading support for ZIP files..."
 Add-Type -AssemblyName "System.IO.Compression.FileSystem"
 
-## Create temporary folder (D:\temp).
-Write-Host "Creating temporary folder on local SSD..."
-New-Item "D:\temp" -ItemType "directory"
-
-## Redirect MSYS2's tmp folder to D:\temp
-Write-Host "Redirecting MSYS2's tmp folder to D:\temp..."
-Remove-Item -Recurse -Force C:\tools\msys64\tmp
-New-Item -ItemType Junction -Path "C:\tools\msys64\tmp" -Value "D:\temp"
-
-## Create Buildkite agent working directory (D:\b).
-Write-Host "Creating build folder on local SSD..."
-Remove-Item "D:\b" -Recurse -Force -ErrorAction Ignore
-New-Item "D:\b" -ItemType "directory"
+## Create Buildkite agent working directory (C:\b).
+Write-Host "Creating build folder on PD-SSD..."
+Remove-Item "C:\b" -Recurse -Force -ErrorAction Ignore
+New-Item "C:\b" -ItemType "directory"
 
 ## Setup environment variables.
 Write-Host "Setting environment variables..."
-[Environment]::SetEnvironmentVariable("TEMP", "D:\temp", "Machine")
-[Environment]::SetEnvironmentVariable("TMP", "D:\temp", "Machine")
+[Environment]::SetEnvironmentVariable("TEMP", "C:\temp", "Machine")
+[Environment]::SetEnvironmentVariable("TMP", "C:\temp", "Machine")
 $env:TEMP = [Environment]::GetEnvironmentVariable("TEMP", "Machine")
 $env:TMP = [Environment]::GetEnvironmentVariable("TMP", "Machine")
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
@@ -62,6 +43,12 @@ SET TEMP=${env:TEMP}
 SET TMP=${env:TEMP}
 "@
 [System.IO.File]::WriteAllLines("c:\buildkite\hooks\environment.bat", $buildkite_environment_hook)
+
+Write-Host "Creating Buildkite agent pre-exit hook..."
+$buildkite_preexit_hook = @"
+wmic pagefile list /format:list
+"@
+[System.IO.File]::WriteAllLines("c:\buildkite\hooks\pre-exit.bat", $buildkite_preexit_hook)
 
 ## Enable support for symlinks.
 Write-Host "Enabling SECreateSymbolicLinkPrivilege permission..."
@@ -113,7 +100,7 @@ if ($myhostname -like "*trusted*") {
   $project = "bazel-untrusted"
   $key = "buildkite-untrusted-agent-token"
 }
-$buildkite_agent_token_file = "d:\buildkite_agent_token.enc"
+$buildkite_agent_token_file = "c:\buildkite\buildkite_agent_token.enc"
 Write-Host "Getting Buildkite Agent token from GCS..."
 while ($true) {
   try {
@@ -139,7 +126,7 @@ token="${buildkite_agent_token}"
 name="%hostname"
 tags="queue=windows,kind=worker,os=windows"
 experiment="git-mirrors"
-build-path="d:\b"
+build-path="c:\b"
 hooks-path="c:\buildkite\hooks"
 plugins-path="c:\buildkite\plugins"
 git-mirrors-path="c:\buildkite\bazelbuild"

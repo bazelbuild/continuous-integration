@@ -29,41 +29,9 @@ import gcloud_utils
 DEBUG = False
 
 IMAGE_CREATION_VMS = {
-    # Find the newest FreeBSD 11 image via:
-    # gcloud compute images list --project freebsd-org-cloud-dev \
-    #     --no-standard-images
-    # ('bk-freebsd11',): {
-    #     'source_image': 'https://www.googleapis.com/compute/v1/projects/freebsd-org-cloud-dev/global/images/freebsd-11-1-stable-amd64-2017-12-28',
-    #     'scripts': [
-    #         'setup-freebsd.sh',
-    #         'install-buildkite-agent.sh'
-    #     ]
-    # },
     "bk-docker": {
-        "project": "bazel-untrusted",
-        "zone": "us-central1-a",
-        "source_image_project": "ubuntu-os-cloud",
-        "source_image_family": "ubuntu-1804-lts",
-        "setup_script": "setup-docker.sh",
-        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
-        "licenses": [
-            "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
-        ],
-    },
-    "bk-testing-docker": {
-        "project": "bazel-untrusted",
-        "zone": "us-central1-a",
-        "source_image_project": "ubuntu-os-cloud",
-        "source_image_family": "ubuntu-1804-lts",
-        "setup_script": "setup-docker.sh",
-        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
-        "licenses": [
-            "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
-        ],
-    },
-    "bk-trusted-docker": {
         "project": "bazel-public",
-        "zone": "us-central1-a",
+        "zone": "us-central1-f",
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
@@ -72,33 +40,17 @@ IMAGE_CREATION_VMS = {
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
     },
-    "bk-windows-java8": {
-        "project": "bazel-untrusted",
-        "zone": "us-central1-a",
-        "source_image_project": "windows-cloud",
-        "source_image_family": "windows-1809-core",
-        "setup_script": "setup-windows.ps1",
-        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
-    },
-    "bk-testing-windows-java8": {
-        "project": "bazel-untrusted",
-        "zone": "us-central1-a",
-        "source_image_project": "windows-cloud",
-        "source_image_family": "windows-1809-core",
-        "setup_script": "setup-windows.ps1",
-        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
-    },
-    "bk-trusted-windows-java8": {
+    "bk-windows": {
         "project": "bazel-public",
-        "zone": "us-central1-a",
+        "zone": "us-central1-f",
         "source_image_project": "windows-cloud",
-        "source_image_family": "windows-1809-core",
+        "source_image_family": "windows-1909-core",
         "setup_script": "setup-windows.ps1",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
     },
     "windows-playground": {
         "project": "di-cloud-exp",
-        "zone": "us-central1-a",
+        "zone": "us-central1-f",
         "network": "default",
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-2019",
@@ -149,11 +101,11 @@ def create_instance(instance_name, params):
             instance_name,
             project=params["project"],
             zone=params["zone"],
-            machine_type="n1-standard-8",
+            machine_type="c2-standard-8",
             network=params.get("network", "default"),
             metadata_from_file=startup_script,
             boot_disk_type="pd-ssd",
-            boot_disk_size=params.get("boot_disk_size", "50GB"),
+            boot_disk_size=params.get("boot_disk_size", "500GB"),
             **image,
         )
     finally:

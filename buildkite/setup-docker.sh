@@ -47,6 +47,14 @@ EOF
 EOF
 }
 
+### Patch the filesystem options to increase I/O performance
+{
+    tune2fs \
+        -o ^acl,journal_data_writeback,nobarrier \
+        -E mount_opts="commit=300 noatime journal_async_commit" \
+        /dev/sda1
+}
+
 ### Install the Buildkite Agent on production images.
 {
   apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 \
@@ -54,11 +62,6 @@ EOF
   add-apt-repository -y "deb https://apt.buildkite.com/buildkite-agent stable main"
   apt-get -y update
   apt-get -y install buildkite-agent
-
-  # Install our custom Buildkite Agent version that includes the health check patch.
-  curl -fsSL -o /usr/bin/buildkite-agent \
-      https://storage.googleapis.com/bazel-ci/buildkite-agent/v3.14.0.bazel1/buildkite-agent-linux-amd64
-  chmod +x /usr/bin/buildkite-agent
 
   # Disable the Buildkite agent service, as the startup script has to mount /var/lib/buildkite-agent
   # first.
@@ -132,7 +135,6 @@ EOF
   mkdir -p /var/lib/gitmirrors
   curl -fsSL https://storage.googleapis.com/bazel-git-mirror/bazelbuild-mirror.tar | \
       tar x -C /var/lib/gitmirrors --strip=1
-  # gsutil -qm rsync -rd gs://bazel-git-mirror/mirrors/ /var/lib/gitmirrors/
   chown -R buildkite-agent:buildkite-agent /var/lib/gitmirrors
   chmod -R 0755 /var/lib/gitmirrors
 }
@@ -172,7 +174,11 @@ EOF
   yes | tools/bin/sdkmanager --licenses > /dev/null || true
   tools/bin/sdkmanager --update
   tools/bin/sdkmanager \
+      "build-tools;28.0.2" \
+      "build-tools;28.0.3" \
+      "build-tools;29.0.0" \
       "build-tools;29.0.2" \
+      "build-tools;29.0.3" \
       "emulator" \
       "extras;android;m2repository" \
       "platform-tools" \
