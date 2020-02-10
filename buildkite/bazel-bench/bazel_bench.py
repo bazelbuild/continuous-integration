@@ -42,7 +42,7 @@ PROJECTS = [
         "git_repository": "https://github.com/bazelbuild/bazel.git",
         "bazel_command": "build //src:bazel",
         "bazel_bench_extra_options": {},
-        "active": False,
+        "active": True,
     },
     {
         "name": "TensorFlow-cc",
@@ -52,12 +52,12 @@ PROJECTS = [
         "bazel_command": "build --output_filter=^\$ //tensorflow/core:core",
         "bazel_bench_extra_options": {
             "ubuntu1804": "--env_configure=\"unset PYTHONPATH && yes '' | python3 ./configure.py\"",
-            "macos": ("--env_configure=\"python3 --version && unset PYTHONPATH && pip3 install -U --user pip six numpy wheel setuptools mock 'future>=0.17.1' "
+            "macos": ("--env_configure=\"python3 --version && unset PYTHONPATH "
+                "&& pip3 install -U --user pip six numpy wheel setuptools mock 'future>=0.17.1' "
                 "&& pip3 install -U --user keras_applications==1.0.6 --no-deps "
                 "&& pip3 install -U --user keras_preprocessing==1.0.5 --no-deps "
                 "&& yes '' | python3 ./configure.py\""),
         },
-        # "bazel_bench_extra_options": "https://raw.githubusercontent.com/joeleba/continuous-integration/tf/buildkite/pipelines/tensorflow-bazel-bench.yml",
         "active": True,
     }
 ]
@@ -70,33 +70,19 @@ REPORT_GENERATION_PLATFORM = 'ubuntu1804'
 STARTER_JOB_PLATFORM = 'ubuntu1804'
 
 
-def _bazel_bench_env_setup_command(platform, bazel_commits, project_clone_path):
-    bazel_binaries_setup_url = (
-        "https://raw.githubusercontent.com/joeleba/continuous-integration/tf/buildkite/bazel-bench/bazel_binaries_setup.py?%s"
-        % int(time.time())
+def _bazel_bench_env_setup_command(platform, bazel_commits):
+    bazel_bench_env_setup_py_url = (
+        "https://raw.githubusercontent.com/bazelbuild/continuous-integration"
+        "/tf/buildkite/bazel-bench/bazel_binaries_setup.py?{}".format(int(time.time()))
     )
-    download_bb_command = 'curl -sS "%s" -o bazel_bench_env_setup.py' % bazel_binaries_setup_url
-    exec_bb_command = "{python} bazel_bench_env_setup.py --platform={platform} --bazel_commits={bazel_commits}".format(
+    download_command = 'curl -sS "{}" -o bazel_bench_env_setup.py'.format(bazel_bench_env_setup_py_url)
+    exec_command = "{python} bazel_bench_env_setup.py --platform={platform} --bazel_commits={bazel_commits}".format(
         python=bazelci.PLATFORMS[platform]["python"],
         platform=platform,
         bazel_commits=bazel_commits
     )
 
-    bazelci_env_setup_url = (
-        "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?%s"
-        % int(time.time())
-    )
-    # download_bazelci_command = 'curl -sS "%s" -o bazelci.py' % bazelci_env_setup_url
-    # exec_bazelci_command = (
-    #     "{python}  bazelci.py runner --task={platform} --http_config={bazel_bench_env_config} "
-    #     "--git_repo_location={project_clone_path}"
-    #     ).format(
-    #         python=bazelci.PLATFORMS[platform]["python"],
-    #         platform=platform,
-    #         bazel_bench_env_config=bazel_bench_env_config,
-    #         project_clone_path=project_clone_path,
-    # )
-    return [download_bb_command, exec_bb_command]#, download_bazelci_command, exec_bazelci_command]
+    return [download_command, exec_command]
 
 
 def _evenly_spaced_sample(lst, num_elem):
