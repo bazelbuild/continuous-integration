@@ -45,11 +45,11 @@ PROJECTS = [
         "active": False,
     },
     {
-        "name": "TensorFlow",
+        "name": "TensorFlow-cc",
         "storage_subdir": "tensorflow-cc",
         "project_label": "tensorflow-cc",
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
-        "bazel_command": "build //tensorflow/core:core",
+        "bazel_command": "build --output_filter=^\$ //tensorflow/core:core",
         "bazel_bench_extra_options": {
             "ubuntu1804": "--env_configure=\"unset PYTHONPATH && yes '' | python3 ./configure.py\"",
             "macos": ("--env_configure=\"python3 --version && unset PYTHONPATH && pip3 install -U --user pip six numpy wheel setuptools mock 'future>=0.17.1' "
