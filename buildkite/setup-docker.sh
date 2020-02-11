@@ -122,7 +122,9 @@ EOF
   systemctl stop docker
 }
 
+### Let 'localhost' resolve to '::1', otherwise one of Envoy's tests fails.
 {
+  sed -i 's/^::1 .*/::1 localhost ip6-localhost ip6-loopback/' /etc/hosts
 }
 
 ## Add our minimum uptime enforcer.
