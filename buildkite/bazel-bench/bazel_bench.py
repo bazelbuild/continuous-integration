@@ -34,9 +34,20 @@ import math
 # TMP has different values, depending on the platform.
 TMP = tempfile.gettempdir()
 # TODO(leba): Move this to a separate config file.
+"""
+"display_name": the name to be displayed on the BuildKite pipeline.
+"bazelci_name": the name that is used to retrieve the project's platforms on bazelci.
+"storage_subdir": the subdir on GCS to retrieve the data. Usually just the project_label.
+"project_label": the label of the project.
+"git_repository": the project's Git repo.
+"bazel_command": the command to be benchmarked.
+"bazel_bench_extra_options": extra commandline that will be run before each benchmark.
+"active": whether this project is active on bazel-bench.
+"""
 PROJECTS = [
     {
-        "name": "Bazel",
+        "display_name": "Bazel",
+        "bazelci_name": "Bazel",
         "storage_subdir": "bazel",
         "project_label": "bazel",
         "git_repository": "https://github.com/bazelbuild/bazel.git",
@@ -45,7 +56,8 @@ PROJECTS = [
         "active": True,
     },
     {
-        "name": "TensorFlow-cc",
+        "display_name": "Tensorflow-Cpp",
+        "bazelci_name": "Tensorflow",
         "storage_subdir": "tensorflow-cc",
         "project_label": "tensorflow-cc",
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
@@ -256,10 +268,7 @@ def _ci_step_for_platform_and_commits(
         + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
         + [bazel_bench_command, upload_output_files_storage_command, upload_to_big_query_command]
     )
-    label = (
-        bazelci.PLATFORMS[platform]["emoji-name"]
-        + " Running bazel-bench on project: %s" % project["name"]
-    )
+    label = bazelci.PLATFORMS[platform]["emoji-name"] + project["display_name"]
     return bazelci.create_step(label, commands, platform)
 
 
@@ -412,7 +421,7 @@ def main(args=None):
         if not project["active"]:
             continue
         platforms = _get_platforms(
-            project["name"], whitelist=PLATFORMS_WHITELIST)
+            project["bazelci_name"], whitelist=PLATFORMS_WHITELIST)
         
         for platform in platforms:
             if (project["bazel_bench_extra_options"] and platform in project["bazel_bench_extra_options"]):
