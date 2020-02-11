@@ -101,25 +101,56 @@ EOF
 
 ### Install Docker.
 {
-  apt-get -y install apt-transport-https ca-certificates
+  apt-get -y install uidmap
+  echo 'buildkite-agent:231072:65536' >> /etc/subuid
+  echo 'buildkite-agent:231072:65536' >> /etc/subgid
 
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-  add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  curl -fsSL https://get.docker.com/rootless > /tmp/rootless
+  chmod +x /tmp/rootless
+  sudo -H -u buildkite-agent /tmp/rootless
 
-  apt-get -y update
-  apt-get -y install docker-ce
-
-  # Allow everyone access to the Docker socket. Usually this would be insane from a security point
-  # of view, but these are untrusted throw-away machines anyway, so the risk is acceptable.
-  mkdir /etc/systemd/system/docker.socket.d
-  cat > /etc/systemd/system/docker.socket.d/override.conf <<'EOF'
-[Socket]
-SocketMode=0666
+  cat > /etc/sysctl.d/20-allow-ping.conf <<'EOF'
+net.ipv4.ping_group_range = 0 2147483647
 EOF
 
-  # Disable the Docker service, as the startup script has to mount /var/lib/docker first.
-  systemctl disable docker
-  systemctl stop docker
+  echo 'br_netfilter' >> /etc/modules
+
+  cat > /etc/systemd/system/docker.service <<'EOF'
+[Unit]
+Description=Docker Application Container Engine (Rootless)
+Documentation=https://docs.docker.com
+
+[Service]
+User=buildkite-agent
+Environment=HOME=/var/lib/buildkite-agent
+Environment=XDG_RUNTIME_DIR=/tmp/docker-999
+Environment=PATH=/var/lib/buildkite-agent/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=DOCKER_HOST=unix:///tmp/docker-999/docker.sock
+ExecStart=/var/lib/buildkite-agent/bin/dockerd-rootless.sh --experimental
+ExecReload=/bin/kill -s HUP \$MAINPID
+TimeoutSec=0
+RestartSec=2
+Restart=always
+StartLimitBurst=3
+StartLimitInterval=60s
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+TasksMax=infinity
+Delegate=yes
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  mkdir /etc/systemd/system/buildkite-agent.service.d
+  cat > /etc/systemd/system/buildkite-agent.service.d/override.conf <<'EOF'
+[Service]
+Environment=XDG_RUNTIME_DIR=/tmp/docker-999
+Environment=PATH=/var/lib/buildkite-agent/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=DOCKER_HOST=unix:///tmp/docker-999/docker.sock
+EOF
 }
 
 ### Let 'localhost' resolve to '::1', otherwise one of Envoy's tests fails.
