@@ -1773,7 +1773,7 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None):
         "command": commands,
         "agents": {"queue": "default"},
         "plugins": {
-            "docker#v3.2.0": {
+            "docker#v3.5.0": {
                 "always-pull": True,
                 "environment": env,
                 "image": image,
