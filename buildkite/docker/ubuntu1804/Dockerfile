@@ -98,13 +98,13 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     apt-get -qqy install google-cloud-sdk && \
     rm -rf /var/lib/apt/lists/*
 
-### Install Docker.
+### Install Podman.
 RUN apt-get -qqy update && \
     apt-get -qqy install apt-transport-https ca-certificates && \
-    curl -sSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
-    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
+    curl -sSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_18.04/Release.key | apt-key add - && \
+    add-apt-repository "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_18.04/ /" && \
     apt-get -qqy update && \
-    apt-get -qqy install docker-ce && \
+    apt-get -qqy install podman buildah && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Go.

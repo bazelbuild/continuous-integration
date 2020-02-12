@@ -89,13 +89,20 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     apt-get -qqy install google-cloud-sdk && \
     rm -rf /var/lib/apt/lists/*
 
-### Install Docker.
-RUN apt-get -qqy update && \
-    apt-get -qqy install apt-transport-https ca-certificates && \
-    curl -sSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
-    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
+### Install Node.js and packages required by Gerrit.
+### (see https://gerrit.googlesource.com/gerrit/+show/master/polygerrit-ui/README.md)
+RUN curl -L https://deb.nodesource.com/setup_10.x | bash - && \
     apt-get -qqy update && \
-    apt-get -qqy install docker-ce && \
+    apt-get -qqy install nodejs && \
+    npm install --unsafe-perm -g \
+    eslint@"=4.19.0" \
+    eslint-config-google@"=0.12.0" \
+    eslint-plugin-html@"=5.0.3" \
+    eslint-plugin-promise@"=4.0.1" \
+    typescript \
+    fried-twinkie@"^0.2.2" \
+    polylint polymer-cli \
+    web-component-tester@6.8.0 && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Python (required by our own bazelci.py script).

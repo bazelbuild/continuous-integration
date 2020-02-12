@@ -56,13 +56,13 @@ RUN dpkg --add-architecture i386 && \
 
 ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64
 
-### Install Docker.
+### Install Podman.
 RUN apt-get -qqy update && \
     apt-get -qqy install apt-transport-https ca-certificates && \
-    curl -sSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
-    add-apt-repository "deb [arch=$BUILDARCH] https://download.docker.com/linux/debian $(lsb_release -cs) stable" && \
+    curl -sSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/Debian_10/Release.key | apt-key add - && \
+    add-apt-repository "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/Debian_10/ /" && \
     apt-get -qqy update && \
-    apt-get -qqy install docker-ce && \
+    apt-get -qqy install podman buildah && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=gcr.io/bazel-public/base:bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
