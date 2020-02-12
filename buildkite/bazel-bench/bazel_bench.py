@@ -35,7 +35,6 @@ import math
 TMP = tempfile.gettempdir()
 # TODO(leba): Move this to a separate config file.
 """
-"display_name": the name to be displayed on the BuildKite pipeline.
 "bazelci_name": the name that is used to retrieve the project's platforms on bazelci.
 "storage_subdir": the subdir on GCS to retrieve the data. Usually just the project_label.
 "project_label": the label of the project.
@@ -46,7 +45,6 @@ TMP = tempfile.gettempdir()
 """
 PROJECTS = [
     {
-        "display_name": "Bazel",
         "bazelci_name": "Bazel",
         "storage_subdir": "bazel",
         "project_label": "bazel",
@@ -56,7 +54,6 @@ PROJECTS = [
         "active": True,
     },
     {
-        "display_name": "TensorFlow-Cpp",
         "bazelci_name": "TensorFlow",
         "storage_subdir": "tensorflow-cc",
         "project_label": "tensorflow-cc",
@@ -268,7 +265,7 @@ def _ci_step_for_platform_and_commits(
         + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
         + [bazel_bench_command, upload_output_files_storage_command, upload_to_big_query_command]
     )
-    label = bazelci.PLATFORMS[platform]["emoji-name"] + project["display_name"]
+    label = bazelci.PLATFORMS[platform]["emoji-name"] + project["project_label"]
     return bazelci.create_step(label, commands, platform)
 
 
