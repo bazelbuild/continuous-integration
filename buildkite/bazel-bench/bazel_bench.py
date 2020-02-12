@@ -82,7 +82,7 @@ STARTER_JOB_PLATFORM = 'ubuntu1804'
 def _bazel_bench_env_setup_command(platform, bazel_commits):
     bazel_bench_env_setup_py_url = (
         "https://raw.githubusercontent.com/bazelbuild/continuous-integration"
-        "/tf/buildkite/bazel-bench/bazel_binaries_setup.py?{}".format(int(time.time()))
+        "/master/buildkite/bazel-bench/bazel_binaries_setup.py?{}".format(int(time.time()))
     )
     download_command = 'curl -sS "{}" -o bazel_bench_env_setup.py'.format(bazel_bench_env_setup_py_url)
     exec_command = "{python} bazel_bench_env_setup.py --platform={platform} --bazel_commits={bazel_commits}".format(
