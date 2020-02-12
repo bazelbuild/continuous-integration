@@ -57,9 +57,6 @@ case $(hostname -f) in
     esac
 esac
 
-### Configure and start Docker.
-systemctl start docker
-
 ### Ensure that Docker images can be downloaded from GCR.
 gcloud auth configure-docker --quiet
 sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
@@ -101,15 +98,15 @@ case $(hostname -f) in
         ;;
 esac
 
-docker pull "gcr.io/$PREFIX/centos7-java8" &
-docker pull "gcr.io/$PREFIX/centos7-releaser" &
-docker pull "gcr.io/$PREFIX/debian10-java11" &
-docker pull "gcr.io/$PREFIX/ubuntu1604-bazel-java8" &
-docker pull "gcr.io/$PREFIX/ubuntu1604-java8" &
-docker pull "gcr.io/$PREFIX/ubuntu1804-bazel-java11" &
-docker pull "gcr.io/$PREFIX/ubuntu1804-bazel-nojava" &
-docker pull "gcr.io/$PREFIX/ubuntu1804-java11" &
-docker pull "gcr.io/$PREFIX/ubuntu1804-nojava" &
+sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/ubuntu1604/bazel:java8" &
+sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/ubuntu1804/bazel:java11" &
+sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/ubuntu1804/bazel:nojava" &
+sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/ubuntu1604:java8" &
+sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/ubuntu1804:java11" &
+sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/ubuntu1804:nojava" &
+sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/debian10:java11" &
+sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/centos7:java8" &
+sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/centos7:releaser" &
 wait
 
 ### Start the Buildkite agent service.

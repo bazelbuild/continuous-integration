@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-### Setup script for an Ubuntu 18.04 LTS based Docker host.
+### Setup script for an Ubuntu 18.04 LTS based Podman host.
 
 # Fail on errors.
 # Fail when using undefined variables.
@@ -99,58 +99,35 @@ EOF
   sed -i 's/^::1 .*/::1 localhost ip6-localhost ip6-loopback/' /etc/hosts
 }
 
-### Install Docker.
+### Install Podman.
 {
   apt-get -y install uidmap
   echo 'buildkite-agent:231072:65536' >> /etc/subuid
   echo 'buildkite-agent:231072:65536' >> /etc/subgid
 
-  curl -fsSL https://get.docker.com/rootless > /tmp/rootless
-  chmod +x /tmp/rootless
-  sudo -H -u buildkite-agent /tmp/rootless
+  echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_18.04/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+  curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_18.04/Release.key | sudo apt-key add -
+  apt-get -y update
+  apt-get -y install podman buildah
+  ln -s /usr/bin/podman /usr/local/bin/docker
+
+  # catanonit is missing from the official packages. We need it for "podman run --init" support.
+  curl -fsSL "https://mirror.bazel.build/github.com/openSUSE/catatonit/releases/download/v0.1.4/catatonit.x86_64" -o /usr/libexec/podman/catatonit
+  chmod +x /usr/libexec/podman/catatonit
+
+  # fuse-overlayfs makes "podman run" faster, so let's install it.
+  curl -fsSL "https://mirror.bazel.build/github.com/philwo/fuse-overlayfs/releases/download/v0.7.6/fuse-overlayfs" -o /usr/local/bin/fuse-overlayfs
+  chmod +x /usr/local/bin/fuse-overlayfs
 
   cat > /etc/sysctl.d/20-allow-ping.conf <<'EOF'
 net.ipv4.ping_group_range = 0 2147483647
 EOF
 
-  echo 'br_netfilter' >> /etc/modules
-
-  cat > /etc/systemd/system/docker.service <<'EOF'
-[Unit]
-Description=Docker Application Container Engine (Rootless)
-Documentation=https://docs.docker.com
-
-[Service]
-User=buildkite-agent
-Environment=HOME=/var/lib/buildkite-agent
-Environment=XDG_RUNTIME_DIR=/tmp/docker-999
-Environment=PATH=/var/lib/buildkite-agent/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-Environment=DOCKER_HOST=unix:///tmp/docker-999/docker.sock
-ExecStart=/var/lib/buildkite-agent/bin/dockerd-rootless.sh --experimental
-ExecReload=/bin/kill -s HUP \$MAINPID
-TimeoutSec=0
-RestartSec=2
-Restart=always
-StartLimitBurst=3
-StartLimitInterval=60s
-LimitNOFILE=infinity
-LimitNPROC=infinity
-LimitCORE=infinity
-TasksMax=infinity
-Delegate=yes
-Type=simple
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
   mkdir /etc/systemd/system/buildkite-agent.service.d
-  cat > /etc/systemd/system/buildkite-agent.service.d/10-rootless-docker.conf <<'EOF'
+  cat > /etc/systemd/system/buildkite-agent.service.d/10-podman.conf <<'EOF'
 [Service]
-# Setup the environment variables for rootless Docker.
-Environment=DOCKER_HOST=unix:///tmp/docker-999/docker.sock
-Environment=PATH=/var/lib/buildkite-agent/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-Environment=XDG_RUNTIME_DIR=/tmp/docker-999
+# Setup the environment variables for Podman.
+Environment=PODMAN_USERNS=keep-id
 EOF
   cat > /etc/systemd/system/buildkite-agent.service.d/10-oneshot-agent.conf <<'EOF'
 [Service]
@@ -171,6 +148,7 @@ EOF
 Environment=ANDROID_HOME=/opt/android-sdk-linux
 Environment=ANDROID_NDK_HOME=/opt/android-ndk-r15c
 Environment=CLOUDSDK_PYTHON=/usr/bin/python
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 EOF
 }
 
