@@ -1778,7 +1778,7 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None):
         "command": commands,
         "agents": {"queue": "default"},
         "plugins": {
-            "docker#v3.5.0": {
+            "philwo/docker#ad417e1bbd09070460dc17d0bc27315d0203f669": {
                 "always-pull": True,
                 "environment": env,
                 "image": image,
