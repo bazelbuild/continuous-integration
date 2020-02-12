@@ -57,10 +57,6 @@ case $(hostname -f) in
     esac
 esac
 
-### Ensure that Docker images can be downloaded from GCR.
-gcloud auth configure-docker --quiet
-sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
-
 ### Write the Buildkite agent's systemd configuration.
 mkdir -p /etc/systemd/system/buildkite-agent.service.d
 cat > /etc/systemd/system/buildkite-agent.service.d/10-artifact-upload.conf <<EOF
@@ -97,6 +93,13 @@ case $(hostname -f) in
         PREFIX="bazel-public"
         ;;
 esac
+
+# gcloud tries to be smart and refuses to run if it can query Docker for its version,
+# because it believes that the version is too old. We can circumvent that by temporarily
+# making podman not executable.
+chmod -x /usr/bin/podman
+sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
+chmod +x /usr/bin/podman
 
 sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/ubuntu1604/bazel:java8" &
 sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/ubuntu1804/bazel:java11" &
