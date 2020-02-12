@@ -102,13 +102,21 @@ sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
 chmod +x /usr/bin/podman
 
 sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/ubuntu1604/bazel:java8" &
+sleep 1
 sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/ubuntu1804/bazel:java11" &
+sleep 1
 sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/ubuntu1804/bazel:nojava" &
+sleep 1
 sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/ubuntu1604:java8" &
+sleep 1
 sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/ubuntu1804:java11" &
+sleep 1
 sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/ubuntu1804:nojava" &
+sleep 1
 sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/debian10:java11" &
+sleep 1
 sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/centos7:java8" &
+sleep 1
 sudo -H -u buildkite-agent podman pull "gcr.io/$PREFIX/centos7:releaser" &
 wait
 
