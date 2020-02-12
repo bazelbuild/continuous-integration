@@ -51,8 +51,8 @@ EOF
 {
   tune2fs -o ^acl,journal_data_writeback,nobarrier /dev/sda1
   cat > /etc/fstab <<'EOF'
-LABEL=cloudimg-rootfs  /               ext4    defaults,noatime,commit=300,journal_async_commit        0 0
-LABEL=UEFI               /boot/efi     vfat    defaults,noatime        0 0
+LABEL=cloudimg-rootfs	/	        ext4	defaults,noatime,commit=300,journal_async_commit	0 0
+LABEL=UEFI	          /boot/efi	vfat	defaults,noatime	0 0
 EOF
 }
 
@@ -105,8 +105,8 @@ EOF
   echo 'buildkite-agent:231072:65536' >> /etc/subuid
   echo 'buildkite-agent:231072:65536' >> /etc/subgid
 
-  echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_18.04/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-  curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_18.04/Release.key | sudo apt-key add -
+  echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_19.10/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+  curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_19.10/Release.key | sudo apt-key add -
   apt-get -y update
   apt-get -y install podman buildah
   ln -s /usr/bin/podman /usr/local/bin/docker

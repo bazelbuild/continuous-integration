@@ -1789,6 +1789,8 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None):
                 "volumes": [
                     "/etc/group:/etc/group:ro",
                     "/etc/passwd:/etc/passwd:ro",
+                    "/etc/subuid:/etc/subuid:ro",
+                    "/etc/subgid:/etc/subgid:ro",
                     "/opt:/opt:ro",
                     "/var/lib/buildkite-agent:/var/lib/buildkite-agent",
                     "/var/lib/gitmirrors:/var/lib/gitmirrors:ro",

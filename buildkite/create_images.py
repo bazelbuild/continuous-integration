@@ -33,7 +33,7 @@ IMAGE_CREATION_VMS = {
         "project": "bazel-public",
         "zone": "us-central1-f",
         "source_image_project": "ubuntu-os-cloud",
-        "source_image_family": "ubuntu-1804-lts",
+        "source_image_family": "ubuntu-1910",
         "setup_script": "setup-docker.sh",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
         "licenses": [
