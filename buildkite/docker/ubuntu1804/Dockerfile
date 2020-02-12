@@ -105,6 +105,11 @@ RUN apt-get -qqy update && \
     add-apt-repository "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_18.04/ /" && \
     apt-get -qqy update && \
     apt-get -qqy install podman buildah && \
+    ln -s /usr/bin/podman /usr/local/bin/docker && \
+    curl -fsSL "https://mirror.bazel.build/github.com/openSUSE/catatonit/releases/download/v0.1.4/catatonit.x86_64" -o /usr/libexec/podman/catatonit && \
+    chmod +x /usr/libexec/podman/catatonit && \
+    curl -fsSL "https://mirror.bazel.build/github.com/philwo/fuse-overlayfs/releases/download/v0.7.6/fuse-overlayfs" -o /usr/local/bin/fuse-overlayfs && \
+    chmod +x /usr/local/bin/fuse-overlayfs && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Go.
