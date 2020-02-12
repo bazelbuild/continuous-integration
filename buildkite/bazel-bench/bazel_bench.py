@@ -56,8 +56,8 @@ PROJECTS = [
         "active": True,
     },
     {
-        "display_name": "Tensorflow-Cpp",
-        "bazelci_name": "Tensorflow",
+        "display_name": "TensorFlow-Cpp",
+        "bazelci_name": "TensorFlow",
         "storage_subdir": "tensorflow-cc",
         "project_label": "tensorflow-cc",
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
