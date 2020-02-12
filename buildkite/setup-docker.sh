@@ -145,11 +145,32 @@ WantedBy=multi-user.target
 EOF
 
   mkdir /etc/systemd/system/buildkite-agent.service.d
-  cat > /etc/systemd/system/buildkite-agent.service.d/override.conf <<'EOF'
+  cat > /etc/systemd/system/buildkite-agent.service.d/10-rootless-docker.conf <<'EOF'
 [Service]
-Environment=XDG_RUNTIME_DIR=/tmp/docker-999
-Environment=PATH=/var/lib/buildkite-agent/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Setup the environment variables for rootless Docker.
 Environment=DOCKER_HOST=unix:///tmp/docker-999/docker.sock
+Environment=PATH=/var/lib/buildkite-agent/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=XDG_RUNTIME_DIR=/tmp/docker-999
+EOF
+  cat > /etc/systemd/system/buildkite-agent.service.d/10-oneshot-agent.conf <<'EOF'
+[Service]
+# Only run one job, then shutdown the machine (so that the instance group replaces it with a fresh one).
+Restart=no
+PermissionsStartOnly=true
+ExecStopPost=/bin/systemctl poweroff
+EOF
+  cat > /etc/systemd/system/buildkite-agent.service.d/10-disable-tasks-accounting.conf <<'EOF'
+[Service]
+# Disable tasks accounting, because Bazel is prone to run into resource limits there.
+# This fixes the "cgroup: fork rejected by pids controller" error that some CI jobs triggered.
+TasksAccounting=no
+EOF
+  cat > /etc/systemd/system/buildkite-agent.service.d/10-environment.conf <<'EOF'
+[Service]
+# Setup some environment variables that we need.
+Environment=ANDROID_HOME=/opt/android-sdk-linux
+Environment=ANDROID_NDK_HOME=/opt/android-ndk-r15c
+Environment=CLOUDSDK_PYTHON=/usr/bin/python
 EOF
 }
 
