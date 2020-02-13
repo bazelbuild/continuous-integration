@@ -1,6 +1,5 @@
 FROM ubuntu:16.04 as ubuntu1604-bazel-java8
 ENV DEBIAN_FRONTEND="noninteractive"
-ARG BUILDARCH
 
 ENV LANG "C.UTF-8"
 ENV LANGUAGE "C.UTF-8"
@@ -32,7 +31,6 @@ RUN dpkg --add-architecture i386 && \
     libstdc++6:i386 \
     libz1:i386 \
     llvm \
-    llvm-dev \
     lsb-release \
     netcat-openbsd \
     openjdk-8-jdk \

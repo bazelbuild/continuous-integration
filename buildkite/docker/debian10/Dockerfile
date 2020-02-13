@@ -32,7 +32,6 @@ RUN dpkg --add-architecture i386 && \
     libstdc++6:i386 \
     libz1:i386 \
     llvm \
-    llvm-dev \
     lsb-release \
     netcat-openbsd \
     openjdk-11-jdk \
@@ -55,20 +54,6 @@ RUN dpkg --add-architecture i386 && \
     rm -rf /var/lib/apt/lists/*
 
 ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64
-
-### Install Podman.
-RUN apt-get -qqy update && \
-    apt-get -qqy install apt-transport-https ca-certificates && \
-    curl -sSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/Debian_10/Release.key | apt-key add - && \
-    add-apt-repository "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/Debian_10/ /" && \
-    apt-get -qqy update && \
-    apt-get -qqy install podman buildah && \
-    ln -s /usr/bin/podman /usr/local/bin/docker && \
-    curl -fsSL "https://mirror.bazel.build/github.com/openSUSE/catatonit/releases/download/v0.1.4/catatonit.x86_64" -o /usr/libexec/podman/catatonit && \
-    chmod +x /usr/libexec/podman/catatonit && \
-    curl -fsSL "https://mirror.bazel.build/github.com/philwo/fuse-overlayfs/releases/download/v0.7.6/fuse-overlayfs" -o /usr/local/bin/fuse-overlayfs && \
-    chmod +x /usr/local/bin/fuse-overlayfs && \
-    rm -rf /var/lib/apt/lists/*
 
 COPY --from=gcr.io/bazel-public/base:bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
 COPY --from=gcr.io/bazel-public/base:buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier

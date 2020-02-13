@@ -5,23 +5,36 @@ COPY --from=gcr.io/bazel-public/base:buildifier /usr/local/bin/buildifier /usr/l
 COPY --from=gcr.io/bazel-public/base:saucelabs /usr/local/bin/sc /usr/local/bin/sc
 
 # Install required packages.
-RUN echo "Enabling EPEL repository..." && \
-    yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
-    echo "Installing packages required by Bazel..." && \
-    yum install -y bind-utils dpkg-dev ed file gcc gcc-c++ git iproute java-1.8.0-openjdk-devel lcov openssl-perl patch python python-six python36 python36-PyYAML python36-six unzip which zip && \
-    echo "Installing packages required by Android SDK..." && \
-    yum install -y bzip2-libs.i686 ncurses-libs.i686 zlib.i686 && \
-    echo "Installing Podman..." && \
-    yum install -y podman && \
-    ln -s /usr/bin/podman /usr/local/bin/docker && \
-    echo "Installing gnupg2..." && \
-    yum install -y gnupg2 && \
-    echo "Cleaning up..." && \
-    yum clean all
+COPY google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
 
-RUN yum install -y yum-utils && \
-    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
-    yum install -y containerd.io docker-ce docker-ce-cli && \
+RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
+    yum install -y \
+    bind-utils \
+    bzip2-libs.i686 \
+    dpkg-dev \
+    ed \
+    file \
+    gcc \
+    gcc-c++ \
+    git \
+    gnupg2 \
+    google-cloud-sdk \
+    iproute \
+    java-1.8.0-openjdk-devel \
+    lcov \
+    ncurses-libs.i686 \
+    openssl-perl \
+    patch \
+    python \
+    python-six \
+    python36 \
+    python36-PyYAML \
+    python36-six \
+    unzip \
+    which \
+    zip \
+    zlib.i686 \
+    && \
     yum clean all
 
 # Ensure that Bazel can use its beloved ISO-8859-1 locale.
