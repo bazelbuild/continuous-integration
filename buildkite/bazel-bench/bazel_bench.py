@@ -412,11 +412,11 @@ def main(args=None):
         BAZEL_REPOSITORY, STARTER_JOB_PLATFORM)
     bazel_commits_full_list, bazel_commits_to_benchmark = _get_bazel_commits(
         date, bazel_clone_path, parsed_args.max_commits)
+    bazel_bench_ci_steps = []
 
     for project in PROJECTS:
         if not project["active"]:
             continue
-        bazel_bench_ci_steps = []
         platforms = _get_platforms(
             project["bazelci_name"], whitelist=PLATFORMS_WHITELIST)
         
