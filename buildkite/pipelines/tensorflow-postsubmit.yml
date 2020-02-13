@@ -12,7 +12,7 @@ platforms:
     #   echo '
     #   android_sdk_repository(name = "androidsdk")
     #   android_ndk_repository(name = "androidndk")' >>WORKSPACE
-    - yes '' | ./configure
+    - yes '' | python3 ./configure.py
     build_flags:
     - "--config=opt"
     # Suppress warning messages from all actions
