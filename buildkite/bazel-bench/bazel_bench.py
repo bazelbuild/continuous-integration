@@ -402,7 +402,6 @@ def main(args=None):
       help="The BigQuery table to fetch data from. In the format: project:table_identifier.")
     parsed_args = parser.parse_args(args)
 
-    bazel_bench_ci_steps = []
     date = (
         datetime.datetime.strptime(parsed_args.date, "%Y-%m-%d").date()
         if parsed_args.date
@@ -417,6 +416,7 @@ def main(args=None):
     for project in PROJECTS:
         if not project["active"]:
             continue
+        bazel_bench_ci_steps = []
         platforms = _get_platforms(
             project["bazelci_name"], whitelist=PLATFORMS_WHITELIST)
         
