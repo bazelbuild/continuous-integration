@@ -444,7 +444,10 @@ def main(args=None):
             benchmarked_commits=bazel_commits_to_benchmark
         )
 
-        bazel_bench_ci_steps.append("wait")
+    bazel_bench_ci_steps.append("wait")
+    for project in PROJECTS:
+        if not project["active"]:
+            continue
         # If all the above steps succeed, generate the report.
         bazel_bench_ci_steps.append(
             _report_generation_step(
@@ -452,10 +455,10 @@ def main(args=None):
                 parsed_args.bucket, parsed_args.bigquery_table, REPORT_GENERATION_PLATFORM,
                 parsed_args.report_name, parsed_args.update_latest, parsed_args.upload_report))
 
-        bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
-        subprocess.run(
-            ["buildkite-agent", "pipeline", "upload"],
-            input=yaml.dump({"steps": bazel_bench_ci_steps}, encoding="utf-8"))
+    bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
+    subprocess.run(
+        ["buildkite-agent", "pipeline", "upload"],
+        input=yaml.dump({"steps": bazel_bench_ci_steps}, encoding="utf-8"))
 
 
 if __name__ == "__main__":
