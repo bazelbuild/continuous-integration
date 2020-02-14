@@ -31,6 +31,7 @@ RUN dpkg --add-architecture i386 && \
     libstdc++6:i386 \
     libz1:i386 \
     llvm \
+    llvm-dev \
     lsb-release \
     netcat-openbsd \
     python \
