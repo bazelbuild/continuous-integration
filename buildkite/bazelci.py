@@ -128,6 +128,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/bazel-skylib.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-skylib/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-skylib",
+        "migration_owner": "Bazel team",
     },
     "Bazel toolchains": {
         "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
@@ -213,16 +214,19 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/google/protobuf.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/protobuf-postsubmit.yml",
         "pipeline_slug": "protobuf",
+        "migration_owner": "Bazel Team",
     },
     "Skydoc": {
         "git_repository": "https://github.com/bazelbuild/skydoc.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/skydoc/master/.bazelci/presubmit.yml",
         "pipeline_slug": "skydoc",
+        "migration_owner": "Bazel Team",
     },
     "Subpar": {
         "git_repository": "https://github.com/google/subpar.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/subpar-postsubmit.yml",
         "pipeline_slug": "subpar",
+        "migration_owner": "Bazel Team",
     },
     "TensorFlow": {
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
@@ -258,11 +262,13 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_cc.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_cc/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-cc",
+        "migration_owner": "Bazel Team",
     },
     "rules_closure": {
         "git_repository": "https://github.com/bazelbuild/rules_closure.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_closure/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-closure-closure-compiler",
+        "migration_owner": "Bazel Team",
     },
     "rules_d": {
         "git_repository": "https://github.com/bazelbuild/rules_d.git",
@@ -278,6 +284,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_foreign_cc/master/.bazelci/config.yaml",
         "pipeline_slug": "rules-foreign-cc",
+        "migration_owner": "Bazel Team",
     },
     "rules_go": {
         "git_repository": "https://github.com/bazelbuild/rules_go.git",
@@ -308,11 +315,13 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_jvm_external.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jvm_external/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-jvm-external",
+        "migration_owner": "Bazel Team",
     },
     "rules_jvm_external - examples": {
         "git_repository": "https://github.com/bazelbuild/rules_jvm_external.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jvm_external/master/.bazelci/examples.yml",
         "pipeline_slug": "rules-jvm-external-examples",
+        "migration_owner": "Bazel Team",
     },
     "rules_k8s": {
         "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
@@ -338,11 +347,13 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_proto.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_proto/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-proto",
+        "migration_owner": "Bazel Team",
     },
     "rules_python": {
         "git_repository": "https://github.com/bazelbuild/rules_python.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_python/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-python-python",
+        "migration_owner": "Bazel Team",
     },
     "rules_rust": {
         "git_repository": "https://github.com/bazelbuild/rules_rust.git",
