@@ -2593,7 +2593,10 @@ def update_last_green_commit_if_newer(last_green_commit_url):
     # commits, otherwise the output should be empty.
     if not last_green_commit or result:
         execute_command(
-            ["echo %s | %s cp - %s" % (current_commit, gsutil_command(), last_green_commit_url)],
+            [
+                "echo %s | %s -h 'Cache-Control: no-store' cp - %s"
+                % (current_commit, gsutil_command(), last_green_commit_url)
+            ],
             shell=True,
         )
     else:
