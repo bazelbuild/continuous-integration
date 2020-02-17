@@ -1,67 +1,66 @@
 steps:
-- label: 'Project pipeline :ubuntu: 18.04 (JDK 8)'
-  command:
-  - python3.6 buildkite/bazelci.py project_pipeline --file_config=buildkite/pipelines/tensorflow-postsubmit.yml
-  agents: &linux_agents {queue: default}
-  plugins: &plugins
-    - docker#v3.2.0:
-        always-pull: true
-        environment:
-          - "ANDROID_HOME"
-          - "ANDROID_NDK_HOME"
-          - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-        image: "gcr.io/bazel-public/ubuntu1804:java11"
-        network: "host"
-        privileged: true
-        propagate-environment: true
-        propagate-uid-gid: true
-        volumes:
-          - "/etc/group:/etc/group:ro"
-          - "/etc/passwd:/etc/passwd:ro"
-          - "/opt:/opt:ro"
-          - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
-          - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
-          - "/var/run/docker.sock:/var/run/docker.sock"
-- label: 'Downstream pipeline :ubuntu: 18.04 (JDK 8)'
-  command:
-  - python3.6 buildkite/bazelci.py bazel_downstream_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml 
-  - python3.6 buildkite/bazelci.py bazel_downstream_pipeline --test_incompatible_flags --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml 
-  - python3.6 buildkite/bazelci.py bazel_downstream_pipeline --test_disabled_projects --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml 
-  agents: *linux_agents
-  plugins: *plugins
-- label: 'Publish binaries pipeline :ubuntu: 18.04 (JDK 8)'
-  command:
-  - python3.6 buildkite/bazelci.py bazel_publish_binaries_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/build_bazel_binaries.yml
-  agents: *linux_agents
-  plugins: *plugins
+  - label: "Project pipeline :ubuntu: 18.04 (JDK 8)"
+    command:
+      - python3.6 buildkite/bazelci.py project_pipeline --file_config=buildkite/pipelines/tensorflow-postsubmit.yml
+    agents: &linux_agents { queue: default }
+    plugins: &plugins
+      - docker#v3.2.0:
+          always-pull: true
+          environment:
+            - "ANDROID_HOME"
+            - "ANDROID_NDK_HOME"
+            - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
+          image: "gcr.io/bazel-public/ubuntu1804-java11"
+          network: "host"
+          privileged: true
+          propagate-environment: true
+          propagate-uid-gid: true
+          volumes:
+            - "/etc/group:/etc/group:ro"
+            - "/etc/passwd:/etc/passwd:ro"
+            - "/opt:/opt:ro"
+            - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+            - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+            - "/var/run/docker.sock:/var/run/docker.sock"
+  - label: "Downstream pipeline :ubuntu: 18.04 (JDK 8)"
+    command:
+      - python3.6 buildkite/bazelci.py bazel_downstream_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
+      - python3.6 buildkite/bazelci.py bazel_downstream_pipeline --test_incompatible_flags --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
+      - python3.6 buildkite/bazelci.py bazel_downstream_pipeline --test_disabled_projects --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
+    agents: *linux_agents
+    plugins: *plugins
+  - label: "Publish binaries pipeline :ubuntu: 18.04 (JDK 8)"
+    command:
+      - python3.6 buildkite/bazelci.py bazel_publish_binaries_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/build_bazel_binaries.yml
+    agents: *linux_agents
+    plugins: *plugins
 
-- label: 'Project pipeline :darwin: (JDK 8)'
-  command:
-  - python3.7 buildkite/bazelci.py project_pipeline --file_config=buildkite/pipelines/tensorflow-postsubmit.yml
-  agents: &mac_agents {queue: macos}
-- label: 'Downstream pipeline :darwin: (JDK 8)'
-  command:
-  - python3.7 buildkite/bazelci.py bazel_downstream_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml 
-  - python3.7 buildkite/bazelci.py bazel_downstream_pipeline --test_incompatible_flags --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml 
-  - python3.7 buildkite/bazelci.py bazel_downstream_pipeline --test_disabled_projects --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml 
-  agents: *mac_agents
-- label: 'Publish binaries pipeline :darwin: (JDK 8)'
-  command:
-  - python3.7 buildkite/bazelci.py bazel_publish_binaries_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/build_bazel_binaries.yml
-  agents: *mac_agents
+  - label: "Project pipeline :darwin: (JDK 8)"
+    command:
+      - python3.7 buildkite/bazelci.py project_pipeline --file_config=buildkite/pipelines/tensorflow-postsubmit.yml
+    agents: &mac_agents { queue: macos }
+  - label: "Downstream pipeline :darwin: (JDK 8)"
+    command:
+      - python3.7 buildkite/bazelci.py bazel_downstream_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
+      - python3.7 buildkite/bazelci.py bazel_downstream_pipeline --test_incompatible_flags --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
+      - python3.7 buildkite/bazelci.py bazel_downstream_pipeline --test_disabled_projects --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
+    agents: *mac_agents
+  - label: "Publish binaries pipeline :darwin: (JDK 8)"
+    command:
+      - python3.7 buildkite/bazelci.py bazel_publish_binaries_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/build_bazel_binaries.yml
+    agents: *mac_agents
 
-- label: 'Project pipeline :windows: (JDK 8)'
-  command:
-  - python.exe buildkite/bazelci.py project_pipeline --file_config=buildkite/pipelines/tensorflow-postsubmit.yml
-  agents: &win_agents {queue: windows}  
-- label: 'Downstream pipeline :windows: (JDK 8)'
-  command:
-  - python.exe buildkite/bazelci.py bazel_downstream_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml 
-  - python.exe buildkite/bazelci.py bazel_downstream_pipeline --test_incompatible_flags --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml 
-  - python.exe buildkite/bazelci.py bazel_downstream_pipeline --test_disabled_projects --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml 
-  agents: *win_agents
-- label: 'Publish binaries pipeline :windows: (JDK 8)'
-  command:
-  - python.exe buildkite/bazelci.py bazel_publish_binaries_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/build_bazel_binaries.yml
-  agents: *win_agents
-
+  - label: "Project pipeline :windows: (JDK 8)"
+    command:
+      - python.exe buildkite/bazelci.py project_pipeline --file_config=buildkite/pipelines/tensorflow-postsubmit.yml
+    agents: &win_agents { queue: windows }
+  - label: "Downstream pipeline :windows: (JDK 8)"
+    command:
+      - python.exe buildkite/bazelci.py bazel_downstream_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
+      - python.exe buildkite/bazelci.py bazel_downstream_pipeline --test_incompatible_flags --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
+      - python.exe buildkite/bazelci.py bazel_downstream_pipeline --test_disabled_projects --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
+    agents: *win_agents
+  - label: "Publish binaries pipeline :windows: (JDK 8)"
+    command:
+      - python.exe buildkite/bazelci.py bazel_publish_binaries_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/build_bazel_binaries.yml
+    agents: *win_agents

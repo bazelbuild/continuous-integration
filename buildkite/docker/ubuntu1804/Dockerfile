@@ -1,31 +1,81 @@
-FROM ubuntu:18.04 as ubuntu1804-nojava
+FROM ubuntu:18.04 as ubuntu1804-bazel-nojava
 ENV DEBIAN_FRONTEND="noninteractive"
+ARG BUILDARCH
+
+ENV LANG "C.UTF-8"
+ENV LANGUAGE "C.UTF-8"
+ENV LC_ALL "C.UTF-8"
+
+### Install packages required by Bazel and its tests
+RUN dpkg --add-architecture i386 && \
+    apt-get -qqy update && \
+    apt-get -qqy install --no-install-recommends \
+    apt-utils \
+    bind9-host \
+    build-essential \
+    clang \
+    coreutils \
+    curl \
+    dnsutils \
+    ed \
+    expect \
+    file \
+    git \
+    gnupg2 \
+    iproute2 \
+    iputils-ping \
+    lcov \
+    less \
+    libbz2-1.0:i386 \
+    libncurses5:i386 \
+    libssl-dev \
+    libstdc++6:i386 \
+    libz1:i386 \
+    llvm \
+    llvm-dev \
+    lsb-release \
+    netcat-openbsd \
+    python \
+    python-dev \
+    python-six \
+    python3 \
+    python3-dev \
+    python3-requests \
+    python3-six \
+    python3-yaml \
+    software-properties-common \
+    unzip \
+    wget \
+    xvfb \
+    zip \
+    zlib1g-dev \
+    && \
+    apt-get -qqy purge apport && \
+    rm -rf /var/lib/apt/lists/*
+
+FROM ubuntu1804-bazel-nojava AS ubuntu1804-bazel-java11
+RUN apt-get -qqy update && \
+    apt-get -qqy install --no-install-recommends openjdk-11-jdk && \
+    rm -rf /var/lib/apt/lists/*
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64
+
+FROM ubuntu1804-bazel-nojava AS ubuntu1804-nojava
 COPY --from=gcr.io/bazel-public/base:bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
 COPY --from=gcr.io/bazel-public/base:buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
-COPY --from=gcr.io/bazel-public/base:github-release /usr/local/bin/github-release /usr/local/bin/github-release
 COPY --from=gcr.io/bazel-public/base:saucelabs /usr/local/bin/sc /usr/local/bin/sc
 
 ### Install required packages.
-RUN dpkg --add-architecture i386 && \
-    apt-get -qqy update && \
-    echo "Installing base packages" && \
-    apt-get -qqy install apt-utils curl lsb-release software-properties-common && \
-    echo "Installing packages required by Bazel" && \
-    apt-get -qqy install bind9-host build-essential clang curl dnsutils ed git iproute2 iputils-ping netcat-openbsd python python-dev python3 python3-dev unzip wget xvfb zip zlib1g-dev && \
-    echo "Installing packages required by Android SDK" && \
-    apt-get -qqy install expect libbz2-1.0:i386 libncurses5:i386 libstdc++6:i386 libz1:i386 && \
+RUN apt-get -qqy update && \
     echo "Installing packages required by Tensorflow" && \
-    apt-get -qqy install libcurl3-dev swig python-enum34 python-mock python-numpy python-pip python-wheel python3-mock python3-numpy python3-pip python3-wheel && \
+    apt-get -qqy install libcurl3-dev swig python3-mock python3-numpy python3-pip python3-wheel && \
     echo "Installing packages required by Envoy" && \
     apt-get -qqy install automake autotools-dev cmake libtool m4 ninja-build && \
     echo "Installing packages required by Android emulator" && \
-    apt-get -qqy install cpio cpu-checker lsof qemu-kvm qemu-system-x86 unzip xvfb && \
+    apt-get -qqy install cpio cpu-checker lsof qemu-kvm qemu-system-x86 && \
     echo "Installing packages required by Bazel release process" && \
-    apt-get -qqy install devscripts gnupg pandoc reprepro && \
-    echo "Installing packages required by C++ coverage tests" && \
-    apt-get -qqy install lcov llvm && \
+    apt-get -qqy install devscripts pandoc reprepro && \
     echo "Installing packages required by Swift toolchain" && \
-    apt-get -qqy install clang libicu-dev && \
+    apt-get -qqy install libicu-dev && \
     echo "Installing packages required by rules_webtesting" && \
     apt-get -qqy install python-urllib3 python3-urllib3 && \
     echo "Installing packages required by Kythe" && \
@@ -34,12 +84,10 @@ RUN dpkg --add-architecture i386 && \
     apt-get -qqy install libreadline-dev && \
     echo "Installing packages required by rules_haskell" && \
     apt-get -qqy install libgmp-dev && \
-    apt-get -qqy purge apport && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Python packages required by Tensorflow.
-RUN pip install keras_applications keras_preprocessing future && \
-    pip3 install keras_applications keras_preprocessing future
+RUN pip3 install keras_applications keras_preprocessing future
 
 ### Install Google Cloud SDK.
 ### https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
@@ -59,27 +107,8 @@ RUN apt-get -qqy update && \
     apt-get -qqy install docker-ce && \
     rm -rf /var/lib/apt/lists/*
 
-### Install Node.js and packages required by Gerrit.
-### (see https://gerrit.googlesource.com/gerrit/+show/master/polygerrit-ui/README.md)
-RUN curl -L https://deb.nodesource.com/setup_10.x | bash - && \
-    apt-get -qqy update && \
-    apt-get -qqy install nodejs && \
-    npm install --unsafe-perm -g \
-    eslint@"=4.19.0" \
-    eslint-config-google@"=0.12.0" \
-    eslint-plugin-html@"=5.0.3" \
-    eslint-plugin-promise@"=4.0.1" \
-    typescript \
-    fried-twinkie@"^0.2.2" \
-    polylint polymer-cli \
-    web-component-tester@6.8.0 && \
-    rm -rf /var/lib/apt/lists/*
-
-### Install Python dependencies required by our own bazelci.py script.
-RUN pip3 install requests uritemplate pyyaml github3.py
-
 ### Install Go.
-ENV GO_HOME "/opt/go1.12.6.linux-amd64"
+ENV GO_HOME "/opt/go1.13.8.linux-amd64"
 ENV PATH "${PATH}:${GO_HOME}/bin"
 
 ### Install Swift toolchain (required by rules_swift).
@@ -88,5 +117,6 @@ ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
 
 FROM ubuntu1804-nojava AS ubuntu1804-java11
 RUN apt-get -qqy update && \
-    apt-get -qqy install openjdk-11-jdk && \
+    apt-get -qqy install --no-install-recommends openjdk-11-jdk && \
     rm -rf /var/lib/apt/lists/*
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64

@@ -421,7 +421,7 @@ PLATFORMS = {
         "emoji-name": ":centos: 7 (Java 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["ubuntu1404", "centos7", "linux"],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7:java8",
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7-java8",
         "python": "python3.6",
     },
     "debian10": {
@@ -429,7 +429,7 @@ PLATFORMS = {
         "emoji-name": ":debian: Buster (OpenJDK 11)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian10:java11",
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian10-java11",
         "python": "python3.7",
     },
     "ubuntu1604": {
@@ -437,7 +437,7 @@ PLATFORMS = {
         "emoji-name": ":ubuntu: 16.04 (OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["ubuntu1604"],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1604:java8",
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1604-java8",
         "python": "python3.6",
     },
     "ubuntu1804": {
@@ -445,7 +445,7 @@ PLATFORMS = {
         "emoji-name": ":ubuntu: 18.04 (OpenJDK 11)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["ubuntu1804"],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1804:java11",
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1804-java11",
         "python": "python3.6",
     },
     "ubuntu1804_nojava": {
@@ -453,7 +453,7 @@ PLATFORMS = {
         "emoji-name": ":ubuntu: 18.04 (no JDK)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1804:nojava",
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1804-nojava",
         "python": "python3.6",
     },
     "macos": {
@@ -477,7 +477,7 @@ PLATFORMS = {
         "emoji-name": "RBE (:ubuntu: 16.04, OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1604:java8",
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1604-java8",
         "python": "python3.6",
     },
 }

@@ -28,7 +28,7 @@ steps:
           - ANDROID_HOME
           - ANDROID_NDK_HOME
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/ubuntu1804:java11
+        image: gcr.io/bazel-public/ubuntu1804-java11
         network: host
         privileged: true
         propagate-environment: true

@@ -12,7 +12,7 @@ steps:
           - ANDROID_HOME
           - ANDROID_NDK_HOME
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/centos7:releaser
+        image: gcr.io/bazel-public/centos7-releaser
         network: host
         privileged: true
         propagate-environment: true
