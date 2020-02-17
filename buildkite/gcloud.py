@@ -155,7 +155,9 @@ def create_image(name, **kwargs):
 def describe_image_family(name, **kwargs):
     try:
         return json.loads(
-            gcloud("compute", "images", "describe-from-family", "--format=json", name, **kwargs)
+            gcloud(
+                "compute", "images", "describe-from-family", "--format=json", name, **kwargs
+            ).stdout
         )
     except subprocess.CalledProcessError as e:
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
