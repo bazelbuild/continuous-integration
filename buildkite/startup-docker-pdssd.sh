@@ -64,13 +64,6 @@ systemctl start docker
 gcloud auth configure-docker --quiet
 sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
 
-### Write the Buildkite agent's systemd configuration.
-mkdir -p /etc/systemd/system/buildkite-agent.service.d
-cat > /etc/systemd/system/buildkite-agent.service.d/10-artifact-upload.conf <<EOF
-[Service]
-Environment=BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://${ARTIFACT_BUCKET}/\$BUILDKITE_JOB_ID"
-EOF
-
 ### Write the Buildkite agent configuration.
 cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
 token="${BUILDKITE_TOKEN}"
@@ -84,6 +77,13 @@ hooks-path="/etc/buildkite-agent/hooks"
 plugins-path="/etc/buildkite-agent/plugins"
 disconnect-after-job=true
 health-check-addr=0.0.0.0:8080
+EOF
+
+### Add the Buildkite agent hooks.
+cat > /etc/buildkite-agent/hooks/environment <<EOF
+#!/bin/bash
+set -euo pipefail
+export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://${ARTIFACT_BUCKET}/\${BUILDKITE_JOB_ID}"
 EOF
 
 ### Fix permissions of the Buildkite agent configuration files and hooks.
