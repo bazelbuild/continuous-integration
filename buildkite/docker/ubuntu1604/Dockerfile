@@ -80,6 +80,23 @@ RUN apt-get -qqy update && \
     apt-get -qqy install libgmp-dev && \
     rm -rf /var/lib/apt/lists/*
 
+### Install Python (required by our own bazelci.py script).
+RUN export PYTHON_VERSION="3.6.8" && \
+    mkdir -p /usr/local/src && \
+    cd /usr/local/src && \
+    curl -LO "https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz" && \
+    tar xfJ "Python-${PYTHON_VERSION}.tar.xz" && \
+    rm "Python-${PYTHON_VERSION}.tar.xz" && \
+    cd "Python-${PYTHON_VERSION}" && \
+    echo "_ssl _ssl.c -DUSE_SSL -I/usr/include -I/usr/include/openssl -L/usr/lib -lssl -lcrypto" >> Modules/Setup.dist && \
+    echo "Compiling Python ${PYTHON_VERSION} ..." && \
+    ./configure --quiet --enable-ipv6 && \
+    make -s -j all && \
+    echo "Installing Python ${PYTHON_VERSION} ..." && \
+    make -s altinstall && \
+    pip3.6 install requests==2.22.0 pyyaml==3.13 && \
+    rm -rf "/usr/local/src/Python-${PYTHON_VERSION}"
+
 ### Install Google Cloud SDK.
 ### https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
 RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
@@ -98,22 +115,10 @@ RUN apt-get -qqy update && \
     apt-get -qqy install docker-ce && \
     rm -rf /var/lib/apt/lists/*
 
-### Install Python (required by our own bazelci.py script).
-RUN export PYTHON_VERSION="3.6.8" && \
-    mkdir -p /usr/local/src && \
-    cd /usr/local/src && \
-    curl -LO "https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz" && \
-    tar xfJ "Python-${PYTHON_VERSION}.tar.xz" && \
-    rm "Python-${PYTHON_VERSION}.tar.xz" && \
-    cd "Python-${PYTHON_VERSION}" && \
-    echo "_ssl _ssl.c -DUSE_SSL -I/usr/include -I/usr/include/openssl -L/usr/lib -lssl -lcrypto" >> Modules/Setup.dist && \
-    echo "Compiling Python ${PYTHON_VERSION} ..." && \
-    ./configure --quiet --enable-ipv6 && \
-    make -s -j all && \
-    echo "Installing Python ${PYTHON_VERSION} ..." && \
-    make -s altinstall && \
-    pip3.6 install requests==2.22.0 pyyaml==3.13 && \
-    rm -rf "/usr/local/src/Python-${PYTHON_VERSION}"
+### Install node.js (for Gerrit)
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
+    apt-get -qqy install nodejs && \
+    rm -rf /var/lib/apt/lists/*
 
 ### Install Go.
 ENV GO_HOME "/opt/go1.13.8.linux-amd64"
