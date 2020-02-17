@@ -485,7 +485,7 @@ PLATFORMS = {
         "emoji-name": "RBE (:ubuntu: 18.04, OpenJDK 8)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1804:java11",
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1804-java11",
         "python": "python3.6",
     },
 }
