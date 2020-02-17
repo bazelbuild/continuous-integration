@@ -67,6 +67,7 @@ sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
 ### Write the Buildkite agent's systemd configuration.
 mkdir -p /etc/systemd/system/buildkite-agent.service.d
 cat > /etc/systemd/system/buildkite-agent.service.d/10-artifact-upload.conf <<EOF
+[Service]
 Environment=BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://${ARTIFACT_BUCKET}/\$BUILDKITE_JOB_ID"
 EOF
 
