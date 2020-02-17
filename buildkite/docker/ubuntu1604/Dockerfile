@@ -79,7 +79,7 @@ RUN apt-get -qqy update && \
     echo "Installing packages required by rules_haskell" && \
     apt-get -qqy install libgmp-dev && \
     echo "Installing packages required by Gerrit" && \
-    apt-get -qqy install openssh-client \
+    apt-get -qqy install openssh-client && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Python (required by our own bazelci.py script).
