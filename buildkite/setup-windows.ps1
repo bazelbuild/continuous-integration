@@ -155,7 +155,6 @@ Write-Host "Installing Python packages..."
     six `
     requests `
     pyyaml `
-    github3.py `
     keras_applications `
     keras_preprocessing
 
