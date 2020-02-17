@@ -66,6 +66,36 @@ EOF
   # Disable the Buildkite agent service, as the startup script has to mount /var/lib/buildkite-agent
   # first.
   systemctl disable buildkite-agent
+
+  mkdir -p /etc/systemd/system/buildkite-agent.service.d
+  cat > /etc/systemd/system/buildkite-agent.service.d/10-oneshot-agent.conf <<'EOF'
+[Service]
+# Only run one job, then shutdown the machine (so that the instance group replaces it with a fresh one).
+Restart=no
+PermissionsStartOnly=true
+ExecStopPost=/bin/systemctl poweroff
+EOF
+
+  cat > /etc/systemd/system/buildkite-agent.service.d/10-disable-tasks-accounting.conf <<'EOF'
+[Service]
+# Disable tasks accounting, because Bazel is prone to run into resource limits there.
+# This fixes the "cgroup: fork rejected by pids controller" error that some CI jobs triggered.
+TasksAccounting=no
+EOF
+
+  cat > /etc/systemd/system/buildkite-agent.service.d/10-environment.conf <<'EOF'
+[Service]
+# Setup some environment variables that we need.
+Environment=ANDROID_HOME=/opt/android-sdk-linux
+Environment=ANDROID_NDK_HOME=/opt/android-ndk-r15c
+Environment=CLOUDSDK_PYTHON=/usr/bin/python
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+EOF
+}
+
+### Let 'localhost' resolve to '::1', otherwise one of Envoy's tests fails.
+{
+  sed -i 's/^::1 .*/::1 localhost ip6-localhost ip6-loopback/' /etc/hosts
 }
 
 ### Install Docker.
