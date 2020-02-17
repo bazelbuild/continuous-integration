@@ -29,7 +29,7 @@ import gcloud_utils
 DEBUG = False
 
 IMAGE_CREATION_VMS = {
-    "bk-docker": {
+    "bk-testing-docker": {
         "project": "bazel-public",
         "zone": "us-central1-f",
         "source_image_project": "ubuntu-os-cloud",
@@ -40,7 +40,7 @@ IMAGE_CREATION_VMS = {
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
     },
-    "bk-windows": {
+    "bk-testing-windows": {
         "project": "bazel-public",
         "zone": "us-central1-f",
         "source_image_project": "windows-cloud",

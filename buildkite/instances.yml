@@ -35,7 +35,7 @@ instance_groups:
     count: 30
     project: bazel-untrusted
     service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
-    image_family: bk-docker
+    image_family: bk-testing-docker
     metadata_from_file: startup-script=startup-docker-pdssd.sh
   - name: bk-trusted-docker
     count: 8
@@ -54,7 +54,7 @@ instance_groups:
     count: 10
     project: bazel-untrusted
     service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
-    image_family: bk-windows
+    image_family: bk-testing-windows
     metadata_from_file: windows-startup-script-ps1=startup-windows-pdssd.ps1
   - name: bk-trusted-windows
     count: 4

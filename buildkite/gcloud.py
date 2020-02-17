@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import collections
+import json
 import re
 import subprocess
 import threading
@@ -147,6 +148,15 @@ def delete_instance_template(name, **kwargs):
 def create_image(name, **kwargs):
     try:
         return gcloud("compute", "images", "create", name, **kwargs)
+    except subprocess.CalledProcessError as e:
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
+
+
+def describe_image_family(name, **kwargs):
+    try:
+        return json.loads(
+            gcloud("compute", "images", "describe-from-family", "--format=json", name, **kwargs)
+        )
     except subprocess.CalledProcessError as e:
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
