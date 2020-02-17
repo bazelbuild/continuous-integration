@@ -1298,10 +1298,8 @@ def common_build_flags(bep_file, platform):
         "--terminal_columns=143",
         "--show_timestamps",
         "--verbose_failures",
-        "--keep_going",
         "--jobs=" + concurrent_jobs(platform),
         "--announce_rc",
-        "--experimental_multi_threaded_digest",
         "--experimental_repository_cache_hardlinks",
         # Some projects set --disk_cache in their project-specific bazelrc, which we never want on
         # CI, so let's just disable it explicitly.
@@ -1332,10 +1330,9 @@ def rbe_flags(original_flags, accept_cached):
     flags = [
         "--remote_executor=remotebuildexecution.googleapis.com",
         "--remote_instance_name=projects/bazel-untrusted/instances/default_instance",
-        "--remote_timeout=3600",
-        "--experimental_strict_action_env",
-        "--tls_enabled=true",
+        "--incompatible_strict_action_env",
         "--google_default_credentials",
+        "--toolchain_resolution_debug",
     ]
 
     # Enable BES / Build Results reporting.
