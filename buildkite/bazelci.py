@@ -1225,7 +1225,7 @@ def remote_caching_flags(platform):
             subprocess.check_output(["/usr/bin/xcodebuild", "-version"]),
         ]
         # Use a local cache server for our macOS machines.
-        flags = ["--remote_cache=http://100.107.73.186"]
+        flags = ["--remote_cache=http://100.107.73.148"]
     else:
         platform_cache_key += [
             # Platform name:
