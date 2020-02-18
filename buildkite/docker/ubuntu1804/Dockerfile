@@ -40,8 +40,11 @@ RUN dpkg --add-architecture i386 && \
     python-six \
     python3 \
     python3-dev \
+    python3-pip \
     python3-requests \
+    python3-setuptools \
     python3-six \
+    python3-wheel \
     python3-yaml \
     software-properties-common \
     unzip \
@@ -67,7 +70,7 @@ COPY --from=gcr.io/bazel-public/base:saucelabs /usr/local/bin/sc /usr/local/bin/
 ### Install required packages.
 RUN apt-get -qqy update && \
     echo "Installing packages required by Tensorflow" && \
-    apt-get -qqy install libcurl3-dev swig python3-mock python3-numpy python3-pip python3-wheel && \
+    apt-get -qqy install libcurl3-dev swig python3-mock python3-numpy python3-wheel && \
     echo "Installing packages required by Envoy" && \
     apt-get -qqy install automake autotools-dev cmake libtool m4 ninja-build && \
     echo "Installing packages required by Android emulator" && \

@@ -41,8 +41,11 @@ RUN dpkg --add-architecture i386 && \
     python-six \
     python3 \
     python3-dev \
+    python3-pip \
     python3-requests \
+    python3-setuptools \
     python3-six \
+    python3-wheel \
     python3-yaml \
     software-properties-common \
     unzip \
