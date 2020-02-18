@@ -56,6 +56,12 @@ The following steps allow you to run the service locally:
 5. Start the proxy via `./cloud_sql_proxy -instances="bazel-untrusted:europe-west1:metrics"=tcp:3306`
 6. Run the app via `go run metrics/main.go metrics/settings.go --test=true`. The `test`parameter means that all metrics are collected immediately, and all results are published to stdout instead of being written to Cloud SQL.
 
+## Access via Cloud Shell
+Open Cloud Shell for the `bazel-untrusted` project, then run these commands:
+
+- `gcloud beta auth login`
+- `gcloud beta sql connect metrics --user=root --quiet`
+
 ## Test Coverage
 
 TODO(fweikert): Actually implement unit tests.
