@@ -212,7 +212,7 @@ def main(argv=None):
         return formatter_result.returncode
 
     # Format: "<file name> # reformated"
-    unformatted_files = [l.partition(" ")[0] for l in formatter_result.stdout.splitlines()]
+    unformatted_files = [l.partition(" ")[0] for l in formatter_result.stderr.splitlines()]
     if unformatted_files:
         eprint(
             "+++ :construction: Found {} file(s) that must be formatted".format(
