@@ -193,6 +193,8 @@ def main(argv=None):
             task = os.environ.get("PLATFORM_NAME") or os.environ.get("TASK_NAME")
             if task:
                 tasks = [task]
+            elif os.environ.get("TASK_NAME_LIST"):
+                tasks = os.environ.get("TASK_NAME_LIST").split(",")
             else:
                 tasks = get_tasks(project_name)
 

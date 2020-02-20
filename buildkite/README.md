@@ -93,7 +93,7 @@ You can preview the effect of an unmerged commit on downstream projects. See [Te
 ## Checking incompatible changes status for downstream projects
 
 [Bazelisk + Incompatible flags pipeline](https://buildkite.com/bazel/bazelisk-plus-incompatible-flags)
-runs [`bazelisk --migrate`](https://github.com/bazelbuild/bazelisk#other-features) on all downstream projects and reports 
+runs [`bazelisk --migrate`](https://github.com/bazelbuild/bazelisk#other-features) on all downstream projects and reports
 a summary of all incompatible flags and migrations statuses of downstream projects.
 
 The pipeline runs every night against the latest Bazel release. You can also schedule manual builds and set [`USE_BAZEL_VERSION`](https://github.com/bazelbuild/bazelisk#how-does-bazelisk-know-which-version-to-run) to run against a specific release or a release candidate (e.g. `USE_BAZEL_VERSION=0.29rc3` to test against RC3 of release 0.29)
@@ -109,12 +109,13 @@ If a project is green with release Bazel but red with Bazel nightly, it means so
 
 Create "New Build" in the [Culprit Finder](https://buildkite.com/bazel/culprit-finder) project with the following environment variable:
 
-- PROJECT_NAME (The project name must exist in DOWNSTREAM_PROJECTS in [bazelci.py](https://github.com/bazelbuild/continuous-integration/blob/master/buildkite/bazelci.py))
-- (Optional) TASK_NAME (The task name must exist in the project's config file, eg. [macos_latest](https://github.com/bazelbuild/rules_apple/blob/master/.bazelci/presubmit.yml#L3)). For old config syntax where platform name is essentially the task name, you can also set PLATFORM_NAME instead of TASK_NAME. If not set, culprit finder will bisect for all tasks of the specified project.
-- (Optional) GOOD_BAZEL_COMMIT (A full Bazel commit, Bazel built at this commit still works for this project). If not set, culprit finder will use the last green bazel commit in downstream pipeline as the good bazel commit.
-- (Optional) BAD_BAZEL_COMMIT (A full Bazel commit, Bazel built at this commit fails with this project). If not set, culprit finder will use the lastest Bazel commit as the bad bazel commit.
-- (Optional) NEEDS_CLEAN (Set NEEDS_CLEAN to `true` to run `bazel clean --expunge` before each build, this will help reduce flakiness)
-- (Optional) REPEAT_TIMES (Set REPEAT_TIMES to run the build multiple times to detect flaky build failure, if at least one build fails we consider the commit as bad)
+- **PROJECT_NAME** (The project name must exist in DOWNSTREAM_PROJECTS in [bazelci.py](https://github.com/bazelbuild/continuous-integration/blob/master/buildkite/bazelci.py))
+- (Optional) **TASK_NAME** (The task name must exist in the project's config file, eg. [macos_latest](https://github.com/bazelbuild/rules_apple/blob/master/.bazelci/presubmit.yml#L3)). For old config syntax where platform name is essentially the task name, you can also set PLATFORM_NAME instead of TASK_NAME. If not set, culprit finder will bisect for all tasks of the specified project.
+- (Optional) **TASK_NAME_LIST** A list of **TASK_NAME** separated by `,`. You can set this to bisect for multiple tasks in one build. It will be ignored if **TASK_NAME** is set.
+- (Optional) **GOOD_BAZEL_COMMIT** (A full Bazel commit, Bazel built at this commit still works for this project). If not set, culprit finder will use the last green bazel commit in downstream pipeline as the good bazel commit.
+- (Optional) **BAD_BAZEL_COMMIT** (A full Bazel commit, Bazel built at this commit fails with this project). If not set, culprit finder will use the lastest Bazel commit as the bad bazel commit.
+- (Optional) **NEEDS_CLEAN** (Set **NEEDS_CLEAN** to `true` to run `bazel clean --expunge` before each build, this will help reduce flakiness)
+- (Optional) **REPEAT_TIMES** (Set **REPEAT_TIMES** to run the build multiple times to detect flaky build failure, if at least one build fails we consider the commit as bad)
 
 
 eg.
