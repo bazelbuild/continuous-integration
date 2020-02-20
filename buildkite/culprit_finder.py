@@ -194,7 +194,7 @@ def main(argv=None):
             if task:
                 tasks = [task]
             elif os.environ.get("TASK_NAME_LIST"):
-                tasks = os.environ.get("TASK_NAME_LIST").split(";")
+                tasks = os.environ.get("TASK_NAME_LIST").split(",")
             else:
                 tasks = get_tasks(project_name)
 
