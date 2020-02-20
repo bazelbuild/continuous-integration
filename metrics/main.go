@@ -92,6 +92,9 @@ func main() {
 
 	srv := service.CreateService(handleError)
 
+	aggPipelinePerformance := metrics.CreateAggregatedPipelinePerformance(bk, 20, pipelines...)
+	srv.AddMetric(aggPipelinePerformance, minutes(10), defaultPublisher)
+
 	buildsPerChange := metrics.CreateBuildsPerChange(bk, 500, pipelines...)
 	srv.AddMetric(buildsPerChange, minutes(60), defaultPublisher)
 
