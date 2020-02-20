@@ -195,15 +195,38 @@ def get_html_link_text(content, link):
     return f'<a href="{link}" target="_blank">{content}</a>'
 
 
+# Check if any of the given jobs needs to be migrated by the Bazel team
+def needs_bazel_team_migrate(jobs):
+    for job in jobs:
+        pipeline, _ = get_pipeline_and_platform(job)
+        if bazelci.DOWNSTREAM_PROJECTS[pipeline].get("owned_by_bazel"):
+            return True
+    return False
+
+
 def print_flags_ready_to_flip(failed_jobs_per_flag, details_per_flag):
-    info_text = ["#### The following flags didn't break any passing jobs"]
+    info_text1 = ["#### The following flags didn't break any passing projects"]
     for flag in sorted(list(details_per_flag.keys())):
         if flag not in failed_jobs_per_flag:
-            github_url = details_per_flag[flag].issue_url
-            info_text.append(f"* **{flag}** " + get_html_link_text(":github:", github_url))
-    if len(info_text) == 1:
-        return
-    print_info("flags_ready_to_flip", "success", info_text)
+            html_link_text = get_html_link_text(":github:", details_per_flag[flag].issue_url)
+            info_text1.append(f"* **{flag}** {html_link_text}")
+
+    if len(info_text1) == 1:
+        info_text1 = []
+
+    info_text2.append("#### The following flags didn't break any passing Bazel team owned/co-owned projects"):
+    for flag, jobs in failed_jobs_per_flag.items():
+        if not needs_bazel_team_migrate(jobs):
+            failed_cnt = len(jobs)
+            s1 = "" if failed_cnt == 1 else "s"
+            s2 = "s" if failed_cnt == 1 else ""
+            html_link_text = get_html_link_text(":github:", details_per_flag[flag].issue_url)
+            info_text2.append(f"* **{flag}** {html_link_text}  ({failed_cnt} other job{s1} need{s2} migration)")
+
+    if len(info_text2) == 1:
+        info_text2 = []
+
+    print_info("flags_ready_to_flip", "success", info_text1 + info_text2)
 
 
 def print_already_fail_jobs(already_failing_jobs):
@@ -264,14 +287,29 @@ def print_flags_need_to_migrate(failed_jobs_per_flag, details_per_flag):
         if jobs:
             github_url = details_per_flag[flag].issue_url
             info_text = [f"* **{flag}** " + get_html_link_text(":github:", github_url)]
-            info_text += merge_and_format_jobs(jobs.values(), "  - **{}**: {}")
+            jobs_per_pipeline = merge_jobs(jobs.values())
+            for pipeline, platforms in jobs_per_pipeline.items():
+                color = "red" if bazelci.DOWNSTREAM_PROJECTS[pipeline].get("owned_by_bazel") else "black"
+                platforms_text = ", ".join(platforms)
+                info_text.append(f"  <li><strong style=\"color: {color}\">{pipeline}</strong>: {platforms_text}</li>")
             # Use flag as the context so that each flag gets a different info box.
             print_info(flag, "error", info_text)
             printed_flag_boxes = True
     if not printed_flag_boxes:
         return
-    info_text = ["#### Downstream projects need to migrate for the following flags:"]
+    info_text = [
+        "#### Downstream projects need to migrate for the following flags:",
+        "    Projects with <strong style=\"color: red;\">red title</strong> need to be migrated by the Bazel team.",
+    ]
     print_info("flags_need_to_migrate", "error", info_text)
+
+
+def merge_jobs(jobs):
+    jobs_per_pipeline = collections.defaultdict(list)
+    for job in sorted(jobs, key=lambda s: s["name"].lower()):
+        pipeline, platform = get_pipeline_and_platform(job)
+        jobs_per_pipeline[pipeline].append(get_html_link_text(platform, job["web_url"]))
+    return jobs_per_pipeline
 
 
 def merge_and_format_jobs(jobs, line_pattern):
@@ -282,13 +320,7 @@ def merge_and_format_jobs(jobs, line_pattern):
     #   pipeline (platform3)
     # with line_pattern ">> {}: {}" becomes
     #   >> pipeline: platform1, platform2, platform3
-    jobs = list(jobs)
-    jobs.sort(key=lambda s: s["name"].lower())
-    jobs_per_pipeline = collections.defaultdict(list)
-    for job in jobs:
-        pipeline, platform = get_pipeline_and_platform(job)
-        jobs_per_pipeline[pipeline].append(get_html_link_text(platform, job["web_url"]))
-
+    jobs_per_pipeline = merge_jobs(jobs)
     return [
         line_pattern.format(pipeline, ", ".join(platforms))
         for pipeline, platforms in jobs_per_pipeline.items()
