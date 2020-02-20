@@ -1,7 +1,9 @@
 package metrics
 
 import (
+	"fmt"
 	"log"
+	"sort"
 	"strings"
 
 	"github.com/buildkite/go-buildkite/buildkite"
@@ -43,6 +45,76 @@ func getPlatformFromJobName(jobName *string) string {
 	} else {
 		return ""
 	}
+}
+
+func isFinishedWorkerTask(job *buildkite.Job) bool {
+	// Name == nil -> "wait" step
+	// StartedAt == nil -> step was cancelled while waiting for an agent
+	// FinishedAt == nil -> step is still running
+	return job != nil && job.Name != nil && job.RunnableAt != nil && job.FinishedAt != nil
+}
+
+type event struct {
+	*buildkite.Timestamp
+	runDelta int
+}
+
+type jobsPerformance struct {
+	firstJobRunnableAt           *buildkite.Timestamp
+	totalWaitSeconds             float64
+	totalRunSeconds              float64
+	longestRunningTaskName       string
+	longestRunningTaskRunSeconds float64
+	passed                       bool
+}
+
+func analyzeJobsPerformance(jobs []*buildkite.Job) (*jobsPerformance, error) {
+	events := make([]event, 0)
+	result := &jobsPerformance{passed: true}
+	for _, job := range jobs {
+		if job.State == nil || *job.State != "passed" {
+			result.passed = false
+		}
+
+		if !isFinishedWorkerTask(job) {
+			continue
+		}
+
+		if result.firstJobRunnableAt == nil || job.RunnableAt.Time.Before(result.firstJobRunnableAt.Time) {
+			result.firstJobRunnableAt = job.RunnableAt
+		}
+
+		// Job lifecycle: scheduled -> created -> runnable -> started -> finished
+		// wait time = started - runnable
+		// run time = finished - started
+		// total time = finished - runnable
+		// Scheduled and created are affected by "wait" steps, so we don't look at them here.
+		duration := getDifferenceSeconds(job.RunnableAt, job.FinishedAt)
+		if duration > result.longestRunningTaskRunSeconds {
+			result.longestRunningTaskName = *job.Name
+			result.longestRunningTaskRunSeconds = duration
+		}
+	}
+	sortFunc := func(i, j int) bool { return events[i].Time.Before(events[j].Time) }
+	sort.Slice(events, sortFunc)
+
+	runningTasks := 0
+	prevTime := result.firstJobRunnableAt
+	for _, evt := range events {
+		elapsed := getDifferenceSeconds(prevTime, evt.Timestamp)
+		if runningTasks == 0 {
+			result.totalWaitSeconds += elapsed
+		} else {
+			result.totalWaitSeconds += elapsed
+		}
+
+		runningTasks += evt.runDelta
+		prevTime = evt.Timestamp
+	}
+	if runningTasks > 0 {
+		return nil, fmt.Errorf("There are %d unfinished jobs", runningTasks)
+	}
+	return result, nil
 }
 
 func getDifferenceSeconds(start *buildkite.Timestamp, end *buildkite.Timestamp) float64 {
