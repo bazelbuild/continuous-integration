@@ -195,6 +195,15 @@ def get_html_link_text(content, link):
     return f'<a href="{link}" target="_blank">{content}</a>'
 
 
+# Check if any of the given jobs needs to be migrated by the Bazel team
+def needs_bazel_team_migrate(jobs):
+    for job in jobs:
+        pipeline, _ = get_pipeline_and_platform(job)
+        if bazelci.DOWNSTREAM_PROJECTS[pipeline].get("owned_by_bazel"):
+            return True
+    return False
+
+
 def print_flags_ready_to_flip(failed_jobs_per_flag, details_per_flag):
     info_text1 = ["#### The following flags didn't break any passing projects"]
     for flag in sorted(list(details_per_flag.keys())):
@@ -207,13 +216,7 @@ def print_flags_ready_to_flip(failed_jobs_per_flag, details_per_flag):
 
     info_text2.append("#### The following flags didn't break any passing Bazel team owned/co-owned projects"):
     for flag, jobs in failed_jobs_per_flag.items():
-        needs_bazel_team_migrate = False
-        for job in jobs:
-            pipeline, _ = get_pipeline_and_platform(job)
-            if bazelci.DOWNSTREAM_PROJECTS[pipeline].get("owned_by_bazel"):
-                needs_bazel_team_migrate = True
-                break
-        if not needs_bazel_team_migrate:
+        if not needs_bazel_team_migrate(jobs):
             failed_cnt = len(jobs)
             s1 = "" if failed_cnt == 1 else "s"
             s2 = "s" if failed_cnt == 1 else ""
