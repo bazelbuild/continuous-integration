@@ -199,8 +199,8 @@ def print_flags_ready_to_flip(failed_jobs_per_flag, details_per_flag):
     info_text1 = ["#### The following flags didn't break any passing projects"]
     for flag in sorted(list(details_per_flag.keys())):
         if flag not in failed_jobs_per_flag:
-            github_url = details_per_flag[flag].issue_url
-            info_text1.append(f"* **{flag}** " + get_html_link_text(":github:", github_url))
+            html_link_text = get_html_link_text(":github:", details_per_flag[flag].issue_url)
+            info_text1.append(f"* **{flag}** {html_link_text}")
 
     if len(info_text1) == 1:
         info_text1 = []
@@ -210,15 +210,15 @@ def print_flags_ready_to_flip(failed_jobs_per_flag, details_per_flag):
         needs_bazel_team_migrate = False
         for job in jobs:
             pipeline, _ = get_pipeline_and_platform(job)
-            if bazelci.DOWNSTREAM_PROJECTS[pipeline].get("migration_owner") == "Bazel Team":
+            if bazelci.DOWNSTREAM_PROJECTS[pipeline].get("owned_by_bazel"):
                 needs_bazel_team_migrate = True
                 break
         if not needs_bazel_team_migrate:
             failed_cnt = len(jobs)
             s1 = "" if failed_cnt == 1 else "s"
             s2 = "s" if failed_cnt == 1 else ""
-            github_url = details_per_flag[flag].issue_url
-            info_text2.append(f"* **{flag}** " + get_html_link_text(":github:", github_url) + f" ({failed_cnt} other job{s1} need{s2} migration)")
+            html_link_text = get_html_link_text(":github:", details_per_flag[flag].issue_url)
+            info_text2.append(f"* **{flag}** {html_link_text}  ({failed_cnt} other job{s1} need{s2} migration)")
 
     if len(info_text2) == 1:
         info_text2 = []
@@ -286,7 +286,7 @@ def print_flags_need_to_migrate(failed_jobs_per_flag, details_per_flag):
             info_text = [f"* **{flag}** " + get_html_link_text(":github:", github_url)]
             jobs_per_pipeline = merge_jobs(jobs.values())
             for pipeline, platforms in jobs_per_pipeline.items():
-                color = "red" if bazelci.DOWNSTREAM_PROJECTS[pipeline].get("migration_owner") == "Bazel Team" else "black"
+                color = "red" if bazelci.DOWNSTREAM_PROJECTS[pipeline].get("owned_by_bazel") else "black"
                 platforms_text = ", ".join(platforms)
                 info_text.append(f"  <li><strong style=\"color: {color}\">{pipeline}</strong>: {platforms_text}</li>")
             # Use flag as the context so that each flag gets a different info box.
@@ -296,16 +296,14 @@ def print_flags_need_to_migrate(failed_jobs_per_flag, details_per_flag):
         return
     info_text = [
         "#### Downstream projects need to migrate for the following flags:",
-        "    Projects with <strong style=\"color: red;\">red title</strong> need to be migrated by Bazel team.",
+        "    Projects with <strong style=\"color: red;\">red title</strong> need to be migrated by the Bazel team.",
     ]
     print_info("flags_need_to_migrate", "error", info_text)
 
 
 def merge_jobs(jobs):
-    jobs = list(jobs)
-    jobs.sort(key=lambda s: s["name"].lower())
     jobs_per_pipeline = collections.defaultdict(list)
-    for job in jobs:
+    for job in sorted(jobs, key=lambda s: s["name"].lower()):
         pipeline, platform = get_pipeline_and_platform(job)
         jobs_per_pipeline[pipeline].append(get_html_link_text(platform, job["web_url"]))
     return jobs_per_pipeline
