@@ -216,7 +216,7 @@ def print_flags_ready_to_flip(failed_jobs_per_flag, details_per_flag):
 
     info_text2 = ["#### The following flags didn't break any passing Bazel team owned/co-owned projects"]
     for flag, jobs in failed_jobs_per_flag.items():
-        if not needs_bazel_team_migrate(jobs):
+        if not needs_bazel_team_migrate(jobs.values()):
             failed_cnt = len(jobs)
             s1 = "" if failed_cnt == 1 else "s"
             s2 = "s" if failed_cnt == 1 else ""
@@ -299,7 +299,7 @@ def print_flags_need_to_migrate(failed_jobs_per_flag, details_per_flag):
         return
     info_text = [
         "#### Downstream projects need to migrate for the following flags:",
-        "    Projects with <strong style=\"color: red;\">red title</strong> need to be migrated by the Bazel team.",
+        "Projects with <strong style=\"color: red;\">red title</strong> need to be migrated by the Bazel team.",
     ]
     print_info("flags_need_to_migrate", "error", info_text)
 
