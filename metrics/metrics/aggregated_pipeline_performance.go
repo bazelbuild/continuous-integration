@@ -43,7 +43,7 @@ func (app *AggregatedPipelinePerformance) Collect() (data.DataSet, error) {
 			}
 
 			skippedTasks := getSkippedTasks(build)
-			err := result.AddRow(pipeline.Org, pipeline.Slug, *build.Number, *build.State, getDifferenceSeconds(build.ScheduledAt, build.FinishedAt), skippedTasks)
+			err := result.AddRow(pipeline.Org, pipeline.Slug, *build.Number, build.ScheduledAt.Time, getDifferenceSeconds(build.ScheduledAt, build.FinishedAt), skippedTasks, *build.State)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to add result for build %d in %s: %v", *build.Number, pipeline.Slug, err)
 			}
@@ -53,8 +53,8 @@ func (app *AggregatedPipelinePerformance) Collect() (data.DataSet, error) {
 	return result, nil
 }
 
-// CREATE TABLE aggregated_pipeline_performance (org VARCHAR(255), pipeline VARCHAR(255), build INT, result VARCHAR(16), total_time_seconds FLOAT, skipped_tasks VARCHAR(255), PRIMARY KEY(org, pipeline, build));
+// CREATE TABLE aggregated_pipeline_performance (org VARCHAR(255), pipeline VARCHAR(255), build INT, scheduled DATETIME, total_time_seconds FLOAT, skipped_tasks VARCHAR(255), result VARCHAR(16), PRIMARY KEY(org, pipeline, build));
 func CreateAggregatedPipelinePerformance(client clients.BuildkiteClient, lastNBuilds int, pipelines ...*data.PipelineID) *AggregatedPipelinePerformance {
-	columns := []Column{Column{"org", true}, Column{"pipeline", true}, Column{"build", true}, Column{"result", false}, Column{"total_time_seconds", false}, Column{"skipped_tasks", false}}
+	columns := []Column{Column{"org", true}, Column{"pipeline", true}, Column{"build", true}, Column{"scheduled", false}, Column{"total_time_seconds", false}, Column{"skipped_tasks", false}, Column{"result", false}}
 	return &AggregatedPipelinePerformance{client: client, pipelines: pipelines, columns: columns, lastNBuilds: lastNBuilds}
 }

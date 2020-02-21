@@ -9,6 +9,7 @@ NOTE: Double check that the following commands match the output of `git grep "CR
 ```sql
 USE metrics;
 
+CREATE TABLE aggregated_pipeline_performance (org VARCHAR(255), pipeline VARCHAR(255), build INT, scheduled DATETIME, total_time_seconds FLOAT, skipped_tasks VARCHAR(255), result VARCHAR(16), PRIMARY KEY(org, pipeline, build));
 CREATE TABLE build_success (org VARCHAR(255), pipeline VARCHAR(255), build INT, linux VARCHAR(255), macos VARCHAR(255), windows VARCHAR(255), rbe VARCHAR(255), PRIMARY KEY(org, pipeline, build));
 CREATE TABLE builds_per_change (org VARCHAR(255), pipeline VARCHAR(255), changelist INT, builds INT, PRIMARY KEY(org, pipeline, changelist));
 CREATE TABLE cloud_build_status (timestamp DATETIME, build VARCHAR(255), source VARCHAR(255), success BOOL, PRIMARY KEY(timestamp, build));
