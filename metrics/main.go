@@ -111,6 +111,9 @@ func main() {
 	criticalPath := metrics.CreateCriticalPath(bk, 20, pipelines...)
 	srv.AddMetric(criticalPath, minutes(60), defaultPublisher)
 
+	dailyPerformance := metrics.CreateDailyPerformance(bk, 100, pipelines...)
+	srv.AddMetric(dailyPerformance, minutes(60), defaultPublisher)
+
 	flakiness := metrics.CreateFlakiness(storageClient, "bazel-buildkite-stats", "flaky-tests-bep", pipelines...)
 	srv.AddMetric(flakiness, minutes(60), defaultPublisher)
 
