@@ -125,6 +125,9 @@ ENV PATH "${PATH}:${GO_HOME}/bin"
 ENV SWIFT_HOME "/opt/swift-4.2.1-RELEASE-ubuntu18.04"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
 
+# TODO: Remove once release builds happen on Kokoro.
+COPY --from=gcr.io/bazel-public/base:github-release /usr/local/bin/github-release /usr/local/bin/github-release
+
 FROM ubuntu1804-nojava AS ubuntu1804-java11
 RUN apt-get -qqy update && \
     apt-get -qqy install --no-install-recommends openjdk-11-jdk && \

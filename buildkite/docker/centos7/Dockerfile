@@ -47,8 +47,6 @@ RUN localedef -i en_US -f ISO-8859-1 en_US.ISO-8859-1
 
 FROM centos7-java8 AS centos7-releaser
 
-COPY --from=gcr.io/bazel-public/base:github-release /usr/local/bin/github-release /usr/local/bin/github-release
-
 # dpkg-source needs a newer GNU tar version that supports --sort=name.
 RUN pushd /usr/local/src && \
     curl http://ftp.gnu.org/gnu/tar/tar-1.32.tar.bz2 | tar xvj && \
