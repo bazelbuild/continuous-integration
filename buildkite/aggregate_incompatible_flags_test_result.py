@@ -289,9 +289,9 @@ def print_flags_need_to_migrate(failed_jobs_per_flag, details_per_flag):
             info_text = [f"* **{flag}** " + get_html_link_text(":github:", github_url)]
             jobs_per_pipeline = merge_jobs(jobs.values())
             for pipeline, platforms in jobs_per_pipeline.items():
-                color = "red" if bazelci.DOWNSTREAM_PROJECTS[pipeline].get("owned_by_bazel") else "black"
+                bazel_mark = ":bazel:" if bazelci.DOWNSTREAM_PROJECTS[pipeline].get("owned_by_bazel") else ""
                 platforms_text = ", ".join(platforms)
-                info_text.append(f"  <li><strong style=\"color: {color}\">{pipeline}</strong>: {platforms_text}</li>")
+                info_text.append(f"  - {bazel_mark}**{pipeline}**: {platforms_text}")
             # Use flag as the context so that each flag gets a different info box.
             print_info(flag, "error", info_text)
             printed_flag_boxes = True
@@ -299,7 +299,7 @@ def print_flags_need_to_migrate(failed_jobs_per_flag, details_per_flag):
         return
     info_text = [
         "#### Downstream projects need to migrate for the following flags:",
-        "Projects with <strong style=\"color: red;\">red title</strong> need to be migrated by the Bazel team.",
+        "Projects marked with :bazel: need to be migrated by the Bazel team.",
     ]
     print_info("flags_need_to_migrate", "error", info_text)
 
