@@ -214,7 +214,7 @@ def print_flags_ready_to_flip(failed_jobs_per_flag, details_per_flag):
     if len(info_text1) == 1:
         info_text1 = []
 
-    info_text2.append("#### The following flags didn't break any passing Bazel team owned/co-owned projects")
+    info_text2 = ["#### The following flags didn't break any passing Bazel team owned/co-owned projects"]
     for flag, jobs in failed_jobs_per_flag.items():
         if not needs_bazel_team_migrate(jobs):
             failed_cnt = len(jobs)
