@@ -3,6 +3,7 @@ platforms:
   ubuntu1604:
     test_targets:
       - "//:all"
+      - "//java/..."
       # `cc_proto_blacklist_test` only works as `@com_google_protobuf//:cc_proto_blacklist_test`.
       # https://github.com/bazelbuild/bazel/issues/10590
       - "-//:cc_proto_blacklist_test"
@@ -10,6 +11,7 @@ platforms:
   macos:
     test_targets:
       - "//:all"
+      - "//java/..."
       # `cc_proto_blacklist_test` only works as `@com_google_protobuf//:cc_proto_blacklist_test`.
       # https://github.com/bazelbuild/bazel/issues/10590
       - "-//:cc_proto_blacklist_test"
@@ -17,6 +19,7 @@ platforms:
   windows:
     test_targets:
       - "//:all"
+      - "//java/..."
       # `cc_proto_blacklist_test` only works as `@com_google_protobuf//:cc_proto_blacklist_test`.
       # https://github.com/bazelbuild/bazel/issues/10590
       - "-//:cc_proto_blacklist_test"
