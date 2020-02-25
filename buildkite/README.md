@@ -128,6 +128,46 @@ BAD_BAZEL_COMMIT=91eb3d207714af0ab1e5812252a0f10f40d6e4a8
 
 Note: Bazel commit can only be set to commits after [63453bdbc6b05bd201375ee9e25b35010ae88aab](https://github.com/bazelbuild/bazel/commit/63453bdbc6b05bd201375ee9e25b35010ae88aab), Culprit Finder needs to download Bazel at specific commit, but we didn't prebuild Bazel binaries before this commit.
 
+
+## Bazel Auto Sheriff
+
+[Bazel Auto Sheriff](https://buildkite.com/bazel/bazel-auto-sheriff-face-with-cowboy-hat) is the pipeline to monitor Bazel CI build status and identify reasons for breakages.
+
+Based on a project's build result in main build (with Bazel@Release) and dowsntream build (with Bazel@HEAD), the Bazel Auto Sheriff does analyzing by the following principles:
+
+* Main Build: PASSED, Downstream build: PASSED
+
+  Everything is fine.
+
+- Main Build: FAILED, Downstream build: PASSED
+
+  Retry the failed jobs to check if they are flaky
+  - If passed, report the failed tasks as flaky.
+  - If failed, the project is probably broken by its own change.
+
+- Main Build: PASSED, Downstream build: FAILED
+
+  Retry the failed downstream jobs to check if they are flaky
+
+  - If passed, report the failed tasks as flaky.
+  - If failed, use culprit finder to do a bisect for each failed project to detect the culprit.
+
+- Main Build: FAILED, Downstream build: FAILED
+
+  Rebuild the project at last green commit
+
+  - If passed, the build is like broken by an infrastructure change.
+  - If failed, anayzle main build and downstream build separately according to the same principles as above.
+
+After the analyzing, the pipeline will give a summary of four kinds of breakages:
+- Breakages caused by infra change
+- Breakages cuased by Bazel change, including the culprits identified.
+- Breakages caused by the project itself
+- Flaky builds
+
+You can check the analyzing log for more details.
+
+
 ## Configuring a Pipeline
 
 Each pipeline is configured via a Yaml file. This file either lives in `$PROJECT_DIR/.bazelci/presubmit.yml` (for presubmits) or in an arbitrary location whose path or URL is passed to the CI script (as configured in the Buildkite settings of the respective pipeline). Projects should store the postsubmit configuration in their own repository, but we keep some configurations for downstream projects in https://github.com/bazelbuild/continuous-integration/tree/master/buildkite/pipelines.
