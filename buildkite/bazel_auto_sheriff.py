@@ -19,9 +19,6 @@ import threading
 
 import bazelci
 
-from bazelci import BuildkiteClient
-from bazelci import BuildkiteException
-
 BUILDKITE_ORG = "bazel"
 DOWNSTREAM_PIPELINE = "bazel-at-head-plus-downstream"
 CULPRIT_FINDER_PIPELINE = "culprit-finder"
@@ -37,8 +34,8 @@ COLORS = {
     "BOLD" : '\033[1m',
 }
 
-DOWNSTREAM_PIPELINE_CLIENT = BuildkiteClient(BUILDKITE_ORG, DOWNSTREAM_PIPELINE)
-CULPRIT_FINDER_PIPELINE_CLIENT = BuildkiteClient(BUILDKITE_ORG, CULPRIT_FINDER_PIPELINE)
+DOWNSTREAM_PIPELINE_CLIENT = bazelci.BuildkiteClient(BUILDKITE_ORG, DOWNSTREAM_PIPELINE)
+CULPRIT_FINDER_PIPELINE_CLIENT = bazelci.BuildkiteClient(BUILDKITE_ORG, CULPRIT_FINDER_PIPELINE)
 
 def print_info(context, style, info, append=True):
     info_str = "\n".join(info)
@@ -93,17 +90,17 @@ class BuildInfoAnalyzer(threading.Thread):
     success_log = []
 
     def __init__(self, project, pipeline, downstream_result):
-        threading.Thread.__init__(self)
+        super().init()
         self.project = project
         self.pipeline = pipeline
         self.downstream_result = downstream_result
         self.main_result = None
-        self.client = BuildkiteClient(BUILDKITE_ORG, pipeline)
-        self.analyze_log = [COLORS["HEADER"] + f"Analyzing {self.project}: " + COLORS["ENDC"]]
+        self.client = bazelci.BuildkiteClient(BUILDKITE_ORG, pipeline)
+        self.analyze_log = [f"{COLORS['HEADER']}Analyzing {self.project}: {COLORS['ENDC']}"]
         self.broken_by_infra = False
 
 
-    def __get_main_build_result(self):
+    def _get_main_build_result(self):
         build_info_list = self.client.get_build_info_list([
             ("branch", "master"),
             ("page", "1"),
@@ -111,16 +108,16 @@ class BuildInfoAnalyzer(threading.Thread):
             ("state[]", "failed"),
             ("state[]", "passed"),
         ])
-        if len(build_info_list) == 0:
+        if not build_info_list == 0:
             error = f"Cannot find finished build for pipeline {self.pipeline}, please try to rerun the pipeline first."
-            self.__log("SERIOUS", error)
-            raise BuildkiteException(error)
+            self._log("SERIOUS", error)
+            raise bazelci.BuildkiteException(error)
         main_build_info = build_info_list[0]
 
         self.main_result = {}
         self.main_result["commit"] = main_build_info["commit"]
         self.main_result["build_number"] = main_build_info["number"]
-        job_infos = filter(lambda x: x != None, [extract_job_info_by_key(job) for job in main_build_info["jobs"]])
+        job_infos = filter(lambda x: bool(x), (extract_job_info_by_key(job) for job in main_build_info["jobs"]))
         self.main_result["tasks"] = group_job_info_by_task(job_infos)
         self.main_result["state"] = get_project_state(self.main_result["tasks"])
 
@@ -131,9 +128,9 @@ class BuildInfoAnalyzer(threading.Thread):
 
 
     # Log all succeeded projects in the same annotate block
-    def __log_success(self, text):
+    def _log_success(self, text):
         with BuildInfoAnalyzer.success_log_lock:
-            BuildInfoAnalyzer.success_log.append(COLORS["HEADER"] + f"Analyzing {self.project}: " + COLORS["ENDC"] + COLORS["PASSED"] + text + COLORS["ENDC"])
+            BuildInfoAnalyzer.success_log.append(f"{COLORS['HEADER']}Analyzing {self.project}: {COLORS['PASSED']}{text}{COLORS['ENDC']}")
             info = [
                 "<details><summary><strong>:bk-status-passed: Success</strong></summary><p>",
                 "",
@@ -146,8 +143,8 @@ class BuildInfoAnalyzer(threading.Thread):
             print_info("success-info", "success", info, append = False)
 
     # Log broken projects in their separate annotate block
-    def __log(self, c, text):
-        self.analyze_log.append(COLORS[c] + text + COLORS["ENDC"])
+    def _log(self, c, text):
+        self.analyze_log.append(f"{COLORS[c]}{text}{COLORS['ENDC']}")
         info = [
             f"<details><summary><strong>:bk-status-failed: {self.project}</strong></summary><p>",
             "",
@@ -165,10 +162,10 @@ class BuildInfoAnalyzer(threading.Thread):
         # Be smart here to reduce log length.
         if self.analyze_log[-1].startswith(COLORS["INFO"] + "Waiting for "):
             self.analyze_log.pop(-1)
-        self.__log("INFO", text)
+        self._log("INFO", text)
 
 
-    def __trigger_bisect(self, tasks):
+    def _trigger_bisect(self, tasks):
         env = {
             "PROJECT_NAME": self.project,
             "TASK_NAME_LIST": ",".join(tasks) if tasks else "",
@@ -180,11 +177,12 @@ class BuildInfoAnalyzer(threading.Thread):
     # Return values are
     #   1. A bisect result message
     #   2. The commit of the culprit if found, otherwise None
-    def __determine_bisect_result(self, job):
+    def _determine_bisect_result(self, job):
         bisect_log = CULPRIT_FINDER_PIPELINE_CLIENT.get_build_log(job)
         pos = bisect_log.rfind("first bad commit is ")
         if pos != -1:
             start = pos + len("first bad commit is ")
+            # The length of a full commit hash is 40
             culprit_commit = bisect_log[start:start + 40]
             return "\n".join([
                  "Culprit found!",
@@ -210,7 +208,7 @@ class BuildInfoAnalyzer(threading.Thread):
         return "Bisect failed due to unknown reason, please check " + job["web_url"], None
 
 
-    def __retry_failed_jobs(self, build_result, buildkite_client):
+    def _retry_failed_jobs(self, build_result, buildkite_client):
         retry_per_failed_task = {}
         for task, info in build_result["tasks"].items():
             if info["state"] != "passed":
@@ -220,25 +218,23 @@ class BuildInfoAnalyzer(threading.Thread):
         return retry_per_failed_task
 
 
-    def __print_job_list(self, jobs):
+    def _print_job_list(self, jobs):
         for job in jobs:
-            name = job["name"]
-            url = job["web_url"]
-            self.__log("INFO", f"  {name}: {url}")
-        self.__log("INFO", "")
+            self._log("INFO", f"  {job['name']}: {job['web_url']}")
+        self._log("INFO", "")
 
 
-    def __analyze_main_pipeline_result(self):
-        self.__log("INFO", "")
-        self.__log("PASSED", "***Analyze failures in main pipeline***")
+    def _analyze_main_pipeline_result(self):
+        self._log("INFO", "")
+        self._log("PASSED", "***Analyze failures in main pipeline***")
 
         # Report failed tasks
-        self.__log("WARNING", "The following tasks are failing in main pipeline")
-        self.__print_job_list([info for _, info in self.main_result["tasks"].items() if info["state"] != "passed"])
+        self._log("WARNING", "The following tasks are failing in main pipeline")
+        self._print_job_list([info for _, info in self.main_result["tasks"].items() if info["state"] != "passed"])
 
         # Retry all failed tasks
-        self.__log("PASSED", "Retry failed main pipeline tasks...")
-        retry_per_failed_task = self.__retry_failed_jobs(self.main_result, self.client)
+        self._log("PASSED", "Retry failed main pipeline tasks...")
+        retry_per_failed_task = self._retry_failed_jobs(self.main_result, self.client)
 
         # Report tasks that succeeded after retry
         succeeded_tasks = []
@@ -247,8 +243,8 @@ class BuildInfoAnalyzer(threading.Thread):
                 succeeded_tasks.append(info)
                 self.main_result["tasks"][task]["flaky"] = True
         if succeeded_tasks:
-            self.__log("WARNING", "The following tasks succeeded after retry, they might be flaky")
-            self.__print_job_list(succeeded_tasks)
+            self._log("WARNING", "The following tasks succeeded after retry, they might be flaky")
+            self._print_job_list(succeeded_tasks)
 
         # Report tasks that are still failing after retry
         still_failing_tasks = []
@@ -258,22 +254,22 @@ class BuildInfoAnalyzer(threading.Thread):
                 self.main_result["tasks"][task]["broken"] = True
         if still_failing_tasks:
             last_green_commit = self.main_result["last_green_commit"]
-            self.__log("FAIL", f"The following tasks are still failing after retry, they are probably broken due to changes from the project itself.")
-            self.__log("FAIL", f"The last recorded green commit is {last_green_commit}. Please file bug for the repository.")
-            self.__print_job_list(still_failing_tasks)
+            self._log("FAIL", f"The following tasks are still failing after retry, they are probably broken due to changes from the project itself.")
+            self._log("FAIL", f"The last recorded green commit is {last_green_commit}. Please file bug for the repository.")
+            self._print_job_list(still_failing_tasks)
 
 
-    def __analyze_for_downstream_pipeline_result(self):
-        self.__log("INFO", "")
-        self.__log("PASSED", "***Analyze failures in downstream pipeline***")
+    def _analyze_for_downstream_pipeline_result(self):
+        self._log("INFO", "")
+        self._log("PASSED", "***Analyze failures in downstream pipeline***")
 
         # Report failed tasks
-        self.__log("WARNING", "The following tasks are failing in downstream pipeline")
-        self.__print_job_list([info for _, info in self.downstream_result["tasks"].items() if info["state"] != "passed"])
+        self._log("WARNING", "The following tasks are failing in downstream pipeline")
+        self._print_job_list([info for _, info in self.downstream_result["tasks"].items() if info["state"] != "passed"])
 
         # Retry all failed tasks
-        self.__log("PASSED", "Retry failed downstream pipeline tasks...")
-        retry_per_failed_task = self.__retry_failed_jobs(self.downstream_result, DOWNSTREAM_PIPELINE_CLIENT)
+        self._log("PASSED", "Retry failed downstream pipeline tasks...")
+        retry_per_failed_task = self._retry_failed_jobs(self.downstream_result, DOWNSTREAM_PIPELINE_CLIENT)
 
         # Report tasks that succeeded after retry
         succeeded_tasks = []
@@ -282,8 +278,8 @@ class BuildInfoAnalyzer(threading.Thread):
                 succeeded_tasks.append(info)
                 self.downstream_result["tasks"][task]["flaky"] = True
         if succeeded_tasks:
-            self.__log("WARNING", "The following tasks succeeded after retry, they might be flaky")
-            self.__print_job_list(succeeded_tasks)
+            self._log("WARNING", "The following tasks succeeded after retry, they might be flaky")
+            self._print_job_list(succeeded_tasks)
 
         # Report tasks that are still failing after retry
         still_failing_tasks = []
@@ -292,89 +288,89 @@ class BuildInfoAnalyzer(threading.Thread):
                 still_failing_tasks.append(info)
                 self.downstream_result["tasks"][task]["broken"] = True
         if still_failing_tasks:
-            self.__log("FAIL", f"The following tasks are still failing after retry, they are probably broken due to recent Bazel changes.")
-            self.__print_job_list(still_failing_tasks)
+            self._log("FAIL", f"The following tasks are still failing after retry, they are probably broken due to recent Bazel changes.")
+            self._print_job_list(still_failing_tasks)
 
         # Do bisect for still failing jobs
-        self.__log("PASSED", f"Bisect for still failing tasks...")
+        self._log("PASSED", f"Bisect for still failing tasks...")
         failing_task_names = [name for name, info in retry_per_failed_task.items() if info["state"] != "passed"]
-        bisect_build = self.__trigger_bisect(failing_task_names)
+        bisect_build = self._trigger_bisect(failing_task_names)
         bisect_build = CULPRIT_FINDER_PIPELINE_CLIENT.wait_build_to_finish(build_number = bisect_build["number"], logger = self)
         bisect_result_by_task = {}
         for task in failing_task_names:
             for job in bisect_build["jobs"]:
                 if ("--task_name=" + task) in job["command"]:
-                    bisect_result_by_task[task], culprit = self.__determine_bisect_result(job)
+                    bisect_result_by_task[task], culprit = self._determine_bisect_result(job)
                     if culprit:
                         self.downstream_result["tasks"][task]["culprit"] = culprit
             if task not in bisect_result_by_task:
                 error = f"Bisect job for task {task} is missing in " + bisect_build["web_url"]
-                self.__log("SERIOUS", error)
-                raise BuildkiteException(error)
+                self._log("SERIOUS", error)
+                raise bazelci.BuildkiteException(error)
 
         # Report bisect result
         for task, result in bisect_result_by_task.items():
-            self.__log("WARNING", "Bisect result for " + self.downstream_result["tasks"][task]["name"])
-            self.__log("INFO", result)
+            self._log("WARNING", "Bisect result for " + self.downstream_result["tasks"][task]["name"])
+            self._log("INFO", result)
 
 
-    def __analyze(self):
+    def _analyze(self):
         # Main build: PASSED; Downstream build: PASSED
         if self.main_result["state"] == "passed" and self.downstream_result["state"] == "passed":
-            self.__log_success("Main build: PASSED; Downstream build: PASSED")
+            self._log_success("Main build: PASSED; Downstream build: PASSED")
             return
 
         # Main build: FAILED; Downstream build: PASSED
         if self.main_result["state"] == "failed" and self.downstream_result["state"] == "passed":
-            self.__log("FAIL", "Main build: FAILED")
-            self.__log("PASSED", "Downstream build: PASSED")
-            self.__analyze_main_pipeline_result()
-            self.__log("HEADER", "Analyzing finished.")
+            self._log("FAIL", "Main build: FAILED")
+            self._log("PASSED", "Downstream build: PASSED")
+            self._analyze_main_pipeline_result()
+            self._log("HEADER", "Analyzing finished.")
             return
 
         # Main build: PASSED; Downstream build: FAILED
         if self.main_result["state"] == "passed" and self.downstream_result["state"] == "failed":
-            self.__log("PASSED", "Main build: PASSED")
-            self.__log("FAIL", "Downstream build: FAILED")
-            self.__analyze_for_downstream_pipeline_result()
-            self.__log("HEADER", "Analyzing finished.")
+            self._log("PASSED", "Main build: PASSED")
+            self._log("FAIL", "Downstream build: FAILED")
+            self._analyze_for_downstream_pipeline_result()
+            self._log("HEADER", "Analyzing finished.")
             return
 
         # Main build: FAILED; Downstream build: FAILED
         if self.main_result["state"] == "failed" and self.downstream_result["state"] == "failed":
-            self.__log("FAIL", "Main build: FAILED")
-            self.__log("FAIL", "Downstream build: FAILED")
+            self._log("FAIL", "Main build: FAILED")
+            self._log("FAIL", "Downstream build: FAILED")
 
             last_green_commit = self.main_result["last_green_commit"]
 
             # If the lastest build is the last green commit, that means some infra change has caused the breakage.
             if last_green_commit == self.main_result["commit"]:
                 self.broken_by_infra = True
-                self.__log("SERIOUS", f"Project failed at last green commit. This is probably caused by an infra change, please ping philwo@ or pcloudy@.")
-                self.__log("HEADER", "Analyzing finished.")
+                self._log("SERIOUS", f"Project failed at last green commit. This is probably caused by an infra change, please ping philwo@ or pcloudy@.")
+                self._log("HEADER", "Analyzing finished.")
                 return
 
             # Rebuild the project at last green commit, check if the failure is caused by infra change.
-            self.__log("PASSED", f"Rebuild at last green commit {last_green_commit}...")
+            self._log("PASSED", f"Rebuild at last green commit {last_green_commit}...")
             build_info = self.client.trigger_new_build(last_green_commit, "Trigger build at last green commit.")
             build_info = self.client.wait_build_to_finish(build_number = build_info["number"], logger = self)
 
             if build_info["state"] == "failed":
                 self.broken_by_infra = True
-                self.__log("SERIOUS", f"Project failed at last green commit. This is probably caused by an infra change, please ping philwo@ or pcloudy@.")
+                self._log("SERIOUS", f"Project failed at last green commit. This is probably caused by an infra change, please ping philwo@ or pcloudy@.")
             elif build_info["state"] == "passed":
-                self.__log("PASSED", f"Project succeeded at last green commit. Maybe main pipeline and downstream pipeline are broken for different reasons.")
-                self.__analyze_main_pipeline_result()
-                self.__analyze_for_downstream_pipeline_result()
+                self._log("PASSED", f"Project succeeded at last green commit. Maybe main pipeline and downstream pipeline are broken for different reasons.")
+                self._analyze_main_pipeline_result()
+                self._analyze_for_downstream_pipeline_result()
             else:
-                self.__log("SERIOUS", f"Rebuilding project at last green commit failed with unknown reason. Please check " + build_info["web_url"])
-            self.__log("HEADER", "Analyzing finished.")
+                self._log("SERIOUS", f"Rebuilding project at last green commit failed with unknown reason. Please check " + build_info["web_url"])
+            self._log("HEADER", "Analyzing finished.")
             return
 
 
     def run(self):
-        self.__get_main_build_result()
-        self.__analyze()
+        self._get_main_build_result()
+        self._analyze()
 
 
 def get_html_link_text(content, link):
@@ -505,7 +501,7 @@ def get_latest_downstream_build_info():
     ])
 
     if len(downstream_build_list) == 0:
-        raise BuildkiteException("Cannot find finished downstream build, please try to rerun downstream pipeline first.")
+        raise bazelci.BuildkiteException("Cannot find finished downstream build, please try to rerun downstream pipeline first.")
     return downstream_build_list[0]
 
 
@@ -557,7 +553,7 @@ def group_job_info_by_task(job_infos):
     job_info_by_task = {}
     for job_info in job_infos:
         if "task" not in job_info:
-            raise BuildkiteException(f"'task' must be a key of job_info: {job_info}")
+            raise bazelci.BuildkiteException(f"'task' must be a key of job_info: {job_info}")
 
         task_name = job_info["task"]
         del job_info["task"]

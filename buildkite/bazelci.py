@@ -591,12 +591,9 @@ P9w8kNhEbw==
         )
 
 
-    def _open_url(self, url, params = None):
+    def _open_url(self, url, params = []):
         try:
-            params_str = ""
-            if params:
-                for k, v in params:
-                    params_str = params_str + "&{}={}".format(k, v)
+            params_str = "".join("&{}={}".format(k, v) for k, v in params)
             return (
                 urllib.request.urlopen("{}?access_token={}{}".format(url, self._token, params_str))
                 .read()
@@ -606,18 +603,37 @@ P9w8kNhEbw==
             raise BuildkiteException("Failed to open {}: {} - {}".format(url, ex.code, ex.reason))
 
 
-    # Get build info for a pipeline with a given build number
-    # See https://buildkite.com/docs/apis/rest-api/builds#get-a-build
     def get_build_info(self, build_number):
+        """Get build info for a pipeline with a given build number
+        See https://buildkite.com/docs/apis/rest-api/builds#get-a-build
+
+        Parameters
+        ----------
+        build_number : the build number
+
+        Returns
+        -------
+        dict
+            the metadata for the build
+        """
         url = self._BUILD_STATUS_URL_TEMPLATE.format(self._org, self._pipeline, build_number)
         output = self._open_url(url)
         return json.loads(output)
 
 
-    # Get a list of build infos for a pipeline
-    # Some parameters can be set to filter the result.
-    # See https://buildkite.com/docs/apis/rest-api/builds#list-builds-for-a-pipeline
     def get_build_info_list(self, params):
+        """Get a list of build infos for this pipeline
+        See https://buildkite.com/docs/apis/rest-api/builds#list-builds-for-a-pipeline
+
+        Parameters
+        ----------
+        params : the parameters to filter the result
+
+        Returns
+        -------
+        list of dict
+            the metadata for a list of builds
+        """
         url = self._BUILD_STATUS_URL_TEMPLATE.format(self._org, self._pipeline, "")
         output = self._open_url(url, params)
         return json.loads(output)
@@ -628,15 +644,28 @@ P9w8kNhEbw==
 
 
     @staticmethod
-    def __check_response(response, expected_status_code):
+    def _check_response(response, expected_status_code):
         if response.status_code != expected_status_code:
-            print("Exit code:", response.status_code)
-            print("Response:\n", response.text)
+            eprint("Exit code:", response.status_code)
+            eprint("Response:\n", response.text)
             response.raise_for_status()
 
 
-    # Trigger a new build at a given commit and return the build metadata.
     def trigger_new_build(self, commit, message = None, env = {}):
+        """Trigger a new build at a given commit and return the build metadata.
+        See https://buildkite.com/docs/apis/rest-api/builds#create-a-build
+
+        Parameters
+        ----------
+        commit : the commit we want to build at
+        message : the message we should as the build titile
+        env : (optional) the environment variables to set
+
+        Returns
+        -------
+        dict
+            the metadata for the build
+        """
         url = self._NEW_BUILD_URL_TEMPLATE.format(self._org, self._pipeline)
         data = {
             "commit": commit,
@@ -645,20 +674,45 @@ P9w8kNhEbw==
             "env": env,
         }
         response = requests.post(url + "?access_token=" + self._token, json = data)
-        BuildkiteClient.__check_response(response, requests.codes.created)
+        BuildkiteClient._check_response(response, requests.codes.created)
         return json.loads(response.text)
 
 
-    # Trigger a job retry and return the job metadata.
     def trigger_job_retry(self, build_number, job_id):
+        """Trigger a job retry and return the job metadata.
+        See https://buildkite.com/docs/apis/rest-api/jobs#retry-a-job
+
+        Parameters
+        ----------
+        build_number : the number of the build we want to retry
+        job_id : the id of the job we want to retry
+
+        Returns
+        -------
+        dict
+            the metadata for the job
+        """
         url = self._RETRY_JOB_URL_TEMPLATE.format(self._org, self._pipeline, build_number, job_id)
         response = requests.put(url + "?access_token=" + self._token)
-        BuildkiteClient.__check_response(response, requests.codes.ok)
+        BuildkiteClient._check_response(response, requests.codes.ok)
         return json.loads(response.text)
 
 
-    # Wait a job to finish and return the job metadata
-    def wait_job_to_finish(self, build_number, job_id, wait_time=30, logger=None):
+    def wait_job_to_finish(self, build_number, job_id, interval_time=30, logger=None):
+        """Wait a job to finish and return the job metadata
+
+        Parameters
+        ----------
+        build_number : the number of the build we want to wait
+        job_id : the id of the job we want to wait
+        interval_time : (optional) the interval time to check the build status, default to 30s
+        logger : (optional) a logger to report progress
+
+        Returns
+        -------
+        dict
+            the latest metadata for the job
+        """
         t = 0
         build_info = self.get_build_info(build_number)
         while True:
@@ -673,21 +727,33 @@ P9w8kNhEbw==
             url = build_info["web_url"]
             if logger:
                 logger.log(f"Waiting for {url}, waited {t} seconds...")
-            time.sleep(wait_time)
-            t = t + wait_time
+            time.sleep(interval_time)
+            t += interval_time
             build_info = self.get_build_info(build_number)
 
 
-    # Wait a build to finish and return the build metadata
-    def wait_build_to_finish(self, build_number, wait_time=30, logger=None):
+    def wait_build_to_finish(self, build_number, interval_time=30, logger=None):
+        """Wait a build to finish and return the build metadata
+
+        Parameters
+        ----------
+        build_number : the number of the build we want to wait
+        interval_time : (optional) the interval time to check the build status, default to 30s
+        logger : (optional) a logger to report progress
+
+        Returns
+        -------
+        dict
+            the latest metadata for the build
+        """
         t = 0
         build_info = self.get_build_info(build_number)
         while build_info["state"] == "scheduled" or build_info["state"] == "running":
             url = build_info["web_url"]
             if logger:
                 logger.log(f"Waiting for {url}, waited {t} seconds...")
-            time.sleep(wait_time)
-            t = t + wait_time
+            time.sleep(interval_time)
+            t += interval_time
             build_info = self.get_build_info(build_number)
         return build_info
 
