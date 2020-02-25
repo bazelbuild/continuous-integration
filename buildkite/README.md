@@ -157,15 +157,15 @@ Based on a project's build result in main build (with Bazel@Release) and downstr
   Rebuild the project at last green commit
 
   - If passed, the build is like broken by an infrastructure change.
-  - If failed, anayzle main build and downstream build separately according to the same principles as above.
+  - If failed, analyze main build and downstream build separately according to the same principles as above.
 
-After the analyzing, the pipeline will give a summary of four kinds of breakages:
+After the analysis, the pipeline will give a summary of four kinds of breakages:
 - Breakages caused by infra change.
 - Breakages cuased by Bazel change, including the culprits identified.
 - Breakages caused by the project itself.
 - Flaky builds.
 
-You can check the analyzing log for more details.
+You can check the analysis log for more details.
 
 
 ## Configuring a Pipeline

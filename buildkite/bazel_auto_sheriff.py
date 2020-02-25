@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2018 The Bazel Authors. All rights reserved.
+# Copyright 2020 The Bazel Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ def print_info(context, style, info, append=True):
     )
 
 
-# The class to fetch build result and do the analyzing
+# The class to fetch build result and do the analysis
 # The build result are stored in main_result and downstream_result, their structures are like:
 # 1. An example of downstream _result
 # {
