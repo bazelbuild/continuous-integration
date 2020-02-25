@@ -133,7 +133,7 @@ Note: Bazel commit can only be set to commits after [63453bdbc6b05bd201375ee9e25
 
 [Bazel Auto Sheriff](https://buildkite.com/bazel/bazel-auto-sheriff-face-with-cowboy-hat) is the pipeline to monitor Bazel CI build status and identify reasons for breakages.
 
-Based on a project's build result in main build (with Bazel@Release) and dowsntream build (with Bazel@HEAD), the Bazel Auto Sheriff does analyzing by the following principles:
+Based on a project's build result in main build (with Bazel@Release) and downstream build (with Bazel@HEAD), the Bazel Auto Sheriff does analyzing by the following principles:
 
 * Main Build: PASSED, Downstream build: PASSED
 
@@ -160,10 +160,10 @@ Based on a project's build result in main build (with Bazel@Release) and dowsntr
   - If failed, anayzle main build and downstream build separately according to the same principles as above.
 
 After the analyzing, the pipeline will give a summary of four kinds of breakages:
-- Breakages caused by infra change
+- Breakages caused by infra change.
 - Breakages cuased by Bazel change, including the culprits identified.
-- Breakages caused by the project itself
-- Flaky builds
+- Breakages caused by the project itself.
+- Flaky builds.
 
 You can check the analyzing log for more details.
 
