@@ -90,7 +90,7 @@ class BuildInfoAnalyzer(threading.Thread):
     success_log = []
 
     def __init__(self, project, pipeline, downstream_result):
-        super().init()
+        super().__init__()
         self.project = project
         self.pipeline = pipeline
         self.downstream_result = downstream_result
