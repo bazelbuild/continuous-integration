@@ -108,7 +108,7 @@ class BuildInfoAnalyzer(threading.Thread):
             ("state[]", "failed"),
             ("state[]", "passed"),
         ])
-        if not build_info_list == 0:
+        if not build_info_list:
             error = f"Cannot find finished build for pipeline {self.pipeline}, please try to rerun the pipeline first."
             self._log("SERIOUS", error)
             raise bazelci.BuildkiteException(error)
