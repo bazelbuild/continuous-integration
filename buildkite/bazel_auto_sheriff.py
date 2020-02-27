@@ -283,17 +283,21 @@ class BuildInfoAnalyzer(threading.Thread):
 
         # Report tasks that are still failing after retry
         still_failing_tasks = []
+        failing_task_names = []
         for task, info in retry_per_failed_task.items():
             if info["state"] != "passed":
                 still_failing_tasks.append(info)
+                failing_task_names.append(task)
                 self.downstream_result["tasks"][task]["broken"] = True
-        if still_failing_tasks:
-            self._log("FAIL", f"The following tasks are still failing after retry, they are probably broken due to recent Bazel changes.")
-            self._print_job_list(still_failing_tasks)
+
+        if not still_failing_tasks:
+            return
+
+        self._log("FAIL", f"The following tasks are still failing after retry, they are probably broken due to recent Bazel changes.")
+        self._print_job_list(still_failing_tasks)
 
         # Do bisect for still failing jobs
         self._log("PASSED", f"Bisect for still failing tasks...")
-        failing_task_names = [name for name, info in retry_per_failed_task.items() if info["state"] != "passed"]
         bisect_build = self._trigger_bisect(failing_task_names)
         bisect_build = CULPRIT_FINDER_PIPELINE_CLIENT.wait_build_to_finish(build_number = bisect_build["number"], logger = self)
         bisect_result_by_task = {}
