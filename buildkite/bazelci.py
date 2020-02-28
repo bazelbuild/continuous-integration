@@ -597,7 +597,7 @@ P9w8kNhEbw==
             return (
                 urllib.request.urlopen("{}?access_token={}{}".format(url, self._token, params_str))
                 .read()
-                .decode("utf-8")
+                .decode("utf-8", "ignore")
             )
         except urllib.error.HTTPError as ex:
             raise BuildkiteException("Failed to open {}: {} - {}".format(url, ex.code, ex.reason))
