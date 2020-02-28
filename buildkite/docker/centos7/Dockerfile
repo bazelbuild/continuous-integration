@@ -29,6 +29,7 @@ RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.n
     python-six \
     python36 \
     python36-PyYAML \
+    python36-requests \
     python36-six \
     unzip \
     which \
