@@ -477,7 +477,7 @@ def report_flaky_tasks(analyzers):
 
     if flaky_main_tasks_per_project:
         info_text.append("##### Main Build")
-        add_tasks_info_text(flaky_tasks_per_project, info_text)
+        add_tasks_info_text(flaky_main_tasks_per_project, info_text)
 
     if flaky_downstream_tasks_per_project:
         info_text.append("##### Downstream Build")
