@@ -1340,7 +1340,7 @@ def execute_shell_commands(commands):
     if not commands:
         return
     print_collapsed_group(":bash: Setup (Shell Commands)")
-    shell_command = "\n".join(commands)
+    shell_command = "\n".join(["set -e"] + commands)
     execute_command([shell_command], shell=True)
 
 
