@@ -161,7 +161,7 @@ Based on a project's build result in main build (with Bazel@Release) and downstr
 
 After the analysis, the pipeline will give a summary of four kinds of breakages:
 - Breakages caused by infra change.
-- Breakages cuased by Bazel change, including the culprits identified.
+- Breakages caused by Bazel change, including the culprits identified.
 - Breakages caused by the project itself.
 - Flaky builds.
 
