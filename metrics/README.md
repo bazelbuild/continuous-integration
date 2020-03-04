@@ -70,3 +70,9 @@ TODO(fweikert): Actually implement unit tests.
 ```bash
 go test metrics/clients/buildkite_test.go metrics/clients/buildkite.go metrics/clients/buildkite_api.go
 ```
+
+# TODOs
+
+- Implement unit tests.
+- All metrics should export typed `DataSet` implementations instead of `LegacyDataSet` objects, similar to cloud_build_status.
+- There should be a graph of metrics (not just a list) in order to show dependencies between metrics.
