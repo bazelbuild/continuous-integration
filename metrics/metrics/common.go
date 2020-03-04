@@ -54,6 +54,8 @@ func isFinishedWorkerTask(job *buildkite.Job) bool {
 	return job != nil && job.Name != nil && job.RunnableAt != nil && job.FinishedAt != nil
 }
 
+const skipTasksEnvVar = "CI_SKIP_TASKS"
+
 func getSkippedTasks(build buildkite.Build) string {
 	if data, ok := build.Env[skipTasksEnvVar]; ok {
 		if skippedTasks, ok := data.(string); ok {

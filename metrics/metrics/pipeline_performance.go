@@ -7,8 +7,6 @@ import (
 	"github.com/bazelbuild/continuous-integration/metrics/data"
 )
 
-const skipTasksEnvVar = "CI_SKIP_TASKS"
-
 type PipelinePerformance struct {
 	client      clients.BuildkiteClient
 	pipelines   []*data.PipelineID
