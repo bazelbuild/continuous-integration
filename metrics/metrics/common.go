@@ -3,7 +3,9 @@ package metrics
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/buildkite/go-buildkite/buildkite"
@@ -15,6 +17,19 @@ func getPlatform(job *buildkite.Job) string {
 		platform = getPlatformFromAgentQueryRules(job.AgentQueryRules)
 	}
 	return platform
+}
+
+var shardRE = regexp.MustCompile(`\(shard (\d+)\)$`)
+
+func getShardFromJobName(job string) int {
+	groups := shardRE.FindStringSubmatch(job)
+	if groups == nil {
+		return 0
+	}
+
+	// Should not fail due to \d
+	shard, _ := strconv.Atoi(groups[1])
+	return shard
 }
 
 func getPlatformFromAgentQueryRules(rules []string) string {
