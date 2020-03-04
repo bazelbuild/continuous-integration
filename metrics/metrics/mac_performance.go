@@ -24,31 +24,31 @@ func (mp *MacPerformance) Columns() []Column {
 }
 
 func (mp *MacPerformance) Collect() (data.DataSet, error) {
-	perfData, err := mp.perfMetric.Collect()
+	legacyPerfData, err := mp.perfMetric.Collect()
 	if err != nil {
 		return nil, fmt.Errorf("Cannot calculate macOS metrics: %v", err)
 	}
 
-	result := data.CreateDataSet(GetColumnNames(mp.columns))
-	var lastAdded string
-	for _, row := range perfData.GetData().Data {
-		str := data.GetRowAsStrings(row)
-		build := str[1]
-		jobName := str[2]
-		skipped_tasks := str[6]
+	perfData, ok := legacyPerfData.(*pipelinePerformanceSet)
+	if !ok {
+		return nil, fmt.Errorf("Invalid type %T of performance data", legacyPerfData)
+	}
 
-		if build != lastAdded {
+	result := data.CreateDataSet(GetColumnNames(mp.columns))
+	var lastStoredBuild int
+	for _, row := range perfData.rows {
+		if row.build != lastStoredBuild {
 			err = nil
-			if getPlatformFromJobName(&jobName) == macPlatform {
-				err = result.AddRow(row[0], row[1], row[4], row[5], false)
-				lastAdded = build
-			} else if strings.Contains(skipped_tasks, macPlatform) {
-				err = result.AddRow(row[0], row[1], -1, -1, true)
-				lastAdded = build
+			if getPlatformFromJobName(&row.job) == macPlatform {
+				err = result.AddRow(row.org, row.pipeline, row.build, row.waitTimeSeconds, row.runTimeSeconds, false)
+				lastStoredBuild = row.build
+			} else if strings.Contains(row.skippedTasks, macPlatform) {
+				err = result.AddRow(row.org, row.pipeline, row.build, nil, nil, true)
+				lastStoredBuild = row.build
 			}
 
 			if err != nil {
-				return nil, fmt.Errorf("Pipeline %s: Failed to add result for job %s of build %s: %v", str[0], str[2], str[1], err)
+				return nil, fmt.Errorf("Pipeline %s/%s: Failed to add result for job %s of build %d: %v", row.org, row.pipeline, row.job, row.build, err)
 			}
 		}
 	}

@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/bazelbuild/continuous-integration/metrics/clients"
 	"github.com/bazelbuild/continuous-integration/metrics/data"
@@ -31,7 +32,7 @@ func (*PipelinePerformance) RelevantDelta() int {
 }
 
 func (pp *PipelinePerformance) Collect() (data.DataSet, error) {
-	result := data.CreateDataSet(GetColumnNames(pp.columns))
+	result := &pipelinePerformanceSet{headers: GetColumnNames(pp.columns)}
 	for _, pipeline := range pp.pipelines {
 		builds, err := pp.client.GetMostRecentBuilds(pipeline, pp.lastNBuilds)
 		if err != nil {
@@ -43,10 +44,16 @@ func (pp *PipelinePerformance) Collect() (data.DataSet, error) {
 				if !isFinishedWorkerTask(job) {
 					continue
 				}
-				err := result.AddRow(pipeline.Org, pipeline.Slug, *build.Number, *job.Name, job.RunnableAt.Time, getDifferenceSeconds(job.RunnableAt, job.StartedAt), getDifferenceSeconds(job.StartedAt, job.FinishedAt), skippedTasks)
-				if err != nil {
-					return nil, fmt.Errorf("Failed to add result for job %s of build %d: %v", *job.Name, *build.Number, err)
+				row := &pipelinePerformanceRow{org: pipeline.Org,
+					pipeline:        pipeline.Slug,
+					build:           *build.Number,
+					job:             *job.Name,
+					creationTime:    job.RunnableAt.Time,
+					waitTimeSeconds: getDifferenceSeconds(job.RunnableAt, job.StartedAt),
+					runTimeSeconds:  getDifferenceSeconds(job.StartedAt, job.FinishedAt),
+					skippedTasks:    skippedTasks,
 				}
+				result.rows = append(result.rows, row)
 			}
 		}
 	}
@@ -57,4 +64,29 @@ func (pp *PipelinePerformance) Collect() (data.DataSet, error) {
 func CreatePipelinePerformance(client clients.BuildkiteClient, lastNBuilds int, pipelines ...*data.PipelineID) *PipelinePerformance {
 	columns := []Column{Column{"org", true}, Column{"pipeline", true}, Column{"build", true}, Column{"job", true}, Column{"creation_time", false}, Column{"wait_time_seconds", false}, Column{"run_time_seconds", false}, Column{"skipped_tasks", false}}
 	return &PipelinePerformance{client: client, pipelines: pipelines, columns: columns, lastNBuilds: lastNBuilds}
+}
+
+type pipelinePerformanceRow struct {
+	org             string
+	pipeline        string
+	build           int
+	job             string
+	creationTime    time.Time
+	waitTimeSeconds float64
+	runTimeSeconds  float64
+	skippedTasks    string
+}
+
+type pipelinePerformanceSet struct {
+	headers []string
+	rows    []*pipelinePerformanceRow
+}
+
+func (s *pipelinePerformanceSet) GetData() *data.LegacyDataSet {
+	rawSet := data.CreateDataSet(s.headers)
+	for _, row := range s.rows {
+		rawRow := []interface{}{row.org, row.pipeline, row.build, row.job, row.creationTime, row.waitTimeSeconds, row.runTimeSeconds, row.skippedTasks}
+		rawSet.Data = append(rawSet.Data, rawRow)
+	}
+	return rawSet
 }
