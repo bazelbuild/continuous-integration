@@ -5,10 +5,7 @@ import (
 
 	"github.com/bazelbuild/continuous-integration/metrics/clients"
 	"github.com/bazelbuild/continuous-integration/metrics/data"
-	"github.com/buildkite/go-buildkite/buildkite"
 )
-
-const skipTasksEnvVar = "CI_SKIP_TASKS"
 
 type PipelinePerformance struct {
 	client      clients.BuildkiteClient
@@ -54,15 +51,6 @@ func (pp *PipelinePerformance) Collect() (data.DataSet, error) {
 		}
 	}
 	return result, nil
-}
-
-func getSkippedTasks(build buildkite.Build) string {
-	if data, ok := build.Env[skipTasksEnvVar]; ok {
-		if skippedTasks, ok := data.(string); ok {
-			return skippedTasks
-		}
-	}
-	return ""
 }
 
 // CREATE TABLE pipeline_performance (org VARCHAR(255), pipeline VARCHAR(255), build INT, job VARCHAR(255), creation_time DATETIME, wait_time_seconds FLOAT, run_time_seconds FLOAT, skipped_tasks VARCHAR(255), PRIMARY KEY(org, pipeline, build, job));
