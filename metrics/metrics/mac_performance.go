@@ -35,29 +35,30 @@ func (mp *MacPerformance) Collect() (data.DataSet, error) {
 	}
 
 	result := data.CreateDataSet(GetColumnNames(mp.columns))
-	var lastStoredBuild int
+	skippedBuilds := make(map[int]struct{})
 	for _, row := range perfData.rows {
-		if row.build != lastStoredBuild {
-			err = nil
-			if getPlatformFromJobName(&row.job) == macPlatform {
-				err = result.AddRow(row.org, row.pipeline, row.build, row.waitTimeSeconds, row.runTimeSeconds, false)
-				lastStoredBuild = row.build
-			} else if strings.Contains(row.skippedTasks, macPlatform) {
-				err = result.AddRow(row.org, row.pipeline, row.build, nil, nil, true)
-				lastStoredBuild = row.build
-			}
+		if _, ok := skippedBuilds[row.build]; ok {
+			continue
+		}
 
-			if err != nil {
-				return nil, fmt.Errorf("Pipeline %s/%s: Failed to add result for job %s of build %d: %v", row.org, row.pipeline, row.job, row.build, err)
-			}
+		err = nil
+		if getPlatformFromJobName(&row.job) == macPlatform {
+			err = result.AddRow(row.org, row.pipeline, row.build, getShardFromJobName(row.job), row.waitTimeSeconds, row.runTimeSeconds, false)
+		} else if strings.Contains(row.skippedTasks, macPlatform) {
+			err = result.AddRow(row.org, row.pipeline, row.build, nil, nil, nil, true)
+			skippedBuilds[row.build] = struct{}{}
+		}
+
+		if err != nil {
+			return nil, fmt.Errorf("Pipeline %s/%s: Failed to add result for job %s of build %d: %v", row.org, row.pipeline, row.job, row.build, err)
 		}
 	}
 	return result, nil
 }
 
-// CREATE TABLE mac_performance (org VARCHAR(255), pipeline VARCHAR(255), build INT, wait_time_seconds FLOAT, run_time_seconds FLOAT, skipped BOOL, PRIMARY KEY(org, pipeline, build));
+// CREATE TABLE mac_performance (org VARCHAR(255), pipeline VARCHAR(255), build INT, shard INT, wait_time_seconds FLOAT, run_time_seconds FLOAT, skipped BOOL, PRIMARY KEY(org, pipeline, build, shard));
 func CreateMacPerformance(client clients.BuildkiteClient, lastNBuilds int, pipelines ...*data.PipelineID) *MacPerformance {
-	columns := []Column{Column{"org", true}, Column{"pipeline", true}, Column{"build", true}, Column{"wait_time_seconds", false}, Column{"run_time_seconds", false}, Column{"skipped", false}}
+	columns := []Column{Column{"org", true}, Column{"pipeline", true}, Column{"build", true}, Column{"shard", true}, Column{"wait_time_seconds", false}, Column{"run_time_seconds", false}, Column{"skipped", false}}
 	perfMetric := CreatePipelinePerformance(client, lastNBuilds, pipelines...)
 	return &MacPerformance{perfMetric: perfMetric, columns: columns}
 }
