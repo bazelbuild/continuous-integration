@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -10,6 +9,7 @@ import (
 	"time"
 
 	"github.com/bazelbuild/continuous-integration/metrics/clients"
+	"github.com/bazelbuild/continuous-integration/metrics/data"
 	"github.com/bazelbuild/continuous-integration/metrics/metrics"
 	"github.com/bazelbuild/continuous-integration/metrics/publishers"
 	"github.com/bazelbuild/continuous-integration/metrics/service"
@@ -59,24 +59,24 @@ func main() {
 		log.Fatalf("Cannot create Buildkite API client: %v", err)
 	}
 	bk := clients.CreateCachedBuildkiteClient(bkAPI, time.Duration(settings.BuildkiteCacheTimeoutMinutes)*time.Minute)
+	/*
+		computeClient, err := clients.CreateComputeEngineClient()
+		if err != nil {
+			log.Fatalf("Cannot create Compute Engine client: %v", err)
+		}
 
-	computeClient, err := clients.CreateComputeEngineClient()
-	if err != nil {
-		log.Fatalf("Cannot create Compute Engine client: %v", err)
-	}
+		storageClient, err := clients.CreateCloudStorageClient()
+		if err != nil {
+			log.Fatalf("Cannot create Cloud Storage client: %v", err)
+		}
 
-	storageClient, err := clients.CreateCloudStorageClient()
-	if err != nil {
-		log.Fatalf("Cannot create Cloud Storage client: %v", err)
-	}
+		stackdriverClient, err := clients.CreateStackdriverClient()
+		if err != nil {
+			log.Fatalf("Cannot create Stackdriver client: %v", err)
+		}
 
-	stackdriverClient, err := clients.CreateStackdriverClient()
-	if err != nil {
-		log.Fatalf("Cannot create Stackdriver client: %v", err)
-	}
-
-	stackdriver := publishers.CreateStackdriverPublisher(stackdriverClient, *projectID)
-
+		stackdriver := publishers.CreateStackdriverPublisher(stackdriverClient, *projectID)
+	*/
 	stdout := publishers.CreateStdoutPublisher(publishers.Csv)
 
 	var defaultPublisher publishers.Publisher
@@ -91,59 +91,61 @@ func main() {
 	}
 
 	srv := service.CreateService(handleError)
+	/*
+		aggPipelinePerformance := metrics.CreateAggregatedPipelinePerformance(bk, 20, pipelines...)
+		srv.AddMetric(aggPipelinePerformance, minutes(10), defaultPublisher)
 
-	aggPipelinePerformance := metrics.CreateAggregatedPipelinePerformance(bk, 20, pipelines...)
-	srv.AddMetric(aggPipelinePerformance, minutes(10), defaultPublisher)
+		buildsPerChange := metrics.CreateBuildsPerChange(bk, 500, pipelines...)
+		srv.AddMetric(buildsPerChange, minutes(60), defaultPublisher)
 
-	buildsPerChange := metrics.CreateBuildsPerChange(bk, 500, pipelines...)
-	srv.AddMetric(buildsPerChange, minutes(60), defaultPublisher)
+		buildSuccess := metrics.CreateBuildSuccess(bk, 200, pipelines...)
+		srv.AddMetric(buildSuccess, minutes(60), defaultPublisher)
 
-	buildSuccess := metrics.CreateBuildSuccess(bk, 200, pipelines...)
-	srv.AddMetric(buildSuccess, minutes(60), defaultPublisher)
+		ctx := context.Background()
+		cloudBuildStatus, err := metrics.CreateCloudBuildStatus(ctx, settings.CloudBuildProject, settings.CloudBuildSubscription)
+		if err != nil {
+			log.Fatalf("Failed to set up CloudBuildStatus metric: %v", err)
+		}
+		srv.AddMetric(cloudBuildStatus, minutes(5), defaultPublisher, stackdriver)
 
-	ctx := context.Background()
-	cloudBuildStatus, err := metrics.CreateCloudBuildStatus(ctx, settings.CloudBuildProject, settings.CloudBuildSubscription)
-	if err != nil {
-		log.Fatalf("Failed to set up CloudBuildStatus metric: %v", err)
-	}
-	srv.AddMetric(cloudBuildStatus, minutes(5), defaultPublisher, stackdriver)
+		criticalPath := metrics.CreateCriticalPath(bk, 20, pipelines...)
+		srv.AddMetric(criticalPath, minutes(60), defaultPublisher)
 
-	criticalPath := metrics.CreateCriticalPath(bk, 20, pipelines...)
-	srv.AddMetric(criticalPath, minutes(60), defaultPublisher)
+		dailyPerformance := metrics.CreateDailyPerformance(bk, 100, pipelines...)
+		srv.AddMetric(dailyPerformance, minutes(60), defaultPublisher)
 
-	dailyPerformance := metrics.CreateDailyPerformance(bk, 100, pipelines...)
-	srv.AddMetric(dailyPerformance, minutes(60), defaultPublisher)
-
-	flakiness := metrics.CreateFlakiness(storageClient, "bazel-buildkite-stats", "flaky-tests-bep", pipelines...)
-	srv.AddMetric(flakiness, minutes(60), defaultPublisher)
-
-	macPerformance := metrics.CreateMacPerformance(bk, 20, pipelines...)
-	srv.AddMetric(macPerformance, minutes(60), defaultPublisher)
-
-	pipelinePerformance := metrics.CreatePipelinePerformance(bk, 20, pipelines...)
+		flakiness := metrics.CreateFlakiness(storageClient, "bazel-buildkite-stats", "flaky-tests-bep", pipelines...)
+		srv.AddMetric(flakiness, minutes(60), defaultPublisher)
+	*/
+	pipeline := &data.PipelineID{Org: "bazel", Slug: "google-bazel-presubmit"}
+	/*
+		macPerformance := metrics.CreateMacPerformance(bk, 1000, pipeline)
+		srv.AddMetric(macPerformance, minutes(60), defaultPublisher)
+	*/
+	pipelinePerformance := metrics.CreatePipelinePerformance(bk, 3000, pipeline)
 	srv.AddMetric(pipelinePerformance, minutes(10), defaultPublisher)
+	/*
+		platformLoad := metrics.CreatePlatformLoad(bk, 100, settings.BuildkiteOrgs...)
+		srv.AddMetric(platformLoad, minutes(1), defaultPublisher, stackdriver)
 
-	platformLoad := metrics.CreatePlatformLoad(bk, 100, settings.BuildkiteOrgs...)
-	srv.AddMetric(platformLoad, minutes(1), defaultPublisher, stackdriver)
+		platformSignificance := metrics.CreatePlatformSignificance(bk, 100, pipelines...)
+		srv.AddMetric(platformSignificance, minutes(24*60), defaultPublisher)
 
-	platformSignificance := metrics.CreatePlatformSignificance(bk, 100, pipelines...)
-	srv.AddMetric(platformSignificance, minutes(24*60), defaultPublisher)
+		platformUsage := metrics.CreatePlatformUsage(bk, 100, settings.BuildkiteOrgs...)
+		srv.AddMetric(platformUsage, minutes(60), defaultPublisher)
 
-	platformUsage := metrics.CreatePlatformUsage(bk, 100, settings.BuildkiteOrgs...)
-	srv.AddMetric(platformUsage, minutes(60), defaultPublisher)
+		releaseDownloads := metrics.CreateReleaseDownloads(settings.GitHubOrg,
+			settings.GitHubRepo,
+			settings.GitHubApiToken, megaByte)
+		srv.AddMetric(releaseDownloads, minutes(12*60), defaultPublisher)
 
-	releaseDownloads := metrics.CreateReleaseDownloads(settings.GitHubOrg,
-		settings.GitHubRepo,
-		settings.GitHubApiToken, megaByte)
-	srv.AddMetric(releaseDownloads, minutes(12*60), defaultPublisher)
+		workerAvailability := metrics.CreateWorkerAvailability(bk, settings.BuildkiteOrgs...)
+		srv.AddMetric(workerAvailability, minutes(5), defaultPublisher)
 
-	workerAvailability := metrics.CreateWorkerAvailability(bk, settings.BuildkiteOrgs...)
-	srv.AddMetric(workerAvailability, minutes(5), defaultPublisher)
-
-	// TODO(fweikert): Read gracePeriod from Datastore
-	zombieInstances := metrics.CreateZombieInstances(computeClient, settings.CloudProjects, bk, settings.BuildkiteOrgs, minutes(3))
-	srv.AddMetric(zombieInstances, minutes(5), defaultPublisher)
-
+		// TODO(fweikert): Read gracePeriod from Datastore
+		zombieInstances := metrics.CreateZombieInstances(computeClient, settings.CloudProjects, bk, settings.BuildkiteOrgs, minutes(3))
+		srv.AddMetric(zombieInstances, minutes(5), defaultPublisher)
+	*/
 	if *testMode {
 		logInTestMode("Running all jobs exactly once...")
 		srv.RunJobsOnce()

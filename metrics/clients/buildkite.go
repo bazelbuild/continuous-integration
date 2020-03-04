@@ -136,8 +136,8 @@ func (client *CachedBuildkiteClient) getUncachedResults(listFunc func(int, int) 
 	if 0 < lastN && lastN < perPage {
 		perPage = lastN
 	}
-	currPage := 1
-	lastPage := 1
+	currPage := 110
+	lastPage := 110
 
 	for currPage <= lastPage {
 		log.Printf("Buildkite: Fetching page %d for '%s' (last=%d).\n", currPage, cacheKey, lastPage)

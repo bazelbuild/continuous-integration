@@ -37,7 +37,7 @@ func (stdout *Stdout) RegisterMetric(metric metrics.Metric) error {
 }
 
 func (stdout *Stdout) Publish(metric metrics.Metric, newData data.DataSet) error {
-	fmt.Println(stdout.formatFunc(metric.Name(), newData))
+	//fmt.Println(stdout.formatFunc(metric.Name(), newData))
 	return nil
 }
 

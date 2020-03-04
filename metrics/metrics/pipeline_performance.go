@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/bazelbuild/continuous-integration/metrics/clients"
@@ -39,8 +40,17 @@ func (pp *PipelinePerformance) Collect() (data.DataSet, error) {
 			return nil, fmt.Errorf("Cannot collect performance statistics for pipeline %s: %v", pipeline, err)
 		}
 		for _, build := range builds {
+
+			fmt.Println(*build.Number)
+
 			skippedTasks := getSkippedTasks(build)
 			for _, job := range build.Jobs {
+				if job != nil && job.Agent.Hostname != nil {
+					hn := *job.Agent.Hostname
+					if strings.Contains(hn, "imac") {
+						fmt.Printf("\t%s\n", hn)
+					}
+				}
 				if !isFinishedWorkerTask(job) {
 					continue
 				}
