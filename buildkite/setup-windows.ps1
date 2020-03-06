@@ -88,7 +88,7 @@ Set-Alias bash "c:\tools\msys64\usr\bin\bash.exe"
 ## Install MSYS2 packages required by Bazel.
 Write-Host "Installing required MSYS2 packages..."
 & bash -lc "pacman --noconfirm -Syuu"
-& bash -lc "pacman --noconfirm --needed -S curl zip unzip gcc tar diffutils patch perl mingw-w64-x86_64-gcc"
+& bash -lc "pacman --noconfirm --needed -S curl zip unzip gcc tar diffutils patch perl mingw-w64-x86_64-gcc ed"
 
 ## Install Git for Windows.
 Write-Host "Installing Git for Windows..."
