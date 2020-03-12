@@ -391,7 +391,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/protocolbuffers/upb.git",
         "http_config": "https://raw.githubusercontent.com/protocolbuffers/upb/master/.bazelci/presubmit.yml",
         "pipeline_slug": "upb",
-        "disabled_reason": "https://github.com/protocolbuffers/upb/issues/172",
     },
 }
 
