@@ -6,7 +6,7 @@ If you don't have access to our BuildKite instance, you can request it by sendin
 
 There is a daily scheduled build on this pipeline with the latest HEAD of the [master Bazel branch](https://github.com/bazelbuild/bazel/tree/master), but frequently it can be useful to run these tests with your own changes before merging a pull request.
 
-In order to run this pipeline, your changes need to be available on the [main Bazel repo](https://github.com/bazelbuild/bazel/), not on a fork or your local copy. Most core Bazel contributors can create branches here. However, it is recomended that you create and upload a change to a personal fork and submit a Pull Request to Bazel.
+In order to run this pipeline, your changes need to be available on the [main Bazel repo](https://github.com/bazelbuild/bazel/), not on a fork or your local copy. Most core Bazel contributors can create branches here. However, it is recommended that you create and upload a change to a personal fork and submit a Pull Request to Bazel.
 
 ## Starting the tests
 
