@@ -39,17 +39,17 @@ def main(argv=None):
     bazel_commits = args.bazel_commits.split(",")
     # We use one binary for all Linux platforms.
     # Context: https://github.com/bazelbuild/continuous-integration/blob/master/buildkite/bazelci.py
-    binary_platform = (args.platform if args.platform in ["macos", "windows"]
-                       else bazelci.LINUX_BINARY_PLATFORM)
-    bazel_bin_dir = BAZEL_BINARY_BASE_PATH + "/" + binary_platform
+    binary_platform = (
+        args.platform if args.platform in ["macos", "windows"] else bazelci.LINUX_BINARY_PLATFORM
+    )
+    bazel_bin_dir = BAZEL_BINARY_BASE_PATH + "/" + args.platform
 
     for bazel_commit in bazel_commits:
         destination = bazel_bin_dir + "/" + bazel_commit
         if os.path.exists(destination):
             continue
         try:
-            bazelci.download_bazel_binary_at_commit(
-                destination, binary_platform, bazel_commit)
+            bazelci.download_bazel_binary_at_commit(destination, binary_platform, bazel_commit)
         except bazelci.BuildkiteException:
             # Carry on.
             bazelci.eprint("Binary for Bazel commit %s not found." % bazel_commit)

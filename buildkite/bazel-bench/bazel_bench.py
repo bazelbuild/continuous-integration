@@ -34,12 +34,39 @@ import math
 # TMP has different values, depending on the platform.
 TMP = tempfile.gettempdir()
 # TODO(leba): Move this to a separate config file.
+"""
+"bazelci_name": the name that is used to retrieve the project's platforms on bazelci.
+"storage_subdir": the subdir on GCS to retrieve the data. Usually just the project_label.
+"project_label": the label of the project.
+"git_repository": the project's Git repo.
+"bazel_command": the command to be benchmarked.
+"bazel_bench_extra_options": extra commandline that will be run before each benchmark.
+"active": whether this project is active on bazel-bench.
+"""
 PROJECTS = [
     {
-        "name": "Bazel",
+        "bazelci_name": "Bazel",
         "storage_subdir": "bazel",
+        "project_label": "bazel",
         "git_repository": "https://github.com/bazelbuild/bazel.git",
         "bazel_command": "build //src:bazel",
+        "bazel_bench_extra_options": {},
+        "active": True,
+    },
+    {
+        "bazelci_name": "TensorFlow",
+        "storage_subdir": "tensorflow-cc",
+        "project_label": "tensorflow-cc",
+        "git_repository": "https://github.com/tensorflow/tensorflow.git",
+        "bazel_command": "build --output_filter=^\$ //tensorflow/core:core",
+        "bazel_bench_extra_options": {
+            "ubuntu1804": "--env_configure=\"unset PYTHONPATH && yes '' | python3 ./configure.py\"",
+            "macos": ("--env_configure=\"python3 --version && unset PYTHONPATH "
+                "&& pip3 install -U --user pip six numpy wheel setuptools mock 'future>=0.17.1' "
+                "&& pip3 install -U --user keras_applications==1.0.6 --no-deps "
+                "&& pip3 install -U --user keras_preprocessing==1.0.5 --no-deps "
+                "&& yes '' | python3 ./configure.py\""),
+        },
         "active": True,
     }
 ]
@@ -47,22 +74,23 @@ BAZEL_REPOSITORY = "https://github.com/bazelbuild/bazel.git"
 DATA_DIRECTORY = os.path.join(TMP, ".bazel-bench", "out")
 BAZEL_BENCH_RESULT_FILENAME = "perf_data.csv"
 AGGR_JSON_PROFILES_FILENAME = "aggr_json_profiles.csv"
-PLATFORMS_WHITELIST = ['macos', 'ubuntu1604', 'ubuntu1804', 'rbe_ubuntu1604']
+PLATFORMS_WHITELIST = ['macos', 'ubuntu1804']
 REPORT_GENERATION_PLATFORM = 'ubuntu1804'
 STARTER_JOB_PLATFORM = 'ubuntu1804'
 
 
 def _bazel_bench_env_setup_command(platform, bazel_commits):
     bazel_bench_env_setup_py_url = (
-        "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-bench/bazel_bench_env_setup.py?%s"
-        % int(time.time())
+        "https://raw.githubusercontent.com/bazelbuild/continuous-integration"
+        "/master/buildkite/bazel-bench/bazel_bench_env_setup.py?{}".format(int(time.time()))
     )
-    download_command = 'curl -sS "%s" -o bazel_bench_env_setup.py' % bazel_bench_env_setup_py_url
-    exec_command = "%s bazel_bench_env_setup.py --platform=%s --bazel_commits=%s" % (
-        bazelci.PLATFORMS[platform]["python"],
-        platform,
-        bazel_commits,
+    download_command = 'curl -sS "{}" -o bazel_bench_env_setup.py'.format(bazel_bench_env_setup_py_url)
+    exec_command = "{python} bazel_bench_env_setup.py --platform={platform} --bazel_commits={bazel_commits}".format(
+        python=bazelci.PLATFORMS[platform]["python"],
+        platform=platform,
+        bazel_commits=bazel_commits
     )
+
     return [download_command, exec_command]
 
 
@@ -190,6 +218,7 @@ def _ci_step_for_platform_and_commits(
             "--bazel_commits=%s" % ",".join(bazel_commits),
             "--bazel_source=%s" % bazel_clone_path,
             "--project_source=%s" % project_clone_path,
+            "--project_label=%s" % project["project_label"],
             "--platform=%s" % platform,
             "--collect_memory",
             "--data_directory=%s" % DATA_DIRECTORY,
@@ -236,10 +265,7 @@ def _ci_step_for_platform_and_commits(
         + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
         + [bazel_bench_command, upload_output_files_storage_command, upload_to_big_query_command]
     )
-    label = (
-        bazelci.PLATFORMS[platform]["emoji-name"]
-        + " Running bazel-bench on project: %s" % project["name"]
-    )
+    label = bazelci.PLATFORMS[platform]["emoji-name"] + project["project_label"]
     return bazelci.create_step(label, commands, platform)
 
 
@@ -376,7 +402,6 @@ def main(args=None):
       help="The BigQuery table to fetch data from. In the format: project:table_identifier.")
     parsed_args = parser.parse_args(args)
 
-    bazel_bench_ci_steps = []
     date = (
         datetime.datetime.strptime(parsed_args.date, "%Y-%m-%d").date()
         if parsed_args.date
@@ -387,17 +412,24 @@ def main(args=None):
         BAZEL_REPOSITORY, STARTER_JOB_PLATFORM)
     bazel_commits_full_list, bazel_commits_to_benchmark = _get_bazel_commits(
         date, bazel_clone_path, parsed_args.max_commits)
+    bazel_bench_ci_steps = []
 
     for project in PROJECTS:
         if not project["active"]:
             continue
         platforms = _get_platforms(
-            project["name"], whitelist=PLATFORMS_WHITELIST)
+            project["bazelci_name"], whitelist=PLATFORMS_WHITELIST)
+        
         for platform in platforms:
+            if (project["bazel_bench_extra_options"] and platform in project["bazel_bench_extra_options"]):
+                project_specific_bazel_bench_options = " ".join([project["bazel_bench_extra_options"][platform], parsed_args.bazel_bench_options])
+            else:
+                project_specific_bazel_bench_options = parsed_args.bazel_bench_options
+
             bazel_bench_ci_steps.append(
                 _ci_step_for_platform_and_commits(
                     bazel_commits_to_benchmark, platform, project,
-                    parsed_args.bazel_bench_options, date, parsed_args.bucket,
+                    project_specific_bazel_bench_options, date, parsed_args.bucket,
                     parsed_args.bigquery_table
                 )
             )
@@ -412,7 +444,10 @@ def main(args=None):
             benchmarked_commits=bazel_commits_to_benchmark
         )
 
-        bazel_bench_ci_steps.append("wait")
+    bazel_bench_ci_steps.append("wait")
+    for project in PROJECTS:
+        if not project["active"]:
+            continue
         # If all the above steps succeed, generate the report.
         bazel_bench_ci_steps.append(
             _report_generation_step(
@@ -420,10 +455,10 @@ def main(args=None):
                 parsed_args.bucket, parsed_args.bigquery_table, REPORT_GENERATION_PLATFORM,
                 parsed_args.report_name, parsed_args.update_latest, parsed_args.upload_report))
 
-        bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
-        subprocess.run(
-            ["buildkite-agent", "pipeline", "upload"],
-            input=yaml.dump({"steps": bazel_bench_ci_steps}, encoding="utf-8"))
+    bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
+    subprocess.run(
+        ["buildkite-agent", "pipeline", "upload"],
+        input=yaml.dump({"steps": bazel_bench_ci_steps}, encoding="utf-8"))
 
 
 if __name__ == "__main__":
