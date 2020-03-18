@@ -33,7 +33,6 @@ platforms:
     #   echo '
     #   android_sdk_repository(name = "androidsdk")
     #   android_ndk_repository(name = "androidndk")' >>WORKSPACE
-    - easy_install pip
     - pip3 install -U --user pip six numpy wheel setuptools mock 'future>=0.17.1'
     - pip3 install -U --user keras_applications==1.0.6 --no-deps
     - pip3 install -U --user keras_preprocessing==1.0.5 --no-deps  
