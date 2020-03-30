@@ -172,9 +172,9 @@ Editing the release notes is not needed (it will be done later).
 1.  Trigger a new pipeline in BuildKite to test the release candidate with all the downstream projects.
     *   Go to https://buildkite.com/bazel/bazel-with-downstream-projects-bazel
     *   Click "New Build", then fill in the fields like this:
-        *   Message: Test Release-0.14.0rc1 (Or any message you like)
+        *   Message: Test Release-3.0.0rc2 (Or any message you like)
         *   Commit: HEAD
-        *   Branch: release-0.14.0
+        *   Branch: release-3.0.0rc2
 
 1.  Look for failing projects in red.
     *   Compare the results with the latest Bazel release:
