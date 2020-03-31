@@ -156,7 +156,8 @@ Write-Host "Installing Python packages..."
     requests `
     pyyaml `
     keras_applications `
-    keras_preprocessing
+    keras_preprocessing `
+    pywin32
 
 ## CMake (for rules_foreign_cc).
 Write-Host "Installing CMake..."
