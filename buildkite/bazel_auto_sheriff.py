@@ -427,7 +427,8 @@ def report_downstream_breakages(analyzers):
         for task_info in analyzer.downstream_result["tasks"].values():
             if task_info.get("culprit"):
                 culprits.add(task_info["culprit"])
-        culprits_per_project[analyzer.project] = culprits
+        if culprits:
+            culprits_per_project[analyzer.project] = culprits
 
     if not broken_downstream_tasks_per_project:
         return
