@@ -301,6 +301,10 @@ After a few days of iteration:
          1. After the changes are submitted, it will take 30 mins-1 hour for them to show up on bazel.build.
 
 1.  Merge the blog post pull request.
+    1.  Make sure you update the date in your post (and the path) to reflect when
+    it is actually published.
+    1.  **Note:** The blog sometimes takes time to update the homepage, so use
+    the full path to your post to check that it is live.
 1.  Update the [release page](https://github.com/bazelbuild/bazel/releases/) to
     replace the generated notes with a link to the blog post.
 1.  Close the release-tracking bug. If you need to do a patch release, create a
