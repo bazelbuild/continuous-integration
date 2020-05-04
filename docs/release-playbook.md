@@ -310,6 +310,12 @@ After a few days of iteration:
 1.  Close the release-tracking bug. If you need to do a patch release, create a
     new tracking bug.
 
+### Updating Google's internal mirror
+
+Please ping @philwo and @meteorcloudy to copy the release binary to their
+internal mirror.
+
+
 ### Updating the Homebrew recipe
 
 [Homebrew](http://brew.sh/index.html) is a package manager for OS X. This
