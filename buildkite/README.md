@@ -488,3 +488,19 @@ tasks:
 When `include_json_profile` is specified with `build`, the builds will be carried out with the extra JSON profile flags. Similarly for `test`. Other values will be ignored.
 
 The exported JSON profiles are available as artifacts after each run.
+
+## FAQ
+
+### My tests fail on Bazel CI due to "Error downloading"
+
+**Q:** I added or changed an external repository and now my test is failing on Bazel CI only with errors like this:
+
+```
+WARNING: Download from https://github.com/bazelbuild/java_tools/releases/download/javac11-v11.0/java_tools_javac11_linux-v11.0.zip failed: class java.net.ConnectException Operation not permitted (connect failed)
+ERROR: An error occurred during the fetch of repository 'remote_java_tools_linux_beta':
+   java.io.IOException: Error downloading [https://github.com/bazelbuild/java_tools/releases/download/javac11-v11.0/java_tools_javac11_linux-v11.0.zip] to /private/var/tmp/_bazel_buildkite/c3a616e1648c5e14a8ab09d0d59696c2/sandbox/darwin-sandbox/3279/execroot/io_bazel/_tmp/58d272c7f3dd803b2bcb2fc7be47d391/root/fb8b458bcc92813a6fcf57a0dbe6e8bd/external/remote_java_tools_linux_beta/java_tools_javac11_linux-v11.0.zip: Operation not permitted (connect failed)
+```
+
+**A:** We run most tests on CI without network access and instead inject the external repositories from the outside. This saves a lot of network traffic and I/O (because the Bazel integration tests don't have to extract the repository archives again and again).
+
+In the code review of this PR, philwo@ explained how to fix test failures like this: https://github.com/bazelbuild/bazel/pull/11436.
