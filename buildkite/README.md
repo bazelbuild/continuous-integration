@@ -44,6 +44,8 @@ You can view the failed test attempt's `test.log` file in the *Artifacts* tab.
 
 ![buildkite useful buttons]
 
+![buildkite testlog buttons]
+
 ## Pull Requests
 
 Bazel accepts contributions via pull requests. Contributions by members of the [bazelbuild]
@@ -70,22 +72,6 @@ for an example.
 
 ![pull request details]
 
-[Buildkite]: https://buildkite.com
-[buildkite folder]: https://github.com/bazelbuild/continuous-integration/tree/master/buildkite
-[rules_go]: https://github.com/bazelbuild/rules_go
-[Bazel]: https://github.com/bazelbuild/bazel
-[bazelbuild]: https://github.com/bazelbuild/
-
-[pipelines]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/pipelines.png
-[failed build step]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/failed-build-step.png
-[flaky test]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/flaky-test.png
-[flaky test log]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/flaky-test-log.png
-[status verify pull request]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/status-verify-pull-request.png
-[buildkite verify pull request]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/buildkite-verify-pull-request.png
-[pull request details]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/pull-request-details.png
-[buildkite useful buttons]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/buildkite-useful-buttons.png
-
-
 ## Presubmit for downstream projects
 
 You can preview the effect of an unmerged commit on downstream projects. See [Testing Local Changes With All Downstream Projects](https://github.com/bazelbuild/continuous-integration/blob/master/docs/downstream-testing.md).
@@ -97,7 +83,6 @@ runs [`bazelisk --migrate`](https://github.com/bazelbuild/bazelisk#other-feature
 a summary of all incompatible flags and migrations statuses of downstream projects.
 
 The pipeline runs every night against the latest Bazel release. You can also schedule manual builds and set [`USE_BAZEL_VERSION`](https://github.com/bazelbuild/bazelisk#how-does-bazelisk-know-which-version-to-run) to run against a specific release or a release candidate (e.g. `USE_BAZEL_VERSION=0.29rc3` to test against RC3 of release 0.29)
-
 
 ## Culprit Finder
 
@@ -127,7 +112,6 @@ BAD_BAZEL_COMMIT=91eb3d207714af0ab1e5812252a0f10f40d6e4a8
 ```
 
 Note: Bazel commit can only be set to commits after [63453bdbc6b05bd201375ee9e25b35010ae88aab](https://github.com/bazelbuild/bazel/commit/63453bdbc6b05bd201375ee9e25b35010ae88aab), Culprit Finder needs to download Bazel at specific commit, but we didn't prebuild Bazel binaries before this commit.
-
 
 ## Bazel Auto Sheriff
 
@@ -166,7 +150,6 @@ After the analysis, the pipeline will give a summary of four kinds of breakages:
 - Flaky builds.
 
 You can check the analysis log for more details.
-
 
 ## Configuring a Pipeline
 
@@ -504,3 +487,19 @@ ERROR: An error occurred during the fetch of repository 'remote_java_tools_linux
 **A:** We run most tests on CI without network access and instead inject the external repositories from the outside. This saves a lot of network traffic and I/O (because the Bazel integration tests don't have to extract the repository archives again and again).
 
 In the code review of this PR, philwo@ explained how to fix test failures like this: https://github.com/bazelbuild/bazel/pull/11436.
+
+[Buildkite]: https://buildkite.com
+[buildkite folder]: https://github.com/bazelbuild/continuous-integration/tree/master/buildkite
+[rules_go]: https://github.com/bazelbuild/rules_go
+[Bazel]: https://github.com/bazelbuild/bazel
+[bazelbuild]: https://github.com/bazelbuild/
+
+[pipelines]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/pipelines.png
+[failed build step]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/failed-build-step.png
+[flaky test]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/flaky-test.png
+[flaky test log]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/flaky-test-log.png
+[status verify pull request]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/status-verify-pull-request.png
+[buildkite verify pull request]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/buildkite-verify-pull-request.png
+[pull request details]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/pull-request-details.png
+[buildkite useful buttons]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/buildkite-useful-buttons.png
+[buildkite testlog buttons]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/buildkite-testlog-buttons.png
