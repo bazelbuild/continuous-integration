@@ -44,6 +44,8 @@ You can view the failed test attempt's `test.log` file in the *Artifacts* tab.
 
 ![buildkite useful buttons]
 
+![buildkite testlog buttons]
+
 ## Pull Requests
 
 Bazel accepts contributions via pull requests. Contributions by members of the [bazelbuild]
