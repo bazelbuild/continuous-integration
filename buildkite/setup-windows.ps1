@@ -232,6 +232,8 @@ Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
 
 ## Install all required Android SDK components.
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platform-tools"
+& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;28.0.2"
+& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;29.0.3"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;30.0.0-rc4"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-24"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-28"
