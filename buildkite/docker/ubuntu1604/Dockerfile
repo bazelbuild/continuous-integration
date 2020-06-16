@@ -67,8 +67,6 @@ COPY --from=gcr.io/bazel-public/base:saucelabs /usr/local/bin/sc /usr/local/bin/
 RUN apt-get -qqy update && \
     echo "Installing packages required by Envoy" && \
     apt-get -qqy install automake autotools-dev cmake libtool m4 ninja-build && \
-    echo "Installing packages required by Android emulator" && \
-    apt-get -qqy install cpio cpu-checker lsof qemu-kvm qemu-system-x86 && \
     echo "Installing packages required by Bazel release process" && \
     apt-get -qqy install devscripts pandoc reprepro && \
     echo "Installing packages required by Swift toolchain" && \
