@@ -16,7 +16,7 @@ function mirror() {
     repo="$1"
     remote_name="$(echo -n $repo | tr -C '[[:alnum:]]' '-')"
     if [[ -d $remote_name ]]; then
-        git -C "${remote_name}" pull
+        git -C "${remote_name}" fetch
     else
         git clone --bare "${repo}" "${remote_name}"
     fi
@@ -28,7 +28,9 @@ for repo in $(curl -sS -H "Authorization: Bearer ${BUILDKITE_API_TOKEN}" "https:
     mirror "$repo" &
 done
 
-for repo in $(fgrep '"git_repository": "' ../buildkite/bazelci.py | cut -d'"' -f4 | sort -u); do
+wait
+
+for repo in $(fgrep '"git_repository": "' ../../buildkite/bazelci.py | cut -d'"' -f4 | sort -u); do
     mirror "$repo" &
 done
 
