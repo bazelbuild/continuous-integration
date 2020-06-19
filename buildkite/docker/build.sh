@@ -22,6 +22,7 @@ for target in bazelisk buildifier github-release saucelabs; do
     docker build -f base/Dockerfile --target $target -t gcr.io/bazel-public/base:$target .
 done
 
+# Containers used by Bazel CI
 docker build -f centos7/Dockerfile    --target centos7-java8           -t "gcr.io/$PREFIX/centos7-java8" centos7
 docker build -f centos7/Dockerfile    --target centos7-releaser        -t "gcr.io/$PREFIX/centos7-releaser" centos7
 docker build -f debian10/Dockerfile   --target debian10-java11         -t "gcr.io/$PREFIX/debian10-java11" debian10
@@ -34,3 +35,10 @@ docker build -f ubuntu2004/Dockerfile --target ubuntu2004-bazel-java11 -t "gcr.i
 docker build -f ubuntu2004/Dockerfile --target ubuntu2004-java11       -t "gcr.io/$PREFIX/ubuntu2004-java11" ubuntu2004
 docker build -f ubuntu2004/Dockerfile --target ubuntu2004-java11-kythe -t "gcr.io/$PREFIX/ubuntu2004-java11-kythe" ubuntu2004
 docker build -f ubuntu2004/Dockerfile --target ubuntu2004-nojava       -t "gcr.io/$PREFIX/ubuntu2004-nojava" ubuntu2004
+
+# Other containers
+docker build \
+    -f bazel-slack-inviter-slackin/Dockerfile \
+    --target bazel-slack-inviter-slackin \
+    -t "gcr.io/$PREFIX/bazel-slack-inviter-slackin" \
+    bazel-slack-inviter-slackin
