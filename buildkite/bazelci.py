@@ -469,6 +469,22 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1804-nojava",
         "python": "python3.6",
     },
+    "ubuntu2004": {
+        "name": "Ubuntu 20.04, OpenJDK 11",
+        "emoji-name": ":ubuntu: 20.04 (OpenJDK 11)",
+        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
+        "publish_binary": ["ubuntu2004-java11"],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11",
+        "python": "python3.8",
+    },
+    "ubuntu2004_nojava": {
+        "name": "Ubuntu 20.04, no JDK",
+        "emoji-name": ":ubuntu: 20.04 (no JDK)",
+        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
+        "publish_binary": ["ubuntu2004-nojava"],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-nojava",
+        "python": "python3.8",
+    },
     "macos": {
         "name": "macOS, OpenJDK 8",
         "emoji-name": ":darwin: (OpenJDK 8)",
