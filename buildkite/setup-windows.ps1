@@ -97,6 +97,8 @@ Write-Host "Installing Git for Windows..."
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 # Don't convert the line endings when cloning the repository because that could break some tests
 & git config --system core.autocrlf false
+# Turn on long path support on Windows
+& git config --system core.longpaths true
 
 ## Install Azul Zulu.
 Write-Host "Installing OpenJDK..."
