@@ -330,6 +330,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_k8s/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-k8s-k8s",
+        "disabled_reason": "https://github.com/bazelbuild/rules_k8s/pull/580",
     },
     "rules_kotlin": {
         "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
