@@ -2569,6 +2569,8 @@ def print_bazel_downstream_pipeline(
     incompatible_flags = None
     if test_incompatible_flags:
         incompatible_flags_map = fetch_incompatible_flags()
+        if not incompatible_flags_map:
+            raise BuildkiteException("No incompatible flag issue is found on github for current version of Bazel.")
         info_box_step = print_incompatible_flags_info_box_step(incompatible_flags_map)
         if info_box_step is not None:
             pipeline_steps.append(info_box_step)
