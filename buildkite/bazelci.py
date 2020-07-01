@@ -150,6 +150,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/bazel-buildfarm.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-buildfarm/master/.bazelci/presubmit.yml",
         "pipeline_slug": "buildfarm-male-farmer",
+        "disabled_reason": "https://github.com/bazelbuild/bazel-buildfarm/issues/441",
     },
     "Buildtools": {
         "git_repository": "https://github.com/bazelbuild/buildtools.git",
@@ -170,6 +171,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/googlecloudrobotics/core.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/cloud-robotics-postsubmit.yml",
         "pipeline_slug": "cloud-robotics-core",
+        "disabled_reason": "https://github.com/googlecloudrobotics/core/issues/49",
     },
     "Envoy": {
         "git_repository": "https://github.com/envoyproxy/envoy.git",
