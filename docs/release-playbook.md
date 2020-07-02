@@ -148,7 +148,7 @@ Editing the release notes is not needed (it will be done later).
         automatically run. Make sure that it passes.
 
 1.  When it all looks good, go back to the job in the release pipeline, click
-    "Unblock step" for the deployment step.
+    "Deploy release artifacts" for the deployment step.
 
     *   This will upload the release candidate binaries to GitHub and our 
         apt-get repository. The github link is probably of the form:
@@ -157,7 +157,7 @@ Editing the release notes is not needed (it will be done later).
     *   If you don't have the permission, ask one of the Buildkite org admins
         to add you to the [release-managers](https://buildkite.com/organizations/bazel-trusted/teams/release-managers/members) group.
 
-1.  If that worked, click "Unblock step" for the "Generate Announcement" step.
+1.  If that worked, click on "Generate Announcement" step to unblock it.
     If it's the first release candidate, prepare the release announcement (see
     next section).
 
