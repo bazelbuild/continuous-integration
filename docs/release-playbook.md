@@ -13,7 +13,7 @@ Do these steps once per release.
 *   Find baseline commit and cherrypicks
     *    Check Bazel nightly build at
          https://buildkite.com/bazel/bazel-with-downstream-projects-bazel. If
-         many downstream jobs are failing then this isnot a good baseline
+         many downstream jobs are failing then this is not a good baseline
          commit. If only a few downstream jobs are failing and the issues are
          known then this is a good baseline commit. Fixes for the known issues
          should be cherry-picked, any remaining issues should become release
@@ -86,7 +86,7 @@ In the below, _X.Y_ is a release you are cutting.
 
 ## Create a Candidate
 
-Create candidates with the `release.sh` script.
+Create candidates with the `release.sh` script. See above how to pick a good baseline commit.
 
 *  If it's the first candidate for this version, run:
 
