@@ -157,7 +157,7 @@ Editing the release notes is not needed (it will be done later).
     *   If you don't have the permission, ask one of the Buildkite org admins
         to add you to the [release-managers](https://buildkite.com/organizations/bazel-trusted/teams/release-managers/members) group.
 
-1.  If that worked, click on "Generate Announcement" step to unblock it.
+1.  If that worked, click on the "Generate Announcement" step to unblock it.
     If it's the first release candidate, prepare the release announcement (see
     next section).
 
