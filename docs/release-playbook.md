@@ -218,6 +218,7 @@ Once the first candidate is available:
 1.  Send an email to [bazel-dev](https://groups.google.com/forum/#!forum/bazel-dev) for
     additional reviews.
 1.  Assign a comment to "+[aiuto@google.com](mailto:aiuto@google.com)"
+    and "+[daroberts@google.com](mailto:daroberts@google.com)"
     for a global review.
 
 After a few days of iteration:
