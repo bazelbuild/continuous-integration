@@ -170,7 +170,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/googlecloudrobotics/core.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/cloud-robotics-postsubmit.yml",
         "pipeline_slug": "cloud-robotics-core",
-        "disabled_reason": "https://github.com/googlecloudrobotics/core/issues/49",
     },
     "Envoy": {
         "git_repository": "https://github.com/envoyproxy/envoy.git",
