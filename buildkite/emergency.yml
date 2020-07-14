@@ -17,6 +17,6 @@
 # Please do not clear or delete this file when an incident is over.
 # Instead, simply replace all values with empty strings ("").
 ---
-message: "Bazel 3.4.0 is broken, patch release pending"
-issue_url: "https://github.com/bazelbuild/bazel/issues/11756"
-last_good_bazel: "3.3.1"
+message: ""
+issue_url: ""
+last_good_bazel: ""
