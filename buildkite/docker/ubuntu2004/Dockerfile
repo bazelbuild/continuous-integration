@@ -133,7 +133,7 @@ RUN apt-get -qqy update && \
 ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64
 
 FROM ubuntu2004-java11 AS ubuntu2004-java11-kythe
-RUN mkdir /opt/kythe && \
-    curl -sSL https://github.com/kythe/kythe/releases/download/v0.0.44/kythe-v0.0.44.tar.gz | \
-    tar xvz --no-same-owner --strip-components 1 --directory /opt/kythe && \
-    test -f /opt/kythe/WORKSPACE
+RUN mkdir /usr/local/kythe && \
+    curl -sSL https://github.com/kythe/kythe/releases/download/v0.0.45/kythe-v0.0.45.tar.gz | \
+    tar xvz --no-same-owner --strip-components 1 --directory /usr/local/kythe && \
+    test -f /usr/local/kythe/WORKSPACE
