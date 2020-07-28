@@ -1741,6 +1741,21 @@ def calculate_targets(task_config, platform, bazel_binary, build_only, test_only
     test_targets = [] if build_only else task_config.get("test_targets", [])
     index_targets = [] if (build_only or test_only) else task_config.get("index_targets", [])
 
+    index_targets_query = None if (build_only or test_only) else task_config.get("index_targets_query", None)
+    if index_targets_query:
+        output = execute_command_and_get_output(
+            [bazel_binary]
+            + common_startup_flags(platform)
+            + [
+                "--nomaster_bazelrc",
+                "--bazelrc=/dev/null",
+                "query",
+                index_targets_query,
+            ],
+            print_output=False,
+        )
+        index_targets += output.strip().split("\n")
+
     # Remove the "--" argument splitter from the list that some configs explicitly
     # include. We'll add it back again later where needed.
     build_targets = [x.strip() for x in build_targets if x.strip() != "--"]
