@@ -18,6 +18,7 @@ import argparse
 import base64
 import codecs
 import datetime
+import glob
 import hashlib
 import json
 import multiprocessing
@@ -469,6 +470,14 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1804-nojava",
         "python": "python3.6",
     },
+    "kythe_ubuntu2004": {
+        "name": "Kythe (Ubuntu 20.04, OpenJDK 11)",
+        "emoji-name": "Kythe (:ubuntu: 20.04, OpenJDK 11)",
+        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11-kythe",
+        "python": "python3.8",
+    },
     "macos": {
         "name": "macOS, OpenJDK 8",
         "emoji-name": ":darwin: (OpenJDK 8)",
@@ -531,6 +540,7 @@ SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
 
 CONFIG_FILE_EXTENSIONS = {".yml", ".yaml"}
 
+KYTHE_DIR = "/usr/local/kythe"
 
 class BuildkiteException(Exception):
     """
@@ -923,6 +933,25 @@ def bazelisk_flags():
     return ["--migrate"] if use_bazelisk_migrate() else []
 
 
+def calculate_flags(task_config, task_config_key, json_profile_key, tmpdir, test_env_vars):
+    include_json_profile = task_config.get("include_json_profile", [])
+
+    json_profile_flags = []
+    json_profile_out = None
+    if json_profile_key in include_json_profile:
+        json_profile_out = os.path.join(tmpdir, "{}.profile.gz".format(json_profile_key))
+        json_profile_flags = get_json_profile_flags(json_profile_out)
+
+    flags = task_config.get(task_config_key) or []
+    flags += json_profile_flags
+    # We have to add --test_env flags to `build`, too, otherwise Bazel
+    # discards its analysis cache between `build` and `test`.
+    if test_env_vars:
+        flags += ["--test_env={}".format(v) for v in test_env_vars]
+
+    return flags, json_profile_out
+
+
 def execute_commands(
     task_config,
     platform,
@@ -1044,26 +1073,12 @@ def execute_commands(
         if needs_clean:
             execute_bazel_clean(bazel_binary, platform)
 
-        build_targets, test_targets = calculate_targets(
+        build_targets, test_targets, index_targets = calculate_targets(
             task_config, platform, bazel_binary, build_only, test_only
         )
 
-        include_json_profile = task_config.get("include_json_profile", [])
-
         if build_targets:
-            json_profile_flags = []
-            include_json_profile_build = "build" in include_json_profile
-            json_profile_out_build = None
-            if include_json_profile_build:
-                json_profile_out_build = os.path.join(tmpdir, "build.profile.gz")
-                json_profile_flags = get_json_profile_flags(json_profile_out_build)
-
-            build_flags = task_config.get("build_flags") or []
-            build_flags += json_profile_flags
-            # We have to add --test_env flags to `build`, too, otherwise Bazel
-            # discards its analysis cache between `build` and `test`.
-            if test_env_vars:
-                build_flags += ["--test_env={}".format(v) for v in test_env_vars]
+            build_flags, json_profile_out_build = calculate_flags(task_config, "build_flags", "build", tmpdir, test_env_vars)
             try:
                 execute_bazel_build(
                     bazel_version,
@@ -1077,22 +1092,11 @@ def execute_commands(
                 if save_but:
                     upload_bazel_binary(platform)
             finally:
-                if include_json_profile_build:
+                if json_profile_out_build:
                     upload_json_profile(json_profile_out_build, tmpdir)
 
         if test_targets:
-            json_profile_flags = []
-            include_json_profile_test = "test" in include_json_profile
-            json_profile_out_test = None
-            if include_json_profile_test:
-                json_profile_out_test = os.path.join(tmpdir, "test.profile.gz")
-                json_profile_flags = get_json_profile_flags(json_profile_out_test)
-
-            test_flags = task_config.get("test_flags") or []
-            test_flags += json_profile_flags
-            if test_env_vars:
-                test_flags += ["--test_env={}".format(v) for v in test_env_vars]
-
+            test_flags, json_profile_out_test = calculate_flags(task_config, "test_flags", "test", tmpdir, test_env_vars)
             if not is_windows():
                 # On platforms that support sandboxing (Linux, MacOS) we have
                 # to allow access to Bazelisk's cache directory.
@@ -1124,11 +1128,31 @@ def execute_commands(
                     if monitor_flaky_tests:
                         upload_bep_logs_for_flaky_tests(test_bep_file)
                 finally:
-                    if include_json_profile_test:
+                    if json_profile_out_test:
                         upload_json_profile(json_profile_out_test, tmpdir)
             finally:
                 stop_request.set()
                 upload_thread.join()
+
+        if index_targets:
+            index_flags, json_profile_out_index = calculate_flags(task_config, "index_flags", "index", tmpdir, test_env_vars)
+
+            try:
+                execute_bazel_build_with_kythe(
+                    bazel_version,
+                    bazel_binary,
+                    platform,
+                    index_flags,
+                    index_targets,
+                    None,
+                    incompatible_flags
+                )
+                merge_and_upload_kythe_kzip(platform)
+            finally:
+                if json_profile_out_index:
+                    upload_json_profile(json_profile_out_index, tmpdir)
+
+
     finally:
         terminate_background_process(sc_process)
         if tmpdir:
@@ -1251,6 +1275,19 @@ def upload_bazel_binary(platform):
         binary_nojdk_name = "bazel_nojdk"
     execute_command(["buildkite-agent", "artifact", "upload", binary_name], cwd=binary_dir)
     execute_command(["buildkite-agent", "artifact", "upload", binary_nojdk_name], cwd=binary_dir)
+
+
+def merge_and_upload_kythe_kzip(platform):
+    print_collapsed_group(":gcloud: Uploading kythe kzip")
+
+    kzips = glob.glob("bazel-out/*/extra_actions/**/*.kzip", recursive=True)
+
+    project = os.getenv("BUILDKITE_PIPELINE_SLUG")
+    build_number = os.getenv("BUILDKITE_BUILD_NUMBER")
+    final_kzip_name = "{}-{}-build{}.kzip".format(project, platform, build_number)
+    execute_command([f"{KYTHE_DIR}/tools/kzip", "merge", "--output", final_kzip_name] + kzips)
+
+    execute_command(["buildkite-agent", "artifact", "upload", final_kzip_name])
 
 
 def download_binary(dest_dir, platform, binary_name):
@@ -1628,6 +1665,14 @@ def execute_bazel_clean(bazel_binary, platform):
         raise BuildkiteException("bazel clean failed with exit code {}".format(e.returncode))
 
 
+def kythe_startup_flags():
+    return [f"--bazelrc={KYTHE_DIR}/extractors.bazelrc"]
+
+
+def kythe_build_flags():
+    return [f"--override_repository=kythe_release={KYTHE_DIR}"]
+
+
 def execute_bazel_build(
     bazel_version, bazel_binary, platform, flags, targets, bep_file, incompatible_flags
 ):
@@ -1658,14 +1703,49 @@ def execute_bazel_build(
         handle_bazel_failure(e, "build")
 
 
+def execute_bazel_build_with_kythe(
+    bazel_version, bazel_binary, platform, flags, targets, bep_file, incompatible_flags
+):
+    print_collapsed_group(":bazel: Computing flags for build step")
+    aggregated_flags = compute_flags(
+        platform,
+        flags,
+        # When using bazelisk --migrate to test incompatible flags,
+        # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
+        [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags,
+        bep_file,
+        bazel_binary,
+        enable_remote_cache=False,
+    )
+
+    print_expanded_group(":bazel: Build ({})".format(bazel_version))
+    try:
+        execute_command(
+            [bazel_binary]
+            + bazelisk_flags()
+            + common_startup_flags(platform)
+            + kythe_startup_flags()
+            + ["build"]
+            + kythe_build_flags()
+            + aggregated_flags
+            + ["--"]
+            + targets
+        )
+    except subprocess.CalledProcessError as e:
+        msg = "bazel build failed with exit code {}".format(e.returncode)
+        print_collapsed_group(msg)
+
+
 def calculate_targets(task_config, platform, bazel_binary, build_only, test_only):
     build_targets = [] if test_only else task_config.get("build_targets", [])
     test_targets = [] if build_only else task_config.get("test_targets", [])
+    index_targets = [] if (build_only or test_only) else task_config.get("index_targets", [])
 
     # Remove the "--" argument splitter from the list that some configs explicitly
     # include. We'll add it back again later where needed.
     build_targets = [x.strip() for x in build_targets if x.strip() != "--"]
     test_targets = [x.strip() for x in test_targets if x.strip() != "--"]
+    index_targets = [x.strip() for x in index_targets if x.strip() != "--"]
 
     shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
     shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
@@ -1678,7 +1758,7 @@ def calculate_targets(task_config, platform, bazel_binary, build_only, test_only
         expanded_test_targets = expand_test_target_patterns(bazel_binary, platform, test_targets)
         test_targets = get_targets_for_shard(expanded_test_targets, shard_id, shard_count)
 
-    return build_targets, test_targets
+    return build_targets, test_targets, index_targets
 
 
 def expand_test_target_patterns(bazel_binary, platform, test_targets):
