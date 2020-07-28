@@ -217,10 +217,10 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "pipeline_slug": "protobuf",
         "owned_by_bazel": True,
     },
-    "Skydoc": {
-        "git_repository": "https://github.com/bazelbuild/skydoc.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/skydoc/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "skydoc",
+    "Stardoc": {
+        "git_repository": "https://github.com/bazelbuild/stardoc.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/stardoc/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "stardoc",
         "owned_by_bazel": True,
     },
     "Subpar": {
