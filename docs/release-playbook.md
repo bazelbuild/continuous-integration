@@ -322,8 +322,13 @@ internal mirror.
 [Homebrew](http://brew.sh/index.html) is a package manager for OS X. This
 section assumes that you are on a Mac OS machine with homebrew installed.
 
-To update the `bazel` recipe on Homebrew, you must send a pull request to
-https://github.com/bazelbuild/homebrew-tap
+To update the `bazel` recipe on Homebrew, you can send a pull request to
+https://github.com/Homebrew/homebrew-core/blob/master/Formula/bazel.rb.
+
+Example: https://github.com/Homebrew/homebrew-core/pull/57966
+
+However, usually the Homebrew community takes care of this reasonably
+quickly, so feel free to skip this step, if you aren't familiar with it.
 
 
 ### Updating the Chocolatey package
