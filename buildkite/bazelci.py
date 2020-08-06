@@ -542,6 +542,12 @@ CONFIG_FILE_EXTENSIONS = {".yml", ".yaml"}
 
 KYTHE_DIR = "/usr/local/kythe"
 
+INDEX_UPLOAD_POLICY_ALWAYS = "Always"
+
+INDEX_UPLOAD_POLICY_IF_BUILD_SUCCESS = "IfBuildSuccess"
+
+INDEX_UPLOAD_POLICY_NEVER = "Never"
+
 class BuildkiteException(Exception):
     """
     Raised whenever something goes wrong and we should exit with an error.
@@ -1136,9 +1142,10 @@ def execute_commands(
 
         if index_targets:
             index_flags, json_profile_out_index = calculate_flags(task_config, "index_flags", "index", tmpdir, test_env_vars)
+            index_upload_policy = task_config.get("index_upload_policy", "IfBuildSuccess")
 
             try:
-                execute_bazel_build_with_kythe(
+                returncode = execute_bazel_build_with_kythe(
                     bazel_version,
                     bazel_binary,
                     platform,
@@ -1147,7 +1154,8 @@ def execute_commands(
                     None,
                     incompatible_flags
                 )
-                merge_and_upload_kythe_kzip(platform)
+                if index_upload_policy == INDEX_UPLOAD_POLICY_ALWAYS or (index_upload_policy == INDEX_UPLOAD_POLICY_IF_BUILD_SUCCESS and returncode == 0):
+                    merge_and_upload_kythe_kzip(platform)
             finally:
                 if json_profile_out_index:
                     upload_json_profile(json_profile_out_index, tmpdir)
@@ -1720,7 +1728,7 @@ def execute_bazel_build_with_kythe(
 
     print_expanded_group(":bazel: Build ({})".format(bazel_version))
     try:
-        execute_command(
+        return execute_command(
             [bazel_binary]
             + bazelisk_flags()
             + common_startup_flags(platform)
@@ -1734,6 +1742,7 @@ def execute_bazel_build_with_kythe(
     except subprocess.CalledProcessError as e:
         msg = "bazel build failed with exit code {}".format(e.returncode)
         print_collapsed_group(msg)
+        return e.returncode
 
 
 def calculate_targets(task_config, platform, bazel_binary, build_only, test_only):
