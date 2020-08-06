@@ -1145,17 +1145,30 @@ def execute_commands(
             index_upload_policy = task_config.get("index_upload_policy", "IfBuildSuccess")
 
             try:
-                returncode = execute_bazel_build_with_kythe(
-                    bazel_version,
-                    bazel_binary,
-                    platform,
-                    index_flags,
-                    index_targets,
-                    None,
-                    incompatible_flags
-                )
-                if index_upload_policy == INDEX_UPLOAD_POLICY_ALWAYS or (index_upload_policy == INDEX_UPLOAD_POLICY_IF_BUILD_SUCCESS and returncode == 0):
-                    merge_and_upload_kythe_kzip(platform)
+                should_upload_kzip = True if index_upload_policy == INDEX_UPLOAD_POLICY_ALWAYS else False
+                try:
+                    execute_bazel_build_with_kythe(
+                        bazel_version,
+                        bazel_binary,
+                        platform,
+                        index_flags,
+                        index_targets,
+                        None,
+                        incompatible_flags
+                    )
+
+                    if index_upload_policy == INDEX_UPLOAD_POLICY_IF_BUILD_SUCCESS:
+                        should_upload_kzip = True
+                except subprocess.CalledProcessError as e:
+                    # If not running with Always policy, raise the build error.
+                    if index_upload_policy != INDEX_UPLOAD_POLICY_ALWAYS:
+                        handle_bazel_failure(e, "build")
+
+                if should_upload_kzip:
+                    try:
+                        merge_and_upload_kythe_kzip(platform)
+                    except subprocess.CalledProcessError:
+                        raise BuildkiteException("Failed to upload kythe kzip")
             finally:
                 if json_profile_out_index:
                     upload_json_profile(json_profile_out_index, tmpdir)
@@ -1727,22 +1740,18 @@ def execute_bazel_build_with_kythe(
     )
 
     print_expanded_group(":bazel: Build ({})".format(bazel_version))
-    try:
-        return execute_command(
-            [bazel_binary]
-            + bazelisk_flags()
-            + common_startup_flags(platform)
-            + kythe_startup_flags()
-            + ["build"]
-            + kythe_build_flags()
-            + aggregated_flags
-            + ["--"]
-            + targets
-        )
-    except subprocess.CalledProcessError as e:
-        msg = "bazel build failed with exit code {}".format(e.returncode)
-        print_collapsed_group(msg)
-        return e.returncode
+
+    execute_command(
+        [bazel_binary]
+        + bazelisk_flags()
+        + common_startup_flags(platform)
+        + kythe_startup_flags()
+        + ["build"]
+        + kythe_build_flags()
+        + aggregated_flags
+        + ["--"]
+        + targets
+    )
 
 
 def calculate_targets(task_config, platform, bazel_binary, build_only, test_only):
