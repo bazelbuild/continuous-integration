@@ -22,8 +22,8 @@
 # where
 #   direction can be ==> or <=>
 REPOSITORIES=(
-    "https://bazel.googlesource.com/bazel ==> git@github.com:bazelbuild/bazel.git bazel"
-    "https://bazel.googlesource.com/tulsi ==> git@github.com:bazelbuild/tulsi.git tulsi"
+    "https://bazel.googlesource.com/bazel ==> git@github.com:bazelbuild/bazel.git bazel master"
+    "https://bazel.googlesource.com/tulsi ==> git@github.com:bazelbuild/tulsi.git tulsi upstream"
 )
 
 set -euxo pipefail
@@ -57,16 +57,17 @@ function sync() {
   local direction="$2"
   local destination="$3"
   local name="$4"
+  local branch="$5"
 
   pushd "${name}"
-  echo "Syncing ${origin} ${direction} ${destination} ..."
+  echo "Syncing ${origin} ${direction} ${destination} on the $branch branch..."
   git remote update --prune
-  git checkout "origin/master" -B "master"
+  git checkout "origin/$branch" -B "$branch"
   if [[ "${direction}" == "<=>" ]]; then
-    git rebase "destination/master"
-    git push -f origin master
+    git rebase "destination/$branch"
+    git push -f origin "$branch"
   fi
-  git push destination master
+  git push destination "$branch"
   popd
 }
 
