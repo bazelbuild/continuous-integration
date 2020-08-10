@@ -1005,6 +1005,11 @@ def execute_commands(
             # be smart and converts strings like "true" and "false" to booleans.
             os.environ[key] = str(value)
 
+        # Set BAZELISK_SHUTDOWN to 1 when we use bazelisk --migrate on Windows.
+        # This is a workaround for https://github.com/bazelbuild/continuous-integration/issues/1012
+        if use_bazelisk_migrate() and platform == "windows":
+            os.environ["BAZELISK_SHUTDOWN"] = "1"
+
         cmd_exec_func = execute_batch_commands if platform == "windows" else execute_shell_commands
         cmd_exec_func(task_config.get("setup", None))
 
