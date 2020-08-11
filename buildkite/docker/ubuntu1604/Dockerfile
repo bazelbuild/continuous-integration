@@ -128,5 +128,5 @@ ENV GO_HOME "/opt/go1.13.8.linux-amd64"
 ENV PATH "${PATH}:${GO_HOME}/bin"
 
 ### Install Swift toolchain (required by rules_swift).
-ENV SWIFT_HOME "/opt/swift-4.2.1-RELEASE-ubuntu16.04"
+ENV SWIFT_HOME "/opt/swift-5.2.5-RELEASE-ubuntu16.04"
 ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
