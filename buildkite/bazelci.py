@@ -1331,6 +1331,13 @@ def clone_git_repository(git_repository, platform, git_commit=None):
     execute_command(["git", "submodule", "foreach", "--recursive", "git reset --hard"])
     execute_command(["git", "clean", "-fdqx"])
     execute_command(["git", "submodule", "foreach", "--recursive", "git clean -fdqx"])
+    for root, dirs, files in os.walk("."):
+        for name in files:
+            if name == "WORKSPACE":
+                if ".bazelversion" in files:
+                    os.remove(os.path.join(root, ".bazelversion"))
+
+    os.chdir(clone_path)
     return clone_path
 
 
