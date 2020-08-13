@@ -6,10 +6,16 @@ release process.
 
 ## Setup
 
-Do these steps once per release.
+Do this once.
 
+*   Make sure you are a member of the Bazel [release-managers](https://buildkite.com/organizations/bazel-trusted/teams/release-managers/members)
+    group.  If that link does not work for you, ask one of the Buildkite org admins to add you to
+    the group.
 *   Set up github ssh key if you haven't already.
     *    https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
+        
+Do these steps once per release.
+
 *   Find baseline commit and cherrypicks
     *    Check Bazel nightly build at
          https://buildkite.com/bazel/bazel-with-downstream-projects-bazel. If
@@ -147,17 +153,15 @@ Editing the release notes is not needed (it will be done later).
         `release-$RELEASE_NUMBER` branch in the list. A build should
         automatically run. Make sure that it passes.
 
-1.  When it all looks good, go back to the job in the release pipeline, click
-    "Deploy release artifacts" for the deployment step.
+1.  When it all looks good, go back to the job in the
+    [release pipeline](https://buildkite.com/bazel-trusted/bazel-release/builds),
+    click "Deploy release artifacts" for the deployment step.
 
     *   This will upload the release candidate binaries to GitHub and our 
         apt-get repository. The github link is probably of the form:
-        https://releases.bazel.build/0.25.0/rc1/index.html
+        https://releases.bazel.build/3.6.0/rc1/index.html
 
-    *   If you don't have the permission, ask one of the Buildkite org admins
-        to add you to the [release-managers](https://buildkite.com/organizations/bazel-trusted/teams/release-managers/members) group.
-
-1.  If that worked, click on the "Generate Announcement" step to unblock it.
+1.  If that worked, click on the "Generate announcement mail text" step to unblock it.
     If it's the first release candidate, prepare the release announcement (see
     next section).
 
@@ -168,6 +172,7 @@ Editing the release notes is not needed (it will be done later).
     *   The second line is the subject.
     *   The rest is the body of the message.
     *   Replace the generated notes with a link to the release announcement draft.
+       `https://docs.google.com/document/d/1wDvulLlj4NAlPZamdlEVFORks3YXJonCjyuQMUQEmB0/view`
 
 1.  Trigger a new pipeline in BuildKite to test the release candidate with all the downstream projects.
     *   Go to https://buildkite.com/bazel/bazel-with-downstream-projects-bazel
