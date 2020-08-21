@@ -24,13 +24,10 @@ tools/bin/sdkmanager \
     "build-tools;29.0.2" \
     "build-tools;29.0.3" \
     "build-tools;30.0.1" \
-    "emulator" \
     "extras;android;m2repository" \
     "platform-tools" \
     "platforms;android-24" \
     "platforms;android-28" \
-    "system-images;android-19;default;x86" \
-    "system-images;android-21;default;x86" \
-    "system-images;android-22;default;x86" \
-    "system-images;android-23;default;x86"
+    "platforms;android-29" \
+    "platforms;android-30"
 chown -R root:root /mnt/android-sdk-linux

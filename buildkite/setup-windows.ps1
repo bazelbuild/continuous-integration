@@ -240,6 +240,8 @@ Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;30.0.1"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-24"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-28"
+& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-29"
+& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-30"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
 
 ## Download and unpack our Git snapshot.
