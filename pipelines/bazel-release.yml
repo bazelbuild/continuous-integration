@@ -76,6 +76,7 @@ steps:
           --embed_label "\${release_name}" \
           --workspace_status_command=scripts/ci/build_status_command.sh \
           src/bazel \
+          src/bazel_nojdk \
           scripts/packages/with-jdk/install.sh \
           scripts/packages/debian/bazel-debian.deb \
           scripts/packages/debian/bazel.dsc \
@@ -84,6 +85,7 @@ steps:
 
       mkdir artifacts
       cp "bazel-bin/src/bazel" "artifacts/bazel-\${release_name}-linux-x86_64"
+      cp "bazel-bin/src/bazel_nojdk" "artifacts/bazel_nojdk-\${release_name}-linux-x86_64"
       cp "bazel-bin/scripts/packages/with-jdk/install.sh" "artifacts/bazel-\${release_name}-installer-linux-x86_64.sh"
       cp "bazel-bin/scripts/packages/debian/bazel-debian.deb" "artifacts/bazel_\${release_name}-linux-x86_64.deb"
       cp "bazel-bin/scripts/packages/debian/bazel.dsc" "artifacts/bazel_\${release_name}.dsc"
@@ -120,10 +122,12 @@ steps:
           --embed_label "\${release_name}" \
           --workspace_status_command=scripts/ci/build_status_command.sh \
           src/bazel \
+          src/bazel_nojdk \
           scripts/packages/with-jdk/install.sh
 
       mkdir artifacts
       cp "bazel-bin/src/bazel" "artifacts/bazel-\${release_name}-darwin-x86_64"
+      cp "bazel-bin/src/bazel_nojdk" "artifacts/bazel_nojdk-\${release_name}-darwin-x86_64"
       cp "bazel-bin/scripts/packages/with-jdk/install.sh" "artifacts/bazel-\${release_name}-installer-darwin-x86_64.sh"
 
       cd artifacts
