@@ -119,14 +119,14 @@ $env:JAVA_HOME = $zulu_root
 ## Install Visual C++ 2017 Build Tools.
 Write-Host "Installing Visual C++ 2017 Build Tools..."
 & choco install visualstudio2017buildtools
-& choco install visualstudio2017-workload-vctools
+& choco install visualstudio2017-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.Tools.ARM --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
 [Environment]::SetEnvironmentVariable("BAZEL_VC", "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC", "Machine")
 $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 
 ## Install Visual C++ 2019 Build Tools.
 Write-Host "Installing Visual C++ 2019 Build Tools..."
 & choco install visualstudio2019buildtools
-& choco install visualstudio2019-workload-vctools
+& choco install visualstudio2019-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.Tools.ARM --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
 
 ## Install Windows 10 SDK
 ## https://github.com/bazelbuild/continuous-integration/issues/768
@@ -235,12 +235,13 @@ Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
 ## Install all required Android SDK components.
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platform-tools"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;28.0.2"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;28.0.3"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;29.0.0"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;29.0.2"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;29.0.3"
+& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;30.0.1"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-24"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-28"
+& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-29"
+& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-30"
 & "${android_sdk_root}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
 
 ## Download and unpack our Git snapshot.

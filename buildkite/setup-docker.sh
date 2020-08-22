@@ -163,6 +163,15 @@ EOF
 
 ### Install Swift toolchains.
 {
+  # Swift 4.2.1
+  curl -fsSL https://mirror.bazel.build/swift.org/builds/swift-4.2.1-release/ubuntu1404/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu14.04.tar.gz | \
+      tar xz -C /opt
+  curl -fsSL https://mirror.bazel.build/swift.org/builds/swift-4.2.1-release/ubuntu1604/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu16.04.tar.gz | \
+      tar xz -C /opt
+  curl -fsSL https://mirror.bazel.build/swift.org/builds/swift-4.2.1-release/ubuntu1804/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu18.04.tar.gz | \
+      tar xz -C /opt
+
+  # Swift 5.2.5
   curl -fsSL https://mirror.bazel.build/swift.org/builds/swift-5.2.5-release/ubuntu1604/swift-5.2.5-RELEASE/swift-5.2.5-RELEASE-ubuntu16.04.tar.gz | \
       tar xz -C /opt
   curl -fsSL https://mirror.bazel.build/swift.org/builds/swift-5.2.5-release/ubuntu1804/swift-5.2.5-RELEASE/swift-5.2.5-RELEASE-ubuntu18.04.tar.gz | \
@@ -197,19 +206,15 @@ EOF
   tools/bin/sdkmanager --update
   tools/bin/sdkmanager \
       "build-tools;28.0.2" \
-      "build-tools;28.0.3" \
-      "build-tools;29.0.0" \
       "build-tools;29.0.2" \
       "build-tools;29.0.3" \
-      "emulator" \
+      "build-tools;30.0.1" \
       "extras;android;m2repository" \
       "platform-tools" \
       "platforms;android-24" \
       "platforms;android-28" \
-      "system-images;android-19;default;x86" \
-      "system-images;android-21;default;x86" \
-      "system-images;android-22;default;x86" \
-      "system-images;android-23;default;x86"
+      "platforms;android-29" \
+      "platforms;android-30"
 }
 
 ### Fix permissions in /opt.

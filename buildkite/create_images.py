@@ -36,9 +36,6 @@ IMAGE_CREATION_VMS = {
         "source_image_family": "ubuntu-1804-lts",
         "setup_script": "setup-docker.sh",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
-        "licenses": [
-            "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
-        ],
     },
     "bk-testing-windows": {
         "project": "bazel-public",
