@@ -1244,15 +1244,16 @@ def upload_bazel_binary(platform):
     if platform == "windows":
         binary_dir = r"bazel-bin\src"
         binary_name = r"bazel.exe"
+        binary_nojdk_name = r"bazel_nojdk.exe"
     else:
         binary_dir = "bazel-bin/src"
         binary_name = "bazel"
+        binary_nojdk_name = "bazel_nojdk"
     execute_command(["buildkite-agent", "artifact", "upload", binary_name], cwd=binary_dir)
+    execute_command(["buildkite-agent", "artifact", "upload", binary_nojdk_name], cwd=binary_dir)
 
 
-def download_bazel_binary(dest_dir, platform):
-    binary_name = "bazel.exe" if platform == "windows" else "bazel"
-
+def download_binary(dest_dir, platform, binary_name):
     source_step = create_label(platform, "Bazel", build_only=True)
     execute_command(
         ["buildkite-agent", "artifact", "download", binary_name, dest_dir, "--step", source_step]
@@ -1263,14 +1264,23 @@ def download_bazel_binary(dest_dir, platform):
     return bazel_binary_path
 
 
-def download_bazel_binary_at_commit(dest_dir, platform, bazel_git_commit):
-    bazel_binary_path = os.path.join(dest_dir, "bazel.exe" if platform == "windows" else "bazel")
+def download_bazel_binary(dest_dir, platform):
+    binary_name = "bazel.exe" if platform == "windows" else "bazel"
+    return download_binary(dest_dir, platform, binary_name)
+
+
+def download_bazel_nojdk_binary(dest_dir, platform):
+    binary_name = "bazel_nojdk.exe" if platform == "windows" else "bazel_nojdk"
+    return download_binary(dest_dir, platform, binary_name)
+
+
+def download_binary_at_commit(dest_dir, platform, bazel_git_commit, bazel_binary_url, bazel_binary_path):
     try:
         execute_command(
             [
                 gsutil_command(),
                 "cp",
-                bazelci_builds_gs_url(platform, bazel_git_commit),
+                bazel_binary_url,
                 bazel_binary_path,
             ]
         )
@@ -1281,6 +1291,18 @@ def download_bazel_binary_at_commit(dest_dir, platform, bazel_git_commit):
     st = os.stat(bazel_binary_path)
     os.chmod(bazel_binary_path, st.st_mode | stat.S_IEXEC)
     return bazel_binary_path
+
+
+def download_bazel_binary_at_commit(dest_dir, platform, bazel_git_commit):
+    url = bazelci_builds_gs_url(platform, bazel_git_commit)
+    path = os.path.join(dest_dir, "bazel.exe" if platform == "windows" else "bazel")
+    return download_binary_at_commit(dest_dir, platform, bazel_git_commit, url, path)
+
+
+def download_bazel_nojdk_binary_at_commit(dest_dir, platform, bazel_git_commit):
+    url = bazelci_builds_nojdk_gs_url(platform, bazel_git_commit)
+    path = os.path.join(dest_dir, "bazel_nojdk.exe" if platform == "windows" else "bazel_nojdk")
+    return download_binary_at_commit(dest_dir, platform, bazel_git_commit, url, path)
 
 
 def get_mirror_path(git_repository, platform):
@@ -2673,9 +2695,21 @@ def bazelci_builds_download_url(platform, git_commit):
     )
 
 
+def bazelci_builds_nojdk_download_url(platform, git_commit):
+    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-builds"
+    return "https://storage.googleapis.com/{}/artifacts/{}/{}/bazel_nojdk".format(
+        bucket_name, platform, git_commit
+    )
+
+
 def bazelci_builds_gs_url(platform, git_commit):
     bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-builds"
     return "gs://{}/artifacts/{}/{}/bazel".format(bucket_name, platform, git_commit)
+
+
+def bazelci_builds_nojdk_gs_url(platform, git_commit):
+    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-builds"
+    return "gs://{}/artifacts/{}/{}/bazel_nojdk".format(bucket_name, platform, git_commit)
 
 
 def bazelci_builds_metadata_url():
@@ -2831,9 +2865,10 @@ def upload_bazel_binaries():
     """
     Uploads all Bazel binaries to a deterministic URL based on the current Git commit.
 
-    Returns a map of platform names to sha256 hashes of the corresponding Bazel binary.
+    Returns maps of platform names to sha256 hashes of the corresponding bazel and bazel_nojdk binaries.
     """
-    hashes = {}
+    bazel_hashes = {}
+    bazel_nojdk_hashes = {}
     for platform_name, platform in PLATFORMS.items():
         if not should_publish_binaries_for_platform(platform_name):
             continue
@@ -2852,13 +2887,26 @@ def upload_bazel_binaries():
                         bazelci_builds_gs_url(target_platform_name, os.environ["BUILDKITE_COMMIT"]),
                     ]
                 )
-                hashes[target_platform_name] = sha256_hexdigest(bazel_binary_path)
+                bazel_hashes[target_platform_name] = sha256_hexdigest(bazel_binary_path)
+
+            # Also publish bazel_nojdk binaries.
+            bazel_nojdk_binary_path = download_bazel_nojdk_binary(tmpdir, platform_name)
+            for target_platform_name in platform["publish_binary"]:
+                execute_command(
+                    [
+                        gsutil_command(),
+                        "cp",
+                        bazel_nojdk_binary_path,
+                        bazelci_builds_nojdk_gs_url(target_platform_name, os.environ["BUILDKITE_COMMIT"]),
+                    ]
+                )
+                bazel_nojdk_hashes[target_platform_name] = sha256_hexdigest(bazel_nojdk_binary_path)
         finally:
             shutil.rmtree(tmpdir)
-    return hashes
+    return bazel_hashes, bazel_nojdk_hashes
 
 
-def try_publish_binaries(hashes, build_number, expected_generation):
+def try_publish_binaries(bazel_hashes, bazel_nojdk_hashes, build_number, expected_generation):
     """
     Uploads the info.json file that contains information about the latest Bazel commit that was
     successfully built on CI.
@@ -2871,10 +2919,12 @@ def try_publish_binaries(hashes, build_number, expected_generation):
         "git_commit": git_commit,
         "platforms": {},
     }
-    for platform, sha256 in hashes.items():
+    for platform, sha256 in bazel_hashes.items():
         info["platforms"][platform] = {
             "url": bazelci_builds_download_url(platform, git_commit),
             "sha256": sha256,
+            "nojdk_url": bazelci_builds_nojdk_download_url(platform, git_commit),
+            "nojdk_sha256": bazel_nojdk_hashes[platform],
         }
     tmpdir = tempfile.mkdtemp()
     try:
@@ -2911,7 +2961,7 @@ def publish_binaries():
     current_build_number = int(current_build_number)
 
     # Upload the Bazel binaries for this commit.
-    hashes = upload_bazel_binaries()
+    bazel_hashes, bazel_nojdk_hashes = upload_bazel_binaries()
 
     # Try to update the info.json with data about our build. This will fail (expectedly) if we're
     # not the latest build.
@@ -2928,7 +2978,7 @@ def publish_binaries():
             break
 
         try:
-            try_publish_binaries(hashes, current_build_number, latest_generation)
+            try_publish_binaries(bazel_hashes, bazel_nojdk_hashes, current_build_number, latest_generation)
         except BinaryUploadRaceException:
             # Retry.
             continue
