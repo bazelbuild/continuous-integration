@@ -2900,19 +2900,18 @@ def upload_bazel_binaries():
                 )
                 bazel_hashes[target_platform_name] = sha256_hexdigest(bazel_binary_path)
 
-            # Also publish bazel_nojdk binaries for non-Windows platforms.
-            if platform_name != "windows":
-                bazel_nojdk_binary_path = download_bazel_nojdk_binary(tmpdir, platform_name)
-                for target_platform_name in platform["publish_binary"]:
-                    execute_command(
-                        [
-                            gsutil_command(),
-                            "cp",
-                            bazel_nojdk_binary_path,
-                            bazelci_builds_nojdk_gs_url(target_platform_name, os.environ["BUILDKITE_COMMIT"]),
-                        ]
-                    )
-                    bazel_nojdk_hashes[target_platform_name] = sha256_hexdigest(bazel_nojdk_binary_path)
+            # Also publish bazel_nojdk binaries.
+            bazel_nojdk_binary_path = download_bazel_nojdk_binary(tmpdir, platform_name)
+            for target_platform_name in platform["publish_binary"]:
+                execute_command(
+                    [
+                        gsutil_command(),
+                        "cp",
+                        bazel_nojdk_binary_path,
+                        bazelci_builds_nojdk_gs_url(target_platform_name, os.environ["BUILDKITE_COMMIT"]),
+                    ]
+                )
+                bazel_nojdk_hashes[target_platform_name] = sha256_hexdigest(bazel_nojdk_binary_path)
         finally:
             shutil.rmtree(tmpdir)
     return bazel_hashes, bazel_nojdk_hashes
