@@ -2934,11 +2934,9 @@ def try_publish_binaries(bazel_hashes, bazel_nojdk_hashes, build_number, expecte
         info["platforms"][platform] = {
             "url": bazelci_builds_download_url(platform, git_commit),
             "sha256": sha256,
+            "nojdk_url": bazelci_builds_nojdk_download_url(platform, git_commit),
+            "nojdk_sha256": bazel_nojdk_hashes[platform],
         }
-        if platform in bazel_nojdk_hashes:
-          info["platforms"][platform]["nojdk_url"] = bazelci_builds_nojdk_download_url(platform, git_commit)
-          info["platforms"][platform]["nojdk_sha256"] = bazel_nojdk_hashes[platform]
-
     tmpdir = tempfile.mkdtemp()
     try:
         info_file = os.path.join(tmpdir, "info.json")
