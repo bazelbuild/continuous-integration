@@ -980,25 +980,15 @@ def execute_commands(
         binary_platform = platform if platform in ["macos", "windows"] else LINUX_BINARY_PLATFORM
 
         if use_bazel_at_commit:
-            print_collapsed_group(":gcloud: Downloading bazel built at " + use_bazel_at_commit)
+            print_collapsed_group(":gcloud: Downloading Bazel built at " + use_bazel_at_commit)
             bazel_binary = download_bazel_binary_at_commit(
                 tmpdir, binary_platform, use_bazel_at_commit
             )
             os.environ["USE_BAZEL_VERSION"] = bazel_binary
-
-            # Also download bazel_nojdk.
-            print_collapsed_group(":gcloud: Downloading bazel_nojdk built at " + use_bazel_at_commit)
-            bazel_nojdk_binary = download_bazel_nojdk_binary_at_commit(
-                tmpdir, binary_platform, use_bazel_at_commit
-            )
         elif use_but:
-            print_collapsed_group(":gcloud: Downloading bazel under test")
+            print_collapsed_group(":gcloud: Downloading Bazel under test")
             bazel_binary = download_bazel_binary(tmpdir, binary_platform)
             os.environ["USE_BAZEL_VERSION"] = bazel_binary
-
-            # Also download bazel_nojdk.
-            print_collapsed_group(":gcloud: Downloading bazel_nojdk under test")
-            bazel_nojdk_binary = download_bazel_nojdk_binary(tmpdir, binary_platform)
         else:
             bazel_binary = "bazel"
             if bazel_version:
@@ -1297,7 +1287,7 @@ def download_binary_at_commit(dest_dir, platform, bazel_git_commit, bazel_binary
         )
     except subprocess.CalledProcessError as e:
         raise BuildkiteException(
-            "Failed to download bazel binary at %s, error message:\n%s" % (bazel_git_commit, str(e))
+            "Failed to download Bazel binary at %s, error message:\n%s" % (bazel_git_commit, str(e))
         )
     st = os.stat(bazel_binary_path)
     os.chmod(bazel_binary_path, st.st_mode | stat.S_IEXEC)
