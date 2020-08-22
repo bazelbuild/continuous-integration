@@ -1265,7 +1265,7 @@ def upload_bazel_binary(platform):
 
 
 def download_binary(dest_dir, platform, binary_name):
-    source_step = create_label(platform, "Download " + binary_name, build_only=True)
+    source_step = create_label(platform, "Bazel", build_only=True)
     execute_command(
         ["buildkite-agent", "artifact", "download", binary_name, dest_dir, "--step", source_step]
     )
