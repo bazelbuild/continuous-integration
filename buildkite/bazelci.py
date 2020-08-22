@@ -986,14 +986,13 @@ def execute_commands(
             )
             os.environ["USE_BAZEL_VERSION"] = bazel_binary
         elif use_but:
-            print_collapsed_group(":gcloud: Downloading Bazel under test")
+            print_collapsed_group(":gcloud: Downloading Bazel Under Test")
             bazel_binary = download_bazel_binary(tmpdir, binary_platform)
             os.environ["USE_BAZEL_VERSION"] = bazel_binary
         else:
             bazel_binary = "bazel"
             if bazel_version:
                 os.environ["USE_BAZEL_VERSION"] = bazel_version
-
         if "USE_BAZEL_VERSION" in os.environ and not task_config.get(
             "skip_use_bazel_version_for_test", False
         ):
@@ -1259,10 +1258,10 @@ def download_binary(dest_dir, platform, binary_name):
     execute_command(
         ["buildkite-agent", "artifact", "download", binary_name, dest_dir, "--step", source_step]
     )
-    binary_path = os.path.join(dest_dir, binary_name)
-    st = os.stat(binary_path)
-    os.chmod(binary_path, st.st_mode | stat.S_IEXEC)
-    return binary_path
+    bazel_binary_path = os.path.join(dest_dir, binary_name)
+    st = os.stat(bazel_binary_path)
+    os.chmod(bazel_binary_path, st.st_mode | stat.S_IEXEC)
+    return bazel_binary_path
 
 
 def download_bazel_binary(dest_dir, platform):
