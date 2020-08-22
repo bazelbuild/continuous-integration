@@ -986,21 +986,19 @@ def execute_commands(
             )
             os.environ["USE_BAZEL_VERSION"] = bazel_binary
 
-            # Also download bazel_nojdk for non-Windows platforms.
-            if binary_platform != "windows":
-                print_collapsed_group(":gcloud: Downloading bazel_nojdk built at " + use_bazel_at_commit)
-                bazel_nojdk_binary = download_bazel_nojdk_binary_at_commit(
-                    tmpdir, binary_platform, use_bazel_at_commit
-                )
+            # Also download bazel_nojdk.
+            print_collapsed_group(":gcloud: Downloading bazel_nojdk built at " + use_bazel_at_commit)
+            bazel_nojdk_binary = download_bazel_nojdk_binary_at_commit(
+                tmpdir, binary_platform, use_bazel_at_commit
+            )
         elif use_but:
             print_collapsed_group(":gcloud: Downloading bazel under test")
             bazel_binary = download_bazel_binary(tmpdir, binary_platform)
             os.environ["USE_BAZEL_VERSION"] = bazel_binary
 
-            # Also download bazel_nojdk for non-Windows platforms.
-            if binary_platform != "windows":
-                print_collapsed_group(":gcloud: Downloading bazel_nojdk under test")
-                bazel_nojdk_binary = download_bazel_nojdk_binary(tmpdir, binary_platform)
+            # Also download bazel_nojdk.
+            print_collapsed_group(":gcloud: Downloading bazel_nojdk under test")
+            bazel_nojdk_binary = download_bazel_nojdk_binary(tmpdir, binary_platform)
         else:
             bazel_binary = "bazel"
             if bazel_version:
@@ -1257,14 +1255,13 @@ def upload_bazel_binary(platform):
     if platform == "windows":
         binary_dir = r"bazel-bin\src"
         binary_name = r"bazel.exe"
+        binary_nojdk_name = r"bazel_nojdk.exe"
     else:
         binary_dir = "bazel-bin/src"
         binary_name = "bazel"
+        binary_nojdk_name = "bazel_nojdk"
     execute_command(["buildkite-agent", "artifact", "upload", binary_name], cwd=binary_dir)
-
-    # Also upload bazel_nojdk for non-Windows platforms.
-    if platform != "windows":
-        execute_command(["buildkite-agent", "artifact", "upload", "bazel_nojdk"], cwd=binary_dir)
+    execute_command(["buildkite-agent", "artifact", "upload", binary_nojdk_name], cwd=binary_dir)
 
 
 def download_binary(dest_dir, platform, binary_name):
@@ -1284,9 +1281,7 @@ def download_bazel_binary(dest_dir, platform):
 
 
 def download_bazel_nojdk_binary(dest_dir, platform):
-    if platform == "windows":
-        raise BuildkiteException("Cannot download bazel_nojdk binary for Windows.")
-    binary_name = "bazel_nojdk"
+    binary_name = "bazel_nojdk.exe" if platform == "windows" else "bazel_nojdk"
     return download_binary(dest_dir, platform, binary_name)
 
 
@@ -1316,10 +1311,8 @@ def download_bazel_binary_at_commit(dest_dir, platform, bazel_git_commit):
 
 
 def download_bazel_nojdk_binary_at_commit(dest_dir, platform, bazel_git_commit):
-    if platform == "windows":
-        raise BuildkiteException("Cannot download bazel_nojdk binary for Windows.")
     url = bazelci_builds_nojdk_gs_url(platform, bazel_git_commit)
-    path = os.path.join(dest_dir, "bazel_nojdk")
+    path = os.path.join(dest_dir, "bazel_nojdk.exe" if platform == "windows" else "bazel_nojdk")
     return download_binary_at_commit(dest_dir, platform, bazel_git_commit, url, path)
 
 
