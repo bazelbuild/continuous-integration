@@ -260,6 +260,33 @@ tasks:
     - "..."
 ```
 
+### Generating semantic information with Kythe
+
+You can use `kythe_ubuntu2004` platform along with some `index_*` fields to create a task that generate semantic information of your code with [Kythe](https://kythe.io/).
+
+The `index_targets` field contains list of targets that should be indexed.
+
+The `index_targets_query` field contains a query string that is used to generate additional index targets by command `bazel query ${index_targets_query}`. The returned targets will be merged into `index_targets`.
+
+The `index_flags` field contains list of build flags that should be used when indexing.
+
+The `index_upload_policy` field is used to set policy for uploading generated files. Available values are:
+  - `Always`: Always upload generated files even build failed.
+  - `IfBuildSuccess`: __Default value__. Only upload generated files if build succeed and raise error when build failed.
+  - `Never`: Never upload index files and raise error when build failed.
+
+```yaml
+---
+tasks:
+  kythe_ubuntu2004:
+    index_targets:
+    - "..."
+    index_targets_query: "kind(\"java_(binary|import|library|plugin|test|proto_library) rule\", ...)"
+    index_flags:
+    - "--define=kythe_corpus=github.com/bazelbuild/bazel"
+    index_upload_policy: "IfBuildSuccess"
+```
+
 ### Legacy Format
 
 Most existing configuration use the legacy format with a "platforms" dictionary:
