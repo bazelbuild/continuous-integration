@@ -29,5 +29,9 @@ tools/bin/sdkmanager \
     "platforms;android-24" \
     "platforms;android-28" \
     "platforms;android-29" \
-    "platforms;android-30"
+    "platforms;android-30" \
+    "system-images;android-19;default;x86" \
+    "system-images;android-21;default;x86" \
+    "system-images;android-22;default;x86" \
+    "system-images;android-23;default;x86"
 chown -R root:root /mnt/android-sdk-linux
