@@ -24,6 +24,7 @@ tools/bin/sdkmanager \
     "build-tools;29.0.2" \
     "build-tools;29.0.3" \
     "build-tools;30.0.1" \
+    "emulator" \
     "extras;android;m2repository" \
     "platform-tools" \
     "platforms;android-24" \
