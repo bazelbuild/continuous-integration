@@ -79,6 +79,12 @@ FLAKY_TESTS_BUCKET = {
     "bazel": "gs://bazel-buildkite-stats/flaky-tests-bep/",
 }[BUILDKITE_ORG]
 
+KZIPS_BUCKET = {
+    "bazel-testing": "gs://bazel-kzips-testing/",
+    "bazel-trusted": "gs://bazel-kzips/",
+    "bazel": "gs://bazel-kzips/",
+}[BUILDKITE_ORG]
+
 # Projects can opt out of receiving GitHub issues from --notify by adding `"do_not_notify": True` to their respective downstream entry.
 DOWNSTREAM_PROJECTS_PRODUCTION = {
     "Android Studio Plugin": {
@@ -1143,6 +1149,7 @@ def execute_commands(
         if index_targets:
             index_flags, json_profile_out_index = calculate_flags(task_config, "index_flags", "index", tmpdir, test_env_vars)
             index_upload_policy = task_config.get("index_upload_policy", "IfBuildSuccess")
+            index_upload_gcs = task_config.get("index_upload_gcs", False)
 
             try:
                 should_upload_kzip = True if index_upload_policy == INDEX_UPLOAD_POLICY_ALWAYS else False
@@ -1166,7 +1173,7 @@ def execute_commands(
 
                 if should_upload_kzip:
                     try:
-                        merge_and_upload_kythe_kzip(platform)
+                        merge_and_upload_kythe_kzip(platform, index_upload_gcs)
                     except subprocess.CalledProcessError:
                         raise BuildkiteException("Failed to upload kythe kzip")
             finally:
@@ -1298,17 +1305,30 @@ def upload_bazel_binary(platform):
     execute_command(["buildkite-agent", "artifact", "upload", binary_nojdk_name], cwd=binary_dir)
 
 
-def merge_and_upload_kythe_kzip(platform):
+def merge_and_upload_kythe_kzip(platform, index_upload_gcs):
     print_collapsed_group(":gcloud: Uploading kythe kzip")
 
     kzips = glob.glob("bazel-out/*/extra_actions/**/*.kzip", recursive=True)
 
-    project = os.getenv("BUILDKITE_PIPELINE_SLUG")
     build_number = os.getenv("BUILDKITE_BUILD_NUMBER")
-    final_kzip_name = "{}-{}-build{}.kzip".format(project, platform, build_number)
-    execute_command([f"{KYTHE_DIR}/tools/kzip", "merge", "--output", final_kzip_name] + kzips)
+    git_commit = os.getenv("BUILDKITE_COMMIT")
+    final_kzip_name = "{}-{}-{}.kzip".format(build_number, platform, git_commit)
 
+    execute_command([f"{KYTHE_DIR}/tools/kzip", "merge", "--output", final_kzip_name] + kzips)
     execute_command(["buildkite-agent", "artifact", "upload", final_kzip_name])
+
+    if index_upload_gcs:
+        pipeline = os.getenv("BUILDKITE_PIPELINE_SLUG")
+        destination = KZIPS_BUCKET + pipeline + "/" + final_kzip_name
+        print("Uploading to GCS {}".format(destination))
+        execute_command(
+            [
+                gsutil_command(),
+                "cp",
+                final_kzip_name,
+                destination,
+            ]
+        )
 
 
 def download_binary(dest_dir, platform, binary_name):

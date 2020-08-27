@@ -275,6 +275,8 @@ The `index_upload_policy` field is used to set policy for uploading generated fi
   - `IfBuildSuccess`: __Default value__. Only upload generated files if build succeed and raise error when build failed.
   - `Never`: Never upload index files and raise error when build failed.
 
+If `index_upload_gcs` is `True`, the generated files will be uploaded to Google Cloud Storage.
+
 ```yaml
 ---
 tasks:
@@ -285,6 +287,7 @@ tasks:
     index_flags:
     - "--define=kythe_corpus=github.com/bazelbuild/bazel"
     index_upload_policy: "IfBuildSuccess"
+    index_upload_gcs: True
 ```
 
 ### Legacy Format
