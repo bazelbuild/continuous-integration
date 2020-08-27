@@ -122,6 +122,15 @@ EOF
   systemctl stop docker
 }
 
+### Setup KVM.
+{
+  apt-get -y install qemu-kvm
+
+  # Allow everyone access to the KVM device. As above, this would usually not be a good idea, but
+  # these machines are untrusted anyway...
+  echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' > /etc/udev/rules.d/65-kvm.rules
+}
+
 ## Add our minimum uptime enforcer.
 {
   cat > /etc/systemd/system/minimum-uptime.service <<'EOF'
