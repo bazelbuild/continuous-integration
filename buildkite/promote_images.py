@@ -28,6 +28,9 @@ IMAGE_PROMOTIONS = {
         "source_image_project": "bazel-public",
         "source_image_family": "bk-testing-docker",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
+        "licenses": [
+            "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
+        ],
     },
     "bk-windows": {
         "project": "bazel-public",
