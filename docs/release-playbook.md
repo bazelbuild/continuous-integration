@@ -4,6 +4,23 @@ This is the guide to conducting a Bazel release. This is especially relevant for
 release managers, but will be of interest to anyone who is curious about the
 release process.
 
+## Preface 
+
+> For future reference and release managers - the release manager playbook should
+> be treated like an IKEA manual. That means: Do not try to be smart, optimize /
+> skip / reorder steps, otherwise chaos will ensue. Just follow it and the end
+> result will be.. well, a usable piece of furniture, or a Bazel release
+> (depending on the manual).
+> 
+> Like aviation and workplace safety regulations, the playbook is written in the
+> tears and blood of broken Bazelisks, pipelines, releases and Git branches.
+> Assume that every step is exactly there for a reason, even if it might not be
+> obvious. If you follow them to the letter, they are not error prone. Errors
+> have only happened in the past, when a release manager thought it's ok to
+> follow them by spirit instead. ;)
+> 
+> -- @philwo
+
 ## Setup
 
 Do this once.
@@ -61,6 +78,8 @@ Keep the task list updated and check boxes as you follow the release process. [E
 
 
 ## Update the status of GitHub issues for incompatible changes
+
+**This section is a place where you have to mechanically follow the entire process to the letter from beginning to end, even though it might seem unnecessary at times.**
 
 In the below, _X.Y_ is a release you are cutting.
 
