@@ -121,6 +121,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/bazel-federation.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-federation/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-federation",
+        "disabled_reason": "https://github.com/bazelbuild/bazel-federation/issues/120 and https://github.com/bazelbuild/bazel-federation/issues/121",
     },
     "Bazel Remote Cache": {
         "git_repository": "https://github.com/buchgr/bazel-remote.git",
@@ -182,6 +183,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/envoyproxy/envoy.git",
         "http_config": "https://raw.githubusercontent.com/envoyproxy/envoy/master/.bazelci/presubmit.yml",
         "pipeline_slug": "envoy",
+        "disabled_reason": "https://github.com/envoyproxy/envoy/issues/13079",
     },
     "FlatBuffers": {
         "git_repository": "https://github.com/google/flatbuffers.git",
@@ -245,6 +247,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/tulsi.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/tulsi/master/.bazelci/presubmit.yml",
         "pipeline_slug": "tulsi-bazel-darwin",
+        "disabled_reason": "https://github.com/bazelbuild/bazel/issues/12102",
     },
     "re2": {
         "git_repository": "https://github.com/google/re2.git",
