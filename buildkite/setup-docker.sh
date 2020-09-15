@@ -194,6 +194,10 @@ EOF
   mkdir /opt/go1.13.8.linux-amd64
   curl -fsSL https://dl.google.com/go/go1.13.8.linux-amd64.tar.gz | \
       tar xz -C /opt/go1.13.8.linux-amd64 --strip=1
+
+  mkdir /opt/go1.15.2.linux-amd64
+  curl -fsSL https://dl.google.com/go/go1.15.2.linux-amd64.tar.gz | \
+      tar xz -C /opt/go1.15.2.linux-amd64 --strip=1
 }
 
 ### Install Android NDK.
