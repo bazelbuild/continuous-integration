@@ -125,7 +125,7 @@ RUN wget https://apt.llvm.org/llvm.sh && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Go.
-ENV GO_HOME "/opt/go1.13.8.linux-amd64"
+ENV GO_HOME "/opt/go1.15.2.linux-amd64"
 ENV PATH "${PATH}:${GO_HOME}/bin"
 
 ### Install Swift toolchain (required by rules_swift).
