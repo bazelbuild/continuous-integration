@@ -63,6 +63,9 @@ EOF
   add-apt-repository -y "deb https://apt.buildkite.com/buildkite-agent stable main"
   apt-get -y update
   apt-get -y install buildkite-agent
+  # Workaround bug https://github.com/bazelbuild/continuous-integration/issues/1034
+  curl -fsSL --retry 3 https://github.com/buildkite/agent/releases/download/v3.22.1/buildkite-agent-linux-amd64-3.22.1.tar.gz | \
+      tar xvz -C /usr/bin ./buildkite-agent
 
   # Disable the Buildkite agent service, as the startup script has to mount /var/lib/buildkite-agent
   # first.

@@ -262,6 +262,9 @@ $res = $req.getresponse()
 $res.Close()
 $buildkite_agent_version = $res.ResponseUri.AbsolutePath.TrimStart("/buildkite/agent/releases/tag/v")
 
+## Workaround bug https://github.com/bazelbuild/continuous-integration/issues/1034
+$buildkite_agent_version = "v3.22.1"
+
 Write-Host "Downloading Buildkite agent..."
 $buildkite_agent_url = "https://github.com/buildkite/agent/releases/download/v${buildkite_agent_version}/buildkite-agent-windows-amd64-${buildkite_agent_version}.zip"
 $buildkite_agent_zip = "c:\temp\buildkite-agent.zip"
