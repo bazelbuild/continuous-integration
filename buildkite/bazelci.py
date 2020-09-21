@@ -482,7 +482,7 @@ PLATFORMS = {
         "name": "Ubuntu 20.04, OpenJDK 11",
         "emoji-name": ":ubuntu: 20.04 (OpenJDK 11)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": ["ubuntu2004"],
+        "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11",
         "python": "python3.8",
     },
