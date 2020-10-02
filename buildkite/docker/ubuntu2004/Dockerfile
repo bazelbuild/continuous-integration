@@ -36,6 +36,8 @@ RUN dpkg --add-architecture i386 && \
     lsb-release \
     netcat-openbsd \
     python-is-python3 \
+    python2 \
+    python2-dev \
     python3 \
     python3-dev \
     python3-pip \
