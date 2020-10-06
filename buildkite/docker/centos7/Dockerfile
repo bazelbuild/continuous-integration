@@ -1,8 +1,6 @@
 FROM centos:7 as centos7-java8
 
 COPY --from=gcr.io/bazel-public/base:bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
-COPY --from=gcr.io/bazel-public/base:buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
-COPY --from=gcr.io/bazel-public/base:saucelabs /usr/local/bin/sc /usr/local/bin/sc
 
 # Install required packages.
 COPY google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
@@ -10,7 +8,6 @@ COPY google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
 RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
     yum install -y \
     bind-utils \
-    bzip2-libs.i686 \
     dpkg-dev \
     ed \
     file \
@@ -22,7 +19,6 @@ RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.n
     iproute \
     java-1.8.0-openjdk-devel \
     lcov \
-    ncurses-libs.i686 \
     openssl-perl \
     patch \
     python \
@@ -35,13 +31,7 @@ RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.n
     unzip \
     which \
     zip \
-    zlib.i686 \
     && \
-    yum clean all
-
-RUN yum install -y yum-utils && \
-    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
-    yum install -y containerd.io docker-ce docker-ce-cli && \
     yum clean all
 
 # Ensure that Bazel can use its beloved ISO-8859-1 locale.
