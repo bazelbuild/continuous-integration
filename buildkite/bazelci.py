@@ -2868,7 +2868,7 @@ def bazelci_latest_build_metadata_url():
 
 def bazelci_builds_metadata_url(git_commit):
     bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-builds"
-    return "gs://{}/artifacts/metadata/{}/info.json".format(bucket_name, git_commit)
+    return "gs://{}/metadata/{}.json".format(bucket_name, git_commit)
 
 
 def bazelci_last_green_commit_url(git_repository, pipeline_slug):
