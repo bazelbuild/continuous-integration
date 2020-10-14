@@ -56,9 +56,6 @@ RUN dpkg --add-architecture i386 && \
     apt-get -qqy purge apport && \
     rm -rf /var/lib/apt/lists/*
 
-# Need to symlink llvm-profdata for coverage test to find it.
-RUN ln -s /usr/bin/llvm-profdata-3.8 /usr/bin/llvm-profdata
-
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 
 FROM ubuntu1604-bazel-java8 AS ubuntu1604-java8
