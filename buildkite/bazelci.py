@@ -2157,6 +2157,10 @@ def print_project_pipeline(
         raise BuildkiteException("{0} pipeline configuration is empty.".format(project_name))
 
     pipeline_steps = []
+    # If this job is not triggered from a Github pull request, we show the link to its Gerrit review
+    if not is_pull_request():
+        show_gerrit_review_link(pipeline_steps)
+
     task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
     # In Bazel Downstream Project pipelines, git_repository and project_name must be specified.
@@ -2288,6 +2292,19 @@ def print_project_pipeline(
         pipeline_steps += get_steps_for_aggregating_migration_results(number, notify)
 
     print_pipeline_steps(pipeline_steps, handle_emergencies=not is_downstream_project)
+
+
+def show_gerrit_review_link(pipeline_steps):
+    text = "The transformed code used in this pipeline can be found under https://bazel-review.googlesource.com/q/%s" \
+           % os.getenv("BUILDKITE_COMMIT")
+    commands = ["buildkite-agent annotate --style=info '{}'".format(text)]
+    pipeline_steps.append(
+        create_step(
+            label=":pipeline: Print information about Gerrit Review Link",
+            commands=commands,
+            platform=DEFAULT_PLATFORM,
+        )
+    )
 
 
 def hash_task_config(task_name, task_config):
