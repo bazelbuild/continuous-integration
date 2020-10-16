@@ -2296,7 +2296,9 @@ def print_project_pipeline(
 
 
 def show_gerrit_review_link(git_repository, pipeline_steps):
-    host = git_repository[len("https://"): git_repository.find(".googlesource")]
+    host = re.search(r"https://(.+?)\.googlesource", git_repository).group(1)
+    if not host:
+        raise BuildkiteException("Couldn't get host name from %s" % git_repository)
     text = "The transformed code used in this pipeline can be found under https://{}-review.googlesource.com/q/{}". \
         format(host, os.getenv("BUILDKITE_COMMIT"))
     commands = ["buildkite-agent annotate --style=info '{}'".format(text)]
@@ -2310,9 +2312,7 @@ def show_gerrit_review_link(git_repository, pipeline_steps):
 
 
 def is_git_on_borg_repo(git_repository):
-    if git_repository is not None and "googlesource.com" in git_repository:
-        return True
-    return False
+    return git_repository and "googlesource.com" in git_repository
 
 
 def hash_task_config(task_name, task_config):
