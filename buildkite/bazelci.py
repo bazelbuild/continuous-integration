@@ -2157,9 +2157,10 @@ def print_project_pipeline(
         raise BuildkiteException("{0} pipeline configuration is empty.".format(project_name))
 
     pipeline_steps = []
-    # If this job is not triggered from a Github pull request, we show the link to its Gerrit review
-    if not is_pull_request():
-        show_gerrit_review_link(pipeline_steps)
+    # If the repository is hosted on Git-on-borg, we show the link to the commit Gerrit review
+    buildkite_repo = os.getenv("BUILDKITE_REPO")
+    if is_git_on_borg_repo(buildkite_repo):
+        show_gerrit_review_link(buildkite_repo, pipeline_steps)
 
     task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
@@ -2294,9 +2295,10 @@ def print_project_pipeline(
     print_pipeline_steps(pipeline_steps, handle_emergencies=not is_downstream_project)
 
 
-def show_gerrit_review_link(pipeline_steps):
-    text = "The transformed code used in this pipeline can be found under https://bazel-review.googlesource.com/q/%s" \
-           % os.getenv("BUILDKITE_COMMIT")
+def show_gerrit_review_link(git_repository, pipeline_steps):
+    host = git_repository[len("https://"): git_repository.find(".googlesource")]
+    text = "The transformed code used in this pipeline can be found under https://{}-review.googlesource.com/q/{}". \
+        format(host, os.getenv("BUILDKITE_COMMIT"))
     commands = ["buildkite-agent annotate --style=info '{}'".format(text)]
     pipeline_steps.append(
         create_step(
@@ -2305,6 +2307,12 @@ def show_gerrit_review_link(pipeline_steps):
             platform=DEFAULT_PLATFORM,
         )
     )
+
+
+def is_git_on_borg_repo(git_repository):
+    if git_repository is not None and "googlesource.com" in git_repository:
+        return True
+    return False
 
 
 def hash_task_config(task_name, task_config):
