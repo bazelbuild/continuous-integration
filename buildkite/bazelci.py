@@ -2157,6 +2157,11 @@ def print_project_pipeline(
         raise BuildkiteException("{0} pipeline configuration is empty.".format(project_name))
 
     pipeline_steps = []
+    # If the repository is hosted on Git-on-borg, we show the link to the commit Gerrit review
+    buildkite_repo = os.getenv("BUILDKITE_REPO")
+    if is_git_on_borg_repo(buildkite_repo):
+        show_gerrit_review_link(buildkite_repo, pipeline_steps)
+
     task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
     # In Bazel Downstream Project pipelines, git_repository and project_name must be specified.
@@ -2288,6 +2293,26 @@ def print_project_pipeline(
         pipeline_steps += get_steps_for_aggregating_migration_results(number, notify)
 
     print_pipeline_steps(pipeline_steps, handle_emergencies=not is_downstream_project)
+
+
+def show_gerrit_review_link(git_repository, pipeline_steps):
+    host = re.search(r"https://(.+?)\.googlesource", git_repository).group(1)
+    if not host:
+        raise BuildkiteException("Couldn't get host name from %s" % git_repository)
+    text = "The transformed code used in this pipeline can be found under https://{}-review.googlesource.com/q/{}". \
+        format(host, os.getenv("BUILDKITE_COMMIT"))
+    commands = ["buildkite-agent annotate --style=info '{}'".format(text)]
+    pipeline_steps.append(
+        create_step(
+            label=":pipeline: Print information about Gerrit Review Link",
+            commands=commands,
+            platform=DEFAULT_PLATFORM,
+        )
+    )
+
+
+def is_git_on_borg_repo(git_repository):
+    return git_repository and "googlesource.com" in git_repository
 
 
 def hash_task_config(task_name, task_config):
