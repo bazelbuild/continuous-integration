@@ -2886,9 +2886,14 @@ def bazelci_builds_nojdk_gs_url(platform, git_commit):
     return "gs://{}/artifacts/{}/{}/bazel_nojdk".format(bucket_name, platform, git_commit)
 
 
-def bazelci_builds_metadata_url():
+def bazelci_latest_build_metadata_url():
     bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-builds"
     return "gs://{}/metadata/latest.json".format(bucket_name)
+
+
+def bazelci_builds_metadata_url(git_commit):
+    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-builds"
+    return "gs://{}/metadata/{}.json".format(bucket_name, git_commit)
 
 
 def bazelci_last_green_commit_url(git_repository, pipeline_slug):
@@ -3002,7 +3007,7 @@ def latest_generation_and_build_number():
     output = None
     for attempt in range(5):
         output = subprocess.check_output(
-            [gsutil_command(), "stat", bazelci_builds_metadata_url()], env=os.environ
+            [gsutil_command(), "stat", bazelci_latest_build_metadata_url()], env=os.environ
         )
         match = re.search("Generation:[ ]*([0-9]+)", output.decode("utf-8"))
         if not match:
@@ -3015,7 +3020,7 @@ def latest_generation_and_build_number():
         expected_md5hash = base64.b64decode(match.group(1))
 
         output = subprocess.check_output(
-            [gsutil_command(), "cat", bazelci_builds_metadata_url()], env=os.environ
+            [gsutil_command(), "cat", bazelci_latest_build_metadata_url()], env=os.environ
         )
         hasher = hashlib.md5()
         hasher.update(output)
@@ -3116,11 +3121,20 @@ def try_publish_binaries(bazel_hashes, bazel_nojdk_hashes, build_number, expecte
                     "Content-Type:application/json",
                     "cp",
                     info_file,
-                    bazelci_builds_metadata_url(),
+                    bazelci_latest_build_metadata_url(),
                 ]
             )
         except subprocess.CalledProcessError:
             raise BinaryUploadRaceException()
+
+        execute_command(
+            [
+                gsutil_command(),
+                "cp",
+                bazelci_latest_build_metadata_url(),
+                bazelci_builds_metadata_url(git_commit),
+            ]
+        )
     finally:
         shutil.rmtree(tmpdir)
 
@@ -3159,7 +3173,7 @@ def publish_binaries():
 
         eprint(
             "Successfully updated '{0}' to binaries from build {1}.".format(
-                bazelci_builds_metadata_url(), current_build_number
+                bazelci_latest_build_metadata_url(), current_build_number
             )
         )
         break
