@@ -1,0 +1,234 @@
+---
+steps:
+  - label: "Get release name"
+    agents:
+      - "queue=default"
+    plugins:
+      docker#v3.2.0:
+        always-pull: true
+        environment:
+          - ANDROID_HOME
+          - ANDROID_NDK_HOME
+          - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+        image: gcr.io/bazel-public/ubuntu1804-java11
+        network: host
+        privileged: true
+        propagate-environment: true
+        propagate-uid-gid: true
+        shell: ["/bin/bash", "-e", "-c"]
+        volumes:
+          - "/etc/group:/etc/group:ro"
+          - "/etc/passwd:/etc/passwd:ro"
+          - "/opt:/opt:ro"
+          - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+          - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+          - "/var/run/docker.sock:/var/run/docker.sock"
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+      git checkout ${BUILDKITE_BRANCH}
+
+      release_name=${BUILDKITE_BRANCH}
+      echo "release_name = \"\$release_name\""
+      buildkite-agent meta-data set "release_name" "\$release_name"
+
+  - wait
+
+  - label: "CentOS 7"
+    agents:
+      - "queue=default"
+    plugins:
+      docker#v3.2.0:
+        always-pull: true
+        environment:
+          - ANDROID_HOME
+          - ANDROID_NDK_HOME
+          - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+        image: gcr.io/bazel-public/centos7-releaser
+        network: host
+        privileged: true
+        propagate-environment: true
+        propagate-uid-gid: true
+        shell: ["/bin/bash", "-e", "-c"]
+        volumes:
+          - "/etc/group:/etc/group:ro"
+          - "/etc/passwd:/etc/passwd:ro"
+          - "/opt:/opt:ro"
+          - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+          - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+          - "/var/run/docker.sock:/var/run/docker.sock"
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+      git checkout ${BUILDKITE_BRANCH}
+
+      release_name=$(buildkite-agent meta-data get "release_name")
+      echo "release_name = \"\$release_name\""
+
+      bazel build --sandbox_tmpfs_path=/tmp //src:bazel
+      mkdir output
+      cp bazel-bin/src/bazel output/bazel
+
+      output/bazel build \
+          -c opt \
+          --stamp \
+          --sandbox_tmpfs_path=/tmp \
+          --embed_label "\${release_name}" \
+          --workspace_status_command=scripts/ci/build_status_command.sh \
+          src/bazel \
+          src/bazel_nojdk \
+          scripts/packages/with-jdk/install.sh \
+          scripts/packages/debian/bazel-debian.deb \
+          scripts/packages/debian/bazel.dsc \
+          scripts/packages/debian/bazel.tar.gz \
+          bazel-distfile.zip
+
+      mkdir artifacts
+      cp "bazel-bin/src/bazel" "artifacts/bazel-\${release_name}-linux-x86_64"
+      cp "bazel-bin/src/bazel_nojdk" "artifacts/bazel_nojdk-\${release_name}-linux-x86_64"
+      cp "bazel-bin/scripts/packages/with-jdk/install.sh" "artifacts/bazel-\${release_name}-installer-linux-x86_64.sh"
+      cp "bazel-bin/scripts/packages/debian/bazel-debian.deb" "artifacts/bazel_\${release_name}-linux-x86_64.deb"
+      cp "bazel-bin/scripts/packages/debian/bazel.dsc" "artifacts/bazel_\${release_name}.dsc"
+      cp "bazel-bin/scripts/packages/debian/bazel.tar.gz" "artifacts/bazel_\${release_name}.tar.gz"
+      cp "bazel-bin/bazel-distfile.zip" "artifacts/bazel-\${release_name}-dist.zip"
+
+      cd artifacts
+      buildkite-agent artifact upload "*"
+
+  - label: macOS
+    agents:
+      - queue=macos
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+      git checkout ${BUILDKITE_BRANCH}
+
+      release_name=$(buildkite-agent meta-data get "release_name")
+      echo "release_name = \"\$release_name\""
+
+      # Switch to Xcode 10.3 so that the Bazel release we build is still
+      # compatible with macOS High Sierra.
+      /usr/bin/sudo /usr/bin/xcode-select --switch /Applications/Xcode10.3.app
+      /usr/bin/sudo /usr/bin/xcodebuild -runFirstLaunch
+
+      bazel build //src:bazel
+      mkdir output
+      cp bazel-bin/src/bazel output/bazel
+
+      output/bazel build \
+          --define IPHONE_SDK=1 \
+          -c opt \
+          --stamp \
+          --embed_label "\${release_name}" \
+          --workspace_status_command=scripts/ci/build_status_command.sh \
+          src/bazel \
+          src/bazel_nojdk \
+          scripts/packages/with-jdk/install.sh
+
+      mkdir artifacts
+      cp "bazel-bin/src/bazel" "artifacts/bazel-\${release_name}-darwin-x86_64"
+      cp "bazel-bin/src/bazel_nojdk" "artifacts/bazel_nojdk-\${release_name}-darwin-x86_64"
+      cp "bazel-bin/scripts/packages/with-jdk/install.sh" "artifacts/bazel-\${release_name}-installer-darwin-x86_64.sh"
+
+      cd artifacts
+      buildkite-agent artifact upload "*"
+
+  - label: Windows
+    agents:
+      - queue=windows
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+      git checkout ${BUILDKITE_BRANCH}
+
+      buildkite-agent meta-data get "release_name" > release_name.txt
+      SET /p RELEASE_NAME=<release_name.txt
+      DEL /q release_name.txt
+
+      echo Release: %RELEASE_NAME%
+
+      bazel build //src:bazel.exe
+      mkdir output
+      copy bazel-bin\src\bazel.exe output\bazel.exe
+
+      output\bazel build -c opt --copt=-w --host_copt=-w --stamp --embed_label %RELEASE_NAME% src/bazel scripts/packages/bazel.zip
+
+      mkdir artifacts
+      move bazel-bin\src\bazel artifacts\bazel-%RELEASE_NAME%-windows-x86_64.exe
+      move bazel-bin\scripts\packages\bazel.zip artifacts\bazel-%RELEASE_NAME%-windows-x86_64.zip
+
+      cd artifacts
+      buildkite-agent artifact upload "*"
+
+  - wait
+
+  - label: "CentOS 7"
+    agents:
+      - "queue=default"
+    plugins:
+      docker#v3.2.0:
+        always-pull: true
+        environment:
+          - ANDROID_HOME
+          - ANDROID_NDK_HOME
+          - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+        image: gcr.io/bazel-public/centos7-java8
+        network: host
+        privileged: true
+        propagate-environment: true
+        propagate-uid-gid: true
+        shell: ["/bin/bash", "-e", "-c"]
+        volumes:
+          - "/etc/group:/etc/group:ro"
+          - "/etc/passwd:/etc/passwd:ro"
+          - "/opt:/opt:ro"
+          - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+          - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+          - "/var/run/docker.sock:/var/run/docker.sock"
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+      git checkout ${BUILDKITE_BRANCH}
+
+      release_name=$(buildkite-agent meta-data get "release_name")
+      echo "release_name = \"\$release_name\""
+
+      buildkite-agent artifact download "bazel-\${release_name}-linux-x86_64" .
+
+      chmod +x "bazel-\${release_name}-linux-x86_64"
+
+      "./bazel-\${release_name}-linux-x86_64" info
+
+  - label: "Test on macOS"
+    agents:
+      - queue=macos
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+      git checkout ${BUILDKITE_BRANCH}
+
+      release_name=$(buildkite-agent meta-data get "release_name")
+      echo "release_name = \"\$release_name\""
+
+      buildkite-agent artifact download "bazel-\${release_name}-darwin-x86_64" .
+
+      chmod +x "bazel-\${release_name}-darwin-x86_64"
+
+      "./bazel-\${release_name}-darwin-x86_64" info
+  - label: "Test on Windows"
+    agents:
+      - queue=windows
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+      git checkout ${BUILDKITE_BRANCH}
+
+      buildkite-agent meta-data get "release_name" > release_name.txt
+      SET /p RELEASE_NAME=<release_name.txt
+      DEL /q release_name.txt
+
+      echo Release: %RELEASE_NAME%
+
+      buildkite-agent artifact download bazel-%RELEASE_NAME%-windows-x86_64.exe .
+
+      bazel-%RELEASE_NAME%-windows-x86_64.exe info
