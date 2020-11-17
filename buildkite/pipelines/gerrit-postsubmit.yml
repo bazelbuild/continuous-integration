@@ -1,13 +1,5 @@
 ---
 platforms:
-  ubuntu1604:
-    build_targets:
-      - "//:release"
-      - "//:api"
-    test_flags:
-      - "--test_tag_filters=-slow,-flaky,-docker"
-    test_targets:
-      - "//..."
   ubuntu1804:
     build_flags:
       - "--host_javabase=@bazel_tools//tools/jdk:remote_jdk11"
@@ -25,11 +17,11 @@ platforms:
       - "--test_tag_filters=-slow,-flaky,-docker"
     test_targets:
       - "//..."
-  macos:
-    build_targets:
-      - "//:release"
-      - "//:api"
-    test_flags:
-      - "--test_tag_filters=-slow,-flaky,-docker"
-    test_targets:
-      - "//..."
+#   macos:
+#     build_targets:
+#       - "//:release"
+#       - "//:api"
+#     test_flags:
+#       - "--test_tag_filters=-slow,-flaky,-docker"
+#     test_targets:
+#       - "//..."
