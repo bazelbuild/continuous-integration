@@ -1,10 +1,13 @@
 ---
 platforms:
   ubuntu1604:
+    build_flags:
+      - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_java8"
     build_targets:
       - "//:release"
       - "//:api"
     test_flags:
+      - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_java8"
       - "--test_tag_filters=-slow,-flaky,-docker"
     test_targets:
       - "//..."
@@ -26,10 +29,13 @@ platforms:
     test_targets:
       - "//..."
   macos:
+    build_flags:
+      - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_java8"
     build_targets:
       - "//:release"
       - "//:api"
     test_flags:
+      - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_java8"
       - "--test_tag_filters=-slow,-flaky,-docker"
     test_targets:
       - "//..."
