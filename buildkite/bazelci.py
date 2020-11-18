@@ -345,7 +345,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "rules_nodejs": {
         "git_repository": "https://github.com/bazelbuild/rules_nodejs.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_nodejs/master/.bazelci/presubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_nodejs/stable/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-nodejs-nodejs",
     },
     "rules_perl": {
@@ -2244,20 +2244,17 @@ def print_project_pipeline(
     all_downstream_pipeline_slugs = []
     for _, config in DOWNSTREAM_PROJECTS.items():
         all_downstream_pipeline_slugs.append(config["pipeline_slug"])
-    # We don't need to update last green commit in the following cases:
-    #   1. This job is a GitHub pull request
-    #   2. This job uses a custom built Bazel binary (in Bazel Downstream Projects pipeline)
-    #   3. This job doesn't run on master branch (could be a custom build launched manually)
-    #   4. We don't intend to run the same job in downstream with Bazel@HEAD (eg. google-bazel-presubmit)
-    #   5. We are testing incompatible flags
-    #   6. We are running `bazelisk --migrate` in a non-downstream pipeline
-    if not (
-        is_pull_request()
-        or use_but
-        or os.getenv("BUILDKITE_BRANCH") != "master"
-        or pipeline_slug not in all_downstream_pipeline_slugs
-        or incompatible_flags
-        or use_bazelisk_migrate()
+    # We update last green commit in the following cases:
+    #   1. This job runs on master, stable or main branch (could be a custom build launched manually)
+    #   2. We intend to run the same job in downstream with Bazel@HEAD (eg. google-bazel-presubmit)
+    #   3. This job is not:
+    #      - a GitHub pull request
+    #      - uses a custom built Bazel binary (in Bazel Downstream Projects pipeline)
+    #      - testing incompatible flags
+    #      - running `bazelisk --migrate` in a non-downstream pipeline
+    if (os.getenv("BUILDKITE_BRANCH") in ("master", "stable", "main") 
+        and pipeline_slug in all_downstream_pipeline_slugs
+        and not (is_pull_request() or use_but or incompatible_flags or use_bazelisk_migrate())
     ):
         # We need to call "Try Update Last Green Commit" even if there are failures,
         # since we don't want a failing Buildifier step to block the update of
