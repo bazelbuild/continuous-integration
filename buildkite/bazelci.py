@@ -2254,9 +2254,7 @@ def print_project_pipeline(
     if not (
         is_pull_request()
         or use_but
-        or (os.getenv("BUILDKITE_BRANCH") != "master" 
-            and os.getenv("BUILDKITE_BRANCH") != "stable"
-            and os.getenv("BUILDKITE_BRANCH") != "main")
+        or os.getenv("BUILDKITE_BRANCH") not in ("master", "stable", "main")
         or pipeline_slug not in all_downstream_pipeline_slugs
         or incompatible_flags
         or use_bazelisk_migrate()
