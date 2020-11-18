@@ -2251,13 +2251,9 @@ def print_project_pipeline(
     #   4. We don't intend to run the same job in downstream with Bazel@HEAD (eg. google-bazel-presubmit)
     #   5. We are testing incompatible flags
     #   6. We are running `bazelisk --migrate` in a non-downstream pipeline
-    if not (
-        is_pull_request()
-        or use_but
-        or os.getenv("BUILDKITE_BRANCH") not in ("master", "stable", "main")
-        or pipeline_slug not in all_downstream_pipeline_slugs
-        or incompatible_flags
-        or use_bazelisk_migrate()
+    if (os.getenv("BUILDKITE_BRANCH") in ("master", "stable", "main") 
+        and pipeline_slug in all_downstream_pipeline_slugs
+        and not (is_pull_request() or use_but or incompatible_flags or use_bazelisk_migrate())
     ):
         # We need to call "Try Update Last Green Commit" even if there are failures,
         # since we don't want a failing Buildifier step to block the update of
