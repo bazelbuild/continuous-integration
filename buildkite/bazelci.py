@@ -2188,14 +2188,14 @@ def print_project_pipeline(
     config_hashes = set()
     skipped_due_to_bazel_version = []
     for task, task_config in task_configs.items():
+        platform = get_platform_for_task(task, task_config)
+        task_name = task_config.get("name")
+
         # We override the Bazel version in downstream pipelines. This means that two tasks that
         # only differ in the value of their explicit "bazel" field will be identical in the
         # downstream pipeline, thus leading to duplicate work.
         # Consequently, we filter those duplicate tasks here.
         if is_downstream_project:
-            platform = get_platform_for_task(task, task_config)
-            task_name = task_config.get("name")
-
             # Skip tasks that require a specific Bazel version
             bazel = task_config.get("bazel")
             if bazel and bazel != "latest":
