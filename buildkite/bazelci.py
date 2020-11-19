@@ -111,6 +111,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/codelabs.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/codelabs/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-codelabs",
+        "disabled_reason": "https://github.com/bazelbuild/codelabs/issues/38",
     },
     "Bazel Examples": {
         "git_repository": "https://github.com/bazelbuild/examples.git",
