@@ -121,6 +121,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/bazel-federation.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-federation/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-federation",
+        "disabled_reason": "https://github.com/bazelbuild/bazel-federation/issues/126",
     },
     "Bazel Remote Cache": {
         "git_repository": "https://github.com/buchgr/bazel-remote.git",
