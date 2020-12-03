@@ -27,6 +27,7 @@ RUN dpkg --add-architecture i386 && \
     lcov \
     less \
     libbz2-1.0:i386 \
+    libncurses5 \
     libncurses5:i386 \
     libssl-dev \
     libstdc++6:i386 \
