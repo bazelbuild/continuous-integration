@@ -156,7 +156,14 @@
   resolved "https://registry.yarnpkg.com/@types/prop-types/-/prop-types-15.7.3.tgz#2ab0d5da2e5815f94b0b9d4b95d1e5f243ab2ca7"
   integrity sha512-KfRL3PuHmqQLOG+2tGpRO26Ctg+Cq1E01D2DMriKEATHgWLfeNDmq9e29Q9WIky0dQ3NPkd1mzYH8Lm936Z9qw==
 
-"@types/react@^17.0.0":
+"@types/react-table@^7.0.25":
+  version "7.0.25"
+  resolved "https://registry.yarnpkg.com/@types/react-table/-/react-table-7.0.25.tgz#79efba1c58149d75b3c030634ed36215b7ba8390"
+  integrity sha512-MLWxIiFKIW2CjcB8yQ5LfLNyVfwXfIYm2yrQfTkroK5tJ3Ai+Xzq73EQcdKWQvi/nLk431v2WV0cf30VQV+5Ow==
+  dependencies:
+    "@types/react" "*"
+
+"@types/react@*", "@types/react@^17.0.0":
   version "17.0.0"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-17.0.0.tgz#5af3eb7fad2807092f0046a1302b7823e27919b8"
   integrity sha512-aj/L7RIMsRlWML3YB6KZiXB3fV2t41+5RBGYF8z+tAKU43Px8C3cYUZsDvf1/+Bm4FK21QWBrDutu8ZJ/70qOw==
@@ -3049,6 +3056,11 @@ react-refresh@0.8.3:
   version "0.8.3"
   resolved "https://registry.yarnpkg.com/react-refresh/-/react-refresh-0.8.3.tgz#721d4657672d400c5e3c75d063c4a85fb2d5d68f"
   integrity sha512-X8jZHc7nCMjaCqoU+V2I0cOhNW+QMBwSUkeXnTi8IPe6zaRWfn60ZzvFDZqWPfmSJfjub7dDW1SP0jaHWLu/hg==
+
+react-table@^7.6.2:
+  version "7.6.2"
+  resolved "https://registry.yarnpkg.com/react-table/-/react-table-7.6.2.tgz#b60932fa6d457c2bca0da49815cd6a8fe9451f77"
+  integrity sha512-urwNZTieb+xg/+BITUIrqdH5jZfJlw7rKVAAq25iXpBPwbQojLCEKJuGycLbVwn8fzU+Ovly3y8HHNaLNrPCvQ==
 
 react@17.0.1:
   version "17.0.1"
