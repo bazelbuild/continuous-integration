@@ -29,7 +29,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 /** Fetch github team issues by directly requesting the web pages and parse the HTML content. */
 @Component
 public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
-  private static final Logger logger = LoggerFactory.getLogger(GithubTeamIssueCrawler.class);
+  private static final Logger log = LoggerFactory.getLogger(GithubTeamIssueCrawler.class);
+
   private static final String OWNER = "bazelbuild";
   private static final String REPO = "bazel";
 
@@ -43,7 +44,7 @@ public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
                 public @NonNull CompletableFuture<GithubTeamIssue> asyncLoad(
                     GithubTeamIssue.@NonNull Team key, @NonNull Executor executor) {
                   return fetchTeamIssue(key)
-                      .doOnError(error -> logger.error("Failed to fetch issues", error))
+                      .doOnError(error -> log.error("Failed to fetch issues", error))
                       // If we encounter some errors when the first time fetching the data, return a
                       // ZERO data to make sure we can continue.
                       .onErrorResume(error -> Mono.just(buildEmptyTeamIssue(key)))
@@ -62,7 +63,7 @@ public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
                       .plus(10, ChronoUnit.MINUTES)
                       .isBefore(Instant.now())) {
                     return fetchTeamIssue(key)
-                        .doOnError(error -> logger.error("Failed to fetch issues", error))
+                        .doOnError(error -> log.error("Failed to fetch issues", error))
                         .subscribeOn(Schedulers.fromExecutor(executor))
                         .toFuture();
                   } else {

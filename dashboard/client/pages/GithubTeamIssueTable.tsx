@@ -101,7 +101,7 @@ export default function GithubTeamIssueTable() {
   } = useTable({ columns, data: data || [] });
 
   if (loading) {
-    return "loading";
+    return <div>loading</div>;
   }
 
   console.log(data);
