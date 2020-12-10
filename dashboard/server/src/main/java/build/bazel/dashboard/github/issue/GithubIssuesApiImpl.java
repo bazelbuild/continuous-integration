@@ -14,7 +14,6 @@ public class GithubIssuesApiImpl implements GithubIssuesApi {
 
   private final WebClient webClient;
 
-  @Autowired
   public GithubIssuesApiImpl(WebClient webClient) {
     this.webClient = webClient;
   }

@@ -1,30 +1,21 @@
 package build.bazel.dashboard.rest;
 
-import build.bazel.dashboard.github.issue.GithubIssuesApi;
-import build.bazel.dashboard.github.issue.ListRepositoryIssuesRequest;
-import com.fasterxml.jackson.databind.JsonNode;
-import org.springframework.beans.factory.annotation.Autowired;
+import build.bazel.dashboard.github.issue.GithubTeamIssue;
+import build.bazel.dashboard.github.issue.GithubTeamIssueProvider;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 @RestController
 public class GithubTeamIssuesRestController {
-    private final GithubIssuesApi githubIssuesApi;
+  private final GithubTeamIssueProvider githubTeamIssueProvider;
 
-    @Autowired
-    public GithubTeamIssuesRestController(GithubIssuesApi githubIssuesApi) {
-        this.githubIssuesApi = githubIssuesApi;
-    }
+  public GithubTeamIssuesRestController(GithubTeamIssueProvider githubTeamIssueProvider) {
+    this.githubTeamIssueProvider = githubTeamIssueProvider;
+  }
 
-    @GetMapping("/github/teams/issues")
-    public Mono<JsonNode> listGithubTeamIssues() {
-        ListRepositoryIssuesRequest request = ListRepositoryIssuesRequest.builder()
-                .owner("bazelbuild")
-                .repo("bazel")
-                .perPage(100)
-                .page(0)
-                .build();
-        return githubIssuesApi.listRepositoryIssues(request);
-    }
+  @GetMapping("/github/teams/issues")
+  public Flux<GithubTeamIssue> listGithubTeamIssues() {
+    return githubTeamIssueProvider.list();
+  }
 }
