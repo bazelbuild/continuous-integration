@@ -197,9 +197,9 @@ public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
           KEY_UNTRIAGED, String.format("is:issue is:open label:untriaged label:%s", teamLabel));
     }
 
-    public void collectIssueStats(Map.Entry<String, GithubTeamIssue.IssueStats> entry) {
+    public void collectIssueStats(Map.Entry<String, GithubTeamIssue.Stats> entry) {
       String key = entry.getKey();
-      GithubTeamIssue.IssueStats value = entry.getValue();
+      GithubTeamIssue.Stats value = entry.getValue();
       switch (key) {
         case KEY_ALL:
           builder.openIssues(value);
@@ -268,7 +268,7 @@ public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
 
   private static final Pattern OPEN_ISSUES_PATTERN = Pattern.compile("([0-9]+) Open");
 
-  private Mono<GithubTeamIssue.IssueStats> fetchIssuesStats(String query) {
+  private Mono<GithubTeamIssue.Stats> fetchIssuesStats(String query) {
     String url = buildQueryUrl(query);
     return webClient
         .get()
@@ -282,8 +282,8 @@ public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
             })
         .map(
             content -> {
-              GithubTeamIssue.IssueStats.IssueStatsBuilder builder =
-                  GithubTeamIssue.IssueStats.builder();
+              GithubTeamIssue.Stats.StatsBuilder builder =
+                  GithubTeamIssue.Stats.builder();
               builder.url(URLEncoder.encode(url, UTF_8));
 
               Matcher matcher = OPEN_ISSUES_PATTERN.matcher(content);
@@ -302,8 +302,8 @@ public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
         .map(
             entry -> {
               String url = buildQueryUrl(entry.getValue());
-              GithubTeamIssue.IssueStats stats =
-                  GithubTeamIssue.IssueStats.builder().url(url).build();
+              GithubTeamIssue.Stats stats =
+                  GithubTeamIssue.Stats.builder().url(url).build();
               return new AbstractMap.SimpleEntry<>(entry.getKey(), stats);
             })
         .forEach(builder::collectIssueStats);

@@ -9,15 +9,15 @@ import java.time.Instant;
 @Value
 public class GithubTeamIssue {
     Team team;
-    IssueStats openIssues;
-    IssueStats openP0Issues;
-    IssueStats openP1Issues;
-    IssueStats openP2Issues;
-    IssueStats openP3Issues;
-    IssueStats openP4Issues;
-    IssueStats openNoTypeIssues;
-    IssueStats openNoPriorityIssues;
-    IssueStats openUntriagedIssues;
+    Stats openIssues;
+    Stats openP0Issues;
+    Stats openP1Issues;
+    Stats openP2Issues;
+    Stats openP3Issues;
+    Stats openP4Issues;
+    Stats openNoTypeIssues;
+    Stats openNoPriorityIssues;
+    Stats openUntriagedIssues;
     Instant updatedAt;
 
     @Builder
@@ -30,7 +30,7 @@ public class GithubTeamIssue {
 
     @Builder
     @Value
-    public static class IssueStats {
+    public static class Stats {
         String url;
         Integer count;
     }

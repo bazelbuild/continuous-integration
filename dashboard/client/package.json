@@ -12,7 +12,8 @@
     "react": "17.0.1",
     "react-dom": "17.0.1",
     "react-table": "^7.6.2",
-    "sass": "^1.30.0"
+    "sass": "^1.30.0",
+    "swr": "^0.3.9"
   },
   "devDependencies": {
     "@types/node": "^14.14.11",
