@@ -17,7 +17,7 @@ public class RefreshGithubTeamIssueTask {
   }
 
   // Refresh after 1 minutes
-  @Scheduled(initialDelay = 0, fixedDelay = 60000000)
+  @Scheduled(initialDelay = 0, fixedDelay = 60000)
   public void refresh() {
     log.info("Refreshing Github team issues...");
     crawler.list().blockLast();

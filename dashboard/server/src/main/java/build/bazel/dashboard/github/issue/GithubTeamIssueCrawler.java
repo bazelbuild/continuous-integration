@@ -80,64 +80,64 @@ public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
   public Flux<GithubTeamIssue> list() {
     List<GithubTeamIssue.Team> teams =
         Arrays.asList(
-            GithubTeamIssue.Team.builder().label("team-Android").name("Android").owner("").build(),
-            GithubTeamIssue.Team.builder().label("team-Apple").name("Apple").owner("").build(),
-            GithubTeamIssue.Team.builder().label("team-Bazel").name("Bazel").owner("").build(),
+            GithubTeamIssue.Team.builder().label("team-Android").name("Android").owner("ahumesky").build(),
+            GithubTeamIssue.Team.builder().label("team-Apple").name("Apple").owner("aiuto").build(),
+            GithubTeamIssue.Team.builder().label("team-Bazel").name("Bazel").owner("stiffe").build(),
             GithubTeamIssue.Team.builder()
                 .label("team-Configurability")
                 .name("Configurability")
-                .owner("")
+                .owner("gregestren")
                 .build(),
-            GithubTeamIssue.Team.builder().label("team-Core").name("Core").owner("").build(),
+            GithubTeamIssue.Team.builder().label("team-Core").name("Core").owner("janakr").build(),
             GithubTeamIssue.Team.builder()
                 .label("team-Documentation")
                 .name("Documentation")
-                .owner("")
+                .owner("daroberts")
                 .build(),
             GithubTeamIssue.Team.builder()
                 .label("team-Local-Exec")
                 .name("Local-Exec")
-                .owner("")
+                .owner("twerth")
                 .build(),
             GithubTeamIssue.Team.builder()
                 .label("team-Performance")
                 .name("Performance")
-                .owner("")
+                .owner("twerth")
                 .build(),
             GithubTeamIssue.Team.builder()
                 .label("team-Remote-Exec")
                 .name("Remote-Exec")
-                .owner("")
+                .owner("chiwang")
                 .build(),
             GithubTeamIssue.Team.builder()
                 .label("team-Rules-CPP")
                 .name("Rules-CPP")
-                .owner("")
+                .owner("lberki")
                 .build(),
             GithubTeamIssue.Team.builder()
                 .label("team-Rules-Java")
                 .name("Rules-Java")
-                .owner("")
+                .owner("lberki")
                 .build(),
             GithubTeamIssue.Team.builder()
                 .label("team-Rules-Python")
                 .name("Rules-Python")
-                .owner("")
+                .owner("lberki")
                 .build(),
             GithubTeamIssue.Team.builder()
                 .label("team-Rules-Server")
                 .name("Rules-Server")
-                .owner("")
+                .owner("lberki")
                 .build(),
             GithubTeamIssue.Team.builder()
                 .label("team-Starlark")
                 .name("Starlark")
-                .owner("")
+                .owner("adonovan")
                 .build(),
             GithubTeamIssue.Team.builder()
                 .label("team-XProduct")
                 .name("XProduct")
-                .owner("")
+                .owner("philwo")
                 .build());
     return Flux.fromIterable(teams)
         // We could have use flatMap here to fetch all the team issues CONCURRENTLY. However it
@@ -283,9 +283,8 @@ public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
             })
         .map(
             content -> {
-              GithubTeamIssue.Stats.StatsBuilder builder =
-                  GithubTeamIssue.Stats.builder();
-              builder.url(URLEncoder.encode(url, UTF_8));
+              GithubTeamIssue.Stats.StatsBuilder builder = GithubTeamIssue.Stats.builder();
+              builder.url(buildQueryUrl(URLEncoder.encode(query, UTF_8)));
 
               Matcher matcher = OPEN_ISSUES_PATTERN.matcher(content);
               if (matcher.find()) {
@@ -302,9 +301,9 @@ public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
     builder.queryEntrySet().stream()
         .map(
             entry -> {
-              String url = buildQueryUrl(entry.getValue());
-              GithubTeamIssue.Stats stats =
-                  GithubTeamIssue.Stats.builder().url(url).build();
+              String query = entry.getValue();
+              String url = buildQueryUrl(URLEncoder.encode(query, UTF_8));
+              GithubTeamIssue.Stats stats = GithubTeamIssue.Stats.builder().url(url).build();
               return new AbstractMap.SimpleEntry<>(entry.getKey(), stats);
             })
         .forEach(builder::collectIssueStats);

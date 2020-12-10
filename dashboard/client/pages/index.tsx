@@ -1,7 +1,7 @@
 import styles from "./index.module.scss";
 
 import React from "react";
-import GithubTeamIssueTable from "./GithubTeamIssueTable";
+import GithubTeamIssueTable from "../components/GithubTeamIssueTable";
 
 export default function Home() {
   return (
