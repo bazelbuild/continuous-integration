@@ -1,20 +1,16 @@
-package build.bazel.dashboard.task;
+package build.bazel.dashboard.github.issue.task;
 
 import build.bazel.dashboard.github.issue.GithubTeamIssueCrawler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
+@RequiredArgsConstructor
 public class RefreshGithubTeamIssueTask {
-  private static final Logger log = LoggerFactory.getLogger(RefreshGithubTeamIssueTask.class);
-
   private final GithubTeamIssueCrawler crawler;
-
-  public RefreshGithubTeamIssueTask(GithubTeamIssueCrawler crawler) {
-    this.crawler = crawler;
-  }
 
   // Refresh after 1 minutes
   @Scheduled(initialDelay = 0, fixedDelay = 60000)

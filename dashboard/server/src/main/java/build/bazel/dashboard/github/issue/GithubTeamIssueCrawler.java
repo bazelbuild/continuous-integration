@@ -3,9 +3,9 @@ package build.bazel.dashboard.github.issue;
 import com.github.benmanes.caffeine.cache.AsyncCacheLoader;
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -28,9 +28,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 /** Fetch github team issues by directly requesting the web pages and parse the HTML content. */
 @Component
+@Slf4j
+@RequiredArgsConstructor
 public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
-  private static final Logger log = LoggerFactory.getLogger(GithubTeamIssueCrawler.class);
-
   private static final String OWNER = "bazelbuild";
   private static final String REPO = "bazel";
 
@@ -72,17 +72,21 @@ public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
                 }
               });
 
-  public GithubTeamIssueCrawler(WebClient webClient) {
-    this.webClient = webClient;
-  }
-
   @Override
   public Flux<GithubTeamIssue> list() {
     List<GithubTeamIssue.Team> teams =
         Arrays.asList(
-            GithubTeamIssue.Team.builder().label("team-Android").name("Android").owner("ahumesky").build(),
+            GithubTeamIssue.Team.builder()
+                .label("team-Android")
+                .name("Android")
+                .owner("ahumesky")
+                .build(),
             GithubTeamIssue.Team.builder().label("team-Apple").name("Apple").owner("aiuto").build(),
-            GithubTeamIssue.Team.builder().label("team-Bazel").name("Bazel").owner("stiffe").build(),
+            GithubTeamIssue.Team.builder()
+                .label("team-Bazel")
+                .name("Bazel")
+                .owner("stiffe")
+                .build(),
             GithubTeamIssue.Team.builder()
                 .label("team-Configurability")
                 .name("Configurability")

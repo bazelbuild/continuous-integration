@@ -1,4 +1,4 @@
-package build.bazel.dashboard.github.issue;
+package build.bazel.dashboard.github.api;
 
 import lombok.Builder;
 import lombok.Value;
