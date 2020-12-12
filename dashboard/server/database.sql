@@ -12,6 +12,60 @@ CREATE TABLE github_issue_data
     PRIMARY KEY (owner, repo, issue_number)
 );
 
+CREATE OR REPLACE FUNCTION tf_regenerate_github_issue()
+    RETURNS TRIGGER
+    LANGUAGE plpgsql
+AS
+$$
+BEGIN
+    IF NEW IS NULL THEN
+        DELETE FROM github_issue WHERE owner = OLD.owner AND repo = OLD.repo AND issue_number = OLD.issue_number;
+    ELSE
+        CALL regenerate_github_issue(NEW.owner, NEW.repo, NEW.issue_number);
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER t_regenerate_github_issue
+    AFTER INSERT OR UPDATE OR DELETE
+    ON github_issue_data
+    FOR EACH ROW
+EXECUTE PROCEDURE tf_regenerate_github_issue();
+
+CREATE OR REPLACE FUNCTION tf_snapshot_github_issue_data()
+    RETURNS TRIGGER
+    LANGUAGE plpgsql
+AS
+$$
+BEGIN
+    INSERT INTO github_issue_data_snapshot (owner, repo, issue_number, timestamp, data)
+    VALUES (NEW.owner, NEW.repo, NEW.issue_number, NEW.timestamp, NEW.data);
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER t_snapshot_github_issue_data
+    AFTER INSERT OR UPDATE
+    ON github_issue_data
+    FOR EACH ROW
+EXECUTE PROCEDURE tf_snapshot_github_issue_data();
+
+--
+-- Table that store the snapshots of issues data fetched from Github
+--
+CREATE TABLE github_issue_data_snapshot
+(
+    owner        TEXT        NOT NULL,
+    repo         TEXT        NOT NULL,
+    issue_number INTEGER     NOT NULL,
+    timestamp    TIMESTAMPTZ NOT NULL,
+    data         JSONB       NOT NULL,
+    PRIMARY KEY (owner, repo, issue_number, timestamp)
+);
+
 --
 -- Table that stored issues generated from github_issue_data automatically by trigger
 --
@@ -34,6 +88,7 @@ CREATE TABLE github_issue
 CREATE UNIQUE INDEX ON github_issue (owner, repo, issue_number);
 CREATE INDEX ON github_issue (state);
 CREATE INDEX ON github_issue (labels);
+CREATE INDEX ON github_issue (is_pull_request);
 
 CREATE OR REPLACE PROCEDURE regenerate_github_issue(target_owner TEXT, target_repo TEXT, target_issue_number INTEGER)
     LANGUAGE plpgsql
@@ -89,28 +144,6 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION trigger_function_regenerate_github_issue()
-    RETURNS TRIGGER
-    LANGUAGE plpgsql
-AS
-$$
-BEGIN
-    IF NEW IS NULL THEN
-        DELETE FROM github_issue WHERE owner = OLD.owner AND repo = OLD.repo AND issue_number = OLD.issue_number;
-    ELSE
-        CALL regenerate_github_issue(NEW.owner, NEW.repo, NEW.issue_number);
-    END IF;
-
-    RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER trigger_regenerate_github_issue
-    AFTER INSERT OR UPDATE OR DELETE
-    ON github_issue_data
-    FOR EACH ROW
-EXECUTE PROCEDURE trigger_function_regenerate_github_issue();
-
 
 CREATE VIEW github_issue_label AS
 SELECT owner, repo, issue_number, unnest(labels) AS label
@@ -149,7 +182,8 @@ SELECT gi.*
 FROM github_issue gi
          LEFT JOIN github_issue_has_type giht
                    ON gi.owner = giht.owner AND gi.repo = giht.repo AND gi.issue_number = giht.issue_number
-WHERE giht IS NULL;
+WHERE NOT gi.is_pull_request
+  AND giht IS NULL;
 
 CREATE VIEW github_issue_no_priority AS
 WITH github_issue_has_priority AS (
@@ -162,7 +196,8 @@ SELECT gi.*
 FROM github_issue gi
          LEFT JOIN github_issue_has_priority gihp
                    ON gi.owner = gihp.owner AND gi.repo = gihp.repo AND gi.issue_number = gihp.issue_number
-WHERE gihp IS NULL;
+WHERE NOT gi.is_pull_request
+  AND gihp IS NULL;
 
 
 CREATE VIEW github_label_team_issue_status AS
@@ -180,6 +215,7 @@ WITH github_label_team_issue_open AS (
     FROM github_issue gi
              LEFT JOIN github_label_team_issue glti
                        ON gi.owner = glti.owner AND gi.repo = glti.repo AND gi.issue_number = glti.issue_number
+    WHERE NOT gi.is_pull_request
     GROUP BY gi.owner, gi.repo, glti.label
 ),
      github_label_team_issue_open_no_type AS (
