@@ -26,7 +26,6 @@ steps:
     command: |
       git fetch origin master
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
-      git checkout ${BUILDKITE_BRANCH}
 
       release_name=\$(source scripts/release/common.sh; get_full_release_name)
       echo "release_name = \"\$release_name\""
@@ -60,7 +59,6 @@ steps:
     command: |
       git fetch origin master
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
-      git checkout ${BUILDKITE_BRANCH}
 
       release_name=$(buildkite-agent meta-data get "release_name")
       echo "release_name = \"\$release_name\""
@@ -118,7 +116,6 @@ steps:
     command: |
       git fetch origin master
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
-      git checkout ${BUILDKITE_BRANCH}
 
       release_name=$(buildkite-agent meta-data get "release_name")
       echo "release_name = \"\$release_name\""
@@ -147,7 +144,6 @@ steps:
     command: |
       git fetch origin master
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
-      git checkout ${BUILDKITE_BRANCH}
 
       release_name=$(buildkite-agent meta-data get "release_name")
       echo "release_name = \"\$release_name\""
@@ -183,7 +179,6 @@ steps:
     command: |
       git fetch origin master
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
-      git checkout ${BUILDKITE_BRANCH}
 
       buildkite-agent meta-data get "release_name" > release_name.txt
       SET /p RELEASE_NAME=<release_name.txt
@@ -232,7 +227,6 @@ steps:
     command: |
       git fetch origin master
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
-      git checkout ${BUILDKITE_BRANCH}
 
       release_name=$(buildkite-agent meta-data get "release_name")
       echo "release_name = \"\$release_name\""
@@ -266,7 +260,6 @@ steps:
     command: |
       git fetch origin master
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
-      git checkout ${BUILDKITE_BRANCH}
 
       release_name=$(buildkite-agent meta-data get "release_name")
       echo "release_name = \"\$release_name\""
@@ -283,7 +276,6 @@ steps:
     command: |
       git fetch origin master
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
-      git checkout ${BUILDKITE_BRANCH}
 
       release_name=$(buildkite-agent meta-data get "release_name")
       echo "release_name = \"\$release_name\""
@@ -300,7 +292,6 @@ steps:
     command: |
       git fetch origin master
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
-      git checkout ${BUILDKITE_BRANCH}
 
       buildkite-agent meta-data get "release_name" > release_name.txt
       SET /p RELEASE_NAME=<release_name.txt
@@ -343,7 +334,6 @@ steps:
       echo "+++ Fetching Git notes"
       git fetch origin master
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
-      git checkout ${BUILDKITE_BRANCH}
 
       echo "+++ Downloading release artifacts"
       ARTIFACTS="$(mktemp -d)"
@@ -388,7 +378,6 @@ steps:
     command: |
       git fetch origin master
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
-      git checkout ${BUILDKITE_BRANCH}
 
       source scripts/ci/build.sh
       generate_email
