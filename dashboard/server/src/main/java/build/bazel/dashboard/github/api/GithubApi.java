@@ -1,12 +1,11 @@
 package build.bazel.dashboard.github.api;
 
-import build.bazel.dashboard.github.api.GetIssueRequest;
-import build.bazel.dashboard.github.api.GithubApiResponse;
-import build.bazel.dashboard.github.api.ListRepositoryIssuesRequest;
-import reactor.core.publisher.Mono;
+import io.reactivex.rxjava3.core.Single;
 
 public interface GithubApi {
-  Mono<GithubApiResponse> listRepositoryIssues(ListRepositoryIssuesRequest request);
+  Single<GithubApiResponse> listRepositoryIssues(ListRepositoryIssuesRequest request);
 
-  Mono<GithubApiResponse> getIssue(GetIssueRequest request);
+  Single<GithubApiResponse> listRepositoryEvents(ListRepositoryEventsRequest request);
+
+  Single<GithubApiResponse> fetchIssue(FetchIssueRequest request);
 }

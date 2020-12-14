@@ -1,41 +1,14 @@
 package build.bazel.dashboard.github.issue;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import lombok.Builder;
-import lombok.Value;
-import lombok.With;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
-import java.time.Instant;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Maybe;
+import io.reactivex.rxjava3.core.Observable;
 
 public interface GithubIssueRepository {
 
-  @Builder
-  @Value
-  @With
-  class GithubIssue {
-    String owner;
-    String repo;
-    int issueNumber;
-    Instant timestamp;
-    String eTag;
-    JsonNode data;
+  Completable save(GithubIssue githubIssue);
 
-    public static GithubIssue empty(String owner, String repo, int issueNumber) {
-      return GithubIssue.builder()
-          .owner(owner)
-          .repo(repo)
-          .issueNumber(issueNumber)
-          .timestamp(Instant.EPOCH)
-          .eTag("")
-          .build();
-    }
-  }
+  Maybe<GithubIssue> findOne(String owner, String repo, int issueNumber);
 
-  Mono<GithubIssue> save(GithubIssue githubIssue);
-
-  Mono<GithubIssue> findOne(String owner, String repo, int issueNumber);
-
-  Flux<GithubIssue> list();
+  Observable<GithubIssue> list();
 }

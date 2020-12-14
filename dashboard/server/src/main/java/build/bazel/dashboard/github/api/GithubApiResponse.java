@@ -14,7 +14,7 @@ import static build.bazel.dashboard.utils.HttpHeadersUtils.getOrEmpty;
 @Value
 public class GithubApiResponse {
   HttpStatus status;
-  String eTag;
+  String etag;
   RateLimit rateLimit;
   JsonNode body;
 
@@ -42,7 +42,7 @@ public class GithubApiResponse {
     GithubApiResponseBuilder builder =
         GithubApiResponse.builder()
             .status(status)
-            .eTag(getOrEmpty(headers, "ETag"))
+            .etag(getOrEmpty(headers, "ETag"))
             .rateLimit(RateLimit.fromHeaders(headers));
 
     if (status.is2xxSuccessful()) {

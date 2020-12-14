@@ -20,8 +20,8 @@ public class ListRepositoryIssuesRequest {
   // TODO(coeuvre): Add more options
 
   // Results per page (max 100)
-  int perPage;
+  Integer perPage;
 
   // Page number of the results to fetch.
-  int page;
+  Integer page;
 }

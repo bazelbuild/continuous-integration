@@ -1,7 +1,7 @@
 package build.bazel.dashboard.github.issue;
 
-import reactor.core.publisher.Flux;
+import io.reactivex.rxjava3.core.Observable;
 
 public interface GithubTeamIssueProvider {
-    Flux<GithubTeamIssue> list();
+  Observable<GithubTeamIssue> list();
 }

@@ -1,15 +1,20 @@
 package build.bazel.dashboard.github.api;
 
 import com.google.common.base.Strings;
+import io.reactivex.rxjava3.core.Single;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
-import reactor.core.publisher.Mono;
+import reactor.adapter.rxjava.RxJava3Adapter;
+
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Component
+@Slf4j
 public class WebClientGithubApi implements GithubApi {
   private static final String SCHEME = "https";
   private static final String HOST = "api.github.com";
@@ -24,51 +29,71 @@ public class WebClientGithubApi implements GithubApi {
   }
 
   @Override
-  public Mono<GithubApiResponse> listRepositoryIssues(ListRepositoryIssuesRequest request) {
+  public Single<GithubApiResponse> listRepositoryIssues(ListRepositoryIssuesRequest request) {
     checkNotNull(request.getOwner());
     checkNotNull(request.getRepo());
 
     String url =
-        UriComponentsBuilder.newInstance()
-            .scheme(SCHEME)
-            .host(HOST)
-            .pathSegment("repos", request.getOwner(), request.getRepo(), "issues")
-            .queryParam("per_page", request.getPerPage())
-            .queryParam("page", request.getPage())
+        newUrl("repos", request.getOwner(), request.getRepo(), "issues")
+            .queryParamIfPresent("per_page", Optional.ofNullable(request.getPerPage()))
+            .queryParamIfPresent("page", Optional.ofNullable(request.getPage()))
             .build()
             .toString();
 
-    return webClient
-        .get()
-        .uri(url)
-        .header("accept", "application/vnd.github.v3+json")
-        .exchangeToMono(GithubApiResponse::fromClientResponse);
+    WebClient.RequestHeadersSpec<?> spec = get(url);
+
+    return exchange(spec);
   }
 
   @Override
-  public Mono<GithubApiResponse> getIssue(GetIssueRequest request) {
+  public Single<GithubApiResponse> listRepositoryEvents(ListRepositoryEventsRequest request) {
     checkNotNull(request.getOwner());
     checkNotNull(request.getRepo());
 
+    log.debug("Listing GitHub repository events: {}", request.toString());
+
     String url =
-        UriComponentsBuilder.newInstance()
-            .scheme(SCHEME)
-            .host(HOST)
-            .pathSegment(
-                "repos",
-                request.getOwner(),
-                request.getRepo(),
-                "issues",
-                String.valueOf(request.getIssueNumber()))
+        newUrl("repos", request.getOwner(), request.getRepo(), "events")
+            .queryParamIfPresent("per_page", Optional.ofNullable(request.getPerPage()))
+            .queryParamIfPresent("page", Optional.ofNullable(request.getPage()))
             .build()
             .toString();
-    WebClient.RequestHeadersSpec<?> spec = get(url);
 
-    if (!Strings.isNullOrEmpty(request.getETag())) {
-      spec.ifNoneMatch(request.getETag());
+    WebClient.RequestHeadersSpec<?> spec = get(url);
+    if (!Strings.isNullOrEmpty(request.getEtag())) {
+      spec.ifNoneMatch(request.getEtag());
     }
 
-    return spec.exchangeToMono(GithubApiResponse::fromClientResponse);
+    return exchange(spec);
+  }
+
+  @Override
+  public Single<GithubApiResponse> fetchIssue(FetchIssueRequest request) {
+    checkNotNull(request.getOwner());
+    checkNotNull(request.getRepo());
+
+    log.debug("Fetching GitHub issue: {}", request);
+
+    String url =
+        newUrl(
+            "repos",
+            request.getOwner(),
+            request.getRepo(),
+            "issues",
+            String.valueOf(request.getIssueNumber()))
+            .build()
+            .toString();
+
+    WebClient.RequestHeadersSpec<?> spec = get(url);
+    if (!Strings.isNullOrEmpty(request.getEtag())) {
+      spec.ifNoneMatch(request.getEtag());
+    }
+
+    return exchange(spec);
+  }
+
+  private UriComponentsBuilder newUrl(String... pathSegment) {
+    return UriComponentsBuilder.newInstance().scheme(SCHEME).host(HOST).pathSegment(pathSegment);
   }
 
   private WebClient.RequestHeadersSpec<?> get(String url) {
@@ -80,5 +105,9 @@ public class WebClientGithubApi implements GithubApi {
     }
 
     return spec;
+  }
+
+  private Single<GithubApiResponse> exchange(WebClient.RequestHeadersSpec<?> spec) {
+    return RxJava3Adapter.monoToSingle(spec.exchangeToMono(GithubApiResponse::fromClientResponse));
   }
 }

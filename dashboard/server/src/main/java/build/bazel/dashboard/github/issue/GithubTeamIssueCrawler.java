@@ -1,17 +1,19 @@
 package build.bazel.dashboard.github.issue;
 
+import build.bazel.dashboard.utils.RxJavaFutures;
 import com.github.benmanes.caffeine.cache.AsyncCacheLoader;
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
-import reactor.core.publisher.Flux;
+import reactor.adapter.rxjava.RxJava3Adapter;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -43,13 +45,14 @@ public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
                 @Override
                 public @NonNull CompletableFuture<GithubTeamIssue> asyncLoad(
                     GithubTeamIssue.@NonNull Team key, @NonNull Executor executor) {
-                  return fetchTeamIssue(key)
-                      .doOnError(error -> log.error("Failed to fetch issues", error))
-                      // If we encounter some errors when the first time fetching the data, return a
-                      // ZERO data to make sure we can continue.
-                      .onErrorResume(error -> Mono.just(buildEmptyTeamIssue(key)))
-                      .subscribeOn(Schedulers.fromExecutor(executor))
-                      .toFuture();
+                  Single<GithubTeamIssue> single =
+                      fetchTeamIssue(key)
+                          .doOnError(error -> log.error("Failed to fetch issues", error))
+                          // If we encounter some errors when the first time fetching the data,
+                          // return a
+                          // ZERO data to make sure we can continue.
+                          .onErrorResumeNext(error -> Single.just(buildEmptyTeamIssue(key)));
+                  return RxJavaFutures.toCompletableFuture(single, executor);
                 }
 
                 @Override
@@ -62,10 +65,10 @@ public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
                       .getUpdatedAt()
                       .plus(10, ChronoUnit.MINUTES)
                       .isBefore(Instant.now())) {
-                    return fetchTeamIssue(key)
-                        .doOnError(error -> log.error("Failed to fetch issues", error))
-                        .subscribeOn(Schedulers.fromExecutor(executor))
-                        .toFuture();
+                    Single<GithubTeamIssue> single =
+                        fetchTeamIssue(key)
+                            .doOnError(error -> log.error("Failed to fetch issues", error));
+                    return RxJavaFutures.toCompletableFuture(single, executor);
                   } else {
                     return CompletableFuture.completedFuture(oldValue);
                   }
@@ -73,7 +76,7 @@ public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
               });
 
   @Override
-  public Flux<GithubTeamIssue> list() {
+  public Observable<GithubTeamIssue> list() {
     List<GithubTeamIssue.Team> teams =
         Arrays.asList(
             GithubTeamIssue.Team.builder()
@@ -143,11 +146,11 @@ public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
                 .name("XProduct")
                 .owner("philwo")
                 .build());
-    return Flux.fromIterable(teams)
+    return Observable.fromIterable(teams)
         // We could have use flatMap here to fetch all the team issues CONCURRENTLY. However it
         // will lead us an error of 429 TOO_MANY_REQUESTS since Github has rate limit...
-        .flatMap(team -> Mono.fromFuture(cache.get(team)))
-        .sort(Comparator.comparing(a -> a.getTeam().getName()));
+        .flatMap(team -> Single.fromFuture(cache.get(team)).toObservable())
+        .sorted(Comparator.comparing(a -> a.getTeam().getName()));
   }
 
   static class TeamIssueBuilder {
@@ -250,13 +253,14 @@ public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
     }
   }
 
-  private Mono<GithubTeamIssue> fetchTeamIssue(GithubTeamIssue.Team team) {
+  private Single<GithubTeamIssue> fetchTeamIssue(GithubTeamIssue.Team team) {
     TeamIssueBuilder builder = new TeamIssueBuilder(team);
-    return Flux.fromIterable(builder.queryEntrySet())
+    return Observable.fromIterable(builder.queryEntrySet())
         .flatMap(
             entry ->
                 fetchIssuesStats(entry.getValue())
-                    .map(number -> new AbstractMap.SimpleEntry<>(entry.getKey(), number)))
+                    .map(number -> new AbstractMap.SimpleEntry<>(entry.getKey(), number))
+                    .toObservable())
         .collect(() -> builder, TeamIssueBuilder::collectIssueStats)
         .map(b -> b.updatedAt(Instant.now()).build());
   }
@@ -273,18 +277,20 @@ public class GithubTeamIssueCrawler implements GithubTeamIssueProvider {
 
   private static final Pattern OPEN_ISSUES_PATTERN = Pattern.compile("([0-9]+) Open");
 
-  private Mono<GithubTeamIssue.Stats> fetchIssuesStats(String query) {
+  private Single<GithubTeamIssue.Stats> fetchIssuesStats(String query) {
     String url = buildQueryUrl(query);
-    return webClient
-        .get()
-        .uri(url)
-        .exchangeToMono(
-            clientResponse -> {
-              if (clientResponse.statusCode().is2xxSuccessful()) {
-                return clientResponse.bodyToMono(String.class);
-              }
-              return Mono.error(new IOException(clientResponse.statusCode().toString()));
-            })
+    Mono<String> fetch =
+        webClient
+            .get()
+            .uri(url)
+            .exchangeToMono(
+                clientResponse -> {
+                  if (clientResponse.statusCode().is2xxSuccessful()) {
+                    return clientResponse.bodyToMono(String.class);
+                  }
+                  return Mono.error(new IOException(clientResponse.statusCode().toString()));
+                });
+    return RxJava3Adapter.monoToSingle(fetch)
         .map(
             content -> {
               GithubTeamIssue.Stats.StatsBuilder builder = GithubTeamIssue.Stats.builder();

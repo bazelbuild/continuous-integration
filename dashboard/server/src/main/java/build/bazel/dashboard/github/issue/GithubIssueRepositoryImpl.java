@@ -4,9 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.r2dbc.postgresql.codec.Json;
 import io.r2dbc.spi.Row;
+import io.reactivex.rxjava3.core.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
+import reactor.adapter.rxjava.RxJava3Adapter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -23,13 +25,9 @@ public class GithubIssueRepositoryImpl implements GithubIssueRepository {
   private final ObjectMapper objectMapper;
 
   @Override
-  public Mono<GithubIssue> save(GithubIssue githubIssue) {
-    return insertOrUpdate(githubIssue).thenReturn(githubIssue);
-  }
-
-  private Mono<Void> insertOrUpdate(GithubIssue githubIssue) {
+  public Completable save(GithubIssue githubIssue) {
     try {
-      return databaseClient
+      Mono<Void> execution = databaseClient
           .sql(
               "INSERT INTO github_issue_data (owner, repo, issue_number, timestamp, etag, data) "
                   + "VALUES (:owner, :repo, :issue_number, :timestamp, :etag, :data) "
@@ -39,17 +37,18 @@ public class GithubIssueRepositoryImpl implements GithubIssueRepository {
           .bind("repo", githubIssue.getRepo())
           .bind("issue_number", githubIssue.getIssueNumber())
           .bind("timestamp", githubIssue.getTimestamp())
-          .bind("etag", githubIssue.getETag())
+          .bind("etag", githubIssue.getEtag())
           .bind("data", Json.of(objectMapper.writeValueAsBytes(githubIssue.getData())))
           .then();
+      return RxJava3Adapter.monoToCompletable(execution);
     } catch (JsonProcessingException e) {
-      return Mono.error(e);
+      return Completable.error(e);
     }
   }
 
   @Override
-  public Mono<GithubIssue> findOne(String owner, String repo, int issueNumber) {
-    return databaseClient
+  public Maybe<GithubIssue> findOne(String owner, String repo, int issueNumber) {
+    Mono<GithubIssue> query = databaseClient
         .sql(
             "SELECT owner, repo, issue_number, timestamp, etag, data FROM github_issue_data "
                 + "WHERE owner=:owner AND repo=:repo AND issue_number=:issue_number")
@@ -58,15 +57,18 @@ public class GithubIssueRepositoryImpl implements GithubIssueRepository {
         .bind("issue_number", issueNumber)
         .map(this::toGithubIssue)
         .one();
+    return RxJava3Adapter.monoToMaybe(query);
   }
 
   @Override
-  public Flux<GithubIssue> list() {
-    return databaseClient
+  public Observable<GithubIssue> list() {
+    Flux<GithubIssue> query = databaseClient
         // language=SQL
         .sql("SELECT owner, repo, issue_number, timestamp, etag, data FROM github_issue_data")
         .map(this::toGithubIssue)
         .all();
+
+    return RxJava3Adapter.fluxToObservable(query);
   }
 
   private GithubIssue toGithubIssue(Row row) {
@@ -76,7 +78,7 @@ public class GithubIssueRepositoryImpl implements GithubIssueRepository {
           .repo(requireNonNull(row.get("repo", String.class)))
           .issueNumber(requireNonNull(row.get("issue_number", Integer.class)))
           .timestamp(requireNonNull(row.get("timestamp", Instant.class)))
-          .eTag(requireNonNull(row.get("etag", String.class)))
+          .etag(requireNonNull(row.get("etag", String.class)))
           .data(objectMapper.readTree((requireNonNull(row.get("data", Json.class))).asArray()))
           .build();
     } catch (IOException e) {

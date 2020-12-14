@@ -5,9 +5,10 @@ import lombok.Value;
 
 @Builder
 @Value
-public class GetIssueRequest {
+public class ListRepositoryEventsRequest {
   String owner;
   String repo;
-  int issueNumber;
-  String eTag;
+  Integer perPage;
+  Integer page;
+  String etag;
 }

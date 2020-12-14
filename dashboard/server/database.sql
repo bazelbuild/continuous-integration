@@ -1,3 +1,10 @@
+CREATE TABLE json_state
+(
+    key       TEXT PRIMARY KEY,
+    timestamp TIMESTAMPTZ,
+    data      JSONB NOT NULL
+);
+
 --
 -- Table that store the raw issues data fetched from Github
 --
