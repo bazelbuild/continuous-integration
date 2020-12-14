@@ -7,6 +7,7 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
 import reactor.adapter.rxjava.RxJava3Adapter;
@@ -28,7 +29,7 @@ public class PostgresqlJsonStateStore implements JsonStateStore {
   @Override
   public <T> Completable save(String key, Instant lastTimestamp, T data) {
     try {
-      Mono<Void> execution =
+      Mono<Integer> execution =
           databaseClient
               .sql(
                   "INSERT INTO json_state (key, timestamp, data) VALUES (:key, CURRENT_TIMESTAMP, :data) "
@@ -37,8 +38,19 @@ public class PostgresqlJsonStateStore implements JsonStateStore {
               .bind("key", key)
               .bind("data", Json.of(objectMapper.writeValueAsBytes(data)))
               .bind("last_timestamp", lastTimestamp)
-              .then();
-      return RxJava3Adapter.monoToCompletable(execution);
+              .fetch()
+              .rowsUpdated()
+              .defaultIfEmpty(0);
+      return RxJava3Adapter.monoToSingle(execution)
+          .flatMapCompletable(
+              count -> {
+                if (count != 1) {
+                  return Completable.error(
+                      new OptimisticLockingFailureException(
+                          "Failed to update: updated count is " + count));
+                }
+                return Completable.complete();
+              });
     } catch (JsonProcessingException e) {
       return Completable.error(e);
     }

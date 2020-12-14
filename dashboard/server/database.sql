@@ -48,7 +48,8 @@ AS
 $$
 BEGIN
     INSERT INTO github_issue_data_snapshot (owner, repo, issue_number, timestamp, data)
-    VALUES (NEW.owner, NEW.repo, NEW.issue_number, NEW.timestamp, NEW.data);
+    VALUES (NEW.owner, NEW.repo, NEW.issue_number, NEW.timestamp, NEW.data)
+    ON CONFLICT DO NOTHING;
 
     RETURN NEW;
 END;
@@ -88,14 +89,18 @@ CREATE TABLE github_issue
     body            TEXT        NOT NULL,
     labels          TEXT[]      NOT NULL,
     created_at      TIMESTAMPTZ NOT NULL,
+    updated_at      TIMESTAMPTZ,
     closed_at       TIMESTAMPTZ,
     PRIMARY KEY (owner, repo, issue_number)
 );
 
 CREATE UNIQUE INDEX ON github_issue (owner, repo, issue_number);
 CREATE INDEX ON github_issue (state);
-CREATE INDEX ON github_issue (labels);
+CREATE INDEX ON github_issue USING GIN (labels);
 CREATE INDEX ON github_issue (is_pull_request);
+CREATE INDEX ON github_issue (created_at);
+CREATE INDEX ON github_issue (updated_at);
+CREATE INDEX ON github_issue (closed_at);
 
 CREATE OR REPLACE PROCEDURE regenerate_github_issue(target_owner TEXT, target_repo TEXT, target_issue_number INTEGER)
     LANGUAGE plpgsql
@@ -112,6 +117,7 @@ BEGIN
                              body,
                              labels,
                              created_at,
+                             updated_at,
                              closed_at)
     WITH github_issue_label AS (
         SELECT owner, repo, issue_number, jsonb_array_elements(data -> 'labels') ->> 'name' AS label
@@ -132,6 +138,7 @@ BEGIN
            COALESCE(i.data ->> 'body', ''),
            COALESCE(il.labels, '{}'),
            (data ->> 'created_at')::TIMESTAMPTZ,
+           (data ->> 'updated_at')::TIMESTAMPTZ,
            (data ->> 'closed_at')::TIMESTAMPTZ
     FROM github_issue_data i
              LEFT JOIN github_issue_labels il
@@ -147,6 +154,7 @@ BEGIN
             body            = excluded.body,
             labels          = excluded.labels,
             created_at      = excluded.created_at,
+            updated_at      = excluded.updated_at,
             closed_at       = excluded.closed_at;
 END;
 $$;
