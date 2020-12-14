@@ -115,7 +115,8 @@ steps:
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
     command: |
       git fetch origin master
-      git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
+      git fetch origin ${BUILDKITE_BRANCH}
+      git checkout FETCH_HEAD
 
       release_name=$(buildkite-agent meta-data get "release_name")
       echo "release_name = \"\$release_name\""
@@ -259,7 +260,8 @@ steps:
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
     command: |
       git fetch origin master
-      git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
+      git fetch origin ${BUILDKITE_BRANCH}
+      git checkout FETCH_HEAD
 
       release_name=$(buildkite-agent meta-data get "release_name")
       echo "release_name = \"\$release_name\""
