@@ -1,7 +1,10 @@
 package build.bazel.dashboard.config;
 
+import build.bazel.dashboard.github.issue.GithubSearchExecutor;
+import build.bazel.dashboard.github.issue.PostgresqlGithubSearchExecutor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -11,7 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class DefaultConfiguration {
 
   @Bean
-  public WebClient webClient() {
+  public WebClient defaultWebClient() {
     return WebClient.builder()
         .exchangeStrategies(
             ExchangeStrategies.builder()
@@ -23,5 +26,10 @@ public class DefaultConfiguration {
                             .maxInMemorySize(10 * 1024 * 1024))
                 .build())
         .build();
+  }
+
+  @Bean
+  public GithubSearchExecutor defaultGithubSearchExecutor(DatabaseClient databaseClient) {
+    return new PostgresqlGithubSearchExecutor(databaseClient);
   }
 }

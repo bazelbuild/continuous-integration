@@ -6,12 +6,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.util.UriBuilder;
 import reactor.adapter.rxjava.RxJava3Adapter;
 
+import java.net.URI;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Component
 @Slf4j
@@ -33,14 +36,14 @@ public class WebClientGithubApi implements GithubApi {
     checkNotNull(request.getOwner());
     checkNotNull(request.getRepo());
 
-    String url =
-        newUrl("repos", request.getOwner(), request.getRepo(), "issues")
-            .queryParamIfPresent("per_page", Optional.ofNullable(request.getPerPage()))
-            .queryParamIfPresent("page", Optional.ofNullable(request.getPage()))
-            .build()
-            .toString();
-
-    WebClient.RequestHeadersSpec<?> spec = get(url);
+    WebClient.RequestHeadersSpec<?> spec =
+        get(
+            uriBuilder ->
+                uriBuilder
+                    .pathSegment("repos", request.getOwner(), request.getRepo(), "issues")
+                    .queryParamIfPresent("per_page", Optional.ofNullable(request.getPerPage()))
+                    .queryParamIfPresent("page", Optional.ofNullable(request.getPage()))
+                    .build());
 
     return exchange(spec);
   }
@@ -52,14 +55,14 @@ public class WebClientGithubApi implements GithubApi {
 
     log.debug("Listing GitHub repository events: {}", request.toString());
 
-    String url =
-        newUrl("repos", request.getOwner(), request.getRepo(), "events")
-            .queryParamIfPresent("per_page", Optional.ofNullable(request.getPerPage()))
-            .queryParamIfPresent("page", Optional.ofNullable(request.getPage()))
-            .build()
-            .toString();
-
-    WebClient.RequestHeadersSpec<?> spec = get(url);
+    WebClient.RequestHeadersSpec<?> spec =
+        get(
+            uriBuilder ->
+                uriBuilder
+                    .pathSegment("repos", request.getOwner(), request.getRepo(), "events")
+                    .queryParamIfPresent("per_page", Optional.ofNullable(request.getPerPage()))
+                    .queryParamIfPresent("page", Optional.ofNullable(request.getPage()))
+                    .build());
     if (!Strings.isNullOrEmpty(request.getEtag())) {
       spec.ifNoneMatch(request.getEtag());
     }
@@ -74,17 +77,17 @@ public class WebClientGithubApi implements GithubApi {
 
     log.debug("Fetching GitHub issue: {}", request);
 
-    String url =
-        newUrl(
-            "repos",
-            request.getOwner(),
-            request.getRepo(),
-            "issues",
-            String.valueOf(request.getIssueNumber()))
-            .build()
-            .toString();
-
-    WebClient.RequestHeadersSpec<?> spec = get(url);
+    WebClient.RequestHeadersSpec<?> spec =
+        get(
+            uriBuilder ->
+                uriBuilder
+                    .pathSegment(
+                        "repos",
+                        request.getOwner(),
+                        request.getRepo(),
+                        "issues",
+                        String.valueOf(request.getIssueNumber()))
+                    .build());
     if (!Strings.isNullOrEmpty(request.getEtag())) {
       spec.ifNoneMatch(request.getEtag());
     }
@@ -92,13 +95,33 @@ public class WebClientGithubApi implements GithubApi {
     return exchange(spec);
   }
 
-  private UriComponentsBuilder newUrl(String... pathSegment) {
-    return UriComponentsBuilder.newInstance().scheme(SCHEME).host(HOST).pathSegment(pathSegment);
+  @Override
+  public Single<GithubApiResponse> searchIssues(SearchIssuesRequest request) {
+    checkNotNull(request.getQ());
+
+    log.debug("Searching GitHub issues: {}", request);
+
+    WebClient.RequestHeadersSpec<?> spec =
+        get(
+            uriBuilder ->
+                uriBuilder
+                    .pathSegment("search", "issues")
+                    .queryParam("q", "{query}")
+                    .queryParamIfPresent("sort", Optional.ofNullable(request.getSort()))
+                    .queryParamIfPresent("order", Optional.ofNullable(request.getOrder()))
+                    .queryParamIfPresent("per_page", Optional.ofNullable(request.getPerPage()))
+                    .queryParamIfPresent("page", Optional.ofNullable(request.getPage()))
+                    .build(request.getQ()));
+
+    return exchange(spec);
   }
 
-  private WebClient.RequestHeadersSpec<?> get(String url) {
+  private WebClient.RequestHeadersSpec<?> get(Function<UriBuilder, URI> uriFunction) {
     WebClient.RequestHeadersSpec<?> spec =
-        webClient.get().uri(url).header("Accept", "application/vnd.github.v3+json");
+        webClient
+            .get()
+            .uri(uriBuilder -> uriFunction.apply(uriBuilder.scheme(SCHEME).host(HOST)))
+            .header("Accept", "application/vnd.github.v3+json");
 
     if (!Strings.isNullOrEmpty(accessToken)) {
       spec = spec.header("Authorization", "token " + accessToken);

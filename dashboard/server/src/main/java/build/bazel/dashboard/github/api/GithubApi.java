@@ -8,4 +8,6 @@ public interface GithubApi {
   Single<GithubApiResponse> listRepositoryEvents(ListRepositoryEventsRequest request);
 
   Single<GithubApiResponse> fetchIssue(FetchIssueRequest request);
+
+  Single<GithubApiResponse> searchIssues(SearchIssuesRequest request);
 }
