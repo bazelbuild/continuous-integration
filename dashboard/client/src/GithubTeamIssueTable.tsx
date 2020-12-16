@@ -1,8 +1,16 @@
-import styles from "./GithubTeamIssueTable.module.scss";
-
 import React from "react";
-import { Column, useTable } from "react-table";
+import { Column, Row, useSortBy, useTable } from "react-table";
 import useSWR from "swr";
+import {
+  Link,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TableSortLabel,
+} from "@material-ui/core";
 
 function fetcher(input: RequestInfo, init?: RequestInit) {
   return fetch(input, init).then((res) => res.json());
@@ -45,18 +53,38 @@ function useGithubTeamIssues() {
 }
 
 function IssueStatsCell({ value }: { value: GithubTeamIssueStats }) {
-  const text = value.count !== null ? String(value.count) : "(none)";
+  const content = value.count !== null ? value.count : "";
   return (
-    <div className={styles.stats}>
-      <a href={value.url} target="_blank">
-        {text}
-      </a>
-    </div>
+    <Link href={value.url} target="_blank">
+      {content}
+    </Link>
   );
 }
 
 export default function GithubTeamIssueTable() {
   const { data, error, loading } = useGithubTeamIssues();
+
+  const issueStatsSortType = React.useMemo(
+    () => (rowA: Row<any>, rowB: Row<any>, id: string, _desc: boolean) => {
+      const a = rowA.values[id] as GithubTeamIssueStats;
+      const b = rowB.values[id] as GithubTeamIssueStats;
+      if (!a.count) {
+        return 1;
+      } else if (!b.count) {
+        return -1;
+      } else {
+        if (a.count > b.count) {
+          return -1;
+        } else if (b.count > a.count) {
+          return 1;
+        } else {
+          return 0;
+        }
+      }
+    },
+    []
+  );
+
   const columns: Array<Column<GithubTeamIssue>> = React.useMemo(
     () => [
       {
@@ -67,46 +95,55 @@ export default function GithubTeamIssueTable() {
         Header: "# open issues",
         accessor: (data) => data.openIssues,
         Cell: IssueStatsCell,
+        sortType: issueStatsSortType,
       },
       {
         Header: "# open P0",
         accessor: (data) => data.openP0Issues,
         Cell: IssueStatsCell,
+        sortType: issueStatsSortType,
       },
       {
         Header: "# open P1",
         accessor: (data) => data.openP1Issues,
         Cell: IssueStatsCell,
+        sortType: issueStatsSortType,
       },
       {
         Header: "# open P2",
         accessor: (data) => data.openP2Issues,
         Cell: IssueStatsCell,
+        sortType: issueStatsSortType,
       },
       {
         Header: "# open P3",
         accessor: (data) => data.openP3Issues,
         Cell: IssueStatsCell,
+        sortType: issueStatsSortType,
       },
       {
         Header: "# open P4",
         accessor: (data) => data.openP4Issues,
         Cell: IssueStatsCell,
+        sortType: issueStatsSortType,
       },
       {
         Header: "no type",
         accessor: (data) => data.openNoTypeIssues,
         Cell: IssueStatsCell,
+        sortType: issueStatsSortType,
       },
       {
         Header: "no priority",
         accessor: (data) => data.openNoPriorityIssues,
         Cell: IssueStatsCell,
+        sortType: issueStatsSortType,
       },
       {
         Header: "Untriaged",
         accessor: (data) => data.openUntriagedIssues,
         Cell: IssueStatsCell,
+        sortType: issueStatsSortType,
       },
       {
         Header: "Owner",
@@ -122,41 +159,56 @@ export default function GithubTeamIssueTable() {
     headerGroups,
     rows,
     prepareRow,
-  } = useTable({ columns, data: data || [] });
+  } = useTable({ columns, data: data || [] }, useSortBy);
 
   if (loading) {
     return <div>loading</div>;
   }
 
-  console.log(data);
+  if (error) {
+    return <div>{JSON.stringify(error)}</div>;
+  }
 
   return (
-    <div className={styles.container}>
-      <table {...getTableProps()}>
-        <thead>
+    <TableContainer>
+      <Table {...getTableProps()}>
+        <TableHead>
           {headerGroups.map((headerGroup) => (
-            <tr {...headerGroup.getHeaderGroupProps()}>
+            <TableRow {...headerGroup.getHeaderGroupProps()}>
               {headerGroup.headers.map((column) => (
-                <th {...column.getHeaderProps()}>{column.render("Header")}</th>
+                <TableCell
+                  {...column.getHeaderProps(
+                    (column as any).getSortByToggleProps()
+                  )}
+                >
+                  <TableSortLabel
+                    active={(column as any).isSorted}
+                    direction={(column as any).isSortedDesc ? "desc" : "asc"}
+                  >
+                    {column.render("Header")}
+                  </TableSortLabel>
+                </TableCell>
               ))}
-            </tr>
+            </TableRow>
           ))}
-        </thead>
-        <tbody {...getTableBodyProps()}>
+        </TableHead>
+        <TableBody {...getTableBodyProps()}>
           {rows.map((row) => {
             prepareRow(row);
             return (
-              <tr {...row.getRowProps()}>
+              <TableRow {...row.getRowProps()}>
                 {row.cells.map((cell) => {
                   return (
-                    <td {...cell.getCellProps()}>{cell.render("Cell")}</td>
+                    <TableCell {...cell.getCellProps()}>
+                      {cell.render("Cell")}
+                    </TableCell>
                   );
                 })}
-              </tr>
+              </TableRow>
             );
           })}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }
