@@ -8,6 +8,8 @@ public interface GithubIssueRepository {
 
   Completable save(GithubIssue githubIssue);
 
+  Completable delete(String owner, String repo, int issueNumber);
+
   Maybe<GithubIssue> findOne(String owner, String repo, int issueNumber);
 
   Observable<GithubIssue> list();

@@ -56,6 +56,7 @@ public class GithubTeamIssuesRestController {
     int count;
     int added;
     int updated;
+    int deleted;
     int untouched;
     int error;
   }
@@ -86,6 +87,8 @@ public class GithubTeamIssuesRestController {
                 builder.added(builder.added + 1);
               } else if (result.isUpdated()) {
                 builder.updated(builder.updated + 1);
+              } else if (result.isDeleted()) {
+                builder.deleted(builder.deleted + 1);
               } else if (result.getError() != null) {
                 builder.error(builder.error + 1);
               } else {

@@ -27,19 +27,20 @@ public class GithubIssueRepositoryImpl implements GithubIssueRepository {
   @Override
   public Completable save(GithubIssue githubIssue) {
     try {
-      Mono<Void> execution = databaseClient
-          .sql(
-              "INSERT INTO github_issue_data (owner, repo, issue_number, timestamp, etag, data) "
-                  + "VALUES (:owner, :repo, :issue_number, :timestamp, :etag, :data) "
-                  + "ON CONFLICT (owner, repo, issue_number) DO UPDATE "
-                  + "SET etag = excluded.etag, timestamp = excluded.timestamp, data = excluded.data")
-          .bind("owner", githubIssue.getOwner())
-          .bind("repo", githubIssue.getRepo())
-          .bind("issue_number", githubIssue.getIssueNumber())
-          .bind("timestamp", githubIssue.getTimestamp())
-          .bind("etag", githubIssue.getEtag())
-          .bind("data", Json.of(objectMapper.writeValueAsBytes(githubIssue.getData())))
-          .then();
+      Mono<Void> execution =
+          databaseClient
+              .sql(
+                  "INSERT INTO github_issue_data (owner, repo, issue_number, timestamp, etag, data) "
+                      + "VALUES (:owner, :repo, :issue_number, :timestamp, :etag, :data) "
+                      + "ON CONFLICT (owner, repo, issue_number) DO UPDATE "
+                      + "SET etag = excluded.etag, timestamp = excluded.timestamp, data = excluded.data")
+              .bind("owner", githubIssue.getOwner())
+              .bind("repo", githubIssue.getRepo())
+              .bind("issue_number", githubIssue.getIssueNumber())
+              .bind("timestamp", githubIssue.getTimestamp())
+              .bind("etag", githubIssue.getEtag())
+              .bind("data", Json.of(objectMapper.writeValueAsBytes(githubIssue.getData())))
+              .then();
       return RxJava3Adapter.monoToCompletable(execution);
     } catch (JsonProcessingException e) {
       return Completable.error(e);
@@ -47,26 +48,41 @@ public class GithubIssueRepositoryImpl implements GithubIssueRepository {
   }
 
   @Override
+  public Completable delete(String owner, String repo, int issueNumber) {
+    Mono<Void> execution =
+        databaseClient
+            .sql(
+                "DELETE FROM github_issue_data WHERE owner = :owner AND repo = :repo AND issue_number = :issue_number")
+            .bind("owner", owner)
+            .bind("repo", repo)
+            .bind("issue_number", issueNumber)
+            .then();
+    return RxJava3Adapter.monoToCompletable(execution);
+  }
+
+  @Override
   public Maybe<GithubIssue> findOne(String owner, String repo, int issueNumber) {
-    Mono<GithubIssue> query = databaseClient
-        .sql(
-            "SELECT owner, repo, issue_number, timestamp, etag, data FROM github_issue_data "
-                + "WHERE owner=:owner AND repo=:repo AND issue_number=:issue_number")
-        .bind("owner", owner)
-        .bind("repo", repo)
-        .bind("issue_number", issueNumber)
-        .map(this::toGithubIssue)
-        .one();
+    Mono<GithubIssue> query =
+        databaseClient
+            .sql(
+                "SELECT owner, repo, issue_number, timestamp, etag, data FROM github_issue_data "
+                    + "WHERE owner=:owner AND repo=:repo AND issue_number=:issue_number")
+            .bind("owner", owner)
+            .bind("repo", repo)
+            .bind("issue_number", issueNumber)
+            .map(this::toGithubIssue)
+            .one();
     return RxJava3Adapter.monoToMaybe(query);
   }
 
   @Override
   public Observable<GithubIssue> list() {
-    Flux<GithubIssue> query = databaseClient
-        // language=SQL
-        .sql("SELECT owner, repo, issue_number, timestamp, etag, data FROM github_issue_data")
-        .map(this::toGithubIssue)
-        .all();
+    Flux<GithubIssue> query =
+        databaseClient
+            // language=SQL
+            .sql("SELECT owner, repo, issue_number, timestamp, etag, data FROM github_issue_data")
+            .map(this::toGithubIssue)
+            .all();
 
     return RxJava3Adapter.fluxToObservable(query);
   }

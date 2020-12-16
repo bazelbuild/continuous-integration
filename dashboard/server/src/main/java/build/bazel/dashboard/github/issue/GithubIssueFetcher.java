@@ -26,18 +26,20 @@ public class GithubIssueFetcher {
     GithubIssue githubIssue;
     boolean added;
     boolean updated;
+    boolean deleted;
     Throwable error;
 
-    static FetchResult create(GithubIssue result, boolean exists, boolean saved, Throwable error) {
+    static FetchResult create(
+        GithubIssue result, boolean added, boolean updated, boolean deleted, Throwable error) {
       FetchResultBuilder builder = FetchResult.builder().githubIssue(result);
       if (error != null) {
         builder.error(error);
-      } else if (saved) {
-        if (exists) {
-          builder.updated(true);
-        } else {
-          builder.added(true);
-        }
+      } else if (added) {
+        builder.added(true);
+      } else if (updated) {
+        builder.updated(true);
+      } else if (deleted) {
+        builder.deleted(true);
       }
       return builder.build();
     }
@@ -74,10 +76,22 @@ public class GithubIssueFetcher {
                                   .build();
                           return repository
                               .save(githubIssue)
-                              .toSingle(() -> FetchResult.create(githubIssue, exists, true, null));
+                              .toSingle(
+                                  () ->
+                                      FetchResult.create(
+                                          githubIssue, !exists, exists, false, null));
                         } else if (response.getStatus().value() == 304) {
                           // Not modified
-                          return Single.just(FetchResult.create(existed, exists, false, null));
+                          return Single.just(
+                              FetchResult.create(existed, false, false, false, null));
+                        } else if (response.getStatus().value() == 301
+                            || response.getStatus().value() == 404
+                            || response.getStatus().value() == 410) {
+                          // Transferred or deleted
+                          return repository
+                              .delete(owner, repo, issueNumber)
+                              .toSingle(
+                                  () -> FetchResult.create(existed, false, false, true, null));
                         } else {
                           log.error(
                               "Failed to fetch {}/{}/issues/{}: {}",
@@ -88,7 +102,8 @@ public class GithubIssueFetcher {
                           return Single.just(
                               FetchResult.create(
                                   existed,
-                                  exists,
+                                  false,
+                                  false,
                                   false,
                                   new IOException(response.getStatus().toString())));
                         }
