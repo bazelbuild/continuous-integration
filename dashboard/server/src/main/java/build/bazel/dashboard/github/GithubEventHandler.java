@@ -1,6 +1,5 @@
 package build.bazel.dashboard.github;
 
-import build.bazel.dashboard.github.issue.GithubIssueFetcher;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.reactivex.rxjava3.core.Completable;
 import lombok.RequiredArgsConstructor;

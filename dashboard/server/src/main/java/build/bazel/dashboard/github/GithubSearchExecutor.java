@@ -1,4 +1,4 @@
-package build.bazel.dashboard.github.issue;
+package build.bazel.dashboard.github;
 
 import io.reactivex.rxjava3.core.Single;
 

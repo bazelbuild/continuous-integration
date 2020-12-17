@@ -1,7 +1,8 @@
-package build.bazel.dashboard.github.issue;
+package build.bazel.dashboard.github;
 
 import build.bazel.dashboard.github.api.FetchIssueRequest;
 import build.bazel.dashboard.github.api.GithubApi;
+import build.bazel.dashboard.github.db.GithubIssueRepository;
 import io.reactivex.rxjava3.core.Single;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;

@@ -1,5 +1,7 @@
-package build.bazel.dashboard.github.issue;
+package build.bazel.dashboard.github.db.postgresql;
 
+import build.bazel.dashboard.github.db.GithubIssueRepository;
+import build.bazel.dashboard.github.GithubIssue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.r2dbc.postgresql.codec.Json;
@@ -19,7 +21,7 @@ import static java.util.Objects.requireNonNull;
 
 @Component
 @RequiredArgsConstructor
-public class GithubIssueRepositoryImpl implements GithubIssueRepository {
+public class PostgresqlGithubIssueRepository implements GithubIssueRepository {
 
   private final DatabaseClient databaseClient;
   private final ObjectMapper objectMapper;

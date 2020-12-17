@@ -1,6 +1,9 @@
-package build.bazel.dashboard.github.issue.rest;
+package build.bazel.dashboard.github.rest;
 
-import build.bazel.dashboard.github.issue.*;
+import build.bazel.dashboard.github.GithubIssue;
+import build.bazel.dashboard.github.GithubIssueFetcher;
+import build.bazel.dashboard.github.GithubTeamIssue;
+import build.bazel.dashboard.github.GithubTeamIssueProvider;
 import build.bazel.dashboard.github.task.PollGithubEventsTask;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
@@ -19,13 +22,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class GithubTeamIssuesRestController {
   private final GithubTeamIssueProvider githubTeamIssueProvider;
-  private final GithubIssueRepository githubIssueRepository;
   private final PollGithubEventsTask pollGithubEventsTask;
   private final GithubIssueFetcher githubIssueFetcher;
 
-  @GetMapping("/github/teams/issues")
-  public Observable<GithubTeamIssue> listGithubTeamIssues() {
-    return githubTeamIssueProvider.list();
+  @GetMapping("/github/{owner}/{repo}/teams/issues")
+  public Observable<GithubTeamIssue> listGithubTeamIssues(
+      @PathVariable("owner") String owner, @PathVariable("repo") String repo) {
+    return githubTeamIssueProvider.list(owner, repo);
   }
 
   @GetMapping("/github/{owner}/{repo}/issues/{issueNumber}")
@@ -33,13 +36,10 @@ public class GithubTeamIssuesRestController {
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
       @PathVariable("issueNumber") Integer issueNumber) {
-    return githubIssueRepository.findOne(owner, repo, issueNumber);
-  }
-
-  @PutMapping("/github/{owner}/{repo}/events")
-  public Completable pollGithubRepositoryEvents(
-      @PathVariable("owner") String owner, @PathVariable("repo") String repo) {
-    return pollGithubEventsTask.pollGithubRepositoryEvents(owner, repo);
+    return githubIssueFetcher
+        .fetch(owner, repo, issueNumber)
+        .map(GithubIssueFetcher.FetchResult::getGithubIssue)
+        .toMaybe();
   }
 
   @PutMapping("/github/{owner}/{repo}/issues/{issueNumber}")
@@ -59,13 +59,6 @@ public class GithubTeamIssuesRestController {
     int deleted;
     int untouched;
     int error;
-  }
-
-  private Maybe<GithubIssue> fetchOneIssues(String owner, String repo, Integer issueNumber) {
-    return githubIssueFetcher
-        .fetch(owner, repo, issueNumber)
-        .map(GithubIssueFetcher.FetchResult::getGithubIssue)
-        .toMaybe();
   }
 
   @PutMapping("/github/{owner}/{repo}/issues")
@@ -97,4 +90,11 @@ public class GithubTeamIssuesRestController {
             })
         .map(builder -> builder.count(count).build());
   }
+
+  @PutMapping("/github/{owner}/{repo}/events")
+  public Completable pollGithubRepositoryEvents(
+      @PathVariable("owner") String owner, @PathVariable("repo") String repo) {
+    return pollGithubEventsTask.pollGithubRepositoryEvents(owner, repo);
+  }
+
 }

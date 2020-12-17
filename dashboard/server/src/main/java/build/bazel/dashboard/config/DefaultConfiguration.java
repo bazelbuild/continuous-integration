@@ -1,7 +1,7 @@
 package build.bazel.dashboard.config;
 
-import build.bazel.dashboard.github.issue.GithubSearchExecutor;
-import build.bazel.dashboard.github.issue.PostgresqlGithubSearchExecutor;
+import build.bazel.dashboard.github.GithubSearchExecutor;
+import build.bazel.dashboard.github.db.postgresql.PostgresqlGithubSearchExecutor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.r2dbc.core.DatabaseClient;

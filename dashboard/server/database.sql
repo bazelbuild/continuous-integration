@@ -174,85 +174,15 @@ SELECT owner, repo, name
 FROM github_label
 GROUP BY owner, repo, name;
 
-CREATE VIEW github_label_team AS
-SELECT owner, repo, SUBSTR(name, 6) AS name, name as label
-FROM github_label
-WHERE name LIKE 'team-%';
 
-
-CREATE VIEW github_label_team_issue AS
-SELECT glt.owner, glt.repo, glt.label, il.issue_number
-FROM github_label_team glt
-         LEFT JOIN github_issue_label il ON glt.owner = il.owner AND glt.repo = il.repo AND glt.label = il.label;
-
-
-CREATE VIEW github_issue_no_type AS
-WITH github_issue_has_type AS (
-    SELECT owner, repo, issue_number
-    FROM github_issue_label
-    WHERE label LIKE 'type: %'
-    GROUP BY owner, repo, issue_number
-)
-SELECT gi.*
-FROM github_issue gi
-         LEFT JOIN github_issue_has_type giht
-                   ON gi.owner = giht.owner AND gi.repo = giht.repo AND gi.issue_number = giht.issue_number
-WHERE NOT gi.is_pull_request
-  AND giht IS NULL;
-
-CREATE VIEW github_issue_no_priority AS
-WITH github_issue_has_priority AS (
-    SELECT owner, repo, issue_number
-    FROM github_issue_label
-    WHERE label LIKE 'P_'
-    GROUP BY owner, repo, issue_number
-)
-SELECT gi.*
-FROM github_issue gi
-         LEFT JOIN github_issue_has_priority gihp
-                   ON gi.owner = gihp.owner AND gi.repo = gihp.repo AND gi.issue_number = gihp.issue_number
-WHERE NOT gi.is_pull_request
-  AND gihp IS NULL;
-
-
-CREATE VIEW github_label_team_issue_status AS
-WITH github_label_team_issue_open AS (
-    SELECT gi.owner,
-           gi.repo,
-           COALESCE(glti.label, '(none)')                                              AS team,
-           COUNT(*) FILTER (WHERE gi.state = 'open')                                   AS open,
-           COUNT(*) FILTER (WHERE gi.state = 'open' AND 'P0' = ANY (gi.labels))        AS open_p0,
-           COUNT(*) FILTER (WHERE gi.state = 'open' AND 'P1' = ANY (gi.labels))        AS open_p1,
-           COUNT(*) FILTER (WHERE gi.state = 'open' AND 'P2' = ANY (gi.labels))        AS open_p2,
-           COUNT(*) FILTER (WHERE gi.state = 'open' AND 'P3' = ANY (gi.labels))        AS open_p3,
-           COUNT(*) FILTER (WHERE gi.state = 'open' AND 'P4' = ANY (gi.labels))        AS open_p4,
-           COUNT(*) FILTER (WHERE gi.state = 'open' AND 'untriaged' = ANY (gi.labels)) AS untriaged
-    FROM github_issue gi
-             LEFT JOIN github_label_team_issue glti
-                       ON gi.owner = glti.owner AND gi.repo = glti.repo AND gi.issue_number = glti.issue_number
-    WHERE NOT gi.is_pull_request
-    GROUP BY gi.owner, gi.repo, glti.label
-),
-     github_label_team_issue_open_no_type AS (
-         SELECT glti.owner, glti.repo, glti.label AS team, COUNT(gint) AS no_type
-         FROM github_issue_no_type gint
-                  LEFT JOIN github_label_team_issue glti ON gint.owner = glti.owner AND gint.repo = glti.repo AND
-                                                            gint.issue_number = glti.issue_number
-         WHERE gint.state = 'open'
-         GROUP BY glti.owner, glti.repo, glti.label
-     ),
-     github_label_team_issue_open_no_priority AS (
-         SELECT glti.owner, glti.repo, glti.label AS team, COUNT(ginp) AS no_priority
-         FROM github_issue_no_priority ginp
-                  LEFT JOIN github_label_team_issue glti ON ginp.owner = glti.owner AND ginp.repo = glti.repo AND
-                                                            ginp.issue_number = glti.issue_number
-         WHERE ginp.state = 'open'
-         GROUP BY glti.owner, glti.repo, glti.label
-     )
-SELECT gltio.*, COALESCE(gltiont.no_type, 0) as no_type, COALESCE(gltionp.no_priority, 0) as no_priority
-FROM github_label_team_issue_open gltio
-         LEFT JOIN github_label_team_issue_open_no_type gltiont
-                   ON gltio.owner = gltiont.owner AND gltio.repo = gltiont.repo AND gltio.team = gltiont.team
-         LEFT JOIN github_label_team_issue_open_no_priority gltionp
-                   ON gltio.owner = gltionp.owner AND gltio.repo = gltionp.repo AND gltio.team = gltionp.team;
-
+CREATE TABLE github_issue_team
+(
+    owner      TEXT,
+    repo       TEXT,
+    label      TEXT,
+    created_at TIMESTAMPTZ,
+    updated_at TIMESTAMPTZ,
+    name       TEXT,
+    team_owner TEXT,
+    PRIMARY KEY (owner, repo, label)
+);

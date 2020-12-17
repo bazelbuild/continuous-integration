@@ -16,10 +16,12 @@ function fetcher(input: RequestInfo, init?: RequestInit) {
   return fetch(input, init).then((res) => res.json());
 }
 
-interface GithubTeamIssueTeam {
-  name: string;
+interface GithubIssueTeam {
   owner: string;
+  repo: string;
   label: string;
+  name: string;
+  teamOwner: string;
 }
 
 interface GithubTeamIssueStats {
@@ -28,7 +30,7 @@ interface GithubTeamIssueStats {
 }
 
 interface GithubTeamIssue {
-  team: GithubTeamIssueTeam;
+  team: GithubIssueTeam;
   openIssues: GithubTeamIssueStats;
   openP0Issues: GithubTeamIssueStats;
   openP1Issues: GithubTeamIssueStats;
@@ -41,10 +43,14 @@ interface GithubTeamIssue {
   updatedAt: string;
 }
 
-function useGithubTeamIssues() {
-  const { data, error } = useSWR("/api/github/teams/issues", fetcher, {
-    refreshInterval: 60000,
-  });
+function useGithubTeamIssues(owner: string, repo: string) {
+  const { data, error } = useSWR(
+    `/api/github/${owner}/${repo}/teams/issues`,
+    fetcher,
+    {
+      refreshInterval: 60000,
+    }
+  );
   return {
     data: data as Array<GithubTeamIssue>,
     error,
@@ -61,8 +67,16 @@ function IssueStatsCell({ value }: { value: GithubTeamIssueStats }) {
   );
 }
 
+function TeamOwnerCell({ value }: { value: string }) {
+  return (
+    <Link href={`https://github.com/${value}`} target="_blank">
+      {value}
+    </Link>
+  );
+}
+
 export default function GithubTeamIssueTable() {
-  const { data, error, loading } = useGithubTeamIssues();
+  const { data, error, loading } = useGithubTeamIssues("bazelbuild", "bazel");
 
   const issueStatsSortType = React.useMemo(
     () => (rowA: Row<any>, rowB: Row<any>, id: string, _desc: boolean) => {
@@ -147,7 +161,8 @@ export default function GithubTeamIssueTable() {
       },
       {
         Header: "Owner",
-        accessor: (data) => data.team.owner,
+        accessor: (data) => data.team.teamOwner,
+        Cell: TeamOwnerCell,
       },
     ],
     []
@@ -166,12 +181,12 @@ export default function GithubTeamIssueTable() {
   }
 
   if (error) {
-    return <div>{JSON.stringify(error)}</div>;
+    return <div>error</div>;
   }
 
   return (
     <TableContainer>
-      <Table {...getTableProps()}>
+      <Table size="small" {...getTableProps()}>
         <TableHead>
           {headerGroups.map((headerGroup) => (
             <TableRow {...headerGroup.getHeaderGroupProps()}>

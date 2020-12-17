@@ -1,4 +1,4 @@
-package build.bazel.dashboard.github.issue;
+package build.bazel.dashboard.github;
 
 import build.bazel.dashboard.github.api.GithubApi;
 import build.bazel.dashboard.github.api.SearchIssuesRequest;

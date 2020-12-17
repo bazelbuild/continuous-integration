@@ -1,5 +1,6 @@
-package build.bazel.dashboard.github.issue;
+package build.bazel.dashboard.github.db;
 
+import build.bazel.dashboard.github.GithubIssue;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Observable;

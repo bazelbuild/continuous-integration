@@ -1,4 +1,4 @@
-package build.bazel.dashboard.github.issue;
+package build.bazel.dashboard.github;
 
 import lombok.Builder;
 import lombok.Value;
@@ -8,7 +8,7 @@ import java.time.Instant;
 @Builder
 @Value
 public class GithubTeamIssue {
-    Team team;
+    GithubIssueTeam team;
     Stats openIssues;
     Stats openP0Issues;
     Stats openP1Issues;
@@ -19,14 +19,6 @@ public class GithubTeamIssue {
     Stats openNoPriorityIssues;
     Stats openUntriagedIssues;
     Instant updatedAt;
-
-    @Builder
-    @Value
-    public static class Team {
-      String name;
-      String owner;
-      String label;
-    }
 
     @Builder
     @Value

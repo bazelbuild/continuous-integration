@@ -1,5 +1,6 @@
-package build.bazel.dashboard.github.issue;
+package build.bazel.dashboard.github.db.postgresql;
 
+import build.bazel.dashboard.github.GithubSearchExecutor;
 import io.reactivex.rxjava3.core.Single;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;

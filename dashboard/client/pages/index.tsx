@@ -2,24 +2,16 @@ import React from "react";
 import GithubTeamIssueTable from "../src/GithubTeamIssueTable";
 import {
   AppBar,
+  Card,
+  CardContent,
+  CardHeader,
   Container,
-  createMuiTheme,
-  Paper,
-  ThemeProvider,
   Toolbar,
 } from "@material-ui/core";
 
-let theme = createMuiTheme({
-  palette: {
-    primary: {
-      main: "#368039",
-    },
-  },
-});
-
 export default function Home() {
   return (
-    <ThemeProvider theme={theme}>
+    <>
       <AppBar position="static">
         <Toolbar variant="dense">
           <img
@@ -31,10 +23,20 @@ export default function Home() {
       </AppBar>
 
       <Container style={{ marginTop: "30px" }}>
-        <Paper>
-          <GithubTeamIssueTable />
-        </Paper>
+        {/*<Grid container>*/}
+        {/*<Grid item>*/}
+        <Card>
+          <CardHeader
+            title="Open Issues (by Team)"
+            titleTypographyProps={{ variant: "body1" }}
+          />
+          <CardContent style={{ padding: 0 }}>
+            <GithubTeamIssueTable />
+          </CardContent>
+        </Card>
+        {/*</Grid>*/}
+        {/*</Grid>*/}
       </Container>
-    </ThemeProvider>
+    </>
   );
 }
