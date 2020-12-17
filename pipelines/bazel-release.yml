@@ -25,6 +25,7 @@ steps:
           - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
       git fetch origin master
+      git fetch --tags origin
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
 
       release_name=\$(source scripts/release/common.sh; get_full_release_name)
@@ -58,6 +59,7 @@ steps:
           - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
       git fetch origin master
+      git fetch --tags origin
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
 
       release_name=$(buildkite-agent meta-data get "release_name")
@@ -115,6 +117,7 @@ steps:
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
     command: |
       git fetch origin master
+      git fetch --tags origin
       git fetch origin ${BUILDKITE_BRANCH}
       git checkout FETCH_HEAD
 
@@ -144,6 +147,7 @@ steps:
       - queue=macos
     command: |
       git fetch origin master
+      git fetch --tags origin
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
 
       release_name=$(buildkite-agent meta-data get "release_name")
@@ -179,6 +183,7 @@ steps:
       - queue=windows
     command: |
       git fetch origin master
+      git fetch --tags origin
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
 
       buildkite-agent meta-data get "release_name" > release_name.txt
@@ -227,6 +232,7 @@ steps:
           - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
       git fetch origin master
+      git fetch --tags origin
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
 
       release_name=$(buildkite-agent meta-data get "release_name")
@@ -260,6 +266,7 @@ steps:
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
     command: |
       git fetch origin master
+      git fetch --tags origin
       git fetch origin ${BUILDKITE_BRANCH}
       git checkout FETCH_HEAD
 
@@ -277,6 +284,7 @@ steps:
       - queue=macos
     command: |
       git fetch origin master
+      git fetch --tags origin
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
 
       release_name=$(buildkite-agent meta-data get "release_name")
@@ -293,6 +301,7 @@ steps:
       - queue=windows
     command: |
       git fetch origin master
+      git fetch --tags origin
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
 
       buildkite-agent meta-data get "release_name" > release_name.txt
@@ -335,6 +344,7 @@ steps:
     command: |
       echo "+++ Fetching Git notes"
       git fetch origin master
+      git fetch --tags origin
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
 
       echo "+++ Downloading release artifacts"
@@ -379,6 +389,7 @@ steps:
           - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
       git fetch origin master
+      git fetch --tags origin
       git checkout -b ${BUILDKITE_BRANCH} --track origin/${BUILDKITE_BRANCH}
 
       source scripts/ci/build.sh
