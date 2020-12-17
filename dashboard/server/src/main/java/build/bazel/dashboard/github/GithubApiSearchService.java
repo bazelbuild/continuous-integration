@@ -10,7 +10,7 @@ import java.io.IOException;
 
 @Slf4j
 @RequiredArgsConstructor
-public class GithubApiSearchExecutor implements GithubSearchExecutor {
+public class GithubApiSearchService implements GithubSearchService {
   private final GithubApi githubApi;
 
   @Override

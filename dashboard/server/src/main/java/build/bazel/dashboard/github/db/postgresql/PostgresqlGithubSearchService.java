@@ -1,6 +1,6 @@
 package build.bazel.dashboard.github.db.postgresql;
 
-import build.bazel.dashboard.github.GithubSearchExecutor;
+import build.bazel.dashboard.github.GithubSearchService;
 import io.reactivex.rxjava3.core.Single;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
-public class PostgresqlGithubSearchExecutor implements GithubSearchExecutor {
+public class PostgresqlGithubSearchService implements GithubSearchService {
 
   private final DatabaseClient databaseClient;
 

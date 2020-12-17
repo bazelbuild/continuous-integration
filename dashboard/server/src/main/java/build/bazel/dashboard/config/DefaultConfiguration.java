@@ -1,7 +1,7 @@
 package build.bazel.dashboard.config;
 
-import build.bazel.dashboard.github.GithubSearchExecutor;
-import build.bazel.dashboard.github.db.postgresql.PostgresqlGithubSearchExecutor;
+import build.bazel.dashboard.github.GithubSearchService;
+import build.bazel.dashboard.github.db.postgresql.PostgresqlGithubSearchService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -29,7 +29,7 @@ public class DefaultConfiguration {
   }
 
   @Bean
-  public GithubSearchExecutor defaultGithubSearchExecutor(DatabaseClient databaseClient) {
-    return new PostgresqlGithubSearchExecutor(databaseClient);
+  public GithubSearchService defaultGithubSearchExecutor(DatabaseClient databaseClient) {
+    return new PostgresqlGithubSearchService(databaseClient);
   }
 }

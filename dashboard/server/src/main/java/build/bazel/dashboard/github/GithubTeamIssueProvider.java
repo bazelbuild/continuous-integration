@@ -34,7 +34,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @RequiredArgsConstructor
 public class GithubTeamIssueProvider {
   private final GithubIssueTeamRepository githubIssueTeamRepository;
-  private final GithubSearchExecutor githubSearchExecutor;
+  private final GithubSearchService githubSearchService;
 
   @Builder
   @Value
@@ -225,7 +225,7 @@ public class GithubTeamIssueProvider {
   }
 
   private Single<GithubTeamIssue.Stats> fetchIssuesStats(String owner, String repo, String query) {
-    return githubSearchExecutor
+    return githubSearchService
         .fetchSearchResultCount(owner, repo, query)
         .onErrorComplete(
             error -> {

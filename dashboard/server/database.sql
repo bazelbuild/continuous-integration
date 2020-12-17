@@ -186,3 +186,39 @@ CREATE TABLE github_issue_team
     team_owner TEXT,
     PRIMARY KEY (owner, repo, label)
 );
+
+
+CREATE TABLE github_issue_query
+(
+    owner      TEXT,
+    repo       TEXT,
+    id         TEXT,
+    created_at TIMESTAMPTZ NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL,
+    name       TEXT,
+    query      TEXT        NOT NULL,
+    PRIMARY KEY (owner, repo, id)
+);
+
+
+CREATE TABLE github_issue_query_count_task
+(
+    owner      TEXT,
+    repo       TEXT,
+    query_id   TEXT,
+    period     TEXT,
+    created_at TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (owner, repo, query_id, period)
+);
+
+
+CREATE TABLE github_issue_query_count_task_result
+(
+    owner     TEXT,
+    repo      TEXT,
+    query_id  TEXT,
+    period    TEXT,
+    timestamp TIMESTAMPTZ,
+    count     int,
+    PRIMARY KEY (owner, repo, query_id, period, timestamp)
+);

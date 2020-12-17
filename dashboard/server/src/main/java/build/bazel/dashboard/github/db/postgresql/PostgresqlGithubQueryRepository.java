@@ -1,43 +1,42 @@
 package build.bazel.dashboard.github.db.postgresql;
 
-import build.bazel.dashboard.github.GithubIssueTeam;
-import build.bazel.dashboard.github.db.GithubIssueTeamRepository;
-import io.reactivex.rxjava3.core.Observable;
+import build.bazel.dashboard.github.GithubIssueQuery;
+import build.bazel.dashboard.github.db.GithubIssueQueryRepository;
+import io.reactivex.rxjava3.core.Maybe;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
 import reactor.adapter.rxjava.RxJava3Adapter;
-import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.Instant;
-import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class PostgresqlGithubIssueTeamRepository implements GithubIssueTeamRepository {
+public class PostgresqlGithubQueryRepository implements GithubIssueQueryRepository {
   private final DatabaseClient databaseClient;
 
   @Override
-  public Observable<GithubIssueTeam> list(String owner, String repo) {
-    Flux<GithubIssueTeam> query =
+  public Maybe<GithubIssueQuery> findOne(String owner, String repo, String id) {
+    Mono<GithubIssueQuery> query =
         databaseClient
             .sql(
-                "SELECT owner, repo, label, created_at, updated_at, name, team_owner FROM github_issue_team WHERE owner = :owner AND repo = :repo")
+                "SELECT owner, repo, id, created_at, updated_at, name, query FROM github_issue_query WHERE owner = :owner AND repo = :repo AND id = :id")
             .bind("owner", owner)
             .bind("repo", repo)
+            .bind("id", id)
             .map(
                 row ->
-                    GithubIssueTeam.builder()
+                    GithubIssueQuery.builder()
                         .owner(row.get("owner", String.class))
                         .repo(row.get("repo", String.class))
-                        .label(row.get("label", String.class))
+                        .id(row.get("id", String.class))
                         .createdAt(row.get("created_at", Instant.class))
                         .updatedAt(row.get("updated_at", Instant.class))
                         .name(row.get("name", String.class))
-                        .teamOwner(Optional.ofNullable(row.get("team_owner", String.class)).orElse(""))
+                        .query(row.get("query", String.class))
                         .build())
-            .all();
-
-    return RxJava3Adapter.fluxToObservable(query);
+            .one();
+    return RxJava3Adapter.monoToMaybe(query);
   }
 }
