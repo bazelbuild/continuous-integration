@@ -2,7 +2,16 @@ import "../styles/globals.scss";
 
 import { AppProps } from "next/app";
 import Head from "next/head";
-import { CssBaseline } from "@material-ui/core";
+import { createMuiTheme, CssBaseline, ThemeProvider } from "@material-ui/core";
+import React from "react";
+
+let theme = createMuiTheme({
+  palette: {
+    primary: {
+      main: "#368039",
+    },
+  },
+});
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
@@ -20,7 +29,10 @@ function MyApp({ Component, pageProps }: AppProps) {
         />
       </Head>
       <CssBaseline />
-      <Component {...pageProps} />
+
+      <ThemeProvider theme={theme}>
+        <Component {...pageProps} />
+      </ThemeProvider>
     </>
   );
 }
