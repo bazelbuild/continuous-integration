@@ -7,6 +7,7 @@ import build.bazel.dashboard.github.task.CountGithubIssueQueryTask;
 import build.bazel.dashboard.utils.Period;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
+import io.reactivex.rxjava3.core.Observable;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -44,14 +45,25 @@ public class GithubIssueQueryCountTaskRestController {
     Integer count;
   }
 
-  @GetMapping("/github/{owner}/{repo}/search/count/daily/{queryId}")
+  @GetMapping("/github/{owner}/{repo}/search/count/{queryId}")
   public Maybe<CountResult> fetchCountResult(
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
       @PathVariable("queryId") String queryId,
-      @RequestParam("from") Instant from,
-      @RequestParam("to") Instant to) {
-    Period period = Period.DAILY;
+      @RequestParam("period") Period period,
+      @RequestParam(value = "from", required = false) Instant requestFrom,
+      @RequestParam(value = "to", required = false) Instant requestTo) {
+    if (requestTo == null) {
+      requestTo = Instant.now();
+    }
+
+    if (requestFrom == null) {
+      requestFrom = period.prev(requestTo, 30);
+    }
+
+    Instant from = requestFrom;
+    Instant to = requestTo;
+
     return githubIssueQueryRepository
         .findOne(owner, repo, queryId)
         .flatMapSingle(
@@ -64,7 +76,7 @@ public class GithubIssueQueryCountTaskRestController {
                         resultMap -> {
                           Instant end = period.truncate(to);
                           List<CountResultItem> items = new ArrayList<>();
-                          for (Instant timestamp = Period.DAILY.truncate(from);
+                          for (Instant timestamp = period.truncate(from);
                                !timestamp.isAfter(end);
                                timestamp = period.next(timestamp)) {
                             Integer count = null;
@@ -82,5 +94,17 @@ public class GithubIssueQueryCountTaskRestController {
                               .items(items)
                               .build();
                         }));
+  }
+
+  @GetMapping("/github/{owner}/{repo}/search/count")
+  public Observable<CountResult> fetchCountResults(
+      @PathVariable("owner") String owner,
+      @PathVariable("repo") String repo,
+      @RequestParam("period") Period period,
+      @RequestParam("queryId") List<String> queryIds,
+      @RequestParam(value = "from", required = false) Instant from,
+      @RequestParam(value = "to", required = false) Instant to) {
+    return Observable.fromIterable(queryIds)
+        .flatMapMaybe(queryId -> fetchCountResult(owner, repo, queryId, period, from, to));
   }
 }

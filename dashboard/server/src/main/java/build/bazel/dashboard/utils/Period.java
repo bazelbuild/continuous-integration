@@ -24,4 +24,13 @@ public enum Period {
         throw new UnsupportedOperationException();
     }
   }
+
+  public Instant prev(Instant instant, int amount) {
+    switch (this) {
+      case DAILY:
+        return instant.minus(amount, DAYS);
+      default:
+        throw new UnsupportedOperationException();
+    }
+  }
 }

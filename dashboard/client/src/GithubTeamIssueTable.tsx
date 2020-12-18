@@ -1,7 +1,7 @@
 import React from "react";
 import { Column, Row, useSortBy, useTable } from "react-table";
-import useSWR from "swr";
 import {
+  Box,
   Link,
   Table,
   TableBody,
@@ -12,51 +12,11 @@ import {
   TableSortLabel,
 } from "@material-ui/core";
 
-function fetcher(input: RequestInfo, init?: RequestInit) {
-  return fetch(input, init).then((res) => res.json());
-}
-
-interface GithubIssueTeam {
-  owner: string;
-  repo: string;
-  label: string;
-  name: string;
-  teamOwner: string;
-}
-
-interface GithubTeamIssueStats {
-  url: string;
-  count: number | null;
-}
-
-interface GithubTeamIssue {
-  team: GithubIssueTeam;
-  openIssues: GithubTeamIssueStats;
-  openP0Issues: GithubTeamIssueStats;
-  openP1Issues: GithubTeamIssueStats;
-  openP2Issues: GithubTeamIssueStats;
-  openP3Issues: GithubTeamIssueStats;
-  openP4Issues: GithubTeamIssueStats;
-  openNoTypeIssues: GithubTeamIssueStats;
-  openNoPriorityIssues: GithubTeamIssueStats;
-  openUntriagedIssues: GithubTeamIssueStats;
-  updatedAt: string;
-}
-
-function useGithubTeamIssues(owner: string, repo: string) {
-  const { data, error } = useSWR(
-    `/api/github/${owner}/${repo}/teams/issues`,
-    fetcher,
-    {
-      refreshInterval: 60000,
-    }
-  );
-  return {
-    data: data as Array<GithubTeamIssue>,
-    error,
-    loading: !error && !data,
-  };
-}
+import {
+  GithubTeamIssue,
+  GithubTeamIssueStats,
+  useGithubTeamIssues,
+} from "./data/GithubTeamIssue";
 
 function IssueStatsCell({ value }: { value: GithubTeamIssueStats }) {
   const content = value.count !== null ? value.count : "";
@@ -106,49 +66,49 @@ export default function GithubTeamIssueTable() {
         accessor: (data) => data.team.name,
       },
       {
-        Header: "# open issues",
+        Header: "Total",
         accessor: (data) => data.openIssues,
         Cell: IssueStatsCell,
         sortType: issueStatsSortType,
       },
       {
-        Header: "# open P0",
+        Header: "P0",
         accessor: (data) => data.openP0Issues,
         Cell: IssueStatsCell,
         sortType: issueStatsSortType,
       },
       {
-        Header: "# open P1",
+        Header: "P1",
         accessor: (data) => data.openP1Issues,
         Cell: IssueStatsCell,
         sortType: issueStatsSortType,
       },
       {
-        Header: "# open P2",
+        Header: "P2",
         accessor: (data) => data.openP2Issues,
         Cell: IssueStatsCell,
         sortType: issueStatsSortType,
       },
       {
-        Header: "# open P3",
+        Header: "P3",
         accessor: (data) => data.openP3Issues,
         Cell: IssueStatsCell,
         sortType: issueStatsSortType,
       },
       {
-        Header: "# open P4",
+        Header: "P4",
         accessor: (data) => data.openP4Issues,
         Cell: IssueStatsCell,
         sortType: issueStatsSortType,
       },
       {
-        Header: "no type",
+        Header: "No Type",
         accessor: (data) => data.openNoTypeIssues,
         Cell: IssueStatsCell,
         sortType: issueStatsSortType,
       },
       {
-        Header: "no priority",
+        Header: "No Priority",
         accessor: (data) => data.openNoPriorityIssues,
         Cell: IssueStatsCell,
         sortType: issueStatsSortType,
