@@ -105,6 +105,8 @@ public class PollGithubEventsTask {
                           terminate = true;
                         }
 
+                        log.debug("{}", response);
+
                         return terminate;
                       })
                   .flatMapCompletable(

@@ -1,7 +1,6 @@
 import React from "react";
 import { Column, Row, useSortBy, useTable } from "react-table";
 import {
-  Box,
   Link,
   Table,
   TableBody,
