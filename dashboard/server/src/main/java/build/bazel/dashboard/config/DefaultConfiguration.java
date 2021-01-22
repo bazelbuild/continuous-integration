@@ -5,12 +5,10 @@ import build.bazel.dashboard.github.db.postgresql.PostgresqlGithubSearchService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.r2dbc.core.DatabaseClient;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
-@EnableScheduling
 public class DefaultConfiguration {
 
   @Bean
