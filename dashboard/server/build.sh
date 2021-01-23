@@ -4,7 +4,7 @@ set -euxo pipefail
 
 GIT_REV=$(git rev-parse --short HEAD)
 
-mvn -Dproject.version=${GIT_REV} clean package
+./mvnw -Dproject.version=${GIT_REV} clean package
 
 rm -rf target/dependency && mkdir -p target/dependency && (cd target/dependency; jar -xf ../dashboard-${GIT_REV}.jar)
 
