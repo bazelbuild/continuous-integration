@@ -2,8 +2,10 @@
 
 set -euxo pipefail
 
-./mvnw clean package
+GIT_REV=$(git rev-parse --short HEAD)
 
-rm -rf target/dependency && mkdir -p target/dependency && (cd target/dependency; jar -xf ../dashboard.jar)
+mvn -Dproject.version=${GIT_REV} clean package
 
-docker build -f Dockerfile -t gcr.io/bazel-public/dashboard target
+rm -rf target/dependency && mkdir -p target/dependency && (cd target/dependency; jar -xf ../dashboard-${GIT_REV}.jar)
+
+docker build -f Dockerfile -t gcr.io/bazel-public/dashboard:$GIT_REV target

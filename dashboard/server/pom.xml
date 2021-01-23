@@ -10,12 +10,13 @@
     </parent>
     <groupId>build.bazel</groupId>
     <artifactId>dashboard</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${project.version}</version>
     <name>dashboard</name>
     <description>The server for the dashboard</description>
 
     <properties>
         <java.version>11</java.version>
+        <project.version>DEV</project.version>
     </properties>
 
     <dependencies>
@@ -88,7 +89,6 @@
     </dependencies>
 
     <build>
-        <finalName>dashboard</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
