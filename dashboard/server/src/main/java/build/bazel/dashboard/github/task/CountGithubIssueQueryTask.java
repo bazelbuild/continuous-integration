@@ -7,11 +7,12 @@ import io.reactivex.rxjava3.core.Completable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 
-@Component
+@RestController
 @Slf4j
 @RequiredArgsConstructor
 public class CountGithubIssueQueryTask {
@@ -23,6 +24,7 @@ public class CountGithubIssueQueryTask {
     startCountDaily().blockingAwait();
   }
 
+  @PutMapping("/github/search/count/daily")
   public Completable startCountDaily() {
     log.info("Counting Github daily issue queries...");
     return githubIssueQueryCountTaskRepository

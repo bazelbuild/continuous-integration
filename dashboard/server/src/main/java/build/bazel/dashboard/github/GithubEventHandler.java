@@ -1,5 +1,6 @@
 package build.bazel.dashboard.github;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.reactivex.rxjava3.core.Completable;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,8 @@ public class GithubEventHandler {
   private final GithubIssueFetcher githubIssueFetcher;
 
   public Completable onGithubRepositoryEvent(String owner, String repo, ObjectNode event) {
+    log.debug("Repository event {}: {}", event.get("type"), event);
+
     String type = event.get("type").asText();
     switch (type) {
       case "IssuesEvent":
@@ -23,6 +26,17 @@ public class GithubEventHandler {
             owner, repo, event.get("payload").get("pull_request").get("number").asInt());
       default:
         return Completable.complete();
+    }
+  }
+
+  public Completable onGithubRepositoryIssueEvent(String owner, String repo, ObjectNode event) {
+    log.debug("Issue event {}: {}", event.get("event"), event);
+
+    JsonNode issue = event.get("issue");
+    if (issue != null) {
+      return updateGithubIssue(owner, repo, issue.get("number").asInt());
+    } else {
+      return Completable.complete();
     }
   }
 

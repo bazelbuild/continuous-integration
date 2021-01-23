@@ -33,6 +33,8 @@ public class WebClientGithubApi implements GithubApi {
 
   @Override
   public Single<GithubApiResponse> listRepositoryIssues(ListRepositoryIssuesRequest request) {
+    log.debug("{}", request);
+
     checkNotNull(request.getOwner());
     checkNotNull(request.getRepo());
 
@@ -50,10 +52,10 @@ public class WebClientGithubApi implements GithubApi {
 
   @Override
   public Single<GithubApiResponse> listRepositoryEvents(ListRepositoryEventsRequest request) {
+    log.debug("{}", request);
+
     checkNotNull(request.getOwner());
     checkNotNull(request.getRepo());
-
-    log.debug("Listing GitHub repository events: {}", request.toString());
 
     WebClient.RequestHeadersSpec<?> spec =
         get(
@@ -71,11 +73,33 @@ public class WebClientGithubApi implements GithubApi {
   }
 
   @Override
-  public Single<GithubApiResponse> fetchIssue(FetchIssueRequest request) {
+  public Single<GithubApiResponse> listRepositoryIssueEvents(ListRepositoryIssueEventsRequest request) {
+    log.debug("{}", request);
+
     checkNotNull(request.getOwner());
     checkNotNull(request.getRepo());
 
-    log.debug("Fetching GitHub issue: {}", request);
+    WebClient.RequestHeadersSpec<?> spec =
+        get(
+            uriBuilder ->
+                uriBuilder
+                    .pathSegment("repos", request.getOwner(), request.getRepo(), "issues", "events")
+                    .queryParamIfPresent("per_page", Optional.ofNullable(request.getPerPage()))
+                    .queryParamIfPresent("page", Optional.ofNullable(request.getPage()))
+                    .build());
+    if (!Strings.isNullOrEmpty(request.getEtag())) {
+      spec.ifNoneMatch(request.getEtag());
+    }
+
+    return exchange(spec);
+  }
+
+  @Override
+  public Single<GithubApiResponse> fetchIssue(FetchIssueRequest request) {
+    log.debug("{}", request);
+
+    checkNotNull(request.getOwner());
+    checkNotNull(request.getRepo());
 
     WebClient.RequestHeadersSpec<?> spec =
         get(
@@ -97,9 +121,9 @@ public class WebClientGithubApi implements GithubApi {
 
   @Override
   public Single<GithubApiResponse> searchIssues(SearchIssuesRequest request) {
-    checkNotNull(request.getQ());
+    log.debug("{}", request);
 
-    log.debug("Searching GitHub issues: {}", request);
+    checkNotNull(request.getQ());
 
     WebClient.RequestHeadersSpec<?> spec =
         get(

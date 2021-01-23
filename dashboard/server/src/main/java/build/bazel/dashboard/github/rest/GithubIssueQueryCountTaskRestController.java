@@ -3,15 +3,16 @@ package build.bazel.dashboard.github.rest;
 import build.bazel.dashboard.github.GithubIssueQueryCountTaskResult;
 import build.bazel.dashboard.github.db.GithubIssueQueryCountTaskRepository;
 import build.bazel.dashboard.github.db.GithubIssueQueryRepository;
-import build.bazel.dashboard.github.task.CountGithubIssueQueryTask;
 import build.bazel.dashboard.utils.Period;
-import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Observable;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -23,12 +24,6 @@ import java.util.stream.Collectors;
 public class GithubIssueQueryCountTaskRestController {
   private final GithubIssueQueryRepository githubIssueQueryRepository;
   private final GithubIssueQueryCountTaskRepository githubIssueQueryCountTaskRepository;
-  private final CountGithubIssueQueryTask countGithubIssueQueryTask;
-
-  @PutMapping("/github/search/count/daily")
-  public Completable countDaily() {
-    return countGithubIssueQueryTask.startCountDaily();
-  }
 
   @Builder
   @Value
