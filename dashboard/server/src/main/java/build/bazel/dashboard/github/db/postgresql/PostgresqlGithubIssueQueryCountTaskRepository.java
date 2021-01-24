@@ -5,6 +5,7 @@ import build.bazel.dashboard.github.GithubIssueQueryCountTaskResult;
 import build.bazel.dashboard.github.db.GithubIssueQueryCountTaskRepository;
 import build.bazel.dashboard.utils.Period;
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Observable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -14,6 +15,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.concurrent.Flow;
 
 @Repository
 @RequiredArgsConstructor
@@ -22,7 +24,7 @@ public class PostgresqlGithubIssueQueryCountTaskRepository
   private final DatabaseClient databaseClient;
 
   @Override
-  public Observable<GithubIssueQueryCountTask> list(Period period) {
+  public Flowable<GithubIssueQueryCountTask> list(Period period) {
     Flux<GithubIssueQueryCountTask> query =
         databaseClient
             .sql(
@@ -42,7 +44,7 @@ public class PostgresqlGithubIssueQueryCountTaskRepository
                         .query(row.get("query", String.class))
                         .build())
             .all();
-    return RxJava3Adapter.fluxToObservable(query);
+    return RxJava3Adapter.fluxToFlowable(query);
   }
 
   @Override
@@ -65,7 +67,7 @@ public class PostgresqlGithubIssueQueryCountTaskRepository
   }
 
   @Override
-  public Observable<GithubIssueQueryCountTaskResult> listResult(
+  public Flowable<GithubIssueQueryCountTaskResult> listResult(
       String owner, String repo, String queryId, Period period, Instant from, Instant to) {
     Flux<GithubIssueQueryCountTaskResult> query =
         databaseClient
@@ -89,6 +91,6 @@ public class PostgresqlGithubIssueQueryCountTaskRepository
                         .count(row.get("count", Integer.class))
                         .build())
             .all();
-    return RxJava3Adapter.fluxToObservable(query);
+    return RxJava3Adapter.fluxToFlowable(query);
   }
 }

@@ -5,6 +5,7 @@ import fetcher from "./fetcher";
 export interface GithubIssueQueryCountTaskResult {
   id: string;
   name: string;
+  url: string;
   items: Array<{
     timestamp: string;
     count: number | null;

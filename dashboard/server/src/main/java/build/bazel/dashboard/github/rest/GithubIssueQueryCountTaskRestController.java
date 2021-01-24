@@ -1,11 +1,12 @@
 package build.bazel.dashboard.github.rest;
 
 import build.bazel.dashboard.github.GithubIssueQueryCountTaskResult;
+import build.bazel.dashboard.github.GithubUtils;
 import build.bazel.dashboard.github.db.GithubIssueQueryCountTaskRepository;
 import build.bazel.dashboard.github.db.GithubIssueQueryRepository;
 import build.bazel.dashboard.utils.Period;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
-import io.reactivex.rxjava3.core.Observable;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -30,6 +31,7 @@ public class GithubIssueQueryCountTaskRestController {
   static class CountResult {
     String id;
     String name;
+    String url;
     List<CountResultItem> items;
   }
 
@@ -86,20 +88,23 @@ public class GithubIssueQueryCountTaskRestController {
                           return CountResult.builder()
                               .id(query.getId())
                               .name(query.getName())
+                              .url(
+                                  GithubUtils.buildIssueQueryUrl(
+                                      query.getOwner(), query.getRepo(), query.getQuery()))
                               .items(items)
                               .build();
                         }));
   }
 
   @GetMapping("/github/{owner}/{repo}/search/count")
-  public Observable<CountResult> fetchCountResults(
+  public Flowable<CountResult> fetchCountResults(
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
       @RequestParam("period") Period period,
       @RequestParam("queryId") List<String> queryIds,
       @RequestParam(value = "from", required = false) Instant from,
       @RequestParam(value = "to", required = false) Instant to) {
-    return Observable.fromIterable(queryIds)
+    return Flowable.fromIterable(queryIds)
         .flatMapMaybe(queryId -> fetchCountResult(owner, repo, queryId, period, from, to));
   }
 }

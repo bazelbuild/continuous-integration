@@ -1,5 +1,6 @@
 package build.bazel.dashboard.config;
 
+import build.bazel.dashboard.github.GithubQueryParser;
 import build.bazel.dashboard.github.GithubSearchService;
 import build.bazel.dashboard.github.db.postgresql.PostgresqlGithubSearchService;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +28,7 @@ public class DefaultConfiguration {
   }
 
   @Bean
-  public GithubSearchService defaultGithubSearchExecutor(DatabaseClient databaseClient) {
-    return new PostgresqlGithubSearchService(databaseClient);
+  public GithubSearchService defaultGithubSearchExecutor(GithubQueryParser queryParser, DatabaseClient databaseClient) {
+    return new PostgresqlGithubSearchService(queryParser, databaseClient);
   }
 }

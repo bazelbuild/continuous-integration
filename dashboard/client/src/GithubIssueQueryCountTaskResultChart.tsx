@@ -36,11 +36,17 @@ export default function GithubIssueQueryCountTaskResultChart({
         {data.map((result) => {
           return (
             <Line
+              connectNulls
               key={result.id}
               type="monotone"
               data={result.items}
               dataKey="count"
               name={result.name}
+              activeDot={{
+                onClick: () => {
+                  window.open(result.url, "_blank");
+                },
+              }}
             />
           );
         })}
@@ -49,7 +55,7 @@ export default function GithubIssueQueryCountTaskResultChart({
             return DateTime.fromISO(data.timestamp).toFormat("MM-dd");
           }}
         />
-        <YAxis  />
+        <YAxis />
         <Tooltip />
         {data.length > 1 && <Legend />}
       </LineChart>

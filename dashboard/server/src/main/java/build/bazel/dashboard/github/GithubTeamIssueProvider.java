@@ -14,17 +14,13 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URLEncoder;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Fetch github team issues by directly requesting the web pages and parse the HTML content.
@@ -214,16 +210,6 @@ public class GithubTeamIssueProvider {
         .map(b -> b.updatedAt(Instant.now()).build());
   }
 
-  private String buildQueryUrl(String owner, String repo, String query) {
-    return UriComponentsBuilder.newInstance()
-        .scheme("https")
-        .host("github.com")
-        .pathSegment(owner, repo, "issues")
-        .queryParam("q", URLEncoder.encode(query, UTF_8))
-        .build()
-        .toString();
-  }
-
   private Single<GithubTeamIssue.Stats> fetchIssuesStats(String owner, String repo, String query) {
     return githubSearchService
         .fetchSearchResultCount(owner, repo, query)
@@ -235,10 +221,12 @@ public class GithubTeamIssueProvider {
         .map(
             count ->
                 GithubTeamIssue.Stats.builder()
-                    .url(buildQueryUrl(owner, repo, query))
+                    .url(GithubUtils.buildIssueQueryUrl(owner, repo, query))
                     .count(count)
                     .build())
         .defaultIfEmpty(
-            GithubTeamIssue.Stats.builder().url(buildQueryUrl(owner, repo, query)).build());
+            GithubTeamIssue.Stats.builder()
+                .url(GithubUtils.buildIssueQueryUrl(owner, repo, query))
+                .build());
   }
 }
