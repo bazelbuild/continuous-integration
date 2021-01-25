@@ -263,6 +263,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_appengine.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_appengine/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-appengine-appengine",
+        "disabled_reason": "https://github.com/bazelbuild/rules_appengine/issues/119",
     },
     "rules_apple": {
         "git_repository": "https://github.com/bazelbuild/rules_apple.git",
@@ -301,6 +302,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_go.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_go/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-go-golang",
+        "disabled_reason": "https://github.com/bazelbuild/rules_go/pull/2798",
     },
     "rules_groovy": {
         "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
@@ -376,6 +378,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_sass.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_sass/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-sass",
+        "disabled_reason": "https://github.com/bazelbuild/rules_rust/pull/558",
     },
     "rules_scala": {
         "git_repository": "https://github.com/bazelbuild/rules_scala.git",
