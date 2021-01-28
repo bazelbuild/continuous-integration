@@ -289,7 +289,9 @@ def print_flags_need_to_migrate(failed_jobs_per_flag, details_per_flag):
             info_text = [f"* **{flag}** " + get_html_link_text(":github:", github_url)]
             jobs_per_pipeline = merge_jobs(jobs.values())
             for pipeline, platforms in jobs_per_pipeline.items():
-                bazel_mark = ":bazel:" if bazelci.DOWNSTREAM_PROJECTS[pipeline].get("owned_by_bazel") else ""
+                bazel_mark = ""
+                if pipeline in bazelci.DOWNSTREAM_PROJECTS and bazelci.DOWNSTREAM_PROJECTS[pipeline].get("owned_by_bazel"):
+                    bazel_mark = ":bazel:"
                 platforms_text = ", ".join(platforms)
                 info_text.append(f"  - {bazel_mark}**{pipeline}**: {platforms_text}")
             # Use flag as the context so that each flag gets a different info box.
