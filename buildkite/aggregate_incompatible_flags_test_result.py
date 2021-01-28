@@ -199,7 +199,7 @@ def get_html_link_text(content, link):
 def needs_bazel_team_migrate(jobs):
     for job in jobs:
         pipeline, _ = get_pipeline_and_platform(job)
-        if bazelci.DOWNSTREAM_PROJECTS[pipeline].get("owned_by_bazel"):
+        if pipeline in bazelci.DOWNSTREAM_PROJECTS and bazelci.DOWNSTREAM_PROJECTS[pipeline].get("owned_by_bazel"):
             return True
     return False
 
