@@ -6,7 +6,7 @@ import com.github.benmanes.caffeine.cache.AsyncCache;
 import com.github.benmanes.caffeine.cache.AsyncCacheLoader;
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class GithubTeamIssueProvider {
+public class GithubTeamService {
   private final GithubIssueTeamRepository githubIssueTeamRepository;
   private final GithubSearchService githubSearchService;
 
@@ -39,25 +39,25 @@ public class GithubTeamIssueProvider {
     String repo;
   }
 
-  private final AsyncLoadingCache<TeamsCacheKey, List<GithubIssueTeam>> teamsCache =
+  private final AsyncLoadingCache<TeamsCacheKey, List<GithubTeam>> teamsCache =
       Caffeine.newBuilder()
           .refreshAfterWrite(Duration.ofMinutes(1))
           .buildAsync(
               new AsyncCacheLoader<>() {
                 @Override
-                public @NonNull CompletableFuture<List<GithubIssueTeam>> asyncLoad(
+                public @NonNull CompletableFuture<List<GithubTeam>> asyncLoad(
                     @NonNull TeamsCacheKey key, @NonNull Executor executor) {
-                  Single<List<GithubIssueTeam>> single =
-                      Observable.concat(
-                          Observable.just(
-                              GithubIssueTeam.buildNone(key.getOwner(), key.getRepo())),
+                  Single<List<GithubTeam>> single =
+                      Flowable.concat(
+                          Flowable.just(
+                              GithubTeam.buildNone(key.getOwner(), key.getRepo())),
                           githubIssueTeamRepository.list(key.getOwner(), key.getRepo()))
                           .collect(Collectors.toList());
                   return RxJavaFutures.toCompletableFuture(single, executor);
                 }
               });
 
-  private final AsyncCache<GithubIssueTeam, GithubTeamIssue> issueCache =
+  private final AsyncCache<GithubTeam, GithubTeamIssue> issueCache =
       Caffeine.newBuilder().expireAfterWrite(Duration.ofSeconds(1)).buildAsync();
 
   private static TeamsCacheKey buildTeamsKey(String owner, String repo) {
@@ -67,25 +67,42 @@ public class GithubTeamIssueProvider {
   private CompletableFuture<GithubTeamIssue> loadIssue(
       String owner,
       String repo,
-      List<GithubIssueTeam> teams,
-      GithubIssueTeam key,
+      List<GithubTeam> teams,
+      GithubTeam key,
       Executor executor) {
     return RxJavaFutures.toCompletableFuture(fetchTeamIssue(owner, repo, teams, key), executor);
   }
 
-  public Observable<GithubTeamIssue> list(String owner, String repo) {
+  public Flowable<GithubTeamIssue> listIssues(String owner, String repo) {
     return Single.fromFuture(teamsCache.get(buildTeamsKey(owner, repo)))
-        .flatMapObservable(
+        .flatMapPublisher(
             teams ->
-                Observable.fromIterable(teams)
+                Flowable.fromIterable(teams)
                     .flatMap(
                         team ->
-                            Observable.fromFuture(
+                            Flowable.fromFuture(
                                 issueCache.get(
                                     team,
                                     (key, executor) ->
                                         loadIssue(owner, repo, teams, key, executor)))))
         .sorted(Comparator.comparing(issue -> issue.getTeam().getTeamOwner()));
+  }
+
+  private static String buildTeamQuery(List<GithubTeam> teams, GithubTeam team) {
+    String teamLabel = team.getLabel();
+    String teamQuery;
+    if (teamLabel.equals("")) {
+      teamQuery =
+          teams.stream()
+              .map(GithubTeam::getLabel)
+              .filter(label -> !label.equals(""))
+              .map(label -> "-label:" + label)
+              .collect(Collectors.joining(" "));
+    } else {
+      teamQuery = "label:" + teamLabel;
+    }
+
+    return teamQuery;
   }
 
   static class TeamIssueBuilder {
@@ -98,25 +115,15 @@ public class GithubTeamIssueProvider {
     static final String KEY_NO_TYPE = "noType";
     static final String KEY_NO_PRIORITY = "noPriority";
     static final String KEY_UNTRIAGED = "untriaged";
+    static final String KEY_PR = "pullRequest";
 
     final Map<String, String> queryMap = new HashMap<>();
     final GithubTeamIssue.GithubTeamIssueBuilder builder = GithubTeamIssue.builder();
 
-    TeamIssueBuilder(List<GithubIssueTeam> teams, GithubIssueTeam team) {
+    TeamIssueBuilder(List<GithubTeam> teams, GithubTeam team) {
       builder.team(team);
 
-      String teamLabel = team.getLabel();
-      String teamQuery;
-      if (teamLabel.equals("")) {
-        teamQuery =
-            teams.stream()
-                .map(GithubIssueTeam::getLabel)
-                .filter(label -> !label.equals(""))
-                .map(label -> "-label:" + label)
-                .collect(Collectors.joining(" "));
-      } else {
-        teamQuery = "label:" + teamLabel;
-      }
+      String teamQuery = buildTeamQuery(teams, team);
       queryMap.put(KEY_ALL, String.format("is:issue is:open %s", teamQuery));
       queryMap.put(KEY_P0, String.format("is:issue is:open label:P0 %s", teamQuery));
       queryMap.put(KEY_P1, String.format("is:issue is:open label:P1 %s", teamQuery));
@@ -147,6 +154,7 @@ public class GithubTeamIssueProvider {
                   + "%s",
               teamQuery));
       queryMap.put(KEY_UNTRIAGED, String.format("is:issue is:open label:untriaged %s", teamQuery));
+      queryMap.put(KEY_PR, String.format("is:pr is:open %s", teamQuery));
     }
 
     public void collectIssueStats(Map.Entry<String, GithubTeamIssue.Stats> entry) {
@@ -180,6 +188,9 @@ public class GithubTeamIssueProvider {
         case KEY_UNTRIAGED:
           builder.openUntriagedIssues(value);
           break;
+        case KEY_PR:
+          builder.openPullRequests(value);
+          break;
       }
     }
 
@@ -198,14 +209,13 @@ public class GithubTeamIssueProvider {
   }
 
   private Single<GithubTeamIssue> fetchTeamIssue(
-      String owner, String repo, List<GithubIssueTeam> teams, GithubIssueTeam team) {
+      String owner, String repo, List<GithubTeam> teams, GithubTeam team) {
     TeamIssueBuilder builder = new TeamIssueBuilder(teams, team);
-    return Observable.fromIterable(builder.queryEntrySet())
-        .flatMap(
+    return Flowable.fromIterable(builder.queryEntrySet())
+        .flatMapSingle(
             entry ->
                 fetchIssuesStats(owner, repo, entry.getValue())
-                    .map(number -> new AbstractMap.SimpleEntry<>(entry.getKey(), number))
-                    .toObservable())
+                    .map(number -> new AbstractMap.SimpleEntry<>(entry.getKey(), number)))
         .collect(() -> builder, TeamIssueBuilder::collectIssueStats)
         .map(b -> b.updatedAt(Instant.now()).build());
   }

@@ -1,8 +1,8 @@
 package build.bazel.dashboard.github.db.postgresql;
 
-import build.bazel.dashboard.github.GithubIssueTeam;
+import build.bazel.dashboard.github.GithubTeam;
 import build.bazel.dashboard.github.db.GithubIssueTeamRepository;
-import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Flowable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
@@ -18,8 +18,8 @@ public class PostgresqlGithubIssueTeamRepository implements GithubIssueTeamRepos
   private final DatabaseClient databaseClient;
 
   @Override
-  public Observable<GithubIssueTeam> list(String owner, String repo) {
-    Flux<GithubIssueTeam> query =
+  public Flowable<GithubTeam> list(String owner, String repo) {
+    Flux<GithubTeam> query =
         databaseClient
             .sql(
                 "SELECT owner, repo, label, created_at, updated_at, name, team_owner FROM github_issue_team WHERE owner = :owner AND repo = :repo")
@@ -27,7 +27,7 @@ public class PostgresqlGithubIssueTeamRepository implements GithubIssueTeamRepos
             .bind("repo", repo)
             .map(
                 row ->
-                    GithubIssueTeam.builder()
+                    GithubTeam.builder()
                         .owner(row.get("owner", String.class))
                         .repo(row.get("repo", String.class))
                         .label(row.get("label", String.class))
@@ -38,6 +38,6 @@ public class PostgresqlGithubIssueTeamRepository implements GithubIssueTeamRepos
                         .build())
             .all();
 
-    return RxJava3Adapter.fluxToObservable(query);
+    return RxJava3Adapter.fluxToFlowable(query);
   }
 }

@@ -119,6 +119,12 @@ export default function GithubTeamIssueTable() {
         sortType: issueStatsSortType,
       },
       {
+        Header: "PR",
+        accessor: (data) => data.openPullRequests,
+        Cell: IssueStatsCell,
+        sortType: issueStatsSortType,
+      },
+      {
         Header: "Owner",
         accessor: (data) => data.team.teamOwner,
         Cell: TeamOwnerCell,

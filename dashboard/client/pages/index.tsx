@@ -58,9 +58,7 @@ export default function Home() {
               />
               <CardContent>
                 <GithubIssueQueryCountTaskResultChart
-                  queryIds={[
-                    "total-untriaged",
-                  ]}
+                  queryIds={["total-untriaged"]}
                 />
               </CardContent>
             </Card>

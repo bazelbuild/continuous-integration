@@ -7,7 +7,7 @@ import java.time.Instant;
 
 @Builder
 @Value
-public class GithubIssueTeam {
+public class GithubTeam {
   String owner;
   String repo;
   String label;
@@ -16,8 +16,8 @@ public class GithubIssueTeam {
   String name;
   String teamOwner;
 
-  public static GithubIssueTeam buildNone(String owner, String repo) {
-    return GithubIssueTeam.builder()
+  public static GithubTeam buildNone(String owner, String repo) {
+    return GithubTeam.builder()
         .owner(owner)
         .repo(repo)
         .label("")

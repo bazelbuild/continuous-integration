@@ -8,7 +8,7 @@ import java.time.Instant;
 @Builder
 @Value
 public class GithubTeamIssue {
-    GithubIssueTeam team;
+    GithubTeam team;
     Stats openIssues;
     Stats openP0Issues;
     Stats openP1Issues;
@@ -18,6 +18,7 @@ public class GithubTeamIssue {
     Stats openNoTypeIssues;
     Stats openNoPriorityIssues;
     Stats openUntriagedIssues;
+    Stats openPullRequests;
     Instant updatedAt;
 
     @Builder

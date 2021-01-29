@@ -2,7 +2,7 @@ import useSWR from "swr";
 
 import fetcher from "./fetcher";
 
-export interface GithubIssueTeam {
+export interface GithubTeam {
   owner: string;
   repo: string;
   label: string;
@@ -16,7 +16,7 @@ export interface GithubTeamIssueStats {
 }
 
 export interface GithubTeamIssue {
-  team: GithubIssueTeam;
+  team: GithubTeam;
   openIssues: GithubTeamIssueStats;
   openP0Issues: GithubTeamIssueStats;
   openP1Issues: GithubTeamIssueStats;
@@ -26,6 +26,7 @@ export interface GithubTeamIssue {
   openNoTypeIssues: GithubTeamIssueStats;
   openNoPriorityIssues: GithubTeamIssueStats;
   openUntriagedIssues: GithubTeamIssueStats;
+  openPullRequests: GithubTeamIssueStats;
   updatedAt: string;
 }
 
