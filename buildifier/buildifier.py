@@ -139,7 +139,7 @@ def get_releases():
 
 def get_release_urls(release):
     buildifier_assets = [
-        a for a in release["assets"] if a["name"] in ("buildifier", "buildifier.linux")
+        a for a in release["assets"] if a["name"] in ("buildifier", "buildifier-linux-amd64")
     ]
     if not buildifier_assets:
         raise Exception("There is no Buildifier binary for release {}".format(release["tag_name"]))
