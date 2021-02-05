@@ -1,8 +1,6 @@
-package build.bazel.dashboard.github.db.postgresql;
+package build.bazel.dashboard.github.issuequery;
 
-import build.bazel.dashboard.github.GithubQueryParser;
-import build.bazel.dashboard.github.GithubQueryParser.Query;
-import build.bazel.dashboard.github.GithubSearchService;
+import build.bazel.dashboard.github.issuequery.GithubIssueQueryParser.Query;
 import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,13 +12,13 @@ import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
-public class PostgresqlGithubSearchService implements GithubSearchService {
+public class GithubIssueQueryExecutorPg implements GithubIssueQueryExecutor {
 
-  private final GithubQueryParser queryParser;
+  private final GithubIssueQueryParser queryParser;
   private final DatabaseClient databaseClient;
 
   @Override
-  public Single<Integer> fetchSearchResultCount(String owner, String repo, String query) {
+  public Single<Integer> fetchQueryResultCount(String owner, String repo, String query) {
     Query parsedQuery = queryParser.parse(query);
     Map<String, Object> bindings = new HashMap<>();
     StringBuilder conditions = new StringBuilder();

@@ -1,6 +1,5 @@
-package build.bazel.dashboard.github.task;
+package build.bazel.dashboard.github.event;
 
-import build.bazel.dashboard.github.GithubEventHandler;
 import build.bazel.dashboard.github.api.GithubApi;
 import build.bazel.dashboard.github.api.GithubApiResponse;
 import build.bazel.dashboard.github.api.ListRepositoryEventsRequest;

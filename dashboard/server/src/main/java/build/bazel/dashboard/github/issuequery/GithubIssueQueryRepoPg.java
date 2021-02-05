@@ -1,7 +1,7 @@
-package build.bazel.dashboard.github.db.postgresql;
+package build.bazel.dashboard.github.issuequery;
 
-import build.bazel.dashboard.github.GithubIssueQuery;
-import build.bazel.dashboard.github.db.GithubIssueQueryRepository;
+import build.bazel.dashboard.github.issuequery.GithubIssueQuery;
+import build.bazel.dashboard.github.issuequery.GithubIssueQueryRepo;
 import io.reactivex.rxjava3.core.Maybe;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -13,7 +13,7 @@ import java.time.Instant;
 
 @Repository
 @RequiredArgsConstructor
-public class PostgresqlGithubQueryRepository implements GithubIssueQueryRepository {
+public class GithubIssueQueryRepoPg implements GithubIssueQueryRepo {
   private final DatabaseClient databaseClient;
 
   @Override

@@ -1,4 +1,4 @@
-package build.bazel.dashboard.github;
+package build.bazel.dashboard.github.issuequery;
 
 import build.bazel.dashboard.github.api.GithubApi;
 import build.bazel.dashboard.github.api.SearchIssuesRequest;
@@ -10,11 +10,11 @@ import java.io.IOException;
 
 @Slf4j
 @RequiredArgsConstructor
-public class GithubApiSearchService implements GithubSearchService {
+public class GithubIssueQueryExecutorApi implements GithubIssueQueryExecutor {
   private final GithubApi githubApi;
 
   @Override
-  public Single<Integer> fetchSearchResultCount(String owner, String repo, String query) {
+  public Single<Integer> fetchQueryResultCount(String owner, String repo, String query) {
     SearchIssuesRequest request =
         SearchIssuesRequest.builder().q(String.format("repo:%s/%s %s", owner, repo, query)).build();
     return githubApi

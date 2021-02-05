@@ -1,7 +1,5 @@
-package build.bazel.dashboard.github.rest;
+package build.bazel.dashboard.github.issue;
 
-import build.bazel.dashboard.github.GithubIssue;
-import build.bazel.dashboard.github.GithubIssueFetcher;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
@@ -17,25 +15,25 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @RequiredArgsConstructor
 @Slf4j
 public class GithubIssueRestController {
-  private final GithubIssueFetcher githubIssueFetcher;
+  private final GithubIssueService githubIssueService;
 
   @GetMapping("/github/{owner}/{repo}/issues/{issueNumber}")
   public Maybe<GithubIssue> findOneGithubIssue(
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
       @PathVariable("issueNumber") Integer issueNumber) {
-    return githubIssueFetcher
-        .fetch(owner, repo, issueNumber)
-        .map(GithubIssueFetcher.FetchResult::getGithubIssue)
+    return githubIssueService
+        .fetchAndSave(owner, repo, issueNumber)
+        .map(GithubIssueService.FetchResult::getGithubIssue)
         .toMaybe();
   }
 
   @PutMapping("/github/{owner}/{repo}/issues/{issueNumber}")
-  public Single<GithubIssueFetcher.FetchResult> updateGithubIssue(
+  public Single<GithubIssueService.FetchResult> updateGithubIssue(
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
       @PathVariable("issueNumber") Integer issueNumber) {
-    return githubIssueFetcher.fetch(owner, repo, issueNumber);
+    return githubIssueService.fetchAndSave(owner, repo, issueNumber);
   }
 
   @Builder
@@ -59,7 +57,7 @@ public class GithubIssueRestController {
     checkNotNull(count);
     return Observable.range(start, count)
         .flatMap(
-            issueNumber -> githubIssueFetcher.fetch(owner, repo, issueNumber).toObservable(),
+            issueNumber -> githubIssueService.fetchAndSave(owner, repo, issueNumber).toObservable(),
             10) // Limit concurrent request to 10 so we won't rate limited by Github
         .collect(
             UpdateResult::builder,

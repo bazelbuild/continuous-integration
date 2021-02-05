@@ -1,4 +1,4 @@
-package build.bazel.dashboard.github;
+package build.bazel.dashboard.github.issue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Builder;

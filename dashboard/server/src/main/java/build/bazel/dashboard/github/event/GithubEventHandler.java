@@ -1,5 +1,6 @@
-package build.bazel.dashboard.github;
+package build.bazel.dashboard.github.event;
 
+import build.bazel.dashboard.github.issue.GithubIssueService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.reactivex.rxjava3.core.Completable;
@@ -11,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @RequiredArgsConstructor
 public class GithubEventHandler {
-  private final GithubIssueFetcher githubIssueFetcher;
+  private final GithubIssueService githubIssueService;
 
   public Completable onGithubRepositoryEvent(String owner, String repo, ObjectNode event) {
     log.debug("Repository event {}: {}", event.get("type"), event);
@@ -41,6 +42,6 @@ public class GithubEventHandler {
   }
 
   private Completable updateGithubIssue(String owner, String repo, int issueNumber) {
-    return Completable.fromSingle(githubIssueFetcher.fetch(owner, repo, issueNumber));
+    return Completable.fromSingle(githubIssueService.fetchAndSave(owner, repo, issueNumber));
   }
 }

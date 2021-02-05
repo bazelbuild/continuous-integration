@@ -1,8 +1,8 @@
 package build.bazel.dashboard.config;
 
-import build.bazel.dashboard.github.GithubQueryParser;
-import build.bazel.dashboard.github.GithubSearchService;
-import build.bazel.dashboard.github.db.postgresql.PostgresqlGithubSearchService;
+import build.bazel.dashboard.github.issuequery.GithubIssueQueryParser;
+import build.bazel.dashboard.github.issuequery.GithubIssueQueryExecutor;
+import build.bazel.dashboard.github.issuequery.GithubIssueQueryExecutorPg;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -28,7 +28,7 @@ public class DefaultConfiguration {
   }
 
   @Bean
-  public GithubSearchService defaultGithubSearchExecutor(GithubQueryParser queryParser, DatabaseClient databaseClient) {
-    return new PostgresqlGithubSearchService(queryParser, databaseClient);
+  public GithubIssueQueryExecutor defaultGithubSearchExecutor(GithubIssueQueryParser queryParser, DatabaseClient databaseClient) {
+    return new GithubIssueQueryExecutorPg(queryParser, databaseClient);
   }
 }

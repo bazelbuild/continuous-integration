@@ -1,7 +1,7 @@
-package build.bazel.dashboard.github.db.postgresql;
+package build.bazel.dashboard.github.issue;
 
-import build.bazel.dashboard.github.db.GithubIssueRepository;
-import build.bazel.dashboard.github.GithubIssue;
+import build.bazel.dashboard.github.issue.GithubIssueRepo;
+import build.bazel.dashboard.github.issue.GithubIssue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.r2dbc.postgresql.codec.Json;
@@ -9,7 +9,6 @@ import io.r2dbc.spi.Row;
 import io.reactivex.rxjava3.core.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import reactor.adapter.rxjava.RxJava3Adapter;
 import reactor.core.publisher.Flux;
@@ -22,7 +21,7 @@ import static java.util.Objects.requireNonNull;
 
 @Repository
 @RequiredArgsConstructor
-public class PostgresqlGithubIssueRepository implements GithubIssueRepository {
+public class GithubIssueRepoPg implements GithubIssueRepo {
 
   private final DatabaseClient databaseClient;
   private final ObjectMapper objectMapper;

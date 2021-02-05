@@ -1,6 +1,5 @@
 package build.bazel.dashboard.github.team;
 
-import build.bazel.dashboard.github.db.GithubIssueTeamRepository;
 import build.bazel.dashboard.utils.RxJavaFutures;
 import com.github.benmanes.caffeine.cache.AsyncCacheLoader;
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
@@ -24,7 +23,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class GithubTeamService {
-  private final GithubIssueTeamRepository githubIssueTeamRepository;
+  private final GithubTeamRepo githubTeamRepo;
 
   @Builder
   @Value
@@ -42,7 +41,7 @@ public class GithubTeamService {
                 public @NonNull CompletableFuture<List<GithubTeam>> asyncLoad(
                     @NonNull TeamsCacheKey key, @NonNull Executor executor) {
                   Single<List<GithubTeam>> single =
-                      githubIssueTeamRepository
+                      githubTeamRepo
                           .list(key.getOwner(), key.getRepo())
                           .collect(Collectors.toList());
                   return RxJavaFutures.toCompletableFuture(single, executor);

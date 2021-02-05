@@ -1,25 +1,24 @@
-package build.bazel.dashboard.github;
+package build.bazel.dashboard.github.issue;
 
 import build.bazel.dashboard.github.api.FetchIssueRequest;
 import build.bazel.dashboard.github.api.GithubApi;
-import build.bazel.dashboard.github.db.GithubIssueRepository;
 import io.reactivex.rxjava3.core.Single;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.Instant;
 
-@Component
+@Service
 @Slf4j
 @RequiredArgsConstructor
-public class GithubIssueFetcher {
+public class GithubIssueService {
 
   private final GithubApi githubApi;
-  private final GithubIssueRepository repository;
+  private final GithubIssueRepo githubIssueRepo;
 
   @Builder
   @Value
@@ -46,8 +45,8 @@ public class GithubIssueFetcher {
     }
   }
 
-  public Single<FetchResult> fetch(String owner, String repo, int issueNumber) {
-    return repository
+  public Single<FetchResult> fetchAndSave(String owner, String repo, int issueNumber) {
+    return githubIssueRepo
         .findOne(owner, repo, issueNumber)
         .switchIfEmpty(Single.just(GithubIssue.empty(owner, repo, issueNumber)))
         .flatMap(
@@ -75,7 +74,7 @@ public class GithubIssueFetcher {
                                   .etag(response.getEtag())
                                   .data(response.getBody())
                                   .build();
-                          return repository
+                          return githubIssueRepo
                               .save(githubIssue)
                               .toSingle(
                                   () ->
@@ -89,7 +88,7 @@ public class GithubIssueFetcher {
                             || response.getStatus().value() == 404
                             || response.getStatus().value() == 410) {
                           // Transferred or deleted
-                          return repository
+                          return githubIssueRepo
                               .delete(owner, repo, issueNumber)
                               .toSingle(
                                   () -> FetchResult.create(existed, false, false, true, null));

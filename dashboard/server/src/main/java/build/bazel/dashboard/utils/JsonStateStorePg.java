@@ -21,7 +21,7 @@ import static java.util.Objects.requireNonNull;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class PostgresqlJsonStateStore implements JsonStateStore {
+public class JsonStateStorePg implements JsonStateStore {
 
   private final DatabaseClient databaseClient;
   private final ObjectMapper objectMapper;

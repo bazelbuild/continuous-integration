@@ -1,9 +1,9 @@
-package build.bazel.dashboard.github.rest;
+package build.bazel.dashboard.github.issuequery.task;
 
-import build.bazel.dashboard.github.GithubIssueQueryCountTaskResult;
+import build.bazel.dashboard.github.issuequery.task.GithubIssueQueryCountTaskResult;
 import build.bazel.dashboard.github.GithubUtils;
-import build.bazel.dashboard.github.db.GithubIssueQueryCountTaskRepository;
-import build.bazel.dashboard.github.db.GithubIssueQueryRepository;
+import build.bazel.dashboard.github.issuequery.task.GithubIssueQueryCountTaskRepo;
+import build.bazel.dashboard.github.issuequery.GithubIssueQueryRepo;
 import build.bazel.dashboard.utils.Period;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
@@ -23,8 +23,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequiredArgsConstructor
 public class GithubIssueQueryCountTaskRestController {
-  private final GithubIssueQueryRepository githubIssueQueryRepository;
-  private final GithubIssueQueryCountTaskRepository githubIssueQueryCountTaskRepository;
+  private final GithubIssueQueryRepo githubIssueQueryRepo;
+  private final GithubIssueQueryCountTaskRepo githubIssueQueryCountTaskRepo;
 
   @Builder
   @Value
@@ -61,11 +61,11 @@ public class GithubIssueQueryCountTaskRestController {
     Instant from = requestFrom;
     Instant to = requestTo;
 
-    return githubIssueQueryRepository
+    return githubIssueQueryRepo
         .findOne(owner, repo, queryId)
         .flatMapSingle(
             query ->
-                githubIssueQueryCountTaskRepository
+                githubIssueQueryCountTaskRepo
                     .listResult(query.getOwner(), query.getRepo(), query.getId(), period, from, to)
                     .collect(
                         Collectors.toMap(GithubIssueQueryCountTaskResult::getTimestamp, it -> it))

@@ -1,4 +1,4 @@
-package build.bazel.dashboard.github;
+package build.bazel.dashboard.github.issuequery;
 
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,7 @@ import java.util.List;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class GithubQueryParser {
+public class GithubIssueQueryParser {
   @Builder
   @Value
   public static class Query {

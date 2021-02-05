@@ -1,11 +1,11 @@
-package build.bazel.dashboard.github.db;
+package build.bazel.dashboard.github.issue;
 
-import build.bazel.dashboard.github.GithubIssue;
+import build.bazel.dashboard.github.issue.GithubIssue;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Observable;
 
-public interface GithubIssueRepository {
+public interface GithubIssueRepo {
 
   Completable save(GithubIssue githubIssue);
 

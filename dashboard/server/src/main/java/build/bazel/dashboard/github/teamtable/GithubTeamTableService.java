@@ -1,6 +1,6 @@
 package build.bazel.dashboard.github.teamtable;
 
-import build.bazel.dashboard.github.GithubSearchService;
+import build.bazel.dashboard.github.issuequery.GithubIssueQueryExecutor;
 import build.bazel.dashboard.github.GithubUtils;
 import build.bazel.dashboard.github.team.GithubTeam;
 import build.bazel.dashboard.github.team.GithubTeamService;
@@ -31,7 +31,7 @@ import static build.bazel.dashboard.github.teamtable.GithubTeamTable.Cell;
 public class GithubTeamTableService {
   private final GithubTeamTableRepo githubTeamTableRepo;
   private final GithubTeamService githubTeamService;
-  private final GithubSearchService githubSearchService;
+  private final GithubIssueQueryExecutor githubIssueQueryExecutor;
 
   @Builder
   @Value
@@ -90,8 +90,8 @@ public class GithubTeamTableService {
         .flatMapSingle(
             header -> {
               String query = interceptQuery(teams, team, header.getQuery());
-              return githubSearchService
-                  .fetchSearchResultCount(team.getOwner(), team.getRepo(), query)
+              return githubIssueQueryExecutor
+                  .fetchQueryResultCount(team.getOwner(), team.getRepo(), query)
                   .map(
                       count ->
                           new AbstractMap.SimpleEntry<>(

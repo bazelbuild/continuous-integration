@@ -1,7 +1,5 @@
-package build.bazel.dashboard.github.db.postgresql;
+package build.bazel.dashboard.github.team;
 
-import build.bazel.dashboard.github.team.GithubTeam;
-import build.bazel.dashboard.github.db.GithubIssueTeamRepository;
 import io.reactivex.rxjava3.core.Flowable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -14,7 +12,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class PostgresqlGithubIssueTeamRepository implements GithubIssueTeamRepository {
+public class GithubTeamRepoPg implements GithubTeamRepo {
   private final DatabaseClient databaseClient;
 
   @Override

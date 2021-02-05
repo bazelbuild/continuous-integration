@@ -1,7 +1,5 @@
-package build.bazel.dashboard.github.rest;
+package build.bazel.dashboard.github.issuequery;
 
-import build.bazel.dashboard.github.GithubSearchService;
-import build.bazel.dashboard.github.db.GithubIssueQueryRepository;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
 import lombok.Builder;
@@ -18,8 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class GithubIssueQueryRestController {
 
-  private final GithubSearchService githubSearchService;
-  private final GithubIssueQueryRepository githubIssueQueryRepository;
+  private final GithubIssueQueryExecutor githubIssueQueryExecutor;
+  private final GithubIssueQueryRepo githubIssueQueryRepo;
 
   @Builder
   @Value
@@ -32,8 +30,8 @@ public class GithubIssueQueryRestController {
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
       @RequestParam(name = "q") String q) {
-    return githubSearchService
-        .fetchSearchResultCount(owner, repo, q)
+    return githubIssueQueryExecutor
+        .fetchQueryResultCount(owner, repo, q)
         .map(count -> SearchResult.builder().count(count).build());
   }
 
@@ -42,10 +40,10 @@ public class GithubIssueQueryRestController {
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
       @PathVariable("queryId") String queryId) {
-    return githubIssueQueryRepository
+    return githubIssueQueryRepo
         .findOne(owner, repo, queryId)
         .flatMapSingle(
-            query -> githubSearchService.fetchSearchResultCount(owner, repo, query.getQuery()))
+            query -> githubIssueQueryExecutor.fetchQueryResultCount(owner, repo, query.getQuery()))
         .map(count -> SearchResult.builder().count(count).build());
   }
 }

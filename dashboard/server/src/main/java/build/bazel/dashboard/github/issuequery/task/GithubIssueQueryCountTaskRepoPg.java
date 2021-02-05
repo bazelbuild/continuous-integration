@@ -1,12 +1,8 @@
-package build.bazel.dashboard.github.db.postgresql;
+package build.bazel.dashboard.github.issuequery.task;
 
-import build.bazel.dashboard.github.GithubIssueQueryCountTask;
-import build.bazel.dashboard.github.GithubIssueQueryCountTaskResult;
-import build.bazel.dashboard.github.db.GithubIssueQueryCountTaskRepository;
 import build.bazel.dashboard.utils.Period;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Observable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
@@ -15,12 +11,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
-import java.util.concurrent.Flow;
 
 @Repository
 @RequiredArgsConstructor
-public class PostgresqlGithubIssueQueryCountTaskRepository
-    implements GithubIssueQueryCountTaskRepository {
+public class GithubIssueQueryCountTaskRepoPg
+    implements GithubIssueQueryCountTaskRepo {
   private final DatabaseClient databaseClient;
 
   @Override

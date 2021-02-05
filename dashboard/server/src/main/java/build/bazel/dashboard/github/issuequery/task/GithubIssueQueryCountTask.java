@@ -1,4 +1,4 @@
-package build.bazel.dashboard.github;
+package build.bazel.dashboard.github.issuequery.task;
 
 import build.bazel.dashboard.utils.Period;
 import lombok.Builder;
@@ -8,11 +8,11 @@ import java.time.Instant;
 
 @Builder
 @Value
-public class GithubIssueQueryCountTaskResult {
+public class GithubIssueQueryCountTask {
   String owner;
   String repo;
   String queryId;
   Period period;
-  Instant timestamp;
-  Integer count;
+  Instant createdAt;
+  String query;
 }
