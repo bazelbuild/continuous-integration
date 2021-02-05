@@ -41,39 +41,6 @@ CREATE TRIGGER t_regenerate_github_issue
     FOR EACH ROW
 EXECUTE PROCEDURE tf_regenerate_github_issue();
 
-CREATE OR REPLACE FUNCTION tf_snapshot_github_issue_data()
-    RETURNS TRIGGER
-    LANGUAGE plpgsql
-AS
-$$
-BEGIN
-    INSERT INTO github_issue_data_snapshot (owner, repo, issue_number, timestamp, data)
-    VALUES (NEW.owner, NEW.repo, NEW.issue_number, NEW.timestamp, NEW.data)
-    ON CONFLICT DO NOTHING;
-
-    RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER t_snapshot_github_issue_data
-    AFTER INSERT OR UPDATE
-    ON github_issue_data
-    FOR EACH ROW
-EXECUTE PROCEDURE tf_snapshot_github_issue_data();
-
---
--- Table that store the snapshots of issues data fetched from Github
---
-CREATE TABLE github_issue_data_snapshot
-(
-    owner        TEXT        NOT NULL,
-    repo         TEXT        NOT NULL,
-    issue_number INTEGER     NOT NULL,
-    timestamp    TIMESTAMPTZ NOT NULL,
-    data         JSONB       NOT NULL,
-    PRIMARY KEY (owner, repo, issue_number, timestamp)
-);
-
 --
 -- Table that stored issues generated from github_issue_data automatically by trigger
 --
