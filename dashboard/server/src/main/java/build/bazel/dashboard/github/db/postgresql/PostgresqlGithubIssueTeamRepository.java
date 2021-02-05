@@ -1,6 +1,6 @@
 package build.bazel.dashboard.github.db.postgresql;
 
-import build.bazel.dashboard.github.GithubTeam;
+import build.bazel.dashboard.github.team.GithubTeam;
 import build.bazel.dashboard.github.db.GithubIssueTeamRepository;
 import io.reactivex.rxjava3.core.Flowable;
 import lombok.RequiredArgsConstructor;

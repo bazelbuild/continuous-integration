@@ -1,4 +1,4 @@
-package build.bazel.dashboard.github;
+package build.bazel.dashboard.github.team;
 
 import lombok.Builder;
 import lombok.Value;
@@ -16,6 +16,12 @@ public class GithubTeam {
   String name;
   String teamOwner;
 
+  private static final String NONE_NAME = "(none)";
+
+  public boolean isNone() {
+    return NONE_NAME.equals(name);
+  }
+
   public static GithubTeam buildNone(String owner, String repo) {
     return GithubTeam.builder()
         .owner(owner)
@@ -23,7 +29,7 @@ public class GithubTeam {
         .label("")
         .createdAt(Instant.EPOCH)
         .updatedAt(Instant.EPOCH)
-        .name("(none)")
+        .name(NONE_NAME)
         .teamOwner("")
         .build();
   }

@@ -1,5 +1,5 @@
 import React from "react";
-import GithubTeamIssueTable from "../src/GithubTeamIssueTable";
+import GithubTeamTable from "../src/GithubTeamTable";
 import {
   AppBar,
   Card,
@@ -33,7 +33,7 @@ export default function Home() {
                 titleTypographyProps={{ variant: "body1" }}
               />
               <CardContent>
-                <GithubTeamIssueTable />
+                <GithubTeamTable />
               </CardContent>
             </Card>
           </Grid>
