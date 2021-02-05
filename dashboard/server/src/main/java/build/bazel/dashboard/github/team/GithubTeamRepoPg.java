@@ -20,7 +20,8 @@ public class GithubTeamRepoPg implements GithubTeamRepo {
     Flux<GithubTeam> query =
         databaseClient
             .sql(
-                "SELECT owner, repo, label, created_at, updated_at, name, team_owner FROM github_issue_team WHERE owner = :owner AND repo = :repo")
+                "SELECT owner, repo, label, created_at, updated_at, name, team_owner " +
+                    "FROM github_team WHERE owner = :owner AND repo = :repo")
             .bind("owner", owner)
             .bind("repo", repo)
             .map(

@@ -1,7 +1,7 @@
 package build.bazel.dashboard.github.teamtable;
 
-import build.bazel.dashboard.github.issuequery.GithubIssueQueryExecutor;
 import build.bazel.dashboard.github.GithubUtils;
+import build.bazel.dashboard.github.issuequery.GithubIssueQueryExecutor;
 import build.bazel.dashboard.github.team.GithubTeam;
 import build.bazel.dashboard.github.team.GithubTeamService;
 import build.bazel.dashboard.github.teamtable.GithubTeamTable.Row;
@@ -41,12 +41,12 @@ public class GithubTeamTableService {
     String tableId;
   }
 
-  private final AsyncCache<GithubTeamTableCacheKey, GithubTeamTable> issueCache =
+  private final AsyncCache<GithubTeamTableCacheKey, GithubTeamTable> tableCache =
       Caffeine.newBuilder().expireAfterWrite(Duration.ofSeconds(1)).buildAsync();
 
   Single<GithubTeamTable> findOne(String owner, String repo, String tableId) {
     return Single.fromFuture(
-        issueCache.get(
+        tableCache.get(
             GithubTeamTableCacheKey.builder().owner(owner).repo(repo).tableId(tableId).build(),
             (key, executor) ->
                 RxJavaFutures.toCompletableFuture(
@@ -66,23 +66,25 @@ public class GithubTeamTableService {
         .flatMapSingle(team -> fetchRow(teams, team, table))
         .collect(Collectors.toList())
         .map(
-            rows ->
-                GithubTeamTable.builder()
-                    .owner(table.getOwner())
-                    .repo(table.getRepo())
-                    .id(table.getId())
-                    .name(table.getName())
-                    .headers(
-                        table.getHeaders().stream()
-                            .map(
-                                header ->
-                                    GithubTeamTable.Header.builder()
-                                        .id(header.getId())
-                                        .name(header.getName())
-                                        .build())
-                            .collect(Collectors.toList()))
-                    .rows(rows)
-                    .build());
+            rows -> {
+              rows.sort(Comparator.comparing(row -> row.getTeam().getName()));
+              return GithubTeamTable.builder()
+                  .owner(table.getOwner())
+                  .repo(table.getRepo())
+                  .id(table.getId())
+                  .name(table.getName())
+                  .headers(
+                      table.getHeaders().stream()
+                          .map(
+                              header ->
+                                  GithubTeamTable.Header.builder()
+                                      .id(header.getId())
+                                      .name(header.getName())
+                                      .build())
+                          .collect(Collectors.toList()))
+                  .rows(rows)
+                  .build();
+            });
   }
 
   private Single<Row> fetchRow(List<GithubTeam> teams, GithubTeam team, GithubTeamTableData table) {
@@ -137,10 +139,6 @@ public class GithubTeamTableService {
     return githubTeamService
         .findAll(owner, repo)
         .collect(Collectors.toList())
-        .doOnSuccess(
-            teams -> {
-              teams.add(GithubTeam.buildNone(owner, repo));
-              teams.sort(Comparator.comparing(GithubTeam::getName));
-            });
+        .doOnSuccess(teams -> teams.add(GithubTeam.buildNone(owner, repo)));
   }
 }

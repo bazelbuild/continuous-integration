@@ -4,6 +4,7 @@ import io.reactivex.rxjava3.core.Maybe;
 import lombok.Builder;
 import lombok.Value;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface GithubTeamTableRepo {
@@ -13,6 +14,8 @@ public interface GithubTeamTableRepo {
     String owner;
     String repo;
     String id;
+    Instant createdAt;
+    Instant updatedAt;
     String name;
     List<Header> headers;
 
@@ -20,6 +23,8 @@ public interface GithubTeamTableRepo {
     @Value
     public static class Header {
       String id;
+      Instant createdAt;
+      Instant updatedAt;
       String name;
       String query;
     }

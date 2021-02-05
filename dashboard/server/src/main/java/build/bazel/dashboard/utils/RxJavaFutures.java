@@ -6,8 +6,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 public class RxJavaFutures {
-  private RxJavaFutures() {
-  }
+  private RxJavaFutures() {}
 
   public static <T> CompletableFuture<T> toCompletableFuture(Single<T> single, Executor executor) {
     return CompletableFuture.supplyAsync(single::blockingGet, executor);

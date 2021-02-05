@@ -142,7 +142,7 @@ FROM github_label
 GROUP BY owner, repo, name;
 
 
-CREATE TABLE github_issue_team
+CREATE TABLE github_team
 (
     owner      TEXT,
     repo       TEXT,
@@ -188,4 +188,28 @@ CREATE TABLE github_issue_query_count_task_result
     timestamp TIMESTAMPTZ,
     count     int,
     PRIMARY KEY (owner, repo, query_id, period, timestamp)
+);
+
+CREATE TABLE github_team_table
+(
+    owner      TEXT,
+    repo       TEXT,
+    id         TEXT,
+    created_at TIMESTAMPTZ NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL,
+    name       TEXT NOT NULL,
+    PRIMARY KEY (owner, repo, id)
+);
+
+CREATE TABLE github_team_table_header
+(
+    owner      TEXT,
+    repo       TEXT,
+    table_id   TEXT,
+    id         TEXT,
+    created_at TIMESTAMPTZ NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL,
+    name       TEXT NOT NULL,
+    query      TEXT NOT NULL,
+    PRIMARY KEY (owner, repo, table_id, id)
 );
