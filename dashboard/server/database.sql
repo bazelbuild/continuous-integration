@@ -197,7 +197,7 @@ CREATE TABLE github_team_table
     id         TEXT,
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL,
-    name       TEXT NOT NULL,
+    name       TEXT        NOT NULL,
     PRIMARY KEY (owner, repo, id)
 );
 
@@ -209,7 +209,9 @@ CREATE TABLE github_team_table_header
     id         TEXT,
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL,
-    name       TEXT NOT NULL,
-    query      TEXT NOT NULL,
+    seq        INT         NOT NULL,
+    name       TEXT        NOT NULL,
+    query      TEXT        NOT NULL,
     PRIMARY KEY (owner, repo, table_id, id)
 );
+CREATE UNIQUE INDEX ON github_team_table_header (owner, repo, table_id, id, seq);

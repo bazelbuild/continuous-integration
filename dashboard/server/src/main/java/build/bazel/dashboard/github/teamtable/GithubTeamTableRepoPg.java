@@ -10,6 +10,7 @@ import reactor.adapter.rxjava.RxJava3Adapter;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -108,7 +109,7 @@ public class GithubTeamTableRepoPg implements GithubTeamTableRepo {
                   GithubTeamTableData tmp = builder.build();
                   return databaseClient
                       .sql(
-                          "SELECT id, created_at, updated_at, name, query FROM"
+                          "SELECT id, created_at, updated_at, seq, name, query FROM"
                               + " github_team_table_header WHERE owner = :owner AND repo = :repo"
                               + " AND table_id = :tableId")
                       .bind("owner", tmp.getOwner())
@@ -120,12 +121,16 @@ public class GithubTeamTableRepoPg implements GithubTeamTableRepo {
                                   .id(row.get("id", String.class))
                                   .createdAt(row.get("created_at", Instant.class))
                                   .updatedAt(row.get("updated_at", Instant.class))
+                                  .seq(row.get("seq", Integer.class))
                                   .name(row.get("name", String.class))
                                   .query(row.get("query", String.class))
                                   .build())
                       .all()
                       .collect(Collectors.toList())
-                      .map(headers -> builder.headers(headers).build());
+                      .map(headers -> {
+                        headers.sort(Comparator.comparing(Header::getSeq));
+                        return builder.headers(headers).build();
+                      });
                 });
 
     return RxJava3Adapter.monoToMaybe(query);

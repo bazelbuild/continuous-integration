@@ -25,6 +25,7 @@ public interface GithubTeamTableRepo {
       String id;
       Instant createdAt;
       Instant updatedAt;
+      Integer seq;
       String name;
       String query;
     }
