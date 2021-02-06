@@ -1,8 +1,7 @@
 package build.bazel.dashboard.github.issuequery.task;
 
-import build.bazel.dashboard.github.issuequery.task.GithubIssueQueryCountTaskResult;
 import build.bazel.dashboard.github.GithubUtils;
-import build.bazel.dashboard.github.issuequery.task.GithubIssueQueryCountTaskRepo;
+import build.bazel.dashboard.github.issuequery.GithubIssueQueryExecutor;
 import build.bazel.dashboard.github.issuequery.GithubIssueQueryRepo;
 import build.bazel.dashboard.utils.Period;
 import io.reactivex.rxjava3.core.Flowable;
@@ -24,6 +23,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class GithubIssueQueryCountTaskRestController {
   private final GithubIssueQueryRepo githubIssueQueryRepo;
+  private final GithubIssueQueryExecutor githubIssueQueryExecutor;
   private final GithubIssueQueryCountTaskRepo githubIssueQueryCountTaskRepo;
 
   @Builder
@@ -47,19 +47,10 @@ public class GithubIssueQueryCountTaskRestController {
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
       @PathVariable("queryId") String queryId,
-      @RequestParam("period") Period period,
-      @RequestParam(value = "from", required = false) Instant requestFrom,
-      @RequestParam(value = "to", required = false) Instant requestTo) {
-    if (requestTo == null) {
-      requestTo = Instant.now();
-    }
-
-    if (requestFrom == null) {
-      requestFrom = period.prev(requestTo, 30);
-    }
-
-    Instant from = requestFrom;
-    Instant to = requestTo;
+      @RequestParam("period") Period period) {
+    Instant now = Instant.now();
+    Instant to = period.prev(now, 1);
+    Instant from = period.prev(to, 29);
 
     return githubIssueQueryRepo
         .findOne(owner, repo, queryId)
@@ -69,13 +60,13 @@ public class GithubIssueQueryCountTaskRestController {
                     .listResult(query.getOwner(), query.getRepo(), query.getId(), period, from, to)
                     .collect(
                         Collectors.toMap(GithubIssueQueryCountTaskResult::getTimestamp, it -> it))
-                    .map(
+                    .flatMap(
                         resultMap -> {
                           Instant end = period.truncate(to);
                           List<CountResultItem> items = new ArrayList<>();
                           for (Instant timestamp = period.truncate(from);
-                               !timestamp.isAfter(end);
-                               timestamp = period.next(timestamp)) {
+                              !timestamp.isAfter(end);
+                              timestamp = period.next(timestamp)) {
                             Integer count = null;
                             GithubIssueQueryCountTaskResult result = resultMap.get(timestamp);
                             if (result != null) {
@@ -85,14 +76,27 @@ public class GithubIssueQueryCountTaskRestController {
                                 CountResultItem.builder().timestamp(timestamp).count(count).build();
                             items.add(item);
                           }
-                          return CountResult.builder()
-                              .id(query.getId())
-                              .name(query.getName())
-                              .url(
-                                  GithubUtils.buildIssueQueryUrl(
-                                      query.getOwner(), query.getRepo(), query.getQuery()))
-                              .items(items)
-                              .build();
+
+                          return githubIssueQueryExecutor
+                              .fetchQueryResultCount(owner, repo, query.getQuery())
+                              .map(
+                                  count -> {
+                                    items.add(
+                                        CountResultItem.builder()
+                                            .timestamp(now)
+                                            .count(count)
+                                            .build());
+                                    return CountResult.builder()
+                                        .id(query.getId())
+                                        .name(query.getName())
+                                        .url(
+                                            GithubUtils.buildIssueQueryUrl(
+                                                query.getOwner(),
+                                                query.getRepo(),
+                                                query.getQuery()))
+                                        .items(items)
+                                        .build();
+                                  });
                         }));
   }
 
@@ -101,10 +105,8 @@ public class GithubIssueQueryCountTaskRestController {
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
       @RequestParam("period") Period period,
-      @RequestParam("queryId") List<String> queryIds,
-      @RequestParam(value = "from", required = false) Instant from,
-      @RequestParam(value = "to", required = false) Instant to) {
+      @RequestParam("queryId") List<String> queryIds) {
     return Flowable.fromIterable(queryIds)
-        .flatMapMaybe(queryId -> fetchCountResult(owner, repo, queryId, period, from, to));
+        .flatMapMaybe(queryId -> fetchCountResult(owner, repo, queryId, period));
   }
 }
