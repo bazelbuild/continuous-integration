@@ -224,6 +224,11 @@
   resolved "https://registry.yarnpkg.com/@next/react-refresh-utils/-/react-refresh-utils-10.0.3.tgz#276bec60eae18768f96baf8a52f668f657f50ab4"
   integrity sha512-XtzzPX2R4+MIyu1waEQUo2tiNwWVEkmObA6pboRCDTPOs4Ri8ckaIE08lN5A5opyF6GVN+IEq/J8KQrgsePsZQ==
 
+"@primer/octicons-react@^12.0.0":
+  version "12.0.0"
+  resolved "https://registry.yarnpkg.com/@primer/octicons-react/-/octicons-react-12.0.0.tgz#4b42a361636e4834cb55d241995086e1c1908cd3"
+  integrity sha512-L1u2kjhAEMoOeNOZqQSc4xGE7/Cl6kjhuiIKrJOmNa6M86Zy+/pv1zFlvFnWzxu2FhPTlZWC4LLazTYf5spceA==
+
 "@types/d3-path@^1":
   version "1.0.9"
   resolved "https://registry.yarnpkg.com/@types/d3-path/-/d3-path-1.0.9.tgz#73526b150d14cd96e701597cbf346cfd1fd4a58c"

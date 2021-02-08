@@ -107,16 +107,7 @@ public class GithubTeamTableService {
             })
         .collect(
             Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue))
-        .map(
-            cells ->
-                Row.builder()
-                    .team(
-                        GithubTeamTable.Team.builder()
-                            .name(team.getName())
-                            .teamOwner(team.getTeamOwner())
-                            .build())
-                    .cells(cells)
-                    .build());
+        .map(cells -> Row.builder().team(GithubTeamTable.Team.create(team)).cells(cells).build());
   }
 
   private String interceptQuery(List<GithubTeam> teams, GithubTeam team, String query) {

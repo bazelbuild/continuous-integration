@@ -215,3 +215,12 @@ CREATE TABLE github_team_table_header
     PRIMARY KEY (owner, repo, table_id, id)
 );
 CREATE UNIQUE INDEX ON github_team_table_header (owner, repo, table_id, id, seq);
+
+CREATE TABLE github_repo
+(
+    owner      TEXT,
+    repo       TEXT,
+    created_at TIMESTAMPTZ NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (owner, repo)
+);

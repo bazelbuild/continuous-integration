@@ -6,6 +6,7 @@ import build.bazel.dashboard.github.api.ListRepositoryEventsRequest;
 import build.bazel.dashboard.github.api.ListRepositoryEventsRequest.ListRepositoryEventsRequestBuilder;
 import build.bazel.dashboard.github.api.ListRepositoryIssueEventsRequest;
 import build.bazel.dashboard.github.api.ListRepositoryIssueEventsRequest.ListRepositoryIssueEventsRequestBuilder;
+import build.bazel.dashboard.github.repo.GithubRepoService;
 import build.bazel.dashboard.utils.JsonStateStore;
 import build.bazel.dashboard.utils.JsonStateStore.JsonState;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -34,6 +35,7 @@ public class PollGithubEventsTask {
   private final GithubApi githubApi;
   private final JsonStateStore jsonStateStore;
   private final GithubEventHandler githubEventHandler;
+  private final GithubRepoService githubRepoService;
 
   @Builder
   @Value
@@ -42,12 +44,19 @@ public class PollGithubEventsTask {
     long eventId;
   }
 
-  @Scheduled(fixedRate = 60000)
+  @Scheduled(fixedDelay = 60000)
   public void pollGithubRepositoryEvents() {
-    // TODO(coeuvre): Also poll other repos?
-    Completable.concatArray(
-        pollGithubRepositoryEvents("bazelbuild", "bazel"),
-        pollGithubRepositoryIssueEvents("bazelbuild", "bazel"))
+    githubRepoService
+        .findAll()
+        .flatMapCompletable(
+            githubRepo -> {
+              String owner = githubRepo.getOwner();
+              String repo = githubRepo.getRepo();
+              return pollGithubRepositoryEvents(owner, repo)
+                  .andThen(pollGithubRepositoryIssueEvents(owner, repo));
+            },
+            false,
+            1)
         .blockingAwait();
   }
 

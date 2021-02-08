@@ -12,12 +12,15 @@ import {
 } from "@material-ui/core";
 import {
   useGithubTeamTable,
-  GithubTeamTable,
   GithubTeamTableCell,
   GithubTeamTableRow,
 } from "./data/GithubTeamTable";
 
-function IssueStatsCell({ value }: { value: GithubTeamTableCell }) {
+function GithubTeamTableCellContainer({
+  value,
+}: {
+  value: GithubTeamTableCell;
+}) {
   const content = value.count !== null ? value.count : "";
   return (
     <Link href={value.url} target="_blank">
@@ -34,72 +37,20 @@ function TeamOwnerCell({ value }: { value: string }) {
   );
 }
 
-export default function GithubTeamIssueTable() {
-  const { data: table, error, loading } = useGithubTeamTable(
-    "bazelbuild",
-    "bazel",
-    "open-issues"
-  );
-
-  const issueStatsSortType = React.useMemo(
-    () => (rowA: Row<any>, rowB: Row<any>, id: string, _desc: boolean) => {
-      const a = rowA.values[id] as GithubTeamTableCell;
-      const b = rowB.values[id] as GithubTeamTableCell;
-      if (!a.count) {
-        return 1;
-      } else if (!b.count) {
-        return -1;
-      } else {
-        if (a.count > b.count) {
-          return -1;
-        } else if (b.count > a.count) {
-          return 1;
-        } else {
-          return 0;
-        }
-      }
-    },
-    []
-  );
-
-  const columns: Array<Column<GithubTeamTableRow>> = React.useMemo(
-    () => [
-      {
-        Header: "Team",
-        accessor: (data) => data.team.name,
-      },
-      ...(loading ? [] : table.headers).map((header) => {
-        return {
-          Header: header.name,
-          accessor: (data: GithubTeamTableRow) => data.cells[header.id],
-          Cell: IssueStatsCell,
-          sortType: issueStatsSortType,
-        };
-      }),
-      {
-        Header: "Owner",
-        accessor: (data) => data.team.teamOwner,
-        Cell: TeamOwnerCell,
-      },
-    ],
-    [table]
-  );
-
+function UnderlyingTable({
+  columns,
+  data,
+}: {
+  columns: Array<Column<GithubTeamTableRow>>;
+  data: Array<GithubTeamTableRow>;
+}) {
   const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
     rows,
     prepareRow,
-  } = useTable({ columns, data: loading ? [] : table.rows }, useSortBy);
-
-  if (loading) {
-    return <div>loading</div>;
-  }
-
-  if (error) {
-    return <div>error</div>;
-  }
+  } = useTable({ columns, data }, useSortBy);
 
   return (
     <TableContainer>
@@ -143,4 +94,74 @@ export default function GithubTeamIssueTable() {
       </Table>
     </TableContainer>
   );
+}
+
+export interface GithubTeamTableContainerProps {
+  owner: string;
+  repo: string;
+}
+
+export default function GithubTeamTableContainer({
+  owner,
+  repo,
+}: GithubTeamTableContainerProps) {
+  const { data: table, error, loading } = useGithubTeamTable(
+    owner,
+    repo,
+    "open-issues"
+  );
+
+  const githubTeamTableCellSortType = React.useMemo(
+    () => (rowA: Row<any>, rowB: Row<any>, id: string, _desc: boolean) => {
+      const a = rowA.values[id] as GithubTeamTableCell;
+      const b = rowB.values[id] as GithubTeamTableCell;
+      if (!a.count) {
+        return 1;
+      } else if (!b.count) {
+        return -1;
+      } else {
+        if (a.count > b.count) {
+          return -1;
+        } else if (b.count > a.count) {
+          return 1;
+        } else {
+          return 0;
+        }
+      }
+    },
+    []
+  );
+
+  const columns: Array<Column<GithubTeamTableRow>> = React.useMemo(
+    () => [
+      {
+        Header: "Team",
+        accessor: (data) => data.team.name,
+      },
+      ...(loading ? [] : table.headers).map((header) => {
+        return {
+          Header: header.name,
+          accessor: (data: GithubTeamTableRow) => data.cells[header.id],
+          Cell: GithubTeamTableCellContainer,
+          sortType: githubTeamTableCellSortType,
+        };
+      }),
+      {
+        Header: "Owner",
+        accessor: (data) => data.team.teamOwner,
+        Cell: TeamOwnerCell,
+      },
+    ],
+    [table]
+  );
+
+  if (loading) {
+    return <div>loading</div>;
+  }
+
+  if (error) {
+    return <div>error</div>;
+  }
+
+  return <UnderlyingTable columns={columns} data={table.rows} />;
 }

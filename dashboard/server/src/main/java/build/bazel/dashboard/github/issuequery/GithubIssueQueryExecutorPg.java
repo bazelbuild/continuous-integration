@@ -22,6 +22,13 @@ public class GithubIssueQueryExecutorPg implements GithubIssueQueryExecutor {
     Query parsedQuery = queryParser.parse(query);
     Map<String, Object> bindings = new HashMap<>();
     StringBuilder conditions = new StringBuilder();
+
+    and(conditions, "owner = :owner");
+    bindings.put("owner", owner);
+
+    and(conditions, "repo = :repo");
+    bindings.put("repo", repo);
+
     if (parsedQuery.getState() != null) {
       and(conditions, "state = :state");
       bindings.put("state", parsedQuery.getState());

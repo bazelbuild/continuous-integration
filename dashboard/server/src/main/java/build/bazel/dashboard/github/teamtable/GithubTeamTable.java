@@ -2,6 +2,7 @@ package build.bazel.dashboard.github.teamtable;
 
 import build.bazel.dashboard.github.team.GithubTeam;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import lombok.Builder;
 import lombok.Value;
 
@@ -25,7 +26,12 @@ public class GithubTeamTable {
         .id(id)
         .name("")
         .headers(ImmutableList.of())
-        .rows(ImmutableList.of())
+        .rows(
+            ImmutableList.of(
+                Row.builder()
+                    .team(Team.create(GithubTeam.buildNone(owner, repo)))
+                    .cells(ImmutableMap.of())
+                    .build()))
         .build();
   }
 
@@ -48,6 +54,13 @@ public class GithubTeamTable {
   public static class Team {
     String name;
     String teamOwner;
+
+    public static Team create(GithubTeam team) {
+      return Team.builder()
+          .name(team.getName())
+          .teamOwner(team.getTeamOwner())
+          .build();
+    }
   }
 
   @Builder
