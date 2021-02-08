@@ -1,15 +1,10 @@
 package build.bazel.dashboard.github.issue;
 
 import io.reactivex.rxjava3.core.Maybe;
-import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
-import lombok.Builder;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @RestController
 @RequiredArgsConstructor
@@ -36,6 +31,7 @@ public class GithubIssueRestController {
     return githubIssueService.fetchAndSave(owner, repo, issueNumber);
   }
 
+  /*
   @Builder
   @Value
   static class UpdateResult {
@@ -76,4 +72,5 @@ public class GithubIssueRestController {
             })
         .map(builder -> builder.count(count).build());
   }
+   */
 }

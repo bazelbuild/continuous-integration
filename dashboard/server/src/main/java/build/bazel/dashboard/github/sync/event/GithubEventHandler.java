@@ -1,4 +1,4 @@
-package build.bazel.dashboard.github.event;
+package build.bazel.dashboard.github.sync.event;
 
 import build.bazel.dashboard.github.issue.GithubIssueService;
 import com.fasterxml.jackson.databind.JsonNode;

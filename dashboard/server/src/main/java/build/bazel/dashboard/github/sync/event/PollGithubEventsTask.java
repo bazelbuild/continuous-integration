@@ -1,4 +1,4 @@
-package build.bazel.dashboard.github.event;
+package build.bazel.dashboard.github.sync.event;
 
 import build.bazel.dashboard.github.api.GithubApi;
 import build.bazel.dashboard.github.api.GithubApiResponse;
@@ -44,8 +44,8 @@ public class PollGithubEventsTask {
     long eventId;
   }
 
-  @Scheduled(fixedDelay = 60000)
-  public void pollGithubRepositoryEvents() {
+//  @Scheduled(fixedDelay = 60000)
+  public void pollGithubEvents() {
     githubRepoService
         .findAll()
         .flatMapCompletable(

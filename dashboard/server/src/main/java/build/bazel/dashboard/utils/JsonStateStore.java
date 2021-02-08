@@ -19,7 +19,9 @@ public interface JsonStateStore {
     T data;
   }
 
-  <T> Completable save(String key, Instant lastTimestamp, T data);
+  <T> Completable save(String key, @Nullable Instant lastTimestamp, T data);
 
   <T> Single<JsonState<T>> load(String key, Class<T> type);
+
+  Completable delete(String key, Instant lastTimestamp);
 }
