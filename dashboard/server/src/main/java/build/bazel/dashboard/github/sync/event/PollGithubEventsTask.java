@@ -44,7 +44,7 @@ public class PollGithubEventsTask {
     long eventId;
   }
 
-//  @Scheduled(fixedDelay = 60000)
+  @Scheduled(fixedDelay = 60000)
   public void pollGithubEvents() {
     githubRepoService
         .findAll()
