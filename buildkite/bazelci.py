@@ -18,7 +18,7 @@ import argparse
 import base64
 import codecs
 import datetime
-import glob
+from glob import glob
 import hashlib
 import json
 import multiprocessing
@@ -1196,25 +1196,39 @@ def execute_commands(
 
 def activate_xcode(task_config):
     # Get the Xcode version from the config.
-    xcode_version = task_config.get("xcode_version", DEFAULT_XCODE_VERSION)
-    print_collapsed_group("Activating Xcode {}...".format(xcode_version))
+    wanted_xcode_version = task_config.get("xcode_version", DEFAULT_XCODE_VERSION)
+    print_collapsed_group(":xcode: Activating Xcode {}...".format(wanted_xcode_version))
 
     # Ensure it's a valid version number.
-    if not isinstance(xcode_version, str):
+    if not isinstance(wanted_xcode_version, str):
         raise BuildkiteException(
             "Version number '{}' is not a string. Did you forget to put it in quotes?".format(
-                xcode_version
+                wanted_xcode_version
             )
         )
-    if not XCODE_VERSION_REGEX.match(xcode_version):
+    if not XCODE_VERSION_REGEX.match(wanted_xcode_version):
         raise BuildkiteException(
             "Invalid Xcode version format '{}', must match the format X.Y[.Z].".format(
-                xcode_version
+                wanted_xcode_version
             )
         )
 
     # This is used to replace e.g. 11.2 with 11.2.1 without having to update all configs.
-    xcode_version = XCODE_VERSION_OVERRIDES.get(xcode_version, xcode_version)
+    xcode_version = XCODE_VERSION_OVERRIDES.get(wanted_xcode_version, wanted_xcode_version)
+
+    # This falls back to a default version if the selected version is not available.
+    supported_versions = sorted(
+        [os.path.basename(x)[5:-4] for x in glob("/Applications/Xcode*.app")], reverse=True
+    )
+    if xcode_version not in supported_versions:
+        xcode_version = DEFAULT_XCODE_VERSION
+    if xcode_version != wanted_xcode_version:
+        print_collapsed_group(
+            ":xcode: Fixed Xcode version: {} -> {}...".format(wanted_xcode_version, xcode_version)
+        )
+        print("Your selected version {} was not available on the machine.".format(wanted_xcode_version))
+        print("Bazel CI automatically picked a fallback version: {}".format(xcode_version))
+        print("Available versions are: {}".format(supported_versions))
 
     # Check that the selected Xcode version is actually installed on the host.
     xcode_path = "/Applications/Xcode{}.app".format(xcode_version)
@@ -1315,7 +1329,7 @@ def upload_bazel_binary(platform):
 def merge_and_upload_kythe_kzip(platform, index_upload_gcs):
     print_collapsed_group(":gcloud: Uploading kythe kzip")
 
-    kzips = glob.glob("bazel-out/*/extra_actions/**/*.kzip", recursive=True)
+    kzips = glob("bazel-out/*/extra_actions/**/*.kzip", recursive=True)
 
     build_number = os.getenv("BUILDKITE_BUILD_NUMBER")
     git_commit = os.getenv("BUILDKITE_COMMIT")
