@@ -1218,6 +1218,7 @@ def activate_xcode(task_config):
 
     # This falls back to a default version if the selected version is not available.
     supported_versions = sorted(
+        # Stripping "Xcode" prefix and ".app" suffix from e.g. "Xcode12.0.1.app" leaves just the version number.
         [os.path.basename(x)[5:-4] for x in glob("/Applications/Xcode*.app")], reverse=True
     )
     if xcode_version not in supported_versions:
@@ -1226,9 +1227,12 @@ def activate_xcode(task_config):
         print_collapsed_group(
             ":xcode: Fixed Xcode version: {} -> {}...".format(wanted_xcode_version, xcode_version)
         )
-        print("Your selected version {} was not available on the machine.".format(wanted_xcode_version))
-        print("Bazel CI automatically picked a fallback version: {}".format(xcode_version))
-        print("Available versions are: {}".format(supported_versions))
+        lines = [
+            "Your selected Xcode version {} was not available on the machine.".format(wanted_xcode_version),
+            "Bazel CI automatically picked a fallback version: {}.".format(xcode_version),
+            "Available versions are: {}.".format(supported_versions),
+        ]
+        execute_command(["buildkite-agent", "annotate", "--style=warning", "\n".join(lines), "--context", "ctx-xcode_version_fixed"])
 
     # Check that the selected Xcode version is actually installed on the host.
     xcode_path = "/Applications/Xcode{}.app".format(xcode_version)
