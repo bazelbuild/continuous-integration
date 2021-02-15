@@ -202,7 +202,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "Google Logging": {
         "git_repository": "https://github.com/google/glog.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/glog-postsubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/google/glog/master/.bazelci/presubmit.yml",
         "pipeline_slug": "google-logging",
     },
     "IntelliJ Plugin": {
