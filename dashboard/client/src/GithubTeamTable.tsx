@@ -1,38 +1,30 @@
 import React from "react";
-import { Column, Row, useSortBy, useTable } from "react-table";
-import {
-  Link,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TableSortLabel,
-} from "@material-ui/core";
-import {
-  useGithubTeamTable,
-  GithubTeamTableCell,
-  GithubTeamTableRow,
-} from "./data/GithubTeamTable";
+import { Link } from "@material-ui/core";
+import MUIDataTable, { MUIDataTableColumn } from "mui-datatables";
+import { useGithubTeamTable } from "./data/GithubTeamTable";
 
 function GithubTeamTableCellContainer({
   value,
+  url,
   header,
 }: {
-  value: GithubTeamTableCell;
-  header: string,
+  value: number;
+  url: string;
+  header: string | undefined;
 }) {
-  const content = value.count !== null ? value.count : "";
   let style = {};
-  if (header === "No Type" || header === "No Priority" || header === "Untriaged") {
-    if (value.count >= 10) {
+  if (
+    header === "No Type" ||
+    header === "No Priority" ||
+    header === "Untriaged"
+  ) {
+    if (value >= 10) {
       style = { color: "#e53935", fontWeight: "bold" };
     }
   }
   return (
-    <Link href={value.url} target="_blank" style={style}>
-      {content}
+    <Link href={url} target="_blank" style={style}>
+      {value}
     </Link>
   );
 }
@@ -42,66 +34,6 @@ function TeamOwnerCell({ value }: { value: string }) {
     <Link href={`https://github.com/${value}`} target="_blank">
       {value}
     </Link>
-  );
-}
-
-function UnderlyingTable({
-  columns,
-  data,
-}: {
-  columns: Array<Column<GithubTeamTableRow>>;
-  data: Array<GithubTeamTableRow>;
-}) {
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-  } = useTable({ columns, data }, useSortBy);
-
-  return (
-    <TableContainer>
-      <Table size="small" {...getTableProps()}>
-        <TableHead>
-          {headerGroups.map((headerGroup) => (
-            <TableRow {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map((column) => (
-                <TableCell
-                  {...column.getHeaderProps(
-                    (column as any).getSortByToggleProps()
-                  )}
-                >
-                  <TableSortLabel
-                    active={(column as any).isSorted}
-                    direction={(column as any).isSortedDesc ? "desc" : "asc"}
-                  >
-                    {column.render("Header")}
-                  </TableSortLabel>
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableHead>
-        <TableBody {...getTableBodyProps()}>
-          {rows.map((row) => {
-            prepareRow(row);
-            return (
-              <TableRow {...row.getRowProps()}>
-                {row.cells.map((cell) => {
-                  const header = cell.column.Header;
-                  return (
-                    <TableCell {...cell.getCellProps()}>
-                      {cell.render("Cell", { header })}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </TableContainer>
   );
 }
 
@@ -120,57 +52,95 @@ export default function GithubTeamTableContainer({
     "open-issues"
   );
 
-  const githubTeamTableCellSortType = React.useMemo(
-    () => (rowA: Row<any>, rowB: Row<any>, id: string, _desc: boolean) => {
-      const a = rowA.values[id] as GithubTeamTableCell;
-      const b = rowB.values[id] as GithubTeamTableCell;
-      if (!a.count) {
-        return 1;
-      } else if (!b.count) {
-        return -1;
-      } else {
-        if (a.count > b.count) {
-          return -1;
-        } else if (b.count > a.count) {
-          return 1;
-        } else {
-          return 0;
-        }
-      }
-    },
-    []
+  const data = React.useMemo(
+    () =>
+      table && table.rows
+        ? table.rows.map((row, index) => {
+            const data: any = {};
+            for (let key of Object.keys(row.cells)) {
+              data[`cells.${key}`] = row.cells[key].count;
+            }
+            data["team.name"] = row.team.name;
+            data["team.teamOwner"] = row.team.teamOwner;
+            data["index"] = index;
+            return data;
+          })
+        : [],
+    [table]
   );
 
-  const columns: Array<Column<GithubTeamTableRow>> = React.useMemo(
-    () => [
-      {
-        Header: "Team",
-        accessor: (data) => data.team.name,
-      },
-      ...(loading ? [] : table.headers).map((header) => {
-        return {
-          Header: header.name,
-          accessor: (data: GithubTeamTableRow) => data.cells[header.id],
-          Cell: GithubTeamTableCellContainer,
-          sortType: githubTeamTableCellSortType,
-        };
-      }),
-      {
-        Header: "Owner",
-        accessor: (data) => data.team.teamOwner,
-        Cell: TeamOwnerCell,
-      },
-    ],
+  const columns = React.useMemo(
+    () =>
+      table && table.headers
+        ? [
+            {
+              name: "team.name",
+              label: "Team",
+            },
+            ...table.headers.map(
+              (header) =>
+                ({
+                  name: `cells.${header.id}`,
+                  label: header.name,
+                  options: {
+                    filter: false,
+                    customBodyRender: (value, tableMeta) => {
+                      let url = "";
+
+                      const row = table.rows.find(
+                        (row) => row.team.name === tableMeta.rowData[0]
+                      );
+                      if (row) {
+                        const key = tableMeta.columnData.name.substring(
+                          "cells.".length
+                        );
+                        url = row.cells[key].url;
+                      }
+
+                      return (
+                        <GithubTeamTableCellContainer
+                          value={value}
+                          url={url}
+                          header={tableMeta.columnData.label}
+                        />
+                      );
+                    },
+                  },
+                } as MUIDataTableColumn)
+            ),
+            {
+              name: "team.teamOwner",
+              label: "Owner",
+              options: {
+                customBodyRender: (value) => {
+                  return <TeamOwnerCell value={value} />;
+                },
+              },
+            },
+          ]
+        : [],
     [table]
   );
 
   if (loading) {
-    return <div>loading</div>;
+    return <span>loading</span>;
   }
 
   if (error) {
-    return <div>error</div>;
+    return <span>error</span>;
   }
 
-  return <UnderlyingTable columns={columns} data={table.rows} />;
+  return (
+    <MUIDataTable
+      title={table.name}
+      columns={columns}
+      data={data}
+      options={{
+        elevation: 1,
+        selectableRows: "none",
+        download: false,
+        print: false,
+      }}
+    />
+  );
 }

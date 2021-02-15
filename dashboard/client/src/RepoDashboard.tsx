@@ -1,5 +1,6 @@
 import React from "react";
 import { RepoIcon } from "@primer/octicons-react";
+import dynamic from "next/dynamic";
 import {
   Breadcrumbs,
   Card,
@@ -14,8 +15,11 @@ import {
   Typography,
 } from "@material-ui/core";
 
-import GithubIssueQueryCountTaskResultChart from "../src/GithubIssueQueryCountTaskResultChart";
-import GithubTeamTable from "./GithubTeamTable";
+const DynamicGithubTeamTable = dynamic(() => import("./GithubTeamTable"));
+
+const DynamicGithubIssueQueryCountTaskResultChart = dynamic(
+  () => import("../src/GithubIssueQueryCountTaskResultChart")
+);
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -50,15 +54,7 @@ export default function RepoDashboard({ owner, repo }: RepoDashboardProps) {
       </Breadcrumbs>
       <Grid container spacing={2} className={classes.container}>
         <Grid item xs={12}>
-          <Card>
-            <CardHeader
-              title="Open Issues"
-              titleTypographyProps={{ variant: "body1" }}
-            />
-            <CardContent style={{ marginTop: -32 }}>
-              <GithubTeamTable owner={owner} repo={repo} />
-            </CardContent>
-          </Card>
+          <DynamicGithubTeamTable owner={owner} repo={repo} />
         </Grid>
         {owner === "bazelbuild" && repo === "bazel" && (
           <>
@@ -69,7 +65,7 @@ export default function RepoDashboard({ owner, repo }: RepoDashboardProps) {
                   titleTypographyProps={{ variant: "body1" }}
                 />
                 <CardContent>
-                  <GithubIssueQueryCountTaskResultChart
+                  <DynamicGithubIssueQueryCountTaskResultChart
                     queryIds={["unreviewed"]}
                   />
                 </CardContent>
@@ -82,7 +78,7 @@ export default function RepoDashboard({ owner, repo }: RepoDashboardProps) {
                   titleTypographyProps={{ variant: "body1" }}
                 />
                 <CardContent>
-                  <GithubIssueQueryCountTaskResultChart
+                  <DynamicGithubIssueQueryCountTaskResultChart
                     queryIds={["total-untriaged"]}
                   />
                 </CardContent>

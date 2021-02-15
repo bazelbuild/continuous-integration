@@ -15,6 +15,7 @@
     "@types/react-table": "^7.0.25",
     "http-proxy-middleware": "^1.0.6",
     "luxon": "^1.25.0",
+    "mui-datatables": "^3.7.6",
     "next": "10.0.3",
     "react": "17.0.1",
     "react-dom": "17.0.1",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "@types/luxon": "^1.25.0",
+    "@types/mui-datatables": "^3.7.0",
     "@types/node": "^14.14.11",
     "@types/react": "^17.0.0",
     "@types/recharts": "^1.8.18",
