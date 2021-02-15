@@ -27,6 +27,3 @@ docker push "gcr.io/$PREFIX/ubuntu2004-bazel-java11"
 docker push "gcr.io/$PREFIX/ubuntu2004-java11"
 docker push "gcr.io/$PREFIX/ubuntu2004-java11-kythe"
 docker push "gcr.io/$PREFIX/ubuntu2004-nojava"
-
-# Other containers
-docker push "gcr.io/$PREFIX/bazel-slack-inviter-slackin"

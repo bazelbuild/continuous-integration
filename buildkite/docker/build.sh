@@ -35,10 +35,3 @@ docker build -f ubuntu2004/Dockerfile --target ubuntu2004-bazel-java11 -t "gcr.i
 docker build -f ubuntu2004/Dockerfile --target ubuntu2004-java11       -t "gcr.io/$PREFIX/ubuntu2004-java11" ubuntu2004
 docker build -f ubuntu2004/Dockerfile --target ubuntu2004-java11-kythe -t "gcr.io/$PREFIX/ubuntu2004-java11-kythe" ubuntu2004
 docker build -f ubuntu2004/Dockerfile --target ubuntu2004-nojava       -t "gcr.io/$PREFIX/ubuntu2004-nojava" ubuntu2004
-
-# Other containers
-docker build \
-    -f bazel-slack-inviter-slackin/Dockerfile \
-    --target bazel-slack-inviter-slackin \
-    -t "gcr.io/$PREFIX/bazel-slack-inviter-slackin" \
-    bazel-slack-inviter-slackin
