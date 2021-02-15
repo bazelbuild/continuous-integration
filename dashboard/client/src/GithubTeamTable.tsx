@@ -18,12 +18,20 @@ import {
 
 function GithubTeamTableCellContainer({
   value,
+  header,
 }: {
   value: GithubTeamTableCell;
+  header: string,
 }) {
   const content = value.count !== null ? value.count : "";
+  let style = {};
+  if (header === "No Type" || header === "No Priority" || header === "Untriaged") {
+    if (value.count >= 10) {
+      style = { color: "#e53935", fontWeight: "bold" };
+    }
+  }
   return (
-    <Link href={value.url} target="_blank">
+    <Link href={value.url} target="_blank" style={style}>
       {content}
     </Link>
   );
@@ -81,9 +89,10 @@ function UnderlyingTable({
             return (
               <TableRow {...row.getRowProps()}>
                 {row.cells.map((cell) => {
+                  const header = cell.column.Header;
                   return (
                     <TableCell {...cell.getCellProps()}>
-                      {cell.render("Cell")}
+                      {cell.render("Cell", { header })}
                     </TableCell>
                   );
                 })}
