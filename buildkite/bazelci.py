@@ -503,7 +503,7 @@ PLATFORMS = {
         "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["macos"],
         "queue": "macos",
-        "python": "python3.7",
+        "python": "python3",
     },
     "windows": {
         "name": "Windows, OpenJDK 8",
