@@ -30,6 +30,10 @@ function GithubTeamTableCellContainer({
 }
 
 function TeamOwnerCell({ value }: { value: string }) {
+  if (value === "(none)") {
+    return null;
+  }
+
   return (
     <Link href={`https://github.com/${value}`} target="_blank">
       {value}
@@ -61,7 +65,11 @@ export default function GithubTeamTableContainer({
               data[`cells.${key}`] = row.cells[key].count;
             }
             data["team.name"] = row.team.name;
-            data["team.teamOwner"] = row.team.teamOwner;
+            let teamOwner = row.team.teamOwner;
+            if (teamOwner === "") {
+              teamOwner = "(none)";
+            }
+            data["team.teamOwner"] = teamOwner;
             data["index"] = index;
             return data;
           })
@@ -69,13 +77,16 @@ export default function GithubTeamTableContainer({
     [table]
   );
 
-  const columns = React.useMemo(
+  const columns: MUIDataTableColumn[] = React.useMemo(
     () =>
       table && table.headers
         ? [
             {
               name: "team.name",
               label: "Team",
+              options: {
+                filterType: "multiselect",
+              },
             },
             ...table.headers.map(
               (header) =>
@@ -112,6 +123,7 @@ export default function GithubTeamTableContainer({
               name: "team.teamOwner",
               label: "Owner",
               options: {
+                filterType: "multiselect",
                 customBodyRender: (value) => {
                   return <TeamOwnerCell value={value} />;
                 },
