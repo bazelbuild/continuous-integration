@@ -4,7 +4,10 @@ import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
@@ -12,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 public class GithubIssueRestController {
   private final GithubIssueService githubIssueService;
 
-  @GetMapping("/github/{owner}/{repo}/issues/{issueNumber}")
+  @GetMapping("/internal/github/{owner}/{repo}/issues/{issueNumber}")
   public Maybe<GithubIssue> findOneGithubIssue(
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
@@ -23,7 +26,7 @@ public class GithubIssueRestController {
         .toMaybe();
   }
 
-  @PutMapping("/github/{owner}/{repo}/issues/{issueNumber}")
+  @PutMapping("/internal/github/{owner}/{repo}/issues/{issueNumber}")
   public Single<GithubIssueService.FetchResult> updateGithubIssue(
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
@@ -43,7 +46,7 @@ public class GithubIssueRestController {
     int error;
   }
 
-  @PutMapping("/github/{owner}/{repo}/issues")
+  @PutMapping("/internal/github/{owner}/{repo}/issues")
   public Single<UpdateResult> updateGithubIssues(
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,

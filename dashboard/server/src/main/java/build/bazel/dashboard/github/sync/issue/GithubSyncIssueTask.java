@@ -36,7 +36,7 @@ public class GithubSyncIssueTask {
     int end;
   }
 
-  @PutMapping("/github/{owner}/{repo}/sync/issues")
+  @PutMapping("/internal/github/{owner}/{repo}/sync/issues")
   public Completable saveNewSyncIssueState(
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,

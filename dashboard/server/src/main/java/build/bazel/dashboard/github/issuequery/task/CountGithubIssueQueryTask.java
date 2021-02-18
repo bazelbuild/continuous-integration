@@ -23,7 +23,7 @@ public class CountGithubIssueQueryTask {
     startCountDaily().blockingAwait();
   }
 
-  @PutMapping("/github/search/count/daily")
+  @PutMapping("/internal/github/search/count/daily")
   public Completable startCountDaily() {
     log.info("Counting Github daily issue queries at {}...", Instant.now());
     return githubIssueQueryCountTaskRepo

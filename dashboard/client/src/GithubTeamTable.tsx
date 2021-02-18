@@ -95,6 +95,7 @@ export default function GithubTeamTableContainer({
                   label: header.name,
                   options: {
                     filter: false,
+                    sortDescFirst: true,
                     customBodyRender: (value, tableMeta) => {
                       let url = "";
 

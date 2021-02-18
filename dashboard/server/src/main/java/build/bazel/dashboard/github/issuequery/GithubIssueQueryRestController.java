@@ -25,7 +25,7 @@ public class GithubIssueQueryRestController {
     int count;
   }
 
-  @GetMapping("/github/{owner}/{repo}/search")
+  @GetMapping("/internal/github/{owner}/{repo}/search")
   public Single<SearchResult> search(
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
@@ -35,7 +35,7 @@ public class GithubIssueQueryRestController {
         .map(count -> SearchResult.builder().count(count).build());
   }
 
-  @GetMapping("/github/{owner}/{repo}/search/{queryId}")
+  @GetMapping("/internal/github/{owner}/{repo}/search/{queryId}")
   public Maybe<SearchResult> searchByQueryId(
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,

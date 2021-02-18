@@ -60,7 +60,7 @@ public class PollGithubEventsTask {
         .blockingAwait();
   }
 
-  @PutMapping("/github/{owner}/{repo}/events")
+  @PutMapping("/internal/github/{owner}/{repo}/events")
   public Completable pollGithubRepositoryEvents(
       @PathVariable("owner") String owner, @PathVariable("repo") String repo) {
     String stateKey = buildPollGithubRepositoryEventsStateKey(owner, repo);
@@ -110,7 +110,7 @@ public class PollGithubEventsTask {
                     jsonState.getKey(), jsonState.getTimestamp(), jsonState.getData()));
   }
 
-  @PutMapping("/github/{owner}/{repo}/issues/events")
+  @PutMapping("/internal/github/{owner}/{repo}/issues/events")
   public Completable pollGithubRepositoryIssueEvents(
       @PathVariable("owner") String owner, @PathVariable("repo") String repo) {
     String stateKey = buildPollGithubRepositoryIssueEventsStateKey(owner, repo);
