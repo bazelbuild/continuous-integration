@@ -1,8 +1,9 @@
 package build.bazel.dashboard.config;
 
-import build.bazel.dashboard.github.issuequery.GithubIssueQueryParser;
 import build.bazel.dashboard.github.issuequery.GithubIssueQueryExecutor;
 import build.bazel.dashboard.github.issuequery.GithubIssueQueryExecutorPg;
+import build.bazel.dashboard.github.issuequery.GithubIssueQueryParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -28,7 +29,10 @@ public class DefaultConfig {
   }
 
   @Bean
-  public GithubIssueQueryExecutor defaultGithubSearchExecutor(GithubIssueQueryParser queryParser, DatabaseClient databaseClient) {
-    return new GithubIssueQueryExecutorPg(queryParser, databaseClient);
+  public GithubIssueQueryExecutor defaultGithubSearchExecutor(
+      ObjectMapper objectMapper,
+      GithubIssueQueryParser queryParser,
+      DatabaseClient databaseClient) {
+    return new GithubIssueQueryExecutorPg(objectMapper, queryParser, databaseClient);
   }
 }
