@@ -1,0 +1,28 @@
+---
+steps:
+- label: DocGen
+  command:
+  - curl -sS https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s) -o bazelci.py
+  - curl -sS https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/docgen/docgen.py?$(date +%s) -o docgen.py
+  - python3.6 docgen.py
+  agents:
+    queue: default
+  plugins:
+    docker#v3.5.0:
+      image: gcr.io/bazel-public/docgen
+      network: host
+      volumes:
+      - "/etc/group:/etc/group:ro"
+      - "/etc/passwd:/etc/passwd:ro"
+      - "/opt:/opt:ro"
+      - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+      - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      privileged: true
+      always-pull: true
+      environment:
+      - ANDROID_HOME
+      - ANDROID_NDK_HOME
+      - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+      propagate-uid-gid: true
+      propagate-environment: true
