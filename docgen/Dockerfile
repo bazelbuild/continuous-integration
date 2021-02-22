@@ -13,7 +13,7 @@ RUN apt-get -qqy update && \
 
 RUN ln -fs /usr/bin/python3.7 /usr/bin/python
 
-### Install packages required by bazelci.pys
+### Install packages required by bazelci.py
 RUN dpkg --add-architecture i386 && \
     apt-get -qqy update && \
     apt-get -qqy install --no-install-recommends \
