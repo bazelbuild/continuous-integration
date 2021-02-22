@@ -22,7 +22,7 @@ public class GithubTeamTableRepoPg implements GithubTeamTableRepo {
     Mono<GithubTeamTableData> query =
         databaseClient
             .sql(
-                "SELECT owner, repo, id, created_at, updated_at, name FROM github_team_table WHERE"
+                "SELECT owner, repo, id, created_at, updated_at, name, none_team_owner FROM github_team_table WHERE"
                     + " owner = :owner AND repo = :repo AND id = :id")
             .bind("owner", owner)
             .bind("repo", repo)
@@ -35,7 +35,8 @@ public class GithubTeamTableRepoPg implements GithubTeamTableRepo {
                         .id(row.get("id", String.class))
                         .createdAt(row.get("created_at", Instant.class))
                         .updatedAt(row.get("updated_at", Instant.class))
-                        .name(row.get("name", String.class)))
+                        .name(row.get("name", String.class))
+                        .noneTeamOwner(row.get("none_team_owner", String.class)))
             .one()
             .flatMap(
                 builder -> {

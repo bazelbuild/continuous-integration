@@ -57,8 +57,10 @@ public class GithubTeamTableService {
     return githubTeamTableRepo
         .findOne(owner, repo, tableId)
         .flatMapSingle(
-            table -> findAllTeams(owner, repo).flatMap(teams -> fetchTable(teams, table)))
-        .defaultIfEmpty(GithubTeamTable.buildNone(owner, repo, tableId));
+            table ->
+                findAllTeams(owner, repo, table.getNoneTeamOwner())
+                    .flatMap(teams -> fetchTable(teams, table)))
+        .defaultIfEmpty(GithubTeamTable.buildNone(owner, repo, tableId, ""));
   }
 
   private Single<GithubTeamTable> fetchTable(List<GithubTeam> teams, GithubTeamTableData table) {
@@ -126,10 +128,10 @@ public class GithubTeamTableService {
     return String.format("%s %s", query, teamQuery);
   }
 
-  private Single<List<GithubTeam>> findAllTeams(String owner, String repo) {
+  private Single<List<GithubTeam>> findAllTeams(String owner, String repo, String noneTeamOwner) {
     return githubTeamService
         .findAll(owner, repo)
         .collect(Collectors.toList())
-        .doOnSuccess(teams -> teams.add(GithubTeam.buildNone(owner, repo)));
+        .doOnSuccess(teams -> teams.add(GithubTeam.buildNone(owner, repo, noneTeamOwner)));
   }
 }

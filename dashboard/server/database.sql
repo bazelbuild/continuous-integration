@@ -192,12 +192,13 @@ CREATE TABLE github_issue_query_count_task_result
 
 CREATE TABLE github_team_table
 (
-    owner      TEXT,
-    repo       TEXT,
-    id         TEXT,
-    created_at TIMESTAMPTZ NOT NULL,
-    updated_at TIMESTAMPTZ NOT NULL,
-    name       TEXT        NOT NULL,
+    owner           TEXT,
+    repo            TEXT,
+    id              TEXT,
+    created_at      TIMESTAMPTZ NOT NULL,
+    updated_at      TIMESTAMPTZ NOT NULL,
+    name            TEXT        NOT NULL,
+    none_team_owner TEXT        NOT NULL DEFAULT '',
     PRIMARY KEY (owner, repo, id)
 );
 

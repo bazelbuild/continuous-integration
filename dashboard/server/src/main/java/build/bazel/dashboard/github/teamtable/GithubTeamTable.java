@@ -19,7 +19,7 @@ public class GithubTeamTable {
   List<Header> headers;
   List<Row> rows;
 
-  public static GithubTeamTable buildNone(String owner, String repo, String id) {
+  public static GithubTeamTable buildNone(String owner, String repo, String id, String noneTeamOwner) {
     return GithubTeamTable.builder()
         .owner(owner)
         .repo(repo)
@@ -29,7 +29,7 @@ public class GithubTeamTable {
         .rows(
             ImmutableList.of(
                 Row.builder()
-                    .team(Team.create(GithubTeam.buildNone(owner, repo)))
+                    .team(Team.create(GithubTeam.buildNone(owner, repo, noneTeamOwner)))
                     .cells(ImmutableMap.of())
                     .build()))
         .build();

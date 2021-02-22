@@ -81,13 +81,17 @@ export default function GithubTeamTableContainer({
     () =>
       table && table.headers
         ? [
-            {
-              name: "team.name",
-              label: "Team",
-              options: {
-                filterType: "multiselect",
-              },
-            },
+            ...(table.rows.length > 1
+              ? ([
+                  {
+                    name: "team.name",
+                    label: "Team",
+                    options: {
+                      filterType: "multiselect",
+                    },
+                  },
+                ] as MUIDataTableColumn[])
+              : []),
             ...table.headers.map(
               (header) =>
                 ({

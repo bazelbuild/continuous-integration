@@ -22,7 +22,7 @@ public class GithubTeam {
     return NONE_NAME.equals(name);
   }
 
-  public static GithubTeam buildNone(String owner, String repo) {
+  public static GithubTeam buildNone(String owner, String repo, String teamOwner) {
     return GithubTeam.builder()
         .owner(owner)
         .repo(repo)
@@ -30,7 +30,7 @@ public class GithubTeam {
         .createdAt(Instant.EPOCH)
         .updatedAt(Instant.EPOCH)
         .name(NONE_NAME)
-        .teamOwner("")
+        .teamOwner(teamOwner)
         .build();
   }
 }
