@@ -21,7 +21,7 @@ import sys
 
 import bazelci
 
-DEFAULT_FLAGS = ["--action_env=PATH=/usr/local/bin:/usr/bin:/bin"]
+DEFAULT_FLAGS = ["--action_env=PATH=/usr/local/bin:/usr/bin:/bin", "--sandbox_tmpfs_path=/tmp"]
 
 Settings = collections.namedtuple(
     "Settings", ["target", "build_flags", "output_dir", "gcs_bucket", "gcs_subdir", "landing_page"]
