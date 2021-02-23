@@ -110,4 +110,8 @@ public class GithubIssueService {
                       });
             });
   }
+
+  public Single<Integer> findMaxIssueNumber(String owner, String repo) {
+    return githubIssueRepo.findMaxIssueNumber(owner, repo);
+  }
 }

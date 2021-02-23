@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Nullable;
+import java.time.Instant;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @RestController
@@ -42,18 +45,60 @@ public class GithubSyncIssueTask {
       @PathVariable("repo") String repo,
       @RequestParam(name = "start") Integer start,
       @RequestParam(name = "count") Integer count) {
-    checkNotNull(start);
-    checkNotNull(count);
+    return saveNewSyncIssueState(owner, repo, start, start + count, null);
+  }
+
+  @PutMapping("/internal/github/{owner}/{repo}/sync/issues/all")
+  public Completable saveAllSyncIssueState(
+      @PathVariable("owner") String owner, @PathVariable("repo") String repo) {
+    return saveAllSyncIssueState(owner, repo, null);
+  }
+
+  private Completable saveNewSyncIssueState(
+      String owner, String repo, Integer start, Integer end, @Nullable Instant lastTimestamp) {
     return jsonStateStore.save(
         buildSyncStateKey(owner, repo),
-        null,
+        lastTimestamp,
         SyncIssueState.builder()
             .owner(owner)
             .repo(repo)
             .start(start)
             .current(start)
-            .end(start + count)
+            .end(end)
             .build());
+  }
+
+  private Completable saveAllSyncIssueState(
+      String owner, String repo, @Nullable Instant lastTimestamp) {
+    return githubIssueService
+        .findMaxIssueNumber(owner, repo)
+        .flatMapCompletable(
+            maxIssueNumber ->
+                saveNewSyncIssueState(owner, repo, 1, maxIssueNumber + 100, lastTimestamp));
+  }
+
+  @Scheduled(cron = "0 0 0 * * *", zone = "UTC")
+  public void startNewSyncIfNotExisting() {
+    githubRepoService
+        .findAll()
+        .flatMapCompletable(
+            repo -> {
+              String stateKey = buildSyncStateKey(repo.getOwner(), repo.getRepo());
+              return jsonStateStore
+                  .load(stateKey, SyncIssueState.class)
+                  .flatMapCompletable(
+                      jsonState -> {
+                        if (jsonState.getData() != null) {
+                          return Completable.complete();
+                        }
+
+                        return saveAllSyncIssueState(
+                            repo.getOwner(), repo.getRepo(), jsonState.getTimestamp());
+                      });
+            },
+            false,
+            1)
+        .blockingAwait();
   }
 
   // We have a rate limit 5000/hour = 1.4/sec. Use a conservative rate 0.5/sec
