@@ -64,9 +64,9 @@ def get_destination(bucket, subdir):
     return "{}/{}".format(bucket, subdir)
 
 
-def get_url(dest_bucket, landing_page):
-    return "{}/{}".format(
-        dest_bucket.replace("gs://", "https://storage.googleapis.com/"), landing_page
+def get_url(settings):
+    return "https://{}/{}".format(
+        get_destination(settings.gcs_bucket, settings.gcs_subdir), settings.landing_page
     )
 
 
@@ -103,7 +103,7 @@ def main(argv=None):
         return e.returncode
 
     bazelci.print_collapsed_group(":bazel: Publishing documentation URL")
-    message = "You can find the documentation at {}".format(get_url(dest, settings.landing_page))
+    message = "You can find the documentation at {}".format(get_url(settings))
     bazelci.execute_command(
         ["buildkite-agent", "annotate", "--style=info", message, "--context", "doc_url"]
     )
