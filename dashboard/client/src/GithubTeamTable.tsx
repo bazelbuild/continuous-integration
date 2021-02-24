@@ -77,67 +77,68 @@ export default function GithubTeamTableContainer({
     [table]
   );
 
-  const columns: MUIDataTableColumn[] = React.useMemo(
-    () =>
-      table && table.headers
-        ? [
-            ...(table.rows.length > 1
-              ? ([
-                  {
-                    name: "team.name",
-                    label: "Team",
-                    options: {
-                      filterType: "multiselect",
-                    },
-                  },
-                ] as MUIDataTableColumn[])
-              : []),
-            ...table.headers.map(
-              (header) =>
-                ({
-                  name: `cells.${header.id}`,
-                  label: header.name,
-                  options: {
-                    filter: false,
-                    sortDescFirst: true,
-                    customBodyRender: (value, tableMeta) => {
-                      let url = "";
+  const columns: MUIDataTableColumn[] = React.useMemo(() => {
+    if (!(table && table.headers)) {
+      return [];
+    }
 
-                      const row = table.rows.find(
-                        (row) => row.team.name === tableMeta.rowData[0]
-                      );
-                      if (row) {
-                        const key = tableMeta.columnData.name.substring(
-                          "cells.".length
-                        );
-                        url = row.cells[key].url;
-                      }
+    const displayTeamColumn = table.rows.length > 1;
+    return [
+      {
+        name: "team.name",
+        label: "Team",
+        options: {
+          filterType: "multiselect",
+          viewColumns: displayTeamColumn,
+          filter: displayTeamColumn,
+          display: displayTeamColumn,
+        },
+      },
+      ...table.headers.map(
+        (header) =>
+          ({
+            name: `cells.${header.id}`,
+            label: header.name,
+            options: {
+              filter: false,
+              sortDescFirst: true,
+              customBodyRender: (value, tableMeta) => {
+                let url = "";
 
-                      return (
-                        <GithubTeamTableCellContainer
-                          value={value}
-                          url={url}
-                          header={tableMeta.columnData.label}
-                        />
-                      );
-                    },
-                  },
-                } as MUIDataTableColumn)
-            ),
-            {
-              name: "team.teamOwner",
-              label: "Owner",
-              options: {
-                filterType: "multiselect",
-                customBodyRender: (value) => {
-                  return <TeamOwnerCell value={value} />;
-                },
+                console.log(table, tableMeta);
+                const row = table.rows.find(
+                  (row) => row.team.name === tableMeta.rowData[0]
+                );
+                if (row) {
+                  const key = tableMeta.columnData.name.substring(
+                    "cells.".length
+                  );
+                  url = row.cells[key].url;
+                }
+
+                return (
+                  <GithubTeamTableCellContainer
+                    value={value}
+                    url={url}
+                    header={tableMeta.columnData.label}
+                  />
+                );
               },
             },
-          ]
-        : [],
-    [table]
-  );
+          } as MUIDataTableColumn)
+      ),
+      {
+        name: "team.teamOwner",
+        label: "Owner",
+        options: {
+          filterType: "multiselect",
+          customBodyRender: (value) => {
+            return <TeamOwnerCell value={value} />;
+          },
+        },
+      },
+    ];
+  }, [table]);
 
   if (loading) {
     return <span>loading</span>;
