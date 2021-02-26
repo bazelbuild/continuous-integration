@@ -376,6 +376,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_rust.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_rust/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-rust-rustlang",
+        "disabled_reason": "https://github.com/bazelbuild/rules_rust/issues/589",
     },
     "rules_sass": {
         "git_repository": "https://github.com/bazelbuild/rules_sass.git",
@@ -386,6 +387,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_scala.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_scala/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-scala-scala",
+        "disabled_reason": "https://github.com/bazelbuild/rules_scala/issues/1224",
     },
     "rules_swift": {
         "git_repository": "https://github.com/bazelbuild/rules_swift.git",
