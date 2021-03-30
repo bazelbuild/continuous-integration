@@ -298,7 +298,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "rules_foreign_cc": {
         "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_foreign_cc/master/.bazelci/config.yaml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_foreign_cc/main/.bazelci/config.yaml",
         "pipeline_slug": "rules-foreign-cc",
         "owned_by_bazel": True,
     },
