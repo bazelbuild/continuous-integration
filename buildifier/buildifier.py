@@ -16,12 +16,9 @@ from contextlib import closing
 from distutils.version import LooseVersion
 from urllib.request import urlopen
 
-regex = re.compile(
-    r"^(?P<filename>[^:]*):(?P<line>\d*):(?:(?P<column>\d*):)? (?P<message_id>[^:]*): (?P<message>.*?) \((?P<message_url>.*?)\)$",
-    re.MULTILINE | re.DOTALL
+BUILDIFIER_VERSION_PATTERN = re.compile(
+    r"^buildifier version: ([\.\w]+)$", re.MULTILINE
 )
-
-BUILDIFIER_VERSION_PATTERN = re.compile(r"^buildifier version: ([\.\w]+)$", re.MULTILINE)
 
 # https://github.com/bazelbuild/buildtools/blob/master/buildifier/buildifier.go#L333
 # Buildifier error code for "needs formatting". We should fail on all other error codes > 0
@@ -34,7 +31,9 @@ WARNINGS_ENV_VAR = "BUILDIFIER_WARNINGS"
 
 BUILDIFIER_RELEASES_URL = "https://api.github.com/repos/bazelbuild/buildtools/releases"
 
-BUILDIFIER_DEFAULT_DISPLAY_URL = "https://github.com/bazelbuild/buildtools/tree/master/buildifier"
+BUILDIFIER_DEFAULT_DISPLAY_URL = (
+    "https://github.com/bazelbuild/buildtools/tree/master/buildifier"
+)
 
 
 def eprint(*args, **kwargs):
@@ -51,7 +50,14 @@ def upload_output(output):
 
     eprint("+++ :buildkite: Uploading output via 'buildkite annotate'")
     result = subprocess.run(
-        ["buildkite-agent", "annotate", "--style", "warning", "--context", "buildifier"],
+        [
+            "buildkite-agent",
+            "annotate",
+            "--style",
+            "warning",
+            "--context",
+            "buildifier",
+        ],
         input=output.encode(locale.getpreferredencoding(False)),
     )
     if result.returncode != 0:
@@ -66,14 +72,18 @@ def print_error(failing_task, message):
     output = "##### :bazel: buildifier: error while {}:\n".format(failing_task)
     output += "<pre><code>{}</code></pre>".format(html.escape(message))
     if "BUILDKITE_JOB_ID" in os.environ:
-        output += "\n\nSee [job {job}](#{job})\n".format(job=os.environ["BUILDKITE_JOB_ID"])
+        output += "\n\nSee [job {job}](#{job})\n".format(
+            job=os.environ["BUILDKITE_JOB_ID"]
+        )
 
     upload_output(output)
 
 
 def get_file_url(filename, line):
     commit = os.environ.get("BUILDKITE_COMMIT")
-    repo = os.environ.get("BUILDKITE_PULL_REQUEST_REPO", os.environ.get("BUILDKITE_REPO", None))
+    repo = os.environ.get(
+        "BUILDKITE_PULL_REQUEST_REPO", os.environ.get("BUILDKITE_REPO", None)
+    )
     if not commit or not repo:
         return None
 
@@ -89,7 +99,7 @@ def get_file_url(filename, line):
     return None
 
 
-def run_buildifier(binary, flags, files=None, version=None, what=None):
+def run_buildifier(binary, flags, version=None, what=None):
     label = "+++ :bazel: Running "
     if version:
         label += "Buildifier " + version
@@ -100,11 +110,9 @@ def run_buildifier(binary, flags, files=None, version=None, what=None):
 
     eprint(label)
 
-    args = [binary] + flags
-    if files:
-        args += files
-
-    return subprocess.run(args, capture_output=True, universal_newlines=True)
+    return subprocess.run(
+        [binary] + flags, capture_output=True, universal_newlines=True
+    )
 
 
 def create_heading(issue_type, issue_count):
@@ -134,15 +142,23 @@ def get_releases():
         body = res.read()
         content = body.decode(res.info().get_content_charset("iso-8859-1"))
 
-    return {r["tag_name"]: get_release_urls(r) for r in json.loads(content) if not r["prerelease"]}
+    return {
+        r["tag_name"]: get_release_urls(r)
+        for r in json.loads(content)
+        if not r["prerelease"]
+    }
 
 
 def get_release_urls(release):
     buildifier_assets = [
-        a for a in release["assets"] if a["name"] in ("buildifier", "buildifier-linux-amd64")
+        a
+        for a in release["assets"]
+        if a["name"] in ("buildifier", "buildifier-linux-amd64")
     ]
     if not buildifier_assets:
-        raise Exception("There is no Buildifier binary for release {}".format(release["tag_name"]))
+        raise Exception(
+            "There is no Buildifier binary for release {}".format(release["tag_name"])
+        )
 
     return release["html_url"], buildifier_assets[0]["browser_download_url"]
 
@@ -154,6 +170,31 @@ def download_buildifier(url):
             shutil.copyfileobj(response, out_file)
     os.chmod(path, 0o755)
     return path
+
+
+def format_lint_warning(filename, warning):
+    line_number = warning["start"]["line"]
+    link_start, link_end, column_text = "", "", ""
+
+    file_url = get_file_url(filename, line_number)
+    if file_url:
+        link_start = '<a href="{}">'.format(file_url)
+        link_end = "</a>"
+
+    column = warning["start"].get("column")
+    if column:
+        column_text = ":{}".format(column)
+
+    return '{link_start}{filename}:{line}{column}{link_end}: <a href="{help_url}">{category}</a>: {message}'.format(
+        link_start=link_start,
+        filename=filename,
+        line=line_number,
+        column=column_text,
+        link_end=link_end,
+        help_url=warning["url"],
+        category=warning["category"],
+        message=warning["message"],
+    )
 
 
 def main(argv=None):
@@ -173,102 +214,75 @@ def main(argv=None):
             print_error("downloading Buildifier", str(ex))
             return 1
 
-    # Gather all files to process.
-    eprint("+++ :female-detective: Looking for WORKSPACE, BUILD, BUILD.bazel and *.bzl files")
-    files = []
-    build_bazel_found = False
-    for root, _, filenames in os.walk("."):
-        for filename in filenames:
-            if fnmatch.fnmatch(filename, "BUILD.bazel"):
-                build_bazel_found = True
-            for pattern in ("WORKSPACE", "BUILD", "BUILD.bazel", "*.bzl"):
-                if fnmatch.fnmatch(filename, pattern):
-                    files.append(os.path.relpath(os.path.join(root, filename)))
-    if build_bazel_found:
-        eprint(
-            "Found BUILD.bazel files in the workspace, thus ignoring BUILD files without suffix."
-        )
-        files = [fname for fname in files if not fnmatch.fnmatch(os.path.basename(fname), "BUILD")]
-    if not files:
-        eprint("No files found, exiting.")
-        return 0
-
-    files = sorted(files)
-
     # Determine Buildifier version if the user did not request a specific version.
     if not version:
         eprint("+++ :female-detective: Detecting Buildifier version")
-        version_result = run_buildifier(buildifier_binary, ["--version"], what="Version info")
+        version_result = run_buildifier(
+            buildifier_binary, ["--version"], what="Version info"
+        )
         match = BUILDIFIER_VERSION_PATTERN.search(version_result.stdout)
         version = match.group(1) if match and match.group(1) != "redacted" else None
 
-    # Run formatter before linter since --lint=warn implies --mode=fix,
-    # thus fixing any format issues.
-    formatter_result = run_buildifier(
-        buildifier_binary, ["--mode=check"], files=files, version=version, what="Format check"
-    )
-    if formatter_result.returncode and formatter_result.returncode != BUILDIFIER_FORMAT_ERROR_CODE:
-        print_error("checking format", formatter_result.stderr)
-        return formatter_result.returncode
+    flags = ["--mode=check", "--lint=warn"]
+    warnings = os.getenv(WARNINGS_ENV_VAR)
+    if warnings:
+        eprint("Running Buildifier with the following warnings: {}".format(warnings))
+        flags.append("--warnings={}".format(warnings))
 
-    # Format: "<file name> # reformated"
-    unformatted_files = [l.partition(" ")[0] for l in formatter_result.stderr.splitlines()]
+    result = run_buildifier(
+        buildifier_binary,
+        flags + ["--format=json", "-r", "."],
+        version=version,
+        what="Format & lint checks",
+    )
+
+    if result.returncode and result.returncode != BUILDIFIER_FORMAT_ERROR_CODE:
+        print_error("Buildifier failed", result.stderr)
+        return result.returncode
+
+    data = json.loads(result.stdout)
+    if data["success"]:
+        # If buildifier was happy, there's nothing left to do for us.
+        eprint("+++ :tada: Buildifier found nothing to complain about")
+        return 0
+
+    unformatted_files = []
+    lint_findings = []
+    for file in data["files"]:
+        filename = file["filename"]
+
+        if not file["formatted"]:
+            unformatted_files.append(filename)
+
+        for warning in file["warnings"]:
+            lint_findings.append(format_lint_warning(filename, warning))
+
+    output = ""
     if unformatted_files:
         eprint(
             "+++ :construction: Found {} file(s) that must be formatted".format(
                 len(unformatted_files)
             )
         )
-
-    lint_flags = ["--lint=warn"]
-    warnings = os.getenv(WARNINGS_ENV_VAR)
-    if warnings:
-        eprint("Running Buildifier with the following warnings: {}".format(warnings))
-        lint_flags.append("--warnings={}".format(warnings))
-
-    linter_result = run_buildifier(
-        buildifier_binary, lint_flags, files=files, version=version, what="Lint checks"
-    )
-    if linter_result.returncode == 0 and not unformatted_files:
-        # If buildifier was happy, there's nothing left to do for us.
-        eprint("+++ :tada: Buildifier found nothing to complain about")
-        return 0
-
-    output = ""
-    if unformatted_files:
         output = create_heading("format", len(unformatted_files))
         display_version = " {}".format(version) if version else ""
         output += (
-            "Please download <a href=\"{}\">buildifier{}</a> and run the following "
+            'Please download <a href="{}">buildifier{}</a> and run the following '
             "command in your workspace:<br/><pre><code>buildifier {}</code></pre>"
             "\n".format(display_url, display_version, " ".join(unformatted_files))
         )
 
-    # Parse output.
-    if linter_result.returncode:
-        eprint("+++ :gear: Parsing buildifier output")
-        findings = list(regex.finditer(linter_result.stderr))
-        output += create_heading("lint", len(findings))
+    if lint_findings:
+        eprint("+++ :gear: Rendering lint warnings")
+        output += create_heading("lint", len(lint_findings))
         output += "<pre><code>"
-        for finding in findings:
-            file_url = get_file_url(finding["filename"], finding["line"])
-            if file_url:
-                output += '<a href="{}">{}:{}</a>:'.format(
-                    file_url, finding["filename"], finding["line"]
-                )
-            else:
-                output += "{}:{}:".format(finding["filename"], finding["line"])
-            if finding["column"]:
-                output += "{}:".format(finding["column"])
-            output += ' <a href="{}">{}</a>: {}\n'.format(
-                finding["message_url"], finding["message_id"], finding["message"]
-            )
+        output += "\n".join(lint_findings)
         output = output.strip() + "</pre></code>"
 
     upload_output(output)
 
     # Preserve buildifier's exit code.
-    return max(linter_result.returncode, formatter_result.returncode)
+    return BUILDIFIER_FORMAT_ERROR_CODE
 
 
 if __name__ == "__main__":
