@@ -296,6 +296,11 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_docker/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-docker-docker",
     },
+    "rules_dotnet": {
+        "git_repository": "https://github.com/bazelbuild/rules_dotnet.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_dotnet/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "rules-dotnet-edge",
+    },
     "rules_foreign_cc": {
         "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_foreign_cc/main/.bazelci/config.yaml",
