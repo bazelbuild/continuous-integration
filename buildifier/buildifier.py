@@ -153,7 +153,7 @@ def get_release_urls(release):
     buildifier_assets = [
         a
         for a in release["assets"]
-        if a["name"] in ("buildifier", "buildifier-linux-amd64")
+        if a["name"] in ("buildifier", "buildifier-linux-amd64", "buildifier.linux")
     ]
     if not buildifier_assets:
         raise Exception(
@@ -203,25 +203,15 @@ def main(argv=None):
 
     buildifier_binary = "buildifier"
     display_url = BUILDIFIER_DEFAULT_DISPLAY_URL
-    version = os.environ.get(VERSION_ENV_VAR)
-    if version:
-        eprint("+++ :github: Downloading Buildifier version '{}'".format(version))
-        try:
-            version, display_url, download_url = get_buildifier_info(version)
-            eprint("Downloading Buildifier {} from {}".format(version, download_url))
-            buildifier_binary = download_buildifier(download_url)
-        except Exception as ex:
-            print_error("downloading Buildifier", str(ex))
-            return 1
-
-    # Determine Buildifier version if the user did not request a specific version.
-    if not version:
-        eprint("+++ :female-detective: Detecting Buildifier version")
-        version_result = run_buildifier(
-            buildifier_binary, ["--version"], what="Version info"
-        )
-        match = BUILDIFIER_VERSION_PATTERN.search(version_result.stdout)
-        version = match.group(1) if match and match.group(1) != "redacted" else None
+    version = os.environ.get(VERSION_ENV_VAR, "latest")
+    eprint("+++ :github: Downloading Buildifier version '{}'".format(version))
+    try:
+        version, display_url, download_url = get_buildifier_info(version)
+        eprint("Downloading Buildifier {} from {}".format(version, download_url))
+        buildifier_binary = download_buildifier(download_url)
+    except Exception as ex:
+        print_error("downloading Buildifier", str(ex))
+        return 1
 
     flags = ["--mode=check", "--lint=warn"]
     warnings = os.getenv(WARNINGS_ENV_VAR)
