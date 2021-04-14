@@ -54,6 +54,16 @@ DOCGEN_SETTINGS = {
             landing_page="index.html",
         ),
     },
+    "bazel": {
+        "https://bazel.googlesource.com/bazel.git":  Settings(
+            target="//site",
+            build_flags=[],
+            output_dir="bazel-bin/site/site-build",
+            gcs_bucket="docs-staging.bazel.build",
+            gcs_subdir=os.getenv("BUILDKITE_BUILD_NUMBER"),
+            landing_page="versions/master/bazel-overview.html",
+        ),
+    },
 }
 
 
@@ -77,6 +87,7 @@ def main(argv=None):
     if not settings:
         bazelci.eprint("docgen is not enabled for '%s' org and repository %s", org, repo)
         return 1
+
 
     bazelci.print_expanded_group(":bazel: Building documentation from {}".format(repo))
     try:
@@ -106,6 +117,9 @@ def main(argv=None):
     message = "You can find the documentation at {}".format(get_url(settings))
     bazelci.execute_command(
         ["buildkite-agent", "annotate", "--style=info", message, "--context", "doc_url"]
+    )
+    bazelci.execute_command(
+        ["buildkite-agent", "meta-data", "set", "message", message]
     )
 
     return 0
