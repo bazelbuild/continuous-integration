@@ -136,7 +136,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "Bazel skylib": {
         "git_repository": "https://github.com/bazelbuild/bazel-skylib.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-skylib/master/.bazelci/presubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-skylib/main/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-skylib",
         "owned_by_bazel": True,
     },
