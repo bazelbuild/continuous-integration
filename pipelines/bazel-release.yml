@@ -173,6 +173,44 @@ steps:
       cd artifacts
       buildkite-agent artifact upload "*"
 
+  - label: macOS (arm64)
+    agents:
+      # TODO(pcloudy): Switch to macos_arm64 queue when Apple Silicon machines are available,
+      # current we just use x86_64 machines to do cross compile.
+      - queue=macos
+    command: |
+      git fetch origin ${BUILDKITE_BRANCH}
+      git checkout ${BUILDKITE_BRANCH}
+
+      release_name=$(buildkite-agent meta-data get "release_name")
+      echo "release_name = \"\$release_name\""
+
+      /usr/bin/sudo /usr/bin/xcode-select --switch /Applications/Xcode12.4.app
+      /usr/bin/sudo /usr/bin/xcodebuild -runFirstLaunch
+
+      bazel build //src:bazel
+      mkdir output
+      cp bazel-bin/src/bazel output/bazel
+
+      output/bazel build \
+          --define IPHONE_SDK=1 \
+          -c opt \
+          --stamp \
+          --embed_label "\${release_name}" \
+          --workspace_status_command=scripts/ci/build_status_command.sh \
+          --cpu=darwin_arm64 \
+          src/bazel \
+          src/bazel_nojdk \
+          scripts/packages/with-jdk/install.sh
+
+      mkdir artifacts
+      cp "bazel-bin/src/bazel" "artifacts/bazel-\${release_name}-darwin-arm64"
+      cp "bazel-bin/src/bazel_nojdk" "artifacts/bazel_nojdk-\${release_name}-darwin-arm64"
+      cp "bazel-bin/scripts/packages/with-jdk/install.sh" "artifacts/bazel-\${release_name}-installer-darwin-arm64.sh"
+
+      cd artifacts
+      buildkite-agent artifact upload "*"
+
   - label: Windows
     agents:
       - queue=windows
@@ -285,6 +323,23 @@ steps:
       chmod +x "bazel-\${release_name}-darwin-x86_64"
 
       "./bazel-\${release_name}-darwin-x86_64" info
+
+  - label: "Test on macOS (arm64)"
+    agents:
+      # TODO(pcloudy): Switch to macos_arm64 queue and write a proper test step
+      # when Apple Silicon machines are available,
+      - queue=macos
+    command: |
+      git fetch origin ${BUILDKITE_BRANCH}
+      git checkout ${BUILDKITE_BRANCH}
+
+      release_name=$(buildkite-agent meta-data get "release_name")
+      echo "release_name = \"\$release_name\""
+
+      buildkite-agent artifact download "bazel-\${release_name}-darwin-arm64" .
+
+      output=$(lipo -info "bazel-\${release_name}-darwin-arm64")
+      [[ $output == *"architecture: arm64"* ]] || (echo "architecture arm64 expected, but got: \"$output\"" && exit 1)
 
   - label: "Test on Windows"
     agents:

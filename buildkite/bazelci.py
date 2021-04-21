@@ -517,6 +517,16 @@ PLATFORMS = {
         "queue": "macos",
         "python": "python3",
     },
+    "macos_arm64": {
+        "name": "macOS (arm64), OpenJDK 8",
+        "emoji-name": ":darwin: (arm64) (OpenJDK 8)",
+        "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
+        "publish_binary": [], # Change to ["macos_arm64"] when bazel_publish_binaries.yml is updated.
+        # TODO(pcloudy): Switch to macos_arm64 queue when Apple Silicon machines are available,
+        # current we just use x86_64 machines to do cross compile.
+        "queue": "macos",
+        "python": "python3",
+    },
     "windows": {
         "name": "Windows, OpenJDK 8",
         "emoji-name": ":windows: (OpenJDK 8)",
