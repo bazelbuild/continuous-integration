@@ -339,7 +339,7 @@ steps:
       buildkite-agent artifact download "bazel-\${release_name}-darwin-arm64" .
 
       output=$(lipo -info "bazel-\${release_name}-darwin-arm64")
-      [[ $output == *"architecture: arm64"* ]] || (echo "architecture arm64 expected, but got: \"$output\"" && exit 1)
+      [[ \${output} == *"architecture: arm64"* ]] || (echo "architecture arm64 expected, but got: \"\${output}\"" && exit 1)
 
   - label: "Test on Windows"
     agents:
