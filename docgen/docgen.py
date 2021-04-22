@@ -61,7 +61,7 @@ DOCGEN_SETTINGS = {
             output_dir="bazel-bin/site/site-build",
             gcs_bucket="docs-staging.bazel.build",
             gcs_subdir=os.getenv("BUILDKITE_BUILD_NUMBER"),
-            landing_page="versions/master/bazel-overview.html",
+            landing_page="bazel-overview.html",
         ),
     },
 }
