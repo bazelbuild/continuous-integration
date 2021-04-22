@@ -23,6 +23,8 @@ import bazelci
 
 DEFAULT_FLAGS = ["--action_env=PATH=/usr/local/bin:/usr/bin:/bin", "--sandbox_tmpfs_path=/tmp"]
 
+PLATFORM = "ubuntu1804"
+
 Settings = collections.namedtuple(
     "Settings", ["target", "build_flags", "output_dir", "gcs_bucket", "gcs_subdir", "landing_page"]
 )
@@ -57,7 +59,7 @@ DOCGEN_SETTINGS = {
     "bazel": {
         "https://bazel.googlesource.com/bazel.git":  Settings(
             target="//site",
-            build_flags=[],
+            build_flags=bazelci.remote_caching_flags(PLATFORM),
             output_dir="bazel-bin/site/site-build",
             gcs_bucket="docs-staging.bazel.build",
             gcs_subdir=os.getenv("BUILDKITE_BUILD_NUMBER"),
