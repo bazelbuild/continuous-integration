@@ -61,7 +61,6 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 FROM ubuntu1604-bazel-java8 AS ubuntu1604-java8
 COPY --from=gcr.io/bazel-public/base:bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
 COPY --from=gcr.io/bazel-public/base:buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
-COPY --from=gcr.io/bazel-public/base:saucelabs /usr/local/bin/sc /usr/local/bin/sc
 
 ### Install required packages.
 RUN apt-get -qqy update && \

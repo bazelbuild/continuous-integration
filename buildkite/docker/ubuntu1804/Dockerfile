@@ -65,7 +65,6 @@ ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64
 FROM ubuntu1804-bazel-nojava AS ubuntu1804-nojava
 COPY --from=gcr.io/bazel-public/base:bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
 COPY --from=gcr.io/bazel-public/base:buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
-COPY --from=gcr.io/bazel-public/base:saucelabs /usr/local/bin/sc /usr/local/bin/sc
 
 ### Install required packages.
 RUN apt-get -qqy update && \

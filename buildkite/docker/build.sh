@@ -18,7 +18,7 @@ esac
 # See https://docs.docker.com/develop/develop-images/build_enhancements/ for details.
 export DOCKER_BUILDKIT=1
 
-for target in bazelisk buildifier github-release saucelabs; do
+for target in bazelisk buildifier github-release; do
     docker build -f base/Dockerfile --target $target -t gcr.io/bazel-public/base:$target .
 done
 
