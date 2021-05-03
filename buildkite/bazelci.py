@@ -1201,7 +1201,7 @@ def execute_commands(
                     if index_upload_policy != INDEX_UPLOAD_POLICY_ALWAYS:
                         handle_bazel_failure(e, "build")
 
-                if should_upload_kzip:
+                if should_upload_kzip and not is_pull_request():
                     try:
                         merge_and_upload_kythe_kzip(platform, index_upload_gcs)
                     except subprocess.CalledProcessError:
