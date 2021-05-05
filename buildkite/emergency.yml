@@ -17,6 +17,6 @@
 # Please do not clear or delete this file when an incident is over.
 # Instead, simply replace all values with empty strings ("").
 ---
-message: ""
-issue_url: ""
-last_good_bazel: ""
+message: "Due to a Bazelisk bug CI wants to use Bazel 0.27.0. We temporarily force 4.0.0 for most builds."
+issue_url: "https://github.com/bazelbuild/bazelisk/issues/239"
+last_good_bazel: "4.0.0"
