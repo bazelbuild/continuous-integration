@@ -1746,7 +1746,10 @@ def kythe_startup_flags():
 
 
 def kythe_build_flags():
-    return [f"--override_repository=kythe_release={KYTHE_DIR}"]
+    return [
+        "--experimental_convenience_symlinks=normal",
+        f"--override_repository=kythe_release={KYTHE_DIR}"
+    ]
 
 
 def execute_bazel_build(
