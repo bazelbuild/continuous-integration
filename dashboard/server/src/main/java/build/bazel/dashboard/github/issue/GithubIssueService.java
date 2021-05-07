@@ -2,6 +2,8 @@ package build.bazel.dashboard.github.issue;
 
 import build.bazel.dashboard.github.api.FetchIssueRequest;
 import build.bazel.dashboard.github.api.GithubApi;
+import build.bazel.dashboard.github.issuestatus.GithubIssueStatus;
+import build.bazel.dashboard.github.issuestatus.GithubIssueStatusService;
 import io.reactivex.rxjava3.core.Single;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
@@ -19,19 +21,21 @@ public class GithubIssueService {
 
   private final GithubApi githubApi;
   private final GithubIssueRepo githubIssueRepo;
+  private final GithubIssueStatusService githubIssueStatusService;
 
   @Builder
   @Value
   public static class FetchResult {
-    GithubIssue githubIssue;
+    GithubIssue issue;
+    GithubIssueStatus status;
     boolean added;
     boolean updated;
     boolean deleted;
     Throwable error;
 
     static FetchResult create(
-        GithubIssue result, boolean added, boolean updated, boolean deleted, Throwable error) {
-      FetchResultBuilder builder = FetchResult.builder().githubIssue(result);
+        GithubIssue result, GithubIssueStatus status, boolean added, boolean updated, boolean deleted, Throwable error) {
+      FetchResultBuilder builder = FetchResult.builder().issue(result).status(status);
       if (error != null) {
         builder.error(error);
       } else if (added) {
@@ -76,22 +80,28 @@ public class GithubIssueService {
                                   .build();
                           return githubIssueRepo
                               .save(githubIssue)
-                              .toSingle(
-                                  () ->
-                                      FetchResult.create(
-                                          githubIssue, !exists, exists, false, null));
+                              .andThen(githubIssueStatusService.check(githubIssue, Instant.now()))
+                              .map(status -> FetchResult.create(
+                                  githubIssue, status, !exists, exists, false, null))
+                              .switchIfEmpty(Single.just(
+                                FetchResult.create(
+                                    githubIssue, null, !exists, exists, false, null)
+                              ));
                         } else if (response.getStatus().value() == 304) {
                           // Not modified
-                          return Single.just(
-                              FetchResult.create(existed, false, false, false, null));
+                          return githubIssueStatusService.findOne(owner, repo, issueNumber)
+                              .map(status -> FetchResult.create(existed, status, false, false, false, null))
+                              .switchIfEmpty(Single.just(FetchResult.create(existed, null, false, false, false, null)));
                         } else if (response.getStatus().value() == 301
                             || response.getStatus().value() == 404
                             || response.getStatus().value() == 410) {
                           // Transferred or deleted
                           return githubIssueRepo
                               .delete(owner, repo, issueNumber)
+                              // Mark existing status to DELETED
+                              .andThen(githubIssueStatusService.markDeleted(owner, repo, issueNumber))
                               .toSingle(
-                                  () -> FetchResult.create(existed, false, false, true, null));
+                                  () -> FetchResult.create(existed, null, false, false, true, null));
                         } else {
                           log.error(
                               "Failed to fetch {}/{}/issues/{}: {}",
@@ -102,6 +112,7 @@ public class GithubIssueService {
                           return Single.just(
                               FetchResult.create(
                                   existed,
+                                  null,
                                   false,
                                   false,
                                   false,

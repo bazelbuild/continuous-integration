@@ -225,3 +225,18 @@ CREATE TABLE github_repo
     updated_at TIMESTAMPTZ NOT NULL,
     PRIMARY KEY (owner, repo)
 );
+
+CREATE TABLE github_issue_status
+(
+    owner               TEXT,
+    repo                TEXT,
+    issue_number        INTEGER     NOT NULL,
+    status              TEXT,
+    action_owner        TEXT,
+    updated_at          TIMESTAMPTZ NOT NULL,
+    expected_respond_at TIMESTAMPTZ,
+    last_notified_at    TIMESTAMPTZ,
+    next_notify_at      TIMESTAMPTZ,
+    checked_at          TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (owner, repo, issue_number)
+);

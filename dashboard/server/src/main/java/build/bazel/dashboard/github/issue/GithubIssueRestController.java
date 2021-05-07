@@ -22,7 +22,7 @@ public class GithubIssueRestController {
       @PathVariable("issueNumber") Integer issueNumber) {
     return githubIssueService
         .fetchAndSave(owner, repo, issueNumber)
-        .map(GithubIssueService.FetchResult::getGithubIssue)
+        .map(GithubIssueService.FetchResult::getIssue)
         .toMaybe();
   }
 
