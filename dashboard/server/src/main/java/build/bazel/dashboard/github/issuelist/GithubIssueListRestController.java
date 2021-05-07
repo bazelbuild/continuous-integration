@@ -1,5 +1,6 @@
 package build.bazel.dashboard.github.issuelist;
 
+import build.bazel.dashboard.github.issuelist.GithubIssueListService.ListParams;
 import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,7 @@ public class GithubIssueListRestController {
 
   @GetMapping("/github/{owner}/{repo}/issues")
   public Single<GithubIssueList> find(
-      @PathVariable("owner") String owner, @PathVariable("repo") String repo) {
-    return githubIssueListService.find(owner, repo);
+      @PathVariable("owner") String owner, @PathVariable("repo") String repo, ListParams params) {
+    return githubIssueListService.find(owner, repo, params);
   }
 }

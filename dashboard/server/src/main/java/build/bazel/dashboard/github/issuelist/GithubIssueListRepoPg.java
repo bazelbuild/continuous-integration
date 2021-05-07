@@ -1,5 +1,6 @@
 package build.bazel.dashboard.github.issuelist;
 
+import build.bazel.dashboard.github.issuelist.GithubIssueListService.ListParams;
 import build.bazel.dashboard.github.issuestatus.GithubIssueStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.r2dbc.postgresql.codec.Json;
@@ -13,6 +14,8 @@ import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -25,8 +28,15 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
   private final DatabaseClient databaseClient;
 
   @Override
-  public Single<GithubIssueList> find(String owner, String repo) {
-    Flux<GithubIssueList.Item> query =
+  public Single<GithubIssueList> find(String owner, String repo, ListParams params) {
+    StringBuilder condition = new StringBuilder();
+    Map<String, Object> bindings = new HashMap<>();
+    if (params.getStatus() != null) {
+      condition.append(" AND gis.status = :status");
+      bindings.put("status", params.getStatus().toString());
+    }
+
+    DatabaseClient.GenericExecuteSpec spec =
         databaseClient
             .sql(
                 "SELECT gid.owner, gid.repo, gid.issue_number, gis.status, gis.action_owner,"
@@ -34,11 +44,17 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
                     + " github_issue gi ON (gi.owner, gi.repo, gi.issue_number) = (gis.owner,"
                     + " gis.repo, gis.issue_number) INNER JOIN github_issue_data gid ON (gid.owner,"
                     + " gid.repo, gid.issue_number) = (gi.owner, gi.repo, gi.issue_number)"
-                    + " WHERE gis.owner = :owner AND gis.repo = :repo")
+                    + " WHERE gis.owner = :owner AND gis.repo = :repo"
+                    + condition)
             .bind("owner", owner)
-            .bind("repo", repo)
-            .map(this::toGithubIssueListItem)
-            .all();
+            .bind("repo", repo);
+
+    for (Map.Entry<String, Object> binding : bindings.entrySet()) {
+      spec = spec.bind(binding.getKey(), binding.getValue());
+    }
+
+    Flux<GithubIssueList.Item> query = spec.map(this::toGithubIssueListItem).all();
+
     return RxJava3Adapter.fluxToFlowable(query)
         .collect(Collectors.toList())
         .map(items -> GithubIssueList.builder().items(items).build());

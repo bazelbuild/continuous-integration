@@ -82,7 +82,7 @@ export default function Layout({ children }: LayoutProps) {
         <Toolbar variant="dense">
           <img
             src="https://bazel.build/images/bazel-navbar.svg"
-            height={28}
+            style={{height: 28}}
             alt="Bazel"
           />
         </Toolbar>
