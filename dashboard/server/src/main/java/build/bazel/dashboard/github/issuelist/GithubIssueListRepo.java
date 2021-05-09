@@ -1,7 +1,10 @@
 package build.bazel.dashboard.github.issuelist;
 
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 
 public interface GithubIssueListRepo {
-  Single<GithubIssueList> find(String owner, String repo, GithubIssueListService.ListParams listParams);
+  Flowable<GithubIssueList.Item> find(String owner, String repo, GithubIssueListService.ListParams params);
+
+  Single<Integer> count(String owner, String repo, GithubIssueListService.ListParams params);
 }

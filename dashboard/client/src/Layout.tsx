@@ -65,7 +65,7 @@ function RepoList() {
   }
 
   if (error) {
-    return <p>error</p>;
+    return <p>Error</p>;
   }
   return <List>{data.map((repo) => RepoListItem(repo))}</List>;
 }

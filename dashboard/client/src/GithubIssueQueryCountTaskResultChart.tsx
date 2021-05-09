@@ -24,10 +24,10 @@ export default function GithubIssueQueryCountTaskResultChart({
     "DAILY"
   );
   if (loading) {
-    return <span>loading</span>;
+    return <span>Loading</span>;
   }
   if (error) {
-    return <span>error</span>;
+    return <span>Error</span>;
   }
 
   return (

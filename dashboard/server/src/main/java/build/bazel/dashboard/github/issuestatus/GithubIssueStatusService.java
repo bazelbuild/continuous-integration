@@ -181,7 +181,7 @@ public class GithubIssueStatusService {
   }
 
   private static boolean hasMoreDataNeededLabel(List<Label> labels) {
-    return hasLabelPrefix(labels, "\"more data needed\"");
+    return hasLabelPrefix(labels, "more data needed");
   }
 
   private static boolean hasPriorityLabel(List<Label> labels) {

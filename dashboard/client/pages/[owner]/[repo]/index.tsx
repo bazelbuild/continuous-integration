@@ -1,7 +1,5 @@
-import { useRouter } from "next/router";
-
-import Layout from "../../src/Layout";
-import RepoDashboard from "../../src/RepoDashboard";
+import Layout from "../../../src/Layout";
+import RepoDashboard from "../../../src/RepoDashboard";
 import { GetStaticPaths, GetStaticProps } from "next";
 
 interface PageProps {

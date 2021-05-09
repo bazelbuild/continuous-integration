@@ -14,10 +14,12 @@ export interface GithubIssueListItem {
   issueNumber: number;
   status: string;
   expectedRespondAt?: string;
+  actionOwner?: string;
   data: {
     id: number;
     user: GithubIssueListItemUser;
     created_at: string;
+    updated_at: string;
     title: string;
     labels: Array<{
       id: number;
@@ -31,18 +33,26 @@ export interface GithubIssueListItem {
 
 export interface GithubIssueList {
   items: Array<GithubIssueListItem>;
+  total: number;
+}
+
+export type GithubIssueListStatus = 'TO_BE_REVIEWED' | 'REVIEWED' | 'TRIAGED' | 'CLOSED';
+
+export interface GithubIssueListParams {
+  isPullRequest?: boolean,
+  status?: GithubIssueListStatus,
+  page?: number,
+  actionOwner?: string,
 }
 
 export function useGithubIssueList(
   owner: string,
   repo: string,
-  params: {
-    status?: 'TO_BE_REVIEWED' | 'REVIEWED' | 'TRIAGED' | 'CLOSED';
-  }
+  params?: GithubIssueListParams,
 ) {
   const { data, error } = useSWR(
     queryString.stringifyUrl(
-      { url: `/api/github/${owner}/${repo}/issues`, query: params },
+      { url: `/api/github/${owner}/${repo}/issues`, query: params as any },
       { skipNull: true }
     ),
     fetcher,

@@ -13,6 +13,7 @@ import java.util.List;
 @Value
 class GithubIssueList {
   List<Item> items;
+  int total;
 
   @Builder
   @Value

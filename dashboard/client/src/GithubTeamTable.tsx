@@ -105,7 +105,6 @@ export default function GithubTeamTableContainer({
               customBodyRender: (value, tableMeta) => {
                 let url = "";
 
-                console.log(table, tableMeta);
                 const row = table.rows.find(
                   (row) => row.team.name === tableMeta.rowData[0]
                 );
@@ -141,11 +140,11 @@ export default function GithubTeamTableContainer({
   }, [table]);
 
   if (loading) {
-    return <span>loading</span>;
+    return <span>Loading</span>;
   }
 
   if (error) {
-    return <span>error</span>;
+    return <span>Error</span>;
   }
 
   return (

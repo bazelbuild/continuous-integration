@@ -81,17 +81,26 @@ public class GithubIssueService {
                           return githubIssueRepo
                               .save(githubIssue)
                               .andThen(githubIssueStatusService.check(githubIssue, Instant.now()))
-                              .map(status -> FetchResult.create(
-                                  githubIssue, status, !exists, exists, false, null))
-                              .switchIfEmpty(Single.just(
-                                FetchResult.create(
-                                    githubIssue, null, !exists, exists, false, null)
-                              ));
+                              .map(
+                                  status ->
+                                      FetchResult.create(
+                                          githubIssue, status, !exists, exists, false, null))
+                              .switchIfEmpty(
+                                  Single.just(
+                                      FetchResult.create(
+                                          githubIssue, null, !exists, exists, false, null)));
                         } else if (response.getStatus().value() == 304) {
                           // Not modified
-                          return githubIssueStatusService.findOne(owner, repo, issueNumber)
-                              .map(status -> FetchResult.create(existed, status, false, false, false, null))
-                              .switchIfEmpty(Single.just(FetchResult.create(existed, null, false, false, false, null)));
+                          return githubIssueStatusService
+                              .check(existed, Instant.now())
+                              .map(
+                                  status ->
+                                      FetchResult.create(
+                                          existed, status, false, false, false, null))
+                              .switchIfEmpty(
+                                  Single.just(
+                                      FetchResult.create(
+                                          existed, null, false, false, false, null)));
                         } else if (response.getStatus().value() == 301
                             || response.getStatus().value() == 404
                             || response.getStatus().value() == 410) {
@@ -99,9 +108,11 @@ public class GithubIssueService {
                           return githubIssueRepo
                               .delete(owner, repo, issueNumber)
                               // Mark existing status to DELETED
-                              .andThen(githubIssueStatusService.markDeleted(owner, repo, issueNumber))
+                              .andThen(
+                                  githubIssueStatusService.markDeleted(owner, repo, issueNumber))
                               .toSingle(
-                                  () -> FetchResult.create(existed, null, false, false, true, null));
+                                  () ->
+                                      FetchResult.create(existed, null, false, false, true, null));
                         } else {
                           log.error(
                               "Failed to fetch {}/{}/issues/{}: {}",

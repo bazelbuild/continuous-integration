@@ -16,7 +16,6 @@ import {
 } from "@material-ui/core";
 
 const DynamicGithubTeamTable = dynamic(() => import("./GithubTeamTable"));
-const DynamicGithubIssueList = dynamic(() => import("./GithubIssueList"));
 
 const DynamicGithubIssueQueryCountTaskResultChart = dynamic(
   () => import("../src/GithubIssueQueryCountTaskResultChart")
@@ -54,11 +53,6 @@ export default function RepoDashboard({ owner, repo }: RepoDashboardProps) {
         </Typography>
       </Breadcrumbs>
       <Grid container spacing={2} className={classes.container}>
-        {owner === "bazelbuild" && repo === "bazel" && (
-        <Grid item xs={12}>
-          <DynamicGithubIssueList owner={owner} repo={repo}/>
-        </Grid>
-        )}
         <Grid item xs={12}>
           <DynamicGithubTeamTable owner={owner} repo={repo} />
         </Grid>
