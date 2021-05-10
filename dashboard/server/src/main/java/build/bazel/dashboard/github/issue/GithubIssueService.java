@@ -4,6 +4,7 @@ import build.bazel.dashboard.github.api.FetchIssueRequest;
 import build.bazel.dashboard.github.api.GithubApi;
 import build.bazel.dashboard.github.issuestatus.GithubIssueStatus;
 import build.bazel.dashboard.github.issuestatus.GithubIssueStatusService;
+import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +48,10 @@ public class GithubIssueService {
       }
       return builder.build();
     }
+  }
+
+  public Maybe<GithubIssue> findOne(String owner, String repo, int issueNumber) {
+    return githubIssueRepo.findOne(owner, repo, issueNumber);
   }
 
   public Single<FetchResult> fetchAndSave(String owner, String repo, int issueNumber) {

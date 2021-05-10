@@ -240,3 +240,7 @@ CREATE TABLE github_issue_status
     checked_at          TIMESTAMPTZ NOT NULL,
     PRIMARY KEY (owner, repo, issue_number)
 );
+CREATE INDEX ON github_issue_status (status);
+CREATE INDEX ON github_issue_status (action_owner);
+CREATE INDEX ON github_issue_status (expected_respond_at);
+CREATE INDEX ON github_issue_status (next_notify_at);

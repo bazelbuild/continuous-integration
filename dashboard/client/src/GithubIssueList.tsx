@@ -15,17 +15,26 @@ import {
   GithubIssueListStatus,
   useGithubIssueList,
   GithubIssueList as GithubIssueListData,
+  GithubIssueListSort,
+  useGithubIssueListActionOwner,
+  GithubIssueListResult,
 } from "./data/GithubIssueList";
 
 function Status(props: {
   name: string;
-  status: GithubIssueListStatus;
-  count: number;
-  currentStatus?: GithubIssueListStatus;
-  changeStatus: (status: GithubIssueListStatus) => void;
+  active?: boolean;
+  count?: GithubIssueListResult;
+  changeStatus: () => void;
 }) {
-  const active = props.status == props.currentStatus;
-  const count = props.count;
+  const active = props.active;
+  const result = props.count;
+  const count =
+    (result &&
+      !result.loading &&
+      !result.error &&
+      result.data &&
+      result.data.total) ||
+    0;
   return (
     <a
       className={classNames(
@@ -35,7 +44,7 @@ function Status(props: {
           "font-medium": active,
         }
       )}
-      onClick={() => props.changeStatus(props.status)}
+      onClick={() => props.changeStatus()}
     >
       {props.name}
       {count > 0 && (
@@ -189,17 +198,31 @@ function ListItem(props: {
   const issueLink = `https://github.com/${item.owner}/${item.repo}/issues/${item.issueNumber}`;
   return (
     <div className="flex flex-row">
-      <svg
-        className="flex-shrink-0 w-7 h-7 text-green-700 ml-4 mt-3 -mr-2"
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-      >
-        <path
-          fillRule="evenodd"
-          d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9 3a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z"
-        />
-      </svg>
+      {!item.data.pull_request ? (
+        <svg
+          className="flex-shrink-0 w-5 h-5 text-green-700 ml-4 mt-3"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 16 16"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9 3a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z"
+          />
+        </svg>
+      ) : (
+        <svg
+          className="flex-shrink-0 w-5 h-5 text-green-700 ml-4 mt-3"
+          viewBox="0 0 16 16"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 011.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v5.628a2.251 2.251 0 101.5 0V5A2.5 2.5 0 0011 2.5zm1 10.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0zM3.75 12a.75.75 0 100 1.5.75.75 0 000-1.5z"
+          />
+        </svg>
+      )}
 
       <div className="flex-auto flex flex-col space-y-1 p-2">
         <div className="flex flex-row space-x-1 space-y-1 flex-wrap">
@@ -252,7 +275,7 @@ function ListItem(props: {
               <a
                 key={assignee.login}
                 title={`Assigned to ${assignee.login}`}
-                className="transition-all relative"
+                className="transition-all"
                 href={userLink(assignee.login)}
                 target="_blank"
               >
@@ -299,9 +322,9 @@ function defaultGithubIssueListParams(): GithubIssueListParams {
 }
 
 function GithubIssueListBody(props: {
-  data: GithubIssueListData;
+  data?: GithubIssueListData;
   loading: boolean;
-  error: any;
+  error?: any;
   changeActionOwner: (actionOwner: string) => void;
 }) {
   const data = props.data;
@@ -333,7 +356,7 @@ function GithubIssueListBody(props: {
     );
   }
 
-  if (props.error || !data.items) {
+  if (props.error || !data || !data.items) {
     return <div className="p-4">Error</div>;
   }
 
@@ -450,10 +473,10 @@ function Popup(props: {
   return (
     <Transition
       show={props.show}
-      enter="transition duration-100 ease-out"
+      enter="transition duration-100 ease-out z-50"
       enterFrom="transform -translate-y-10 opacity-0"
       enterTo="transform translate-y-0 opacity-100"
-      leave="transition duration-100 ease-out"
+      leave="transition duration-100 ease-out z-50"
       leaveFrom="transform opacity-100"
       leaveTo="transform opacity-0"
     >
@@ -461,7 +484,7 @@ function Popup(props: {
         className="fixed top-0 right-0 left-0 bottom-0 z-50"
         onClick={() => props.onClose()}
       />
-      <div className="absolute w-[300px] right-0 border shadow rounded bg-white z-50 flex flex-col mt-2">
+      <div className="absolute right-0 border shadow rounded bg-white z-50 flex flex-col mt-2">
         <div className="flex flex-row justify-between items-center border-b px-2">
           <span className="p-2 text-base font-bold">{props.title}</span>
           <svg
@@ -487,35 +510,112 @@ function Popup(props: {
   );
 }
 
+function FilterButton(props: { name: string; onClick: () => void }) {
+  return (
+    <a
+      className="flex flex-row items-center space-x-1 text-gray-600 hover:text-black cursor-pointer select-none"
+      onClick={() => props.onClick()}
+    >
+      <span className="text-base font-medium">{props.name}</span>
+      <DownIcon />
+    </a>
+  );
+}
+
 function ActionOwnerFilter(props: {
+  owner: string;
+  repo: string;
   changeActionOwner: (actionOwner: string) => void;
+  activeOwner?: string;
 }) {
+  const [loaded, setLoaded] = useState(false);
   const [show, setShow] = useState(false);
+  const { data, loading, error } = useGithubIssueListActionOwner(
+    loaded || show,
+    props.owner,
+    props.repo
+  );
+
+  if (data && !loaded) {
+    setLoaded(true);
+  }
 
   return (
     <span className="relative">
-      <a
-        className="flex flex-row items-center space-x-1 text-gray-600 hover:text-black cursor-pointer select-none"
-        onClick={() => setShow(!show)}
-      >
-        <span className="text-base font-medium">Owner</span>
-        <DownIcon />
-      </a>
+      <FilterButton name="Owner" onClick={() => setShow(!show)} />
       <Popup
         title="Filter by action owner"
         show={show}
         onClose={() => setShow(false)}
       >
-        {[1, 2, 3, 4, 5].map((key) => (
+        <div className="max-h-[300px] overflow-y-scroll">
+          {data &&
+            data.map((owner) => (
+              <div
+                key={owner}
+                className="p-2 border-b flex flex-row space-x-2 items-center hover:bg-gray-100 cursor-pointer w-[300px]"
+                onClick={() => {
+                  props.changeActionOwner(owner);
+                  setShow(false);
+                }}
+              >
+                {owner === props.activeOwner ? (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                ) : (
+                  <div className="w-5 h-5" />
+                )}
+
+                <span
+                  className={classNames("text-base", {
+                    "font-bold": owner === props.activeOwner,
+                  })}
+                >
+                  {owner}
+                </span>
+              </div>
+            ))}
+        </div>
+      </Popup>
+    </span>
+  );
+}
+
+function SortFilter(props: {
+  changeSort: (sort: GithubIssueListSort) => void;
+  activeSort?: GithubIssueListSort;
+}) {
+  const [show, setShow] = useState(false);
+
+  return (
+    <span className="relative">
+      <FilterButton name="Sort" onClick={() => setShow(!show)} />
+      <Popup title={"Sort by"} show={show} onClose={() => setShow(false)}>
+        {[
+          { name: "Most urgent", key: "EXPECTED_RESPOND_AT_ASC" },
+          { name: "Newest", key: "EXPECTED_RESPOND_AT_DESC" },
+        ].map((sort) => (
           <div
-            key={key}
-            className="p-2 border-b flex flex-row space-x-2 items-center hover:bg-gray-100 cursor-pointer"
+            key={sort.key}
+            className="p-2 border-b flex flex-row space-x-2 items-center hover:bg-gray-100 cursor-pointer w-[300px]"
             onClick={() => {
-              props.changeActionOwner("philwo");
+              props.changeSort(sort.key as any);
               setShow(false);
             }}
           >
-            {key % 2 == 0 ? (
+            {sort.key == props.activeSort ? (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5"
@@ -536,15 +636,38 @@ function ActionOwnerFilter(props: {
 
             <span
               className={classNames("text-base", {
-                "font-bold": key % 2 == 0,
+                "font-bold": sort.key == props.activeSort,
               })}
             >
-              philwo
+              {sort.name}
             </span>
           </div>
         ))}
       </Popup>
     </span>
+  );
+}
+
+function FilterLabel(props: { name: string; onClear: () => void }) {
+  return (
+    <a className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full bg-gray-300 space-x-1">
+      <span className="text-s">{props.name}</span>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-3 w-3 cursor-pointer"
+        onClick={() => props.onClear()}
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M6 18L18 6M6 6l12 12"
+        />
+      </svg>
+    </a>
   );
 }
 
@@ -572,6 +695,24 @@ export default function GithubIssueList({
     isPullRequest: false,
     actionOwner: params.actionOwner,
   });
+  const p0Count = useGithubIssueList(owner, repo, {
+    status: "TRIAGED",
+    labels: ["P0"],
+    isPullRequest: false,
+    actionOwner: params.actionOwner,
+  });
+  const p1Count = useGithubIssueList(owner, repo, {
+    status: "TRIAGED",
+    labels: ["P1"],
+    isPullRequest: false,
+    actionOwner: params.actionOwner,
+  });
+  const p2Count = useGithubIssueList(owner, repo, {
+    status: "TRIAGED",
+    labels: ["P2"],
+    isPullRequest: false,
+    actionOwner: params.actionOwner,
+  });
 
   const githubIssueList = useGithubIssueList(owner, repo, params);
 
@@ -586,12 +727,16 @@ export default function GithubIssueList({
     router.push(newUrl, undefined, { scroll: false });
   };
 
-  const changeStatus = (status: GithubIssueListStatus) => {
+  const changeStatus = (
+    status: GithubIssueListStatus,
+    labels?: Array<string>
+  ) => {
     let newParams = { ...params };
     newParams.status = status;
     if (status == "TO_BE_REVIEWED") {
       newParams.actionOwner = undefined;
     }
+    newParams.labels = labels;
     newParams.page = 1;
     changeParams(newParams);
   };
@@ -599,6 +744,13 @@ export default function GithubIssueList({
   const changeActionOwner = (actionOwner: string | undefined) => {
     let newParams = { ...params };
     newParams.actionOwner = actionOwner;
+    newParams.page = 1;
+    changeParams(newParams);
+  };
+
+  const changeSort = (sort: GithubIssueListSort | undefined) => {
+    let newParams = { ...params };
+    newParams.sort = sort;
     newParams.page = 1;
     changeParams(newParams);
   };
@@ -616,56 +768,84 @@ export default function GithubIssueList({
           <div className="flex-shrink-0 flex space-x-6 p-4">
             <Status
               name="Need Review"
-              status="TO_BE_REVIEWED"
-              count={
-                (!needReviewCount.loading &&
-                  !needReviewCount.error &&
-                  needReviewCount.data &&
-                  needReviewCount.data.total) ||
-                0
-              }
-              currentStatus={params.status}
-              changeStatus={changeStatus}
+              active={params.status == "TO_BE_REVIEWED"}
+              count={needReviewCount}
+              changeStatus={() => changeStatus("TO_BE_REVIEWED")}
             />
             <Status
               name="Need Triage"
-              status="REVIEWED"
-              count={
-                (!needTriageCount.loading &&
-                  !needTriageCount.error &&
-                  needTriageCount.data &&
-                  needTriageCount.data.total) ||
-                0
-              }
-              currentStatus={params.status}
-              changeStatus={changeStatus}
+              active={params.status == "REVIEWED"}
+              count={needTriageCount}
+              changeStatus={() => changeStatus("REVIEWED")}
             />
             <Status
-              name="Triaged"
-              status="TRIAGED"
-              count={0}
-              currentStatus={params.status}
-              changeStatus={changeStatus}
+              name="P0 Issues"
+              active={
+                params.status == "TRIAGED" &&
+                params.labels &&
+                params.labels.length == 1 &&
+                !!params.labels.find((label) => label === "P0")
+              }
+              count={p0Count}
+              changeStatus={() => changeStatus("TRIAGED", ["P0"])}
+            />
+            <Status
+              name="P1 Issues"
+              active={
+                params.status == "TRIAGED" &&
+                params.labels &&
+                params.labels.length == 1 &&
+                !!params.labels.find((label) => label === "P1")
+              }
+              count={p1Count}
+              changeStatus={() => changeStatus("TRIAGED", ["P1"])}
+            />
+            <Status
+              name="P2 Issues"
+              active={
+                params.status == "TRIAGED" &&
+                params.labels &&
+                params.labels.length == 1 &&
+                !!params.labels.find((label) => label === "P2")
+              }
+              count={p2Count}
+              changeStatus={() => changeStatus("TRIAGED", ["P2"])}
             />
           </div>
 
-          <div className="flex-auto">
+          <div className="flex-auto ml-4 space-x-2">
+            {params.actionOwner && (
+              <FilterLabel
+                name={`Owner: ${params.actionOwner}`}
+                onClear={() => changeActionOwner(undefined)}
+              />
+            )}
 
+            {params.sort && (
+              <FilterLabel
+                name={`Sort: ${params.sort}`}
+                onClear={() => changeSort(undefined)}
+              />
+            )}
           </div>
 
           <div className="flex-shrink-0 w-4/12 flex flex-row">
             <div className="flex-1 flex flex-row justify-center">
               <span className="text-base text-gray-600 font-medium">
-                Assignees
+                {/* intentionally empty */}
               </span>
             </div>
             <div className="flex-1 flex flex-row justify-center">
-              <ActionOwnerFilter changeActionOwner={changeActionOwner} />
+              <ActionOwnerFilter
+                changeActionOwner={changeActionOwner}
+                owner={owner}
+                repo={repo}
+                activeOwner={params.actionOwner}
+              />
             </div>
-            <a className="flex-1 flex flex-row justify-center items-center space-x-1 text-gray-600 hover:text-black cursor-pointer">
-              <span className="text-base font-medium">Sort</span>
-              <DownIcon />
-            </a>
+            <div className="flex-1 flex flex-row justify-center">
+              <SortFilter changeSort={changeSort} activeSort={params.sort} />
+            </div>
           </div>
         </div>
 

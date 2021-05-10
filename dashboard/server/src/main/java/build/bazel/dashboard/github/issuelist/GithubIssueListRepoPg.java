@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
 import reactor.adapter.rxjava.RxJava3Adapter;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -61,6 +62,11 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
     if (params.getActionOwner() != null) {
       where.append(" AND gis.action_owner = :action_owner");
       bindings.put("action_owner", params.getActionOwner());
+    }
+
+    if (params.getLabels() != null && !params.getLabels().isEmpty()) {
+      where.append(" AND gi.labels @> :labels");
+      bindings.put("labels", params.getLabels().toArray(new String[0]));
     }
 
     String order = " ORDER BY gi.issue_number DESC";
@@ -140,5 +146,20 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
+  }
+
+  @Override
+  public Flowable<String> findAllActionOwner(String owner, String repo) {
+    Flux<String> query =
+        databaseClient
+            .sql(
+                "SELECT DISTINCT action_owner FROM github_issue_status WHERE owner = :owner AND"
+                    + " repo = :repo AND action_owner IS NOT NULL")
+            .bind("owner", owner)
+            .bind("repo", repo)
+            .map(row -> row.get("action_owner", String.class))
+            .all();
+
+    return RxJava3Adapter.fluxToFlowable(query);
   }
 }

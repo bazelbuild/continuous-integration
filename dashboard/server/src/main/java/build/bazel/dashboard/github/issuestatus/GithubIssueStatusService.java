@@ -3,7 +3,6 @@ package build.bazel.dashboard.github.issuestatus;
 import build.bazel.dashboard.github.issue.GithubIssue;
 import build.bazel.dashboard.github.issue.GithubIssue.Label;
 import build.bazel.dashboard.github.issue.GithubIssue.User;
-import build.bazel.dashboard.github.issue.GithubIssueService;
 import build.bazel.dashboard.github.issuestatus.GithubIssueStatus.GithubIssueStatusBuilder;
 import build.bazel.dashboard.github.issuestatus.GithubIssueStatus.Status;
 import build.bazel.dashboard.github.team.GithubTeam;
@@ -167,7 +166,8 @@ public class GithubIssueStatusService {
               .findAll(issue.getOwner(), issue.getRepo())
               .filter(
                   team ->
-                      labels.stream().anyMatch(label -> label.getName().equals(team.getLabel())))
+                      labels.stream().anyMatch(label -> label.getName().equals(team.getLabel()))
+                          && !team.getTeamOwner().isBlank())
               .firstElement()
               .map(GithubTeam::getTeamOwner);
         }

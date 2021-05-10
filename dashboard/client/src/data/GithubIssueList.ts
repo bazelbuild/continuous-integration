@@ -28,6 +28,7 @@ export interface GithubIssueListItem {
       description: string;
     }>;
     assignees: Array<GithubIssueListItemUser>;
+    pull_request?: {};
   };
 }
 
@@ -36,20 +37,29 @@ export interface GithubIssueList {
   total: number;
 }
 
-export type GithubIssueListStatus = 'TO_BE_REVIEWED' | 'REVIEWED' | 'TRIAGED' | 'CLOSED';
+export type GithubIssueListStatus =
+  | "TO_BE_REVIEWED"
+  | "REVIEWED"
+  | "TRIAGED"
+  | "CLOSED";
+export type GithubIssueListSort =
+  | "EXPECTED_RESPOND_AT_ASC"
+  | "EXPECTED_RESPOND_AT_DESC";
 
 export interface GithubIssueListParams {
-  isPullRequest?: boolean,
-  status?: GithubIssueListStatus,
-  page?: number,
-  actionOwner?: string,
+  isPullRequest?: boolean;
+  status?: GithubIssueListStatus;
+  page?: number;
+  actionOwner?: string;
+  sort?: GithubIssueListSort;
+  labels?: Array<string>;
 }
 
 export function useGithubIssueList(
   owner: string,
   repo: string,
-  params?: GithubIssueListParams,
-) {
+  params?: GithubIssueListParams
+): GithubIssueListResult {
   const { data, error } = useSWR(
     queryString.stringifyUrl(
       { url: `/api/github/${owner}/${repo}/issues`, query: params as any },
@@ -62,6 +72,31 @@ export function useGithubIssueList(
   );
   return {
     data: data as GithubIssueList,
+    error,
+    loading: !error && !data,
+  };
+}
+
+export interface GithubIssueListResult {
+  data?: GithubIssueList;
+  error?: any;
+  loading: boolean;
+}
+
+export function useGithubIssueListActionOwner(
+  shouldFetch: boolean,
+  owner: string,
+  repo: string
+) {
+  const { data, error } = useSWR(
+    shouldFetch ? `/api/github/${owner}/${repo}/issues/owners` : null,
+    fetcher,
+    {
+      refreshInterval: 60000,
+    }
+  );
+  return {
+    data: data as [string],
     error,
     loading: !error && !data,
   };

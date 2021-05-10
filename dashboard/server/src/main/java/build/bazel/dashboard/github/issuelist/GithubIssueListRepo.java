@@ -7,4 +7,6 @@ public interface GithubIssueListRepo {
   Flowable<GithubIssueList.Item> find(String owner, String repo, GithubIssueListService.ListParams params);
 
   Single<Integer> count(String owner, String repo, GithubIssueListService.ListParams params);
+
+  Flowable<String> findAllActionOwner(String owner, String repo);
 }
