@@ -65,6 +65,17 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
 
     String order = " ORDER BY gi.issue_number DESC";
 
+    if (params.getSort() != null) {
+      switch (params.getSort()) {
+        case EXPECTED_RESPOND_AT_ASC:
+          order = " ORDER BY gis.expected_respond_at ASC";
+          break;
+        case EXPECTED_RESPOND_AT_DESC:
+          order = " ORDER BY gis.expected_respond_at DESC";
+          break;
+      }
+    }
+
     int page = 1;
     if (params.getPage() != null) {
       page = params.getPage();

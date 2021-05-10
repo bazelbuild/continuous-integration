@@ -1,6 +1,9 @@
+import React, { ReactNode, useState } from "react";
+import { Transition } from "@headlessui/react";
 import classNames from "classnames";
 import formatDistance from "date-fns/formatDistance";
 import differenceInDays from "date-fns/differenceInDays";
+import differenceInHours from "date-fns/differenceInHours";
 import format from "date-fns/format";
 import isAfter from "date-fns/isAfter";
 import { useRouter } from "next/router";
@@ -104,26 +107,76 @@ function dayText(diff: number) {
   }
 }
 
-function SLOStatus(props: { expectedRespondAt: string }) {
+function SLOStatus(props: { expectedRespondAt: string; updatedAt: string }) {
   const now = new Date();
   const expectedRespondAt = new Date(props.expectedRespondAt);
 
   const diffInDays = differenceInDays(expectedRespondAt, now);
   const days = dayText(diffInDays);
-  let suffix;
+  const overdue = isAfter(now, expectedRespondAt);
+  let colorBg = "#ecd5d5";
+  let colorFg = "#de3b3b";
+  let percentage = 0.0;
 
-  if (isAfter(now, expectedRespondAt)) {
+  let suffix;
+  if (overdue) {
     suffix = " overdue";
   } else {
     suffix = " to respond";
+    const total = differenceInHours(
+      expectedRespondAt,
+      new Date(props.updatedAt)
+    );
+    if (total > 0) {
+      percentage = differenceInHours(expectedRespondAt, now) / total;
+      if (percentage > 0.7) {
+        colorBg = "#ddecdb";
+        colorFg = "#92cb8a";
+      } else if (percentage > 0.3) {
+        colorBg = "#e2e0d3";
+        colorFg = "#cfc50f";
+      }
+    }
   }
 
   return (
-    <div className="flex flex-col">
-      <span className="mr-1">
+    <div className="flex flex-col w-full">
+      <span className="mr-1 text-center">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-5 w-5 inline-block mr-1 text-red-600"
+          style={{ color: colorFg }}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
         {days}
         {suffix}
       </span>
+
+      {percentage > 0.0 && (
+        <div
+          className="overflow-hidden h-1 text-xs flex rounded flex-auto my-2 mx-4"
+          style={{
+            backgroundColor: colorBg,
+          }}
+        >
+          <div
+            style={{
+              width: `${Math.round(percentage * 100)}%`,
+              backgroundColor: colorFg,
+            }}
+            className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center"
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -192,8 +245,8 @@ function ListItem(props: {
           </span>
         </div>
       </div>
-      <div className="hidden md:flex flex-shrink-0 w-3/12 flex-row items-center">
-        <div className="flex-1">
+      <div className="hidden md:flex flex-shrink-0 w-4/12 flex-row">
+        <div className="flex-1 mt-4">
           <div className="flex flex-row -space-x-4 hover:space-x-1 justify-center">
             {item.data.assignees.map((assignee) => (
               <a
@@ -213,20 +266,23 @@ function ListItem(props: {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-row justify-center">
+        <div className="flex-1 flex flex-row mt-4 justify-center">
           {item.actionOwner && (
             <a
-              className="cursor-pointer"
+              className="cursor-pointer hover:font-bold"
               onClick={() => props.changeActionOwner(item.actionOwner!)}
             >
-              @{item.actionOwner}
+              {item.actionOwner}
             </a>
           )}
         </div>
 
-        <div className="flex-1 flex flex-col items-center">
+        <div className="flex-1 flex flex-col mt-4 items-center">
           {item.expectedRespondAt && (
-            <SLOStatus expectedRespondAt={item.expectedRespondAt} />
+            <SLOStatus
+              expectedRespondAt={item.expectedRespondAt}
+              updatedAt={item.data.updated_at}
+            />
           )}
         </div>
       </div>
@@ -372,6 +428,126 @@ function GithubIssueListFooter(props: {
   );
 }
 
+function DownIcon() {
+  return (
+    <svg
+      className="w-3 h-3"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 1024 1024"
+      fill="currentColor"
+    >
+      <path d="M163.446154 275.692308h697.107692c19.692308 0 33.476923 25.6 17.723077 43.323077L537.6 736.492308c-11.815385 15.753846-37.415385 15.753846-49.230769 0L143.753846 319.015385c-13.784615-17.723077-1.969231-43.323077 19.692308-43.323077z" />
+    </svg>
+  );
+}
+
+function Popup(props: {
+  title: string;
+  show: boolean;
+  children: NonNullable<ReactNode>;
+  onClose: () => void;
+}) {
+  return (
+    <Transition
+      show={props.show}
+      enter="transition duration-100 ease-out"
+      enterFrom="transform -translate-y-10 opacity-0"
+      enterTo="transform translate-y-0 opacity-100"
+      leave="transition duration-100 ease-out"
+      leaveFrom="transform opacity-100"
+      leaveTo="transform opacity-0"
+    >
+      <div
+        className="fixed top-0 right-0 left-0 bottom-0 z-50"
+        onClick={() => props.onClose()}
+      />
+      <div className="absolute w-[300px] right-0 border shadow rounded bg-white z-50 flex flex-col mt-2">
+        <div className="flex flex-row justify-between items-center border-b px-2">
+          <span className="p-2 text-base font-bold">{props.title}</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4 cursor-pointer"
+            onClick={() => props.onClose()}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </div>
+
+        {props.children}
+      </div>
+    </Transition>
+  );
+}
+
+function ActionOwnerFilter(props: {
+  changeActionOwner: (actionOwner: string) => void;
+}) {
+  const [show, setShow] = useState(false);
+
+  return (
+    <span className="relative">
+      <a
+        className="flex flex-row items-center space-x-1 text-gray-600 hover:text-black cursor-pointer select-none"
+        onClick={() => setShow(!show)}
+      >
+        <span className="text-base font-medium">Owner</span>
+        <DownIcon />
+      </a>
+      <Popup
+        title="Filter by action owner"
+        show={show}
+        onClose={() => setShow(false)}
+      >
+        {[1, 2, 3, 4, 5].map((key) => (
+          <div
+            key={key}
+            className="p-2 border-b flex flex-row space-x-2 items-center hover:bg-gray-100 cursor-pointer"
+            onClick={() => {
+              props.changeActionOwner("philwo");
+              setShow(false);
+            }}
+          >
+            {key % 2 == 0 ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            ) : (
+              <div className="w-5 h-5" />
+            )}
+
+            <span
+              className={classNames("text-base", {
+                "font-bold": key % 2 == 0,
+              })}
+            >
+              philwo
+            </span>
+          </div>
+        ))}
+      </Popup>
+    </span>
+  );
+}
+
 export default function GithubIssueList({
   owner,
   repo,
@@ -437,7 +613,7 @@ export default function GithubIssueList({
     <div className="flex flex-col">
       <div className="flex flex-col border shadow rounded bg-white ring-1 ring-black ring-opacity-5">
         <div className="bg-gray-100 flex flex-row items-center">
-          <div className="flex-auto flex space-x-6 p-4">
+          <div className="flex-shrink-0 flex space-x-6 p-4">
             <Status
               name="Need Review"
               status="TO_BE_REVIEWED"
@@ -472,56 +648,24 @@ export default function GithubIssueList({
               changeStatus={changeStatus}
             />
           </div>
-          <div className="flex-shrink-0 w-3/12 flex flex-row">
+
+          <div className="flex-auto">
+
+          </div>
+
+          <div className="flex-shrink-0 w-4/12 flex flex-row">
             <div className="flex-1 flex flex-row justify-center">
               <span className="text-base text-gray-600 font-medium">
                 Assignees
               </span>
             </div>
-            {params.actionOwner && (
-              <a
-                className="flex-1 flex flex-row justify-center items-center space-x-1 text-gray-600 hover:text-black cursor-pointer"
-                onClick={() => changeActionOwner(undefined)}
-              >
-                <span className="font-bold text-base">
-                  @{params.actionOwner}
-                </span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </a>
-            )}
-            {!params.actionOwner && (
-              <a className="flex-1 flex flex-row justify-center items-center space-x-1 text-gray-600 hover:text-black cursor-pointer">
-                <span className="text-base font-medium">Owner</span>
-                <span>
-                  <svg
-                    className="w-3 h-3"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 1024 1024"
-                    fill="currentColor"
-                  >
-                    <path d="M163.446154 275.692308h697.107692c19.692308 0 33.476923 25.6 17.723077 43.323077L537.6 736.492308c-11.815385 15.753846-37.415385 15.753846-49.230769 0L143.753846 319.015385c-13.784615-17.723077-1.969231-43.323077 19.692308-43.323077z" />
-                  </svg>
-                </span>
-              </a>
-            )}
             <div className="flex-1 flex flex-row justify-center">
-              <span className="text-base text-gray-600 font-medium">
-                SLO Status
-              </span>
+              <ActionOwnerFilter changeActionOwner={changeActionOwner} />
             </div>
+            <a className="flex-1 flex flex-row justify-center items-center space-x-1 text-gray-600 hover:text-black cursor-pointer">
+              <span className="text-base font-medium">Sort</span>
+              <DownIcon />
+            </a>
           </div>
         </div>
 

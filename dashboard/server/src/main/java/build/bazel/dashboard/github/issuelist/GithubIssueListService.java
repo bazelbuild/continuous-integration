@@ -23,6 +23,12 @@ public class GithubIssueListService {
     @Nullable GithubIssueStatus.Status status;
     @Nullable Integer page;
     @Nullable String actionOwner;
+    @Nullable ListSortParams sort;
+  }
+
+  public enum ListSortParams {
+    EXPECTED_RESPOND_AT_ASC,
+    EXPECTED_RESPOND_AT_DESC,
   }
 
   public Single<GithubIssueList> find(String owner, String repo, ListParams params) {
