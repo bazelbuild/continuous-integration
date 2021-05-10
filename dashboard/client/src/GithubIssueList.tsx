@@ -548,12 +548,12 @@ function ActionOwnerFilter(props: {
         show={show}
         onClose={() => setShow(false)}
       >
-        <div className="max-h-[300px] overflow-y-scroll">
+        <div className="w-[300px] max-h-[300px] overflow-y-scroll">
           {data &&
             data.map((owner) => (
               <div
                 key={owner}
-                className="p-2 border-b flex flex-row space-x-2 items-center hover:bg-gray-100 cursor-pointer w-[300px]"
+                className="p-2 border-b flex flex-row space-x-2 items-center hover:bg-gray-100 cursor-pointer"
                 onClick={() => {
                   props.changeActionOwner(owner);
                   setShow(false);

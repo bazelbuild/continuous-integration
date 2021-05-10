@@ -19,12 +19,17 @@ public class GithubEventHandler {
 
     String type = event.get("type").asText();
     switch (type) {
+      case "IssueCommentEvent":
       case "IssuesEvent":
         return updateGithubIssue(
             owner, repo, event.get("payload").get("issue").get("number").asInt());
+
+      case "PullRequestReviewEvent":
+      case "PullRequestReviewCommentEvent":
       case "PullRequestEvent":
         return updateGithubIssue(
             owner, repo, event.get("payload").get("pull_request").get("number").asInt());
+
       default:
         return Completable.complete();
     }
