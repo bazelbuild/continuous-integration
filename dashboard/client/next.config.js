@@ -9,13 +9,4 @@ module.exports = withBundleAnalyzer({
   serverRuntimeConfig: {
     SERVER_URL: process.env.SERVER_URL || "http://localhost:8080",
   },
-  async redirects() {
-    return [
-      {
-        source: "/",
-        destination: "/bazelbuild/bazel",
-        permanent: false,
-      },
-    ];
-  },
 });
