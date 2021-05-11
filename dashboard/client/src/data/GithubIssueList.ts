@@ -56,13 +56,11 @@ export interface GithubIssueListParams {
 }
 
 export function useGithubIssueList(
-  owner: string,
-  repo: string,
   params?: GithubIssueListParams
 ): GithubIssueListResult {
   const { data, error } = useSWR(
     queryString.stringifyUrl(
-      { url: `/api/github/${owner}/${repo}/issues`, query: params as any },
+      { url: "/api/github/issues", query: params as any },
       { skipNull: true }
     ),
     fetcher,
@@ -83,20 +81,19 @@ export interface GithubIssueListResult {
   loading: boolean;
 }
 
-export function useGithubIssueListActionOwner(
-  shouldFetch: boolean,
-  owner: string,
-  repo: string
-) {
+export function useGithubIssueListActionOwner(params?: GithubIssueListParams) {
   const { data, error } = useSWR(
-    shouldFetch ? `/api/github/${owner}/${repo}/issues/owners` : null,
+    queryString.stringifyUrl(
+      { url: "/api/github/issues/owners", query: params as any },
+      { skipNull: true }
+    ),
     fetcher,
     {
       refreshInterval: 60000,
     }
   );
   return {
-    data: data as [string],
+    data: data as Array<string>,
     error,
     loading: !error && !data,
   };

@@ -1,8 +1,7 @@
 import React from "react";
 import { GetStaticPaths, GetStaticProps } from "next";
 
-import Layout from "../../../src/Layout";
-import GithubIssueList from "../../../src/GithubIssueList";
+import { useRouter } from "next/router";
 
 function Breadcrumb({ owner, repo }: { owner: string; repo: string }) {
   return (
@@ -37,18 +36,11 @@ function Breadcrumb({ owner, repo }: { owner: string; repo: string }) {
 }
 
 export default function Page({ owner, repo }: { owner: string; repo: string }) {
-  if (!(owner == "bazelbuild" && repo == "bazel")) {
-    return <div>Not found</div>;
+  const router = useRouter();
+  if (typeof window !== "undefined") {
+    router.replace("/issues");
   }
-
-  return (
-    <Layout>
-      <div className="m-6 flex flex-col space-y-4">
-        {/*<Breadcrumb owner={owner} repo={repo} />*/}
-        <GithubIssueList owner={owner} repo={repo} queryKey="q" />
-      </div>
-    </Layout>
-  );
+  return null;
 }
 
 export const getStaticProps: GetStaticProps = async (context) => {

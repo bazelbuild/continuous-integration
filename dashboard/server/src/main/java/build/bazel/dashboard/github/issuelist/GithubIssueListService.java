@@ -21,6 +21,8 @@ public class GithubIssueListService {
   @NoArgsConstructor
   @Data
   public static class ListParams {
+    @Nullable String owner;
+    @Nullable String repo;
     @Nullable Boolean isPullRequest;
     @Nullable GithubIssueStatus.Status status;
     @Nullable Integer page;
@@ -34,18 +36,18 @@ public class GithubIssueListService {
     EXPECTED_RESPOND_AT_DESC,
   }
 
-  public Single<GithubIssueList> find(String owner, String repo, ListParams params) {
+  public Single<GithubIssueList> find(ListParams params) {
     return githubIssueListRepo
-        .find(owner, repo, params)
+        .find(params)
         .collect(Collectors.toList())
         .flatMap(
             items ->
                 githubIssueListRepo
-                    .count(owner, repo, params)
+                    .count(params)
                     .map(total -> GithubIssueList.builder().items(items).total(total).build()));
   }
 
-  public Flowable<String> findAllActionOwner(String owner, String repo) {
-    return githubIssueListRepo.findAllActionOwner(owner, repo);
+  public Flowable<String> findAllActionOwner(ListParams params) {
+    return githubIssueListRepo.findAllActionOwner(params);
   }
 }

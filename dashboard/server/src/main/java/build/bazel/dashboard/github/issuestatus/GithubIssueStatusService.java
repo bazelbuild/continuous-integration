@@ -132,12 +132,14 @@ public class GithubIssueStatusService {
       case TRIAGED:
         {
           List<Label> labels = data.getLabels();
-          if (hasLabelPrefix(labels, "P0")) {
-            return updatedAt.plus(1, DAYS);
-          } else if (hasLabelPrefix(labels, "P1")) {
-            return updatedAt.plus(7, DAYS);
-          } else if (hasLabelPrefix(labels, "P2")) {
-            return updatedAt.plus(120, DAYS);
+          if (hasLabelPrefix(labels, "type: bug")) {
+            if (hasLabelPrefix(labels, "P0")) {
+              return updatedAt.plus(1, DAYS);
+            } else if (hasLabelPrefix(labels, "P1")) {
+              return updatedAt.plus(7, DAYS);
+            } else if (hasLabelPrefix(labels, "P2")) {
+              return updatedAt.plus(120, DAYS);
+            }
           }
 
           return null;

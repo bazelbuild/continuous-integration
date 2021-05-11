@@ -10,9 +10,9 @@ import io.reactivex.rxjava3.core.Single;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
+import org.springframework.r2dbc.core.DatabaseClient.GenericExecuteSpec;
 import org.springframework.stereotype.Repository;
 import reactor.adapter.rxjava.RxJava3Adapter;
-import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -37,7 +37,7 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
     Map<String, Object> bindings;
   }
 
-  private static QuerySpec buildQuerySpec(String owner, String repo, ListParams params) {
+  private static QuerySpec buildQuerySpec(ListParams params) {
     String from =
         " FROM github_issue_status gis INNER JOIN github_issue gi ON (gi.owner, gi.repo,"
             + " gi.issue_number) = (gis.owner, gis.repo, gis.issue_number) INNER JOIN"
@@ -45,9 +45,17 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
             + " gi.repo, gi.issue_number)";
 
     Map<String, Object> bindings = new HashMap<>();
-    StringBuilder where = new StringBuilder(" WHERE gis.owner = :owner AND gis.repo = :repo");
-    bindings.put("owner", owner);
-    bindings.put("repo", repo);
+    StringBuilder where = new StringBuilder();
+
+    if (params.getOwner() != null) {
+      where.append(" AND gis.owner = :owner");
+      bindings.put("owner", params.getOwner());
+    }
+
+    if (params.getRepo() != null) {
+      where.append(" AND gis.repo = :repo");
+      bindings.put("repo", params.getRepo());
+    }
 
     if (params.getIsPullRequest() != null) {
       where.append(" AND gi.is_pull_request = :is_pull_request");
@@ -67,6 +75,12 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
     if (params.getLabels() != null && !params.getLabels().isEmpty()) {
       where.append(" AND gi.labels @> :labels");
       bindings.put("labels", params.getLabels().toArray(new String[0]));
+    }
+
+    if (where.length() > 0) {
+      // Remove heading AND
+      where.delete(0, 4);
+      where.insert(0, " WHERE");
     }
 
     String order = " ORDER BY gi.issue_number DESC";
@@ -103,15 +117,15 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
   }
 
   @Override
-  public Flowable<GithubIssueList.Item> find(String owner, String repo, ListParams params) {
-    QuerySpec query = buildQuerySpec(owner, repo, params);
+  public Flowable<GithubIssueList.Item> find(ListParams params) {
+    QuerySpec query = buildQuerySpec(params);
 
     String fields =
         "gid.owner, gid.repo, gid.issue_number, gis.status, gis.action_owner,"
             + " gis.expected_respond_at, gid.data";
     String sql = "SELECT " + fields + query.from + query.where + query.order + query.limit;
 
-    DatabaseClient.GenericExecuteSpec spec = databaseClient.sql(sql);
+    GenericExecuteSpec spec = databaseClient.sql(sql);
     for (Map.Entry<String, Object> binding : query.bindings.entrySet()) {
       spec = spec.bind(binding.getKey(), binding.getValue());
     }
@@ -120,11 +134,11 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
   }
 
   @Override
-  public Single<Integer> count(String owner, String repo, ListParams params) {
-    QuerySpec query = buildQuerySpec(owner, repo, params);
+  public Single<Integer> count(ListParams params) {
+    QuerySpec query = buildQuerySpec(params);
 
     String sql = "SELECT COUNT(*) as total" + query.from + query.where;
-    DatabaseClient.GenericExecuteSpec spec = databaseClient.sql(sql);
+    GenericExecuteSpec spec = databaseClient.sql(sql);
     for (Map.Entry<String, Object> binding : query.bindings.entrySet()) {
       spec = spec.bind(binding.getKey(), binding.getValue());
     }
@@ -149,17 +163,25 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
   }
 
   @Override
-  public Flowable<String> findAllActionOwner(String owner, String repo) {
-    Flux<String> query =
-        databaseClient
-            .sql(
-                "SELECT DISTINCT action_owner FROM github_issue_status WHERE owner = :owner AND"
-                    + " repo = :repo AND action_owner IS NOT NULL")
-            .bind("owner", owner)
-            .bind("repo", repo)
-            .map(row -> row.get("action_owner", String.class))
-            .all();
+  public Flowable<String> findAllActionOwner(ListParams params) {
+    QuerySpec query = buildQuerySpec(params);
 
-    return RxJava3Adapter.fluxToFlowable(query);
+    StringBuilder sql = new StringBuilder("SELECT DISTINCT gis.action_owner");
+    sql.append(query.from);
+    sql.append(query.where);
+    if (query.where.isBlank()) {
+      sql.append(" WHERE");
+    } else {
+      sql.append(" AND");
+    }
+    sql.append(" gis.action_owner IS NOT NULL");
+
+    GenericExecuteSpec spec = databaseClient.sql(sql.toString());
+    for (Map.Entry<String, Object> binding : query.bindings.entrySet()) {
+      spec = spec.bind(binding.getKey(), binding.getValue());
+    }
+
+    return RxJava3Adapter.fluxToFlowable(
+        spec.map(row -> requireNonNull(row.get("action_owner", String.class))).all());
   }
 }

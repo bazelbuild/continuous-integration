@@ -1,13 +1,13 @@
 import React, { ReactNode, useState } from "react";
 import { Transition } from "@headlessui/react";
 import classNames from "classnames";
-import formatDistance from "date-fns/formatDistance";
-import differenceInDays from "date-fns/differenceInDays";
-import differenceInHours from "date-fns/differenceInHours";
-import format from "date-fns/format";
-import isAfter from "date-fns/isAfter";
-import { useRouter } from "next/router";
-import queryString from "query-string";
+import {
+  formatDistance,
+  differenceInDays,
+  differenceInHours,
+  format,
+  isAfter,
+} from "date-fns";
 
 import {
   GithubIssueListItem,
@@ -19,6 +19,11 @@ import {
   useGithubIssueListActionOwner,
   GithubIssueListResult,
 } from "./data/GithubIssueList";
+
+const LABEL_P0 = "P0";
+const LABEL_P1 = "P1";
+const LABEL_P2 = "P2";
+const LABEL_TYPE_BUG = "type: bug";
 
 function Status(props: {
   name: string;
@@ -522,23 +527,73 @@ function FilterButton(props: { name: string; onClick: () => void }) {
   );
 }
 
-function ActionOwnerFilter(props: {
-  owner: string;
-  repo: string;
+function ActionOwnerFilterBody(
+  props: ActionOwnerFilterProps & { onClose: () => void }
+) {
+  const result = useGithubIssueListActionOwner(props.params);
+
+  console.log(result);
+
+  const { data, loading, error } = result;
+  if (loading || error) {
+    return null;
+  }
+
+  if (!data || data.length == 0) {
+    return <div className="px-5 py-2 border-b">No results found.</div>;
+  }
+
+  return (
+    <div className="max-h-[300px] overflow-y-scroll">
+      {data.map((owner) => (
+        <div
+          key={owner}
+          className="p-2 border-b flex flex-row space-x-2 items-center hover:bg-gray-100 cursor-pointer"
+          onClick={() => {
+            props.changeActionOwner(owner);
+            props.onClose();
+          }}
+        >
+          {owner === props.activeOwner ? (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          ) : (
+            <div className="w-5 h-5" />
+          )}
+
+          <span
+            className={classNames("text-base", {
+              "font-bold": owner === props.activeOwner,
+            })}
+          >
+            {owner}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export interface ActionOwnerFilterProps {
   changeActionOwner: (actionOwner: string) => void;
   activeOwner?: string;
-}) {
-  const [loaded, setLoaded] = useState(false);
-  const [show, setShow] = useState(false);
-  const { data, loading, error } = useGithubIssueListActionOwner(
-    loaded || show,
-    props.owner,
-    props.repo
-  );
+  params?: GithubIssueListParams;
+}
 
-  if (data && !loaded) {
-    setLoaded(true);
-  }
+function ActionOwnerFilter(props: ActionOwnerFilterProps) {
+  const [show, setShow] = useState(false);
 
   return (
     <span className="relative">
@@ -548,45 +603,8 @@ function ActionOwnerFilter(props: {
         show={show}
         onClose={() => setShow(false)}
       >
-        <div className="w-[300px] max-h-[300px] overflow-y-scroll">
-          {data &&
-            data.map((owner) => (
-              <div
-                key={owner}
-                className="p-2 border-b flex flex-row space-x-2 items-center hover:bg-gray-100 cursor-pointer"
-                onClick={() => {
-                  props.changeActionOwner(owner);
-                  setShow(false);
-                }}
-              >
-                {owner === props.activeOwner ? (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                ) : (
-                  <div className="w-5 h-5" />
-                )}
-
-                <span
-                  className={classNames("text-base", {
-                    "font-bold": owner === props.activeOwner,
-                  })}
-                >
-                  {owner}
-                </span>
-              </div>
-            ))}
+        <div className="w-[300px]">
+          <ActionOwnerFilterBody {...props} onClose={() => setShow(false)} />
         </div>
       </Popup>
     </span>
@@ -671,60 +689,78 @@ function FilterLabel(props: { name: string; onClear: () => void }) {
   );
 }
 
-export default function GithubIssueList({
-  owner,
-  repo,
-  queryKey,
-}: {
-  owner: string;
-  repo: string;
-  queryKey: string;
-}) {
-  const router = useRouter();
-  const query = queryString.parseUrl(router.asPath);
-  const params: GithubIssueListParams = query.query[queryKey]
-    ? (JSON.parse(query.query[queryKey] as string) as GithubIssueListParams)
-    : defaultGithubIssueListParams();
+function labelContains(
+  labels: Array<string> | undefined,
+  label: string
+): boolean {
+  if (!labels) {
+    return false;
+  }
 
-  const needReviewCount = useGithubIssueList(owner, repo, {
+  return !!labels.find((l) => l === label);
+}
+
+function useGithubIssueListForListBody(params: GithubIssueListParams) {
+  let requestParams = { ...params };
+  if (params.status === "TO_BE_REVIEWED") {
+    requestParams.actionOwner = undefined;
+  }
+  if (
+    !params.sort &&
+    (labelContains(params.labels, LABEL_P0) ||
+      labelContains(params.labels, LABEL_P1) ||
+      labelContains(params.labels, LABEL_P2))
+  ) {
+    requestParams.sort = "EXPECTED_RESPOND_AT_ASC";
+  }
+  return useGithubIssueList(requestParams);
+}
+
+export default function GithubIssueList(props: {
+  paramString?: string;
+  changeParams: (params: string) => void;
+}) {
+  let params: GithubIssueListParams = defaultGithubIssueListParams();
+  if (props.paramString) {
+    try {
+      params = JSON.parse(props.paramString) as GithubIssueListParams;
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  const needReviewCount = useGithubIssueList({
     status: "TO_BE_REVIEWED",
     isPullRequest: false,
   });
-  const needTriageCount = useGithubIssueList(owner, repo, {
+  const needTriageCount = useGithubIssueList({
     status: "REVIEWED",
     isPullRequest: false,
     actionOwner: params.actionOwner,
   });
-  const p0Count = useGithubIssueList(owner, repo, {
+  const p0BugsCount = useGithubIssueList({
     status: "TRIAGED",
-    labels: ["P0"],
+    labels: [LABEL_P0],
     isPullRequest: false,
     actionOwner: params.actionOwner,
   });
-  const p1Count = useGithubIssueList(owner, repo, {
+  const p1BugsCount = useGithubIssueList({
     status: "TRIAGED",
-    labels: ["P1"],
+    labels: [LABEL_P1],
     isPullRequest: false,
     actionOwner: params.actionOwner,
   });
-  const p2Count = useGithubIssueList(owner, repo, {
+  const p2BugsCount = useGithubIssueList({
     status: "TRIAGED",
-    labels: ["P2"],
+    labels: [LABEL_P2],
     isPullRequest: false,
     actionOwner: params.actionOwner,
   });
 
-  const githubIssueList = useGithubIssueList(owner, repo, params);
+  const githubIssueList = useGithubIssueListForListBody(params);
 
   const changeParams = (newParams: GithubIssueListParams) => {
-    let newQuery = { ...query.query };
-    newQuery[queryKey] = JSON.stringify(newParams);
-
-    const newUrl = queryString.stringifyUrl({
-      url: query.url,
-      query: newQuery,
-    });
-    router.push(newUrl, undefined, { scroll: false });
+    props.changeParams(JSON.stringify(newParams));
   };
 
   const changeStatus = (
@@ -733,9 +769,6 @@ export default function GithubIssueList({
   ) => {
     let newParams = { ...params };
     newParams.status = status;
-    if (status == "TO_BE_REVIEWED") {
-      newParams.actionOwner = undefined;
-    }
     newParams.labels = labels;
     newParams.page = 1;
     changeParams(newParams);
@@ -782,34 +815,28 @@ export default function GithubIssueList({
               name="P0 Issues"
               active={
                 params.status == "TRIAGED" &&
-                params.labels &&
-                params.labels.length == 1 &&
-                !!params.labels.find((label) => label === "P0")
+                labelContains(params.labels, LABEL_P0)
               }
-              count={p0Count}
-              changeStatus={() => changeStatus("TRIAGED", ["P0"])}
+              count={p0BugsCount}
+              changeStatus={() => changeStatus("TRIAGED", [LABEL_P0])}
             />
             <Status
               name="P1 Issues"
               active={
                 params.status == "TRIAGED" &&
-                params.labels &&
-                params.labels.length == 1 &&
-                !!params.labels.find((label) => label === "P1")
+                labelContains(params.labels, LABEL_P1)
               }
-              count={p1Count}
-              changeStatus={() => changeStatus("TRIAGED", ["P1"])}
+              count={p1BugsCount}
+              changeStatus={() => changeStatus("TRIAGED", [LABEL_P1])}
             />
             <Status
               name="P2 Issues"
               active={
                 params.status == "TRIAGED" &&
-                params.labels &&
-                params.labels.length == 1 &&
-                !!params.labels.find((label) => label === "P2")
+                labelContains(params.labels, LABEL_P2)
               }
-              count={p2Count}
-              changeStatus={() => changeStatus("TRIAGED", ["P2"])}
+              count={p2BugsCount}
+              changeStatus={() => changeStatus("TRIAGED", [LABEL_P2])}
             />
           </div>
 
@@ -838,9 +865,8 @@ export default function GithubIssueList({
             <div className="flex-1 flex flex-row justify-center">
               <ActionOwnerFilter
                 changeActionOwner={changeActionOwner}
-                owner={owner}
-                repo={repo}
                 activeOwner={params.actionOwner}
+                params={params}
               />
             </div>
             <div className="flex-1 flex flex-row justify-center">

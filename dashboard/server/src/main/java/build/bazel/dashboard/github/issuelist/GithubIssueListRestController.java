@@ -5,7 +5,6 @@ import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -17,17 +16,15 @@ import java.util.stream.Collectors;
 public class GithubIssueListRestController {
   private final GithubIssueListService githubIssueListService;
 
-  @GetMapping("/github/{owner}/{repo}/issues")
-  public Single<GithubIssueList> find(
-      @PathVariable("owner") String owner, @PathVariable("repo") String repo, ListParams params) {
-    return githubIssueListService.find(owner, repo, params);
+  @GetMapping("/github/issues")
+  public Single<GithubIssueList> find(ListParams params) {
+    return githubIssueListService.find(params);
   }
 
-  @GetMapping("/github/{owner}/{repo}/issues/owners")
-  public Single<List<String>> findAllActionOwners(
-      @PathVariable("owner") String owner, @PathVariable("repo") String repo) {
+  @GetMapping("/github/issues/owners")
+  public Single<List<String>> findAllActionOwners(ListParams params) {
     return githubIssueListService
-        .findAllActionOwner(owner, repo)
+        .findAllActionOwner(params)
         .filter(actionOwner -> !actionOwner.isBlank())
         .sorted()
         .collect(Collectors.toList());
