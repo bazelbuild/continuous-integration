@@ -1054,6 +1054,9 @@ export default function GithubIssueList(props: {
   const changeExtraLabels = (extraLabels?: Array<string>) => {
     let newParams = { ...params };
     newParams.extraLabels = extraLabels;
+    if (newParams.extraLabels && newParams.extraLabels.length == 0) {
+      newParams.extraLabels = undefined;
+    }
     newParams.page = 1;
     changeParams(newParams);
   };
@@ -1065,6 +1068,9 @@ export default function GithubIssueList(props: {
     let newParams = { ...params };
     newParams.status = status;
     newParams.labels = labels;
+    if (newParams.labels && newParams.labels.length == 0) {
+      newParams.labels = undefined;
+    }
     newParams.page = 1;
     changeParams(newParams);
   };
@@ -1092,6 +1098,7 @@ export default function GithubIssueList(props: {
   const changePageSize = (pageSize: number) => {
     let newParams = { ...params };
     newParams.pageSize = pageSize;
+    newParams.page = 1;
     changeParams(newParams);
   };
 
