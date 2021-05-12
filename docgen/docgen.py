@@ -28,14 +28,26 @@ DEFAULT_FLAGS = ["--action_env=PATH=/usr/local/bin:/usr/bin:/bin", "--sandbox_tm
 PLATFORM = "ubuntu1804"
 
 Settings = collections.namedtuple(
-    "Settings", ["target", "build_flags", "output_dir", "gcs_bucket", "gcs_subdir", "landing_page", "rewrite"]
+    "Settings",
+    ["target", "build_flags", "output_dir", "gcs_bucket", "gcs_subdir", "landing_page", "rewrite"],
 )
 
 BUILDKITE_BUILD_NUMBER = os.getenv("BUILDKITE_BUILD_NUMBER")
 
-def rewrite_staging_urls(content):
-    new_content = content.replace("docs.bazel.build", "docs-staging.bazel.build/{}".format(BUILDKITE_BUILD_NUMBER))
+
+def rewrite_staging_urls(filename, content):
+    new_content = content.replace(
+        "docs.bazel.build", "docs-staging.bazel.build/{}".format(BUILDKITE_BUILD_NUMBER)
+    )
+
+    # Hack to get search working
+    if filename == "search.html" or filename == "header.html":
+        new_content = new_content.replace(
+            "009927877080525621790:2pxlpaexqpc", "12ee759976b5ec02f", 1
+        )
+
     return new_content.replace('"/', '"/{}/'.format(BUILDKITE_BUILD_NUMBER))
+
 
 DOCGEN_SETTINGS = {
     "bazel-trusted": {
@@ -68,7 +80,7 @@ DOCGEN_SETTINGS = {
         ),
     },
     "bazel": {
-        "https://bazel.googlesource.com/bazel.git":  Settings(
+        "https://bazel.googlesource.com/bazel.git": Settings(
             target="//site",
             build_flags=bazelci.remote_caching_flags(PLATFORM),
             output_dir="bazel-bin/site/site-build",
@@ -86,16 +98,16 @@ def rewrite_and_copy(src_root, dest_root, rewrite):
         dest_dir = src_dir.replace(src_root, dest_root, 1)
         os.mkdir(dest_dir)
 
-        for file in files:
-            src_file = os.path.join(src_dir, file)
-            dest_file  = os.path.join(dest_dir, file)
+        for filename in files:
+            src_file = os.path.join(src_dir, filename)
+            dest_file = os.path.join(dest_dir, filename)
 
             if src_file.endswith(".html"):
                 with open(src_file, "r", encoding="utf-8") as src:
                     content = src.read()
 
                 with open(dest_file, "w", encoding="utf-8") as dest:
-                    dest.write(rewrite(content))
+                    dest.write(rewrite(filename, content))
             else:
                 shutil.copyfile(src_file, dest_file)
 
@@ -121,7 +133,6 @@ def main(argv=None):
         bazelci.eprint("docgen is not enabled for '%s' org and repository %s", org, repo)
         return 1
 
-
     bazelci.print_expanded_group(":bazel: Building documentation from {}".format(repo))
     try:
         bazelci.execute_command(
@@ -142,9 +153,7 @@ def main(argv=None):
     dest = get_destination(bucket, settings.gcs_subdir)
     bazelci.print_expanded_group(":bazel: Uploading documentation to {}".format(dest))
     try:
-        bazelci.execute_command(
-            ["gsutil", "-m", "rsync", "-r", "-c", "-d", src_root, dest]
-        )
+        bazelci.execute_command(["gsutil", "-m", "rsync", "-r", "-c", "-d", src_root, dest])
         bazelci.execute_command(
             ["gsutil", "web", "set", "-m", "index.html", "-e", "404.html", bucket]
         )
@@ -158,9 +167,7 @@ def main(argv=None):
     bazelci.execute_command(
         ["buildkite-agent", "annotate", "--style=info", message, "--context", "doc_url"]
     )
-    bazelci.execute_command(
-        ["buildkite-agent", "meta-data", "set", "message", message]
-    )
+    bazelci.execute_command(["buildkite-agent", "meta-data", "set", "message", message])
 
     return 0
 
