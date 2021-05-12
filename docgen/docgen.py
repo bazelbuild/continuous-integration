@@ -16,8 +16,10 @@
 
 import collections
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 
 import bazelci
 
@@ -26,8 +28,14 @@ DEFAULT_FLAGS = ["--action_env=PATH=/usr/local/bin:/usr/bin:/bin", "--sandbox_tm
 PLATFORM = "ubuntu1804"
 
 Settings = collections.namedtuple(
-    "Settings", ["target", "build_flags", "output_dir", "gcs_bucket", "gcs_subdir", "landing_page"]
+    "Settings", ["target", "build_flags", "output_dir", "gcs_bucket", "gcs_subdir", "landing_page", "rewrite"]
 )
+
+BUILDKITE_BUILD_NUMBER = os.getenv("BUILDKITE_BUILD_NUMBER")
+
+def rewrite_staging_urls(content):
+    new_content = content.replace("docs.bazel.build", "docs-staging.bazel.build/{}".format(BUILDKITE_BUILD_NUMBER))
+    return new_content.replace('"/', '"/{}/'.format(BUILDKITE_BUILD_NUMBER))
 
 DOCGEN_SETTINGS = {
     "bazel-trusted": {
@@ -38,6 +46,7 @@ DOCGEN_SETTINGS = {
             gcs_bucket="docs.bazel.build",
             gcs_subdir="",
             landing_page="versions/master/bazel-overview.html",
+            rewrite=None,
         ),
         "https://github.com/bazelbuild/bazel-blog.git": Settings(
             target="//:site",
@@ -46,6 +55,7 @@ DOCGEN_SETTINGS = {
             gcs_bucket="blog.bazel.build",
             gcs_subdir="",
             landing_page="index.html",
+            rewrite=None,
         ),
         "https://github.com/bazelbuild/bazel-website.git": Settings(
             target="//:site",
@@ -54,6 +64,7 @@ DOCGEN_SETTINGS = {
             gcs_bucket="www.bazel.build",
             gcs_subdir="",
             landing_page="index.html",
+            rewrite=None,
         ),
     },
     "bazel": {
@@ -62,11 +73,31 @@ DOCGEN_SETTINGS = {
             build_flags=bazelci.remote_caching_flags(PLATFORM),
             output_dir="bazel-bin/site/site-build",
             gcs_bucket="docs-staging.bazel.build",
-            gcs_subdir=os.getenv("BUILDKITE_BUILD_NUMBER"),
+            gcs_subdir=BUILDKITE_BUILD_NUMBER,
             landing_page="versions/master/bazel-overview.html",
+            rewrite=rewrite_staging_urls,
         ),
     },
 }
+
+
+def rewrite_and_copy(src_root, dest_root, rewrite):
+    for src_dir, dirs, files in os.walk(src_root):
+        dest_dir = src_dir.replace(src_root, dest_root, 1)
+        os.mkdir(dest_dir)
+
+        for file in files:
+            src_file = os.path.join(src_dir, file)
+            dest_file  = os.path.join(dest_dir, file)
+
+            if src_file.endswith(".html"):
+                with open(src_file, "r", encoding="utf-8") as src:
+                    content = src.read()
+
+                with open(dest_file, "w", encoding="utf-8") as dest:
+                    dest.write(rewrite(content))
+            else:
+                shutil.copyfile(src_file, dest_file)
 
 
 def get_destination(bucket, subdir):
@@ -100,12 +131,19 @@ def main(argv=None):
         bazelci.eprint("Bazel failed with exit code {}".format(e.returncode))
         return e.returncode
 
+    src_root = os.path.join(os.getcwd(), settings.output_dir)
+    if settings.rewrite:
+        bazelci.print_expanded_group(":bazel: Rewriting links in documentation files")
+        dest_root = os.path.join(tempfile.mkdtemp(), "site")
+        rewrite_and_copy(src_root, dest_root, settings.rewrite)
+        src_root = dest_root
+
     bucket = "gs://{}".format(settings.gcs_bucket)
     dest = get_destination(bucket, settings.gcs_subdir)
     bazelci.print_expanded_group(":bazel: Uploading documentation to {}".format(dest))
     try:
         bazelci.execute_command(
-            ["gsutil", "-m", "rsync", "-r", "-c", "-d", settings.output_dir, dest]
+            ["gsutil", "-m", "rsync", "-r", "-c", "-d", src_root, dest]
         )
         bazelci.execute_command(
             ["gsutil", "web", "set", "-m", "index.html", "-e", "404.html", bucket]
