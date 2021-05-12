@@ -35,17 +35,12 @@ Settings = collections.namedtuple(
 BUILDKITE_BUILD_NUMBER = os.getenv("BUILDKITE_BUILD_NUMBER")
 
 
-def rewrite_staging_urls(filename, content):
+def rewrite_staging_urls(content):
     new_content = content.replace(
         "docs.bazel.build", "docs-staging.bazel.build/{}".format(BUILDKITE_BUILD_NUMBER)
     )
-
     # Hack to get search working
-    if filename == "search.html" or filename == "header.html":
-        new_content = new_content.replace(
-            "009927877080525621790:2pxlpaexqpc", "12ee759976b5ec02f", 1
-        )
-
+    new_content = new_content.replace("009927877080525621790:2pxlpaexqpc", "12ee759976b5ec02f", 1)
     return new_content.replace('"/', '"/{}/'.format(BUILDKITE_BUILD_NUMBER))
 
 
@@ -107,7 +102,7 @@ def rewrite_and_copy(src_root, dest_root, rewrite):
                     content = src.read()
 
                 with open(dest_file, "w", encoding="utf-8") as dest:
-                    dest.write(rewrite(filename, content))
+                    dest.write(rewrite(content))
             else:
                 shutil.copyfile(src_file, dest_file)
 
