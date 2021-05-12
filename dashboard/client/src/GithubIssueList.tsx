@@ -18,6 +18,7 @@ import {
   GithubIssueListSort,
   useGithubIssueListActionOwner,
   GithubIssueListResult,
+  useGithubIssueListLabel,
 } from "./data/GithubIssueList";
 import { useGithubRepo } from "./data/GithubRepo";
 
@@ -588,7 +589,9 @@ function Popup(props: {
 function ActionOwnerFilterBody(
   props: ActionOwnerFilterProps & { onClose: () => void }
 ) {
-  const result = useGithubIssueListActionOwner(props.params);
+  const newParams = { ...props.params };
+  newParams.actionOwner = undefined;
+  const result = useGithubIssueListActionOwner(newParams);
 
   const { data, loading, error } = result;
   if (loading || error) {
@@ -600,7 +603,7 @@ function ActionOwnerFilterBody(
   }
 
   return (
-    <div className="max-h-[300px] overflow-y-scroll">
+    <div className="max-h-[300px] overflow-y-auto">
       {data.map((owner) => (
         <div
           key={owner}
@@ -661,47 +664,48 @@ function FilterPopover(props: {
             {props.button}
           </Popover.Button>
 
-          <Transition
-            show={open}
-            enter="transition duration-100 ease-out z-50"
-            enterFrom="transform -translate-y-10 opacity-0"
-            enterTo="transform translate-y-0 opacity-100"
-            leave="transition duration-100 ease-out z-50"
-            leaveFrom="transform opacity-100"
-            leaveTo="transform opacity-0"
+          <div
+            className={classNames("absolute z-50 mt-2", {
+              "right-0": !props.left,
+              "left-0": props.left,
+            })}
           >
-            <Popover.Panel
-              className={classNames(
-                "absolute border shadow rounded bg-white z-50 flex flex-col mt-2",
-                {
-                  "right-0": !props.left,
-                  "left-0": props.left,
-                }
-              )}
+            <Transition
+              show={open}
+              enter="transition-transform duration-100 ease-out"
+              enterFrom="transform -translate-y-2 opacity-0"
+              enterTo="transform translate-y-0 opacity-100"
+              leave="transition duration-100 ease-out"
+              leaveFrom="transform opacity-100"
+              leaveTo="transform opacity-0"
             >
-              <div className="w-[300px]">
-                <div className="flex flex-row justify-between items-center border-b px-2">
-                  <span className="p-2 text-base font-bold">{props.title}</span>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 cursor-pointer"
-                    onClick={close}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+              <Popover.Panel className="border shadow rounded bg-white flex flex-col">
+                <div className="w-[300px]">
+                  <div className="flex flex-row justify-between items-center border-b px-2">
+                    <span className="p-2 text-base font-bold">
+                      {props.title}
+                    </span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 cursor-pointer"
+                      onClick={close}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </div>
+                  {props.children({ close })}
                 </div>
-                {props.children({ close })}
-              </div>
-            </Popover.Panel>
-          </Transition>
+              </Popover.Panel>
+            </Transition>
+          </div>
         </>
       )}
     </Popover>
@@ -782,7 +786,7 @@ function SortFilter(props: {
 
 function FilterLabel(props: { name: string; onClear: () => void }) {
   return (
-    <a className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full bg-gray-300 space-x-1">
+    <a className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full bg-gray-300 space-x-1 flex-shrink-0">
       <span className="text-s">{props.name}</span>
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -824,7 +828,7 @@ function RepoFilterBody(props: RepoFilterProps & { close: () => void }) {
   };
 
   return (
-    <ul className="max-h-[300px] overflow-y-scroll cursor-pointer">
+    <ul className="max-h-[300px] overflow-y-auto cursor-pointer">
       {data.map((repo) => (
         <li
           key={`${repo.owner}/${repo.repo}`}
@@ -836,7 +840,7 @@ function RepoFilterBody(props: RepoFilterProps & { close: () => void }) {
         >
           <Check active={isActive(repo)} />
           <span
-            className={classNames({ "text-medium": isActive(repo) })}
+            className={classNames({ "font-medium": isActive(repo) })}
           >{`${repo.owner}/${repo.repo}`}</span>
         </li>
       ))}
@@ -868,7 +872,43 @@ function RepoFilter(props: RepoFilterProps) {
   );
 }
 
-function LabelFilter() {
+function LabelFilterBody(props: LabelFilterProps & { close: () => void }) {
+  const { data, loading, error } = useGithubIssueListLabel(props.params);
+  if (loading || error) {
+    return null;
+  }
+
+  const isActive = (label: string) => {
+    return labelContains(props.params?.extraLabels, label);
+  };
+
+  return (
+    <ul className="max-h-[300px] overflow-y-auto cursor-pointer">
+      {data.map((label) => (
+        <li
+          key={label}
+          className="py-2 px-4 text-base flex flex-row space-x-2 hover:bg-gray-100 border-b"
+          onClick={() => {
+            props.close();
+            props.filterByLabel(label);
+          }}
+        >
+          <Check active={isActive(label)} />
+          <span className={classNames({ "font-medium": isActive(label) })}>
+            {label}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+interface LabelFilterProps {
+  params?: GithubIssueListParams;
+  filterByLabel: (label: string) => void;
+}
+
+function LabelFilter(props: LabelFilterProps) {
   return (
     <FilterPopover
       title="Filter by Label"
@@ -881,7 +921,7 @@ function LabelFilter() {
         </div>
       }
     >
-      {({ close }) => <div></div>}
+      {({ close }) => <LabelFilterBody {...props} close={close} />}
     </FilterPopover>
   );
 }
@@ -929,6 +969,7 @@ function useGithubIssueListForListBody(params: GithubIssueListParams) {
   let requestParams = { ...params };
   if (params.status === "TO_BE_REVIEWED") {
     requestParams.actionOwner = undefined;
+    requestParams.extraLabels = undefined;
   }
   if (
     !params.sort &&
@@ -959,7 +1000,6 @@ export default function GithubIssueList(props: {
     repo: params.repo,
     status: "TO_BE_REVIEWED",
     isPullRequest: false,
-    extraLabels: params.extraLabels,
   });
   const needTriageCount = useGithubIssueList({
     owner: params.owner,
@@ -1066,7 +1106,7 @@ export default function GithubIssueList(props: {
         <div className="flex-auto flex flex-row border rounded-lg shadow bg-gray-100">
           <RepoFilter activeRepo={activeRepo} changeRepo={changeRepo} />
 
-          <div className="flex flex-row items-center ml-4 space-x-2">
+          <div className="flex flex-row items-center ml-4 space-x-2 overflow-x-auto">
             {params.owner && params.repo && (
               <FilterLabel
                 name={`Repo: ${params.owner}/${params.repo}`}
@@ -1102,9 +1142,14 @@ export default function GithubIssueList(props: {
           </div>
         </div>
 
-        {/*<div className="flex-shrink-0 border rounded-lg shadow">*/}
-        {/*  <LabelFilter />*/}
-        {/*</div>*/}
+        <div className="flex-shrink-0 border rounded-lg shadow">
+          <LabelFilter
+            params={params}
+            filterByLabel={(label) =>
+              changeExtraLabels(labelAdd(params.extraLabels, label))
+            }
+          />
+        </div>
       </div>
       <div className="flex flex-col border shadow rounded bg-white ring-1 ring-black ring-opacity-5">
         <div className="bg-gray-100 flex flex-row items-center">

@@ -117,3 +117,21 @@ export function useGithubIssueListActionOwner(params?: GithubIssueListParams) {
     loading: !error && !data,
   };
 }
+
+export function useGithubIssueListLabel(params?: GithubIssueListParams) {
+  const { data, error } = useSWR(
+    queryString.stringifyUrl(
+      { url: "/api/github/issues/labels", query: params as any },
+      { skipNull: true }
+    ),
+    fetcher,
+    {
+      refreshInterval: 60000,
+    }
+  );
+  return {
+    data: data as Array<string>,
+    error,
+    loading: !error && !data,
+  };
+}

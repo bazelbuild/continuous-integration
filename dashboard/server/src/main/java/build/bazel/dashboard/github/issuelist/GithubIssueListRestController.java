@@ -29,4 +29,13 @@ public class GithubIssueListRestController {
         .sorted()
         .collect(Collectors.toList());
   }
+
+  @GetMapping("/github/issues/labels")
+  public Single<List<String>> findAllLabels(ListParams params) {
+    return githubIssueListService
+        .findAllLabels(params)
+        .filter(label -> !label.isBlank())
+        .sorted()
+        .collect(Collectors.toList());
+  }
 }

@@ -70,4 +70,8 @@ public class GithubIssueListService {
   public Flowable<String> findAllActionOwner(ListParams params) {
     return githubIssueListRepo.findAllActionOwner(params);
   }
+
+  public Flowable<String> findAllLabels(ListParams params) {
+    return githubIssueListRepo.findAllLabels(params);
+  }
 }

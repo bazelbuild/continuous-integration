@@ -10,4 +10,6 @@ public interface GithubIssueListRepo {
   Single<Integer> count(ListParams params);
 
   Flowable<String> findAllActionOwner(ListParams params);
+
+  Flowable<String> findAllLabels(ListParams params);
 }

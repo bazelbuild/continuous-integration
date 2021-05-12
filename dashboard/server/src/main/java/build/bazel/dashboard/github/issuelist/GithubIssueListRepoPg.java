@@ -178,4 +178,20 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
     return RxJava3Adapter.fluxToFlowable(
         spec.map(row -> requireNonNull(row.get("action_owner", String.class))).all());
   }
+
+  @Override
+  public Flowable<String> findAllLabels(ListParams params) {
+    QuerySpec query = buildQuerySpec(params);
+    StringBuilder sql = new StringBuilder("SELECT DISTINCT unnest(gi.labels) AS label");
+    sql.append(query.from);
+    sql.append(query.where);
+
+    GenericExecuteSpec spec = databaseClient.sql(sql.toString());
+    for (Map.Entry<String, Object> binding : query.bindings.entrySet()) {
+      spec = spec.bind(binding.getKey(), binding.getValue());
+    }
+
+    return RxJava3Adapter.fluxToFlowable(
+        spec.map(row -> requireNonNull(row.get("label", String.class))).all());
+  }
 }
