@@ -26,6 +26,7 @@ public class GithubIssueListService {
     @Nullable Boolean isPullRequest;
     @Nullable GithubIssueStatus.Status status;
     @Nullable Integer page;
+    @Nullable Integer pageSize;
     @Nullable String actionOwner;
     @Nullable ListSortParams sort;
     @Nullable List<String> labels;
@@ -37,6 +38,18 @@ public class GithubIssueListService {
   }
 
   public Single<GithubIssueList> find(ListParams params) {
+    if (params.page == null) {
+      params.page = 1;
+    }
+    if (params.page < 1) {
+      params.page = 1;
+    }
+
+    if (params.pageSize == null) {
+      params.pageSize = 10;
+    }
+    params.pageSize = Math.min(params.pageSize, 100);
+
     return githubIssueListRepo
         .find(params)
         .collect(Collectors.toList())
@@ -44,7 +57,14 @@ public class GithubIssueListService {
             items ->
                 githubIssueListRepo
                     .count(params)
-                    .map(total -> GithubIssueList.builder().items(items).total(total).build()));
+                    .map(
+                        total ->
+                            GithubIssueList.builder()
+                                .items(items)
+                                .total(total)
+                                .page(params.page)
+                                .pageSize(params.pageSize)
+                                .build()));
   }
 
   public Flowable<String> findAllActionOwner(ListParams params) {

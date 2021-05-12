@@ -1,5 +1,5 @@
-import React, { ReactNode, useState } from "react";
-import { Transition } from "@headlessui/react";
+import React, { ReactNode, useRef } from "react";
+import { Transition, Popover } from "@headlessui/react";
 import classNames from "classnames";
 import {
   formatDistance,
@@ -321,7 +321,6 @@ function ListItem(props: {
 function defaultGithubIssueListParams(): GithubIssueListParams {
   return {
     status: "TO_BE_REVIEWED",
-    page: 1,
     isPullRequest: false,
   };
 }
@@ -397,13 +396,15 @@ function GithubIssueListBody(props: {
 }
 
 function GithubIssueListFooter(props: {
-  page: number;
-  total: number;
+  data: GithubIssueListData;
   goToPage: (page: number) => void;
+  changePageSize: (pageSize: number) => void;
 }) {
-  const page = props.page;
-  const total = props.total;
-  const pageSize = 10;
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const data = props.data;
+  const page = data.page;
+  const total = data.total;
+  const pageSize = data.pageSize;
   const lastPage = Math.ceil(total / pageSize);
 
   const start = 1 + pageSize * (page - 1);
@@ -415,13 +416,61 @@ function GithubIssueListFooter(props: {
 
   return (
     <div className="flex flex-row-reverse mt-2">
-      <div className="flex space-x-2 flex-row items-center">
+      <div className="flex flex-row items-center">
+        <div className="mr-8 flex flex-row">
+          <span>Rows per page: </span>
+          <Popover className="relative">
+            {({ open }) => (
+              <>
+                <Popover.Button
+                  ref={buttonRef}
+                  className="ml-1 flex flex-row items-center cursor-pointer relative focus:outline-none"
+                >
+                  <span>{pageSize}</span>
+                  <span className="ml-1">
+                    <DownIcon />
+                  </span>
+                </Popover.Button>
+
+                <Transition
+                  show={open}
+                  enter="transition duration-100 ease-out z-50"
+                  enterFrom="transform translate-y-10 opacity-0"
+                  enterTo="transform translate-y-0 opacity-100"
+                  leave="transition duration-100 ease-out z-50"
+                  leaveFrom="transform opacity-100"
+                  leaveTo="transform opacity-0"
+                >
+                  <Popover.Panel className="absolute bg-white right-0 bottom-8 border shadow rounded bg-white z-50 flex flex-col mt-2">
+                    <ul className="flex flex-col text-center cursor-pointer">
+                      {[10, 25, 50, 100].map((pageSize) => (
+                        <li
+                          key={pageSize}
+                          className="py-1 px-2 border-b hover:bg-gray-100"
+                          onClick={() => {
+                            if (buttonRef.current) {
+                              buttonRef.current.click();
+                            }
+                            props.changePageSize(pageSize);
+                          }}
+                        >
+                          {pageSize}
+                        </li>
+                      ))}
+                    </ul>
+                  </Popover.Panel>
+                </Transition>
+              </>
+            )}
+          </Popover>
+        </div>
+
         <span className="mr-4">
-          {start}-{end} of {props.total}
+          {start}-{end} of {total}
         </span>
 
         <button
-          className="h-8 px-1 rounded-lg ring-gray-300 hover:ring-1 focus:outline-none disabled:text-gray-400"
+          className="h-8 px-1 rounded-lg ring-gray-300 hover:ring-1 focus:outline-none disabled:text-gray-400 mr-2"
           disabled={page == 1}
           onClick={() => props.goToPage(page - 1)}
         >
@@ -470,11 +519,16 @@ function DownIcon() {
 }
 
 function Popup(props: {
-  title: string;
+  title?: string;
   show: boolean;
   children: NonNullable<ReactNode>;
   onClose: () => void;
+  bottom?: number;
 }) {
+  const style: any = {};
+  if (props.bottom) {
+    style.bottom = `${props.bottom}px`;
+  }
   return (
     <Transition
       show={props.show}
@@ -489,25 +543,30 @@ function Popup(props: {
         className="fixed top-0 right-0 left-0 bottom-0 z-50"
         onClick={() => props.onClose()}
       />
-      <div className="absolute right-0 border shadow rounded bg-white z-50 flex flex-col mt-2">
-        <div className="flex flex-row justify-between items-center border-b px-2">
-          <span className="p-2 text-base font-bold">{props.title}</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 cursor-pointer"
-            onClick={() => props.onClose()}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </div>
+      <div
+        className="absolute right-0 border shadow rounded bg-white z-50 flex flex-col mt-2"
+        style={style}
+      >
+        {props.title && (
+          <div className="flex flex-row justify-between items-center border-b px-2">
+            <span className="p-2 text-base font-bold">{props.title}</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 cursor-pointer"
+              onClick={() => props.onClose()}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </div>
+        )}
 
         {props.children}
       </div>
@@ -515,24 +574,10 @@ function Popup(props: {
   );
 }
 
-function FilterButton(props: { name: string; onClick: () => void }) {
-  return (
-    <a
-      className="flex flex-row items-center space-x-1 text-gray-600 hover:text-black cursor-pointer select-none"
-      onClick={() => props.onClick()}
-    >
-      <span className="text-base font-medium">{props.name}</span>
-      <DownIcon />
-    </a>
-  );
-}
-
 function ActionOwnerFilterBody(
   props: ActionOwnerFilterProps & { onClose: () => void }
 ) {
   const result = useGithubIssueListActionOwner(props.params);
-
-  console.log(result);
 
   const { data, loading, error } = result;
   if (loading || error) {
@@ -592,22 +637,73 @@ export interface ActionOwnerFilterProps {
   params?: GithubIssueListParams;
 }
 
-function ActionOwnerFilter(props: ActionOwnerFilterProps) {
-  const [show, setShow] = useState(false);
+function FilterPopover(props: {
+  title: string;
+  buttonName: string;
+  children: (props: { close: () => void }) => ReactNode;
+}) {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const close = () => {
+    if (buttonRef.current) {
+      buttonRef.current.click();
+    }
+  };
 
   return (
-    <span className="relative">
-      <FilterButton name="Owner" onClick={() => setShow(!show)} />
-      <Popup
-        title="Filter by action owner"
-        show={show}
-        onClose={() => setShow(false)}
-      >
-        <div className="w-[300px]">
-          <ActionOwnerFilterBody {...props} onClose={() => setShow(false)} />
-        </div>
-      </Popup>
-    </span>
+    <Popover className="relative">
+      {({ open }) => (
+        <>
+          <Popover.Button ref={buttonRef}>
+            <a className="flex flex-row items-center space-x-1 text-gray-600 hover:text-black cursor-pointer select-none">
+              <span className="text-base font-medium">{props.buttonName}</span>
+              <DownIcon />
+            </a>
+          </Popover.Button>
+
+          <Transition
+            show={open}
+            enter="transition duration-100 ease-out z-50"
+            enterFrom="transform -translate-y-10 opacity-0"
+            enterTo="transform translate-y-0 opacity-100"
+            leave="transition duration-100 ease-out z-50"
+            leaveFrom="transform opacity-100"
+            leaveTo="transform opacity-0"
+          >
+            <Popover.Panel className="absolute right-0 border shadow rounded bg-white z-50 flex flex-col mt-2">
+              <div className="w-[300px]">
+                <div className="flex flex-row justify-between items-center border-b px-2">
+                  <span className="p-2 text-base font-bold">{props.title}</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 cursor-pointer"
+                    onClick={close}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </div>
+                {props.children({ close })}
+              </div>
+            </Popover.Panel>
+          </Transition>
+        </>
+      )}
+    </Popover>
+  );
+}
+
+function ActionOwnerFilter(props: ActionOwnerFilterProps) {
+  return (
+    <FilterPopover title={"Filter by action owner"} buttonName="Owner">
+      {({ close }) => <ActionOwnerFilterBody {...props} onClose={close} />}
+    </FilterPopover>
   );
 }
 
@@ -615,13 +711,10 @@ function SortFilter(props: {
   changeSort: (sort: GithubIssueListSort) => void;
   activeSort?: GithubIssueListSort;
 }) {
-  const [show, setShow] = useState(false);
-
   return (
-    <span className="relative">
-      <FilterButton name="Sort" onClick={() => setShow(!show)} />
-      <Popup title={"Sort by"} show={show} onClose={() => setShow(false)}>
-        {[
+    <FilterPopover title="Sort by" buttonName="Sort">
+      {({ close }) => {
+        return [
           { name: "Most urgent", key: "EXPECTED_RESPOND_AT_ASC" },
           { name: "Newest", key: "EXPECTED_RESPOND_AT_DESC" },
         ].map((sort) => (
@@ -629,8 +722,8 @@ function SortFilter(props: {
             key={sort.key}
             className="p-2 border-b flex flex-row space-x-2 items-center hover:bg-gray-100 cursor-pointer w-[300px]"
             onClick={() => {
+              close();
               props.changeSort(sort.key as any);
-              setShow(false);
             }}
           >
             {sort.key == props.activeSort ? (
@@ -660,9 +753,9 @@ function SortFilter(props: {
               {sort.name}
             </span>
           </div>
-        ))}
-      </Popup>
-    </span>
+        ));
+      }}
+    </FilterPopover>
   );
 }
 
@@ -740,19 +833,19 @@ export default function GithubIssueList(props: {
   });
   const p0BugsCount = useGithubIssueList({
     status: "TRIAGED",
-    labels: [LABEL_P0],
+    labels: [LABEL_P0, LABEL_TYPE_BUG],
     isPullRequest: false,
     actionOwner: params.actionOwner,
   });
   const p1BugsCount = useGithubIssueList({
     status: "TRIAGED",
-    labels: [LABEL_P1],
+    labels: [LABEL_P1, LABEL_TYPE_BUG],
     isPullRequest: false,
     actionOwner: params.actionOwner,
   });
   const p2BugsCount = useGithubIssueList({
     status: "TRIAGED",
-    labels: [LABEL_P2],
+    labels: [LABEL_P2, LABEL_TYPE_BUG],
     isPullRequest: false,
     actionOwner: params.actionOwner,
   });
@@ -791,6 +884,12 @@ export default function GithubIssueList(props: {
   const goToPage = (page: number) => {
     let newParams = { ...params };
     newParams.page = page;
+    changeParams(newParams);
+  };
+
+  const changePageSize = (pageSize: number) => {
+    let newParams = { ...params };
+    newParams.pageSize = pageSize;
     changeParams(newParams);
   };
 
@@ -884,9 +983,9 @@ export default function GithubIssueList(props: {
         !githubIssueList.error &&
         githubIssueList.data && (
           <GithubIssueListFooter
-            page={params.page!}
-            total={githubIssueList.data.total}
+            data={githubIssueList.data}
             goToPage={goToPage}
+            changePageSize={changePageSize}
           />
         )}
     </div>

@@ -14,6 +14,8 @@ import java.util.List;
 class GithubIssueList {
   List<Item> items;
   int total;
+  int page;
+  int pageSize;
 
   @Builder
   @Value

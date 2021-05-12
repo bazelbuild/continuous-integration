@@ -35,6 +35,8 @@ export interface GithubIssueListItem {
 export interface GithubIssueList {
   items: Array<GithubIssueListItem>;
   total: number;
+  page: number;
+  pageSize: number;
 }
 
 export type GithubIssueListStatus =
@@ -50,6 +52,7 @@ export interface GithubIssueListParams {
   isPullRequest?: boolean;
   status?: GithubIssueListStatus;
   page?: number;
+  pageSize?: number;
   actionOwner?: string;
   sort?: GithubIssueListSort;
   labels?: Array<string>;

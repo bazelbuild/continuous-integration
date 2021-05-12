@@ -96,16 +96,10 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
       }
     }
 
-    int page = 1;
-    if (params.getPage() != null) {
-      page = params.getPage();
-      if (page < 1) {
-        page = 1;
-      }
-    }
-    int pageSize = 10;
+    int page = requireNonNull(params.getPage());
+    int pageSize = requireNonNull(params.getPageSize());
     int offset = (page - 1) * pageSize;
-    String limit = " LIMIT 10 OFFSET " + offset;
+    String limit = " LIMIT " + pageSize + " OFFSET " + offset;
 
     return QuerySpec.builder()
         .from(from)
