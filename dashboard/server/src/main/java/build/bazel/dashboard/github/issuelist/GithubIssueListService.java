@@ -11,6 +11,8 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -37,7 +39,7 @@ public class GithubIssueListService {
     EXPECTED_RESPOND_AT_DESC,
   }
 
-  public Single<GithubIssueList> find(ListParams params) {
+  private void preprocessParams(ListParams params) {
     if (params.page == null) {
       params.page = 1;
     }
@@ -49,7 +51,10 @@ public class GithubIssueListService {
       params.pageSize = 10;
     }
     params.pageSize = Math.min(params.pageSize, 100);
+  }
 
+  public Single<GithubIssueList> find(ListParams params) {
+    preprocessParams(params);
     return githubIssueListRepo
         .find(params)
         .collect(Collectors.toList())
@@ -62,16 +67,18 @@ public class GithubIssueListService {
                             GithubIssueList.builder()
                                 .items(items)
                                 .total(total)
-                                .page(params.page)
-                                .pageSize(params.pageSize)
+                                .page(requireNonNull(params.getPage()))
+                                .pageSize(requireNonNull(params.getPageSize()))
                                 .build()));
   }
 
   public Flowable<String> findAllActionOwner(ListParams params) {
+    preprocessParams(params);
     return githubIssueListRepo.findAllActionOwner(params);
   }
 
   public Flowable<String> findAllLabels(ListParams params) {
+    preprocessParams(params);
     return githubIssueListRepo.findAllLabels(params);
   }
 }
