@@ -19,6 +19,7 @@ import {
   useGithubIssueListActionOwner,
   GithubIssueListResult,
 } from "./data/GithubIssueList";
+import { useGithubRepo } from "./data/GithubRepo";
 
 const LABEL_P0 = "P0";
 const LABEL_P1 = "P1";
@@ -72,15 +73,18 @@ function Label({
   name,
   colorHex,
   description,
+  onClick,
 }: {
   name: string;
   colorHex: string;
   description: string;
+  onClick: () => void;
 }) {
   const color = colorHexToRGB(colorHex);
   return (
     <a
-      className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full issue-label"
+      className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full issue-label cursor-pointer"
+      onClick={onClick}
       style={
         {
           "--label-r": color.r,
@@ -198,6 +202,7 @@ function SLOStatus(props: { expectedRespondAt: string; updatedAt: string }) {
 function ListItem(props: {
   item: GithubIssueListItem;
   changeActionOwner: (actionOwner: string) => void;
+  filterByLabel: (label: string) => void;
 }) {
   const item = props.item;
   const issueLink = `https://github.com/${item.owner}/${item.repo}/issues/${item.issueNumber}`;
@@ -244,6 +249,7 @@ function ListItem(props: {
               name={label.name}
               colorHex={`#${label.color}`}
               description={label.description}
+              onClick={() => props.filterByLabel(label.name)}
             />
           ))}
         </div>
@@ -330,6 +336,7 @@ function GithubIssueListBody(props: {
   loading: boolean;
   error?: any;
   changeActionOwner: (actionOwner: string) => void;
+  filterByLabel: (label: string) => void;
 }) {
   const data = props.data;
 
@@ -388,7 +395,11 @@ function GithubIssueListBody(props: {
     <div className="flex flex-col">
       {data.items.map((item) => (
         <div key={item.data.id} className="border-t hover:bg-gray-100">
-          <ListItem item={item} changeActionOwner={props.changeActionOwner} />
+          <ListItem
+            item={item}
+            changeActionOwner={props.changeActionOwner}
+            filterByLabel={props.filterByLabel}
+          />
         </div>
       ))}
     </div>
@@ -599,24 +610,7 @@ function ActionOwnerFilterBody(
             props.onClose();
           }}
         >
-          {owner === props.activeOwner ? (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          ) : (
-            <div className="w-5 h-5" />
-          )}
+          <Check active={owner === props.activeOwner} />
 
           <span
             className={classNames("text-base", {
@@ -637,10 +631,20 @@ export interface ActionOwnerFilterProps {
   params?: GithubIssueListParams;
 }
 
+function FilterPopoverTextButton({ name }: { name: string }) {
+  return (
+    <a className="flex flex-row items-center space-x-1 text-gray-600 hover:text-black cursor-pointer select-none">
+      <span className="text-base font-medium">{name}</span>
+      <DownIcon />
+    </a>
+  );
+}
+
 function FilterPopover(props: {
   title: string;
-  buttonName: string;
+  button: ReactNode;
   children: (props: { close: () => void }) => ReactNode;
+  left?: boolean;
 }) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const close = () => {
@@ -653,11 +657,8 @@ function FilterPopover(props: {
     <Popover className="relative">
       {({ open }) => (
         <>
-          <Popover.Button ref={buttonRef}>
-            <a className="flex flex-row items-center space-x-1 text-gray-600 hover:text-black cursor-pointer select-none">
-              <span className="text-base font-medium">{props.buttonName}</span>
-              <DownIcon />
-            </a>
+          <Popover.Button ref={buttonRef} className="focus:outline-none">
+            {props.button}
           </Popover.Button>
 
           <Transition
@@ -669,7 +670,15 @@ function FilterPopover(props: {
             leaveFrom="transform opacity-100"
             leaveTo="transform opacity-0"
           >
-            <Popover.Panel className="absolute right-0 border shadow rounded bg-white z-50 flex flex-col mt-2">
+            <Popover.Panel
+              className={classNames(
+                "absolute border shadow rounded bg-white z-50 flex flex-col mt-2",
+                {
+                  "right-0": !props.left,
+                  "left-0": props.left,
+                }
+              )}
+            >
               <div className="w-[300px]">
                 <div className="flex flex-row justify-between items-center border-b px-2">
                   <span className="p-2 text-base font-bold">{props.title}</span>
@@ -699,9 +708,35 @@ function FilterPopover(props: {
   );
 }
 
+function Check({ active }: { active?: boolean }) {
+  if (!active) {
+    return <div className="w-5 h-5" />;
+  }
+
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-5 w-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M5 13l4 4L19 7"
+      />
+    </svg>
+  );
+}
+
 function ActionOwnerFilter(props: ActionOwnerFilterProps) {
   return (
-    <FilterPopover title={"Filter by action owner"} buttonName="Owner">
+    <FilterPopover
+      title="Filter by action owner"
+      button={<FilterPopoverTextButton name="Owner" />}
+    >
       {({ close }) => <ActionOwnerFilterBody {...props} onClose={close} />}
     </FilterPopover>
   );
@@ -712,7 +747,10 @@ function SortFilter(props: {
   activeSort?: GithubIssueListSort;
 }) {
   return (
-    <FilterPopover title="Sort by" buttonName="Sort">
+    <FilterPopover
+      title="Sort by"
+      button={<FilterPopoverTextButton name="Sort" />}
+    >
       {({ close }) => {
         return [
           { name: "Most urgent", key: "EXPECTED_RESPOND_AT_ASC" },
@@ -726,24 +764,7 @@ function SortFilter(props: {
               props.changeSort(sort.key as any);
             }}
           >
-            {sort.key == props.activeSort ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            ) : (
-              <div className="w-5 h-5" />
-            )}
+            <Check active={sort.key == props.activeSort} />
 
             <span
               className={classNames("text-base", {
@@ -782,6 +803,89 @@ function FilterLabel(props: { name: string; onClear: () => void }) {
   );
 }
 
+interface Repo {
+  owner: string;
+  repo: string;
+}
+
+function RepoFilterBody(props: RepoFilterProps & { close: () => void }) {
+  const { data, loading, error } = useGithubRepo();
+
+  if (loading || error) {
+    return null;
+  }
+
+  const activeRepo = props.activeRepo;
+  const isActive = (repo: Repo) => {
+    if (!activeRepo) {
+      return false;
+    }
+    return repo.owner === activeRepo.owner && repo.repo === activeRepo.repo;
+  };
+
+  return (
+    <ul className="max-h-[300px] overflow-y-scroll cursor-pointer">
+      {data.map((repo) => (
+        <li
+          key={`${repo.owner}/${repo.repo}`}
+          className="py-2 px-4 text-base flex flex-row space-x-2 hover:bg-gray-100 border-b"
+          onClick={() => {
+            props.close();
+            props.changeRepo(repo);
+          }}
+        >
+          <Check active={isActive(repo)} />
+          <span
+            className={classNames({ "text-medium": isActive(repo) })}
+          >{`${repo.owner}/${repo.repo}`}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+interface RepoFilterProps {
+  activeRepo?: Repo;
+  changeRepo: (repo: Repo) => void;
+}
+
+function RepoFilter(props: RepoFilterProps) {
+  return (
+    <FilterPopover
+      title="Filter by Repo"
+      button={
+        <div className="flex flex-row items-center py-1.5 px-4 bg-gray-50 hover:bg-gray-100 border-r-2 rounded-l-lg">
+          <a className="flex flex-row items-center space-x-1 select-none">
+            <span className="text-base font-medium">Repo</span>
+            <DownIcon />
+          </a>
+        </div>
+      }
+      left
+    >
+      {({ close }) => <RepoFilterBody {...props} close={close} />}
+    </FilterPopover>
+  );
+}
+
+function LabelFilter() {
+  return (
+    <FilterPopover
+      title="Filter by Label"
+      button={
+        <div className="flex flex-row items-center py-1.5 px-4 bg-gray-50 rounded-lg hover:bg-gray-100">
+          <a className="flex flex-row items-center space-x-1 select-none">
+            <span className="text-base font-medium">Labels</span>
+            <DownIcon />
+          </a>
+        </div>
+      }
+    >
+      {({ close }) => <div></div>}
+    </FilterPopover>
+  );
+}
+
 function labelContains(
   labels: Array<string> | undefined,
   label: string
@@ -791,6 +895,34 @@ function labelContains(
   }
 
   return !!labels.find((l) => l === label);
+}
+
+function labelRemove(labels: Array<string> | undefined, label: string) {
+  if (!labels) {
+    return labels;
+  }
+
+  const index = labels.findIndex((l) => l === label);
+  if (index >= 0) {
+    const newLabels = [...labels];
+    newLabels.splice(index, 1);
+    return newLabels;
+  }
+
+  return labels;
+}
+
+function labelAdd(labels: Array<string> | undefined, label: string) {
+  if (!labels) {
+    return [label];
+  }
+
+  const index = labels.findIndex((l) => l === label);
+  if (index >= 0) {
+    return labels;
+  }
+
+  return [...labels, label];
 }
 
 function useGithubIssueListForListBody(params: GithubIssueListParams) {
@@ -823,31 +955,46 @@ export default function GithubIssueList(props: {
   }
 
   const needReviewCount = useGithubIssueList({
+    owner: params.owner,
+    repo: params.repo,
     status: "TO_BE_REVIEWED",
     isPullRequest: false,
+    extraLabels: params.extraLabels,
   });
   const needTriageCount = useGithubIssueList({
+    owner: params.owner,
+    repo: params.repo,
     status: "REVIEWED",
     isPullRequest: false,
     actionOwner: params.actionOwner,
+    extraLabels: params.extraLabels,
   });
   const p0BugsCount = useGithubIssueList({
+    owner: params.owner,
+    repo: params.repo,
     status: "TRIAGED",
     labels: [LABEL_P0, LABEL_TYPE_BUG],
     isPullRequest: false,
     actionOwner: params.actionOwner,
+    extraLabels: params.extraLabels,
   });
   const p1BugsCount = useGithubIssueList({
+    owner: params.owner,
+    repo: params.repo,
     status: "TRIAGED",
     labels: [LABEL_P1, LABEL_TYPE_BUG],
     isPullRequest: false,
     actionOwner: params.actionOwner,
+    extraLabels: params.extraLabels,
   });
   const p2BugsCount = useGithubIssueList({
+    owner: params.owner,
+    repo: params.repo,
     status: "TRIAGED",
     labels: [LABEL_P2, LABEL_TYPE_BUG],
     isPullRequest: false,
     actionOwner: params.actionOwner,
+    extraLabels: params.extraLabels,
   });
 
   const githubIssueList = useGithubIssueListForListBody(params);
@@ -856,8 +1003,23 @@ export default function GithubIssueList(props: {
     props.changeParams(JSON.stringify(newParams));
   };
 
+  const changeRepo = (repo?: Repo) => {
+    let newParams = { ...params };
+    newParams.owner = repo?.owner;
+    newParams.repo = repo?.repo;
+    newParams.page = 1;
+    changeParams(newParams);
+  };
+
+  const changeExtraLabels = (extraLabels?: Array<string>) => {
+    let newParams = { ...params };
+    newParams.extraLabels = extraLabels;
+    newParams.page = 1;
+    changeParams(newParams);
+  };
+
   const changeStatus = (
-    status: GithubIssueListStatus,
+    status?: GithubIssueListStatus,
     labels?: Array<string>
   ) => {
     let newParams = { ...params };
@@ -893,11 +1055,60 @@ export default function GithubIssueList(props: {
     changeParams(newParams);
   };
 
+  let activeRepo = undefined;
+  if (params.owner && params.repo) {
+    activeRepo = { owner: params.owner, repo: params.repo };
+  }
+
   return (
     <div className="flex flex-col">
+      <div className="flex flex-row space-x-6 mb-4">
+        <div className="flex-auto flex flex-row border rounded-lg shadow bg-gray-100">
+          <RepoFilter activeRepo={activeRepo} changeRepo={changeRepo} />
+
+          <div className="flex flex-row items-center ml-4 space-x-2">
+            {params.owner && params.repo && (
+              <FilterLabel
+                name={`Repo: ${params.owner}/${params.repo}`}
+                onClear={() => changeRepo(undefined)}
+              />
+            )}
+
+            {[...(params.extraLabels ? params.extraLabels : [])].map(
+              (label) => (
+                <FilterLabel
+                  key={label}
+                  name={`Label: ${label}`}
+                  onClear={() =>
+                    changeExtraLabels(labelRemove(params.extraLabels, label))
+                  }
+                />
+              )
+            )}
+
+            {params.actionOwner && (
+              <FilterLabel
+                name={`Owner: ${params.actionOwner}`}
+                onClear={() => changeActionOwner(undefined)}
+              />
+            )}
+
+            {params.sort && (
+              <FilterLabel
+                name={`Sort: ${params.sort}`}
+                onClear={() => changeSort(undefined)}
+              />
+            )}
+          </div>
+        </div>
+
+        {/*<div className="flex-shrink-0 border rounded-lg shadow">*/}
+        {/*  <LabelFilter />*/}
+        {/*</div>*/}
+      </div>
       <div className="flex flex-col border shadow rounded bg-white ring-1 ring-black ring-opacity-5">
         <div className="bg-gray-100 flex flex-row items-center">
-          <div className="flex-shrink-0 flex space-x-6 p-4">
+          <div className="flex-auto flex space-x-6 p-4">
             <Status
               name="Need Review"
               active={params.status == "TO_BE_REVIEWED"}
@@ -939,22 +1150,6 @@ export default function GithubIssueList(props: {
             />
           </div>
 
-          <div className="flex-auto ml-4 space-x-2">
-            {params.actionOwner && (
-              <FilterLabel
-                name={`Owner: ${params.actionOwner}`}
-                onClear={() => changeActionOwner(undefined)}
-              />
-            )}
-
-            {params.sort && (
-              <FilterLabel
-                name={`Sort: ${params.sort}`}
-                onClear={() => changeSort(undefined)}
-              />
-            )}
-          </div>
-
           <div className="flex-shrink-0 w-4/12 flex flex-row">
             <div className="flex-1 flex flex-row justify-center">
               <span className="text-base text-gray-600 font-medium">
@@ -977,6 +1172,9 @@ export default function GithubIssueList(props: {
         <GithubIssueListBody
           {...githubIssueList}
           changeActionOwner={changeActionOwner}
+          filterByLabel={(label) =>
+            changeExtraLabels(labelAdd(params.extraLabels, label))
+          }
         />
       </div>
       {!githubIssueList.loading &&

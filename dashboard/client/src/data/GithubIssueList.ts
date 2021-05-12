@@ -49,6 +49,8 @@ export type GithubIssueListSort =
   | "EXPECTED_RESPOND_AT_DESC";
 
 export interface GithubIssueListParams {
+  owner?: string;
+  repo?: string;
   isPullRequest?: boolean;
   status?: GithubIssueListStatus;
   page?: number;
@@ -56,14 +58,28 @@ export interface GithubIssueListParams {
   actionOwner?: string;
   sort?: GithubIssueListSort;
   labels?: Array<string>;
+  extraLabels?: Array<string>;
 }
 
 export function useGithubIssueList(
   params?: GithubIssueListParams
 ): GithubIssueListResult {
+  let newParams = undefined;
+  if (params) {
+    newParams = { ...params };
+  }
+
+  if (newParams && newParams.extraLabels) {
+    if (!newParams.labels) {
+      newParams.labels = [];
+    }
+    newParams.labels = [...newParams.labels, ...newParams.extraLabels];
+    newParams.extraLabels = undefined;
+  }
+
   const { data, error } = useSWR(
     queryString.stringifyUrl(
-      { url: "/api/github/issues", query: params as any },
+      { url: "/api/github/issues", query: newParams as any },
       { skipNull: true }
     ),
     fetcher,
