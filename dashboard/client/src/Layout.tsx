@@ -1,102 +1,36 @@
-import React from "react";
-import {
-  AppBar,
-  Toolbar,
-  Theme,
-  makeStyles,
-  createStyles,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Link,
-  Drawer,
-  Hidden,
-} from "@material-ui/core";
-import { RepoIcon } from "@primer/octicons-react";
-import NextLink from "next/link";
-
-import { GithubRepo, useGithubRepo } from "./data/GithubRepo";
-
-const appBarHeight = 48;
-const drawerWidth = 256;
-
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    appBar: {
-      zIndex: theme.zIndex.drawer + 1,
-    },
-    drawer: {},
-    toolbar: {
-      width: drawerWidth,
-      paddingTop: appBarHeight,
-    },
-    main: {
-      paddingTop: appBarHeight,
-      [theme.breakpoints.up("md")]: {
-        paddingLeft: drawerWidth,
-      },
-    },
-  })
-);
-
-function RepoListItem(repo: GithubRepo) {
-  const name = `${repo.owner}/${repo.repo}`;
-  const link = `/${name}`;
-  return (
-    <ListItem key={name} dense={true}>
-      <ListItemIcon style={{ minWidth: 20 }}>
-        <RepoIcon />
-      </ListItemIcon>
-      <ListItemText>
-        <NextLink href={link}>
-          <Link href={link}>{name}</Link>
-        </NextLink>
-      </ListItemText>
-    </ListItem>
-  );
-}
-
-function RepoList() {
-  const { data, loading, error } = useGithubRepo();
-
-  if (loading) {
-    return <div />;
-  }
-
-  if (error) {
-    return <p>Error</p>;
-  }
-  return <List>{data.map((repo) => RepoListItem(repo))}</List>;
-}
+import React, { ReactNode } from "react";
+import Link from "next/link";
 
 export interface LayoutProps {
-  children: NonNullable<React.ReactNode>;
+  children: NonNullable<ReactNode>;
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const classes = useStyles();
   return (
-    <>
-      <AppBar position="fixed" className={classes.appBar}>
-        <Toolbar variant="dense">
-          <img
-            src="https://bazel.build/images/bazel-navbar.svg"
-            style={{height: 28}}
-            alt="Bazel"
-          />
-        </Toolbar>
-      </AppBar>
-
-      <Hidden smDown implementation="css">
-        <Drawer variant={"permanent"} className={classes.drawer}>
-          <Toolbar className={classes.toolbar}>
-            <RepoList />
-          </Toolbar>
-        </Drawer>
-      </Hidden>
-
-      <main className={classes.main}>{children}</main>
-    </>
+    <div className="flex flex-col">
+      <header className="flex flex-row bg-green-bazel h-[52px] items-center fixed w-full z-header top-0 border-b">
+        <img
+          src="https://bazel.build/images/bazel-navbar.svg"
+          className="h-[28px] pl-[15px]"
+          alt="Bazel"
+        />
+        <ul className="flex ml-12 text-white text-base">
+          {[
+            { name: "Stat", link: "/" },
+            { name: "Issues", link: "/issues" },
+          ].map((menu) => (
+            <li
+              key={menu.name}
+              className="flex hover:bg-green-bazel-light hover:text-gray-700"
+            >
+              <Link href={menu.link}>
+                <a className="h-[50px] flex items-center px-4">{menu.name}</a>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </header>
+      <main className="pt-[50px]">{children}</main>
+    </div>
   );
 }

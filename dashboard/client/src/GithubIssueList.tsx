@@ -45,7 +45,7 @@ function Status(props: {
   return (
     <a
       className={classNames(
-        "cursor-pointer text-base relative hover:text-black",
+        "cursor-pointer text-base relative hover:text-black flex-shrink-0",
         active ? "text-black" : "text-gray-600",
         {
           "font-medium": active,
@@ -160,7 +160,7 @@ function SLOStatus(props: { expectedRespondAt: string; updatedAt: string }) {
 
   return (
     <div className="flex flex-col w-full">
-      <span className="mr-1 text-center">
+      <span className="mr-1 text-center text-sm">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="h-5 w-5 inline-block mr-1 text-red-600"
@@ -238,7 +238,7 @@ function ListItem(props: {
       <div className="flex-auto flex flex-col space-y-1 p-2">
         <div className="flex flex-row space-x-1 space-y-1 flex-wrap">
           <a
-            className="text-base font-medium hover:text-blue-github"
+            className="text-base font-medium hover:text-blue-github break-all"
             target="_blank"
             href={issueLink}
           >
@@ -280,7 +280,7 @@ function ListItem(props: {
           </span>
         </div>
       </div>
-      <div className="hidden md:flex flex-shrink-0 w-4/12 flex-row">
+      <div className="flex flex-shrink-0 w-4/12 flex-row space-x-2">
         <div className="flex-1 mt-4">
           <div className="flex flex-row -space-x-4 hover:space-x-1 justify-center">
             {item.data.assignees.map((assignee) => (
@@ -332,6 +332,31 @@ function defaultGithubIssueListParams(): GithubIssueListParams {
   };
 }
 
+function Loading() {
+  return (
+    <svg
+      className="animate-spin h-8 w-8 text-gray-700"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
+    </svg>
+  );
+}
+
 function GithubIssueListBody(props: {
   data?: GithubIssueListData;
   loading: boolean;
@@ -344,26 +369,7 @@ function GithubIssueListBody(props: {
   if (props.loading) {
     return (
       <div className="flex justify-center py-8">
-        <svg
-          className="animate-spin h-8 w-8 text-gray-700"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          />
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          />
-        </svg>
+        <Loading />
       </div>
     );
   }
@@ -446,14 +452,14 @@ function GithubIssueListFooter(props: {
 
                 <Transition
                   show={open}
-                  enter="transition duration-100 ease-out z-50"
+                  enter="transition duration-100 ease-out"
                   enterFrom="transform translate-y-10 opacity-0"
                   enterTo="transform translate-y-0 opacity-100"
-                  leave="transition duration-100 ease-out z-50"
+                  leave="transition duration-100 ease-out"
                   leaveFrom="transform opacity-100"
                   leaveTo="transform opacity-0"
                 >
-                  <Popover.Panel className="absolute bg-white right-0 bottom-8 border shadow rounded bg-white z-50 flex flex-col mt-2">
+                  <Popover.Panel className="absolute bg-white right-0 bottom-8 border shadow rounded bg-white z-popup flex flex-col mt-2">
                     <ul className="flex flex-col text-center cursor-pointer">
                       {[10, 25, 50, 100].map((pageSize) => (
                         <li
@@ -530,62 +536,6 @@ function DownIcon() {
   );
 }
 
-function Popup(props: {
-  title?: string;
-  show: boolean;
-  children: NonNullable<ReactNode>;
-  onClose: () => void;
-  bottom?: number;
-}) {
-  const style: any = {};
-  if (props.bottom) {
-    style.bottom = `${props.bottom}px`;
-  }
-  return (
-    <Transition
-      show={props.show}
-      enter="transition duration-100 ease-out z-50"
-      enterFrom="transform -translate-y-10 opacity-0"
-      enterTo="transform translate-y-0 opacity-100"
-      leave="transition duration-100 ease-out z-50"
-      leaveFrom="transform opacity-100"
-      leaveTo="transform opacity-0"
-    >
-      <div
-        className="fixed top-0 right-0 left-0 bottom-0 z-50"
-        onClick={() => props.onClose()}
-      />
-      <div
-        className="absolute right-0 border shadow rounded bg-white z-50 flex flex-col mt-2"
-        style={style}
-      >
-        {props.title && (
-          <div className="flex flex-row justify-between items-center border-b px-2">
-            <span className="p-2 text-base font-bold">{props.title}</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 cursor-pointer"
-              onClick={() => props.onClose()}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </div>
-        )}
-
-        {props.children}
-      </div>
-    </Transition>
-  );
-}
-
 function ActionOwnerFilterBody(
   props: ActionOwnerFilterProps & { onClose: () => void }
 ) {
@@ -595,7 +545,11 @@ function ActionOwnerFilterBody(
 
   const { data, loading, error } = result;
   if (loading || error) {
-    return null;
+    return (
+      <div className="flex flex-row justify-center p-4">
+        <Loading />
+      </div>
+    );
   }
 
   if (!data || data.length == 0) {
@@ -665,7 +619,7 @@ function FilterPopover(props: {
           </Popover.Button>
 
           <div
-            className={classNames("absolute z-50 mt-2", {
+            className={classNames("absolute z-popup mt-2", {
               "right-0": !props.left,
               "left-0": props.left,
             })}
@@ -816,7 +770,11 @@ function RepoFilterBody(props: RepoFilterProps & { close: () => void }) {
   const { data, loading, error } = useGithubRepo();
 
   if (loading || error) {
-    return null;
+    return (
+      <div className="flex flex-row justify-center p-4">
+        <Loading />
+      </div>
+    );
   }
 
   const activeRepo = props.activeRepo;
@@ -875,7 +833,11 @@ function RepoFilter(props: RepoFilterProps) {
 function LabelFilterBody(props: LabelFilterProps & { close: () => void }) {
   const { data, loading, error } = useGithubIssueListLabel(props.params);
   if (loading || error) {
-    return null;
+    return (
+      <div className="flex flex-row justify-center p-4">
+        <Loading />
+      </div>
+    );
   }
 
   const isActive = (label: string) => {
@@ -1160,7 +1122,7 @@ export default function GithubIssueList(props: {
       </div>
       <div className="flex flex-col border shadow rounded bg-white ring-1 ring-black ring-opacity-5">
         <div className="bg-gray-100 flex flex-row items-center">
-          <div className="flex-auto flex space-x-6 p-4">
+          <div className="flex-auto flex space-x-6 p-4 overflow-x-auto">
             <Status
               name="Need Review"
               active={params.status == "TO_BE_REVIEWED"}
@@ -1202,7 +1164,7 @@ export default function GithubIssueList(props: {
             />
           </div>
 
-          <div className="flex-shrink-0 w-4/12 flex flex-row">
+          <div className="flex flex-shrink-0 w-4/12 flex-row space-x-2">
             <div className="flex-1 flex flex-row justify-center">
               <span className="text-base text-gray-600 font-medium">
                 {/* intentionally empty */}

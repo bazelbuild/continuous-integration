@@ -1,13 +1,14 @@
 import React from "react";
-
-import Layout from "../src/Layout";
-import GithubIssueList from "../src/GithubIssueList";
 import { useRouter } from "next/router";
 import queryString from "query-string";
 import { GetServerSidePropsContext } from "next";
 import { ParsedUrlQuery } from "querystring";
 
+import GithubIssueList from "../src/GithubIssueList";
+import Layout from "../src/Layout";
+
 const PARAM_QUERY_KEY = "q";
+
 
 export default function Page(props: { query: ParsedUrlQuery }) {
   const router = useRouter();
@@ -25,7 +26,7 @@ export default function Page(props: { query: ParsedUrlQuery }) {
 
   return (
     <Layout>
-      <div className="m-6 flex flex-col space-y-4">
+      <div className="flex flex-col space-y-4 mx-auto max-w-[1440px] px-4 mt-6">
         <GithubIssueList
           paramString={props.query[PARAM_QUERY_KEY] as string | undefined}
           changeParams={changeParams}
