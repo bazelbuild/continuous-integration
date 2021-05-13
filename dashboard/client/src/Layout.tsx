@@ -16,7 +16,7 @@ export default function Layout({ children }: LayoutProps) {
         />
         <ul className="flex ml-12 text-white text-base">
           {[
-            { name: "Stat", link: "/" },
+            { name: "Stats", link: "/" },
             { name: "Issues", link: "/issues" },
           ].map((menu) => (
             <li
