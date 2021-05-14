@@ -11,7 +11,7 @@ import java.util.List;
 
 @Builder
 @Value
-class GithubIssueList {
+public class GithubIssueList {
   List<Item> items;
   int total;
   int page;
@@ -19,7 +19,7 @@ class GithubIssueList {
 
   @Builder
   @Value
-  static class Item {
+  public static class Item {
     String owner;
     String repo;
     int issueNumber;

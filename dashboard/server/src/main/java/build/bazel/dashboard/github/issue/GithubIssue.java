@@ -32,8 +32,12 @@ public class GithubIssue {
         .build();
   }
 
-  public Data parseData(ObjectMapper objectMapper) throws JsonProcessingException {
+  public static Data parseData(ObjectMapper objectMapper, JsonNode data) throws JsonProcessingException {
     return objectMapper.treeToValue(data, Data.class);
+  }
+
+  public Data parseData(ObjectMapper objectMapper) throws JsonProcessingException {
+    return parseData(objectMapper, data);
   }
 
   @Builder

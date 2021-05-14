@@ -244,3 +244,10 @@ CREATE INDEX ON github_issue_status (status);
 CREATE INDEX ON github_issue_status (action_owner);
 CREATE INDEX ON github_issue_status (expected_respond_at);
 CREATE INDEX ON github_issue_status (next_notify_at);
+
+CREATE TABLE github_user
+(
+    username TEXT,
+    email TEXT NOT NULL,
+    PRIMARY KEY (username)
+);
