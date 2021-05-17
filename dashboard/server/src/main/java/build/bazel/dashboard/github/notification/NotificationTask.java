@@ -53,7 +53,6 @@ public class NotificationTask {
     ListParams params = new ListParams();
     params.setOwner("bazelbuild");
     params.setRepo("bazel");
-    params.setIsPullRequest(false);
     params.setStatus(GithubIssueStatus.Status.TO_BE_REVIEWED);
 
     return githubIssueListService
@@ -65,7 +64,7 @@ public class NotificationTask {
                     () -> {
                       String reviewLink =
                           dashboardConfig.getHost()
-                              + "/issues?q=%7B%22status%22%3A%22TO_BE_REVIEWED%22%2C%22isPullRequest%22%3Afalse%2C%22page%22%3A1%7D";
+                              + "/issues?q=%7B%22status%22%3A%22TO_BE_REVIEWED%22%2C%22page%22%3A1%7D";
                       String body =
                           buildNotificationBody(
                               params.getOwner(),
@@ -189,7 +188,6 @@ public class NotificationTask {
     ListParams params = new ListParams();
     params.setOwner("bazelbuild");
     params.setRepo("bazel");
-    params.setIsPullRequest(false);
     params.setStatus(GithubIssueStatus.Status.REVIEWED);
     params.setActionOwner(user.getUsername());
     return githubIssueListService
@@ -199,7 +197,7 @@ public class NotificationTask {
               if (list.getTotal() > 0) {
                 String reviewLink =
                     dashboardConfig.getHost()
-                        + "/issues?q=%7B%22status%22%3A%22REVIEWED%22%2C%22isPullRequest%22%3Afalse%2C%22page%22%3A1%2C%22actionOwner%22%3A%22"
+                        + "/issues?q=%7B%22status%22%3A%22REVIEWED%22%2C%22page%22%3A1%2C%22actionOwner%22%3A%22"
                         + user.getUsername()
                         + "%22%7D";
                 return buildNotificationBody(
@@ -213,7 +211,6 @@ public class NotificationTask {
     ListParams params = new ListParams();
     params.setOwner("bazelbuild");
     params.setRepo("bazel");
-    params.setIsPullRequest(false);
     params.setStatus(GithubIssueStatus.Status.TRIAGED);
     params.setLabels(ImmutableList.of("P0", "type: bug"));
     params.setActionOwner(user.getUsername());
@@ -225,7 +222,7 @@ public class NotificationTask {
               if (list.getTotal() > 0) {
                 String reviewLink =
                     dashboardConfig.getHost()
-                        + "/issues?q=%7B%22status%22%3A%22TRIAGED%22%2C%22isPullRequest%22%3Afalse%2C%22page%22%3A1%2C%22labels%22%3A%5B%22P0%22%5D%2C%22actionOwner%22%3A%22"
+                        + "/issues?q=%7B%22status%22%3A%22TRIAGED%22%2C%22page%22%3A1%2C%22labels%22%3A%5B%22P0%22%5D%2C%22actionOwner%22%3A%22"
                         + user.getUsername()
                         + "%22%7D";
                 return buildNotificationBody(
@@ -239,7 +236,6 @@ public class NotificationTask {
     ListParams params = new ListParams();
     params.setOwner("bazelbuild");
     params.setRepo("bazel");
-    params.setIsPullRequest(false);
     params.setStatus(GithubIssueStatus.Status.TRIAGED);
     params.setLabels(ImmutableList.of("P1", "type: bug"));
     params.setActionOwner(user.getUsername());
@@ -251,7 +247,7 @@ public class NotificationTask {
               if (list.getTotal() > 0) {
                 String reviewLink =
                     dashboardConfig.getHost()
-                        + "/issues?q=%7B%22status%22%3A%22TRIAGED%22%2C%22isPullRequest%22%3Afalse%2C%22page%22%3A1%2C%22labels%22%3A%5B%22P1%22%5D%2C%22actionOwner%22%3A%22"
+                        + "/issues?q=%7B%22status%22%3A%22TRIAGED%22%2C%22page%22%3A1%2C%22labels%22%3A%5B%22P1%22%5D%2C%22actionOwner%22%3A%22"
                         + user.getUsername()
                         + "%22%7D";
                 return buildNotificationBody(
@@ -265,7 +261,6 @@ public class NotificationTask {
     ListParams params = new ListParams();
     params.setOwner("bazelbuild");
     params.setRepo("bazel");
-    params.setIsPullRequest(false);
     params.setStatus(GithubIssueStatus.Status.TRIAGED);
     params.setLabels(ImmutableList.of("P2", "type: bug"));
     params.setActionOwner(user.getUsername());
@@ -277,7 +272,7 @@ public class NotificationTask {
               if (list.getTotal() > 0) {
                 String reviewLink =
                     dashboardConfig.getHost()
-                        + "/issues?q=%7B%22status%22%3A%22TRIAGED%22%2C%22isPullRequest%22%3Afalse%2C%22page%22%3A1%2C%22labels%22%3A%5B%22P2%22%5D%2C%22actionOwner%22%3A%22"
+                        + "/issues?q=%7B%22status%22%3A%22TRIAGED%22%2C%22page%22%3A1%2C%22labels%22%3A%5B%22P2%22%5D%2C%22actionOwner%22%3A%22"
                         + user.getUsername()
                         + "%22%7D";
                 return buildNotificationBody(
