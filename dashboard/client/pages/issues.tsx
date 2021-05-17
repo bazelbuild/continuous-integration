@@ -16,10 +16,13 @@ export default function Page() {
     if (paramsString) {
       try {
         setParams(JSON.parse(paramsString));
+        return;
       } catch (e) {
         console.error(e);
       }
     }
+
+    setParams(undefined);
   }, [router]);
 
   const changeParams = (params: GithubIssueListParams) => {
