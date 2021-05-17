@@ -211,7 +211,7 @@ function ListItem(props: {
     <div className="flex flex-row">
       {!item.data.pull_request ? (
         <svg
-          className="flex-shrink-0 w-5 h-5 text-green-700 ml-4 mt-3"
+          className="flex-shrink-0 w-4 h-4 text-green-700 ml-4 mt-3"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 16 16"
           fill="currentColor"
@@ -223,7 +223,7 @@ function ListItem(props: {
         </svg>
       ) : (
         <svg
-          className="flex-shrink-0 w-5 h-5 text-green-700 ml-4 mt-3"
+          className="flex-shrink-0 w-4 h-4 text-green-700 ml-4 mt-3"
           viewBox="0 0 16 16"
           xmlns="http://www.w3.org/2000/svg"
           fill="currentColor"
@@ -328,7 +328,6 @@ function ListItem(props: {
 function defaultGithubIssueListParams(): GithubIssueListParams {
   return {
     status: "TO_BE_REVIEWED",
-    isPullRequest: false,
   };
 }
 
@@ -888,6 +887,58 @@ function LabelFilter(props: LabelFilterProps) {
   );
 }
 
+interface TypeFilterProps {
+  params?: GithubIssueListParams;
+  filterByType: (isPullRequest: boolean) => void;
+}
+
+function TypeFilter(props: TypeFilterProps) {
+  const isActive = (isPullRequest: boolean) => {
+    return props.params?.isPullRequest === isPullRequest;
+  };
+
+  return (
+    <FilterPopover
+      title="Filter by Type"
+      button={
+        <div className="flex flex-row items-center py-1.5 px-4 bg-gray-50 rounded-lg hover:bg-gray-100">
+          <a className="flex flex-row items-center space-x-1 select-none">
+            <span className="text-base font-medium">Type</span>
+            <DownIcon />
+          </a>
+        </div>
+      }
+    >
+      {({ close }) => (
+        <ul className="max-h-[300px] overflow-y-auto cursor-pointer">
+          {[
+            { name: "Issues", isPullRequest: false },
+            { name: "Pull Requests", isPullRequest: true },
+          ].map((type) => (
+            <li
+              key={type.name}
+              className="py-2 px-4 text-base flex flex-row space-x-2 hover:bg-gray-100 border-b"
+              onClick={() => {
+                close();
+                props.filterByType(type.isPullRequest);
+              }}
+            >
+              <Check active={isActive(type.isPullRequest)} />
+              <span
+                className={classNames({
+                  "font-medium": isActive(type.isPullRequest),
+                })}
+              >
+                {type.name}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </FilterPopover>
+  );
+}
+
 function labelContains(
   labels: Array<string> | undefined,
   label: string
@@ -945,29 +996,23 @@ function useGithubIssueListForListBody(params: GithubIssueListParams) {
 }
 
 export default function GithubIssueList(props: {
-  paramString?: string;
-  changeParams: (params: string) => void;
+  params?: GithubIssueListParams;
+  changeParams: (params: GithubIssueListParams) => void;
 }) {
-  let params: GithubIssueListParams = defaultGithubIssueListParams();
-  if (props.paramString) {
-    try {
-      params = JSON.parse(props.paramString) as GithubIssueListParams;
-    } catch (e) {
-      console.error(e);
-    }
-  }
+  let params: GithubIssueListParams =
+    props.params || defaultGithubIssueListParams();
 
   const needReviewCount = useGithubIssueList({
     owner: params.owner,
     repo: params.repo,
     status: "TO_BE_REVIEWED",
-    isPullRequest: false,
+    isPullRequest: params.isPullRequest,
   });
   const needTriageCount = useGithubIssueList({
     owner: params.owner,
     repo: params.repo,
     status: "REVIEWED",
-    isPullRequest: false,
+    isPullRequest: params.isPullRequest,
     actionOwner: params.actionOwner,
     extraLabels: params.extraLabels,
   });
@@ -976,7 +1021,7 @@ export default function GithubIssueList(props: {
     repo: params.repo,
     status: "TRIAGED",
     labels: [LABEL_P0, LABEL_TYPE_BUG],
-    isPullRequest: false,
+    isPullRequest: params.isPullRequest,
     actionOwner: params.actionOwner,
     extraLabels: params.extraLabels,
   });
@@ -985,7 +1030,7 @@ export default function GithubIssueList(props: {
     repo: params.repo,
     status: "TRIAGED",
     labels: [LABEL_P1, LABEL_TYPE_BUG],
-    isPullRequest: false,
+    isPullRequest: params.isPullRequest,
     actionOwner: params.actionOwner,
     extraLabels: params.extraLabels,
   });
@@ -994,16 +1039,14 @@ export default function GithubIssueList(props: {
     repo: params.repo,
     status: "TRIAGED",
     labels: [LABEL_P2, LABEL_TYPE_BUG],
-    isPullRequest: false,
+    isPullRequest: params.isPullRequest,
     actionOwner: params.actionOwner,
     extraLabels: params.extraLabels,
   });
 
   const githubIssueList = useGithubIssueListForListBody(params);
 
-  const changeParams = (newParams: GithubIssueListParams) => {
-    props.changeParams(JSON.stringify(newParams));
-  };
+  const changeParams = props.changeParams;
 
   const changeRepo = (repo?: Repo) => {
     let newParams = { ...params };
@@ -1023,9 +1066,16 @@ export default function GithubIssueList(props: {
     changeParams(newParams);
   };
 
+  const changeIsPullRequest = (isPullRequest: boolean | undefined) => {
+    let newParams = { ...params };
+    newParams.isPullRequest = isPullRequest;
+    newParams.page = 1;
+    changeParams(newParams);
+  };
+
   const changeStatus = (
     status?: GithubIssueListStatus,
-    labels?: Array<string>
+    labels?: Array<string>,
   ) => {
     let newParams = { ...params };
     newParams.status = status;
@@ -1083,6 +1133,15 @@ export default function GithubIssueList(props: {
               />
             )}
 
+            {typeof params.isPullRequest !== "undefined" && (
+              <FilterLabel
+                name={`Type: ${
+                  params.isPullRequest ? "Pull Requests" : "Issues"
+                }`}
+                onClear={() => changeIsPullRequest(undefined)}
+              />
+            )}
+
             {[...(params.extraLabels ? params.extraLabels : [])].map(
               (label) => (
                 <FilterLabel
@@ -1109,6 +1168,13 @@ export default function GithubIssueList(props: {
               />
             )}
           </div>
+        </div>
+
+        <div className="flex-shrink-0 border rounded-lg shadow">
+          <TypeFilter
+            params={params}
+            filterByType={(isPullRequest) => changeIsPullRequest(isPullRequest)}
+          />
         </div>
 
         <div className="flex-shrink-0 border rounded-lg shadow">

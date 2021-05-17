@@ -1,41 +1,46 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import queryString from "query-string";
-import { GetServerSidePropsContext } from "next";
-import { ParsedUrlQuery } from "querystring";
 
 import GithubIssueList from "../src/GithubIssueList";
 import Layout from "../src/Layout";
+import { GithubIssueListParams } from "../src/data/GithubIssueList";
 
 const PARAM_QUERY_KEY = "q";
 
-
-export default function Page(props: { query: ParsedUrlQuery }) {
+export default function Page() {
   const router = useRouter();
+  const [params, setParams] = useState(undefined);
 
-  const changeParams = (params: string) => {
-    let newQuery = { ...props.query };
-    newQuery[PARAM_QUERY_KEY] = params;
+  useEffect(() => {
+    const paramsString = router.query[PARAM_QUERY_KEY] as string | undefined;
+    if (paramsString) {
+      try {
+        setParams(JSON.parse(paramsString));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [router]);
 
-    const newUrl = queryString.stringifyUrl({
-      url: router.pathname,
-      query: newQuery,
-    });
-    router.push(newUrl, undefined, { scroll: false });
+  const changeParams = (params: GithubIssueListParams) => {
+    let newQuery = { ...router.query };
+    newQuery[PARAM_QUERY_KEY] = JSON.stringify(params);
+
+    router.push(
+      {
+        pathname: router.pathname,
+        query: newQuery,
+      },
+      undefined,
+      { scroll: false }
+    );
   };
 
   return (
     <Layout>
       <div className="flex flex-col space-y-4 mx-auto max-w-[1440px] px-4 mt-6">
-        <GithubIssueList
-          paramString={props.query[PARAM_QUERY_KEY] as string | undefined}
-          changeParams={changeParams}
-        />
+        <GithubIssueList params={params} changeParams={changeParams} />
       </div>
     </Layout>
   );
-}
-
-export function getServerSideProps(context: GetServerSidePropsContext) {
-  return { props: { query: context.query } };
 }

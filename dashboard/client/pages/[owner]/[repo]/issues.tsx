@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { GetStaticPaths, GetStaticProps } from "next";
 
 import { useRouter } from "next/router";
@@ -37,9 +37,9 @@ function Breadcrumb({ owner, repo }: { owner: string; repo: string }) {
 
 export default function Page({ owner, repo }: { owner: string; repo: string }) {
   const router = useRouter();
-  if (typeof window !== "undefined") {
+  useEffect(() => {
     router.replace("/issues");
-  }
+  }, []);
   return null;
 }
 
