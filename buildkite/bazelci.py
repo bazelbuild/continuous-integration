@@ -2986,13 +2986,14 @@ def try_update_last_green_commit():
     client = BuildkiteClient(org=org_slug, pipeline=pipeline_slug)
     build_info = client.get_build_info(build_number)
 
-    # Find any failing steps other than Buildifier and "try update last green".
+    # Find any failing steps other than Buildifier and steps with soft_fail enabled then "try update last green".
     def has_failed(job):
         state = job.get("state")
         # Ignore steps that don't have a state (like "wait").
         return (
             state is not None
             and state != "passed"
+            and not job.get("soft_failed")
             and job["id"] != current_job_id
             and job["name"] != BUILDIFIER_STEP_NAME
         )
