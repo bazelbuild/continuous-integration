@@ -1241,7 +1241,8 @@ def activate_xcode(task_config):
     # This falls back to a default version if the selected version is not available.
     supported_versions = sorted(
         # Stripping "Xcode" prefix and ".app" suffix from e.g. "Xcode12.0.1.app" leaves just the version number.
-        [os.path.basename(x)[5:-4] for x in glob("/Applications/Xcode*.app")], reverse=True
+        [os.path.basename(x)[5:-4] for x in glob("/Applications/Xcode*.app")],
+        reverse=True,
     )
     if xcode_version not in supported_versions:
         xcode_version = DEFAULT_XCODE_VERSION
@@ -1250,11 +1251,22 @@ def activate_xcode(task_config):
             ":xcode: Fixed Xcode version: {} -> {}...".format(wanted_xcode_version, xcode_version)
         )
         lines = [
-            "Your selected Xcode version {} was not available on the machine.".format(wanted_xcode_version),
+            "Your selected Xcode version {} was not available on the machine.".format(
+                wanted_xcode_version
+            ),
             "Bazel CI automatically picked a fallback version: {}.".format(xcode_version),
             "Available versions are: {}.".format(supported_versions),
         ]
-        execute_command(["buildkite-agent", "annotate", "--style=warning", "\n".join(lines), "--context", "ctx-xcode_version_fixed"])
+        execute_command(
+            [
+                "buildkite-agent",
+                "annotate",
+                "--style=warning",
+                "\n".join(lines),
+                "--context",
+                "ctx-xcode_version_fixed",
+            ]
+        )
 
     # Check that the selected Xcode version is actually installed on the host.
     xcode_path = "/Applications/Xcode{}.app".format(xcode_version)
@@ -1748,7 +1760,7 @@ def kythe_startup_flags():
 def kythe_build_flags():
     return [
         "--experimental_convenience_symlinks=normal",
-        f"--override_repository=kythe_release={KYTHE_DIR}"
+        f"--override_repository=kythe_release={KYTHE_DIR}",
     ]
 
 
@@ -2494,7 +2506,11 @@ def runner_step(
         command += " --incompatible_flag=" + flag
     label = create_label(platform, project_name, task_name=task_name)
     return create_step(
-        label=label, commands=[fetch_bazelcipy_command(), command], platform=platform, shards=shards, soft_fail=soft_fail
+        label=label,
+        commands=[fetch_bazelcipy_command(), command],
+        platform=platform,
+        shards=shards,
+        soft_fail=soft_fail,
     )
 
 
@@ -2825,9 +2841,17 @@ def print_bazel_downstream_pipeline(
     if test_incompatible_flags:
         incompatible_flags_map = fetch_incompatible_flags()
         if not incompatible_flags_map:
-            raise BuildkiteException(
-                "No incompatible flag issue is found on github for current version of Bazel."
+            step = create_step(
+                label="No Incompatible flags info",
+                commands=[
+                    'buildkite-agent annotate --append --style=error "No incompatible flag issue is found on github for current version of Bazel."'
+                ],
+                platform=DEFAULT_PLATFORM,
             )
+            pipeline_steps.append(step)
+            print_pipeline_steps(pipeline_steps)
+            return
+
         info_box_step = print_incompatible_flags_info_box_step(incompatible_flags_map)
         if info_box_step is not None:
             pipeline_steps.append(info_box_step)
