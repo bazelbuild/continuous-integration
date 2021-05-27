@@ -257,7 +257,8 @@ def main(argv=None):
         output = create_heading("format", len(unformatted_files))
         display_version = " {}".format(version) if version else ""
         output += (
-            'Please download <a href="{}">buildifier{}</a> and run the following '
+            'If this repo uses a pre-commit hook, then you should install it. '
+            'Otherwise, please download <a href="{}">buildifier{}</a> and run the following '
             "command in your workspace:<br/><pre><code>buildifier {}</code></pre>"
             "\n".format(display_url, display_version, " ".join(unformatted_files))
         )
