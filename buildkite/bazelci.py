@@ -2844,7 +2844,7 @@ def print_bazel_downstream_pipeline(
             step = create_step(
                 label="No Incompatible flags info",
                 commands=[
-                    'buildkite-agent annotate --append --style=error "No incompatible flag issue is found on github for current version of Bazel."'
+                    'buildkite-agent annotate --style=error "No incompatible flag issue is found on github for current version of Bazel."'
                 ],
                 platform=DEFAULT_PLATFORM,
             )
