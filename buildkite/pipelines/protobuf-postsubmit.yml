@@ -24,3 +24,5 @@ platforms:
       # https://github.com/bazelbuild/bazel/issues/10590
       - "-//:cc_proto_blacklist_test"
       - "@com_google_protobuf//:cc_proto_blacklist_test"
+      - "-//java/core:conformance_test"
+      - "-//java/lite:conformance_test"
