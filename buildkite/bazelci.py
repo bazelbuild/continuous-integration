@@ -1317,6 +1317,10 @@ def saucelabs_token():
     return decrypt_token(encrypted_token=ENCRYPTED_SAUCELABS_TOKEN, kms_key="saucelabs-access-key")
 
 
+def current_branch_is_main_branch():
+    return os.getenv("BUILDKITE_BRANCH") in ("master", "stable", "main")
+
+
 def is_pull_request():
     third_party_repo = os.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
     return len(third_party_repo) > 0
@@ -2323,7 +2327,7 @@ def print_project_pipeline(
     #      - testing incompatible flags
     #      - running `bazelisk --migrate` in a non-downstream pipeline
     if (
-        os.getenv("BUILDKITE_BRANCH") in ("master", "stable", "main")
+        current_branch_is_main_branch()
         and pipeline_slug in all_downstream_pipeline_slugs
         and not (is_pull_request() or use_but or incompatible_flags or use_bazelisk_migrate())
     ):
@@ -2900,7 +2904,7 @@ def print_bazel_downstream_pipeline(
     if (
         not test_disabled_projects
         and not test_incompatible_flags
-        and os.getenv("BUILDKITE_BRANCH") == "master"
+        and current_branch_is_main_branch()
     ):
         # Only update the last green downstream commit in the regular Bazel@HEAD + Downstream pipeline.
         pipeline_steps.append("wait")
@@ -3234,35 +3238,37 @@ def publish_binaries():
     bazel_hashes, bazel_nojdk_hashes = upload_bazel_binaries()
 
     # Try to update the info.json with data about our build. This will fail (expectedly) if we're
-    # not the latest build.
-    for _ in range(5):
-        latest_generation, latest_build_number = latest_generation_and_build_number()
+    # not the latest build. Only do this if we're building binaries from the main branch to avoid
+    # accidentally publishing a custom debug build as the "latest" Bazel binary.
+    if current_branch_is_main_branch():
+        for _ in range(5):
+            latest_generation, latest_build_number = latest_generation_and_build_number()
 
-        if current_build_number <= latest_build_number:
+            if current_build_number <= latest_build_number:
+                eprint(
+                    (
+                        "Current build '{0}' is not newer than latest published '{1}'. "
+                        + "Skipping publishing of binaries."
+                    ).format(current_build_number, latest_build_number)
+                )
+                break
+
+            try:
+                try_publish_binaries(
+                    bazel_hashes, bazel_nojdk_hashes, current_build_number, latest_generation
+                )
+            except BinaryUploadRaceException:
+                # Retry.
+                continue
+
             eprint(
-                (
-                    "Current build '{0}' is not newer than latest published '{1}'. "
-                    + "Skipping publishing of binaries."
-                ).format(current_build_number, latest_build_number)
+                "Successfully updated '{0}' to binaries from build {1}.".format(
+                    bazelci_latest_build_metadata_url(), current_build_number
+                )
             )
             break
-
-        try:
-            try_publish_binaries(
-                bazel_hashes, bazel_nojdk_hashes, current_build_number, latest_generation
-            )
-        except BinaryUploadRaceException:
-            # Retry.
-            continue
-
-        eprint(
-            "Successfully updated '{0}' to binaries from build {1}.".format(
-                bazelci_latest_build_metadata_url(), current_build_number
-            )
-        )
-        break
-    else:
-        raise BuildkiteException("Could not publish binaries, ran out of attempts.")
+        else:
+            raise BuildkiteException("Could not publish binaries, ran out of attempts.")
 
 
 # This is so that multiline python strings are represented as YAML
