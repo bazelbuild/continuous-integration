@@ -2900,7 +2900,7 @@ def print_bazel_downstream_pipeline(
     if (
         not test_disabled_projects
         and not test_incompatible_flags
-        and os.getenv("BUILDKITE_BRANCH") == "master"
+        and os.getenv("BUILDKITE_BRANCH") in ("master", "stable", "main")
     ):
         # Only update the last green downstream commit in the regular Bazel@HEAD + Downstream pipeline.
         pipeline_steps.append("wait")
@@ -3234,35 +3234,37 @@ def publish_binaries():
     bazel_hashes, bazel_nojdk_hashes = upload_bazel_binaries()
 
     # Try to update the info.json with data about our build. This will fail (expectedly) if we're
-    # not the latest build.
-    for _ in range(5):
-        latest_generation, latest_build_number = latest_generation_and_build_number()
+    # not the latest build. Only do this if we're building binaries from the main branch to avoid
+    # accidentally publishing a custom debug build as the "latest" Bazel binary.
+    if os.getenv("BUILDKITE_BRANCH") in ("master", "stable", "main"):
+        for _ in range(5):
+            latest_generation, latest_build_number = latest_generation_and_build_number()
 
-        if current_build_number <= latest_build_number:
+            if current_build_number <= latest_build_number:
+                eprint(
+                    (
+                        "Current build '{0}' is not newer than latest published '{1}'. "
+                        + "Skipping publishing of binaries."
+                    ).format(current_build_number, latest_build_number)
+                )
+                break
+
+            try:
+                try_publish_binaries(
+                    bazel_hashes, bazel_nojdk_hashes, current_build_number, latest_generation
+                )
+            except BinaryUploadRaceException:
+                # Retry.
+                continue
+
             eprint(
-                (
-                    "Current build '{0}' is not newer than latest published '{1}'. "
-                    + "Skipping publishing of binaries."
-                ).format(current_build_number, latest_build_number)
+                "Successfully updated '{0}' to binaries from build {1}.".format(
+                    bazelci_latest_build_metadata_url(), current_build_number
+                )
             )
             break
-
-        try:
-            try_publish_binaries(
-                bazel_hashes, bazel_nojdk_hashes, current_build_number, latest_generation
-            )
-        except BinaryUploadRaceException:
-            # Retry.
-            continue
-
-        eprint(
-            "Successfully updated '{0}' to binaries from build {1}.".format(
-                bazelci_latest_build_metadata_url(), current_build_number
-            )
-        )
-        break
-    else:
-        raise BuildkiteException("Could not publish binaries, ran out of attempts.")
+        else:
+            raise BuildkiteException("Could not publish binaries, ran out of attempts.")
 
 
 # This is so that multiline python strings are represented as YAML
