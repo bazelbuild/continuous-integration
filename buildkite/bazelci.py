@@ -1317,6 +1317,10 @@ def saucelabs_token():
     return decrypt_token(encrypted_token=ENCRYPTED_SAUCELABS_TOKEN, kms_key="saucelabs-access-key")
 
 
+def current_branch_is_main_branch():
+    return os.getenv("BUILDKITE_BRANCH") in ("master", "stable", "main")
+
+
 def is_pull_request():
     third_party_repo = os.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
     return len(third_party_repo) > 0
@@ -2323,7 +2327,7 @@ def print_project_pipeline(
     #      - testing incompatible flags
     #      - running `bazelisk --migrate` in a non-downstream pipeline
     if (
-        os.getenv("BUILDKITE_BRANCH") in ("master", "stable", "main")
+        current_branch_is_main_branch()
         and pipeline_slug in all_downstream_pipeline_slugs
         and not (is_pull_request() or use_but or incompatible_flags or use_bazelisk_migrate())
     ):
@@ -2900,7 +2904,7 @@ def print_bazel_downstream_pipeline(
     if (
         not test_disabled_projects
         and not test_incompatible_flags
-        and os.getenv("BUILDKITE_BRANCH") in ("master", "stable", "main")
+        and current_branch_is_main_branch()
     ):
         # Only update the last green downstream commit in the regular Bazel@HEAD + Downstream pipeline.
         pipeline_steps.append("wait")
@@ -3236,7 +3240,7 @@ def publish_binaries():
     # Try to update the info.json with data about our build. This will fail (expectedly) if we're
     # not the latest build. Only do this if we're building binaries from the main branch to avoid
     # accidentally publishing a custom debug build as the "latest" Bazel binary.
-    if os.getenv("BUILDKITE_BRANCH") in ("master", "stable", "main"):
+    if current_branch_is_main_branch():
         for _ in range(5):
             latest_generation, latest_build_number = latest_generation_and_build_number()
 
