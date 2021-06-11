@@ -2685,7 +2685,9 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
     # These are the platforms that we want to build and publish according to this script.
     expected_platforms = set(filter(should_publish_binaries_for_platform, PLATFORMS))
 
-    if not expected_platforms.issubset(configured_platforms):
+    # We can skip this check if we're not on the main branch, because then we're probably
+    # building a one-off custom debugging binary anyway.
+    if current_branch_is_main_branch() and not expected_platforms.issubset(configured_platforms):
         raise BuildkiteException(
             "Bazel publish binaries pipeline needs to build Bazel for every commit on all publish_binary-enabled platforms."
         )
@@ -3166,6 +3168,18 @@ def upload_bazel_binaries():
                     ]
                 )
                 bazel_nojdk_hashes[target_platform_name] = sha256_hexdigest(bazel_nojdk_binary_path)
+        except subprocess.CalledProcessError as e:
+            # If we're not on the main branch, we're probably building a custom one-off binary and
+            # ignore failures for individual platforms (it's possible that we didn't build binaries
+            # for all platforms).
+            if not current_branch_is_main_branch():
+                eprint(
+                    "Ignoring failure to download and publish Bazel binary for platform {}: {}".format(
+                        platform_name, e
+                    )
+                )
+            else:
+                raise e
         finally:
             shutil.rmtree(tmpdir)
     return bazel_hashes, bazel_nojdk_hashes
