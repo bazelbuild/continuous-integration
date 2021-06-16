@@ -1669,6 +1669,7 @@ def rbe_flags(original_flags, accept_cached):
     flags = [
         "--remote_executor=remotebuildexecution.googleapis.com",
         "--remote_instance_name=projects/bazel-untrusted/instances/default_instance",
+        "--remote_timeout=3600",
         "--incompatible_strict_action_env",
         "--google_default_credentials",
         "--toolchain_resolution_debug",
