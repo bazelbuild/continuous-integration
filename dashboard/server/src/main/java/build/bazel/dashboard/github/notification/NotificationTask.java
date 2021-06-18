@@ -76,7 +76,7 @@ public class NotificationTask {
 
                       sendNotification(
                           dashboardConfig.getGithub().getNotification().getToNeedReviewEmail(),
-                          body);
+                          body, "review");
 
                       return null;
                     });
@@ -86,12 +86,13 @@ public class NotificationTask {
             });
   }
 
-  private void sendNotification(String to, String body) throws MessagingException {
+  private void sendNotification(String to, String body, String action) throws MessagingException {
     MimeMessage mimeMessage = javaMailSender.createMimeMessage();
     MimeMessageHelper message = new MimeMessageHelper(mimeMessage);
     message.setFrom(dashboardConfig.getGithub().getNotification().getFromEmail());
     message.setTo(to);
-    message.setSubject("Please review Github issues. " + Instant.now().toString());
+    Instant now = Instant.ofEpochSecond(Instant.now().getEpochSecond());
+    message.setSubject("Please " + action + " Github issues. " + now.toString());
 
     StringBuilder text = new StringBuilder();
     text.append("<p>Hi there,</p>");
@@ -175,7 +176,7 @@ public class NotificationTask {
                           if (!body.isBlank()) {
                             return Completable.fromCallable(
                                 () -> {
-                                  sendNotification(user.getEmail(), body);
+                                  sendNotification(user.getEmail(), body, "triage/update");
                                   return null;
                                 });
                           }
