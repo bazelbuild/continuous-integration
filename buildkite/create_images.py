@@ -44,7 +44,7 @@ IMAGE_CREATION_VMS = {
         "project": "bazel-public",
         "zone": "us-central1-f",
         "source_image_project": "windows-cloud",
-        "source_image_family": "windows-1909-core",
+        "source_image_family": "windows-20h2-core",
         "setup_script": "setup-windows.ps1",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
     },
