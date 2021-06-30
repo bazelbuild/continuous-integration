@@ -106,7 +106,7 @@ Create "New Build" in the [Culprit Finder](https://buildkite.com/bazel/culprit-f
 eg.
 ```
 PROJECT_NAME=rules_go
-PLATFORM_NAME=ubuntu1604
+PLATFORM_NAME=ubuntu2004
 GOOD_BAZEL_COMMIT=b6ea3b6caa7f379778e74da33d1bd0ff6477f963
 BAD_BAZEL_COMMIT=91eb3d207714af0ab1e5812252a0f10f40d6e4a8
 ```
@@ -163,7 +163,7 @@ The most important piece of the configuration file is the `tasks` dictionary. Ea
 ---
 tasks:
   ubuntu_build_only:
-    platform: ubuntu1604
+    platform: ubuntu2004
     build_targets:
     - "..."
   windows:
@@ -179,7 +179,7 @@ If there is exactly one task per platform, you can omit the `platform` field and
 ```yaml
 ---
 tasks:
-  ubuntu1604:
+  ubuntu2004:
     build_targets:
     - "..."
   windows:
@@ -488,7 +488,7 @@ Example usage:
 ```yaml
 ---
 tasks:
-  ubuntu1604:
+  ubuntu2004:
     include_json_profile:
     - build
     - test

@@ -1,7 +1,7 @@
 ---
 platforms:
-  ubuntu1604:
+  ubuntu2004:
     build_targets:
-      - "..."
+      - "//..."
     test_targets:
-      - "..."
+      - "//..."

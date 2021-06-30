@@ -1,6 +1,6 @@
 ---
 platforms:
-  ubuntu1604:
+  ubuntu2004:
     test_targets:
       - "//:all"
       - "//java/..."
