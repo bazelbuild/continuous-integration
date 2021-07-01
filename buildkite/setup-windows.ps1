@@ -211,12 +211,15 @@ $env:ANDROID_NDK_HOME = [Environment]::GetEnvironmentVariable("ANDROID_NDK_HOME"
 Remove-Item $android_ndk_zip
 
 ## Download the Android SDK and install into C:\android_sdk.
-$android_sdk_url = "https://dl.google.com/android/repository/sdk-tools-windows-4333796.zip"
+$android_sdk_url = "https://dl.google.com/android/repository/commandlinetools-win-7302050_latest.zip"
 $android_sdk_zip = "c:\temp\android_sdk.zip"
 $android_sdk_root = "c:\android_sdk"
+$android_sdk_tools_root = "c:\android_sdk\cmdline-tools"
 New-Item $android_sdk_root -ItemType "directory" -Force
+New-Item $android_sdk_tools_root -ItemType "directory" -Force
 (New-Object Net.WebClient).DownloadFile($android_sdk_url, $android_sdk_zip)
-[System.IO.Compression.ZipFile]::ExtractToDirectory($android_sdk_zip, $android_sdk_root)
+[System.IO.Compression.ZipFile]::ExtractToDirectory($android_sdk_zip, $android_sdk_tools_root)
+Rename-Item "${$android_sdk_tools_root}\cmdline-tools" -NewName "latest"
 [Environment]::SetEnvironmentVariable("ANDROID_HOME", $android_sdk_root, "Machine")
 $env:ANDROID_HOME = [Environment]::GetEnvironmentVariable("ANDROID_HOME", "Machine")
 Remove-Item $android_sdk_zip
@@ -227,22 +230,17 @@ Add-Content -Value "`nd56f5187479451eabf01fb78af6dfcb131a6481e" -Path "${android
 Add-Content -Value "`n24333f8a63b6825ea9c5514f83c2829b004d1fee" -Path "${android_sdk_root}\licenses\android-sdk-license" -Encoding ASCII
 Add-Content -Value "`nd975f751698a77b662f1254ddbeed3901e976f5a" -Path "${android_sdk_root}\licenses\intel-android-extra-license" -Encoding ASCII
 
-## Update the Android SDK tools.
-Rename-Item "${android_sdk_root}\tools" "${android_sdk_root}\tools.old"
-& "${android_sdk_root}\tools.old\bin\sdkmanager" "tools"
-Remove-Item "${android_sdk_root}\tools.old" -Force -Recurse
-
 ## Install all required Android SDK components.
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platform-tools"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;28.0.2"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;29.0.2"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;29.0.3"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "build-tools;30.0.1"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-24"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-28"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-29"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "platforms;android-30"
-& "${android_sdk_root}\tools\bin\sdkmanager.bat" "extras;android;m2repository"
+& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platform-tools"
+& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "build-tools;28.0.2"
+& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "build-tools;29.0.2"
+& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "build-tools;29.0.3"
+& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "build-tools;30.0.1"
+& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platforms;android-24"
+& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platforms;android-28"
+& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platforms;android-29"
+& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platforms;android-30"
+& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "extras;android;m2repository"
 
 ## Download and unpack our Git snapshot.
 Write-Host "Downloading Git snapshot..."
