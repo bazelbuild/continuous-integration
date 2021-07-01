@@ -102,7 +102,7 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Install Azul Zulu.
 Write-Host "Installing OpenJDK..."
-$zulu_filename = "zulu8.44.0.11-ca-jdk8.0.242-win_x64.zip"
+$zulu_filename = "zulu11.48.21-ca-jdk11.0.11-win_x64.zip"
 $zulu_url = "https://cdn.azul.com/zulu/bin/${zulu_filename}"
 $zulu_zip = "c:\temp\${zulu_filename}"
 $zulu_extracted_path = "c:\temp\" + [IO.Path]::GetFileNameWithoutExtension($zulu_zip)
