@@ -185,14 +185,15 @@ EOF
 
 ### Install Android SDK.
 {
-  mkdir -p /opt/android-sdk-linux
-  cd /opt/android-sdk-linux
-  curl -fsSL -o android-sdk.zip https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
+  mkdir -p /opt/android-sdk-linux/cmdline-tools
+  cd /opt/android-sdk-linux/cmdline-tools
+  curl -fsSL -o android-sdk.zip https://dl.google.com/android/repository/commandlinetools-linux-7302050_latest.zip
   unzip android-sdk.zip > /dev/null
   rm android-sdk.zip
-  yes | tools/bin/sdkmanager --licenses > /dev/null || true
-  tools/bin/sdkmanager --update
-  tools/bin/sdkmanager \
+  mv cmdline-tools latest
+  yes | latest/bin/sdkmanager --licenses > /dev/null || true
+  latest/tools/bin/sdkmanager --update
+  latest/tools/bin/sdkmanager \
       "build-tools;28.0.2" \
       "build-tools;29.0.2" \
       "build-tools;29.0.3" \
