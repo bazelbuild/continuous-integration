@@ -29,7 +29,7 @@ export DEBIAN_FRONTEND="noninteractive"
 {
   apt-get -y update
   apt-get -y dist-upgrade
-  apt-get -y install python openjdk-8-jdk unzip
+  apt-get -y install python-is-python3 openjdk-11-jdk unzip
 }
 
 ### Disable automatic upgrades, as they can interfere with our startup scripts.
@@ -51,8 +51,8 @@ EOF
 {
   tune2fs -o ^acl,journal_data_writeback,nobarrier /dev/sda1
   cat > /etc/fstab <<'EOF'
-LABEL=cloudimg-rootfs  /               ext4    defaults,noatime,commit=300,journal_async_commit        0 0
-LABEL=UEFI               /boot/efi     vfat    defaults,noatime        0 0
+LABEL=cloudimg-rootfs    /            ext4    defaults,noatime,commit=300,journal_async_commit    0 0
+LABEL=UEFI               /boot/efi    vfat    defaults,noatime                                    0 0
 EOF
 }
 
@@ -64,8 +64,8 @@ EOF
   apt-get -y update
   apt-get -y install buildkite-agent
   # Workaround bug https://github.com/bazelbuild/continuous-integration/issues/1034
-  curl -fsSL --retry 3 https://github.com/buildkite/agent/releases/download/v3.22.1/buildkite-agent-linux-amd64-3.22.1.tar.gz | \
-      tar xvz -C /usr/bin ./buildkite-agent
+  # curl -fsSL --retry 3 https://github.com/buildkite/agent/releases/download/v3.22.1/buildkite-agent-linux-amd64-3.22.1.tar.gz | \
+  #     tar xvz -C /usr/bin ./buildkite-agent
 
   # Disable the Buildkite agent service, as the startup script has to mount /var/lib/buildkite-agent
   # first.
@@ -106,11 +106,13 @@ EOF
 {
   apt-get -y install apt-transport-https ca-certificates
 
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-  add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  echo \
+      "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+      $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
   apt-get -y update
-  apt-get -y install docker-ce
+  apt-get -y install docker-ce docker-ce-cli containerd.io
 
   # Allow everyone access to the Docker socket. Usually this would be insane from a security point
   # of view, but these are untrusted throw-away machines anyway, so the risk is acceptable.
@@ -171,36 +173,6 @@ EOF
       tar x -C /var/lib/gitmirrors --strip=1
   chown -R buildkite-agent:buildkite-agent /var/lib/gitmirrors
   chmod -R 0755 /var/lib/gitmirrors
-}
-
-### Install Swift toolchains.
-{
-  # Swift 4.2.1
-  curl -fsSL https://mirror.bazel.build/swift.org/builds/swift-4.2.1-release/ubuntu1404/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu14.04.tar.gz | \
-      tar xz -C /opt
-  curl -fsSL https://mirror.bazel.build/swift.org/builds/swift-4.2.1-release/ubuntu1604/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu16.04.tar.gz | \
-      tar xz -C /opt
-  curl -fsSL https://mirror.bazel.build/swift.org/builds/swift-4.2.1-release/ubuntu1804/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu18.04.tar.gz | \
-      tar xz -C /opt
-
-  # Swift 5.2.5
-  curl -fsSL https://mirror.bazel.build/swift.org/builds/swift-5.2.5-release/ubuntu1604/swift-5.2.5-RELEASE/swift-5.2.5-RELEASE-ubuntu16.04.tar.gz | \
-      tar xz -C /opt
-  curl -fsSL https://mirror.bazel.build/swift.org/builds/swift-5.2.5-release/ubuntu1804/swift-5.2.5-RELEASE/swift-5.2.5-RELEASE-ubuntu18.04.tar.gz | \
-      tar xz -C /opt
-  curl -fsSL https://mirror.bazel.build/swift.org/builds/swift-5.2.5-release/ubuntu2004/swift-5.2.5-RELEASE/swift-5.2.5-RELEASE-ubuntu20.04.tar.gz | \
-      tar xz -C /opt
-}
-
-### Install Go.
-{
-  mkdir /opt/go1.13.8.linux-amd64
-  curl -fsSL https://dl.google.com/go/go1.13.8.linux-amd64.tar.gz | \
-      tar xz -C /opt/go1.13.8.linux-amd64 --strip=1
-
-  mkdir /opt/go1.15.2.linux-amd64
-  curl -fsSL https://dl.google.com/go/go1.15.2.linux-amd64.tar.gz | \
-      tar xz -C /opt/go1.15.2.linux-amd64 --strip=1
 }
 
 ### Install Android NDK.
