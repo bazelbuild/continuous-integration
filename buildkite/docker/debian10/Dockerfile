@@ -1,15 +1,14 @@
 FROM debian:10 as debian10-java11
-ENV DEBIAN_FRONTEND="noninteractive"
 ARG BUILDARCH
 
+ENV DEBIAN_FRONTEND="noninteractive"
 ENV LANG "C.UTF-8"
 ENV LANGUAGE "C.UTF-8"
 ENV LC_ALL "C.UTF-8"
 
 ### Install packages required by Bazel and its tests
-RUN dpkg --add-architecture i386 && \
-    apt-get -qqy update && \
-    apt-get -qqy install --no-install-recommends \
+RUN apt-get -y update && \
+    apt-get -y install --no-install-recommends \
     apt-utils \
     bind9-host \
     build-essential \
@@ -26,11 +25,7 @@ RUN dpkg --add-architecture i386 && \
     iputils-ping \
     lcov \
     less \
-    libbz2-1.0:i386 \
-    libncurses5:i386 \
     libssl-dev \
-    libstdc++6:i386 \
-    libz1:i386 \
     llvm \
     llvm-dev \
     lsb-release \
@@ -54,29 +49,44 @@ RUN dpkg --add-architecture i386 && \
     zip \
     zlib1g-dev \
     && \
-    apt-get -qqy purge apport && \
+    apt-get -y purge apport && \
     rm -rf /var/lib/apt/lists/*
 
-ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64
-
-### Install Docker.
-RUN apt-get -qqy update && \
-    apt-get -qqy install apt-transport-https ca-certificates && \
-    curl -sSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
-    add-apt-repository "deb [arch=$BUILDARCH] https://download.docker.com/linux/debian $(lsb_release -cs) stable" && \
-    apt-get -qqy update && \
-    apt-get -qqy install docker-ce && \
-    rm -rf /var/lib/apt/lists/*
-
-COPY --from=gcr.io/bazel-public/base:bazelisk /usr/local/bin/bazel /usr/local/bin/bazel
-COPY --from=gcr.io/bazel-public/base:buildifier /usr/local/bin/buildifier /usr/local/bin/buildifier
-COPY --from=gcr.io/bazel-public/base:saucelabs /usr/local/bin/sc /usr/local/bin/sc
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-${BUILDARCH}
 
 ### Install Google Cloud SDK.
 ### https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
 RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
     curl -L https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
-    apt-get -qqy update && \
-    apt-get -qqy install google-cloud-sdk && \
+    apt-get -y update && \
+    apt-get -y install google-cloud-sdk && \
     rm -rf /var/lib/apt/lists/*
+
+### Docker (for legacy rbe_autoconfig)
+RUN apt-get -y update && \
+    apt-get -y install apt-transport-https ca-certificates && \
+    curl -sSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
+    add-apt-repository "deb [arch=$BUILDARCH] https://download.docker.com/linux/debian $(lsb_release -cs) stable" && \
+    apt-get -y update && \
+    apt-get -y install docker-ce && \
+    rm -rf /var/lib/apt/lists/*
+
+# Bazelisk
+RUN LATEST_BAZELISK=$(curl -sSI https://github.com/bazelbuild/bazelisk/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
+    curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/${LATEST_BAZELISK}/bazelisk-linux-${BUILDARCH} && \
+    chown root:root /usr/local/bin/bazel && \
+    chmod 0755 /usr/local/bin/bazel
+
+# Buildifier
+RUN LATEST_BUILDIFIER=$(curl -sSI https://github.com/bazelbuild/buildtools/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
+    curl -Lo /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/${LATEST_BUILDIFIER}/buildifier-linux-${BUILDARCH} && \
+    chown root:root /usr/local/bin/buildifier && \
+    chmod 0755 /usr/local/bin/buildifier
+
+# github-release
+RUN LATEST_GITHUB_RELEASE=$(curl -sSI https://github.com/c4milo/github-release/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
+    curl -L https://github.com/c4milo/github-release/releases/download/${LATEST_GITHUB_RELEASE}/github-release_${LATEST_GITHUB_RELEASE}_linux_${BUILDARCH}.tar.gz | \
+    tar xz -C /usr/local/bin && \
+    chown root:root /usr/local/bin/github-release && \
+    chmod 0755 /usr/local/bin/github-release

@@ -107,11 +107,8 @@ docker pull "gcr.io/$PREFIX/debian10-java11" &
 docker pull "gcr.io/$PREFIX/ubuntu1604-bazel-java8" &
 docker pull "gcr.io/$PREFIX/ubuntu1604-java8" &
 docker pull "gcr.io/$PREFIX/ubuntu1804-bazel-java11" &
-docker pull "gcr.io/$PREFIX/ubuntu1804-bazel-nojava" &
 docker pull "gcr.io/$PREFIX/ubuntu1804-java11" &
-docker pull "gcr.io/$PREFIX/ubuntu1804-nojava" &
 docker pull "gcr.io/$PREFIX/ubuntu2004-java11" &
-docker pull "gcr.io/$PREFIX/ubuntu2004-nojava" &
 wait
 
 ### Start the Buildkite agent service.
