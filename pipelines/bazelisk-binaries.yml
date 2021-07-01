@@ -10,7 +10,7 @@ steps:
     agents:
       - "queue=default"
     plugins:
-      docker#v3.2.0:
+      docker#v3.8.0:
         always-pull: true
         environment:
           - ANDROID_HOME

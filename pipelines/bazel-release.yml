@@ -4,7 +4,7 @@ steps:
     agents:
       - "queue=default"
     plugins:
-      docker#v3.5.0:
+      docker#v3.8.0:
         always-pull: true
         environment:
           - ANDROID_HOME
@@ -37,7 +37,7 @@ steps:
     agents:
       - "queue=default"
     plugins:
-      docker#v3.5.0:
+      docker#v3.8.0:
         always-pull: true
         environment:
           - ANDROID_HOME
@@ -97,7 +97,7 @@ steps:
     agents:
       - "queue=arm64"
     plugins:
-      docker#v3.5.0:
+      docker#v3.8.0:
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
           - GOOGLE_APPLICATION_CREDENTIALS
@@ -243,7 +243,7 @@ steps:
     agents:
       - "queue=default"
     plugins:
-      docker#v3.5.0:
+      docker#v3.8.0:
         always-pull: true
         environment:
           - ANDROID_HOME
@@ -279,7 +279,7 @@ steps:
     agents:
       - "queue=arm64"
     plugins:
-      docker#v3.5.0:
+      docker#v3.8.0:
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
           - GOOGLE_APPLICATION_CREDENTIALS
@@ -366,7 +366,7 @@ steps:
     agents:
       - "queue=default"
     plugins:
-      docker#v3.5.0:
+      docker#v3.8.0:
         always-pull: true
         environment:
           - ANDROID_HOME
@@ -411,7 +411,7 @@ steps:
     agents:
       - "queue=default"
     plugins:
-      docker#v3.5.0:
+      docker#v3.8.0:
         always-pull: true
         environment:
           - ANDROID_HOME

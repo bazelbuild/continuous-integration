@@ -4,7 +4,7 @@ steps:
       - python3.6 buildkite/bazelci.py project_pipeline --file_config=buildkite/pipelines/tensorflow-postsubmit.yml
     agents: &linux_agents { queue: default }
     plugins: &plugins
-      - docker#v3.2.0:
+      - docker#v3.8.0:
           always-pull: true
           environment:
             - "ANDROID_HOME"

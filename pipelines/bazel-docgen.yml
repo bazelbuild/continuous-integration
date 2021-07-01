@@ -8,7 +8,7 @@ steps:
   agents:
     queue: default
   plugins:
-    docker#v3.5.0:
+    docker#v3.8.0:
       image: gcr.io/bazel-public/docgen
       network: host
       volumes:
