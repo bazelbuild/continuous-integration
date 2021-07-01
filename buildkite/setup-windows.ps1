@@ -130,7 +130,7 @@ Write-Host "Installing Visual C++ 2019 Build Tools..."
 
 ## Install Windows 10 SDK
 ## https://github.com/bazelbuild/continuous-integration/issues/768
-& choco install windows-sdk-10.1
+& choco install windows-sdk-10-version-2004-all
 
 ## Install Python2
 Write-Host "Installing Python 2..."
