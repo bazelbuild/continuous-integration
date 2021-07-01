@@ -139,7 +139,7 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Install Python3
 Write-Host "Installing Python 3..."
-& choco install python3 --version 3.6.8 --params "/InstallDir:C:\python3"
+& choco install python3 --params "/InstallDir:C:\python3"
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Install a couple of Python modules required by TensorFlow.
