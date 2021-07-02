@@ -2221,7 +2221,8 @@ def print_project_pipeline(
                 continue
             config_hashes.add(h)
 
-        shards = task_config.get("shards", "1")
+        # TESTING ONLY: Use 4 shards by default on macOS, because the machines are so slow.
+        shards = task_config.get("shards", "4" if platform.startswith("macos") else "1")
         try:
             shards = int(shards)
         except ValueError:
