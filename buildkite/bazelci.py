@@ -1613,7 +1613,9 @@ def concurrent_test_jobs(platform):
         return "75"
     elif platform == "windows":
         return "8"
-    elif platform == "macos":
+    elif platform.startswith("macos") and THIS_IS_TESTING:
+        return "4"
+    elif platform.startswith("macos"):
         return "8"
     return "12"
 
