@@ -1906,8 +1906,8 @@ def expand_test_target_patterns(bazel_binary, platform, test_targets):
             ),
         ],
         print_output=False,
-    )
-    return output.strip().split("\n")
+    ).strip()
+    return output.split("\n") if output else []
 
 
 def partition_targets(targets):
