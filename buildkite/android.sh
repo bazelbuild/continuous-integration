@@ -21,9 +21,7 @@ yes | tools/bin/sdkmanager --licenses > /dev/null
 tools/bin/sdkmanager --update
 tools/bin/sdkmanager \
     "build-tools;28.0.2" \
-    "build-tools;29.0.2" \
-    "build-tools;29.0.3" \
-    "build-tools;30.0.1" \
+    "build-tools;30.0.3" \
     "emulator" \
     "extras;android;m2repository" \
     "platform-tools" \

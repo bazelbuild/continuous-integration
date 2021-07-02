@@ -192,12 +192,10 @@ EOF
   rm android-sdk.zip
   mv cmdline-tools latest
   yes | latest/bin/sdkmanager --licenses > /dev/null || true
-  latest/tools/bin/sdkmanager --update
-  latest/tools/bin/sdkmanager \
+  latest/bin/sdkmanager --update
+  latest/bin/sdkmanager \
       "build-tools;28.0.2" \
-      "build-tools;29.0.2" \
-      "build-tools;29.0.3" \
-      "build-tools;30.0.1" \
+      "build-tools;30.0.3" \
       "emulator" \
       "extras;android;m2repository" \
       "platform-tools" \

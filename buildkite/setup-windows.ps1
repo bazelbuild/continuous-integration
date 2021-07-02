@@ -219,7 +219,7 @@ New-Item $android_sdk_root -ItemType "directory" -Force
 New-Item $android_sdk_tools_root -ItemType "directory" -Force
 (New-Object Net.WebClient).DownloadFile($android_sdk_url, $android_sdk_zip)
 [System.IO.Compression.ZipFile]::ExtractToDirectory($android_sdk_zip, $android_sdk_tools_root)
-Rename-Item "${$android_sdk_tools_root}\cmdline-tools" -NewName "latest"
+Rename-Item "${android_sdk_tools_root}\cmdline-tools" -NewName "latest"
 [Environment]::SetEnvironmentVariable("ANDROID_HOME", $android_sdk_root, "Machine")
 $env:ANDROID_HOME = [Environment]::GetEnvironmentVariable("ANDROID_HOME", "Machine")
 Remove-Item $android_sdk_zip
@@ -233,9 +233,7 @@ Add-Content -Value "`nd975f751698a77b662f1254ddbeed3901e976f5a" -Path "${android
 ## Install all required Android SDK components.
 & "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platform-tools"
 & "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "build-tools;28.0.2"
-& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "build-tools;29.0.2"
-& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "build-tools;29.0.3"
-& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "build-tools;30.0.1"
+& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "build-tools;30.0.3"
 & "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platforms;android-24"
 & "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platforms;android-28"
 & "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platforms;android-29"
