@@ -144,7 +144,7 @@ def print_windows_instructions(project, zone, instance_name):
         project=project,
         zone=zone,
         start=tail_start,
-        until="Finished running startup scripts",
+        until="GCEGuestAgent: GCE Agent Started",
     )
     print("Connecting via RDP a second time to finish the setup...")
     write_to_clipboard(pw["password"])
