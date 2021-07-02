@@ -579,10 +579,6 @@ DEFAULT_PLATFORM = "ubuntu1804"
 # release platform for all Linux downstream tests.
 LINUX_BINARY_PLATFORM = "centos7_java11_devtoolset10"
 
-DEFAULT_XCODE_VERSION = "13.0"
-XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
-XCODE_VERSION_OVERRIDES = {"10.2.1": "10.3", "11.2": "11.2.1", "11.3": "11.3.1"}
-
 BUILD_LABEL_PATTERN = re.compile(r"^Build label: (\S+)$", re.MULTILINE)
 
 BUILDIFIER_STEP_NAME = "Buildifier"
@@ -1060,9 +1056,6 @@ def execute_commands(
     tmpdir = tempfile.mkdtemp()
     sc_process = None
     try:
-        if platform == "macos" or platform == "macos_arm64":
-            activate_xcode(task_config)
-
         # If the CI worker runs Bazelisk, we need to forward all required env variables to the test.
         # Otherwise any integration test that invokes Bazel (=Bazelisk in this case) will fail.
         test_env_vars = ["LocalAppData"] if platform == "windows" else ["HOME"]
@@ -1261,70 +1254,6 @@ def execute_commands(
         terminate_background_process(sc_process)
         if tmpdir:
             shutil.rmtree(tmpdir)
-
-
-def activate_xcode(task_config):
-    # Get the Xcode version from the config.
-    wanted_xcode_version = task_config.get("xcode_version", DEFAULT_XCODE_VERSION)
-    print_collapsed_group(":xcode: Activating Xcode {}...".format(wanted_xcode_version))
-
-    # Ensure it's a valid version number.
-    if not isinstance(wanted_xcode_version, str):
-        raise BuildkiteException(
-            "Version number '{}' is not a string. Did you forget to put it in quotes?".format(
-                wanted_xcode_version
-            )
-        )
-    if not XCODE_VERSION_REGEX.match(wanted_xcode_version):
-        raise BuildkiteException(
-            "Invalid Xcode version format '{}', must match the format X.Y[.Z].".format(
-                wanted_xcode_version
-            )
-        )
-
-    # This is used to replace e.g. 11.2 with 11.2.1 without having to update all configs.
-    xcode_version = XCODE_VERSION_OVERRIDES.get(wanted_xcode_version, wanted_xcode_version)
-
-    # This falls back to a default version if the selected version is not available.
-    supported_versions = sorted(
-        # Stripping "Xcode" prefix and ".app" suffix from e.g. "Xcode12.0.1.app" leaves just the version number.
-        [os.path.basename(x)[5:-4] for x in glob("/Applications/Xcode*.app")],
-        reverse=True,
-    )
-    if xcode_version not in supported_versions:
-        xcode_version = DEFAULT_XCODE_VERSION
-    if xcode_version != wanted_xcode_version:
-        print_collapsed_group(
-            ":xcode: Fixed Xcode version: {} -> {}...".format(wanted_xcode_version, xcode_version)
-        )
-        lines = [
-            "Your selected Xcode version {} was not available on the machine.".format(
-                wanted_xcode_version
-            ),
-            "Bazel CI automatically picked a fallback version: {}.".format(xcode_version),
-            "Available versions are: {}.".format(supported_versions),
-        ]
-        execute_command(
-            [
-                "buildkite-agent",
-                "annotate",
-                "--style=warning",
-                "\n".join(lines),
-                "--context",
-                "ctx-xcode_version_fixed",
-            ]
-        )
-
-    # Check that the selected Xcode version is actually installed on the host.
-    xcode_path = "/Applications/Xcode{}.app".format(xcode_version)
-    if not os.path.exists(xcode_path):
-        raise BuildkiteException("Xcode not found at '{}'.".format(xcode_path))
-
-    # Now activate the specified Xcode version and let it install its required components.
-    # The CI machines have a sudoers config that allows the 'buildkite' user to run exactly
-    # these two commands, so don't change them without also modifying the file there.
-    execute_command(["/usr/bin/sudo", "/usr/bin/xcode-select", "--switch", xcode_path])
-    execute_command(["/usr/bin/sudo", "/usr/bin/xcodebuild", "-runFirstLaunch"])
 
 
 def get_bazelisk_cache_directory(platform):
