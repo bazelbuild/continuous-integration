@@ -7,8 +7,13 @@ assignees: ''
 
 ---
 
-- I want to test the following project on Bazel CI: [URL_TO_GIT_HUB_PROJECT]
-- I confirm that the project has a `.bazelci/presubmit.yml` file.
+Thank you for your interest in adding your project to Bazel CI.
+
+At the moment we're operating at capacity and cannot add new projects except for rules and projects maintained under the bazelbuild GitHub organization.
+
+- [ ] My project is part of the bazelbuild GitHub organization.
+- [ ] I want to test the following project on Bazel CI: [URL_TO_GIT_HUB_PROJECT]
+- [ ] I confirm that the project has a `.bazelci/presubmit.yml` file.
 
 # Instructions (you can delete this section from the issue)
 
