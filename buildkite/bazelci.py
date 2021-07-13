@@ -1024,6 +1024,11 @@ def execute_commands(
         # If the CI worker runs Bazelisk, we need to forward all required env variables to the test.
         # Otherwise any integration test that invokes Bazel (=Bazelisk in this case) will fail.
         test_env_vars = ["LocalAppData"] if platform == "windows" else ["HOME"]
+
+        # CI should have its own user agent so that we can remove it from Bazel download statistics.
+        os.environ["BAZELISK_USER_AGENT"] = "Bazelisk/BazelCI"
+        test_env_vars.append("BAZELISK_USER_AGENT")
+
         if git_repo_location:
             os.chdir(git_repo_location)
         elif git_repository:
