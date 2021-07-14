@@ -2039,12 +2039,9 @@ def rename_test_logs_for_upload(test_logs, tmpdir):
 
 def test_label_to_path(tmpdir, label, attempt):
     # remove leading //
-    path = label[2:]
+    path = label.lstrip("/:")
     path = path.replace("/", os.sep)
-    if path[0] == ':':
-        path = path[1:]
-    else:
-        path = path.replace(":", os.sep)
+    path = path.replace(":", os.sep)
     if attempt == 0:
         path = os.path.join(path, "test.log")
     else:
