@@ -570,7 +570,7 @@ def group_job_info_by_task(job_infos):
 # If any of the tasks didn't pass, we condsider the state of this project failed.
 def get_project_state(tasks):
     for _, infos in tasks.items():
-        if infos["state"] != "passed":
+        if infos["state"] != "passed" and infos["state"] != "soft_failed":
             return "failed"
     return "passed"
 
