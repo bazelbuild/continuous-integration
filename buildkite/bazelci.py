@@ -243,6 +243,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/subpar-postsubmit.yml",
         "pipeline_slug": "subpar",
         "owned_by_bazel": True,
+        "disabled_reason": "https://github.com/google/subpar/issues/133",
     },
     "TensorFlow": {
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
