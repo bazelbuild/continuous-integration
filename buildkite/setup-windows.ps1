@@ -118,6 +118,7 @@ $env:JAVA_HOME = $zulu_root
 ## Install Visual C++ 2019 Build Tools.
 Write-Host "Installing Visual C++ 2019 Build Tools..."
 & choco install visualstudio2019buildtools
+& choco install visualstudio2019-workload-nativedesktop
 & choco install visualstudio2019-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.Tools.ARM --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
 [Environment]::SetEnvironmentVariable("BAZEL_VC", "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC", "Machine")
 $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
