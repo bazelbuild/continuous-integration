@@ -960,7 +960,7 @@ def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_v
     if action_key in include_json_profile:
         json_profile_out = os.path.join(tmpdir, "{}.profile.gz".format(action_key))
         json_profile_flags = get_json_profile_flags(json_profile_out)
-     
+
     capture_corrupted_outputs_flags = []
     capture_corrupted_outputs_dir = None
     if action_key in capture_corrupted_outputs:
@@ -1117,7 +1117,7 @@ def execute_commands(
                     bazel_version,
                     bazel_binary,
                     platform,
-                    build_flags,
+                    build_flags + ["--embed_label=%s" % get_release_name_from_branch_name()] if save_but else [],
                     build_targets,
                     None,
                     incompatible_flags,
@@ -1323,6 +1323,11 @@ def saucelabs_token():
 
 def current_branch_is_main_branch():
     return os.getenv("BUILDKITE_BRANCH") in ("master", "stable", "main")
+
+
+def get_release_name_from_branch_name():
+    res = re.match(r"release-(\d+\.\d+\.\d+).*", os.getenv("BUILDKITE_BRANCH"))
+    return res.group(1) if res else ""
 
 
 def is_pull_request():
