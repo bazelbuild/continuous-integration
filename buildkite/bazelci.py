@@ -1326,7 +1326,7 @@ def current_branch_is_main_branch():
 
 
 def get_release_name_from_branch_name():
-    res = re.match(r"release-(\d+\.\d+\.\d+).*", os.getenv("BUILDKITE_BRANCH"))
+    res = re.match(r"release-(\d+\.\d+\.\d+(rc\d+)?).*", os.getenv("BUILDKITE_BRANCH"))
     return res.group(1) if res else ""
 
 
