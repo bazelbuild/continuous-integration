@@ -1117,7 +1117,7 @@ def execute_commands(
                     bazel_version,
                     bazel_binary,
                     platform,
-                    build_flags + ["--embed_label=%s" % get_release_name_from_branch_name()] if save_but else [],
+                    build_flags + ["--stamp", "--embed_label=%s" % get_release_name_from_branch_name()] if save_but else [],
                     build_targets,
                     None,
                     incompatible_flags,
