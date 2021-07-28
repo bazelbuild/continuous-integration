@@ -1113,11 +1113,12 @@ def execute_commands(
                 task_config, "build_flags", "build", tmpdir, test_env_vars
             )
             try:
+                release_name = get_release_name_from_branch_name()
                 execute_bazel_build(
                     bazel_version,
                     bazel_binary,
                     platform,
-                    build_flags + (["--stamp", "--embed_label=%s" % get_release_name_from_branch_name()] if save_but else []),
+                    build_flags + (["--stamp", "--embed_label=%s" % release_name] if save_but and release_name else []),
                     build_targets,
                     None,
                     incompatible_flags,
