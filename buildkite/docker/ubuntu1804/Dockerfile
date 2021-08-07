@@ -136,7 +136,7 @@ RUN curl -L https://saucelabs.com/downloads/sc-4.6.5-linux.tar.gz | \
     chmod 0755 /usr/local/bin/sc
 
 # Go
-RUN curl -L https://golang.org/dl/go1.16.5.linux-${BUILDARCH}.tar.gz | \
+RUN curl -L https://golang.org/dl/go1.16.7.linux-${BUILDARCH}.tar.gz | \
     tar xz -C /usr/local
 ENV GO_HOME "/usr/local/go"
 ENV PATH "${PATH}:${GO_HOME}/bin"

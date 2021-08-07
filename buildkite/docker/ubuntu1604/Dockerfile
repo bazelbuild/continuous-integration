@@ -78,7 +78,7 @@ RUN apt-get -y update && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Python (required by our own bazelci.py script).
-RUN export PYTHON_VERSION="3.6.8" && \
+RUN export PYTHON_VERSION="3.6.14" && \
     mkdir -p /usr/local/src && \
     cd /usr/local/src && \
     curl -LO "https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz" && \
@@ -144,7 +144,7 @@ RUN curl -L https://saucelabs.com/downloads/sc-4.6.5-linux.tar.gz | \
     chmod 0755 /usr/local/bin/sc
 
 # Go
-RUN curl -L https://golang.org/dl/go1.16.5.linux-${BUILDARCH}.tar.gz | \
+RUN curl -L https://golang.org/dl/go1.16.7.linux-${BUILDARCH}.tar.gz | \
     tar xz -C /usr/local
 ENV GO_HOME "/usr/local/go"
 ENV PATH "${PATH}:${GO_HOME}/bin"
