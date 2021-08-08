@@ -30,7 +30,7 @@ RUN apt-get -y update && \
     llvm-dev \
     lsb-release \
     netcat-openbsd \
-    openjdk-11-jdk \
+    openjdk-11-jdk-headless \
     python \
     python-dev \
     python-six \

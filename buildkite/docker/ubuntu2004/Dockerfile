@@ -31,7 +31,7 @@ RUN apt-get -y update && \
     llvm-dev \
     lsb-release \
     netcat-openbsd \
-    openjdk-11-jdk \
+    openjdk-11-jdk-headless \
     python-is-python3 \
     python2 \
     python2-dev \
