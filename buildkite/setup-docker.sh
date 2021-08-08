@@ -29,7 +29,7 @@ export DEBIAN_FRONTEND="noninteractive"
 {
   apt-get -y update
   apt-get -y dist-upgrade
-  apt-get -y install python-is-python3 openjdk-11-jdk unzip
+  apt-get -y install python-is-python3 openjdk-11-jdk-headless unzip
 }
 
 ### Disable automatic upgrades, as they can interfere with our startup scripts.
