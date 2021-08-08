@@ -44,7 +44,6 @@ RUN apt-get -y update && \
     software-properties-common \
     unzip \
     wget \
-    xvfb \
     zip \
     zlib1g-dev \
     && \
@@ -57,16 +56,10 @@ FROM ubuntu1604-bazel-java8 AS ubuntu1604-java8
 
 ### Install required packages.
 RUN apt-get -y update && \
-    echo "Installing packages required by Envoy" && \
-    apt-get -y install automake autotools-dev cmake libtool m4 ninja-build && \
-    echo "Installing packages required by Android emulator" && \
-    apt-get -y install cpio cpu-checker lsof qemu-kvm qemu-system-x86 && \
     echo "Installing packages required by Bazel release process" && \
     apt-get -y install devscripts pandoc reprepro && \
     echo "Installing packages required by Swift toolchain" && \
     apt-get -y install libicu-dev && \
-    echo "Installing packages required by rules_webtesting" && \
-    apt-get -y install python3-urllib3 && \
     echo "Installing packages required by Kythe" && \
     apt-get -y install bison flex uuid-dev asciidoc graphviz source-highlight && \
     echo "Installing packages required by upb" && \
@@ -142,12 +135,6 @@ RUN curl -L https://saucelabs.com/downloads/sc-4.6.5-linux.tar.gz | \
     tar xz -C /usr/local --strip=1 sc-4.6.5-linux/bin/sc && \
     chown root:root /usr/local/bin/sc && \
     chmod 0755 /usr/local/bin/sc
-
-# Go
-RUN curl -L https://golang.org/dl/go1.16.7.linux-${BUILDARCH}.tar.gz | \
-    tar xz -C /usr/local
-ENV GO_HOME "/usr/local/go"
-ENV PATH "${PATH}:${GO_HOME}/bin"
 
 # Swift
 RUN curl -fsSL https://swift.org/builds/swift-5.4.2-release/ubuntu1604/swift-5.4.2-RELEASE/swift-5.4.2-RELEASE-ubuntu16.04.tar.gz | \

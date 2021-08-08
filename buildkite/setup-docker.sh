@@ -63,9 +63,6 @@ EOF
   add-apt-repository -y "deb https://apt.buildkite.com/buildkite-agent stable main"
   apt-get -y update
   apt-get -y install buildkite-agent
-  # Workaround bug https://github.com/bazelbuild/continuous-integration/issues/1034
-  # curl -fsSL --retry 3 https://github.com/buildkite/agent/releases/download/v3.22.1/buildkite-agent-linux-amd64-3.22.1.tar.gz | \
-  #     tar xvz -C /usr/bin ./buildkite-agent
 
   # Disable the Buildkite agent service, as the startup script has to mount /var/lib/buildkite-agent
   # first.
@@ -125,15 +122,6 @@ EOF
   # Disable the Docker service, as the startup script has to mount /var/lib/docker first.
   systemctl disable docker
   systemctl stop docker
-}
-
-### Setup KVM.
-{
-  apt-get -y install qemu-kvm
-
-  # Allow everyone access to the KVM device. As above, this would usually not be a good idea, but
-  # these machines are untrusted anyway...
-  echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' > /etc/udev/rules.d/65-kvm.rules
 }
 
 ## Add our minimum uptime enforcer.
@@ -196,17 +184,12 @@ EOF
   latest/bin/sdkmanager \
       "build-tools;28.0.2" \
       "build-tools;30.0.3" \
-      "emulator" \
       "extras;android;m2repository" \
       "platform-tools" \
       "platforms;android-24" \
       "platforms;android-28" \
       "platforms;android-29" \
-      "platforms;android-30" \
-      "system-images;android-19;default;x86" \
-      "system-images;android-21;default;x86" \
-      "system-images;android-22;default;x86" \
-      "system-images;android-23;default;x86"
+      "platforms;android-30"
 }
 
 ### Fix permissions in /opt.

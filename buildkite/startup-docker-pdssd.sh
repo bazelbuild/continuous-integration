@@ -24,10 +24,13 @@ set -euxo pipefail
 export DEBIAN_FRONTEND="noninteractive"
 
 ### Optimize the CPU scheduler for throughput.
-### (see https://unix.stackexchange.com/questions/466722/how-to-change-the-length-of-time-slices-used-by-the-linux-cpu-scheduler/466723)
+# From https://unix.stackexchange.com/questions/466722/how-to-change-the-length-of-time-slices-used-by-the-linux-cpu-scheduler/466723
 sysctl -w kernel.sched_min_granularity_ns=10000000
 sysctl -w kernel.sched_wakeup_granularity_ns=15000000
 sysctl -w vm.dirty_ratio=40
+# From https://www.postgresql.org/message-id/50E4AAB1.9040902@optionshouse.com
+sysctl -w kernel.sched_migration_cost_ns=5000000
+sysctl -w kernel.sched_autogroup_enabled=0
 
 ### Mount tmpfs to buildkite-agent's home.
 AGENT_HOME="/var/lib/buildkite-agent"
