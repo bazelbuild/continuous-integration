@@ -257,7 +257,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/tulsi.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/tulsi/master/.bazelci/presubmit.yml",
         "pipeline_slug": "tulsi-bazel-darwin",
-        "disabled_reason": "https://github.com/bazelbuild/bazel/issues/13811",
     },
     "re2": {
         "git_repository": "https://github.com/google/re2.git",
