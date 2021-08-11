@@ -2454,9 +2454,9 @@ def create_config_validation_steps():
         ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", os.getenv("BUILDKITE_COMMIT")]
     )
     config_files = [
-        l
-        for l in output.split("\n")
-        if l.startswith(".bazelci/") and os.path.splitext(l)[1] in CONFIG_FILE_EXTENSIONS
+        path
+        for path in output.split("\n")
+        if path.startswith(".bazelci/") and os.path.splitext(path)[1] in CONFIG_FILE_EXTENSIONS
     ]
     return [
         create_step(
