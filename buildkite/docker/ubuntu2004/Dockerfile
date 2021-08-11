@@ -127,12 +127,6 @@ RUN curl -L https://saucelabs.com/downloads/sc-4.6.5-linux.tar.gz | \
     chown root:root /usr/local/bin/sc && \
     chmod 0755 /usr/local/bin/sc
 
-# Swift
-RUN curl -fsSL https://swift.org/builds/swift-5.4.2-release/ubuntu2004/swift-5.4.2-RELEASE/swift-5.4.2-RELEASE-ubuntu20.04.tar.gz | \
-    tar xz -C /opt
-ENV SWIFT_HOME "/opt/swift-5.4.2-RELEASE-ubuntu20.04"
-ENV PATH "${PATH}:${SWIFT_HOME}/usr/bin"
-
 FROM ubuntu2004-java11 AS ubuntu2004-java11-kythe
 RUN LATEST_KYTHE=v0.0.52 && \
     mkdir /usr/local/kythe && \
