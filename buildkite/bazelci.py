@@ -966,8 +966,14 @@ def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_v
     capture_corrupted_outputs_flags = []
     capture_corrupted_outputs_dir = None
     if action_key in capture_corrupted_outputs:
-        capture_corrupted_outputs_dir = os.path.join(tmpdir, "{}_corrupted_outputs".format(action_key))
-        capture_corrupted_outputs_flags = ["--experimental_remote_capture_corrupted_outputs={}".format(capture_corrupted_outputs_dir)]
+        capture_corrupted_outputs_dir = os.path.join(
+            tmpdir, "{}_corrupted_outputs".format(action_key)
+        )
+        capture_corrupted_outputs_flags = [
+            "--experimental_remote_capture_corrupted_outputs={}".format(
+                capture_corrupted_outputs_dir
+            )
+        ]
 
     flags = task_config.get(task_config_key) or []
     flags += json_profile_flags
@@ -1111,16 +1117,23 @@ def execute_commands(
         )
 
         if build_targets:
-            build_flags, json_profile_out_build, capture_corrupted_outputs_dir_build = calculate_flags(
-                task_config, "build_flags", "build", tmpdir, test_env_vars
-            )
+            (
+                build_flags,
+                json_profile_out_build,
+                capture_corrupted_outputs_dir_build,
+            ) = calculate_flags(task_config, "build_flags", "build", tmpdir, test_env_vars)
             try:
                 release_name = get_release_name_from_branch_name()
                 execute_bazel_build(
                     bazel_version,
                     bazel_binary,
                     platform,
-                    build_flags + (["--stamp", "--embed_label=%s" % release_name] if save_but and release_name else []),
+                    build_flags
+                    + (
+                        ["--stamp", "--embed_label=%s" % release_name]
+                        if save_but and release_name
+                        else []
+                    ),
                     build_targets,
                     None,
                     incompatible_flags,
@@ -1177,9 +1190,11 @@ def execute_commands(
                 upload_thread.join()
 
         if index_targets:
-            index_flags, json_profile_out_index, capture_corrupted_outputs_dir_index = calculate_flags(
-                task_config, "index_flags", "index", tmpdir, test_env_vars
-            )
+            (
+                index_flags,
+                json_profile_out_index,
+                capture_corrupted_outputs_dir_index,
+            ) = calculate_flags(task_config, "index_flags", "index", tmpdir, test_env_vars)
             index_upload_policy = task_config.get("index_upload_policy", "IfBuildSuccess")
             index_upload_gcs = task_config.get("index_upload_gcs", False)
 
@@ -2026,11 +2041,16 @@ def upload_json_profile(json_profile_path, tmpdir):
     print_collapsed_group(":gcloud: Uploading JSON Profile")
     execute_command(["buildkite-agent", "artifact", "upload", json_profile_path], cwd=tmpdir)
 
+
 def upload_corrupted_outputs(capture_corrupted_outputs_dir, tmpdir):
     if not os.path.exists(capture_corrupted_outputs_dir):
         return
     print_collapsed_group(":gcloud: Uploading corrupted outputs")
-    execute_command(["buildkite-agent", "artifact", "upload", "{}/**/*".format(capture_corrupted_outputs_dir)], cwd=tmpdir)
+    execute_command(
+        ["buildkite-agent", "artifact", "upload", "{}/**/*".format(capture_corrupted_outputs_dir)],
+        cwd=tmpdir,
+    )
+
 
 def rename_test_logs_for_upload(test_logs, tmpdir):
     # Rename the test.log files to the target that created them
