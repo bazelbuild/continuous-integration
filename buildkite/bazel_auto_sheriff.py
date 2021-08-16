@@ -628,7 +628,7 @@ def main(argv=None):
 
     analyzers = []
     for project_name, project_info in bazelci.DOWNSTREAM_PROJECTS.items():
-        if "disabled_reason" not in project_info:
+        if project_name in downstream_result:
             analyzer = BuildInfoAnalyzer(project_name, project_info["pipeline_slug"], downstream_result[project_name])
             analyzers.append(analyzer)
             analyzer.start()
