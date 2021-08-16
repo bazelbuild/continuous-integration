@@ -2342,7 +2342,7 @@ def print_project_pipeline(
         lines = ["The following tasks were skipped since they require specific Bazel versions:", ""]
         lines += ["- {}".format(s) for s in skipped_due_to_bazel_version]
         commands = [
-            "buildkite-agent annotate --style=info '{}' --context 'ctx-skipped_due_to_bazel_version'".format(
+            "buildkite-agent annotate --style=info '{}' --append --context 'ctx-skipped_due_to_bazel_version'".format(
                 "\n".join(lines)
             )
         ]
