@@ -2339,12 +2339,12 @@ def print_project_pipeline(
         pipeline_steps.append(step)
 
     if skipped_due_to_bazel_version:
-        lines = ["The following tasks were skipped since they require specific Bazel versions:", ""]
-        lines += ["- {}".format(s) for s in skipped_due_to_bazel_version]
+        lines = ["\n- {}".format(s) for s in skipped_due_to_bazel_version]
         commands = [
             "buildkite-agent annotate --style=info '{}' --append --context 'ctx-skipped_due_to_bazel_version'".format(
-                "\n".join(lines)
-            )
+                "".join(lines)
+            ),
+            "buildkite-agent meta-data set 'has-skipped-steps' 'true'",
         ]
         pipeline_steps.append(
             create_step(
@@ -2902,6 +2902,10 @@ def print_bazel_downstream_pipeline(
             pipeline_steps.append(info_box_step)
         incompatible_flags = list(incompatible_flags_map.keys())
 
+    pipeline_steps.append(create_step(
+        label="Print skipped tasks annotation",
+        commands=['buildkite-agent annotate --style=info "The following tasks were skipped since they require specific Bazel versions:\n" --context "ctx-skipped_due_to_bazel_version"'],
+        platform=DEFAULT_PLATFORM))
     for project, config in DOWNSTREAM_PROJECTS.items():
         disabled_reason = config.get("disabled_reason", None)
         # If test_disabled_projects is true, we add configs for disabled projects.
@@ -2918,6 +2922,10 @@ def print_bazel_downstream_pipeline(
                     incompatible_flags=incompatible_flags,
                 )
             )
+    pipeline_steps.append(create_step(
+        label="Remove skipped tasks annotation if unneeded",
+        commands=['buildkite-agent meta-data exists "has-skipped-steps" || buildkite-agent annotation remove --context "ctx-skipped_due_to_bazel_version"'],
+        platform=DEFAULT_PLATFORM))
 
     if test_incompatible_flags:
         current_build_number = os.environ.get("BUILDKITE_BUILD_NUMBER", None)
