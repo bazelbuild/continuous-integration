@@ -280,7 +280,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "rules_cc": {
         "git_repository": "https://github.com/bazelbuild/rules_cc.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_cc/master/.bazelci/presubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_cc/main/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-cc",
         "owned_by_bazel": True,
     },
