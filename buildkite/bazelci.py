@@ -2925,7 +2925,7 @@ def print_bazel_downstream_pipeline(
     pipeline_steps.append(create_step(
         label="Remove skipped tasks annotation if unneeded",
         commands=['buildkite-agent meta-data exists "has-skipped-steps" || buildkite-agent annotation remove --context "ctx-skipped_due_to_bazel_version"'],
-        platform=DEFAULT_PLATFORM))'
+        platform=DEFAULT_PLATFORM))
 
     if test_incompatible_flags:
         current_build_number = os.environ.get("BUILDKITE_BUILD_NUMBER", None)
