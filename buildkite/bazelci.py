@@ -325,6 +325,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_gwt/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-gwt",
+        "disabled_reason": "https://github.com/bazelbuild/continuous-integration/issues/1202",
     },
     "rules_haskell": {
         "git_repository": "https://github.com/tweag/rules_haskell.git",
