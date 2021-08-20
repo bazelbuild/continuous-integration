@@ -124,6 +124,7 @@ def main():
   download_root = 'https://storage.googleapis.com/bazel-ci/rbe-configs'
 
   bazel_versions = [
+      '4.2.0',
       '4.1.0',
       '4.0.0',
   ]
@@ -177,16 +178,14 @@ def main():
                        tarball_sha256)
 
       toolchains.append({
-          'name':
-              toolchain_name,
-          'url':
+          'name': toolchain_name,
+          'urls': [
               get_output_tarball(
                   get_upload_dir(download_root, bazel_version, toolchain_name,
-                                 tarball_sha256)),
-          'sha256':
-              tarball_sha256,
-          'manifest':
-              tarball_manifest,
+                                 tarball_sha256))
+          ],
+          'sha256': tarball_sha256,
+          'manifest': tarball_manifest,
       })
 
     manifest.append({'bazel_version': bazel_version, 'toolchains': toolchains})
