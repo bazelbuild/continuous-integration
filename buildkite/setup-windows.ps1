@@ -141,6 +141,7 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 Write-Host "Installing Python 3..."
 & choco install python3 --params "/InstallDir:C:\python3"
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+New-Item -ItemType SymbolicLink -Path "C:\python3\python3.exe" -Target "C:\python3\python.exe"
 
 ## Install a couple of Python modules required by TensorFlow.
 Write-Host "Updating Python package management tools..."
