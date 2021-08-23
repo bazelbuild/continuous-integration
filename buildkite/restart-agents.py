@@ -8,16 +8,17 @@
 #   For example, you can put "windows" there to restart Windows agents.
 
 import os
+import sys
 from pybuildkite.buildkite import Buildkite
 from requests.exceptions import HTTPError
 
-FILTER = "docker"
+FILTER = sys.argv[1]
 ORGANIZATION = "bazel"
 
-print("Using Buildkite API Token: {}".format(os.environ["BUILDKITE_TOKEN"]))
+print("Using Buildkite API Token: {}".format(os.environ["BUILDKITE_API_TOKEN"]))
 
 buildkite = Buildkite()
-buildkite.set_access_token(os.environ["BUILDKITE_TOKEN"])
+buildkite.set_access_token(os.environ["BUILDKITE_API_TOKEN"])
 
 response = buildkite.agents().list_all(
     organization=ORGANIZATION, page=1, with_pagination=True
