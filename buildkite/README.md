@@ -8,6 +8,15 @@ Bazel uses [Buildkite] for continuous integration. The user interface and the or
 builds is fully managed by Buildkite, but Bazel brings its own CI machines. The [buildkite folder]
 contains all the scripts and configuration files necessary to setup Bazel's CI on Buildkite.
 
+## Reporting a Vulnerability
+
+To report a security issue, please email [bazel-security@google.com](mailto:bazel-security@google.com)
+with a description of the issue, the steps you took to create the issue,
+affected versions, and, if known, mitigations for the issue. Our vulnerability
+management team will respond within 3 working days of your email. If the issue
+is confirmed as a vulnerability, we will open a Security Advisory. This project
+follows a 90 day disclosure timeline.
+
 ## Bazel on Buildkite 101
 
 When you first log into [Buildkite] you are presented with a list of pipelines. A pipeline is a
