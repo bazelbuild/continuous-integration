@@ -3458,6 +3458,12 @@ def main(argv=None):
 
             platform = get_platform_for_task(args.task, task_config)
 
+            # The value of `BUILDKITE_MESSAGE` defaults to the commit message, which can be too large
+            # on Windows, therefore we truncate the value to 1000 characters.
+            # See https://github.com/bazelbuild/continuous-integration/issues/1218
+            if "BUILDKITE_MESSAGE" in os.environ:
+                os.environ["BUILDKITE_MESSAGE"] = os.environ["BUILDKITE_MESSAGE"][:1000]
+
             execute_commands(
                 task_config=task_config,
                 platform=platform,
