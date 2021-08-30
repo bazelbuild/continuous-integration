@@ -59,7 +59,7 @@ instance_groups:
     count: 4
     project: bazel-public
     service_account: buildkite-trusted@bazel-public.iam.gserviceaccount.com
-    image_family: bk-trusted-windows
+    image_family: bk-windows
     metadata_from_file: windows-startup-script-ps1=startup-windows-pdssd.ps1
 physical_clusters:
   - name: buildkite-imacpro
