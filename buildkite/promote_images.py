@@ -38,6 +38,12 @@ IMAGE_PROMOTIONS = {
         "source_image_family": "bk-testing-windows",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
     },
+    "bk-trusted-windows": {
+        "project": "bazel-public",
+        "source_image_project": "bazel-public",
+        "source_image_family": "bk-testing-windows",
+        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
+    },
 }
 
 WORK_QUEUE = queue.Queue()
