@@ -41,6 +41,7 @@ Do these steps once per release.
          known then this is a good baseline commit. Fixes for the known issues
          should be cherry-picked, any remaining issues should become release
          blockers.
+*   Begin the [internal release process](http://go/bazel-internal-launch-checklist), too.
 
 ## Release issue
 
