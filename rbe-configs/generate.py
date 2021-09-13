@@ -109,11 +109,71 @@ def upload_configs(output_root: str, upload_root: str, bazel_version: str,
   )
 
 
+bazel_versions = [
+    '4.2.1',
+    '4.2.0',
+    '4.1.0',
+    '4.0.0',
+]
+
+containers = [
+    {
+        'toolchain_name': 'ubuntu1604-bazel-java8',
+        'cpp_env_json': 'cpp_env/ubuntu1604.json'
+    },
+    {
+        'toolchain_name': 'ubuntu1604-java8',
+        'cpp_env_json': 'cpp_env/ubuntu1604.json'
+    },
+    {
+        'toolchain_name': 'ubuntu1804-bazel-java11',
+        'cpp_env_json': 'cpp_env/ubuntu1804.json'
+    },
+    {
+        'toolchain_name': 'ubuntu1804-java11',
+        'cpp_env_json': 'cpp_env/ubuntu1804.json'
+    },
+    {
+        'toolchain_name': 'ubuntu2004-bazel-java11',
+        'cpp_env_json': 'cpp_env/ubuntu2004.json'
+    },
+    {
+        'toolchain_name': 'ubuntu2004-java11',
+        'cpp_env_json': 'cpp_env/ubuntu2004.json'
+    },
+]
+
+
+def generate_configs_for_version(output_root: str, bazel_version: str, download_root: str) -> list[dict]:
+  toolchains = []
+  for container in containers:
+    toolchain_name = container['toolchain_name']
+    cpp_env_json = container['cpp_env_json']
+
+    generate_configs(output_root, bazel_version, toolchain_name, cpp_env_json)
+
+    tarball_manifest = load_json(
+        get_output_manifest(
+            get_output_dir(output_root, bazel_version, toolchain_name)))
+    tarball_sha256 = tarball_manifest['configs_tarball_digest']
+    assert tarball_sha256
+
+    toolchains.append({
+        'name': toolchain_name,
+        'urls': [
+            get_output_tarball(
+                  get_upload_dir(download_root, bazel_version, toolchain_name, tarball_sha256))
+        ],
+        'sha256': tarball_sha256,
+        'manifest': tarball_manifest,
+    })
+
+
 def main():
   parser = argparse.ArgumentParser()
   parser.add_argument(
       '--upload',
-      default=False,
+      default='',
       action=argparse.BooleanOptionalAction,
       help='upload generated configs to GCP')
 
@@ -123,75 +183,19 @@ def main():
   upload_root = 'gs://bazel-ci/rbe-configs'
   download_root = 'https://storage.googleapis.com/bazel-ci/rbe-configs'
 
-  bazel_versions = [
-      '4.2.0',
-      '4.1.0',
-      '4.0.0',
-  ]
-
-  containers = [
-      {
-          'toolchain_name': 'ubuntu1604-bazel-java8',
-          'cpp_env_json': 'cpp_env/ubuntu1604.json'
-      },
-      {
-          'toolchain_name': 'ubuntu1604-java8',
-          'cpp_env_json': 'cpp_env/ubuntu1604.json'
-      },
-      {
-          'toolchain_name': 'ubuntu1804-bazel-java11',
-          'cpp_env_json': 'cpp_env/ubuntu1804.json'
-      },
-      {
-          'toolchain_name': 'ubuntu1804-java11',
-          'cpp_env_json': 'cpp_env/ubuntu1804.json'
-      },
-      {
-          'toolchain_name': 'ubuntu2004-bazel-java11',
-          'cpp_env_json': 'cpp_env/ubuntu2004.json'
-      },
-      {
-          'toolchain_name': 'ubuntu2004-java11',
-          'cpp_env_json': 'cpp_env/ubuntu2004.json'
-      },
-  ]
-
   manifest = []
 
   for bazel_version in bazel_versions:
-    toolchains = []
-
-    for container in containers:
-      toolchain_name = container['toolchain_name']
-      cpp_env_json = container['cpp_env_json']
-
-      generate_configs(output_root, bazel_version, toolchain_name, cpp_env_json)
-
-      tarball_manifest = load_json(
-          get_output_manifest(
-              get_output_dir(output_root, bazel_version, toolchain_name)))
-      tarball_sha256 = tarball_manifest['configs_tarball_digest']
-      assert tarball_sha256
-
-      if args.upload:
-        upload_configs(output_root, upload_root, bazel_version, toolchain_name,
-                       tarball_sha256)
-
-      toolchains.append({
-          'name': toolchain_name,
-          'urls': [
-              get_output_tarball(
-                  get_upload_dir(download_root, bazel_version, toolchain_name,
-                                 tarball_sha256))
-          ],
-          'sha256': tarball_sha256,
-          'manifest': tarball_manifest,
-      })
+    toolchains = generate_configs_for_version(output_root, bazel_version, download_root)
+    if args.upload == 'all' or args.upload == bazel_version:
+      for toolchain in toolchains:
+        upload_configs(output_root, upload_root, bazel_version, toolchain['name'],
+                       toolchain['sha256'])
 
     manifest.append({'bazel_version': bazel_version, 'toolchains': toolchains})
 
   generate_manifest(output_root, manifest)
-  if args.upload:
+  if args.upload == 'all' or args.upload == 'manifest':
     upload_manifest(output_root, upload_root)
 
 

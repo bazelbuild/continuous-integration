@@ -1,5 +1,3 @@
-load("//:manifests.bzl", "manifests")
-
 def _available_bazel_versions(manifests):
     bazel_versions = []
     for manifest in manifests:
@@ -45,9 +43,19 @@ def _rbe_preconfig_impl(repository_ctx):
     latest configs without upgrading this rule.
 
     Args:
-      toolchain_name: The name of the pre-generated toolchain.
+      toolchain: The name of the pre-generated toolchain.
     """
-    toolchain_name = repository_ctx.attr.toolchain_name
+
+    toolchain_name = repository_ctx.attr.toolchain
+
+    manifest_json = 'manifest.json'
+    # Omit sha256 since remote file can be changed
+    repository_ctx.download(
+        output = manifest_json,
+        url = ["https://storage.googleapis.com/bazel-ci/rbe-configs/manifest.json"]
+    )
+
+    manifests = json.decode(repository_ctx.read(manifest_json))
 
     manifest = _auto_detect_bazel_version(manifests)
 
@@ -63,7 +71,7 @@ def _rbe_preconfig_impl(repository_ctx):
 rbe_preconfig = repository_rule(
     implementation = _rbe_preconfig_impl,
     attrs = {
-        "toolchain_name": attr.string(
+        "toolchain": attr.string(
             mandatory = True,
         ),
     },

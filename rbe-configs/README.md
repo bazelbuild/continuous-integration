@@ -22,7 +22,7 @@ To (re)generate configs:
 1. Make sure `docker` is installed locally.
 2. Install [`rbe_configs_gen`](https://github.com/bazelbuild/bazel-toolchains).
 3. Run `./generate.py` to generate configs.
-4. Run `./generate.py --upload` to upload configs.
+4. Run `./generate.py --upload=all` to upload configs and `manifest.json`.
 
 ## FAQ
 
