@@ -1,0 +1,16 @@
+[package]
+name = "bazelci-agent"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+tracing = "0.1"
+tracing-subscriber = "0.2"
+anyhow = "1.0"
+serde_json = "1.0"
+clap = "2.33"
+structopt = "0.3"
+rand = "0.8"
+
+[profile.release]
+lto = true
