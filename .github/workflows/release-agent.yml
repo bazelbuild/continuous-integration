@@ -88,27 +88,24 @@ jobs:
 
     - name: Build release binary
       working-directory: agent
-      run: cargo build --verbose --release ${{ matrix.target }}
+      run: cargo build --manifest-path agent/Cargo.toml --verbose --release --target ${{ matrix.target }}
 
     - name: Strip release binary (linux and macos)
-      working-directory: agent
       if: matrix.build == 'linux' || matrix.build == 'macos'
-      run: strip "target/release/bazelci-agent"
+      run: strip "agent/target/${{ matrix.target }}/release/bazelci-agent"
 
     - name: Build release asset
-      working-directory: agent
       shell: bash
       run: |
         staging="bazelci-${{ needs.create-release.outputs.agent_version }}-${{ matrix.target }}"
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          cp "target/${{ matrix.target }}/release/bazelci-agent.exe" "$staging.exe"
+          cp "agent/target/${{ matrix.target }}/release/bazelci-agent.exe" "$staging.exe"
           echo "ASSET=$staging.exe" >> $GITHUB_ENV
         else
-          cp "target/${{ matrix.target }}/release/bazelci-agent" "$staging"
+          cp "agent/target/${{ matrix.target }}/release/bazelci-agent" "$staging"
           echo "ASSET=$staging" >> $GITHUB_ENV
         fi
     - name: Upload release asset
-      working-directory: agent
       uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
