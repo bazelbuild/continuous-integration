@@ -1,33 +1,39 @@
 use anyhow::Result;
 use clap::arg_enum;
-use std::path::PathBuf;
+use std::{path::PathBuf, time::Duration};
 use structopt::StructOpt;
 
-use bazelci_agent::artifact::upload::{upload, Destination};
+use bazelci_agent::artifact::upload::{self, upload};
 
 arg_enum! {
-    #[derive(Clone, Copy)]
-    enum UploadDestination {
+    #[allow(non_camel_case_types)]
+    enum UploadMode {
         // Don't upload to any place. (For debug purpose)
-        Dry,
+        dry,
         // Upload as Buildkite's artifacts
-        Buildkite,
+        buildkite,
     }
 }
 
 /// Upload/download artifacts from Bazel CI tasks
 #[derive(StructOpt)]
 enum ArtifactCommand {
-    /// Upload artifacts (e.g. logs for failed tests) from Bazel CI tasks
+    /// Upload artifacts (e.g. test logs for failed tests) from Bazel CI tasks
     #[structopt(rename_all = "snake")]
     Upload {
         /// The file contains the JSON serialisation of the build event protocol.
         /// The agent "watches" this file until "last message" encountered
         #[structopt(long, parse(from_os_str))]
         build_event_json_file: PathBuf,
-        /// The destination the artifacts should be uploaded to
-        #[structopt(long, possible_values = &UploadDestination::variants(), case_insensitive = true)]
-        destination: UploadDestination,
+        /// The mode the artifacts should be uploaded to
+        #[structopt(long, possible_values = &UploadMode::variants(), case_insensitive = true)]
+        mode: Option<UploadMode>,
+        /// The seconds to wait before watching the BEP file
+        #[structopt(long)]
+        delay: Option<u64>,
+        /// BEP json file is uploaded if there are flaky tests
+        #[structopt(long)]
+        monitor_flaky_tests: bool,
     },
 }
 
@@ -47,13 +53,21 @@ fn main() -> Result<()> {
         Command::Artifact(cmd) => match cmd {
             ArtifactCommand::Upload {
                 build_event_json_file,
-                destination,
+                mode,
+                delay,
+                monitor_flaky_tests,
             } => {
-                let destination = match destination {
-                    UploadDestination::Dry => Destination::Dry,
-                    UploadDestination::Buildkite => Destination::Buildkite,
+                let mode = match mode {
+                    Some(UploadMode::dry) => upload::Mode::Dry,
+                    Some(UploadMode::buildkite) => upload::Mode::Buildkite,
+                    None => upload::Mode::Dry,
                 };
-                upload(&build_event_json_file, destination)?;
+                upload(
+                    &build_event_json_file,
+                    mode,
+                    delay.map(|secs| Duration::from_secs(secs)),
+                    monitor_flaky_tests,
+                )?;
             }
         },
     }

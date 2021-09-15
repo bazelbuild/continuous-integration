@@ -11,8 +11,8 @@ use std::{
 };
 use tracing::warn;
 
-#[derive(Clone, Copy)]
-pub enum Destination {
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Mode {
     // Don't upload to any place. (For debug purpose)
     Dry,
     // Upload as Buildkite's artifacts
@@ -22,15 +22,24 @@ pub enum Destination {
 /// Upload artifacts (e.g. test logs) by reading the BEP JSON file.
 ///
 /// The file is read in a loop until "last message" is reached or encountered consective errors.
-pub fn upload(build_event_json_file: &Path, destination: Destination) -> Result<()> {
-    let tmpdir = make_tmpdir();
+pub fn upload(
+    build_event_json_file: &Path,
+    mode: Mode,
+    delay: Option<Duration>,
+    monitor_flaky_tests: bool,
+) -> Result<()> {
+    if let Some(delay) = delay {
+        sleep(delay);
+    }
+
+    let tmpdir = make_tmpdir_path(mode != Mode::Dry);
     let status = ["FAILED", "TIMEOUT", "FLAKY"];
     let mut parser = BepJsonParser::new(build_event_json_file);
     let max_retries = 5;
     let mut retries = max_retries;
     let mut test_log_offset = 0;
 
-    loop {
+    'parse_loop: loop {
         match parser.parse() {
             Ok(_) => {
                 // If we made progress, reset the retry counter
@@ -40,13 +49,13 @@ pub fn upload(build_event_json_file: &Path, destination: Destination) -> Result<
                     .iter()
                     .filter(|test_log| status.contains(&test_log.status.as_str()))
                     .collect();
-                if let Err(error) = upload_test_logs(&tmpdir, &test_logs_to_upload, destination) {
+                if let Err(error) = upload_test_logs(&tmpdir, &test_logs_to_upload, mode) {
                     warn!("{:?}", error);
                 }
                 test_log_offset = parser.test_logs.len();
 
                 if parser.done {
-                    return Ok(());
+                    break 'parse_loop;
                 }
             }
             Err(error) => {
@@ -62,28 +71,58 @@ pub fn upload(build_event_json_file: &Path, destination: Destination) -> Result<
 
         sleep(Duration::from_secs(1));
     }
-}
 
-fn buildkite_artifact_upload(cwd: &Path, artifacts: &[PathBuf]) -> Result<()> {
-    let artifacts: Vec<String> = artifacts
-        .iter()
-        .map(|path| path.display().to_string())
-        .collect();
-    process::Command::new("buildkite-agent")
-        .current_dir(cwd)
-        .args(["artifact", "upload", artifacts.join(";").as_str()])
-        .output()?;
+    if monitor_flaky_tests && parser.has_test_status("FLAKY") {
+        upload_bep_json_file(mode, build_event_json_file)?;
+    }
+
     Ok(())
 }
 
-fn upload_artifacts(cwd: &Path, artifacts: &[PathBuf], destination: Destination) -> Result<()> {
-    match destination {
-        Destination::Dry => {
+fn upload_bep_json_file(mode: Mode, build_event_json_file: &Path) -> Result<()> {
+    upload_artifacts(None, &[build_event_json_file], mode)
+}
+
+fn execute_command(program: &str, args: &[&str], cwd: Option<&Path>) -> Result<()> {
+    let mut command = process::Command::new(program);
+    if let Some(cwd) = cwd {
+        command.current_dir(cwd.canonicalize()?);
+    }
+    command.args(args);
+
+    command
+        .output()
+        .with_context(|| format!("Failed to execute command {:?}", command))?;
+
+    Ok(())
+}
+
+fn buildkite_artifact_upload<P: AsRef<Path>>(cwd: Option<&Path>, artifacts: &[P]) -> Result<()> {
+    let artifacts: Vec<String> = artifacts
+        .iter()
+        .map(|path| path.as_ref().display().to_string())
+        .collect();
+
+    execute_command(
+        "buildkite-agent",
+        &["artifact", "upload", artifacts.join(";").as_str()],
+        cwd,
+    )
+}
+
+fn upload_artifacts<P: AsRef<Path>>(cwd: Option<&Path>, artifacts: &[P], mode: Mode) -> Result<()> {
+    match mode {
+        Mode::Dry => {
             for artifact in artifacts {
-                println!("{}", artifact.display());
+                let path = if let Some(cwd) = cwd {
+                    cwd.join(artifact)
+                } else {
+                    artifact.as_ref().to_path_buf()
+                };
+                println!("Upload artifact: {}", path.display());
             }
         }
-        Destination::Buildkite => {
+        Mode::Buildkite => {
             buildkite_artifact_upload(cwd, artifacts)?;
         }
     }
@@ -112,18 +151,25 @@ fn test_label_to_path(tmpdir: &Path, label: &str, attempt: i32) -> PathBuf {
     tmpdir.join(&path)
 }
 
-fn make_tmpdir() -> PathBuf {
+fn make_tmpdir_path(should_create_dir_all: bool) -> PathBuf {
     let base = env::temp_dir();
     loop {
         let i: u32 = rand::random();
         let tmpdir = base.join(format!("bazelci-agent-{}", i));
         if !tmpdir.exists() {
+            if should_create_dir_all {
+                fs::create_dir_all(&tmpdir);
+            }
             return tmpdir;
         }
     }
 }
 
-fn upload_test_logs(tmpdir: &Path, test_logs: &[&TestLog], destination: Destination) -> Result<()> {
+fn upload_test_logs(tmpdir: &Path, test_logs: &[&TestLog], mode: Mode) -> Result<()> {
+    if test_logs.is_empty() {
+        return Ok(());
+    }
+
     let mut artifacts = Vec::new();
     // Rename the test.log files to the target that created them
     // so that it's easy to associate test.log and target.
@@ -141,12 +187,15 @@ fn upload_test_logs(tmpdir: &Path, test_logs: &[&TestLog], destination: Destinat
             }
             let path = &path[FILE_PROTOCOL.len()..];
             let new_path = test_label_to_path(&tmpdir, &test_log.target, attempt);
-            fs::create_dir_all(new_path.parent().unwrap_or(&new_path)).with_context(|| {
-                format!("Failed to create directories for {}", new_path.display())
-            })?;
-            fs::copy(path, &new_path).with_context(|| {
-                format!("Failed to copy file {} to {}", path, new_path.display())
-            })?;
+
+            if mode != Mode::Dry {
+                fs::create_dir_all(new_path.parent().unwrap_or(&new_path)).with_context(|| {
+                    format!("Failed to create directories for {}", new_path.display())
+                })?;
+                fs::copy(path, &new_path).with_context(|| {
+                    format!("Failed to copy file {} to {}", path, new_path.display())
+                })?;
+            }
 
             artifacts.push(new_path.strip_prefix(&tmpdir).unwrap().to_path_buf());
 
@@ -154,7 +203,7 @@ fn upload_test_logs(tmpdir: &Path, test_logs: &[&TestLog], destination: Destinat
         }
     }
 
-    upload_artifacts(&tmpdir, &artifacts, destination)?;
+    upload_artifacts(Some(&tmpdir), &artifacts, mode)?;
 
     Ok(())
 }
@@ -195,8 +244,15 @@ impl BepJsonParser {
     ///   2. Can't decode the line into a JSON object
     /// are propagated.
     pub fn parse(&mut self) -> Result<()> {
-        let mut file = File::open(&self.path)?;
-        file.seek(SeekFrom::Start(self.offset))?;
+        let mut file = File::open(&self.path)
+            .with_context(|| format!("Failed to open file {}", self.path.display()))?;
+        file.seek(SeekFrom::Start(self.offset)).with_context(|| {
+            format!(
+                "Failed to seek file {} to offset {}",
+                self.path.display(),
+                self.offset
+            )
+        })?;
 
         let mut reader = BufReader::new(file);
         loop {
@@ -213,40 +269,8 @@ impl BepJsonParser {
                     if build_event.is_last_message() {
                         self.done = true;
                         return Ok(());
-                    }
-
-                    if build_event.is_test_summary() {
-                        let test_target = build_event
-                            .get("id.testSummary.label")
-                            .and_then(|v| v.as_str())
-                            .unwrap_or("")
-                            .to_string();
-                        let test_status = build_event
-                            .get("testSummary.overallStatus")
-                            .and_then(|v| v.as_str())
-                            .unwrap_or("")
-                            .to_string();
-                        let failed_outputs = build_event
-                            .get("testSummary.failed")
-                            .and_then(|v| v.as_array())
-                            .cloned()
-                            .unwrap_or(vec![]);
-                        let test_logs: Vec<_> = failed_outputs
-                            .into_iter()
-                            .map(|output| {
-                                output
-                                    .get("uri")
-                                    .and_then(|v| v.as_str())
-                                    .unwrap_or("")
-                                    .to_string()
-                            })
-                            .collect();
-                        let test_log = TestLog {
-                            target: test_target,
-                            status: test_status,
-                            paths: test_logs,
-                        };
-                        self.test_logs.push(test_log);
+                    } else if build_event.is_test_summary() {
+                        self.on_test_summary(&build_event);
                     }
                 }
                 Err(error) => {
@@ -259,6 +283,50 @@ impl BepJsonParser {
                 }
             }
         }
+    }
+
+    fn on_test_summary(&mut self, build_event: &BuildEvent) {
+        let test_target = build_event
+            .get("id.testSummary.label")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let test_status = build_event
+            .get("testSummary.overallStatus")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let failed_outputs = build_event
+            .get("testSummary.failed")
+            .and_then(|v| v.as_array())
+            .cloned()
+            .unwrap_or(vec![]);
+        let test_logs: Vec<_> = failed_outputs
+            .into_iter()
+            .map(|output| {
+                output
+                    .get("uri")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string()
+            })
+            .collect();
+        let test_log = TestLog {
+            target: test_target,
+            status: test_status,
+            paths: test_logs,
+        };
+        self.test_logs.push(test_log);
+    }
+
+    pub fn has_test_status(&self, status: &str) -> bool {
+        for test_log in self.test_logs.iter() {
+            if test_log.status == status {
+                return true;
+            }
+        }
+
+        false
     }
 }
 
