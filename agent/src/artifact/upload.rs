@@ -7,7 +7,7 @@ use std::{
     path::{Path, PathBuf, MAIN_SEPARATOR},
     process,
     thread::sleep,
-    time::Duration,
+    time::{Duration, SystemTime},
 };
 use tracing::warn;
 
@@ -21,7 +21,7 @@ pub enum Mode {
 
 /// Upload artifacts (e.g. test logs) by reading the BEP JSON file.
 ///
-/// The file is read in a loop until "last message" is reached or encountered consective errors.
+/// The file is read in a loop until "last message" is reached, encountered consective errors or timed out.
 pub fn upload(
     build_event_json_file: &Path,
     mode: Mode,
@@ -32,27 +32,41 @@ pub fn upload(
         sleep(delay);
     }
 
-    let tmpdir = make_tmpdir_path(mode != Mode::Dry);
     let status = ["FAILED", "TIMEOUT", "FLAKY"];
     let mut parser = BepJsonParser::new(build_event_json_file);
     let max_retries = 5;
     let mut retries = max_retries;
     let mut test_log_offset = 0;
+    let mut last_offset = 0;
+    let mut last_time = SystemTime::now();
+    let timeout = Duration::from_secs(60);
 
     'parse_loop: loop {
         match parser.parse() {
             Ok(_) => {
-                // If we made progress, reset the retry counter
-                retries = max_retries;
+                if parser.offset == last_offset {
+                    // Didn't make progress, check timeout
+                    if let Ok(diff) = SystemTime::now().duration_since(last_time) {
+                        if diff > timeout {
+                            break 'parse_loop;
+                        }
+                    }
+                } else {
+                    last_offset = parser.offset;
+                    last_time = SystemTime::now();
+                    // We have made progress, reset the retry counter
+                    retries = max_retries;
 
-                let test_logs_to_upload: Vec<_> = parser.test_logs[test_log_offset..]
-                    .iter()
-                    .filter(|test_log| status.contains(&test_log.status.as_str()))
-                    .collect();
-                if let Err(error) = upload_test_logs(&tmpdir, &test_logs_to_upload, mode) {
-                    warn!("{:?}", error);
+                    let test_logs_to_upload: Vec<_> = parser.test_logs[test_log_offset..]
+                        .iter()
+                        .filter(|test_log| status.contains(&test_log.status.as_str()))
+                        .collect();
+                    let local_exec_root = parser.local_exec_root.as_ref().map(|str| Path::new(str));
+                    if let Err(error) = upload_test_logs(local_exec_root, &test_logs_to_upload, mode) {
+                        warn!("{:?}", error);
+                    }
+                    test_log_offset = parser.test_logs.len();
                 }
-                test_log_offset = parser.test_logs.len();
 
                 if parser.done {
                     break 'parse_loop;
@@ -130,6 +144,7 @@ fn upload_artifacts<P: AsRef<Path>>(cwd: Option<&Path>, artifacts: &[P], mode: M
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_label_to_path(tmpdir: &Path, label: &str, attempt: i32) -> PathBuf {
     // replace '/' and ':' with path separator
     let path: String = label
@@ -151,65 +166,53 @@ fn test_label_to_path(tmpdir: &Path, label: &str, attempt: i32) -> PathBuf {
     tmpdir.join(&path)
 }
 
-fn make_tmpdir_path(should_create_dir_all: bool) -> PathBuf {
+#[allow(dead_code)]
+fn make_tmpdir_path(should_create_dir_all: bool) -> Result<PathBuf> {
     let base = env::temp_dir();
     loop {
         let i: u32 = rand::random();
         let tmpdir = base.join(format!("bazelci-agent-{}", i));
         if !tmpdir.exists() {
             if should_create_dir_all {
-                fs::create_dir_all(&tmpdir);
+                fs::create_dir_all(&tmpdir)?;
             }
-            return tmpdir;
+            return Ok(tmpdir);
         }
     }
 }
 
-fn upload_test_logs(tmpdir: &Path, test_logs: &[&TestLog], mode: Mode) -> Result<()> {
+fn upload_test_logs(local_exec_root: Option<&Path>, test_logs: &[&TestLog], mode: Mode) -> Result<()> {
     if test_logs.is_empty() {
         return Ok(());
     }
 
     let mut artifacts = Vec::new();
-    // Rename the test.log files to the target that created them
-    // so that it's easy to associate test.log and target.
     for test_log in test_logs.iter() {
-        let mut attempt = 0;
-        if test_log.paths.len() > 1 {
-            attempt = 1;
-        }
-
         const FILE_PROTOCOL: &'static str = "file://";
         for path in &test_log.paths {
             if !path.starts_with(FILE_PROTOCOL) {
-                warn!("Failed to upload file {}", path);
+                warn!("Failed to upload test log {}: not a local file", path);
                 continue;
             }
-            let path = &path[FILE_PROTOCOL.len()..];
-            let new_path = test_label_to_path(&tmpdir, &test_log.target, attempt);
-
-            if mode != Mode::Dry {
-                fs::create_dir_all(new_path.parent().unwrap_or(&new_path)).with_context(|| {
-                    format!("Failed to create directories for {}", new_path.display())
-                })?;
-                fs::copy(path, &new_path).with_context(|| {
-                    format!("Failed to copy file {} to {}", path, new_path.display())
-                })?;
+            let path = Path::new(&path[FILE_PROTOCOL.len()..]);
+            if let Some(local_exec_root) = local_exec_root {
+                if let Ok(relative_path) = path.strip_prefix(local_exec_root) {
+                    artifacts.push(relative_path.to_path_buf());
+                } else {
+                    artifacts.push(path.to_path_buf());
+                }
+            } else {
+                artifacts.push(path.to_path_buf());
             }
-
-            artifacts.push(new_path.strip_prefix(&tmpdir).unwrap().to_path_buf());
-
-            attempt += 1
         }
     }
 
-    upload_artifacts(Some(&tmpdir), &artifacts, mode)?;
+    upload_artifacts(local_exec_root, &artifacts, mode)?;
 
     Ok(())
 }
 
 struct TestLog {
-    target: String,
     status: String,
     paths: Vec<String>,
 }
@@ -222,6 +225,7 @@ struct BepJsonParser {
     buf: String,
 
     test_logs: Vec<TestLog>,
+    local_exec_root: Option<String>,
 }
 
 impl BepJsonParser {
@@ -234,6 +238,7 @@ impl BepJsonParser {
             buf: String::new(),
 
             test_logs: Vec::new(),
+            local_exec_root: None,
         }
     }
 
@@ -269,6 +274,8 @@ impl BepJsonParser {
                     if build_event.is_last_message() {
                         self.done = true;
                         return Ok(());
+                    } else if build_event.is_workspace() {
+                        self.on_workspace(&build_event);
                     } else if build_event.is_test_summary() {
                         self.on_test_summary(&build_event);
                     }
@@ -285,12 +292,14 @@ impl BepJsonParser {
         }
     }
 
-    fn on_test_summary(&mut self, build_event: &BuildEvent) {
-        let test_target = build_event
-            .get("id.testSummary.label")
+    fn on_workspace(&mut self, build_event: &BuildEvent) {
+        self.local_exec_root = build_event
+            .get("workspaceInfo.localExecRoot")
             .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .to_string();
+            .map(|str| str.to_string());
+    }
+
+    fn on_test_summary(&mut self, build_event: &BuildEvent) {
         let test_status = build_event
             .get("testSummary.overallStatus")
             .and_then(|v| v.as_str())
@@ -312,7 +321,6 @@ impl BepJsonParser {
             })
             .collect();
         let test_log = TestLog {
-            target: test_target,
             status: test_status,
             paths: test_logs,
         };
@@ -346,6 +354,10 @@ impl BuildEvent {
 
     pub fn is_test_summary(&self) -> bool {
         self.get("id.testSummary").is_some()
+    }
+
+    pub fn is_workspace(&self) -> bool {
+        self.get("id.workspace").is_some()
     }
 
     pub fn is_last_message(&self) -> bool {
