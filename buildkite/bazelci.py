@@ -992,7 +992,7 @@ def execute_commands(
     platform,
     git_repository,
     git_commit,
-    git_repo_location,
+    repo_location,
     use_bazel_at_commit,
     use_but,
     save_but,
@@ -1039,8 +1039,8 @@ def execute_commands(
         os.environ["BAZELISK_USER_AGENT"] = "Bazelisk/BazelCI"
         test_env_vars.append("BAZELISK_USER_AGENT")
 
-        if git_repo_location:
-            os.chdir(git_repo_location)
+        if repo_location:
+            os.chdir(repo_location)
         elif git_repository:
             clone_git_repository(git_repository, platform, git_commit)
 
@@ -3389,7 +3389,7 @@ def main(argv=None):
         "--git_commit", type=str, help="Reset the git repository to this commit after cloning it"
     )
     runner.add_argument(
-        "--git_repo_location",
+        "--repo_location",
         type=str,
         help="Use an existing repository instead of cloning from github",
     )
@@ -3469,7 +3469,7 @@ def main(argv=None):
                 platform=platform,
                 git_repository=args.git_repository,
                 git_commit=args.git_commit,
-                git_repo_location=args.git_repo_location,
+                repo_location=args.repo_location,
                 use_bazel_at_commit=args.use_bazel_at_commit,
                 use_but=args.use_but,
                 save_but=args.save_but,
