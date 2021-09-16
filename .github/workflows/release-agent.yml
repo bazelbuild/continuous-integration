@@ -86,6 +86,10 @@ jobs:
         override: true
         target: ${{ matrix.target }}
 
+    - name: Test release binary
+      working-directory: agent
+      run: cargo test --verbose --release --target ${{ matrix.target }}
+
     - name: Build release binary
       working-directory: agent
       run: cargo build --verbose --release --target ${{ matrix.target }}
