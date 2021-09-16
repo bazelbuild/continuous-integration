@@ -8,8 +8,6 @@ use bazelci_agent::artifact::upload;
 arg_enum! {
     #[allow(non_camel_case_types)]
     enum UploadMode {
-        // Don't upload to any place. (For debug purpose)
-        dry,
         // Upload as Buildkite's artifacts
         buildkite,
     }
@@ -21,13 +19,16 @@ enum ArtifactCommand {
     /// Upload artifacts (e.g. test logs for failed tests) from Bazel CI tasks
     #[structopt(rename_all = "snake")]
     Upload {
-        // Upload various files for debug purpose
+        /// Don't actually upload files for debug purpose
+        #[structopt(long)]
+        dry: bool,
+        /// Upload various files for debug purpose
         #[structopt(long)]
         debug: bool,
         /// The file contains the JSON serialisation of the build event protocol.
         /// The agent "watches" this file until "last message" encountered
         #[structopt(long, parse(from_os_str))]
-        build_event_json_file: PathBuf,
+        build_event_json_file: Option<PathBuf>,
         /// The mode the artifacts should be uploaded to
         #[structopt(long, possible_values = &UploadMode::variants(), case_insensitive = true)]
         mode: Option<UploadMode>,
@@ -55,6 +56,7 @@ fn main() -> Result<()> {
     match cmd {
         Command::Artifact(cmd) => match cmd {
             ArtifactCommand::Upload {
+                dry,
                 debug,
                 build_event_json_file,
                 mode,
@@ -62,13 +64,13 @@ fn main() -> Result<()> {
                 monitor_flaky_tests,
             } => {
                 let mode = match mode {
-                    Some(UploadMode::dry) => upload::Mode::Dry,
                     Some(UploadMode::buildkite) => upload::Mode::Buildkite,
-                    None => upload::Mode::Dry,
+                    None => upload::Mode::Buildkite,
                 };
                 upload::upload(
+                    dry,
                     debug,
-                    &build_event_json_file,
+                    build_event_json_file.as_ref().map(|p| p.as_path()),
                     mode,
                     delay.map(|secs| Duration::from_secs(secs)),
                     monitor_flaky_tests,

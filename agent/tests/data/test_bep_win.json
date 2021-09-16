@@ -1,0 +1,3 @@
+{"id":{"workspace":{}},"workspaceInfo":{"localExecRoot":"C:/b/vajal562/execroot/io_bazel"}}
+{"id":{"testSummary":{"label":"//src/test/shell/bazel:resource_compiler_toolchain_test","configuration":{"id":"8d2a4b7b4d6c17e5b6c4a124717b04f611b2f08879ed37d414f7c5fdc0d1316f"}}},"testSummary":{"totalRunCount":3,"failed":[{"uri":"file:///C:/b/vajal562/execroot/io_bazel/bazel-out/x64_windows-fastbuild/testlogs/src/test/shell/bazel/resource_compiler_toolchain_test/test.log"}],"overallStatus":"FAILED","firstStartTimeMillis":"1631772381437","lastStopTimeMillis":"1631772391388","totalRunDurationMillis":"9951","runCount":1}}
+{"id":{"progress": {}},"lastMessage":true}
