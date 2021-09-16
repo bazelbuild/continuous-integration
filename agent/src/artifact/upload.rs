@@ -109,9 +109,20 @@ fn execute_command(program: &str, args: &[&str], cwd: Option<&Path>) -> Result<(
     }
     command.args(args);
 
-    command
+    println!("{} {}", program, args.join(" "));
+
+    let status = command
         .status()
         .with_context(|| format!("Failed to execute command `{} {}`", program, args.join(" ")))?;
+
+    if !status.success() {
+        return Err(anyhow!(
+            "Failed to execute command `{} {}`: exit status {}",
+            program,
+            args.join(" "),
+            status
+        ));
+    }
 
     Ok(())
 }
