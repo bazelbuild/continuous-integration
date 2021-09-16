@@ -3,7 +3,7 @@ use clap::arg_enum;
 use std::{path::PathBuf, time::Duration};
 use structopt::StructOpt;
 
-use bazelci_agent::artifact::upload::{self, upload};
+use bazelci_agent::artifact::upload;
 
 arg_enum! {
     #[allow(non_camel_case_types)]
@@ -21,6 +21,9 @@ enum ArtifactCommand {
     /// Upload artifacts (e.g. test logs for failed tests) from Bazel CI tasks
     #[structopt(rename_all = "snake")]
     Upload {
+        // Upload various files for debug purpose
+        #[structopt(long)]
+        debug: bool,
         /// The file contains the JSON serialisation of the build event protocol.
         /// The agent "watches" this file until "last message" encountered
         #[structopt(long, parse(from_os_str))]
@@ -52,6 +55,7 @@ fn main() -> Result<()> {
     match cmd {
         Command::Artifact(cmd) => match cmd {
             ArtifactCommand::Upload {
+                debug,
                 build_event_json_file,
                 mode,
                 delay,
@@ -62,7 +66,8 @@ fn main() -> Result<()> {
                     Some(UploadMode::buildkite) => upload::Mode::Buildkite,
                     None => upload::Mode::Dry,
                 };
-                upload(
+                upload::upload(
+                    debug,
                     &build_event_json_file,
                     mode,
                     delay.map(|secs| Duration::from_secs(secs)),

@@ -23,6 +23,7 @@ pub enum Mode {
 ///
 /// The file is read in a loop until "last message" is reached, encountered consective errors or timed out.
 pub fn upload(
+    debug: bool,
     build_event_json_file: &Path,
     mode: Mode,
     delay: Option<Duration>,
@@ -89,7 +90,9 @@ pub fn upload(
         sleep(Duration::from_secs(1));
     }
 
-    if monitor_flaky_tests && parser.has_overall_test_status("FLAKY") {
+    let should_upload_bep_json_file =
+        debug || (monitor_flaky_tests && parser.has_overall_test_status("FLAKY"));
+    if should_upload_bep_json_file {
         if let Err(error) = upload_bep_json_file(mode, build_event_json_file) {
             error!("{:?}", error);
         }
