@@ -53,7 +53,7 @@ THIS_IS_SPARTA = True
 
 CLOUD_PROJECT = "bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"
 
-GITHUB_BRANCH = {"bazel": "master", "bazel-trusted": "master", "bazel-testing": "pcloudy-bcr-test"}[
+GITHUB_BRANCH = {"bazel": "master", "bazel-trusted": "master", "bazel-testing": "testing"}[
     BUILDKITE_ORG
 ]
 
@@ -1028,8 +1028,8 @@ def execute_commands(
     tmpdir = tempfile.mkdtemp()
     sc_process = None
     try:
-        # if platform == "macos" or platform == "macos_arm64":
-            # activate_xcode(task_config)
+        if platform == "macos" or platform == "macos_arm64":
+            activate_xcode(task_config)
 
         # If the CI worker runs Bazelisk, we need to forward all required env variables to the test.
         # Otherwise any integration test that invokes Bazel (=Bazelisk in this case) will fail.

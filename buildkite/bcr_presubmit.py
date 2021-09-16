@@ -26,6 +26,7 @@ import pathlib
 import re
 import sys
 import subprocess
+import time
 import yaml
 
 import bazelci
@@ -35,10 +36,10 @@ BCR_REPO_DIR = pathlib.Path(os.getcwd())
 BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
 
 SCRIPT_URL = {
-    "bazel-testing": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/pcloudy-bcr-test/buildkite/bcr_presubmit.py",
+    "bazel-testing": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bcr_presubmit.py",
     "bazel-trusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bcr_presubmit.py",
     "bazel": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bcr_presubmit.py",
-}[BUILDKITE_ORG]
+}[BUILDKITE_ORG] + "?{}".format(int(time.time()))
 
 
 def fetch_bcr_presubmit_py_command():
