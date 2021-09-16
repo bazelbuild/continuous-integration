@@ -74,7 +74,7 @@ def get_tasks(project_name):
 
 
 def test_with_bazel_at_commit(
-    project_name, task_name, git_repo_location, bazel_commit, needs_clean, repeat_times
+    project_name, task_name, repo_location, bazel_commit, needs_clean, repeat_times
 ):
     http_config = bazelci.DOWNSTREAM_PROJECTS[project_name]["http_config"]
     for i in range(1, repeat_times + 1):
@@ -86,7 +86,7 @@ def test_with_bazel_at_commit(
                     "runner",
                     "--task=" + task_name,
                     "--http_config=" + http_config,
-                    "--git_repo_location=" + git_repo_location,
+                    "--repo_location=" + repo_location,
                     "--use_bazel_at_commit=" + bazel_commit,
                 ]
                 + (["--needs_clean"] if needs_clean else [])
@@ -110,7 +110,7 @@ def clone_git_repository(project_name, task_name):
 
 
 def start_bisecting(
-    project_name, task_name, git_repo_location, commits_list, needs_clean, repeat_times
+    project_name, task_name, repo_location, commits_list, needs_clean, repeat_times
 ):
     left = 0
     right = len(commits_list)
@@ -122,7 +122,7 @@ def start_bisecting(
         for i in range(left, right):
             bazelci.eprint(commits_list[i] + "\n")
         if test_with_bazel_at_commit(
-            project_name, task_name, git_repo_location, mid_commit, needs_clean, repeat_times
+            project_name, task_name, repo_location, mid_commit, needs_clean, repeat_times
         ):
             bazelci.print_collapsed_group(":bazel: Succeeded at " + mid_commit)
             left = mid + 1
@@ -236,12 +236,12 @@ def main(argv=None):
             repeat_times=repeat_times,
         )
     elif args.subparsers_name == "runner":
-        git_repo_location = clone_git_repository(args.project_name, args.task_name)
+        repo_location = clone_git_repository(args.project_name, args.task_name)
         bazelci.print_collapsed_group("Check good bazel commit " + args.good_bazel_commit)
         if not test_with_bazel_at_commit(
             project_name=args.project_name,
             task_name=args.task_name,
-            git_repo_location=git_repo_location,
+            repo_location=repo_location,
             bazel_commit=args.good_bazel_commit,
             needs_clean=args.needs_clean,
             repeat_times=args.repeat_times,
@@ -253,7 +253,7 @@ def main(argv=None):
         start_bisecting(
             project_name=args.project_name,
             task_name=args.task_name,
-            git_repo_location=git_repo_location,
+            repo_location=repo_location,
             commits_list=get_bazel_commits_between(args.good_bazel_commit, args.bad_bazel_commit),
             needs_clean=args.needs_clean,
             repeat_times=args.repeat_times,
