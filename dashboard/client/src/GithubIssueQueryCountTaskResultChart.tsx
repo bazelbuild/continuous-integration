@@ -42,6 +42,7 @@ export default function GithubIssueQueryCountTaskResultChart({
               connectNulls
               key={result.id}
               type="monotone"
+              isAnimationActive={false}
               dot={false}
               data={result.items}
               dataKey="count"
