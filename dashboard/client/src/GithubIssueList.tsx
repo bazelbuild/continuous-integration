@@ -1007,6 +1007,7 @@ export default function GithubIssueList(props: {
     repo: params.repo,
     status: "TO_BE_REVIEWED",
     isPullRequest: params.isPullRequest,
+    actionOwner: params.actionOwner,
   });
   const needTriageCount = useGithubIssueList({
     owner: params.owner,
