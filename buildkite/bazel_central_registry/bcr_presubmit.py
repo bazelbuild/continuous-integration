@@ -17,7 +17,7 @@
 # pylint: disable=missing-function-docstring
 # pylint: disable=unspecified-encoding
 # pylint: disable=invalid-name
-"""The CI script for Bazel Central Registry."""
+"""The CI script for Bazel Central Registry Presubmit."""
 
 
 import argparse
@@ -36,9 +36,9 @@ BCR_REPO_DIR = pathlib.Path(os.getcwd())
 BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
 
 SCRIPT_URL = {
-    "bazel-testing": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bcr_presubmit.py",
-    "bazel-trusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bcr_presubmit.py",
-    "bazel": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bcr_presubmit.py",
+    "bazel-testing": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazel-central-registry/bcr_presubmit.py",
+    "bazel-trusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py",
+    "bazel": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py",
 }[BUILDKITE_ORG] + "?{}".format(int(time.time()))
 
 
