@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { RepoIcon } from "@primer/octicons-react";
 import dynamic from "next/dynamic";
 import {
@@ -22,6 +22,10 @@ import {
   Theme,
   Toolbar,
   Typography,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
 } from "@material-ui/core";
 import NextLink from "next/link";
 
@@ -88,6 +92,39 @@ function RepoList() {
   return <List>{data.map((repo) => RepoListItem(repo))}</List>;
 }
 
+function GithubIssueQueryResultCard({title, queryIds}: {title: string, queryIds: Array<string>}) {
+  const [days, setDays] = useState(30)
+  return (
+    <Card>
+      <CardHeader
+        title={title}
+        titleTypographyProps={{ variant: "body1" }}
+        action={
+          <FormControl fullWidth>
+            <Select
+              id="select"
+              value={days}
+              autoWidth
+              onChange={(event) => setDays(event.target.value as number)}
+            >
+              <MenuItem value={30}>past month</MenuItem>
+              <MenuItem value={90}>past 3 months</MenuItem>
+              <MenuItem value={180}>past 6 months</MenuItem>
+              <MenuItem value={360}>past 12 months</MenuItem>
+            </Select>
+          </FormControl>
+        }
+      />
+      <CardContent>
+        <DynamicGithubIssueQueryCountTaskResultChart
+          days={days}
+          queryIds={queryIds}
+        />
+      </CardContent>
+    </Card>
+  )
+}
+
 export interface RepoDashboardProps {
   owner: string;
   repo: string;
@@ -136,30 +173,10 @@ export default function RepoDashboard({ owner, repo }: RepoDashboardProps) {
             {owner === "bazelbuild" && repo === "bazel" && (
               <>
                 <Grid item xs={12} md={6} xl={4}>
-                  <Card>
-                    <CardHeader
-                      title="Unreviewed Issues"
-                      titleTypographyProps={{ variant: "body1" }}
-                    />
-                    <CardContent>
-                      <DynamicGithubIssueQueryCountTaskResultChart
-                        queryIds={["unreviewed"]}
-                      />
-                    </CardContent>
-                  </Card>
+                  <GithubIssueQueryResultCard title="Unreviewed Issues" queryIds={["unreviewed"]}/>
                 </Grid>
                 <Grid item xs={12} md={6} xl={4}>
-                  <Card>
-                    <CardHeader
-                      title="Untriaged Issues"
-                      titleTypographyProps={{ variant: "body1" }}
-                    />
-                    <CardContent>
-                      <DynamicGithubIssueQueryCountTaskResultChart
-                        queryIds={["total-untriaged"]}
-                      />
-                    </CardContent>
-                  </Card>
+                  <GithubIssueQueryResultCard title="Untriaged Issues" queryIds={["total-untriaged"]}/>
                 </Grid>
               </>
             )}

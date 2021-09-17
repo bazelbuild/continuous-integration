@@ -47,10 +47,11 @@ public class GithubIssueQueryCountTaskRestController {
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
       @PathVariable("queryId") String queryId,
-      @RequestParam("period") Period period) {
+      @RequestParam("period") Period period,
+      @RequestParam(name = "amount", defaultValue = "30") Integer amount) {
     Instant now = Instant.now();
     Instant to = period.prev(now, 1);
-    Instant from = period.prev(to, 29);
+    Instant from = period.prev(to, amount);
 
     return githubIssueQueryRepo
         .findOne(owner, repo, queryId)
@@ -105,8 +106,9 @@ public class GithubIssueQueryCountTaskRestController {
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
       @RequestParam("period") Period period,
-      @RequestParam("queryId") List<String> queryIds) {
+      @RequestParam("queryId") List<String> queryIds,
+      @RequestParam(name = "amount", defaultValue = "30") Integer amount) {
     return Flowable.fromIterable(queryIds)
-        .flatMapMaybe(queryId -> fetchCountResult(owner, repo, queryId, period));
+        .flatMapMaybe(queryId -> fetchCountResult(owner, repo, queryId, period, amount));
   }
 }

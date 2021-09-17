@@ -16,9 +16,10 @@ export function useGithubIssueQueryCountTaskResult(
   owner: string,
   repo: string,
   queryIds: Array<string>,
-  period: string
+  period: string,
+  amount: number,
 ) {
-  let url = `/api/github/${owner}/${repo}/search/count?period=${period}`;
+  let url = `/api/github/${owner}/${repo}/search/count?period=${period}&amount=${amount}`;
   for (let queryId of queryIds) {
     url = url + "&queryId=" + queryId;
   }

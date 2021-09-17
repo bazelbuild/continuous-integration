@@ -12,16 +12,19 @@ import { DateTime } from "luxon";
 
 export interface GithubIssueQueryCountTaskResultChartProps {
   queryIds: Array<string>;
+  days: number
 }
 
 export default function GithubIssueQueryCountTaskResultChart({
   queryIds,
+  days,
 }: GithubIssueQueryCountTaskResultChartProps) {
   const { data, loading, error } = useGithubIssueQueryCountTaskResult(
     "bazelbuild",
     "bazel",
     queryIds,
-    "DAILY"
+    "DAILY",
+    days
   );
   if (loading) {
     return <span>Loading</span>;
@@ -39,6 +42,7 @@ export default function GithubIssueQueryCountTaskResultChart({
               connectNulls
               key={result.id}
               type="monotone"
+              dot={false}
               data={result.items}
               dataKey="count"
               name={result.name}
