@@ -23,7 +23,6 @@ import {
   Toolbar,
   Typography,
   FormControl,
-  InputLabel,
   MenuItem,
   Select,
 } from "@material-ui/core";
