@@ -158,7 +158,7 @@ def mirror_archive(url, integrity):
 
 
 def sync_bcr_content():
-    print_collapsed_group(":gcloud: Sync BCR content")
+    print_expanded_group(":gcloud: Sync BCR content")
     subprocess.check_output(
         ["gsutil", "-h", "Cache-Control:no-cache", "cp", "./bazel_registry.json", BCR_BUCKET]
     )
@@ -168,7 +168,7 @@ def sync_bcr_content():
 
 
 def update_last_synced_commit(current_commit):
-    print_collapsed_group(":gcloud: Update last synced commit")
+    print_expanded_group(":gcloud: Update last synced commit")
     subprocess.check_output(
         "echo %s | gsutil -h 'Cache-Control: no-cache' cp - %s" % (current_commit, LAST_SYNCED_COMMIT_URL),
         shell=True,
@@ -183,7 +183,7 @@ def main():
         eprint("Current commit is already synced.")
         return 0
     archive_urls = parse_new_archive_urls(last_synced_commit)
-    print_collapsed_group(":gcloud: Mirror archives")
+    print_expanded_group(":gcloud: Mirror archives")
     for url, integrity in archive_urls.items():
         mirror_archive(url, integrity)
     sync_bcr_content()
