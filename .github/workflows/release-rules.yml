@@ -1,0 +1,53 @@
+name: release-rules
+on:
+  push: 
+    tags:
+    - "rules-[0-9]+.[0-9]+.[0-9]+"
+jobs:
+  create-release:
+    name: create-release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.release.outputs.upload_url }}
+      rules_version: ${{ env.RULES_VERSION }}
+    steps:
+      - name: Get the release version from the tag
+        shell: bash
+        if: env.RULES_VERSION == ''
+        run: |
+          echo "RULES_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          echo "version is: ${{ env.RULES_VERSION }}"
+      - name: Create GitHub release
+        id: release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.RULES_VERSION }}
+          release_name: ${{ env.RULES_VERSION }}
+
+  build-release:
+    name: build-release
+    needs: ['create-release']
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+    - name: Build release asset
+      shell: bash
+      run: |
+        staging="bazelci_${{ needs.create-release.outputs.rules_version }}"
+        cp -r rules "$staging"
+        tar czf "$staging.tar.gz" "$staging"
+        echo "ASSET=$staging.tar.gz" >> $GITHUB_ENV
+    - name: Upload release asset
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: ${{ env.ASSET }}
+        asset_name: ${{ env.ASSET }}
+        asset_content_type: application/octet-stream
