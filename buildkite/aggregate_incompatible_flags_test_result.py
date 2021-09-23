@@ -19,6 +19,7 @@ import collections
 import os
 import re
 import requests
+import subprocess
 import sys
 import threading
 
@@ -391,7 +392,7 @@ def handle_already_flipped_flags(failed_jobs_per_flag, details_per_flag):
     # Process and remove all flags that have already been flipped.
     # Bazelisk may return already flipped flags if a project uses an old Bazel version
     # via its .bazelversion file.
-    current_major_version = bazelci.get_bazel_major_version()
+    current_major_version = get_bazel_major_version()
     failed_jobs_for_new_flags = {}
     details_for_new_flags = {}
 
@@ -410,6 +411,14 @@ def handle_already_flipped_flags(failed_jobs_per_flag, details_per_flag):
             failed_jobs_for_new_flags[flag] = failed_jobs_per_flag[flag]
 
     return failed_jobs_for_new_flags, details_for_new_flags
+
+
+def get_bazel_major_version():
+    # Get bazel major version on CI, eg. 0.21 from "Build label: 0.21.0\n..."
+    output = subprocess.check_output(
+        ["bazel", "--nomaster_bazelrc", "--bazelrc=/dev/null", "version"]
+    ).decode("utf-8")
+    return output.split()[2].rsplit(".", 1)[0]
 
 
 def print_result_info(already_failing_jobs, failed_jobs_per_flag, details_per_flag):
