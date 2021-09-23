@@ -2819,13 +2819,10 @@ def fetch_incompatible_flags():
             incompatible_flags[flag] = ""
         return incompatible_flags
 
-    bazel_major_version = get_bazel_major_version()
-
     output = subprocess.check_output(
         [
             "curl",
-            "https://api.github.com/search/issues?per_page=100&q=repo:bazelbuild/bazel+label:migration-%s"
-            % bazel_major_version,
+            "https://api.github.com/search/issues?per_page=100&q=repo:bazelbuild/bazel+label:incompatible-change+state:open"
         ]
     ).decode("utf-8")
     issue_info = json.loads(output)
@@ -2843,14 +2840,6 @@ def fetch_incompatible_flags():
             )
 
     return incompatible_flags
-
-
-def get_bazel_major_version():
-    # Get bazel major version on CI, eg. 0.21 from "Build label: 0.21.0\n..."
-    output = subprocess.check_output(
-        ["bazel", "--nomaster_bazelrc", "--bazelrc=/dev/null", "version"]
-    ).decode("utf-8")
-    return output.split()[2].rsplit(".", 1)[0]
 
 
 def print_bazel_downstream_pipeline(
