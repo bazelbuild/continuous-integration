@@ -397,7 +397,7 @@ def handle_already_flipped_flags(failed_jobs_per_flag, details_per_flag):
     details_for_new_flags = {}
 
     for flag, details in details_per_flag.items():
-        if details.bazel_version < current_major_version:
+        if not details.bazel_version or details.bazel_version < current_major_version:
             # TOOD(fweikert): maybe display a Buildkite annotation
             bazelci.eprint(
                 "Ignoring {} since it has already been flipped in Bazel {} (latest is {}).".format(
