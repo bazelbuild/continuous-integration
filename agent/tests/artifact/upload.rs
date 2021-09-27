@@ -15,7 +15,7 @@ fn test_logs_uploaded_to_buildkite() -> Result<()> {
     ]);
     cmd.assert()
         .success()
-        .stdout(predicates::str::contains("buildkite-agent artifact upload bazel-out\\x64_windows-fastbuild\\testlogs\\src\\test\\shell\\bazel\\resource_compiler_toolchain_test\\test.log"));
+        .stdout(predicates::str::contains("buildkite-agent artifact upload src\\test\\shell\\bazel\\resource_compiler_toolchain_test\\test.log"));
 
     Ok(())
 }
@@ -33,7 +33,7 @@ fn test_logs_uploaded_to_buildkite() -> Result<()> {
     ]);
     cmd.assert()
         .success()
-        .stdout(predicates::str::contains("buildkite-agent artifact upload bazel-out/darwin-fastbuild/testlogs/src/test/shell/bazel/starlark_repository_test/shard_4_of_6/test_attempts/attempt_1.log"));
+        .stdout(predicates::str::contains("buildkite-agent artifact upload src/test/shell/bazel/starlark_repository_test/shard_4_of_6/test_attempts/attempt_1.log"));
 
     Ok(())
 }
