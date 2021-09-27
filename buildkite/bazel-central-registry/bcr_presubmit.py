@@ -69,7 +69,7 @@ def get_target_modules():
 
     # Get the list of changed files compared to the main branch
     output = subprocess.check_output(
-        ["git", "diff", "main", "--name-only", "--pretty=format:"]
+        ["git", "diff", "main...HEAD", "--name-only", "--pretty=format:"]
     )
     # Matching modules/<name>/<version>/
     for line in output.decode("utf-8").split():
