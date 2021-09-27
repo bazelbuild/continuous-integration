@@ -1,0 +1,123 @@
+# The way this works is the following:
+#
+# The create-release job runs purely to initialize the GitHub release itself
+# and to output upload_url for the following job.
+#
+# The build-release job runs only once create-release is finished. It gets the
+# release upload URL from create-release job outputs, then builds the release
+# executables for each supported platform and attaches them as release assets
+# to the previously created release.
+#
+# The key here is that we create the release only once.
+#
+# Reference:
+# https://eugene-babichenko.github.io/blog/2020/05/09/github-actions-cross-platform-auto-releases/
+
+name: release-agent
+on:
+  push: 
+    # Enable when testing release infrastructure on a branch.
+    # branches:
+    # - test
+    tags:
+    - "agent-[0-9]+.[0-9]+.[0-9]+"
+jobs:
+  create-release:
+    name: create-release
+    runs-on: ubuntu-latest
+    # env:
+      # Set to force version number, e.g., when no tag exists.
+      # AGENT_VERSION: TEST-0.0.0
+    outputs:
+      upload_url: ${{ steps.release.outputs.upload_url }}
+      agent_version: ${{ env.AGENT_VERSION }}
+    steps:
+      - name: Get the release version from the tag
+        shell: bash
+        if: env.AGENT_VERSION == ''
+        run: |
+          # Apparently, this is the right way to get a tag name. Really?
+          #
+          # See: https://github.community/t5/GitHub-Actions/How-to-get-just-the-tag-name/m-p/32167/highlight/true#M1027
+          echo "AGENT_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          echo "version is: ${{ env.AGENT_VERSION }}"
+      - name: Create GitHub release
+        id: release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.AGENT_VERSION }}
+          release_name: ${{ env.AGENT_VERSION }}
+
+  build-release:
+    name: build-release
+    needs: ['create-release']
+    runs-on: ${{ matrix.os }}
+    env:
+      # Emit backtraces on panics.
+      RUST_BACKTRACE: 1
+    strategy:
+      matrix:
+        build: [linux, macos, win-msvc]
+        include:
+        - build: linux
+          os: ubuntu-18.04
+          rust: nightly
+          target: x86_64-unknown-linux-musl
+        - build: macos
+          os: macos-latest
+          rust: nightly
+          target: x86_64-apple-darwin
+        - build: win-msvc
+          os: windows-latest
+          rust: nightly
+          target: x86_64-pc-windows-msvc
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        profile: minimal
+        override: true
+        target: ${{ matrix.target }}
+
+    - name: Test release binary
+      working-directory: agent
+      run: cargo test --verbose --release --target ${{ matrix.target }}
+
+    - name: Build release binary
+      working-directory: agent
+      run: cargo build --verbose --release --target ${{ matrix.target }}
+
+    - name: Strip release binary (linux and macos)
+      if: matrix.build == 'linux' || matrix.build == 'macos'
+      working-directory: agent
+      run: strip "target/${{ matrix.target }}/release/bazelci-agent"
+
+    - name: Build release asset
+      shell: bash
+      run: |
+        staging="bazelci-${{ needs.create-release.outputs.agent_version }}-${{ matrix.target }}"
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          cp "agent/target/${{ matrix.target }}/release/bazelci-agent.exe" "$staging.exe"
+          echo "ASSET=$staging.exe" >> $GITHUB_ENV
+        else
+          cp "agent/target/${{ matrix.target }}/release/bazelci-agent" "$staging"
+          echo "ASSET=$staging" >> $GITHUB_ENV
+        fi
+    - name: Upload release asset
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: ${{ env.ASSET }}
+        asset_name: ${{ env.ASSET }}
+        asset_content_type: application/octet-stream
