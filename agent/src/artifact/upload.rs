@@ -7,7 +7,7 @@ use std::{
     path::{Path, PathBuf, MAIN_SEPARATOR},
     process,
     thread::sleep,
-    time::{Duration, SystemTime},
+    time::Duration,
 };
 use tracing::error;
 
@@ -19,7 +19,7 @@ pub enum Mode {
 
 /// Upload artifacts (e.g. test logs) by reading the BEP JSON file.
 ///
-/// The file is read in a loop until "last message" is reached, encountered consective errors or timed out.
+/// The file is read in a loop until "last message" is reached, encountered consective errors.
 pub fn upload(
     dry: bool,
     debug: bool,
@@ -59,24 +59,14 @@ fn watch_bep_json_file(
     let mut retries = max_retries;
     let mut test_result_offset = 0;
     let mut last_offset = 0;
-    let mut last_time = SystemTime::now();
-    let timeout = Duration::from_secs(60);
 
     'parse_loop: loop {
         match parser.parse() {
             Ok(_) => {
-                if parser.offset == last_offset {
-                    // Didn't make progress, check timeout
-                    if let Ok(diff) = SystemTime::now().duration_since(last_time) {
-                        if diff > timeout {
-                            break 'parse_loop;
-                        }
-                    }
-                } else {
-                    last_offset = parser.offset;
-                    last_time = SystemTime::now();
+                if parser.offset != last_offset {
                     // We have made progress, reset the retry counter
                     retries = max_retries;
+                    last_offset = parser.offset;
 
                     let local_exec_root = parser.local_exec_root.as_ref().map(|str| Path::new(str));
                     for test_summary in parser.test_summaries[test_result_offset..]

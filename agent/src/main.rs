@@ -29,7 +29,7 @@ enum ArtifactCommand {
         /// The agent "watches" this file until "last message" encountered
         #[structopt(long, parse(from_os_str))]
         build_event_json_file: Option<PathBuf>,
-        /// The mode the artifacts should be uploaded to
+        /// The desitnation the artifacts should be uploaded to
         #[structopt(long, possible_values = &UploadMode::variants(), case_insensitive = true)]
         mode: Option<UploadMode>,
         /// The seconds to wait before watching the BEP file

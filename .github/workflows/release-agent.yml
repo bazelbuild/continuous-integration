@@ -17,6 +17,8 @@ name: release-agent
 on:
   push: 
     # Enable when testing release infrastructure on a branch.
+    # branches:
+    # - test
     tags:
     - "agent-[0-9]+.[0-9]+.[0-9]+"
 jobs:
