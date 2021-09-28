@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 /// Splits [`Path`] into two parts separated by `target`. The `target` itself is included
 /// in the end of first part.
-/// 
+///
 /// ```
 /// # use std::path::Path;
 /// # use bazelci_agent::utils::split_path_inclusive;
@@ -27,9 +27,8 @@ pub fn split_path_inclusive(path: &Path, target: &str) -> Option<(PathBuf, PathB
     }
 
     if found {
-    let second: PathBuf = iter.collect();
-    Some((first, second))
-
+        let second: PathBuf = iter.collect();
+        Some((first, second))
     } else {
         None
     }
