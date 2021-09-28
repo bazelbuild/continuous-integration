@@ -11,6 +11,8 @@ use std::{
 };
 use tracing::error;
 
+use crate::utils::split_path_inclusive;
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Mode {
     // Upload as Buildkite's artifacts
@@ -217,6 +219,11 @@ fn upload_test_log(
     mode: Mode,
 ) -> Result<()> {
     let path = uri_to_file_path(test_log)?;
+
+    if let Some((first, second)) = split_path_inclusive(&path, "testlogs") {
+        return upload_artifact(dry, Some(&first), &second, mode);
+    }
+
     let artifact = if let Some(local_exec_root) = local_exec_root {
         if let Ok(relative_path) = path.strip_prefix(local_exec_root) {
             relative_path
