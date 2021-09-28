@@ -27,7 +27,6 @@ import os.path
 import random
 import re
 import requests
-from shutil import copyfile
 import shutil
 import stat
 import subprocess
@@ -39,8 +38,6 @@ import urllib.error
 import urllib.request
 import uuid
 import yaml
-from urllib.request import url2pathname
-from urllib.parse import urlparse
 
 # Initialize the random number generator.
 random.seed()
@@ -1162,9 +1159,8 @@ def execute_commands(
                 test_flags.append("--sandbox_writable_path={}".format(bazelisk_cache_dir))
 
             test_bep_file = os.path.join(tmpdir, "test_bep.json")
-            stop_request = threading.Event()
             upload_thread = threading.Thread(
-                target=upload_test_logs_from_bep, args=(test_bep_file, tmpdir, stop_request)
+                target=upload_test_logs_from_bep, args=(test_bep_file, tmpdir, binary_platform, monitor_flaky_tests)
             )
             try:
                 upload_thread.start()
@@ -1179,15 +1175,12 @@ def execute_commands(
                         monitor_flaky_tests,
                         incompatible_flags,
                     )
-                    if monitor_flaky_tests:
-                        upload_bep_logs_for_flaky_tests(test_bep_file)
                 finally:
                     if json_profile_out_test:
                         upload_json_profile(json_profile_out_test, tmpdir)
                     if capture_corrupted_outputs_dir_test:
                         upload_corrupted_outputs(capture_corrupted_outputs_dir_test, tmpdir)
             finally:
-                stop_request.set()
                 upload_thread.join()
 
         if index_targets:
@@ -1309,10 +1302,6 @@ def get_bazelisk_cache_directory(platform):
     return os.path.join(os.environ.get("HOME"), cache_dir, "bazelisk")
 
 
-def tests_with_status(bep_file, status):
-    return set(label for label, _ in test_logs_for_status(bep_file, status=[status]))
-
-
 def start_sauce_connect_proxy(platform, tmpdir):
     print_collapsed_group(":saucelabs: Starting Sauce Connect Proxy")
     os.environ["SAUCE_USERNAME"] = "bazel_rules_webtesting"
@@ -1352,10 +1341,6 @@ def get_release_name_from_branch_name():
 def is_pull_request():
     third_party_repo = os.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
     return len(third_party_repo) > 0
-
-
-def has_flaky_tests(bep_file):
-    return len(test_logs_for_status(bep_file, status=["FLAKY"])) > 0
 
 
 def print_bazel_version_info(bazel_binary, platform):
@@ -1460,6 +1445,22 @@ def download_bazel_nojdk_binary_at_commit(dest_dir, platform, bazel_git_commit):
     path = os.path.join(dest_dir, "bazel_nojdk.exe" if platform == "windows" else "bazel_nojdk")
     return download_binary_at_commit(dest_dir, platform, bazel_git_commit, url, path)
 
+def download_bazelci_agent(dest_dir, platform, version):
+    postfix = ""
+    if platform == "windows":
+        postfix = "x86_64-pc-windows-msvc.exe"
+    elif platform == "macos":
+        postfix = "x86_64-apple-darwin"
+    else:
+        postfix = "x86_64-unknown-linux-musl"
+
+    name = "bazelci-agent-{}-{}".format(version, postfix)
+    url = "https://github.com/bazelbuild/continuous-integration/releases/download/agent-{}/{}".format(version, name)
+    path = os.path.join(dest_dir, "bazelci-agent.exe" if platform == "windows" else "bazelci-agent")
+    execute_command(["curl", "-sSL", url, "-o", path])
+    st = os.stat(path)
+    os.chmod(path, st.st_mode | stat.S_IEXEC)
+    return path
 
 def get_mirror_path(git_repository, platform):
     mirror_root = {
@@ -1996,44 +1997,12 @@ def get_json_profile_flags(out_file):
     ]
 
 
-def upload_bep_logs_for_flaky_tests(test_bep_file):
-    if has_flaky_tests(test_bep_file):
-        build_number = os.getenv("BUILDKITE_BUILD_NUMBER")
-        pipeline_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
-        execute_command(
-            [
-                gsutil_command(),
-                "cp",
-                test_bep_file,
-                FLAKY_TESTS_BUCKET + pipeline_slug + "/" + build_number + ".json",
-            ]
-        )
-
-
-def upload_test_logs_from_bep(bep_file, tmpdir, stop_request):
-    uploaded_targets = set()
-    while True:
-        done = stop_request.isSet()
-        if os.path.exists(bep_file):
-            all_test_logs = test_logs_for_status(bep_file, status=["FAILED", "TIMEOUT", "FLAKY"])
-            test_logs_to_upload = [
-                (target, files) for target, files in all_test_logs if target not in uploaded_targets
-            ]
-
-            if test_logs_to_upload:
-                files_to_upload = rename_test_logs_for_upload(test_logs_to_upload, tmpdir)
-                cwd = os.getcwd()
-                try:
-                    os.chdir(tmpdir)
-                    test_logs = [os.path.relpath(file, tmpdir) for file in files_to_upload]
-                    test_logs = sorted(test_logs)
-                    execute_command(["buildkite-agent", "artifact", "upload", ";".join(test_logs)])
-                finally:
-                    uploaded_targets.update([target for target, _ in test_logs_to_upload])
-                    os.chdir(cwd)
-        if done:
-            break
-        time.sleep(5)
+def upload_test_logs_from_bep(bep_file, tmpdir, binary_platform, monitor_flaky_tests):
+    bazelci_agent_binary = download_bazelci_agent(tmpdir, binary_platform, "0.1.1")
+    execute_command(
+        [bazelci_agent_binary, "artifact", "upload", "--delay=5", "--mode=buildkite", "--build_event_json_file={}".format(bep_file)]
+        + (["--monitor_flaky_tests"] if monitor_flaky_tests else [])
+    )
 
 
 def upload_json_profile(json_profile_path, tmpdir):
@@ -2051,65 +2020,6 @@ def upload_corrupted_outputs(capture_corrupted_outputs_dir, tmpdir):
         ["buildkite-agent", "artifact", "upload", "{}/**/*".format(capture_corrupted_outputs_dir)],
         cwd=tmpdir,
     )
-
-
-def rename_test_logs_for_upload(test_logs, tmpdir):
-    # Rename the test.log files to the target that created them
-    # so that it's easy to associate test.log and target.
-    new_paths = []
-    for label, files in test_logs:
-        attempt = 0
-        if len(files) > 1:
-            attempt = 1
-        for test_log in files:
-            try:
-                new_path = test_label_to_path(tmpdir, label, attempt)
-                os.makedirs(os.path.dirname(new_path), exist_ok=True)
-                copyfile(test_log, new_path)
-                new_paths.append(new_path)
-                attempt += 1
-            except IOError as err:
-                # Log error and ignore.
-                eprint(err)
-    return new_paths
-
-
-def test_label_to_path(tmpdir, label, attempt):
-    # remove leading //
-    path = label.lstrip("/:")
-    path = path.replace("/", os.sep)
-    path = path.replace(":", os.sep)
-    if attempt == 0:
-        path = os.path.join(path, "test.log")
-    else:
-        path = os.path.join(path, "attempt_" + str(attempt) + ".log")
-    return os.path.join(tmpdir, path)
-
-
-def test_logs_for_status(bep_file, status):
-    targets = []
-    with open(bep_file, encoding="utf-8") as f:
-        raw_data = f.read()
-    decoder = json.JSONDecoder()
-
-    pos = 0
-    while pos < len(raw_data):
-        try:
-            bep_obj, size = decoder.raw_decode(raw_data[pos:])
-        except ValueError as e:
-            eprint("JSON decoding error: " + str(e))
-            return targets
-        if "testSummary" in bep_obj:
-            test_target = bep_obj["id"]["testSummary"]["label"]
-            test_status = bep_obj["testSummary"]["overallStatus"]
-            if test_status in status:
-                outputs = bep_obj["testSummary"]["failed"]
-                test_logs = []
-                for output in outputs:
-                    test_logs.append(url2pathname(urlparse(output["uri"]).path))
-                targets.append((test_target, test_logs))
-        pos += size + 1
-    return targets
 
 
 def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True, print_output=True):
