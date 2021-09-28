@@ -43,10 +43,14 @@ jobs:
         override: true
         target: ${{ matrix.target }}
 
-    - name: Cargo Format Check
+    - name: Cargo Build
       working-directory: agent
-      run: cargo fmt -- --check
+      run: cargo build --verbose --release --target ${{ matrix.target }}
 
     - name: Cargo Test
       working-directory: agent
       run: cargo test --verbose --release --target ${{ matrix.target }}
+
+    - name: Cargo Format Check
+      working-directory: agent
+      run: cargo fmt --all -- --check
