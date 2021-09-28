@@ -547,9 +547,9 @@ XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
 XCODE_VERSION_OVERRIDES = {"10.2.1": "10.3", "11.2": "11.2.1", "11.3": "11.3.1"}
 
 ENCRYPTED_SAUCELABS_TOKEN = """
-CiQAry63sOlZtTNtuOT5DAOLkum0rGof+DOweppZY1aOWbat8zwSTQAL7Hu+rgHSOr6P4S1cu4YG
-/I1BHsWaOANqUgFt6ip9/CUGGJ1qggsPGXPrmhSbSPqNAIAkpxYzabQ3mfSIObxeBmhKg2dlILA/
-EDql
+CiQAry63sLRxp4nB1WMbyGZ9b8ma3DIcxEAvpWfV6ajSEwYlToESTQAL7Hu+7qlgyBTwOzAgjqUZ
+yPPX9/HdmYBIUeCkph0CDS9ulhpDlhTapcfhE1w5XtlCPdh/3cYulSx8JeNT9AMgl4JNGeZthkPR
+jLdy
 """.strip()
 
 BUILD_LABEL_PATTERN = re.compile(r"^Build label: (\S+)$", re.MULTILINE)
