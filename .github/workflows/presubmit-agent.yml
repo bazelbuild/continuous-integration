@@ -45,11 +45,11 @@ jobs:
 
     - name: Cargo Build
       working-directory: agent
-      run: cargo build --verbose --release --target ${{ matrix.target }}
+      run: cargo build --verbose --target ${{ matrix.target }}
 
     - name: Cargo Test
       working-directory: agent
-      run: cargo test --verbose --release --target ${{ matrix.target }}
+      run: cargo test --verbose --target ${{ matrix.target }}
 
     - name: Cargo Format Check
       working-directory: agent
