@@ -37,6 +37,7 @@ jobs:
       with:
         toolchain: ${{ matrix.rust }}
         profile: minimal
+        components: rustfmt
         override: true
         target: ${{ matrix.target }}
 
