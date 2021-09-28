@@ -4,12 +4,14 @@ on:
     paths:
       - 'agent/**'
 jobs:
-  check:
+  presubmit:
+    name: Presubmit
     runs-on: ${{ matrix.os }}
     env:
       # Emit backtraces on panics.
       RUST_BACKTRACE: 1
     strategy:
+      fail-fast: false
       matrix:
         build: [linux, macos, win-msvc]
         include:
