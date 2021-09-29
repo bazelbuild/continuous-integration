@@ -29,11 +29,15 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf && 
     python36-requests \
     python36-six \
     rpm-build \
+    sudo \
     unzip \
     which \
     zip \
     && \
     yum clean all
+
+# Allow ALL users to install additional packages
+RUN echo "ALL ALL=NOPASSWD: /usr/bin/yum" >> /etc/sudoers
 
 RUN yum install -y yum-utils && \
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \

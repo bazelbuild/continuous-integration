@@ -42,6 +42,7 @@ RUN apt-get -y update && \
     python3-wheel \
     realpath \
     software-properties-common \
+    sudo \
     unzip \
     wget \
     zip \
@@ -49,6 +50,9 @@ RUN apt-get -y update && \
     && \
     apt-get -y purge apport && \
     rm -rf /var/lib/apt/lists/*
+
+# Allow ALL users to install additional packages
+RUN echo "ALL ALL=NOPASSWD: /usr/bin/apt, /usr/bin/apt-get" >> /etc/sudoers
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-${BUILDARCH}
 
