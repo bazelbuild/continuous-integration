@@ -2,7 +2,7 @@
 steps:
   - command: |-
       curl -sS "https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)" -o bazelci.py
-      python3.6 bazelci.py project_pipeline %{ for flag in flags ~} ${flag} %{ endfor ~} | buildkite-agent pipeline upload
+      python3.6 bazelci.py %{ for flag in flags ~} ${flag} %{ endfor ~} | buildkite-agent pipeline upload
     label: ":pipeline:"
     agents:
       - "queue=default"
