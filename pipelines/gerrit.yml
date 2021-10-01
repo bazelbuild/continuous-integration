@@ -1,6 +1,8 @@
 ---
 platforms:
   ubuntu2004:
+    shell_commands:
+      - "curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash - && sudo apt -y install nodejs && sudo npm install -g npm@latest"
     build_flags:
       - "--host_javabase=@bazel_tools//tools/jdk:remote_jdk11"
       - "--javabase=@bazel_tools//tools/jdk:remote_jdk11"

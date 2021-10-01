@@ -95,12 +95,6 @@ RUN apt-get -y update && \
     apt-get -y install docker-ce && \
     rm -rf /var/lib/apt/lists/*
 
-### Node.js (for Gerrit)
-RUN curl -fsSL https://deb.nodesource.com/setup_14.x | bash - && \
-    apt-get -y install nodejs && \
-    npm install -g npm@latest && \
-    rm -rf /var/lib/apt/lists/*
-
 # Bazelisk
 RUN LATEST_BAZELISK=$(curl -sSI https://github.com/bazelbuild/bazelisk/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
     curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/${LATEST_BAZELISK}/bazelisk-linux-${BUILDARCH} && \
