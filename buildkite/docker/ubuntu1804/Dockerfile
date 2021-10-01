@@ -62,11 +62,9 @@ FROM ubuntu1804-bazel-java11 AS ubuntu1804-java11
 
 ### Install Google Cloud SDK.
 ### https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
-RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
-    echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    curl -L https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
-    apt-get -y update && \
-    apt-get -y install google-cloud-sdk && \
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
+    apt-get update -y && apt-get install google-cloud-sdk -y && \
     rm -rf /var/lib/apt/lists/*
 
 ### Docker (for legacy rbe_autoconfig)
