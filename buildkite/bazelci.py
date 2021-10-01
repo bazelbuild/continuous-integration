@@ -179,12 +179,12 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "Cloud Robotics Core": {
         "git_repository": "https://github.com/googlecloudrobotics/core.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/cloud-robotics-postsubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/cloud-robotics.yml",
         "pipeline_slug": "cloud-robotics-core",
     },
     "Envoy": {
         "git_repository": "https://github.com/envoyproxy/envoy.git",
-        "http_config": "https://raw.githubusercontent.com/envoyproxy/envoy/master/.bazelci/presubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/envoy.yml",
         "pipeline_slug": "envoy",
     },
     "FlatBuffers": {
@@ -195,12 +195,12 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "Flogger": {
         "git_repository": "https://github.com/google/flogger.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/flogger.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/flogger.yml",
         "pipeline_slug": "flogger",
     },
     "Gerrit": {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/gerrit-postsubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/gerrit.yml",
         "pipeline_slug": "gerrit",
         "disabled_reason": "https://github.com/bazelbuild/continuous-integration/issues/1182",
     },
@@ -226,7 +226,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "Protobuf": {
         "git_repository": "https://github.com/google/protobuf.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/protobuf-postsubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/protobuf.yml",
         "pipeline_slug": "protobuf",
         "owned_by_bazel": True,
     },
@@ -238,14 +238,14 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "Subpar": {
         "git_repository": "https://github.com/google/subpar.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/subpar-postsubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/subpar.yml",
         "pipeline_slug": "subpar",
         "owned_by_bazel": True,
         "disabled_reason": "https://github.com/google/subpar/issues/133",
     },
     "TensorFlow": {
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/tensorflow-postsubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/tensorflow.yml",
         "pipeline_slug": "tensorflow",
         "disabled_reason": "https://github.com/bazelbuild/bazel/issues/13811",
     },
@@ -256,7 +256,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "re2": {
         "git_repository": "https://github.com/google/re2.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/re2-postsubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/re2.yml",
         "pipeline_slug": "re2",
     },
     "rules_android": {
