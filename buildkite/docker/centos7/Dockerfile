@@ -1,4 +1,4 @@
-FROM centos:7 as centos7-java8
+FROM centos:7 as centos7
 ARG BUILDARCH
 
 # Install required packages.
@@ -18,7 +18,6 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf && 
     gnupg2 \
     google-cloud-sdk \
     iproute \
-    java-1.8.0-openjdk-devel \
     lcov \
     openssl-perl \
     patch \
@@ -59,8 +58,13 @@ RUN LATEST_BUILDIFIER=$(curl -sSI https://github.com/bazelbuild/buildtools/relea
     chown root:root /usr/local/bin/buildifier && \
     chmod 0755 /usr/local/bin/buildifier
 
-FROM centos7-java8 AS centos7-releaser
+FROM centos7 AS centos7-java8
+RUN yum install -y java-1.8.0-openjdk-devel && yum clean all
 
+FROM centos7 AS centos7-java11
+RUN yum install -y https://cdn.azul.com/zulu/bin/zulu11.52.13-ca-jdk11.0.13-linux.x86_64.rpm && yum clean all
+
+FROM centos7-java11 AS centos7-releaser
 # dpkg-source needs a newer GNU tar version that supports --sort=name.
 RUN pushd /usr/local/src && \
     curl -fsSL http://ftp.gnu.org/gnu/tar/tar-1.34.tar.bz2 | tar xvj && \
