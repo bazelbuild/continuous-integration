@@ -60,20 +60,6 @@ ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-${BUILDARCH}
 
 FROM ubuntu1804-bazel-java11 AS ubuntu1804-java11
 
-### Install required packages.
-RUN apt-get -y update && \
-    echo "Installing packages required by Bazel release process" && \
-    apt-get -y install devscripts pandoc reprepro && \
-    echo "Installing packages required by Swift toolchain" && \
-    apt-get -y install libicu-dev && \
-    echo "Installing packages required by Kythe" && \
-    apt-get -y install bison flex uuid-dev asciidoc graphviz source-highlight && \
-    echo "Installing packages required by upb" && \
-    apt-get -y install libreadline-dev && \
-    echo "Installing packages required by rules_haskell" && \
-    apt-get -y install libgmp-dev && \
-    rm -rf /var/lib/apt/lists/*
-
 ### Install Google Cloud SDK.
 ### https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
 RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \

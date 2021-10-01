@@ -59,20 +59,6 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-${BUILDARCH}
 
 FROM ubuntu1604-bazel-java8 AS ubuntu1604-java8
 
-### Install required packages.
-RUN apt-get -y update && \
-    echo "Installing packages required by Bazel release process" && \
-    apt-get -y install devscripts pandoc reprepro && \
-    echo "Installing packages required by Swift toolchain" && \
-    apt-get -y install libicu-dev && \
-    echo "Installing packages required by Kythe" && \
-    apt-get -y install bison flex uuid-dev asciidoc graphviz source-highlight && \
-    echo "Installing packages required by upb" && \
-    apt-get -y install libreadline-dev && \
-    echo "Installing packages required by rules_haskell" && \
-    apt-get -y install libgmp-dev && \
-    rm -rf /var/lib/apt/lists/*
-
 ### Install Python (required by our own bazelci.py script).
 RUN export PYTHON_VERSION="3.6.14" && \
     mkdir -p /usr/local/src && \
