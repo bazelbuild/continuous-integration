@@ -99,12 +99,6 @@ RUN curl -fsSL https://deb.nodesource.com/setup_14.x | bash - && \
     npm install -g npm@latest && \
     rm -rf /var/lib/apt/lists/*
 
-### Install and clang-10 (for Envoy).
-RUN wget https://apt.llvm.org/llvm.sh && \
-    bash llvm.sh 10 && \
-    rm -f llvm.sh && \
-    rm -rf /var/lib/apt/lists/*
-
 # Bazelisk
 RUN LATEST_BAZELISK=$(curl -sSI https://github.com/bazelbuild/bazelisk/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
     curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/${LATEST_BAZELISK}/bazelisk-linux-${BUILDARCH} && \
