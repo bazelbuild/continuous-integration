@@ -51,8 +51,8 @@ RUN apt-get -y update && \
     apt-get -y purge apport && \
     rm -rf /var/lib/apt/lists/*
 
-# Allow ALL users to install additional packages
-RUN echo "ALL ALL=NOPASSWD: /usr/bin/apt, /usr/bin/apt-get" >> /etc/sudoers
+# Allow using sudo inside the container.
+RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-${BUILDARCH}
 

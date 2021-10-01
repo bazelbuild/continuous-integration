@@ -36,8 +36,8 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf && 
     && \
     yum clean all
 
-# Allow ALL users to install additional packages
-RUN echo "ALL ALL=NOPASSWD: /usr/bin/yum" >> /etc/sudoers
+# Allow using sudo inside the container.
+RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 RUN yum install -y yum-utils && \
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
