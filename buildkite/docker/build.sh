@@ -18,7 +18,19 @@ esac
 # See https://docs.docker.com/develop/develop-images/build_enhancements/ for details.
 export DOCKER_BUILDKIT=1
 
-# Containers used by Bazel CI
+# Push containers used by Bazel CI.
+case $(uname -m) in
+    aarch64)
+        docker build -f manylinux2014_aarch64/Dockerfile --target manylinux2014 -t "gcr.io/$PREFIX/manylinux2014" manylinux2014_aarch64 &
+        ;;
+    x86_64)
+        docker build -f manylinux2014_x86_64/Dockerfile  --target manylinux2014 -t "gcr.io/$PREFIX/manylinux2014" manylinux2014_x86_64 &
+        ;;
+    *)
+        echo "Unsupported architecture: $(uname -m)"
+        exit 1
+esac
+
 docker build -f centos7/Dockerfile    --target centos7           -t "gcr.io/$PREFIX/centos7" centos7 &
 docker build -f debian10/Dockerfile   --target debian10-java11   -t "gcr.io/$PREFIX/debian10-java11" debian10 &
 docker build -f debian11/Dockerfile   --target debian11-java17   -t "gcr.io/$PREFIX/debian11-java17" debian11 &

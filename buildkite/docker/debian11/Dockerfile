@@ -1,4 +1,4 @@
-FROM debian:11 as debian11-java17
+FROM debian:11 as debian11-bazel-java17
 ARG BUILDARCH
 
 ENV DEBIAN_FRONTEND="noninteractive"
@@ -57,6 +57,8 @@ RUN apt-get -y update && \
 RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-${BUILDARCH}
+
+FROM debian11-bazel-java17 AS debian11-java17
 
 ### Install Google Cloud SDK.
 ### https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
