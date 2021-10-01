@@ -391,7 +391,10 @@ steps:
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
           - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
-      echo "+++ Fetching Git notes"
+      echo "+++ Installing required packages"
+      sudo apt -y update && sudo apt -y install devscripts pandoc reprepro
+      
+      echo "+++ Checking out Git branch"
       git fetch origin ${BUILDKITE_BRANCH}
       git checkout ${BUILDKITE_BRANCH}
 
@@ -436,8 +439,13 @@ steps:
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
           - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
+      echo "+++ Installing required packages"
+      sudo apt -y update && sudo apt -y install devscripts pandoc reprepro
+
+      echo "+++ Checking out Git branch"
       git fetch origin ${BUILDKITE_BRANCH}
       git checkout ${BUILDKITE_BRANCH}
 
+      echo "+++ Generating e-mail text"
       source scripts/ci/build.sh
       generate_email
