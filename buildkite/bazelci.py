@@ -543,12 +543,6 @@ DEFAULT_XCODE_VERSION = "12.4"
 XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
 XCODE_VERSION_OVERRIDES = {"10.2.1": "10.3", "11.2": "11.2.1", "11.3": "11.3.1"}
 
-ENCRYPTED_SAUCELABS_TOKEN = """
-CiQAry63sLRxp4nB1WMbyGZ9b8ma3DIcxEAvpWfV6ajSEwYlToESTQAL7Hu+7qlgyBTwOzAgjqUZ
-yPPX9/HdmYBIUeCkph0CDS9ulhpDlhTapcfhE1w5XtlCPdh/3cYulSx8JeNT9AMgl4JNGeZthkPR
-jLdy
-""".strip()
-
 BUILD_LABEL_PATTERN = re.compile(r"^Build label: (\S+)$", re.MULTILINE)
 
 BUILDIFIER_VERSION_ENV_VAR = "BUILDIFIER_VERSION"
@@ -1104,9 +1098,6 @@ def execute_commands(
             bazel_binary, platform, task_config.get("run_targets", None), incompatible_flags
         )
 
-        if task_config.get("sauce"):
-            sc_process = start_sauce_connect_proxy(platform, tmpdir)
-
         if needs_clean:
             execute_bazel_clean(bazel_binary, platform)
 
@@ -1300,33 +1291,6 @@ def get_bazelisk_cache_directory(platform):
     # and of the Go version of Bazelisk.
     cache_dir = "Library/Caches" if platform == "macos" else ".cache"
     return os.path.join(os.environ.get("HOME"), cache_dir, "bazelisk")
-
-
-def start_sauce_connect_proxy(platform, tmpdir):
-    print_collapsed_group(":saucelabs: Starting Sauce Connect Proxy")
-    os.environ["SAUCE_USERNAME"] = "bazel_rules_webtesting"
-    os.environ["SAUCE_ACCESS_KEY"] = saucelabs_token()
-    os.environ["TUNNEL_IDENTIFIER"] = str(uuid.uuid4())
-    os.environ["BUILD_TAG"] = str(uuid.uuid4())
-    readyfile = os.path.join(tmpdir, "sc_is_ready")
-    if platform == "windows":
-        cmd = ["sauce-connect.exe", "-i", os.environ["TUNNEL_IDENTIFIER"], "-f", readyfile]
-    else:
-        cmd = ["sc", "-i", os.environ["TUNNEL_IDENTIFIER"], "-f", readyfile]
-    sc_process = execute_command_background(cmd)
-    wait_start = time.time()
-    while not os.path.exists(readyfile):
-        if time.time() - wait_start > 60:
-            raise BuildkiteException(
-                "Sauce Connect Proxy is still not ready after 60 seconds, aborting!"
-            )
-        time.sleep(1)
-    print("Sauce Connect Proxy is ready, continuing...")
-    return sc_process
-
-
-def saucelabs_token():
-    return decrypt_token(encrypted_token=ENCRYPTED_SAUCELABS_TOKEN, kms_key="saucelabs-access-key")
 
 
 def current_branch_is_main_branch():

@@ -178,11 +178,6 @@ Remove-Item $ninja_zip
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${ninja_root}"
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
-## Install Sauce Connect (for rules_webtesting).
-Write-Host "Installing Sauce Connect Proxy..."
-& choco install sauce-connect
-$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
-
 ## Get the latest release version number of Bazelisk.
 Write-Host "Grabbing latest Bazelisk version number from GitHub..."
 $url = "https://github.com/bazelbuild/bazelisk/releases/latest"

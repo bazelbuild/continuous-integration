@@ -125,12 +125,6 @@ RUN LATEST_GITHUB_RELEASE=$(curl -sSI https://github.com/c4milo/github-release/r
     chown root:root /usr/local/bin/github-release && \
     chmod 0755 /usr/local/bin/github-release
 
-# Sauce Labs Proxy
-RUN curl -L https://saucelabs.com/downloads/sc-4.6.5-linux.tar.gz | \
-    tar xz -C /usr/local --strip=1 sc-4.6.5-linux/bin/sc && \
-    chown root:root /usr/local/bin/sc && \
-    chmod 0755 /usr/local/bin/sc
-
 FROM ubuntu2004-java11 AS ubuntu2004-java11-kythe
 RUN LATEST_KYTHE=v0.0.52 && \
     mkdir /usr/local/kythe && \
