@@ -87,10 +87,3 @@ RUN LATEST_BUILDIFIER=$(curl -sSI https://github.com/bazelbuild/buildtools/relea
     curl -Lo /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/${LATEST_BUILDIFIER}/buildifier-linux-${BUILDARCH} && \
     chown root:root /usr/local/bin/buildifier && \
     chmod 0755 /usr/local/bin/buildifier
-
-# github-release
-RUN LATEST_GITHUB_RELEASE=$(curl -sSI https://github.com/c4milo/github-release/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
-    curl -L https://github.com/c4milo/github-release/releases/download/${LATEST_GITHUB_RELEASE}/github-release_${LATEST_GITHUB_RELEASE}_linux_${BUILDARCH}.tar.gz | \
-    tar xz -C /usr/local/bin && \
-    chown root:root /usr/local/bin/github-release && \
-    chmod 0755 /usr/local/bin/github-release
