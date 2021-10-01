@@ -19,7 +19,7 @@ esac
 export DOCKER_BUILDKIT=1
 
 # Containers used by Bazel CI
-docker build -f centos7/Dockerfile    --target centos7           -t "gcr.io/$PREFIX/centos7-java8" centos7 &
+docker build -f centos7/Dockerfile    --target centos7           -t "gcr.io/$PREFIX/centos7" centos7 &
 docker build -f debian10/Dockerfile   --target debian10-java11   -t "gcr.io/$PREFIX/debian10-java11" debian10 &
 docker build -f ubuntu1604/Dockerfile --target ubuntu1604-java8  -t "gcr.io/$PREFIX/ubuntu1604-java8" ubuntu1604 &
 docker build -f ubuntu1804/Dockerfile --target ubuntu1804-java11 -t "gcr.io/$PREFIX/ubuntu1804-java11" ubuntu1804 &
