@@ -38,11 +38,6 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf && 
 # Allow using sudo inside the container.
 RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-RUN yum install -y yum-utils && \
-    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
-    yum install -y containerd.io docker-ce docker-ce-cli && \
-    yum clean all
-
 # Ensure that Bazel can use its beloved ISO-8859-1 locale.
 RUN localedef -i en_US -f ISO-8859-1 en_US.ISO-8859-1
 
