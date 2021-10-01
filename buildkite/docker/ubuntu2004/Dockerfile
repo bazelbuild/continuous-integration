@@ -73,8 +73,6 @@ RUN apt-get -y update && \
     apt-get -y install libreadline-dev && \
     echo "Installing packages required by rules_haskell" && \
     apt-get -y install libgmp-dev && \
-    echo "Installing packages required by Gerrit" && \
-    apt-get -y install openssh-client && \
     rm -rf /var/lib/apt/lists/*
 
 ### Install Google Cloud SDK.
