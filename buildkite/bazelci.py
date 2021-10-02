@@ -474,7 +474,7 @@ PLATFORMS = {
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["linux"],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/manylinux2014",
-        "python": "python3.6",
+        "python": "python3",
     },
     "debian10": {
         "name": "Debian 10 Buster (OpenJDK 11, gcc 8.3.0)",
