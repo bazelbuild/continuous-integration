@@ -18,7 +18,6 @@ import argparse
 import collections
 import os
 import re
-import requests
 import subprocess
 import sys
 import threading
@@ -31,111 +30,12 @@ PIPELINE = os.environ["BUILDKITE_PIPELINE_SLUG"]
 
 FAIL_IF_MIGRATION_REQUIRED = os.environ.get("USE_BAZELISK_MIGRATE", "").upper() == "FAIL"
 
-REPO_PATTERN = re.compile(r"https?://github.com/(?P<owner>[^/]+)/(?P<repo>[^/]+).git")
-
-EMOJI_PATTERN = re.compile(r":([\w+-]+):")
-
-EMOJI_IMAGE_TEMPLATE = '<img src="https://raw.githubusercontent.com/buildkite/emojis/master/img-buildkite-64/{}.png" height="16"/>'
 
 INCOMPATIBLE_FLAG_LINE_PATTERN = re.compile(
     r"\s*(?P<flag>--incompatible_\S+)\s*(\(Bazel (?P<version>.+?): (?P<url>.+?)\))?"
 )
 
-ISSUE_TEMPLATE = """Incompatible flag {flag} will be enabled by default in {version}, thus breaking {project}.
-
-The flag is documented here: {issue_url}
-
-Please check the following CI builds for build and test results:
-
-{links}
-
-Never heard of incompatible flags before? We have [documentation](https://docs.bazel.build/versions/master/backward-compatibility.html) that explains everything.
-
-If you don't want to receive any future issues for {project} or if you have any questions,
-please file an issue in https://github.com/bazelbuild/continuous-integration
-
-**Important**: Please do NOT modify the issue title since that might break our tools.
-{version_footnote}
-"""
-
-GITHUB_ISSUE_REPORTER = "bazel-flag-bot"
-
-GITHUB_TOKEN_KMS_KEY = "github-api-token"
-
-ENCRYPTED_GITHUB_API_TOKEN = """
-CiQA6OLsm0n0R4F/5qdkav2pVIJ+SJnDwcW0+aMgmE0m2UfAtgESUQBsAAJAzHhCcAOfDkOiO0VI7hdPac
-vKgsR3LRgJhvwAhomic1ijEXFwUSOcCgvPYXcQK04YCKMJf+/DaExdtRmslvvCBkGI4tjUlMRhJ+8RLQ==
-""".strip()
-
-
 FlagDetails = collections.namedtuple("FlagDetails", ["bazel_version", "issue_url"])
-
-
-class GitHubError(Exception):
-    def __init__(self, code, message):
-        super(GitHubError, self).__init__("{}: {}".format(code, message))
-        self.code = code
-        self.message = message
-
-
-class GitHubIssueClient(object):
-
-    LINK_PATTERN = re.compile(r'<(?P<url>.*?)>; rel="(?P<type>\w+)"')
-
-    def __init__(self, reporter, oauth_token):
-        self._reporter = reporter
-        self._session = requests.Session()
-        self._session.headers.update(
-            {
-                "Accept": "application/vnd.github.v3+json",
-                "Authorization": "token {}".format(oauth_token),
-                "Content-Type": "application/json",
-            }
-        )
-
-    def get_issue(self, repo_owner, repo_name, title):
-        # Returns an arbitrary matching issue if multiple matching issues exist.
-        generator = self._send_request(repo_owner, repo_name, params={"creator": self._reporter})
-        for issue_subset in generator:
-            for i in issue_subset:
-                if i["title"] == title:
-                    return i["number"]
-
-    def create_issue(self, repo_owner, repo_name, title, body):
-        generator = self._send_request(
-            repo_owner,
-            repo_name,
-            verb="post",
-            json={"title": title, "body": body, "assignee": None, "labels": [], "milestone": None},
-        )
-        return next(generator).get("number", "")
-
-    def update_title(self, repo_owner, repo_name, issue_number, title):
-        self._send_request(
-            repo_owner, repo_name, issue=issue_number, verb="patch", json={"title": title}
-        )
-
-    def _send_request(self, repo_owner, repo_name, issue=None, verb="get", **kwargs):
-        url = "https://api.github.com/repos/{}/{}/issues".format(repo_owner, repo_name)
-        if issue:
-            url = os.path.join(url, str(issue))
-
-        method = getattr(self._session, verb)
-
-        while url:
-            response = method(url, **kwargs)
-            if response.status_code // 100 != 2:
-                raise GitHubError(response.status_code, response.content)
-
-            url = self.get_next_page_url(response.headers)
-            yield response.json()
-
-    def get_next_page_url(self, headers):
-        link = headers.get("Link", "")
-        for part in link.split(","):
-            match = self.LINK_PATTERN.match(part.strip())
-            if match and match.group("type") == "next":
-                return match.group("url")
 
 
 class LogFetcher(threading.Thread):
@@ -200,7 +100,9 @@ def get_html_link_text(content, link):
 def needs_bazel_team_migrate(jobs):
     for job in jobs:
         pipeline, _ = get_pipeline_and_platform(job)
-        if pipeline in bazelci.DOWNSTREAM_PROJECTS and bazelci.DOWNSTREAM_PROJECTS[pipeline].get("owned_by_bazel"):
+        if pipeline in bazelci.DOWNSTREAM_PROJECTS and bazelci.DOWNSTREAM_PROJECTS[pipeline].get(
+            "owned_by_bazel"
+        ):
             return True
     return False
 
@@ -215,14 +117,18 @@ def print_flags_ready_to_flip(failed_jobs_per_flag, details_per_flag):
     if len(info_text1) == 1:
         info_text1 = []
 
-    info_text2 = ["#### The following flags didn't break any passing Bazel team owned/co-owned projects"]
+    info_text2 = [
+        "#### The following flags didn't break any passing Bazel team owned/co-owned projects"
+    ]
     for flag, jobs in failed_jobs_per_flag.items():
         if not needs_bazel_team_migrate(jobs.values()):
             failed_cnt = len(jobs)
             s1 = "" if failed_cnt == 1 else "s"
             s2 = "s" if failed_cnt == 1 else ""
             html_link_text = get_html_link_text(":github:", details_per_flag[flag].issue_url)
-            info_text2.append(f"* **{flag}** {html_link_text}  ({failed_cnt} other job{s1} need{s2} migration)")
+            info_text2.append(
+                f"* **{flag}** {html_link_text}  ({failed_cnt} other job{s1} need{s2} migration)"
+            )
 
     if len(info_text2) == 1:
         info_text2 = []
@@ -272,8 +178,8 @@ def print_projects_need_to_migrate(failed_jobs_per_flag):
             "buildkite-agent",
             "annotate",
             "--append",
-            f"--context=projects_need_migration",
-            f"--style=error",
+            "--context=projects_need_migration",
+            "--style=error",
             f"\n{info_str}\n",
         ]
     )
@@ -291,7 +197,9 @@ def print_flags_need_to_migrate(failed_jobs_per_flag, details_per_flag):
             jobs_per_pipeline = merge_jobs(jobs.values())
             for pipeline, platforms in jobs_per_pipeline.items():
                 bazel_mark = ""
-                if pipeline in bazelci.DOWNSTREAM_PROJECTS and bazelci.DOWNSTREAM_PROJECTS[pipeline].get("owned_by_bazel"):
+                if pipeline in bazelci.DOWNSTREAM_PROJECTS and bazelci.DOWNSTREAM_PROJECTS[
+                    pipeline
+                ].get("owned_by_bazel"):
                     bazel_mark = ":bazel:"
                 platforms_text = ", ".join(platforms)
                 info_text.append(f"  - {bazel_mark}**{pipeline}**: {platforms_text}")
@@ -433,146 +341,6 @@ def print_result_info(already_failing_jobs, failed_jobs_per_flag, details_per_fl
     return bool(failed_jobs_per_flag)
 
 
-def notify_projects(failed_jobs_per_flag, details_per_flag):
-    links_per_project_and_flag = collect_notification_links(failed_jobs_per_flag)
-    create_all_issues(details_per_flag, links_per_project_and_flag)
-
-
-def collect_notification_links(failed_jobs_per_flag):
-    links_per_project_and_flag = collections.defaultdict(set)
-    for flag, job_data in failed_jobs_per_flag.items():
-        for job in job_data.values():
-            project_label, platform = get_pipeline_and_platform(job)
-            link = get_link_for_build(platform, job["web_url"])
-            links_per_project_and_flag[(project_label, flag)].add(link)
-
-    return links_per_project_and_flag
-
-
-def get_link_for_build(platform, url):
-    names = [v["name"] for v in bazelci.PLATFORMS.values() if v["emoji-name"] == platform]
-    display_name = names[0] if names else ""
-
-    match = EMOJI_PATTERN.search(platform)
-    img = ""
-    if match:
-        # darwin emoji has image mac.png
-        emoji = match.group(1).replace("darwin", "mac")
-        img = EMOJI_IMAGE_TEMPLATE.format(emoji)
-
-    text = (img + display_name) or platform
-    return get_html_link_text(text, url)
-
-
-def create_all_issues(details_per_flag, links_per_project_and_flag):
-    errors = set()
-    issue_client = get_github_client()
-    for (project_label, flag), links in links_per_project_and_flag.items():
-        try:
-            details = details_per_flag.get(flag, (None, None))
-            if details.bazel_version in (None, "unreleased binary"):
-                raise bazelci.BuildkiteException(
-                    "Notifications: Invalid Bazel version '{}' for flag {}".format(
-                        details.bazel_version or "", flag
-                    )
-                )
-
-            if not details.issue_url:
-                raise bazelci.BuildkiteException(
-                    "Notifications: Missing GitHub issue URL for flag {}".format(flag)
-                )
-
-            repo_owner, repo_name, do_not_notify = get_project_details(project_label)
-            if do_not_notify:
-                bazelci.eprint("{} has opted out of notifications.".format(project_label))
-                continue
-
-            temporary_title = get_temporary_issue_title(project_label, flag)
-            final_title = get_final_issue_title(project_label, details.bazel_version, flag)
-            has_target_release = details.bazel_version != "TBD"
-
-            # Three possible scenarios:
-            # 1. There is already an issue with the target release in the title -> do nothing
-            # 2. There is an issue, but without the target release, and we now know the target release -> update title
-            # 3. There is no issue -> create one
-            if issue_client.get_issue(repo_owner, repo_name, final_title):
-                bazelci.eprint(
-                    "There is already an issue in {}/{} for project {}, flag {} and Bazel {}".format(
-                        repo_owner, repo_name, project_label, flag, details.bazel_version
-                    )
-                )
-            else:
-                number = issue_client.get_issue(repo_owner, repo_name, temporary_title)
-                if number:
-                    if has_target_release:
-                        issue_client.update_title(repo_owner, repo_name, number, final_title)
-                else:
-                    body = create_issue_body(project_label, flag, details, links)
-                    title = final_title if has_target_release else temporary_title
-                    issue_client.create_issue(repo_owner, repo_name, title, body)
-        except (bazelci.BuildkiteException, GitHubError) as ex:
-            errors.add("Could not notify project '{}': {}".format(project_label, ex))
-
-    if errors:
-        print_info("notify_errors", "error", list(errors))
-
-
-def get_github_client():
-    try:
-        github_token = bazelci.decrypt_token(
-            encrypted_token=ENCRYPTED_GITHUB_API_TOKEN, kms_key=GITHUB_TOKEN_KMS_KEY
-        )
-    except Exception as ex:
-        raise bazelci.BuildkiteException("Failed to decrypt GitHub API token: {}".format(ex))
-
-    return GitHubIssueClient(reporter=GITHUB_ISSUE_REPORTER, oauth_token=github_token)
-
-
-def get_project_details(project_label):
-    entry = bazelci.DOWNSTREAM_PROJECTS.get(project_label, {})
-    full_repo = entry.get("git_repository", "")
-    if not full_repo:
-        raise bazelci.BuildkiteException(
-            "Could not retrieve Git repository for project '{}'".format(project_label)
-        )
-    match = REPO_PATTERN.match(full_repo)
-    if not match:
-        raise bazelci.BuildkiteException(
-            "Hosts other than GitHub are currently not supported ({})".format(full_repo)
-        )
-
-    return match.group("owner"), match.group("repo"), entry.get("do_not_notify", False)
-
-
-def get_temporary_issue_title(project_label, flag):
-    return "Flag {} will break {} in a future Bazel release".format(flag, project_label)
-
-
-def get_final_issue_title(project_label, bazel_version, flag):
-    return "Flag {} will break {} in Bazel {}".format(flag, project_label, bazel_version)
-
-
-def create_issue_body(project_label, flag, details, links):
-    if details.bazel_version == "TBD":
-        version = "a future Bazel release [1]"
-        version_footnote = (
-            "\n[1] The target release hasn't been determined yet. "
-            "Our tool will update the issue title once the flag flip has been scheduled."
-        )
-    else:
-        version = "Bazel {}".format(details.bazel_version)
-        version_footnote = ""
-
-    return ISSUE_TEMPLATE.format(
-        project=project_label,
-        version=version,
-        version_footnote=version_footnote,
-        issue_url=details.issue_url,
-        flag=flag,
-        links="\n".join("* {}".format(l) for l in links),
-    )
-
-
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
@@ -596,9 +364,6 @@ def main(argv=None):
             migration_required = print_result_info(
                 already_failing_jobs, failed_jobs_per_flag, details_per_flag
             )
-
-            if args.notify:
-                notify_projects(failed_jobs_per_flag, details_per_flag)
 
             if migration_required and FAIL_IF_MIGRATION_REQUIRED:
                 bazelci.eprint("Exiting with code 3 since a migration is required.")
