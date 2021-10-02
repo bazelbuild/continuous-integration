@@ -545,10 +545,6 @@ XCODE_VERSION_OVERRIDES = {"10.2.1": "10.3", "11.2": "11.2.1", "11.3": "11.3.1"}
 
 BUILD_LABEL_PATTERN = re.compile(r"^Build label: (\S+)$", re.MULTILINE)
 
-BUILDIFIER_VERSION_ENV_VAR = "BUILDIFIER_VERSION"
-
-BUILDIFIER_WARNINGS_ENV_VAR = "BUILDIFIER_WARNINGS"
-
 BUILDIFIER_STEP_NAME = "Buildifier"
 
 SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
@@ -2119,20 +2115,17 @@ def print_project_pipeline(
             # Simple format:
             # ---
             # buildifier: latest
-            buildifier_env_vars[BUILDIFIER_VERSION_ENV_VAR] = buildifier_config
+            buildifier_env_vars["BUILDIFIER_VERSION"] = buildifier_config
         else:
             # Advanced format:
             # ---
             # buildifier:
             #   version: latest
             #   warnings: all
-
-            def set_env_var(config_key, env_var_name):
-                if config_key in buildifier_config:
-                    buildifier_env_vars[env_var_name] = buildifier_config[config_key]
-
-            set_env_var("version", BUILDIFIER_VERSION_ENV_VAR)
-            set_env_var("warnings", BUILDIFIER_WARNINGS_ENV_VAR)
+            if "version" in buildifier_config:
+                buildifier_env_vars["BUILDIFIER_VERSION"] = buildifier_config["version"]
+            if "warnings" in buildifier_config:
+                buildifier_env_vars["BUILDIFIER_WARNINGS"] = buildifier_config["warnings"]
 
         if not buildifier_env_vars:
             raise BuildkiteException(
