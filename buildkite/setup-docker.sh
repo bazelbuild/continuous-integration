@@ -111,13 +111,8 @@ EOF
   apt-get -y update
   apt-get -y install docker-ce docker-ce-cli containerd.io
 
-  # Allow everyone access to the Docker socket. Usually this would be insane from a security point
-  # of view, but these are untrusted throw-away machines anyway, so the risk is acceptable.
-  mkdir /etc/systemd/system/docker.socket.d
-  cat > /etc/systemd/system/docker.socket.d/override.conf <<'EOF'
-[Socket]
-SocketMode=0666
-EOF
+  # Allow the buildkite-agent access to the Docker socket.
+  usermod -a -G docker buildkite-agent
 
   # Disable the Docker service, as the startup script has to mount /var/lib/docker first.
   systemctl disable docker
