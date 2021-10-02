@@ -6,7 +6,6 @@ import sys
 
 
 os.environ["BUILDKITE_ORGANIZATION_SLUG"] = "bazel"
-import bazelci
 
 
 def encrypt(value, kms_key):
@@ -33,6 +32,34 @@ def encrypt(value, kms_key):
     )
 
 
+def decrypt(encrypted_token, kms_key):
+    return (
+        subprocess.check_output(
+            [
+                "gcloud",
+                "kms",
+                "decrypt",
+                "--project",
+                "bazel-untrusted",
+                "--location",
+                "global",
+                "--keyring",
+                "buildkite",
+                "--key",
+                kms_key,
+                "--ciphertext-file",
+                "-",
+                "--plaintext-file",
+                "-",
+            ],
+            input=base64.b64decode(encrypted_token),
+            env=os.environ,
+        )
+        .decode("utf-8")
+        .strip()
+    )
+
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
@@ -53,7 +80,7 @@ def main(argv=None):
     enc = base64.b64encode(enc).decode("utf-8").strip()
     print("Encoded:  %s" % enc)
 
-    dec = bazelci.decrypt_token(enc, args.key_name)
+    dec = decrypt(enc, args.key_name)
     print("Decoded:  %s" % dec)
 
 

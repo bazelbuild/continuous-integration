@@ -16,7 +16,6 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf && 
     gcc-c++ \
     git \
     gnupg2 \
-    google-cloud-sdk \
     iproute \
     lcov \
     openssl-perl \
@@ -40,6 +39,10 @@ RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Ensure that Bazel can use its beloved ISO-8859-1 locale.
 RUN localedef -i en_US -f ISO-8859-1 en_US.ISO-8859-1
+
+# gsutil
+RUN curl -fsSL https://storage.googleapis.com/pub/gsutil.tar.gz | tar xfz - -C /opt && \
+    ln -s /opt/gsutil/gsutil /usr/bin/gsutil
 
 # Bazelisk
 RUN LATEST_BAZELISK=$(curl -sSI https://github.com/bazelbuild/bazelisk/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \

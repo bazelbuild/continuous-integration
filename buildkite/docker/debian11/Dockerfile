@@ -1,4 +1,4 @@
-FROM debian:11 as debian11-bazel-java17
+FROM debian:11 as debian11-java17
 ARG BUILDARCH
 
 ENV DEBIAN_FRONTEND="noninteractive"
@@ -58,14 +58,9 @@ RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-${BUILDARCH}
 
-FROM debian11-bazel-java17 AS debian11-java17
-
-### Install Google Cloud SDK.
-### https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
-    apt-get update -y && apt-get install google-cloud-sdk -y && \
-    rm -rf /var/lib/apt/lists/*
+# gsutil
+RUN curl -fsSL https://storage.googleapis.com/pub/gsutil.tar.gz | tar xfz - -C /opt && \
+    ln -s /opt/gsutil/gsutil /usr/bin/gsutil
 
 # Bazelisk
 RUN LATEST_BAZELISK=$(curl -sSI https://github.com/bazelbuild/bazelisk/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \

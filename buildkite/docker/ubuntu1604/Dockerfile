@@ -1,4 +1,4 @@
-FROM ubuntu:16.04 as ubuntu1604-bazel-java8
+FROM ubuntu:16.04 as ubuntu1604-java8
 ARG BUILDARCH
 
 ENV DEBIAN_FRONTEND="noninteractive"
@@ -57,8 +57,6 @@ RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-${BUILDARCH}
 
-FROM ubuntu1604-bazel-java8 AS ubuntu1604-java8
-
 ### Install Python (required by our own bazelci.py script).
 RUN export PYTHON_VERSION="3.6.14" && \
     mkdir -p /usr/local/src && \
@@ -76,12 +74,9 @@ RUN export PYTHON_VERSION="3.6.14" && \
     pip3.6 install requests==2.22.0 pyyaml==3.13 && \
     rm -rf "/usr/local/src/Python-${PYTHON_VERSION}"
 
-### Install Google Cloud SDK.
-### https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
-    apt-get update -y && apt-get install google-cloud-sdk -y && \
-    rm -rf /var/lib/apt/lists/*
+# gsutil
+RUN curl -fsSL https://storage.googleapis.com/pub/gsutil.tar.gz | tar xfz - -C /opt && \
+    ln -s /opt/gsutil/gsutil /usr/bin/gsutil
 
 # Bazelisk
 RUN LATEST_BAZELISK=$(curl -sSI https://github.com/bazelbuild/bazelisk/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \

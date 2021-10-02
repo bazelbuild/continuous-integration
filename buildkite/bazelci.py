@@ -36,7 +36,6 @@ import threading
 import time
 import urllib.error
 import urllib.request
-import uuid
 import yaml
 
 # Initialize the random number generator.
@@ -623,18 +622,6 @@ class BinaryUploadRaceException(Exception):
 
 class BuildkiteClient(object):
 
-    _ENCRYPTED_BUILDKITE_API_TOKEN = """
-CiQA4DEB9ldzC+E39KomywtqXfaQ86hhulgeDsicds2BuvbCYzsSUAAqwcvXZPh9IMWlwWh94J2F
-exosKKaWB0tSRJiPKnv2NPDfEqGul0ZwVjtWeASpugwxxKeLhFhPMcgHMPfndH6j2GEIY6nkKRbP
-uwoRMCwe
-""".strip()
-
-    _ENCRYPTED_BUILDKITE_API_TESTING_TOKEN = """
-CiQAMTBkWjL1C+F5oon3+cC1vmum5+c1y5+96WQY44p0Lxd0PeASUQAy7iU0c6E3W5EOSFYfD5fA
-MWy/SHaMno1NQSUa4xDOl5yc2kizrtxPPVkX4x9pLNuGUY/xwAn2n1DdiUdWZNWlY1bX2C4ex65e
-P9w8kNhEbw==
-""".strip()
-
     _BUILD_STATUS_URL_TEMPLATE = (
         "https://api.buildkite.com/v2/organizations/{}/pipelines/{}/builds/{}"
     )
@@ -648,17 +635,7 @@ P9w8kNhEbw==
     def __init__(self, org, pipeline):
         self._org = org
         self._pipeline = pipeline
-        self._token = self._get_buildkite_token()
-
-    def _get_buildkite_token(self):
-        return decrypt_token(
-            encrypted_token=self._ENCRYPTED_BUILDKITE_API_TESTING_TOKEN
-            if THIS_IS_TESTING
-            else self._ENCRYPTED_BUILDKITE_API_TOKEN,
-            kms_key="buildkite-testing-api-token"
-            if THIS_IS_TESTING
-            else "buildkite-untrusted-api-token",
-        )
+        self._token = os.environ.get("BUILDKITE_API_TOKEN")
 
     def _open_url(self, url, params=[]):
         try:
@@ -821,34 +798,6 @@ P9w8kNhEbw==
         return build_info
 
 
-def decrypt_token(encrypted_token, kms_key):
-    return (
-        subprocess.check_output(
-            [
-                gcloud_command(),
-                "kms",
-                "decrypt",
-                "--project",
-                "bazel-untrusted",
-                "--location",
-                "global",
-                "--keyring",
-                "buildkite",
-                "--key",
-                kms_key,
-                "--ciphertext-file",
-                "-",
-                "--plaintext-file",
-                "-",
-            ],
-            input=base64.b64decode(encrypted_token),
-            env=os.environ,
-        )
-        .decode("utf-8")
-        .strip()
-    )
-
-
 def eprint(*args, **kwargs):
     """
     Print to stderr and flush (just in case).
@@ -862,10 +811,6 @@ def is_windows():
 
 def gsutil_command():
     return "gsutil.cmd" if is_windows() else "gsutil"
-
-
-def gcloud_command():
-    return "gcloud.cmd" if is_windows() else "gcloud"
 
 
 def downstream_projects_root(platform):
@@ -1387,6 +1332,7 @@ def download_bazel_nojdk_binary_at_commit(dest_dir, platform, bazel_git_commit):
     path = os.path.join(dest_dir, "bazel_nojdk.exe" if platform == "windows" else "bazel_nojdk")
     return download_binary_at_commit(dest_dir, platform, bazel_git_commit, url, path)
 
+
 def download_bazelci_agent(dest_dir, platform, version):
     postfix = ""
     if platform == "windows":
@@ -1403,6 +1349,7 @@ def download_bazelci_agent(dest_dir, platform, version):
     st = os.stat(path)
     os.chmod(path, st.st_mode | stat.S_IEXEC)
     return path
+
 
 def get_mirror_path(git_repository, platform):
     mirror_root = {
