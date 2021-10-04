@@ -1,7 +1,7 @@
 steps:
   - label: "Project pipeline :ubuntu: 18.04 (JDK 8)"
     command:
-      - python3.6 buildkite/bazelci.py project_pipeline --file_config=buildkite/pipelines/tensorflow-postsubmit.yml
+      - python3.6 buildkite/bazelci.py project_pipeline --file_config=pipelines/tensorflow.yml
     agents: &linux_agents { queue: default }
     plugins: &plugins
       - docker#v3.8.0:
@@ -37,7 +37,7 @@ steps:
 
   - label: "Project pipeline :darwin: (JDK 8)"
     command:
-      - python3.7 buildkite/bazelci.py project_pipeline --file_config=buildkite/pipelines/tensorflow-postsubmit.yml
+      - python3.7 buildkite/bazelci.py project_pipeline --file_config=pipelines/tensorflow.yml
     agents: &mac_agents { queue: macos }
   - label: "Downstream pipeline :darwin: (JDK 8)"
     command:
@@ -52,7 +52,7 @@ steps:
 
   - label: "Project pipeline :windows: (JDK 8)"
     command:
-      - python.exe buildkite/bazelci.py project_pipeline --file_config=buildkite/pipelines/tensorflow-postsubmit.yml
+      - python.exe buildkite/bazelci.py project_pipeline --file_config=pipelines/tensorflow.yml
     agents: &win_agents { queue: windows }
   - label: "Downstream pipeline :windows: (JDK 8)"
     command:
