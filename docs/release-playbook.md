@@ -80,36 +80,6 @@ Keep the task list updated and check boxes as you follow the release process. [E
 
 ## Update the status of GitHub issues for incompatible changes
 
-**This section is a place where you have to mechanically follow the entire process to the letter from beginning to end, even though it might seem unnecessary at times.**
-
-In the below, _X.Y_ is a release you are cutting.
-
-### Start new migration windows
-
-1. Search for all [open "incompatible-change" issues that have "migration-ready" labels](https://github.com/bazelbuild/bazel/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Aincompatible-change+label%3Amigration-ready)
-1. For each such issue:
-     1. Add a "migration-_X.Y_" label.
-     2. Add a "breaking-change-_X.Y+w_" label where _w_ is the length of migration window for that particular issue
-     2. Remove "migration-ready" label
-
-### Review breaking changes
-
-(skip this section if you're not creating a major release)
-
-1. Search for issues with label "breaking-change-_X.Y_".
-2. For all such issues that are **closed**, verify that the flag is flipped and release notes mention the breaking change.
-   1. If the flag is not flipped, you probably need to reopen the issue and follow the steps as if the issue was open. Ping the author as well.
-   1. If the release notes do not mention the breaking change, manually add the flag to the release notes (under "Prepare the Release Announcement" section). 
-2. For all such issues that are still **open**:
-   1. remove the label "breaking-change-_X.Y_".
-   1. add a label "migration-_X.Y_" and "breaking-change-_X.Y+1_" (this prolongs the migration window by 1 release).
-   1. Reach out to the issue owner.
-
-### Prolong ongoing migration windows
-
-1. Search for issues with labels "migration-_X.Y-1_" that are not "migration-_X.Y_" and not "breaking-change-_X.Y_"
-2. For all such issues, apply "migration-_X.Y_" label. Do **not** remove any previous "migration-_X.Y-1_" labels.
-
 ## Create a Candidate
 
 Create candidates with the `release.sh` script. See above how to pick a good baseline commit.
@@ -215,7 +185,6 @@ Editing the release notes is not needed (it will be done later).
         https://github.com/bazelbuild/bazel/issues and mark it as release
         blocker.
 
-
         If a project is failing with both release candidate and the latest Bazel
         release, it could be a breakage from the project itself. Go through the
         build history (eg.
@@ -225,6 +194,12 @@ Editing the release notes is not needed (it will be done later).
     *   File bugs (**TODO: how to find the owner/project link?**)
 
 1.  Once issues are fixed, create a new candidate with the relevant cherry-picks.
+
+## Google-internal launch review
+
+Once the first candidate is available:
+
+1.  Follow the steps in [go/bazel-internal-launch-checklist](http://goto.google.com/bazel-internal-launch-checklist) to kick-off Google's internal launch review process.
 
 ## Release announcement
 
