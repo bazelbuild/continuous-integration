@@ -5,7 +5,8 @@ ARG BUILDARCH
 COPY google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
 
 # Activate Python 3.9.
-ENV PATH=/opt/python/cp39-cp39/bin:$PATH
+RUN ln -sv /opt/python/cp39-cp39/bin/{pip3,python3} /usr/local/bin && \
+    pip3 install requests PyYAML
 
 # Disable "fastestmirror" plug-in, because it takes a long time.
 RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf && \
