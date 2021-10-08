@@ -953,7 +953,8 @@ def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_v
     json_profile_out = None
     if action_key in include_json_profile:
         json_profile_out = os.path.join(tmpdir, "{}.profile.gz".format(action_key))
-        json_profile_flags = get_json_profile_flags(json_profile_out)
+        json_profile_flags = ["--profile={}".format(json_profile_out)]
+
 
     capture_corrupted_outputs_flags = []
     capture_corrupted_outputs_dir = None
@@ -1950,15 +1951,6 @@ def execute_bazel_test(
         )
     except subprocess.CalledProcessError as e:
         handle_bazel_failure(e, "test")
-
-
-def get_json_profile_flags(out_file):
-    return [
-        "--experimental_generate_json_trace_profile",
-        "--experimental_profile_cpu_usage",
-        "--experimental_json_trace_compression",
-        "--profile={}".format(out_file),
-    ]
 
 
 def upload_test_logs_from_bep(bep_file, tmpdir, binary_platform, monitor_flaky_tests):
