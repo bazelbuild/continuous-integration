@@ -59,7 +59,6 @@ fn watch_bep_json_file(
     let mut parser = BepJsonParser::new(build_event_json_file);
     let max_retries = 5;
     let mut retries = max_retries;
-    let mut test_result_offset = 0;
     let mut last_offset = 0;
 
     'parse_loop: loop {
@@ -71,7 +70,7 @@ fn watch_bep_json_file(
                     last_offset = parser.offset;
 
                     let local_exec_root = parser.local_exec_root.as_ref().map(|str| Path::new(str));
-                    for test_summary in parser.test_summaries[test_result_offset..]
+                    for test_summary in parser.test_summaries
                         .iter()
                         .filter(|test_result| status.contains(&test_result.overall_status.as_str()))
                     {
@@ -83,7 +82,7 @@ fn watch_bep_json_file(
                             }
                         }
                     }
-                    test_result_offset = parser.test_summaries.len();
+                    parser.test_summaries.clear();
                 }
 
                 if parser.done {
@@ -273,6 +272,14 @@ impl BepJsonParser {
         }
     }
 
+    fn reset(&mut self) {
+        self.offset = 0;
+        self.line = 1;
+        self.done = false;
+        self.local_exec_root = None;
+        self.test_summaries.clear();
+    }
+
     /// Parse the BEP JSON file until "last message" encounted or EOF reached.
     ///
     /// Errors encounted before "last message", e.g.
@@ -282,6 +289,13 @@ impl BepJsonParser {
     pub fn parse(&mut self) -> Result<()> {
         let mut file = File::open(&self.path)
             .with_context(|| format!("Failed to open file {}", self.path.display()))?;
+
+        let eof = file.seek(SeekFrom::End(0))?;
+        if self.offset == 0 || self.offset >= eof {
+            // The file is truncated, reset to read from the start
+            self.reset();
+        }
+
         file.seek(SeekFrom::Start(self.offset)).with_context(|| {
             format!(
                 "Failed to seek file {} to offset {}",
@@ -312,10 +326,16 @@ impl BepJsonParser {
                     }
                 }
                 Err(error) => {
+                    // Newline should always start with '{', otherwise we read from the start next time
+                    if !self.buf.starts_with('{') {
+                        self.offset = 0;
+                    }
+
                     return Err(anyhow!(
-                        "{}:{}: {:?}",
+                        "{}:{}: {:?} `{}`",
                         self.path.display(),
                         self.line,
+                        &self.buf,
                         error
                     ));
                 }
