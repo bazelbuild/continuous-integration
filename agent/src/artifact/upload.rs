@@ -70,7 +70,8 @@ fn watch_bep_json_file(
                     last_offset = parser.offset;
 
                     let local_exec_root = parser.local_exec_root.as_ref().map(|str| Path::new(str));
-                    for test_summary in parser.test_summaries
+                    for test_summary in parser
+                        .test_summaries
                         .iter()
                         .filter(|test_result| status.contains(&test_result.overall_status.as_str()))
                     {

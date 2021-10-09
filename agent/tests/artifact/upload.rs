@@ -92,18 +92,13 @@ fn truncate_build_event_json_file_restart() -> Result<()> {
     })
 }
 
-
 /// Test that if the BEP json file is truncated and the current read cursor
 /// is in the middle of a line (instead of beginning), the parser can detect
 /// that and reread from the start.
 #[test]
 fn truncate_build_event_json_file_recover_from_middle() -> Result<()> {
     with_tmpfile(|mut file, path| {
-        writeln!(
-            file,
-            "{}",
-            r#"{}"#
-        )?;
+        writeln!(file, "{}", r#"{}"#)?;
 
         std::thread::spawn(move || {
             std::thread::sleep(Duration::from_secs(1));
