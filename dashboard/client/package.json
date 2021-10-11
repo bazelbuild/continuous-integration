@@ -1,0 +1,43 @@
+{
+  "name": "dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start -p ${PORT-3000}"
+  },
+  "dependencies": {
+    "@headlessui/react": "^1.1.1",
+    "@material-ui/core": "^4.11.2",
+    "@material-ui/icons": "^4.11.2",
+    "@next/bundle-analyzer": "^10.0.3",
+    "@primer/octicons-react": "^12.0.0",
+    "@types/react-table": "^7.0.25",
+    "classnames": "^2.3.1",
+    "date-fns": "^2.21.2",
+    "http-proxy-middleware": "^1.0.6",
+    "luxon": "^1.25.0",
+    "mui-datatables": "^3.7.8",
+    "next": "^11.1.2",
+    "query-string": "^7.0.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-table": "^7.6.2",
+    "recharts": "^2.1.2",
+    "sass": "^1.30.0",
+    "swr": "^1.0.1"
+  },
+  "devDependencies": {
+    "@types/luxon": "^1.25.0",
+    "@types/mui-datatables": "^3.7.7",
+    "@types/node": "^16.9.2",
+    "@types/react": "^17.0.21",
+    "@types/recharts": "^1.8.20",
+    "autoprefixer": "^10.2.5",
+    "postcss": "^8.2.14",
+    "prettier": "^2.2.1",
+    "tailwindcss": "^2.1.2",
+    "typescript": "^4.4.3"
+  }
+}
