@@ -2068,6 +2068,7 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None):
                 "volumes": [
                     "/etc/group:/etc/group:ro",
                     "/etc/passwd:/etc/passwd:ro",
+                    "/etc/shadow:/etc/shadow:ro",
                     "/opt:/opt:ro",
                     "/var/lib/buildkite-agent:/var/lib/buildkite-agent",
                     "/var/lib/gitmirrors:/var/lib/gitmirrors:ro",
