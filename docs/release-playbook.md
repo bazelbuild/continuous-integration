@@ -77,9 +77,6 @@ Task list:
 
 Keep the task list updated and check boxes as you follow the release process. [Example](https://github.com/bazelbuild/bazel/issues/7816#issuecomment-497037232).
 
-
-## Update the status of GitHub issues for incompatible changes
-
 ## Create a Candidate
 
 Create candidates with the `release.sh` script. See above how to pick a good baseline commit.
