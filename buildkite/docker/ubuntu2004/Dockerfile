@@ -25,6 +25,7 @@ RUN apt-get -y update && \
     iputils-ping \
     lcov \
     less \
+    libc++-dev \
     libncurses5 \
     libssl-dev \
     llvm \

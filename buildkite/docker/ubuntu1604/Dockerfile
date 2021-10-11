@@ -25,6 +25,7 @@ RUN apt-get -y update && \
     iputils-ping \
     lcov \
     less \
+    libc++-dev \
     libssl-dev \
     llvm \
     llvm-dev \
