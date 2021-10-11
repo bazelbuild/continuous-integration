@@ -1,0 +1,56 @@
+name: presubmit-agent
+on:
+  pull_request:
+    paths:
+      - 'agent/**'
+jobs:
+  presubmit:
+    name: Presubmit
+    runs-on: ${{ matrix.os }}
+    env:
+      # Emit backtraces on panics.
+      RUST_BACKTRACE: 1
+    strategy:
+      fail-fast: false
+      matrix:
+        build: [linux, macos, win-msvc]
+        include:
+        - build: linux
+          os: ubuntu-18.04
+          rust: nightly
+          target: x86_64-unknown-linux-musl
+        - build: macos
+          os: macos-latest
+          rust: nightly
+          target: x86_64-apple-darwin
+        - build: win-msvc
+          os: windows-latest
+          rust: nightly
+          target: x86_64-pc-windows-msvc
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        profile: minimal
+        components: rustfmt
+        override: true
+        target: ${{ matrix.target }}
+
+    - name: Cargo Build
+      working-directory: agent
+      run: cargo build --verbose --target ${{ matrix.target }}
+
+    - name: Cargo Test
+      working-directory: agent
+      run: cargo test --verbose --target ${{ matrix.target }}
+
+    - name: Cargo Format Check
+      working-directory: agent
+      run: cargo fmt --all -- --check
