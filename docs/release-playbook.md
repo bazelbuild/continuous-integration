@@ -62,7 +62,7 @@ The release manager adds a comment to the issue with the following content:
 - Expected release date: [date]
 - [List of release blockers](link-to-milestone)
 
-To report a release-blocking bug, please file a bug using the `Release blocker` label, and cc me.
+To report a release-blocking bug, please add it to the release blocker milestone above, and cc me.
 
 Task list:
 
