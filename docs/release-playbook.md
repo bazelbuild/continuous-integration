@@ -50,6 +50,9 @@ Each release has a tracking bug (see the
 The last and the next releases should be pinned. The bug includes a "Target RC
 date". On that day, create a new release candidate.
 
+A milestone should also be [created](https://github.com/bazelbuild/bazel/milestones/new)
+for the release to keep track of any release blocking issues. ([Example](https://github.com/bazelbuild/bazel/milestone/31))
+
 The release manager adds a comment to the issue with the following content:
 
 ```
@@ -57,13 +60,12 @@ The release manager adds a comment to the issue with the following content:
 
 - Target baseline: [date]
 - Expected release date: [date]
-- [List of release blockers](https://github.com/bazelbuild/bazel/labels/Release%20blocker)
+- [List of release blockers](link-to-milestone)
 
-To report a release-blocking bug, please file a bug using the `Release blocker` label, and cc me.
+To report a release-blocking bug, please add it to the release blocker milestone above, and cc me.
 
 Task list:
 
-- [ ] Update GitHub issues for incompatible changes
 - [ ] Pick release baseline:
 - [ ] Create release candidate:
 - [ ] Check downstream projects:
