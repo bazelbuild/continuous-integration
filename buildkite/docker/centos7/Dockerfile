@@ -7,13 +7,13 @@ COPY google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
 # Disable "fastestmirror" plug-in, because it takes a long time.
 RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf && \
     yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
+    yum install -y centos-release-scl && \
     yum install -y \
     bind-utils \
+    devtoolset-9 \
     dpkg-dev \
     ed \
     file \
-    gcc \
-    gcc-c++ \
     git \
     gnupg2 \
     google-cloud-sdk \
@@ -58,6 +58,9 @@ RUN LATEST_BUILDIFIER=$(curl -sSI https://github.com/bazelbuild/buildtools/relea
     curl -Lo /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/${LATEST_BUILDIFIER}/buildifier-linux-${BUILDARCH} && \
     chown root:root /usr/local/bin/buildifier && \
     chmod 0755 /usr/local/bin/buildifier
+
+# Bump to gcc-9
+RUN echo "source /opt/rh/devtoolset-9/enable" > /etc/profile.d/enable-devtoolset.sh
 
 FROM centos7-java8 AS centos7-releaser
 
