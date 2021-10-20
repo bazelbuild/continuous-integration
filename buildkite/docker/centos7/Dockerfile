@@ -66,7 +66,14 @@ RUN yum install -y https://cdn.azul.com/zulu/bin/zulu11.52.13-ca-jdk11.0.13-linu
 
 FROM centos7-java11 AS centos7-java11-devtoolset10
 RUN yum install -y centos-release-scl && yum install -y devtoolset-10 && yum remove -y gcc gcc-c++ lcov && yum clean all
-RUN ln -s /opt/rh/devtoolset-10/enable /etc/profile.d/enable-devtoolset10.sh
+
+# These are the variables set by /opt/rh/devtoolset-10/enable and necessary to activate devtoolset-10.
+ENV PATH=/opt/rh/devtoolset-10/root/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV MANPATH=/opt/rh/devtoolset-10/root/usr/share/man
+ENV INFOPATH=/opt/rh/devtoolset-10/root/usr/share/info
+ENV PCP_DIR=/opt/rh/devtoolset-10/root
+ENV LD_LIBRARY_PATH=/opt/rh/devtoolset-10/root/usr/lib64:/opt/rh/devtoolset-10/root/usr/lib:/opt/rh/devtoolset-10/root/usr/lib64/dyninst:/opt/rh/devtoolset-10/root/usr/lib/dyninst:/opt/rh/devtoolset-10/root/usr/lib64:/opt/rh/devtoolset-10/root/usr/lib
+ENV PKG_CONFIG_PATH=/opt/rh/devtoolset-10/root/usr/lib64/pkgconfig
 
 FROM centos7-java11-devtoolset10 AS centos7-releaser
 # dpkg-source needs a newer GNU tar version that supports --sort=name.
