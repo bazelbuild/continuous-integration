@@ -931,7 +931,7 @@ def print_expanded_group(name):
 
     
 def is_trueish(s):
-    return s.lower() in ['true', '1', 't', 'y', 'yes']
+    return str(s).lower() in ["true", "1", "t", "y", "yes"]
 
 def use_bazelisk_migrate():
     """
