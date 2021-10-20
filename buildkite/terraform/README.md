@@ -3,6 +3,7 @@ This directory contains terraform configuration files to manage pipelines on Bui
 ```
 terraform
 |
+|- bazel            # Configuration files for bazel
 |- bazel-testing    # Configuration files for bazel-testing
 ```
 
