@@ -64,7 +64,11 @@ RUN yum install -y java-1.8.0-openjdk-devel && yum clean all
 FROM centos7 AS centos7-java11
 RUN yum install -y https://cdn.azul.com/zulu/bin/zulu11.52.13-ca-jdk11.0.13-linux.x86_64.rpm && yum clean all
 
-FROM centos7-java11 AS centos7-releaser
+FROM centos7-java11 AS centos7-java11-devtoolset10
+RUN yum install -y centos-release-scl && yum install -y devtoolset-10 && yum remove -y gcc gcc-c++ lcov && yum clean all
+RUN ln -s /opt/rh/devtoolset-10/enable /etc/profile.d/enable-devtoolset10.sh
+
+FROM centos7-java11-devtoolset10 AS centos7-releaser
 # dpkg-source needs a newer GNU tar version that supports --sort=name.
 RUN pushd /usr/local/src && \
     curl -fsSL http://ftp.gnu.org/gnu/tar/tar-1.34.tar.bz2 | tar xvj && \
