@@ -929,12 +929,15 @@ def print_collapsed_group(name):
 def print_expanded_group(name):
     eprint("\n\n+++ {0}\n\n".format(name))
 
+    
+def is_trueish(s):
+    return s.lower() in ['true', '1', 't', 'y', 'yes']
 
 def use_bazelisk_migrate():
     """
     If USE_BAZELISK_MIGRATE is set, we use `bazelisk --migrate` to test incompatible flags.
     """
-    return bool(os.environ.get("USE_BAZELISK_MIGRATE"))
+    return is_trueish(os.environ.get("USE_BAZELISK_MIGRATE"))
 
 
 def bazelisk_flags():
