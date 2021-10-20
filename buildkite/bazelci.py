@@ -534,8 +534,8 @@ PLATFORMS = {
         "python": "python3.8",
     },
     "macos": {
-        "name": "macOS (OpenJDK 8, Xcode)",
-        "emoji-name": ":darwin: (OpenJDK 8, Xcode)",
+        "name": "macOS (OpenJDK 11, Xcode)",
+        "emoji-name": ":darwin: (OpenJDK 11, Xcode)",
         "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["macos"],
         "queue": "macos",
