@@ -1,17 +1,23 @@
----
+---%{ if length(envs) > 0 }
+env:%{ for key, value in envs }
+  ${key}: "${value}"%{ endfor ~}
+
+%{ endif }
 steps:
   - command: |-
-      curl -sS "https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)" -o bazelci.py
-      python3.6 bazelci.py %{ for flag in flags ~} ${flag} %{ endfor ~} | buildkite-agent pipeline upload
-    label: ":pipeline:"
+%{ for command in steps.commands ~}
+      ${command}
+%{ endfor ~}
+    label: "${try(steps.label, ":pipeline:")}"
     agents:
-      - "queue=default"
+      - "queue=default"%{ if try(length(steps.artifact_paths), 0) > 0 }
+    artifact_paths:%{ for artifact_path in steps.artifact_paths }
+      - "${artifact_path}"%{ endfor }%{ endif }
     plugins:
       - docker#v3.8.0:
           always-pull: true
           environment:
             - "ANDROID_HOME"
-            - "ANDROID_SDK_ROOT"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
           image: "gcr.io/bazel-public/ubuntu1804-java11"
@@ -22,7 +28,9 @@ steps:
           volumes:
             - "/etc/group:/etc/group:ro"
             - "/etc/passwd:/etc/passwd:ro"
+            - "/etc/shadow:/etc/shadow:ro"
             - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
             - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
             - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
             - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+            - "/var/run/docker.sock:/var/run/docker.sock"
