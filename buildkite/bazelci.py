@@ -552,8 +552,8 @@ PLATFORMS = {
         "python": "python3",
     },
     "windows": {
-        "name": "Windows (OpenJDK 8, VS2017)",
-        "emoji-name": ":windows: (OpenJDK 8, VS2017)",
+        "name": "Windows (OpenJDK 11, VS2017)",
+        "emoji-name": ":windows: (OpenJDK 11, VS2017)",
         "downstream-root": "c:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["windows"],
         "queue": "windows",
