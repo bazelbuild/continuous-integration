@@ -579,7 +579,7 @@ DEFAULT_PLATFORM = "ubuntu1804"
 # release platform for all Linux downstream tests.
 LINUX_BINARY_PLATFORM = "centos7"
 
-DEFAULT_XCODE_VERSION = "12.4"
+DEFAULT_XCODE_VERSION = "13.0"
 XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
 XCODE_VERSION_OVERRIDES = {"10.2.1": "10.3", "11.2": "11.2.1", "11.3": "11.3.1"}
 
