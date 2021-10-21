@@ -1990,7 +1990,7 @@ def execute_bazel_test(
 
 
 def upload_test_logs_from_bep(bep_file, tmpdir, binary_platform, monitor_flaky_tests):
-    bazelci_agent_binary = download_bazelci_agent(tmpdir, binary_platform, "0.1.2")
+    bazelci_agent_binary = download_bazelci_agent(tmpdir, binary_platform, "0.1.3")
     execute_command(
         [bazelci_agent_binary, "artifact", "upload", "--delay=5", "--mode=buildkite", "--build_event_json_file={}".format(bep_file)]
         + (["--monitor_flaky_tests"] if monitor_flaky_tests else [])
