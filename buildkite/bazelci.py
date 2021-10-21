@@ -489,7 +489,7 @@ PLATFORMS = {
         "name": "Ubuntu 16.04 LTS (OpenJDK 8, gcc 5.4.0)",
         "emoji-name": ":ubuntu: 16.04 LTS (OpenJDK 8, gcc 5.4.0)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": ["ubuntu1604"],
+        "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1604-java8",
         "python": "python3.6",
     },
