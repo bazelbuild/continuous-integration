@@ -105,13 +105,22 @@ case $(hostname -f) in
 esac
 
 docker pull "gcr.io/$PREFIX/centos7-java8" &
+docker pull "gcr.io/$PREFIX/centos7-java11" &
+docker pull "gcr.io/$PREFIX/centos7-java11-devtoolset10" &
 docker pull "gcr.io/$PREFIX/centos7-releaser" &
 docker pull "gcr.io/$PREFIX/debian10-java11" &
+docker pull "gcr.io/$PREFIX/debian11-java17" &
 docker pull "gcr.io/$PREFIX/ubuntu1604-bazel-java8" &
 docker pull "gcr.io/$PREFIX/ubuntu1604-java8" &
 docker pull "gcr.io/$PREFIX/ubuntu1804-bazel-java11" &
 docker pull "gcr.io/$PREFIX/ubuntu1804-java11" &
+docker pull "gcr.io/$PREFIX/ubuntu2004-bazel-java11" &
 docker pull "gcr.io/$PREFIX/ubuntu2004-java11" &
+docker pull "gcr.io/$PREFIX/ubuntu2004-java11-kythe" &
+docker pull "gcr.io/$PREFIX/ubuntu2104-java11" &
+docker pull "gcr.io/$PREFIX/ubuntu2104-bazel-java11" &
+docker pull "gcr.io/$PREFIX/ubuntu2110-java17" &
+docker pull "gcr.io/$PREFIX/ubuntu2110-bazel-java17" &
 wait
 
 ### Start the Buildkite agent service.
