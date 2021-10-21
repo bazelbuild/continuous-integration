@@ -1,9 +1,11 @@
 use anyhow::{anyhow, Context, Result};
 use serde_json::Value;
+use sha1::{Digest, Sha1};
 use std::{
+    collections::HashSet,
     env,
     fs::{self, File},
-    io::{BufRead, BufReader, Seek, SeekFrom},
+    io::{BufRead, BufReader, Read, Seek, SeekFrom},
     path::{Path, PathBuf, MAIN_SEPARATOR},
     process,
     thread::sleep,
@@ -60,6 +62,7 @@ fn watch_bep_json_file(
     let max_retries = 5;
     let mut retries = max_retries;
     let mut last_offset = 0;
+    let mut uploader = Uploader::new();
 
     'parse_loop: loop {
         match parser.parse() {
@@ -76,9 +79,13 @@ fn watch_bep_json_file(
                         .filter(|test_result| status.contains(&test_result.overall_status.as_str()))
                     {
                         for failed_test in test_summary.failed.iter() {
-                            if let Err(error) =
-                                upload_test_log(dry, local_exec_root, &failed_test.uri, mode)
-                            {
+                            if let Err(error) = upload_test_log(
+                                &mut uploader,
+                                dry,
+                                local_exec_root,
+                                &failed_test.uri,
+                                mode,
+                            ) {
                                 error!("{:?}", error);
                             }
                         }
@@ -107,7 +114,7 @@ fn watch_bep_json_file(
     let should_upload_bep_json_file =
         debug || (monitor_flaky_tests && parser.has_overall_test_status("FLAKY"));
     if should_upload_bep_json_file {
-        if let Err(error) = upload_bep_json_file(dry, build_event_json_file, mode) {
+        if let Err(error) = upload_bep_json_file(&mut uploader, dry, build_event_json_file, mode) {
             error!("{:?}", error);
         }
     }
@@ -115,8 +122,13 @@ fn watch_bep_json_file(
     Ok(())
 }
 
-fn upload_bep_json_file(dry: bool, build_event_json_file: &Path, mode: Mode) -> Result<()> {
-    upload_artifact(dry, None, build_event_json_file, mode)
+fn upload_bep_json_file(
+    uploader: &mut Uploader,
+    dry: bool,
+    build_event_json_file: &Path,
+    mode: Mode,
+) -> Result<()> {
+    uploader.upload_artifact(dry, None, build_event_json_file, mode)
 }
 
 fn execute_command(dry: bool, cwd: Option<&Path>, program: &str, args: &[&str]) -> Result<()> {
@@ -148,19 +160,75 @@ fn execute_command(dry: bool, cwd: Option<&Path>, program: &str, args: &[&str]) 
     Ok(())
 }
 
-fn upload_artifact_buildkite(dry: bool, cwd: Option<&Path>, artifact: &Path) -> Result<()> {
-    let artifact = artifact.display().to_string();
-    execute_command(
-        dry,
-        cwd,
-        "buildkite-agent",
-        &["artifact", "upload", artifact.as_str()],
-    )
+type Sha1Digest = [u8; 20];
+
+fn read_entire_file(path: &Path) -> Result<Vec<u8>> {
+    let mut file = File::open(path)?;
+    let mut buf = Vec::new();
+    file.read_to_end(&mut buf)?;
+    Ok(buf)
 }
 
-fn upload_artifact(dry: bool, cwd: Option<&Path>, artifact: &Path, mode: Mode) -> Result<()> {
-    match mode {
-        Mode::Buildkite => upload_artifact_buildkite(dry, cwd, artifact),
+fn sha1_digest(path: &Path) -> Sha1Digest {
+    let buf = match read_entire_file(path) {
+        Ok(buf) => buf,
+        _ => path.display().to_string().into_bytes(),
+    };
+
+    let mut hasher = Sha1::new();
+    hasher.update(buf);
+    let hash = hasher.finalize();
+    hash.into()
+}
+
+struct Uploader {
+    uploaded_digests: HashSet<Sha1Digest>,
+}
+
+impl Uploader {
+    pub fn new() -> Self {
+        Self {
+            uploaded_digests: HashSet::new(),
+        }
+    }
+
+    pub fn upload_artifact(
+        &mut self,
+        dry: bool,
+        cwd: Option<&Path>,
+        artifact: &Path,
+        mode: Mode,
+    ) -> Result<()> {
+        {
+            let file = match cwd {
+                Some(cwd) => cwd.join(artifact),
+                None => PathBuf::from(artifact),
+            };
+            let digest = sha1_digest(&file);
+            if self.uploaded_digests.contains(&digest) {
+                return Ok(());
+            }
+            self.uploaded_digests.insert(digest);
+        }
+
+        match mode {
+            Mode::Buildkite => self.upload_artifact_buildkite(dry, cwd, artifact),
+        }
+    }
+
+    fn upload_artifact_buildkite(
+        &mut self,
+        dry: bool,
+        cwd: Option<&Path>,
+        artifact: &Path,
+    ) -> Result<()> {
+        let artifact = artifact.display().to_string();
+        execute_command(
+            dry,
+            cwd,
+            "buildkite-agent",
+            &["artifact", "upload", artifact.as_str()],
+        )
     }
 }
 
@@ -213,6 +281,7 @@ fn uri_to_file_path(uri: &str) -> Result<PathBuf> {
 }
 
 fn upload_test_log(
+    uploader: &mut Uploader,
     dry: bool,
     local_exec_root: Option<&Path>,
     test_log: &str,
@@ -221,7 +290,7 @@ fn upload_test_log(
     let path = uri_to_file_path(test_log)?;
 
     if let Some((first, second)) = split_path_inclusive(&path, "testlogs") {
-        return upload_artifact(dry, Some(&first), &second, mode);
+        return uploader.upload_artifact(dry, Some(&first), &second, mode);
     }
 
     let artifact = if let Some(local_exec_root) = local_exec_root {
@@ -234,7 +303,7 @@ fn upload_test_log(
         &path
     };
 
-    upload_artifact(dry, local_exec_root, &artifact, mode)
+    uploader.upload_artifact(dry, local_exec_root, &artifact, mode)
 }
 
 #[derive(Debug)]
