@@ -138,7 +138,7 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
 ## Install Python3
 Write-Host "Installing Python 3..."
-& choco install python3 --params "/InstallDir:C:\python3"
+& choco install python3 --params "/InstallDir:C:\python3" --version=3.9.7
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 New-Item -ItemType SymbolicLink -Path "C:\python3\python3.exe" -Target "C:\python3\python.exe"
 
@@ -150,7 +150,7 @@ Write-Host "Updating Python package management tools..."
 Write-Host "Installing Python packages..."
 & "C:\Python3\Scripts\pip.exe" install --upgrade `
     autograd `
-    numpy `
+    numpy~=1.21.2 `
     portpicker `
     protobuf `
     pyreadline `
