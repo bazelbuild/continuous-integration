@@ -101,8 +101,8 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 & git config --system core.longpaths true
 
 ## Install Azul Zulu.
-Write-Host "Installing OpenJDK..."
-$zulu_filename = "zulu11.48.21-ca-jdk11.0.11-win_x64.zip"
+https://cdn.azul.com/zulu/bin/
+$zulu_filename = "zulu11.52.13-ca-jdk11.0.13-win_x64.zip"
 $zulu_url = "https://cdn.azul.com/zulu/bin/${zulu_filename}"
 $zulu_zip = "c:\temp\${zulu_filename}"
 $zulu_extracted_path = "c:\temp\" + [IO.Path]::GetFileNameWithoutExtension($zulu_zip)
