@@ -1,0 +1,62 @@
+steps:
+  - label: "CentOS 7"
+    agents:
+      - "queue=arm64"
+    plugins:
+      - docker#v3.8.0:
+          environment:
+            - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+            - GOOGLE_APPLICATION_CREDENTIALS
+          image: gcr.io/bazel-public/centos7-releaser
+          network: host
+          privileged: true
+          propagate-environment: true
+          propagate-uid-gid: true
+          shell: ["/bin/bash", "-e", "-c"]
+          volumes:
+            - "/etc/group:/etc/group:ro"
+            - "/etc/passwd:/etc/passwd:ro"
+            - "/opt:/opt:ro"
+            - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+            - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+    command: |
+      bazel build --sandbox_tmpfs_path=/tmp //src:bazel
+      mkdir output
+      cp bazel-bin/src/bazel output/bazel
+      output/bazel build \
+          -c opt \
+          --stamp \
+          --sandbox_tmpfs_path=/tmp \
+          --workspace_status_command=scripts/ci/build_status_command.sh \
+          src/bazel
+      mkdir artifacts
+      cp "bazel-bin/src/bazel" "artifacts/bazel-linux-arm64"
+      cd artifacts
+      buildkite-agent artifact upload "*"
+
+  - wait
+
+  - label: "Test on CentOS 7"
+    agents:
+      - "queue=arm64"
+    plugins:
+      - docker#v3.8.0:
+          environment:
+            - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+            - GOOGLE_APPLICATION_CREDENTIALS
+          image: gcr.io/bazel-public/centos7-java8
+          network: host
+          privileged: true
+          propagate-environment: true
+          propagate-uid-gid: true
+          shell: ["/bin/bash", "-e", "-c"]
+          volumes:
+            - "/etc/group:/etc/group:ro"
+            - "/etc/passwd:/etc/passwd:ro"
+            - "/opt:/opt:ro"
+            - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+            - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+    command: |
+      buildkite-agent artifact download "bazel-linux-arm64" .
+      chmod +x "bazel-linux-arm64"
+      "./bazel-linux-arm64" info

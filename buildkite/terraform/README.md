@@ -5,6 +5,7 @@ terraform
 |
 |- bazel            # Configuration files for bazel
 |- bazel-testing    # Configuration files for bazel-testing
+|- bazel-trusted    # Configuration files for bazel-trusted
 ```
 
 The terraform [state](https://www.terraform.io/docs/language/state/index.html) is stored in GCS bucket `bazel-buildkite-tf-state` (non-public).
