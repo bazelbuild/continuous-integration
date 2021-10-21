@@ -125,3 +125,21 @@ fn truncate_build_event_json_file_recover_from_middle() -> Result<()> {
         Ok(())
     })
 }
+
+#[cfg(not(target_os = "windows"))]
+#[test]
+fn test_logs_deduplicated() -> Result<()> {
+    let mut cmd = Command::cargo_bin("bazelci-agent")?;
+    cmd.args([
+        "artifact",
+        "upload",
+        "--dry",
+        "--mode=buildkite",
+        "--build_event_json_file=tests/data/test_bep_duplicated.json",
+    ]);
+    cmd.assert()
+        .success()
+        .stdout(predicates::str::contains("buildkite-agent artifact upload src/test/shell/bazel/starlark_repository_test/shard_4_of_6/test_attempts/attempt_1.log").count(1));
+
+    Ok(())
+}
