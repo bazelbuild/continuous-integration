@@ -531,7 +531,7 @@ PLATFORMS = {
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2110-java17",
-        "python": "python3.8",
+        "python": "python3",
     },
     "macos": {
         "name": "macOS (OpenJDK 11, Xcode)",
