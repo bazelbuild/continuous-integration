@@ -37,17 +37,17 @@ steps:
 
   - label: "Project pipeline :darwin: (JDK 8)"
     command:
-      - python3.7 buildkite/bazelci.py project_pipeline --file_config=pipelines/tensorflow.yml
+      - python3 buildkite/bazelci.py project_pipeline --file_config=pipelines/tensorflow.yml
     agents: &mac_agents { queue: macos }
   - label: "Downstream pipeline :darwin: (JDK 8)"
     command:
-      - python3.7 buildkite/bazelci.py bazel_downstream_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
-      - python3.7 buildkite/bazelci.py bazel_downstream_pipeline --test_incompatible_flags --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
-      - python3.7 buildkite/bazelci.py bazel_downstream_pipeline --test_disabled_projects --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
+      - python3 buildkite/bazelci.py bazel_downstream_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
+      - python3 buildkite/bazelci.py bazel_downstream_pipeline --test_incompatible_flags --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
+      - python3 buildkite/bazelci.py bazel_downstream_pipeline --test_disabled_projects --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
     agents: *mac_agents
   - label: "Publish binaries pipeline :darwin: (JDK 8)"
     command:
-      - python3.7 buildkite/bazelci.py bazel_publish_binaries_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/build_bazel_binaries.yml
+      - python3 buildkite/bazelci.py bazel_publish_binaries_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/build_bazel_binaries.yml
     agents: *mac_agents
 
   - label: "Project pipeline :windows: (JDK 8)"
