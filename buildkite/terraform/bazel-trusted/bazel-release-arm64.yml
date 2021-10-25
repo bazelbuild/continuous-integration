@@ -1,0 +1,161 @@
+steps:
+  - label: "Get release name"
+    agents:
+      - "queue=default"
+    plugins:
+      - docker#v3.8.0:
+          environment:
+            - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+            - GOOGLE_APPLICATION_CREDENTIALS
+          image: gcr.io/bazel-public/ubuntu1804-java11
+          network: host
+          privileged: true
+          propagate-environment: true
+          propagate-uid-gid: true
+          shell: ["/bin/bash", "-e", "-c"]
+          volumes:
+            - "/etc/group:/etc/group:ro"
+            - "/etc/passwd:/etc/passwd:ro"
+            - "/opt:/opt:ro"
+            - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+            - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+      git checkout ${BUILDKITE_BRANCH}
+
+      release_name=\$(source scripts/release/common.sh; get_full_release_name)
+      echo "release_name = \"\$release_name\""
+      buildkite-agent meta-data set "release_name" "\$release_name"
+
+  - wait
+
+  - label: "CentOS 7"
+    agents:
+      - "queue=arm64"
+    env:
+      USE_BAZEL_VERSION: 3.6.0
+    plugins:
+      - docker#v3.8.0:
+          environment:
+            - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+            - GOOGLE_APPLICATION_CREDENTIALS
+          image: gcr.io/bazel-public/centos7-releaser
+          network: host
+          privileged: true
+          propagate-environment: true
+          propagate-uid-gid: true
+          shell: ["/bin/bash", "-e", "-c"]
+          volumes:
+            - "/etc/group:/etc/group:ro"
+            - "/etc/passwd:/etc/passwd:ro"
+            - "/opt:/opt:ro"
+            - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+            - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+      git checkout ${BUILDKITE_BRANCH}
+
+      release_name=$(buildkite-agent meta-data get "release_name")
+      echo "release_name = \"\$release_name\""
+
+      bazel build --sandbox_tmpfs_path=/tmp //src:bazel
+      mkdir output
+      cp bazel-bin/src/bazel output/bazel
+
+      output/bazel build \
+          -c opt \
+          --stamp \
+          --sandbox_tmpfs_path=/tmp \
+          --embed_label "\${release_name}" \
+          --workspace_status_command=scripts/ci/build_status_command.sh \
+          src/bazel
+
+      mkdir artifacts
+      cp "bazel-bin/src/bazel" "artifacts/bazel-\${release_name}-linux-arm64"
+
+      cd artifacts
+      buildkite-agent artifact upload "*"
+
+  - wait
+
+  - label: "Test on CentOS 7"
+    agents:
+      - "queue=arm64"
+    plugins:
+      - docker#v3.8.0:
+          environment:
+            - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+            - GOOGLE_APPLICATION_CREDENTIALS
+          image: gcr.io/bazel-public/centos7-java8
+          network: host
+          privileged: true
+          propagate-environment: true
+          propagate-uid-gid: true
+          shell: ["/bin/bash", "-e", "-c"]
+          volumes:
+            - "/etc/group:/etc/group:ro"
+            - "/etc/passwd:/etc/passwd:ro"
+            - "/opt:/opt:ro"
+            - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+            - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+    command: |
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+      git checkout ${BUILDKITE_BRANCH}
+
+      release_name=$(buildkite-agent meta-data get "release_name")
+      echo "release_name = \"\$release_name\""
+
+      buildkite-agent artifact download "bazel-\${release_name}-linux-arm64" .
+
+      chmod +x "bazel-\${release_name}-linux-arm64"
+
+      "./bazel-\${release_name}-linux-arm64" info
+
+  - wait
+
+  - block: ":rocket: Deploy release artifacts"
+
+  - label: "Deploy release artifacts"
+    agents:
+      - "queue=default"
+    plugins:
+      - docker#v3.8.0:
+          environment:
+            - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+            - GOOGLE_APPLICATION_CREDENTIALS
+          image: gcr.io/bazel-public/ubuntu1804-java11
+          network: host
+          privileged: true
+          propagate-environment: true
+          propagate-uid-gid: true
+          shell: ["/bin/bash", "-e", "-c"]
+          volumes:
+            - "/etc/group:/etc/group:ro"
+            - "/etc/passwd:/etc/passwd:ro"
+            - "/opt:/opt:ro"
+            - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+            - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+    command: |
+      echo "+++ Fetching Git notes"
+      git fetch origin master
+      git fetch --force origin refs/notes/*:refs/notes/*
+      git checkout ${BUILDKITE_BRANCH}
+
+      echo "+++ Downloading release artifacts"
+      ARTIFACTS="$(mktemp -d)"
+      buildkite-agent artifact download "*" "\${ARTIFACTS}/"
+
+      echo "+++ Importing GPG release key"
+      keyfile="$(mktemp --tmpdir)"
+      chmod 0600 "\${keyfile}"
+      gsutil cat "gs://bazel-trusted-encrypted-secrets/release-key.gpg.enc" | gcloud kms decrypt --project "bazel-public" --location "global" --keyring "buildkite" --key "bazel-release-key" --ciphertext-file "-" --plaintext-file "\${keyfile}"
+      gpg --allow-secret-key-import --import "\${keyfile}"
+      rm -f "\${keyfile}"
+
+      echo "+++ Deploying release"
+      sed -i -e '403,410d' scripts/ci/build.sh
+      source scripts/ci/build.sh
+      deploy_release "\${ARTIFACTS}"
