@@ -95,7 +95,7 @@ def gen_teams(node):
     teams += ']'
     return teams
 
-def gen_prodier_settings(org_slug, pipeline_slug):
+def gen_provider_settings(org_slug, pipeline_slug):
     pipeline = get_pipeline(org_slug, pipeline_slug)
     provider_settings = pipeline['provider']['settings']
     if "trigger_mode" not in provider_settings or provider_settings['trigger_mode'] == 'none':
@@ -136,7 +136,7 @@ def migrate(data, out_tf, out_sh):
         cancel_intermediate_builds_branch_filter = node['cancelIntermediateBuildsBranchFilter']
         branch_configuration = node['branchConfiguration']
         teams = gen_teams(node)
-        provider_settings = gen_prodier_settings(org_slug, slug)
+        provider_settings = gen_provider_settings(org_slug, slug)
 
         resource = f'resource "buildkite_pipeline" "{slug}" {{\n'
         resource += f'  name = "{name}"\n'
