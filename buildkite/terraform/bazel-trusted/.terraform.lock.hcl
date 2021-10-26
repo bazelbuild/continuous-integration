@@ -6,6 +6,7 @@ provider "registry.terraform.io/buildkite/buildkite" {
   constraints = "0.5.0"
   hashes = [
     "h1:0+KcHcoBr7zPr3QWMB2WhHFeFgWEZ5A0gYHut7Yi3es=",
+    "h1:FWAUULxdpzzlRgADjgU1IIqGBHl79Mr+4qUZ9GD0O+c=",
     "zh:12bcddfec2f92afb67f515f21434b3d548580ba16c3e0b5170e17be20fd2ef2b",
     "zh:238a2848ea81f356352ba89df2d4311df6468180ca8c3a5020dae730c05c19b9",
     "zh:6a055856c7c68ebd80789539e6118cd0e32ea3823118c06315302bdbc20f9a8a",
