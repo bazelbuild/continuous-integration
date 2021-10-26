@@ -29,9 +29,9 @@ docker build -f ubuntu2104/Dockerfile --target ubuntu2104-java11 -t "gcr.io/$PRE
 docker build -f ubuntu2110/Dockerfile --target ubuntu2110-java17 -t "gcr.io/$PREFIX/ubuntu2110-java17" ubuntu2110 &
 wait
 
-docker build -f centos7/Dockerfile    --target centos7-java8               -t "gcr.io/$PREFIX/centos7-java8" centos7 &
-docker build -f centos7/Dockerfile    --target centos7-java11              -t "gcr.io/$PREFIX/centos7-java11" centos7 &
-docker build -f centos7/Dockerfile    --target centos7-java11-devtoolset10 -t "gcr.io/$PREFIX/centos7-java11-devtoolset10" centos7 &
+docker build -f centos7/Dockerfile    --target centos7-java8               -t "gcr.io/$PREFIX/centos7-java8" centos7
+docker build -f centos7/Dockerfile    --target centos7-java11              -t "gcr.io/$PREFIX/centos7-java11" centos7
+docker build -f centos7/Dockerfile    --target centos7-java11-devtoolset10 -t "gcr.io/$PREFIX/centos7-java11-devtoolset10" centos7
 docker build -f centos7/Dockerfile    --target centos7-releaser            -t "gcr.io/$PREFIX/centos7-releaser" centos7
 docker build -f ubuntu1604/Dockerfile --target ubuntu1604-bazel-java8      -t "gcr.io/$PREFIX/ubuntu1604-bazel-java8" ubuntu1604
 docker build -f ubuntu1804/Dockerfile --target ubuntu1804-bazel-java11     -t "gcr.io/$PREFIX/ubuntu1804-bazel-java11" ubuntu1804
