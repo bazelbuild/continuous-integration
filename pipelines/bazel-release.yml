@@ -127,6 +127,9 @@ steps:
       release_name=$(buildkite-agent meta-data get "release_name")
       echo "release_name = \"\$release_name\""
 
+      # Our arm64 machine keeps state between runs, but we want to also do a clean build.
+      bazel clean --expunge
+
       bazel build --sandbox_tmpfs_path=/tmp //src:bazel
       mkdir output
       cp bazel-bin/src/bazel output/bazel
