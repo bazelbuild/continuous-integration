@@ -148,9 +148,6 @@ steps:
       release_name=$(buildkite-agent meta-data get "release_name")
       echo "release_name = \"\$release_name\""
 
-      /usr/bin/sudo /usr/bin/xcode-select --switch /Applications/Xcode11.7.app
-      /usr/bin/sudo /usr/bin/xcodebuild -runFirstLaunch
-
       bazel build //src:bazel
       mkdir output
       cp bazel-bin/src/bazel output/bazel
