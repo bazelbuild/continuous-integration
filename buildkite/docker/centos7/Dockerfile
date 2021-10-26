@@ -62,8 +62,9 @@ FROM centos7 AS centos7-java8
 RUN yum install -y java-1.8.0-openjdk-devel && yum clean all
 
 FROM centos7 AS centos7-java11
-RUN yum install -y https://cdn.azul.com/zulu/bin/zulu11.52.13-ca-jdk11.0.13-linux.x86_64.rpm && yum clean all
-
+RUN yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm && \
+    yum install -y zulu11-jdk && \
+    yum clean all
 FROM centos7-java11 AS centos7-java11-devtoolset10
 RUN yum install -y centos-release-scl && yum install -y devtoolset-10 && yum remove -y gcc gcc-c++ lcov && yum clean all
 
