@@ -16,9 +16,12 @@ steps:
           volumes:
             - "/etc/group:/etc/group:ro"
             - "/etc/passwd:/etc/passwd:ro"
-            - "/opt:/opt:ro"
+            - "/etc/shadow:/etc/shadow:ro"
+            - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+            - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
             - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
             - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+            - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
       git fetch origin master
       git fetch --force origin refs/notes/*:refs/notes/*
@@ -49,9 +52,12 @@ steps:
           volumes:
             - "/etc/group:/etc/group:ro"
             - "/etc/passwd:/etc/passwd:ro"
-            - "/opt:/opt:ro"
+            - "/etc/shadow:/etc/shadow:ro"
+            - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+            - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
             - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
             - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+            - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
       git fetch origin master
       git fetch --force origin refs/notes/*:refs/notes/*
@@ -97,9 +103,12 @@ steps:
           volumes:
             - "/etc/group:/etc/group:ro"
             - "/etc/passwd:/etc/passwd:ro"
-            - "/opt:/opt:ro"
+            - "/etc/shadow:/etc/shadow:ro"
+            - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+            - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
             - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
             - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+            - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
       git fetch origin master
       git fetch --force origin refs/notes/*:refs/notes/*
@@ -135,9 +144,12 @@ steps:
           volumes:
             - "/etc/group:/etc/group:ro"
             - "/etc/passwd:/etc/passwd:ro"
-            - "/opt:/opt:ro"
+            - "/etc/shadow:/etc/shadow:ro"
+            - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+            - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
             - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
             - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+            - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
       echo "+++ Fetching Git notes"
       git fetch origin master

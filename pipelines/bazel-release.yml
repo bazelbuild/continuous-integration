@@ -19,7 +19,9 @@ steps:
         volumes:
           - "/etc/group:/etc/group:ro"
           - "/etc/passwd:/etc/passwd:ro"
-          - "/opt:/opt:ro"
+          - "/etc/shadow:/etc/shadow:ro"
+          - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+          - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
           - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
           - "/var/run/docker.sock:/var/run/docker.sock"
@@ -52,7 +54,9 @@ steps:
         volumes:
           - "/etc/group:/etc/group:ro"
           - "/etc/passwd:/etc/passwd:ro"
-          - "/opt:/opt:ro"
+          - "/etc/shadow:/etc/shadow:ro"
+          - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+          - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
           - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
           - "/var/run/docker.sock:/var/run/docker.sock"
@@ -110,9 +114,12 @@ steps:
         volumes:
           - "/etc/group:/etc/group:ro"
           - "/etc/passwd:/etc/passwd:ro"
-          - "/opt:/opt:ro"
+          - "/etc/shadow:/etc/shadow:ro"
+          - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+          - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
           - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+          - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
       git fetch origin ${BUILDKITE_BRANCH}
       git checkout FETCH_HEAD
@@ -258,7 +265,9 @@ steps:
         volumes:
           - "/etc/group:/etc/group:ro"
           - "/etc/passwd:/etc/passwd:ro"
-          - "/opt:/opt:ro"
+          - "/etc/shadow:/etc/shadow:ro"
+          - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+          - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
           - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
           - "/var/run/docker.sock:/var/run/docker.sock"
@@ -292,9 +301,12 @@ steps:
         volumes:
           - "/etc/group:/etc/group:ro"
           - "/etc/passwd:/etc/passwd:ro"
-          - "/opt:/opt:ro"
+          - "/etc/shadow:/etc/shadow:ro"
+          - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+          - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
           - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+          - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
       git fetch origin ${BUILDKITE_BRANCH}
       git checkout FETCH_HEAD
@@ -383,14 +395,16 @@ steps:
         volumes:
           - "/etc/group:/etc/group:ro"
           - "/etc/passwd:/etc/passwd:ro"
-          - "/opt:/opt:ro"
+          - "/etc/shadow:/etc/shadow:ro"
+          - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+          - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
           - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
           - "/var/run/docker.sock:/var/run/docker.sock"
     command: |
       echo "+++ Installing required packages"
       sudo apt -y update && sudo apt -y install devscripts pandoc reprepro
-      
+
       echo "+++ Downloading github-release"
       curl -L https://mirror.bazel.build/github.com/c4milo/github-release/releases/download/v1.1.0/github-release_v1.1.0_linux_amd64.tar.gz | sudo tar xz -C /usr/local/bin
       sudo chown root:root /usr/local/bin/github-release
@@ -436,7 +450,9 @@ steps:
         volumes:
           - "/etc/group:/etc/group:ro"
           - "/etc/passwd:/etc/passwd:ro"
-          - "/opt:/opt:ro"
+          - "/etc/shadow:/etc/shadow:ro"
+          - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+          - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
           - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
           - "/var/run/docker.sock:/var/run/docker.sock"
