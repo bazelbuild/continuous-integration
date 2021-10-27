@@ -2494,7 +2494,7 @@ def upload_project_pipeline_step(
         pipeline_command += " --http_config=" + http_config
     if file_config:
         pipeline_command += " --file_config=" + file_config
-    pipeline_command += " | buildkite-agent pipeline upload"
+    pipeline_command += " | tee /dev/tty | buildkite-agent pipeline upload"
 
     return create_step(
         label="Setup {0}".format(project_name),
@@ -2839,7 +2839,7 @@ def print_bazel_downstream_pipeline(
                         fetch_bazelcipy_command(),
                         fetch_incompatible_flag_verbose_failures_command(),
                         PLATFORMS[DEFAULT_PLATFORM]["python"]
-                        + " incompatible_flag_verbose_failures.py --build_number=%s | buildkite-agent pipeline upload"
+                        + " incompatible_flag_verbose_failures.py --build_number=%s | tee /dev/tty | buildkite-agent pipeline upload"
                         % current_build_number,
                     ],
                     platform=DEFAULT_PLATFORM,
