@@ -18,5 +18,5 @@
 # Instead, simply replace all values with empty strings ("").
 ---
 message: ""
-issue_url: "MacOS machines are offline due to network maintenance. We expect the outage to continue until 6pm EDT today."
+issue_url: ""
 last_good_bazel: ""
