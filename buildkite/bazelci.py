@@ -523,7 +523,7 @@ PLATFORMS = {
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2104-java11",
-        "python": "python3.8",
+        "python": "python3",
     },
     "ubuntu2110": {
         "name": "Ubuntu 21.10 (OpenJDK 17, gcc 11.2.0)",
