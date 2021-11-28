@@ -237,6 +237,18 @@ tasks:
     - "..."
 ```
 
+### Running Bazel coverage
+
+The `coverage_targets` field allows you to specify a list of targets that will be run using `bazel coverage`:
+
+```yaml
+---
+tasks:
+  ubuntu2004:
+    coverage_targets:
+    - "..."
+```
+
 ### Using Specific Build & Test Flags
 
 The `build_flags` and `test_flags` fields contain lists of flags that should be used when building or testing (respectively):
