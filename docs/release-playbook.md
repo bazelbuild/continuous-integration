@@ -244,6 +244,10 @@ After a few days of iteration:
     ```bash
     scripts/release/release.sh release
     ```
+    
+    **Warning**: If this process is interrupted for any reason, please check the following before running:
+      * Both `release-x.x.xrcN` and `master` branch are restored to the previous clean state (without addtional release commits).
+      * Release tag is deleted locally (`git tag -d x.x.x`), otherwise rerun will cause an error that complains the tag already exists.
 
 1.  A CI job is uploading the release artifacts to GitHub. Look for the release
     workflow on https://buildkite.com/bazel-trusted/bazel-release/. Unblock the steps.
