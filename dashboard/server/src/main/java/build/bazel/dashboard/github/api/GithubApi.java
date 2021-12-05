@@ -11,5 +11,7 @@ public interface GithubApi {
 
   Single<GithubApiResponse> fetchIssue(FetchIssueRequest request);
 
+  Single<GithubApiResponse> listIssueComments(ListIssueCommentsRequest request);
+
   Single<GithubApiResponse> searchIssues(SearchIssuesRequest request);
 }

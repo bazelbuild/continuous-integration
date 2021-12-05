@@ -251,3 +251,18 @@ CREATE TABLE github_user
     email TEXT NOT NULL,
     PRIMARY KEY (username)
 );
+
+--
+-- Table that store the raw issue comments data fetched from Github
+--
+CREATE TABLE github_issue_comment_data
+(
+    owner        TEXT        NOT NULL,
+    repo         TEXT        NOT NULL,
+    issue_number INTEGER     NOT NULL,
+    page         INTEGER     NOT NULL,
+    timestamp    TIMESTAMPTZ NOT NULL,
+    etag         TEXT        NOT NULL,
+    data         JSONB       NOT NULL,
+    PRIMARY KEY (owner, repo, issue_number, page)
+);

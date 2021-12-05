@@ -1,6 +1,7 @@
 package build.bazel.dashboard.github.sync.issue;
 
 import build.bazel.dashboard.github.issue.GithubIssueService;
+import build.bazel.dashboard.github.issuecomment.GithubIssueCommentService;
 import build.bazel.dashboard.github.repo.GithubRepoService;
 import build.bazel.dashboard.utils.JsonStateStore;
 import build.bazel.dashboard.utils.JsonStateStore.JsonState;
@@ -27,6 +28,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class GithubSyncIssueTask {
   private final GithubRepoService githubRepoService;
   private final GithubIssueService githubIssueService;
+  private final GithubIssueCommentService githubIssueCommentService;
   private final JsonStateStore jsonStateStore;
 
   @Builder
@@ -135,6 +137,9 @@ public class GithubSyncIssueTask {
               }
               return Completable.complete();
             })
+        .andThen(
+            githubIssueCommentService.syncIssueComments(
+                data.getOwner(), data.getRepo(), data.getCurrent()))
         .andThen(
             jsonStateStore.save(
                 jsonState.getKey(),

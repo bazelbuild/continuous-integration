@@ -56,6 +56,7 @@ public class GithubIssue {
 
   @Builder
   @Value
+  @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
   public static class User {
     String login;
     String avatarUrl;
@@ -63,6 +64,7 @@ public class GithubIssue {
 
   @Builder
   @Value
+  @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
   public static class Label {
     String name;
     String description;
