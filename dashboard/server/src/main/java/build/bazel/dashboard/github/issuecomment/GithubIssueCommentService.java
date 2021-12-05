@@ -11,6 +11,7 @@ import io.reactivex.rxjava3.core.Single;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -46,8 +47,10 @@ public class GithubIssueCommentService {
 
   private Single<JsonNode> syncIssueCommentPage(
       String owner, String repo, int issueNumber, int page) {
+    AtomicReference<GithubIssueCommentPage> existedPage = new AtomicReference<>();
     return githubIssueCommentRepo
         .findOnePage(owner, repo, issueNumber, page)
+        .doOnSuccess(existedPage::set)
         .map(GithubIssueCommentPage::getEtag)
         .defaultIfEmpty("")
         .map(
@@ -79,7 +82,11 @@ public class GithubIssueCommentService {
                     .andThen(Single.just(response.getBody()));
               } else if (response.getStatus().value() == 304) {
                 // Not modified
-                return Single.just(response.getBody());
+                GithubIssueCommentPage existed = existedPage.get();
+                if (existed == null) {
+                  return Single.just(objectMapper.createArrayNode());
+                }
+                return Single.just(existed.getData());
               } else {
                 return Single.error(new IOException(response.getStatus().toString()));
               }
