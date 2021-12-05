@@ -13,10 +13,12 @@ import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class GithubIssueCommentService {
   private static final int PER_PAGE = 100;
 
@@ -40,9 +42,15 @@ public class GithubIssueCommentService {
             });
 
     return Completable.fromPublisher(
-        pages
-            .flatMapSingle(page -> syncIssueCommentPage(owner, repo, issueNumber, page), false, 1)
-            .takeUntil(node -> node.size() < PER_PAGE));
+            pages
+                .flatMapSingle(
+                    page -> syncIssueCommentPage(owner, repo, issueNumber, page), false, 1)
+                .takeUntil(node -> node.size() < PER_PAGE))
+        .onErrorComplete(
+            error -> {
+              log.error("Failed to sync issue comments: " + error.getMessage(), error);
+              return true;
+            });
   }
 
   private Single<JsonNode> syncIssueCommentPage(
