@@ -2,6 +2,7 @@ package build.bazel.dashboard.github.notification;
 
 import build.bazel.dashboard.config.DashboardConfig;
 import build.bazel.dashboard.github.issue.GithubIssue;
+import build.bazel.dashboard.github.issuecomment.GithubIssueCommentService;
 import build.bazel.dashboard.github.issuelist.GithubIssueList;
 import build.bazel.dashboard.github.issuelist.GithubIssueListService;
 import build.bazel.dashboard.github.issuelist.GithubIssueListService.ListParams;
@@ -13,7 +14,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
@@ -22,11 +34,6 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.time.Instant;
-import java.util.stream.Collectors;
 
 @Profile("notification")
 @RestController
@@ -38,6 +45,7 @@ public class NotificationTask {
   private final JavaMailSender javaMailSender;
   private final GithubIssueListService githubIssueListService;
   private final GithubUserService githubUserService;
+  private final GithubIssueCommentService githubIssueCommentService;
 
   @PostMapping("/internal/github/issues/notifications")
   public void notifyIssueStatus() {
@@ -60,26 +68,24 @@ public class NotificationTask {
         .flatMapCompletable(
             list -> {
               if (list.getTotal() > 0) {
-                return Completable.fromCallable(
-                    () -> {
-                      String reviewLink =
-                          dashboardConfig.getHost()
-                              + "/issues?q=%7B%22status%22%3A%22TO_BE_REVIEWED%22%2C%22page%22%3A1%7D";
-                      String body =
-                          buildNotificationBody(
-                              params.getOwner(),
-                              params.getRepo(),
-                              reviewLink,
-                              "issues",
-                              "review",
-                              list);
+                String reviewLink =
+                    dashboardConfig.getHost()
+                        + "/issues?q=%7B%22status%22%3A%22TO_BE_REVIEWED%22%2C%22page%22%3A1%7D";
+                return buildNotificationBody(reviewLink, "issues", "review", list)
+                    .flatMapCompletable(
+                        body ->
+                            Completable.fromCallable(
+                                () -> {
+                                  sendNotification(
+                                      dashboardConfig
+                                          .getGithub()
+                                          .getNotification()
+                                          .getToNeedReviewEmail(),
+                                      body,
+                                      "review");
 
-                      sendNotification(
-                          dashboardConfig.getGithub().getNotification().getToNeedReviewEmail(),
-                          body, "review");
-
-                      return null;
-                    });
+                                  return null;
+                                }));
               }
 
               return Completable.complete();
@@ -107,49 +113,116 @@ public class NotificationTask {
     javaMailSender.send(mimeMessage);
   }
 
-  private String buildNotificationBody(
-      String owner,
-      String repo,
-      String reviewLink,
-      String type,
-      String action,
-      GithubIssueList list) {
-    StringBuilder body = new StringBuilder();
+  private Single<String> buildNotificationBody(
+      String reviewLink, String type, String action, GithubIssueList list) {
+    return Flowable.fromIterable(list.getItems())
+        .concatMapMaybe(this::buildIssueListItem)
+        .collect(Collectors.toList())
+        .map(
+            issues -> {
+              StringBuilder body = new StringBuilder();
 
-    body.append("<p>You have ");
-    appendLink(body, reviewLink, Integer.toString(list.getTotal()));
-    body.append(" ")
-        .append(type)
-        .append(" to ")
-        .append(action)
-        .append(". Below are some of them:</p>");
+              body.append("<p>You have ");
+              appendLink(body, reviewLink, list.getTotal() + " " + type);
+              body.append(" to ").append(action).append(". Below are some of them:</p>");
 
-    body.append("<ul>");
-    for (GithubIssueList.Item issue : list.getItems()) {
-      GithubIssue.Data data;
-      try {
-        data = GithubIssue.parseData(objectMapper, issue.getData());
-      } catch (JsonProcessingException e) {
-        continue;
-      }
+              body.append("<table style=\"text-align: left;\">");
 
-      body.append("<li>");
-      appendLink(
-          body,
-          String.format("https://github.com/%s/%s/issues/%s", owner, repo, issue.getIssueNumber()),
-          Integer.toString(issue.getIssueNumber()));
+              body.append("<thead>");
+              body.append("<tr>");
+              body.append("<th>Issue / PR</th>");
+              body.append("<th></th>");
+              body.append("<th>Author</th>");
+              body.append("<th>Participants</th>");
+              body.append("</tr>");
+              body.append("</thead>");
 
-      body.append(" ");
-      body.append(data.getTitle());
-      body.append("</li>");
+              body.append("<tbody>");
+              for (String issue : issues) {
+                body.append(issue);
+              }
+              body.append("</tbody>");
+
+              body.append("</table>");
+
+              return body.toString();
+            });
+  }
+
+  private Maybe<String> buildIssueListItem(GithubIssueList.Item issue) {
+    GithubIssue.Data data;
+    try {
+      data = GithubIssue.parseData(objectMapper, issue.getData());
+    } catch (JsonProcessingException e) {
+      return Maybe.empty();
     }
-    body.append("</ul>");
 
-    body.append("<p>Please check ");
-    body.append(reviewLink);
-    body.append(".</p>");
+    return findParticipants(issue)
+        .map(
+            participants -> {
+              StringBuilder body = new StringBuilder();
+              body.append("<tr>");
 
-    return body.toString();
+              body.append("<td>");
+              appendLink(
+                  body,
+                  String.format(
+                      "https://github.com/%s/%s/issues/%s",
+                      issue.getOwner(), issue.getRepo(), issue.getIssueNumber()),
+                  "#" + issue.getIssueNumber());
+              body.append("</td>");
+
+              body.append("<td>");
+              String title = data.getTitle();
+              if (title.length() > 80) {
+                title = title.substring(0, 77) + "...";
+              }
+              boolean isPullRequest = issue.getData().get("pull_request") != null;
+              body.append(isPullRequest ? "PR: " : "Issue: ");
+              body.append(title);
+              body.append("</td>");
+
+              body.append("<td>");
+              body.append("@");
+              body.append(data.getUser().getLogin());
+              body.append("</td>");
+
+              body.append("<td>");
+              for (String participant : participants) {
+                body.append("@");
+                body.append(participant);
+                body.append(" ");
+              }
+              body.append("</td>");
+
+              body.append("</tr>");
+              return body.toString();
+            })
+        .toMaybe();
+  }
+
+  private static final Pattern MENTIONS_PATTERN = Pattern.compile("(^|\\s+)@(\\S+)($|\\s+)");
+
+  private Single<List<String>> findParticipants(GithubIssueList.Item issue) {
+    return githubIssueCommentService
+        .findIssueComments(issue.getOwner(), issue.getRepo(), issue.getIssueNumber())
+        .flatMap(
+            comment -> {
+              Set<String> usernames = new HashSet<>();
+              usernames.add(comment.getUser().getLogin());
+              Matcher matcher = MENTIONS_PATTERN.matcher(comment.getBody());
+              while (matcher.find()) {
+                usernames.add(matcher.group(2));
+              }
+              return Flowable.fromIterable(usernames);
+            })
+        .collect(Collectors.toSet())
+        .map(
+            participants -> {
+              List<String> result = new ArrayList<>(participants);
+              result.sort(String::compareTo);
+              return result;
+            });
   }
 
   private void appendLink(StringBuilder sb, String href, String text) {
@@ -193,7 +266,7 @@ public class NotificationTask {
     params.setActionOwner(user.getUsername());
     return githubIssueListService
         .find(params)
-        .map(
+        .flatMap(
             list -> {
               if (list.getTotal() > 0) {
                 String reviewLink =
@@ -201,10 +274,9 @@ public class NotificationTask {
                         + "/issues?q=%7B%22status%22%3A%22REVIEWED%22%2C%22page%22%3A1%2C%22actionOwner%22%3A%22"
                         + user.getUsername()
                         + "%22%7D";
-                return buildNotificationBody(
-                    params.getOwner(), params.getRepo(), reviewLink, "issues", "triage", list);
+                return buildNotificationBody(reviewLink, "issues", "triage", list);
               }
-              return "";
+              return Single.just("");
             });
   }
 
@@ -218,7 +290,7 @@ public class NotificationTask {
 
     return githubIssueListService
         .find(params)
-        .map(
+        .flatMap(
             list -> {
               if (list.getTotal() > 0) {
                 String reviewLink =
@@ -226,10 +298,9 @@ public class NotificationTask {
                         + "/issues?q=%7B%22status%22%3A%22TRIAGED%22%2C%22page%22%3A1%2C%22labels%22%3A%5B%22P0%22%5D%2C%22actionOwner%22%3A%22"
                         + user.getUsername()
                         + "%22%7D";
-                return buildNotificationBody(
-                    params.getOwner(), params.getRepo(), reviewLink, "P0 bugs", "fix", list);
+                return buildNotificationBody(reviewLink, "P0 bugs", "fix", list);
               }
-              return "";
+              return Single.just("");
             });
   }
 
@@ -243,7 +314,7 @@ public class NotificationTask {
 
     return githubIssueListService
         .find(params)
-        .map(
+        .flatMap(
             list -> {
               if (list.getTotal() > 0) {
                 String reviewLink =
@@ -251,10 +322,9 @@ public class NotificationTask {
                         + "/issues?q=%7B%22status%22%3A%22TRIAGED%22%2C%22page%22%3A1%2C%22labels%22%3A%5B%22P1%22%5D%2C%22actionOwner%22%3A%22"
                         + user.getUsername()
                         + "%22%7D";
-                return buildNotificationBody(
-                    params.getOwner(), params.getRepo(), reviewLink, "P1 bugs", "fix", list);
+                return buildNotificationBody(reviewLink, "P1 bugs", "fix", list);
               }
-              return "";
+              return Single.just("");
             });
   }
 
@@ -268,7 +338,7 @@ public class NotificationTask {
 
     return githubIssueListService
         .find(params)
-        .map(
+        .flatMap(
             list -> {
               if (list.getTotal() > 0) {
                 String reviewLink =
@@ -276,10 +346,9 @@ public class NotificationTask {
                         + "/issues?q=%7B%22status%22%3A%22TRIAGED%22%2C%22page%22%3A1%2C%22labels%22%3A%5B%22P2%22%5D%2C%22actionOwner%22%3A%22"
                         + user.getUsername()
                         + "%22%7D";
-                return buildNotificationBody(
-                    params.getOwner(), params.getRepo(), reviewLink, "P2 bugs", "fix", list);
+                return buildNotificationBody(reviewLink, "P2 bugs", "fix", list);
               }
-              return "";
+              return Single.just("");
             });
   }
 }
