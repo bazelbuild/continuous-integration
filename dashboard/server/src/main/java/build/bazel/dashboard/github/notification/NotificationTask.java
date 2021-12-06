@@ -157,7 +157,7 @@ public class NotificationTask {
       return Maybe.empty();
     }
 
-    return findParticipants(issue)
+    return findParticipants(issue, data)
         .map(
             participants -> {
               StringBuilder body = new StringBuilder();
@@ -201,24 +201,14 @@ public class NotificationTask {
         .toMaybe();
   }
 
-  private static final Pattern MENTIONS_PATTERN = Pattern.compile("(^|\\s+)@(\\S+)($|\\s+)");
-
-  private Single<List<String>> findParticipants(GithubIssueList.Item issue) {
+  private Single<List<String>> findParticipants(GithubIssueList.Item issue, GithubIssue.Data data) {
     return githubIssueCommentService
         .findIssueComments(issue.getOwner(), issue.getRepo(), issue.getIssueNumber())
-        .flatMap(
-            comment -> {
-              Set<String> usernames = new HashSet<>();
-              usernames.add(comment.getUser().getLogin());
-              Matcher matcher = MENTIONS_PATTERN.matcher(comment.getBody());
-              while (matcher.find()) {
-                usernames.add(matcher.group(2));
-              }
-              return Flowable.fromIterable(usernames);
-            })
+        .map(comment -> comment.getUser().getLogin())
         .collect(Collectors.toSet())
         .map(
             participants -> {
+              participants.remove(data.getUser().getLogin());
               List<String> result = new ArrayList<>(participants);
               result.sort(String::compareTo);
               return result;
