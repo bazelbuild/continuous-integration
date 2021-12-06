@@ -93,6 +93,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/googlesamples/android-testing.git",
         "http_config": "https://raw.githubusercontent.com/googlesamples/android-testing/master/bazelci/buildkite-pipeline.yml",
         "pipeline_slug": "android-testing",
+        "disabled_reason": "https://github.com/android/testing-samples/issues/417",
     },
     "Bazel": {
         "git_repository": "https://github.com/bazelbuild/bazel.git",
@@ -253,6 +254,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/tulsi.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/tulsi/master/.bazelci/presubmit.yml",
         "pipeline_slug": "tulsi-bazel-darwin",
+        "disabled_reason": "https://github.com/bazelbuild/tulsi/issues/286",
     },
     "re2": {
         "git_repository": "https://github.com/google/re2.git",
@@ -287,11 +289,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "pipeline_slug": "rules-closure-closure-compiler",
         "owned_by_bazel": True,
     },
-    "rules_d": {
-        "git_repository": "https://github.com/bazelbuild/rules_d.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_d/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-d",
-    },
     "rules_docker": {
         "git_repository": "https://github.com/bazelbuild/rules_docker.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_docker/master/.bazelci/presubmit.yml",
@@ -301,6 +298,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_dotnet.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_dotnet/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-dotnet-edge",
+        "disabled_reason": "https://github.com/bazelbuild/rules_dotnet/issues/268",
     },
     "rules_foreign_cc": {
         "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
@@ -328,6 +326,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/tweag/rules_haskell.git",
         "http_config": "https://raw.githubusercontent.com/tweag/rules_haskell/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-haskell-haskell",
+        "disabled_reason": "https://github.com/tweag/rules_haskell/issues/1650",
     },
     "rules_jsonnet": {
         "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
@@ -350,6 +349,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_k8s/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-k8s-k8s",
+        "disabled_reason": "https://github.com/bazelbuild/rules_k8s/issues/668",
     },
     "rules_kotlin": {
         "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
@@ -969,7 +969,7 @@ def print_collapsed_group(name):
 def print_expanded_group(name):
     eprint("\n\n+++ {0}\n\n".format(name))
 
-    
+
 def is_trueish(s):
     return str(s).lower() in ["true", "1", "t", "y", "yes"]
 
