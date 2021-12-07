@@ -165,7 +165,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "Cargo-Raze": {
         "git_repository": "https://github.com/google/cargo-raze.git",
-        "http_config": "https://raw.githubusercontent.com/google/cargo-raze/master/.bazelci/presubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/google/cargo-raze/main/.bazelci/presubmit.yml",
         "pipeline_slug": "cargo-raze",
     },
     "CLion Plugin": {
