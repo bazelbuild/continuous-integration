@@ -43,7 +43,7 @@ def generate_configs(output_root: str, bazel_version: str, toolchain_name: str,
   os.makedirs(output_dir, exist_ok=True)
 
   toolchain_container = 'gcr.io/bazel-public/{}:latest'.format(toolchain_name)
-  exec_constrants = [
+  exec_constraints = [
       '@bazel_tools//platforms:linux', '@bazel_tools//platforms:x86_64',
       '@bazel_tools//tools/cpp:gcc'
   ]
@@ -53,12 +53,12 @@ def generate_configs(output_root: str, bazel_version: str, toolchain_name: str,
           '--bazel_version={}'.format(bazel_version),
           '--toolchain_container={}'.format(toolchain_container),
           '--cpp_env_json={}'.format(cpp_env_json),
-          '--exec_constrants={}'.format(','.join(exec_constrants)),
+          '--exec_constraints={}'.format(','.join(exec_constraints)),
           '--output_tarball={}'.format(output_tarball),
           '--output_manifest={}'.format(output_manifest),
           '--exec_os=linux',
           '--target_os=linux',
-      ],
+      ] + (['--java_use_local_runtime'] if bazel_version[0] > '4' else []),
       check=True,
   )
 
@@ -108,43 +108,184 @@ def upload_configs(output_root: str, upload_root: str, bazel_version: str,
       check=True,
   )
 
-
-bazel_versions = [
-    '4.2.1',
-    '4.2.0',
-    '4.1.0',
-    '4.0.0',
+configs = [
+  {
+    "bazel_version": "5.0.0",
+    "containers": [
+      {
+          'toolchain_name': 'ubuntu1604-bazel-java8',
+          'cpp_env_json': 'cpp_env/ubuntu1604.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1604-java8',
+          'cpp_env_json': 'cpp_env/ubuntu1604.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1804-bazel-java11',
+          'cpp_env_json': 'cpp_env/ubuntu1804.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1804-java11',
+          'cpp_env_json': 'cpp_env/ubuntu1804.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004-bazel-java11',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004-java11',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+    ]
+  },
+  {
+    "bazel_version": "4.2.2",
+    "containers": [
+      {
+          'toolchain_name': 'ubuntu1604-bazel-java8',
+          'cpp_env_json': 'cpp_env/ubuntu1604.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1604-java8',
+          'cpp_env_json': 'cpp_env/ubuntu1604.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1804-bazel-java11',
+          'cpp_env_json': 'cpp_env/ubuntu1804.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1804-java11',
+          'cpp_env_json': 'cpp_env/ubuntu1804.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004-bazel-java11',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004-java11',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+    ]
+  },
+  {
+    "bazel_version": "4.2.1",
+    "containers": [
+      {
+          'toolchain_name': 'ubuntu1604-bazel-java8',
+          'cpp_env_json': 'cpp_env/ubuntu1604.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1604-java8',
+          'cpp_env_json': 'cpp_env/ubuntu1604.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1804-bazel-java11',
+          'cpp_env_json': 'cpp_env/ubuntu1804.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1804-java11',
+          'cpp_env_json': 'cpp_env/ubuntu1804.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004-bazel-java11',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004-java11',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+    ]
+  },
+  {
+    "bazel_version": "4.2.0",
+    "containers": [
+      {
+          'toolchain_name': 'ubuntu1604-bazel-java8',
+          'cpp_env_json': 'cpp_env/ubuntu1604.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1604-java8',
+          'cpp_env_json': 'cpp_env/ubuntu1604.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1804-bazel-java11',
+          'cpp_env_json': 'cpp_env/ubuntu1804.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1804-java11',
+          'cpp_env_json': 'cpp_env/ubuntu1804.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004-bazel-java11',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004-java11',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+    ]
+  },
+  {
+    "bazel_version": "4.1.0",
+    "containers": [
+      {
+          'toolchain_name': 'ubuntu1604-bazel-java8',
+          'cpp_env_json': 'cpp_env/ubuntu1604.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1604-java8',
+          'cpp_env_json': 'cpp_env/ubuntu1604.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1804-bazel-java11',
+          'cpp_env_json': 'cpp_env/ubuntu1804.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1804-java11',
+          'cpp_env_json': 'cpp_env/ubuntu1804.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004-bazel-java11',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004-java11',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+    ]
+  },
+  {
+    "bazel_version": "4.0.0",
+    "containers": [
+      {
+          'toolchain_name': 'ubuntu1604-bazel-java8',
+          'cpp_env_json': 'cpp_env/ubuntu1604.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1604-java8',
+          'cpp_env_json': 'cpp_env/ubuntu1604.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1804-bazel-java11',
+          'cpp_env_json': 'cpp_env/ubuntu1804.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1804-java11',
+          'cpp_env_json': 'cpp_env/ubuntu1804.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004-bazel-java11',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004-java11',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+    ]
+  },
 ]
 
-containers = [
-    {
-        'toolchain_name': 'ubuntu1604-bazel-java8',
-        'cpp_env_json': 'cpp_env/ubuntu1604.json'
-    },
-    {
-        'toolchain_name': 'ubuntu1604-java8',
-        'cpp_env_json': 'cpp_env/ubuntu1604.json'
-    },
-    {
-        'toolchain_name': 'ubuntu1804-bazel-java11',
-        'cpp_env_json': 'cpp_env/ubuntu1804.json'
-    },
-    {
-        'toolchain_name': 'ubuntu1804-java11',
-        'cpp_env_json': 'cpp_env/ubuntu1804.json'
-    },
-    {
-        'toolchain_name': 'ubuntu2004-bazel-java11',
-        'cpp_env_json': 'cpp_env/ubuntu2004.json'
-    },
-    {
-        'toolchain_name': 'ubuntu2004-java11',
-        'cpp_env_json': 'cpp_env/ubuntu2004.json'
-    },
-]
-
-
-def generate_configs_for_version(output_root: str, bazel_version: str, download_root: str) -> list[dict]:
+def generate_configs_for_version(output_root: str, bazel_version: str, containers: dict, download_root: str) -> list[dict]:
   toolchains = []
   for container in containers:
     toolchain_name = container['toolchain_name']
@@ -167,6 +308,7 @@ def generate_configs_for_version(output_root: str, bazel_version: str, download_
         'sha256': tarball_sha256,
         'manifest': tarball_manifest,
     })
+  return toolchains
 
 
 def main():
@@ -174,7 +316,6 @@ def main():
   parser.add_argument(
       '--upload',
       default='',
-      action=argparse.BooleanOptionalAction,
       help='upload generated configs to GCP')
 
   args = parser.parse_args()
@@ -185,8 +326,9 @@ def main():
 
   manifest = []
 
-  for bazel_version in bazel_versions:
-    toolchains = generate_configs_for_version(output_root, bazel_version, download_root)
+  for config in configs:
+    bazel_version = config["bazel_version"]
+    toolchains = generate_configs_for_version(output_root, bazel_version, config["containers"], download_root)
     if args.upload == 'all' or args.upload == bazel_version:
       for toolchain in toolchains:
         upload_configs(output_root, upload_root, bazel_version, toolchain['name'],
