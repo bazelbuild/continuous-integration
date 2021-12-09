@@ -298,7 +298,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_dotnet.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_dotnet/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-dotnet-edge",
-        "disabled_reason": "https://github.com/bazelbuild/rules_dotnet/issues/268",
     },
     "rules_foreign_cc": {
         "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
