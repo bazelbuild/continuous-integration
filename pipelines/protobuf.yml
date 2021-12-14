@@ -1,28 +1,25 @@
 ---
 platforms:
   ubuntu2004:
+    test_flags:
+      - "--proto_toolchain_for_cc=//:cc_toolchain"
     test_targets:
       - "//:all"
       - "//java/..."
-      # `cc_proto_blacklist_test` only works as `@com_google_protobuf//:cc_proto_blacklist_test`.
-      # https://github.com/bazelbuild/bazel/issues/10590
-      - "-//:cc_proto_blacklist_test"
-      - "@com_google_protobuf//:cc_proto_blacklist_test"
+      - "//:cc_proto_blacklist_test"
   macos:
+    test_flags:
+      - "--proto_toolchain_for_cc=//:cc_toolchain"
     test_targets:
       - "//:all"
       - "//java/..."
-      # `cc_proto_blacklist_test` only works as `@com_google_protobuf//:cc_proto_blacklist_test`.
-      # https://github.com/bazelbuild/bazel/issues/10590
-      - "-//:cc_proto_blacklist_test"
-      - "@com_google_protobuf//:cc_proto_blacklist_test"
+      - "//:cc_proto_blacklist_test"
   windows:
+    test_flags:
+      - "--proto_toolchain_for_cc=//:cc_toolchain"
     test_targets:
       - "//:all"
       - "//java/..."
-      # `cc_proto_blacklist_test` only works as `@com_google_protobuf//:cc_proto_blacklist_test`.
-      # https://github.com/bazelbuild/bazel/issues/10590
-      - "-//:cc_proto_blacklist_test"
-      - "@com_google_protobuf//:cc_proto_blacklist_test"
+      - "//:cc_proto_blacklist_test"
       - "-//java/core:conformance_test"
       - "-//java/lite:conformance_test"
