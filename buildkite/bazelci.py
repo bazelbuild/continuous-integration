@@ -325,7 +325,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/tweag/rules_haskell.git",
         "http_config": "https://raw.githubusercontent.com/tweag/rules_haskell/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-haskell-haskell",
-        "disabled_reason": "https://github.com/tweag/rules_haskell/issues/1650",
     },
     "rules_jsonnet": {
         "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
