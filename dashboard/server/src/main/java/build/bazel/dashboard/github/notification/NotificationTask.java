@@ -231,7 +231,7 @@ public class NotificationTask {
         .append(", calc(")
         .append(hsl[1])
         .append(" * 1%), calc((")
-        .append(hsl[1])
+        .append(hsl[2])
         .append(" - 25) * 1%), ")
         .append(borderAlpha)
         .append(");");
