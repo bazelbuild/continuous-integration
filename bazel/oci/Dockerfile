@@ -12,6 +12,8 @@ RUN apt-get update && \
         curl \
         git \
         openjdk-11-jdk \
+        python3 \
+        python3-pip \
         unzip \
         zip
 
@@ -40,3 +42,4 @@ RUN curl \
 FROM base_image
 
 COPY --from=downloader /var/bazel/bazel /usr/local/bin/bazel
+ENTRYPOINT ["/usr/local/bin/bazel"]
