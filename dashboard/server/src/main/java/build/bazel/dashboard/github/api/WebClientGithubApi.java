@@ -120,6 +120,28 @@ public class WebClientGithubApi implements GithubApi {
   }
 
   @Override
+  public Single<GithubApiResponse> listIssueComments(ListIssueCommentsRequest request) {
+    log.debug("{}", request);
+
+    checkNotNull(request.getOwner());
+    checkNotNull(request.getRepo());
+
+    WebClient.RequestHeadersSpec<?> spec =
+        get(
+            uriBuilder ->
+                uriBuilder
+                    .pathSegment("repos", request.getOwner(), request.getRepo(), "issues", Integer.toString(request.getIssueNumber()), "comments")
+                    .queryParamIfPresent("per_page", Optional.ofNullable(request.getPerPage()))
+                    .queryParamIfPresent("page", Optional.ofNullable(request.getPage()))
+                    .build());
+    if (!Strings.isNullOrEmpty(request.getEtag())) {
+      spec.ifNoneMatch(request.getEtag());
+    }
+
+    return exchange(spec);
+  }
+
+  @Override
   public Single<GithubApiResponse> searchIssues(SearchIssuesRequest request) {
     log.debug("{}", request);
 

@@ -6,7 +6,7 @@ CREATE TABLE json_state
 );
 
 --
--- Table that store the raw issues data fetched from Github
+-- Table that stores the raw issues data fetched from Github
 --
 CREATE TABLE github_issue_data
 (
@@ -42,7 +42,7 @@ CREATE TRIGGER t_regenerate_github_issue
 EXECUTE PROCEDURE tf_regenerate_github_issue();
 
 --
--- Table that stored issues generated from github_issue_data automatically by trigger
+-- Table that stores issues generated from github_issue_data automatically by trigger
 --
 CREATE TABLE github_issue
 (
@@ -250,4 +250,19 @@ CREATE TABLE github_user
     username TEXT,
     email TEXT NOT NULL,
     PRIMARY KEY (username)
+);
+
+--
+-- Table that stores the raw issue comments data fetched from Github
+--
+CREATE TABLE github_issue_comment_data
+(
+    owner        TEXT        NOT NULL,
+    repo         TEXT        NOT NULL,
+    issue_number INTEGER     NOT NULL,
+    page         INTEGER     NOT NULL,
+    timestamp    TIMESTAMPTZ NOT NULL,
+    etag         TEXT        NOT NULL,
+    data         JSONB       NOT NULL,
+    PRIMARY KEY (owner, repo, issue_number, page)
 );

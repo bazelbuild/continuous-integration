@@ -1,5 +1,6 @@
 package build.bazel.dashboard.github.issue;
 
+import build.bazel.dashboard.github.issuecomment.GithubIssueCommentService;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class GithubIssueRestController {
   private final GithubIssueService githubIssueService;
+  private final GithubIssueCommentService githubIssueCommentService;
 
   @GetMapping("/internal/github/{owner}/{repo}/issues/{issueNumber}")
   public Maybe<GithubIssue> findOneGithubIssue(
@@ -31,7 +33,13 @@ public class GithubIssueRestController {
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
       @PathVariable("issueNumber") Integer issueNumber) {
-    return githubIssueService.fetchAndSave(owner, repo, issueNumber);
+    return githubIssueService
+        .fetchAndSave(owner, repo, issueNumber)
+        .flatMap(
+            result ->
+                githubIssueCommentService
+                    .syncIssueComments(owner, repo, issueNumber)
+                    .toSingleDefault(result));
   }
 
   /*
