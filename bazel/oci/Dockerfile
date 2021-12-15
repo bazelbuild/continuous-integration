@@ -14,6 +14,7 @@ RUN apt-get update && \
         openjdk-11-jdk \
         python3 \
         python3-pip \
+        python-is-python3 \
         unzip \
         zip
 
