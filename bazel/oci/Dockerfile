@@ -1,44 +1,18 @@
 # ATTENTION: use the build.sh script to build this image.
 # ./build.sh <OCI_REPOSITORY> <BAZEL_VERSION>
 
-# When upgrading the base OS image, update the SHA as well to keep the image pinned.
-FROM ubuntu:20.04@sha256:626ffe58f6e7566e00254b638eb7e0f3b11d4da9675088f4781a50ae288f3322 AS base_image
+FROM ubuntu:16.04@sha256:0f71fa8d4d2d4292c3c617fda2b36f6dabe5c8b6e34c3dc5b0d17d4e704bd39c AS base_image
 
-RUN apt-get update && \
-    DEBIAN_FRONTEND="noninteractive" \
-    TZ="Etc/UTC" \
-    apt-get install --yes \
-        build-essential \
-        curl \
-        git \
-        openjdk-11-jdk \
-        python3 \
-        python3-pip \
-        python-is-python3 \
-        unzip \
-        zip
+RUN --mount=source=bazel/oci/install_packages.sh,target=/mnt/install_packages.sh,type=bind \
+    /mnt/install_packages.sh
 
 FROM base_image AS downloader
 
 ARG BAZEL_VERSION
 
 WORKDIR /var/bazel
-RUN curl \
-        --fail \
-        --fail-early \
-        --no-progress-meter \
-        --location \
-        --remote-name \
-        "https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-linux-x86_64"
-RUN curl \
-        --fail \
-        --fail-early \
-        --no-progress-meter \
-        --location \
-        "https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-linux-x86_64.sha256" \
-    | sha256sum --check \
-    && mv "bazel-${BAZEL_VERSION}-linux-x86_64" bazel \
-    && chmod +x bazel
+RUN --mount=source=bazel/oci/install_bazel.sh,target=/mnt/install_bazel.sh,type=bind \
+    /mnt/install_bazel.sh
 
 FROM base_image
 
