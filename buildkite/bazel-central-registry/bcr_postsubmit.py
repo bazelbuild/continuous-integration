@@ -152,7 +152,7 @@ def mirror_archive(url, integrity):
         tmpfile.write(data)
         tmpfile.close()
         subprocess.check_output(
-            ["gsutil", "-h", "Cache-Control: public, max-age=31536000", "cp", tmpfile.name, MIRROR_BUCKET + target_path]
+            ["gsutil", "-h", "Cache-Control:no-cache", "cp", tmpfile.name, MIRROR_BUCKET + target_path]
         )
         eprint("Mirror succeeded, archive available at {}".format(MIRROR_URL_PREFIX + target_path))
 
