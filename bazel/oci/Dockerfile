@@ -16,5 +16,8 @@ RUN --mount=source=bazel/oci/install_bazel.sh,target=/mnt/install_bazel.sh,type=
 
 FROM base_image
 
+RUN useradd --system --create-home --home-dir=/home/ubuntu --shell=/bin/bash --gid=root --groups=sudo --uid=1000 ubuntu
+USER ubuntu
+WORKDIR /home/ubuntu
 COPY --from=downloader /var/bazel/bazel /usr/local/bin/bazel
 ENTRYPOINT ["/usr/local/bin/bazel"]
