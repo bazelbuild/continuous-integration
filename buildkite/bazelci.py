@@ -115,7 +115,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/examples.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/examples/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-bazel-examples",
-        "disabled_reason": "https://github.com/bazelbuild/examples/pull/233",     
+        "disabled_reason": "https://github.com/bazelbuild/examples/pull/233",
     },
     "Bazel Federation": {
         "git_repository": "https://github.com/bazelbuild/bazel-federation.git",
@@ -2815,6 +2815,8 @@ def print_bazel_downstream_pipeline(
                     incompatible_flags=incompatible_flags,
                 )
             )
+
+    pipeline_steps.append("wait")
     pipeline_steps.append(create_step(
         label="Remove skipped tasks annotation if unneeded",
         commands=['buildkite-agent meta-data exists "has-skipped-steps" || buildkite-agent annotation remove --context "ctx-skipped_due_to_bazel_version"'],
