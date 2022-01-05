@@ -249,7 +249,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/tensorflow.yml",
         "pipeline_slug": "tensorflow",
-        "disabled_reason": "https://github.com/bazelbuild/bazel/issues/13811",
     },
     "Tulsi": {
         "git_repository": "https://github.com/bazelbuild/tulsi.git",
