@@ -603,6 +603,9 @@ def get_downstream_result_by_project(downstream_build_info):
     jobs_per_project = {}
 
     for job in downstream_build_info["jobs"]:
+        # Skip all soft failed jobs
+        if job["soft_failed"]:
+            continue
         job_info = extract_job_info_by_key(job = job, info_from_command = ["http_config", "git_commit"])
         if job_info:
             project_name = config_to_project[job_info["http_config"]]
