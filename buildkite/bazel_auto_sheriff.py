@@ -117,7 +117,7 @@ class BuildInfoAnalyzer(threading.Thread):
         self.main_result = {}
         self.main_result["commit"] = main_build_info["commit"]
         self.main_result["build_number"] = main_build_info["number"]
-        job_infos = filter(lambda x: bool(x), (extract_job_info_by_key(job) for job in main_build_info["jobs"]))
+        job_infos = filter(lambda x: bool(x), (extract_job_info_by_key(job) for job in main_build_info["jobs"] if not ("soft_failed" in job and job["soft_failed"])))
         self.main_result["tasks"] = group_job_info_by_task(job_infos)
         self.main_result["state"] = get_project_state(self.main_result["tasks"])
 
@@ -604,7 +604,7 @@ def get_downstream_result_by_project(downstream_build_info):
 
     for job in downstream_build_info["jobs"]:
         # Skip all soft failed jobs
-        if job["soft_failed"]:
+        if "soft_failed" in job and job["soft_failed"]:
             continue
         job_info = extract_job_info_by_key(job = job, info_from_command = ["http_config", "git_commit"])
         if job_info:
