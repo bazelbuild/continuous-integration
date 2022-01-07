@@ -90,8 +90,8 @@ def get_task_config(module_name, module_version):
                                allow_imports=False)
 
 
-def add_presubmit_jobs(module_name, module_version, task_config, pipeline_steps):
-    for task_name in task_config:
+def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps):
+    for task_name, task_config in task_configs.items():
         platform_name = bazelci.get_platform_for_task(task_name, task_config)
         label = bazelci.PLATFORMS[platform_name]["emoji-name"] + " {0}@{1}".format(
             module_name, module_version
@@ -124,7 +124,7 @@ def scratch_file(root, relative_path, lines=None):
 
 def create_test_repo(module_name, module_version, task):
     configs = get_task_config(module_name, module_version)
-    platform = bazelci.get_platform_for_task(task, configs.get("tasks", None))
+    platform = bazelci.get_platform_for_task(task, configs["tasks"][task])
     # TODO(pcloudy): We use the "downstream root" as the repo root, find a better root path for BCR presubmit.
     root = pathlib.Path(bazelci.downstream_projects_root(platform))
     scratch_file(root, "WORKSPACE")
