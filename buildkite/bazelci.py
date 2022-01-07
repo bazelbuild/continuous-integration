@@ -17,9 +17,11 @@
 import argparse
 import base64
 import codecs
+import copy
 import datetime
 from glob import glob
 import hashlib
+import itertools
 import json
 import multiprocessing
 import os
@@ -873,6 +875,54 @@ def downstream_projects_root(platform):
     return downstream_root
 
 
+def match_matrix_attr_pattern(s):
+    return re.match("^\${{\s*(\w+)\s*}}$", s)
+
+
+def get_matrix_attributes(task):
+    """Get unexpanded matrix attributes from the given task.
+
+    If a value of field matches "${{<name>}}", then <name> is a wanted matrix attribute.
+    eg. platform: ${{ platform }}
+    """
+    attributes = []
+    for key, value in task.items():
+        if type(value) is str:
+            res = match_matrix_attr_pattern(value)
+            if res:
+                attributes.append(res.groups()[0])
+    return list(set(attributes))
+
+
+def get_combinations(matrix, attributes):
+    """Given a matrix and the wanted attributes, return all possible combinations.
+
+    eg.
+    With matrix = {'a': [1, 2], 'b': [1], 'c': [1]},
+    if attributes = ['a', 'b'], then returns [[('a', 1), ('b', 1)], [('a', 2), ('b', 1)]]
+    if attributes = ['b', 'c'], then returns [[('b', 1), ('c', 1)]]
+    if attributes = ['c'], then returns [[('c', 1)]]
+    """
+    for attr in attributes:
+        if attr not in matrix:
+            raise BuildkiteException("${{ %s }} is not defined in `matrix` section." % attr)
+    pairs = [[(attr, value) for value in matrix[attr]] for attr in attributes]
+    return itertools.product(*pairs)
+
+
+def get_expanded_task(task, combination):
+    """Expand a task with the given combination of values of attributes."""
+    combination = dict(combination)
+    expanded_task = copy.deepcopy(task)
+    for key, value in task.items():
+        if type(value) is str:
+            res = match_matrix_attr_pattern(value)
+            if res:
+                attr = res.groups()[0]
+                expanded_task[key] = combination[attr]
+    return expanded_task
+
+
 def fetch_configs(http_url, file_config):
     """
     If specified fetches the build configuration from file_config or http_url, else tries to
@@ -902,6 +952,29 @@ def load_config(http_url, file_config, allow_imports=True):
 
     if "tasks" not in config:
         config["tasks"] = {}
+
+    # Expand tasks that uses attributes defined in the matrix section.
+    # The original task definition expands to multiple tasks for each possible combination.
+    tasks_to_expand = []
+    expanded_tasks = {}
+    matrix = config.pop("matrix", {})
+    for key, value in matrix.items():
+        if type(key) is not str or type(value) is not list:
+            raise BuildkiteException("Expect `matrix` is a map of str -> list")
+
+    for task in config["tasks"]:
+        attributes = get_matrix_attributes(config["tasks"][task])
+        if attributes:
+            tasks_to_expand.append(task)
+            count = 1
+            for combination in get_combinations(matrix, attributes):
+                expanded_task_name = "%s_config_%.2d" % (task, count)
+                count += 1
+                expanded_tasks[expanded_task_name] = get_expanded_task(config["tasks"][task], combination)
+
+    for task in tasks_to_expand:
+        config["tasks"].pop(task)
+    config["tasks"].update(expanded_tasks)
 
     imports = config.pop("imports", None)
     if imports:
