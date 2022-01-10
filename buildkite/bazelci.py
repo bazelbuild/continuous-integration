@@ -936,24 +936,7 @@ def fetch_configs(http_url, file_config):
     return load_config(http_url, file_config)
 
 
-def load_config(http_url, file_config, allow_imports=True):
-    if http_url:
-        config = load_remote_yaml_file(http_url)
-    else:
-        file_config = file_config or ".bazelci/presubmit.yml"
-        with open(file_config, "r") as fd:
-            config = yaml.safe_load(fd)
-
-    # Legacy mode means that there is exactly one task per platform (e.g. ubuntu1604_nojdk),
-    # which means that we can get away with using the platform name as task ID.
-    # No other updates are needed since get_platform_for_task() falls back to using the
-    # task ID as platform if there is no explicit "platforms" field.
-    if "platforms" in config:
-        config["tasks"] = config.pop("platforms")
-
-    if "tasks" not in config:
-        config["tasks"] = {}
-
+def expand_task_config(config):
     # Expand tasks that uses attributes defined in the matrix section.
     # The original task definition expands to multiple tasks for each possible combination.
     tasks_to_expand = []
@@ -976,6 +959,27 @@ def load_config(http_url, file_config, allow_imports=True):
     for task in tasks_to_expand:
         config["tasks"].pop(task)
     config["tasks"].update(expanded_tasks)
+
+
+def load_config(http_url, file_config, allow_imports=True):
+    if http_url:
+        config = load_remote_yaml_file(http_url)
+    else:
+        file_config = file_config or ".bazelci/presubmit.yml"
+        with open(file_config, "r") as fd:
+            config = yaml.safe_load(fd)
+
+    # Legacy mode means that there is exactly one task per platform (e.g. ubuntu1604_nojdk),
+    # which means that we can get away with using the platform name as task ID.
+    # No other updates are needed since get_platform_for_task() falls back to using the
+    # task ID as platform if there is no explicit "platforms" field.
+    if "platforms" in config:
+        config["tasks"] = config.pop("platforms")
+
+    if "tasks" not in config:
+        config["tasks"] = {}
+
+    expand_task_config(config)
 
     imports = config.pop("imports", None)
     if imports:
