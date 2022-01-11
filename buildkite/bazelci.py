@@ -730,6 +730,7 @@ P9w8kNhEbw==
             "branch": "master",
             "message": message if message else f"Trigger build at {commit}",
             "env": env,
+            "ignore_pipeline_branch_filters": "true",
         }
         response = requests.post(url + "?access_token=" + self._token, json=data)
         BuildkiteClient._check_response(response, requests.codes.created)
