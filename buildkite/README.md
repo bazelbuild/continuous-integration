@@ -511,6 +511,47 @@ When `include_json_profile` is specified with `build`, the builds will be carrie
 
 The exported JSON profiles are available as artifacts after each run.
 
+### Matrix Testing
+
+Similar to Github Actions's [matrix testing support](https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idstrategymatrix), you can specify a matrix to create multiple tasks by performing variable substitution in a single task configuration.
+
+Example usage:
+
+```yaml
+---
+matrix:
+  bazel_version: ["4.2.2", "5.0.0"]
+  unix_platform: ["centos7", "debian10", "macos", "ubuntu2004"]
+  python: ["python2", "python3"]
+  unix_compiler: ["gcc", "clang"]
+  win_compiler: ["msvc", "clang"]
+
+tasks:
+  unix_test:
+    name: "Test my project on Unix systems"
+    platform: ${{ unix_platform }}
+    compiler: ${{ unix_compiler }}
+    python: ${{ python }}
+    build_targets:
+    - "//..."
+    test_targets:
+    - "//..."
+  windows_test:
+    name: "Test my project on Windows"
+    platform: "windows"
+    bazel: ${{ bazel_version }}
+    compiler: ${{ win_compiler }}
+    python: ${{ python }}
+    build_targets:
+    - "//..."
+    test_targets:
+    - "//..."
+```
+
+The `unix_test` task configuration will generate 16 tasks (4 * 2 * 2) for each `unix_platform`, `unix_compiler`, and `python` combination.
+
+The `windows_test` task configuration will generate 8 tasks (2 * 2 * 2) for each `bazel_version`, `win_compiler` and `python` combination.
+
 ## FAQ
 
 ### My tests fail on Bazel CI due to "Error downloading"
