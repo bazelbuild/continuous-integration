@@ -577,7 +577,7 @@ DEFAULT_PLATFORM = "ubuntu1804"
 # In order to test that "the one Linux binary" that we build for our official releases actually
 # works on all Linux distributions that we test on, we use the Linux binary built on our official
 # release platform for all Linux downstream tests.
-LINUX_BINARY_PLATFORM = "centos7"
+LINUX_BINARY_PLATFORM = "centos7_java11_devtoolset10"
 
 DEFAULT_XCODE_VERSION = "13.0"
 XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
@@ -1158,6 +1158,9 @@ def execute_commands(
 
         if use_bazel_at_commit:
             print_collapsed_group(":gcloud: Downloading Bazel built at " + use_bazel_at_commit)
+            # Linux binaries are published under platform name "centos7"
+            if binary_platform == LINUX_BINARY_PLATFORM:
+                binary_platform = "centos7"
             bazel_binary = download_bazel_binary_at_commit(
                 tmpdir, binary_platform, use_bazel_at_commit
             )
