@@ -208,8 +208,8 @@ resource "buildkite_pipeline" "publish-bazel-binaries" {
   team = [{ access_level = "READ_ONLY", slug = "everyone" }]
   provider_settings {
     trigger_mode = "code"
-    skip_pull_request_builds_for_existing_commits = true
-    prefix_pull_request_fork_branch_names = true
+    build_branches = true
+    build_tags = true
   }
 }
 
