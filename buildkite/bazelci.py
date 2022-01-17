@@ -599,6 +599,10 @@ INDEX_UPLOAD_POLICY_IF_BUILD_SUCCESS = "IfBuildSuccess"
 
 INDEX_UPLOAD_POLICY_NEVER = "Never"
 
+# The maximum number of tasks allowed in one pipeline yaml config file.
+# This is to prevent accidentally creating too many tasks with the martix testing feature.
+MAX_TASK_NUMBER = 50
+
 
 class BuildkiteException(Exception):
     """
@@ -989,6 +993,9 @@ def load_config(http_url, file_config, allow_imports=True):
         for i in imports:
             imported_tasks = load_imported_tasks(i, http_url, file_config)
             config["tasks"].update(imported_tasks)
+
+    if len(config["tasks"]) > MAX_TASK_NUMBER:
+        raise BuildkiteException("The number of tasks in one config file is limited to %s!" % MAX_TASK_NUMBER)
 
     return config
 
