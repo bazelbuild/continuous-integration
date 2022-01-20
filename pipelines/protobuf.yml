@@ -22,6 +22,8 @@ platforms:
       - "//java/..."
       - "//:cc_proto_blacklist_test"
       - "-//java/core:conformance_test"
+      - "-//java/kotlin:all"
+      - "-//java/kotlin-lite:all"
       - "-//java/lite:conformance_test"
       - "-//:protobuf_test"
       - "-//:py_descriptor_database_test"
