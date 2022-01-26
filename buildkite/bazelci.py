@@ -195,7 +195,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/google/flatbuffers.git",
         "http_config": "https://raw.githubusercontent.com/google/flatbuffers/master/.bazelci/presubmit.yml",
         "pipeline_slug": "flatbuffers",
-        "disabled_reason": "https://github.com/bazelbuild/bazel/issues/13811",
     },
     "Flogger": {
         "git_repository": "https://github.com/google/flogger.git",
