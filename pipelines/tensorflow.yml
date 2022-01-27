@@ -12,7 +12,7 @@ platforms:
     #   echo '
     #   android_sdk_repository(name = "androidsdk")
     #   android_ndk_repository(name = "androidndk")' >>WORKSPACE
-    - pip3 install portpicker keras_applications keras_preprocessing future
+    - pip3 install portpicker keras_applications keras_preprocessing future packaging
     - yes '' | python3 ./configure.py
     build_flags:
     - "--config=opt"
@@ -33,7 +33,7 @@ platforms:
     #   echo '
     #   android_sdk_repository(name = "androidsdk")
     #   android_ndk_repository(name = "androidndk")' >>WORKSPACE
-    - pip3 install -U --user pip six 'numpy<1.19.0' wheel setuptools mock 'future>=0.17.1' portpicker
+    - pip3 install -U --user pip six 'numpy<1.19.0' wheel setuptools mock 'future>=0.17.1' portpicker packaging
     - pip3 install -U --user keras_applications==1.0.6 --no-deps
     - pip3 install -U --user keras_preprocessing==1.0.5 --no-deps
     - yes '' | python3 ./configure.py
@@ -49,6 +49,7 @@ platforms:
       USE_BAZEL_VERSION: latest
       BAZEL_VC: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC"
     batch_commands:
+    - pip3 install packaging
     - echo.| python ./configure.py
     build_flags:
     - "--config=opt"
