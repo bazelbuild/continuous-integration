@@ -24,7 +24,7 @@ fi
 GIT_ROOT=$(git rev-parse --show-toplevel)
 readonly GIT_ROOT
 
-if docker buildx version 2>&1 1>/dev/null; then
+if docker buildx version &>/dev/null; then
     buildx="buildx"
 fi
 
