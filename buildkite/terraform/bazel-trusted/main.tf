@@ -36,7 +36,7 @@ resource "buildkite_pipeline" "bazel-arm64" {
 resource "buildkite_pipeline" "docgen-bazel-website" {
   name = "DocGen: Bazel-website"
   repository = "https://github.com/bazelbuild/bazel-website.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-docgen.yml?$(date +%s)\" | buildkite-agent pipeline upload --replace"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-docgen.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"] } })
   default_branch = "master"
   branch_configuration = "master"
   team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-docs" }]
@@ -51,7 +51,7 @@ resource "buildkite_pipeline" "docgen-bazel-website" {
 resource "buildkite_pipeline" "docgen-bazel-blog" {
   name = "DocGen: Bazel-blog"
   repository = "https://github.com/bazelbuild/bazel-blog.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-docgen.yml?$(date +%s)\" | buildkite-agent pipeline upload --replace"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-docgen.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"] } })
   default_branch = "master"
   branch_configuration = "master"
   team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-docs" }]
@@ -66,7 +66,7 @@ resource "buildkite_pipeline" "docgen-bazel-blog" {
 resource "buildkite_pipeline" "docgen-bazel" {
   name = "DocGen: Bazel"
   repository = "https://github.com/bazelbuild/bazel.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-docgen.yml?$(date +%s)\" | buildkite-agent pipeline upload --replace"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-docgen.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"] } })
   default_branch = "master"
   branch_configuration = "master"
   team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-docs" }]
@@ -81,7 +81,7 @@ resource "buildkite_pipeline" "docgen-bazel" {
 resource "buildkite_pipeline" "bazel-custom-release" {
   name = "Bazel Custom Release"
   repository = "https://github.com/bazelbuild/bazel.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-custom-release.yml?$(date +%s)\" | buildkite-agent pipeline upload --replace"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-custom-release.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"] } })
   default_branch = "master"
   team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "release-managers" }]
 }
@@ -169,7 +169,7 @@ resource "buildkite_pipeline" "bazel-bench-nightly" {
 resource "buildkite_pipeline" "java-tools-binaries-java" {
   name = "java_tools binaries :java:"
   repository = "https://github.com/bazelbuild/bazel.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/java_tools-binaries.yml?$(date +%s)\" | buildkite-agent pipeline upload --replace"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/java_tools-binaries.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"] } })
   description = "Temporary pipeline for building java_tools binaries on all platforms"
   default_branch = "master"
   team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "java-tools-team" }, { access_level = "READ_ONLY", slug = "everyone" }]
@@ -185,7 +185,7 @@ resource "buildkite_pipeline" "java-tools-binaries-java" {
 resource "buildkite_pipeline" "bazel-release" {
   name = "Bazel Release"
   repository = "https://github.com/bazelbuild/bazel.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-release.yml?$(date +%s)\" | buildkite-agent pipeline upload --replace"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-release.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"] } })
   default_branch = "0.21.0"
   branch_configuration = "release-* 0.* 1.* 2.* 3.* 4.* 5.* 6.*"
   team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "release-managers" }, { access_level = "READ_ONLY", slug = "everyone" }]
@@ -201,7 +201,7 @@ resource "buildkite_pipeline" "bazel-release" {
 resource "buildkite_pipeline" "publish-bazel-binaries" {
   name = "Publish Bazel binaries"
   repository = "https://github.com/bazelbuild/bazel.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-bazel-binaries.yml?$(date +%s)\" | buildkite-agent pipeline upload --replace"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-bazel-binaries.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"] } })
   description = "Publish Bazel binaries to GCS (http://storage.googleapis.com/bazel-builds/metadata/latest.json)"
   default_branch = "master"
   branch_configuration = "master"
@@ -216,7 +216,7 @@ resource "buildkite_pipeline" "publish-bazel-binaries" {
 resource "buildkite_pipeline" "build-embedded-minimized-jdk" {
   name = "Build embedded (minimized) JDK"
   repository = "https://bazel.googlesource.com/bazel.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/build-embedded-minimized-jdk.yml?$(date +%s)\" | buildkite-agent pipeline upload --replace"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/build-embedded-minimized-jdk.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"] } })
   default_branch = "master"
   team = [{ access_level = "READ_ONLY", slug = "everyone" }]
 }
