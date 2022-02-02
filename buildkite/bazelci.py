@@ -567,7 +567,7 @@ PLATFORMS = {
         # current we just use x86_64 machines to do cross compile.
         "queue": "windows",
         "python": "python.exe",
-    },    
+    },
     "rbe_ubuntu1604": {
         "name": "RBE (Ubuntu 16.04, OpenJDK 8)",
         "emoji-name": "RBE (:ubuntu: 16.04, OpenJDK 8)",
@@ -967,7 +967,9 @@ def expand_task_config(config):
             for combination in get_combinations(matrix, attributes):
                 expanded_task_name = "%s_config_%.2d" % (task, count)
                 count += 1
-                expanded_tasks[expanded_task_name] = get_expanded_task(config["tasks"][task], combination)
+                expanded_tasks[expanded_task_name] = get_expanded_task(
+                    config["tasks"][task], combination
+                )
 
     for task in tasks_to_expand:
         config["tasks"].pop(task)
@@ -1004,7 +1006,9 @@ def load_config(http_url, file_config, allow_imports=True):
             config["tasks"].update(imported_tasks)
 
     if len(config["tasks"]) > MAX_TASK_NUMBER:
-        raise BuildkiteException("The number of tasks in one config file is limited to %s!" % MAX_TASK_NUMBER)
+        raise BuildkiteException(
+            "The number of tasks in one config file is limited to %s!" % MAX_TASK_NUMBER
+        )
 
     return config
 
@@ -1086,7 +1090,6 @@ def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_v
     if action_key in include_json_profile:
         json_profile_out = os.path.join(tmpdir, "{}.profile.gz".format(action_key))
         json_profile_flags = ["--profile={}".format(json_profile_out)]
-
 
     capture_corrupted_outputs_flags = []
     capture_corrupted_outputs_dir = None
@@ -1287,7 +1290,8 @@ def execute_commands(
 
             test_bep_file = os.path.join(tmpdir, "test_bep.json")
             upload_thread = threading.Thread(
-                target=upload_test_logs_from_bep, args=(test_bep_file, tmpdir, binary_platform, monitor_flaky_tests)
+                target=upload_test_logs_from_bep,
+                args=(test_bep_file, tmpdir, binary_platform, monitor_flaky_tests),
             )
             try:
                 upload_thread.start()
@@ -1311,8 +1315,11 @@ def execute_commands(
                 upload_thread.join()
 
         if coverage_targets:
-            coverage_flags, json_profile_out_coverage, capture_corrupted_outputs_dir_coverage = calculate_flags(
-                task_config, "coverage_flags", "coverage", tmpdir, test_env_vars)
+            (
+                coverage_flags,
+                json_profile_out_coverage,
+                capture_corrupted_outputs_dir_coverage,
+            ) = calculate_flags(task_config, "coverage_flags", "coverage", tmpdir, test_env_vars)
             try:
                 execute_bazel_coverage(
                     bazel_version,
@@ -1563,6 +1570,7 @@ def download_bazel_nojdk_binary_at_commit(dest_dir, platform, bazel_git_commit):
     path = os.path.join(dest_dir, "bazel_nojdk.exe" if platform == "windows" else "bazel_nojdk")
     return download_binary_at_commit(dest_dir, platform, bazel_git_commit, url, path)
 
+
 def download_bazelci_agent(dest_dir, platform, version):
     postfix = ""
     if platform == "windows":
@@ -1573,12 +1581,17 @@ def download_bazelci_agent(dest_dir, platform, version):
         postfix = "x86_64-unknown-linux-musl"
 
     name = "bazelci-agent-{}-{}".format(version, postfix)
-    url = "https://github.com/bazelbuild/continuous-integration/releases/download/agent-{}/{}".format(version, name)
+    url = (
+        "https://github.com/bazelbuild/continuous-integration/releases/download/agent-{}/{}".format(
+            version, name
+        )
+    )
     path = os.path.join(dest_dir, "bazelci-agent.exe" if platform == "windows" else "bazelci-agent")
     execute_command(["curl", "-sSL", url, "-o", path])
     st = os.stat(path)
     os.chmod(path, st.st_mode | stat.S_IEXEC)
     return path
+
 
 def get_mirror_path(git_repository, platform):
     mirror_root = {
@@ -2107,6 +2120,7 @@ def execute_bazel_test(
     except subprocess.CalledProcessError as e:
         handle_bazel_failure(e, "test")
 
+
 def execute_bazel_coverage(
     bazel_version, bazel_binary, platform, flags, targets, incompatible_flags
 ):
@@ -2140,10 +2154,18 @@ def execute_bazel_coverage(
     except subprocess.CalledProcessError as e:
         handle_bazel_failure(e, "coverage")
 
+
 def upload_test_logs_from_bep(bep_file, tmpdir, binary_platform, monitor_flaky_tests):
     bazelci_agent_binary = download_bazelci_agent(tmpdir, binary_platform, "0.1.3")
     execute_command(
-        [bazelci_agent_binary, "artifact", "upload", "--delay=5", "--mode=buildkite", "--build_event_json_file={}".format(bep_file)]
+        [
+            bazelci_agent_binary,
+            "artifact",
+            "upload",
+            "--delay=5",
+            "--mode=buildkite",
+            "--build_event_json_file={}".format(bep_file),
+        ]
         + (["--monitor_flaky_tests"] if monitor_flaky_tests else [])
     )
 
@@ -2780,10 +2802,17 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
 
     # We can skip this check if we're not on the main branch, because then we're probably
     # building a one-off custom debugging binary anyway.
-    if current_branch_is_main_branch() and not expected_platforms.issubset(configured_platforms):
-        raise BuildkiteException(
-            "Bazel publish binaries pipeline needs to build Bazel for every commit on all publish_binary-enabled platforms."
-        )
+    if current_branch_is_main_branch():
+        missing = expected_platforms.difference(configured_platforms)
+        if missing:
+            raise BuildkiteException(
+                (
+                    "Bazel publish binaries pipeline needs to build Bazel for every commit on all publish_binary-enabled platforms. "
+                    "Please add jobs for the missing platform(s) to the pipeline config: {}".format(
+                        ", ".join(missing)
+                    )
+                )
+            )
 
     # Build Bazel
     for task, task_config in task_configs.items():
@@ -2874,7 +2903,7 @@ def fetch_incompatible_flags():
     output = subprocess.check_output(
         [
             "curl",
-            "https://api.github.com/search/issues?per_page=100&q=repo:bazelbuild/bazel+label:incompatible-change+state:open"
+            "https://api.github.com/search/issues?per_page=100&q=repo:bazelbuild/bazel+label:incompatible-change+state:open",
         ]
     ).decode("utf-8")
     issue_info = json.loads(output)
@@ -2944,10 +2973,15 @@ def print_bazel_downstream_pipeline(
             pipeline_steps.append(info_box_step)
         incompatible_flags = list(incompatible_flags_map.keys())
 
-    pipeline_steps.append(create_step(
-        label="Print skipped tasks annotation",
-        commands=['buildkite-agent annotate --style=info "The following tasks were skipped since they require specific Bazel versions:\n" --context "ctx-skipped_due_to_bazel_version"'],
-        platform=DEFAULT_PLATFORM))
+    pipeline_steps.append(
+        create_step(
+            label="Print skipped tasks annotation",
+            commands=[
+                'buildkite-agent annotate --style=info "The following tasks were skipped since they require specific Bazel versions:\n" --context "ctx-skipped_due_to_bazel_version"'
+            ],
+            platform=DEFAULT_PLATFORM,
+        )
+    )
     for project, config in DOWNSTREAM_PROJECTS.items():
         disabled_reason = config.get("disabled_reason", None)
         # If test_disabled_projects is true, we add configs for disabled projects.
@@ -2966,10 +3000,15 @@ def print_bazel_downstream_pipeline(
             )
 
     pipeline_steps.append("wait")
-    pipeline_steps.append(create_step(
-        label="Remove skipped tasks annotation if unneeded",
-        commands=['buildkite-agent meta-data exists "has-skipped-steps" || buildkite-agent annotation remove --context "ctx-skipped_due_to_bazel_version"'],
-        platform=DEFAULT_PLATFORM))
+    pipeline_steps.append(
+        create_step(
+            label="Remove skipped tasks annotation if unneeded",
+            commands=[
+                'buildkite-agent meta-data exists "has-skipped-steps" || buildkite-agent annotation remove --context "ctx-skipped_due_to_bazel_version"'
+            ],
+            platform=DEFAULT_PLATFORM,
+        )
+    )
 
     if test_incompatible_flags:
         current_build_number = os.environ.get("BUILDKITE_BUILD_NUMBER", None)
