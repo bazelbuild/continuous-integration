@@ -5,12 +5,15 @@ import build.bazel.dashboard.github.issue.GithubIssue.Label;
 import build.bazel.dashboard.github.issue.GithubIssue.User;
 import build.bazel.dashboard.github.issuestatus.GithubIssueStatus.GithubIssueStatusBuilder;
 import build.bazel.dashboard.github.issuestatus.GithubIssueStatus.Status;
+import build.bazel.dashboard.github.repo.GithubRepo;
+import build.bazel.dashboard.github.repo.GithubRepoService;
 import build.bazel.dashboard.github.team.GithubTeam;
 import build.bazel.dashboard.github.team.GithubTeamService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 @RequiredArgsConstructor
 public class GithubIssueStatusService {
   private final ObjectMapper objectMapper;
+  private final GithubRepoService githubRepoService;
   private final GithubIssueStatusRepo githubIssueStatusRepo;
   private final GithubTeamService githubTeamService;
 
@@ -37,15 +41,11 @@ public class GithubIssueStatusService {
     String owner = issue.getOwner();
     String repo = issue.getRepo();
 
-    if (!(owner.equals("bazelbuild") && repo.equals("bazel"))) {
-      return Maybe.empty();
-    }
-
-    return githubIssueStatusRepo
+    return githubRepoService.findOne(owner, repo).flatMap(githubRepo -> githubIssueStatusRepo
         .findOne(owner, repo, issue.getIssueNumber())
-        .flatMapSingle(status -> buildStatus(status, issue, now))
-        .switchIfEmpty(buildStatus(null, issue, now))
-        .flatMapMaybe(status -> githubIssueStatusRepo.save(status).andThen(Maybe.just(status)));
+        .flatMapSingle(status -> buildStatus(githubRepo, status, issue, now))
+        .switchIfEmpty(buildStatus(githubRepo, null, issue, now))
+        .flatMapMaybe(status -> githubIssueStatusRepo.save(status).andThen(Maybe.just(status))));
   }
 
   public Completable markDeleted(String owner, String repo, int issueNumber) {
@@ -59,11 +59,12 @@ public class GithubIssueStatusService {
   }
 
   private Single<GithubIssueStatus> buildStatus(
+      GithubRepo repo,
       @Nullable GithubIssueStatus oldStatus, GithubIssue issue, Instant now) {
     return Single.fromCallable(() -> issue.parseData(objectMapper))
         .flatMap(
             data -> {
-              Status newStatus = newStatus(data);
+              Status newStatus = newStatus(repo, data);
               Instant lastNotifiedAt = null;
 
               if (oldStatus != null) {
@@ -91,14 +92,14 @@ public class GithubIssueStatusService {
                       .nextNotifyAt(nextNotifyAt)
                       .checkedAt(now);
 
-              return findActionOwner(issue, data, newStatus)
+              return findActionOwner(repo, issue, data, newStatus)
                   .map(builder::actionOwner)
                   .defaultIfEmpty(builder)
                   .map(GithubIssueStatusBuilder::build);
             });
   }
 
-  static Status newStatus(GithubIssue.Data data) {
+  static Status newStatus(GithubRepo repo, GithubIssue.Data data) {
     if (data.getState().equals("closed")) {
       return Status.CLOSED;
     }
@@ -109,7 +110,7 @@ public class GithubIssueStatusService {
       return Status.MORE_DATA_NEEDED;
     }
 
-    if (hasTeamLabel(labels)) {
+    if (!repo.isTeamLabelEnabled() || hasTeamLabel(labels)) {
       if (hasPriorityLabel(labels)) {
         return Status.TRIAGED;
       } else {
@@ -151,7 +152,7 @@ public class GithubIssueStatusService {
     return null;
   }
 
-  private Maybe<String> findActionOwner(GithubIssue issue, GithubIssue.Data data, Status status) {
+  private Maybe<String> findActionOwner(GithubRepo repo, GithubIssue issue, GithubIssue.Data data, Status status) {
     switch (status) {
       case TO_BE_REVIEWED:
         return Maybe.empty();
@@ -171,7 +172,8 @@ public class GithubIssueStatusService {
                       labels.stream().anyMatch(label -> label.getName().equals(team.getLabel()))
                           && !team.getTeamOwner().isBlank())
               .firstElement()
-              .map(GithubTeam::getTeamOwner);
+              .map(GithubTeam::getTeamOwner)
+              .switchIfEmpty(Maybe.fromOptional(Optional.ofNullable(repo.getActionOwner())));
         }
     }
 
