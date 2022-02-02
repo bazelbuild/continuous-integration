@@ -1227,7 +1227,7 @@ def execute_commands(
         if needs_clean:
             execute_bazel_clean(bazel_binary, platform)
 
-        build_targets, test_targets, index_targets = calculate_targets(
+        build_targets, test_targets, coverage_targets, index_targets = calculate_targets(
             task_config, platform, bazel_binary, build_only, test_only
         )
 
@@ -1299,6 +1299,24 @@ def execute_commands(
                         upload_corrupted_outputs(capture_corrupted_outputs_dir_test, tmpdir)
             finally:
                 upload_thread.join()
+
+        if coverage_targets:
+            coverage_flags, json_profile_out_coverage, capture_corrupted_outputs_dir_coverage = calculate_flags(
+                task_config, "coverage_flags", "coverage", tmpdir, test_env_vars)
+            try:
+                execute_bazel_coverage(
+                    bazel_version,
+                    bazel_binary,
+                    platform,
+                    coverage_flags,
+                    coverage_targets,
+                    incompatible_flags,
+                )
+            finally:
+                if json_profile_out_coverage:
+                    upload_json_profile(json_profile_out_coverage, tmpdir)
+                if capture_corrupted_outputs_dir_coverage:
+                    upload_corrupted_outputs(capture_corrupted_outputs_dir_coverage, tmpdir)
 
         if index_targets:
             (
@@ -1952,6 +1970,7 @@ def execute_bazel_build_with_kythe(
 def calculate_targets(task_config, platform, bazel_binary, build_only, test_only):
     build_targets = [] if test_only else task_config.get("build_targets", [])
     test_targets = [] if build_only else task_config.get("test_targets", [])
+    coverage_targets = [] if (build_only or test_only) else task_config.get("coverage_targets", [])
     index_targets = [] if (build_only or test_only) else task_config.get("index_targets", [])
 
     index_targets_query = (
@@ -1970,6 +1989,7 @@ def calculate_targets(task_config, platform, bazel_binary, build_only, test_only
     # include. We'll add it back again later where needed.
     build_targets = [x.strip() for x in build_targets if x.strip() != "--"]
     test_targets = [x.strip() for x in test_targets if x.strip() != "--"]
+    coverage_targets = [x.strip() for x in coverage_targets if x.strip() != "--"]
     index_targets = [x.strip() for x in index_targets if x.strip() != "--"]
 
     shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
@@ -1983,7 +2003,7 @@ def calculate_targets(task_config, platform, bazel_binary, build_only, test_only
         expanded_test_targets = expand_test_target_patterns(bazel_binary, platform, test_targets)
         test_targets = get_targets_for_shard(expanded_test_targets, shard_id, shard_count)
 
-    return build_targets, test_targets, index_targets
+    return build_targets, test_targets, coverage_targets, index_targets
 
 
 def expand_test_target_patterns(bazel_binary, platform, test_targets):
@@ -2077,6 +2097,38 @@ def execute_bazel_test(
     except subprocess.CalledProcessError as e:
         handle_bazel_failure(e, "test")
 
+def execute_bazel_coverage(
+    bazel_version, bazel_binary, platform, flags, targets, incompatible_flags
+):
+    aggregated_flags = [
+        "--build_tests_only",
+        "--local_test_jobs=" + concurrent_test_jobs(platform),
+    ]
+    print_collapsed_group(":bazel: Computing flags for coverage step")
+    aggregated_flags += compute_flags(
+        platform,
+        flags,
+        # When using bazelisk --migrate to test incompatible flags,
+        # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
+        [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags,
+        None,
+        bazel_binary,
+        enable_remote_cache=True,
+    )
+
+    print_expanded_group(":bazel: Coverage ({})".format(bazel_version))
+    try:
+        execute_command(
+            [bazel_binary]
+            + bazelisk_flags()
+            + common_startup_flags(platform)
+            + ["coverage"]
+            + aggregated_flags
+            + ["--"]
+            + targets
+        )
+    except subprocess.CalledProcessError as e:
+        handle_bazel_failure(e, "coverage")
 
 def upload_test_logs_from_bep(bep_file, tmpdir, binary_platform, monitor_flaky_tests):
     bazelci_agent_binary = download_bazelci_agent(tmpdir, binary_platform, "0.1.3")
