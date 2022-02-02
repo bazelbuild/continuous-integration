@@ -96,8 +96,6 @@ public class NotificationTask {
 
   Single<String> buildTriageTeamNotificationBody() {
     ListParams params = new ListParams();
-    params.setOwner("bazelbuild");
-    params.setRepo("bazel");
     params.setStatus(GithubIssueStatus.Status.TO_BE_REVIEWED);
     return githubIssueListService
         .find(params)
@@ -255,12 +253,16 @@ public class NotificationTask {
               body.append("<tr style=\"vertical-align: baseline\">");
 
               body.append("<td>");
+              String repo = "";
+              if (!(issue.getOwner().equals("bazelbuild") && issue.getRepo().equals("bazel"))) {
+                repo = issue.getRepo();
+              }
               appendLink(
                   body,
                   String.format(
                       "https://github.com/%s/%s/issues/%s",
                       issue.getOwner(), issue.getRepo(), issue.getIssueNumber()),
-                  "#" + issue.getIssueNumber());
+                   repo + "#" + issue.getIssueNumber());
               body.append("</td>");
 
               body.append("<td style=\"white-space: nowrap;\">");
@@ -352,8 +354,6 @@ public class NotificationTask {
 
   Single<String> buildNeedTriageMessage(GithubUser user) {
     ListParams params = new ListParams();
-    params.setOwner("bazelbuild");
-    params.setRepo("bazel");
     params.setStatus(GithubIssueStatus.Status.REVIEWED);
     params.setActionOwner(user.getUsername());
     return githubIssueListService
@@ -374,8 +374,6 @@ public class NotificationTask {
 
   Single<String> buildFixP0BugsMessage(GithubUser user) {
     ListParams params = new ListParams();
-    params.setOwner("bazelbuild");
-    params.setRepo("bazel");
     params.setStatus(GithubIssueStatus.Status.TRIAGED);
     params.setLabels(ImmutableList.of("P0", "type: bug"));
     params.setActionOwner(user.getUsername());
@@ -398,8 +396,6 @@ public class NotificationTask {
 
   Single<String> buildFixP1BugsMessage(GithubUser user) {
     ListParams params = new ListParams();
-    params.setOwner("bazelbuild");
-    params.setRepo("bazel");
     params.setStatus(GithubIssueStatus.Status.TRIAGED);
     params.setLabels(ImmutableList.of("P1", "type: bug"));
     params.setActionOwner(user.getUsername());
@@ -422,8 +418,6 @@ public class NotificationTask {
 
   Single<String> buildFixP2BugsMessage(GithubUser user) {
     ListParams params = new ListParams();
-    params.setOwner("bazelbuild");
-    params.setRepo("bazel");
     params.setStatus(GithubIssueStatus.Status.TRIAGED);
     params.setLabels(ImmutableList.of("P2", "type: bug"));
     params.setActionOwner(user.getUsername());
