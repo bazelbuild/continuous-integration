@@ -4,10 +4,10 @@ To build it:
 
 ```
 docker build \
-    -f bazel-slack-inviter-slackin/Dockerfile \
+    -f slack-bazel-build/docker/Dockerfile \
     --target bazel-slack-inviter-slackin \
     -t "gcr.io/bazel-public/bazel-slack-inviter-slackin" \
-    docker
+    slack-bazel-build/docker
 ```
 
 To push it to GCR:
