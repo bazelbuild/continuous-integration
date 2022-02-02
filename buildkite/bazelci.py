@@ -558,6 +558,16 @@ PLATFORMS = {
         "queue": "windows",
         "python": "python.exe",
     },
+    "windows_arm64": {
+        "name": "Windows ARM64 (OpenJDK 11, VS2017)",
+        "emoji-name": ":windows: arm64 (OpenJDK 11, VS2017)",
+        "downstream-root": "c:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
+        "publish_binary": ["windows_arm64"],
+        # TODO(pcloudy): Switch to windows_arm64 queue when Windows ARM64 machines are available,
+        # current we just use x86_64 machines to do cross compile.
+        "queue": "windows",
+        "python": "python.exe",
+    },    
     "rbe_ubuntu1604": {
         "name": "RBE (Ubuntu 16.04, OpenJDK 8)",
         "emoji-name": "RBE (:ubuntu: 16.04, OpenJDK 8)",
