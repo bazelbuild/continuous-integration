@@ -81,6 +81,14 @@ async function run() {
       issue_number: payload.issue.number,
       labels: [FLAGGED_LABEL],
     });
+  } else {
+    await octokit.rest.reactions.createForIssueComment({
+      owner,
+      repo,
+      comment_id: payload.comment.id,
+      content: 'confused',
+    });
+    throw `unrecognized command: ${command}`;
   }
 
   await octokit.rest.reactions.createForIssueComment({
