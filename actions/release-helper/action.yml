@@ -1,0 +1,10 @@
+name: 'Release Helper'
+description: 'Helps manage release-related issues.'
+inputs:
+  token:
+    description: 'The GitHub token'
+    required: false
+    default: ${{ github.token }}
+runs:
+  using: 'node16'
+  main: 'index.js'
