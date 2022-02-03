@@ -562,7 +562,7 @@ PLATFORMS = {
         "name": "Windows ARM64 (OpenJDK 11, VS2017)",
         "emoji-name": ":windows: arm64 (OpenJDK 11, VS2017)",
         "downstream-root": "c:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": [],
+        "publish_binary": ["windows_arm64"],
         # TODO(pcloudy): Switch to windows_arm64 queue when Windows ARM64 machines are available,
         # current we just use x86_64 machines to do cross compile.
         "queue": "windows",
