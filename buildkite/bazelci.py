@@ -1692,7 +1692,7 @@ def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags):
             handle_bazel_failure(e, "run")
 
 
-def remote_caching_flags(platform):
+def remote_caching_flags(platform, accept_cached):
     # Only enable caching for untrusted and testing builds.
     if CLOUD_PROJECT not in ["bazel-untrusted"]:
         return []
@@ -1736,6 +1736,9 @@ def remote_caching_flags(platform):
         '--remote_default_platform_properties=properties:{name:"cache-silo-key" value:"%s"}'
         % platform_cache_digest.hexdigest(),
     ]
+
+    if not accept_cached:
+        flags += ["--noremote_accept_cached"]
 
     return flags
 
@@ -1882,8 +1885,8 @@ def compute_flags(
     if not remote_enabled(flags):
         if platform.startswith("rbe_"):
             aggregated_flags += rbe_flags(flags, accept_cached=enable_remote_cache)
-        elif enable_remote_cache:
-            aggregated_flags += remote_caching_flags(platform)
+        else:
+            aggregated_flags += remote_caching_flags(platform, accept_cached=enable_remote_cache)
     aggregated_flags += flags
     if incompatible_flags:
         aggregated_flags += incompatible_flags
