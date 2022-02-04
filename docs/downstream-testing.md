@@ -10,7 +10,7 @@ In order to run this pipeline, your changes need to be available on the [main Ba
 
 ## Starting the tests
 
-After the new branch or Pull Request is created, visit the [Bazel (with downstream projects)](https://buildkite.com/bazel/bazel-with-downstream-projects-bazel/) pipeline. Then follow these steps:
+After the new branch or Pull Request is created, visit the [Bazel (with downstream projects)](https://buildkite.com/bazel/bazel-with-downstream-projects-bazel/) pipeline and select the Bazel project. Then follow these steps:
 
 1.  Click the "New Build" button at the top right.
 2.  Name your build. This should be meaningful to you, but otherwise is just for display purposes. By default, Buildkite will use the first line of the commit message.
