@@ -1822,3 +1822,35 @@ resource "buildkite_pipeline" "bazel-bazel" {
     publish_commit_status = true
   }
 }
+
+resource "buildkite_pipeline" "rules-license" {
+  name = "rules_license"
+  repository = "https://github.com/bazelbuild/rules_license.git"
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
+  default_branch = "master"
+  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
+  provider_settings {
+    trigger_mode = "code"
+    build_pull_requests = true
+    skip_pull_request_builds_for_existing_commits = true
+    build_pull_request_forks = true
+    prefix_pull_request_fork_branch_names = true
+    publish_commit_status = true
+  }
+}
+
+resource "buildkite_pipeline" "bazel-lib" {
+  name = "bazel-lib"
+  repository = "https://github.com/aspect-build/bazel-lib.git"
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
+  default_branch = "master"
+  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
+  provider_settings {
+    trigger_mode = "code"
+    build_pull_requests = true
+    skip_pull_request_builds_for_existing_commits = true
+    build_pull_request_forks = true
+    prefix_pull_request_fork_branch_names = true
+    publish_commit_status = true
+  }
+}
