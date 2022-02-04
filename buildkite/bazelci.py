@@ -1692,7 +1692,7 @@ def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags):
             handle_bazel_failure(e, "run")
 
 
-def remote_caching_flags(platform, accept_cached):
+def remote_caching_flags(platform, accept_cached = True):
     # Only enable caching for untrusted and testing builds.
     if CLOUD_PROJECT not in ["bazel-untrusted"]:
         return []
