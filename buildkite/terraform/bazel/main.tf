@@ -1827,7 +1827,7 @@ resource "buildkite_pipeline" "rules-license" {
   name = "rules_license"
   repository = "https://github.com/bazelbuild/rules_license.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
-  default_branch = "master"
+  default_branch = "main"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
   provider_settings {
     trigger_mode = "code"
@@ -1843,7 +1843,7 @@ resource "buildkite_pipeline" "bazel-lib" {
   name = "bazel-lib"
   repository = "https://github.com/aspect-build/bazel-lib.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
-  default_branch = "master"
+  default_branch = "main"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
   provider_settings {
     trigger_mode = "code"
