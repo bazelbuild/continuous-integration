@@ -744,7 +744,7 @@ resource "buildkite_pipeline" "abseil-python" {
   name = "Abseil Python"
   repository = "https://github.com/abseil/abseil-py.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/abseil-py.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"] } })
-  default_branch = "master"
+  default_branch = "main"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
 }
 
