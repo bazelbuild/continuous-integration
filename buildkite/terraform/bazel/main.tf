@@ -1682,7 +1682,7 @@ resource "buildkite_pipeline" "rules-perl" {
   name = "rules_perl"
   repository = "https://github.com/bazelbuild/rules_perl.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
-  default_branch = "master"
+  default_branch = "main"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
   provider_settings {
     trigger_mode = "code"
