@@ -1822,3 +1822,53 @@ resource "buildkite_pipeline" "bazel-bazel" {
     publish_commit_status = true
   }
 }
+
+resource "buildkite_pipeline" "bazel-lib" {
+  name = "bazel-lib"
+  repository = "https://github.com/aspect-build/bazel-lib.git"
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
+  default_branch = "main"
+  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
+  provider_settings {
+    trigger_mode = "code"
+    filter_enabled = false
+    build_pull_requests = true
+    pull_request_branch_filter_enabled = false
+    skip_pull_request_builds_for_existing_commits = true
+    build_pull_request_ready_for_review = false
+    build_pull_request_forks = true
+    prefix_pull_request_fork_branch_names = true
+    build_branches = false
+    build_tags = false
+    cancel_deleted_branch_builds = false
+    publish_commit_status = true
+    publish_blocked_as_pending = false
+    publish_commit_status_per_step = false
+    separate_pull_request_statuses = false
+  }
+}
+
+resource "buildkite_pipeline" "rules-license" {
+  name = "rules_license"
+  repository = "https://github.com/bazelbuild/rules_license.git"
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
+  default_branch = "main"
+  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
+  provider_settings {
+    trigger_mode = "code"
+    filter_enabled = false
+    build_pull_requests = true
+    pull_request_branch_filter_enabled = false
+    skip_pull_request_builds_for_existing_commits = true
+    build_pull_request_ready_for_review = false
+    build_pull_request_forks = true
+    prefix_pull_request_fork_branch_names = true
+    build_branches = false
+    build_tags = false
+    cancel_deleted_branch_builds = false
+    publish_commit_status = true
+    publish_blocked_as_pending = false
+    publish_commit_status_per_step = false
+    separate_pull_request_statuses = false
+  }
+}
