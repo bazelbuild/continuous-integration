@@ -1218,6 +1218,9 @@ def execute_commands(
             raise BuildkiteException("working_directory refers to a path outside the workspace")
         os.chdir(requested_working_dir)
 
+        # Set OUTPUT_BASE environment variable
+        os.environ["OUTPUT_BASE"] = get_output_base(bazel_binary, platform)
+
         if platform == "windows":
             execute_batch_commands(task_config.get("batch_commands", None))
         else:
@@ -1877,6 +1880,13 @@ def rbe_flags(original_flags, accept_cached):
     return flags
 
 
+def get_output_base(bazel_binary, platform):
+    return execute_command_and_get_output(
+        [bazel_binary] + common_startup_flags(platform) + ["info", "output_base"],
+        print_output=False,
+    ).strip()
+
+
 def compute_flags(
     platform, flags, incompatible_flags, bep_file, bazel_binary, enable_remote_cache=False
 ):
@@ -1903,10 +1913,7 @@ def compute_flags(
                 home = "/var/lib/buildkite-agent"
             aggregated_flags[i] = flag.replace("$HOME", home)
         if "$OUTPUT_BASE" in flag:
-            output_base = execute_command_and_get_output(
-                [bazel_binary] + common_startup_flags(platform) + ["info", "output_base"],
-                print_output=False,
-            ).strip()
+            output_base = get_output_base(bazel_binary, platform)
             aggregated_flags[i] = flag.replace("$OUTPUT_BASE", output_base)
 
     return aggregated_flags
