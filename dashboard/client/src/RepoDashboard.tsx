@@ -8,7 +8,6 @@ import {
   CardHeader,
   Container,
   createStyles,
-  CssBaseline,
   Drawer,
   Grid,
   Hidden,
@@ -27,6 +26,7 @@ import {
   Select,
 } from "@material-ui/core";
 import NextLink from "next/link";
+import { DateTime } from "luxon";
 
 import theme from "./theme";
 import { GithubRepo, useGithubRepo } from "./data/GithubRepo";
@@ -91,6 +91,10 @@ function RepoList() {
   return <List>{data.map((repo) => RepoListItem(repo))}</List>;
 }
 
+function maxDays() {
+  return Math.ceil(Math.abs(DateTime.fromISO("2020-12-17").diffNow("day").days));
+}
+
 function GithubIssueQueryResultCard({title, queryIds}: {title: string, queryIds: Array<string>}) {
   const [days, setDays] = useState(30)
   return (
@@ -110,6 +114,8 @@ function GithubIssueQueryResultCard({title, queryIds}: {title: string, queryIds:
               <MenuItem value={90}>past 3 months</MenuItem>
               <MenuItem value={180}>past 6 months</MenuItem>
               <MenuItem value={360}>past 12 months</MenuItem>
+              <MenuItem value={720}>past 24 months</MenuItem>
+              <MenuItem value={maxDays()}>all</MenuItem>
             </Select>
           </FormControl>
         }
