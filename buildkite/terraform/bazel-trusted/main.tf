@@ -205,7 +205,7 @@ resource "buildkite_pipeline" "publish-bazel-binaries" {
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-bazel-binaries.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"] } })
   description = "Publish Bazel binaries to GCS (http://storage.googleapis.com/bazel-builds/metadata/latest.json)"
   default_branch = "master"
-  branch_configuration = "master"
+  branch_configuration = "master release-*"
   team = [{ access_level = "READ_ONLY", slug = "everyone" }]
   provider_settings {
     trigger_mode = "code"
