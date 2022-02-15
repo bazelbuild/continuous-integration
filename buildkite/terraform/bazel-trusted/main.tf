@@ -98,6 +98,7 @@ resource "buildkite_pipeline" "bazel-release-arm64" {
     skip_pull_request_builds_for_existing_commits = true
     prefix_pull_request_fork_branch_names = true
     build_tags = true
+    build_branches = true
   }
 }
 
