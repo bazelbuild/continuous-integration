@@ -35,8 +35,26 @@ Settings = collections.namedtuple(
 BUILDKITE_BUILD_NUMBER = os.getenv("BUILDKITE_BUILD_NUMBER")
 
 
+def rewrite_staging_urls(content):
+    new_content = content.replace(
+        "docs.bazel.build", "docs-staging.bazel.build/{}".format(BUILDKITE_BUILD_NUMBER)
+    )
+    # Hack to get search working
+    new_content = new_content.replace("009927877080525621790:2pxlpaexqpc", "12ee759976b5ec02f", 1)
+    return new_content.replace('"/', '"/{}/'.format(BUILDKITE_BUILD_NUMBER))
+
+
 DOCGEN_SETTINGS = {
     "bazel-trusted": {
+        "https://github.com/bazelbuild/bazel.git": Settings(
+            target="//site",
+            build_flags=[],
+            output_dir="bazel-bin/site/site-build",
+            gcs_bucket="docs.bazel.build",
+            gcs_subdir="",
+            landing_page="versions/master/bazel-overview.html",
+            rewrite=None,
+        ),
         "https://github.com/bazelbuild/bazel-blog.git": Settings(
             target="//:site",
             build_flags=[],
@@ -45,6 +63,26 @@ DOCGEN_SETTINGS = {
             gcs_subdir="",
             landing_page="index.html",
             rewrite=None,
+        ),
+        "https://github.com/bazelbuild/bazel-website.git": Settings(
+            target="//:site",
+            build_flags=[],
+            output_dir="bazel-bin/site-build",
+            gcs_bucket="www.bazel.build",
+            gcs_subdir="",
+            landing_page="index.html",
+            rewrite=None,
+        ),
+    },
+    "bazel": {
+        "https://bazel.googlesource.com/bazel.git": Settings(
+            target="//site",
+            build_flags=bazelci.remote_caching_flags(PLATFORM),
+            output_dir="bazel-bin/site/site-build",
+            gcs_bucket="docs-staging.bazel.build",
+            gcs_subdir=BUILDKITE_BUILD_NUMBER,
+            landing_page="versions/master/bazel-overview.html",
+            rewrite=rewrite_staging_urls,
         ),
     },
 }

@@ -233,6 +233,14 @@ resource "buildkite_pipeline" "distributed-point-functions" {
   }
 }
 
+resource "buildkite_pipeline" "google-bazel-docs-staging" {
+  name = "Google Bazel Docs Staging"
+  repository = "https://bazel.googlesource.com/bazel.git"
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-docgen.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"] } })
+  default_branch = "master"
+  team = [{ access_level = "READ_ONLY", slug = "bazel" }, { access_level = "BUILD_AND_READ", slug = "googlers" }]
+}
+
 resource "buildkite_pipeline" "cargo-raze" {
   name = "Cargo-Raze"
   repository = "https://github.com/google/cargo-raze.git"
