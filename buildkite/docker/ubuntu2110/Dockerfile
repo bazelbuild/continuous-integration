@@ -57,7 +57,7 @@ RUN apt-get -y update && \
 # Allow using sudo inside the container.
 RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-${BUILDARCH}
+ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-${BUILDARCH}
 
 FROM ubuntu2110-bazel-java17 AS ubuntu2110-java17
 
