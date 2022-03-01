@@ -359,7 +359,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_nodejs.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_nodejs/stable/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-nodejs-nodejs",
-        "disabled_reason": "https://github.com/bazelbuild/rules_nodejs/issues/3328",
     },
     "rules_perl": {
         "git_repository": "https://github.com/bazelbuild/rules_perl.git",
