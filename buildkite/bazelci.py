@@ -1712,6 +1712,9 @@ def remote_caching_flags(platform, accept_cached=True):
     # Whenever the remote cache was known to have been poisoned increase the number below
     platform_cache_key += ["cache-poisoning-20210811".encode("utf-8")]
 
+    if platform == "ubuntu2004_arm64":
+        return []
+
     if platform == "macos":
         platform_cache_key += [
             # macOS version:
