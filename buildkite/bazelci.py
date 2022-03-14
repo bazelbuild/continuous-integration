@@ -2247,7 +2247,8 @@ def terminate_background_process(process):
 def create_step(label, commands, platform, shards=1, soft_fail=None):
     if "docker-image" in PLATFORMS[platform]:
         step = create_docker_step(
-            label, image=PLATFORMS[platform]["docker-image"], commands=commands
+            label, image=PLATFORMS[platform]["docker-image"], commands=commands,
+            queue = PLATFORMS[platform].get("queue", "default")
         )
     else:
         step = {
@@ -2278,7 +2279,7 @@ def create_step(label, commands, platform, shards=1, soft_fail=None):
     return step
 
 
-def create_docker_step(label, image, commands=None, additional_env_vars=None):
+def create_docker_step(label, image, commands=None, additional_env_vars=None, queue="default"):
     env = ["ANDROID_HOME", "ANDROID_NDK_HOME", "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"]
     if additional_env_vars:
         env += ["{}={}".format(k, v) for k, v in additional_env_vars.items()]
@@ -2286,7 +2287,7 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None):
     step = {
         "label": label,
         "command": commands,
-        "agents": {"queue": "default"},
+        "agents": {"queue": queue},
         "plugins": {
             "docker#v3.8.0": {
                 "always-pull": True,
