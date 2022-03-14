@@ -1,6 +1,6 @@
 steps:
   - command: |-
-      bazel --nomaster_bazelrc --bazelrc=/dev/null version
+      bazel --ignore_all_rc_files --bazelrc=/dev/null version
       bazel build //src:embedded_jdk_minimal //src:embedded_jdk_allmodules
       buildkite-agent artifact upload "./bazel-bin/src/*_jdk.tar.gz"
       gsutil cp ./bazel-bin/src/minimal_jdk.tar.gz gs://bazel-mirror/openjdk/azul-zulu11.37.17-ca-jdk11.0.6/zulu11.37.17-ca-jdk11.0.6-linux_x64-minimal-$(git rev-parse HEAD)-$(date +%s).tar.gz
@@ -31,13 +31,13 @@ steps:
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
           - "/var/run/docker.sock:/var/run/docker.sock"
 
-  - command: "powershell -Command \"bazel --nomaster_bazelrc --bazelrc=NUL version ; if (\\$LastExitCode -ne 0) { exit 1 } ; bazel build //src:embedded_jdk_minimal //src:embedded_jdk_allmodules ; if (\\$LastExitCode -ne 0) { exit 1 } ; buildkite-agent artifact upload ./bazel-bin/src/minimal_jdk.zip ; if (\\$LastExitCode -ne 0) { exit 1 } ; buildkite-agent artifact upload ./bazel-bin/src/allmodules_jdk.zip ; if (\\$LastExitCode -ne 0) { exit 1 } ; \\$revision=(git rev-parse HEAD) ; if (\\$LastExitCode -ne 0) { exit 1 } ; \\$epoch=(date +%%s) ; if (\\$LastExitCode -ne 0) { exit 1 } ; gsutil cp ./bazel-bin/src/minimal_jdk.zip gs://bazel-mirror/openjdk/azul-zulu11.37.17-ca-jdk11.0.6/zulu11.37.17-ca-jdk11.0.6-win_x64-minimal-\\${revision}-\\${epoch}.zip ; if (\\$LastExitCode -ne 0) { exit 1 } ; gsutil cp ./bazel-bin/src/allmodules_jdk.zip gs://bazel-mirror/openjdk/azul-zulu11.37.17-ca-jdk11.0.6/zulu11.37.17-ca-jdk11.0.6-win_x64-allmodules-\\${revision}-\\${epoch}.zip ; if (\\$LastExitCode -ne 0) { exit 1 } ;\""
+  - command: "powershell -Command \"bazel --ignore_all_rc_files --bazelrc=NUL version ; if (\\$LastExitCode -ne 0) { exit 1 } ; bazel build //src:embedded_jdk_minimal //src:embedded_jdk_allmodules ; if (\\$LastExitCode -ne 0) { exit 1 } ; buildkite-agent artifact upload ./bazel-bin/src/minimal_jdk.zip ; if (\\$LastExitCode -ne 0) { exit 1 } ; buildkite-agent artifact upload ./bazel-bin/src/allmodules_jdk.zip ; if (\\$LastExitCode -ne 0) { exit 1 } ; \\$revision=(git rev-parse HEAD) ; if (\\$LastExitCode -ne 0) { exit 1 } ; \\$epoch=(date +%%s) ; if (\\$LastExitCode -ne 0) { exit 1 } ; gsutil cp ./bazel-bin/src/minimal_jdk.zip gs://bazel-mirror/openjdk/azul-zulu11.37.17-ca-jdk11.0.6/zulu11.37.17-ca-jdk11.0.6-win_x64-minimal-\\${revision}-\\${epoch}.zip ; if (\\$LastExitCode -ne 0) { exit 1 } ; gsutil cp ./bazel-bin/src/allmodules_jdk.zip gs://bazel-mirror/openjdk/azul-zulu11.37.17-ca-jdk11.0.6/zulu11.37.17-ca-jdk11.0.6-win_x64-allmodules-\\${revision}-\\${epoch}.zip ; if (\\$LastExitCode -ne 0) { exit 1 } ;\""
     label: ":windows:"
     agents:
       - "queue=windows"
 
   - command: |-
-      bazel --nomaster_bazelrc --bazelrc=/dev/null version
+      bazel --ignore_all_rc_files --bazelrc=/dev/null version
       bazel build //src:embedded_jdk_minimal //src:embedded_jdk_allmodules
       buildkite-agent artifact upload "./bazel-bin/src/*_jdk.tar.gz"
       gsutil cp ./bazel-bin/src/minimal_jdk.tar.gz gs://bazel-mirror/openjdk/azul-zulu11.37.17-ca-jdk11.0.6/zulu11.37.17-ca-jdk11.0.6-macosx_x64-minimal-$(git rev-parse HEAD)-$(date +%s).tar.gz
