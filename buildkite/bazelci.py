@@ -2290,7 +2290,7 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None, qu
         "agents": {"queue": queue},
         "plugins": {
             "docker#v3.8.0": {
-                "always-pull": True,
+                # "always-pull": True,
                 "environment": env,
                 "image": image,
                 "network": "host",
