@@ -509,7 +509,7 @@ PLATFORMS = {
     },
     "ubuntu2004_arm64": {
         "name": "Ubuntu 20.04 LTS ARM64 (OpenJDK 11, gcc 9.3.0)",
-        "emoji-name": ":ubuntu: 20.04 LTS (OpenJDK 11, gcc 9.3.0)",
+        "emoji-name": ":ubuntu: 20.04 LTS ARM64 (OpenJDK 11, gcc 9.3.0)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11",
