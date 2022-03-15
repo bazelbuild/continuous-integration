@@ -324,7 +324,7 @@ def handle_already_flipped_flags(failed_jobs_per_flag, details_per_flag):
 def get_bazel_major_version():
     # Get bazel major version on CI, eg. 0.21 from "Build label: 0.21.0\n..."
     output = subprocess.check_output(
-        ["bazel", "--nomaster_bazelrc", "--bazelrc=/dev/null", "version"]
+        ["bazel", "--ignore_all_rc_files", "version"]
     ).decode("utf-8")
     return output.split()[2].rsplit(".", 1)[0]
 

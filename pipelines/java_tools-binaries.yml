@@ -1,6 +1,6 @@
 steps:
   - command: |-
-      bazel --nomaster_bazelrc --bazelrc=/dev/null version
+      bazel --ignore_all_rc_files version
       ./src/upload_all_java_tools.sh
     label: ":ubuntu:"
     agents:
@@ -28,13 +28,13 @@ steps:
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
           - "/var/run/docker.sock:/var/run/docker.sock"
 
-  - command: "powershell -Command \"bazel --nomaster_bazelrc --bazelrc=NUL version ; if (\\$LastExitCode -ne 0) { exit 1 } ; sh ./src/upload_all_java_tools.sh ; if (\\$LastExitCode -ne 0) { exit 1 } ;\""
+  - command: "powershell -Command \"bazel --ignore_all_rc_files version ; if (\\$LastExitCode -ne 0) { exit 1 } ; sh ./src/upload_all_java_tools.sh ; if (\\$LastExitCode -ne 0) { exit 1 } ;\""
     label: ":windows:"
     agents:
       - "queue=windows"
 
   - command: |-
-      bazel --nomaster_bazelrc --bazelrc=/dev/null version
+      bazel --ignore_all_rc_files version
       ./src/upload_all_java_tools.sh
     env:
       BAZEL_USE_CPP_ONLY_TOOLCHAIN: "1"
