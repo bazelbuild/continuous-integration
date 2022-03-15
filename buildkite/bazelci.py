@@ -1475,12 +1475,12 @@ def print_bazel_version_info(bazel_binary, platform):
     version_output = execute_command_and_get_output(
         [bazel_binary]
         + common_startup_flags(platform)
-        + ["--ignore_all_rc_files", "--bazelrc=/dev/null", "version"]
+        + ["--ignore_all_rc_files", "version"]
     )
     execute_command(
         [bazel_binary]
         + common_startup_flags(platform)
-        + ["--ignore_all_rc_files", "--bazelrc=/dev/null", "info"]
+        + ["--ignore_all_rc_files", "info"]
     )
 
     match = BUILD_LABEL_PATTERN.search(version_output)
