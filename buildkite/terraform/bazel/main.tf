@@ -1872,3 +1872,31 @@ resource "buildkite_pipeline" "rules-license" {
     separate_pull_request_statuses = false
   }
 }
+
+resource "buildkite_pipeline" "bazel-arm64" {
+  name           = "Bazel (arm64)"
+  repository     = "https://github.com/bazelbuild/bazel.git"
+  description    = "Run Bazel test suite on Linux ARM64 platform"
+  steps          = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-linux-arm64.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"] } })
+  default_branch = "master"
+  team           = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }]
+  provider_settings {
+    build_branches                                = true
+    build_pull_request_forks                      = true
+    build_pull_request_ready_for_review           = false
+    build_pull_requests                           = true
+    build_tags                                    = false
+    cancel_deleted_branch_builds                  = false
+    filter_condition                              = "build.pull_request.labels includes \"linux-arm64-presubmit\""
+    filter_enabled                                = true
+    prefix_pull_request_fork_branch_names         = true
+    publish_blocked_as_pending                    = false
+    publish_commit_status                         = false
+    publish_commit_status_per_step                = false
+    pull_request_branch_filter_enabled            = false
+    separate_pull_request_statuses                = false
+    skip_pull_request_builds_for_existing_commits = true
+    trigger_mode                                  = "code"
+  }
+}
+
