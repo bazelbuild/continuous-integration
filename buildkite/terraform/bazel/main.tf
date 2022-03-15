@@ -885,7 +885,7 @@ resource "buildkite_pipeline" "apple-support-darwin" {
   repository = "https://github.com/bazelbuild/apple_support.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
   default_branch = "master"
-  branch_configuration = "!test_* !upstream"
+  branch_configuration = "master"
   team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "apple-team" }, { access_level = "BUILD_AND_READ", slug = "googlers" }, { access_level = "BUILD_AND_READ", slug = "bazel" }]
   provider_settings {
     trigger_mode = "code"
@@ -1060,7 +1060,7 @@ resource "buildkite_pipeline" "rules-swift-swift" {
   repository = "https://github.com/bazelbuild/rules_swift.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
   default_branch = "master"
-  branch_configuration = "!test_* !upstream"
+  branch_configuration = "master"
   team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "apple-team" }, { access_level = "BUILD_AND_READ", slug = "bazel" }]
   provider_settings {
     trigger_mode = "code"
@@ -1292,7 +1292,7 @@ resource "buildkite_pipeline" "rules-apple-darwin" {
   repository = "https://github.com/bazelbuild/rules_apple.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
   default_branch = "master"
-  branch_configuration = "!test_* !upstream"
+  branch_configuration = "master"
   skip_intermediate_builds = true
   skip_intermediate_builds_branch_filter = "!master"
   cancel_intermediate_builds = true
@@ -1617,7 +1617,7 @@ resource "buildkite_pipeline" "rules-nodejs-nodejs" {
   repository = "https://github.com/bazelbuild/rules_nodejs.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
   default_branch = "stable"
-  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
+  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" },  { access_level = "BUILD_AND_READ", slug = "rules-nodejs" }]
   provider_settings {
     trigger_mode = "code"
     build_pull_requests = true
@@ -1828,7 +1828,7 @@ resource "buildkite_pipeline" "bazel-lib" {
   repository = "https://github.com/aspect-build/bazel-lib.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
   default_branch = "main"
-  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
+  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }, { access_level = "BUILD_AND_READ", slug = "rules-nodejs" }]
   provider_settings {
     trigger_mode = "code"
     filter_enabled = false
@@ -1841,7 +1841,7 @@ resource "buildkite_pipeline" "bazel-lib" {
     build_branches = false
     build_tags = false
     cancel_deleted_branch_builds = false
-    publish_commit_status = true
+    publish_commit_status = false
     publish_blocked_as_pending = false
     publish_commit_status_per_step = false
     separate_pull_request_statuses = false
