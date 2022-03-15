@@ -2012,7 +2012,7 @@ def calculate_targets(task_config, platform, bazel_binary, build_only, test_only
         output = execute_command_and_get_output(
             [bazel_binary]
             + common_startup_flags(platform)
-            + ["--nosystem_rc", "--nohome_rc", "--bazelrc=/dev/null", "query", index_targets_query],
+            + ["--ignore_all_rc_files", "query", index_targets_query],
             print_output=False,
         )
         index_targets += output.strip().split("\n")
@@ -2055,9 +2055,7 @@ def expand_test_target_patterns(bazel_binary, platform, test_targets):
         [bazel_binary]
         + common_startup_flags(platform)
         + [
-            "--nosystem_rc",
-            "--nohome_rc",
-            "--bazelrc=/dev/null",
+            "--ignore_all_rc_files",
             "query",
             "tests(set({})){}{}".format(
                 " ".join("'{}'".format(t) for t in included_targets),
