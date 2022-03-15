@@ -43,6 +43,25 @@ tasks:
       - "-//src/test/java/com/google/devtools/build/lib/bazel/rules/android/..."
       - "-//src/test/java/com/google/devtools/build/lib/rules/android/..."
       - "-//src/test/shell/bazel:bazel_android_tools_test"
+      # TODO: Re-enable the following tests on Linux ARM64 if possible
+      - "-//src/test/java/com/google/devtools/build/lib/buildtool:CompileOneDependencyIntegrationTest"
+      - "-//src/test/java/com/google/devtools/build/lib/buildtool:DanglingSymlinkTest"
+      - "-//src/test/java/com/google/devtools/build/lib/buildtool:KeepGoingTest"
+      - "-//src/test/java/com/google/devtools/build/lib/buildtool:MiscAnalysisTest"
+      - "-//src/test/java/com/google/devtools/build/lib/remote:remote"
+      - "-//src/test/java/com/google/devtools/build/lib/rules/objc:BazelJ2ObjcLibraryTest"
+      - "-//src/test/java/com/google/devtools/build/lib/skyframe/serialization:SerializationTests"
+      - "-//src/test/java/net/starlark/java/eval:ScriptTest"
+      - "-//src/test/shell/bazel:bazel_cc_code_coverage_test"
+      - "-//src/test/shell/bazel:bazel_java17_test"
+      - "-//src/test/shell/bazel:bazel_java_test_defaults"
+      - "-//src/test/shell/bazel:bazel_java_test_jdk17_toolchain_head"
+      - "-//src/test/shell/bazel:bazel_with_jdk_test"
+      - "-//src/test/shell/bazel/remote:remote_execution_mtls_test"
+      - "-//src/test/shell/bazel/remote:remote_execution_tls_test"
+      - "-//src/test/shell/integration:bazel_java_test"
+      - "-//src/test/shell/integration:minimal_jdk_test"
+      - "-//src/test/java/com/google/devtools/build/lib/rules/objc:ObjcRulesTests"
     include_json_profile:
       - build
       - test
