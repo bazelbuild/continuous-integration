@@ -507,6 +507,17 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11",
         "python": "python3.8",
     },
+    "ubuntu2004_arm64": {
+        "name": "Ubuntu 20.04 LTS ARM64 (OpenJDK 11, gcc 9.3.0)",
+        "emoji-name": ":ubuntu: 20.04 LTS ARM64 (OpenJDK 11, gcc 9.3.0)",
+        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11",
+        "python": "python3.8",
+        "queue": "arm64",
+        # TODO: Re-enable always-pull if we also publish docker containers for Linux ARM64
+        "always-pull": False,
+    },
     "kythe_ubuntu2004": {
         "name": "Kythe (Ubuntu 20.04 LTS, OpenJDK 11, gcc 9.3.0)",
         "emoji-name": "Kythe (:ubuntu: 20.04 LTS, OpenJDK 11, gcc 9.3.0)",
@@ -1703,6 +1714,10 @@ def remote_caching_flags(platform, accept_cached=True):
     # Whenever the remote cache was known to have been poisoned increase the number below
     platform_cache_key += ["cache-poisoning-20210811".encode("utf-8")]
 
+    # We don't enable remote caching on the Linux ARM64 machine since it doesn't have access to GCS.
+    if platform == "ubuntu2004_arm64":
+        return []
+
     if platform == "macos":
         platform_cache_key += [
             # macOS version:
@@ -2238,7 +2253,9 @@ def terminate_background_process(process):
 def create_step(label, commands, platform, shards=1, soft_fail=None):
     if "docker-image" in PLATFORMS[platform]:
         step = create_docker_step(
-            label, image=PLATFORMS[platform]["docker-image"], commands=commands
+            label, image=PLATFORMS[platform]["docker-image"], commands=commands,
+            queue = PLATFORMS[platform].get("queue", "default"),
+            always_pull = PLATFORMS[platform].get("always-pull", True),
         )
     else:
         step = {
@@ -2269,7 +2286,7 @@ def create_step(label, commands, platform, shards=1, soft_fail=None):
     return step
 
 
-def create_docker_step(label, image, commands=None, additional_env_vars=None):
+def create_docker_step(label, image, commands=None, additional_env_vars=None, queue="default", always_pull=True):
     env = ["ANDROID_HOME", "ANDROID_NDK_HOME", "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"]
     if additional_env_vars:
         env += ["{}={}".format(k, v) for k, v in additional_env_vars.items()]
@@ -2277,10 +2294,10 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None):
     step = {
         "label": label,
         "command": commands,
-        "agents": {"queue": "default"},
+        "agents": {"queue": queue},
         "plugins": {
             "docker#v3.8.0": {
-                "always-pull": True,
+                "always-pull": always_pull,
                 "environment": env,
                 "image": image,
                 "network": "host",
