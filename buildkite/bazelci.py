@@ -1475,12 +1475,12 @@ def print_bazel_version_info(bazel_binary, platform):
     version_output = execute_command_and_get_output(
         [bazel_binary]
         + common_startup_flags(platform)
-        + ["--ignore_all_rc_files", "version"]
+        + ["--nosystem_rc", "--nohome_rc", "version"]
     )
     execute_command(
         [bazel_binary]
         + common_startup_flags(platform)
-        + ["--ignore_all_rc_files", "info"]
+        + ["--nosystem_rc", "--nohome_rc", "info"]
     )
 
     match = BUILD_LABEL_PATTERN.search(version_output)
@@ -2012,7 +2012,7 @@ def calculate_targets(task_config, platform, bazel_binary, build_only, test_only
         output = execute_command_and_get_output(
             [bazel_binary]
             + common_startup_flags(platform)
-            + ["--ignore_all_rc_files", "query", index_targets_query],
+            + ["--nosystem_rc", "--nohome_rc", "query", index_targets_query],
             print_output=False,
         )
         index_targets += output.strip().split("\n")
@@ -2055,7 +2055,8 @@ def expand_test_target_patterns(bazel_binary, platform, test_targets):
         [bazel_binary]
         + common_startup_flags(platform)
         + [
-            "--ignore_all_rc_files",
+            "--nosystem_rc",
+            "--nohome_rc",
             "query",
             "tests(set({})){}{}".format(
                 " ".join("'{}'".format(t) for t in included_targets),
