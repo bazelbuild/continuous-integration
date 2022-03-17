@@ -1,3 +1,5 @@
+# Update this script for setting up the Windows playground.
+
 ## Stop on action error.
 $ErrorActionPreference = "Stop"
 $ConfirmPreference = "None"
@@ -62,6 +64,10 @@ Write-Host "Installing Chocolatey..."
 Invoke-Expression ((New-Object Net.WebClient).DownloadString("https://chocolatey.org/install.ps1"))
 & choco feature enable -n allowGlobalConfirmation
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+
+## Install vscode
+Write-Host "Installing VSCODE..."
+& choco install vscode
 
 ## Install curl
 Write-Host "Installing curl..."
@@ -239,69 +245,14 @@ Add-Content -Value "`nd975f751698a77b662f1254ddbeed3901e976f5a" -Path "${android
 Write-Host "Downloading Git snapshot..."
 $bazelbuild_url = "https://storage.googleapis.com/bazel-git-mirror/bazelbuild-mirror.zip"
 $bazelbuild_zip = "c:\temp\bazelbuild-mirror.zip"
-$bazelbuild_root = "c:\buildkite"
 (New-Object Net.WebClient).DownloadFile($bazelbuild_url, $bazelbuild_zip)
 Write-Host "Unpacking Git snapshot..."
 Expand-Archive -LiteralPath $bazelbuild_zip -DestinationPath $bazelbuild_root -Force
 Remove-Item $bazelbuild_zip
 
-## Download and install the Buildkite agent.
-Write-Host "Grabbing latest Buildkite Agent version number from GitHub..."
-$url = "https://github.com/buildkite/agent/releases/latest"
-$req = [system.Net.HttpWebRequest]::Create($url)
-$res = $req.getresponse()
-$res.Close()
-$buildkite_agent_version = $res.ResponseUri.AbsolutePath.TrimStart("/buildkite/agent/releases/tag/v")
-
-Write-Host "Downloading Buildkite agent..."
-$buildkite_agent_url = "https://github.com/buildkite/agent/releases/download/v${buildkite_agent_version}/buildkite-agent-windows-amd64-${buildkite_agent_version}.zip"
-$buildkite_agent_zip = "c:\temp\buildkite-agent.zip"
-$buildkite_agent_root = "c:\buildkite"
-New-Item $buildkite_agent_root -ItemType "directory" -Force
-(New-Object Net.WebClient).DownloadFile($buildkite_agent_url, $buildkite_agent_zip)
-[System.IO.Compression.ZipFile]::ExtractToDirectory($buildkite_agent_zip, $buildkite_agent_root)
-Remove-Item $buildkite_agent_zip
-New-Item "${buildkite_agent_root}\hooks" -ItemType "directory" -Force
-New-Item "${buildkite_agent_root}\plugins" -ItemType "directory" -Force
-$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${buildkite_agent_root}"
-[Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
-
 ## Remove empty folders (";;") from PATH.
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine").replace(";;", ";")
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
-
-## Create an unprivileged user that we'll run the Buildkite agent as.
-# The password used here is not relevant for security, as the server is behind a
-# firewall blocking all incoming access and locally we run the CI jobs as that
-# user anyway.
-Write-Host "Creating Buildkite service user..."
-$buildkite_username = "b"
-$buildkite_password = "Bu1ldk1t3"
-$buildkite_secure_password = ConvertTo-SecureString $buildkite_password -AsPlainText -Force
-New-LocalUser -Name $buildkite_username -Password $buildkite_secure_password -UserMayNotChangePassword
-Add-NTFSAccess -Path "C:\buildkite" -Account "b" -AccessRights FullControl
-
-## Allow the Buildkite agent to store SSH host keys in this folder.
-Write-Host "Creating C:\buildkite\.ssh folder..."
-New-Item "c:\buildkite\.ssh" -ItemType "directory"
-
-Write-Host "Creating C:\buildkite\logs folder..."
-New-Item "c:\buildkite\logs" -ItemType "directory"
-
-## Create a service for the Buildkite agent.
-& choco install nssm
-
-Write-Host "Creating Buildkite Agent service..."
-nssm install "buildkite-agent" `
-    "c:\buildkite\buildkite-agent.exe" `
-    "start"
-nssm set "buildkite-agent" "AppDirectory" "c:\buildkite"
-nssm set "buildkite-agent" "DisplayName" "Buildkite Agent"
-nssm set "buildkite-agent" "Start" "SERVICE_DEMAND_START"
-nssm set "buildkite-agent" "ObjectName" ".\${buildkite_username}" "$buildkite_password"
-nssm set "buildkite-agent" "AppExit" "Default" "Exit"
-nssm set "buildkite-agent" "AppStdout" "COM1"
-nssm set "buildkite-agent" "AppStderr" "COM1"
 
 ## Setup pagefile.sys, because otherwise we might run out of memory.
 ## The JVM uses 25% of the physical RAM as its default heap size and doesn't return free memory
@@ -314,6 +265,51 @@ $pagefile.InitialSize = 4 * 1024;
 $pagefile.MaximumSize = 64 * 1024;
 $pagefile.Put();
 
-Write-Host "All done, adding GCESysprep to RunOnce and rebooting..."
-Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "GCESysprep" -Value "c:\Program Files\Google\Compute Engine\sysprep\gcesysprep.bat"
-Restart-Computer
+############################ From startup-windows-pdssd.ps1 ####################################
+
+## Setup environment variables.
+Write-Host "Setting environment variables..."
+[Environment]::SetEnvironmentVariable("TEMP", "C:\temp", "Machine")
+[Environment]::SetEnvironmentVariable("TMP", "C:\temp", "Machine")
+$env:TEMP = [Environment]::GetEnvironmentVariable("TEMP", "Machine")
+$env:TMP = [Environment]::GetEnvironmentVariable("TMP", "Machine")
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+
+## Load PowerShell support for ZIP files.
+Write-Host "Loading support for ZIP files..."
+Add-Type -AssemblyName "System.IO.Compression.FileSystem"
+
+## Enable support for symlinks.
+Write-Host "Enabling SECreateSymbolicLinkPrivilege permission..."
+$ntprincipal = New-Object System.Security.Principal.NTAccount "b"
+$sid = $ntprincipal.Translate([System.Security.Principal.SecurityIdentifier])
+$sidstr = $sid.Value.ToString()
+
+$tmp = [System.IO.Path]::GetTempFileName()
+& secedit.exe /export /cfg "$($tmp)"
+$currentConfig = Get-Content -Path "$tmp"
+$currentSetting = ""
+foreach ($s in $currentConfig) {
+    if ($s -like "SECreateSymbolicLinkPrivilege*") {
+        $x = $s.split("=",[System.StringSplitOptions]::RemoveEmptyEntries)
+        $currentSetting = $x[1].Trim()
+    }
+}
+
+if ([string]::IsNullOrEmpty($currentSetting)) {
+    $currentSetting = "*$($sidstr)"
+} else {
+    $currentSetting = "*$($sidstr),$($currentSetting)"
+}
+$outfile = @"
+[Unicode]
+Unicode=yes
+[Version]
+signature="`$CHICAGO`$"
+Revision=1
+[Privilege Rights]
+SECreateSymbolicLinkPrivilege = $($currentSetting)
+"@
+$outfile | Set-Content -Path $tmp -Encoding Unicode -Force
+& secedit.exe /configure /db "secedit.sdb" /cfg "$($tmp)" /areas USER_RIGHTS
+Remove-Item -Path "$tmp"
