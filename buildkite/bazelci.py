@@ -1532,7 +1532,8 @@ def merge_and_upload_kythe_kzip(platform, index_upload_gcs):
 
     if index_upload_gcs:
         pipeline = os.getenv("BUILDKITE_PIPELINE_SLUG")
-        destination = KZIPS_BUCKET + pipeline + "/" + final_kzip_name
+        branch = os.getenv("BUILDKITE_BRANCH")
+        destination = KZIPS_BUCKET + pipeline + "/" + branch + "/" + final_kzip_name
         print("Uploading to GCS {}".format(destination))
         execute_command([gsutil_command(), "cp", final_kzip_name, destination])
 
