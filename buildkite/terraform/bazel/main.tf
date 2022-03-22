@@ -1884,11 +1884,11 @@ resource "buildkite_pipeline" "bazel-arm64" {
     build_branches                                = true
     build_pull_request_forks                      = true
     build_pull_request_ready_for_review           = false
-    build_pull_requests                           = true
-    build_tags                                    = false
+    build_pull_requests                           = false
+    build_tags                                    = true
     cancel_deleted_branch_builds                  = false
     filter_condition                              = "build.pull_request.labels includes \"linux-arm64-presubmit\""
-    filter_enabled                                = true
+    filter_enabled                                = false
     prefix_pull_request_fork_branch_names         = true
     publish_blocked_as_pending                    = false
     publish_commit_status                         = false
