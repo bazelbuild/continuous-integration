@@ -159,6 +159,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/bazel-buildfarm.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-buildfarm/main/.bazelci/presubmit.yml",
         "pipeline_slug": "buildfarm-farmer",
+        "disabled_reason": "https://github.com/bazelbuild/bazel-buildfarm/issues/1071",
     },
     "Buildtools": {
         "git_repository": "https://github.com/bazelbuild/buildtools.git",
