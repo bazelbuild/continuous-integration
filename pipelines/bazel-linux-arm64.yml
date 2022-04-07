@@ -53,6 +53,7 @@ tasks:
       - "-//src/test/java/com/google/devtools/build/lib/skyframe/serialization:SerializationTests"
       - "-//src/test/java/net/starlark/java/eval:ScriptTest"
       - "-//src/test/shell/bazel:bazel_cc_code_coverage_test"
+      - "-//src/test/shell/bazel:bazel_coverage_java_jdk17_toolchain_head_test"      
       - "-//src/test/shell/bazel:bazel_java17_test"
       - "-//src/test/shell/bazel:bazel_java_test_defaults"
       - "-//src/test/shell/bazel:bazel_java_test_jdk17_toolchain_head"
