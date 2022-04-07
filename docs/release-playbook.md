@@ -21,125 +21,58 @@ release process.
 > 
 > -- @philwo
 
-## Setup
+## One-time setup
 
-Do this once.
+These steps only have to be performed once, ever.
 
 *   Make sure you are a member of the Bazel [release-managers](https://buildkite.com/organizations/bazel-trusted/teams/release-managers/members)
     group.  If that link does not work for you, ask one of the Buildkite org admins to add you to
     the group.
 *   Set up github ssh key if you haven't already.
     *    https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
-        
-Do these steps once per release.
+*   Generate a new identifier for Google's internal Git mirror: https://bazel.googlesource.com/new-password (and paste the code in your shell).
 
-*   Find baseline commit and cherrypicks
-    *    Check Bazel nightly build at
-         https://buildkite.com/bazel/bazel-with-downstream-projects-bazel. If
-         many downstream jobs are failing then this is not a good baseline
-         commit. If only a few downstream jobs are failing and the issues are
-         known then this is a good baseline commit. Fixes for the known issues
-         should be cherry-picked, any remaining issues should become release
-         blockers.
-*   Begin the [internal release process](http://go/bazel-internal-launch-checklist), too.
+## Preparing a new release
 
-## Release issue
+1.  [Create a release blockers milestone](https://github.com/bazelbuild/bazel/milestones/new) named "X.Y\[.Z\] release blockers", where we keep track of issues that must be resolved before the release goes out.
+1.  (For major and minor releases only) [Create a release tracking issue](https://github.com/bazelbuild/bazel/issues/new?assignees=&labels=release%2Cteam-OSS%2CP1%2Ctype%3A+process&template=release.md&title=Release+X.Y+-+%24MONTH+%24YEAR) to keep the community updated about the progress of the release
+1.  Create the branch for the release. The branch should always be named `release-X.Y.Z` (the `.Z` part is important). Cherry-pick PRs will be sent against this branch.
+    *   The actual creation of the branch can be done via the GitHub UI or via the command line. How we choose the base commit of the branch depends on the type of the release:
+    *   For patch releases (`X.Y.Z` where `Z>0`), the base commit should simply be `X.Y.(Z-1)`.
+    *   For minor releases (`X.Y.0` where `Y>0`), the base commit should typically be `X.(Y-1).<current max Z>`.
+    *   For major releases (`X.0.0`), the base commit is some "healthy" commit on the main branch.
+        *   This means that there's an extra step involved in preparing the release -- "cutting" the release branch, so to speak. For this, check the [Bazel@HEAD+Downstream pipeline](https://buildkite.com/bazel/bazel-with-downstream-projects-bazel). The branch cut should happen on a green commit there; if the pipeline is persistently red, work with the Green Team to resolve it first and delay the branch cut as needed.
+        *   A first release candidate should immediately be created after the release branch is created. See [create a release candidate](#create-a-release-candidate) below.
+1.  Meanwhile, begin the [internal approval process](http://go/bazel-internal-launch-checklist), too.
+    *   Note that certain steps in the internal approval process require at least preliminary release notes, so those steps should usually wait until the first release candidate is pushed and the release notes have taken vague shape.
 
-Each release has a tracking bug (see the
-[list](https://github.com/bazelbuild/bazel/issues?utf8=%E2%9C%93&q=label%3Arelease+)).
-The last and the next releases should be pinned. The bug includes a "Target RC
-date". On that day, create a new release candidate.
+## Maintaining the release
 
-A milestone should also be [created](https://github.com/bazelbuild/bazel/milestones/new)
-for the release to keep track of any release blocking issues. ([Example](https://github.com/bazelbuild/bazel/milestone/31))
+While the release is active, you should make sure to do the following:
 
-The release manager adds a comment to the issue with the following content:
+*   Monitor [the "potential release blocker" label](https://github.com/bazelbuild/bazel/issues?q=label%3A%22potential+release+blocker%22).
+    *   These are issues or PRs that community members have proposed to be fixed/included in the next release. Check each of these and decide whether they should be release blockers; if so, add a comment with the text `@bazel-io fork X.Y.[.Z]` and a copy of the issue will be added to the "X.Y.\[.Z\] release blockers" milestone; if not, explain why in a comment, and remove the "potential release blocker" label.
+*   Review any PRs sent to the release branch and merge them as necessary.
+    *   Make sure to close any related release blocker issues after merging the PRs; merging PRs into non-main branches does *not* automatically close related issues (see [GitHub docs](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue)).
+*   When enough PRs have been cherry-picked and the release is nearing a ready state, create a release candidate (see [below](#create-a-release-candidate)).
+    *   When a few days pass and no more release blockers show up, push the candidate as the release. Otherwise, rinse and repeat the steps above.
+*   Keep the task list in the release tracking issue updated and check boxes as you follow the release process.
+    *   In particular, try and keep the estimated release date updated.
 
-```
-# Status of Bazel X.Y
+## Create a release candidate
 
-- Target baseline: [date]
-- Expected release date: [date]
-- [List of release blockers](link-to-milestone)
-
-To report a release-blocking bug, please add it to the release blocker milestone above, and cc me.
-
-Task list:
-
-- [ ] Pick release baseline:
-- [ ] Create release candidate:
-- [ ] Check downstream projects:
-- [ ] [Create draft release announcement](https://docs.google.com/document/d/1wDvulLlj4NAlPZamdlEVFORks3YXJonCjyuQMUQEmB0/edit)
-- [ ] Send for review the release announcement PR:
-- [ ] Push the release, notify package maintainers:
-- [ ] Update the documentation
-- [ ] Push the blog post
-- [ ] Update the [release page](https://github.com/bazelbuild/bazel/releases/)
-```
-
-Keep the task list updated and check boxes as you follow the release process. [Example](https://github.com/bazelbuild/bazel/issues/7816#issuecomment-497037232).
-
-## Create a Candidate
-
-Create candidates with the `release.sh` script. See above how to pick a good baseline commit.
-
-*  If it's the first candidate for this version, run:
-
-    ```bash
-    RELEASE_NUMBER=<CURRENT RELEASE NUMBER x.yy.z>
-    BASELINE_COMMIT=01234567890abcdef # From the Setup phase
-    git clone https://github.com/bazelbuild/bazel.git ~/bazel-release-$RELEASE_NUMBER
-    cd ~/bazel-release-$RELEASE_NUMBER
-    scripts/release/release.sh create $RELEASE_NUMBER $BASELINE_COMMIT [CHERRY_PICKS...]
-    ```
-
-    Note that the three-digit version is important: "0.19.0". not "0.19".
-
-*  For cherry-picks, you need `--force_rc=N` where `N` is the number of the
-    release candidate of `$RELEASE_NUMBER`. For example, the first time you do a
-    cherry-pick (after the initial candidate), N will be 2.
-
-    ```bash
-    scripts/release/release.sh create --force_rc=2 $RELEASE_NUMBER $BASELINE_COMMIT [CHERRY_PICKS...]
-    ```
-
-*  If you already did some cherry-picks and you want to add more, use "git log"
-    to find the latest commit (this corresponds to the last cherry-pick commit).
-    Use that as the new baseline and list the new cherry-picks to add on top. Or
-    simply re-use the same baseline and cherrypicks from the previous candidate,
-    and add the new cherrypicks.
-
-    ```bash
-    scripts/release/release.sh create --force_rc=3 $RELEASE_NUMBER NEW_BASELINE_COMMIT [NEW_CHERRY_PICKS...]
-    ```
-
-Resolve conflicts if there are any, type `exit` when you are done, then the script will continue.
-WARNING: `release.sh create` handles conflicts in a subshell (which is why you need to type `exit`).
-
-Editing the release notes is not needed (it will be done later).
-
-## Push the candidate
-
-1.  Run `release.sh push`. This uploads the candidate and starts the release
-    process on BuildKite.
-
-    ```bash
-    scripts/release/release.sh push
-    ```
-
-1.  Update GitHub issue with the command that was run and the new candidate name
-    (ie, 0.19.1rc3). Update the issue with the estimated release date, assuming no
-    regression is found.
+1.  Create a branch (via the GitHub UI or via the command line) named `release-X.Y.ZrcN` at the appropriate commit.
+    *   This branch is essentially used as a tag (i.e. no further commits should happen on this branch). All cherry-pick commits should continue to go into the release branch (i.e. `release-X.Y.Z`, without the `rcN` part).
 
 1.  Check BuildKite results at https://buildkite.com/bazel-trusted/bazel-release. You should
-    see the `release-$RELEASE_NUMBER` branch here and a new build running for
+    see the `release-X.Y.ZrcN` branch here and a new build running for
     your release.
 
 1.  Check the postsubmit test run for the release branch to ensure that all
     tests on all platforms pass with the version you're about to release.
 
     *   Go to https://buildkite.com/bazel/bazel-bazel and find the
-        `release-$RELEASE_NUMBER` branch in the list. A build should
+        `release-X.Y.ZrcN` branch in the list. A build should
         automatically run. Make sure that it passes.
 
 1.  When it all looks good, go back to the job in the
@@ -194,12 +127,6 @@ Editing the release notes is not needed (it will be done later).
 
 1.  Once issues are fixed, create a new candidate with the relevant cherry-picks.
 
-## Google-internal launch review
-
-Once the first candidate is available:
-
-1.  Follow the steps in [go/bazel-internal-launch-checklist](http://goto.google.com/bazel-internal-launch-checklist) to kick-off Google's internal launch review process.
-
 ## Release announcement
 
 The release manager is responsible for the [draft release
@@ -233,21 +160,21 @@ After a few days of iteration:
     May 2019 those were the following, but _double check_ that they have not changed since then.
     1.  at least **1 week passed since you pushed RC1**, and
     1.  at least **2 business days passed since you pushed the last RC**, and
-    1.  there are **no open ["Release blocking" Bazel bugs](https://github.com/bazelbuild/bazel/labels/Release%20blocker)** on GitHub.
+    1.  there are no more release blocking issues.
 
 ## Push a release
 
-1.  Generate a new identifier: https://bazel.googlesource.com/new-password (and paste the code in your shell).
-    This is only necessary the first time you handle a release.
-1.  **Push the final release (do not cancel midway)**:
+1.  **Push the final release (do not cancel midway)** by running the following commands in a Bazel git repo on a Linux machine:
 
     ```bash
+    git fetch origin release-X.Y.ZrcN
+    git checkout release-X.Y.ZrcN
     scripts/release/release.sh release
     ```
     
     **Warning**: If this process is interrupted for any reason, please check the following before running:
-      * Both `release-x.x.xrcN` and `master` branch are restored to the previous clean state (without addtional release commits).
-      * Release tag is deleted locally (`git tag -d x.x.x`), otherwise rerun will cause an error that complains the tag already exists.
+      * Both `release-X.Y.ZrcN` and `master` branch are restored to the previous clean state (without addtional release commits).
+      * Release tag is deleted locally (`git tag -d X.Y.Z`), otherwise rerun will cause an error that complains the tag already exists.
 
 1.  A CI job is uploading the release artifacts to GitHub. Look for the release
     workflow on https://buildkite.com/bazel-trusted/bazel-release/. Unblock the steps.
@@ -265,12 +192,12 @@ After a few days of iteration:
     1.  Example: [https://github.com/bazelbuild/bazel/issues/3773#issuecomment-352692144]
 1.  Publish versioned documentation
     1.  Fetch the git tag for the release: `git fetch --tags`
-    1.  Do a checkout to that tag: `git checkout $RELEASE_NUMBER`
-        1. You should see this message (e.g. for 0.21.0):
+    1.  Do a checkout to that tag: `git checkout X.Y.Z`
+        1. You should see this message:
 
         ```
-        $ git checkout 0.21.0
-        Note: checking out '0.21.0'.
+        $ git checkout X.Y.Z
+        Note: checking out 'X.Y.Z'.
 
         You are in 'detached HEAD' state. You can look around, make experimental
         changes and commit them, and you can discard any commits you make in this
@@ -281,7 +208,7 @@ After a few days of iteration:
 
         git checkout -b <new-branch-name>
 
-        HEAD is now at defd737761 Release 0.21.0 (2018-12-19)
+        HEAD is now at defd737761 Release X.Y.Z (yyyy-mm-dd)
         ```
     1.  [Install `gsutil`](https://cloud.google.com/storage/docs/gsutil_install)
         and ensure you have access to the `bazel-public` GCP project.
@@ -293,16 +220,7 @@ After a few days of iteration:
           release.
         * If the tarball has already been pushed to GCS, this script will not
           overwrite the existing tarball.
-    1.  Update `site/_config.yml` and `scripts/docs/doc_versions.bzl` with `$RELEASE_NUMBER`.
-         1. `site/_config.yml`: set `version:` to `$RELEASE_NUMBER` and add `$RELEASE_NUMBER` to `doc_versions:`.
-         1. `scripts/docs/doc_versions.bzl`: add the following list item to `DOC_VERSIONS`
-            <pre>
-            {
-               "version": "<i>$RELEASE_NUMBER</i>",
-               "sha256": "<i>result of `sha256sum bazel-bin/site/jekyll-tree.tar`</i>",
-            },
-            </pre>
-         1. After the changes are submitted, it will take 30 mins-1 hour for them to show up on bazel.build.
+    1.  Ping @fweikert to update the documentation site.
 
 1.  Merge the blog post pull request.
     1.  Make sure you update the date in your post (and the path) to reflect when
@@ -311,14 +229,11 @@ After a few days of iteration:
     the full path to your post to check that it is live.
 1.  Update the [release page](https://github.com/bazelbuild/bazel/releases/) to
     replace the generated notes with a link to the blog post.
-1.  Close the release-tracking bug. If you need to do a patch release, create a
-    new tracking bug.
+1.  Close the release-tracking bug.
 
 ### Updating Google's internal mirror
 
-Please ping @philwo and @meteorcloudy to copy the release binary to their
-internal mirror.
-
+Please ping @meteorcloudy to copy the release binary to their internal mirror.
 
 ### Updating the Homebrew recipe
 
@@ -352,3 +267,4 @@ new release coming out.
 
 This is done by an external contributor, [@vbatts](https://github.com/vbatts) on
 GitHub. Ping him when there's a new release coming out.
+
