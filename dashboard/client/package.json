@@ -17,7 +17,7 @@
     "classnames": "^2.3.1",
     "date-fns": "^2.21.2",
     "http-proxy-middleware": "^1.0.6",
-    "luxon": "^1.25.0",
+    "luxon": "^2.3.0",
     "mui-datatables": "^3.7.8",
     "next": "^12.1.0",
     "query-string": "^7.0.0",
@@ -29,7 +29,7 @@
     "swr": "^1.0.1"
   },
   "devDependencies": {
-    "@types/luxon": "^1.25.0",
+    "@types/luxon": "^2.0.9",
     "@types/mui-datatables": "^3.7.7",
     "@types/node": "^16.9.2",
     "@types/react": "^17.0.21",
