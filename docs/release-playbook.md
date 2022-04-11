@@ -25,8 +25,9 @@ release process.
 
 These steps only have to be performed once, ever.
 
+*   Make sure you are a member of the Bazel [Release Managers](https://github.com/orgs/bazelbuild/teams/release-managers/members) team on GitHub.
 *   Make sure you are a member of the Bazel [release-managers](https://buildkite.com/organizations/bazel-trusted/teams/release-managers/members)
-    group.  If that link does not work for you, ask one of the Buildkite org admins to add you to
+    group on BuildKite.  If that link does not work for you, ask one of the Buildkite org admins to add you to
     the group.
 *   Set up github ssh key if you haven't already.
     *    https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
@@ -34,7 +35,7 @@ These steps only have to be performed once, ever.
 
 ## Preparing a new release
 
-1.  [Create a release blockers milestone](https://github.com/bazelbuild/bazel/milestones/new) named "X.Y\[.Z\] release blockers", where we keep track of issues that must be resolved before the release goes out.
+1.  [Create a release blockers milestone](https://github.com/bazelbuild/bazel/milestones/new) named "X.Y.Z release blockers" (case-sensitive), where we keep track of issues that must be resolved before the release goes out.
 1.  (For major and minor releases only) [Create a release tracking issue](https://github.com/bazelbuild/bazel/issues/new?assignees=&labels=release%2Cteam-OSS%2CP1%2Ctype%3A+process&template=release.md&title=Release+X.Y+-+%24MONTH+%24YEAR) to keep the community updated about the progress of the release
 1.  Create the branch for the release. The branch should always be named `release-X.Y.Z` (the `.Z` part is important). Cherry-pick PRs will be sent against this branch.
     *   The actual creation of the branch can be done via the GitHub UI or via the command line. How we choose the base commit of the branch depends on the type of the release:
@@ -43,6 +44,10 @@ These steps only have to be performed once, ever.
     *   For major releases (`X.0.0`), the base commit is some "healthy" commit on the main branch.
         *   This means that there's an extra step involved in preparing the release -- "cutting" the release branch, so to speak. For this, check the [Bazel@HEAD+Downstream pipeline](https://buildkite.com/bazel/bazel-with-downstream-projects-bazel). The branch cut should happen on a green commit there; if the pipeline is persistently red, work with the Green Team to resolve it first and delay the branch cut as needed.
         *   A first release candidate should immediately be created after the release branch is created. See [create a release candidate](#create-a-release-candidate) below.
+1.  After creating the branch, edit the CODEOWNERS file on that branch, replace the entire contents of the file with the line `* @your-github-username` and submit it directly.
+    *   This makes sure that all PRs sent against that branch have you as a reviewer.
+1.  (For minor and patch releases only) Send an email to both bazel-dev@googlegroups.com and bazel-discuss@googlegroups.com announcing the next release.
+    *   It should contain the text: `The Bazel X.Y.Z release branch (release-X.Y.Z [link]) is open for business. Please send cherry-pick PRs against this branch if you'd like your change to be in X.Y.Z. Please follow the release tracking issue [link] for updates.`
 1.  Meanwhile, begin the [internal approval process](http://go/bazel-internal-launch-checklist), too.
     *   Note that certain steps in the internal approval process require at least preliminary release notes, so those steps should usually wait until the first release candidate is pushed and the release notes have taken vague shape.
 
@@ -51,7 +56,7 @@ These steps only have to be performed once, ever.
 While the release is active, you should make sure to do the following:
 
 *   Monitor [the "potential release blocker" label](https://github.com/bazelbuild/bazel/issues?q=label%3A%22potential+release+blocker%22).
-    *   These are issues or PRs that community members have proposed to be fixed/included in the next release. Check each of these and decide whether they should be release blockers; if so, add a comment with the text `@bazel-io fork X.Y.[.Z]` and a copy of the issue will be added to the "X.Y.\[.Z\] release blockers" milestone; if not, explain why in a comment, and remove the "potential release blocker" label.
+    *   These are issues or PRs that community members have proposed to be fixed/included in the next release. Check each of these and decide whether they should be release blockers; if so, add a comment with the text `@bazel-io fork X.Y.Z` and a copy of the issue will be added to the "X.Y.Z release blockers" milestone; if not, explain why in a comment, and remove the "potential release blocker" label.
 *   Review any PRs sent to the release branch and merge them as necessary.
     *   Make sure to close any related release blocker issues after merging the PRs; merging PRs into non-main branches does *not* automatically close related issues (see [GitHub docs](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue)).
 *   When enough PRs have been cherry-picked and the release is nearing a ready state, create a release candidate (see [below](#create-a-release-candidate)).
