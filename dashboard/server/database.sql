@@ -54,6 +54,7 @@ CREATE TABLE github_issue
     is_pull_request BOOL        NOT NULL,
     title           TEXT        NOT NULL,
     body            TEXT        NOT NULL,
+    milestone       TEXT        NOT NULL,
     labels          TEXT[]      NOT NULL,
     created_at      TIMESTAMPTZ NOT NULL,
     updated_at      TIMESTAMPTZ,
@@ -63,6 +64,7 @@ CREATE TABLE github_issue
 
 CREATE UNIQUE INDEX ON github_issue (owner, repo, issue_number);
 CREATE INDEX ON github_issue (state);
+CREATE INDEX ON github_issue (milestone);
 CREATE INDEX ON github_issue USING GIN (labels);
 CREATE INDEX ON github_issue (is_pull_request);
 CREATE INDEX ON github_issue (created_at);
@@ -82,6 +84,7 @@ BEGIN
                              is_pull_request,
                              title,
                              body,
+                             milestone,
                              labels,
                              created_at,
                              updated_at,
@@ -103,6 +106,7 @@ BEGIN
            i.data -> 'pull_request' IS NOT NULL,
            COALESCE(i.data ->> 'title', ''),
            COALESCE(i.data ->> 'body', ''),
+           COALESCE(TRIM(i.data -> 'milestone' ->> 'title'), ''),
            COALESCE(il.labels, '{}'),
            (data ->> 'created_at')::TIMESTAMPTZ,
            (data ->> 'updated_at')::TIMESTAMPTZ,
@@ -119,6 +123,7 @@ BEGIN
             is_pull_request = excluded.is_pull_request,
             title           = excluded.title,
             body            = excluded.body,
+            milestone       = excluded.milestone,
             labels          = excluded.labels,
             created_at      = excluded.created_at,
             updated_at      = excluded.updated_at,
