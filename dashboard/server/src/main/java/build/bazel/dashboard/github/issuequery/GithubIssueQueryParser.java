@@ -23,6 +23,8 @@ public class GithubIssueQueryParser {
     Boolean isPullRequest;
     List<String> labels;
     List<String> excludeLabels;
+    @Nullable
+    Boolean noMilestone;
   }
 
   public Query parse(String query) {
@@ -30,6 +32,7 @@ public class GithubIssueQueryParser {
     Boolean isPullRequest = null;
     List<String> labels = new ArrayList<>();
     List<String> excludeLabels = new ArrayList<>();
+    Boolean noMilestone = null;
 
     String str = skipLeadingSpace(query);
     while (str.length() > 0) {
@@ -69,6 +72,15 @@ public class GithubIssueQueryParser {
 
         str = str.substring(result.getSkip());
         str = skipLeadingSpace(str);
+      } else if (str.startsWith("no:milestone")) {
+        str = str.substring(12);
+        // handle no:milestones
+        if (str.startsWith("s")) {
+          str = str.substring(1);
+        }
+        str = skipLeadingSpace(str);
+
+        noMilestone = true;
       } else {
         throw new IllegalArgumentException("Unable to handle query: " + query);
       }
@@ -79,6 +91,7 @@ public class GithubIssueQueryParser {
         .isPullRequest(isPullRequest)
         .labels(labels)
         .excludeLabels(excludeLabels)
+        .noMilestone(noMilestone)
         .build();
   }
 

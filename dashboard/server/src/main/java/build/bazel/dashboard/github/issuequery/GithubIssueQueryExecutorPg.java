@@ -125,6 +125,10 @@ public class GithubIssueQueryExecutorPg implements GithubIssueQueryExecutor {
       bindings.put("is_pull_request", parsedQuery.getIsPullRequest());
     }
 
+    if (parsedQuery.getNoMilestone() != null && parsedQuery.getNoMilestone()) {
+      and(condition, "milestone = ''");
+    }
+
     if (!parsedQuery.getLabels().isEmpty()) {
       and(condition, "labels @> :labels");
       bindings.put("labels", parsedQuery.getLabels().toArray(new String[0]));
