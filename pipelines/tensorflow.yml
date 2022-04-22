@@ -12,7 +12,7 @@ platforms:
     #   echo '
     #   android_sdk_repository(name = "androidsdk")
     #   android_ndk_repository(name = "androidndk")' >>WORKSPACE
-    - pip3 install portpicker keras_applications keras_preprocessing future packaging
+    - pip3 install portpicker keras_applications keras_preprocessing future packaging dataclasses
     - yes '' | python3 ./configure.py
     build_flags:
     - "--config=opt"
