@@ -271,6 +271,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_appengine.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_appengine/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-appengine-appengine",
+        "disabled_reason": "https://github.com/bazelbuild/rules_appengine/issues/127",
     },
     "rules_apple": {
         "git_repository": "https://github.com/bazelbuild/rules_apple.git",
