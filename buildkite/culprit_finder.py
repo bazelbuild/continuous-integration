@@ -50,7 +50,7 @@ def get_bazel_commits_between(first_commit, second_commit):
         )
         return [i for i in reversed(output.decode("utf-8").split("\n")) if i]
     except subprocess.CalledProcessError as e:
-        raise bazelci.BazelBuildFailedException(
+        raise bazelci.BuildkiteException(
             "Failed to get bazel commits between %s..%s:\n%s"
             % (first_commit, second_commit, str(e))
         )
