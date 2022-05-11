@@ -6,21 +6,18 @@ platforms:
     test_targets:
       - "//:all"
       - "//java/..."
-      - "//:cc_proto_blacklist_test"
   macos:
     test_flags:
       - "--proto_toolchain_for_cc=//:cc_toolchain"
     test_targets:
       - "//:all"
       - "//java/..."
-      - "//:cc_proto_blacklist_test"
   windows:
     test_flags:
       - "--proto_toolchain_for_cc=//:cc_toolchain"
     test_targets:
       - "//:all"
       - "//java/..."
-      - "//:cc_proto_blacklist_test"
       - "-//java/core:conformance_test"
       - "-//java/lite:conformance_test"
       - "-//:protobuf_test"
