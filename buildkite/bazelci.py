@@ -344,7 +344,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jvm_external/master/.bazelci/examples.yml",
         "pipeline_slug": "rules-jvm-external-examples",
         "owned_by_bazel": True,
-        "disabled_reason": "https://github.com/bazelbuild/rules_jvm_external/pull/677",
     },
     "rules_k8s": {
         "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
