@@ -1,6 +1,6 @@
 ---
 platforms:
-  ubuntu1804:
+  ubuntu2004:
     environment:
       TF_IGNORE_MAX_BAZEL_VERSION: 1
       USE_BAZEL_VERSION: latest
