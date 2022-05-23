@@ -1,7 +1,7 @@
 # ATTENTION: use the build.sh script to build this image.
 # ./build.sh <OCI_REPOSITORY> <BAZEL_VERSION>
 
-FROM ubuntu:16.04@sha256:0f71fa8d4d2d4292c3c617fda2b36f6dabe5c8b6e34c3dc5b0d17d4e704bd39c AS base_image
+FROM ubuntu:16.04 AS base_image
 
 RUN --mount=source=bazel/oci/install_packages.sh,target=/mnt/install_packages.sh,type=bind \
     /mnt/install_packages.sh
