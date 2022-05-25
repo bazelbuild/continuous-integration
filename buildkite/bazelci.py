@@ -1489,10 +1489,9 @@ def print_bazel_version_info(bazel_binary, platform, build_flags):
         + ["--nosystem_rc", "--nohome_rc", "version"]
     )
     
-    eprint("build_flags:", build_flags)
     info_flags = ["--nosystem_rc", "--nohome_rc"]
-    #if "--noincompatible_disable_managed_directories" in build_flags:
-    info_flags += ["--noincompatible_disable_managed_directories"]
+    if "--noincompatible_disable_managed_directories" in build_flags:
+        info_flags += ["--noincompatible_disable_managed_directories"]
     
     execute_command(
         [bazel_binary]
