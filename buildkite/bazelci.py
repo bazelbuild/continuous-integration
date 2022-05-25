@@ -1237,7 +1237,7 @@ def execute_commands(
         else:
             execute_shell_commands(task_config.get("shell_commands", None))
 
-        bazel_version = print_bazel_version_info(bazel_binary, platform)
+        bazel_version = print_bazel_version_info(bazel_binary, platform, task_config.get("build_flags", []))
 
         print_environment_variables_info()
 
@@ -1481,17 +1481,24 @@ def is_pull_request():
     return len(third_party_repo) > 0
 
 
-def print_bazel_version_info(bazel_binary, platform):
+def print_bazel_version_info(bazel_binary, platform, build_flags):
     print_collapsed_group(":information_source: Bazel Info")
     version_output = execute_command_and_get_output(
         [bazel_binary]
         + common_startup_flags(platform)
         + ["--nosystem_rc", "--nohome_rc", "version"]
     )
+    
+    print("build_flags:", build_flags)
+    info_flags = ["--nosystem_rc", "--nohome_rc"]
+    if "--noincompatible_disable_managed_directories" in build_flags:
+        info_flags += ["--noincompatible_disable_managed_directories"]
+    
     execute_command(
         [bazel_binary]
         + common_startup_flags(platform)
-        + ["--nosystem_rc", "--nohome_rc", "info"]
+        + info_flags 
+        + ["info"]
     )
 
     match = BUILD_LABEL_PATTERN.search(version_output)
