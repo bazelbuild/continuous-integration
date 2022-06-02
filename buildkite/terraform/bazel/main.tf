@@ -1667,7 +1667,7 @@ resource "buildkite_pipeline" "protobuf" {
   repository = "https://github.com/google/protobuf.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/protobuf.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"] } })
   description = "Triggered every 4 hours"
-  default_branch = "master"
+  default_branch = "main"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
   provider_settings {
     trigger_mode = "code"
