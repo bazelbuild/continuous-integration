@@ -2145,7 +2145,6 @@ def execute_bazel_test(
             + bazelisk_flags()
             + common_startup_flags(platform)
             + ["test"]
-            + aggregated_flags
             + ["--"]
             + targets
         )
