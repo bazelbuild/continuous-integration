@@ -620,7 +620,7 @@ INDEX_UPLOAD_POLICY_NEVER = "Never"
 
 # The maximum number of tasks allowed in one pipeline yaml config file.
 # This is to prevent accidentally creating too many tasks with the martix testing feature.
-MAX_TASK_NUMBER = 50
+MAX_TASK_NUMBER = 80
 
 
 class BuildkiteException(Exception):
