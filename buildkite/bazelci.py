@@ -2138,7 +2138,7 @@ def execute_bazel_test(
         enable_remote_cache=not monitor_flaky_tests,
     )
 
-    print_expanded_group(":bazel: Test ({})".format(bazel_version))
+    print_expanded_group(":bazel: Test Without aggregated_flags ({})".format(bazel_version))
     try:
         execute_command(
             [bazel_binary]
