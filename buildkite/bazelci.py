@@ -1309,7 +1309,7 @@ def execute_commands(
             try:
                 upload_thread.start()
                 try:
-                    execute_bazel_test(
+                    execute_bazel_tes(
                         bazel_version,
                         bazel_binary,
                         platform,
