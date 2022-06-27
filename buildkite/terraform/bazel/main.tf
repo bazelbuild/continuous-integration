@@ -108,7 +108,7 @@ resource "buildkite_pipeline" "intellij-ue-plugin" {
   }
 }
 
-resource "buildkite_pipeline" "intellij-ue-plugin" {
+resource "buildkite_pipeline" "intellij-ue-plugin-google" {
   name = "IntelliJ UE plugin Google"
   repository = "https://github.com/bazelbuild/intellij.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/intellij-ue.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
@@ -1279,7 +1279,7 @@ resource "buildkite_pipeline" "intellij-plugin-aspect" {
   }
 }
 
-resource "buildkite_pipeline" "intellij-plugin-aspect" {
+resource "buildkite_pipeline" "intellij-plugin-aspect-google" {
   name = "IntelliJ Plugin Aspect Google"
   repository = "https://github.com/bazelbuild/intellij.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/aspect.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
@@ -1315,7 +1315,7 @@ resource "buildkite_pipeline" "android-studio-plugin" {
   }
 }
 
-resource "buildkite_pipeline" "android-studio-plugin" {
+resource "buildkite_pipeline" "android-studio-plugin-google" {
   name = "Android Studio Plugin Google"
   repository = "https://github.com/bazelbuild/intellij.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/android-studio.yml --monitor_flaky_tests=true | tee /dev/tty | buildkite-agent pipeline upload"] } })
@@ -1576,7 +1576,7 @@ resource "buildkite_pipeline" "clion-plugin" {
   }
 }
 
-resource "buildkite_pipeline" "clion-plugin" {
+resource "buildkite_pipeline" "clion-plugin-google" {
   name = "CLion plugin Google"
   repository = "https://github.com/bazelbuild/intellij.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/clion.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
@@ -1614,7 +1614,7 @@ resource "buildkite_pipeline" "intellij-plugin" {
   }
 }
 
-resource "buildkite_pipeline" "intellij-plugin" {
+resource "buildkite_pipeline" "intellij-plugin-google" {
   name = "IntelliJ plugin Google"
   repository = "https://github.com/bazelbuild/intellij.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/intellij.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
