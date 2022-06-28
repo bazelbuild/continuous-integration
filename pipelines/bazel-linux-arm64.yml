@@ -64,6 +64,7 @@ tasks:
       - "-//src/test/shell/integration:bazel_java_test"
       - "-//src/test/shell/integration:minimal_jdk_test"
       - "-//src/test/java/com/google/devtools/build/lib/rules/objc:ObjcRulesTests"
+      - "-//src/test/java/com/google/devtools/build/lib/skyframe/rewinding:RewindingTest"
     include_json_profile:
       - build
       - test
