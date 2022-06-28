@@ -90,6 +90,11 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/android-studio.yml",
         "pipeline_slug": "android-studio-plugin",
     },
+    "Android Studio Plugin Google": {
+        "git_repository": "https://github.com/bazelbuild/intellij.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/google/.bazelci/android-studio.yml",
+        "pipeline_slug": "android-studio-plugin-google",
+    },
     "Android Testing": {
         "git_repository": "https://github.com/googlesamples/android-testing.git",
         "http_config": "https://raw.githubusercontent.com/googlesamples/android-testing/master/bazelci/buildkite-pipeline.yml",
@@ -175,6 +180,11 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/clion.yml",
         "pipeline_slug": "clion-plugin",
     },
+    "CLion Plugin Google": {
+        "git_repository": "https://github.com/bazelbuild/intellij.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/google/.bazelci/clion.yml",
+        "pipeline_slug": "clion-plugin-google",
+    },
     "Cartographer": {
         "git_repository": "https://github.com/googlecartographer/cartographer.git",
         "http_config": "https://raw.githubusercontent.com/googlecartographer/cartographer/master/.bazelci/presubmit.yml",
@@ -216,10 +226,30 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/intellij.yml",
         "pipeline_slug": "intellij-plugin",
     },
+    "IntelliJ Plugin Google": {
+        "git_repository": "https://github.com/bazelbuild/intellij.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/google/.bazelci/intellij.yml",
+        "pipeline_slug": "intellij-plugin-google",
+    },
+    "IntelliJ UE Plugin": {
+        "git_repository": "https://github.com/bazelbuild/intellij.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/intellij-ue.yml",
+        "pipeline_slug": "intellij-ue-plugin",
+    },
+    "IntelliJ UE Plugin Google": {
+        "git_repository": "https://github.com/bazelbuild/intellij.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/google/.bazelci/intellij-ue.yml",
+        "pipeline_slug": "intellij-ue-plugin-google",
+    },
     "IntelliJ Plugin Aspect": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/aspect.yml",
         "pipeline_slug": "intellij-plugin-aspect",
+    },
+    "IntelliJ Plugin Aspect Google": {
+        "git_repository": "https://github.com/bazelbuild/intellij.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/google/.bazelci/aspect.yml",
+        "pipeline_slug": "intellij-plugin-aspect-google",
     },
     "Kythe": {
         "git_repository": "https://github.com/kythe/kythe.git",
@@ -1468,7 +1498,7 @@ def get_bazelisk_cache_directory(platform):
 
 
 def current_branch_is_main_branch():
-    return os.getenv("BUILDKITE_BRANCH") in ("master", "stable", "main")
+    return os.getenv("BUILDKITE_BRANCH") in ("master", "stable", "main", "google")
 
 
 def get_release_name_from_branch_name():
