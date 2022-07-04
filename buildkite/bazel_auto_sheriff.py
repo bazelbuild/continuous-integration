@@ -101,13 +101,14 @@ class BuildInfoAnalyzer(threading.Thread):
 
 
     def _get_main_build_result(self):
-        build_info_list = self.client.get_build_info_list([
-            ("branch", "master"),
+        builds_filter = [("branch[]", b) for b in bazelci.MAIN_BRANCHES]
+        builds_filter.extend([
             ("page", "1"),
             ("per_page", "1"),
             ("state[]", "failed"),
             ("state[]", "passed"),
         ])
+        build_info_list = self.client.get_build_info_list(builds_filter)
         if not build_info_list:
             error = f"Cannot find finished build for pipeline {self.pipeline}, please try to rerun the pipeline first."
             self._log("SERIOUS", error)
