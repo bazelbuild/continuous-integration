@@ -652,6 +652,8 @@ INDEX_UPLOAD_POLICY_NEVER = "Never"
 # This is to prevent accidentally creating too many tasks with the martix testing feature.
 MAX_TASK_NUMBER = 80
 
+# Possible names of repos main branches
+MAIN_BRANCHES = ["master", "stable", "main", "google"]
 
 class BuildkiteException(Exception):
     """
@@ -1498,7 +1500,7 @@ def get_bazelisk_cache_directory(platform):
 
 
 def current_branch_is_main_branch():
-    return os.getenv("BUILDKITE_BRANCH") in ("master", "stable", "main", "google")
+    return os.getenv("BUILDKITE_BRANCH") in MAIN_BRANCHES
 
 
 def get_release_name_from_branch_name():
