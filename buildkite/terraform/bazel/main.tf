@@ -103,8 +103,6 @@ resource "buildkite_pipeline" "intellij-ue-plugin" {
     prefix_pull_request_fork_branch_names = true
     build_branches = true
     publish_commit_status = true
-    filter_enabled = true
-    filter_condition = "build.pull_request.base_branch != \"google\""
   }
 }
 
@@ -116,15 +114,7 @@ resource "buildkite_pipeline" "intellij-ue-plugin-google" {
   default_branch = "google"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
   provider_settings {
-    trigger_mode = "code"
-    build_pull_requests = true
-    skip_pull_request_builds_for_existing_commits = true
-    build_pull_request_forks = true
-    prefix_pull_request_fork_branch_names = true
-    build_branches = true
-    publish_commit_status = true
-    filter_enabled = true
-    filter_condition = "build.pull_request.base_branch == \"google\""
+    trigger_mode = "none"
   }
 }
 
@@ -1274,8 +1264,6 @@ resource "buildkite_pipeline" "intellij-plugin-aspect" {
     build_pull_request_forks = true
     prefix_pull_request_fork_branch_names = true
     publish_commit_status = true
-    filter_enabled = true
-    filter_condition = "build.pull_request.base_branch != \"google\""
   }
 }
 
@@ -1286,14 +1274,7 @@ resource "buildkite_pipeline" "intellij-plugin-aspect-google" {
   default_branch = "google"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
   provider_settings {
-    trigger_mode = "code"
-    build_pull_requests = true
-    skip_pull_request_builds_for_existing_commits = true
-    build_pull_request_forks = true
-    prefix_pull_request_fork_branch_names = true
-    publish_commit_status = true
-    filter_enabled = true
-    filter_condition = "build.pull_request.base_branch == \"google\""
+    trigger_mode = "none"
   }
 }
 
@@ -1310,8 +1291,6 @@ resource "buildkite_pipeline" "android-studio-plugin" {
     build_pull_request_forks = true
     prefix_pull_request_fork_branch_names = true
     publish_commit_status = true
-    filter_enabled = true
-    filter_condition = "build.pull_request.base_branch != \"google\""
   }
 }
 
@@ -1322,14 +1301,7 @@ resource "buildkite_pipeline" "android-studio-plugin-google" {
   default_branch = "google"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
   provider_settings {
-    trigger_mode = "code"
-    build_pull_requests = true
-    skip_pull_request_builds_for_existing_commits = true
-    build_pull_request_forks = true
-    prefix_pull_request_fork_branch_names = true
-    publish_commit_status = true
-    filter_enabled = true
-    filter_condition = "build.pull_request.base_branch == \"google\""
+    trigger_mode = "none"
   }
 }
 
@@ -1571,8 +1543,6 @@ resource "buildkite_pipeline" "clion-plugin" {
     build_pull_request_forks = true
     prefix_pull_request_fork_branch_names = true
     publish_commit_status = true
-    filter_enabled = true
-    filter_condition = "build.pull_request.base_branch != \"google\""
   }
 }
 
@@ -1583,14 +1553,7 @@ resource "buildkite_pipeline" "clion-plugin-google" {
   default_branch = "google"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
   provider_settings {
-    trigger_mode = "code"
-    build_pull_requests = true
-    skip_pull_request_builds_for_existing_commits = true
-    build_pull_request_forks = true
-    prefix_pull_request_fork_branch_names = true
-    publish_commit_status = true
-    filter_enabled = true
-    filter_condition = "build.pull_request.base_branch == \"google\""
+    trigger_mode = "none"
   }
 }
 
@@ -1609,8 +1572,6 @@ resource "buildkite_pipeline" "intellij-plugin" {
     prefix_pull_request_fork_branch_names = true
     build_branches = true
     publish_commit_status = true
-    filter_enabled = true
-    filter_condition = "build.pull_request.base_branch != \"google\""
   }
 }
 
@@ -1622,15 +1583,7 @@ resource "buildkite_pipeline" "intellij-plugin-google" {
   default_branch = "google"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
   provider_settings {
-    trigger_mode = "code"
-    build_pull_requests = true
-    skip_pull_request_builds_for_existing_commits = true
-    build_pull_request_forks = true
-    prefix_pull_request_fork_branch_names = true
-    build_branches = true
-    publish_commit_status = true
-    filter_enabled = true
-    filter_condition = "build.pull_request.base_branch == \"google\""
+    trigger_mode = "none"
   }
 }
 
