@@ -652,8 +652,6 @@ INDEX_UPLOAD_POLICY_NEVER = "Never"
 # This is to prevent accidentally creating too many tasks with the martix testing feature.
 MAX_TASK_NUMBER = 80
 
-# Possible names of repos main branches
-MAIN_BRANCHES = ["master", "stable", "main", "google"]
 
 class BuildkiteException(Exception):
     """
@@ -696,6 +694,10 @@ P9w8kNhEbw==
         "https://api.buildkite.com/v2/organizations/{}/pipelines/{}/builds/{}/jobs/{}/retry"
     )
 
+    _PIPELINE_INFO_URL_TEMPLATE = (
+        "https://api.buildkite.com/v2/organizations/{}/pipelines/{}"
+    )
+
     def __init__(self, org, pipeline):
         self._org = org
         self._pipeline = pipeline
@@ -721,6 +723,20 @@ P9w8kNhEbw==
             )
         except urllib.error.HTTPError as ex:
             raise BuildkiteException("Failed to open {}: {} - {}".format(url, ex.code, ex.reason))
+
+    def get_pipeline_info(self):
+    """Get details for a pipeline given its organization slug
+    and pipeline slug.
+    See https://buildkite.com/docs/apis/rest-api/pipelines#get-a-pipeline
+
+    Returns
+    -------
+    dict
+        the metadata for the pipeline
+    """
+    url = self._PIPELINE_INFO_URL_TEMPLATE.format(self._org, self._pipeline)
+    output = self._open_url(url)
+    return json.loads(output)
 
     def get_build_info(self, build_number):
         """Get build info for a pipeline with a given build number
@@ -1500,7 +1516,7 @@ def get_bazelisk_cache_directory(platform):
 
 
 def current_branch_is_main_branch():
-    return os.getenv("BUILDKITE_BRANCH") in MAIN_BRANCHES
+    return os.getenv("BUILDKITE_BRANCH") in ("master", "stable", "main", "google")
 
 
 def get_release_name_from_branch_name():
