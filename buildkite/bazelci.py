@@ -725,18 +725,18 @@ P9w8kNhEbw==
             raise BuildkiteException("Failed to open {}: {} - {}".format(url, ex.code, ex.reason))
 
     def get_pipeline_info(self):
-    """Get details for a pipeline given its organization slug
-    and pipeline slug.
-    See https://buildkite.com/docs/apis/rest-api/pipelines#get-a-pipeline
+        """Get details for a pipeline given its organization slug
+        and pipeline slug.
+        See https://buildkite.com/docs/apis/rest-api/pipelines#get-a-pipeline
 
-    Returns
-    -------
-    dict
-        the metadata for the pipeline
-    """
-    url = self._PIPELINE_INFO_URL_TEMPLATE.format(self._org, self._pipeline)
-    output = self._open_url(url)
-    return json.loads(output)
+        Returns
+        -------
+        dict
+            the metadata for the pipeline
+        """
+        url = self._PIPELINE_INFO_URL_TEMPLATE.format(self._org, self._pipeline)
+        output = self._open_url(url)
+        return json.loads(output)
 
     def get_build_info(self, build_number):
         """Get build info for a pipeline with a given build number
