@@ -34,8 +34,8 @@ import urllib.request
 
 BCR_BUCKET = "gs://bcr.bazel.build/"
 LAST_SYNCED_COMMIT_URL = BCR_BUCKET + "last_synced_commit"
-MIRROR_BUCKET = BCR_BUCKET + "test-mirror/"
-MIRROR_URL_PREFIX = "https://bcr.bazel.build/test-mirror/"
+MIRROR_PATH = BCR_BUCKET + "mirror/"
+MIRROR_URL_PREFIX = "https://bcr.bazel.build/mirror/"
 
 
 class BcrPipelineException(Exception):
@@ -122,7 +122,7 @@ def verify_integrity(data, integrity):
 
 def already_mirrored(target_path):
     try:
-        subprocess.check_output(["gsutil", "ls", MIRROR_BUCKET + target_path])
+        subprocess.check_output(["gsutil", "ls", MIRROR_PATH + target_path])
         return True
     except subprocess.CalledProcessError:
         return False
@@ -152,7 +152,7 @@ def mirror_archive(url, integrity):
         tmpfile.write(data)
         tmpfile.close()
         subprocess.check_output(
-            ["gsutil", "-h", "Cache-Control:no-cache", "cp", tmpfile.name, MIRROR_BUCKET + target_path]
+            ["gsutil", "-h", "Cache-Control:no-cache", "cp", tmpfile.name, MIRROR_PATH + target_path]
         )
         eprint("Mirror succeeded, archive available at {}".format(MIRROR_URL_PREFIX + target_path))
 
