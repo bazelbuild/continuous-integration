@@ -101,8 +101,14 @@ class BuildInfoAnalyzer(threading.Thread):
 
 
     def _get_main_build_result(self):
+        pipeline_info = self.client.get_pipeline_info()
+        if not pipeline_info:
+            error = f"Cannot find pipeline info for pipeline {self.pipeline}."
+            self._log("SERIOUS", error)
+            raise bazelci.BuildkiteException(error)
+
         build_info_list = self.client.get_build_info_list([
-            ("branch", "master"),
+            ("branch", pipeline_info["default_branch"]),
             ("page", "1"),
             ("per_page", "1"),
             ("state[]", "failed"),
