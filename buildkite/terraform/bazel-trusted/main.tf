@@ -221,3 +221,22 @@ resource "buildkite_pipeline" "build-embedded-minimized-jdk" {
   default_branch = "master"
   team = [{ access_level = "READ_ONLY", slug = "everyone" }]
 }
+
+resource "buildkite_pipeline" "bcr-postsubmit" {
+  name = "BCR Postsubmit"
+  repository = "https://github.com/bazelbuild/bazel-central-registry.git"
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_postsubmit.py\" -o bcr_postsubmit.py", "python3.6 bcr_postsubmit.py"] } })
+  description = "Tasks to run after merging a change for the Bazel Central Registry"
+  default_branch = "main"
+  branch_configuration = "main"
+  skip_intermediate_builds = true
+  cancel_intermediate_builds = true
+  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }]
+  provider_settings {
+    trigger_mode = "code"
+    skip_pull_request_builds_for_existing_commits = true
+    prefix_pull_request_fork_branch_names = true
+    build_branches = true
+    publish_commit_status = true
+  }
+}
