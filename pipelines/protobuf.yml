@@ -13,22 +13,8 @@ platforms:
       - "//:all"
       - "//java/..."
   windows:
-    test_flags:
+    build_flags:
       - "--proto_toolchain_for_cc=//:cc_toolchain"
-    test_targets:
-      - "//:all"
-      - "//java/..."
-      - "-//java/core:conformance_test"
-      - "-//java/lite:conformance_test"
-      - "-//:protobuf_test"
-      - "-//:py_descriptor_database_test"
-      - "-//:py_descriptor_pool_test"
-      - "-//:py_descriptor_test"
-      - "-//:py_generator_test"
-      - "-//:py_json_format_test"
-      - "-//:py_message_factory_test"
-      - "-//:py_message_test"
-      - "-//:py_reflection_test"
-      - "-//:py_symbol_database_test"
-      - "-//:py_text_format_test"
-      - "-//:py_unknown_fields_test"
+    build_targets:
+      - "//:protobuf"
+      - "//:protobuf_java"
