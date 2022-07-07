@@ -231,7 +231,7 @@ resource "buildkite_pipeline" "bcr-postsubmit" {
   branch_configuration = "main"
   skip_intermediate_builds = true
   cancel_intermediate_builds = true
-  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }]
+  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "release-managers" }]
   provider_settings {
     trigger_mode = "code"
     skip_pull_request_builds_for_existing_commits = true
