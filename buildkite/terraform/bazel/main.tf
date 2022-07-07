@@ -1447,8 +1447,7 @@ resource "buildkite_pipeline" "rules-rust-rustlang" {
     build_pull_request_forks = true
     prefix_pull_request_fork_branch_names = true
     build_branches = true
-    # TODO(hlopko): Fix this after investigating why "Buildkite has temporarily turned off commit status updates for this build pipeline."
-    publish_commit_status = false
+    publish_commit_status = true
   }
 }
 
@@ -1952,7 +1951,8 @@ resource "buildkite_pipeline" "crubit" {
     build_pull_request_forks = true
     prefix_pull_request_fork_branch_names = true
     build_branches = true
-    publish_commit_status = true
+    # TODO(hlopko): Fix this after investigating why "Buildkite has temporarily turned off commit status updates for this build pipeline."
+    publish_commit_status = false
     separate_pull_request_statuses = true
   }
 }
