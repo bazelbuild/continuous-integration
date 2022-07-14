@@ -1233,21 +1233,22 @@ def execute_commands(
         # Linux versions and we have to ensure that it works on all of them).
         binary_platform = platform if platform in ["macos", "windows"] else LINUX_BINARY_PLATFORM
 
+        bazel_binary = "bazel"
         if use_bazel_at_commit:
             print_collapsed_group(":gcloud: Downloading Bazel built at " + use_bazel_at_commit)
             # Linux binaries are published under platform name "centos7"
             if binary_platform == LINUX_BINARY_PLATFORM:
                 binary_platform = "centos7"
-            bazel_binary = download_bazel_binary_at_commit(
+            os.environ["USE_BAZEL_VERSION"] = download_bazel_binary_at_commit(
                 tmpdir, binary_platform, use_bazel_at_commit
             )
-            os.environ["USE_BAZEL_VERSION"] = bazel_binary
+            print_collapsed_group(":bazel: Using Bazel at " + os.environ["USE_BAZEL_VERSION"])
         elif use_but:
             print_collapsed_group(":gcloud: Downloading Bazel Under Test")
-            bazel_binary = download_bazel_binary(tmpdir, binary_platform)
-            os.environ["USE_BAZEL_VERSION"] = bazel_binary
+            os.environ["USE_BAZEL_VERSION"] = download_bazel_binary(tmpdir, binary_platform)
+            print_collapsed_group(":bazel: Using Bazel at " + os.environ["USE_BAZEL_VERSION"])
         else:
-            bazel_binary = "bazel"
+            print_collapsed_group(":bazel: Using Bazel version " + bazel_version)
             if bazel_version:
                 os.environ["USE_BAZEL_VERSION"] = bazel_version
         if "USE_BAZEL_VERSION" in os.environ and not task_config.get(
