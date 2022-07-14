@@ -1246,6 +1246,7 @@ def execute_commands(
             print_collapsed_group(":gcloud: Downloading Bazel Under Test")
             os.environ["USE_BAZEL_VERSION"] = download_bazel_binary(tmpdir, binary_platform)
         else:
+            print_collapsed_group(":bazel: Using Bazel version " + bazel_version)
             if bazel_version:
                 os.environ["USE_BAZEL_VERSION"] = bazel_version
         if "USE_BAZEL_VERSION" in os.environ and not task_config.get(
