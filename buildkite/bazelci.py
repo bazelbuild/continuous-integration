@@ -1242,11 +1242,11 @@ def execute_commands(
             os.environ["USE_BAZEL_VERSION"] = download_bazel_binary_at_commit(
                 tmpdir, binary_platform, use_bazel_at_commit
             )
-            print_collapsed_group(":bazel: Using Bazel at  " + os.environ["USE_BAZEL_VERSION"])            
+            print_collapsed_group(":bazel: Using Bazel at " + os.environ["USE_BAZEL_VERSION"])            
         elif use_but:
             print_collapsed_group(":gcloud: Downloading Bazel Under Test")
             os.environ["USE_BAZEL_VERSION"] = download_bazel_binary(tmpdir, binary_platform)
-            print_collapsed_group(":bazel: Using Bazel at  " + os.environ["USE_BAZEL_VERSION"])            
+            print_collapsed_group(":bazel: Using Bazel at " + os.environ["USE_BAZEL_VERSION"])            
         else:
             print_collapsed_group(":bazel: Using Bazel version " + bazel_version)
             if bazel_version:
