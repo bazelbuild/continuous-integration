@@ -44,7 +44,7 @@ def generate_configs(output_root: str, bazel_version: str, toolchain_name: str,
 
   toolchain_container = 'gcr.io/bazel-public/{}:latest'.format(toolchain_name)
   exec_constraints = [
-      '@bazel_tools//platforms:linux', '@bazel_tools//platforms:x86_64',
+      '@platforms//os:linux', '@platforms//cpu:x86_64',
       '@bazel_tools//tools/cpp:gcc'
   ]
   subprocess.run(
@@ -109,6 +109,64 @@ def upload_configs(output_root: str, upload_root: str, bazel_version: str,
   )
 
 configs = [
+  {
+    "bazel_version": "5.2.0",
+    "containers": [
+      {
+          'toolchain_name': 'ubuntu1604-bazel-java8',
+          'cpp_env_json': 'cpp_env/ubuntu1604.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1604-java8',
+          'cpp_env_json': 'cpp_env/ubuntu1604.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1804-bazel-java11',
+          'cpp_env_json': 'cpp_env/ubuntu1804.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1804-java11',
+          'cpp_env_json': 'cpp_env/ubuntu1804.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004-bazel-java11',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004-java11',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+    ]
+  },
+  {
+    "bazel_version": "5.1.0",
+    "containers": [
+      {
+          'toolchain_name': 'ubuntu1604-bazel-java8',
+          'cpp_env_json': 'cpp_env/ubuntu1604.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1604-java8',
+          'cpp_env_json': 'cpp_env/ubuntu1604.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1804-bazel-java11',
+          'cpp_env_json': 'cpp_env/ubuntu1804.json'
+      },
+      {
+          'toolchain_name': 'ubuntu1804-java11',
+          'cpp_env_json': 'cpp_env/ubuntu1804.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004-bazel-java11',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004-java11',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+    ]
+  },
   {
     "bazel_version": "5.0.0",
     "containers": [
