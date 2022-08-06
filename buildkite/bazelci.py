@@ -230,7 +230,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/google/.bazelci/intellij.yml",
         "pipeline_slug": "intellij-plugin-google",
-        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/3813",
     },
     "IntelliJ UE Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
@@ -241,7 +240,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/google/.bazelci/intellij-ue.yml",
         "pipeline_slug": "intellij-ue-plugin-google",
-        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/3813",
     },
     "IntelliJ Plugin Aspect": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
@@ -252,7 +250,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/google/.bazelci/aspect.yml",
         "pipeline_slug": "intellij-plugin-aspect-google",
-        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/3813",
     },
     "Kythe": {
         "git_repository": "https://github.com/kythe/kythe.git",
