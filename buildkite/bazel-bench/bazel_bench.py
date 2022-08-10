@@ -116,19 +116,10 @@ def _evenly_spaced_sample(lst, num_elem):
     return sample[::-1]
 
 
-def _get_bazel_commits(date, bazel_repo_path, max_commits=None):
+def _get_commits_from_date(date, repo_path):
     """Get the commits from a particular date.
 
     Get the commits from 00:00 of date to 00:00 of date + 1.
-
-    Args:
-      date: a datetime.date the date to get commits.
-      bazel_repo_path: the path to a local clone of bazelbuild/bazel.
-      max_commits: the maximum number of commits to consider for benchmarking.
-
-    Return:
-      A tuple: (list of strings: all commits during that day,
-        list of strings: commits to benchmark).
     """
     date_plus_one = date + datetime.timedelta(days=1)
     args = [
@@ -139,11 +130,35 @@ def _get_bazel_commits(date, bazel_repo_path, max_commits=None):
         "--until='%s'" % date_plus_one.strftime("%Y-%m-%d 00:00"),
         "--reverse",
     ]
-    command_output = subprocess.check_output(args, cwd=bazel_repo_path)
+    command_output = subprocess.check_output(args, cwd=repo_path)
     decoded = command_output.decode("utf-8").splitlines()
-    full_list = [line.strip("'") for line in decoded if line]
 
-    return full_list, _evenly_spaced_sample(full_list, max_commits)
+    return [line.strip("'") for line in decoded if line]
+
+
+def _get_bazel_commits(date, bazel_repo_path, max_commits=None):
+    """Get the Bazel commits to benchmark from a particular date.
+
+    Also include the last commit from the previous day (to create some overlap).
+
+    Args:
+      date: a datetime.date the date to get commits.
+      bazel_repo_path: the path to a local clone of bazelbuild/bazel.
+      max_commits: the maximum number of commits to consider for benchmarking.
+
+    Return:
+      A tuple: (list of strings: all commits during that day,
+        list of strings: commits to benchmark).
+    """
+    previous_day = date - datetime.timedelta(days=1)
+
+    from_date = _get_commits_from_date(date, bazel_repo_path)
+    from_prev_day = _get_commits_from_date(previous_day, bazel_repo_path)
+
+    full_list = from_prev_day[-1:] + from_date
+    to_benchmark = from_prev_day[-1:] + _evenly_spaced_sample(from_date, max_commits)
+
+    return full_list, to_benchmark
 
 
 def _get_platforms(project_name, whitelist):
@@ -220,7 +235,6 @@ def _ci_step_for_platform_and_commits(
             "--project_source=%s" % project_clone_path,
             "--project_label=%s" % project["project_label"],
             "--platform=%s" % platform,
-            "--collect_memory",
             "--data_directory=%s" % DATA_DIRECTORY,
             "--csv_file_name=%s" % BAZEL_BENCH_RESULT_FILENAME,
             "--collect_json_profile",
@@ -265,7 +279,7 @@ def _ci_step_for_platform_and_commits(
         + _bazel_bench_env_setup_command(platform, ",".join(bazel_commits))
         + [bazel_bench_command, upload_output_files_storage_command, upload_to_big_query_command]
     )
-    label = bazelci.PLATFORMS[platform]["emoji-name"] + project["project_label"]
+    label = "{} {}".format(bazelci.PLATFORMS[platform]["emoji-name"], project["project_label"])
     return bazelci.create_step(label, commands, platform)
 
 
@@ -392,6 +406,7 @@ def main(args=None):
     parser = argparse.ArgumentParser(description="Bazel Bench CI Pipeline")
     parser.add_argument("--date", type=str)
     parser.add_argument("--bazel_bench_options", type=str, default="")
+    parser.add_argument("--projects", type=str, nargs='+', default=None)
     parser.add_argument("--bucket", type=str, default="")
     parser.add_argument("--max_commits", type=int, default="")
     parser.add_argument("--report_name", type=str, default="report")
@@ -415,11 +430,13 @@ def main(args=None):
     bazel_bench_ci_steps = []
 
     for project in PROJECTS:
-        if not project["active"]:
+        if (not project["active"]
+            or (parsed_args.projects
+                and project['project_label'] not in parsed_args.projects)):
             continue
         platforms = _get_platforms(
             project["bazelci_name"], whitelist=PLATFORMS_WHITELIST)
-        
+
         for platform in platforms:
             if (project["bazel_bench_extra_options"] and platform in project["bazel_bench_extra_options"]):
                 project_specific_bazel_bench_options = " ".join([project["bazel_bench_extra_options"][platform], parsed_args.bazel_bench_options])
