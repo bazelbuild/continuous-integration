@@ -134,11 +134,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/buchgr/bazel-remote/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-remote-cache",
     },
-    "Bazel integration testing": {
-        "git_repository": "https://github.com/bazelbuild/bazel-integration-testing.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-integration-testing/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "bazel-integration-testing",
-    },
     "Bazel skylib": {
         "git_repository": "https://github.com/bazelbuild/bazel-skylib.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-skylib/main/.bazelci/presubmit.yml",
