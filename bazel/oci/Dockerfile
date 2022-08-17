@@ -1,7 +1,7 @@
 # ATTENTION: use the build.sh script to build this image.
 # ./build.sh <OCI_REPOSITORY> <BAZEL_VERSION>
 
-FROM ubuntu:16.04 AS base_image
+FROM ubuntu:20.04 AS base_image
 
 RUN --mount=source=bazel/oci/install_packages.sh,target=/mnt/install_packages.sh,type=bind \
     /mnt/install_packages.sh
