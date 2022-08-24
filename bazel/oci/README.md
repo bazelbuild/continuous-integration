@@ -13,7 +13,7 @@ $ ./build.sh gcr.io/bazel-public/bazel <bazel version>
 $ docker push gcr.io/bazel-public/bazel:<bazel version>
 ```
 
-### 2. Update latest tag if necessary
+### 3. Update the `latest` tag if necessary
 If the new Bazel version is the latest version (not a minor/patch release for previous major LTS version):
 ```bash
 $ docker image list gcr.io/bazel-public/bazel:<bazel version>   # To check the <IMAGE ID>.
