@@ -4,21 +4,21 @@ This is the guide to conducting a Bazel release. This is especially relevant for
 release managers, but will be of interest to anyone who is curious about the
 release process.
 
-## Preface 
+## Preface
 
 > For future reference and release managers - the release manager playbook should
 > be treated like an IKEA manual. That means: Do not try to be smart, optimize /
 > skip / reorder steps, otherwise chaos will ensue. Just follow it and the end
 > result will be.. well, a usable piece of furniture, or a Bazel release
 > (depending on the manual).
-> 
+>
 > Like aviation and workplace safety regulations, the playbook is written in the
 > tears and blood of broken Bazelisks, pipelines, releases and Git branches.
 > Assume that every step is exactly there for a reason, even if it might not be
 > obvious. If you follow them to the letter, they are not error prone. Errors
 > have only happened in the past, when a release manager thought it's ok to
 > follow them by spirit instead. ;)
-> 
+>
 > -- @philwo
 
 ## One-time setup
@@ -84,7 +84,7 @@ While the release is active, you should make sure to do the following:
     [release pipeline](https://buildkite.com/bazel-trusted/bazel-release/builds),
     click "Deploy release artifacts" for the deployment step.
 
-    *   This will upload the release candidate binaries to GitHub and our 
+    *   This will upload the release candidate binaries to GitHub and our
         apt-get repository. The github link is probably of the form:
         https://releases.bazel.build/3.6.0/rc1/index.html
 
@@ -176,7 +176,7 @@ After a few days of iteration:
     git checkout release-X.Y.ZrcN
     scripts/release/release.sh release
     ```
-    
+
     **Warning**: If this process is interrupted for any reason, please check the following before running:
       * Both `release-X.Y.ZrcN` and `master` branch are restored to the previous clean state (without addtional release commits).
       * Release tag is deleted locally (`git tag -d X.Y.Z`), otherwise rerun will cause an error that complains the tag already exists.
@@ -273,3 +273,6 @@ new release coming out.
 This is done by an external contributor, [@vbatts](https://github.com/vbatts) on
 GitHub. Ping him when there's a new release coming out.
 
+### Push new docker image
+
+Follow the [instructions](../bazel/oci/README.md) to push new docker image for the new release, ping [@meteorcloudy](https://github.com/meteorcloudy) for help.
