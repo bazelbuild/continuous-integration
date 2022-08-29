@@ -59,10 +59,6 @@ SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integratio
     GITHUB_BRANCH, int(time.time())
 )
 
-INCOMPATIBLE_FLAG_VERBOSE_FAILURES_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/incompatible_flag_verbose_failures.py?{}".format(
-    GITHUB_BRANCH, int(time.time())
-)
-
 AGGREGATE_INCOMPATIBLE_TEST_RESULT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/aggregate_incompatible_flags_test_result.py?{}".format(
     GITHUB_BRANCH, int(time.time())
 )
@@ -1181,13 +1177,24 @@ def execute_commands(
     build_only,
     test_only,
     monitor_flaky_tests,
-    incompatible_flags,
     bazel_version=None,
 ):
-    # If we want to test incompatible flags, we ignore bazel_version and always use
-    # the latest Bazel version through Bazelisk.
-    if incompatible_flags:
-        bazel_version = None
+    if use_bazelisk_migrate():
+        # If we are testing incompatible flags with Bazelisk,
+        # use Bazel@last_green if USE_BAZEL_VERSION env var is not set explicitly.
+        if "USE_BAZEL_VERSION" not in os.environ:
+            bazel_version = "last_green"
+
+        # Override use_but in case we are in the downstream pipeline so that it doesn't try to
+        # download Bazel built from previous jobs.
+        use_but = False
+
+        # If BAZELISK_INCOMPATIBLE_FLAGS environment variable is already set, honour it;
+        # otherwise we parse a set of incompatible flags from the github issue list.
+        # See TODO(pcloudy): put a link to the BAZELISK_INCOMPATIBLE_FLAGS doc.
+        if "BAZELISK_INCOMPATIBLE_FLAGS" not in os.environ:
+            os.environ["BAZELISK_INCOMPATIBLE_FLAGS"] = ",".join(fetch_incompatible_flags().keys())
+
     if not bazel_version:
         # The last good version of Bazel can be specified in an emergency file.
         # However, we only use last_good_bazel for pipelines that do not
@@ -1286,14 +1293,7 @@ def execute_commands(
 
         print_environment_variables_info()
 
-        if incompatible_flags:
-            print_expanded_group("Build and test with the following incompatible flags:")
-            for flag in incompatible_flags:
-                eprint(flag + "\n")
-
-        execute_bazel_run(
-            bazel_binary, platform, task_config.get("run_targets", None), incompatible_flags
-        )
+        execute_bazel_run(bazel_binary, platform, task_config.get("run_targets", None))
 
         if needs_clean:
             execute_bazel_clean(bazel_binary, platform)
@@ -1322,7 +1322,6 @@ def execute_commands(
                     ),
                     build_targets,
                     None,
-                    incompatible_flags,
                 )
                 if save_but:
                     upload_bazel_binary(platform)
@@ -1362,7 +1361,6 @@ def execute_commands(
                         test_targets,
                         test_bep_file,
                         monitor_flaky_tests,
-                        incompatible_flags,
                     )
                 finally:
                     if json_profile_out_test:
@@ -1385,7 +1383,6 @@ def execute_commands(
                     platform,
                     coverage_flags,
                     coverage_targets,
-                    incompatible_flags,
                 )
             finally:
                 if json_profile_out_coverage:
@@ -1414,7 +1411,6 @@ def execute_commands(
                         index_flags,
                         index_targets,
                         None,
-                        incompatible_flags,
                     )
 
                     if index_upload_policy == INDEX_UPLOAD_POLICY_IF_BUILD_SUCCESS:
@@ -1727,15 +1723,10 @@ def handle_bazel_failure(exception, action):
         raise BuildkiteException(msg)
 
 
-def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags):
+def execute_bazel_run(bazel_binary, platform, targets):
     if not targets:
         return
     print_collapsed_group("Setup (Run Targets)")
-    # When using bazelisk --migrate to test incompatible flags,
-    # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
-    incompatible_flags_to_use = (
-        [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags
-    )
     for target in targets:
         try:
             execute_command(
@@ -1744,7 +1735,6 @@ def execute_bazel_run(bazel_binary, platform, targets, incompatible_flags):
                 + common_startup_flags(platform)
                 + ["run"]
                 + common_build_flags(None, platform)
-                + incompatible_flags_to_use
                 + [target]
             )
         except subprocess.CalledProcessError as e:
@@ -1949,7 +1939,7 @@ def get_output_base(bazel_binary, platform):
 
 
 def compute_flags(
-    platform, flags, incompatible_flags, bep_file, bazel_binary, enable_remote_cache=False
+    platform, flags, bep_file, bazel_binary, enable_remote_cache=False
 ):
     aggregated_flags = common_build_flags(bep_file, platform)
     if not remote_enabled(flags):
@@ -1958,8 +1948,6 @@ def compute_flags(
         else:
             aggregated_flags += remote_caching_flags(platform, accept_cached=enable_remote_cache)
     aggregated_flags += flags
-    if incompatible_flags:
-        aggregated_flags += incompatible_flags
 
     for i, flag in enumerate(aggregated_flags):
         if "$HOME" in flag:
@@ -2001,15 +1989,12 @@ def kythe_build_flags():
 
 
 def execute_bazel_build(
-    bazel_version, bazel_binary, platform, flags, targets, bep_file, incompatible_flags
+    bazel_version, bazel_binary, platform, flags, targets, bep_file
 ):
     print_collapsed_group(":bazel: Computing flags for build step")
     aggregated_flags = compute_flags(
         platform,
         flags,
-        # When using bazelisk --migrate to test incompatible flags,
-        # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
-        [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags,
         bep_file,
         bazel_binary,
         enable_remote_cache=True,
@@ -2031,15 +2016,12 @@ def execute_bazel_build(
 
 
 def execute_bazel_build_with_kythe(
-    bazel_version, bazel_binary, platform, flags, targets, bep_file, incompatible_flags
+    bazel_version, bazel_binary, platform, flags, targets, bep_file
 ):
     print_collapsed_group(":bazel: Computing flags for build step")
     aggregated_flags = compute_flags(
         platform,
         flags,
-        # When using bazelisk --migrate to test incompatible flags,
-        # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
-        [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags,
         bep_file,
         bazel_binary,
         enable_remote_cache=False,
@@ -2154,7 +2136,6 @@ def execute_bazel_test(
     targets,
     bep_file,
     monitor_flaky_tests,
-    incompatible_flags,
 ):
     aggregated_flags = [
         "--flaky_test_attempts=3",
@@ -2168,9 +2149,6 @@ def execute_bazel_test(
     aggregated_flags += compute_flags(
         platform,
         flags,
-        # When using bazelisk --migrate to test incompatible flags,
-        # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
-        [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags,
         bep_file,
         bazel_binary,
         enable_remote_cache=not monitor_flaky_tests,
@@ -2192,7 +2170,7 @@ def execute_bazel_test(
 
 
 def execute_bazel_coverage(
-    bazel_version, bazel_binary, platform, flags, targets, incompatible_flags
+    bazel_version, bazel_binary, platform, flags, targets
 ):
     aggregated_flags = [
         "--build_tests_only",
@@ -2202,9 +2180,6 @@ def execute_bazel_coverage(
     aggregated_flags += compute_flags(
         platform,
         flags,
-        # When using bazelisk --migrate to test incompatible flags,
-        # incompatible flags set by "INCOMPATIBLE_FLAGS" env var will be ignored.
-        [] if (use_bazelisk_migrate() or not incompatible_flags) else incompatible_flags,
         None,
         bazel_binary,
         enable_remote_cache=True,
@@ -2376,7 +2351,6 @@ def print_project_pipeline(
     git_repository,
     monitor_flaky_tests,
     use_but,
-    incompatible_flags,
     notify,
 ):
     task_configs = configs.get("tasks", None)
@@ -2392,7 +2366,7 @@ def print_project_pipeline(
     task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
     # In Bazel Downstream Project pipelines, git_repository and project_name must be specified.
-    is_downstream_project = (use_but or incompatible_flags) and git_repository and project_name
+    is_downstream_project = use_but and git_repository and project_name
 
     buildifier_config = configs.get("buildifier")
     # Skip Buildifier when we test downstream projects.
@@ -2479,7 +2453,6 @@ def print_project_pipeline(
             git_commit=git_commit,
             monitor_flaky_tests=monitor_flaky_tests,
             use_but=use_but,
-            incompatible_flags=incompatible_flags,
             shards=shards,
             soft_fail=soft_fail,
         )
@@ -2516,7 +2489,7 @@ def print_project_pipeline(
     if (
         current_branch_is_main_branch()
         and pipeline_slug in all_downstream_pipeline_slugs
-        and not (is_pull_request() or use_but or incompatible_flags or use_bazelisk_migrate())
+        and not (is_pull_request() or use_but or use_bazelisk_migrate())
     ):
         # We need to call "Try Update Last Green Commit" even if there are failures,
         # since we don't want a failing Buildifier step to block the update of
@@ -2675,7 +2648,6 @@ def runner_step(
     git_commit=None,
     monitor_flaky_tests=False,
     use_but=False,
-    incompatible_flags=None,
     shards=1,
     soft_fail=None,
 ):
@@ -2692,8 +2664,6 @@ def runner_step(
         command += " --monitor_flaky_tests"
     if use_but:
         command += " --use_but"
-    for flag in incompatible_flags or []:
-        command += " --incompatible_flag=" + flag
     label = create_label(platform, project_name, task_name=task_name)
     return create_step(
         label=label,
@@ -2708,12 +2678,6 @@ def fetch_bazelcipy_command():
     return "curl -sS {0} -o bazelci.py".format(SCRIPT_URL)
 
 
-def fetch_incompatible_flag_verbose_failures_command():
-    return "curl -sS {0} -o incompatible_flag_verbose_failures.py".format(
-        INCOMPATIBLE_FLAG_VERBOSE_FAILURES_URL
-    )
-
-
 def fetch_aggregate_incompatible_flags_test_result_command():
     return "curl -sS {0} -o aggregate_incompatible_flags_test_result.py".format(
         AGGREGATE_INCOMPATIBLE_TEST_RESULT_URL
@@ -2721,16 +2685,12 @@ def fetch_aggregate_incompatible_flags_test_result_command():
 
 
 def upload_project_pipeline_step(
-    project_name, git_repository, http_config, file_config, incompatible_flags
+    project_name, git_repository, http_config, file_config
 ):
     pipeline_command = (
         '{0} bazelci.py project_pipeline --project_name="{1}" ' + "--git_repository={2}"
     ).format(PLATFORMS[DEFAULT_PLATFORM]["python"], project_name, git_repository)
-    if incompatible_flags is None:
-        pipeline_command += " --use_but"
-    else:
-        for flag in incompatible_flags:
-            pipeline_command += " --incompatible_flag=" + flag
+    pipeline_command += " --use_but"
     if http_config:
         pipeline_command += " --http_config=" + http_config
     if file_config:
@@ -2960,26 +2920,18 @@ def print_incompatible_flags_info_box_step(incompatible_flags_map):
 
 def fetch_incompatible_flags():
     """
-    Return a list of incompatible flags to be tested in downstream with the current release Bazel
+    Return a list of incompatible flags to be tested. The key is the flag name and the value is its Github URL.
     """
-    incompatible_flags = {}
-
-    # If INCOMPATIBLE_FLAGS environment variable is set, we get incompatible flags from it.
-    if "INCOMPATIBLE_FLAGS" in os.environ:
-        for flag in os.environ["INCOMPATIBLE_FLAGS"].split():
-            # We are not able to get the github link for this flag from INCOMPATIBLE_FLAGS,
-            # so just assign the url to empty string.
-            incompatible_flags[flag] = ""
-        return incompatible_flags
-
     output = subprocess.check_output(
         [
+            # Query for open issues with "incompatible-change" and "migration-ready" label.
             "curl",
-            "https://api.github.com/search/issues?per_page=100&q=repo:bazelbuild/bazel+label:incompatible-change+state:open",
+            "https://api.github.com/search/issues?per_page=100&q=repo:bazelbuild/bazel+label:incompatible-change+label:migration-ready+state:open",
         ]
     ).decode("utf-8")
     issue_info = json.loads(output)
 
+    incompatible_flags = {}
     for issue in issue_info["items"]:
         # Every incompatible flags issue should start with "<incompatible flag name (without --)>:"
         name = "--" + issue["title"].split(":")[0]
@@ -2996,7 +2948,7 @@ def fetch_incompatible_flags():
 
 
 def print_bazel_downstream_pipeline(
-    task_configs, http_config, file_config, test_incompatible_flags, test_disabled_projects, notify
+    task_configs, http_config, file_config, test_disabled_projects, notify
 ):
     pipeline_steps = []
 
@@ -3004,7 +2956,7 @@ def print_bazel_downstream_pipeline(
     if info_box_step is not None:
         pipeline_steps.append(info_box_step)
 
-    if not test_incompatible_flags:
+    if not use_bazelisk_migrate():
         if not task_configs:
             raise BuildkiteException("Bazel downstream pipeline configuration is empty.")
         for task, task_config in task_configs.items():
@@ -3020,9 +2972,7 @@ def print_bazel_downstream_pipeline(
             )
 
         pipeline_steps.append("wait")
-
-    incompatible_flags = None
-    if test_incompatible_flags:
+    else:
         incompatible_flags_map = fetch_incompatible_flags()
         if not incompatible_flags_map:
             step = create_step(
@@ -3039,7 +2989,6 @@ def print_bazel_downstream_pipeline(
         info_box_step = print_incompatible_flags_info_box_step(incompatible_flags_map)
         if info_box_step is not None:
             pipeline_steps.append(info_box_step)
-        incompatible_flags = list(incompatible_flags_map.keys())
 
     pipeline_steps.append(
         create_step(
@@ -3063,7 +3012,6 @@ def print_bazel_downstream_pipeline(
                     git_repository=config["git_repository"],
                     http_config=config.get("http_config", None),
                     file_config=config.get("file_config", None),
-                    incompatible_flags=incompatible_flags,
                 )
             )
 
@@ -3078,33 +3026,18 @@ def print_bazel_downstream_pipeline(
         )
     )
 
-    if test_incompatible_flags:
+    if use_bazelisk_migrate():
         current_build_number = os.environ.get("BUILDKITE_BUILD_NUMBER", None)
         if not current_build_number:
             raise BuildkiteException("Not running inside Buildkite")
-        if use_bazelisk_migrate():
-            pipeline_steps += get_steps_for_aggregating_migration_results(
-                current_build_number, notify
-            )
-        else:
-            pipeline_steps.append({"wait": "~", "continue_on_failure": "true"})
-            pipeline_steps.append(
-                create_step(
-                    label="Test failing jobs with incompatible flag separately",
-                    commands=[
-                        fetch_bazelcipy_command(),
-                        fetch_incompatible_flag_verbose_failures_command(),
-                        PLATFORMS[DEFAULT_PLATFORM]["python"]
-                        + " incompatible_flag_verbose_failures.py --build_number=%s | tee /dev/tty | buildkite-agent pipeline upload"
-                        % current_build_number,
-                    ],
-                    platform=DEFAULT_PLATFORM,
-                )
-            )
+
+        pipeline_steps += get_steps_for_aggregating_migration_results(
+            current_build_number, notify
+        )
 
     if (
         not test_disabled_projects
-        and not test_incompatible_flags
+        and not use_bazelisk_migrate()
         and current_branch_is_main_branch()
     ):
         # Only update the last green downstream commit in the regular Bazel@HEAD + Downstream pipeline.
@@ -3513,9 +3446,6 @@ def main(argv=None):
     bazel_downstream_pipeline.add_argument("--http_config", type=str)
     bazel_downstream_pipeline.add_argument("--git_repository", type=str)
     bazel_downstream_pipeline.add_argument(
-        "--test_incompatible_flags", type=bool, nargs="?", const=True
-    )
-    bazel_downstream_pipeline.add_argument(
         "--test_disabled_projects", type=bool, nargs="?", const=True
     )
     bazel_downstream_pipeline.add_argument("--notify", type=bool, nargs="?", const=True)
@@ -3527,7 +3457,6 @@ def main(argv=None):
     project_pipeline.add_argument("--git_repository", type=str)
     project_pipeline.add_argument("--monitor_flaky_tests", type=bool, nargs="?", const=True)
     project_pipeline.add_argument("--use_but", type=bool, nargs="?", const=True)
-    project_pipeline.add_argument("--incompatible_flag", type=str, action="append")
     project_pipeline.add_argument("--notify", type=bool, nargs="?", const=True)
 
     runner = subparsers.add_parser("runner")
@@ -3552,7 +3481,6 @@ def main(argv=None):
     runner.add_argument("--build_only", type=bool, nargs="?", const=True)
     runner.add_argument("--test_only", type=bool, nargs="?", const=True)
     runner.add_argument("--monitor_flaky_tests", type=bool, nargs="?", const=True)
-    runner.add_argument("--incompatible_flag", type=str, action="append")
 
     subparsers.add_parser("publish_binaries")
     subparsers.add_parser("try_update_last_green_commit")
@@ -3580,7 +3508,6 @@ def main(argv=None):
                 task_configs=configs.get("tasks", None),
                 http_config=args.http_config,
                 file_config=args.file_config,
-                test_incompatible_flags=args.test_incompatible_flags,
                 test_disabled_projects=args.test_disabled_projects,
                 notify=args.notify,
             )
@@ -3594,7 +3521,6 @@ def main(argv=None):
                 git_repository=args.git_repository,
                 monitor_flaky_tests=args.monitor_flaky_tests,
                 use_but=args.use_but,
-                incompatible_flags=args.incompatible_flag,
                 notify=args.notify,
             )
         elif args.subparsers_name == "runner":
@@ -3629,7 +3555,6 @@ def main(argv=None):
                 build_only=args.build_only,
                 test_only=args.test_only,
                 monitor_flaky_tests=args.monitor_flaky_tests,
-                incompatible_flags=args.incompatible_flag,
                 bazel_version=task_config.get("bazel") or configs.get("bazel"),
             )
         elif args.subparsers_name == "publish_binaries":
