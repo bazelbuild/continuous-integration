@@ -997,6 +997,9 @@ def fetch_configs(http_url, file_config):
     read it from .bazelci/presubmit.yml.
     Returns the json configuration as a python data structure.
     """
+    if file_config is None and http_url is None:
+        return {"tasks": {}}
+
     if file_config is not None and http_url is not None:
         raise BuildkiteException("file_config and http_url cannot be set at the same time")
 
@@ -2998,12 +3001,6 @@ def fetch_incompatible_flags():
 def print_bazel_downstream_pipeline(
     task_configs, http_config, file_config, test_incompatible_flags, test_disabled_projects, notify
 ):
-    if not task_configs:
-        raise BuildkiteException("Bazel downstream pipeline configuration is empty.")
-
-    pipeline_steps = []
-    task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
-
     pipeline_steps = []
 
     info_box_step = print_disabled_projects_info_box_step()
@@ -3011,6 +3008,8 @@ def print_bazel_downstream_pipeline(
         pipeline_steps.append(info_box_step)
 
     if not test_incompatible_flags:
+        if not task_configs:
+            raise BuildkiteException("Bazel downstream pipeline configuration is empty.")
         for task, task_config in task_configs.items():
             pipeline_steps.append(
                 bazel_build_step(
