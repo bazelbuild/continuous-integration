@@ -2931,12 +2931,12 @@ def fetch_incompatible_flags():
     ).decode("utf-8")
     issue_info = json.loads(output)
 
+    FLAG_PATTERN = re.compile(r"^--[a-z][a-z0-9_]*$")
     incompatible_flags = {}
     for issue in issue_info["items"]:
-        # Every incompatible flags issue should start with "<incompatible flag name (without --)>:"
         name = "--" + issue["title"].split(":")[0]
         url = issue["html_url"]
-        if name.startswith("--incompatible_"):
+        if FLAG_PATTERN.match(name):
             incompatible_flags[name] = url
         else:
             eprint(
