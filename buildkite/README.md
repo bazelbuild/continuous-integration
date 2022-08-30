@@ -91,7 +91,10 @@ You can preview the effect of an unmerged commit on downstream projects. See [Te
 runs [`bazelisk --migrate`](https://github.com/bazelbuild/bazelisk#other-features) on all downstream projects and reports
 a summary of all incompatible flags and migrations statuses of downstream projects.
 
-The pipeline runs every night against the latest Bazel release. You can also schedule manual builds and set [`USE_BAZEL_VERSION`](https://github.com/bazelbuild/bazelisk#how-does-bazelisk-know-which-version-to-run) to run against a specific release or a release candidate (e.g. `USE_BAZEL_VERSION=0.29rc3` to test against RC3 of release 0.29)
+This pipeline works in the following ways:
+
+- The pipeline tests downstream projects with `Bazel@last_green` by default. But you can override the Bazel version by setting the `USE_BAZEL_VERSION` environment variable (e.g. `USE_BAZEL_VERSION=5.3.0`).
+- The pipeline fetches the list of incompatible flags to be tested by parsing [open Bazel Github issues](https://github.com/bazelbuild/bazel/issues?q=is%3Aopen+is%3Aissue+label%3Aincompatible-change+label%3Aready-to-migrate) with `incompatible-change` and `ready-to-migrate` labels. You can override the list of incompatible flags by setting the `BAZELISK_INCOMPATIBLE_FLAGS` environment variable (e.g. `BAZELISK_INCOMPATIBLE_FLAGS=--foo,--bar`).
 
 ## Culprit Finder
 
