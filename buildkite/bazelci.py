@@ -1189,11 +1189,8 @@ def execute_commands(
         # download Bazel built from previous jobs.
         use_but = False
 
-        # If BAZELISK_INCOMPATIBLE_FLAGS environment variable is already set, honour it;
-        # otherwise we parse a set of incompatible flags from the github issue list.
-        # See TODO(pcloudy): put a link to the BAZELISK_INCOMPATIBLE_FLAGS doc.
-        if "BAZELISK_INCOMPATIBLE_FLAGS" not in os.environ:
-            os.environ["BAZELISK_INCOMPATIBLE_FLAGS"] = ",".join(fetch_incompatible_flags().keys())
+        # Set BAZELISK_INCOMPATIBLE_FLAGS to tell Bazelisk which flags to test.
+        os.environ["BAZELISK_INCOMPATIBLE_FLAGS"] = ",".join(fetch_incompatible_flags().keys())
 
     if not bazel_version:
         # The last good version of Bazel can be specified in an emergency file.
@@ -2943,6 +2940,13 @@ def fetch_incompatible_flags():
                 f"{name} is not recognized as an incompatible flag, please modify the issue title "
                 f'of {url} to "<incompatible flag name (without --)>:..."'
             )
+
+    # If INCOMPATIBLE_FLAGS is set manually, we test those flags, try to keep the URL info if possible.
+    if "INCOMPATIBLE_FLAGS" in os.environ:
+        given_incompatible_flags = {}
+        for flag in os.environ["INCOMPATIBLE_FLAGS"].split(","):
+            given_incompatible_flags = incompatible_flags.get(flag, "")
+        return given_incompatible_flags
 
     return incompatible_flags
 
