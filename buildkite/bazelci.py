@@ -159,6 +159,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/bazel-buildfarm.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-buildfarm/main/.bazelci/presubmit.yml",
         "pipeline_slug": "buildfarm-farmer",
+        "disabled_reason": "waiting on https://github.com/bazelbuild/bazel-buildfarm/pull/1142",
     },
     "Buildtools": {
         "git_repository": "https://github.com/bazelbuild/buildtools.git",
@@ -184,6 +185,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/googlecartographer/cartographer.git",
         "http_config": "https://raw.githubusercontent.com/googlecartographer/cartographer/master/.bazelci/presubmit.yml",
         "pipeline_slug": "cartographer",
+        "disabled_reason": "waiting on https://github.com/cartographer-project/cartographer/pull/1898",
     },
     "Cloud Robotics Core": {
         "git_repository": "https://github.com/googlecloudrobotics/core.git",
