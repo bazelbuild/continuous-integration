@@ -96,6 +96,14 @@ This pipeline works in the following ways:
 - The pipeline tests downstream projects with `Bazel@last_green` by default. But you can override the Bazel version by setting the `USE_BAZEL_VERSION` environment variable (e.g. `USE_BAZEL_VERSION=5.3.0`).
 - The pipeline fetches the list of incompatible flags to be tested by parsing [open Bazel Github issues](https://github.com/bazelbuild/bazel/issues?q=is%3Aopen+is%3Aissue+label%3Aincompatible-change+label%3Aready-to-migrate) with `incompatible-change` and `ready-to-migrate` labels. You can override the list of incompatible flags by setting the `BAZELISK_INCOMPATIBLE_FLAGS` environment variable (e.g. `BAZELISK_INCOMPATIBLE_FLAGS=--foo,--bar`).
 
+This pipeline shows the following information:
+
+- The list of projects that already fail without any incompatible flags. Those projects are already broken due to other reasons, they need to be fixed in the [Bazel@HEAD + Downstream pipeline](https://buildkite.com/bazel/bazel-at-head-plus-downstream) first. ![already failing projects]
+- The list of flags that don't break any passing downstream projects or don't break any projects that're owned/co-owned by the Bazel team. ![passing flags]
+- The list of projects that are broken by a specific flag. ![projects need migration per flag]
+- The list of projects that needs migration for at least one flag ![projects need migration]
+- Click a specific job to check the log and find out which flags are breaking it.  ![flags need migration per job]
+
 ## Culprit Finder
 
 [Bazel downstream projects](https://buildkite.com/bazel/bazel-with-downstream-projects-bazel) is red? Use culprit finder to find out which bazel commit broke it!
@@ -598,3 +606,8 @@ In the code review of this PR, philwo@ explained how to fix test failures like t
 [pull request details]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/pull-request-details.png
 [buildkite useful buttons]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/buildkite-useful-buttons.png
 [buildkite testlog buttons]: https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/docs/assets/buildkite-testlog-buttons.png
+[already failing projects]: docs/assets/already-failing-projects.png
+[passing flags]: docs/assets/passing-flags.png
+[flags need migration per job]: docs/assets/flags-need-migration-per-job.png
+[projects need migration per flag]: docs/assets/projects-need-migration-per-flag.png
+[projects need migration]: docs/assets/projects-need-migration.png
