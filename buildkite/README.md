@@ -94,7 +94,7 @@ a summary of all incompatible flags and migrations statuses of downstream projec
 This pipeline works in the following ways:
 
 - The pipeline tests downstream projects with `Bazel@last_green` by default. But you can override the Bazel version by setting the `USE_BAZEL_VERSION` environment variable (e.g. `USE_BAZEL_VERSION=5.3.0`).
-- The pipeline fetches the list of incompatible flags to be tested by parsing [open Bazel Github issues](https://github.com/bazelbuild/bazel/issues?q=is%3Aopen+is%3Aissue+label%3Aincompatible-change+label%3Aready-to-migrate) with `incompatible-change` and `ready-to-migrate` labels. You can override the list of incompatible flags by setting the `BAZELISK_INCOMPATIBLE_FLAGS` environment variable (e.g. `BAZELISK_INCOMPATIBLE_FLAGS=--foo,--bar`).
+- The pipeline fetches the list of incompatible flags to be tested by parsing [open Bazel Github issues](https://github.com/bazelbuild/bazel/issues?q=is%3Aopen+is%3Aissue+label%3Aincompatible-change+label%3Amigration-ready) with `incompatible-change` and `migration-ready` labels. You can override the list of incompatible flags by setting the `INCOMPATIBLE_FLAGS` environment variable (e.g. `INCOMPATIBLE_FLAGS=--foo,--bar`).
 
 This pipeline shows the following information:
 
