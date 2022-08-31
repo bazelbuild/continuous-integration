@@ -98,11 +98,16 @@ This pipeline works in the following ways:
 
 This pipeline shows the following information:
 
-- The list of projects that already fail without any incompatible flags. Those projects are already broken due to other reasons, they need to be fixed in the [Bazel@HEAD + Downstream pipeline](https://buildkite.com/bazel/bazel-at-head-plus-downstream) first. ![already failing projects]
-- The list of flags that don't break any passing downstream projects or don't break any projects that're owned/co-owned by the Bazel team. ![passing flags]
-- The list of projects that are broken by a specific flag. ![projects need migration per flag]
-- The list of projects that needs migration for at least one flag ![projects need migration]
-- Click a specific job to check the log and find out which flags are breaking it.  ![flags need migration per job]
+- The list of projects that already fail without any incompatible flags. Those projects are already broken due to other reasons, they need to be fixed in the [Bazel@HEAD + Downstream pipeline](https://buildkite.com/bazel/bazel-at-head-plus-downstream) first.
+![already failing projects]
+- The list of flags that don't break any passing downstream projects or don't break any projects that're owned/co-owned by the Bazel team.
+![passing flags]
+- The list of projects that are broken by a specific flag.
+![projects need migration per flag]
+- The list of projects that needs migration for at least one flag.
+![projects need migration]
+- Click a specific job to check the log and find out which flags are breaking it.
+![flags need migration per job]
 
 ## Culprit Finder
 
