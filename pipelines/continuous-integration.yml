@@ -27,7 +27,6 @@ steps:
   - label: "Downstream pipeline :ubuntu: 18.04 (JDK 8)"
     command:
       - python3.6 buildkite/bazelci.py bazel_downstream_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
-      - python3.6 buildkite/bazelci.py bazel_downstream_pipeline --test_incompatible_flags --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
       - python3.6 buildkite/bazelci.py bazel_downstream_pipeline --test_disabled_projects --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
     agents: *linux_agents
     plugins: *plugins
@@ -44,7 +43,6 @@ steps:
   - label: "Downstream pipeline :darwin: (JDK 8)"
     command:
       - python3 buildkite/bazelci.py bazel_downstream_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
-      - python3 buildkite/bazelci.py bazel_downstream_pipeline --test_incompatible_flags --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
       - python3 buildkite/bazelci.py bazel_downstream_pipeline --test_disabled_projects --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
     agents: *mac_agents
   - label: "Publish binaries pipeline :darwin: (JDK 8)"
@@ -59,7 +57,6 @@ steps:
   - label: "Downstream pipeline :windows: (JDK 8)"
     command:
       - python.exe buildkite/bazelci.py bazel_downstream_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
-      - python.exe buildkite/bazelci.py bazel_downstream_pipeline --test_incompatible_flags --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
       - python.exe buildkite/bazelci.py bazel_downstream_pipeline --test_disabled_projects --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
     agents: *win_agents
   - label: "Publish binaries pipeline :windows: (JDK 8)"
