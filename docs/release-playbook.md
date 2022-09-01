@@ -46,7 +46,7 @@ These steps only have to be performed once, ever.
         *   A first release candidate should immediately be created after the release branch is created. See [create a release candidate](#create-a-release-candidate) below.
 1.  After creating the branch, edit the CODEOWNERS file on that branch, replace the entire contents of the file with the line `* @your-github-username` and submit it directly.
     *   This makes sure that all PRs sent against that branch have you as a reviewer.
-1.  (For minor and patch releases only) Send an email to both bazel-dev@googlegroups.com and bazel-discuss@googlegroups.com announcing the next release.
+1.  (For minor release only) Send an email to both bazel-dev@googlegroups.com and bazel-discuss@googlegroups.com announcing the next release.
     *   It should contain the text: `The Bazel X.Y.Z release branch (release-X.Y.Z [link]) is open for business. Please send cherry-pick PRs against this branch if you'd like your change to be in X.Y.Z. Please follow the release tracking issue [link] for updates.`
 1.  Meanwhile, begin the [internal approval process](http://go/bazel-internal-launch-checklist), too.
     *   Note that certain steps in the internal approval process require at least preliminary release notes, so those steps should usually wait until the first release candidate is pushed and the release notes have taken vague shape.
@@ -182,7 +182,8 @@ After a few days of iteration:
       * Release tag is deleted locally (`git tag -d X.Y.Z`), otherwise rerun will cause an error that complains the tag already exists.
 
 1.  A CI job is uploading the release artifacts to GitHub. Look for the release
-    workflow on https://buildkite.com/bazel-trusted/bazel-release/. Unblock the steps.
+    workflow on https://buildkite.com/bazel-trusted/bazel-release/. Unblock the steps by clicking "Deploy release artifacts". Subsequently you should
+    see the updated version in Github.
 
 1.  Ensure all binaries were uploaded to GitHub properly.
     1.  **Why?** Sometimes binaries are uploaded incorrectly.
