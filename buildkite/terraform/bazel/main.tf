@@ -1939,7 +1939,7 @@ resource "buildkite_pipeline" "bazel-bazel" {
 resource "buildkite_pipeline" "bazel-skymeld" {
   name = "Bazel-Skymeld :bazel:"
   repository = "https://github.com/bazelbuild/bazel.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/postsubmit-skymeld.yml --monitor_flaky_tests=true | tee /dev/tty | buildkite-agent pipeline upload"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/postsubmit-skymeld.yml?$(date +%s) --monitor_flaky_tests=true | tee /dev/tty | buildkite-agent pipeline upload"] } })
   default_branch = "master"
   branch_configuration = "master release-*"
   team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "bazel" }]
