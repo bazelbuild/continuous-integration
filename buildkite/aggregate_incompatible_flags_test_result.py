@@ -18,7 +18,6 @@ import argparse
 import collections
 import os
 import re
-import subprocess
 import sys
 import threading
 
@@ -30,13 +29,7 @@ PIPELINE = os.environ["BUILDKITE_PIPELINE_SLUG"]
 
 FAIL_IF_MIGRATION_REQUIRED = os.environ.get("USE_BAZELISK_MIGRATE", "").upper() == "FAIL"
 
-
-INCOMPATIBLE_FLAG_LINE_PATTERN = re.compile(
-    r"\s*(?P<flag>--incompatible_\S+)\s*(\(Bazel (?P<version>.+?): (?P<url>.+?)\))?"
-)
-
-FlagDetails = collections.namedtuple("FlagDetails", ["bazel_version", "issue_url"])
-
+FLAG_LINE_PATTERN = re.compile(r"\s*(?P<flag>--\S+)\s*")
 
 class LogFetcher(threading.Thread):
     def __init__(self, job, client):
@@ -49,12 +42,12 @@ class LogFetcher(threading.Thread):
         self.log = self.client.get_build_log(self.job)
 
 
-def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job, details_per_flag):
+def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
     if "Failure: Command failed, even without incompatible flags." in log:
         already_failing_jobs.append(job)
 
-    def handle_failing_flags(line, details_per_flag):
-        flag = extract_flag_details(line, details_per_flag)
+    def handle_failing_flags(line):
+        flag = extract_flag(line)
         if flag:
             failed_jobs_per_flag[flag][job["id"]] = job
 
@@ -65,9 +58,8 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job, deta
         index_failure = log.rfind("Migration is needed for the following flags:")
         if index_success == -1 or index_failure == -1:
             raise bazelci.BuildkiteException("Cannot recognize log of " + job["web_url"])
-
-        extract_all_flags(log[index_success:index_failure], extract_flag_details, details_per_flag)
-        extract_all_flags(log[index_failure:], handle_failing_flags, details_per_flag)
+        for line in log[index_failure:].split("\n"):
+            handle_failing_flags(line)
         log = log[0 : log.rfind("+++ Result")]
 
     # If the job failed for other reasons, we add it into already failing jobs.
@@ -75,21 +67,10 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job, deta
         already_failing_jobs.append(job)
 
 
-def extract_all_flags(log, line_callback, details_per_flag):
-    for line in log.split("\n"):
-        line_callback(line, details_per_flag)
-
-
-def extract_flag_details(line, details_per_flag):
-    match = INCOMPATIBLE_FLAG_LINE_PATTERN.match(line)
+def extract_flag(line):
+    match = FLAG_LINE_PATTERN.match(line)
     if match:
-        flag = match.group("flag")
-        if details_per_flag.get(flag, (None, None)) == (None, None):
-            details_per_flag[flag] = FlagDetails(
-                bazel_version=match.group("version"), issue_url=match.group("url")
-            )
-
-        return flag
+        return match.group("flag")
 
 
 def get_html_link_text(content, link):
@@ -107,11 +88,11 @@ def needs_bazel_team_migrate(jobs):
     return False
 
 
-def print_flags_ready_to_flip(failed_jobs_per_flag, details_per_flag):
+def print_flags_ready_to_flip(failed_jobs_per_flag, incompatible_flags):
     info_text1 = ["#### The following flags didn't break any passing projects"]
-    for flag in sorted(list(details_per_flag.keys())):
+    for flag in sorted(list(incompatible_flags.keys())):
         if flag not in failed_jobs_per_flag:
-            html_link_text = get_html_link_text(":github:", details_per_flag[flag].issue_url)
+            html_link_text = get_html_link_text(":github:", incompatible_flags[flag])
             info_text1.append(f"* **{flag}** {html_link_text}")
 
     if len(info_text1) == 1:
@@ -121,11 +102,13 @@ def print_flags_ready_to_flip(failed_jobs_per_flag, details_per_flag):
         "#### The following flags didn't break any passing Bazel team owned/co-owned projects"
     ]
     for flag, jobs in failed_jobs_per_flag.items():
+        if flag not in incompatible_flags:
+            continue
         if not needs_bazel_team_migrate(jobs.values()):
             failed_cnt = len(jobs)
             s1 = "" if failed_cnt == 1 else "s"
             s2 = "s" if failed_cnt == 1 else ""
-            html_link_text = get_html_link_text(":github:", details_per_flag[flag].issue_url)
+            html_link_text = get_html_link_text(":github:", incompatible_flags[flag])
             info_text2.append(
                 f"* **{flag}** {html_link_text}  ({failed_cnt} other job{s1} need{s2} migration)"
             )
@@ -185,14 +168,16 @@ def print_projects_need_to_migrate(failed_jobs_per_flag):
     )
 
 
-def print_flags_need_to_migrate(failed_jobs_per_flag, details_per_flag):
+def print_flags_need_to_migrate(failed_jobs_per_flag, incompatible_flags):
     # The info box printed later is above info box printed before,
     # so reverse the flag list to maintain the same order.
     printed_flag_boxes = False
     for flag in sorted(list(failed_jobs_per_flag.keys()), reverse=True):
+        if flag not in incompatible_flags:
+            continue
         jobs = failed_jobs_per_flag[flag]
         if jobs:
-            github_url = details_per_flag[flag].issue_url
+            github_url = incompatible_flags[flag]
             info_text = [f"* **{flag}** " + get_html_link_text(":github:", github_url)]
             jobs_per_pipeline = merge_jobs(jobs.values())
             for pipeline, platforms in jobs_per_pipeline.items():
@@ -276,8 +261,6 @@ def analyze_logs(build_number, client):
 
     # dict(flag name -> dict(job id -> job))
     failed_jobs_per_flag = collections.defaultdict(dict)
-    # dict(flag name -> (Bazel version where it's flipped, GitHub issue URL))
-    details_per_flag = {}
 
     threads = []
     for job in build_info["jobs"]:
@@ -290,53 +273,23 @@ def analyze_logs(build_number, client):
     for thread in threads:
         thread.join()
         process_build_log(
-            failed_jobs_per_flag, already_failing_jobs, thread.log, thread.job, details_per_flag
+            failed_jobs_per_flag, already_failing_jobs, thread.log, thread.job
         )
 
-    return already_failing_jobs, failed_jobs_per_flag, details_per_flag
+    return already_failing_jobs, failed_jobs_per_flag
 
 
-def handle_already_flipped_flags(failed_jobs_per_flag, details_per_flag):
-    # Process and remove all flags that have already been flipped.
-    # Bazelisk may return already flipped flags if a project uses an old Bazel version
-    # via its .bazelversion file.
-    current_major_version = get_bazel_major_version()
-    failed_jobs_for_new_flags = {}
-    details_for_new_flags = {}
+def print_result_info(already_failing_jobs, failed_jobs_per_flag):
+    # key: flag name, value: Github Issue URL
+    incompatible_flags = bazelci.fetch_incompatible_flags()
 
-    for flag, details in details_per_flag.items():
-        if not details.bazel_version or details.bazel_version < current_major_version:
-            # TOOD(fweikert): maybe display a Buildkite annotation
-            bazelci.eprint(
-                "Ignoring {} since it has already been flipped in Bazel {} (latest is {}).".format(
-                    flag, details.bazel_version, current_major_version
-                )
-            )
-            continue
-
-        details_for_new_flags[flag] = details
-        if flag in failed_jobs_per_flag:
-            failed_jobs_for_new_flags[flag] = failed_jobs_per_flag[flag]
-
-    return failed_jobs_for_new_flags, details_for_new_flags
-
-
-def get_bazel_major_version():
-    # Get bazel major version on CI, eg. 0.21 from "Build label: 0.21.0\n..."
-    output = subprocess.check_output(
-        ["bazel", "--ignore_all_rc_files", "version"]
-    ).decode("utf-8")
-    return output.split()[2].rsplit(".", 1)[0]
-
-
-def print_result_info(already_failing_jobs, failed_jobs_per_flag, details_per_flag):
-    print_flags_need_to_migrate(failed_jobs_per_flag, details_per_flag)
+    print_flags_need_to_migrate(failed_jobs_per_flag, incompatible_flags)
 
     print_projects_need_to_migrate(failed_jobs_per_flag)
 
     print_already_fail_jobs(already_failing_jobs)
 
-    print_flags_ready_to_flip(failed_jobs_per_flag, details_per_flag)
+    print_flags_ready_to_flip(failed_jobs_per_flag, incompatible_flags)
 
     return bool(failed_jobs_per_flag)
 
@@ -355,14 +308,11 @@ def main(argv=None):
     try:
         if args.build_number:
             client = bazelci.BuildkiteClient(org=BUILDKITE_ORG, pipeline=PIPELINE)
-            already_failing_jobs, failed_jobs_per_flag, details_per_flag = analyze_logs(
+            already_failing_jobs, failed_jobs_per_flag = analyze_logs(
                 args.build_number, client
             )
-            failed_jobs_per_flag, details_per_flag = handle_already_flipped_flags(
-                failed_jobs_per_flag, details_per_flag
-            )
             migration_required = print_result_info(
-                already_failing_jobs, failed_jobs_per_flag, details_per_flag
+                already_failing_jobs, failed_jobs_per_flag
             )
 
             if migration_required and FAIL_IF_MIGRATION_REQUIRED:
