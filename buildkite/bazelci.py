@@ -3021,7 +3021,7 @@ def print_bazel_downstream_pipeline(
                 )
             )
 
-    pipeline_steps.append("wait")
+    pipeline_steps.append({"wait": "~", "continue_on_failure": "true"})
     pipeline_steps.append(
         create_step(
             label="Remove skipped tasks annotation if unneeded",
