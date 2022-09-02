@@ -31,9 +31,6 @@ FAIL_IF_MIGRATION_REQUIRED = os.environ.get("USE_BAZELISK_MIGRATE", "").upper() 
 
 FLAG_LINE_PATTERN = re.compile(r"\s*(?P<flag>--\S+)\s*")
 
-INCOMPATIBLE_FLAGS = bazelci.fetch_incompatible_flags()  # key: flag name, value: Github URL
-
-
 class LogFetcher(threading.Thread):
     def __init__(self, job, client):
         threading.Thread.__init__(self)
@@ -91,11 +88,11 @@ def needs_bazel_team_migrate(jobs):
     return False
 
 
-def print_flags_ready_to_flip(failed_jobs_per_flag):
+def print_flags_ready_to_flip(failed_jobs_per_flag, incompatible_flags):
     info_text1 = ["#### The following flags didn't break any passing projects"]
-    for flag in sorted(list(INCOMPATIBLE_FLAGS.keys())):
+    for flag in sorted(list(incompatible_flags.keys())):
         if flag not in failed_jobs_per_flag:
-            html_link_text = get_html_link_text(":github:", INCOMPATIBLE_FLAGS[flag])
+            html_link_text = get_html_link_text(":github:", incompatible_flags[flag])
             info_text1.append(f"* **{flag}** {html_link_text}")
 
     if len(info_text1) == 1:
@@ -105,13 +102,13 @@ def print_flags_ready_to_flip(failed_jobs_per_flag):
         "#### The following flags didn't break any passing Bazel team owned/co-owned projects"
     ]
     for flag, jobs in failed_jobs_per_flag.items():
-        if flag not in INCOMPATIBLE_FLAGS:
+        if flag not in incompatible_flags:
             continue
         if not needs_bazel_team_migrate(jobs.values()):
             failed_cnt = len(jobs)
             s1 = "" if failed_cnt == 1 else "s"
             s2 = "s" if failed_cnt == 1 else ""
-            html_link_text = get_html_link_text(":github:", INCOMPATIBLE_FLAGS[flag])
+            html_link_text = get_html_link_text(":github:", incompatible_flags[flag])
             info_text2.append(
                 f"* **{flag}** {html_link_text}  ({failed_cnt} other job{s1} need{s2} migration)"
             )
@@ -171,16 +168,16 @@ def print_projects_need_to_migrate(failed_jobs_per_flag):
     )
 
 
-def print_flags_need_to_migrate(failed_jobs_per_flag):
+def print_flags_need_to_migrate(failed_jobs_per_flag, incompatible_flags):
     # The info box printed later is above info box printed before,
     # so reverse the flag list to maintain the same order.
     printed_flag_boxes = False
     for flag in sorted(list(failed_jobs_per_flag.keys()), reverse=True):
-        if flag not in INCOMPATIBLE_FLAGS:
+        if flag not in incompatible_flags:
             continue
         jobs = failed_jobs_per_flag[flag]
         if jobs:
-            github_url = INCOMPATIBLE_FLAGS[flag]
+            github_url = incompatible_flags[flag]
             info_text = [f"* **{flag}** " + get_html_link_text(":github:", github_url)]
             jobs_per_pipeline = merge_jobs(jobs.values())
             for pipeline, platforms in jobs_per_pipeline.items():
@@ -283,13 +280,16 @@ def analyze_logs(build_number, client):
 
 
 def print_result_info(already_failing_jobs, failed_jobs_per_flag):
-    print_flags_need_to_migrate(failed_jobs_per_flag)
+    # key: flag name, value: Github Issue URL
+    incompatible_flags = bazelci.fetch_incompatible_flags()
+
+    print_flags_need_to_migrate(failed_jobs_per_flag, incompatible_flags)
 
     print_projects_need_to_migrate(failed_jobs_per_flag)
 
     print_already_fail_jobs(already_failing_jobs)
 
-    print_flags_ready_to_flip(failed_jobs_per_flag)
+    print_flags_ready_to_flip(failed_jobs_per_flag, incompatible_flags)
 
     return bool(failed_jobs_per_flag)
 
