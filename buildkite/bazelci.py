@@ -2945,7 +2945,7 @@ def fetch_incompatible_flags():
     if "INCOMPATIBLE_FLAGS" in os.environ:
         given_incompatible_flags = {}
         for flag in os.environ["INCOMPATIBLE_FLAGS"].split(","):
-            given_incompatible_flags = incompatible_flags.get(flag, "")
+            given_incompatible_flags[flag] = incompatible_flags.get(flag, "")
         return given_incompatible_flags
 
     return incompatible_flags
