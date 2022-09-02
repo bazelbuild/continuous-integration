@@ -1936,6 +1936,23 @@ resource "buildkite_pipeline" "bazel-bazel" {
   }
 }
 
+resource "buildkite_pipeline" "bazel-skymeld" {
+  name = "Bazel-Skymeld :bazel:"
+  repository = "https://github.com/bazelbuild/bazel.git"
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/postsubmit-skymeld.yml --monitor_flaky_tests=true | tee /dev/tty | buildkite-agent pipeline upload"] } })
+  default_branch = "master"
+  branch_configuration = "master release-*"
+  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "bazel" }]
+  provider_settings {
+    trigger_mode = "code"
+    skip_pull_request_builds_for_existing_commits = true
+    build_pull_request_forks = true
+    prefix_pull_request_fork_branch_names = true
+    build_branches = true
+    publish_commit_status = true
+  }
+}
+
 resource "buildkite_pipeline" "bazel-lib" {
   name = "bazel-lib"
   repository = "https://github.com/aspect-build/bazel-lib.git"
