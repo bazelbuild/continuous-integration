@@ -773,7 +773,7 @@ resource "buildkite_pipeline" "upb" {
   name = "upb"
   repository = "https://github.com/protocolbuffers/upb.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
-  default_branch = "master"
+  default_branch = "main"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "upb" }]
   provider_settings {
     trigger_mode = "code"
@@ -815,7 +815,7 @@ resource "buildkite_pipeline" "bazel-bench" {
   repository = "https://github.com/bazelbuild/bazel-bench.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
   default_branch = "master"
-  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
+  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-perf" }, { access_level = "BUILD_AND_READ", slug = "bazel"}]
   provider_settings {
     trigger_mode = "code"
     build_pull_requests = true
@@ -911,13 +911,13 @@ resource "buildkite_pipeline" "apple-support-darwin" {
 
 resource "buildkite_pipeline" "bazelisk-plus-incompatible-flags" {
   name = "Bazelisk + Incompatible flags"
-  repository = "https://github.com/bazelbuild/bazel.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = jsondecode("{\"USE_BAZELISK_MIGRATE\": \"true\"}"), steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py bazel_downstream_pipeline --test_incompatible_flags --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
+  repository = "https://github.com/bazelbuild/continuous-integration.git"
+  steps = templatefile("pipeline.yml.tpl", { envs = jsondecode("{\"USE_BAZELISK_MIGRATE\": \"true\"}"), steps = { commands = ["python3.6 buildkite/bazelci.py bazel_downstream_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
   description = "Use bazelisk --migrate to test incompatible flags with downstream projects@last_green_commit"
   default_branch = "master"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }, { access_level = "BUILD_AND_READ", slug = "downstream-pipeline-triggerers" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }]
   provider_settings {
-    trigger_mode = "code"
+    trigger_mode = "none"
     build_pull_requests = true
     skip_pull_request_builds_for_existing_commits = true
     build_pull_request_forks = true
