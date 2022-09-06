@@ -550,20 +550,12 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11-kythe",
         "python": "python3.8",
     },
-    "ubuntu2104": {
-        "name": "Ubuntu 21.04 (OpenJDK 11, gcc 10.3.0)",
-        "emoji-name": ":ubuntu: 21.04 (OpenJDK 11, gcc 10.3.0)",
+    "ubuntu2204": {
+        "name": "Ubuntu 22.04 (OpenJDK 17, gcc 11.2.0)",
+        "emoji-name": ":ubuntu: 22.04 (OpenJDK 17, gcc 11.2.0)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2104-java11",
-        "python": "python3",
-    },
-    "ubuntu2110": {
-        "name": "Ubuntu 21.10 (OpenJDK 17, gcc 11.2.0)",
-        "emoji-name": ":ubuntu: 21.10 (OpenJDK 11, gcc 11.2.0)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2110-java17",
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2204-java17",
         "python": "python3",
     },
     "macos": {
