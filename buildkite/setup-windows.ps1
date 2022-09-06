@@ -232,7 +232,7 @@ Add-Content -Value "`nd975f751698a77b662f1254ddbeed3901e976f5a" -Path "${android
 & "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platforms;android-24"
 & "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platforms;android-28"
 & "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platforms;android-29"
-& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platforms;android-30""
+& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platforms;android-30"
 & "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platforms;android-31"
 & "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "extras;android;m2repository"
 
