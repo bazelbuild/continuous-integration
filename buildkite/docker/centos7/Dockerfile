@@ -66,7 +66,7 @@ FROM centos7 AS centos7-java11
 # Unfortunately Azul doesn't publish an RPM package for zulu11 on aarch64, so we have to use the tar.gz version.
 RUN mkdir -p /usr/lib/jvm/zulu-11 && \
     pushd /usr/lib/jvm/zulu-11 && \
-    curl "https://cdn.azul.com/zulu-embedded/bin/zulu11.52.13-ca-jdk11.0.13-linux_$(uname -m).tar.gz" | tar xvz --strip-components=1 && \
+    curl "https://cdn.azul.com/zulu/bin/zulu11.58.23-ca-jdk11.0.16.1-linux_x64.tar.gz" | tar xvz --strip-components=1 && \
     update-alternatives \
         --install /usr/bin/java java /usr/lib/jvm/zulu-11/bin/java 2115200 \
         --slave /usr/bin/jaotc jaotc /usr/lib/jvm/zulu-11/bin/jaotc \
