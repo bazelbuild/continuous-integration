@@ -53,7 +53,7 @@ IMAGE_CREATION_VMS = {
         "zone": "us-central1-f",
         "network": "default",
         "source_image_project": "windows-cloud",
-        "source_image_family": "windows-2019",
+        "source_image_family": "windows-2022",
         "setup_script": "setup-windows.ps1",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
     },
