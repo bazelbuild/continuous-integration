@@ -1967,7 +1967,7 @@ resource "buildkite_pipeline" "bazel-skymeld" {
     build_pull_request_forks = true
     prefix_pull_request_fork_branch_names = true
     build_branches = true
-    publish_commit_status = true
+    publish_commit_status = false
   }
 }
 
