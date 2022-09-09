@@ -294,6 +294,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_android.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_android_ndk/main/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-android-ndk",
+        "disabled_reason": "https://github.com/bazelbuild/rules_android_ndk/issues/12#issuecomment-1241637280",
     },
     "rules_appengine": {
         "git_repository": "https://github.com/bazelbuild/rules_appengine.git",
