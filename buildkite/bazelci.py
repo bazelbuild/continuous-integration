@@ -1745,7 +1745,7 @@ def remote_caching_flags(platform, accept_cached=True):
 
     platform_cache_key = [BUILDKITE_ORG.encode("utf-8")]
     # Whenever the remote cache was known to have been poisoned increase the number below
-    platform_cache_key += ["cache-poisoning-20210811".encode("utf-8")]
+    platform_cache_key += ["cache-poisoning-20220912".encode("utf-8")]
 
     # We don't enable remote caching on the Linux ARM64 machine since it doesn't have access to GCS.
     if platform == "ubuntu2004_arm64":
