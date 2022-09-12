@@ -71,7 +71,7 @@ Write-Host "Installing curl..."
 ## Install LLVM/Clang
 Write-Host "Installing llvm..."
 # FYI: choco installs clang in C:\Program Files\LLVM\bin (which is not on the PATH).
-& choco install llvm --version=10.0.0
+& choco install llvm
 [Environment]::SetEnvironmentVariable("BAZEL_LLVM", "C:\Program Files\LLVM", "Machine")
 $env:BAZEL_LLVM = [Environment]::GetEnvironmentVariable("BAZEL_LLVM", "Machine")
 
