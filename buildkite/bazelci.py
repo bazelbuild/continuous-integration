@@ -2327,6 +2327,7 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None, qu
                     "/etc/passwd:/etc/passwd:ro",
                     "/etc/shadow:/etc/shadow:ro",
                     "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro",
+                    "/opt/android-ndk-r25b:/opt/android-ndk-r25b:ro",
                     "/opt/android-sdk-linux:/opt/android-sdk-linux:ro",
                     "/var/lib/buildkite-agent:/var/lib/buildkite-agent",
                     "/var/lib/gitmirrors:/var/lib/gitmirrors:ro",
