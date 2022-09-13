@@ -27,7 +27,7 @@ resource "buildkite_pipeline" "upb" {
 resource "buildkite_pipeline" "bcr-presubmit" {
   name = "BCR Presubmit"
   repository = "https://github.com/meteorcloudy/bazel-central-registry.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = jsondecode("{\"USE_BAZEL_VERSION\": \"last_green\"}"), steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/pcloudy-bcr-test/buildkite/bazelci.py\" -o bazelci.py", "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/pcloudy-bcr-test/buildkite/bcr_presubmit.py\" -o bcr_presubmit.py", "python3.6 bcr_presubmit.py bcr_presubmit | tee /dev/tty | buildkite-agent pipeline upload "] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = jsondecode("{\"USE_BAZEL_VERSION\": \"last_green\"}"), steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/pcloudy-bcr-test/buildkite/bazelci.py\" -o bazelci.py", "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/pcloudy-bcr-test/buildkite/bazel-central-registry/bcr_presubmit.py\" -o bcr_presubmit.py", "python3.6 bcr_presubmit.py bcr_presubmit | tee /dev/tty | buildkite-agent pipeline upload "] } })
   description = "The presubmit for adding new Bazel module into the Bazel Central Registry"
   default_branch = "main"
   provider_settings {
@@ -167,7 +167,7 @@ resource "buildkite_pipeline" "publish-bazel-binaries" {
 resource "buildkite_pipeline" "bazelisk-plus-incompatible-flags" {
   name = "Bazelisk + Incompatible flags"
   repository = "https://github.com/bazelbuild/bazel.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = jsondecode("{\"USE_BAZELISK_MIGRATE\": true}"), steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py bazel_downstream_pipeline --test_incompatible_flags --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = jsondecode("{\"USE_BAZELISK_MIGRATE\": true}"), steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py bazel_downstream_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
   description = "Use bazelisk --migrate to test incompatible flags with downstream projects@last_green_commit"
   default_branch = "master"
 }
