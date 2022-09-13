@@ -166,9 +166,12 @@ EOF
 ### Install Android NDK.
 {
   cd /opt
-  curl -fsSL -o android-ndk.zip https://dl.google.com/android/repository/android-ndk-r15c-linux-x86_64.zip
-  unzip android-ndk.zip > /dev/null
-  rm android-ndk.zip
+  curl -fsSL -o android-ndk-r15c.zip https://dl.google.com/android/repository/android-ndk-r15c-linux-x86_64.zip
+  unzip android-ndk-r15c.zip > /dev/null
+  rm android-ndk-r15c.zip
+  curl -fsSL -o android-ndk-r25b.zip https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
+  unzip android-ndk-r25b.zip > /dev/null
+  rm android-ndk-r25b.zip
 }
 
 ### Install Android SDK.

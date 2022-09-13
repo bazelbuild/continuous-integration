@@ -30,6 +30,7 @@ steps:
             - "/etc/passwd:/etc/passwd:ro"
             - "/etc/shadow:/etc/shadow:ro"
             - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+            - "/opt/android-ndk-r25b:/opt/android-ndk-r25b:ro"
             - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
             - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
             - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
