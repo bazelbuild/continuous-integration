@@ -133,7 +133,7 @@ RUN mkdir -p /usr/lib/jvm/zulu-11 && \
     javac -version
 
 FROM centos7-java11 AS centos7-java11-devtoolset10
-RUN yum install -y centos-release-scl && yum install -y devtoolset-10 && yum remove -y gcc gcc-c++ lcov && yum clean all
+RUN yum install -y centos-release-scl && yum install -y devtoolset-10 && yum clean all
 
 # These are the variables set by /opt/rh/devtoolset-10/enable and necessary to activate devtoolset-10.
 ENV PATH=/opt/rh/devtoolset-10/root/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
