@@ -8,6 +8,13 @@ rm -rfv android-ndk-r15c
 unzip android-ndk.zip > /dev/null
 rm android-ndk.zip
 
+curl -fLo android-ndk-r25b.dmg https://dl.google.com/android/repository/android-ndk-r25b-darwin.dmg
+hdiutil attach android-ndk-r25b.dmg
+rm -rfv android-ndk-r25b
+cp -r /Volumes/Android\ NDK\ r25b/AndroidNDK8937393.app/Contents/NDK/ android-ndk-r25b
+hdiutil detach /Volumes/Android\ NDK\ r25b/
+sudo rm -fv android-ndk-r25b.dmg
+
 rm -rf "$HOME/android-sdk-macosx"
 mkdir -p "$HOME/android-sdk-macosx/cmdline-tools"
 cd "$HOME/android-sdk-macosx/cmdline-tools"
