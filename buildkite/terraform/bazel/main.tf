@@ -1184,7 +1184,7 @@ resource "buildkite_pipeline" "rules-android" {
 resource "buildkite_pipeline" "rules-android-ndk" {
   name = "rules_android_ndk"
   repository = "https://github.com/bazelbuild/rules_android_ndk.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/rules_android_ndk/main/.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
   description = "Android NDK rules for Bazel"
   default_branch = "main"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "android-team" }]
