@@ -155,7 +155,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/bazel-buildfarm.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-buildfarm/main/.bazelci/presubmit.yml",
         "pipeline_slug": "buildfarm-farmer",
-        "disabled_reason": "waiting on https://github.com/bazelbuild/bazel-buildfarm/pull/1142",
     },
     "Buildtools": {
         "git_repository": "https://github.com/bazelbuild/buildtools.git",
@@ -181,7 +180,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/googlecartographer/cartographer.git",
         "http_config": "https://raw.githubusercontent.com/googlecartographer/cartographer/master/.bazelci/presubmit.yml",
         "pipeline_slug": "cartographer",
-        "disabled_reason": "waiting on https://github.com/cartographer-project/cartographer/pull/1898",
     },
     "Cloud Robotics Core": {
         "git_repository": "https://github.com/googlecloudrobotics/core.git",
@@ -207,7 +205,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/gerrit.yml",
         "pipeline_slug": "gerrit",
-        "disabled_reason": "https://github.com/bazelbuild/continuous-integration/issues/1182",
     },
     "Google Logging": {
         "git_repository": "https://github.com/google/glog.git",
