@@ -412,6 +412,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_scala.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_scala/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-scala-scala",
+        "disabled_reason": "waiting on https://github.com/bazelbuild/rules_scala/pull/1422",
     },
     "rules_swift": {
         "git_repository": "https://github.com/bazelbuild/rules_swift.git",
