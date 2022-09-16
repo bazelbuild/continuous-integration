@@ -14,6 +14,7 @@ tasks:
       - "--noremote_accept_cached"
       - "--experimental_merged_skyframe_analysis_execution"
       - "--experimental_skymeld_ui"
+      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPU*0.5"
     build_targets:
       - "//:bazel-distfile.zip"
       - "//scripts/packages/debian:bazel-debian.deb"
@@ -28,6 +29,7 @@ tasks:
       - "--test_env=TEST_REPOSITORY_HOME=$OUTPUT_BASE/external"
       - "--experimental_merged_skyframe_analysis_execution"
       - "--experimental_skymeld_ui"
+      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPU*0.5"
     test_targets:
       - "//scripts/..."
       - "//src/java_tools/..."
@@ -64,6 +66,7 @@ tasks:
       - "--noremote_accept_cached"
       - "--experimental_merged_skyframe_analysis_execution"
       - "--experimental_skymeld_ui"
+      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPU*0.5"
     build_targets:
       - "//src:bazel"
       - "//src:bazel_jdk_minimal"
@@ -77,6 +80,7 @@ tasks:
       - "--test_env=REMOTE_NETWORK_ADDRESS=bazel.build:80"
       - "--experimental_merged_skyframe_analysis_execution"
       - "--experimental_skymeld_ui"
+      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPU*0.5"
     test_targets:
       - "//scripts/..."
       - "//src/java_tools/..."
@@ -111,6 +115,7 @@ tasks:
       - "--noremote_accept_cached"
       - "--experimental_merged_skyframe_analysis_execution"
       - "--experimental_skymeld_ui"
+      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPU*0.5"
     build_targets:
       - "//src:bazel"
       - "//src:bazel_jdk_minimal"
@@ -122,6 +127,7 @@ tasks:
       - "--test_env=TEST_REPOSITORY_HOME=$OUTPUT_BASE/external"
       - "--experimental_merged_skyframe_analysis_execution"
       - "--experimental_skymeld_ui"
+      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPU*0.5"
     test_targets:
       - "//src/test/shell/bazel:cc_integration_test"
     include_json_profile:
@@ -141,6 +147,7 @@ tasks:
       - "--noremote_accept_cached"
       - "--experimental_merged_skyframe_analysis_execution"
       - "--experimental_skymeld_ui"
+      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPU*0.5"
     build_targets:
       - "//src:bazel"
       - "//src:bazel_jdk_minimal"
@@ -154,6 +161,7 @@ tasks:
       - "--test_env=REMOTE_NETWORK_ADDRESS=bazel.build:80"
       - "--experimental_merged_skyframe_analysis_execution"
       - "--experimental_skymeld_ui"
+      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPU*0.5"
     test_targets:
       - "//scripts/..."
       - "//src/java_tools/..."
@@ -187,6 +195,7 @@ tasks:
       - "--noremote_accept_cached"
       - "--experimental_merged_skyframe_analysis_execution"
       - "--experimental_skymeld_ui"
+      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPU*0.5"
     build_targets:
       - "//src:bazel"
       - "//src:bazel_jdk_minimal"
@@ -200,6 +209,7 @@ tasks:
       - "--test_env=REMOTE_NETWORK_ADDRESS=bazel.build:80"
       - "--experimental_merged_skyframe_analysis_execution"
       - "--experimental_skymeld_ui"
+      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPU*0.5"
     test_targets:
       - "//scripts/..."
       - "//src/test/..."
@@ -230,6 +240,7 @@ tasks:
       - "--noremote_accept_cached"
       - "--experimental_merged_skyframe_analysis_execution"
       - "--experimental_skymeld_ui"
+      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPU*0.5"
     build_targets:
       - "//src:bazel.exe"
       - "//src:bazel_jdk_minimal"
@@ -243,6 +254,7 @@ tasks:
       - "--test_env=TEST_REPOSITORY_HOME=C:/b/bazeltest_external"
       - "--experimental_merged_skyframe_analysis_execution"
       - "--experimental_skymeld_ui"
+      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPU*0.5"
     test_targets:
       - "//src:embedded_tools_size_test"
       - "//src/test/cpp/..."
@@ -287,6 +299,9 @@ tasks:
     - rm -f WORKSPACE.bak
     index_flags:
     - "--define=kythe_corpus=github.com/bazelbuild/bazel"
+    - "--experimental_merged_skyframe_analysis_execution"
+    - "--experimental_skymeld_ui"
+    - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPU*0.5"
     index_targets_query: "kind(\"cc_(binary|library|test|proto_library) rule\", ...) union kind(\"java_(binary|import|library|plugin|test|proto_library) rule\", ...) union kind(\"proto_library rule\", ...)"
     index_upload_policy: Always
     index_upload_gcs: True
