@@ -2738,11 +2738,19 @@ def bazel_build_step(
         pipeline_command += " --file_config=" + file_config
     pipeline_command += " --task=" + task
 
-    return create_step(
+    step = create_step(
         label=create_label(platform, project_name, build_only, test_only),
         commands=[fetch_bazelcipy_command(), pipeline_command],
         platform=platform,
     )
+    # Always try to automatically retry the bazel build step, this will make
+    # the publish bazel binaries pipeline more reliable.
+    step["retry"] = {
+        "automatic": [
+            {"exit_status": "*", "limit": 3},
+        ]
+    }
+    return step
 
 
 def filter_tasks_that_should_be_skipped(task_configs, pipeline_steps):
