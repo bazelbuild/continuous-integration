@@ -109,6 +109,46 @@ def clone_git_repository(project_name, task_name):
     return bazelci.clone_git_repository(git_repository, platform_name, git_commit)
 
 
+def get_previous_bazel_commit(current_commit, count):
+    """Get a previous bazel commit that is a given number of commits older than the current one."""
+    try:
+        os.chdir(BAZEL_REPO_DIR)
+        output = subprocess.check_output(
+            ["git", "rev-parse", "%s~%s" % (current_commit, count)]
+        )
+        return output.decode("utf-8").strip()
+    except subprocess.CalledProcessError as e:
+        raise bazelci.BuildkiteException(
+            "Failed to get bazel commit that is %s commits older than %s" % (count, current_commit)
+        )
+
+
+def identify_bisect_range(args, repo_location):
+    MAX_RETRY = 5
+    retry = 0
+    step = 100
+    good_bazel_commit = args.good_bazel_commit
+    bad_bazel_commit = args.bad_bazel_commit
+    while retry <= MAX_RETRY:
+        bazelci.print_collapsed_group("Check bazel commit at " + good_bazel_commit)
+        if test_with_bazel_at_commit(
+            project_name=args.project_name,
+            task_name=args.task_name,
+            repo_location=repo_location,
+            bazel_commit=good_bazel_commit,
+            needs_clean=args.needs_clean,
+            repeat_times=args.repeat_times,
+        ):
+            return good_bazel_commit, bad_bazel_commit
+        bazelci.print_collapsed_group("Given good bazel commit is not good, try to find a previous good commit (%s~%s)." % (good_bazel_commit, step))
+        bad_bazel_commit = good_bazel_commit
+        good_bazel_commit = get_previous_bazel_commit(good_bazel_commit, step)
+        retry += 1
+        step = step * 2
+
+    raise Exception("Cannot find a good bazel commit, abort bisecting.")
+
+
 def start_bisecting(
     project_name, task_name, repo_location, commits_list, needs_clean, repeat_times
 ):
@@ -237,24 +277,12 @@ def main(argv=None):
         )
     elif args.subparsers_name == "runner":
         repo_location = clone_git_repository(args.project_name, args.task_name)
-        bazelci.print_collapsed_group("Check good bazel commit " + args.good_bazel_commit)
-        if not test_with_bazel_at_commit(
-            project_name=args.project_name,
-            task_name=args.task_name,
-            repo_location=repo_location,
-            bazel_commit=args.good_bazel_commit,
-            needs_clean=args.needs_clean,
-            repeat_times=args.repeat_times,
-        ):
-            raise Exception(
-                "Given good commit (%s) is not actually good, abort bisecting."
-                % args.good_bazel_commit
-            )
+        good_bazel_commit, bad_bazel_commit = identify_bisect_range(args, repo_location)
         start_bisecting(
             project_name=args.project_name,
             task_name=args.task_name,
             repo_location=repo_location,
-            commits_list=get_bazel_commits_between(args.good_bazel_commit, args.bad_bazel_commit),
+            commits_list=get_bazel_commits_between(good_bazel_commit, bad_bazel_commit),
             needs_clean=args.needs_clean,
             repeat_times=args.repeat_times,
         )
