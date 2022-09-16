@@ -195,7 +195,7 @@ class BuildInfoAnalyzer(threading.Thread):
                  bisect_log[pos:].replace("\r", ""),
                  "Bisect URL: " + job["web_url"],
             ]), culprit_commit
-        pos = bisect_log.rfind("Given good commit")  # Matching "Given good commit (XXXX) is not actually good, abort bisecting."
+        pos = bisect_log.rfind("Cannot find a good bazel commit, abort bisecting.")
         if pos != -1:
             self.broken_by_infra = True
             return "\n".join([
