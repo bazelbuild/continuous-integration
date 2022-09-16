@@ -254,7 +254,7 @@ def main(argv=None):
             raise Exception("Environment variable %s must be set" % str(e))
 
         needs_clean = False
-        if "NEEDS_CLEAN" in os.environ:
+        if os.environ.get("NEEDS_CLEAN", None) == "1":
             needs_clean = True
 
         repeat_times = 1
