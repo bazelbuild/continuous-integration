@@ -31,3 +31,4 @@ platforms:
       - "--test_tag_filters=-slow,-flaky,-docker"
     test_targets:
       - "//..."
+      - "-//javatests/com/google/gerrit/server:server_tests"
