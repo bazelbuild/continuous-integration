@@ -196,7 +196,7 @@ After a few days of iteration:
     1.  Ask the package maintainers to update the package definitions:
         [@vbatts](https://github.com/vbatts) [@petemounce](https://github.com/petemounce) [@excitoon](https://github.com/excitoon)
     1.  Example: [https://github.com/bazelbuild/bazel/issues/3773#issuecomment-352692144]
-1.  Publish versioned documentation
+1.  Publish versioned documentation (For major and minor releases only)
     1.  Fetch the git tag for the release: `git fetch --tags`
     1.  Do a checkout to that tag: `git checkout X.Y.Z`
         1. You should see this message:
@@ -228,12 +228,12 @@ After a few days of iteration:
           overwrite the existing tarball.
     1.  Ping @fweikert to update the documentation site.
 
-1.  Merge the blog post pull request.
+1.  Merge the blog post pull request. (For major and minor releases only)
     1.  Make sure you update the date in your post (and the path) to reflect when
     it is actually published.
     1.  **Note:** The blog sometimes takes time to update the homepage, so use
     the full path to your post to check that it is live.
-1.  Update the [release page](https://github.com/bazelbuild/bazel/releases/) to
+1.  Update the [release page](https://github.com/bazelbuild/bazel/releases/). For major and minor releases 
     replace the generated notes with a link to the blog post.
 1.  Close the release-tracking bug.
 
