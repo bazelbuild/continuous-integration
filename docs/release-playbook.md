@@ -36,7 +36,7 @@ These steps only have to be performed once, ever.
 ## Preparing a new release
 
 1.  [Create a release blockers milestone](https://github.com/bazelbuild/bazel/milestones/new) named "X.Y.Z release blockers" (case-sensitive), where we keep track of issues that must be resolved before the release goes out.
-1.  (For major and minor releases only) [Create a release tracking issue](https://github.com/bazelbuild/bazel/issues/new?assignees=&labels=release%2Cteam-OSS%2CP1%2Ctype%3A+process&template=release.md&title=Release+X.Y+-+%24MONTH+%24YEAR) to keep the community updated about the progress of the release
+1.  [Create a release tracking issue](https://github.com/bazelbuild/bazel/issues/new?assignees=&labels=release%2Cteam-OSS%2CP1%2Ctype%3A+process&template=release.md&title=Release+X.Y+-+%24MONTH+%24YEAR) to keep the community updated about the progress of the release
 1.  Create the branch for the release. The branch should always be named `release-X.Y.Z` (the `.Z` part is important). Cherry-pick PRs will be sent against this branch.
     *   The actual creation of the branch can be done via the GitHub UI or via the command line. How we choose the base commit of the branch depends on the type of the release:
     *   For patch releases (`X.Y.Z` where `Z>0`), the base commit should simply be `X.Y.(Z-1)`.
@@ -50,7 +50,7 @@ These steps only have to be performed once, ever.
     *   It should contain the text: `The Bazel X.Y.Z release branch (release-X.Y.Z [link]) is open for business. Please send cherry-pick PRs against this branch if you'd like your change to be in X.Y.Z. Please follow the release tracking issue [link] for updates.`
 1.  Meanwhile, begin the [internal approval process](http://go/bazel-internal-launch-checklist), too.
     *   Note that certain steps in the internal approval process require at least preliminary release notes, so those steps should usually wait until the first release candidate is pushed and the release notes have taken vague shape.
-
+    *   Please make sure the Eng. team review status is explicit in release notes/bazel release announcement doc(s), and ensure the Eng. team should approve the release note before creating the launch review issue.
 ## Maintaining the release
 
 While the release is active, you should make sure to do the following:
@@ -196,7 +196,7 @@ After a few days of iteration:
     1.  Ask the package maintainers to update the package definitions:
         [@vbatts](https://github.com/vbatts) [@petemounce](https://github.com/petemounce) [@excitoon](https://github.com/excitoon)
     1.  Example: [https://github.com/bazelbuild/bazel/issues/3773#issuecomment-352692144]
-1.  Publish versioned documentation
+1.  Publish versioned documentation (For major and minor releases only)
     1.  Fetch the git tag for the release: `git fetch --tags`
     1.  Do a checkout to that tag: `git checkout X.Y.Z`
         1. You should see this message:
@@ -228,13 +228,12 @@ After a few days of iteration:
           overwrite the existing tarball.
     1.  Ping @fweikert to update the documentation site.
 
-1.  Merge the blog post pull request.
+1.  Merge the blog post pull request. (For major and minor releases only)
     1.  Make sure you update the date in your post (and the path) to reflect when
     it is actually published.
     1.  **Note:** The blog sometimes takes time to update the homepage, so use
     the full path to your post to check that it is live.
-1.  Update the [release page](https://github.com/bazelbuild/bazel/releases/) to
-    replace the generated notes with a link to the blog post.
+1.  For major and minor releases, update the release page to replace the generated notes with a link to the blog post. For patch release, update the           release notes without a blog post link - see example: https://github.com/bazelbuild/bazel/releases/tag/5.3.1
 1.  Close the release-tracking bug.
 
 ### Updating Google's internal mirror
