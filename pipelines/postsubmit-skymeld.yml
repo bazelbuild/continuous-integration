@@ -8,29 +8,36 @@ tasks:
       - rm -f WORKSPACE.bak
       - rm -rf $HOME/bazeltest
       - mkdir $HOME/bazeltest
-    build_flags:
+    # build_flags:
+    #   - "--test_env=TEST_INSTALL_BASE=$HOME/bazeltest/install_base"
+    #   - "--test_env=TEST_REPOSITORY_HOME=$OUTPUT_BASE/external"
+    #   - "--noremote_accept_cached"
+    #   - "--experimental_merged_skyframe_analysis_execution"
+    #   - "--experimental_skymeld_ui"
+    #   - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPUS*0.5"
+    # build_targets:
+    #   - "//:bazel-distfile.zip"
+    #   - "//scripts/packages/debian:bazel-debian.deb"
+    #   - "//scripts/packages:with-jdk/install.sh"
+    #   - "//src:bazel"
+    #   - "//src:bazel_jdk_minimal"
+    #   - "//src:test_repos"
+    test_flags:
+      - "--sandbox_default_allow_network=false"
+      - "--sandbox_writable_path=$HOME/bazeltest"
       - "--test_env=TEST_INSTALL_BASE=$HOME/bazeltest/install_base"
       - "--test_env=TEST_REPOSITORY_HOME=$OUTPUT_BASE/external"
       - "--noremote_accept_cached"
       - "--experimental_merged_skyframe_analysis_execution"
       - "--experimental_skymeld_ui"
       - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPUS*0.5"
-    build_targets:
+    test_targets:
       - "//:bazel-distfile.zip"
       - "//scripts/packages/debian:bazel-debian.deb"
       - "//scripts/packages:with-jdk/install.sh"
       - "//src:bazel"
       - "//src:bazel_jdk_minimal"
       - "//src:test_repos"
-    test_flags:
-      - "--sandbox_default_allow_network=false"
-      - "--sandbox_writable_path=$HOME/bazeltest"
-      - "--test_env=TEST_INSTALL_BASE=$HOME/bazeltest/install_base"
-      - "--test_env=TEST_REPOSITORY_HOME=$OUTPUT_BASE/external"
-      - "--experimental_merged_skyframe_analysis_execution"
-      - "--experimental_skymeld_ui"
-      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPUS*0.5"
-    test_targets:
       - "//scripts/..."
       - "//src/java_tools/..."
       - "//src/test/..."
@@ -50,7 +57,7 @@ tasks:
       - "-//src/test/shell/bazel:bazel_coverage_cc_head_test_gcc"
       - "-//src/test/shell/bazel:bazel_coverage_sh_test"
     include_json_profile:
-      - build
+      # - build
       - test
   ubuntu1804:
     shell_commands:
@@ -59,29 +66,33 @@ tasks:
       - rm -f WORKSPACE.bak
       - rm -rf $HOME/bazeltest
       - mkdir $HOME/bazeltest
-    build_flags:
-      - "--test_env=TEST_INSTALL_BASE=$HOME/bazeltest/install_base"
-      - "--test_env=TEST_REPOSITORY_HOME=$OUTPUT_BASE/external"
-      - "--test_env=REMOTE_NETWORK_ADDRESS=bazel.build:80"
-      - "--noremote_accept_cached"
-      - "--experimental_merged_skyframe_analysis_execution"
-      - "--experimental_skymeld_ui"
-      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPUS*0.5"
-    build_targets:
-      - "//src:bazel"
-      - "//src:bazel_jdk_minimal"
-      - "//src:test_repos"
+    # build_flags:
+    #   - "--test_env=TEST_INSTALL_BASE=$HOME/bazeltest/install_base"
+    #   - "--test_env=TEST_REPOSITORY_HOME=$OUTPUT_BASE/external"
+    #   - "--test_env=REMOTE_NETWORK_ADDRESS=bazel.build:80"
+    #   - "--noremote_accept_cached"
+    #   - "--experimental_merged_skyframe_analysis_execution"
+    #   - "--experimental_skymeld_ui"
+    #   - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPUS*0.5"
+    # build_targets:
+    #   - "//src:bazel"
+    #   - "//src:bazel_jdk_minimal"
+    #   - "//src:test_repos"
     test_flags:
       - "--sandbox_default_allow_network=false"
       - "--sandbox_writable_path=$HOME/bazeltest"
       - "--test_env=TEST_INSTALL_BASE=$HOME/bazeltest/install_base"
       - "--test_env=TEST_REPOSITORY_HOME=$OUTPUT_BASE/external"
+      - "--noremote_accept_cached"
       # Configure and enable tests that require access to the network.
       - "--test_env=REMOTE_NETWORK_ADDRESS=bazel.build:80"
       - "--experimental_merged_skyframe_analysis_execution"
       - "--experimental_skymeld_ui"
       - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPUS*0.5"
     test_targets:
+      - "//src:bazel"
+      - "//src:bazel_jdk_minimal"
+      - "//src:test_repos"
       - "//scripts/..."
       - "//src/java_tools/..."
       - "//src/test/..."
@@ -95,7 +106,7 @@ tasks:
       # Re-enable once fixed: https://github.com/bazelbuild/bazel/issues/8162
       - "-//src/java_tools/import_deps_checker/..."
     include_json_profile:
-      - build
+      # - build
       - test
   ubuntu1804_clang:
     platform: ubuntu1804
@@ -131,7 +142,7 @@ tasks:
     test_targets:
       - "//src/test/shell/bazel:cc_integration_test"
     include_json_profile:
-      - build
+      # - build
       - test
   ubuntu2004:
     shell_commands:
@@ -140,29 +151,33 @@ tasks:
       - rm -f WORKSPACE.bak
       - rm -rf $HOME/bazeltest
       - mkdir $HOME/bazeltest
-    build_flags:
-      - "--test_env=TEST_INSTALL_BASE=$HOME/bazeltest/install_base"
-      - "--test_env=TEST_REPOSITORY_HOME=$OUTPUT_BASE/external"
-      - "--test_env=REMOTE_NETWORK_ADDRESS=bazel.build:80"
-      - "--noremote_accept_cached"
-      - "--experimental_merged_skyframe_analysis_execution"
-      - "--experimental_skymeld_ui"
-      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPUS*0.5"
-    build_targets:
-      - "//src:bazel"
-      - "//src:bazel_jdk_minimal"
-      - "//src:test_repos"
+    # build_flags:
+    #   - "--test_env=TEST_INSTALL_BASE=$HOME/bazeltest/install_base"
+    #   - "--test_env=TEST_REPOSITORY_HOME=$OUTPUT_BASE/external"
+    #   - "--test_env=REMOTE_NETWORK_ADDRESS=bazel.build:80"
+    #   - "--noremote_accept_cached"
+    #   - "--experimental_merged_skyframe_analysis_execution"
+    #   - "--experimental_skymeld_ui"
+    #   - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPUS*0.5"
+    # build_targets:
+    #   - "//src:bazel"
+    #   - "//src:bazel_jdk_minimal"
+    #   - "//src:test_repos"
     test_flags:
       - "--sandbox_default_allow_network=false"
       - "--sandbox_writable_path=$HOME/bazeltest"
       - "--test_env=TEST_INSTALL_BASE=$HOME/bazeltest/install_base"
       - "--test_env=TEST_REPOSITORY_HOME=$OUTPUT_BASE/external"
+      - "--noremote_accept_cached"
       # Configure and enable tests that require access to the network.
       - "--test_env=REMOTE_NETWORK_ADDRESS=bazel.build:80"
       - "--experimental_merged_skyframe_analysis_execution"
       - "--experimental_skymeld_ui"
       - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPUS*0.5"
     test_targets:
+      - "//src:bazel"
+      - "//src:bazel_jdk_minimal"
+      - "//src:test_repos"
       - "//scripts/..."
       - "//src/java_tools/..."
       - "//src/test/..."
@@ -176,7 +191,7 @@ tasks:
       # Re-enable once fixed: https://github.com/bazelbuild/bazel/issues/8162
       - "-//src/java_tools/import_deps_checker/..."
     include_json_profile:
-      - build
+      # - build
       - test
   macos:
     xcode_version: "13.0"
@@ -187,30 +202,35 @@ tasks:
       - rm -rf $HOME/bazeltest
       - mkdir $HOME/bazeltest
       - ln -sf $OUTPUT_BASE/external $HOME/bazeltest/external
-    build_flags:
-      - "--test_env=TEST_INSTALL_BASE=$HOME/bazeltest/install_base"
-      - "--test_env=TEST_REPOSITORY_HOME=$OUTPUT_BASE/external"
-      - "--test_env=TEST_REPOSITORY_HOME=$HOME/bazeltest/external"
-      - "--test_env=REMOTE_NETWORK_ADDRESS=bazel.build:80"
-      - "--noremote_accept_cached"
-      - "--experimental_merged_skyframe_analysis_execution"
-      - "--experimental_skymeld_ui"
-      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPUS*0.5"
-    build_targets:
-      - "//src:bazel"
-      - "//src:bazel_jdk_minimal"
-      - "//src:test_repos"
+    # build_flags:
+    #   - "--test_env=TEST_INSTALL_BASE=$HOME/bazeltest/install_base"
+    #   - "--test_env=TEST_REPOSITORY_HOME=$OUTPUT_BASE/external"
+    #   - "--test_env=TEST_REPOSITORY_HOME=$HOME/bazeltest/external"
+    #   - "--test_env=REMOTE_NETWORK_ADDRESS=bazel.build:80"
+    #   - "--noremote_accept_cached"
+    #   - "--experimental_merged_skyframe_analysis_execution"
+    #   - "--experimental_skymeld_ui"
+    #   - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPUS*0.5"
+    # build_targets:
+    #   - "//src:bazel"
+    #   - "//src:bazel_jdk_minimal"
+    #   - "//src:test_repos"
     test_flags:
       - "--sandbox_default_allow_network=false"
       - "--sandbox_writable_path=$HOME/bazeltest"
       - "--test_env=TEST_INSTALL_BASE=$HOME/bazeltest/install_base"
+      - "--test_env=TEST_REPOSITORY_HOME=$OUTPUT_BASE/external"
       - "--test_env=TEST_REPOSITORY_HOME=$HOME/bazeltest/external"
+      - "--noremote_accept_cached"
       # Configure and enable tests that require access to the network.
       - "--test_env=REMOTE_NETWORK_ADDRESS=bazel.build:80"
       - "--experimental_merged_skyframe_analysis_execution"
       - "--experimental_skymeld_ui"
       - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPUS*0.5"
     test_targets:
+      - "//src:bazel"
+      - "//src:bazel_jdk_minimal"
+      - "//src:test_repos"
       - "//scripts/..."
       - "//src/test/..."
       - "//src/tools/execlog/..."
@@ -224,27 +244,27 @@ tasks:
       # C++ coverage is not supported on macOS yet.
       - "-//src/test/shell/bazel:bazel_cc_code_coverage_test"
     include_json_profile:
-      - build
+      # - build
       - test
   windows:
     batch_commands:
       - powershell -Command "(Get-Content WORKSPACE) -Replace '# android_', 'android_' | Set-Content WORKSPACE"
       - mkdir C:\b
       - mklink /J C:\b\bazeltest_external %OUTPUT_BASE:/=\%\external
-    build_flags:
-      - "--copt=-w"
-      - "--host_copt=-w"
-      - "--test_env=JAVA_HOME"
-      - "--test_env=TEST_INSTALL_BASE=$HOME/bazeltest_install_base"
-      - "--test_env=TEST_REPOSITORY_HOME=C:/b/bazeltest_external"
-      - "--noremote_accept_cached"
-      - "--experimental_merged_skyframe_analysis_execution"
-      - "--experimental_skymeld_ui"
-      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPUS*0.5"
-    build_targets:
-      - "//src:bazel.exe"
-      - "//src:bazel_jdk_minimal"
-      - "//src:test_repos"
+    # build_flags:
+    #   - "--copt=-w"
+    #   - "--host_copt=-w"
+    #   - "--test_env=JAVA_HOME"
+    #   - "--test_env=TEST_INSTALL_BASE=$HOME/bazeltest_install_base"
+    #   - "--test_env=TEST_REPOSITORY_HOME=C:/b/bazeltest_external"
+    #   - "--noremote_accept_cached"
+    #   - "--experimental_merged_skyframe_analysis_execution"
+    #   - "--experimental_skymeld_ui"
+    #   - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPUS*0.5"
+    # build_targets:
+    #   - "//src:bazel.exe"
+    #   - "//src:bazel_jdk_minimal"
+    #   - "//src:test_repos"
     test_flags:
       - "--copt=-w"
       - "--host_copt=-w"
@@ -252,10 +272,14 @@ tasks:
       - "--test_env=JAVA_HOME"
       - "--test_env=TEST_INSTALL_BASE=$HOME/bazeltest_install_base"
       - "--test_env=TEST_REPOSITORY_HOME=C:/b/bazeltest_external"
+      - "--noremote_accept_cached"
       - "--experimental_merged_skyframe_analysis_execution"
       - "--experimental_skymeld_ui"
       - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPUS*0.5"
     test_targets:
+      - "//src:bazel.exe"
+      - "//src:bazel_jdk_minimal"
+      - "//src:test_repos"
       - "//src:embedded_tools_size_test"
       - "//src/test/cpp/..."
       - "//src/test/java/com/google/devtools/build/android/..."
@@ -290,7 +314,7 @@ tasks:
       - "-//src/test/shell/bazel/remote/..."
       - "-//tools/python:pywrapper_test"
     include_json_profile:
-      - build
+      # - build
       - test
   kythe_ubuntu2004:
     shell_commands:
