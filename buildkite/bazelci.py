@@ -184,6 +184,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/envoyproxy/envoy.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/envoy.yml",
         "pipeline_slug": "envoy",
+        "disabled_reason": "https://github.com/envoyproxy/envoy/issues/23390",
     },
     "FlatBuffers": {
         "git_repository": "https://github.com/google/flatbuffers.git",
