@@ -75,8 +75,14 @@ While the release is active, you should make sure to do the following:
 
 1.  Check BuildKite results at https://buildkite.com/bazel-trusted/bazel-release. You should
     see the `release-X.Y.ZrcN` branch here and a new build running for
-    your release.
-
+    your release. Building Patch Release for old bazel version, create a new build and in 'Option' choose Environment Variable as USE_BAZEL_VERSION=X.Y.(Z-1) i.e previous version.
+    See example:
+    *   Go to https://buildkite.com/bazel-trusted/bazel-release
+    *   Click "New Build", then fill in the fields like this:
+        *   Message: Release-4.3.2rc1 (Or any message you like)
+        *   Commit: HEAD
+        *   Branch: release-4.3.2rc1
+        *   Option: USE_BAZEL_VERSION=4.2.2 
 1.  Check the postsubmit test run for the release branch to ensure that all
     tests on all platforms pass with the version you're about to release.
 
