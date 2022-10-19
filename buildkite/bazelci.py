@@ -919,6 +919,10 @@ def is_windows():
     return os.name == "nt"
 
 
+def is_mac():
+    return platform.system() == "Darwin"
+
+
 def gsutil_command():
     return "gsutil.cmd" if is_windows() else "gsutil"
 
@@ -1947,12 +1951,12 @@ def compute_flags(
 
     for i, flag in enumerate(aggregated_flags):
         if "$HOME" in flag:
-            if platform == "windows":
+            if is_windows():
                 if os.path.exists("D:/"):
                     home = "D:"
                 else:
                     home = "C:/b"
-            elif platform == "macos":
+            elif is_mac():
                 home = "/Users/buildkite"
             else:
                 home = "/var/lib/buildkite-agent"
