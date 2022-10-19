@@ -26,6 +26,7 @@ import json
 import multiprocessing
 import os
 import os.path
+import platform
 import random
 import re
 import requests
@@ -2196,6 +2197,11 @@ def execute_bazel_coverage(
 
 
 def upload_test_logs_from_bep(bep_file, tmpdir, binary_platform, monitor_flaky_tests):
+    # TODO(https://github.com/bazelbuild/continuous-integration/issues/1465):
+    # Remove condition once there is a bazelci-agent release for M1
+    if platform.machine() == 'arm64' and platform.system() == 'Darwin':
+      return
+
     bazelci_agent_binary = download_bazelci_agent(tmpdir, binary_platform, "0.1.3")
     execute_command(
         [
