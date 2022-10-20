@@ -59,16 +59,20 @@ jobs:
       RUST_BACKTRACE: 1
     strategy:
       matrix:
-        build: [linux, macos, win-msvc]
+        build: [linux, macos-intel, macos-m1, win-msvc]
         include:
         - build: linux
           os: ubuntu-18.04
           rust: nightly
           target: x86_64-unknown-linux-musl
-        - build: macos
+        - build: macos-intel
           os: macos-latest
           rust: nightly
           target: x86_64-apple-darwin
+        - build: macos-m1
+          os: macos-latest
+          rust: nightly
+          target: aarch64-apple-darwin # cross compile to M1 on Intel CPU
         - build: win-msvc
           os: windows-latest
           rust: nightly
@@ -89,6 +93,7 @@ jobs:
         target: ${{ matrix.target }}
 
     - name: Test release binary
+      if: matrix.build != 'macos-m1' # Can't run M1 binary on Intel CPU
       working-directory: agent
       run: cargo test --verbose --release --target ${{ matrix.target }}
 
@@ -97,7 +102,7 @@ jobs:
       run: cargo build --verbose --release --target ${{ matrix.target }}
 
     - name: Strip release binary (linux and macos)
-      if: matrix.build == 'linux' || matrix.build == 'macos'
+      if: matrix.build == 'linux' || matrix.build == 'macos-intel' || matrix.build == 'macos-m1'
       working-directory: agent
       run: strip "target/${{ matrix.target }}/release/bazelci-agent"
 
