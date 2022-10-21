@@ -1631,7 +1631,10 @@ def download_bazelci_agent(dest_dir, platform, version):
     if platform == "windows":
         postfix = "x86_64-pc-windows-msvc.exe"
     elif platform == "macos":
-        postfix = "x86_64-apple-darwin"
+        if platform.machine() == 'arm64':
+            postfix = "aarch64-apple-darwin"
+        else:
+            postfix = "x86_64-apple-darwin"
     else:
         postfix = "x86_64-unknown-linux-musl"
 
@@ -2201,11 +2204,6 @@ def execute_bazel_coverage(
 
 
 def upload_test_logs_from_bep(bep_file, tmpdir, binary_platform, monitor_flaky_tests):
-    # TODO(https://github.com/bazelbuild/continuous-integration/issues/1465):
-    # Remove condition once there is a bazelci-agent release for M1
-    if platform.machine() == 'arm64' and platform.system() == 'Darwin':
-      return
-
     bazelci_agent_binary = download_bazelci_agent(tmpdir, binary_platform, "0.1.3")
     execute_command(
         [
