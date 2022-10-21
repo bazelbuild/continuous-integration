@@ -1644,7 +1644,7 @@ def download_bazelci_agent(dest_dir, version):
             version, name
         )
     )
-    path = os.path.join(dest_dir, "bazelci-agent.exe" is_windows() else "bazelci-agent")
+    path = os.path.join(dest_dir, "bazelci-agent.exe" if is_windows() else "bazelci-agent")
     execute_command(["curl", "-sSL", url, "-o", path])
     st = os.stat(path)
     os.chmod(path, st.st_mode | stat.S_IEXEC)
