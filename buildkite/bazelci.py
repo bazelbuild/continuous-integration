@@ -26,7 +26,7 @@ import json
 import multiprocessing
 import os
 import os.path
-import platform
+import platform as platform_module
 import random
 import re
 import requests
@@ -920,7 +920,7 @@ def is_windows():
 
 
 def is_mac():
-    return platform.system() == "Darwin"
+    return platform_module.system() == "Darwin"
 
 
 def gsutil_command():
@@ -1216,7 +1216,7 @@ def execute_commands(
     tmpdir = tempfile.mkdtemp()
     sc_process = None
     try:
-        if platform == "macos" or platform == "macos_arm64":
+        if is_mac():
             activate_xcode(task_config)
 
         # If the CI worker runs Bazelisk, we need to forward all required env variables to the test.
@@ -1234,7 +1234,7 @@ def execute_commands(
 
         # We use one binary for all Linux platforms (because we also just release one binary for all
         # Linux versions and we have to ensure that it works on all of them).
-        binary_platform = platform if platform in ["macos", "windows"] else LINUX_BINARY_PLATFORM
+        binary_platform = platform if is_mac() or is_windows() else LINUX_BINARY_PLATFORM
 
         bazel_binary = "bazel"
         if use_bazel_at_commit:
@@ -1341,14 +1341,14 @@ def execute_commands(
                 # However, the flag requires the directory to exist,
                 # so we create it here in order to not crash when a test
                 # does not invoke Bazelisk.
-                bazelisk_cache_dir = get_bazelisk_cache_directory(platform)
+                bazelisk_cache_dir = get_bazelisk_cache_directory()
                 os.makedirs(bazelisk_cache_dir, mode=0o755, exist_ok=True)
                 test_flags.append("--sandbox_writable_path={}".format(bazelisk_cache_dir))
 
             test_bep_file = os.path.join(tmpdir, "test_bep.json")
             upload_thread = threading.Thread(
                 target=upload_test_logs_from_bep,
-                args=(test_bep_file, tmpdir, binary_platform, monitor_flaky_tests),
+                args=(test_bep_file, tmpdir, monitor_flaky_tests),
             )
             try:
                 upload_thread.start()
@@ -1501,10 +1501,10 @@ def activate_xcode(task_config):
     execute_command(["/usr/bin/sudo", "/usr/bin/xcodebuild", "-runFirstLaunch"])
 
 
-def get_bazelisk_cache_directory(platform):
+def get_bazelisk_cache_directory():
     # The path relies on the behavior of Go's os.UserCacheDir()
     # and of the Go version of Bazelisk.
-    cache_dir = "Library/Caches" if platform == "macos" else ".cache"
+    cache_dir = "Library/Caches" if is_mac() else ".cache"
     return os.path.join(os.environ.get("HOME"), cache_dir, "bazelisk")
 
 
@@ -1526,12 +1526,12 @@ def print_bazel_version_info(bazel_binary, platform):
     print_collapsed_group(":information_source: Bazel Info")
     version_output = execute_command_and_get_output(
         [bazel_binary]
-        + common_startup_flags(platform)
+        + common_startup_flags()
         + ["--nosystem_rc", "--nohome_rc", "version"]
     )
     execute_command(
         [bazel_binary]
-        + common_startup_flags(platform)
+        + common_startup_flags()
         + ["--nosystem_rc", "--nohome_rc", "info"]
     )
 
@@ -1626,12 +1626,12 @@ def download_bazel_nojdk_binary_at_commit(dest_dir, platform, bazel_git_commit):
     return download_binary_at_commit(dest_dir, platform, bazel_git_commit, url, path)
 
 
-def download_bazelci_agent(dest_dir, platform, version):
+def download_bazelci_agent(dest_dir, version):
     postfix = ""
-    if platform == "windows":
+    if is_windows():
         postfix = "x86_64-pc-windows-msvc.exe"
-    elif platform == "macos":
-        if platform.machine() == 'arm64':
+    elif is_mac():
+        if platform_module.machine() == 'arm64':
             postfix = "aarch64-apple-darwin"
         else:
             postfix = "x86_64-apple-darwin"
@@ -1644,20 +1644,20 @@ def download_bazelci_agent(dest_dir, platform, version):
             version, name
         )
     )
-    path = os.path.join(dest_dir, "bazelci-agent.exe" if platform == "windows" else "bazelci-agent")
+    path = os.path.join(dest_dir, "bazelci-agent.exe" is_windows() else "bazelci-agent")
     execute_command(["curl", "-sSL", url, "-o", path])
     st = os.stat(path)
     os.chmod(path, st.st_mode | stat.S_IEXEC)
     return path
 
 
-def get_mirror_path(git_repository, platform):
-    mirror_root = {
-        "macos": "/usr/local/var/bazelbuild/",
-        "windows": "c:\\buildkite\\bazelbuild\\",
-    }.get(platform, "/var/lib/bazelbuild/")
+def get_mirror_root():
+    if is_mac():
+        return "/usr/local/var/bazelbuild/"
+    elif is_windows():
+        return "c:\\buildkite\\bazelbuild\\"
 
-    return mirror_root + re.sub(r"[^0-9A-Za-z]", "-", git_repository)
+    return "/var/lib/bazelbuild/"
 
 
 def clone_git_repository(git_repository, platform, git_commit=None):
@@ -1668,7 +1668,7 @@ def clone_git_repository(git_repository, platform, git_commit=None):
         "Fetching %s sources at %s" % (project_name, git_commit if git_commit else "HEAD")
     )
 
-    mirror_path = get_mirror_path(git_repository, platform)
+    mirror_path = get_mirror_root() + re.sub(r"[^0-9A-Za-z]", "-", git_repository)
 
     if not os.path.exists(clone_path):
         if os.path.exists(mirror_path):
@@ -1735,7 +1735,7 @@ def execute_bazel_run(bazel_binary, platform, targets):
             execute_command(
                 [bazel_binary]
                 + bazelisk_flags()
-                + common_startup_flags(platform)
+                + common_startup_flags()
                 + ["run"]
                 + common_build_flags(None, platform)
                 + [target]
@@ -1757,7 +1757,7 @@ def remote_caching_flags(platform, accept_cached=True):
     if platform == "ubuntu2004_arm64":
         return []
 
-    if platform == "macos":
+    if is_mac():
         platform_cache_key += [
             # macOS version:
             subprocess.check_output(["/usr/bin/sw_vers", "-productVersion"]),
@@ -1816,17 +1816,17 @@ def concurrent_jobs(platform):
 def concurrent_test_jobs(platform):
     if platform.startswith("rbe_"):
         return "75"
-    elif platform == "windows":
+    elif is_windows():
         return "8"
-    elif platform.startswith("macos") and THIS_IS_TESTING:
+    elif is_mac() and THIS_IS_TESTING:
         return "4"
-    elif platform.startswith("macos"):
+    elif is_mac():
         return "8"
     return "12"
 
 
-def common_startup_flags(platform):
-    if platform == "windows":
+def common_startup_flags():
+    if is_windows():
         if os.path.exists("D:/b"):
             # This machine has a local SSD mounted as drive D.
             return ["--output_user_root=D:/b"]
@@ -1852,9 +1852,9 @@ def common_build_flags(bep_file, platform):
         "--disk_cache=",
     ]
 
-    if platform == "windows":
+    if is_windows():
         pass
-    elif platform == "macos":
+    elif is_mac():
         flags += [
             "--sandbox_writable_path=/var/tmp/_bazel_buildkite/cache/repos/v1",
             "--test_env=REPOSITORY_CACHE=/var/tmp/_bazel_buildkite/cache/repos/v1",
@@ -1936,7 +1936,7 @@ def rbe_flags(original_flags, accept_cached):
 
 def get_output_base(bazel_binary, platform):
     return execute_command_and_get_output(
-        [bazel_binary] + common_startup_flags(platform) + ["info", "output_base"],
+        [bazel_binary] + common_startup_flags() + ["info", "output_base"],
         print_output=False,
     ).strip()
 
@@ -1975,7 +1975,7 @@ def execute_bazel_clean(bazel_binary, platform):
     print_expanded_group(":bazel: Clean")
 
     try:
-        execute_command([bazel_binary] + common_startup_flags(platform) + ["clean", "--expunge"])
+        execute_command([bazel_binary] + common_startup_flags() + ["clean", "--expunge"])
     except subprocess.CalledProcessError as e:
         raise BuildkiteException("bazel clean failed with exit code {}".format(e.returncode))
 
@@ -2008,7 +2008,7 @@ def execute_bazel_build(
         execute_command(
             [bazel_binary]
             + bazelisk_flags()
-            + common_startup_flags(platform)
+            + common_startup_flags()
             + ["build"]
             + aggregated_flags
             + ["--"]
@@ -2035,7 +2035,7 @@ def execute_bazel_build_with_kythe(
     execute_command(
         [bazel_binary]
         + bazelisk_flags()
-        + common_startup_flags(platform)
+        + common_startup_flags()
         + kythe_startup_flags()
         + ["build"]
         + kythe_build_flags()
@@ -2057,7 +2057,7 @@ def calculate_targets(task_config, platform, bazel_binary, build_only, test_only
     if index_targets_query:
         output = execute_command_and_get_output(
             [bazel_binary]
-            + common_startup_flags(platform)
+            + common_startup_flags()
             + ["--nosystem_rc", "--nohome_rc", "query", index_targets_query],
             print_output=False,
         )
@@ -2099,7 +2099,7 @@ def expand_test_target_patterns(bazel_binary, platform, test_targets):
     eprint("Resolving test targets via bazel query")
     output = execute_command_and_get_output(
         [bazel_binary]
-        + common_startup_flags(platform)
+        + common_startup_flags()
         + [
             "--nosystem_rc",
             "--nohome_rc",
@@ -2162,7 +2162,7 @@ def execute_bazel_test(
         execute_command(
             [bazel_binary]
             + bazelisk_flags()
-            + common_startup_flags(platform)
+            + common_startup_flags()
             + ["test"]
             + aggregated_flags
             + ["--"]
@@ -2193,7 +2193,7 @@ def execute_bazel_coverage(
         execute_command(
             [bazel_binary]
             + bazelisk_flags()
-            + common_startup_flags(platform)
+            + common_startup_flags()
             + ["coverage"]
             + aggregated_flags
             + ["--"]
@@ -2203,8 +2203,8 @@ def execute_bazel_coverage(
         handle_bazel_failure(e, "coverage")
 
 
-def upload_test_logs_from_bep(bep_file, tmpdir, binary_platform, monitor_flaky_tests):
-    bazelci_agent_binary = download_bazelci_agent(tmpdir, binary_platform, "0.1.3")
+def upload_test_logs_from_bep(bep_file, tmpdir, monitor_flaky_tests):
+    bazelci_agent_binary = download_bazelci_agent(tmpdir, "0.1.3")
     execute_command(
         [
             bazelci_agent_binary,
