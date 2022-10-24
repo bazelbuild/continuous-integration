@@ -27,7 +27,7 @@ resource "buildkite_pipeline" "upb" {
 resource "buildkite_pipeline" "bcr-presubmit" {
   name = "BCR Presubmit"
   repository = "https://github.com/meteorcloudy/bazel-central-registry.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = jsondecode("{\"USE_BAZEL_VERSION\": \"last_green\"}"), steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/pcloudy-bcr-test/buildkite/bazelci.py\" -o bazelci.py", "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/pcloudy-bcr-test/buildkite/bazel-central-registry/bcr_presubmit.py\" -o bcr_presubmit.py", "python3.6 bcr_presubmit.py bcr_presubmit | tee /dev/tty | buildkite-agent pipeline upload "] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = jsondecode("{\"USE_BAZEL_VERSION\": \"last_green\"}"), steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/pcloudy-bcr-test/buildkite/bazelci.py\" -o bazelci.py", "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/pcloudy-bcr-test/buildkite/bazel-central-registry/bcr_presubmit.py\" -o bcr_presubmit.py", "python3.6 bcr_presubmit.py bcr_presubmit"] } })
   description = "The presubmit for adding new Bazel module into the Bazel Central Registry"
   default_branch = "main"
   provider_settings {
