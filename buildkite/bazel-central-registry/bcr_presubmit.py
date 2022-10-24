@@ -53,6 +53,11 @@ class BcrPipelineException(Exception):
     """Raised whenever something goes wrong and we should exit with an error."""
 
 
+def error(msg):
+    bazelci.eprint("\x1b[31mERROR\x1b[0m: {}\n".format(msg))
+    raise BcrPipelineException("BCR Presubmit failed!")
+
+
 def get_target_modules():
     """
     If the `MODULE_NAME` and `MODULE_VERSION(S)` are specified, calculate the target modules from those env vars.
@@ -257,6 +262,89 @@ def run_test(repo_location, task_config_file, task):
         return 1
 
 
+def validate_existing_modules_are_not_modified():
+    # Get all files that are Modified, Renamed, or Deleted.
+    bazelci.print_expanded_group("Checking if existing modules are not modified")
+    output = subprocess.check_output(
+        ["git", "diff", "main...HEAD", "--diff-filter=MRD", "--name-only", "--pretty=format:"]
+    )
+
+    # Check if any of the source.json, MODULE.bazel, or patch files are changed for an existing module.
+    NO_CHANGE_FILE_PATTERNS = [
+        r"modules\/([^\/]+)\/([^\/]+)\/source.json",
+        r"modules\/([^\/]+)\/([^\/]+)\/MODULE.bazel",
+        r"modules\/([^\/]+)\/([^\/]+)\/patches",
+    ]
+    changed_modules = []
+    for line in output.decode("utf-8").split():
+        for p in NO_CHANGE_FILE_PATTERNS:
+            s = re.match(p, line)
+            if s:
+                bazelci.eprint(line, "was changed")
+                changed_modules.append(s.groups())
+    if changed_modules:
+        error("Existing modules should not be changed:\n" + "\n".join([f"{name}@{version}" for name,version in changed_modules]))
+    else:
+        bazelci.eprint("No existing module was changed.")
+
+
+def validate_files_outside_of_modules_dir_are_not_modififed(modules):
+    # If no modules are changed at the same time, then we don't need to perform this check.
+    if not modules:
+        return
+    bazelci.print_expanded_group("Checking if any file changes outside of modules/")
+    output = subprocess.check_output(
+        ["git", "diff", "main...HEAD", "--name-only", "--pretty=format:", ":!modules"]
+    ).decode("utf-8").strip()
+    if output:
+        error("The following files should not be changed when adding a new module version:\n" + output)
+    else:
+        bazelci.eprint("Nothing changed outside of modules/")
+
+
+def should_bcr_validation_block_presubmit(modules):
+    if not modules:
+        return
+    bazelci.print_expanded_group("Running BCR validations:")
+    returncode = subprocess.run(
+        ["python3", "./tools/bcr_validation.py"] + [f"--check={name}@{version}" for name, version in modules]
+    ).returncode
+    # When a BCR maintainer view is required, the script should return 42.
+    if returncode == 42:
+        return True
+    if returncode != 0:
+        raise BcrPipelineException("BCR validation failed!")
+    return False
+
+
+def should_wait_bcr_maintainer_review(modules):
+    """Validate the changes and decide whether the presubmit should wait for a BCR maintainer review.
+    Returns False if all changes look good and the presubmit can proceed.
+    Returns True if the changes should block follow up presubmit jobs until a BCR maintainer triggers them.
+    Throws an error if the changes violate BCR policies or the BCR validations fail.
+    """
+    # If existing modules are changed, fail the presubmit.
+    validate_existing_modules_are_not_modified()
+
+    # If files outside of the modules/ directory are changed, fail the presubmit.
+    validate_files_outside_of_modules_dir_are_not_modififed(modules)
+
+    # Run BCR validations on target modules and decide if the presubmit jobs should be blocked.
+    if should_bcr_validation_block_presubmit(modules):
+        return True
+
+    return False
+
+
+def upload_jobs_to_pipeline(pipeline_steps):
+    """Directly calling the buildkite-agent to upload steps."""
+    subprocess.run(
+        ["buildkite-agent", "pipeline", "upload"],
+        input=yaml.dump({"steps": pipeline_steps}).encode(),
+        check=True,
+    )
+
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
@@ -288,7 +376,9 @@ def main(argv=None):
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps)
             configs = get_test_module_task_config(module_name, module_version)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True)
-        print(yaml.dump({"steps": pipeline_steps}))
+        if pipeline_steps and should_wait_bcr_maintainer_review(modules):
+            pipeline_steps = [{"block": "Wait on BCR maintainer review"}] + pipeline_steps
+        upload_jobs_to_pipeline(pipeline_steps)
     elif args.subparsers_name == "runner":
         repo_location = create_simple_repo(args.module_name, args.module_version, args.task)
         config_file = get_presubmit_yml(args.module_name, args.module_version)
