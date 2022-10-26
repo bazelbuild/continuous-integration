@@ -120,6 +120,7 @@ tasks:
       - "//src:bazel"
       - "//src:bazel_jdk_minimal"
       - "//src:test_repos"
+      - "//src/main/java/..."
     test_flags:
       - "--sandbox_default_allow_network=false"
       - "--sandbox_writable_path=$HOME/bazeltest"
@@ -131,7 +132,7 @@ tasks:
     test_targets:
       - "//src/test/shell/bazel:cc_integration_test"
     include_json_profile:
-      # - build
+      - build
       - test
   ubuntu2004:
     shell_commands:
@@ -152,6 +153,7 @@ tasks:
       - "//src:bazel"
       - "//src:bazel_jdk_minimal"
       - "//src:test_repos"
+      - "//src/main/java/..."
     test_flags:
       - "--sandbox_default_allow_network=false"
       - "--sandbox_writable_path=$HOME/bazeltest"
@@ -257,6 +259,7 @@ tasks:
   #     - "//src:bazel"
   #     - "//src:bazel_jdk_minimal"
   #     - "//src:test_repos"
+      # - "//src/main/java/..."
   #   test_flags:
   #     - "--sandbox_default_allow_network=false"
   #     - "--sandbox_writable_path=$HOME/bazeltest"
