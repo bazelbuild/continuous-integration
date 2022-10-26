@@ -193,7 +193,7 @@ def load_source_json(module_name, module_version):
 
 
 def apply_patch(work_dir, patch_strip, patch_file):
-    # Requries patch to be installed, this is true for all Bazel CI VMs, including Windows VMs.
+    # Requires `patch` to be installed, this is true for all Bazel CI VMs, including Windows VMs.
     subprocess.run(
         ["patch", "-p%d" % patch_strip, "-i", patch_file], shell=False, check=True, env=os.environ, cwd=work_dir
     )
@@ -228,7 +228,7 @@ def prepare_test_module_repo(module_name, module_version, task):
     bazelci.eprint("\n* Copy checked-in MODULE.bazel file to source root:\n%s\n" % read(checked_in_module_dot_bazel))
     shutil.copy(checked_in_module_dot_bazel, source_root.joinpath("MODULE.bazel"))
 
-    # Genreate the presubmit.yml file for the test module, it should be the content under "bcr_test_module"
+    # Generate the presubmit.yml file for the test module, it should be the content under "bcr_test_module"
     orig_presubmit = yaml.safe_load(open(get_presubmit_yml(module_name, module_version), "r"))
     test_module_presubmit = root.joinpath("presubmit.yml")
     with open(test_module_presubmit, "w") as f:
@@ -271,14 +271,14 @@ def validate_existing_modules_are_not_modified():
 
     # Check if any of the source.json, MODULE.bazel, or patch files are changed for an existing module.
     NO_CHANGE_FILE_PATTERNS = [
-        r"modules\/([^\/]+)\/([^\/]+)\/source.json",
-        r"modules\/([^\/]+)\/([^\/]+)\/MODULE.bazel",
-        r"modules\/([^\/]+)\/([^\/]+)\/patches",
+        re.compile(r"modules\/([^\/]+)\/([^\/]+)\/source.json"),
+        re.compile(r"modules\/([^\/]+)\/([^\/]+)\/MODULE.bazel"),
+        re.compile(r"modules\/([^\/]+)\/([^\/]+)\/patches"),
     ]
     changed_modules = []
     for line in output.decode("utf-8").split():
         for p in NO_CHANGE_FILE_PATTERNS:
-            s = re.match(p, line)
+            s = p.match(line)
             if s:
                 bazelci.eprint(line, "was changed")
                 changed_modules.append(s.groups())
@@ -288,7 +288,7 @@ def validate_existing_modules_are_not_modified():
         bazelci.eprint("No existing module was changed.")
 
 
-def validate_files_outside_of_modules_dir_are_not_modififed(modules):
+def validate_files_outside_of_modules_dir_are_not_modified(modules):
     # If no modules are changed at the same time, then we don't need to perform this check.
     if not modules:
         return
@@ -305,7 +305,7 @@ def validate_files_outside_of_modules_dir_are_not_modififed(modules):
 def should_bcr_validation_block_presubmit(modules):
     if not modules:
         return
-    bazelci.print_expanded_group("Running BCR validations:")
+    bazelci.print_collapsed_group("Running BCR validations:")
     returncode = subprocess.run(
         ["python3", "./tools/bcr_validation.py"] + [f"--check={name}@{version}" for name, version in modules]
     ).returncode
@@ -327,13 +327,10 @@ def should_wait_bcr_maintainer_review(modules):
     validate_existing_modules_are_not_modified()
 
     # If files outside of the modules/ directory are changed, fail the presubmit.
-    validate_files_outside_of_modules_dir_are_not_modififed(modules)
+    validate_files_outside_of_modules_dir_are_not_modified(modules)
 
     # Run BCR validations on target modules and decide if the presubmit jobs should be blocked.
-    if should_bcr_validation_block_presubmit(modules):
-        return True
-
-    return False
+    return should_bcr_validation_block_presubmit(modules)
 
 
 def upload_jobs_to_pipeline(pipeline_steps):
@@ -377,7 +374,7 @@ def main(argv=None):
             configs = get_test_module_task_config(module_name, module_version)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True)
         if pipeline_steps and should_wait_bcr_maintainer_review(modules):
-            pipeline_steps = [{"block": "Wait on BCR maintainer review"}] + pipeline_steps
+            pipeline_steps = [{"block": "Wait on BCR maintainer review", "blocked_state": "failed"}] + pipeline_steps
         upload_jobs_to_pipeline(pipeline_steps)
     elif args.subparsers_name == "runner":
         repo_location = create_simple_repo(args.module_name, args.module_version, args.task)
