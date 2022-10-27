@@ -1754,6 +1754,10 @@ def remote_caching_flags(platform, accept_cached=True):
     # Whenever the remote cache was known to have been poisoned increase the number below
     platform_cache_key += ["cache-poisoning-20220912".encode("utf-8")]
 
+    # TODO(fweikert): Enable caching after problems have been fixed
+    if platform == "experimental_macos_arm64":
+        return []
+
     # We don't enable remote caching on the Linux ARM64 machine since it doesn't have access to GCS.
     if platform == "ubuntu2004_arm64":
         return []
