@@ -397,6 +397,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_python/main/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-python-python",
         "owned_by_bazel": True,
+        "disabled_reason": "waiting on https://github.com/bazelbuild/rules_python/issues/856",
     },
     "rules_rust": {
         "git_repository": "https://github.com/bazelbuild/rules_rust.git",
