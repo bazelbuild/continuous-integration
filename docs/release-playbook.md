@@ -57,7 +57,7 @@ While the release is active, you should make sure to do the following:
 
 *   Monitor [the "potential release blocker" label](https://github.com/bazelbuild/bazel/issues?q=label%3A%22potential+release+blocker%22).
     *   These are issues or PRs that community members have proposed to be fixed/included in the next release. Check each of these and decide whether they should be release blockers; if so, add a comment with the text `@bazel-io fork X.Y.Z` and a copy of the issue will be added to the "X.Y.Z release blockers" milestone; if not, explain why in a comment, and remove the "potential release blocker" label.
-*   For cherry-picks (specifically for minor and patch releases),
+*   For cherry-picks,
     *   If a Bazel team member has proposed the fixes, then proceed with the cherry-pick and merge it.
     *   If a Bazel team member authors a commit and a community member asks to cherry-pick, then confirm with the author before cherry-picking the PR to make sure this change is safe to merge.
     *   If a community member author a commit and asks to cherry-pick, then confirm with the reviewer before cherry-picking the PR to make sure that the change is safe to merge.
