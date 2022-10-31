@@ -153,7 +153,8 @@ Once the first candidate is available:
     the GitHub issue.
 1.  Copy & paste the generated text from the "Generate Announcement" step.
 1.  Reorganize the notes per category (C++, Java, etc.).
-1.  For each category, add a comment and assign it to the corresponding
+2.  Assign a comment to "+[pcloudy@google.com](mailto:pcloudy@google.com)" and "+[wyv@google.com](mailto:wyv@google.com)" for initial review. 
+3.  Once approved, for each category, add a comment and assign it to the corresponding
     [team contact](https://www.bazel.build/maintainers-guide.html#team-labels):
     "+person for review (see guidelines at the top of the doc)".
 1.  Send an email to [bazel-dev](https://groups.google.com/forum/#!forum/bazel-dev) for
