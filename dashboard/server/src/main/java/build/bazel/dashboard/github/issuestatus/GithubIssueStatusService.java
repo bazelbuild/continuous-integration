@@ -1,5 +1,7 @@
 package build.bazel.dashboard.github.issuestatus;
 
+import static java.time.temporal.ChronoUnit.DAYS;
+
 import build.bazel.dashboard.github.issue.GithubIssue;
 import build.bazel.dashboard.github.issue.GithubIssue.Label;
 import build.bazel.dashboard.github.issue.GithubIssue.User;
@@ -10,19 +12,16 @@ import build.bazel.dashboard.github.repo.GithubRepoService;
 import build.bazel.dashboard.github.team.GithubTeam;
 import build.bazel.dashboard.github.team.GithubTeamService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
-import java.util.Optional;
+import java.time.Instant;
+import java.util.List;
+import javax.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.Nullable;
-import java.time.Instant;
-import java.util.List;
-
-import static java.time.temporal.ChronoUnit.DAYS;
 
 @Service
 @Slf4j
@@ -93,8 +92,7 @@ public class GithubIssueStatusService {
                       .checkedAt(now);
 
               return findActionOwner(repo, issue, data, newStatus)
-                  .map(builder::actionOwner)
-                  .defaultIfEmpty(builder)
+                  .map(builder::actionOwners)
                   .map(GithubIssueStatusBuilder::build);
             });
   }
@@ -152,17 +150,18 @@ public class GithubIssueStatusService {
     return null;
   }
 
-  private Maybe<String> findActionOwner(GithubRepo repo, GithubIssue issue, GithubIssue.Data data, Status status) {
+  private Single<ImmutableList<String>> findActionOwner(
+      GithubRepo repo, GithubIssue issue, GithubIssue.Data data, Status status) {
     switch (status) {
       case TO_BE_REVIEWED:
-        return Maybe.empty();
+        return Single.just(ImmutableList.of());
       case MORE_DATA_NEEDED:
-        return Maybe.just(data.getUser().getLogin());
+        return Single.just(ImmutableList.of(data.getUser().getLogin()));
       case REVIEWED:
       case TRIAGED:
         User assignee = data.getAssignee();
         if (assignee != null) {
-          return Maybe.just(assignee.getLogin());
+          return Single.just(ImmutableList.of(assignee.getLogin()));
         } else {
           List<Label> labels = data.getLabels();
           return githubTeamService
@@ -170,14 +169,21 @@ public class GithubIssueStatusService {
               .filter(
                   team ->
                       labels.stream().anyMatch(label -> label.getName().equals(team.getLabel()))
-                          && !team.getTeamOwner().isBlank())
+                          && !team.getTeamOwners().isEmpty())
               .firstElement()
-              .map(GithubTeam::getTeamOwner)
-              .switchIfEmpty(Maybe.fromOptional(Optional.ofNullable(repo.getActionOwner())));
+              .map(GithubTeam::getTeamOwners)
+              .switchIfEmpty(
+                  Single.fromCallable(
+                      () -> {
+                        if (repo.getActionOwner() != null) {
+                          return ImmutableList.of(repo.getActionOwner());
+                        }
+                        return ImmutableList.of();
+                      }));
         }
     }
 
-    return Maybe.empty();
+    return Single.just(ImmutableList.of());
   }
 
   private static boolean hasTeamLabel(List<Label> labels) {

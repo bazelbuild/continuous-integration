@@ -156,6 +156,7 @@ CREATE TABLE github_team
     updated_at TIMESTAMPTZ,
     name       TEXT,
     team_owner TEXT,
+    more_team_owners  TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
     PRIMARY KEY (owner, repo, label)
 );
 
@@ -240,6 +241,7 @@ CREATE TABLE github_issue_status
     issue_number        INTEGER     NOT NULL,
     status              TEXT,
     action_owner        TEXT,
+    more_action_owners  TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
     updated_at          TIMESTAMPTZ NOT NULL,
     expected_respond_at TIMESTAMPTZ,
     last_notified_at    TIMESTAMPTZ,
@@ -249,6 +251,7 @@ CREATE TABLE github_issue_status
 );
 CREATE INDEX ON github_issue_status (status);
 CREATE INDEX ON github_issue_status (action_owner);
+CREATE INDEX ON github_issue_status USING GIN (more_action_owners);
 CREATE INDEX ON github_issue_status (expected_respond_at);
 CREATE INDEX ON github_issue_status (next_notify_at);
 
