@@ -150,7 +150,7 @@ announcement](https://docs.google.com/document/d/1wDvulLlj4NAlPZamdlEVFORks3YXJo
 Once the first candidate is available:
 
 1.  Open the doc, create a new section with your release number, add a link to
-    the GitHub issue.
+    the GitHub issue. Note that there should be a new Bazel Release Announcement document for every major release.
 1.  Copy & paste the generated text from the "Generate Announcement" step.
 1.  Reorganize the notes per category (C++, Java, etc.).
 2.  Assign a comment to "+[pcloudy@google.com](mailto:pcloudy@google.com)" and "+[wyv@google.com](mailto:wyv@google.com)" for initial review. 
