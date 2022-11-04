@@ -793,10 +793,9 @@ P9w8kNhEbw==
             raise BuildkiteException(f"Cannot find pipeline info for pipeline {self._pipeline}.")
 
         url = self._NEW_BUILD_URL_TEMPLATE.format(self._org, self._pipeline)
-        branch = pipeline_info.get("default_branch")
         data = {
             "commit": commit,
-            "branch": branch or "master",
+            "branch": pipeline_info.get("default_branch") or "master",
             "message": message if message else f"Trigger build at {commit}",
             "env": env,
             "ignore_pipeline_branch_filters": "true",

@@ -108,7 +108,7 @@ class BuildInfoAnalyzer(threading.Thread):
             raise bazelci.BuildkiteException(error)
 
         build_info_list = self.client.get_build_info_list([
-            ("branch", pipeline_info["default_branch"]),
+            ("branch", pipeline_info.get("default_branch") or "master"),
             ("page", "1"),
             ("per_page", "1"),
             ("state[]", "failed"),
