@@ -795,6 +795,7 @@ P9w8kNhEbw==
             raise BuildkiteException(error)
 
         url = self._NEW_BUILD_URL_TEMPLATE.format(self._org, self._pipeline)
+        pipeline_info = self.get_pipeline_info()
         data = {
             "commit": commit,
             "branch": pipeline_info["default_branch"],
