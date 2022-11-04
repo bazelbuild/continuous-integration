@@ -790,8 +790,7 @@ P9w8kNhEbw==
         """
         pipeline_info = self.get_pipeline_info()
         if not pipeline_info:
-            error = f"Cannot find pipeline info for pipeline {self._pipeline}."
-            raise BuildkiteException(error)
+            raise BuildkiteException(f"Cannot find pipeline info for pipeline {self._pipeline}.")
 
         url = self._NEW_BUILD_URL_TEMPLATE.format(self._org, self._pipeline)
         branch = pipeline_info.get("default_branch")
