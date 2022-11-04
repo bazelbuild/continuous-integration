@@ -789,9 +789,10 @@ P9w8kNhEbw==
             the metadata for the build
         """
         url = self._NEW_BUILD_URL_TEMPLATE.format(self._org, self._pipeline)
+        pipeline_info = self.get_pipeline_info()
         data = {
             "commit": commit,
-            "branch": "master",
+            "branch": pipeline_info["default_branch"],
             "message": message if message else f"Trigger build at {commit}",
             "env": env,
             "ignore_pipeline_branch_filters": "true",
