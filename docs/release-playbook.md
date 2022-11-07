@@ -39,19 +39,19 @@ These steps only have to be performed once, ever.
     *   Set the (tentative) release date.
     *   Add this description: `Issues that need to be resolved before the X.Y.Z release.`.
     *   Refer to [this example](https://github.com/bazelbuild/bazel/milestone/38)
-3.  [Create a release tracking issue](https://github.com/bazelbuild/bazel/issues/new?assignees=&labels=release%2Cteam-OSS%2CP1%2Ctype%3A+process&template=release.md&title=Release+X.Y+-+%24MONTH+%24YEAR) to keep the community updated about the progress of the release. [See example](https://github.com/bazelbuild/bazel/issues/16159).
-4.  Create the branch for the release. The branch should always be named `release-X.Y.Z` (the `.Z` part is important). Cherry-pick PRs will be sent against this branch.
+1.  [Create a release tracking issue](https://github.com/bazelbuild/bazel/issues/new?assignees=&labels=release%2Cteam-OSS%2CP1%2Ctype%3A+process&template=release.md&title=Release+X.Y+-+%24MONTH+%24YEAR) to keep the community updated about the progress of the release. [See example](https://github.com/bazelbuild/bazel/issues/16159).
+1.  Create the branch for the release. The branch should always be named `release-X.Y.Z` (the `.Z` part is important). Cherry-pick PRs will be sent against this branch.
     *   The actual creation of the branch can be done via the GitHub UI or via the command line. How we choose the base commit of the branch depends on the type of the release:
     *   For patch releases (`X.Y.Z` where `Z>0`), the base commit should simply be `X.Y.(Z-1)`.
     *   For minor releases (`X.Y.0` where `Y>0`), the base commit should typically be `X.(Y-1).<current max Z>`.
     *   For major releases (`X.0.0`), the base commit is some "healthy" commit on the main branch.
         *   This means that there's an extra step involved in preparing the release -- "cutting" the release branch, so to speak. For this, check the [Bazel@HEAD+Downstream pipeline](https://buildkite.com/bazel/bazel-with-downstream-projects-bazel). The branch cut should happen on a green commit there; if the pipeline is persistently red, work with the Green Team to resolve it first and delay the branch cut as needed.
         *   A first release candidate should immediately be created after the release branch is created. See [create a release candidate](#create-a-release-candidate) below.
-5.  After creating the branch, edit the CODEOWNERS file on that branch, replace the entire contents of the file with the line `* @your-github-username` and submit it directly.
+1.  After creating the branch, edit the CODEOWNERS file on that branch, replace the entire contents of the file with the line `* @your-github-username` and submit it directly.
     *   This makes sure that all PRs sent against that branch have you as a reviewer.
-6.  (For minor release only) Send an email to both bazel-dev@googlegroups.com and bazel-discuss@googlegroups.com announcing the next release.
+1.  (For minor release only) Send an email to both bazel-dev@googlegroups.com and bazel-discuss@googlegroups.com announcing the next release.
     *   It should contain the text: `The Bazel X.Y.Z release branch (release-X.Y.Z [link]) is open for business. Please send cherry-pick PRs against this branch if you'd like your change to be in X.Y.Z. Please follow the release tracking issue [link] for updates.`
-7.  Meanwhile, begin the [internal approval process](http://go/bazel-internal-launch-checklist), too.
+1.  Meanwhile, begin the [internal approval process](http://go/bazel-internal-launch-checklist), too.
     *   Note that certain steps in the internal approval process require at least preliminary release notes, so those steps should usually wait until the first release candidate is pushed and the release notes have taken vague shape.
     *   Please make sure the Eng. team review status is explicit in release notes/bazel release announcement doc(s), and ensure the Eng. team should approve the release note before creating the launch review issue.
 
@@ -158,8 +158,8 @@ Once the first candidate is available:
     the GitHub issue. Note that there should be a new Bazel Release Announcement document for every major release. For minor and patch releases, use the latest open doc.
 1.  Copy & paste the generated text from the "Generate Announcement" step.
 1.  Reorganize the notes per category (C++, Java, etc.).
-2.  Assign a comment to "+[pcloudy@google.com](mailto:pcloudy@google.com)" and "+[wyv@google.com](mailto:wyv@google.com)" for initial review. 
-3.  Once approved, for each category, add a comment and assign it to the corresponding
+1.  Assign a comment to "+[pcloudy@google.com](mailto:pcloudy@google.com)" and "+[wyv@google.com](mailto:wyv@google.com)" for initial review. 
+1.  Once approved, for each category, add a comment and assign it to the corresponding
     [team contact](https://bazel.build/contribute/maintainers-guide?hl=en#team-labels):
     "+person for review (see guidelines at the top of the doc)".
 1.  Send an email to [bazel-dev](https://groups.google.com/forum/#!forum/bazel-dev) for
