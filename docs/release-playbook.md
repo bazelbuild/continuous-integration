@@ -36,21 +36,25 @@ These steps only have to be performed once, ever.
 ## Preparing a new release
 
 1.  [Create a release blockers milestone](https://github.com/bazelbuild/bazel/milestones/new) named "X.Y.Z release blockers" (case-sensitive), where we keep track of issues that must be resolved before the release goes out.
-1.  [Create a release tracking issue](https://github.com/bazelbuild/bazel/issues/new?assignees=&labels=release%2Cteam-OSS%2CP1%2Ctype%3A+process&template=release.md&title=Release+X.Y+-+%24MONTH+%24YEAR) to keep the community updated about the progress of the release
-1.  Create the branch for the release. The branch should always be named `release-X.Y.Z` (the `.Z` part is important). Cherry-pick PRs will be sent against this branch.
+    *   Set the (tentative) release date.
+    *   Add this description: `Issues that need to be resolved before the X.Y.Z release.`.
+    *   Refer to [this example](https://github.com/bazelbuild/bazel/milestone/38)
+3.  [Create a release tracking issue](https://github.com/bazelbuild/bazel/issues/new?assignees=&labels=release%2Cteam-OSS%2CP1%2Ctype%3A+process&template=release.md&title=Release+X.Y+-+%24MONTH+%24YEAR) to keep the community updated about the progress of the release. [See example](https://github.com/bazelbuild/bazel/issues/16159).
+4.  Create the branch for the release. The branch should always be named `release-X.Y.Z` (the `.Z` part is important). Cherry-pick PRs will be sent against this branch.
     *   The actual creation of the branch can be done via the GitHub UI or via the command line. How we choose the base commit of the branch depends on the type of the release:
     *   For patch releases (`X.Y.Z` where `Z>0`), the base commit should simply be `X.Y.(Z-1)`.
     *   For minor releases (`X.Y.0` where `Y>0`), the base commit should typically be `X.(Y-1).<current max Z>`.
     *   For major releases (`X.0.0`), the base commit is some "healthy" commit on the main branch.
         *   This means that there's an extra step involved in preparing the release -- "cutting" the release branch, so to speak. For this, check the [Bazel@HEAD+Downstream pipeline](https://buildkite.com/bazel/bazel-with-downstream-projects-bazel). The branch cut should happen on a green commit there; if the pipeline is persistently red, work with the Green Team to resolve it first and delay the branch cut as needed.
         *   A first release candidate should immediately be created after the release branch is created. See [create a release candidate](#create-a-release-candidate) below.
-1.  After creating the branch, edit the CODEOWNERS file on that branch, replace the entire contents of the file with the line `* @your-github-username` and submit it directly.
+5.  After creating the branch, edit the CODEOWNERS file on that branch, replace the entire contents of the file with the line `* @your-github-username` and submit it directly.
     *   This makes sure that all PRs sent against that branch have you as a reviewer.
-1.  (For minor release only) Send an email to both bazel-dev@googlegroups.com and bazel-discuss@googlegroups.com announcing the next release.
+6.  (For minor release only) Send an email to both bazel-dev@googlegroups.com and bazel-discuss@googlegroups.com announcing the next release.
     *   It should contain the text: `The Bazel X.Y.Z release branch (release-X.Y.Z [link]) is open for business. Please send cherry-pick PRs against this branch if you'd like your change to be in X.Y.Z. Please follow the release tracking issue [link] for updates.`
-1.  Meanwhile, begin the [internal approval process](http://go/bazel-internal-launch-checklist), too.
+7.  Meanwhile, begin the [internal approval process](http://go/bazel-internal-launch-checklist), too.
     *   Note that certain steps in the internal approval process require at least preliminary release notes, so those steps should usually wait until the first release candidate is pushed and the release notes have taken vague shape.
     *   Please make sure the Eng. team review status is explicit in release notes/bazel release announcement doc(s), and ensure the Eng. team should approve the release note before creating the launch review issue.
+
 ## Maintaining the release
 
 While the release is active, you should make sure to do the following:
@@ -63,6 +67,7 @@ While the release is active, you should make sure to do the following:
     *   If a community member author a commit and asks to cherry-pick, then confirm with the reviewer before cherry-picking the PR to make sure that the change is safe to merge.
 *   Review any PRs sent to the release branch and merge them as necessary.
     *   Make sure to close any related release blocker issues after merging the PRs; merging PRs into non-main branches does *not* automatically close related issues (see [GitHub docs](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue)).
+    *   Before closing a release blocker issue, add a comment indicating how the issue was resolved, for better tracking (e.g. `cherry-picked in #XYZ` - see [this example](https://github.com/bazelbuild/bazel/issues/16629#issuecomment-1302743541))
 *   When enough PRs have been cherry-picked and the release is nearing a ready state, create a release candidate (see [below](#create-a-release-candidate)).
     *   When a few days pass and no more release blockers show up, push the candidate as the release. Otherwise, rinse and repeat the steps above.
 *   Keep the task list in the release tracking issue updated and check boxes as you follow the release process.
@@ -109,7 +114,7 @@ While the release is active, you should make sure to do the following:
     *   The second line is the subject.
     *   The rest is the body of the message.
     *   Replace the generated notes with a link to the release announcement draft.
-       `https://docs.google.com/document/d/1wDvulLlj4NAlPZamdlEVFORks3YXJonCjyuQMUQEmB0/view`
+       `https://docs.google.com/document/d/1pu2ARPweOCTxPsRR8snoDtkC9R51XWRyBXeiC6Ql5so/edit`
 
 1.  Trigger a new pipeline in BuildKite to test the release candidate with all the downstream projects.
     *   Go to https://buildkite.com/bazel/bazel-with-downstream-projects-bazel
@@ -145,17 +150,17 @@ While the release is active, you should make sure to do the following:
 ## Release announcement
 
 The release manager is responsible for the [draft release
-announcement](https://docs.google.com/document/d/1wDvulLlj4NAlPZamdlEVFORks3YXJonCjyuQMUQEmB0/edit).
+announcement](https://docs.google.com/document/d/1pu2ARPweOCTxPsRR8snoDtkC9R51XWRyBXeiC6Ql5so/edit).
 
 Once the first candidate is available:
 
 1.  Open the doc, create a new section with your release number, add a link to
-    the GitHub issue. Note that there should be a new Bazel Release Announcement document for every major release.
+    the GitHub issue. Note that there should be a new Bazel Release Announcement document for every major release. For minor and patch releases, use the latest open doc.
 1.  Copy & paste the generated text from the "Generate Announcement" step.
 1.  Reorganize the notes per category (C++, Java, etc.).
 2.  Assign a comment to "+[pcloudy@google.com](mailto:pcloudy@google.com)" and "+[wyv@google.com](mailto:wyv@google.com)" for initial review. 
 3.  Once approved, for each category, add a comment and assign it to the corresponding
-    [team contact](https://www.bazel.build/maintainers-guide.html#team-labels):
+    [team contact](https://bazel.build/contribute/maintainers-guide?hl=en#team-labels):
     "+person for review (see guidelines at the top of the doc)".
 1.  Send an email to [bazel-dev](https://groups.google.com/forum/#!forum/bazel-dev) for
     additional reviews.
@@ -167,7 +172,7 @@ After a few days of iteration:
 
 1.  Make sure all comments have been resolved, and the text follows the
     guidelines (see "How to review the notes?" in the document).
-1.  Send a pull request to [bazel-blog](https://github.com/bazelbuild/bazel-blog/).
+1.  Send a pull request to [bazel-blog](https://github.com/bazelbuild/bazel-blog/). (For major and minor releases only.)
 
 ## Release requirements
 
@@ -207,7 +212,7 @@ After a few days of iteration:
     1.  Ask the package maintainers to update the package definitions:
         [@vbatts](https://github.com/vbatts) [@petemounce](https://github.com/petemounce) [@excitoon](https://github.com/excitoon)
     1.  Example: [https://github.com/bazelbuild/bazel/issues/3773#issuecomment-352692144]
-1.  Publish versioned documentation (For major and minor releases only)
+1.  Publish versioned documentation (for major and minor releases only)
     1.  Fetch the git tag for the release: `git fetch --tags`
     1.  Do a checkout to that tag: `git checkout X.Y.Z`
         1. You should see this message:
@@ -239,7 +244,7 @@ After a few days of iteration:
           overwrite the existing tarball.
     1.  Ping @fweikert to update the documentation site.
 
-1.  Merge the blog post pull request. (For major and minor releases only)
+1.  Merge the blog post pull request (for major and minor releases only).
     1.  Make sure you update the date in your post (and the path) to reflect when
     it is actually published.
     1.  **Note:** The blog sometimes takes time to update the homepage, so use
@@ -286,4 +291,4 @@ GitHub. Ping him when there's a new release coming out.
 
 ### Push new docker image
 
-Follow the [instructions](../bazel/oci/README.md) to push new docker image for the new release, ping [@meteorcloudy](https://github.com/meteorcloudy) for help.
+Follow the [instructions](../bazel/oci/README.md) to push new docker image for the new release. Ping [@meteorcloudy](https://github.com/meteorcloudy) for help.
