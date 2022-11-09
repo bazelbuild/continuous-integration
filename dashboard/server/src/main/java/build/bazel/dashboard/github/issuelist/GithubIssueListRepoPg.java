@@ -68,7 +68,8 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
     }
 
     if (params.getActionOwner() != null) {
-      where.append(" AND gis.action_owner = :action_owner");
+      where.append(
+          " AND (gis.action_owner = :action_owner OR :action_owner = ANY(gis.more_action_owners))");
       bindings.put("action_owner", params.getActionOwner());
     }
 
@@ -116,7 +117,7 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
 
     String fields =
         "gid.owner, gid.repo, gid.issue_number, gis.status, gis.action_owner,"
-            + " gis.expected_respond_at, gid.data";
+            + " gis.more_action_owners, gis.expected_respond_at, gid.data";
     String sql = "SELECT " + fields + query.from + query.where + query.order + query.limit;
 
     GenericExecuteSpec spec = databaseClient.sql(sql);
@@ -141,13 +142,21 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
   }
 
   private GithubIssueList.Item toGithubIssueListItem(Row row) {
+    String actionOwner = row.get("action_owner", String.class);
+    if (actionOwner == null) {
+      String[] moreActionOwners = requireNonNull(row.get("more_action_owners", String[].class));
+      if (moreActionOwners.length > 0) {
+        actionOwner = moreActionOwners[0];
+      }
+    }
+
     try {
       return GithubIssueList.Item.builder()
           .owner(requireNonNull(row.get("owner", String.class)))
           .repo(requireNonNull(row.get("repo", String.class)))
           .issueNumber(requireNonNull(row.get("issue_number", Integer.class)))
           .status(GithubIssueStatus.Status.valueOf(row.get("status", String.class)))
-          .actionOwner(row.get("action_owner", String.class))
+          .actionOwner(actionOwner)
           .expectedRespondAt(row.get("expected_respond_at", Instant.class))
           .data(objectMapper.readTree((requireNonNull(row.get("data", Json.class))).asArray()))
           .build();
@@ -158,17 +167,18 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
 
   @Override
   public Flowable<String> findAllActionOwner(ListParams params) {
+    if (params.getActionOwner() != null) {
+      return Flowable.just(params.getActionOwner());
+    }
+
     QuerySpec query = buildQuerySpec(params);
 
-    StringBuilder sql = new StringBuilder("SELECT DISTINCT gis.action_owner");
+    StringBuilder sql =
+        new StringBuilder(
+            "SELECT DISTINCT unnest(array_append(gis.more_action_owners, gis.action_owner)) as"
+                + " action_owner");
     sql.append(query.from);
     sql.append(query.where);
-    if (query.where.isBlank()) {
-      sql.append(" WHERE");
-    } else {
-      sql.append(" AND");
-    }
-    sql.append(" gis.action_owner IS NOT NULL");
 
     GenericExecuteSpec spec = databaseClient.sql(sql.toString());
     for (Map.Entry<String, Object> binding : query.bindings.entrySet()) {
@@ -176,7 +186,15 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
     }
 
     return RxJava3Adapter.fluxToFlowable(
-        spec.map(row -> requireNonNull(row.get("action_owner", String.class))).all());
+        spec.map(
+                row -> {
+                  String actionOwner = row.get("action_owner", String.class);
+                  if (actionOwner == null) {
+                    actionOwner = "";
+                  }
+                  return actionOwner;
+                })
+            .all());
   }
 
   @Override

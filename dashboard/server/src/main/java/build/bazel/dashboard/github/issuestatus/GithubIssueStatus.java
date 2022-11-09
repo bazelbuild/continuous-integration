@@ -1,5 +1,6 @@
 package build.bazel.dashboard.github.issuestatus;
 
+import com.google.common.collect.ImmutableList;
 import lombok.Builder;
 import lombok.Data;
 
@@ -22,7 +23,7 @@ public class GithubIssueStatus {
   String repo;
   int issueNumber;
   Status status;
-  @Nullable String actionOwner;
+  ImmutableList<String> actionOwners;
   Instant updatedAt;
   @Nullable Instant expectedRespondAt;
   @Nullable Instant lastNotifiedAt;

@@ -56,9 +56,13 @@ public class GithubTeamTable {
     String teamOwner;
 
     public static Team create(GithubTeam team) {
+      String teamOwner = "";
+      if (!team.getTeamOwners().isEmpty()) {
+        teamOwner = team.getTeamOwners().get(0);
+      }
       return Team.builder()
           .name(team.getName())
-          .teamOwner(team.getTeamOwner())
+          .teamOwner(teamOwner)
           .build();
     }
   }

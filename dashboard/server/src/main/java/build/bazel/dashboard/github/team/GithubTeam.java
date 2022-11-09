@@ -1,5 +1,6 @@
 package build.bazel.dashboard.github.team;
 
+import com.google.common.collect.ImmutableList;
 import lombok.Builder;
 import lombok.Value;
 
@@ -14,7 +15,7 @@ public class GithubTeam {
   Instant createdAt;
   Instant updatedAt;
   String name;
-  String teamOwner;
+  ImmutableList<String> teamOwners;
 
   private static final String NONE_NAME = "(none)";
 
@@ -30,7 +31,7 @@ public class GithubTeam {
         .createdAt(Instant.EPOCH)
         .updatedAt(Instant.EPOCH)
         .name(NONE_NAME)
-        .teamOwner(teamOwner)
+        .teamOwners(ImmutableList.of(teamOwner))
         .build();
   }
 }

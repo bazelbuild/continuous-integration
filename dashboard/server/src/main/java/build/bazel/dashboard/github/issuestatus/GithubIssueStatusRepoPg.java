@@ -1,9 +1,13 @@
 package build.bazel.dashboard.github.issuestatus;
 
+import com.google.common.collect.ImmutableList;
 import io.r2dbc.spi.Row;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
@@ -23,27 +27,34 @@ public class GithubIssueStatusRepoPg implements GithubIssueStatusRepo {
 
   @Override
   public Completable save(GithubIssueStatus status) {
+    Deque<String> actionOwners = new ArrayDeque<>(status.getActionOwners());
+    String actionOwner = null;
+    if (!actionOwners.isEmpty()) {
+      actionOwner = actionOwners.removeFirst();
+    }
     DatabaseClient.GenericExecuteSpec spec =
         databaseClient
             .sql(
                 "INSERT INTO github_issue_status (owner, repo, issue_number, status, action_owner,"
-                    + " updated_at, expected_respond_at, last_notified_at, next_notify_at,"
-                    + " checked_at) VALUES (:owner, :repo, :issue_number, :status, :action_owner,"
-                    + " :updated_at, :expected_respond_at, :last_notified_at, :next_notify_at, "
-                    + " :checked_at) ON CONFLICT (owner, repo, issue_number) DO UPDATE SET status ="
-                    + " excluded.status, action_owner = excluded.action_owner, updated_at ="
-                    + " excluded.updated_at, expected_respond_at = excluded.expected_respond_at,"
-                    + " last_notified_at = excluded.last_notified_at, next_notify_at ="
-                    + " excluded.next_notify_at, checked_at = excluded.checked_at")
+                    + " more_action_owners, updated_at, expected_respond_at, last_notified_at,"
+                    + " next_notify_at, checked_at) VALUES (:owner, :repo, :issue_number, :status,"
+                    + " :action_owner, :more_action_owners, :updated_at, :expected_respond_at,"
+                    + " :last_notified_at, :next_notify_at,  :checked_at) ON CONFLICT (owner, repo,"
+                    + " issue_number) DO UPDATE SET status = excluded.status, action_owner ="
+                    + " excluded.action_owner, more_action_owners = excluded.more_action_owners,"
+                    + " updated_at = excluded.updated_at, expected_respond_at ="
+                    + " excluded.expected_respond_at, last_notified_at = excluded.last_notified_at,"
+                    + " next_notify_at = excluded.next_notify_at, checked_at = excluded.checked_at")
             .bind("owner", status.getOwner())
             .bind("repo", status.getRepo())
             .bind("issue_number", status.getIssueNumber())
+            .bind("more_action_owners", actionOwners.toArray(new String[0]))
             .bind("status", status.getStatus().toString())
             .bind("updated_at", status.getUpdatedAt())
             .bind("checked_at", status.getCheckedAt());
 
-    if (status.getActionOwner() != null) {
-      spec = spec.bind("action_owner", status.getActionOwner());
+    if (actionOwner != null) {
+      spec = spec.bind("action_owner", actionOwner);
     } else {
       spec = spec.bindNull("action_owner", String.class);
     }
@@ -74,10 +85,10 @@ public class GithubIssueStatusRepoPg implements GithubIssueStatusRepo {
     Mono<GithubIssueStatus> query =
         databaseClient
             .sql(
-                "SELECT owner, repo, issue_number, status, action_owner, updated_at,"
-                    + " expected_respond_at, last_notified_at, next_notify_at, checked_at FROM"
-                    + " github_issue_status WHERE owner = :owner AND repo = :repo AND issue_number"
-                    + " = :issue_number")
+                "SELECT owner, repo, issue_number, status, action_owner, more_action_owners,"
+                    + " updated_at, expected_respond_at, last_notified_at, next_notify_at,"
+                    + " checked_at FROM github_issue_status WHERE owner = :owner AND repo = :repo"
+                    + " AND issue_number = :issue_number")
             .bind("owner", owner)
             .bind("repo", repo)
             .bind("issue_number", issueNumber)
@@ -87,12 +98,19 @@ public class GithubIssueStatusRepoPg implements GithubIssueStatusRepo {
   }
 
   private GithubIssueStatus toGithubIssueStatus(Row row) {
+    ImmutableList.Builder<String> actionOwners = new ImmutableList.Builder<>();
+    String actionOwner = row.get("action_owner", String.class);
+    if (actionOwner != null && !actionOwner.isBlank()) {
+      actionOwners.add(actionOwner);
+    }
+    actionOwners.add(requireNonNull(row.get("more_action_owners", String[].class)));
+
     return GithubIssueStatus.builder()
         .owner(requireNonNull(row.get("owner", String.class)))
         .repo(requireNonNull(row.get("repo", String.class)))
         .issueNumber(requireNonNull(row.get("issue_number", Integer.class)))
         .status(GithubIssueStatus.Status.valueOf(row.get("status", String.class)))
-        .actionOwner(row.get("action_owner", String.class))
+        .actionOwners(actionOwners.build())
         .updatedAt(requireNonNull(row.get("updated_at", Instant.class)))
         .expectedRespondAt(row.get("expected_respond_at", Instant.class))
         .lastNotifiedAt(row.get("last_notified_at", Instant.class))
