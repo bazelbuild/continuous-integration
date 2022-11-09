@@ -690,9 +690,7 @@ P9w8kNhEbw==
         "https://api.buildkite.com/v2/organizations/{}/pipelines/{}/builds/{}/jobs/{}/retry"
     )
 
-    _PIPELINE_INFO_URL_TEMPLATE = (
-        "https://api.buildkite.com/v2/organizations/{}/pipelines/{}"
-    )
+    _PIPELINE_INFO_URL_TEMPLATE = "https://api.buildkite.com/v2/organizations/{}/pipelines/{}"
 
     def __init__(self, org, pipeline):
         self._org = org
@@ -1537,14 +1535,10 @@ def is_pull_request():
 def print_bazel_version_info(bazel_binary, platform):
     print_collapsed_group(":information_source: Bazel Info")
     version_output = execute_command_and_get_output(
-        [bazel_binary]
-        + common_startup_flags()
-        + ["--nosystem_rc", "--nohome_rc", "version"]
+        [bazel_binary] + common_startup_flags() + ["--nosystem_rc", "--nohome_rc", "version"]
     )
     execute_command(
-        [bazel_binary]
-        + common_startup_flags()
-        + ["--nosystem_rc", "--nohome_rc", "info"]
+        [bazel_binary] + common_startup_flags() + ["--nosystem_rc", "--nohome_rc", "info"]
     )
 
     match = BUILD_LABEL_PATTERN.search(version_output)
@@ -1643,7 +1637,7 @@ def download_bazelci_agent(dest_dir, version):
     if is_windows():
         postfix = "x86_64-pc-windows-msvc.exe"
     elif is_mac():
-        if platform_module.machine() == 'arm64':
+        if platform_module.machine() == "arm64":
             postfix = "aarch64-apple-darwin"
         else:
             postfix = "x86_64-apple-darwin"
@@ -1953,9 +1947,7 @@ def get_output_base(bazel_binary, platform):
     ).strip()
 
 
-def compute_flags(
-    platform, flags, bep_file, bazel_binary, enable_remote_cache=False
-):
+def compute_flags(platform, flags, bep_file, bazel_binary, enable_remote_cache=False):
     aggregated_flags = common_build_flags(bep_file, platform)
     if not remote_enabled(flags):
         if platform.startswith("rbe_"):
@@ -2003,9 +1995,7 @@ def kythe_build_flags():
     ]
 
 
-def execute_bazel_build(
-    bazel_version, bazel_binary, platform, flags, targets, bep_file
-):
+def execute_bazel_build(bazel_version, bazel_binary, platform, flags, targets, bep_file):
     print_collapsed_group(":bazel: Computing flags for build step")
     aggregated_flags = compute_flags(
         platform,
@@ -2030,9 +2020,7 @@ def execute_bazel_build(
         handle_bazel_failure(e, "build")
 
 
-def execute_bazel_build_with_kythe(
-    bazel_version, bazel_binary, platform, flags, targets, bep_file
-):
+def execute_bazel_build_with_kythe(bazel_version, bazel_binary, platform, flags, targets, bep_file):
     print_collapsed_group(":bazel: Computing flags for build step")
     aggregated_flags = compute_flags(
         platform,
@@ -2184,9 +2172,7 @@ def execute_bazel_test(
         handle_bazel_failure(e, "test")
 
 
-def execute_bazel_coverage(
-    bazel_version, bazel_binary, platform, flags, targets
-):
+def execute_bazel_coverage(bazel_version, bazel_binary, platform, flags, targets):
     aggregated_flags = [
         "--build_tests_only",
         "--local_test_jobs=" + concurrent_test_jobs(platform),
@@ -2289,9 +2275,11 @@ def terminate_background_process(process):
 def create_step(label, commands, platform, shards=1, soft_fail=None):
     if "docker-image" in PLATFORMS[platform]:
         step = create_docker_step(
-            label, image=PLATFORMS[platform]["docker-image"], commands=commands,
-            queue = PLATFORMS[platform].get("queue", "default"),
-            always_pull = PLATFORMS[platform].get("always-pull", True),
+            label,
+            image=PLATFORMS[platform]["docker-image"],
+            commands=commands,
+            queue=PLATFORMS[platform].get("queue", "default"),
+            always_pull=PLATFORMS[platform].get("always-pull", True),
         )
     else:
         step = {
@@ -2322,7 +2310,9 @@ def create_step(label, commands, platform, shards=1, soft_fail=None):
     return step
 
 
-def create_docker_step(label, image, commands=None, additional_env_vars=None, queue="default", always_pull=True):
+def create_docker_step(
+    label, image, commands=None, additional_env_vars=None, queue="default", always_pull=True
+):
     env = ["ANDROID_HOME", "ANDROID_NDK_HOME", "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"]
     if additional_env_vars:
         env += ["{}={}".format(k, v) for k, v in additional_env_vars.items()]
@@ -2437,19 +2427,14 @@ def print_project_pipeline(
         # downstream pipeline, thus leading to duplicate work.
         # Consequently, we filter those duplicate tasks here.
         if is_downstream_project:
-            # Skip tasks that require a specific Bazel version
-            bazel = task_config.get("bazel")
-            if bazel and bazel != "latest":
-                skipped_due_to_bazel_version.append(
-                    "{}: '{}'".format(
-                        create_label(platform, project_name, task_name=task_name), bazel
-                    )
-                )
-                continue
-
             h = hash_task_config(task, task_config)
             if h in config_hashes:
-                continue
+                skipped_due_to_bazel_version.append(
+                    "{}: '{}'".format(
+                        create_label(platform, project_name, task_name=task_name),
+                        task_config.get("bazel", "latest"),
+                    )
+                )
             config_hashes.add(h)
 
         shards = task_config.get("shards", "1")
@@ -2571,6 +2556,9 @@ def hash_task_config(task_name, task_config):
         cpy["platform"] = task_name
 
     m = hashlib.md5()
+    # Technically we should sort cpy[key] if it's a list of entries
+    # whose order does not matter (e.g. targets).
+    # However, this seems to be overkill for the current use cases.
     for key in sorted(cpy):
         value = "%s:%s;" % (key, cpy[key])
         m.update(value.encode("utf-8"))
@@ -2700,9 +2688,7 @@ def fetch_aggregate_incompatible_flags_test_result_command():
     )
 
 
-def upload_project_pipeline_step(
-    project_name, git_repository, http_config, file_config
-):
+def upload_project_pipeline_step(project_name, git_repository, http_config, file_config):
     pipeline_command = (
         '{0} bazelci.py project_pipeline --project_name="{1}" ' + "--git_repository={2}"
     ).format(PLATFORMS[DEFAULT_PLATFORM]["python"], project_name, git_repository)
@@ -3062,9 +3048,7 @@ def print_bazel_downstream_pipeline(
         if not current_build_number:
             raise BuildkiteException("Not running inside Buildkite")
 
-        pipeline_steps += get_steps_for_aggregating_migration_results(
-            current_build_number, notify
-        )
+        pipeline_steps += get_steps_for_aggregating_migration_results(current_build_number, notify)
 
     if (
         not test_disabled_projects
@@ -3534,7 +3518,9 @@ def main(argv=None):
         elif args.subparsers_name == "bazel_downstream_pipeline":
             # If USE_BAZELISK_MIGRATE is true, we don't need to fetch task configs for Bazel
             # since we use Bazelisk to fetch Bazel binaries.
-            configs = {} if use_bazelisk_migrate() else fetch_configs(args.http_config, args.file_config)
+            configs = (
+                {} if use_bazelisk_migrate() else fetch_configs(args.http_config, args.file_config)
+            )
             print_bazel_downstream_pipeline(
                 task_configs=configs.get("tasks", None),
                 http_config=args.http_config,
