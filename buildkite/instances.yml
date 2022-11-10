@@ -37,6 +37,12 @@ instance_groups:
     service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-testing-docker
     metadata_from_file: startup-script=startup-docker-pdssd.sh
+  - name: bk-testing-docker-arm64
+    count: 2
+    project: bazel-untrusted
+    service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
+    image_family: bk-testing-docker-arm64
+    metadata_from_file: startup-script=startup-docker-pdssd.sh
   - name: bk-trusted-docker
     count: 8
     project: bazel-public

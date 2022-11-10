@@ -72,18 +72,29 @@ def print_pretty_logs(instance_name, log):
             print(lines)
 
 
+_MAX_ATTEMPTS = 10
+
 def tail_serial_console(instance_name, project, zone, start=None, until=None):
     next_start = start if start else "0"
+    attempt = 1
     while True:
         try:
             result = gcloud.get_serial_port_output(
                 instance_name, project=project, zone=zone, start=next_start
             )
+            attempt = 1
         except subprocess.CalledProcessError as e:
             if "Could not fetch serial port output: TIMEOUT" in e.stderr:
                 gcloud.debug("tail_serial_console: Retrying after TIMEOUT")
                 continue
-            gcloud.debug("tail_serial_console: Done, because got exception: {}".format(e))
+            
+            if e.stderr and "The service is currently unavailable" in e.stderr:
+                if attempt < _MAX_ATTEMPTS:
+                    attempt += 1
+                    time.sleep(10)
+                    continue
+
+            gcloud.debug("tail_serial_console: Done, because got exception: {} [after {} attempts]".format(e, attempt))
             if e.stdout:
                 gcloud.debug("stdout: " + e.stdout)
             if e.stderr:

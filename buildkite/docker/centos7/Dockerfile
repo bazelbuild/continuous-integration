@@ -1,5 +1,5 @@
 FROM centos:7 as centos7
-ARG BUILDARCH
+ARG TARGETARCH
 
 # Install required packages.
 COPY google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
@@ -48,13 +48,13 @@ RUN localedef -i en_US -f ISO-8859-1 en_US.ISO-8859-1
 
 # Bazelisk
 RUN LATEST_BAZELISK=$(curl -sSI https://github.com/bazelbuild/bazelisk/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
-    curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/${LATEST_BAZELISK}/bazelisk-linux-${BUILDARCH} && \
+    curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/${LATEST_BAZELISK}/bazelisk-linux-${TARGETARCH} && \
     chown root:root /usr/local/bin/bazel && \
     chmod 0755 /usr/local/bin/bazel
 
 # Buildifier
 RUN LATEST_BUILDIFIER=$(curl -sSI https://github.com/bazelbuild/buildtools/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
-    curl -Lo /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/${LATEST_BUILDIFIER}/buildifier-linux-${BUILDARCH} && \
+    curl -Lo /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/${LATEST_BUILDIFIER}/buildifier-linux-${TARGETARCH} && \
     chown root:root /usr/local/bin/buildifier && \
     chmod 0755 /usr/local/bin/buildifier
 
@@ -64,9 +64,15 @@ RUN yum install -y java-1.8.0-openjdk-devel && yum clean all
 FROM centos7 AS centos7-java11
 
 # Unfortunately Azul doesn't publish an RPM package for zulu11 on aarch64, so we have to use the tar.gz version.
+RUN
 RUN mkdir -p /usr/lib/jvm/zulu-11 && \
     pushd /usr/lib/jvm/zulu-11 && \
-    curl "https://cdn.azul.com/zulu/bin/zulu11.58.23-ca-jdk11.0.16.1-linux_x64.tar.gz" | tar xvz --strip-components=1 && \
+    if [ "$TARGETARCH" = "arm64" ]; then \
+    export DOWNLOAD_URL="https://cdn.azul.com/zulu-embedded/bin/zulu11.58.23-ca-jdk11.0.16.1-linux_aarch64.tar.gz" ; \
+    else \
+    export DOWNLOAD_URL="https://cdn.azul.com/zulu/bin/zulu11.58.23-ca-jdk11.0.16.1-linux_x64.tar.gz" ; \
+    fi; \
+    curl "$DOWNLOAD_URL" | tar xvz --strip-components=1 && \
     update-alternatives \
         --install /usr/bin/java java /usr/lib/jvm/zulu-11/bin/java 2115200 \
         --slave /usr/bin/jaotc jaotc /usr/lib/jvm/zulu-11/bin/jaotc \

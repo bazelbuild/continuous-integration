@@ -31,7 +31,7 @@ def debug(*args, **kwargs):
 
 
 def is_sequence(seq):
-    return isinstance(seq, collections.Sequence) and not isinstance(seq, str)
+    return isinstance(seq, collections.abc.Sequence) and not isinstance(seq, str)
 
 
 def gcloud(*args, **kwargs):

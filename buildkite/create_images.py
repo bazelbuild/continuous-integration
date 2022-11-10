@@ -28,6 +28,9 @@ import gcloud_utils
 
 DEBUG = False
 
+DEFAULT_MACHINE_TYPE = "c2-standard-8"
+DEFAULT_BOOT_DISK_SIZE = "500GB"
+
 IMAGE_CREATION_VMS = {
     "bk-testing-docker": {
         "project": "bazel-public",
@@ -39,6 +42,20 @@ IMAGE_CREATION_VMS = {
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
+    },
+    "bk-testing-docker-arm64": {
+        "project": "bazel-public",
+        "zone": "us-central1-f",
+        "source_image_project": "ubuntu-os-cloud",
+        "source_image_family": "ubuntu-2004-lts-arm64",
+        "setup_script": "setup-docker.sh",
+        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
+        "licenses": [
+            "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
+        ],
+        # https://cloud.google.com/compute/docs/instances/create-arm-vm-instance#armpublicimage
+        "machine_type": "t2a-standard-8",
+        "network_interface": "nic-type=GVNIC",
     },
     "bk-testing-windows": {
         "project": "bazel-public",
@@ -97,16 +114,30 @@ def create_instance(instance_name, params):
                 "image-family": params["source_image_family"],
             }
 
+        network_params = {}
+        if "network_interface" in params:
+            if "network" in params:
+                print(
+                    f"Config error: {instance_name} has both 'network' and "
+                    "'network_interface', which are mutually exclusive.",
+                    file=sys.stdout,
+                )
+                exit(1)
+
+            network_params["network_interface"] = params["network_interface"]
+        else:
+            network_params["network"] = (params.get("network", "default"),)
+
         gcloud.create_instance(
             instance_name,
             project=params["project"],
             zone=params["zone"],
-            machine_type="c2-standard-8",
-            network=params.get("network", "default"),
+            machine_type=params.get("machine_type", DEFAULT_MACHINE_TYPE),
             metadata_from_file=startup_script,
             boot_disk_type="pd-ssd",
-            boot_disk_size=params.get("boot_disk_size", "500GB"),
+            boot_disk_size=params.get("boot_disk_size", DEFAULT_BOOT_DISK_SIZE),
             **image,
+            **network_params,
         )
     finally:
         os.remove(setup_script)

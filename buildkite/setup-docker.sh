@@ -29,7 +29,7 @@ export DEBIAN_FRONTEND="noninteractive"
 {
   apt-get -y update
   apt-get -y dist-upgrade
-  apt-get -y install python-is-python3 openjdk-11-jdk-headless unzip
+  apt-get -y install python-is-python3 openjdk-11-jdk-headless unzip e2fsprogs
 }
 
 ### Disable automatic upgrades, as they can interfere with our startup scripts.
@@ -49,7 +49,13 @@ EOF
 
 ### Patch the filesystem options to increase I/O performance
 {
-  tune2fs -o ^acl,journal_data_writeback,nobarrier /dev/sda1
+  if [[ "$(uname -m)" == "aarch64" ]];
+  then
+    PRIMARY_PARTITION="/dev/nvme0n1p1"
+  else
+    PRIMARY_PARTITION="/dev/sda1"
+  fi
+  tune2fs -o ^acl,journal_data_writeback,nobarrier "$PRIMARY_PARTITION"
   cat > /etc/fstab <<'EOF'
 LABEL=cloudimg-rootfs    /            ext4    defaults,noatime,commit=300,journal_async_commit    0 0
 LABEL=UEFI               /boot/efi    vfat    defaults,noatime                                    0 0
@@ -103,9 +109,16 @@ EOF
 {
   apt-get -y install apt-transport-https ca-certificates
 
+  if [[ "$(uname -m)" == "aarch64" ]];
+  then
+    ARCH="arm64"
+  else
+    ARCH="amd64"
+  fi
+
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
   echo \
-      "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+      "deb [arch=${ARCH} signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
       $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
   apt-get -y update
@@ -184,26 +197,42 @@ EOF
   mv cmdline-tools latest
   yes | latest/bin/sdkmanager --licenses > /dev/null || true
   latest/bin/sdkmanager --update
-  latest/bin/sdkmanager \
+
+  # TODO: fix build-tools problem
+  if [[ "$(uname -m)" == "aarch64" ]];
+  then
+    # Redirect stdout to avoid crashing google_metadata_script_runner.
+    # sdkmanager prints an animated progress bar, which turns into a single gigantic line on GCE,
+    # failing with "error while communicating with "startup-script" script: bufio.Scanner: token too long"
+    latest/bin/sdkmanager \
+      "build-tools;31.0.0"  > /dev/null
+  else
+    latest/bin/sdkmanager \
       "build-tools;28.0.2" \
-      "build-tools;30.0.3" \
+      "build-tools;30.0.3"  > /dev/null
+  fi
+
+  latest/bin/sdkmanager \
       "extras;android;m2repository" \
       "platform-tools" \
       "platforms;android-24" \
       "platforms;android-28" \
       "platforms;android-29" \
       "platforms;android-30" \
-      "platforms;android-31"
+      "platforms;android-31"  > /dev/null
 }
 
 ### Fix permissions in /opt.
 {
+  echo "[*] Fixing permissions..."
   chown -R root:root /opt
 }
 
 ### Clean up and trim the filesystem (potentially reduces the final image size).
 {
+  echo "[*] Cleaning up..."
   rm -rf /var/lib/apt/lists/*
+  echo "[*] Trimming filesystem..."
   fstrim -v /
   sleep 3
 }
