@@ -1,25 +1,26 @@
 package build.bazel.dashboard.github.issuelist;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.Objects.requireNonNull;
+
 import build.bazel.dashboard.github.issuelist.GithubIssueListService.ListParams;
 import build.bazel.dashboard.github.issuestatus.GithubIssueStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import io.r2dbc.postgresql.codec.Json;
 import io.r2dbc.spi.Row;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.r2dbc.core.DatabaseClient.GenericExecuteSpec;
 import org.springframework.stereotype.Repository;
 import reactor.adapter.rxjava.RxJava3Adapter;
-
-import java.io.IOException;
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-
-import static java.util.Objects.requireNonNull;
 
 @Repository
 @RequiredArgsConstructor
@@ -166,9 +167,9 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
   }
 
   @Override
-  public Flowable<String> findAllActionOwner(ListParams params) {
+  public ImmutableList<String> findAllActionOwner(ListParams params) {
     if (params.getActionOwner() != null) {
-      return Flowable.just(params.getActionOwner());
+      return ImmutableList.of(params.getActionOwner());
     }
 
     QuerySpec query = buildQuerySpec(params);
@@ -185,20 +186,21 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
       spec = spec.bind(binding.getKey(), binding.getValue());
     }
 
-    return RxJava3Adapter.fluxToFlowable(
-        spec.map(
-                row -> {
-                  String actionOwner = row.get("action_owner", String.class);
-                  if (actionOwner == null) {
-                    actionOwner = "";
-                  }
-                  return actionOwner;
-                })
-            .all());
+    return spec.map(
+            row -> {
+              String actionOwner = row.get("action_owner", String.class);
+              if (actionOwner == null) {
+                actionOwner = "";
+              }
+              return actionOwner;
+            })
+        .all()
+        .collect(toImmutableList())
+        .block();
   }
 
   @Override
-  public Flowable<String> findAllLabels(ListParams params) {
+  public ImmutableList<String> findAllLabels(ListParams params) {
     QuerySpec query = buildQuerySpec(params);
     StringBuilder sql = new StringBuilder("SELECT DISTINCT unnest(gi.labels) AS label");
     sql.append(query.from);
@@ -209,7 +211,9 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
       spec = spec.bind(binding.getKey(), binding.getValue());
     }
 
-    return RxJava3Adapter.fluxToFlowable(
-        spec.map(row -> requireNonNull(row.get("label", String.class))).all());
+    return spec.map(row -> requireNonNull(row.get("label", String.class)))
+        .all()
+        .collect(toImmutableList())
+        .block();
   }
 }
