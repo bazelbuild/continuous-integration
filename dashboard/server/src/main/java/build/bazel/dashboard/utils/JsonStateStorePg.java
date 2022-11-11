@@ -1,10 +1,15 @@
 package build.bazel.dashboard.utils;
 
+import static java.util.Objects.requireNonNull;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.r2dbc.postgresql.codec.Json;
 import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.rxjava3.core.Single;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.Optional;
+import javax.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -12,12 +17,6 @@ import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
 import reactor.adapter.rxjava.RxJava3Adapter;
 import reactor.core.publisher.Mono;
-
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.time.Instant;
-
-import static java.util.Objects.requireNonNull;
 
 @Component
 @Slf4j
@@ -28,7 +27,7 @@ public class JsonStateStorePg implements JsonStateStore {
   private final ObjectMapper objectMapper;
 
   @Override
-  public <T> Completable save(String key, @Nullable Instant lastTimestamp, T data) {
+  public <T> void save(String key, @Nullable Instant lastTimestamp, T data) {
     String sql =
         "INSERT INTO json_state (key, timestamp, data) VALUES (:key, CURRENT_TIMESTAMP,"
             + " :data) ON CONFLICT (key) DO UPDATE SET timestamp = CURRENT_TIMESTAMP,"
@@ -43,28 +42,21 @@ public class JsonStateStorePg implements JsonStateStore {
     try {
       spec = spec.bind("data", Json.of(objectMapper.writeValueAsBytes(data)));
     } catch (JsonProcessingException e) {
-      return Completable.error(e);
+      throw new RuntimeException(e);
     }
 
     if (lastTimestamp != null) {
       spec = spec.bind("last_timestamp", lastTimestamp);
     }
 
-    Mono<Integer> execution = spec.fetch().rowsUpdated().defaultIfEmpty(0);
-    return RxJava3Adapter.monoToSingle(execution)
-        .flatMapCompletable(
-            count -> {
-              if (count != 1) {
-                return Completable.error(
-                    new OptimisticLockingFailureException(
-                        "Failed to update: updated count is " + count));
-              }
-              return Completable.complete();
-            });
+    var count = Optional.ofNullable(spec.fetch().rowsUpdated().block()).orElse(0);
+    if (count != 1) {
+      throw new OptimisticLockingFailureException("Failed to update: updated count is " + count);
+    }
   }
 
   @Override
-  public <T> Single<JsonState<T>> load(String key, Class<T> type) {
+  public <T> JsonState<T> load(String key, Class<T> type) {
     Mono<JsonState<T>> query =
         databaseClient
             .sql("SELECT key, timestamp, data FROM json_state WHERE key = :key")
@@ -86,27 +78,23 @@ public class JsonStateStorePg implements JsonStateStore {
             .one()
             .defaultIfEmpty(
                 JsonState.<T>builder().key(key).timestamp(Instant.EPOCH).data(null).build());
-    return RxJava3Adapter.monoToSingle(query);
+    return query.block();
   }
 
   @Override
-  public Completable delete(String key, Instant lastTimestamp) {
-    Mono<Integer> query =
-        databaseClient
-            .sql("DELETE FROM json_state WHERE key = :key AND timestamp = :last_timestamp")
-            .bind("key", key)
-            .bind("last_timestamp", lastTimestamp)
-            .fetch()
-            .rowsUpdated()
-            .defaultIfEmpty(0);
-    return RxJava3Adapter.monoToSingle(query)
-        .flatMapCompletable(
-            count -> {
-              if (count != 1) {
-                return Completable.error(
-                    new OptimisticLockingFailureException("Failed to delete: count is " + count));
-              }
-              return Completable.complete();
-            });
+  public void delete(String key, Instant lastTimestamp) {
+    var count =
+        Optional.ofNullable(
+                databaseClient
+                    .sql("DELETE FROM json_state WHERE key = :key AND timestamp = :last_timestamp")
+                    .bind("key", key)
+                    .bind("last_timestamp", lastTimestamp)
+                    .fetch()
+                    .rowsUpdated()
+                    .block())
+            .orElse(0);
+    if (count != 1) {
+      throw new OptimisticLockingFailureException("Failed to delete: count is " + count);
+    }
   }
 }

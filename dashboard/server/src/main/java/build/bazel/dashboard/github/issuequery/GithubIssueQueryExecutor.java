@@ -15,9 +15,9 @@ public interface GithubIssueQueryExecutor {
     int totalCount;
   }
 
-  Single<QueryResult> execute(String owner, String repo, String query);
+  QueryResult execute(String owner, String repo, String query);
 
-  default Single<Integer> fetchQueryResultCount(String owner, String repo, String query) {
-    return execute(owner, repo, query).map(result -> result.totalCount);
+  default Integer fetchQueryResultCount(String owner, String repo, String query) {
+    return execute(owner, repo, query).totalCount;
   }
 }

@@ -1,16 +1,14 @@
 package build.bazel.dashboard.github.team;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.ImmutableList;
 import io.r2dbc.spi.Row;
-import io.reactivex.rxjava3.core.Flowable;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
-import reactor.adapter.rxjava.RxJava3Adapter;
-import reactor.core.publisher.Flux;
 
 @Repository
 @RequiredArgsConstructor
@@ -18,18 +16,17 @@ public class GithubTeamRepoPg implements GithubTeamRepo {
   private final DatabaseClient databaseClient;
 
   @Override
-  public Flowable<GithubTeam> list(String owner, String repo) {
-    Flux<GithubTeam> query =
-        databaseClient
-            .sql(
-                "SELECT owner, repo, label, created_at, updated_at, name, team_owner,"
-                    + " more_team_owners FROM github_team WHERE owner = :owner AND repo = :repo")
-            .bind("owner", owner)
-            .bind("repo", repo)
-            .map(this::toGithubTeam)
-            .all();
-
-    return RxJava3Adapter.fluxToFlowable(query);
+  public ImmutableList<GithubTeam> list(String owner, String repo) {
+    return databaseClient
+        .sql(
+            "SELECT owner, repo, label, created_at, updated_at, name, team_owner,"
+                + " more_team_owners FROM github_team WHERE owner = :owner AND repo = :repo")
+        .bind("owner", owner)
+        .bind("repo", repo)
+        .map(this::toGithubTeam)
+        .all()
+        .collect(toImmutableList())
+        .block();
   }
 
   private GithubTeam toGithubTeam(Row row) {

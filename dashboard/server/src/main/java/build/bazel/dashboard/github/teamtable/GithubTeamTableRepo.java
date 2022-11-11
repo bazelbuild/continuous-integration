@@ -1,6 +1,7 @@
 package build.bazel.dashboard.github.teamtable;
 
 import io.reactivex.rxjava3.core.Maybe;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.Value;
 
@@ -32,5 +33,5 @@ public interface GithubTeamTableRepo {
     }
   }
 
-  Maybe<GithubTeamTableData> findOne(String owner, String repo, String tableId);
+  Optional<GithubTeamTableData> findOne(String owner, String repo, String tableId);
 }

@@ -4,16 +4,18 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
+import java.io.IOException;
+import java.util.Optional;
 
 public interface GithubIssueRepo {
 
-  Completable save(GithubIssue githubIssue);
+  void save(GithubIssue githubIssue) throws IOException;
 
-  Completable delete(String owner, String repo, int issueNumber);
+  void delete(String owner, String repo, int issueNumber);
 
-  Maybe<GithubIssue> findOne(String owner, String repo, int issueNumber);
+  Optional<GithubIssue> findOne(String owner, String repo, int issueNumber);
 
   Observable<GithubIssue> list();
 
-  Single<Integer> findMaxIssueNumber(String owner, String repo);
+  Integer findMaxIssueNumber(String owner, String repo);
 }

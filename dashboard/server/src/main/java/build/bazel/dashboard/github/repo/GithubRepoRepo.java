@@ -1,10 +1,12 @@
 package build.bazel.dashboard.github.repo;
 
+import com.google.common.collect.ImmutableList;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
+import java.util.Optional;
 
 public interface GithubRepoRepo {
-  Maybe<GithubRepo> findOne(String owner, String repo);
+  Optional<GithubRepo> findOne(String owner, String repo);
 
-  Flowable<GithubRepo> findAll();
+  ImmutableList<GithubRepo> findAll();
 }

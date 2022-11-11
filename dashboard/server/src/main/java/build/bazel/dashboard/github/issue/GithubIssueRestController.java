@@ -1,8 +1,12 @@
 package build.bazel.dashboard.github.issue;
 
+import static build.bazel.dashboard.utils.RxJavaVirtualThread.maybe;
+import static build.bazel.dashboard.utils.RxJavaVirtualThread.single;
+
 import build.bazel.dashboard.github.issuecomment.GithubIssueCommentService;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,10 +26,10 @@ public class GithubIssueRestController {
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
       @PathVariable("issueNumber") Integer issueNumber) {
-    return githubIssueService
-        .fetchAndSave(owner, repo, issueNumber)
-        .map(GithubIssueService.FetchResult::getIssue)
-        .toMaybe();
+    return maybe(
+        () ->
+            Optional.ofNullable(
+                githubIssueService.fetchAndSave(owner, repo, issueNumber).getIssue()));
   }
 
   @PutMapping("/internal/github/{owner}/{repo}/issues/{issueNumber}")
@@ -33,13 +37,12 @@ public class GithubIssueRestController {
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
       @PathVariable("issueNumber") Integer issueNumber) {
-    return githubIssueService
-        .fetchAndSave(owner, repo, issueNumber)
-        .flatMap(
-            result ->
-                githubIssueCommentService
-                    .syncIssueComments(owner, repo, issueNumber)
-                    .toSingleDefault(result));
+    return single(
+        () -> {
+          var result = githubIssueService.fetchAndSave(owner, repo, issueNumber);
+          githubIssueCommentService.syncIssueComments(owner, repo, issueNumber);
+          return result;
+        });
   }
 
   /*

@@ -1,20 +1,16 @@
 package build.bazel.dashboard.github.api;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.base.Strings;
-import io.reactivex.rxjava3.core.Single;
+import java.net.URI;
+import java.util.Optional;
+import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriBuilder;
-import reactor.adapter.rxjava.RxJava3Adapter;
-
-import java.net.URI;
-import java.util.Optional;
-import java.util.function.Function;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Component
 @Slf4j
@@ -32,7 +28,7 @@ public class WebClientGithubApi implements GithubApi {
   }
 
   @Override
-  public Single<GithubApiResponse> listRepositoryIssues(ListRepositoryIssuesRequest request) {
+  public GithubApiResponse listRepositoryIssues(ListRepositoryIssuesRequest request) {
     log.debug("{}", request);
 
     checkNotNull(request.getOwner());
@@ -51,7 +47,7 @@ public class WebClientGithubApi implements GithubApi {
   }
 
   @Override
-  public Single<GithubApiResponse> listRepositoryEvents(ListRepositoryEventsRequest request) {
+  public GithubApiResponse listRepositoryEvents(ListRepositoryEventsRequest request) {
     log.debug("{}", request);
 
     checkNotNull(request.getOwner());
@@ -73,7 +69,7 @@ public class WebClientGithubApi implements GithubApi {
   }
 
   @Override
-  public Single<GithubApiResponse> listRepositoryIssueEvents(ListRepositoryIssueEventsRequest request) {
+  public GithubApiResponse listRepositoryIssueEvents(ListRepositoryIssueEventsRequest request) {
     log.debug("{}", request);
 
     checkNotNull(request.getOwner());
@@ -95,7 +91,7 @@ public class WebClientGithubApi implements GithubApi {
   }
 
   @Override
-  public Single<GithubApiResponse> fetchIssue(FetchIssueRequest request) {
+  public GithubApiResponse fetchIssue(FetchIssueRequest request) {
     log.debug("{}", request);
 
     checkNotNull(request.getOwner());
@@ -120,7 +116,7 @@ public class WebClientGithubApi implements GithubApi {
   }
 
   @Override
-  public Single<GithubApiResponse> listIssueComments(ListIssueCommentsRequest request) {
+  public GithubApiResponse listIssueComments(ListIssueCommentsRequest request) {
     log.debug("{}", request);
 
     checkNotNull(request.getOwner());
@@ -130,7 +126,13 @@ public class WebClientGithubApi implements GithubApi {
         get(
             uriBuilder ->
                 uriBuilder
-                    .pathSegment("repos", request.getOwner(), request.getRepo(), "issues", Integer.toString(request.getIssueNumber()), "comments")
+                    .pathSegment(
+                        "repos",
+                        request.getOwner(),
+                        request.getRepo(),
+                        "issues",
+                        Integer.toString(request.getIssueNumber()),
+                        "comments")
                     .queryParamIfPresent("per_page", Optional.ofNullable(request.getPerPage()))
                     .queryParamIfPresent("page", Optional.ofNullable(request.getPage()))
                     .build());
@@ -142,7 +144,7 @@ public class WebClientGithubApi implements GithubApi {
   }
 
   @Override
-  public Single<GithubApiResponse> searchIssues(SearchIssuesRequest request) {
+  public GithubApiResponse searchIssues(SearchIssuesRequest request) {
     log.debug("{}", request);
 
     checkNotNull(request.getQ());
@@ -176,7 +178,7 @@ public class WebClientGithubApi implements GithubApi {
     return spec;
   }
 
-  private Single<GithubApiResponse> exchange(WebClient.RequestHeadersSpec<?> spec) {
-    return RxJava3Adapter.monoToSingle(spec.exchangeToMono(GithubApiResponse::fromClientResponse));
+  private GithubApiResponse exchange(WebClient.RequestHeadersSpec<?> spec) {
+    return spec.exchangeToMono(GithubApiResponse::fromClientResponse).block();
   }
 }

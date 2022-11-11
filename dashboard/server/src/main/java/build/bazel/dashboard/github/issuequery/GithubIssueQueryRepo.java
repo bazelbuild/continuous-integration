@@ -1,7 +1,7 @@
 package build.bazel.dashboard.github.issuequery;
 
-import io.reactivex.rxjava3.core.Maybe;
+import java.util.Optional;
 
 public interface GithubIssueQueryRepo {
-  Maybe<GithubIssueQuery> findOne(String owner, String repo, String id);
+  Optional<GithubIssueQuery> findOne(String owner, String repo, String id);
 }

@@ -1,5 +1,7 @@
 package build.bazel.dashboard.github.teamtable;
 
+import static build.bazel.dashboard.utils.RxJavaVirtualThread.single;
+
 import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +18,6 @@ public class GithubTeamTableRestController {
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
       @PathVariable("tableId") String tableId) {
-    return githubTeamTableService.findOne(owner, repo, tableId);
+    return single(() -> githubTeamTableService.findOne(owner, repo, tableId));
   }
 }

@@ -2,15 +2,13 @@ package build.bazel.dashboard.github.issuecomment;
 
 import static java.util.Objects.requireNonNull;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.r2dbc.postgresql.codec.Json;
 import io.r2dbc.spi.Row;
-import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Maybe;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
@@ -26,7 +24,7 @@ public class GithubIssueCommentRepoPg implements GithubIssueCommentRepo {
   private final ObjectMapper objectMapper;
 
   @Override
-  public Maybe<GithubIssueCommentPage> findOnePage(
+  public Optional<GithubIssueCommentPage> findOnePage(
       String owner, String repo, int issueNumber, int page) {
     Mono<GithubIssueCommentPage> query =
         databaseClient
@@ -40,7 +38,7 @@ public class GithubIssueCommentRepoPg implements GithubIssueCommentRepo {
             .bind("page", page)
             .map(this::toGithubIssueCommentPage)
             .one();
-    return RxJava3Adapter.monoToMaybe(query);
+    return Optional.ofNullable(query.block());
   }
 
   @Override
@@ -76,27 +74,23 @@ public class GithubIssueCommentRepoPg implements GithubIssueCommentRepo {
   }
 
   @Override
-  public Completable savePage(GithubIssueCommentPage page) {
-    try {
-      Mono<Void> execution =
-          databaseClient
-              .sql(
-                  "INSERT INTO github_issue_comment_data (owner, repo, issue_number, page,"
-                      + " timestamp, etag, data) VALUES (:owner, :repo, :issue_number, :page,"
-                      + " :timestamp, :etag, :data) ON CONFLICT (owner, repo, issue_number, page)"
-                      + " DO UPDATE SET etag = excluded.etag, timestamp = excluded.timestamp, data"
-                      + " = excluded.data")
-              .bind("owner", page.getOwner())
-              .bind("repo", page.getRepo())
-              .bind("issue_number", page.getIssueNumber())
-              .bind("page", page.getPage())
-              .bind("timestamp", page.getTimestamp())
-              .bind("etag", page.getEtag())
-              .bind("data", Json.of(objectMapper.writeValueAsBytes(page.getData())))
-              .then();
-      return RxJava3Adapter.monoToCompletable(execution);
-    } catch (JsonProcessingException e) {
-      return Completable.error(e);
-    }
+  public void savePage(GithubIssueCommentPage page) throws IOException {
+    Mono<Void> execution =
+        databaseClient
+            .sql(
+                "INSERT INTO github_issue_comment_data (owner, repo, issue_number, page,"
+                    + " timestamp, etag, data) VALUES (:owner, :repo, :issue_number, :page,"
+                    + " :timestamp, :etag, :data) ON CONFLICT (owner, repo, issue_number, page)"
+                    + " DO UPDATE SET etag = excluded.etag, timestamp = excluded.timestamp, data"
+                    + " = excluded.data")
+            .bind("owner", page.getOwner())
+            .bind("repo", page.getRepo())
+            .bind("issue_number", page.getIssueNumber())
+            .bind("page", page.getPage())
+            .bind("timestamp", page.getTimestamp())
+            .bind("etag", page.getEtag())
+            .bind("data", Json.of(objectMapper.writeValueAsBytes(page.getData())))
+            .then();
+    execution.block();
   }
 }

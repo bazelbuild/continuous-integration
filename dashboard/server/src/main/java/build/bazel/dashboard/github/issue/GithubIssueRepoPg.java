@@ -8,6 +8,7 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
@@ -28,45 +29,39 @@ public class GithubIssueRepoPg implements GithubIssueRepo {
   private final ObjectMapper objectMapper;
 
   @Override
-  public Completable save(GithubIssue githubIssue) {
-    try {
-      Mono<Void> execution =
-          databaseClient
-              .sql(
-                  "INSERT INTO github_issue_data (owner, repo, issue_number, timestamp, etag, data)"
-                      + " VALUES (:owner, :repo, :issue_number, :timestamp, :etag, :data) ON"
-                      + " CONFLICT (owner, repo, issue_number) DO UPDATE SET etag = excluded.etag,"
-                      + " timestamp = excluded.timestamp, data = excluded.data")
-              .bind("owner", githubIssue.getOwner())
-              .bind("repo", githubIssue.getRepo())
-              .bind("issue_number", githubIssue.getIssueNumber())
-              .bind("timestamp", githubIssue.getTimestamp())
-              .bind("etag", githubIssue.getEtag())
-              .bind("data", Json.of(objectMapper.writeValueAsBytes(githubIssue.getData())))
-              .then();
-      return RxJava3Adapter.monoToCompletable(execution);
-    } catch (JsonProcessingException e) {
-      return Completable.error(e);
-    }
+  public void save(GithubIssue githubIssue) throws IOException {
+    databaseClient
+        .sql(
+            "INSERT INTO github_issue_data (owner, repo, issue_number, timestamp, etag, data)"
+                + " VALUES (:owner, :repo, :issue_number, :timestamp, :etag, :data) ON"
+                + " CONFLICT (owner, repo, issue_number) DO UPDATE SET etag = excluded.etag,"
+                + " timestamp = excluded.timestamp, data = excluded.data")
+        .bind("owner", githubIssue.getOwner())
+        .bind("repo", githubIssue.getRepo())
+        .bind("issue_number", githubIssue.getIssueNumber())
+        .bind("timestamp", githubIssue.getTimestamp())
+        .bind("etag", githubIssue.getEtag())
+        .bind("data", Json.of(objectMapper.writeValueAsBytes(githubIssue.getData())))
+        .then()
+        .block();
   }
 
   @Override
-  public Completable delete(String owner, String repo, int issueNumber) {
-    Mono<Void> execution =
-        databaseClient
-            .sql(
-                "DELETE FROM github_issue_data WHERE owner = :owner AND repo = :repo AND"
-                    + " issue_number = :issue_number")
-            .bind("owner", owner)
-            .bind("repo", repo)
-            .bind("issue_number", issueNumber)
-            .then();
-    return RxJava3Adapter.monoToCompletable(execution);
+  public void delete(String owner, String repo, int issueNumber) {
+    databaseClient
+        .sql(
+            "DELETE FROM github_issue_data WHERE owner = :owner AND repo = :repo AND"
+                + " issue_number = :issue_number")
+        .bind("owner", owner)
+        .bind("repo", repo)
+        .bind("issue_number", issueNumber)
+        .then()
+        .block();
   }
 
   @Override
-  public Maybe<GithubIssue> findOne(String owner, String repo, int issueNumber) {
-    Mono<GithubIssue> query =
+  public Optional<GithubIssue> findOne(String owner, String repo, int issueNumber) {
+    return Optional.ofNullable(
         databaseClient
             .sql(
                 "SELECT owner, repo, issue_number, timestamp, etag, data FROM github_issue_data "
@@ -75,8 +70,8 @@ public class GithubIssueRepoPg implements GithubIssueRepo {
             .bind("repo", repo)
             .bind("issue_number", issueNumber)
             .map(this::toGithubIssue)
-            .one();
-    return RxJava3Adapter.monoToMaybe(query);
+            .one()
+            .block());
   }
 
   @Override
@@ -106,16 +101,15 @@ public class GithubIssueRepoPg implements GithubIssueRepo {
   }
 
   @Override
-  public Single<Integer> findMaxIssueNumber(String owner, String repo) {
-    Mono<Integer> query =
-        databaseClient
-            .sql(
-                "SELECT COALESCE(MAX(issue_number), 0) as max_issue_number FROM github_issue WHERE owner ="
-                    + " :owner AND repo = :repo")
-            .bind("owner", owner)
-            .bind("repo", repo)
-            .map(row -> row.get("max_issue_number", Integer.class))
-            .one();
-    return RxJava3Adapter.monoToSingle(query);
+  public Integer findMaxIssueNumber(String owner, String repo) {
+    return databaseClient
+        .sql(
+            "SELECT COALESCE(MAX(issue_number), 0) as max_issue_number FROM github_issue WHERE"
+                + " owner = :owner AND repo = :repo")
+        .bind("owner", owner)
+        .bind("repo", repo)
+        .map(row -> row.get("max_issue_number", Integer.class))
+        .one()
+        .block();
   }
 }

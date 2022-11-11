@@ -8,6 +8,7 @@ import io.reactivex.rxjava3.core.Maybe;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
@@ -26,7 +27,7 @@ public class GithubIssueStatusRepoPg implements GithubIssueStatusRepo {
   private final DatabaseClient databaseClient;
 
   @Override
-  public Completable save(GithubIssueStatus status) {
+  public void save(GithubIssueStatus status) {
     Deque<String> actionOwners = new ArrayDeque<>(status.getActionOwners());
     String actionOwner = null;
     if (!actionOwners.isEmpty()) {
@@ -77,12 +78,12 @@ public class GithubIssueStatusRepoPg implements GithubIssueStatusRepo {
       spec = spec.bindNull("next_notify_at", Instant.class);
     }
 
-    return RxJava3Adapter.monoToCompletable(spec.then());
+    spec.then().block();
   }
 
   @Override
-  public Maybe<GithubIssueStatus> findOne(String owner, String repo, int issueNumber) {
-    Mono<GithubIssueStatus> query =
+  public Optional<GithubIssueStatus> findOne(String owner, String repo, int issueNumber) {
+    return Optional.ofNullable(
         databaseClient
             .sql(
                 "SELECT owner, repo, issue_number, status, action_owner, more_action_owners,"
@@ -93,8 +94,8 @@ public class GithubIssueStatusRepoPg implements GithubIssueStatusRepo {
             .bind("repo", repo)
             .bind("issue_number", issueNumber)
             .map(this::toGithubIssueStatus)
-            .one();
-    return RxJava3Adapter.monoToMaybe(query);
+            .one()
+            .block());
   }
 
   private GithubIssueStatus toGithubIssueStatus(Row row) {

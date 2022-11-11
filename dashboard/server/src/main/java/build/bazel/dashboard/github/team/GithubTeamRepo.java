@@ -1,7 +1,7 @@
 package build.bazel.dashboard.github.team;
 
-import io.reactivex.rxjava3.core.Flowable;
+import com.google.common.collect.ImmutableList;
 
 public interface GithubTeamRepo {
-  Flowable<GithubTeam> list(String owner, String repo);
+  ImmutableList<GithubTeam> list(String owner, String repo);
 }
