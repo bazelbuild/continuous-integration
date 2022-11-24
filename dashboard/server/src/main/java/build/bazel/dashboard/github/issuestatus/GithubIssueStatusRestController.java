@@ -27,7 +27,6 @@ public class GithubIssueStatusRestController {
       @RequestParam(name = "count") Integer count) {
     return completable(
         () -> {
-          // TODO: Concurrency
           for (var number = start; number < start + count; ++number) {
             var issue = githubIssueService.findOne(owner, repo, number);
             if (issue.isPresent()) {

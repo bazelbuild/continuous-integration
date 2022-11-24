@@ -30,7 +30,6 @@ public class CountGithubIssueQueryTask {
         () -> {
           log.info("Counting Github daily issue queries at {}...", Instant.now());
           var tasks = githubIssueQueryCountTaskRepo.list(Period.DAILY);
-          // TODO: Concurrency
           for (var task : tasks) {
             var count =
                 githubIssueQueryExecutor.fetchQueryResultCount(

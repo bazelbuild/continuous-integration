@@ -119,7 +119,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <jvmArguments>--enable-preview --add-modules=jdk.incubator.concurrent</jvmArguments>
+                    <jvmArguments>--enable-preview --add-modules=jdk.incubator.concurrent -Djdk.tracePinnedThreads</jvmArguments>
                 </configuration>
             </plugin>
         </plugins>
