@@ -21,6 +21,10 @@ function GithubTeamTableCellContainer({
     if (value >= 10) {
       style = { color: "#e53935", fontWeight: "bold" };
     }
+  } else if (header === "Awaiting Review") {
+    if (value >= 5) {
+      style = { color: "#e53935", fontWeight: "bold" };
+    }
   }
   return (
     <Link href={url} target="_blank" style={style}>
