@@ -5,7 +5,6 @@ import static java.util.Objects.requireNonNull;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.r2dbc.postgresql.codec.Json;
-import io.reactivex.rxjava3.core.Completable;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
@@ -15,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
-import reactor.adapter.rxjava.RxJava3Adapter;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -49,7 +47,7 @@ public class JsonStateStorePg implements JsonStateStore {
       spec = spec.bind("last_timestamp", lastTimestamp);
     }
 
-    var count = Optional.ofNullable(spec.fetch().rowsUpdated().block()).orElse(0);
+    var count = Optional.ofNullable(spec.fetch().rowsUpdated().block()).orElse(0L);
     if (count != 1) {
       throw new OptimisticLockingFailureException("Failed to update: updated count is " + count);
     }
@@ -92,7 +90,7 @@ public class JsonStateStorePg implements JsonStateStore {
                     .fetch()
                     .rowsUpdated()
                     .block())
-            .orElse(0);
+            .orElse(0L);
     if (count != 1) {
       throw new OptimisticLockingFailureException("Failed to delete: count is " + count);
     }

@@ -4,7 +4,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.ImmutableList;
-import io.r2dbc.spi.Row;
+import io.r2dbc.spi.Readable;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -29,7 +29,7 @@ public class GithubTeamRepoPg implements GithubTeamRepo {
         .block();
   }
 
-  private GithubTeam toGithubTeam(Row row) {
+  private GithubTeam toGithubTeam(Readable row) {
     ImmutableList.Builder<String> teamOwners = ImmutableList.builder();
 
     String teamOwner = row.get("team_owner", String.class);

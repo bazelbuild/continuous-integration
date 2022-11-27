@@ -3,14 +3,13 @@ package build.bazel.dashboard.github.issue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import lombok.Builder;
-import lombok.Value;
-
-import javax.annotation.Nullable;
 import java.time.Instant;
 import java.util.List;
+import javax.annotation.Nullable;
+import lombok.Builder;
+import lombok.Value;
 
 @Builder
 @Value
@@ -42,7 +41,7 @@ public class GithubIssue {
 
   @Builder
   @Value
-  @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+  @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
   public static class Data {
     int number;
     User user;
@@ -56,7 +55,7 @@ public class GithubIssue {
 
   @Builder
   @Value
-  @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+  @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
   public static class User {
     String login;
     String avatarUrl;
@@ -64,7 +63,7 @@ public class GithubIssue {
 
   @Builder
   @Value
-  @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+  @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
   public static class Label {
     String name;
     String description;

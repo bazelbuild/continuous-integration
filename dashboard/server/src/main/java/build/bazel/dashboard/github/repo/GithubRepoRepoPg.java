@@ -4,15 +4,12 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.ImmutableList;
-import io.r2dbc.spi.Row;
-import io.reactivex.rxjava3.core.Maybe;
+import io.r2dbc.spi.Readable;
 import java.time.Instant;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
-import reactor.adapter.rxjava.RxJava3Adapter;
-import reactor.core.publisher.Mono;
 
 @Repository
 @RequiredArgsConstructor
@@ -46,7 +43,7 @@ public class GithubRepoRepoPg implements GithubRepoRepo {
         .block();
   }
 
-  private GithubRepo toGithubRepo(Row row) {
+  private GithubRepo toGithubRepo(Readable row) {
     return GithubRepo.builder()
         .owner(requireNonNull(row.get("owner", String.class)))
         .repo(requireNonNull(row.get("repo", String.class)))

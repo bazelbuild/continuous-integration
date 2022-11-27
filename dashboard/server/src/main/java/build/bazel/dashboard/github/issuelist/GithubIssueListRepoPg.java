@@ -8,7 +8,7 @@ import build.bazel.dashboard.github.issuestatus.GithubIssueStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import io.r2dbc.postgresql.codec.Json;
-import io.r2dbc.spi.Row;
+import io.r2dbc.spi.Readable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import java.io.IOException;
@@ -142,7 +142,7 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
     return RxJava3Adapter.monoToSingle(spec.map(row -> row.get("total", Integer.class)).one());
   }
 
-  private GithubIssueList.Item toGithubIssueListItem(Row row) {
+  private GithubIssueList.Item toGithubIssueListItem(Readable row) {
     String actionOwner = row.get("action_owner", String.class);
     if (actionOwner == null) {
       String[] moreActionOwners = requireNonNull(row.get("more_action_owners", String[].class));

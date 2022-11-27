@@ -4,7 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.r2dbc.postgresql.codec.Json;
-import io.r2dbc.spi.Row;
+import io.r2dbc.spi.Readable;
 import io.reactivex.rxjava3.core.Flowable;
 import java.io.IOException;
 import java.time.Instant;
@@ -57,7 +57,7 @@ public class GithubIssueCommentRepoPg implements GithubIssueCommentRepo {
     return RxJava3Adapter.fluxToFlowable(query);
   }
 
-  private GithubIssueCommentPage toGithubIssueCommentPage(Row row) {
+  private GithubIssueCommentPage toGithubIssueCommentPage(Readable row) {
     try {
       return GithubIssueCommentPage.builder()
           .owner(requireNonNull(row.get("owner", String.class)))
