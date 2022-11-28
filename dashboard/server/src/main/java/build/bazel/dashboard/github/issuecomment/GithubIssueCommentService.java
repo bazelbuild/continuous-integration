@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class GithubIssueCommentService {
+
   private static final int PER_PAGE = 100;
 
   private final GithubIssueCommentRepo githubIssueCommentRepo;
@@ -75,6 +76,9 @@ public class GithubIssueCommentService {
       if (existedPage.isPresent()) {
         return existedPage.get().getData();
       }
+      return objectMapper.createArrayNode();
+    } else if (response.getStatus().value() == 404) {
+      // Not found
       return objectMapper.createArrayNode();
     } else {
       throw new IOException(response.getStatus().toString());
