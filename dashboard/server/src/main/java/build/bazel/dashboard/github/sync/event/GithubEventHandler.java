@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @RequiredArgsConstructor
 public class GithubEventHandler {
+
   private final GithubIssueService githubIssueService;
   private final GithubIssueCommentService githubIssueCommentService;
 
@@ -21,18 +22,12 @@ public class GithubEventHandler {
 
     String type = event.get("type").asText();
     switch (type) {
-      case "IssueCommentEvent":
-      case "IssuesEvent":
-        updateGithubIssue(
-            owner, repo, event.get("payload").get("issue").get("number").asInt());
-
-      case "PullRequestReviewEvent":
-      case "PullRequestReviewCommentEvent":
-      case "PullRequestEvent":
-        updateGithubIssue(
-            owner, repo, event.get("payload").get("pull_request").get("number").asInt());
-
-      default:
+      case "IssueCommentEvent", "IssuesEvent" -> updateGithubIssue(
+          owner, repo, event.get("payload").get("issue").get("number").asInt());
+      case "PullRequestReviewEvent", "PullRequestReviewCommentEvent", "PullRequestEvent" ->
+          updateGithubIssue(
+              owner, repo, event.get("payload").get("pull_request").get("number").asInt());
+      default -> {}
     }
   }
 
