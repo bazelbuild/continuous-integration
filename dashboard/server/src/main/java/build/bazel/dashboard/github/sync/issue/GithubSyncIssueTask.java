@@ -107,6 +107,7 @@ public class GithubSyncIssueTask {
 
     if (data.current >= data.end) {
       jsonStateStore.delete(jsonState.getKey(), jsonState.getTimestamp());
+      return;
     }
 
     var result =
