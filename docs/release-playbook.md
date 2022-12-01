@@ -118,7 +118,7 @@ While the release is active, you should make sure to do the following:
        `https://docs.google.com/document/d/1pu2ARPweOCTxPsRR8snoDtkC9R51XWRyBXeiC6Ql5so/edit`
     *   **Note:** When creating rcX where X>2, only list out cherry-picks added between rcX and rc(X-1) in the email - i.e. for clarity and conciseness, don't list out all cherry-picks in every email.
 
-1.  Add a comment to the release GitHub issue announcing that a new RC is out. See [example]([url](https://github.com/bazelbuild/bazel/issues/16159#issuecomment-1333775711)).
+1.  Add a comment to the release GitHub issue announcing that a new RC is out. See [example](https://github.com/bazelbuild/bazel/issues/16159#issuecomment-1333775711).
 
 1.  Trigger a new pipeline in BuildKite to test the release candidate with all the downstream projects.
     *   Go to https://buildkite.com/bazel/bazel-with-downstream-projects-bazel
