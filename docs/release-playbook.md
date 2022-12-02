@@ -65,7 +65,7 @@ While the release is active, you should make sure to do the following:
     *   If a Bazel team member has proposed the fixes, then proceed with the cherry-pick and merge it.
     *   If a Bazel team member authors a commit and a community member asks to cherry-pick, then confirm with the author before cherry-picking the PR to make sure this change is safe to merge.
     *   If a community member author a commit and asks to cherry-pick, then confirm with the reviewer before cherry-picking the PR to make sure that the change is safe to merge.
-    *   **Note:** Before merging a change into the release branch, confirm that the original change is already merged at Bazel@HEAD. One simple way to do this is to make sure all cherry-picked commits contain `PiperOrigin-RevId: <CL number>` in the commit message. For some exceptions, if it's really specific to the release branch, include a good description in the PR description and make sure it's signed-off by a Bazel team member.
+    *   **Note:** Before merging a change into the release branch, confirm that the original change is already merged at Bazel@HEAD. One simple way to do this is to make sure all cherry-picked commits contain `PiperOrigin-RevId: <CL number>` in the commit message. For some exceptions, if it's really specific to the release branch, include a good reason in the PR description and make sure it's signed-off by a Bazel team member.
 *   Review any PRs sent to the release branch and merge them as necessary.
     *   Make sure to close any related release blocker issues after merging the PRs; merging PRs into non-main branches does *not* automatically close related issues (see [GitHub docs](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue)).
     *   Before closing a release blocker issue, add a comment indicating how the issue was resolved, for better tracking (e.g. `cherry-picked in #XYZ` - see [this example](https://github.com/bazelbuild/bazel/issues/16629#issuecomment-1302743541))
@@ -108,7 +108,7 @@ While the release is active, you should make sure to do the following:
     If it's the first release candidate, prepare the release announcement (see
     next section).
 
-1.  Copy & paste the generated text into a new e-mail and send it. If you're
+1.  Copy & paste the generated text into a new email and send it. If you're
     creating a new release candidate, reply to the previous e-mail to keep all
     the information in one thread.
     *   The first line is the recipient address.
@@ -116,6 +116,9 @@ While the release is active, you should make sure to do the following:
     *   The rest is the body of the message.
     *   Replace the generated notes with a link to the release announcement draft.
        `https://docs.google.com/document/d/1pu2ARPweOCTxPsRR8snoDtkC9R51XWRyBXeiC6Ql5so/edit`
+    *   **Note:** When creating rcX where X>2, only list out cherry-picks added between rcX and rc(X-1) in the email - i.e. for clarity and conciseness, don't list out all cherry-picks in every email.
+
+1.  Add a comment to the release GitHub issue announcing that a new RC is out. See [example](https://github.com/bazelbuild/bazel/issues/16159#issuecomment-1333775711).
 
 1.  Trigger a new pipeline in BuildKite to test the release candidate with all the downstream projects.
     *   Go to https://buildkite.com/bazel/bazel-with-downstream-projects-bazel
@@ -166,7 +169,7 @@ Once the first candidate is available:
 1.  Send an email to [bazel-dev](https://groups.google.com/forum/#!forum/bazel-dev) for
     additional reviews.
 1.  Assign a comment to "+[aiuto@google.com](mailto:aiuto@google.com)"
-    and "+[daroberts@google.com](mailto:daroberts@google.com)"
+    and "+[philomath@google.com](mailto:philomath@google.com)"
     for a global review.
 
 After a few days of iteration:
