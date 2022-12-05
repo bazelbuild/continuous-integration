@@ -39,7 +39,7 @@ These steps only have to be performed once, ever.
     *   Set the (tentative) release date.
     *   Add this description: `Issues that need to be resolved before the X.Y.Z release.`.
     *   Refer to [this example](https://github.com/bazelbuild/bazel/milestone/38)
-1.  [Create a release tracking issue](https://github.com/bazelbuild/bazel/issues/new?assignees=&labels=release%2Cteam-OSS%2CP1%2Ctype%3A+process&template=release.md&title=Release+X.Y+-+%24MONTH+%24YEAR) to keep the community updated about the progress of the release. [See example](https://github.com/bazelbuild/bazel/issues/16159).
+1.  [Create a release tracking issue](https://github.com/bazelbuild/bazel/issues/new?assignees=&labels=release%2Cteam-OSS%2CP1%2Ctype%3A+process&template=release.md&title=Release+X.Y+-+%24MONTH+%24YEAR) to keep the community updated about the progress of the release. [See example](https://github.com/bazelbuild/bazel/issues/16159). Pin this issue.
 1.  Create the branch for the release. The branch should always be named `release-X.Y.Z` (the `.Z` part is important). Cherry-pick PRs will be sent against this branch.
     *   The actual creation of the branch can be done via the GitHub UI or via the command line. How we choose the base commit of the branch depends on the type of the release:
     *   For patch releases (`X.Y.Z` where `Z>0`), the base commit should simply be `X.Y.(Z-1)`.
@@ -176,7 +176,7 @@ After a few days of iteration:
 
 1.  Make sure all comments have been resolved, and the text follows the
     guidelines (see "How to review the notes?" in the document).
-1.  Send a pull request to [bazel-blog](https://github.com/bazelbuild/bazel-blog/). (For major and minor releases only.)
+1.  [For major releases only] Ping "+[radvani@google.com](mailto:radvani@google.com)" to coordinate on publishing a blog post. Send a pull request to [bazel-blog](https://github.com/bazelbuild/bazel-blog/) with release notes if needed.
 
 ## Release requirements
 
@@ -248,13 +248,12 @@ After a few days of iteration:
           overwrite the existing tarball.
     1.  Ping @fweikert to update the documentation site.
 
-1.  Merge the blog post pull request (for major and minor releases only).
+1.  [For major releases only] Coordinate with "+[radvani@google.com](mailto:radvani@google.com)" and merge the blog post pull request as needed.
     1.  Make sure you update the date in your post (and the path) to reflect when
     it is actually published.
     1.  **Note:** The blog sometimes takes time to update the homepage, so use
     the full path to your post to check that it is live.
-1.  For major and minor releases, update the release page to replace the generated notes with a link to the blog post. For patch release, update the           release notes without a blog post link - see example: https://github.com/bazelbuild/bazel/releases/tag/5.3.1
-1.  Close the release-tracking bug.
+1.  For major releases, update the release page to replace the generated notes with a link to the blog post. For minor and patch release, update the           release notes without a blog post link - see example: https://github.com/bazelbuild/bazel/releases/tag/5.3.1
 
 ### Updating Google's internal mirror
 
@@ -296,3 +295,9 @@ GitHub. Ping him when there's a new release coming out.
 ### Push new docker image
 
 Follow the [instructions](../bazel/oci/README.md) to push new docker image for the new release. Ping [@meteorcloudy](https://github.com/meteorcloudy) for help.
+
+## Clean up
+
+1. Close and unpin release tracking issue
+1. Close release blockers milestone
+
