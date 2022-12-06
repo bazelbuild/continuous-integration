@@ -655,6 +655,14 @@ class BuildkiteException(Exception):
     pass
 
 
+class BuildkiteInfraException(Exception):
+    """
+    Raised whenever something goes wrong with the CI infra and we should immediately exit with an error.
+    """
+
+    pass
+
+
 class BinaryUploadRaceException(Exception):
     """
     Raised when try_publish_binaries wasn't able to publish a set of binaries,
@@ -1604,13 +1612,11 @@ def download_bazel_nojdk_binary(dest_dir, platform):
     return download_binary(dest_dir, platform, binary_name)
 
 
-def download_binary_at_commit(
-    dest_dir, platform, bazel_git_commit, bazel_binary_url, bazel_binary_path
-):
+def download_binary_at_commit(bazel_git_commit, bazel_binary_url, bazel_binary_path):
     try:
         execute_command([gsutil_command(), "cp", bazel_binary_url, bazel_binary_path])
     except subprocess.CalledProcessError as e:
-        raise BuildkiteException(
+        raise BuildkiteInfraException(
             "Failed to download Bazel binary at %s, error message:\n%s" % (bazel_git_commit, str(e))
         )
     st = os.stat(bazel_binary_path)
@@ -1621,13 +1627,13 @@ def download_binary_at_commit(
 def download_bazel_binary_at_commit(dest_dir, platform, bazel_git_commit):
     url = bazelci_builds_gs_url(platform, bazel_git_commit)
     path = os.path.join(dest_dir, "bazel.exe" if platform == "windows" else "bazel")
-    return download_binary_at_commit(dest_dir, platform, bazel_git_commit, url, path)
+    return download_binary_at_commit(bazel_git_commit, url, path)
 
 
 def download_bazel_nojdk_binary_at_commit(dest_dir, platform, bazel_git_commit):
     url = bazelci_builds_nojdk_gs_url(platform, bazel_git_commit)
     path = os.path.join(dest_dir, "bazel_nojdk.exe" if platform == "windows" else "bazel_nojdk")
-    return download_binary_at_commit(dest_dir, platform, bazel_git_commit, url, path)
+    return download_binary_at_commit(bazel_git_commit, url, path)
 
 
 def download_bazelci_agent(dest_dir, version):
