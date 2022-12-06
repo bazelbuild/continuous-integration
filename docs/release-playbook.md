@@ -253,7 +253,7 @@ After a few days of iteration:
     it is actually published.
     1.  **Note:** The blog sometimes takes time to update the homepage, so use
     the full path to your post to check that it is live.
-1.  For major releases, update the release page to replace the generated notes with a link to the blog post. For minor and patch release, update the           release notes without a blog post link - see example: https://github.com/bazelbuild/bazel/releases/tag/5.3.1
+1.  For major releases, update the release page to replace the generated notes with a link to the blog post. For minor and patch release, update the release notes without a blog post link - see example: https://github.com/bazelbuild/bazel/releases/tag/5.3.1
 
 ### Updating Google's internal mirror
 
