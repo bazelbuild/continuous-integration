@@ -303,11 +303,9 @@ def validate_files_outside_of_modules_dir_are_not_modified(modules):
 
 
 def should_bcr_validation_block_presubmit(modules):
-    if not modules:
-        return
     bazelci.print_collapsed_group("Running BCR validations:")
     returncode = subprocess.run(
-        ["python3", "./tools/bcr_validation.py"] + [f"--check={name}@{version}" for name, version in modules]
+        ["python3", "./tools/bcr_validation.py", "--check_all_metadata"] + [f"--check={name}@{version}" for name, version in modules]
     ).returncode
     # When a BCR maintainer view is required, the script should return 42.
     if returncode == 42:
@@ -366,14 +364,14 @@ def main(argv=None):
     if args.subparsers_name == "bcr_presubmit":
         modules = get_target_modules()
         if not modules:
-            bazelci.eprint("No target modules detected in this branch!")
+            bazelci.eprint("No target module versions detected in this branch!")
         pipeline_steps = []
         for module_name, module_version in modules:
             configs = get_task_config(module_name, module_version)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps)
             configs = get_test_module_task_config(module_name, module_version)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True)
-        if pipeline_steps and should_wait_bcr_maintainer_review(modules):
+        if should_wait_bcr_maintainer_review(modules) and pipeline_steps:
             pipeline_steps = [{"block": "Wait on BCR maintainer review", "blocked_state": "failed"}] + pipeline_steps
         upload_jobs_to_pipeline(pipeline_steps)
     elif args.subparsers_name == "runner":
