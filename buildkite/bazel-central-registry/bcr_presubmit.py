@@ -371,9 +371,8 @@ def main(argv=None):
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps)
             configs = get_test_module_task_config(module_name, module_version)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True)
-        if should_wait_bcr_maintainer_review(modules):
-            if pipeline_steps:
-                pipeline_steps = [{"block": "Wait on BCR maintainer review", "blocked_state": "failed"}] + pipeline_steps
+        if should_wait_bcr_maintainer_review(modules) and pipeline_steps:
+            pipeline_steps = [{"block": "Wait on BCR maintainer review", "blocked_state": "failed"}] + pipeline_steps
         upload_jobs_to_pipeline(pipeline_steps)
     elif args.subparsers_name == "runner":
         repo_location = create_simple_repo(args.module_name, args.module_version, args.task)
