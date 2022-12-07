@@ -126,6 +126,7 @@ While the release is active, you should make sure to do the following:
         *   Message: Test Release-3.0.0rc2 (Or any message you like)
         *   Commit: HEAD
         *   Branch: release-3.0.0rc2
+    *   **Note:** Before any release, always make sure downstream builds for the release candidate should not have any extra breakages, and also all the Bazel jobs should green.
 
 1.  Look for failing projects in red.
     *   Compare the results with the latest Bazel release:
