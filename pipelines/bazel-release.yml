@@ -182,9 +182,7 @@ steps:
 
   - label: macOS (arm64)
     agents:
-      # TODO(pcloudy): Switch to macos_arm64 queue when Apple Silicon machines are available,
-      # current we just use x86_64 machines to do cross compile.
-      - queue=macos
+      - queue=macos_arm64
     command: |
       git fetch origin ${BUILDKITE_BRANCH}
       git checkout ${BUILDKITE_BRANCH}
