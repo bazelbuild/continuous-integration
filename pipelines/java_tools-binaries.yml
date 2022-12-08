@@ -41,3 +41,12 @@ steps:
     label: ":darwin:"
     agents:
       - "queue=macos"
+
+  - command: |-
+      bazel --ignore_all_rc_files version
+      ./src/upload_all_java_tools.sh
+    env:
+      BAZEL_USE_CPP_ONLY_TOOLCHAIN: "1"
+    label: ":darwin:"
+    agents:
+      - "queue=macos_arm64"
