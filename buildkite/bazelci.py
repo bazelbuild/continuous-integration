@@ -576,14 +576,6 @@ PLATFORMS = {
         "queue": "macos_arm64",
         "python": "python3",
     },
-    "experimental_macos_arm64": {
-        "name": "macOS experimental arm64 (OpenJDK 8, Xcode)",
-        "emoji-name": ":darwin: experimental arm64 (OpenJDK 8, Xcode)",
-        "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": [],
-        "queue": "macos_arm64",
-        "python": "python3",
-    },
     "windows": {
         "name": "Windows (OpenJDK 11, VS2019)",
         "emoji-name": ":windows: (OpenJDK 11, VS2019)",
