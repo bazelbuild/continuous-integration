@@ -1,10 +1,7 @@
 package build.bazel.dashboard.github.issuecomment;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Maybe;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
 import lombok.Builder;
@@ -27,5 +24,5 @@ public interface GithubIssueCommentRepo {
 
   Flowable<GithubIssueCommentPage> findAllPages(String owner, String repo, int issueNumber);
 
-  void savePage(GithubIssueCommentPage page) throws IOException;
+  void savePage(GithubIssueCommentPage page);
 }

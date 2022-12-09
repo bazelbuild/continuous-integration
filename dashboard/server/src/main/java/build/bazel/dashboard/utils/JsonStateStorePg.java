@@ -1,8 +1,8 @@
 package build.bazel.dashboard.utils;
 
+import static build.bazel.dashboard.utils.PgJson.toPgJson;
 import static java.util.Objects.requireNonNull;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.r2dbc.postgresql.codec.Json;
 import java.io.IOException;
@@ -37,11 +37,7 @@ public class JsonStateStorePg implements JsonStateStore {
 
     DatabaseClient.GenericExecuteSpec spec = databaseClient.sql(sql).bind("key", key);
 
-    try {
-      spec = spec.bind("data", Json.of(objectMapper.writeValueAsBytes(data)));
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
+    spec = spec.bind("data", toPgJson(objectMapper, data));
 
     if (lastTimestamp != null) {
       spec = spec.bind("last_timestamp", lastTimestamp);

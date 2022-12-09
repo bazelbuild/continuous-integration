@@ -1,5 +1,6 @@
 package build.bazel.dashboard.github.issuecomment;
 
+import static build.bazel.dashboard.utils.PgJson.toPgJson;
 import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -74,7 +75,7 @@ public class GithubIssueCommentRepoPg implements GithubIssueCommentRepo {
   }
 
   @Override
-  public void savePage(GithubIssueCommentPage page) throws IOException {
+  public void savePage(GithubIssueCommentPage page) {
     Mono<Void> execution =
         databaseClient
             .sql(
@@ -89,7 +90,7 @@ public class GithubIssueCommentRepoPg implements GithubIssueCommentRepo {
             .bind("page", page.getPage())
             .bind("timestamp", page.getTimestamp())
             .bind("etag", page.getEtag())
-            .bind("data", Json.of(objectMapper.writeValueAsBytes(page.getData())))
+            .bind("data", toPgJson(objectMapper, page.getData()))
             .then();
     execution.block();
   }

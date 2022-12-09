@@ -1,5 +1,6 @@
 package build.bazel.dashboard.github.issue;
 
+import static build.bazel.dashboard.utils.PgJson.toPgJson;
 import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,7 +24,7 @@ public class GithubIssueRepoPg implements GithubIssueRepo {
   private final ObjectMapper objectMapper;
 
   @Override
-  public void save(GithubIssue githubIssue) throws IOException {
+  public void save(GithubIssue githubIssue) {
     databaseClient
         .sql(
             "INSERT INTO github_issue_data (owner, repo, issue_number, timestamp, etag, data)"
@@ -35,7 +36,7 @@ public class GithubIssueRepoPg implements GithubIssueRepo {
         .bind("issue_number", githubIssue.getIssueNumber())
         .bind("timestamp", githubIssue.getTimestamp())
         .bind("etag", githubIssue.getEtag())
-        .bind("data", Json.of(objectMapper.writeValueAsBytes(githubIssue.getData())))
+        .bind("data", toPgJson(objectMapper, githubIssue.getData()))
         .then()
         .block();
   }
