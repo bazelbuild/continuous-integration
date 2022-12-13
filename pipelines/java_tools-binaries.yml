@@ -40,4 +40,4 @@ steps:
       BAZEL_USE_CPP_ONLY_TOOLCHAIN: "0"
     label: ":darwin:"
     agents:
-      - "queue=macos_arm64"
+      - "queue=macos"
