@@ -163,8 +163,6 @@ public class WebClientGithubApi implements GithubApi {
       spec.ifNoneMatch(etag);
     }
 
-    spec.headers(headers -> log.debug("{}", headers.toSingleValueMap()));
-
     if (!Strings.isNullOrEmpty(accessToken)) {
       spec = spec.header("Authorization", "token " + accessToken);
     }
