@@ -149,27 +149,28 @@ public class PollGithubEventsTask {
           etag = state.getEtag();
         }
         var response = doRequest(owner, repo, perPage, page, etag);
+        var body = response.getBody();
+        if (body != null) {
+          if (page == 1) {
+            newState =
+                JsonState.<PollState>builder()
+                    .key(jsonState.getKey())
+                    .timestamp(jsonState.getTimestamp())
+                    .data(PollState.create(response.getEtag(), body.get(0).get("id").asLong()))
+                    .build();
+          }
+
+          for (var item : body) {
+            var event = (ObjectNode) item;
+            if (event.get("id").asLong() <= state.getEventId()) {
+              continue;
+            }
+            onEvent(owner, repo, event);
+          }
+        }
 
         if (shouldTerminate(state, response)) {
           break;
-        }
-
-        var body = response.getBody();
-        if (page == 1) {
-          newState =
-              JsonState.<PollState>builder()
-                  .key(jsonState.getKey())
-                  .timestamp(jsonState.getTimestamp())
-                  .data(PollState.create(response.getEtag(), body.get(0).get("id").asLong()))
-                  .build();
-        }
-
-        for (var item : body) {
-          var event = (ObjectNode) item;
-          if (event.get("id").asLong() <= state.getEventId()) {
-            continue;
-          }
-          onEvent(owner, repo, event);
         }
       }
 
@@ -185,23 +186,19 @@ public class PollGithubEventsTask {
         JsonNode body = response.getBody();
         checkState(body != null && body.isArray());
 
-        var hasNewEvent = false;
         for (JsonNode event : body) {
-          if (event.get("id").asLong() > state.getEventId()) {
-            hasNewEvent = true;
+          if (event.get("id").asLong() <= state.getEventId()) {
+            terminate = true;
             break;
           }
-        }
-
-        if (!hasNewEvent) {
-          terminate = true;
         }
       } else {
         terminate = true;
       }
 
       log.debug(
-          "status={}, etag={}, rateLimit={}",
+          "terminate={} status={}, etag={}, rateLimit={}",
+          terminate,
           response.getStatus(),
           response.getEtag(),
           response.getRateLimit());
