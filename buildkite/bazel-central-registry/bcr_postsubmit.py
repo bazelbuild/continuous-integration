@@ -23,13 +23,7 @@ This script does one thing:
   - Sync the bazel_registry.json and modules/ directory in the main branch of the BCR to https://bcr.bazel.build
 """
 
-import base64
-import hashlib
-import json
-import sys
 import subprocess
-import tempfile
-import urllib.request
 
 BCR_BUCKET = "gs://bcr.bazel.build/"
 
