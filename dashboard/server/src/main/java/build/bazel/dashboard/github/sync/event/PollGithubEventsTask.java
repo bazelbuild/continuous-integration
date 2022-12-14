@@ -196,13 +196,6 @@ public class PollGithubEventsTask {
         terminate = true;
       }
 
-      log.debug(
-          "terminate={} status={}, etag={}, rateLimit={}",
-          terminate,
-          response.getStatus(),
-          response.getEtag(),
-          response.getRateLimit());
-
       return terminate;
     }
   }

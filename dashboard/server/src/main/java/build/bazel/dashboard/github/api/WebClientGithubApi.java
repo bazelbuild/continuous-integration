@@ -41,7 +41,7 @@ public class WebClientGithubApi implements GithubApi {
                     .pathSegment("repos", request.getOwner(), request.getRepo(), "issues")
                     .queryParamIfPresent("per_page", Optional.ofNullable(request.getPerPage()))
                     .queryParamIfPresent("page", Optional.ofNullable(request.getPage()))
-                    .build());
+                    .build(), "");
 
     return exchange(spec);
   }
@@ -60,10 +60,7 @@ public class WebClientGithubApi implements GithubApi {
                     .pathSegment("repos", request.getOwner(), request.getRepo(), "events")
                     .queryParamIfPresent("per_page", Optional.ofNullable(request.getPerPage()))
                     .queryParamIfPresent("page", Optional.ofNullable(request.getPage()))
-                    .build());
-    if (!Strings.isNullOrEmpty(request.getEtag())) {
-      spec.ifNoneMatch(request.getEtag());
-    }
+                    .build(), request.getEtag());
 
     return exchange(spec);
   }
@@ -82,10 +79,7 @@ public class WebClientGithubApi implements GithubApi {
                     .pathSegment("repos", request.getOwner(), request.getRepo(), "issues", "events")
                     .queryParamIfPresent("per_page", Optional.ofNullable(request.getPerPage()))
                     .queryParamIfPresent("page", Optional.ofNullable(request.getPage()))
-                    .build());
-    if (!Strings.isNullOrEmpty(request.getEtag())) {
-      spec.ifNoneMatch(request.getEtag());
-    }
+                    .build(), request.getEtag());
 
     return exchange(spec);
   }
@@ -107,10 +101,7 @@ public class WebClientGithubApi implements GithubApi {
                         request.getRepo(),
                         "issues",
                         String.valueOf(request.getIssueNumber()))
-                    .build());
-    if (!Strings.isNullOrEmpty(request.getEtag())) {
-      spec.ifNoneMatch(request.getEtag());
-    }
+                    .build(), request.getEtag());
 
     return exchange(spec);
   }
@@ -135,10 +126,7 @@ public class WebClientGithubApi implements GithubApi {
                         "comments")
                     .queryParamIfPresent("per_page", Optional.ofNullable(request.getPerPage()))
                     .queryParamIfPresent("page", Optional.ofNullable(request.getPage()))
-                    .build());
-    if (!Strings.isNullOrEmpty(request.getEtag())) {
-      spec.ifNoneMatch(request.getEtag());
-    }
+                    .build(), request.getEtag());
 
     return exchange(spec);
   }
@@ -159,17 +147,23 @@ public class WebClientGithubApi implements GithubApi {
                     .queryParamIfPresent("order", Optional.ofNullable(request.getOrder()))
                     .queryParamIfPresent("per_page", Optional.ofNullable(request.getPerPage()))
                     .queryParamIfPresent("page", Optional.ofNullable(request.getPage()))
-                    .build(request.getQ()));
+                    .build(request.getQ()), "");
 
     return exchange(spec);
   }
 
-  private WebClient.RequestHeadersSpec<?> get(Function<UriBuilder, URI> uriFunction) {
+  private WebClient.RequestHeadersSpec<?> get(Function<UriBuilder, URI> uriFunction, String etag) {
     WebClient.RequestHeadersSpec<?> spec =
         webClient
             .get()
             .uri(uriBuilder -> uriFunction.apply(uriBuilder.scheme(SCHEME).host(HOST)))
             .header("Accept", "application/vnd.github.v3+json");
+
+    if (!Strings.isNullOrEmpty(etag)) {
+      spec.ifNoneMatch(etag);
+    }
+
+    spec.headers(headers -> log.debug("{}", headers.toSingleValueMap()));
 
     if (!Strings.isNullOrEmpty(accessToken)) {
       spec = spec.header("Authorization", "token " + accessToken);
@@ -179,6 +173,9 @@ public class WebClientGithubApi implements GithubApi {
   }
 
   private GithubApiResponse exchange(WebClient.RequestHeadersSpec<?> spec) {
-    return spec.exchangeToMono(GithubApiResponse::fromClientResponse).block();
+    return spec.exchangeToMono(response -> {
+      log.debug("{} {}", response.statusCode(), response.headers().asHttpHeaders().toSingleValueMap());
+      return GithubApiResponse.fromClientResponse(response);
+    }).block();
   }
 }
