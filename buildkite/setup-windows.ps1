@@ -78,7 +78,7 @@ $env:BAZEL_LLVM = [Environment]::GetEnvironmentVariable("BAZEL_LLVM", "Machine")
 ## Install MSYS2
 Write-Host "Installing MSYS2..."
 & choco install msys2
-$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";C:\tools\msys64\usr\bin"
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";C:\tools\msys64\usr\bin;C:\tools\msys64\mingw64\bin"
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
 [Environment]::SetEnvironmentVariable("BAZEL_SH", "C:\tools\msys64\usr\bin\bash.exe", "Machine")
