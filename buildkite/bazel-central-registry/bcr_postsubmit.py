@@ -24,6 +24,7 @@ This script does one thing:
 """
 
 import subprocess
+import sys
 
 BCR_BUCKET = "gs://bcr.bazel.build/"
 
