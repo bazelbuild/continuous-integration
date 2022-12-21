@@ -29,7 +29,7 @@ import sys
 BCR_BUCKET = "gs://bcr.bazel.build/"
 
 def print_expanded_group(name):
-    eprint("\n\n+++ {0}\n\n".format(name))
+    print("\n\n+++ {0}\n\n".format(name))
 
 def sync_bcr_content():
     print_expanded_group(":gcloud: Sync BCR content")
