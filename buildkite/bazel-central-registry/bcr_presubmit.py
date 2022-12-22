@@ -195,7 +195,7 @@ def load_source_json(module_name, module_version):
 def apply_patch(work_dir, patch_strip, patch_file):
     # Requires `patch` to be installed, this is true for all Bazel CI VMs, including Windows VMs.
     subprocess.run(
-        ["patch", "-p%d" % patch_strip, "-i", patch_file], shell=False, check=True, env=os.environ, cwd=work_dir
+        ["patch", "-f", "-p%d" % patch_strip, "-i", patch_file], shell=False, check=True, env=os.environ, cwd=work_dir
     )
 
 
