@@ -136,6 +136,17 @@ Write-Host "Installing Visual C++ 2022 Build Tools..."
 ## https://github.com/bazelbuild/continuous-integration/issues/768
 & choco install windows-sdk-10-version-2004-all
 
+## Install Swift
+## https://github.com/bazelbuild/continuous-integration/issues/1374
+## The Swift installation must occur after all the Visual Stduio Build Tools and Windows SDKs
+Write-Host "Installing Swift 5.7.2..."
+$SwiftInstaller = "${env:TEMP}\installer.exe"
+(New-Object Net.WebClient).DownloadFile("https://download.swift.org/swift-5.7.2-release/windows10/swift-5.7.2-RELEASE/swift-5.7.2-RELEASE-windows10.exe", $SwiftInstaller)
+Start-Process -FilePath $SwiftInstaller -ArgumentList("-q") -Wait -PassThru
+Remove-Item $SwiftInstaller
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+$env:SDKROOT = [Environment]::GetEnvironmentVariable("SDKROOT", "Machine")
+
 ## Install Python2
 Write-Host "Installing Python 2..."
 & choco install python2 --params "/InstallDir:C:\python2"
