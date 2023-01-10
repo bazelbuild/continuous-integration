@@ -285,6 +285,7 @@ $buildkite_username = "b"
 $buildkite_password = "Bu1ldk1t3"
 $buildkite_secure_password = ConvertTo-SecureString $buildkite_password -AsPlainText -Force
 New-LocalUser -Name $buildkite_username -Password $buildkite_secure_password -UserMayNotChangePassword
+Add-LocalGroupMember -Group "Administrators" -Member $buildkite_username
 Add-NTFSAccess -Path "C:\buildkite" -Account "b" -AccessRights FullControl
 
 ## Allow the Buildkite agent to store SSH host keys in this folder.
