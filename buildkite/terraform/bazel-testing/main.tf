@@ -175,7 +175,7 @@ resource "buildkite_pipeline" "bazelisk-plus-incompatible-flags" {
 resource "buildkite_pipeline" "bazel-at-head-plus-disabled" {
   name = "Bazel@HEAD + Disabled"
   repository = "https://github.com/bazelbuild/bazel.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py bazel_downstream_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml --test_disabled_projects | tee /dev/tty | buildkite-agent pipeline upload"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py bazel_downstream_pipeline --file_config=.bazelci/build_bazel_binaries.yml --test_disabled_projects | tee /dev/tty | buildkite-agent pipeline upload"] } })
   description = "Test disabled downstream projects to see if they are already fixed."
   default_branch = "master"
 }
@@ -183,7 +183,7 @@ resource "buildkite_pipeline" "bazel-at-head-plus-disabled" {
 resource "buildkite_pipeline" "bazel-at-head-plus-downstream" {
   name = "Bazel@HEAD + Downstream"
   repository = "https://github.com/bazelbuild/bazel.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py bazel_downstream_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py bazel_downstream_pipeline --file_config=.bazelci/build_bazel_binaries.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
   description = "Test Bazel@HEAD + downstream projects@last_green_commit"
   default_branch = "master"
 }
