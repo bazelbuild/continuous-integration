@@ -124,48 +124,25 @@ fn watch_bep_json_file(
                             .get("workspaceInfo.localExecRoot")
                             .and_then(|v| v.as_str())
                             .map(|str| Path::new(str).to_path_buf());
-                    } else if build_event.is_test_summary() {
-                        let overall_status = build_event
-                            .get("testSummary.overallStatus")
-                            .and_then(|v| v.as_str())
-                            .unwrap_or("")
-                            .to_string();
-                        let failed = build_event
-                            .get("testSummary.failed")
-                            .and_then(|v| v.as_array())
-                            .map(|failed| {
-                                failed
-                                    .iter()
-                                    .map(|entry| FailedTest {
-                                        uri: entry
-                                            .get("uri")
-                                            .and_then(|v| v.as_str())
-                                            .unwrap_or("")
-                                            .to_string(),
-                                    })
-                                    .collect::<Vec<_>>()
-                            })
-                            .unwrap_or(vec![]);
-
-                        let test_summary = TestSummary {
-                            overall_status,
-                            failed,
-                        };
-
-                        if status.contains(&test_summary.overall_status.as_str()) {
-                            for failed_test in test_summary.failed.iter() {
-                                if let Err(error) = upload_test_log(
-                                    &mut uploader,
-                                    dry,
-                                    local_exec_root.as_ref().map(|p| p.as_path()),
-                                    &failed_test.uri,
-                                    mode,
-                                ) {
-                                    error!("{:?}", error);
+                    } else if build_event.is_test_result() {
+                        let test_result = build_event.test_result();
+                        if status.contains(&test_result.status.as_str()) {
+                            for output in test_result.test_action_outputs.iter() {
+                                if output.name == "test.log" {
+                                    if let Err(error) = upload_test_log(
+                                        &mut uploader,
+                                        dry,
+                                        local_exec_root.as_ref().map(|p| p.as_path()),
+                                        &output.uri,
+                                        mode,
+                                    ) {
+                                        error!("{:?}", error);
+                                    }
                                 }
                             }
                         }
-
+                    } else if build_event.is_test_summary() {
+                        let test_summary = build_event.test_summary();
                         test_summaries.push(test_summary);
                     }
                 }
@@ -393,14 +370,26 @@ fn upload_test_log(
 }
 
 #[derive(Debug)]
-struct TestSummary {
-    overall_status: String,
-    failed: Vec<FailedTest>,
+pub struct TestActionOutput {
+    pub name: String,
+    pub uri: String,
 }
 
 #[derive(Debug)]
-struct FailedTest {
-    uri: String,
+pub struct TestResult {
+    test_action_outputs: Vec<TestActionOutput>,
+    status: String,
+}
+
+#[derive(Debug)]
+pub struct TestSummary {
+    pub overall_status: String,
+    pub failed: Vec<FailedTest>,
+}
+
+#[derive(Debug)]
+pub struct FailedTest {
+    pub uri: String,
 }
 
 #[derive(Debug)]
@@ -422,6 +411,10 @@ impl BuildEvent {
         self.get("id.testSummary").is_some()
     }
 
+    pub fn is_test_result(&self) -> bool {
+        self.get("id.testResult").is_some()
+    }
+
     pub fn is_workspace(&self) -> bool {
         self.get("id.workspace").is_some()
     }
@@ -438,6 +431,68 @@ impl BuildEvent {
             value = value.and_then(|value| value.get(path));
         }
         value
+    }
+
+    pub fn test_result(&self) -> TestResult {
+        let test_action_outputs = self
+            .get("testResult.testActionOutput")
+            .and_then(|v| v.as_array())
+            .map(|test_action_output| {
+                test_action_output
+                    .iter()
+                    .map(|entry| TestActionOutput {
+                        name: entry
+                            .get("name")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("")
+                            .to_string(),
+                        uri: entry
+                            .get("uri")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("")
+                            .to_string(),
+                    })
+                    .collect()
+            })
+            .unwrap_or(vec![]);
+        let status = self
+            .get("testResult.status")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        TestResult {
+            test_action_outputs,
+            status,
+        }
+    }
+
+    pub fn test_summary(&self) -> TestSummary {
+        let overall_status = self
+            .get("testSummary.overallStatus")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let failed = self
+            .get("testSummary.failed")
+            .and_then(|v| v.as_array())
+            .map(|failed| {
+                failed
+                    .iter()
+                    .map(|entry| FailedTest {
+                        uri: entry
+                            .get("uri")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("")
+                            .to_string(),
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or(vec![]);
+
+        TestSummary {
+            overall_status,
+            failed,
+        }
     }
 }
 

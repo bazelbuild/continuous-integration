@@ -156,6 +156,9 @@ fn test_running_json_file() -> Result<()> {
             writeln!(file, "{}", r#"{"id":{"testSummary":{"label":"//src/test/shell/bazel:starlark_repository_test","configuration":{"id":"7479eaa1eeb472e5c3fdd9f0b604289ffbe45a36edb8a7f474df0c95501b4d00"}}},"testSummary":{"totalRunCount":7,"failed":[{"uri":"file:///private/var/tmp/_bazel_buildkite/78a0792bf9bb0133b1a4a7d083181fcb/execroot/io_bazel/bazel-out/darwin-fastbuild/testlogs/src/test/shell/bazel/starlark_repository_test/shard_4_of_6/test_attempts/attempt_1.log"}],"overallStatus":"FLAKY","firstStartTimeMillis":"1630444947193","lastStopTimeMillis":"1630445154997","totalRunDurationMillis":"338280","runCount":1,"shardCount":6}}"#).unwrap();
 
             std::thread::sleep(Duration::from_secs(1));
+            writeln!(file, "{}", r#"{"id":{"testResult":{}},"testResult":{"testActionOutput":[{"name":"test.log","uri":"file:///private/var/tmp/_bazel_buildkite/78a0792bf9bb0133b1a4a7d083181fcb/execroot/io_bazel/bazel-out/darwin-fastbuild/testlogs/src/test/shell/bazel/starlark_repository_test/shard_4_of_6/test_attempts/attempt_1.log"}],"status":"FAILED"}}"#).unwrap();
+
+            std::thread::sleep(Duration::from_secs(1));
             writeln!(
                 file,
                 "{}",
