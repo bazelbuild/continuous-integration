@@ -1,5 +1,7 @@
 use std::path::{Path, PathBuf};
 
+pub mod follow;
+
 /// Splits [`Path`] into two parts separated by `target`. The `target` itself is included
 /// in the end of first part.
 ///
