@@ -1638,7 +1638,10 @@ def download_bazelci_agent(dest_dir, version):
         else:
             postfix = "x86_64-apple-darwin"
     else:
-        postfix = "x86_64-unknown-linux-musl"
+        if platform_module.machine() == "aarch64":
+            postfix = "aarch64-unknown-linux-musl"
+        else:
+            postfix = "x86_64-unknown-linux-musl"
 
     name = "bazelci-agent-{}-{}".format(version, postfix)
     url = (
