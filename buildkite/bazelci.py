@@ -1628,7 +1628,8 @@ def download_bazel_nojdk_binary_at_commit(dest_dir, platform, bazel_git_commit):
     return download_binary_at_commit(bazel_git_commit, url, path)
 
 
-def download_bazelci_agent(dest_dir, version):
+def download_bazelci_agent(dest_dir):
+    version = "0.1.4"
     postfix = ""
     if is_windows():
         postfix = "x86_64-pc-windows-msvc.exe"
@@ -2201,7 +2202,7 @@ def execute_bazel_coverage(bazel_version, bazel_binary, platform, flags, targets
 
 
 def upload_test_logs_from_bep(bep_file, tmpdir, monitor_flaky_tests):
-    bazelci_agent_binary = download_bazelci_agent(tmpdir, "0.1.3")
+    bazelci_agent_binary = download_bazelci_agent(tmpdir)
     execute_command(
         [
             bazelci_agent_binary,
