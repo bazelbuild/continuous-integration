@@ -5,7 +5,7 @@ use std::{
     collections::HashSet,
     env,
     fs::{self, File},
-    io::{BufRead, BufReader, Read, Seek, SeekFrom},
+    io::{BufRead, BufReader, Lines, Read},
     path::{Path, PathBuf, MAIN_SEPARATOR},
     process,
     thread::sleep,
@@ -13,7 +13,7 @@ use std::{
 };
 use tracing::error;
 
-use crate::utils::split_path_inclusive;
+use crate::utils::{follow::follow, split_path_inclusive};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Mode {
@@ -46,6 +46,53 @@ pub fn upload(
     Ok(())
 }
 
+/// Follow the BEP JSON file until "last message" encounted.
+///
+/// Errors encounted before "last message", e.g.
+///   1. Can't open/seek the file
+///   2. Can't decode the line into a JSON object
+/// are propagated.
+fn build_events(path: &Path) -> impl Iterator<Item = Result<BuildEvent>> {
+    let path = path.to_path_buf();
+    BuildEventIter {
+        path: path.clone(),
+        lines: BufReader::new(follow(path)).lines(),
+        reached_end: false,
+    }
+}
+
+struct BuildEventIter<B> {
+    path: PathBuf,
+    lines: Lines<B>,
+    reached_end: bool,
+}
+
+impl<B: BufRead> Iterator for BuildEventIter<B> {
+    type Item = Result<BuildEvent>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.reached_end {
+            return None;
+        }
+
+        if let Some(line) = self.lines.next() {
+            let build_event = match line {
+                Ok(line) => match BuildEvent::from_json_str(&line) {
+                    Ok(build_event) => Ok(build_event),
+                    Err(error) => Err(anyhow!("{}: {} `{}`", self.path.display(), line, error)),
+                },
+                Err(err) => Err(anyhow!(err)),
+            };
+            if let Ok(ref build_event) = build_event {
+                self.reached_end = build_event.is_last_message();
+            }
+            return Some(build_event);
+        }
+
+        None
+    }
+}
+
 fn watch_bep_json_file(
     dry: bool,
     debug: bool,
@@ -57,62 +104,68 @@ fn watch_bep_json_file(
     if let Some(delay) = delay {
         sleep(delay);
     }
-    let status = ["FAILED", "TIMEOUT", "FLAKY"];
-    let mut parser = BepJsonParser::new(build_event_json_file);
+
     let max_retries = 5;
+    let status = ["FAILED", "TIMEOUT", "FLAKY"];
     let mut retries = max_retries;
-    let mut last_offset = 0;
+    let mut local_exec_root = None;
+    let mut test_summaries = vec![];
     let mut uploader = Uploader::new();
 
-    'parse_loop: loop {
-        match parser.parse() {
-            Ok(_) => {
-                if parser.offset != last_offset {
+    'parse: loop {
+        for build_event in build_events(build_event_json_file) {
+            match build_event {
+                Ok(build_event) => {
                     // We have made progress, reset the retry counter
                     retries = max_retries;
-                    last_offset = parser.offset;
 
-                    let local_exec_root = parser.local_exec_root.as_ref().map(|str| Path::new(str));
-                    for test_summary in parser
-                        .test_summaries
-                        .iter()
-                        .filter(|test_result| status.contains(&test_result.overall_status.as_str()))
-                    {
-                        for failed_test in test_summary.failed.iter() {
-                            if let Err(error) = upload_test_log(
-                                &mut uploader,
-                                dry,
-                                local_exec_root,
-                                &failed_test.uri,
-                                mode,
-                            ) {
-                                error!("{:?}", error);
+                    if build_event.is_workspace() {
+                        local_exec_root = build_event
+                            .get("workspaceInfo.localExecRoot")
+                            .and_then(|v| v.as_str())
+                            .map(|str| Path::new(str).to_path_buf());
+                    } else if build_event.is_test_result() {
+                        let test_result = build_event.test_result();
+                        if status.contains(&test_result.status.as_str()) {
+                            for output in test_result.test_action_outputs.iter() {
+                                if output.name == "test.log" {
+                                    if let Err(error) = upload_test_log(
+                                        &mut uploader,
+                                        dry,
+                                        local_exec_root.as_ref().map(|p| p.as_path()),
+                                        &output.uri,
+                                        mode,
+                                    ) {
+                                        error!("{:?}", error);
+                                    }
+                                }
                             }
                         }
+                    } else if build_event.is_test_summary() {
+                        let test_summary = build_event.test_summary();
+                        test_summaries.push(test_summary);
                     }
-                    parser.test_summaries.clear();
                 }
+                Err(err) => {
+                    error!("{:?}", err);
 
-                if parser.done {
-                    break 'parse_loop;
+                    retries -= 1;
+                    if retries > 0 {
+                        // Continue from start
+                        continue 'parse;
+                    } else {
+                        // Abort since we keep getting errors
+                        return Err(err);
+                    }
                 }
-            }
-            Err(error) => {
-                retries -= 1;
-                // Abort since we keep getting errors
-                if retries == 0 {
-                    return Err(error);
-                }
-
-                error!("{:?}", error);
             }
         }
 
-        sleep(Duration::from_secs(1));
+        break 'parse;
     }
 
     let should_upload_bep_json_file =
-        debug || (monitor_flaky_tests && parser.has_overall_test_status("FLAKY"));
+        debug || (monitor_flaky_tests && has_overall_test_status(&test_summaries, "FLAKY"));
     if should_upload_bep_json_file {
         if let Err(error) = upload_bep_json_file(&mut uploader, dry, build_event_json_file, mode) {
             error!("{:?}", error);
@@ -120,6 +173,16 @@ fn watch_bep_json_file(
     }
 
     Ok(())
+}
+
+fn has_overall_test_status(test_summaries: &[TestSummary], status: &str) -> bool {
+    for test_log in test_summaries.iter() {
+        if test_log.overall_status == status {
+            return true;
+        }
+    }
+
+    false
 }
 
 fn upload_bep_json_file(
@@ -307,158 +370,29 @@ fn upload_test_log(
 }
 
 #[derive(Debug)]
-struct TestSummary {
-    overall_status: String,
-    failed: Vec<FailedTest>,
+pub struct TestActionOutput {
+    pub name: String,
+    pub uri: String,
 }
 
 #[derive(Debug)]
-struct FailedTest {
-    uri: String,
+pub struct TestResult {
+    test_action_outputs: Vec<TestActionOutput>,
+    status: String,
 }
 
-struct BepJsonParser {
-    path: PathBuf,
-    offset: u64,
-    line: usize,
-    done: bool,
-    buf: String,
-
-    local_exec_root: Option<PathBuf>,
-    test_summaries: Vec<TestSummary>,
+#[derive(Debug)]
+pub struct TestSummary {
+    pub overall_status: String,
+    pub failed: Vec<FailedTest>,
 }
 
-impl BepJsonParser {
-    pub fn new(path: &Path) -> BepJsonParser {
-        Self {
-            path: path.to_path_buf(),
-            offset: 0,
-            line: 1,
-            done: false,
-            buf: String::new(),
-
-            local_exec_root: None,
-            test_summaries: Vec::new(),
-        }
-    }
-
-    fn reset(&mut self) {
-        self.offset = 0;
-        self.line = 1;
-        self.done = false;
-        self.local_exec_root = None;
-        self.test_summaries.clear();
-    }
-
-    /// Parse the BEP JSON file until "last message" encounted or EOF reached.
-    ///
-    /// Errors encounted before "last message", e.g.
-    ///   1. Can't open/seek the file
-    ///   2. Can't decode the line into a JSON object
-    /// are propagated.
-    pub fn parse(&mut self) -> Result<()> {
-        let mut file = File::open(&self.path)
-            .with_context(|| format!("Failed to open file {}", self.path.display()))?;
-
-        let eof = file.seek(SeekFrom::End(0))?;
-        if self.offset == 0 || self.offset >= eof {
-            // The file is truncated, reset to read from the start
-            self.reset();
-        }
-
-        file.seek(SeekFrom::Start(self.offset)).with_context(|| {
-            format!(
-                "Failed to seek file {} to offset {}",
-                self.path.display(),
-                self.offset
-            )
-        })?;
-
-        let mut reader = BufReader::new(file);
-        loop {
-            self.buf.clear();
-            let bytes_read = reader.read_line(&mut self.buf)?;
-            if bytes_read == 0 {
-                return Ok(());
-            }
-            match BuildEvent::from_json_str(&self.buf) {
-                Ok(build_event) => {
-                    self.line += 1;
-                    self.offset = self.offset + bytes_read as u64;
-
-                    if build_event.is_last_message() {
-                        self.done = true;
-                        return Ok(());
-                    } else if build_event.is_workspace() {
-                        self.on_workspace(&build_event);
-                    } else if build_event.is_test_summary() {
-                        self.on_test_summary(&build_event);
-                    }
-                }
-                Err(error) => {
-                    // Newline should always start with '{', otherwise we read from the start next time
-                    if !self.buf.starts_with('{') {
-                        self.offset = 0;
-                    }
-
-                    return Err(anyhow!(
-                        "{}:{}: {:?} `{}`",
-                        self.path.display(),
-                        self.line,
-                        &self.buf,
-                        error
-                    ));
-                }
-            }
-        }
-    }
-
-    fn on_workspace(&mut self, build_event: &BuildEvent) {
-        self.local_exec_root = build_event
-            .get("workspaceInfo.localExecRoot")
-            .and_then(|v| v.as_str())
-            .map(|str| Path::new(str).to_path_buf());
-    }
-
-    fn on_test_summary(&mut self, build_event: &BuildEvent) {
-        let overall_status = build_event
-            .get("testSummary.overallStatus")
-            .and_then(|v| v.as_str())
-            .unwrap_or("")
-            .to_string();
-        let failed = build_event
-            .get("testSummary.failed")
-            .and_then(|v| v.as_array())
-            .map(|failed| {
-                failed
-                    .iter()
-                    .map(|entry| FailedTest {
-                        uri: entry
-                            .get("uri")
-                            .and_then(|v| v.as_str())
-                            .unwrap_or("")
-                            .to_string(),
-                    })
-                    .collect::<Vec<_>>()
-            })
-            .unwrap_or(vec![]);
-        self.test_summaries.push(TestSummary {
-            overall_status,
-            failed,
-        })
-    }
-
-    pub fn has_overall_test_status(&self, status: &str) -> bool {
-        for test_log in self.test_summaries.iter() {
-            if test_log.overall_status == status {
-                return true;
-            }
-        }
-
-        false
-    }
+#[derive(Debug)]
+pub struct FailedTest {
+    pub uri: String,
 }
 
+#[derive(Debug)]
 pub struct BuildEvent {
     value: Value,
 }
@@ -477,6 +411,10 @@ impl BuildEvent {
         self.get("id.testSummary").is_some()
     }
 
+    pub fn is_test_result(&self) -> bool {
+        self.get("id.testResult").is_some()
+    }
+
     pub fn is_workspace(&self) -> bool {
         self.get("id.workspace").is_some()
     }
@@ -493,6 +431,68 @@ impl BuildEvent {
             value = value.and_then(|value| value.get(path));
         }
         value
+    }
+
+    pub fn test_result(&self) -> TestResult {
+        let test_action_outputs = self
+            .get("testResult.testActionOutput")
+            .and_then(|v| v.as_array())
+            .map(|test_action_output| {
+                test_action_output
+                    .iter()
+                    .map(|entry| TestActionOutput {
+                        name: entry
+                            .get("name")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("")
+                            .to_string(),
+                        uri: entry
+                            .get("uri")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("")
+                            .to_string(),
+                    })
+                    .collect()
+            })
+            .unwrap_or(vec![]);
+        let status = self
+            .get("testResult.status")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        TestResult {
+            test_action_outputs,
+            status,
+        }
+    }
+
+    pub fn test_summary(&self) -> TestSummary {
+        let overall_status = self
+            .get("testSummary.overallStatus")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let failed = self
+            .get("testSummary.failed")
+            .and_then(|v| v.as_array())
+            .map(|failed| {
+                failed
+                    .iter()
+                    .map(|entry| FailedTest {
+                        uri: entry
+                            .get("uri")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("")
+                            .to_string(),
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or(vec![]);
+
+        TestSummary {
+            overall_status,
+            failed,
+        }
     }
 }
 
