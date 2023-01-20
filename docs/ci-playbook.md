@@ -36,6 +36,7 @@ You need a machine with a recent version of MacOS and Microsoft Remote Desktop (
 
 Most changes can be rolled out by creating and deploying new Docker images. This step requires that Docker is installed and set up, and you need permissions to access the container registry in our GCP project.
 
+1. Clear your local Docker cache via `docker builder prune -a -f`.
 1. Clone the continuous-integration repository.
 1. `cd` into the `continuous-integration/buildkite/docker` directory.
 1. Run `build.sh`.
