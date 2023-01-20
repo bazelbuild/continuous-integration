@@ -476,7 +476,6 @@ steps:
 
       echo "+++ Deploying release"
       source scripts/ci/build.sh
-      set -v
       deploy_release "\${ARTIFACTS}"
 
   - block: ":e-mail: Generate announcement mail text"
