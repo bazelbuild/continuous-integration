@@ -1444,7 +1444,7 @@ def execute_commands(
 
 
 def get_default_xcode_version():
-    macos, _, _ = platform_module.mac_vers()
+    macos, _, _ = platform_module.mac_ver()
     major = int(macos.split(".")[0])
     return DEFAULT_XCODE_VERSION_PER_OS.get(major, "13.0")  # we use 13.0 due to legacy reasons
 
