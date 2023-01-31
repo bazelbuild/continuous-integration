@@ -614,7 +614,8 @@ DEFAULT_PLATFORM = "ubuntu1804"
 # release platform for all Linux downstream tests.
 LINUX_BINARY_PLATFORM = "centos7_java11_devtoolset10"
 
-DEFAULT_XCODE_VERSION = "13.0"
+# Maps major MacOS version numbers to the Xcode version that should be activated on that particular OS
+DEFAULT_XCODE_VERSION_PER_OS = {12: "13.0", 13: "14.2"}
 XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
 XCODE_VERSION_OVERRIDES = {"10.2.1": "10.3", "11.2": "11.2.1", "11.3": "11.3.1"}
 
@@ -1442,9 +1443,16 @@ def execute_commands(
             shutil.rmtree(tmpdir)
 
 
+def get_default_xcode_version():
+    macos, _, _ = platform_module.mac_vers()
+    major = int(macos.split(".")[0])
+    return DEFAULT_XCODE_VERSION_PER_OS.get(major, "13.0")  # we use 13.0 due to legacy reasons
+
 def activate_xcode(task_config):
+    default_xcode_version = get_default_xcode_version()
+
     # Get the Xcode version from the config.
-    wanted_xcode_version = task_config.get("xcode_version", DEFAULT_XCODE_VERSION)
+    wanted_xcode_version = task_config.get("xcode_version", default_xcode_version)
     print_collapsed_group(":xcode: Activating Xcode {}...".format(wanted_xcode_version))
 
     # Ensure it's a valid version number.
@@ -1471,7 +1479,7 @@ def activate_xcode(task_config):
         reverse=True,
     )
     if xcode_version not in supported_versions:
-        xcode_version = DEFAULT_XCODE_VERSION
+        xcode_version = default_xcode_version
     if xcode_version != wanted_xcode_version:
         print_collapsed_group(
             ":xcode: Fixed Xcode version: {} -> {}...".format(wanted_xcode_version, xcode_version)
