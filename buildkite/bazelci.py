@@ -439,11 +439,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
 DOWNSTREAM_PROJECTS_TESTING = {
     "Bazel": DOWNSTREAM_PROJECTS_PRODUCTION["Bazel"],
     "Bazelisk": DOWNSTREAM_PROJECTS_PRODUCTION["Bazelisk"],
-    "Federation": {
-        "git_repository": "https://github.com/fweikert/bazel-federation.git",
-        "http_config": "https://raw.githubusercontent.com/fweikert/bazel-federation/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "bazel-federation",
-    },
     "rules_docker": DOWNSTREAM_PROJECTS_PRODUCTION["rules_docker"],
     "rules_go": DOWNSTREAM_PROJECTS_PRODUCTION["rules_go"],
     "rules_groovy": DOWNSTREAM_PROJECTS_PRODUCTION["rules_groovy"],
