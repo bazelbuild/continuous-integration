@@ -56,8 +56,8 @@ GITHUB_BRANCH = {"bazel": "master", "bazel-trusted": "master", "bazel-testing": 
     BUILDKITE_ORG
 ]
 
-SCRIPT_URL = "https://raw.githubusercontent.com/fweikert/continuous-integration/xcode/buildkite/bazelci.py?{}".format(
-    int(time.time())
+SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazelci.py?{}".format(
+    GITHUB_BRANCH, int(time.time())
 )
 
 AGGREGATE_INCOMPATIBLE_TEST_RESULT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/aggregate_incompatible_flags_test_result.py?{}".format(
