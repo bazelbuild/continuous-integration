@@ -1439,7 +1439,8 @@ def execute_commands(
 
 
 def get_default_xcode_version():
-    macos, _, _ = platform_module.mac_ver()
+    # Cannot use platform.mac_ver() since it returns 10.16 on both 12.x and 13.x
+    macos = execute_command_and_get_output(["sw_vers", "-productVersion"], print_output=False)
     major = int(macos.split(".")[0])
     return DEFAULT_XCODE_VERSION_PER_OS.get(major, "13.0")  # we use 13.0 due to legacy reasons
 
