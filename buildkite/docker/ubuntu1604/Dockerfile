@@ -59,9 +59,11 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-${BUILDARCH}
 
 FROM ubuntu1604-bazel-java8 AS ubuntu1604-java8
 
+RUN mkdir -p /usr/local/src
+COPY requirements.txt /usr/local/src/requirements.txt
+
 ### Install Python (required by our own bazelci.py script).
 RUN export PYTHON_VERSION="3.6.14" && \
-    mkdir -p /usr/local/src && \
     cd /usr/local/src && \
     curl -LO "https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz" && \
     tar xfJ "Python-${PYTHON_VERSION}.tar.xz" && \
@@ -73,7 +75,7 @@ RUN export PYTHON_VERSION="3.6.14" && \
     make -s -j all && \
     echo "Installing Python ${PYTHON_VERSION} ..." && \
     make -s altinstall && \
-    pip3.6 install requests==2.22.0 pyyaml==3.13 && \
+    pip3.6 install --require-hashes -r requirements.txt requests==2.22.0 pyyaml==3.13 && \
     rm -rf "/usr/local/src/Python-${PYTHON_VERSION}"
 
 ### Install Google Cloud SDK.
