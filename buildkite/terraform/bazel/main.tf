@@ -1129,6 +1129,22 @@ resource "buildkite_pipeline" "rules-dotnet-edge" {
   }
 }
 
+resource "buildkite_pipeline" "rules-testing" {
+  name = "rules_testing"
+  repository = "https://github.com/bazelbuild/rules_testing.git"
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
+  default_branch = "master"
+  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "googlers" }, { access_level = "BUILD_AND_READ", slug = "bazel" }]
+  provider_settings {
+    trigger_mode = "code"
+    build_pull_requests = true
+    skip_pull_request_builds_for_existing_commits = true
+    build_pull_request_forks = true
+    prefix_pull_request_fork_branch_names = true
+    publish_commit_status = true
+  }
+}
+
 resource "buildkite_pipeline" "rules-webtesting-saucelabs" {
   name = "rules_webtesting :saucelabs:"
   repository = "https://github.com/bazelbuild/rules_webtesting.git"
