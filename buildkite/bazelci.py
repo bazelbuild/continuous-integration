@@ -269,12 +269,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/tensorflow.yml",
         "pipeline_slug": "tensorflow",
     },
-    "Tulsi": {
-        "git_repository": "https://github.com/bazelbuild/tulsi.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/tulsi/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "tulsi-bazel-darwin",
-        "disabled_reason": "https://github.com/bazelbuild/tulsi/issues/286",
-    },
     "re2": {
         "git_repository": "https://github.com/google/re2.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/re2.yml",
