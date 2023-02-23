@@ -104,19 +104,16 @@ While the release is active, you should make sure to do the following:
         apt-get repository. The github link is probably of the form:
         https://releases.bazel.build/3.6.0/rc1/index.html
 
-1.  If that worked, click on the "Generate announcement mail text" step to unblock it.
-    If it's the first release candidate, prepare the release announcement (see
-    next section).
+1.  Send out an email to `bazel-dev@googlegroups.com` and `bazel-discuss@googlegroups.com` about the new release candidate. E.g.:
+    *   Subject: Bazel 6.1.0 release candidate 1 is available for testing
+    *   Body:
+    ```
+    Bazel 6.1.0rc1 is now available for those that want to try it out.
 
-1.  Copy & paste the generated text into a new email and send it. If you're
-    creating a new release candidate, reply to the previous e-mail to keep all
-    the information in one thread.
-    *   The first line is the recipient address.
-    *   The second line is the subject.
-    *   The rest is the body of the message.
-    *   Replace the generated notes with a link to the release announcement draft.
-       `https://docs.google.com/document/d/1pu2ARPweOCTxPsRR8snoDtkC9R51XWRyBXeiC6Ql5so/edit`
-    *   **Note:** When creating rcX where X>2, only list out cherry-picks added between rcX and rc(X-1) in the email - i.e. for clarity and conciseness, don't list out all cherry-picks in every email.
+    You can download it from: https://releases.bazel.build/6.1.0/rc1/index.html
+
+    Please report regressions to https://github.com/bazelbuild/bazel/issues as soon as possible.
+    ```
 
 1.  Add a comment to the release GitHub issue announcing that a new RC is out. See [example](https://github.com/bazelbuild/bazel/issues/16159#issuecomment-1333775711).
 
