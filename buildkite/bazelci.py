@@ -1204,8 +1204,12 @@ def execute_commands(
     if build_only and test_only:
         raise BuildkiteException("build_only and test_only cannot be true at the same time")
 
-    if use_bazel_at_commit and use_but:
-        raise BuildkiteException("use_bazel_at_commit cannot be set when use_but is true")
+    if use_but:
+        if use_bazel_at_commit:
+            raise BuildkiteException("use_bazel_at_commit cannot be set when use_but is true")
+
+        print_collapsed_group(":printer: Printing task config for downstream job...")
+        eprint(json.dumps(task_config))
 
     tmpdir = tempfile.mkdtemp()
     sc_process = None
