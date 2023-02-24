@@ -2436,6 +2436,8 @@ def print_project_pipeline(
                         task_config.get("bazel", "latest"),
                     )
                 )
+                continue
+
             config_hashes.add(h)
 
         shards = task_config.get("shards", "1")
