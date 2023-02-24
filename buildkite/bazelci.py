@@ -1209,7 +1209,7 @@ def execute_commands(
             raise BuildkiteException("use_bazel_at_commit cannot be set when use_but is true")
 
         print_collapsed_group(":printer: Printing task config for downstream job...")
-        eprint(json.dumps(task_config))
+        eprint(json.dumps(task_config, indent=2))
 
     tmpdir = tempfile.mkdtemp()
     sc_process = None
