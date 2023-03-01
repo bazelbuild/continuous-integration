@@ -1119,7 +1119,7 @@ resource "buildkite_pipeline" "rules-testing" {
   repository = "https://github.com/bazelbuild/rules_testing.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
   default_branch = "master"
-  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "googlers" }, { access_level = "BUILD_AND_READ", slug = "bazel" }]
+  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel" }, { access_level = "BUILD_AND_READ", slug = "googlers" }]
   provider_settings {
     trigger_mode = "code"
     build_pull_requests = true
