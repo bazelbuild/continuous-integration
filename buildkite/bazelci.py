@@ -412,6 +412,12 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_swift/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-swift-swift",
     },
+    "rules_testing": {
+        "git_repository": "https://github.com/bazelbuild/rules_testing.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_python/master/.bazelci/presubmit.yml",
+        "pipeline_slug": "rules-testing",
+        "owned_by_bazel": True,
+    },
     "rules_webtesting": {
         "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_webtesting/master/.bazelci/presubmit.yml",
