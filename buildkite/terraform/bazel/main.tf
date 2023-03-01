@@ -18,28 +18,13 @@ provider "buildkite" {
   organization = "bazel"
 }
 
-resource "buildkite_pipeline" "fwe-inc-test" {
-  name = "fwe inc test"
-  repository = "https://github.com/bazelbuild/bazel.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = jsondecode("{\"USE_BAZELISK_MIGRATE\": \"true\"}"), steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/fweikert/continuous-integration/inc/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py bazel_downstream_pipeline --test_incompatible_flags --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
-  default_branch = "master"
-  provider_settings {
-    trigger_mode = "code"
-    build_pull_requests = true
-    skip_pull_request_builds_for_existing_commits = true
-    prefix_pull_request_fork_branch_names = true
-    build_branches = true
-    publish_commit_status = true
-  }
-}
-
 resource "buildkite_pipeline" "bcr-presubmit" {
   name = "BCR Presubmit"
   repository = "https://github.com/bazelbuild/bazel-central-registry.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = jsondecode("{\"USE_BAZEL_VERSION\": \"last_green\"}"), steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py\" -o bazelci.py", "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py\" -o bcr_presubmit.py", "python3.6 bcr_presubmit.py bcr_presubmit"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = jsondecode("{\"USE_BAZEL_VERSION\": \"6.0.0\"}"), steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py\" -o bazelci.py", "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py\" -o bcr_presubmit.py", "python3.6 bcr_presubmit.py bcr_presubmit"] } })
   description = "The presubmit for adding new Bazel module into the Bazel Central Registry"
   default_branch = "main"
-  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }]
+  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "bcr-maintainers" }]
   provider_settings {
     trigger_mode = "code"
     build_pull_requests = true
@@ -854,7 +839,7 @@ resource "buildkite_pipeline" "rules-jvm-external-examples" {
   default_branch = "master"
   skip_intermediate_builds = true
   cancel_intermediate_builds = true
-  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "android-team" }]
+  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "android-team" }, { access_level = "BUILD_AND_READ", slug = "rules-jvm-external" }]
   provider_settings {
     trigger_mode = "code"
     build_pull_requests = true
@@ -915,7 +900,7 @@ resource "buildkite_pipeline" "bazelisk-plus-incompatible-flags" {
   steps = templatefile("pipeline.yml.tpl", { envs = jsondecode("{\"USE_BAZELISK_MIGRATE\": \"true\"}"), steps = { commands = ["python3.6 buildkite/bazelci.py bazel_downstream_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
   description = "Use bazelisk --migrate to test incompatible flags with downstream projects@last_green_commit"
   default_branch = "master"
-  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }, { access_level = "BUILD_AND_READ", slug = "downstream-pipeline-triggerers" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }]
+  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }, { access_level = "BUILD_AND_READ", slug = "downstream-pipeline-triggerers" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }, { access_level = "BUILD_AND_READ", slug = "bazel-gtech-team" }]
   provider_settings {
     trigger_mode = "none"
     build_pull_requests = true
@@ -1257,7 +1242,7 @@ resource "buildkite_pipeline" "rules-jvm-external" {
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
   description = "Resolve and fetch artifacts transitively from Maven repositories"
   default_branch = "master"
-  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "android-team" }, { access_level = "BUILD_AND_READ", slug = "bazel" }]
+  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "android-team" }, { access_level = "BUILD_AND_READ", slug = "bazel" }, { access_level = "BUILD_AND_READ", slug = "rules-jvm-external" }]
   provider_settings {
     trigger_mode = "code"
     build_pull_requests = true
@@ -1692,7 +1677,7 @@ resource "buildkite_pipeline" "bazel-at-head-plus-downstream" {
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py bazel_downstream_pipeline --file_config=.bazelci/build_bazel_binaries.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
   description = "Test Bazel@HEAD + downstream projects@last_green_commit"
   default_branch = "master"
-  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }, { access_level = "BUILD_AND_READ", slug = "downstream-pipeline-triggerers" }, { access_level = "BUILD_AND_READ", slug = "bazel" }]
+  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }, { access_level = "BUILD_AND_READ", slug = "downstream-pipeline-triggerers" }, { access_level = "BUILD_AND_READ", slug = "bazel" }, { access_level = "BUILD_AND_READ", slug = "bazel-gtech-team" }]
 }
 
 resource "buildkite_pipeline" "rules-scala-scala" {
