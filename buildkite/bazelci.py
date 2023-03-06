@@ -414,7 +414,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "rules_testing": {
         "git_repository": "https://github.com/bazelbuild/rules_testing.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_python/master/.bazelci/presubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_testing/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-testing",
         "owned_by_bazel": True,
     },
