@@ -145,7 +145,7 @@ While the release is active, you should make sure to do the following:
         [TensorFlow_serving](https://buildkite.com/bazel/tensorflow-serving/builds?page=2))
         to confirm this, then file an issue to their owners.
 
-    *   File bugs (**TODO: how to find the owner/project link?**)
+    *   File bugs
 
 1.  Once issues are fixed, create a new candidate with the relevant cherry-picks.
 
@@ -164,11 +164,12 @@ Once the first candidate is available:
 1.  Once approved, for each category, add a comment and assign it to the corresponding
     [team contact](https://bazel.build/contribute/maintainers-guide?hl=en#team-labels):
     "+person for review (see guidelines at the top of the doc)".
-1.  Send an email to [bazel-dev](https://groups.google.com/forum/#!forum/bazel-dev) for
-    additional reviews.
-1.  Assign a comment to "+[aiuto@google.com](mailto:aiuto@google.com)"
-    and "+[philomath@google.com](mailto:philomath@google.com)"
-    for a global review.
+    
+For each subsequent release candidate:
+
+1. Ensure that new commits are documented in the release announcement doc.
+2. Assign a comment to "+[pcloudy@google.com](mailto:pcloudy@google.com)" and "+[wyv@google.com](mailto:wyv@google.com)" for another review, if the changes are significant.
+3. If needed, assign relevant sections to the corresponding TLs for additional edits and review.
 
 After a few days of iteration:
 
@@ -178,12 +179,14 @@ After a few days of iteration:
 
 ## Release requirements
 
-1.  The release announcement must be ready (the pull request has been reviewed).
+1.  The release announcement must be ready and approved.
 1.  Verify that the [conditions outlined in our policy](https://bazel.build/support.html#policy) **all apply**. As of
     May 2019 those were the following, but _double check_ that they have not changed since then.
     1.  at least **1 week passed since you pushed RC1**, and
     1.  at least **2 business days passed since you pushed the last RC**, and
     1.  there are no more release blocking issues.
+
+Note: the above policies are for final releases only. RCs can be created without waiting for days in between each.
 
 ## Push a release
 
@@ -251,7 +254,7 @@ After a few days of iteration:
     it is actually published.
     1.  **Note:** The blog sometimes takes time to update the homepage, so use
     the full path to your post to check that it is live.
-1.  For major releases, update the release page to replace the generated notes with a link to the blog post. For minor and patch release, update the release notes without a blog post link - see example: https://github.com/bazelbuild/bazel/releases/tag/5.3.1
+1.  For major releases, update the release page to replace the generated notes with the structured releases notes from the release announcement doc and link to the blog post (see [example](https://github.com/bazelbuild/bazel/releases/tag/6.0.0)). For minor and patch release, update the release notes without a blog post link - see [example](https://github.com/bazelbuild/bazel/releases/tag/6.1.0).
 
 ### Updating Google's internal mirror
 
@@ -298,4 +301,5 @@ Follow the [instructions](../bazel/oci/README.md) to push new docker image for t
 
 1. Close and unpin release tracking issue
 1. Close release blockers milestone
+1. Ensure that internal trackers are closed
 
