@@ -258,7 +258,7 @@ Note: the above policies are for final releases only. RCs can be created without
 
 ### Updating Google's internal mirror
 
-Follow the instructions [here](http://go/bazel-internal-launch-checklist) to update the internal mirror.
+Follow the instructions [here](http://go/bazel-internal-launch-checklist#updating-googles-internal-mirror) to update the internal mirror.
 
 ### Updating the Homebrew recipe
 
