@@ -217,38 +217,7 @@ Note: the above policies are for final releases only. RCs can be created without
     1.  Ask the package maintainers to update the package definitions:
         [@vbatts](https://github.com/vbatts) [@petemounce](https://github.com/petemounce) [@excitoon](https://github.com/excitoon)
     1.  Example: [https://github.com/bazelbuild/bazel/issues/3773#issuecomment-352692144]
-1.  Publish versioned documentation (for major and minor releases only)
-    1.  Fetch the git tag for the release: `git fetch --tags`
-    1.  Do a checkout to that tag: `git checkout X.Y.Z`
-        1. You should see this message:
-
-        ```
-        $ git checkout X.Y.Z
-        Note: checking out 'X.Y.Z'.
-
-        You are in 'detached HEAD' state. You can look around, make experimental
-        changes and commit them, and you can discard any commits you make in this
-        state without impacting any branches by performing another checkout.
-
-        If you want to create a new branch to retain commits you create, you may
-        do so (now or later) by using -b with the checkout command again. Example:
-
-        git checkout -b <new-branch-name>
-
-        HEAD is now at defd737761 Release X.Y.Z (yyyy-mm-dd)
-        ```
-    1.  [Install `gsutil`](https://cloud.google.com/storage/docs/gsutil_install)
-        and ensure you have access to the `bazel-public` GCP project.
-    1.  Run `scripts/docs/generate_versioned_docs.sh`. If you get interrupted,
-        it is safe to re-run the script. This script will build the web assets
-        for the documentation, generate a tarball from them, and push the
-        tarball to Google Cloud Storage.
-        * The script will fail to run if you're not in a git checkout of a
-          release.
-        * If the tarball has already been pushed to GCS, this script will not
-          overwrite the existing tarball.
-    1.  Ping @fweikert to update the documentation site.
-
+1.  Publish versioned documentation by following go/bazel-release-docs (for major and minor releases only)
 1.  [For major releases only] Coordinate with "+[radvani@google.com](mailto:radvani@google.com)" and merge the blog post pull request as needed.
     1.  Make sure you update the date in your post (and the path) to reflect when
     it is actually published.
