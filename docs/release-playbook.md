@@ -217,7 +217,7 @@ Note: the above policies are for final releases only. RCs can be created without
     1.  Ask the package maintainers to update the package definitions:
         [@vbatts](https://github.com/vbatts) [@petemounce](https://github.com/petemounce) [@excitoon](https://github.com/excitoon)
     1.  Example: [https://github.com/bazelbuild/bazel/issues/3773#issuecomment-352692144]
-1.  Publish versioned documentation by following go/bazel-release-docs (for major and minor releases only)
+1.  Publish versioned documentation by following [go/bazel-release-docs](http://go/bazel-release-docs) (for major and minor releases only)
 1.  [For major releases only] Coordinate with "+[radvani@google.com](mailto:radvani@google.com)" and merge the blog post pull request as needed.
     1.  Make sure you update the date in your post (and the path) to reflect when
     it is actually published.
