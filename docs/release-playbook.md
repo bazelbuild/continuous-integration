@@ -225,6 +225,10 @@ Note: the above policies are for final releases only. RCs can be created without
     the full path to your post to check that it is live.
 1.  For major releases, update the release page to replace the generated notes with the structured releases notes from the release announcement doc and link to the blog post (see [example](https://github.com/bazelbuild/bazel/releases/tag/6.0.0)). For minor and patch release, update the release notes without a blog post link - see [example](https://github.com/bazelbuild/bazel/releases/tag/6.1.0).
 
+### Updating .bazelversion file for the Bazel repository
+
+Please update https://github.com/bazelbuild/bazel/blob/master/.bazelversion if this is the newest version of the most recent Bazel LTS release.
+
 ### Updating Google's internal mirror
 
 Follow the instructions [here](http://go/bazel-internal-launch-checklist#updating-googles-internal-mirror) to update the internal mirror.
