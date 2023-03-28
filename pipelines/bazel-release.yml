@@ -140,10 +140,12 @@ steps:
           --sandbox_tmpfs_path=/tmp \
           --embed_label "\${release_name}" \
           --workspace_status_command=scripts/ci/build_status_command.sh \
-          src/bazel
+          src/bazel \
+          src/bazel_nojdk
 
       mkdir artifacts
       cp "bazel-bin/src/bazel" "artifacts/bazel-\${release_name}-linux-arm64"
+      cp "bazel-bin/src/bazel_nojdk" "artifacts/bazel_nojdk-\${release_name}-linux-arm64"
 
       cd artifacts
       buildkite-agent artifact upload "*"
