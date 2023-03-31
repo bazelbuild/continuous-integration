@@ -2418,7 +2418,7 @@ def print_project_pipeline(
         git_commit = get_last_green_commit(last_green_commit_url)
 
     config_hashes = set()
-    skipped_due_to_bazel_version = []
+    skipped_downstream_tasks = []
     for task, task_config in task_configs.items():
         platform = get_platform_for_task(task, task_config)
         task_name = task_config.get("name")
@@ -2431,15 +2431,26 @@ def print_project_pipeline(
         if is_downstream_project:
             h = hash_task_config(task, task_config)
             if h in config_hashes:
-                skipped_due_to_bazel_version.append(
+                skipped_downstream_tasks.append(
                     "{}: '{}'".format(
                         create_label(platform, project_name, task_name=task_name),
-                        task_config.get("bazel", "latest"),
+                        "The same task already exists after ignoring bazel version.",
                     )
                 )
                 continue
 
             config_hashes.add(h)
+
+            # Skip tasks with `skip_in_bazel_downstream_pipeline` specified.
+            skipped_reason = task_config.get("skip_in_bazel_downstream_pipeline", "")
+            if skipped_reason:
+                skipped_downstream_tasks.append(
+                    "{}: '{}'".format(
+                        create_label(platform, project_name, task_name=task_name),
+                        skipped_reason,
+                    )
+                )
+                continue
 
         shards = task_config.get("shards", "1")
         try:
@@ -2463,17 +2474,17 @@ def print_project_pipeline(
         )
         pipeline_steps.append(step)
 
-    if skipped_due_to_bazel_version:
-        lines = ["\n- {}".format(s) for s in skipped_due_to_bazel_version]
+    if skipped_downstream_tasks:
+        lines = ["\n- {}".format(s) for s in skipped_downstream_tasks]
         commands = [
-            "buildkite-agent annotate --style=info '{}' --append --context 'ctx-skipped_due_to_bazel_version'".format(
+            "buildkite-agent annotate --style=info '{}' --append --context 'ctx-skipped_downstream_tasks'".format(
                 "".join(lines)
             ),
             "buildkite-agent meta-data set 'has-skipped-steps' 'true'",
         ]
         pipeline_steps.append(
             create_step(
-                label=":pipeline: Print information about skipped tasks due to different Bazel versions",
+                label=":pipeline: Print information about skipped tasks",
                 commands=commands,
                 platform=DEFAULT_PLATFORM,
             )
@@ -3015,7 +3026,7 @@ def print_bazel_downstream_pipeline(
         create_step(
             label="Print skipped tasks annotation",
             commands=[
-                'buildkite-agent annotate --style=info "The following tasks were skipped since they require specific Bazel versions:\n" --context "ctx-skipped_due_to_bazel_version"'
+                'buildkite-agent annotate --style=info "The following tasks were skipped:\n" --context "ctx-skipped_downstream_tasks"'
             ],
             platform=DEFAULT_PLATFORM,
         )
@@ -3041,7 +3052,7 @@ def print_bazel_downstream_pipeline(
         create_step(
             label="Remove skipped tasks annotation if unneeded",
             commands=[
-                'buildkite-agent meta-data exists "has-skipped-steps" || buildkite-agent annotation remove --context "ctx-skipped_due_to_bazel_version"'
+                'buildkite-agent meta-data exists "has-skipped-steps" || buildkite-agent annotation remove --context "ctx-skipped_downstream_tasks"'
             ],
             platform=DEFAULT_PLATFORM,
         )
