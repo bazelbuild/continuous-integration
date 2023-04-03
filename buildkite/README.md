@@ -214,6 +214,8 @@ tasks:
     - "..."
 ```
 
+The full list of supported platforms can be found in the PLATFORMS variable in [bazelci.py](./bazelci.py).
+
 ### Setting Environment Variables
 
 You can set environment variables for each individual task via the `environment` field:
