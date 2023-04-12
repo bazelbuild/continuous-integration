@@ -152,7 +152,7 @@ resource "buildkite_pipeline" "rules-nodejs-nodejs" {
   name = "rules_nodejs :nodejs:"
   repository = "https://github.com/bazelbuild/rules_nodejs.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --monitor_flaky_tests=true | tee /dev/tty | buildkite-agent pipeline upload"] } })
-  default_branch = "stable"
+  default_branch = "main"
 }
 
 resource "buildkite_pipeline" "publish-bazel-binaries" {
