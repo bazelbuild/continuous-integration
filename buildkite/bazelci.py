@@ -139,6 +139,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/bazel-watcher.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-watcher/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-watcher",
+        "disabled_reason": "https://github.com/bazelbuild/bazel-watcher/issues/590"
     },
     "Bazelisk": {
         "git_repository": "https://github.com/bazelbuild/bazelisk.git",
