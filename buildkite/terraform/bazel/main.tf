@@ -1748,7 +1748,7 @@ resource "buildkite_pipeline" "rules-nodejs-nodejs" {
   name = "rules_nodejs :nodejs:"
   repository = "https://github.com/bazelbuild/rules_nodejs.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
-  default_branch = "stable"
+  default_branch = "main"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" },  { access_level = "BUILD_AND_READ", slug = "rules-nodejs" }]
   provider_settings {
     trigger_mode = "code"
