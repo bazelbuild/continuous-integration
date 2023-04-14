@@ -558,6 +558,14 @@ PLATFORMS = {
         "queue": "macos",
         "python": "python3",
     },
+    "macos_qa": {
+        "name": "macOS QA (OpenJDK 11, Xcode)",
+        "emoji-name": ":darwin: :fire_extinguisher: (OpenJDK 11, Xcode)",
+        "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
+        "publish_binary": [],
+        "queue": "macos_qa",
+        "python": "python3",
+    },
     "macos_arm64": {
         "name": "macOS arm64 (OpenJDK 8, Xcode)",
         "emoji-name": ":darwin: arm64 (OpenJDK 8, Xcode)",
