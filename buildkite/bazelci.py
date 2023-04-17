@@ -1808,7 +1808,7 @@ def remote_caching_flags(platform, accept_cached=True):
         "--remote_max_connections=200",
         '--remote_default_platform_properties=properties:{name:"cache-silo-key" value:"%s"}'
         % platform_cache_digest.hexdigest(),
-        "--remote_download_minimal",
+        "--remote_download_toplevel",
     ]
 
     if not accept_cached:
@@ -1898,7 +1898,7 @@ def rbe_flags(original_flags, accept_cached):
         "--incompatible_strict_action_env",
         "--google_default_credentials",
         "--toolchain_resolution_debug",
-        "--remote_download_minimal",
+        "--remote_download_toplevel",
     ]
 
     # Enable BES / Build Results reporting.
