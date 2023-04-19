@@ -32,6 +32,7 @@ These steps only have to be performed once, ever.
 *   Set up github ssh key if you haven't already.
     *    https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
 *   Generate a new identifier for Google's internal Git mirror: https://bazel.googlesource.com/new-password (and paste the code in your shell).
+*   Log in to the Gerrit UI to create an account: https://bazel-review.git.corp.google.com/ (without this step, you will see errors such as `error_type: PERMISSION_DENIED_BY_GERRIT_ACL` and `"\'git push\' requires a Gerrit user account."` when running the release script.
 
 ## Preparing a new release
 
@@ -41,7 +42,7 @@ These steps only have to be performed once, ever.
     *   Refer to [this example](https://github.com/bazelbuild/bazel/milestone/38)
 1.  [Create a release tracking issue](https://github.com/bazelbuild/bazel/issues/new?assignees=&labels=release%2Cteam-OSS%2CP1%2Ctype%3A+process&template=release.md&title=Release+X.Y+-+%24MONTH+%24YEAR) to keep the community updated about the progress of the release. [See example](https://github.com/bazelbuild/bazel/issues/16159). Pin this issue.
 1.  Create the branch for the release. The branch should always be named `release-X.Y.Z` (the `.Z` part is important). Cherry-pick PRs will be sent against this branch.
-    *   The actual creation of the branch can be done via the GitHub UI or via the command line. How we choose the base commit of the branch depends on the type of the release:
+    *   The actual creation of the branch can be done via the GitHub UI or via the command line. For minor and patch releases, create the branch from the previous release tag, if possible. How we choose the base commit of the branch depends on the type of the release:
     *   For patch releases (`X.Y.Z` where `Z>0`), the base commit should simply be `X.Y.(Z-1)`.
     *   For minor releases (`X.Y.0` where `Y>0`), the base commit should typically be `X.(Y-1).<current max Z>`.
     *   For major releases (`X.0.0`), the base commit is some "healthy" commit on the main branch.
@@ -53,7 +54,7 @@ These steps only have to be performed once, ever.
     *   It should contain the text: `The Bazel X.Y.Z release branch (release-X.Y.Z [link]) is open for business. Please send cherry-pick PRs against this branch if you'd like your change to be in X.Y.Z. Please follow the release tracking issue [link] for updates.`
 1.  Meanwhile, begin the [internal approval process](http://go/bazel-internal-launch-checklist), too.
     *   Note that certain steps in the internal approval process require at least preliminary release notes, so those steps should usually wait until the first release candidate is pushed and the release notes have taken vague shape.
-    *   Please make sure the Eng. team review status is explicit in release notes/bazel release announcement doc(s), and ensure the Eng. team should approve the release note before creating the launch review issue.
+    *   Please make sure that the Eng team review status is explicit in the release announcement doc. The release notes should be approved before starting the internal review process.
 
 ## Maintaining the release
 
@@ -65,7 +66,10 @@ While the release is active, you should make sure to do the following:
     *   If a Bazel team member has proposed the fixes, then proceed with the cherry-pick and merge it.
     *   If a Bazel team member authors a commit and a community member asks to cherry-pick, then confirm with the author before cherry-picking the PR to make sure this change is safe to merge.
     *   If a community member author a commit and asks to cherry-pick, then confirm with the reviewer before cherry-picking the PR to make sure that the change is safe to merge.
-    *   **Note:** Before merging a change into the release branch, confirm that the original change is already merged at Bazel@HEAD. One simple way to do this is to make sure all cherry-picked commits contain `PiperOrigin-RevId: <CL number>` in the commit message. For some exceptions, if it's really specific to the release branch, include a good reason in the PR description and make sure it's signed-off by a Bazel team member.
+    *   **Notes:** 
+        *   All cherry-pick PRs sent to a release branch should be reviewed and approved by a Bazel team member (usually the reviewer of the original PR)
+        *   Before merging a change into the release branch, confirm that the original change is already merged at Bazel@HEAD. One simple way to do this is to make sure all cherry-picked commits contain `PiperOrigin-RevId: <CL number>` in the commit message. For some exceptions, if it's really specific to the release branch, include a good reason in the PR description and make sure it's signed-off by a Bazel team member.
+        *   If a requested cherry-pick has merge conflicts that cannot be resolved without cherry-picking additional commits, ask the author of the original commit to submit a PR directly against the release branch.
 *   Review any PRs sent to the release branch and merge them as necessary.
     *   Make sure to close any related release blocker issues after merging the PRs; merging PRs into non-main branches does *not* automatically close related issues (see [GitHub docs](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue)).
     *   Before closing a release blocker issue, add a comment indicating how the issue was resolved, for better tracking (e.g. `cherry-picked in #XYZ` - see [this example](https://github.com/bazelbuild/bazel/issues/16629#issuecomment-1302743541))
@@ -81,10 +85,10 @@ While the release is active, you should make sure to do the following:
 
 1.  Check BuildKite results at https://buildkite.com/bazel-trusted/bazel-release. You should
     see the `release-X.Y.ZrcN` branch here and a new build running for
-    your release. Building Patch Release for old bazel version, create a new build and in 'Option' choose Environment Variable as USE_BAZEL_VERSION=X.Y.(Z-1) i.e previous version.
-    See example:
+    your release. When building a patch release for a previous LTS version, make sure to set USE_BAZEL_VERSION=X.Y.(Z-1).
+    For example:
     *   Go to https://buildkite.com/bazel-trusted/bazel-release
-    *   Click "New Build", then fill in the fields like this:
+    *   Click on "New Build" and set the following:
         *   Message: Release-4.2.3rc1 (Or any message you like)
         *   Commit: HEAD
         *   Branch: release-4.2.3rc1
@@ -144,8 +148,6 @@ While the release is active, you should make sure to do the following:
         build history (eg.
         [TensorFlow_serving](https://buildkite.com/bazel/tensorflow-serving/builds?page=2))
         to confirm this, then file an issue to their owners.
-
-    *   File bugs
 
 1.  Once issues are fixed, create a new candidate with the relevant cherry-picks.
 
@@ -272,7 +274,7 @@ Follow the [instructions](../bazel/oci/README.md) to push new docker image for t
 
 ## Clean up
 
-1. Close and unpin release tracking issue
-1. Close release blockers milestone
+1. Close and unpin the release tracking issue
+1. Close the release blockers milestone
 1. Ensure that internal trackers are closed
 
