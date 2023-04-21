@@ -21,7 +21,7 @@ provider "buildkite" {
 resource "buildkite_pipeline" "bcr-presubmit" {
   name = "BCR Presubmit"
   repository = "https://github.com/bazelbuild/bazel-central-registry.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py\" -o bazelci.py", "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py\" -o bcr_presubmit.py", "python3.6 bcr_presubmit.py bcr_presubmit"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = jsondecode("{\"USE_BAZEL_VERSION\": \"latest\"}"), steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py\" -o bazelci.py", "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py\" -o bcr_presubmit.py", "python3.6 bcr_presubmit.py bcr_presubmit"] } })
   description = "The presubmit for adding new Bazel module into the Bazel Central Registry"
   default_branch = "main"
   team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "bcr-maintainers" }]
