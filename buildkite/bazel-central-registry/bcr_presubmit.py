@@ -30,6 +30,7 @@ import subprocess
 import shutil
 import time
 import urllib.request
+import zipfile
 import yaml
 
 import bazelci
@@ -198,6 +199,22 @@ def apply_patch(work_dir, patch_strip, patch_file):
         ["patch", "-f", "-p%d" % patch_strip, "-i", patch_file], shell=False, check=True, env=os.environ, cwd=work_dir
     )
 
+def extract_zip_with_permissions(zip_file_path, destination_dir):
+    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+        for entry in zip_ref.infolist():
+            zip_ref.extract(entry, destination_dir)
+            file_path = os.path.join(destination_dir, entry.filename)
+
+            # Set file permissions according to https://stackoverflow.com/questions/39296101
+            if entry.external_attr >  0xffff:
+                os.chmod(file_path, entry.external_attr >> 16)
+
+def unpack_archive(archive_file, output_dir):
+    # Addressing https://github.com/bazelbuild/continuous-integration/issues/1536
+    if archive_file.endswith(".zip"):
+        extract_zip_with_permissions(archive_file, output_dir)
+    else:
+        shutil.unpack_archive(archive_file, output_dir)
 
 def prepare_test_module_repo(module_name, module_version, task):
     """Prepare the test module repo and the presubmit yml file it should use"""
@@ -211,7 +228,7 @@ def prepare_test_module_repo(module_name, module_version, task):
     output_dir = root.joinpath("output")
     bazelci.eprint("* Download and unpack %s\n" % archive_url)
     download(archive_url, archive_file)
-    shutil.unpack_archive(str(archive_file), output_dir)
+    unpack_archive(str(archive_file), output_dir)
     bazelci.eprint("Source unpacked to %s\n" % output_dir)
 
     # Apply patch files if there are any
