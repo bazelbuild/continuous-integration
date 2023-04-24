@@ -2443,7 +2443,7 @@ def print_project_pipeline(
             h = hash_task_config(task, task_config)
             if h in config_hashes:
                 skipped_downstream_tasks.append(
-                    "{}: '{}'".format(
+                    "{}: {}".format(
                         create_label(platform, project_name, task_name=task_name),
                         "The same task already exists after ignoring bazel version.",
                     )
@@ -2456,7 +2456,7 @@ def print_project_pipeline(
             skipped_reason = task_config.get("skip_in_bazel_downstream_pipeline", "")
             if skipped_reason:
                 skipped_downstream_tasks.append(
-                    "{}: '{}'".format(
+                    "{}: {}".format(
                         create_label(platform, project_name, task_name=task_name),
                         skipped_reason,
                     )
