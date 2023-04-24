@@ -2488,10 +2488,11 @@ def print_project_pipeline(
     if skipped_downstream_tasks:
         lines = ["\n- {}".format(s) for s in skipped_downstream_tasks]
         commands = [
+            "buildkite-agent meta-data exists 'has-skipped-annotation' || buildkite-agent annotate --style=info 'The following tasks were skipped:\n' --context 'ctx-skipped_downstream_tasks'",
+            "buildkite-agent meta-data set 'has-skipped-annotation' 'true'",
             "buildkite-agent annotate --style=info '{}' --append --context 'ctx-skipped_downstream_tasks'".format(
                 "".join(lines)
             ),
-            "buildkite-agent meta-data set 'has-skipped-steps' 'true'",
         ]
         pipeline_steps.append(
             create_step(
@@ -3033,15 +3034,6 @@ def print_bazel_downstream_pipeline(
         if info_box_step is not None:
             pipeline_steps.append(info_box_step)
 
-    pipeline_steps.append(
-        create_step(
-            label="Print skipped tasks annotation",
-            commands=[
-                'buildkite-agent annotate --style=info "The following tasks were skipped:\n" --context "ctx-skipped_downstream_tasks"'
-            ],
-            platform=DEFAULT_PLATFORM,
-        )
-    )
     for project, config in DOWNSTREAM_PROJECTS.items():
         disabled_reason = config.get("disabled_reason", None)
         # If test_disabled_projects is true, we add configs for disabled projects.
@@ -3057,17 +3049,6 @@ def print_bazel_downstream_pipeline(
                     file_config=config.get("file_config", None),
                 )
             )
-
-    pipeline_steps.append({"wait": "~", "continue_on_failure": "true"})
-    pipeline_steps.append(
-        create_step(
-            label="Remove skipped tasks annotation if unneeded",
-            commands=[
-                'buildkite-agent meta-data exists "has-skipped-steps" || buildkite-agent annotation remove --context "ctx-skipped_downstream_tasks"'
-            ],
-            platform=DEFAULT_PLATFORM,
-        )
-    )
 
     if use_bazelisk_migrate():
         current_build_number = os.environ.get("BUILDKITE_BUILD_NUMBER", None)
