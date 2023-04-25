@@ -979,7 +979,7 @@ def get_combinations(matrix, attributes):
         if attr not in matrix:
             raise BuildkiteException("${{ %s }} is not defined in `matrix` section." % attr)
     pairs = [[(attr, value) for value in matrix[attr]] for attr in attributes]
-    return itertools.product(*pairs)
+    return sorted(itertools.product(*pairs))
 
 
 def get_expanded_task(task, combination):
