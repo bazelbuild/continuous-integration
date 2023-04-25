@@ -2157,7 +2157,8 @@ def execute_bazel_test(
     aggregated_flags = [
         "--flaky_test_attempts=3",
         "--build_tests_only",
-        "--local_test_jobs=" + concurrent_test_jobs(platform),
+        # TODO(twerth): Remove after experiment.
+        # "--local_test_jobs=" + concurrent_test_jobs(platform),
     ]
     # Don't enable remote caching if the user enabled remote execution / caching themselves
     # or flaky test monitoring is enabled, as remote caching makes tests look less flaky than
@@ -2189,7 +2190,8 @@ def execute_bazel_test(
 def execute_bazel_coverage(bazel_version, bazel_binary, platform, flags, targets):
     aggregated_flags = [
         "--build_tests_only",
-        "--local_test_jobs=" + concurrent_test_jobs(platform),
+        # TODO(twerth): Remove after experiment.
+        # "--local_test_jobs=" + concurrent_test_jobs(platform),
     ]
     print_collapsed_group(":bazel: Computing flags for coverage step")
     aggregated_flags += compute_flags(
