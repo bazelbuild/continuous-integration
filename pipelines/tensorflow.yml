@@ -14,7 +14,6 @@ platforms:
     - pip3 install portpicker keras_applications keras_preprocessing future packaging dataclasses
     - yes '' | python3 ./configure.py
     build_flags:
-    - "--config=opt"
     # Suppress warning messages from all actions
     - "--output_filter=^$"
     build_targets:
@@ -36,7 +35,6 @@ platforms:
     - pip3 install -U --user keras_preprocessing==1.0.5 --no-deps
     - yes '' | python3 ./configure.py
     build_flags:
-    - "--config=opt"
     # Suppress warning messages from all actions
     - "--output_filter=^$"
     build_targets:
@@ -49,7 +47,6 @@ platforms:
     - pip3 install packaging
     - echo.| python ./configure.py
     build_flags:
-    - "--config=opt"
     # Suppress warning messages from all actions
     - "--output_filter=^$"
     build_targets:
