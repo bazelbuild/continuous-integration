@@ -143,7 +143,7 @@ def get_releases():
         content = body.decode(res.info().get_content_charset("iso-8859-1"))
 
     return {
-        r["tag_name"]: get_release_urls(r)
+        r["tag_name"].lstrip("v"): get_release_urls(r)
         for r in json.loads(content)
         if not r["prerelease"]
     }
