@@ -2151,7 +2151,9 @@ def expand_test_target_patterns(bazel_binary, test_targets):
 def filter_unchanged_targets(
     expanded_test_targets, workspace_dir, bazel_binary, diffbase, git_commit
 ):
-    print_collapsed_group(f":scissors: Filtering targets that haven't been affected since {diffbase}")
+    print_collapsed_group(
+        f":scissors: Filtering targets that haven't been affected since {diffbase}"
+    )
 
     tmpdir = tempfile.mkdtemp()
     eprint(f"Downloading bazel-diff to {tmpdir}")
