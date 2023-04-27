@@ -1,6 +1,7 @@
 # Update Bazel Docker container for new release
 
 To build and publish docker container for new Bazel LTS release to `gcr.io/bazel-public/bazel`, follow those steps:
+(The build.sh file can be found [here](https://github.com/bazelbuild/continuous-integration/blob/master/bazel/oci/build.sh).)
 
 ### 1. Build the docker container on your local Linux machine
 

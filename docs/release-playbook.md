@@ -50,6 +50,7 @@ These steps only have to be performed once, ever.
         *   A first release candidate should immediately be created after the release branch is created. See [create a release candidate](#create-a-release-candidate) below.
 1.  After creating the branch, edit the CODEOWNERS file on that branch, replace the entire contents of the file with the line `* @your-github-username` and submit it directly.
     *   This makes sure that all PRs sent against that branch have you as a reviewer.
+1.  Update the branch name in the scheduled build for release branches by editing the "build branch" field [here](https://buildkite.com/bazel/bazel-at-head-plus-downstream/settings/schedules/b63d6589-2658-4850-a9b9-b588b9ea5c99/edit). Set it to `release-X.Y.Z` so that downstream tests run against this branch.
 1.  (For minor release only) Send an email to both bazel-dev@googlegroups.com and bazel-discuss@googlegroups.com announcing the next release.
     *   It should contain the text: `The Bazel X.Y.Z release branch (release-X.Y.Z [link]) is open for business. Please send cherry-pick PRs against this branch if you'd like your change to be in X.Y.Z. Please follow the release tracking issue [link] for updates.`
 1.  Meanwhile, begin the [internal approval process](http://go/bazel-internal-launch-checklist), too.
@@ -73,6 +74,7 @@ While the release is active, you should make sure to do the following:
 *   Review any PRs sent to the release branch and merge them as necessary.
     *   Make sure to close any related release blocker issues after merging the PRs; merging PRs into non-main branches does *not* automatically close related issues (see [GitHub docs](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue)).
     *   Before closing a release blocker issue, add a comment indicating how the issue was resolved, for better tracking (e.g. `cherry-picked in #XYZ` - see [this example](https://github.com/bazelbuild/bazel/issues/16629#issuecomment-1302743541))
+*   Periodically check downstream tests that are run against the release branch to catch any breakages early on in the process. If you see any failures that don't appear at HEAD, reach out to the Bazel team, open an issue if needed, and add the issue to the release blockers list.
 *   When enough PRs have been cherry-picked and the release is nearing a ready state, create a release candidate (see [below](#create-a-release-candidate)).
     *   When a few days pass and no more release blockers show up, push the candidate as the release. Otherwise, rinse and repeat the steps above.
 *   Keep the task list in the release tracking issue updated and check boxes as you follow the release process.
@@ -93,6 +95,7 @@ While the release is active, you should make sure to do the following:
         *   Commit: HEAD
         *   Branch: release-4.2.3rc1
         *   Option: USE_BAZEL_VERSION=4.2.2 
+    *   If the previous version requires changes to the pipeline, create a new branch in the continuous-integration repository with the required changes (see release-4.2.4 [example](https://github.com/bazelbuild/continuous-integration/tree/release-4.2.4)) and explicitly set the buildkite script path. Refer to [this example](https://buildkite.com/bazel-trusted/bazel-release/builds/1076#01879e91-7694-420d-bc1a-4be9f84c0c51).
 1.  Check the postsubmit test run for the release branch to ensure that all
     tests on all platforms pass with the version you're about to release.
 
@@ -127,7 +130,7 @@ While the release is active, you should make sure to do the following:
         *   Message: Test Release-3.0.0rc2 (Or any message you like)
         *   Commit: HEAD
         *   Branch: release-3.0.0rc2
-    *   **Note:** Before any release, always make sure downstream builds for the release candidate should not have any extra breakages compared to Bazel@HEAD, and all the Bazel jobs should be green so that Bazel postsubmits won’t be broken after the release.
+    *   **Note:** Make sure that downstream builds for the release candidate don't have any extra breakages compared to Bazel@HEAD so that Bazel postsubmits won’t be broken after the release.
 
 1.  Look for failing projects in red.
     *   Compare the results with the latest Bazel release:
@@ -192,7 +195,7 @@ Note: the above policies are for final releases only. RCs can be created without
 
 ## Push a release
 
-1.  **Push the final release (do not cancel midway)** by running the following commands in a Bazel git repo on a Linux machine:
+1.  **Push the final release (do not cancel midway)** by running the following commands in a Bazel git repo on a Linux machine (but first make sure that the master branch is up to date to avoid overwriting parts of the CHANGELOG file.)
 
     ```bash
     git fetch origin release-X.Y.ZrcN
@@ -201,12 +204,13 @@ Note: the above policies are for final releases only. RCs can be created without
     ```
 
     **Warning**: If this process is interrupted for any reason, please check the following before running:
-      * Both `release-X.Y.ZrcN` and `master` branch are restored to the previous clean state (without addtional release commits).
+      * Both `release-X.Y.ZrcN` and `master` branch are restored to the previous clean state (without addtional release commits). Without this step, you may see errors and/or multiple commits pushed.
       * Release tag is deleted locally (`git tag -d X.Y.Z`), otherwise rerun will cause an error that complains the tag already exists.
 
 1.  A CI job is uploading the release artifacts to GitHub. Look for the release
     workflow on https://buildkite.com/bazel-trusted/bazel-release/. Unblock the steps by clicking "Deploy release artifacts". Subsequently you should
     see the updated version in Github.
+      * When building a patch release for a previous LTS version, follow the same steps as you did when creating a release candidate (set `USE_BAZEL_VERSION`, etc.).
 
 1.  Ensure all binaries were uploaded to GitHub properly.
     1.  **Why?** Sometimes binaries are uploaded incorrectly.
