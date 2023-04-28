@@ -139,7 +139,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/bazel-watcher.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-watcher/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-watcher",
-        "disabled_reason": "https://github.com/bazelbuild/bazel-watcher/issues/590"
+        "disabled_reason": "https://github.com/bazelbuild/bazel-watcher/issues/590",
     },
     "Bazelisk": {
         "git_repository": "https://github.com/bazelbuild/bazelisk.git",
@@ -623,6 +623,13 @@ BUILD_LABEL_PATTERN = re.compile(r"^Build label: (\S+)$", re.MULTILINE)
 BUILDIFIER_STEP_NAME = "Buildifier"
 
 SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
+
+# TODO: change to USE_BAZEL_DIFF once the feature has been tested in QA
+USE_BAZEL_DIFF_ENV_VAR = "EXPERIMENTAL_USE_BAZEL_DIFF"
+
+AUTO_DIFFBASE_VALUES = frozenset(["1", "true", "auto"])
+
+COMMIT_RE = re.compile(r"[0-9a-z]{40}")
 
 CONFIG_FILE_EXTENSIONS = {".yml", ".yaml"}
 
@@ -1308,7 +1315,7 @@ def execute_commands(
             execute_bazel_clean(bazel_binary, platform)
 
         build_targets, test_targets, coverage_targets, index_targets = calculate_targets(
-            task_config, platform, bazel_binary, build_only, test_only
+            task_config, bazel_binary, build_only, test_only, requested_working_dir, git_commit
         )
 
         if build_targets:
@@ -1451,6 +1458,7 @@ def get_default_xcode_version():
     macos = execute_command_and_get_output(["sw_vers", "-productVersion"], print_output=False)
     major = int(macos.split(".")[0])
     return DEFAULT_XCODE_VERSION_PER_OS.get(major, "13.0")  # we use 13.0 due to legacy reasons
+
 
 def activate_xcode(task_config):
     default_xcode_version = get_default_xcode_version()
@@ -1840,8 +1848,8 @@ def concurrent_test_jobs(platform):
     elif is_mac() and THIS_IS_TESTING:
         return "4"
     elif is_mac():
-      # TODO(twerth): This is an experiment, remove.
-      return str(int(multiprocessing.cpu_count()/2))
+        # TODO(twerth): This is an experiment, remove.
+        return str(int(multiprocessing.cpu_count() / 2))
     return "12"
 
 
@@ -2060,7 +2068,7 @@ def execute_bazel_build_with_kythe(bazel_version, bazel_binary, platform, flags,
     )
 
 
-def calculate_targets(task_config, platform, bazel_binary, build_only, test_only):
+def calculate_targets(task_config, bazel_binary, build_only, test_only, workspace_dir, git_commit):
     build_targets = [] if test_only else task_config.get("build_targets", [])
     test_targets = [] if build_only else task_config.get("test_targets", [])
     coverage_targets = [] if (build_only or test_only) else task_config.get("coverage_targets", [])
@@ -2085,6 +2093,17 @@ def calculate_targets(task_config, platform, bazel_binary, build_only, test_only
     coverage_targets = [x.strip() for x in coverage_targets if x.strip() != "--"]
     index_targets = [x.strip() for x in index_targets if x.strip() != "--"]
 
+    expanded_test_targets = expand_test_target_patterns(bazel_binary, test_targets)
+
+    diffbase = os.getenv(USE_BAZEL_DIFF_ENV_VAR, "").lower()
+    actual_test_targets = (
+        filter_unchanged_targets(
+            expanded_test_targets, workspace_dir, bazel_binary, diffbase, git_commit
+        )
+        if diffbase
+        else expanded_test_targets
+    )
+
     shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
     shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
     if shard_id > -1 and shard_count > -1:
@@ -2093,13 +2112,12 @@ def calculate_targets(task_config, platform, bazel_binary, build_only, test_only
                 shard_id + 1, shard_count
             )
         )
-        expanded_test_targets = expand_test_target_patterns(bazel_binary, platform, test_targets)
-        test_targets = get_targets_for_shard(expanded_test_targets, shard_id, shard_count)
+        actual_test_targets = get_targets_for_shard(actual_test_targets, shard_id, shard_count)
 
-    return build_targets, test_targets, coverage_targets, index_targets
+    return build_targets, actual_test_targets, coverage_targets, index_targets
 
 
-def expand_test_target_patterns(bazel_binary, platform, test_targets):
+def expand_test_target_patterns(bazel_binary, test_targets):
     included_targets, excluded_targets = partition_targets(test_targets)
     excluded_string = (
         " except tests(set({}))".format(" ".join("'{}'".format(t) for t in excluded_targets))
@@ -2128,6 +2146,112 @@ def expand_test_target_patterns(bazel_binary, platform, test_targets):
         print_output=False,
     ).strip()
     return output.split("\n") if output else []
+
+
+def filter_unchanged_targets(
+    expanded_test_targets, workspace_dir, bazel_binary, diffbase, git_commit
+):
+    print_collapsed_group(
+        f":scissors: Filtering targets that haven't been affected since {diffbase}"
+    )
+
+    tmpdir = tempfile.mkdtemp()
+    eprint(f"Downloading bazel-diff to {tmpdir}")
+    bazel_diff_path = download_bazel_diff(tmpdir)
+    resolved_diffbase = resolve_diffbase(diffbase)
+
+    eprint(f"Running bazel-diff for {resolved_diffbase} and {git_commit}")
+    try:
+        affected_targets = run_bazel_diff(
+            bazel_diff_path, workspace_dir, bazel_binary, resolved_diffbase, git_commit, tmpdir
+        )
+    finally:
+        shutil.rmtree(tmpdir)
+
+    filtered_targets = list(set(expanded_test_targets).intersection(affected_targets))
+    if len(filtered_targets) < len(expanded_test_targets):
+        execute_command(
+            [
+                "buildkite-agent",
+                "annotate",
+                "--style=info",
+                "'This run only contains test targets that have been changed since "
+                "{} due to the {} env variable'".format(resolved_diffbase, USE_BAZEL_DIFF_ENV_VAR),
+            ]
+        )
+
+    return filtered_targets
+
+
+def resolve_diffbase(diffbase):
+    if diffbase in AUTO_DIFFBASE_VALUES:
+        return "HEAD^"
+    elif COMMIT_RE.fullmatch(diffbase):
+        return diffbase
+
+    raise BuildkiteException(
+        "Invalid value '{}' for {} env variable. Must be a Git commit hash or one of {}".format(
+            diffbase, ", ".join(AUTO_DIFFBASE_VALUES)
+        )
+    )
+
+
+def download_bazel_diff(directory):
+    # TODO fweikert: Include bazel-diff in the Docker images if we decide to productionize the experiment.
+    url = "https://github.com/Tinder/bazel-diff/releases/download/4.5.0/bazel-diff_deploy.jar"
+    local_path = os.path.join(directory, "bazel-diff.jar")
+    try:
+        execute_command(["curl", "-sSL", url, "-o", local_path])
+    except subprocess.CalledProcessError as ex:
+        raise BuildkiteInfraException("Failed to download {}, error message:\n%s".format(url, ex))
+    return local_path
+
+
+def run_bazel_diff(
+    bazel_diff_path, workspace_dir, bazel_binary, start_commit, end_commit, data_dir
+):
+    before_json = os.path.join(data_dir, "before.json")
+    after_json = os.path.join(data_dir, "after.json")
+    targets_file = os.path.join(data_dir, "targets.txt")
+
+    try:
+        for commit, json_path in ((start_commit, before_json), (end_commit, after_json)):
+            execute_command(["git", "-C", workspace_dir, "checkout", commit, "--quiet"])
+            execute_command(
+                [
+                    "java",
+                    "-jar",
+                    bazel_diff_path,
+                    "generate-hashes",
+                    "-w",
+                    workspace_dir,
+                    "-b",
+                    bazel_binary,
+                    json_path,
+                ]
+            )
+
+        execute_command(
+            [
+                "java",
+                "-jar",
+                bazel_diff_path,
+                "get-impacted-targets",
+                "-sh",
+                before_json,
+                "-fh",
+                after_json,
+                "-o",
+                targets_file,
+            ]
+        )
+    except subprocess.CalledProcessError as ex:
+        raise BuildkiteException("Failed to run bazel-diff: {}".format(ex))
+
+    with open(targets_file, "rt") as f:
+        contents = f.read()
+
+    return contents.split("\n")
 
 
 def partition_targets(targets):
