@@ -1314,6 +1314,12 @@ def execute_commands(
         if needs_clean:
             execute_bazel_clean(bazel_binary, platform)
 
+        # The git_commit paramter only has a value in the downstream pipeline,
+        # but we need the commit here in order to calculate the correct targets.
+        git_commit = git_commit or os.getenv("BUILDKITE_COMMIT")
+        if not git_commit:
+            raise BuildkiteInfraException("Unable to determine Git commit for this build")
+
         build_targets, test_targets, coverage_targets, index_targets = calculate_targets(
             task_config, bazel_binary, build_only, test_only, requested_working_dir, git_commit
         )
