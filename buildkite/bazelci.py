@@ -672,7 +672,6 @@ class BinaryUploadRaceException(Exception):
 
 
 class BuildkiteClient(object):
-
     _ENCRYPTED_BUILDKITE_API_TOKEN = """
 CiQA4DEB9ldzC+E39KomywtqXfaQ86hhulgeDsicds2BuvbCYzsSUAAqwcvXZPh9IMWlwWh94J2F
 exosKKaWB0tSRJiPKnv2NPDfEqGul0ZwVjtWeASpugwxxKeLhFhPMcgHMPfndH6j2GEIY6nkKRbP
@@ -2181,8 +2180,8 @@ def filter_unchanged_targets(
                 "buildkite-agent",
                 "annotate",
                 "--style=info",
-                "'This run only contains test targets that have been changed since "
-                "{} due to the {} env variable'".format(resolved_diffbase, USE_BAZEL_DIFF_ENV_VAR),
+                "This run only contains test targets that have been changed since "
+                "{} due to the {} env variable".format(resolved_diffbase, USE_BAZEL_DIFF_ENV_VAR),
             ]
         )
 
@@ -2222,7 +2221,19 @@ def run_bazel_diff(
 
     try:
         for commit, json_path in ((start_commit, before_json), (end_commit, after_json)):
-            execute_command(["git", "-C", workspace_dir, "checkout", commit, "--quiet"])
+            # TODO: use -C once all machines run Git 1.8+
+            execute_command(
+                [
+                    "git",
+                    "--git-dir",
+                    os.path.join(workspace_dir, ".git"),
+                    "--work-tree",
+                    workspace_dir,
+                    "checkout",
+                    commit,
+                    "--quiet",
+                ]
+            )
             execute_command(
                 [
                     "java",
