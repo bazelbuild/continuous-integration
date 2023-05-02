@@ -2098,9 +2098,18 @@ def calculate_targets(task_config, bazel_binary, build_only, test_only, workspac
     coverage_targets = [x.strip() for x in coverage_targets if x.strip() != "--"]
     index_targets = [x.strip() for x in index_targets if x.strip() != "--"]
 
+    diffbase = os.getenv(USE_BAZEL_DIFF_ENV_VAR, "").lower()
+    shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
+    shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
+    sharding_enabled = shard_id > -1 and shard_count > -1
+
+    # Skip target expansion if we don't need to calculate test targets
+    if not diffbase and not sharding_enabled:
+        return build_targets, test_targets, coverage_targets, index_targets
+
+    # TODO(#1614): Fix target expansion
     expanded_test_targets = expand_test_target_patterns(bazel_binary, test_targets)
 
-    diffbase = os.getenv(USE_BAZEL_DIFF_ENV_VAR, "").lower()
     actual_test_targets = (
         filter_unchanged_targets(
             expanded_test_targets, workspace_dir, bazel_binary, diffbase, git_commit
@@ -2109,9 +2118,7 @@ def calculate_targets(task_config, bazel_binary, build_only, test_only, workspac
         else expanded_test_targets
     )
 
-    shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
-    shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
-    if shard_id > -1 and shard_count > -1:
+    if sharding_enabled:
         print_collapsed_group(
             ":female-detective: Calculating targets for shard {}/{}".format(
                 shard_id + 1, shard_count
