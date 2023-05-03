@@ -501,7 +501,9 @@ steps:
       echo Release: %RELEASE_NAME%
 
       echo "+++ Updating Chocolatey"
-      SET KEY_ID=$(gsutil cat gs://bazel-trusted-encrypted-secrets/choco-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key choco-trusted-token --ciphertext-file - --plaintext-file -)
+      gsutil cat gs://bazel-trusted-encrypted-secrets/choco-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key choco-trusted-token --ciphertext-file - --plaintext-file key.txt
+      SET /p KEY_ID=<key.txt
+      DEL /q key.txt
 
       choco apikey -k %KEY_ID% -s https://push.chocolatey.org/
 
