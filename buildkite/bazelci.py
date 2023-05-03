@@ -2180,8 +2180,18 @@ def filter_unchanged_targets(
     finally:
         shutil.rmtree(tmpdir)
 
-    filtered_targets = list(set(expanded_test_targets).intersection(affected_targets))
-    if len(filtered_targets) < len(expanded_test_targets):
+    config_target_set = set(expanded_test_targets)
+    remaining_targets = list(config_target_set.intersection(affected_targets))
+    if len(remaining_targets) < len(expanded_test_targets):
+        print_collapsed_group(
+            ":scissors: Successfully reduced test targets from {} to {}".format(
+                len(expanded_test_targets), len(remaining_targets)
+            )
+        )
+
+        skipped_targets = sorted(config_target_set.difference(remaining_targets))
+        eprint("Skipped targets:\n\t{}".format("\n\t".join(skipped_targets)))
+
         execute_command(
             [
                 "buildkite-agent",
@@ -2192,7 +2202,7 @@ def filter_unchanged_targets(
             ]
         )
 
-    return filtered_targets
+    return remaining_targets
 
 
 def resolve_diffbase(diffbase):
