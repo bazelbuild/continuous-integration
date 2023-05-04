@@ -2147,10 +2147,7 @@ def expand_test_target_patterns(bazel_binary, test_targets):
         + [
             "--nosystem_rc",
             "--nohome_rc",
-            "cquery",
-            "--output=starlark",
-            # Print out the label only if the test is compatible.
-            "--starlark:expr=target.label if 'IncompatiblePlatformProvider' not in providers(target) else ''",
+            "query",
             "tests(set({})){}{}".format(
                 " ".join("'{}'".format(t) for t in included_targets),
                 excluded_string,
