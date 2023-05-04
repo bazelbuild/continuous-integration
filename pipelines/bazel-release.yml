@@ -37,12 +37,10 @@ steps:
       if [[ \"\$release_name\" =~ .*rc.* ]]; then
         mode="rc"
       fi
-      
-      echo "mode = \"\$mode\""  
-    
+      echo "mode = \"\$mode\""
       buildkite-agent meta-data set "mode" "\$mode"
       
-      export choco_key=$(gsutil cat gs://bazel-trusted-encrypted-secrets/choco-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key choco-trusted-token --ciphertext-file - --plaintext-file -)
+      choco_key=$(gsutil cat gs://bazel-trusted-encrypted-secrets/choco-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key choco-trusted-token --ciphertext-file - --plaintext-file -)
       buildkite-agent meta-data set "choco_key" "\$choco_key"
 
   - wait
@@ -494,9 +492,9 @@ steps:
 
   - wait
 
-  - block: "Update packages"
+  - block: "Update Chocolatey"
 
-  - label: "Update packages"
+  - label: "Update Chocolatey"
     agents:
       - queue=windows
     command: |
@@ -507,13 +505,11 @@ steps:
       buildkite-agent meta-data get "release_name" > release_name.txt
       SET /p RELEASE_NAME=<release_name.txt
       DEL /q release_name.txt
-      
       echo Release: %RELEASE_NAME%
       
       buildkite-agent meta-data get "mode" > mode.txt
       SET /p MODE=<mode.txt
       DEL /q mode.txt
-      
       echo Mode: %MODE%
       
       buildkite-agent meta-data get "choco_key" > choco_key.txt
@@ -529,7 +525,6 @@ steps:
         SET RC=%RELEASE_NAME:~-1%
         SET VERSION=%RELEASE_NAME:~0,-3%
       )
-      
       echo RC: %RC%
       echo VERSION: %VERSION%
       
