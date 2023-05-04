@@ -2154,7 +2154,7 @@ def expand_test_target_patterns(bazel_binary, test_targets, test_flags):
         + [
             "--nosystem_rc",
             "--nohome_rc",
-            "query",
+            "cquery" if os.getenv("EXP_USE_CQUERY") else "query",
             get_test_query(test_targets, test_flags),
         ],
         print_output=False,
