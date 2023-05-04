@@ -200,7 +200,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/gerrit.yml",
         "pipeline_slug": "gerrit",
-        "disabled_reason": "https://bugs.chromium.org/p/gerrit/issues/detail?id=16632",
     },
     "Google Logging": {
         "git_repository": "https://github.com/google/glog.git",
@@ -1319,18 +1318,8 @@ def execute_commands(
         if not git_commit:
             raise BuildkiteInfraException("Unable to determine Git commit for this build")
 
-        test_flags, json_profile_out_test, capture_corrupted_outputs_dir_test = calculate_flags(
-            task_config, "test_flags", "test", tmpdir, test_env_vars
-        )
-
         build_targets, test_targets, coverage_targets, index_targets = calculate_targets(
-            task_config,
-            bazel_binary,
-            build_only,
-            test_only,
-            requested_working_dir,
-            git_commit,
-            test_flags,
+            task_config, bazel_binary, build_only, test_only, requested_working_dir, git_commit
         )
 
         if build_targets:
@@ -1363,6 +1352,9 @@ def execute_commands(
                     upload_corrupted_outputs(capture_corrupted_outputs_dir_build, tmpdir)
 
         if test_targets:
+            test_flags, json_profile_out_test, capture_corrupted_outputs_dir_test = calculate_flags(
+                task_config, "test_flags", "test", tmpdir, test_env_vars
+            )
             if not is_windows():
                 # On platforms that support sandboxing (Linux, MacOS) we have
                 # to allow access to Bazelisk's cache directory.
@@ -2080,9 +2072,7 @@ def execute_bazel_build_with_kythe(bazel_version, bazel_binary, platform, flags,
     )
 
 
-def calculate_targets(
-    task_config, bazel_binary, build_only, test_only, workspace_dir, git_commit, test_flags
-):
+def calculate_targets(task_config, bazel_binary, build_only, test_only, workspace_dir, git_commit):
     build_targets = [] if test_only else task_config.get("build_targets", [])
     test_targets = [] if build_only else task_config.get("test_targets", [])
     coverage_targets = [] if (build_only or test_only) else task_config.get("coverage_targets", [])
@@ -2107,20 +2097,27 @@ def calculate_targets(
     coverage_targets = [x.strip() for x in coverage_targets if x.strip() != "--"]
     index_targets = [x.strip() for x in index_targets if x.strip() != "--"]
 
+    diffbase = os.getenv(USE_BAZEL_DIFF_ENV_VAR, "").lower()
+    shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
+    shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
+    sharding_enabled = shard_id > -1 and shard_count > -1
+
+    # Skip target expansion if we don't need to calculate test targets
+    if not diffbase and not sharding_enabled:
+        return build_targets, test_targets, coverage_targets, index_targets
+
+    # TODO(#1614): Fix target expansion
     expanded_test_targets = expand_test_target_patterns(bazel_binary, test_targets)
 
-    diffbase = os.getenv(USE_BAZEL_DIFF_ENV_VAR, "").lower()
     actual_test_targets = (
         filter_unchanged_targets(
-            expanded_test_targets, workspace_dir, bazel_binary, diffbase, git_commit, test_flags
+            expanded_test_targets, workspace_dir, bazel_binary, diffbase, git_commit
         )
         if diffbase
         else expanded_test_targets
     )
 
-    shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
-    shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
-    if shard_id > -1 and shard_count > -1:
+    if sharding_enabled:
         print_collapsed_group(
             ":female-detective: Calculating targets for shard {}/{}".format(
                 shard_id + 1, shard_count
@@ -2163,7 +2160,7 @@ def expand_test_target_patterns(bazel_binary, test_targets):
 
 
 def filter_unchanged_targets(
-    expanded_test_targets, workspace_dir, bazel_binary, diffbase, git_commit, test_flags
+    expanded_test_targets, workspace_dir, bazel_binary, diffbase, git_commit
 ):
     print_collapsed_group(
         f":scissors: Filtering targets that haven't been affected since {diffbase}"
@@ -2177,19 +2174,23 @@ def filter_unchanged_targets(
     eprint(f"Running bazel-diff for {resolved_diffbase} and {git_commit}")
     try:
         affected_targets = run_bazel_diff(
-            bazel_diff_path,
-            workspace_dir,
-            bazel_binary,
-            resolved_diffbase,
-            git_commit,
-            test_flags,
-            tmpdir,
+            bazel_diff_path, workspace_dir, bazel_binary, resolved_diffbase, git_commit, tmpdir
         )
     finally:
         shutil.rmtree(tmpdir)
 
-    filtered_targets = list(set(expanded_test_targets).intersection(affected_targets))
-    if len(filtered_targets) < len(expanded_test_targets):
+    config_target_set = set(expanded_test_targets)
+    remaining_targets = list(config_target_set.intersection(affected_targets))
+    if len(remaining_targets) < len(expanded_test_targets):
+        print_collapsed_group(
+            ":scissors: Successfully reduced test targets from {} to {}".format(
+                len(expanded_test_targets), len(remaining_targets)
+            )
+        )
+
+        skipped_targets = sorted(config_target_set.difference(remaining_targets))
+        eprint("Skipped targets:\n\t{}".format("\n\t".join(skipped_targets)))
+
         execute_command(
             [
                 "buildkite-agent",
@@ -2200,7 +2201,7 @@ def filter_unchanged_targets(
             ]
         )
 
-    return filtered_targets
+    return remaining_targets
 
 
 def resolve_diffbase(diffbase):
@@ -2228,7 +2229,7 @@ def download_bazel_diff(directory):
 
 
 def run_bazel_diff(
-    bazel_diff_path, workspace_dir, bazel_binary, start_commit, end_commit, test_flags, data_dir
+    bazel_diff_path, workspace_dir, bazel_binary, start_commit, end_commit, data_dir
 ):
     before_json = os.path.join(data_dir, "before.json")
     after_json = os.path.join(data_dir, "after.json")
@@ -2259,8 +2260,6 @@ def run_bazel_diff(
                     workspace_dir,
                     "-b",
                     bazel_binary,
-                    "-co",
-                    " ".join(test_flags),
                     json_path,
                 ]
             )

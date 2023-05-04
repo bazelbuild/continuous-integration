@@ -19,26 +19,28 @@ platforms:
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
     # - "//tensorflow/examples/android:tensorflow_demo"
-  macos:
-    environment:
-      TF_IGNORE_MAX_BAZEL_VERSION: 1
-    shell_commands:
-    # - |-
-    #   echo '
-    #   import %workspace%/.bazelrc' >>bazel.bazelrc
-    # - |-
-    #   echo '
-    #   android_sdk_repository(name = "androidsdk")
-    #   android_ndk_repository(name = "androidndk")' >>WORKSPACE
-    - pip3 install -U --user pip six 'numpy<1.19.0' wheel setuptools mock 'future>=0.17.1' portpicker packaging
-    - pip3 install -U --user keras_applications==1.0.6 --no-deps
-    - pip3 install -U --user keras_preprocessing==1.0.5 --no-deps
-    - yes '' | python3 ./configure.py
-    build_flags:
-    # Suppress warning messages from all actions
-    - "--output_filter=^$"
-    build_targets:
-    - "//tensorflow/tools/pip_package:build_pip_package"
+# TF build is broken with Xcode 14.2, but fixed with 14.3 due to https://github.com/tensorflow/tensorflow/issues/58368
+# TODO(pcloudy): Re-enable when we use a compatible Xcode verison.
+#   macos:
+#     environment:
+#       TF_IGNORE_MAX_BAZEL_VERSION: 1
+#     shell_commands:
+#     # - |-
+#     #   echo '
+#     #   import %workspace%/.bazelrc' >>bazel.bazelrc
+#     # - |-
+#     #   echo '
+#     #   android_sdk_repository(name = "androidsdk")
+#     #   android_ndk_repository(name = "androidndk")' >>WORKSPACE
+#     - pip3 install -U --user pip six 'numpy<1.19.0' wheel setuptools mock 'future>=0.17.1' portpicker packaging
+#     - pip3 install -U --user keras_applications==1.0.6 --no-deps
+#     - pip3 install -U --user keras_preprocessing==1.0.5 --no-deps
+#     - yes '' | python3 ./configure.py
+#     build_flags:
+#     # Suppress warning messages from all actions
+#     - "--output_filter=^$"
+#     build_targets:
+#     - "//tensorflow/tools/pip_package:build_pip_package"
   windows:
     environment:
       TF_IGNORE_MAX_BAZEL_VERSION: 1
