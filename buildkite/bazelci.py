@@ -1318,8 +1318,18 @@ def execute_commands(
         if not git_commit:
             raise BuildkiteInfraException("Unable to determine Git commit for this build")
 
+        test_flags, json_profile_out_test, capture_corrupted_outputs_dir_test = calculate_flags(
+            task_config, "test_flags", "test", tmpdir, test_env_vars
+        )
+
         build_targets, test_targets, coverage_targets, index_targets = calculate_targets(
-            task_config, bazel_binary, build_only, test_only, requested_working_dir, git_commit
+            task_config,
+            bazel_binary,
+            build_only,
+            test_only,
+            requested_working_dir,
+            git_commit,
+            test_flags,
         )
 
         if build_targets:
@@ -1352,9 +1362,6 @@ def execute_commands(
                     upload_corrupted_outputs(capture_corrupted_outputs_dir_build, tmpdir)
 
         if test_targets:
-            test_flags, json_profile_out_test, capture_corrupted_outputs_dir_test = calculate_flags(
-                task_config, "test_flags", "test", tmpdir, test_env_vars
-            )
             if not is_windows():
                 # On platforms that support sandboxing (Linux, MacOS) we have
                 # to allow access to Bazelisk's cache directory.
@@ -2072,7 +2079,9 @@ def execute_bazel_build_with_kythe(bazel_version, bazel_binary, platform, flags,
     )
 
 
-def calculate_targets(task_config, bazel_binary, build_only, test_only, workspace_dir, git_commit):
+def calculate_targets(
+    task_config, bazel_binary, build_only, test_only, workspace_dir, git_commit, test_flags
+):
     build_targets = [] if test_only else task_config.get("build_targets", [])
     test_targets = [] if build_only else task_config.get("test_targets", [])
     coverage_targets = [] if (build_only or test_only) else task_config.get("coverage_targets", [])
@@ -2107,7 +2116,7 @@ def calculate_targets(task_config, bazel_binary, build_only, test_only, workspac
         return build_targets, test_targets, coverage_targets, index_targets
 
     # TODO(#1614): Fix target expansion
-    expanded_test_targets = expand_test_target_patterns(bazel_binary, test_targets)
+    expanded_test_targets = expand_test_target_patterns(bazel_binary, test_targets, test_flags)
 
     actual_test_targets = (
         filter_unchanged_targets(
@@ -2128,19 +2137,12 @@ def calculate_targets(task_config, bazel_binary, build_only, test_only, workspac
     return build_targets, actual_test_targets, coverage_targets, index_targets
 
 
-def expand_test_target_patterns(bazel_binary, test_targets):
-    included_targets, excluded_targets = partition_targets(test_targets)
-    excluded_string = (
-        " except tests(set({}))".format(" ".join("'{}'".format(t) for t in excluded_targets))
-        if excluded_targets
-        else ""
-    )
+def expand_test_target_patterns(bazel_binary, test_targets, test_flags):
+    if not test_targets:
+        return []
 
-    exclude_manual = ' except tests(attr("tags", "manual", set({})))'.format(
-        " ".join("'{}'".format(t) for t in included_targets)
-    )
+    print_collapsed_group(":ninja: Resolving test targets via bazel query")
 
-    eprint("Resolving test targets via bazel query")
     output = execute_command_and_get_output(
         [bazel_binary]
         + common_startup_flags()
@@ -2148,15 +2150,54 @@ def expand_test_target_patterns(bazel_binary, test_targets):
             "--nosystem_rc",
             "--nohome_rc",
             "query",
-            "tests(set({})){}{}".format(
-                " ".join("'{}'".format(t) for t in included_targets),
-                excluded_string,
-                exclude_manual,
-            ),
+            get_test_query(test_targets, test_flags),
         ],
         print_output=False,
     ).strip()
     return output.split("\n") if output else []
+
+
+def get_test_query(test_targets, test_flags):
+    included_targets, excluded_targets = partition_list(test_targets)
+
+    def FormatTargetList(targets):
+        return " ".join("'{}'".format(t) for t in targets)
+
+    query = "let t = tests(set({})) in \\$t".format(FormatTargetList(included_targets))
+
+    if excluded_targets:
+        query += " except tests(set({}))".format(FormatTargetList(excluded_targets))
+
+    included_tags, excluded_tags = get_test_tags(test_flags)
+
+    for t in excluded_tags:
+        query += " except attr('tags', '\\b{}\\b', \\$t)".format(t)
+
+    if included_tags:
+        parts = ["attr('tags', '\\b{}\\b', \\$tt)".format(t) for t in included_tags]
+        query = "let tt = {} in {}".format(query, " union ".join(parts))
+
+    return query
+
+
+def get_test_tags(test_flags):
+    wanted_prefix = "--test_tag_filters="
+
+    for f in test_flags:
+        if not f.startswith(wanted_prefix):
+            continue
+
+        tags = f.removeprefix(wanted_prefix).split(",")
+        include, exclude = partition_list(tags)
+
+        # Skip tests tagged as "manual" by default, unless explicitly requested
+        manual_tag = "manual"
+        if manual_tag not in include and manual_tag not in exclude:
+            exclude.append(manual_tag)
+
+        return include, exclude
+
+    return [], []
 
 
 def filter_unchanged_targets(
@@ -2287,15 +2328,15 @@ def run_bazel_diff(
     return contents.split("\n")
 
 
-def partition_targets(targets):
-    included_targets, excluded_targets = [], []
-    for target in targets:
-        if target.startswith("-"):
-            excluded_targets.append(target[1:])
+def partition_list(items):
+    included, excluded = [], []
+    for i in items:
+        if i.startswith("-"):
+            excluded.append(i[1:])
         else:
-            included_targets.append(target)
+            included.append(i)
 
-    return included_targets, excluded_targets
+    return included, excluded
 
 
 def get_targets_for_shard(test_targets, shard_id, shard_count):
