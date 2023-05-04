@@ -2242,7 +2242,8 @@ def filter_unchanged_targets(
                 "buildkite-agent",
                 "annotate",
                 "--style=info",
-                "--context 'diff'",
+                "--context",
+                "'diff'",
                 "This run only contains test targets that have been changed since "
                 "{} due to the {} env variable".format(resolved_diffbase, USE_BAZEL_DIFF_ENV_VAR),
             ]
