@@ -2197,7 +2197,7 @@ def get_test_tags(test_flags):
 
         return include, exclude
 
-    return [], []
+    return [], ["manual"]
 
 
 def filter_unchanged_targets(
