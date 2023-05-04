@@ -2242,6 +2242,7 @@ def filter_unchanged_targets(
                 "buildkite-agent",
                 "annotate",
                 "--style=info",
+                "--context 'diff'",
                 "This run only contains test targets that have been changed since "
                 "{} due to the {} env variable".format(resolved_diffbase, USE_BAZEL_DIFF_ENV_VAR),
             ]
@@ -2762,7 +2763,7 @@ def show_gerrit_review_link(git_repository, pipeline_steps):
     text = "The transformed code used in this pipeline can be found under https://{}-review.googlesource.com/q/{}".format(
         host, os.getenv("BUILDKITE_COMMIT")
     )
-    commands = ["buildkite-agent annotate --style=info '{}'".format(text)]
+    commands = ["buildkite-agent annotate --style=info --context 'gerrit' '{}'".format(text)]
     pipeline_steps.append(
         create_step(
             label=":pipeline: Print information about Gerrit Review Link",
