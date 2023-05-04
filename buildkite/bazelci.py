@@ -2163,7 +2163,7 @@ def get_test_query(test_targets, test_flags):
     def FormatTargetList(targets):
         return " ".join("'{}'".format(t) for t in targets)
 
-    query = "let t = tests(set({})) in \\$t".format(FormatTargetList(included_targets))
+    query = "let t = tests(set({})) in $t".format(FormatTargetList(included_targets))
 
     if excluded_targets:
         query += " except tests(set({}))".format(FormatTargetList(excluded_targets))
@@ -2171,10 +2171,10 @@ def get_test_query(test_targets, test_flags):
     included_tags, excluded_tags = get_test_tags(test_flags)
 
     for t in excluded_tags:
-        query += " except attr('tags', '\\b{}\\b', \\$t)".format(t)
+        query += " except attr('tags', '\\b{}\\b', $t)".format(t)
 
     if included_tags:
-        parts = ["attr('tags', '\\b{}\\b', \\$tt)".format(t) for t in included_tags]
+        parts = ["attr('tags', '\\b{}\\b', $tt)".format(t) for t in included_tags]
         query = "let tt = {} in {}".format(query, " union ".join(parts))
 
     return query
