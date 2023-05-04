@@ -2138,6 +2138,9 @@ def calculate_targets(
 
 
 def expand_test_target_patterns(bazel_binary, test_targets, test_flags):
+    if not test_targets:
+        return []
+
     print_collapsed_group(":ninja: Resolving test targets via bazel query")
 
     output = execute_command_and_get_output(
