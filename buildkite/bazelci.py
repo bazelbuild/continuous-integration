@@ -624,7 +624,12 @@ BUILDIFIER_STEP_NAME = "Buildifier"
 SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
 
 # TODO: change to USE_BAZEL_DIFF once the feature has been tested in QA
-USE_BAZEL_DIFF_ENV_VAR = "EXPERIMENTAL_USE_BAZEL_DIFF"
+USE_BAZEL_DIFF_ENV_VAR = "USE_BAZEL_DIFF"
+
+# TODO(fweikert): Install bazel-diff on the Docker images and on the Mac machines
+BAZEL_DIFF_URL = (
+    "https://github.com/Tinder/bazel-diff/releases/download/4.5.0/bazel-diff_deploy.jar"
+)
 
 AUTO_DIFFBASE_VALUES = frozenset(["1", "true", "auto"])
 
@@ -2259,13 +2264,13 @@ def resolve_diffbase(diffbase):
 
 
 def download_bazel_diff(directory):
-    # TODO fweikert: Include bazel-diff in the Docker images if we decide to productionize the experiment.
-    url = "https://github.com/Tinder/bazel-diff/releases/download/4.5.0/bazel-diff_deploy.jar"
     local_path = os.path.join(directory, "bazel-diff.jar")
     try:
-        execute_command(["curl", "-sSL", url, "-o", local_path])
+        execute_command(["curl", "-sSL", BAZEL_DIFF_URL, "-o", local_path])
     except subprocess.CalledProcessError as ex:
-        raise BuildkiteInfraException("Failed to download {}, error message:\n%s".format(url, ex))
+        raise BuildkiteInfraException(
+            "Failed to download {}, error message:\n%s".format(BAZEL_DIFF_URL, ex)
+        )
     return local_path
 
 
