@@ -31,6 +31,7 @@ import shutil
 import time
 import urllib.request
 import zipfile
+import requests
 import yaml
 
 import bazelci
@@ -319,10 +320,32 @@ def validate_files_outside_of_modules_dir_are_not_modified(modules):
         bazelci.eprint("Nothing changed outside of modules/")
 
 
+def get_labels_from_pr():
+    """Get the labels from the PR and return them as a list of strings."""
+
+    # https://buildkite.com/docs/pipelines/environment-variables#BUILDKITE_PULL_REQUEST
+    pr_number = os.environ.get("BUILDKITE_PULL_REQUEST")
+    if not pr_number or pr_number == "false":
+        return []
+
+    response = requests.get(f"https://api.github.com/repos/bazelbuild/bazel-central-registry/pulls/{pr_number}")
+    if response.status_code == 200:
+        pr = response.json()
+        return [label["name"] for label in pr["labels"]]
+    else:
+        error(f"Error: {response.status_code}. Could not fetch labels for PR https://github.com/bazelbuild/bazel-central-registry/pull/{pr_number}")
+
+
 def should_bcr_validation_block_presubmit(modules):
     bazelci.print_collapsed_group("Running BCR validations:")
+    skip_validation_flags = []
+    pr_labels = get_labels_from_pr()
+    if "skip-url-stability-check" in pr_labels:
+        skip_validation_flags.append("--skip_validation=url_stability")
+    if "presubmit-auto-run" in pr_labels:
+        skip_validation_flags.append("--skip_validation=presubmit_yml")
     returncode = subprocess.run(
-        ["python3", "./tools/bcr_validation.py", "--check_all_metadata"] + [f"--check={name}@{version}" for name, version in modules]
+        ["python3", "./tools/bcr_validation.py", "--check_all_metadata"] + [f"--check={name}@{version}" for name, version in modules] + skip_validation_flags,
     ).returncode
     # When a BCR maintainer view is required, the script should return 42.
     if returncode == 42:
@@ -361,7 +384,7 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
-    parser = argparse.ArgumentParser(description="Bazel Central Regsitry Presubmit Test Generator")
+    parser = argparse.ArgumentParser(description="Bazel Central Registry Presubmit Test Generator")
 
     subparsers = parser.add_subparsers(dest="subparsers_name")
 
