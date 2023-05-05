@@ -2217,7 +2217,7 @@ def get_test_tags(test_flags):
         if not f.startswith(wanted_prefix):
             continue
 
-        tags = f.removeprefix(wanted_prefix).split(",")
+        tags = removeprefix(f, wanted_prefix).split(",")
         include, exclude = partition_list(tags)
 
         # Skip tests tagged as "manual" by default, unless explicitly requested
@@ -2228,6 +2228,16 @@ def get_test_tags(test_flags):
         return include, exclude
 
     return [], ["manual"]
+
+
+def removeprefix(s, prefix):
+    def rp(p):
+        if s.startswith(p):
+            return s[len(p):]
+        return s
+
+    func = getattr(s, "removeprefix", rp)
+    return func(prefix)
 
 
 def filter_unchanged_targets(
