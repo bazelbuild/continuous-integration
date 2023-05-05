@@ -2233,7 +2233,7 @@ def get_test_tags(test_flags):
 def removeprefix(s, prefix):
     def rp(p):
         if s.startswith(p):
-            return s[len(p):]
+            return s[len(p) :]
         return s
 
     func = getattr(s, "removeprefix", rp)
@@ -2248,15 +2248,33 @@ def filter_unchanged_targets(
     )
 
     tmpdir = tempfile.mkdtemp()
-    eprint(f"Downloading bazel-diff to {tmpdir}")
-    bazel_diff_path = download_bazel_diff(tmpdir)
-    resolved_diffbase = resolve_diffbase(diffbase)
-
-    eprint(f"Running bazel-diff for {resolved_diffbase} and {git_commit}")
     try:
+        eprint(f"Downloading bazel-diff to {tmpdir}")
+        bazel_diff_path = download_bazel_diff(tmpdir)
+        resolved_diffbase = resolve_diffbase(diffbase)
+
+        eprint(f"Running bazel-diff for {resolved_diffbase} and {git_commit}")
+
         affected_targets = run_bazel_diff(
             bazel_diff_path, workspace_dir, bazel_binary, resolved_diffbase, git_commit, tmpdir
         )
+    except (BuildkiteException, BuildkiteInfraException) as ex:
+        try:
+            execute_command(
+                [
+                    "buildkite-agent",
+                    "annotate",
+                    "--style=warning",
+                    "--context",
+                    "'diff_failed'",
+                    "This build runs all test targets even though `{}` is set "
+                    "since bazel-diff failed with an error:\n```{}```".format(
+                        USE_BAZEL_DIFF_ENV_VAR, ex
+                    ),
+                ]
+            )
+        finally:
+            return expanded_test_targets
     finally:
         shutil.rmtree(tmpdir)
 
@@ -2280,7 +2298,7 @@ def filter_unchanged_targets(
                 "--context",
                 "'diff'",
                 "This run only contains test targets that have been changed since "
-                "{} due to the {} env variable".format(resolved_diffbase, USE_BAZEL_DIFF_ENV_VAR),
+                "{} due to the `{}` env variable".format(resolved_diffbase, USE_BAZEL_DIFF_ENV_VAR),
             ]
         )
 
@@ -2294,7 +2312,7 @@ def resolve_diffbase(diffbase):
         return diffbase
 
     raise BuildkiteException(
-        "Invalid value '{}' for {} env variable. Must be a Git commit hash or one of {}".format(
+        "Invalid value '{}' for `{}` env variable. Must be a Git commit hash or one of {}".format(
             diffbase, ", ".join(AUTO_DIFFBASE_VALUES)
         )
     )
@@ -2306,7 +2324,7 @@ def download_bazel_diff(directory):
         execute_command(["curl", "-sSL", BAZEL_DIFF_URL, "-o", local_path])
     except subprocess.CalledProcessError as ex:
         raise BuildkiteInfraException(
-            "Failed to download {}, error message:\n%s".format(BAZEL_DIFF_URL, ex)
+            "Failed to download {}:{}\n{}".format(BAZEL_DIFF_URL, ex, ex.stderr)
         )
     return local_path
 
@@ -2362,7 +2380,7 @@ def run_bazel_diff(
             ]
         )
     except subprocess.CalledProcessError as ex:
-        raise BuildkiteException("Failed to run bazel-diff: {}".format(ex))
+        raise BuildkiteInfraException("Failed to run bazel-diff: {}\n{}".format(ex, ex.stderr))
 
     with open(targets_file, "rt") as f:
         contents = f.read()
@@ -2509,7 +2527,12 @@ def execute_command(args, shell=False, fail_if_nonzero=True, cwd=None, print_out
     if print_output:
         eprint(" ".join(args))
     return subprocess.run(
-        args, shell=shell, check=fail_if_nonzero, env=os.environ, cwd=cwd
+        args,
+        shell=shell,
+        check=fail_if_nonzero,
+        env=os.environ,
+        cwd=cwd,
+        errors="replace",
     ).returncode
 
 
