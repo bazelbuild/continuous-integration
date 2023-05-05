@@ -633,6 +633,10 @@ BAZEL_DIFF_URL = (
 
 AUTO_DIFFBASE_VALUES = frozenset(["1", "true", "auto"])
 
+# Always run all test targets if any of the paths here are modified by the current commit.
+# Values can be directory paths (with a trailing slash) or file paths.
+DISABLE_BAZEL_DIFF_IF_MODIFIED = (".bazelci/", ".bazelversion")
+
 COMMIT_RE = re.compile(r"[0-9a-z]{40}")
 
 CONFIG_FILE_EXTENSIONS = {".yml", ".yaml"}
@@ -2087,6 +2091,8 @@ def execute_bazel_build_with_kythe(bazel_version, bazel_binary, platform, flags,
 def calculate_targets(
     task_config, bazel_binary, build_only, test_only, workspace_dir, git_commit, test_flags
 ):
+    print_collapsed_group(":dart: Calculating targets")
+
     build_targets = [] if test_only else task_config.get("build_targets", [])
     test_targets = [] if build_only else task_config.get("test_targets", [])
     coverage_targets = [] if (build_only or test_only) else task_config.get("coverage_targets", [])
@@ -2116,8 +2122,10 @@ def calculate_targets(
     shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
     sharding_enabled = shard_id > -1 and shard_count > -1
 
+    use_bazel_diff = diffbase and can_use_bazel_diff()
+
     # Skip target expansion if we don't need to calculate test targets
-    if not diffbase and not sharding_enabled:
+    if not use_bazel_diff and not sharding_enabled:
         return build_targets, test_targets, coverage_targets, index_targets
 
     # TODO(#1614): Fix target expansion
@@ -2127,7 +2135,7 @@ def calculate_targets(
         filter_unchanged_targets(
             expanded_test_targets, workspace_dir, bazel_binary, diffbase, git_commit
         )
-        if diffbase
+        if use_bazel_diff
         else expanded_test_targets
     )
 
@@ -2140,6 +2148,23 @@ def calculate_targets(
         actual_test_targets = get_targets_for_shard(actual_test_targets, shard_id, shard_count)
 
     return build_targets, actual_test_targets, coverage_targets, index_targets
+
+
+def can_use_bazel_diff():
+    matched_files = []
+    for f in get_modified_files():
+        for d in DISABLE_BAZEL_DIFF_IF_MODIFIED:
+            if d.endswith("/") and f.startswith(d) or f == d:
+                matched_files.append(f)
+
+    if matched_files:
+        eprint(
+            "Cannot enable bazel-diff since the following files were modified:\n\t{}".format(
+                "\n\t".join(sorted(matched_files))
+            )
+        )
+
+    return not matched_files
 
 
 def expand_test_target_patterns(bazel_binary, test_targets, test_flags):
@@ -2808,12 +2833,9 @@ def get_platform_for_task(task, task_config):
 
 
 def create_config_validation_steps():
-    output = execute_command_and_get_output(
-        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", os.getenv("BUILDKITE_COMMIT")]
-    )
     config_files = [
         path
-        for path in output.split("\n")
+        for path in get_modified_files()
         if path.startswith(".bazelci/") and os.path.splitext(path)[1] in CONFIG_FILE_EXTENSIONS
     ]
     return [
@@ -2829,6 +2851,13 @@ def create_config_validation_steps():
         )
         for f in config_files
     ]
+
+
+def get_modified_files():
+    output = execute_command_and_get_output(
+        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", os.getenv("BUILDKITE_COMMIT")]
+    )
+    return output.split("\n")
 
 
 def print_pipeline_steps(pipeline_steps, handle_emergencies=True):
