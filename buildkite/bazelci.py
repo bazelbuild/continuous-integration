@@ -1356,8 +1356,8 @@ def execute_commands(
             test_only,
             os.getcwd(),
             PrepareRepoInCwd,
-            test_flags,
             git_commit,
+            test_flags,
         )
 
         if build_targets:
@@ -2114,8 +2114,8 @@ def calculate_targets(
     test_only,
     workspace_dir,
     ws_setup_func,
-    test_flags,
     git_commit,
+    test_flags,
 ):
     print_collapsed_group(":dart: Calculating targets")
 
