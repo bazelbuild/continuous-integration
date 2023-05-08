@@ -2272,7 +2272,7 @@ def filter_unchanged_targets(
                     "--context",
                     "'diff_failed'",
                     "This build runs all test targets even though `{}` is set "
-                    "since bazel-diff failed with an error:\n```{}```".format(
+                    "since bazel-diff failed with an error:\n```\n{}\n```".format(
                         USE_BAZEL_DIFF_ENV_VAR, ex
                     ),
                 ]
@@ -2328,7 +2328,7 @@ def download_bazel_diff(directory):
         execute_command(["curl", "-sSL", BAZEL_DIFF_URL, "-o", local_path])
     except subprocess.CalledProcessError as ex:
         raise BuildkiteInfraException(
-            "Failed to download {}:{}\n{}".format(BAZEL_DIFF_URL, ex, ex.stderr)
+            "Failed to download {}: {}\n{}".format(BAZEL_DIFF_URL, ex, ex.stderr)
         )
     return local_path
 
@@ -2517,7 +2517,7 @@ def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True, prin
         shell=shell,
         check=fail_if_nonzero,
         env=os.environ,
-        stdout=subprocess.PIPE,
+        capture_output=True,
         errors="replace",
         universal_newlines=True,
     )
@@ -2537,6 +2537,7 @@ def execute_command(args, shell=False, fail_if_nonzero=True, cwd=None, print_out
         env=os.environ,
         cwd=cwd,
         errors="replace",
+        capture_output=True,  # We want exceptions to contain stderr
     ).returncode
 
 
