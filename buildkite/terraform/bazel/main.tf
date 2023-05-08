@@ -28,7 +28,7 @@ resource "buildkite_pipeline" "bcr-presubmit" {
   provider_settings {
     trigger_mode = "code"
     build_pull_requests = true
-    skip_pull_request_builds_for_existing_commits = true
+    skip_pull_request_builds_for_existing_commits = false
     build_pull_request_forks = true
     prefix_pull_request_fork_branch_names = true
     publish_commit_status = true
@@ -332,7 +332,7 @@ resource "buildkite_pipeline" "bazel-auto-sheriff-face-with-cowboy-hat" {
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["cd buildkite", "python3.6 bazel_auto_sheriff.py"], label = ":male-police-officer: :female-police-officer: :police_car:" } })
   description = "A pipeline to do most of work for the Bazel Green Team"
   default_branch = "master"
-  team = [{ access_level = "READ_ONLY", slug = "bazel" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }]
+  team = [{ access_level = "READ_ONLY", slug = "bazel" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }, {access_level = "BUILD_AND_READ", slug = "bazel-gtech-team"}]
 }
 
 resource "buildkite_pipeline" "github-dot-com-jmillikin-rules-ragel" {
@@ -440,7 +440,7 @@ resource "buildkite_pipeline" "github-dot-com-brightspace-rules-csharp" {
     skip_pull_request_builds_for_existing_commits = true
     build_pull_request_forks = true
     prefix_pull_request_fork_branch_names = true
-    publish_commit_status = true
+    publish_commit_status = false
     publish_commit_status_per_step = true
     separate_pull_request_statuses = true
   }
@@ -540,7 +540,7 @@ resource "buildkite_pipeline" "bazel-gazelle" {
   repository = "https://github.com/bazelbuild/bazel-gazelle.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
   default_branch = "master"
-  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
+  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }, {access_level = "BUILD_AND_READ", slug = "rules-go"}]
   provider_settings {
     trigger_mode = "code"
     build_pull_requests = true
@@ -984,7 +984,7 @@ resource "buildkite_pipeline" "cloud-robotics-core" {
   name = "Cloud Robotics Core"
   repository = "https://github.com/googlecloudrobotics/core.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/cloud-robotics.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"] } })
-  default_branch = "master"
+  default_branch = "main"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
 }
 
@@ -1092,7 +1092,7 @@ resource "buildkite_pipeline" "culprit-finder" {
   steps = templatefile("pipeline.yml.tpl", { envs = jsondecode("{\"NEEDS_CLEAN\": \"1\"}"), steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/culprit_finder.py?$(date +%s)\" -o culprit_finder.py", "python3.6 culprit_finder.py culprit_finder | tee /dev/tty | buildkite-agent pipeline upload"] } })
   description = "Find out which commit broke a project on specific platform"
   default_branch = "master"
-  team = [{ access_level = "READ_ONLY", slug = "bazel" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }]
+  team = [{ access_level = "READ_ONLY", slug = "bazel" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }, { access_level = "BUILD_AND_READ", slug = "bazel-gtech-team"}]
 }
 
 resource "buildkite_pipeline" "rules-dotnet-edge" {
@@ -1115,6 +1115,7 @@ resource "buildkite_pipeline" "rules-dotnet-edge" {
 }
 
 resource "buildkite_pipeline" "rules-testing" {
+  description = "Tests for https://github.com/bazelbuild/rules_testing"
   name = "rules_testing"
   repository = "https://github.com/bazelbuild/rules_testing.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
@@ -1152,7 +1153,7 @@ resource "buildkite_pipeline" "bazel-bazel-github-presubmit" {
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
   default_branch = "master"
   branch_configuration = "!master !release-*"
-  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
+  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }, {access_level = "BUILD_AND_READ", slug = "apple-team"}, {access_level = "BUILD_AND_READ", slug = "bazel-gtech-team"}]
   provider_settings {
     trigger_mode = "code"
     build_pull_requests = true
@@ -1170,13 +1171,14 @@ resource "buildkite_pipeline" "rules-android" {
   repository = "https://github.com/bazelbuild/rules_android.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
   description = "Android rules for Bazel"
-  default_branch = "master"
+  default_branch = "pre-alpha"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "android-team" }]
   provider_settings {
     trigger_mode = "code"
     build_pull_requests = true
     skip_pull_request_builds_for_existing_commits = true
     build_pull_request_forks = true
+    build_branches = true
     prefix_pull_request_fork_branch_names = true
     publish_commit_status = true
   }
@@ -1468,7 +1470,7 @@ resource "buildkite_pipeline" "google-bazel-presubmit" {
   repository = "https://bazel.googlesource.com/bazel.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
   default_branch = "master"
-  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }, { access_level = "BUILD_AND_READ", slug = "googlers" }, { access_level = "BUILD_AND_READ", slug = "bazel" }]
+  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }, { access_level = "BUILD_AND_READ", slug = "googlers" }, { access_level = "BUILD_AND_READ", slug = "bazel" }, { access_level = "BUILD_AND_READ", slug = "bazel-gtech-team" }]
 }
 
 resource "buildkite_pipeline" "rules-docker-docker" {
@@ -1677,7 +1679,7 @@ resource "buildkite_pipeline" "bazel-at-head-plus-downstream" {
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py bazel_downstream_pipeline --file_config=.bazelci/build_bazel_binaries.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
   description = "Test Bazel@HEAD + downstream projects@last_green_commit"
   default_branch = "master"
-  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }, { access_level = "BUILD_AND_READ", slug = "downstream-pipeline-triggerers" }, { access_level = "BUILD_AND_READ", slug = "bazel" }, { access_level = "BUILD_AND_READ", slug = "bazel-gtech-team" }]
+  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }, { access_level = "BUILD_AND_READ", slug = "downstream-pipeline-triggerers" }, { access_level = "BUILD_AND_READ", slug = "bazel" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-gtech-team" }]
 }
 
 resource "buildkite_pipeline" "rules-scala-scala" {
@@ -1944,7 +1946,7 @@ resource "buildkite_pipeline" "bazel-bazel" {
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/postsubmit.yml --monitor_flaky_tests=true | tee /dev/tty | buildkite-agent pipeline upload"] } })
   default_branch = "master"
   branch_configuration = "master release-*"
-  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }, { access_level = "BUILD_AND_READ", slug = "bazel" }]
+  team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }, { access_level = "BUILD_AND_READ", slug = "bazel" }, {access_level = "BUILD_AND_READ", slug = "bazel-gtech-team"}]
   provider_settings {
     trigger_mode = "code"
     skip_pull_request_builds_for_existing_commits = true
