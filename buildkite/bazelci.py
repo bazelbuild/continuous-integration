@@ -993,6 +993,8 @@ def get_combinations(matrix, attributes):
     if attributes = ['b', 'c'], then returns [[('b', 1), ('c', 1)]]
     if attributes = ['c'], then returns [[('c', 1)]]
     """
+    # Sort the attributes to make the output deterministic.
+    attributes.sort()
     for attr in attributes:
         if attr not in matrix:
             raise BuildkiteException("${{ %s }} is not defined in `matrix` section." % attr)
