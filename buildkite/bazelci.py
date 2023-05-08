@@ -160,6 +160,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/google/cargo-raze.git",
         "http_config": "https://raw.githubusercontent.com/google/cargo-raze/main/.bazelci/presubmit.yml",
         "pipeline_slug": "cargo-raze",
+        "disabled_reason": "https://github.com/bazelbuild/continuous-integration/issues/1594 (broken by Xcode 14.2)",
     },
     "CLion Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
@@ -205,6 +206,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/google/glog.git",
         "http_config": "https://raw.githubusercontent.com/google/glog/master/.bazelci/presubmit.yml",
         "pipeline_slug": "google-logging",
+        "disabled_reason": "Waiting on https://github.com/google/glog/pull/916",
     },
     "IntelliJ Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
@@ -264,6 +266,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/tensorflow.yml",
         "pipeline_slug": "tensorflow",
+        "disabled_reason": "https://github.com/tensorflow/tensorflow/issues/60508",
     },
     "re2": {
         "git_repository": "https://github.com/google/re2.git",
@@ -428,6 +431,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/protocolbuffers/upb.git",
         "http_config": "https://raw.githubusercontent.com/protocolbuffers/upb/master/.bazelci/presubmit.yml",
         "pipeline_slug": "upb",
+        "disabled_reason": "https://github.com/protocolbuffers/upb/issues/1290",
     },
 }
 
