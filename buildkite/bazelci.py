@@ -34,6 +34,7 @@ import shutil
 import stat
 import subprocess
 import sys
+import tarfile
 import tempfile
 import threading
 import time
@@ -1298,23 +1299,36 @@ def execute_commands(
         if use_bazelisk_migrate() and platform == "windows":
             os.environ["BAZELISK_SHUTDOWN"] = "1"
 
-        cmd_exec_func = execute_batch_commands if platform == "windows" else execute_shell_commands
-        cmd_exec_func(task_config.get("setup", None))
-
-        # Allow the config to override the current working directory.
-        required_prefix = os.getcwd()
-        requested_working_dir = os.path.abspath(task_config.get("working_directory", ""))
-        if os.path.commonpath([required_prefix, requested_working_dir]) != required_prefix:
-            raise BuildkiteException("working_directory refers to a path outside the workspace")
-        os.chdir(requested_working_dir)
-
         # Set OUTPUT_BASE environment variable
         os.environ["OUTPUT_BASE"] = get_output_base(bazel_binary, platform)
 
-        if platform == "windows":
-            execute_batch_commands(task_config.get("batch_commands", None))
-        else:
-            execute_shell_commands(task_config.get("shell_commands", None))
+        cmd_exec_func = execute_batch_commands if platform == "windows" else execute_shell_commands
+        cmd_exec_func(task_config.get("setup", None))
+
+        def PrepareRepoInCwd():
+            # Allow the config to override the current working directory.
+            requested_working_dir = task_config.get("working_directory")
+            if requested_working_dir:
+                if os.path.isabs(requested_working_dir):
+                    raise BuildkiteException(
+                        f"working_directory must be relative to the repository root, "
+                        "but was {requested_working_dir}"
+                    )
+
+                full_requested_working_dir = os.path.abspath(requested_working_dir)
+                if not os.path.isdir(full_requested_working_dir):
+                    raise BuildkiteException(
+                        f"{full_requested_working_dir} does not exist or is not a directory"
+                    )
+
+                os.chdir(full_requested_working_dir)
+
+            if platform == "windows":
+                execute_batch_commands(task_config.get("batch_commands", None))
+            else:
+                execute_shell_commands(task_config.get("shell_commands", None))
+
+        PrepareRepoInCwd()
 
         bazel_version = print_bazel_version_info(bazel_binary, platform)
 
@@ -1340,9 +1354,10 @@ def execute_commands(
             bazel_binary,
             build_only,
             test_only,
-            requested_working_dir,
-            git_commit,
+            os.getcwd(),
+            PrepareRepoInCwd,
             test_flags,
+            git_commit,
         )
 
         if build_targets:
@@ -2093,7 +2108,14 @@ def execute_bazel_build_with_kythe(bazel_version, bazel_binary, platform, flags,
 
 
 def calculate_targets(
-    task_config, bazel_binary, build_only, test_only, workspace_dir, git_commit, test_flags
+    task_config,
+    bazel_binary,
+    build_only,
+    test_only,
+    workspace_dir,
+    ws_setup_func,
+    test_flags,
+    git_commit,
 ):
     print_collapsed_group(":dart: Calculating targets")
 
@@ -2137,7 +2159,12 @@ def calculate_targets(
 
     actual_test_targets = (
         filter_unchanged_targets(
-            expanded_test_targets, workspace_dir, bazel_binary, diffbase, git_commit
+            expanded_test_targets,
+            workspace_dir,
+            ws_setup_func,
+            bazel_binary,
+            diffbase,
+            git_commit,
         )
         if use_bazel_diff
         else expanded_test_targets
@@ -2245,7 +2272,7 @@ def removeprefix(s, prefix):
 
 
 def filter_unchanged_targets(
-    expanded_test_targets, workspace_dir, bazel_binary, diffbase, git_commit
+    expanded_test_targets, workspace_dir, ws_setup_func, bazel_binary, diffbase, git_commit
 ):
     print_collapsed_group(
         f":scissors: Filtering targets that haven't been affected since {diffbase}"
@@ -2253,14 +2280,24 @@ def filter_unchanged_targets(
 
     tmpdir = tempfile.mkdtemp()
     try:
+        resolved_diffbase = resolve_diffbase(diffbase)
+        eprint(f"Resolved diffbase to {resolved_diffbase}")
+
+        eprint("Cloning comparison repository...")
+        diffbase_archive_url = get_commit_archive_url(resolved_diffbase)
+        diffbase_repo_dir = os.path.join(tmpdir, resolved_diffbase)
+        extract_archive(diffbase_archive_url, diffbase_repo_dir)
+
+        eprint("Setting up comparison repository...")
+        os.chdir(diffbase_repo_dir)
+        ws_setup_func()
+
         eprint(f"Downloading bazel-diff to {tmpdir}")
         bazel_diff_path = download_bazel_diff(tmpdir)
-        resolved_diffbase = resolve_diffbase(diffbase)
-
         eprint(f"Running bazel-diff for {resolved_diffbase} and {git_commit}")
 
         affected_targets = run_bazel_diff(
-            bazel_diff_path, workspace_dir, bazel_binary, resolved_diffbase, git_commit, tmpdir
+            bazel_diff_path, diffbase_repo_dir, workspace_dir, bazel_binary, tmpdir
         )
     except (BuildkiteException, BuildkiteInfraException) as ex:
         try:
@@ -2281,6 +2318,7 @@ def filter_unchanged_targets(
             return expanded_test_targets
     finally:
         shutil.rmtree(tmpdir)
+        os.chdir(workspace_dir)
 
     config_target_set = set(expanded_test_targets)
     remaining_targets = list(config_target_set.intersection(affected_targets))
@@ -2311,7 +2349,7 @@ def filter_unchanged_targets(
 
 def resolve_diffbase(diffbase):
     if diffbase in AUTO_DIFFBASE_VALUES:
-        return "HEAD^"
+        return resolve_revision("HEAD^")
     elif COMMIT_RE.fullmatch(diffbase):
         return diffbase
 
@@ -2320,6 +2358,23 @@ def resolve_diffbase(diffbase):
             diffbase, ", ".join(AUTO_DIFFBASE_VALUES)
         )
     )
+
+
+def get_commit_archive_url(resolved_diffbase):
+    repo_url = os.getenv("BUILDKITE_REPO", "")
+    prefix = "+" if "googlesource" in repo_url else ""
+    return repo_url.replace(".git", "/{}archive/{}.tar.gz".format(prefix, resolved_diffbase))
+
+
+def extract_archive(archive_url, dest_dir):
+    if not os.path.isdir(dest_dir):
+        os.mkdir(dest_dir)
+
+    try:
+        with tarfile.open(archive_url, mode="r:gz") as archive:
+            archive.extractall(dest_dir)
+    except tarfile.TarError as ex:
+        raise BuildkiteInfraException("Failed to extract repository archive: {}".format(ex)) from ex
 
 
 def download_bazel_diff(directory):
@@ -2333,28 +2388,16 @@ def download_bazel_diff(directory):
     return local_path
 
 
-def run_bazel_diff(
-    bazel_diff_path, workspace_dir, bazel_binary, start_commit, end_commit, data_dir
-):
+def run_bazel_diff(bazel_diff_path, old_workspace_dir, new_workspace_dir, bazel_binary, data_dir):
     before_json = os.path.join(data_dir, "before.json")
     after_json = os.path.join(data_dir, "after.json")
     targets_file = os.path.join(data_dir, "targets.txt")
 
     try:
-        for commit, json_path in ((start_commit, before_json), (end_commit, after_json)):
-            # TODO: use -C once all machines run Git 1.8+
-            execute_command(
-                [
-                    "git",
-                    "--git-dir",
-                    os.path.join(workspace_dir, ".git"),
-                    "--work-tree",
-                    workspace_dir,
-                    "checkout",
-                    commit,
-                    "--quiet",
-                ]
-            )
+        for repo_dir, json_path in (
+            (old_workspace_dir, before_json),
+            (new_workspace_dir, after_json),
+        ):
             execute_command(
                 [
                     "java",
@@ -2362,7 +2405,7 @@ def run_bazel_diff(
                     bazel_diff_path,
                     "generate-hashes",
                     "-w",
-                    workspace_dir,
+                    repo_dir,
                     "-b",
                     bazel_binary,
                     json_path,
@@ -3470,7 +3513,7 @@ def try_update_last_green_commit():
 
 def update_last_green_commit_if_newer(last_green_commit_url):
     last_green_commit = get_last_green_commit(last_green_commit_url)
-    current_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
+    current_commit = resolve_revision("HEAD")
     if last_green_commit:
         success = False
         try:
@@ -3509,6 +3552,10 @@ def update_last_green_commit_if_newer(last_green_commit_url):
             "Updating abandoned: last green commit (%s) is not older than current commit (%s)."
             % (last_green_commit, current_commit)
         )
+
+
+def resolve_revision(rev):
+    return subprocess.check_output(["git", "rev-parse", rev]).decode("utf-8").strip()
 
 
 def try_update_last_green_downstream_commit():
