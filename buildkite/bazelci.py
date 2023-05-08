@@ -2285,15 +2285,16 @@ def filter_unchanged_targets(
 
         eprint("Cloning comparison repository...")
         diffbase_archive_url = get_commit_archive_url(resolved_diffbase)
+        local_archive_path = download_file(diffbase_archive_url, tmpdir, "repo.tar.gz")
         diffbase_repo_dir = os.path.join(tmpdir, resolved_diffbase)
-        extract_archive(diffbase_archive_url, diffbase_repo_dir)
+        extract_archive(local_archive_path, diffbase_repo_dir)
 
         eprint("Setting up comparison repository...")
         os.chdir(diffbase_repo_dir)
         ws_setup_func()
 
         eprint(f"Downloading bazel-diff to {tmpdir}")
-        bazel_diff_path = download_bazel_diff(tmpdir)
+        bazel_diff_path = download_file(BAZEL_DIFF_URL, tmpdir, "bazel-diff.jar")
         eprint(f"Running bazel-diff for {resolved_diffbase} and {git_commit}")
 
         affected_targets = run_bazel_diff(
@@ -2377,14 +2378,12 @@ def extract_archive(archive_url, dest_dir):
         raise BuildkiteInfraException("Failed to extract repository archive: {}".format(ex)) from ex
 
 
-def download_bazel_diff(directory):
-    local_path = os.path.join(directory, "bazel-diff.jar")
+def download_file(url, dest_dir, dest_filename):
+    local_path = os.path.join(dest_dir, dest_filename)
     try:
-        execute_command(["curl", "-sSL", BAZEL_DIFF_URL, "-o", local_path])
+        execute_command(["curl", "-sSL", url, "-o", local_path])
     except subprocess.CalledProcessError as ex:
-        raise BuildkiteInfraException(
-            "Failed to download {}: {}\n{}".format(BAZEL_DIFF_URL, ex, ex.stderr)
-        )
+        raise BuildkiteInfraException("Failed to download {}: {}\n{}".format(url, ex, ex.stderr))
     return local_path
 
 
