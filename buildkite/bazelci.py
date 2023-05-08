@@ -2532,7 +2532,8 @@ def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True, prin
         shell=shell,
         check=fail_if_nonzero,
         env=os.environ,
-        capture_output=True,
+        stdout=subprocess.PIPE,  # We cannot use capture_output since some workers run Python <3.7
+        stderr=subprocess.PIPE,  # We want exceptions to contain stderr
         errors="replace",
         universal_newlines=True,
     )
@@ -2552,7 +2553,7 @@ def execute_command(args, shell=False, fail_if_nonzero=True, cwd=None, print_out
         env=os.environ,
         cwd=cwd,
         errors="replace",
-        capture_output=True,  # We want exceptions to contain stderr
+        stderr=subprocess.PIPE,  # We want exceptions to contain stderr
     ).returncode
 
 
