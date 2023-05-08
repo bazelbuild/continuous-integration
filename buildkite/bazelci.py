@@ -1317,7 +1317,7 @@ def execute_commands(
         cmd_exec_func = execute_batch_commands if platform == "windows" else execute_shell_commands
         cmd_exec_func(task_config.get("setup", None))
 
-        def PrepareRepoInCwd():
+        def PrepareRepoInCwd(print_cmd_groups):
             # Allow the config to override the current working directory.
             requested_working_dir = task_config.get("working_directory")
             if requested_working_dir:
@@ -1336,11 +1336,11 @@ def execute_commands(
                 os.chdir(full_requested_working_dir)
 
             if platform == "windows":
-                execute_batch_commands(task_config.get("batch_commands", None))
+                execute_batch_commands(task_config.get("batch_commands", None), print_cmd_groups)
             else:
-                execute_shell_commands(task_config.get("shell_commands", None))
+                execute_shell_commands(task_config.get("shell_commands", None), print_cmd_groups)
 
-        PrepareRepoInCwd()
+        PrepareRepoInCwd(True)
 
         bazel_version = print_bazel_version_info(bazel_binary, platform)
 
@@ -1779,18 +1779,24 @@ def clone_git_repository(git_repository, platform, git_commit=None):
     return clone_path
 
 
-def execute_batch_commands(commands):
+def execute_batch_commands(commands, print_group=True):
     if not commands:
         return
-    print_collapsed_group(":batch: Setup (Batch Commands)")
+
+    if print_group:
+        print_collapsed_group(":batch: Setup (Batch Commands)")
+
     batch_commands = "&".join(commands)
     return subprocess.run(batch_commands, shell=True, check=True, env=os.environ).returncode
 
 
-def execute_shell_commands(commands):
+def execute_shell_commands(commands, print_group=True):
     if not commands:
         return
-    print_collapsed_group(":bash: Setup (Shell Commands)")
+
+    if print_group:
+        print_collapsed_group(":bash: Setup (Shell Commands)")
+
     shell_command = "\n".join(["set -e"] + commands)
     execute_command([shell_command], shell=True)
 
@@ -2303,7 +2309,7 @@ def filter_unchanged_targets(
 
         eprint("Setting up comparison repository...")
         os.chdir(diffbase_repo_dir)
-        ws_setup_func()
+        ws_setup_func(False)
 
         eprint(f"Downloading bazel-diff to {tmpdir}")
         bazel_diff_path = download_file(BAZEL_DIFF_URL, tmpdir, "bazel-diff.jar")
