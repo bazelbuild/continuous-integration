@@ -554,6 +554,14 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2204-java17",
         "python": "python3",
     },
+    "fedora39": {
+        "name": "Fedora 39 (OpenJDK 17, gcc 13.1.1)",
+        "emoji-name": ":fedora: 39 (OpenJDK 17, gcc 13.1.1)",
+        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/fedora39-java17",
+        "python": "python3",
+    },
     "macos": {
         "name": "macOS (OpenJDK 11, Xcode)",
         "emoji-name": ":darwin: (OpenJDK 11, Xcode)",
