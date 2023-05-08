@@ -630,6 +630,8 @@ SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
 # TODO: change to USE_BAZEL_DIFF once the feature has been tested in QA
 USE_BAZEL_DIFF_ENV_VAR = "USE_BAZEL_DIFF"
 
+BAZEL_DIFF_ANNOTATION_CTX = "'diff'"
+
 # TODO(fweikert): Install bazel-diff on the Docker images and on the Mac machines
 BAZEL_DIFF_URL = (
     "https://github.com/Tinder/bazel-diff/releases/download/4.5.0/bazel-diff_deploy.jar"
@@ -2277,6 +2279,9 @@ def filter_unchanged_targets(
                     ),
                 ]
             )
+            execute_command(
+                ["buildkite-agent", "annotation", "remove", "--context", BAZEL_DIFF_ANNOTATION_CTX]
+            )
         finally:
             return expanded_test_targets
     finally:
@@ -2300,7 +2305,7 @@ def filter_unchanged_targets(
                 "annotate",
                 "--style=info",
                 "--context",
-                "'diff'",
+                BAZEL_DIFF_ANNOTATION_CTX,
                 "This run only contains test targets that have been changed since "
                 "{} due to the `{}` env variable".format(resolved_diffbase, USE_BAZEL_DIFF_ENV_VAR),
             ]
