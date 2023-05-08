@@ -555,6 +555,14 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2204-java17",
         "python": "python3",
     },
+    "fedora39": {
+        "name": "Fedora 39 (OpenJDK 17, gcc 13.1.1)",
+        "emoji-name": ":fedora: 39 (OpenJDK 17, gcc 13.1.1)",
+        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/fedora39-java17",
+        "python": "python3",
+    },
     "macos": {
         "name": "macOS (OpenJDK 11, Xcode)",
         "emoji-name": ":darwin: (OpenJDK 11, Xcode)",
@@ -630,6 +638,8 @@ SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
 
 # TODO: change to USE_BAZEL_DIFF once the feature has been tested in QA
 USE_BAZEL_DIFF_ENV_VAR = "USE_BAZEL_DIFF"
+
+BAZEL_DIFF_ANNOTATION_CTX = "'diff'"
 
 # TODO(fweikert): Install bazel-diff on the Docker images and on the Mac machines
 BAZEL_DIFF_URL = (
@@ -994,6 +1004,8 @@ def get_combinations(matrix, attributes):
     if attributes = ['b', 'c'], then returns [[('b', 1), ('c', 1)]]
     if attributes = ['c'], then returns [[('c', 1)]]
     """
+    # Sort the attributes to make the output deterministic.
+    attributes.sort()
     for attr in attributes:
         if attr not in matrix:
             raise BuildkiteException("${{ %s }} is not defined in `matrix` section." % attr)
@@ -2310,10 +2322,13 @@ def filter_unchanged_targets(
                     "--context",
                     "'diff_failed'",
                     "This build runs all test targets even though `{}` is set "
-                    "since bazel-diff failed with an error:\n```\n{}\n```".format(
+                    "since bazel-diff failed with an error:\n```{}```".format(
                         USE_BAZEL_DIFF_ENV_VAR, ex
                     ),
                 ]
+            )
+            execute_command(
+                ["buildkite-agent", "annotation", "remove", "--context", BAZEL_DIFF_ANNOTATION_CTX]
             )
         finally:
             return expanded_test_targets
@@ -2339,7 +2354,7 @@ def filter_unchanged_targets(
                 "annotate",
                 "--style=info",
                 "--context",
-                "'diff'",
+                BAZEL_DIFF_ANNOTATION_CTX,
                 "This run only contains test targets that have been changed since "
                 "{} due to the `{}` env variable".format(resolved_diffbase, USE_BAZEL_DIFF_ENV_VAR),
             ]
@@ -2559,7 +2574,7 @@ def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True, prin
         shell=shell,
         check=fail_if_nonzero,
         env=os.environ,
-        capture_output=True,
+        stdout=subprocess.PIPE,
         errors="replace",
         universal_newlines=True,
     )
@@ -2579,7 +2594,6 @@ def execute_command(args, shell=False, fail_if_nonzero=True, cwd=None, print_out
         env=os.environ,
         cwd=cwd,
         errors="replace",
-        capture_output=True,  # We want exceptions to contain stderr
     ).returncode
 
 
