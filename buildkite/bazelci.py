@@ -2966,7 +2966,7 @@ def create_config_validation_steps():
 
 def get_modified_files():
     output = execute_command_and_get_output(
-        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", os.getenv("BUILDKITE_COMMIT")],
+        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", os.getenv("BUILDKITE_COMMIT")]
     )
     return output.split("\n")
 
