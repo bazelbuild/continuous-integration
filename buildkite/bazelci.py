@@ -2406,7 +2406,7 @@ def extract_archive(archive_url, dest_dir):
 def download_file(url, dest_dir, dest_filename):
     local_path = os.path.join(dest_dir, dest_filename)
     try:
-        execute_command(["curl", "-sSL", url, "-o", local_path])
+        execute_command(["curl", "-sSL", url, "-o", local_path], capture_stderr=True)
     except subprocess.CalledProcessError as ex:
         raise BuildkiteInfraException("Failed to download {}: {}\n{}".format(url, ex, ex.stderr))
     return local_path
@@ -2433,7 +2433,8 @@ def run_bazel_diff(bazel_diff_path, old_workspace_dir, new_workspace_dir, bazel_
                     "-b",
                     bazel_binary,
                     json_path,
-                ]
+                ],
+                capture_stderr=True,
             )
 
         execute_command(
@@ -2448,7 +2449,8 @@ def run_bazel_diff(bazel_diff_path, old_workspace_dir, new_workspace_dir, bazel_
                 after_json,
                 "-o",
                 targets_file,
-            ]
+            ],
+            capture_stderr=True,
         )
     except subprocess.CalledProcessError as ex:
         raise BuildkiteInfraException("Failed to run bazel-diff: {}\n{}".format(ex, ex.stderr))
@@ -2585,7 +2587,6 @@ def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True, prin
         check=fail_if_nonzero,
         env=os.environ,
         stdout=subprocess.PIPE,  # We cannot use capture_output since some workers run Python <3.7
-        stderr=subprocess.PIPE,  # We want exceptions to contain stderr
         errors="replace",
         universal_newlines=True,
     )
@@ -2595,7 +2596,9 @@ def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True, prin
     return process.stdout
 
 
-def execute_command(args, shell=False, fail_if_nonzero=True, cwd=None, print_output=True):
+def execute_command(
+    args, shell=False, fail_if_nonzero=True, cwd=None, print_output=True, capture_stderr=False
+):
     if print_output:
         eprint(" ".join(args))
     return subprocess.run(
@@ -2605,7 +2608,9 @@ def execute_command(args, shell=False, fail_if_nonzero=True, cwd=None, print_out
         env=os.environ,
         cwd=cwd,
         errors="replace",
-        stderr=subprocess.PIPE,  # We want exceptions to contain stderr
+        stderr=subprocess.PIPE
+        if capture_stderr
+        else None,  # capture_stderr=True when we want exceptions to contain stderr
     ).returncode
 
 
