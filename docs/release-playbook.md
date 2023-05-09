@@ -208,11 +208,11 @@ Note: the above policies are for final releases only. RCs can be created without
       * Release tag is deleted locally (`git tag -d X.Y.Z`), otherwise rerun will cause an error that complains the tag already exists.
 
 1.  A CI job is uploading the release artifacts to GitHub. Look for the release
-    workflow on https://buildkite.com/bazel-trusted/bazel-release/. (When building a patch release for a previous LTS version, follow the same steps above as you did when creating a release candidate (set `USE_BAZEL_VERSION`, etc.).
+    workflow on https://buildkite.com/bazel-trusted/bazel-release/. When building a patch release for a previous LTS version, follow the same steps above as you did when creating a release candidate (set `USE_BAZEL_VERSION`, etc.).
     * Once all the steps are complete, click on "Deploy release artifacts" to unblock it. Subsequently you should see the updated version in Github.
-        1.  Ensure all binaries were uploaded to GitHub properly.
-            1.  **Why?** Sometimes binaries are uploaded incorrectly.
-            1.  **How?** Go to the [GH releases page](https://github.com/bazelbuild/bazel/releases),
+        * Ensure all binaries were uploaded to GitHub properly.
+            * **Why?** Sometimes binaries are uploaded incorrectly.
+            * **How?** Go to the [GH releases page](https://github.com/bazelbuild/bazel/releases),
                 click "Edit", see if there's a red warning sign next to any binary. You
                 need to manually upload those; get them from
                 `https://storage.googleapis.com/bazel/$RELEASE_NUMBER/release/index.html`.
