@@ -231,6 +231,14 @@ Note: the above policies are for final releases only. RCs can be created without
     1.  **Note:** The blog sometimes takes time to update the homepage, so use
     the full path to your post to check that it is live.
 1.  For major releases, update the release page to replace the generated notes with the structured releases notes from the release announcement doc and link to the blog post (see [example](https://github.com/bazelbuild/bazel/releases/tag/6.0.0)). For minor and patch release, update the release notes without a blog post link - see [example](https://github.com/bazelbuild/bazel/releases/tag/6.1.0).
+1.  Send out an email to `bazel-discuss@googlegroups.com` about the new release. E.g.:
+    *   Subject: Bazel 6.2.0 is released
+    *   Body:
+    ```
+    Bazel 6.2.0 is now available:
+    - https://github.com/bazelbuild/bazel/releases/tag/6.2.0
+    - https://releases.bazel.build/6.2.0/release/index.html
+    ```
 
 ### Updating .bazelversion file for the Bazel repository
 
