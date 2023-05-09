@@ -107,7 +107,6 @@ fn watch_bep_json_file(
     }
 
     let max_retries = 5;
-    let status = ["FAILED", "TIMEOUT", "FLAKY"];
     let mut retries = max_retries;
     let mut local_exec_root = None;
     let mut test_summaries = vec![];
@@ -129,7 +128,9 @@ fn watch_bep_json_file(
                         let test_result = build_event.test_result();
                         for output in test_result.test_action_outputs.iter() {
                             if output.name == "test.log" {
-                                if status.contains(&test_result.status.as_str()) {
+                                if ["FAILED", "TIMEOUT", "FLAKY"]
+                                    .contains(&test_result.status.as_str())
+                                {
                                     if let Err(error) = upload_test_log(
                                         &mut uploader,
                                         dry,
@@ -141,14 +142,16 @@ fn watch_bep_json_file(
                                     }
                                 }
                             } else if output.name == "test.xml" {
-                                if let Err(error) = upload_test_xml(
-                                    &mut uploader,
-                                    dry,
-                                    local_exec_root.as_ref().map(|p| p.as_path()),
-                                    &output.uri,
-                                    mode,
-                                ) {
-                                    error!("{:?}", error);
+                                if !test_result.cached {
+                                    if let Err(error) = upload_test_xml(
+                                        &mut uploader,
+                                        dry,
+                                        local_exec_root.as_ref().map(|p| p.as_path()),
+                                        &output.uri,
+                                        mode,
+                                    ) {
+                                        error!("{:?}", error);
+                                    }
                                 }
                             }
                         }
@@ -499,6 +502,7 @@ pub struct TestActionOutput {
 pub struct TestResult {
     test_action_outputs: Vec<TestActionOutput>,
     status: String,
+    cached: bool,
 }
 
 #[derive(Debug)]
@@ -580,9 +584,19 @@ impl BuildEvent {
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
+        let cached_locally = self
+            .get("testResult.cachedLocally")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        let cached_remotely = self
+            .get("testResult.executionInfo.cachedRemotely")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        let cached = cached_locally || cached_remotely;
         TestResult {
             test_action_outputs,
             status,
+            cached,
         }
     }
 
