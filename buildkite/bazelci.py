@@ -2333,7 +2333,11 @@ def filter_unchanged_targets(
         finally:
             return expanded_test_targets
     finally:
-        shutil.rmtree(tmpdir)
+        try:
+            shutil.rmtree(tmpdir)
+        except:
+            pass
+
         os.chdir(workspace_dir)
 
     config_target_set = set(expanded_test_targets)
