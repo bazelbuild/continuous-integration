@@ -914,7 +914,7 @@ P9w8kNhEbw==
         return build_info
 
 
-def decrypt_token(encrypted_token, kms_key):
+def decrypt_token(encrypted_token, kms_key, project="bazel-untrusted"):
     return (
         subprocess.check_output(
             [
@@ -922,7 +922,7 @@ def decrypt_token(encrypted_token, kms_key):
                 "kms",
                 "decrypt",
                 "--project",
-                "bazel-untrusted",
+                project,
                 "--location",
                 "global",
                 "--keyring",
@@ -1411,6 +1411,23 @@ def execute_commands(
                 bazelisk_cache_dir = get_bazelisk_cache_directory()
                 os.makedirs(bazelisk_cache_dir, mode=0o755, exist_ok=True)
                 test_flags.append("--sandbox_writable_path={}".format(bazelisk_cache_dir))
+
+            # Set BUILDKITE_ANALYTICS_TOKEN so that bazelci-agent can upload test results to Test Analytics
+            if "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN" in os.environ:
+                if THIS_IS_TESTING:
+                    kms_key = "buildkite-testing-api-token"
+                    project = "bazel-untrusted"
+                elif THIS_IS_TRUSTED:
+                    kms_key = "buildkite-trusted-api-token"
+                    project = "bazel-public"
+                else:
+                    kms_key = "buildkite-untrusted-api-token"
+                    project = "bazel-untrusted"
+                os.environ["BUILDKITE_ANALYTICS_TOKEN"] = decrypt_token(
+                    encrypted_token=os.environ["ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN"],
+                    kms_key=kms_key,
+                    project=project,
+                )
 
             test_bep_file = os.path.join(tmpdir, "test_bep.json")
             upload_thread = threading.Thread(
