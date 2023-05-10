@@ -1329,15 +1329,15 @@ def execute_commands(
 
                 os.chdir(full_requested_working_dir)
 
-                # Dirty workaround for #1660
-                if initial_setup:
-                    # Set OUTPUT_BASE environment variable
-                    os.environ["OUTPUT_BASE"] = get_output_base(bazel_binary)
+            # Dirty workaround for #1660
+            if initial_setup:
+                # Set OUTPUT_BASE environment variable
+                os.environ["OUTPUT_BASE"] = get_output_base(bazel_binary)
 
-                    cmd_exec_func = (
-                        execute_batch_commands if platform == "windows" else execute_shell_commands
-                    )
-                    cmd_exec_func(task_config.get("setup", None))
+                cmd_exec_func = (
+                    execute_batch_commands if platform == "windows" else execute_shell_commands
+                )
+                cmd_exec_func(task_config.get("setup", None))
 
             if platform == "windows":
                 execute_batch_commands(task_config.get("batch_commands", None), print_cmd_groups)
