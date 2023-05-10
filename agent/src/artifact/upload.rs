@@ -127,32 +127,36 @@ fn watch_bep_json_file(
                     } else if build_event.is_test_result() {
                         let test_result = build_event.test_result();
                         for output in test_result.test_action_outputs.iter() {
-                            if output.name == "test.log" {
-                                if ["FAILED", "TIMEOUT", "FLAKY"]
-                                    .contains(&test_result.status.as_str())
-                                {
-                                    if let Err(error) = upload_test_log(
-                                        &mut uploader,
-                                        dry,
-                                        local_exec_root.as_ref().map(|p| p.as_path()),
-                                        &output.uri,
-                                        mode,
-                                    ) {
-                                        error!("{:?}", error);
+                            match output.name.as_str() {
+                                "test.log" => {
+                                    if ["FAILED", "TIMEOUT", "FLAKY"]
+                                        .contains(&test_result.status.as_str())
+                                    {
+                                        if let Err(error) = upload_test_log(
+                                            &mut uploader,
+                                            dry,
+                                            local_exec_root.as_ref().map(|p| p.as_path()),
+                                            &output.uri,
+                                            mode,
+                                        ) {
+                                            error!("{:?}", error);
+                                        }
                                     }
                                 }
-                            } else if output.name == "test.xml" {
-                                if !test_result.cached {
-                                    if let Err(error) = upload_test_xml(
-                                        &mut uploader,
-                                        dry,
-                                        local_exec_root.as_ref().map(|p| p.as_path()),
-                                        &output.uri,
-                                        mode,
-                                    ) {
-                                        error!("{:?}", error);
+                                "test.xml" => {
+                                    if !test_result.cached {
+                                        if let Err(error) = upload_test_xml(
+                                            &mut uploader,
+                                            dry,
+                                            local_exec_root.as_ref().map(|p| p.as_path()),
+                                            &output.uri,
+                                            mode,
+                                        ) {
+                                            error!("{:?}", error);
+                                        }
                                     }
                                 }
+                                _ => {}
                             }
                         }
                     } else if build_event.is_test_summary() {
