@@ -1311,8 +1311,6 @@ def execute_commands(
         if use_bazelisk_migrate() and platform == "windows":
             os.environ["BAZELISK_SHUTDOWN"] = "1"
 
-        # Set OUTPUT_BASE environment variable
-        os.environ["OUTPUT_BASE"] = get_output_base(bazel_binary, platform)
 
         cmd_exec_func = execute_batch_commands if platform == "windows" else execute_shell_commands
         cmd_exec_func(task_config.get("setup", None))
@@ -1334,6 +1332,9 @@ def execute_commands(
                     )
 
                 os.chdir(full_requested_working_dir)
+
+                # Set OUTPUT_BASE environment variable
+                os.environ["OUTPUT_BASE"] = get_output_base(bazel_binary)
 
             if platform == "windows":
                 execute_batch_commands(task_config.get("batch_commands", None), print_cmd_groups)
@@ -2042,7 +2043,7 @@ def rbe_flags(original_flags, accept_cached):
     return flags
 
 
-def get_output_base(bazel_binary, platform):
+def get_output_base(bazel_binary):
     return execute_command_and_get_output(
         [bazel_binary] + common_startup_flags() + ["info", "output_base"],
         print_output=False,
@@ -2071,7 +2072,7 @@ def compute_flags(platform, flags, bep_file, bazel_binary, enable_remote_cache=F
                 home = "/var/lib/buildkite-agent"
             aggregated_flags[i] = flag.replace("$HOME", home)
         if "$OUTPUT_BASE" in flag:
-            output_base = get_output_base(bazel_binary, platform)
+            output_base = get_output_base(bazel_binary)
             aggregated_flags[i] = flag.replace("$OUTPUT_BASE", output_base)
 
     return aggregated_flags
