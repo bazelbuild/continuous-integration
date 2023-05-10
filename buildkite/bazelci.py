@@ -1381,6 +1381,13 @@ def execute_commands(
                 os.makedirs(bazelisk_cache_dir, mode=0o755, exist_ok=True)
                 test_flags.append("--sandbox_writable_path={}".format(bazelisk_cache_dir))
 
+            # Set BUILDKITE_ANALYTICS_TOKEN so that bazelci-agent can upload test results to Test Analytics
+            if "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN" in os.environ:
+                os.environ["BUILDKITE_ANALYTICS_TOKEN"] = decrypt_token(
+                    encrypted_token=os.environ["ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN"],
+                    kms_key="buildkite-testing-api-token" if THIS_IS_TESTING else "buildkite-untrusted-api-token",
+                )
+
             test_bep_file = os.path.join(tmpdir, "test_bep.json")
             upload_thread = threading.Thread(
                 target=upload_test_logs_from_bep,
