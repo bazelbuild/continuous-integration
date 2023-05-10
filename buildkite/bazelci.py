@@ -1311,11 +1311,7 @@ def execute_commands(
         if use_bazelisk_migrate() and platform == "windows":
             os.environ["BAZELISK_SHUTDOWN"] = "1"
 
-
-        cmd_exec_func = execute_batch_commands if platform == "windows" else execute_shell_commands
-        cmd_exec_func(task_config.get("setup", None))
-
-        def PrepareRepoInCwd(print_cmd_groups):
+        def PrepareRepoInCwd(print_cmd_groups, initial_setup=False):
             # Allow the config to override the current working directory.
             requested_working_dir = task_config.get("working_directory")
             if requested_working_dir:
@@ -1333,15 +1329,22 @@ def execute_commands(
 
                 os.chdir(full_requested_working_dir)
 
-                # Set OUTPUT_BASE environment variable
-                os.environ["OUTPUT_BASE"] = get_output_base(bazel_binary)
+                # Dirty workaround for #1660
+                if initial_setup:
+                    # Set OUTPUT_BASE environment variable
+                    os.environ["OUTPUT_BASE"] = get_output_base(bazel_binary)
+
+                    cmd_exec_func = (
+                        execute_batch_commands if platform == "windows" else execute_shell_commands
+                    )
+                    cmd_exec_func(task_config.get("setup", None))
 
             if platform == "windows":
                 execute_batch_commands(task_config.get("batch_commands", None), print_cmd_groups)
             else:
                 execute_shell_commands(task_config.get("shell_commands", None), print_cmd_groups)
 
-        PrepareRepoInCwd(True)
+        PrepareRepoInCwd(True, initial_setup=True)
 
         bazel_version = print_bazel_version_info(bazel_binary, platform)
 
@@ -1739,11 +1742,7 @@ def download_bazelci_agent(dest_dir):
             postfix = "x86_64-unknown-linux-musl"
 
     name = "bazelci-agent-{}-{}".format(version, postfix)
-    url = (
-        "https://github.com/{}/releases/download/agent-{}/{}".format(
-            repo, version, name
-        )
-    )
+    url = "https://github.com/{}/releases/download/agent-{}/{}".format(repo, version, name)
     path = os.path.join(dest_dir, "bazelci-agent.exe" if is_windows() else "bazelci-agent")
     execute_command(["curl", "-sSL", url, "-o", path])
     st = os.stat(path)
