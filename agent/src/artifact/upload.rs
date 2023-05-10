@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use serde_json::Value;
+use sha1::{Digest, Sha1};
 use std::{
     collections::HashSet,
     env, fs,
@@ -239,14 +240,25 @@ fn execute_command(dry: bool, cwd: Option<&Path>, program: &str, args: &[&str]) 
     Ok(())
 }
 
+type Sha1Digest = [u8; 20];
+
+fn sha1_digest(r: &mut impl Read) -> Result<Sha1Digest> {
+    let mut buf = Vec::new();
+    r.read_to_end(&mut buf)?;
+    let mut hasher = Sha1::new();
+    hasher.update(buf);
+    let hash = hasher.finalize();
+    Ok(hash.into())
+}
+
 struct Uploader {
-    uploaded_path: HashSet<PathBuf>,
+    uploaded_digests: HashSet<Sha1Digest>,
 }
 
 impl Uploader {
     pub fn new() -> Self {
         Self {
-            uploaded_path: HashSet::new(),
+            uploaded_digests: HashSet::new(),
         }
     }
 
@@ -262,7 +274,9 @@ impl Uploader {
                 Some(cwd) => cwd.join(artifact),
                 None => PathBuf::from(artifact),
             };
-            if !self.uploaded_path.insert(file) {
+            let mut file = std::fs::File::open(file)?;
+            let digest = sha1_digest(&mut file)?;
+            if !self.uploaded_digests.insert(digest) {
                 return Ok(());
             }
         }
@@ -302,10 +316,6 @@ impl Uploader {
             data.to_path_buf()
         };
 
-        if !self.uploaded_path.insert(data.clone()) {
-            return Ok(());
-        }
-
         {
             // Read entire content of test.xml into memory. Large test.xml should be rare, so we just assume it can fit
             // into memory.
@@ -313,6 +323,11 @@ impl Uploader {
 
             // Ignore empty testsuite
             if !content.contains("<testcase") {
+                return Ok(());
+            }
+
+            let digest = sha1_digest(&mut content.as_bytes())?;
+            if !self.uploaded_digests.insert(digest) {
                 return Ok(());
             }
         }
