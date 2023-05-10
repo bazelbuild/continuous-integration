@@ -327,7 +327,6 @@ impl Uploader {
             // Read entire content of test.xml into memory. Large test.xml should be rare, so we just assume it can fit
             // into memory.
             let content = std::fs::read_to_string(&data)?;
-            dbg!(&content);
 
             // Ignore empty testsuite
             if !content.contains("<testcase") {
