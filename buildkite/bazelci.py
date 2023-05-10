@@ -3827,6 +3827,8 @@ def main(argv=None):
                     )
                 )
 
+            os.environ["BAZELCI_TASK"] = args.task
+
             platform = get_platform_for_task(args.task, task_config)
 
             # The value of `BUILDKITE_MESSAGE` defaults to the commit message, which can be too large
