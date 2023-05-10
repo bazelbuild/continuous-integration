@@ -1700,7 +1700,12 @@ def download_bazel_nojdk_binary_at_commit(dest_dir, platform, bazel_git_commit):
 
 
 def download_bazelci_agent(dest_dir):
+    repo = "bazelbuild/continuous-integration"
+    if "BAZELCI_AGENT_REPO" in os.environ:
+        repo = os.environ["BAZELCI_AGENT_REPO"]
     version = "0.1.4"
+    if "BAZELCI_AGENT_VERSION" in os.environ:
+        version = os.environ["BAZELCI_AGENT_VERSION"]
     postfix = ""
     if is_windows():
         postfix = "x86_64-pc-windows-msvc.exe"
@@ -1717,8 +1722,8 @@ def download_bazelci_agent(dest_dir):
 
     name = "bazelci-agent-{}-{}".format(version, postfix)
     url = (
-        "https://github.com/bazelbuild/continuous-integration/releases/download/agent-{}/{}".format(
-            version, name
+        "https://github.com/{}/releases/download/agent-{}/{}".format(
+            repo, version, name
         )
     )
     path = os.path.join(dest_dir, "bazelci-agent.exe" if is_windows() else "bazelci-agent")
