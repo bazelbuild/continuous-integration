@@ -317,13 +317,26 @@ impl Uploader {
         format: &str,
         forms: &[(impl AsRef<str>, impl AsRef<str>)],
     ) -> Result<()> {
-        println!("Uploading to Test Analytics: data=@{}", data.display());
+        let data = if let Some(cwd) = cwd {
+            cwd.join(data)
+        } else {
+            data.to_path_buf()
+        };
+
+        {
+            // Read entire content of test.xml into memory. Large test.xml should be rare, so we just assume it can fit
+            // into memory.
+            let content = std::fs::read_to_string(&data)?;
+            dbg!(&content);
+
+            // Ignore empty testsuite
+            if !content.contains("<testcase") {
+                return Ok(());
+            }
+        }
+
+        println!("Uploading to Test Analytics: data={}", data.display());
         if !dry {
-            let data = if let Some(cwd) = cwd {
-                cwd.join(data)
-            } else {
-                data.to_path_buf()
-            };
             let client = reqwest::blocking::Client::new();
             let mut form = reqwest::blocking::multipart::Form::new()
                 .file("data", data)?
