@@ -3,8 +3,7 @@ use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{
     collections::HashSet,
-    env,
-    fs::{self, File},
+    env, fs,
     io::{BufRead, BufReader, Lines, Read},
     path::{Path, PathBuf, MAIN_SEPARATOR},
     process,
@@ -76,13 +75,14 @@ impl<B: BufRead> Iterator for BuildEventIter<B> {
         }
 
         if let Some(line) = self.lines.next() {
-            let build_event = match line {
-                Ok(line) => match BuildEvent::from_json_str(&line) {
-                    Ok(build_event) => Ok(build_event),
-                    Err(error) => Err(anyhow!("{}: {} `{}`", self.path.display(), line, error)),
-                },
-                Err(err) => Err(anyhow!(err)),
-            };
+            let build_event =
+                match line.with_context(|| format!("Failed to read {}", self.path.display())) {
+                    Ok(line) => match BuildEvent::from_json_str(&line) {
+                        Ok(build_event) => Ok(build_event),
+                        Err(error) => Err(anyhow!("{}: {} `{}`", self.path.display(), line, error)),
+                    },
+                    Err(err) => Err(anyhow!(err)),
+                };
             if let Ok(ref build_event) = build_event {
                 self.reached_end = build_event.is_last_message();
             }
@@ -106,7 +106,6 @@ fn watch_bep_json_file(
     }
 
     let max_retries = 5;
-    let status = ["FAILED", "TIMEOUT", "FLAKY"];
     let mut retries = max_retries;
     let mut local_exec_root = None;
     let mut test_summaries = vec![];
@@ -126,19 +125,37 @@ fn watch_bep_json_file(
                             .map(|str| Path::new(str).to_path_buf());
                     } else if build_event.is_test_result() {
                         let test_result = build_event.test_result();
-                        if status.contains(&test_result.status.as_str()) {
-                            for output in test_result.test_action_outputs.iter() {
-                                if output.name == "test.log" {
-                                    if let Err(error) = upload_test_log(
-                                        &mut uploader,
-                                        dry,
-                                        local_exec_root.as_ref().map(|p| p.as_path()),
-                                        &output.uri,
-                                        mode,
-                                    ) {
-                                        error!("{:?}", error);
+                        for output in test_result.test_action_outputs.iter() {
+                            match output.name.as_str() {
+                                "test.log" => {
+                                    if ["FAILED", "TIMEOUT", "FLAKY"]
+                                        .contains(&test_result.status.as_str())
+                                    {
+                                        if let Err(error) = upload_test_log(
+                                            &mut uploader,
+                                            dry,
+                                            local_exec_root.as_ref().map(|p| p.as_path()),
+                                            &output.uri,
+                                            mode,
+                                        ) {
+                                            error!("{:?}", error);
+                                        }
                                     }
                                 }
+                                "test.xml" => {
+                                    if !test_result.cached {
+                                        if let Err(error) = upload_test_xml(
+                                            &mut uploader,
+                                            dry,
+                                            local_exec_root.as_ref().map(|p| p.as_path()),
+                                            &output.uri,
+                                            mode,
+                                        ) {
+                                            error!("{:?}", error);
+                                        }
+                                    }
+                                }
+                                _ => {}
                             }
                         }
                     } else if build_event.is_test_summary() {
@@ -225,23 +242,11 @@ fn execute_command(dry: bool, cwd: Option<&Path>, program: &str, args: &[&str]) 
 
 type Sha1Digest = [u8; 20];
 
-fn read_entire_file(path: &Path) -> Result<Vec<u8>> {
-    let mut file = File::open(path)?;
-    let mut buf = Vec::new();
-    file.read_to_end(&mut buf)?;
-    Ok(buf)
-}
-
-fn sha1_digest(path: &Path) -> Sha1Digest {
-    let buf = match read_entire_file(path) {
-        Ok(buf) => buf,
-        _ => path.display().to_string().into_bytes(),
-    };
-
+fn sha1_digest(buf: &[u8]) -> Result<Sha1Digest> {
     let mut hasher = Sha1::new();
     hasher.update(buf);
     let hash = hasher.finalize();
-    hash.into()
+    Ok(hash.into())
 }
 
 struct Uploader {
@@ -267,11 +272,18 @@ impl Uploader {
                 Some(cwd) => cwd.join(artifact),
                 None => PathBuf::from(artifact),
             };
-            let digest = sha1_digest(&file);
-            if self.uploaded_digests.contains(&digest) {
+            let buf = match std::fs::read(&file) {
+                Ok(buf) => buf,
+                Err(err) => match err.kind() {
+                    // For test
+                    std::io::ErrorKind::NotFound => file.display().to_string().into_bytes(),
+                    _ => anyhow::bail!(err),
+                },
+            };
+            let digest = sha1_digest(&buf)?;
+            if !self.uploaded_digests.insert(digest) {
                 return Ok(());
             }
-            self.uploaded_digests.insert(digest);
         }
 
         match mode {
@@ -293,6 +305,113 @@ impl Uploader {
             &["artifact", "upload", artifact.as_str()],
         )
     }
+
+    fn upload_test_analytics(
+        &mut self,
+        dry: bool,
+        cwd: Option<&Path>,
+        token: &str,
+        data: &Path,
+        format: &str,
+        forms: &[(impl AsRef<str>, impl AsRef<str>)],
+    ) -> Result<()> {
+        let data = if let Some(cwd) = cwd {
+            cwd.join(data)
+        } else {
+            data.to_path_buf()
+        };
+
+        {
+            // Read entire content of test.xml into memory. Large test.xml should be rare, so we just assume it can fit
+            // into memory.
+            let content = std::fs::read_to_string(&data)?;
+
+            // Ignore empty testsuite
+            if !content.contains("<testcase") {
+                return Ok(());
+            }
+
+            let digest = sha1_digest(&mut content.as_bytes())?;
+            if !self.uploaded_digests.insert(digest) {
+                return Ok(());
+            }
+        }
+
+        println!("Uploading to Test Analytics: data={}", data.display());
+        if !dry {
+            let client = reqwest::blocking::Client::new();
+            let mut form = reqwest::blocking::multipart::Form::new()
+                .file("data", data)?
+                .text("format", format.to_string());
+
+            for form_value in forms {
+                form = form.text(
+                    form_value.0.as_ref().to_string(),
+                    form_value.1.as_ref().to_string(),
+                );
+            }
+
+            let request = client
+                .post("https://analytics-api.buildkite.com/v1/uploads")
+                .header(
+                    reqwest::header::AUTHORIZATION,
+                    format!("Token token={}", token),
+                )
+                .multipart(form);
+            let mut resp = request.send()?;
+            if !resp.status().is_success() {
+                let mut msg = String::new();
+                resp.read_to_string(&mut msg)?;
+                anyhow::bail!(format!("status={}, body={}", resp.status(), msg));
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn upload_test_xml(
+        &mut self,
+        dry: bool,
+        cwd: Option<&Path>,
+        test_xml: &Path,
+    ) -> Result<()> {
+        let token = maybe_get_env("BUILDKITE_ANALYTICS_TOKEN");
+        let build_id = maybe_get_env("BUILDKITE_BUILD_ID");
+        let step_id = maybe_get_env("BUILDKITE_STEP_ID");
+        if token.is_none() || build_id.is_none() || step_id.is_none() {
+            return Ok(());
+        }
+
+        let token = token.unwrap();
+        let build_id = build_id.unwrap();
+        let step_id = step_id.unwrap();
+
+        let mut forms = vec![
+            ("run_env[CI]", "buildkite".to_string()),
+            ("run_env[key]", format!("{}/{}", &build_id, &step_id)),
+            ("run_env[build_id]", build_id),
+        ];
+
+        for (name, env) in [
+            ("run_env[url]", "BUILDKITE_BUILD_URL"),
+            ("run_env[branch]", "BUILDKITE_BRANCH"),
+            ("run_env[commit_sha]", "BUILDKITE_COMMIT"),
+            ("run_env[number]", "BUILDKITE_BUILD_NUMBER"),
+            ("run_env[job_id]", "BUILDKITE_JOB_ID"),
+            ("run_env[message]", "BUILDKITE_MESSAGE"),
+            ("run_env[tags][]", "BAZELCI_TASK"),
+        ] {
+            if let Some(value) = maybe_get_env(env) {
+                forms.push((name, value));
+            }
+        }
+
+        self.upload_test_analytics(dry, cwd, &token, test_xml, "junit", &forms)
+    }
+}
+
+fn maybe_get_env(key: &str) -> Option<String> {
+    std::env::var(key).ok()
 }
 
 #[allow(dead_code)]
@@ -343,19 +462,14 @@ fn uri_to_file_path(uri: &str) -> Result<PathBuf> {
     Err(anyhow!("Invalid file URI: {}", uri))
 }
 
-fn upload_test_log(
-    uploader: &mut Uploader,
-    dry: bool,
+fn resolve_artifact(
+    uri: &str,
     local_exec_root: Option<&Path>,
-    test_log: &str,
-    mode: Mode,
-) -> Result<()> {
-    let path = uri_to_file_path(test_log)?;
-
+) -> Result<(Option<PathBuf>, PathBuf)> {
+    let path = uri_to_file_path(uri)?;
     if let Some((first, second)) = split_path_inclusive(&path, "testlogs") {
-        return uploader.upload_artifact(dry, Some(&first), &second, mode);
+        return Ok((Some(first), second));
     }
-
     let artifact = if let Some(local_exec_root) = local_exec_root {
         if let Ok(relative_path) = path.strip_prefix(local_exec_root) {
             relative_path
@@ -365,8 +479,32 @@ fn upload_test_log(
     } else {
         &path
     };
+    Ok((
+        local_exec_root.map(|p| p.to_path_buf()),
+        artifact.to_path_buf(),
+    ))
+}
 
-    uploader.upload_artifact(dry, local_exec_root, &artifact, mode)
+fn upload_test_log(
+    uploader: &mut Uploader,
+    dry: bool,
+    local_exec_root: Option<&Path>,
+    test_log: &str,
+    mode: Mode,
+) -> Result<()> {
+    let (cwd, artifact) = resolve_artifact(test_log, local_exec_root)?;
+    return uploader.upload_artifact(dry, cwd.as_ref().map(|pb| pb.as_path()), &artifact, mode);
+}
+
+fn upload_test_xml(
+    uploader: &mut Uploader,
+    dry: bool,
+    local_exec_root: Option<&Path>,
+    test_xml: &str,
+    _mode: Mode,
+) -> Result<()> {
+    let (cwd, artifact) = resolve_artifact(test_xml, local_exec_root)?;
+    return uploader.upload_test_xml(dry, cwd.as_ref().map(|pb| pb.as_path()), &artifact);
 }
 
 #[derive(Debug)]
@@ -379,6 +517,7 @@ pub struct TestActionOutput {
 pub struct TestResult {
     test_action_outputs: Vec<TestActionOutput>,
     status: String,
+    cached: bool,
 }
 
 #[derive(Debug)]
@@ -460,9 +599,19 @@ impl BuildEvent {
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
+        let cached_locally = self
+            .get("testResult.cachedLocally")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        let cached_remotely = self
+            .get("testResult.executionInfo.cachedRemotely")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        let cached = cached_locally || cached_remotely;
         TestResult {
             test_action_outputs,
             status,
+            cached,
         }
     }
 

@@ -85,7 +85,11 @@ jobs:
     steps:
     - name: Install deps (linux-aarch64)
       if: matrix.build == 'linux-aarch64'
-      run: sudo apt-get install g++-aarch64-linux-gnu
+      run: sudo apt-get install -y wget && cd /opt && wget http://musl.cc/aarch64-linux-musl-cross.tgz && tar xf aarch64-linux-musl-cross.tgz
+
+    - name: Install deps (linux)
+      if: matrix.build == 'linux'
+      run: sudo apt-get install -y musl-tools
 
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -106,8 +110,14 @@ jobs:
       run: cargo test --verbose --release --target ${{ matrix.target }}
 
     - name: Build release binary
+      if: matrix.build != 'linux-aarch64'
       working-directory: agent
       run: cargo build --verbose --release --target ${{ matrix.target }}
+
+    - name: Build release binary (linux-aarch64)
+      if: matrix.build == 'linux-aarch64'
+      working-directory: agent
+      run: CC=/opt/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc cargo build --verbose --release --target ${{ matrix.target }} --config target.${{ matrix.target }}.linker=\"/opt/aarch64-linux-musl-cross/bin/aarch64-linux-musl-ld\"
 
     - name: Strip release binary (linux and macos)
       if: matrix.build == 'linux' || matrix.build == 'macos-intel' || matrix.build == 'macos-m1'
@@ -117,7 +127,7 @@ jobs:
     - name: Strip release binary (linux-aarch64)
       if: matrix.build == 'linux-aarch64'
       working-directory: agent
-      run: aarch64-linux-gnu-strip "target/${{ matrix.target }}/release/bazelci-agent"
+      run: /opt/aarch64-linux-musl-cross/bin/aarch64-linux-musl-strip "target/${{ matrix.target }}/release/bazelci-agent"
 
     - name: Build release asset
       shell: bash
