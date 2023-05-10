@@ -1,10 +1,8 @@
 use anyhow::{anyhow, Context, Result};
 use serde_json::Value;
-use sha1::{Digest, Sha1};
 use std::{
     collections::HashSet,
-    env,
-    fs::{self, File},
+    env, fs,
     io::{BufRead, BufReader, Lines, Read},
     path::{Path, PathBuf, MAIN_SEPARATOR},
     process,
@@ -241,35 +239,14 @@ fn execute_command(dry: bool, cwd: Option<&Path>, program: &str, args: &[&str]) 
     Ok(())
 }
 
-type Sha1Digest = [u8; 20];
-
-fn read_entire_file(path: &Path) -> Result<Vec<u8>> {
-    let mut file = File::open(path)?;
-    let mut buf = Vec::new();
-    file.read_to_end(&mut buf)?;
-    Ok(buf)
-}
-
-fn sha1_digest(path: &Path) -> Sha1Digest {
-    let buf = match read_entire_file(path) {
-        Ok(buf) => buf,
-        _ => path.display().to_string().into_bytes(),
-    };
-
-    let mut hasher = Sha1::new();
-    hasher.update(buf);
-    let hash = hasher.finalize();
-    hash.into()
-}
-
 struct Uploader {
-    uploaded_digests: HashSet<Sha1Digest>,
+    uploaded_path: HashSet<PathBuf>,
 }
 
 impl Uploader {
     pub fn new() -> Self {
         Self {
-            uploaded_digests: HashSet::new(),
+            uploaded_path: HashSet::new(),
         }
     }
 
@@ -285,11 +262,9 @@ impl Uploader {
                 Some(cwd) => cwd.join(artifact),
                 None => PathBuf::from(artifact),
             };
-            let digest = sha1_digest(&file);
-            if self.uploaded_digests.contains(&digest) {
+            if !self.uploaded_path.insert(file) {
                 return Ok(());
             }
-            self.uploaded_digests.insert(digest);
         }
 
         match mode {
@@ -313,7 +288,7 @@ impl Uploader {
     }
 
     fn upload_test_analytics(
-        &self,
+        &mut self,
         dry: bool,
         cwd: Option<&Path>,
         token: &str,
@@ -326,6 +301,10 @@ impl Uploader {
         } else {
             data.to_path_buf()
         };
+
+        if !self.uploaded_path.insert(data.clone()) {
+            return Ok(());
+        }
 
         {
             // Read entire content of test.xml into memory. Large test.xml should be rare, so we just assume it can fit
