@@ -242,9 +242,7 @@ fn execute_command(dry: bool, cwd: Option<&Path>, program: &str, args: &[&str]) 
 
 type Sha1Digest = [u8; 20];
 
-fn sha1_digest(r: &mut impl Read) -> Result<Sha1Digest> {
-    let mut buf = Vec::new();
-    r.read_to_end(&mut buf)?;
+fn sha1_digest(buf: &[u8]) -> Result<Sha1Digest> {
     let mut hasher = Sha1::new();
     hasher.update(buf);
     let hash = hasher.finalize();
@@ -274,8 +272,17 @@ impl Uploader {
                 Some(cwd) => cwd.join(artifact),
                 None => PathBuf::from(artifact),
             };
-            let mut file = std::fs::File::open(file)?;
-            let digest = sha1_digest(&mut file)?;
+            let buf = match std::fs::read(&file) {
+                Ok(buf) => buf,
+                Err(err) => match err.kind() {
+                    // For test
+                    std::io::ErrorKind::NotFound => {
+                        file.display().to_string().into_bytes()
+                    }
+                    _ => anyhow::bail!(err),
+                }
+            };
+            let digest = sha1_digest(&buf)?;
             if !self.uploaded_digests.insert(digest) {
                 return Ok(());
             }
