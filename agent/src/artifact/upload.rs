@@ -276,11 +276,9 @@ impl Uploader {
                 Ok(buf) => buf,
                 Err(err) => match err.kind() {
                     // For test
-                    std::io::ErrorKind::NotFound => {
-                        file.display().to_string().into_bytes()
-                    }
+                    std::io::ErrorKind::NotFound => file.display().to_string().into_bytes(),
                     _ => anyhow::bail!(err),
-                }
+                },
             };
             let digest = sha1_digest(&buf)?;
             if !self.uploaded_digests.insert(digest) {
