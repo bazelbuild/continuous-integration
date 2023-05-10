@@ -51,7 +51,7 @@ These steps only have to be performed once, ever.
 1.  After creating the branch, edit the CODEOWNERS file on that branch, replace the entire contents of the file with the line `* @your-github-username` and submit it directly.
     *   This makes sure that all PRs sent against that branch have you as a reviewer.
 1.  Update the branch name in the scheduled build for release branches by editing the "build branch" field [here](https://buildkite.com/bazel/bazel-at-head-plus-downstream/settings/schedules/b63d6589-2658-4850-a9b9-b588b9ea5c99/edit). Set it to `release-X.Y.Z` so that downstream tests run against this branch.
-1.  (For minor release only) Send an email to both bazel-dev@googlegroups.com and bazel-discuss@googlegroups.com announcing the next release.
+1.  (For minor release only) Send an email to bazel-discuss@googlegroups.com announcing the next release.
     *   It should contain the text: `The Bazel X.Y.Z release branch (release-X.Y.Z [link]) is open for business. Please send cherry-pick PRs against this branch if you'd like your change to be in X.Y.Z. Please follow the release tracking issue [link] for updates.`
 1.  Meanwhile, begin the [internal approval process](http://go/bazel-internal-launch-checklist), too.
     *   Note that certain steps in the internal approval process require at least preliminary release notes, so those steps should usually wait until the first release candidate is pushed and the release notes have taken vague shape.
@@ -111,7 +111,7 @@ While the release is active, you should make sure to do the following:
         apt-get repository. The github link is probably of the form:
         https://releases.bazel.build/3.6.0/rc1/index.html
 
-1.  Send out an email to `bazel-dev@googlegroups.com` and `bazel-discuss@googlegroups.com` about the new release candidate. E.g.:
+1.  Send out an email to `bazel-discuss@googlegroups.com` about the new release candidate. E.g.:
     *   Subject: Bazel 6.1.0 release candidate 1 is available for testing
     *   Body:
     ```
@@ -208,21 +208,22 @@ Note: the above policies are for final releases only. RCs can be created without
       * Release tag is deleted locally (`git tag -d X.Y.Z`), otherwise rerun will cause an error that complains the tag already exists.
 
 1.  A CI job is uploading the release artifacts to GitHub. Look for the release
-    workflow on https://buildkite.com/bazel-trusted/bazel-release/. Unblock the steps by clicking "Deploy release artifacts". Subsequently you should
-    see the updated version in Github.
-      * When building a patch release for a previous LTS version, follow the same steps as you did when creating a release candidate (set `USE_BAZEL_VERSION`, etc.).
+    workflow on https://buildkite.com/bazel-trusted/bazel-release/. When building a patch release for a previous LTS version, follow the same steps above as you did when creating a release candidate (set `USE_BAZEL_VERSION`, etc.).
+    * Once all the steps are complete, click on "Deploy release artifacts" to unblock it. Subsequently you should see the updated version in Github.
+        * Ensure all binaries were uploaded to GitHub properly.
+            * **Why?** Sometimes binaries are uploaded incorrectly.
+            * **How?** Go to the [GH releases page](https://github.com/bazelbuild/bazel/releases),
+                click "Edit", see if there's a red warning sign next to any binary. You
+                need to manually upload those; get them from
+                `https://storage.googleapis.com/bazel/$RELEASE_NUMBER/release/index.html`.
+    * Once the binaries are uploaded and the GitHub release page looks correct, click on "Update Chocolatey" to unblock this step. Verify that the package has been successfully uploaded here: `https://community.chocolatey.org/packages/bazel/<version>`, e.g. [6.2.0](https://community.chocolatey.org/packages/bazel/6.2.0), [6.2.0-rc2](https://community.chocolatey.org/packages/bazel/6.2.0-rc2).
 
-1.  Ensure all binaries were uploaded to GitHub properly.
-    1.  **Why?** Sometimes binaries are uploaded incorrectly.
-    1.  **How?** Go to the [GH releases page](https://github.com/bazelbuild/bazel/releases),
-        click "Edit", see if there's a red warning sign next to any binary. You
-        need to manually upload those; get them from
-        `https://storage.googleapis.com/bazel/$RELEASE_NUMBER/release/index.html`.
 1.  Update the release bug:
     1.  State the fact that you pushed the release
-    1.  Ask the package maintainers to update the package definitions:
-        [@vbatts](https://github.com/vbatts) [@petemounce](https://github.com/petemounce) [@excitoon](https://github.com/excitoon)
-    1.  Example: [https://github.com/bazelbuild/bazel/issues/3773#issuecomment-352692144]
+    2.  Add links to the GitHub and release pages
+    3.  Ask the package maintainers to update the package definitions:
+        [@vbatts](https://github.com/vbatts) [@excitoon](https://github.com/excitoon)
+    1.  Example: [https://github.com/bazelbuild/bazel/issues/17695#issuecomment-1540757336]
 1.  Publish versioned documentation by following [go/bazel-release-docs](http://go/bazel-release-docs) (for major and minor releases only)
 1.  [For major releases only] Coordinate with "+[radvani@google.com](mailto:radvani@google.com)" and merge the blog post pull request as needed.
     1.  Make sure you update the date in your post (and the path) to reflect when
@@ -230,6 +231,14 @@ Note: the above policies are for final releases only. RCs can be created without
     1.  **Note:** The blog sometimes takes time to update the homepage, so use
     the full path to your post to check that it is live.
 1.  For major releases, update the release page to replace the generated notes with the structured releases notes from the release announcement doc and link to the blog post (see [example](https://github.com/bazelbuild/bazel/releases/tag/6.0.0)). For minor and patch release, update the release notes without a blog post link - see [example](https://github.com/bazelbuild/bazel/releases/tag/6.1.0).
+1.  Send out an email to `bazel-discuss@googlegroups.com` about the new release. E.g.:
+    *   Subject: Bazel 6.2.0 is released
+    *   Body:
+    ```
+    Bazel 6.2.0 is now available:
+    - https://github.com/bazelbuild/bazel/releases/tag/6.2.0
+    - https://releases.bazel.build/6.2.0/release/index.html
+    ```
 
 ### Updating .bazelversion file for the Bazel repository
 
@@ -255,10 +264,7 @@ quickly, so feel free to skip this step, if you aren't familiar with it.
 
 ### Updating the Chocolatey package
 
-As of November 2016, this is done by an external contributor,
-[@petemounce](https://github.com/petemounce) on GitHub. Ping him when there's a
-new release coming out.
-
+This is done as part of our release pipeline. If there are any issues or questions, reach out to [@petemounce](https://github.com/petemounce), an external contributor.
 
 ### Updating the Scoop pakage
 
