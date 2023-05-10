@@ -493,10 +493,10 @@ steps:
   - wait
 
   - block: "Update Chocolatey"
-  if: build.branch !~ /pre/i  
+    if: build.branch !~ /pre/i  
 
   - label: "Update Chocolatey"
-  if: build.branch !~ /pre/i  
+    if: build.branch !~ /pre/i  
     agents:
       - queue=windows
     command: |
