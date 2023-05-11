@@ -1724,7 +1724,7 @@ def download_bazelci_agent(dest_dir):
     repo = "bazelbuild/continuous-integration"
     if THIS_IS_TESTING and "BAZELCI_AGENT_REPO" in os.environ:
         repo = os.environ["BAZELCI_AGENT_REPO"]
-    version = "0.1.4"
+    version = "0.2.0"
     if THIS_IS_TESTING and "BAZELCI_AGENT_VERSION" in os.environ:
         version = os.environ["BAZELCI_AGENT_VERSION"]
     postfix = ""
