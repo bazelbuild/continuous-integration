@@ -1468,7 +1468,7 @@ resource "buildkite_pipeline" "rules-kotlin-kotlin" {
 resource "buildkite_pipeline" "google-bazel-presubmit" {
   name = "Google Bazel Presubmit"
   repository = "https://bazel.googlesource.com/bazel.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = { ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN = "CiQA4DEB9rzbux2bc8Cn1JvZIggsEeEq0GCnh1xykjNdwcgN/YESQgAqwcvXqhZ5FkGlrfoeE5/7JLEqQ0vYCfVIKPI9JR0cuo8s3oYZTyxBjbHEhsnh31+LnK2K3GiLyc+vDP7EyNx0ww==" }, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
   default_branch = "master"
   team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }, { access_level = "BUILD_AND_READ", slug = "googlers" }, { access_level = "BUILD_AND_READ", slug = "bazel" }, { access_level = "BUILD_AND_READ", slug = "bazel-gtech-team" }]
 }
@@ -1943,7 +1943,7 @@ resource "buildkite_pipeline" "subpar" {
 resource "buildkite_pipeline" "bazel-bazel" {
   name = "Bazel :bazel:"
   repository = "https://github.com/bazelbuild/bazel.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/postsubmit.yml --monitor_flaky_tests=true | tee /dev/tty | buildkite-agent pipeline upload"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = { ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN = "CiQA4DEB9rzbux2bc8Cn1JvZIggsEeEq0GCnh1xykjNdwcgN/YESQgAqwcvXqhZ5FkGlrfoeE5/7JLEqQ0vYCfVIKPI9JR0cuo8s3oYZTyxBjbHEhsnh31+LnK2K3GiLyc+vDP7EyNx0ww==" }, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/postsubmit.yml --monitor_flaky_tests=true | tee /dev/tty | buildkite-agent pipeline upload"] } })
   default_branch = "master"
   branch_configuration = "master release-*"
   team = [{ access_level = "MANAGE_BUILD_AND_READ", slug = "bazel-sheriffs" }, { access_level = "BUILD_AND_READ", slug = "bazel" }, {access_level = "BUILD_AND_READ", slug = "bazel-gtech-team"}]
