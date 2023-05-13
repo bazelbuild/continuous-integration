@@ -492,7 +492,7 @@ steps:
 
   - wait
 
-  - block: "Update Chocolatey"
+  - block: "Build and publish"
     if: build.branch !~ /pre/i  
 
   - label: "Update Chocolatey"
@@ -531,4 +531,13 @@ steps:
       echo VERSION: %VERSION%
       
       powershell -Command "./build.ps1 -version %VERSION% -mode %MODE% -rc %RC%"
-      choco push      
+      choco push
+
+  - label: "Update Docker"
+    if: |
+      build.branch !~ /pre/i && build.branch !~ /rc/i
+    trigger: "docker-update"
+    build:
+      message: "${BUILDKITE_MESSAGE}"
+      env:
+        release_name: "${BUILDKITE_BRANCH}"
