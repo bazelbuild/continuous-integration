@@ -1,0 +1,67 @@
+---
+steps:
+  - input: "Latest release input"
+    fields:
+      - select: "Should this be tagged as the latest release?"
+        key: "latest_release"
+        required: true
+        default: "yes"        
+        options:
+          - label: "Yes"
+            value: "yes"
+          - label: "No"
+            value: "no" 
+
+  - wait
+    
+  - label: "Docker build and push"
+    agents:
+      - "queue=default"
+    plugins:
+      docker#v3.8.0:
+        always-pull: true
+        environment:
+          - ANDROID_HOME
+          - ANDROID_NDK_HOME
+          - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+        image: gcr.io/bazel-public/ubuntu1804-java11
+        network: host
+        privileged: true
+        propagate-environment: true
+        propagate-uid-gid: true
+        shell: ["/bin/bash", "-e", "-c"]
+        volumes:
+          - "/etc/group:/etc/group:ro"
+          - "/etc/passwd:/etc/passwd:ro"
+          - "/etc/shadow:/etc/shadow:ro"
+          - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+          - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
+          - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+          - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+          - "/var/run/docker.sock:/var/run/docker.sock"    
+    command: |
+      echo "+++ Checking out Git branch"
+      git fetch origin ${BUILDKITE_BRANCH}
+      git checkout ${BUILDKITE_BRANCH}
+      
+      echo "release_name = \"\$release_name\""      
+      
+      version=$(echo $release_name | sed 's/release-//g')
+      echo "version = \"\$version\""  
+      
+      echo "+++ Building the docker container"
+      ./bazel/oci/build.sh gcr.io/bazel-public/bazel \${version}
+
+      echo "+++ Pushing the docker container to gcr.io/bazel-public/bazel"     
+      docker push gcr.io/bazel-public/bazel:\${version}
+      
+      latest_release=$(buildkite-agent meta-data get latest_release)
+      echo "latest_release = \"\$latest_release\""
+      
+      if [[ \"\$latest_release\" == \"yes\" ]]; then
+        echo "+++ Updating the latest tag"
+        image_id=$(docker image list gcr.io/bazel-public/bazel:\${version} --format \"{{.ID}}\")        
+        image_id=$(echo \${image_id} | tr -d '"')
+        docker tag \${image_id} gcr.io/bazel-public/bazel:latest
+        docker push gcr.io/bazel-public/bazel:latest
+      fi
