@@ -216,7 +216,9 @@ Note: the above policies are for final releases only. RCs can be created without
                 click "Edit", see if there's a red warning sign next to any binary. You
                 need to manually upload those; get them from
                 `https://storage.googleapis.com/bazel/$RELEASE_NUMBER/release/index.html`.
-    * Once the binaries are uploaded and the GitHub release page looks correct, click on "Update Chocolatey" to unblock this step. Verify that the package has been successfully uploaded here: `https://community.chocolatey.org/packages/bazel/<version>`, e.g. [6.2.0](https://community.chocolatey.org/packages/bazel/6.2.0), [6.2.0-rc2](https://community.chocolatey.org/packages/bazel/6.2.0-rc2).
+    * Once the binaries are uploaded and the GitHub release page looks correct, click on "Build and Publish" to unblock this step. 
+    * Verify that the Chocolatey package has been successfully uploaded here: `https://community.chocolatey.org/packages/bazel/<version>`, e.g. [6.2.0](https://community.chocolatey.org/packages/bazel/6.2.0), [6.2.0-rc2](https://community.chocolatey.org/packages/bazel/6.2.0-rc2).
+    * Verifily that the docker container has been successfully build, pushed, and tagged as `latest` if needed, by checking the container registry. If there are any issues, follow the [instructions](../bazel/oci/README.md) to manually perform these steps. Ping [@meteorcloudy](https://github.com/meteorcloudy) for help.
 
 1.  Update the release bug:
     1.  State the fact that you pushed the release
@@ -277,10 +279,6 @@ new release coming out.
 
 This is done by an external contributor, [@vbatts](https://github.com/vbatts) on
 GitHub. Ping him when there's a new release coming out.
-
-### Push new docker image
-
-Follow the [instructions](../bazel/oci/README.md) to push new docker image for the new release. Ping [@meteorcloudy](https://github.com/meteorcloudy) for help.
 
 ## Clean up
 
