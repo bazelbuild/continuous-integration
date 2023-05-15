@@ -218,7 +218,7 @@ Note: the above policies are for final releases only. RCs can be created without
                 `https://storage.googleapis.com/bazel/$RELEASE_NUMBER/release/index.html`.
     * Once the binaries are uploaded and the GitHub release page looks correct, click on "Build and Publish" to unblock this step. 
     * Verify that the Chocolatey package has been successfully uploaded here: `https://community.chocolatey.org/packages/bazel/<version>`, e.g. [6.2.0](https://community.chocolatey.org/packages/bazel/6.2.0), [6.2.0-rc2](https://community.chocolatey.org/packages/bazel/6.2.0-rc2).
-    * Verifily that the docker container has been successfully build, pushed, and tagged as `latest` if needed, by checking the container registry. If there are any issues, follow the [instructions](../bazel/oci/README.md) to manually perform these steps. Ping [@meteorcloudy](https://github.com/meteorcloudy) for help.
+    * Verify that the docker container has been successfully build, pushed, and tagged as `latest` if needed, by checking the container registry. If there are any issues, follow the [instructions](../bazel/oci/README.md) to manually perform these steps. Ping [@meteorcloudy](https://github.com/meteorcloudy) for help.
 
 1.  Update the release bug:
     1.  State the fact that you pushed the release
