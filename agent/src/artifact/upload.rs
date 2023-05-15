@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Context, Result};
+use quick_xml::events::BytesStart;
 use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{
@@ -149,6 +150,7 @@ fn watch_bep_json_file(
                                             dry,
                                             local_exec_root.as_ref().map(|p| p.as_path()),
                                             &output.uri,
+                                            test_result.label.as_ref(),
                                             mode,
                                         ) {
                                             error!("{:?}", error);
@@ -209,6 +211,59 @@ fn upload_bep_json_file(
     mode: Mode,
 ) -> Result<()> {
     uploader.upload_artifact(dry, None, build_event_json_file, mode)
+}
+
+fn parse_test_xml(path: &Path, label: &str) -> Result<Option<Vec<u8>>> {
+    use quick_xml::{events::Event, reader::Reader, writer::Writer};
+    use std::io::Cursor;
+
+    let mut writer = Writer::new(Cursor::new(Vec::new()));
+    let mut has_testcase = false;
+    let mut buf = Vec::new();
+    let mut reader = Reader::from_file(&path)?;
+    let fallback_classname = label.replace("//", "").replace("/", ".").replace(":", ".");
+    loop {
+        match reader.read_event_into(&mut buf)? {
+            Event::Eof => break,
+            Event::Start(tag) => {
+                let tag = match tag.name().as_ref() {
+                    b"testcase" => {
+                        has_testcase = true;
+
+                        let mut new_tag = BytesStart::new("testcase");
+                        let mut has_classname = false;
+
+                        // Provide a fallback classname if it is missing or empty
+                        for attr in tag.attributes() {
+                            let mut attr = attr?;
+                            if attr.key.as_ref() == b"classname" {
+                                has_classname = true;
+                                if attr.value.len() == 0 {
+                                    attr.value = fallback_classname.clone().into_bytes().into();
+                                }
+                            }
+                            new_tag.push_attribute(attr);
+                        }
+
+                        if !has_classname {
+                            new_tag.push_attribute(("classname", fallback_classname.as_ref()));
+                        }
+
+                        new_tag
+                    }
+                    _ => tag,
+                };
+                writer.write_event(Event::Start(tag))?;
+            }
+            e => writer.write_event(e)?,
+        }
+    }
+
+    if !has_testcase {
+        return Ok(None);
+    }
+
+    Ok(Some(writer.into_inner().into_inner()))
 }
 
 fn execute_command(dry: bool, cwd: Option<&Path>, program: &str, args: &[&str]) -> Result<()> {
@@ -312,36 +367,43 @@ impl Uploader {
         cwd: Option<&Path>,
         token: &str,
         data: &Path,
+        label: &str,
         format: &str,
         forms: &[(impl AsRef<str>, impl AsRef<str>)],
     ) -> Result<()> {
-        let data = if let Some(cwd) = cwd {
+        let full_path = if let Some(cwd) = cwd {
             cwd.join(data)
         } else {
             data.to_path_buf()
         };
 
-        {
-            // Read entire content of test.xml into memory. Large test.xml should be rare, so we just assume it can fit
-            // into memory.
-            let content = std::fs::read_to_string(&data)?;
+        let content = parse_test_xml(&full_path, label)?;
+        if content.is_none() {
+            return Ok(());
+        }
+        let content = content.unwrap();
 
-            // Ignore empty testsuite
-            if !content.contains("<testcase") {
-                return Ok(());
-            }
-
-            let digest = sha1_digest(&mut content.as_bytes())?;
-            if !self.uploaded_digests.insert(digest) {
-                return Ok(());
-            }
+        let digest = sha1_digest(&content)?;
+        if !self.uploaded_digests.insert(digest) {
+            return Ok(());
         }
 
-        println!("Uploading to Test Analytics: data={}", data.display());
+        println!("Uploading to Test Analytics: data={}", full_path.display());
+
+        let filename = full_path
+            .file_name()
+            .map(|s| s.to_string_lossy().into_owned());
+        let data =
+            reqwest::blocking::multipart::Part::bytes(content).mime_str("application/xml")?;
+        let data = if let Some(filename) = filename {
+            data.file_name(filename)
+        } else {
+            data
+        };
         if !dry {
             let client = reqwest::blocking::Client::new();
             let mut form = reqwest::blocking::multipart::Form::new()
-                .file("data", data)?
+                .part("data", data)
                 .text("format", format.to_string());
 
             for form_value in forms {
@@ -374,6 +436,7 @@ impl Uploader {
         dry: bool,
         cwd: Option<&Path>,
         test_xml: &Path,
+        label: &str,
     ) -> Result<()> {
         let token = maybe_get_env("BUILDKITE_ANALYTICS_TOKEN");
         let build_id = maybe_get_env("BUILDKITE_BUILD_ID");
@@ -406,7 +469,7 @@ impl Uploader {
             }
         }
 
-        self.upload_test_analytics(dry, cwd, &token, test_xml, "junit", &forms)
+        self.upload_test_analytics(dry, cwd, &token, test_xml, label, "junit", &forms)
     }
 }
 
@@ -501,10 +564,11 @@ fn upload_test_xml(
     dry: bool,
     local_exec_root: Option<&Path>,
     test_xml: &str,
+    label: &str,
     _mode: Mode,
 ) -> Result<()> {
     let (cwd, artifact) = resolve_artifact(test_xml, local_exec_root)?;
-    return uploader.upload_test_xml(dry, cwd.as_ref().map(|pb| pb.as_path()), &artifact);
+    return uploader.upload_test_xml(dry, cwd.as_ref().map(|pb| pb.as_path()), &artifact, label);
 }
 
 #[derive(Debug)]
@@ -518,6 +582,7 @@ pub struct TestResult {
     test_action_outputs: Vec<TestActionOutput>,
     status: String,
     cached: bool,
+    label: String,
 }
 
 #[derive(Debug)]
@@ -573,6 +638,11 @@ impl BuildEvent {
     }
 
     pub fn test_result(&self) -> TestResult {
+        let label = self
+            .get("id.testResult.label")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
         let test_action_outputs = self
             .get("testResult.testActionOutput")
             .and_then(|v| v.as_array())
@@ -612,6 +682,7 @@ impl BuildEvent {
             test_action_outputs,
             status,
             cached,
+            label,
         }
     }
 
