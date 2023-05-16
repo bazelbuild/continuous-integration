@@ -3,6 +3,7 @@ package build.bazel.dashboard.github.issuequery;
 import build.bazel.dashboard.github.issuequery.GithubIssueQueryParser.Query;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import io.r2dbc.postgresql.codec.Json;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
@@ -19,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Objects.requireNonNull;
 
 @Slf4j
@@ -30,16 +32,13 @@ public class GithubIssueQueryExecutorPg implements GithubIssueQueryExecutor {
   private final DatabaseClient databaseClient;
 
   @Override
-  public Single<QueryResult> execute(String owner, String repo, String query) {
-    return fetchQueryResult(owner, repo, query)
-        .collect(Collectors.toList())
-        .flatMap(
-            items ->
-                fetchQueryResultCount(owner, repo, query)
-                    .map(count -> QueryResult.builder().totalCount(count).items(items).build()));
+  public QueryResult execute(String owner, String repo, String query) {
+    var items = fetchQueryResult(owner, repo, query);
+    var count = fetchQueryResultCount(owner, repo, query);
+    return QueryResult.builder().totalCount(count).items(items).build();
   }
 
-  private Flowable<JsonNode> fetchQueryResult(String owner, String repo, String query) {
+  private ImmutableList<JsonNode> fetchQueryResult(String owner, String repo, String query) {
     SqlCondition condition = buildSqlCondition(owner, repo, query);
     StringBuilder sql =
         new StringBuilder(
@@ -56,23 +55,22 @@ public class GithubIssueQueryExecutorPg implements GithubIssueQueryExecutor {
       spec = spec.bind(entry.getKey(), entry.getValue());
     }
 
-    Flux<JsonNode> result =
-        spec.map(
-                row -> {
-                  try {
-                    return objectMapper.readTree(
-                        (requireNonNull(row.get("data", Json.class))).asArray());
-                  } catch (IOException e) {
-                    throw new IllegalStateException(e);
-                  }
-                })
-            .all();
-
-    return RxJava3Adapter.fluxToFlowable(result);
+    return spec.map(
+            row -> {
+              try {
+                return objectMapper.readTree(
+                    (requireNonNull(row.get("data", Json.class))).asArray());
+              } catch (IOException e) {
+                throw new IllegalStateException(e);
+              }
+            })
+        .all()
+        .collect(toImmutableList())
+        .block();
   }
 
   @Override
-  public Single<Integer> fetchQueryResultCount(String owner, String repo, String query) {
+  public Integer fetchQueryResultCount(String owner, String repo, String query) {
     SqlCondition condition = buildSqlCondition(owner, repo, query);
     StringBuilder sql = new StringBuilder("SELECT COUNT(*) AS count FROM github_issue");
     if (condition.condition.length() > 0) {
@@ -85,7 +83,7 @@ public class GithubIssueQueryExecutorPg implements GithubIssueQueryExecutor {
       spec = spec.bind(entry.getKey(), entry.getValue());
     }
 
-    return RxJava3Adapter.monoToSingle(spec.map(row -> row.get("count", Integer.class)).one());
+    return spec.map(row -> row.get("count", Integer.class)).one().block();
   }
 
   private void and(StringBuilder conditions, String condition) {

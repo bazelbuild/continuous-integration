@@ -1,19 +1,19 @@
 package build.bazel.dashboard.github.api;
 
+import static build.bazel.dashboard.utils.HttpHeadersUtils.getAsIntOrZero;
+import static build.bazel.dashboard.utils.HttpHeadersUtils.getOrEmpty;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Builder;
 import lombok.Value;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.publisher.Mono;
-
-import static build.bazel.dashboard.utils.HttpHeadersUtils.getAsIntOrZero;
-import static build.bazel.dashboard.utils.HttpHeadersUtils.getOrEmpty;
 
 @Builder
 @Value
 public class GithubApiResponse {
-  HttpStatus status;
+  HttpStatusCode status;
   String etag;
   RateLimit rateLimit;
   JsonNode body;
@@ -37,7 +37,7 @@ public class GithubApiResponse {
   }
 
   public static Mono<GithubApiResponse> fromClientResponse(ClientResponse clientResponse) {
-    HttpStatus status = clientResponse.statusCode();
+    var status = clientResponse.statusCode();
     ClientResponse.Headers headers = clientResponse.headers();
     GithubApiResponseBuilder builder =
         GithubApiResponse.builder()

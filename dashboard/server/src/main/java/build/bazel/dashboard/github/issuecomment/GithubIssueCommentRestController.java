@@ -1,5 +1,7 @@
 package build.bazel.dashboard.github.issuecomment;
 
+import static build.bazel.dashboard.utils.RxJavaVirtualThread.completable;
+
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +22,7 @@ public class GithubIssueCommentRestController {
       @PathVariable("owner") String owner,
       @PathVariable("repo") String repo,
       @PathVariable("issueNumber") Integer issueNumber) {
-    return githubIssueCommentService.syncIssueComments(owner, repo, issueNumber);
+    return completable(() -> githubIssueCommentService.syncIssueComments(owner, repo, issueNumber));
   }
 
   @GetMapping("/internal/github/{owner}/{repo}/issues/{issueNumber}/comments")

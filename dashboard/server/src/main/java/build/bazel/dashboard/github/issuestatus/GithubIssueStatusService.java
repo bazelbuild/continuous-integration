@@ -16,8 +16,10 @@ import com.google.common.collect.ImmutableList;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,69 +34,67 @@ public class GithubIssueStatusService {
   private final GithubIssueStatusRepo githubIssueStatusRepo;
   private final GithubTeamService githubTeamService;
 
-  public Maybe<GithubIssueStatus> findOne(String owner, String repo, int issueNumber) {
+  public Optional<GithubIssueStatus> findOne(String owner, String repo, int issueNumber) {
     return githubIssueStatusRepo.findOne(owner, repo, issueNumber);
   }
 
-  public Maybe<GithubIssueStatus> check(GithubIssue issue, Instant now) {
+  public Optional<GithubIssueStatus> check(GithubIssue issue, Instant now) throws IOException {
     String owner = issue.getOwner();
     String repo = issue.getRepo();
 
-    return githubRepoService.findOne(owner, repo).flatMap(githubRepo -> githubIssueStatusRepo
-        .findOne(owner, repo, issue.getIssueNumber())
-        .flatMapSingle(status -> buildStatus(githubRepo, status, issue, now))
-        .switchIfEmpty(buildStatus(githubRepo, null, issue, now))
-        .flatMapMaybe(status -> githubIssueStatusRepo.save(status).andThen(Maybe.just(status))));
+    var githubRepoOptional = githubRepoService.findOne(owner, repo);
+    if (githubRepoOptional.isEmpty()) {
+      return Optional.empty();
+    }
+
+    var githubRepo = githubRepoOptional.get();
+    var existingIssueStatus = githubIssueStatusRepo.findOne(owner, repo, issue.getIssueNumber());
+
+    var newIssueStatus = buildStatus(githubRepo, existingIssueStatus.orElse(null), issue, now);
+    githubIssueStatusRepo.save(newIssueStatus);
+    return Optional.of(newIssueStatus);
   }
 
-  public Completable markDeleted(String owner, String repo, int issueNumber) {
-    return githubIssueStatusRepo
-        .findOne(owner, repo, issueNumber)
-        .flatMapCompletable(
-            status -> {
-              status.status = Status.DELETED;
-              return githubIssueStatusRepo.save(status);
-            });
+  public void markDeleted(String owner, String repo, int issueNumber) {
+    githubIssueStatusRepo.findOne(owner, repo, issueNumber).ifPresent(status -> {
+      status.status = Status.DELETED;
+      githubIssueStatusRepo.save(status);
+    });
   }
 
-  private Single<GithubIssueStatus> buildStatus(
+  private GithubIssueStatus buildStatus(
       GithubRepo repo,
-      @Nullable GithubIssueStatus oldStatus, GithubIssue issue, Instant now) {
-    return Single.fromCallable(() -> issue.parseData(objectMapper))
-        .flatMap(
-            data -> {
-              Status newStatus = newStatus(repo, data);
-              Instant lastNotifiedAt = null;
+      @Nullable GithubIssueStatus oldStatus, GithubIssue issue, Instant now) throws IOException  {
+    var data = issue.parseData(objectMapper);
+    Status newStatus = newStatus(repo, data);
+    Instant lastNotifiedAt = null;
 
-              if (oldStatus != null) {
-                lastNotifiedAt = oldStatus.getLastNotifiedAt();
-              }
+    if (oldStatus != null) {
+      lastNotifiedAt = oldStatus.getLastNotifiedAt();
+    }
 
-              Instant expectedRespondAt = getExpectedRespondAt(data, newStatus);
-              Instant nextNotifyAt = expectedRespondAt;
+    Instant expectedRespondAt = getExpectedRespondAt(data, newStatus);
+    Instant nextNotifyAt = expectedRespondAt;
 
-              if (lastNotifiedAt != null
-                  && nextNotifyAt != null
-                  && lastNotifiedAt.isAfter(expectedRespondAt)) {
-                nextNotifyAt = lastNotifiedAt.plus(1, DAYS);
-              }
+    if (lastNotifiedAt != null
+        && nextNotifyAt != null
+        && lastNotifiedAt.isAfter(expectedRespondAt)) {
+      nextNotifyAt = lastNotifiedAt.plus(1, DAYS);
+    }
 
-              GithubIssueStatusBuilder builder =
-                  GithubIssueStatus.builder()
-                      .owner(issue.getOwner())
-                      .repo(issue.getRepo())
-                      .issueNumber(issue.getIssueNumber())
-                      .status(newStatus)
-                      .updatedAt(data.getUpdatedAt())
-                      .expectedRespondAt(expectedRespondAt)
-                      .lastNotifiedAt(lastNotifiedAt)
-                      .nextNotifyAt(nextNotifyAt)
-                      .checkedAt(now);
-
-              return findActionOwner(repo, issue, data, newStatus)
-                  .map(builder::actionOwners)
-                  .map(GithubIssueStatusBuilder::build);
-            });
+    var actionOwners = findActionOwner(repo, issue, data, newStatus);
+    return GithubIssueStatus.builder()
+            .owner(issue.getOwner())
+            .repo(issue.getRepo())
+            .issueNumber(issue.getIssueNumber())
+            .status(newStatus)
+        .actionOwners(actionOwners)
+        .updatedAt(data.getUpdatedAt())
+            .expectedRespondAt(expectedRespondAt)
+            .lastNotifiedAt(lastNotifiedAt)
+            .nextNotifyAt(nextNotifyAt)
+            .checkedAt(now)
+            .build();
   }
 
   static Status newStatus(GithubRepo repo, GithubIssue.Data data) {
@@ -150,40 +150,39 @@ public class GithubIssueStatusService {
     return null;
   }
 
-  private Single<ImmutableList<String>> findActionOwner(
+  private ImmutableList<String> findActionOwner(
       GithubRepo repo, GithubIssue issue, GithubIssue.Data data, Status status) {
     switch (status) {
       case TO_BE_REVIEWED:
-        return Single.just(ImmutableList.of());
+        return ImmutableList.of();
       case MORE_DATA_NEEDED:
-        return Single.just(ImmutableList.of(data.getUser().getLogin()));
+        return ImmutableList.of(data.getUser().getLogin());
       case REVIEWED:
       case TRIAGED:
         User assignee = data.getAssignee();
         if (assignee != null) {
-          return Single.just(ImmutableList.of(assignee.getLogin()));
+          return ImmutableList.of(assignee.getLogin());
         } else {
           List<Label> labels = data.getLabels();
-          return githubTeamService
+          githubTeamService
               .findAll(issue.getOwner(), issue.getRepo())
+              .stream()
               .filter(
                   team ->
                       labels.stream().anyMatch(label -> label.getName().equals(team.getLabel()))
                           && !team.getTeamOwners().isEmpty())
-              .firstElement()
+              .findFirst()
               .map(GithubTeam::getTeamOwners)
-              .switchIfEmpty(
-                  Single.fromCallable(
-                      () -> {
-                        if (repo.getActionOwner() != null) {
-                          return ImmutableList.of(repo.getActionOwner());
-                        }
-                        return ImmutableList.of();
-                      }));
+              .orElseGet(() -> {
+                if (repo.getActionOwner() != null) {
+                  return ImmutableList.of(repo.getActionOwner());
+                }
+                return ImmutableList.of();
+              });
         }
     }
 
-    return Single.just(ImmutableList.of());
+    return ImmutableList.of();
   }
 
   private static boolean hasTeamLabel(List<Label> labels) {

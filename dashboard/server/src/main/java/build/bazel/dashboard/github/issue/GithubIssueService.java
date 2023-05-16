@@ -4,16 +4,14 @@ import build.bazel.dashboard.github.api.FetchIssueRequest;
 import build.bazel.dashboard.github.api.GithubApi;
 import build.bazel.dashboard.github.issuestatus.GithubIssueStatus;
 import build.bazel.dashboard.github.issuestatus.GithubIssueStatusService;
-import io.reactivex.rxjava3.core.Maybe;
-import io.reactivex.rxjava3.core.Single;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.time.Instant;
 
 @Service
 @Slf4j
@@ -50,95 +48,71 @@ public class GithubIssueService {
     }
   }
 
-  public Maybe<GithubIssue> findOne(String owner, String repo, int issueNumber) {
+  public Optional<GithubIssue> findOne(String owner, String repo, int issueNumber) {
     return githubIssueRepo.findOne(owner, repo, issueNumber);
   }
 
-  public Single<FetchResult> fetchAndSave(String owner, String repo, int issueNumber) {
-    return githubIssueRepo
-        .findOne(owner, repo, issueNumber)
-        .switchIfEmpty(Single.just(GithubIssue.empty(owner, repo, issueNumber)))
-        .flatMap(
-            existed -> {
-              FetchIssueRequest request =
-                  FetchIssueRequest.builder()
-                      .owner(owner)
-                      .repo(repo)
-                      .issueNumber(issueNumber)
-                      .etag(existed.getEtag())
-                      .build();
-              boolean exists = existed.getTimestamp().isAfter(Instant.EPOCH);
+  public FetchResult fetchAndSave(String owner, String repo, int issueNumber) {
+    var existed =
+        githubIssueRepo
+            .findOne(owner, repo, issueNumber)
+            .orElse(GithubIssue.empty(owner, repo, issueNumber));
 
-              return githubApi
-                  .fetchIssue(request)
-                  .flatMap(
-                      response -> {
-                        if (response.getStatus().is2xxSuccessful()) {
-                          GithubIssue githubIssue =
-                              GithubIssue.builder()
-                                  .owner(owner)
-                                  .repo(repo)
-                                  .issueNumber(issueNumber)
-                                  .timestamp(Instant.now())
-                                  .etag(response.getEtag())
-                                  .data(response.getBody())
-                                  .build();
-                          return githubIssueRepo
-                              .save(githubIssue)
-                              .andThen(githubIssueStatusService.check(githubIssue, Instant.now()))
-                              .map(
-                                  status ->
-                                      FetchResult.create(
-                                          githubIssue, status, !exists, exists, false, null))
-                              .switchIfEmpty(
-                                  Single.just(
-                                      FetchResult.create(
-                                          githubIssue, null, !exists, exists, false, null)));
-                        } else if (response.getStatus().value() == 304) {
-                          // Not modified
-                          return githubIssueStatusService
-                              .check(existed, Instant.now())
-                              .map(
-                                  status ->
-                                      FetchResult.create(
-                                          existed, status, false, false, false, null))
-                              .switchIfEmpty(
-                                  Single.just(
-                                      FetchResult.create(
-                                          existed, null, false, false, false, null)));
-                        } else if (response.getStatus().value() == 301
-                            || response.getStatus().value() == 404
-                            || response.getStatus().value() == 410) {
-                          // Transferred or deleted
-                          return githubIssueRepo
-                              .delete(owner, repo, issueNumber)
-                              // Mark existing status to DELETED
-                              .andThen(
-                                  githubIssueStatusService.markDeleted(owner, repo, issueNumber))
-                              .toSingle(
-                                  () ->
-                                      FetchResult.create(existed, null, false, false, true, null));
-                        } else {
-                          log.error(
-                              "Failed to fetch {}/{}/issues/{}: {}",
-                              owner,
-                              repo,
-                              issueNumber,
-                              response.getStatus().toString());
-                          return Single.just(
-                              FetchResult.create(
-                                  existed,
-                                  null,
-                                  false,
-                                  false,
-                                  false,
-                                  new IOException(response.getStatus().toString())));
-                        }
-                      });
-            });
+    FetchIssueRequest request =
+        FetchIssueRequest.builder()
+            .owner(owner)
+            .repo(repo)
+            .issueNumber(issueNumber)
+            .etag(existed.getEtag())
+            .build();
+    boolean exists = existed.getTimestamp().isAfter(Instant.EPOCH);
+    var response = githubApi.fetchIssue(request);
+    if (response.getStatus().is2xxSuccessful()) {
+      GithubIssue githubIssue =
+          GithubIssue.builder()
+              .owner(owner)
+              .repo(repo)
+              .issueNumber(issueNumber)
+              .timestamp(Instant.now())
+              .etag(response.getEtag())
+              .data(response.getBody())
+              .build();
+      try {
+        githubIssueRepo.save(githubIssue);
+        var status = githubIssueStatusService.check(githubIssue, Instant.now());
+        return FetchResult.create(githubIssue, status.orElse(null), !exists, exists, false, null);
+      } catch (IOException e) {
+        return FetchResult.create(githubIssue, null, !exists, exists, false, e);
+      }
+    } else if (response.getStatus().value() == 304) {
+      // Not modified
+      try {
+        var status = githubIssueStatusService.check(existed, Instant.now());
+        return FetchResult.create(existed, status.orElse(null), false, false, false, null);
+      } catch (IOException e) {
+        return FetchResult.create(existed, null, false, false, false, e);
+      }
+    } else if (response.getStatus().value() == 301
+        || response.getStatus().value() == 404
+        || response.getStatus().value() == 410) {
+      // Transferred or deleted
+      githubIssueRepo.delete(owner, repo, issueNumber);
+      // Mark existing status to DELETED
+      githubIssueStatusService.markDeleted(owner, repo, issueNumber);
+      return FetchResult.create(existed, null, false, false, true, null);
+    } else {
+      log.error(
+          "Failed to fetch {}/{}/issues/{}: {}",
+          owner,
+          repo,
+          issueNumber,
+          response.getStatus().toString());
+      return FetchResult.create(
+          existed, null, false, false, false, new IOException(response.getStatus().toString()));
+    }
   }
 
-  public Single<Integer> findMaxIssueNumber(String owner, String repo) {
+  public Integer findMaxIssueNumber(String owner, String repo) {
     return githubIssueRepo.findMaxIssueNumber(owner, repo);
   }
 }

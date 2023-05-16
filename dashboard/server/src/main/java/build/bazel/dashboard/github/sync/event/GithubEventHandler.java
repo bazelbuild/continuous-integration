@@ -13,43 +13,35 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @RequiredArgsConstructor
 public class GithubEventHandler {
+
   private final GithubIssueService githubIssueService;
   private final GithubIssueCommentService githubIssueCommentService;
 
-  public Completable onGithubRepositoryEvent(String owner, String repo, ObjectNode event) {
+  public void onGithubRepositoryEvent(String owner, String repo, ObjectNode event) {
     log.debug("Repository event {}: {}", event.get("type"), event);
 
     String type = event.get("type").asText();
     switch (type) {
-      case "IssueCommentEvent":
-      case "IssuesEvent":
-        return updateGithubIssue(
-            owner, repo, event.get("payload").get("issue").get("number").asInt());
-
-      case "PullRequestReviewEvent":
-      case "PullRequestReviewCommentEvent":
-      case "PullRequestEvent":
-        return updateGithubIssue(
-            owner, repo, event.get("payload").get("pull_request").get("number").asInt());
-
-      default:
-        return Completable.complete();
+      case "IssueCommentEvent", "IssuesEvent" -> updateGithubIssue(
+          owner, repo, event.get("payload").get("issue").get("number").asInt());
+      case "PullRequestReviewEvent", "PullRequestReviewCommentEvent", "PullRequestEvent" ->
+          updateGithubIssue(
+              owner, repo, event.get("payload").get("pull_request").get("number").asInt());
+      default -> {}
     }
   }
 
-  public Completable onGithubRepositoryIssueEvent(String owner, String repo, ObjectNode event) {
+  public void onGithubRepositoryIssueEvent(String owner, String repo, ObjectNode event) {
     log.debug("Issue event {}: {}", event.get("event"), event);
 
     JsonNode issue = event.get("issue");
     if (issue != null) {
-      return updateGithubIssue(owner, repo, issue.get("number").asInt());
-    } else {
-      return Completable.complete();
+      updateGithubIssue(owner, repo, issue.get("number").asInt());
     }
   }
 
-  private Completable updateGithubIssue(String owner, String repo, int issueNumber) {
-    return Completable.fromSingle(githubIssueService.fetchAndSave(owner, repo, issueNumber))
-        .andThen(githubIssueCommentService.syncIssueComments(owner, repo, issueNumber));
+  private void updateGithubIssue(String owner, String repo, int issueNumber) {
+    githubIssueService.fetchAndSave(owner, repo, issueNumber);
+    githubIssueCommentService.syncIssueComments(owner, repo, issueNumber);
   }
 }

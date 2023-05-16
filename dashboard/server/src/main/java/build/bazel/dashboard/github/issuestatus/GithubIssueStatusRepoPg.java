@@ -1,23 +1,20 @@
 package build.bazel.dashboard.github.issuestatus;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.common.collect.ImmutableList;
-import io.r2dbc.spi.Row;
+import io.r2dbc.spi.Readable;
 import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
+import java.time.Instant;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
 import reactor.adapter.rxjava.RxJava3Adapter;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.time.Instant;
-
-import static java.util.Objects.requireNonNull;
 
 @Repository
 @RequiredArgsConstructor
@@ -26,7 +23,7 @@ public class GithubIssueStatusRepoPg implements GithubIssueStatusRepo {
   private final DatabaseClient databaseClient;
 
   @Override
-  public Completable save(GithubIssueStatus status) {
+  public void save(GithubIssueStatus status) {
     Deque<String> actionOwners = new ArrayDeque<>(status.getActionOwners());
     String actionOwner = null;
     if (!actionOwners.isEmpty()) {
@@ -77,12 +74,12 @@ public class GithubIssueStatusRepoPg implements GithubIssueStatusRepo {
       spec = spec.bindNull("next_notify_at", Instant.class);
     }
 
-    return RxJava3Adapter.monoToCompletable(spec.then());
+    spec.then().block();
   }
 
   @Override
-  public Maybe<GithubIssueStatus> findOne(String owner, String repo, int issueNumber) {
-    Mono<GithubIssueStatus> query =
+  public Optional<GithubIssueStatus> findOne(String owner, String repo, int issueNumber) {
+    return Optional.ofNullable(
         databaseClient
             .sql(
                 "SELECT owner, repo, issue_number, status, action_owner, more_action_owners,"
@@ -93,11 +90,11 @@ public class GithubIssueStatusRepoPg implements GithubIssueStatusRepo {
             .bind("repo", repo)
             .bind("issue_number", issueNumber)
             .map(this::toGithubIssueStatus)
-            .one();
-    return RxJava3Adapter.monoToMaybe(query);
+            .one()
+            .block());
   }
 
-  private GithubIssueStatus toGithubIssueStatus(Row row) {
+  private GithubIssueStatus toGithubIssueStatus(Readable row) {
     ImmutableList.Builder<String> actionOwners = new ImmutableList.Builder<>();
     String actionOwner = row.get("action_owner", String.class);
     if (actionOwner != null && !actionOwner.isBlank()) {

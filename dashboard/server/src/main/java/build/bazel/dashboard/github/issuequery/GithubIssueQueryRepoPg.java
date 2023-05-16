@@ -1,15 +1,10 @@
 package build.bazel.dashboard.github.issuequery;
 
-import build.bazel.dashboard.github.issuequery.GithubIssueQuery;
-import build.bazel.dashboard.github.issuequery.GithubIssueQueryRepo;
-import io.reactivex.rxjava3.core.Maybe;
+import java.time.Instant;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
-import reactor.adapter.rxjava.RxJava3Adapter;
-import reactor.core.publisher.Mono;
-
-import java.time.Instant;
 
 @Repository
 @RequiredArgsConstructor
@@ -17,11 +12,12 @@ public class GithubIssueQueryRepoPg implements GithubIssueQueryRepo {
   private final DatabaseClient databaseClient;
 
   @Override
-  public Maybe<GithubIssueQuery> findOne(String owner, String repo, String id) {
-    Mono<GithubIssueQuery> query =
+  public Optional<GithubIssueQuery> findOne(String owner, String repo, String id) {
+    return Optional.ofNullable(
         databaseClient
             .sql(
-                "SELECT owner, repo, id, created_at, updated_at, name, query FROM github_issue_query WHERE owner = :owner AND repo = :repo AND id = :id")
+                "SELECT owner, repo, id, created_at, updated_at, name, query FROM"
+                    + " github_issue_query WHERE owner = :owner AND repo = :repo AND id = :id")
             .bind("owner", owner)
             .bind("repo", repo)
             .bind("id", id)
@@ -36,7 +32,7 @@ public class GithubIssueQueryRepoPg implements GithubIssueQueryRepo {
                         .name(row.get("name", String.class))
                         .query(row.get("query", String.class))
                         .build())
-            .one();
-    return RxJava3Adapter.monoToMaybe(query);
+            .one()
+            .block());
   }
 }

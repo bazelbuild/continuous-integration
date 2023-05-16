@@ -1,6 +1,9 @@
 package build.bazel.dashboard.github.repo;
 
-import io.reactivex.rxjava3.core.Flowable;
+import static build.bazel.dashboard.utils.RxJavaVirtualThread.single;
+
+import io.reactivex.rxjava3.core.Single;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,7 +14,7 @@ public class GithubRepoRestController {
   private final GithubRepoService githubRepoService;
 
   @GetMapping("/github/repos")
-  public Flowable<GithubRepo> findAll() {
-    return githubRepoService.findAll();
+  public Single<List<GithubRepo>> findAll() {
+    return single(githubRepoService::findAll);
   }
 }

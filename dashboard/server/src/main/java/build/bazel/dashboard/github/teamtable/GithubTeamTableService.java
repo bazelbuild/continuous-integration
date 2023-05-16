@@ -1,29 +1,31 @@
 package build.bazel.dashboard.github.teamtable;
 
+import static build.bazel.dashboard.github.teamtable.GithubTeamTable.Cell;
+
 import build.bazel.dashboard.github.GithubUtils;
 import build.bazel.dashboard.github.issuequery.GithubIssueQueryExecutor;
 import build.bazel.dashboard.github.team.GithubTeam;
 import build.bazel.dashboard.github.team.GithubTeamService;
 import build.bazel.dashboard.github.teamtable.GithubTeamTable.Row;
 import build.bazel.dashboard.github.teamtable.GithubTeamTableRepo.GithubTeamTableData;
-import build.bazel.dashboard.utils.RxJavaFutures;
 import com.github.benmanes.caffeine.cache.AsyncCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Single;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import java.time.Duration;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
+import jdk.incubator.concurrent.StructuredTaskScope;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.time.Duration;
-import java.util.AbstractMap;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static build.bazel.dashboard.github.teamtable.GithubTeamTable.Cell;
 
 @Service
 @Slf4j
@@ -42,74 +44,112 @@ public class GithubTeamTableService {
   }
 
   private final AsyncCache<GithubTeamTableCacheKey, GithubTeamTable> tableCache =
-      Caffeine.newBuilder().expireAfterWrite(Duration.ofSeconds(1)).buildAsync();
+      Caffeine.newBuilder()
+          .expireAfterWrite(Duration.ofSeconds(1))
+          .executor(Executors.newVirtualThreadPerTaskExecutor())
+          .buildAsync();
 
-  Single<GithubTeamTable> findOne(String owner, String repo, String tableId) {
-    return Single.fromFuture(
-        tableCache.get(
-            GithubTeamTableCacheKey.builder().owner(owner).repo(repo).tableId(tableId).build(),
-            (key, executor) ->
-                RxJavaFutures.toCompletableFuture(
-                    loadOne(key.getOwner(), key.getRepo(), key.getTableId()), executor)));
+  public GithubTeamTable findOne(String owner, String repo, String tableId) {
+    try {
+      return tableCache
+          .get(
+              GithubTeamTableCacheKey.builder().owner(owner).repo(repo).tableId(tableId).build(),
+              (key) -> loadOne(key.getOwner(), key.getRepo(), key.getTableId()))
+          .get();
+    } catch (InterruptedException | ExecutionException e) {
+      throw new RuntimeException(e);
+    }
   }
 
-  Single<GithubTeamTable> loadOne(String owner, String repo, String tableId) {
+  GithubTeamTable loadOne(String owner, String repo, String tableId) {
     return githubTeamTableRepo
         .findOne(owner, repo, tableId)
-        .flatMapSingle(
-            table ->
-                findAllTeams(owner, repo, table.getNoneTeamOwner())
-                    .flatMap(teams -> fetchTable(teams, table)))
-        .defaultIfEmpty(GithubTeamTable.buildNone(owner, repo, tableId, ""));
-  }
-
-  private Single<GithubTeamTable> fetchTable(List<GithubTeam> teams, GithubTeamTableData table) {
-    return Flowable.fromIterable(teams)
-        .flatMapSingle(team -> fetchRow(teams, team, table))
-        .collect(Collectors.toList())
         .map(
-            rows -> {
-              rows.sort(Comparator.comparing(row -> row.getTeam().getName()));
-              return GithubTeamTable.builder()
-                  .owner(table.getOwner())
-                  .repo(table.getRepo())
-                  .id(table.getId())
-                  .name(table.getName())
-                  .headers(
-                      table.getHeaders().stream()
-                          .map(
-                              header ->
-                                  GithubTeamTable.Header.builder()
-                                      .id(header.getId())
-                                      .name(header.getName())
-                                      .build())
-                          .collect(Collectors.toList()))
-                  .rows(rows)
-                  .build();
-            });
+            table -> {
+              var teams = findAllTeams(owner, repo, table.getNoneTeamOwner());
+              return fetchTable(teams, table);
+            })
+        .orElseGet(() -> GithubTeamTable.buildNone(owner, repo, tableId, ""));
   }
 
-  private Single<Row> fetchRow(List<GithubTeam> teams, GithubTeam team, GithubTeamTableData table) {
-    return Flowable.fromIterable(table.getHeaders())
-        .flatMapSingle(
-            header -> {
-              String query = interceptQuery(teams, team, header.getQuery());
-              return githubIssueQueryExecutor
-                  .fetchQueryResultCount(team.getOwner(), team.getRepo(), query)
-                  .map(
-                      count ->
-                          new AbstractMap.SimpleEntry<>(
-                              header.getId(),
-                              Cell.builder()
-                                  .url(
-                                      GithubUtils.buildIssueQueryUrl(
-                                          team.getOwner(), team.getRepo(), query))
-                                  .count(count)
-                                  .build()));
-            })
-        .collect(
-            Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue))
-        .map(cells -> Row.builder().team(GithubTeamTable.Team.create(team)).cells(cells).build());
+  private GithubTeamTable fetchTable(List<GithubTeam> teams, GithubTeamTableData table) {
+    var rows = Lists.<Row>newArrayListWithExpectedSize(teams.size());
+    try (var scope = new StructuredTaskScope<>()) {
+      var futures = ImmutableList.<Future<Row>>builderWithExpectedSize(teams.size());
+      for (var team : teams) {
+        var future = scope.fork(() -> fetchRow(teams, team, table));
+        futures.add(future);
+      }
+
+      try {
+        scope.join();
+
+        for (var future : futures.build()) {
+          rows.add(future.get());
+        }
+      } catch (InterruptedException | ExecutionException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    rows.sort(Comparator.comparing(row -> row.getTeam().getName()));
+    return GithubTeamTable.builder()
+        .owner(table.getOwner())
+        .repo(table.getRepo())
+        .id(table.getId())
+        .name(table.getName())
+        .headers(
+            table.getHeaders().stream()
+                .map(
+                    header ->
+                        GithubTeamTable.Header.builder()
+                            .id(header.getId())
+                            .name(header.getName())
+                            .build())
+                .collect(Collectors.toList()))
+        .rows(rows)
+        .build();
+  }
+
+  record CellEntry(String headerId, Cell cell) {}
+
+  private Row fetchRow(List<GithubTeam> teams, GithubTeam team, GithubTeamTableData table) {
+    var cells = new HashMap<String, Cell>();
+    try (var scope = new StructuredTaskScope<>()) {
+      var futures =
+          ImmutableList.<Future<CellEntry>>builderWithExpectedSize(table.getHeaders().size());
+      for (var header : table.getHeaders()) {
+        String query = interceptQuery(teams, team, header.getQuery());
+        var future =
+            scope.fork(
+                () -> {
+                  var count =
+                      githubIssueQueryExecutor.fetchQueryResultCount(
+                          team.getOwner(), team.getRepo(), query);
+                  return new CellEntry(
+                      header.getId(),
+                      Cell.builder()
+                          .url(
+                              GithubUtils.buildIssueQueryUrl(
+                                  team.getOwner(), team.getRepo(), query))
+                          .count(count)
+                          .build());
+                });
+        futures.add(future);
+      }
+      try {
+        scope.join();
+
+        for (var future : futures.build()) {
+          var entry = future.get();
+          cells.put(entry.headerId, entry.cell);
+        }
+      } catch (InterruptedException | ExecutionException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    return Row.builder().team(GithubTeamTable.Team.create(team)).cells(cells).build();
   }
 
   private String interceptQuery(List<GithubTeam> teams, GithubTeam team, String query) {
@@ -128,10 +168,11 @@ public class GithubTeamTableService {
     return String.format("%s %s", query, teamQuery);
   }
 
-  private Single<List<GithubTeam>> findAllTeams(String owner, String repo, String noneTeamOwner) {
-    return githubTeamService
-        .findAll(owner, repo)
-        .collect(Collectors.toList())
-        .doOnSuccess(teams -> teams.add(GithubTeam.buildNone(owner, repo, noneTeamOwner)));
+  private ImmutableList<GithubTeam> findAllTeams(String owner, String repo, String noneTeamOwner) {
+    var teams = githubTeamService.findAll(owner, repo);
+    return ImmutableList.<GithubTeam>builderWithExpectedSize(teams.size() + 1)
+        .addAll(teams)
+        .add(GithubTeam.buildNone(owner, repo, noneTeamOwner))
+        .build();
   }
 }

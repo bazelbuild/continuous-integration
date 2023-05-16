@@ -1,17 +1,19 @@
 package build.bazel.dashboard.github.issuelist;
 
+import static java.util.Objects.requireNonNull;
+
 import build.bazel.dashboard.github.issuestatus.GithubIssueStatus;
+import com.google.common.collect.ImmutableList;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
-import lombok.*;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static java.util.Objects.requireNonNull;
+import javax.annotation.Nullable;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
@@ -72,12 +74,12 @@ public class GithubIssueListService {
                                 .build()));
   }
 
-  public Flowable<String> findAllActionOwner(ListParams params) {
+  public ImmutableList<String> findAllActionOwner(ListParams params) {
     preprocessParams(params);
     return githubIssueListRepo.findAllActionOwner(params);
   }
 
-  public Flowable<String> findAllLabels(ListParams params) {
+  public ImmutableList<String> findAllLabels(ListParams params) {
     preprocessParams(params);
     return githubIssueListRepo.findAllLabels(params);
   }

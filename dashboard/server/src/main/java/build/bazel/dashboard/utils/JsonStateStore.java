@@ -1,12 +1,10 @@
 package build.bazel.dashboard.utils;
 
 import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.rxjava3.core.Single;
+import java.time.Instant;
+import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Value;
-
-import javax.annotation.Nullable;
-import java.time.Instant;
 
 public interface JsonStateStore {
 
@@ -19,9 +17,9 @@ public interface JsonStateStore {
     T data;
   }
 
-  <T> Completable save(String key, @Nullable Instant lastTimestamp, T data);
+  <T> void save(String key, @Nullable Instant lastTimestamp, T data);
 
-  <T> Single<JsonState<T>> load(String key, Class<T> type);
+  <T> JsonState<T> load(String key, Class<T> type);
 
-  Completable delete(String key, Instant lastTimestamp);
+  void delete(String key, Instant lastTimestamp);
 }
