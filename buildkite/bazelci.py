@@ -625,7 +625,7 @@ DEFAULT_PLATFORM = "ubuntu1804"
 LINUX_BINARY_PLATFORM = "centos7_java11_devtoolset10"
 
 # Maps major MacOS version numbers to the Xcode version that should be activated on that particular OS
-DEFAULT_XCODE_VERSION_PER_OS = {12: "13.0", 13: "14.2"}
+DEFAULT_XCODE_VERSIONS_PER_OS = {12: ["13.0"], 13: ["14.3", "14.2"]}
 XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
 XCODE_VERSION_OVERRIDES = {"10.2.1": "10.3", "11.2": "11.2.1", "11.3": "11.3.1"}
 
@@ -1524,15 +1524,26 @@ def execute_commands(
             shutil.rmtree(tmpdir)
 
 
-def get_default_xcode_version():
+def get_default_xcode_versions():
     # Cannot use platform.mac_ver() since it returns 10.16 on both 12.x and 13.x
     macos = execute_command_and_get_output(["sw_vers", "-productVersion"], print_output=False)
     major = int(macos.split(".")[0])
-    return DEFAULT_XCODE_VERSION_PER_OS.get(major, "13.0")  # we use 13.0 due to legacy reasons
+    return DEFAULT_XCODE_VERSIONS_PER_OS.get(major, ["13.0"])  # we use 13.0 due to legacy reasons
 
 
 def activate_xcode(task_config):
-    default_xcode_version = get_default_xcode_version()
+    all_default_xcode_versions = get_default_xcode_versions()
+    supported_versions = sorted(
+        # Stripping "Xcode" prefix and ".app" suffix from e.g. "Xcode12.0.1.app" leaves just the version number.
+        [os.path.basename(x)[5:-4] for x in glob("/Applications/Xcode*.app")],
+        reverse=True,
+    )
+
+    default_xcode_version = "13.0"
+    for v in all_default_xcode_versions:
+        if v in supported_versions:
+            default_xcode_version = v
+            break
 
     # Get the Xcode version from the config.
     wanted_xcode_version = task_config.get("xcode_version", default_xcode_version)
@@ -1556,11 +1567,6 @@ def activate_xcode(task_config):
     xcode_version = XCODE_VERSION_OVERRIDES.get(wanted_xcode_version, wanted_xcode_version)
 
     # This falls back to a default version if the selected version is not available.
-    supported_versions = sorted(
-        # Stripping "Xcode" prefix and ".app" suffix from e.g. "Xcode12.0.1.app" leaves just the version number.
-        [os.path.basename(x)[5:-4] for x in glob("/Applications/Xcode*.app")],
-        reverse=True,
-    )
     if xcode_version not in supported_versions:
         xcode_version = default_xcode_version
     if xcode_version != wanted_xcode_version:
