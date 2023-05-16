@@ -194,7 +194,8 @@ def _get_clone_path(repository, platform):
     Returns:
       A path to the local clone.
     """
-    mirror_path = bazelci.get_mirror_path(repository, platform)
+    mirror_path = bazelci.get_mirror_root() + re.sub(r"[^0-9A-Za-z]", "-", git_repository)
+
     if os.path.exists(mirror_path):
         bazelci.eprint("Found mirror for %s on %s." % repository, platform)
         return mirror_path
