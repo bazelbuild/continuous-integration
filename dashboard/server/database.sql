@@ -276,3 +276,17 @@ CREATE TABLE github_issue_comment_data
     data         JSONB       NOT NULL,
     PRIMARY KEY (owner, repo, issue_number, page)
 );
+
+--
+-- Table that stores the raw builds data fetched from Buildkite
+--
+CREATE TABLE buildkite_build_data
+(
+    org          TEXT        NOT NULL,
+    pipeline     TEXT        NOT NULL,
+    build_number INTEGER     NOT NULL,
+    timestamp    TIMESTAMPTZ NOT NULL,
+    etag         TEXT        NOT NULL,
+    data         JSONB       NOT NULL,
+    PRIMARY KEY (org, pipeline, build_number)
+);

@@ -5,8 +5,10 @@ import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.r2dbc.postgresql.codec.Json;
+import io.r2dbc.spi.Readable;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -55,24 +58,36 @@ public class JsonStateStorePg implements JsonStateStore {
         databaseClient
             .sql("SELECT key, timestamp, data FROM json_state WHERE key = :key")
             .bind("key", key)
-            .map(
-                row -> {
-                  try {
-                    return JsonState.<T>builder()
-                        .key(requireNonNull(row.get("key", String.class)))
-                        .timestamp(requireNonNull(row.get("timestamp", Instant.class)))
-                        .data(
-                            objectMapper.readValue(
-                                requireNonNull(row.get("data", Json.class)).asArray(), type))
-                        .build();
-                  } catch (IOException e) {
-                    throw new RuntimeException(e);
-                  }
-                })
+            .map(row -> toJsonState(row, type))
             .one()
             .defaultIfEmpty(
                 JsonState.<T>builder().key(key).timestamp(Instant.EPOCH).data(null).build());
     return query.block();
+  }
+
+  @Override
+  public <T> List<JsonState<T>> findAllLike(String pattern, Class<T> type) {
+    Flux<JsonState<T>> query =
+        databaseClient
+            .sql("SELECT key, timestamp, data FROM json_state WHERE key LIKE :pattern")
+            .bind("pattern", pattern)
+            .map(row -> toJsonState(row, type))
+            .all();
+    return query.collectList().block();
+  }
+
+  private <T> JsonState<T> toJsonState(Readable row, Class<T> type) {
+    try {
+      return JsonState.<T>builder()
+          .key(requireNonNull(row.get("key", String.class)))
+          .timestamp(requireNonNull(row.get("timestamp", Instant.class)))
+          .data(
+              objectMapper.readValue(
+                  requireNonNull(row.get("data", Json.class)).asArray(), type))
+          .build();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
