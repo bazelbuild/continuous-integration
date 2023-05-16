@@ -207,7 +207,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/google/glog.git",
         "http_config": "https://raw.githubusercontent.com/google/glog/master/.bazelci/presubmit.yml",
         "pipeline_slug": "google-logging",
-        "disabled_reason": "Waiting on https://github.com/google/glog/pull/916",
     },
     "IntelliJ Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
