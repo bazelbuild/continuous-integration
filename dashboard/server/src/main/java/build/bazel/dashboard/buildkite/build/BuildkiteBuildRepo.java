@@ -65,4 +65,10 @@ public class BuildkiteBuildRepo {
       throw new IllegalStateException(e);
     }
   }
+
+  public void refresh() {
+    databaseClient.sql("REFRESH MATERIALIZED VIEW buildkite_job_mview")
+        .then()
+        .block();
+  }
 }

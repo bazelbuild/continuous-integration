@@ -290,3 +290,51 @@ CREATE TABLE buildkite_build_data
     data         JSONB       NOT NULL,
     PRIMARY KEY (org, pipeline, build_number)
 );
+
+--
+-- Materialized view of buildkite_build_data that each row is a bazelci task.
+--
+CREATE MATERIALIZED VIEW buildkite_job_mview AS
+WITH buildkite_job AS (WITH buildkite_job_data AS (SELECT org,
+                                                          pipeline,
+                                                          build_number,
+                                                          data ->> 'branch'                    AS branch,
+                                                          data ->> 'state'                     AS build_state,
+                                                          data ->> 'created_at'                AS build_created_at,
+                                                          JSONB_ARRAY_ELEMENTS(data -> 'jobs') AS data
+                                                   FROM buildkite_build_data)
+                       SELECT org,
+                              pipeline,
+                              build_number,
+                              branch,
+                              build_state,
+                              build_created_at,
+                              data ->> 'name'                                 AS name,
+                              COALESCE(SUBSTRING(data ->> 'command' FROM
+                                                 '--task=(\S+)'),
+                                       SUBSTRING(data ->> 'command' FROM
+                                                 '--platform=(\S+)'))         AS bazelci_task,
+                              data ->> 'state'                                AS state,
+                              (data ->> 'scheduled_at')::timestamptz          AS scheduled_at,
+                              (data ->> 'created_at')::timestamptz            AS created_at,
+                              (data ->> 'started_at')::timestamptz            AS started_at,
+                              (data ->> 'finished_at')::timestamptz           AS finished_at,
+                              EXTRACT(EPOCH FROM
+                                      ((data ->> 'started_at')::timestamptz -
+                                       (data ->> 'created_at')::timestamptz)) AS wait_time,
+                              EXTRACT(EPOCH FROM
+                                      ((data ->> 'finished_at')::timestamptz -
+                                       (data ->> 'started_at')::timestamptz)) AS run_time
+                       FROM buildkite_job_data)
+SELECT *
+FROM buildkite_job
+WHERE bazelci_task is NOT NULL;
+
+CREATE UNIQUE INDEX buildkite_job_mview_pkey
+    ON buildkite_job_mview (org, pipeline, build_number, bazelci_task);
+CREATE INDEX buildkite_job_mview_created_at
+    on buildkite_job_mview (created_at);
+CREATE INDEX buildkite_job_mview_state
+    on buildkite_job_mview (state);
+CREATE INDEX buildkite_job_mview_branch
+    on buildkite_job_mview (branch);

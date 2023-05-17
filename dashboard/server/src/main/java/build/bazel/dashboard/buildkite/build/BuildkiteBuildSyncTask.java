@@ -38,8 +38,8 @@ public class BuildkiteBuildSyncTask {
 
   private final BuildkiteBuildService buildkiteBuildService;
   private final JsonStateStore jsonStateStore;
-
   private final ObjectMapper objectMapper;
+  private final BuildkiteBuildRepo buildkiteBuildRepo;
 
   @Value("${buildkite.webhookToken:}")
   private String buildkiteWebhookToken;
@@ -148,5 +148,15 @@ public class BuildkiteBuildSyncTask {
 
   private String buildSyncStateKey(String org, String pipeline) {
     return String.format("%s/%s/%s", SYNC_STATE_KEY_PREFIX, org, pipeline);
+  }
+
+  @PutMapping("/internal/buildkite")
+  public Completable refreshRepo() {
+    return completable(this::doRefreshRepo);
+  }
+
+  @Scheduled(cron = "0 0 0 * * *", zone = "UTC")
+  public void doRefreshRepo() {
+    buildkiteBuildRepo.refresh();
   }
 }
