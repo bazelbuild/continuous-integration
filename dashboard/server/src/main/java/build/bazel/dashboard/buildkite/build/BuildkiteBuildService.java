@@ -67,8 +67,7 @@ public class BuildkiteBuildService {
       var org = match.group(1);
       var pipeline = match.group(2);
       var buildNumber = Integer.parseInt(match.group(3));
-      var build = new BuildkiteBuild(org, pipeline, buildNumber, Instant.now(), "", buildJson);
-      buildkiteBuildRepo.save(build);
+      var unused = fetchAndSave(org, pipeline, buildNumber);
     }
   }
 }
