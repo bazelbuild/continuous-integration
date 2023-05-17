@@ -625,7 +625,7 @@ DEFAULT_PLATFORM = "ubuntu1804"
 LINUX_BINARY_PLATFORM = "centos7_java11_devtoolset10"
 
 # Maps major MacOS version numbers to the Xcode version that should be activated on that particular OS
-DEFAULT_XCODE_VERSIONS_PER_OS = {12: ["13.0"], 13: ["14.3", "14.2"]}
+DEFAULT_XCODE_VERSIONS_PER_OS = {12: ["13.0"], 13: ["14.2", "14.3"]}
 XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
 XCODE_VERSION_OVERRIDES = {"10.2.1": "10.3", "11.2": "11.2.1", "11.3": "11.3.1"}
 
