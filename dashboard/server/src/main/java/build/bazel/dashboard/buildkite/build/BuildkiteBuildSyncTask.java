@@ -6,17 +6,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import build.bazel.dashboard.utils.JsonStateStore;
 import build.bazel.dashboard.utils.JsonStateStore.JsonState;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.hash.Hashing;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.crypto.codec.Hex;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -61,14 +62,12 @@ public class BuildkiteBuildSyncTask {
         return ResponseEntity.status(401).build();
       }
 
-      var timestamp = Integer.parseInt(parts.get("timestamp"));
+      var timestamp = parts.get("timestamp");
       var signature = parts.get("signature");
-
       var payload = request.getBody();
-      var expected = Hashing.sha256()
-          .hashString(String.format("%s.%s", timestamp, payload), StandardCharsets.UTF_8)
-          .toString();
-      if (!expected.equals(signature)) {
+
+      var expected = computeSignature(timestamp, payload);
+      if (!expected.equalsIgnoreCase(signature)) {
         return ResponseEntity.status(401).build();
       }
 
@@ -77,6 +76,19 @@ public class BuildkiteBuildSyncTask {
 
       return ResponseEntity.ok().build();
     });
+  }
+
+  private String computeSignature(String timestamp, String payload) {
+    var algorithm = "HmacSHA256";
+    var secretKeySpec = new SecretKeySpec(buildkiteWebhookToken.getBytes(), algorithm);
+    try {
+      Mac mac = Mac.getInstance(algorithm);
+      mac.init(secretKeySpec);
+      return new String(
+          Hex.encode(mac.doFinal(String.format("%s.%s", timestamp, payload).getBytes())));
+    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @PutMapping("/internal/buildkite/organizations/{org}/pipelines/{pipeline}/builds")
