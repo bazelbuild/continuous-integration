@@ -34,7 +34,7 @@ public class BuildkiteBuildSyncTask {
   }
 
   // We have a rate limit 100/min.
-  @Scheduled(fixedDelay = 1000)
+  @Scheduled(fixedDelay = 500)
   private void sync() {
     var states = jsonStateStore.findAllLike(SYNC_STATE_KEY_PREFIX + "%", SyncState.class);
     for (var state : states) {

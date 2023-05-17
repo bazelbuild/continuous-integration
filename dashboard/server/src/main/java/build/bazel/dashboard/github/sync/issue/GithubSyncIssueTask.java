@@ -87,8 +87,8 @@ public class GithubSyncIssueTask {
     }
   }
 
-  // We have a rate limit 5000/hour = 1.4/sec. Use a conservative rate 0.5/sec
-  @Scheduled(fixedDelay = 2000)
+  // We have a rate limit 5000/hour = 1.4/sec.
+  @Scheduled(fixedDelay = 1000)
   public void syncGithubIssues() throws Throwable {
     for (var repo : githubRepoService.findAll()) {
       var jsonState =
