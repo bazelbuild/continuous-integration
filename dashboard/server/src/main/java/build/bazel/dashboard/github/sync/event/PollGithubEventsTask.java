@@ -4,7 +4,7 @@ import static build.bazel.dashboard.utils.RxJavaVirtualThread.completable;
 import static com.google.common.base.Preconditions.checkState;
 
 import build.bazel.dashboard.github.api.GithubApi;
-import build.bazel.dashboard.github.api.GithubApiResponse;
+import build.bazel.dashboard.common.RestApiResponse;
 import build.bazel.dashboard.github.api.ListRepositoryEventsRequest;
 import build.bazel.dashboard.github.api.ListRepositoryIssueEventsRequest;
 import build.bazel.dashboard.github.repo.GithubRepoService;
@@ -68,7 +68,7 @@ public class PollGithubEventsTask {
     var poller =
         new PagePoller(owner, repo, stateKey) {
           @Override
-          public GithubApiResponse doRequest(
+          public RestApiResponse doRequest(
               String owner, String repo, int perPage, int page, String etag) {
             var request =
                 ListRepositoryEventsRequest.builder()
@@ -100,7 +100,7 @@ public class PollGithubEventsTask {
     var poller =
         new PagePoller(owner, repo, stateKey) {
           @Override
-          public GithubApiResponse doRequest(
+          public RestApiResponse doRequest(
               String owner, String repo, int perPage, int page, String etag) {
             var request =
                 ListRepositoryIssueEventsRequest.builder()
@@ -132,7 +132,7 @@ public class PollGithubEventsTask {
       this.stateKey = stateKey;
     }
 
-    public abstract GithubApiResponse doRequest(
+    public abstract RestApiResponse doRequest(
         String owner, String repo, int perPage, int page, String etag);
 
     public abstract void onEvent(String owner, String repo, ObjectNode event);
@@ -179,7 +179,7 @@ public class PollGithubEventsTask {
       }
     }
 
-    private static boolean shouldTerminate(PollState state, GithubApiResponse response) {
+    private static boolean shouldTerminate(PollState state, RestApiResponse response) {
       boolean terminate = false;
 
       if (response.getStatus().is2xxSuccessful()) {

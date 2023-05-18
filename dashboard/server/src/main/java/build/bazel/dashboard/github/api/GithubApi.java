@@ -1,15 +1,17 @@
 package build.bazel.dashboard.github.api;
 
+import build.bazel.dashboard.common.RestApiResponse;
+
 public interface GithubApi {
-  GithubApiResponse listRepositoryIssues(ListRepositoryIssuesRequest request);
+  RestApiResponse listRepositoryIssues(ListRepositoryIssuesRequest request);
 
-  GithubApiResponse listRepositoryEvents(ListRepositoryEventsRequest request);
+  RestApiResponse listRepositoryEvents(ListRepositoryEventsRequest request);
 
-  GithubApiResponse listRepositoryIssueEvents(ListRepositoryIssueEventsRequest request);
+  RestApiResponse listRepositoryIssueEvents(ListRepositoryIssueEventsRequest request);
 
-  GithubApiResponse fetchIssue(FetchIssueRequest request);
+  RestApiResponse fetchIssue(FetchIssueRequest request);
 
-  GithubApiResponse listIssueComments(ListIssueCommentsRequest request);
+  RestApiResponse listIssueComments(ListIssueCommentsRequest request);
 
-  GithubApiResponse searchIssues(SearchIssuesRequest request);
+  RestApiResponse searchIssues(SearchIssuesRequest request);
 }

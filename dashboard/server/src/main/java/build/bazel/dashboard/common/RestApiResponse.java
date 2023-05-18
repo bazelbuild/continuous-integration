@@ -1,4 +1,4 @@
-package build.bazel.dashboard.github.api;
+package build.bazel.dashboard.common;
 
 import static build.bazel.dashboard.utils.HttpHeadersUtils.getAsIntOrZero;
 import static build.bazel.dashboard.utils.HttpHeadersUtils.getOrEmpty;
@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 
 @Builder
 @Value
-public class GithubApiResponse {
+public class RestApiResponse {
   HttpStatusCode status;
   String etag;
   RateLimit rateLimit;
@@ -36,11 +36,11 @@ public class GithubApiResponse {
     }
   }
 
-  public static Mono<GithubApiResponse> fromClientResponse(ClientResponse clientResponse) {
+  public static Mono<RestApiResponse> fromClientResponse(ClientResponse clientResponse) {
     var status = clientResponse.statusCode();
     ClientResponse.Headers headers = clientResponse.headers();
-    GithubApiResponseBuilder builder =
-        GithubApiResponse.builder()
+    var builder =
+        RestApiResponse.builder()
             .status(status)
             .etag(getOrEmpty(headers, "ETag"))
             .rateLimit(RateLimit.fromHeaders(headers));
