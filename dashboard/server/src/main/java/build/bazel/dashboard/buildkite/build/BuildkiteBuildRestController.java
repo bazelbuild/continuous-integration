@@ -4,6 +4,7 @@ import static build.bazel.dashboard.utils.RxJavaVirtualThread.maybe;
 import static build.bazel.dashboard.utils.RxJavaVirtualThread.single;
 
 import build.bazel.dashboard.buildkite.build.BuildkiteBuildRepo.BuildStats;
+import build.bazel.dashboard.buildkite.build.BuildkiteBuildRepo.JobStats;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
 import java.time.Instant;
@@ -39,5 +40,16 @@ public class BuildkiteBuildRestController {
       @RequestParam(value = "to", required = false) Instant to
   ) {
     return single(() -> buildkiteBuildService.findBuildStats(org, pipeline, branch, from, to));
+  }
+
+  @GetMapping("/buildkite/organizations/{org}/pipelines/{pipeline}/jobs/stats")
+  public Single<JobStats> findJobStats(
+      @PathVariable("org") String org,
+      @PathVariable("pipeline") String pipeline,
+      @RequestParam(value = "branch", required = false) String branch,
+      @RequestParam(value = "from", required = false) Instant from,
+      @RequestParam(value = "to", required = false) Instant to
+  ) {
+    return single(() -> buildkiteBuildService.findJobStats(org, pipeline, branch, from, to));
   }
 }

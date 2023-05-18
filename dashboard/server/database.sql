@@ -316,19 +316,20 @@ WITH buildkite_job AS (WITH buildkite_job_data AS (SELECT org,
                               build_started_at,
                               build_finished_at,
                               EXTRACT(EPOCH FROM build_started_at -
-                                                 build_created_at)          AS build_wait_time,
+                                                 build_created_at)    AS build_wait_time,
                               EXTRACT(EPOCH FROM build_finished_at -
-                                                 build_started_at)          AS build_run_time,
-                              data ->> 'name'                               AS name,
+                                                 build_started_at)    AS build_run_time,
+                              data ->> 'id'                           AS job_id,
+                              data ->> 'name'                         AS name,
                               COALESCE(SUBSTRING(data ->> 'command' FROM
                                                  '--task=(\S+)'),
                                        SUBSTRING(data ->> 'command' FROM
-                                                 '--platform=(\S+)'))       AS bazelci_task,
-                              data ->> 'state'                              AS state,
-                              (data ->> 'scheduled_at')::timestamptz        AS scheduled_at,
-                              (data ->> 'created_at')::timestamptz          AS created_at,
-                              (data ->> 'started_at')::timestamptz          AS started_at,
-                              (data ->> 'finished_at')::timestamptz         AS finished_at
+                                                 '--platform=(\S+)')) AS bazelci_task,
+                              data ->> 'state'                        AS state,
+                              (data ->> 'scheduled_at')::timestamptz  AS scheduled_at,
+                              (data ->> 'created_at')::timestamptz    AS created_at,
+                              (data ->> 'started_at')::timestamptz    AS started_at,
+                              (data ->> 'finished_at')::timestamptz   AS finished_at
                        FROM buildkite_job_data)
 SELECT *,
        EXTRACT(EPOCH FROM (started_at - created_at))  AS wait_time,
