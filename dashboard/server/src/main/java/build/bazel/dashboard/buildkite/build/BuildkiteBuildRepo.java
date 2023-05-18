@@ -1,14 +1,18 @@
 package build.bazel.dashboard.buildkite.build;
 
 import static build.bazel.dashboard.utils.PgJson.toPgJson;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import io.r2dbc.postgresql.codec.Json;
 import io.r2dbc.spi.Readable;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
@@ -70,5 +74,60 @@ public class BuildkiteBuildRepo {
     databaseClient.sql("REFRESH MATERIALIZED VIEW buildkite_job_mview")
         .then()
         .block();
+  }
+
+  public record BuildStats(
+      String org,
+      String pipeline,
+      List<BuildStatsItem> items
+  ) {
+
+  }
+
+  public record BuildStatsItem(
+      int buildNumber,
+      Instant createdAt,
+      String branch,
+      String state,
+      int waitTime,
+      int runTime
+  ) {
+
+  }
+
+  public BuildStats findBuildStats(String org, String pipeline, @Nullable String branch,
+      Instant from,
+      Instant to) {
+    var query = new StringBuilder("SELECT DISTINCT ON (org, pipeline, build_number) "
+        + "build_number, build_state, build_created_at, build_wait_time, build_run_time, branch "
+        + "FROM buildkite_job_mview "
+        + "WHERE org = :org AND pipeline = :pipeline AND build_state = 'passed' AND build_created_at >= :from AND build_created_at < :to");
+    if (branch != null) {
+      query.append(" AND branch = :branch");
+    }
+    query.append(" ORDER BY build_number ASC");
+
+    var spec = databaseClient.sql(query.toString())
+        .bind("org", org)
+        .bind("pipeline", pipeline)
+        .bind("from", from)
+        .bind("to", to);
+
+    if (branch != null) {
+      spec = spec.bind("branch", branch);
+    }
+
+    var items = spec.map(row -> new BuildStatsItem(
+            checkNotNull(row.get("build_number", Integer.class)),
+            checkNotNull(row.get("build_created_at", Instant.class)),
+            checkNotNull(row.get("branch", String.class)),
+            checkNotNull(row.get("build_state", String.class)),
+            checkNotNull(row.get("build_wait_time", Integer.class)),
+            checkNotNull(row.get("build_run_time", Integer.class))
+        ))
+        .all()
+        .collectList()
+        .block();
+    return new BuildStats(org, pipeline, items);
   }
 }

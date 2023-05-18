@@ -2,10 +2,15 @@ package build.bazel.dashboard.buildkite.build;
 
 import build.bazel.dashboard.buildkite.api.BuildkiteRestApiClient;
 import build.bazel.dashboard.buildkite.api.FetchBuildRequest;
+import build.bazel.dashboard.buildkite.build.BuildkiteBuildRepo.BuildStats;
+import build.bazel.dashboard.common.RestApiResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.time.Instant;
+import java.util.List;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,7 +24,22 @@ public class BuildkiteBuildService {
   private final BuildkiteBuildRepo buildkiteBuildRepo;
   private final ObjectMapper objectMapper;
 
-  public BuildkiteBuild fetchAndSave(String org, String pipeline, int buildNumber) {
+  public static class FetchException extends IOException {
+
+    private final RestApiResponse response;
+
+    public FetchException(RestApiResponse response) {
+      super("Failed to fetch: " + response);
+      this.response = response;
+    }
+
+    public RestApiResponse getResponse() {
+      return response;
+    }
+  }
+
+  public BuildkiteBuild fetchAndSave(String org, String pipeline, int buildNumber)
+      throws FetchException {
     var existing = buildkiteBuildRepo.findOne(org, pipeline, buildNumber)
         .orElse(BuildkiteBuild.empty(org, pipeline, buildNumber, objectMapper));
 
@@ -49,7 +69,7 @@ public class BuildkiteBuildService {
         buildNumber,
         status);
 
-    throw new RuntimeException(status.toString());
+    throw new FetchException(response);
   }
 
   private static final Pattern BUILD_URL_PATTERN = Pattern.compile(
@@ -67,7 +87,22 @@ public class BuildkiteBuildService {
       var org = match.group(1);
       var pipeline = match.group(2);
       var buildNumber = Integer.parseInt(match.group(3));
-      var unused = fetchAndSave(org, pipeline, buildNumber);
+      try {
+        var unused = fetchAndSave(org, pipeline, buildNumber);
+      } catch (FetchException e) {
+        log.error("{}", e.getMessage());
+      }
     }
+  }
+
+  public BuildStats findBuildStats(String org, String pipeline, @Nullable String branch, @Nullable Instant from,
+      @Nullable Instant to) {
+    if (from == null) {
+      from = Instant.EPOCH;
+    }
+    if (to == null) {
+      to = Instant.now();
+    }
+    return buildkiteBuildRepo.findBuildStats(org, pipeline, branch, from, to);
   }
 }

@@ -4,6 +4,7 @@ import static build.bazel.dashboard.utils.RxJavaVirtualThread.completable;
 import static build.bazel.dashboard.utils.RxJavaVirtualThread.single;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import build.bazel.dashboard.buildkite.build.BuildkiteBuildService.FetchException;
 import build.bazel.dashboard.utils.JsonStateStore;
 import build.bazel.dashboard.utils.JsonStateStore.JsonState;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -119,7 +120,14 @@ public class BuildkiteBuildSyncTask {
       return;
     }
 
-    var unused = buildkiteBuildService.fetchAndSave(data.org(), data.pipeline(), data.current());
+    try {
+      var unused = buildkiteBuildService.fetchAndSave(data.org(), data.pipeline(), data.current());
+    } catch (FetchException e) {
+      var ignore = e.getResponse().getStatus().value() == 404;
+      if (!ignore) {
+        throw new RuntimeException(e);
+      }
+    }
     jsonStateStore.save(
         jsonState.getKey(), jsonState.getTimestamp(),
         new SyncState(data.org(), data.pipeline(), data.start(),
