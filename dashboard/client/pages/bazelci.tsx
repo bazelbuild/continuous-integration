@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Layout from "../src/Layout";
 import { useBuildkiteBuildStats } from "../src/data/BuildkiteBuildStats";
 import { useBuildkiteJobStats } from "../src/data/BuildkiteJobStats";
@@ -34,16 +34,17 @@ function formatDuration(dur: Duration) {
   return items.map((item) => `${item.value}${item.unit}`).join(" ");
 }
 
-function Chart(props: { data: any[] }) {
+function Chart(props: { data: any[]; domain: number[] | undefined }) {
+  const data = props.data;
   return (
-    <div style={{ width: "100%", height: 300 }}>
+    <div style={{ width: "100%", height: 300 }} className="pr-[70px]">
       <ResponsiveContainer>
-        <AreaChart data={props.data}>
+        <AreaChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="createdAt"
             tickFormatter={(tick) => {
-              return DateTime.fromISO(tick).toFormat("HH:mm");
+              return DateTime.fromISO(tick).toFormat("MMM d");
             }}
           />
           <YAxis
@@ -54,6 +55,10 @@ function Chart(props: { data: any[] }) {
               });
               return formatDuration(dur);
             }}
+            width={70}
+            type="number"
+            domain={props.domain}
+            interval={0}
           />
           <Tooltip
             formatter={(value: any, name: any) => {
@@ -87,50 +92,88 @@ function Chart(props: { data: any[] }) {
   );
 }
 
-function BuildStats({ org, pipeline }: { org: string; pipeline: string }) {
-  const stats = useBuildkiteBuildStats(org, pipeline, {
-    branch: "master",
-    from: "2023-04-18T00:00:00Z",
-  });
+interface StatsParam {
+  org: string;
+  pipeline: string;
+  from: string;
+  branch: string;
+}
 
-  if (stats.loading || stats.error) {
+function BuildStats({
+  param,
+  domain,
+  setDomain,
+}: {
+  param: StatsParam;
+  domain: number[] | undefined;
+  setDomain: (domain: number[]) => void;
+}) {
+  const stats = useBuildkiteBuildStats(param.org, param.pipeline, {
+    branch: param.branch,
+    from: param.from,
+  });
+  useEffect(() => {
+    if (domain === undefined && stats.data) {
+      let max = 0;
+      for (let item of stats.data.items) {
+        const total = item.runTime + item.waitTime;
+        max = Math.max(max, total);
+      }
+      max *= 1.1;
+      console.log(max);
+      setDomain([0, max]);
+    }
+  }, [stats]);
+
+  if (stats.loading || stats.error || domain === undefined) {
     return <></>;
   }
-
   const data = stats.data.items;
 
   return (
     <div className="flex flex-col border shadow rounded bg-white ring-1 ring-black ring-opacity-5 flex-auto">
       <div className="bg-gray-100 flex flex-row items-center border-b">
-        <span className="px-4 py-2 text-base font-medium">Build Time</span>
+        <span className="px-4 py-2 text-base font-medium">
+          {param.org} / {param.pipeline} / {param.branch}
+        </span>
       </div>
-      <Chart data={data} />
+      <Chart data={data} domain={domain} />
     </div>
   );
 }
 
-function JobStats({ org, pipeline }: { org: string; pipeline: string }) {
-  const stats = useBuildkiteJobStats(org, pipeline, {
-    branch: "master",
-    from: "2023-04-18T00:00:00Z",
+function JobStats({
+  param,
+  domain,
+}: {
+  param: StatsParam;
+  domain: number[] | undefined;
+}) {
+  const stats = useBuildkiteJobStats(param.org, param.pipeline, {
+    branch: param.branch,
+    from: param.from,
   });
 
-  if (stats.loading || stats.error) {
+  if (stats.loading || stats.error || domain === undefined) {
     return <></>;
   }
 
   const data = stats.data.items;
   var group = _.groupBy(data, (item) => item.bazelCITask);
+  var sortedGroup = _.sortBy(group, (data) => {
+    const max = _.maxBy(data, (item) => item.waitTime + item.runTime);
+    return -(max?.runTime || 0);
+  });
   return (
     <>
-      {_.map(group, (data) => (
+      {_.map(sortedGroup, (data) => (
         <div className="flex flex-col border shadow rounded bg-white ring-1 ring-black ring-opacity-5 flex-auto">
           <div className="bg-gray-100 flex flex-row items-center border-b">
             <span className="px-4 py-2 text-base font-medium">
-              {data[0].name} / {data[0].bazelCITask}
+              {data[0].bazelCITask} | {data[0].name}
             </span>
           </div>
-          <Chart key={data[0].bazelCITask} data={data} />
+          <Chart key={data[0].bazelCITask} data={data} domain={domain} />
         </div>
       ))}
     </>
@@ -138,11 +181,18 @@ function JobStats({ org, pipeline }: { org: string; pipeline: string }) {
 }
 
 export default function Page() {
+  const [domain, setDomain] = useState<number[]>();
+  const param = {
+    org: "bazel",
+    pipeline: "bazel-bazel",
+    branch: "master",
+    from: DateTime.now().minus({ days: 30 }).toISO(),
+  };
   return (
     <Layout>
       <div className="m-8 flex flex-col gap-8">
-        <BuildStats org="bazel" pipeline="bazel-bazel" />
-        <JobStats org="bazel" pipeline="bazel-bazel" />
+        <BuildStats param={param} domain={domain} setDomain={setDomain} />
+        <JobStats param={param} domain={domain} />
       </div>
     </Layout>
   );
