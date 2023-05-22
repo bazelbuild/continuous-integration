@@ -147,18 +147,10 @@ function BuildStats({
   param,
   domain,
   setDomain,
-  monthOffset,
-  setMonthOffset,
-  excludeWaitTime,
-  setExcludeWaitTime,
 }: {
   param: StatsParam;
   domain: number[] | undefined;
   setDomain: (domain: number[]) => void;
-  monthOffset: number;
-  setMonthOffset: (monthOffset: number) => void;
-  excludeWaitTime: boolean;
-  setExcludeWaitTime: (excludeWaitTime: boolean) => void;
 }) {
   const stats = useBuildkiteBuildStats(param.org, param.pipeline, {
     branch: param.branch,
@@ -173,7 +165,7 @@ function BuildStats({
       max *= 1.1;
       setDomain([0, max]);
     }
-  }, [stats, excludeWaitTime]);
+  }, [stats]);
 
   if (stats.loading || stats.error || domain === undefined) {
     return <></>;
@@ -187,31 +179,6 @@ function BuildStats({
           <span className="text-base font-medium">
             {param.org} / {param.pipeline} / {param.branch}
           </span>
-        </div>
-        <div className="flex flex-row space-x-2">
-          <label>
-            <span className="mx-2">Exclude Wait Time</span>
-            <input
-              id="exclude-wait-time"
-              type="checkbox"
-              name="Exclude Wait Time"
-              checked={excludeWaitTime}
-              onChange={(e) => setExcludeWaitTime(e.target.checked)}
-            />
-          </label>
-          <select
-            className="bg-gray-100"
-            value={monthOffset}
-            onChange={(e) => setMonthOffset(Number.parseInt(e.target.value))}
-          >
-            <option value={-1}>Past month</option>
-            <option value={-3}>Past 3 months</option>
-            <option value={-6}>Past 6 months</option>
-            <option value={-9}>Past 9 months</option>
-            <option value={-12}>Past 12 months</option>
-            <option value={-24}>Past 24 months</option>
-            <option value={0}>All</option>
-          </select>
         </div>
       </div>
       <Chart
@@ -229,10 +196,12 @@ function JobStats({
   param,
   domain,
   excludeWaitTime,
+  useBuildDomain,
 }: {
   param: StatsParam;
   domain: number[] | undefined;
   excludeWaitTime: boolean;
+  useBuildDomain: boolean;
 }) {
   const stats = useBuildkiteJobStats(param.org, param.pipeline, {
     branch: param.branch,
@@ -283,7 +252,7 @@ function JobStats({
             org={param.org}
             pipeline={param.pipeline}
             data={data}
-            domain={domain}
+            domain={useBuildDomain ? domain : undefined}
             excludeWaitTime={excludeWaitTime}
           />
         </div>
@@ -296,6 +265,7 @@ export default function Page() {
   const [domain, setDomain] = useState<number[]>();
   const [monthOffset, setMonthOffset] = useState<number>(-1);
   const [excludeWaitTime, setExcludeWaitTime] = useState<boolean>(false);
+  const [useBuildDomain, setUseBuildDomain] = useState<boolean>(true);
 
   const param = useMemo(() => {
     return {
@@ -312,25 +282,66 @@ export default function Page() {
   return (
     <Layout>
       <div className="m-8 flex flex-col gap-8">
-        <BuildStats
-          param={param}
-          domain={domain}
-          setDomain={setDomain}
-          monthOffset={monthOffset}
-          setMonthOffset={(v) => {
-            setDomain(undefined);
-            setMonthOffset(v);
-          }}
-          excludeWaitTime={excludeWaitTime}
-          setExcludeWaitTime={(v) => {
-            setDomain(undefined);
-            setExcludeWaitTime(v);
-          }}
-        />
+        <div className="flex flex-row">
+          <p className="flex-auto">
+            The times of successful builds in Bazel's{" "}
+            <a
+              className="text-blue-600"
+              target="_blank"
+              href="https://buildkite.com/bazel/bazel-bazel/builds?branch=master"
+            >
+              postsubmit
+            </a>
+            :
+          </p>
+          <div className="flex flex-row space-x-2">
+            <label>
+              <span className="mx-2">Time:</span>
+              <select
+                value={monthOffset}
+                onChange={(e) => {
+                  setDomain(undefined);
+                  setMonthOffset(Number.parseInt(e.target.value));
+                }}
+              >
+                <option value={-1}>Past month</option>
+                <option value={-3}>Past 3 months</option>
+                <option value={-6}>Past 6 months</option>
+                <option value={-9}>Past 9 months</option>
+                <option value={-12}>Past 12 months</option>
+                <option value={-24}>Past 24 months</option>
+                <option value={0}>All</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <BuildStats param={param} domain={domain} setDomain={setDomain} />
+        <div className="flex flex-row">
+          <p className="flex-auto">Build time breakdown by tasks:</p>
+          <div className="flex flex-row space-x-2">
+            <label>
+              <span className="mx-2">Exclude Wait Time</span>
+              <input
+                type="checkbox"
+                checked={excludeWaitTime}
+                onChange={(e) => setExcludeWaitTime(e.target.checked)}
+              />
+            </label>
+            <label>
+              <span className="mx-2">Use Build Domain</span>
+              <input
+                type="checkbox"
+                checked={useBuildDomain}
+                onChange={(e) => setUseBuildDomain(e.target.checked)}
+              />
+            </label>
+          </div>
+        </div>
         <JobStats
           param={param}
           domain={domain}
           excludeWaitTime={excludeWaitTime}
+          useBuildDomain={useBuildDomain}
         />
       </div>
     </Layout>
