@@ -23,13 +23,14 @@ import argparse
 import bazelci
 import datetime
 import json
+import math
 import os
+import re
 import subprocess
 import sys
 import tempfile
 import time
 import yaml
-import math
 
 # TMP has different values, depending on the platform.
 TMP = tempfile.gettempdir()
