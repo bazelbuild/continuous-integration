@@ -295,7 +295,7 @@ function JobStats({
 export default function Page() {
   const [domain, setDomain] = useState<number[]>();
   const [monthOffset, setMonthOffset] = useState<number>(-1);
-  const [excludeWaitTime, setExcludeWaitTime] = useState<boolean>(true);
+  const [excludeWaitTime, setExcludeWaitTime] = useState<boolean>(false);
 
   const param = useMemo(() => {
     return {
