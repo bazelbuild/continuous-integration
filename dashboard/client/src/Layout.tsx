@@ -18,6 +18,7 @@ export default function Layout({ children }: LayoutProps) {
           {[
             { name: "Stats", link: "/" },
             { name: "Issues", link: "/issues" },
+            { name: "Bazel CI", link: "/bazelci" },
           ].map((menu) => (
             <li
               key={menu.name}

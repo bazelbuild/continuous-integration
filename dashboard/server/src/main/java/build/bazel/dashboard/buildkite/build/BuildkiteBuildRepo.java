@@ -130,4 +130,62 @@ public class BuildkiteBuildRepo {
         .block();
     return new BuildStats(org, pipeline, items);
   }
+
+  public record JobStats(
+      String org,
+      String pipeline,
+      List<JobStatsItem> items
+  ) {
+
+  }
+
+  public record JobStatsItem(
+      int buildNumber,
+      String jobId,
+      String bazelCITask,
+      Instant createdAt,
+      String branch,
+      String name,
+      String state,
+      int waitTime,
+      int runTime
+  ) {
+
+  }
+
+  public JobStats findJobStats(String org, String pipeline, @Nullable String branch, Instant from, Instant to) {
+    var query = new StringBuilder("SELECT build_number, job_id, bazelci_task, build_created_at, branch, name, state, wait_time, run_time "
+        + "FROM buildkite_job_mview "
+        + "WHERE org = :org AND pipeline = :pipeline AND build_state = 'passed' AND build_created_at >= :from AND build_created_at < :to");
+
+    if (branch != null) {
+      query.append(" AND branch = :branch");
+    }
+    query.append(" ORDER BY build_number ASC");
+
+    var spec = databaseClient.sql(query.toString())
+        .bind("org", org)
+        .bind("pipeline", pipeline)
+        .bind("from", from)
+        .bind("to", to);
+    if (branch != null) {
+      spec = spec.bind("branch", branch);
+    }
+
+    var items = spec.map(row -> new JobStatsItem(
+            checkNotNull(row.get("build_number", Integer.class)),
+            checkNotNull(row.get("job_id", String.class)),
+            checkNotNull(row.get("bazelci_task", String.class)),
+            checkNotNull(row.get("build_created_at", Instant.class)),
+            checkNotNull(row.get("branch", String.class)),
+            checkNotNull(row.get("name", String.class)),
+            checkNotNull(row.get("state", String.class)),
+            checkNotNull(row.get("wait_time", Integer.class)),
+            checkNotNull(row.get("run_time", Integer.class))
+        ))
+        .all()
+        .collectList()
+        .block();
+    return new JobStats(org, pipeline, items);
+  }
 }

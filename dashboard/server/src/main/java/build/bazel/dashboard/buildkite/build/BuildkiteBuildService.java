@@ -3,6 +3,7 @@ package build.bazel.dashboard.buildkite.build;
 import build.bazel.dashboard.buildkite.api.BuildkiteRestApiClient;
 import build.bazel.dashboard.buildkite.api.FetchBuildRequest;
 import build.bazel.dashboard.buildkite.build.BuildkiteBuildRepo.BuildStats;
+import build.bazel.dashboard.buildkite.build.BuildkiteBuildRepo.JobStats;
 import build.bazel.dashboard.common.RestApiResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -95,7 +96,8 @@ public class BuildkiteBuildService {
     }
   }
 
-  public BuildStats findBuildStats(String org, String pipeline, @Nullable String branch, @Nullable Instant from,
+  public BuildStats findBuildStats(String org, String pipeline, @Nullable String branch,
+      @Nullable Instant from,
       @Nullable Instant to) {
     if (from == null) {
       from = Instant.EPOCH;
@@ -104,5 +106,17 @@ public class BuildkiteBuildService {
       to = Instant.now();
     }
     return buildkiteBuildRepo.findBuildStats(org, pipeline, branch, from, to);
+  }
+
+  public JobStats findJobStats(String org, String pipeline, @Nullable String branch,
+      @Nullable Instant from,
+      @Nullable Instant to) {
+    if (from == null) {
+      from = Instant.EPOCH;
+    }
+    if (to == null) {
+      to = Instant.now();
+    }
+    return buildkiteBuildRepo.findJobStats(org, pipeline, branch, from, to);
   }
 }
