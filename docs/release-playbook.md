@@ -110,6 +110,8 @@ While the release is active, you should make sure to do the following:
     *   This will upload the release candidate binaries to GitHub and our
         apt-get repository. The github link is probably of the form:
         https://releases.bazel.build/3.6.0/rc1/index.html
+        
+1.  If that worked, click on the "Generate release notes" step to unblock it. If this is the first release candidate, copy and paste the generated text into the release announcements doc. For rcX where X>2, compare the generated notes with the release announcements working doc and add only the new/missing notes. Refer to the "Release announcement" section below for more details.
 
 1.  Send out an email to `bazel-discuss@googlegroups.com` about the new release candidate. E.g.:
     *   Subject: Bazel 6.1.0 release candidate 1 is available for testing
@@ -117,9 +119,10 @@ While the release is active, you should make sure to do the following:
     ```
     Bazel 6.1.0rc1 is now available for those that want to try it out.
 
-    You can download it from: https://releases.bazel.build/6.1.0/rc1/index.html
-
+    You can download it from: https://releases.bazel.build/6.1.0/rc1/index.html. 
     Please report regressions to https://github.com/bazelbuild/bazel/issues as soon as possible.
+    
+    Draft release notes can be found [here](https://docs.google.com/document/d/1pu2ARPweOCTxPsRR8snoDtkC9R51XWRyBXeiC6Ql5so/edit).
     ```
 
 1.  Add a comment to the release GitHub issue announcing that a new RC is out. See [example](https://github.com/bazelbuild/bazel/issues/16159#issuecomment-1333775711).
@@ -163,7 +166,7 @@ Once the first candidate is available:
 
 1.  Open the doc, create a new section with your release number, add a link to
     the GitHub issue. Note that there should be a new Bazel Release Announcement document for every major release. For minor and patch releases, use the latest open doc.
-1.  Copy & paste the generated text from the "Generate Announcement" step.
+1.  Copy & paste the generated text from the "Generate release notes" step.
 1.  Reorganize the notes per category (C++, Java, etc.).
 1.  Assign a comment to "+[pcloudy@google.com](mailto:pcloudy@google.com)" and "+[wyv@google.com](mailto:wyv@google.com)" for initial review. 
 1.  Once approved, for each category, add a comment and assign it to the corresponding
