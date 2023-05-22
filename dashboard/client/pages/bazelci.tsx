@@ -168,10 +168,7 @@ function BuildStats({
     if (domain === undefined && stats.data) {
       let max = 0;
       for (let item of stats.data.items) {
-        const total = excludeWaitTime
-          ? item.runTime
-          : item.waitTime + item.runTime;
-        max = Math.max(max, total);
+        max = Math.max(max, item.runTime);
       }
       max *= 1.1;
       setDomain([0, max]);
@@ -222,7 +219,7 @@ function BuildStats({
         pipeline={param.pipeline}
         data={data}
         domain={domain}
-        excludeWaitTime={excludeWaitTime}
+        excludeWaitTime={true}
       />
     </div>
   );
