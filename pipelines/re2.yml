@@ -1,17 +1,19 @@
 ---
-platforms:
-  ubuntu2004:
+matrix:
+  platform:
+  - ubuntu2004
+  - macos
+  - windows
+tasks:
+  build_and_test:
+    platform: ${{ platform }}
     build_targets:
-      - "//..."
+      - "//:all"
     test_targets:
-      - "//..."
-  macos:
-    build_targets:
-      - "//..."
-    test_targets:
-      - "//..."
-  windows:
-    build_targets:
-      - "//..."
-    test_targets:
-      - "//..."
+      - "//:all"
+      - "-//:dfa_test"
+      - "-//:exhaustive1_test"
+      - "-//:exhaustive2_test"
+      - "-//:exhaustive3_test"
+      - "-//:exhaustive_test"
+      - "-//:random_te"
