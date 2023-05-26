@@ -16,4 +16,4 @@ tasks:
       - "-//:exhaustive2_test"
       - "-//:exhaustive3_test"
       - "-//:exhaustive_test"
-      - "-//:random_te"
+      - "-//:random_test"
