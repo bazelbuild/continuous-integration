@@ -490,6 +490,22 @@ steps:
       source scripts/ci/build.sh
       deploy_release "\${ARTIFACTS}"
 
+  - block: ":e-mail: Generate release notes"
+    if: build.branch =~ /rc/i
+    
+  - label: "Generate release notes"
+    if: build.branch =~ /rc/i
+    agents:
+      - "queue=default"
+    command: |     
+      echo "+++ Checking out Git branch"
+      git fetch origin ${BUILDKITE_BRANCH}
+      git checkout ${BUILDKITE_BRANCH}
+      
+      echo "+++ Generating release notes"
+      cd scripts/release
+      python3 relnotes.py sort
+
   - wait
 
   - block: "Build and publish"
