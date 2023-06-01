@@ -22,7 +22,9 @@ steps:
       
       echo "+++ Getting latest commit hash"
       commit_hash=$(git rev-parse HEAD)
-      echo "commit_hash = \"\$commit_hash\""      
+      echo "commit_hash = \"\$commit_hash\""   
+      
+      echo "buildkite commit_hash = \"\${BUILDKITE_COMMIT}\""   
       
       buildkite-agent meta-data set "commit_hash" "\$commit_hash"
       
