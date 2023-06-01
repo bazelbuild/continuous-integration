@@ -70,13 +70,13 @@ steps:
       # release_candidates=$(buildkite-agent meta-data get "release_candidates")
       # echo "release_candidates = \"\$release_candidates\""
 
-  - wait  
+#  - wait  
   
-  - label: "Trigger downstream build"
-    trigger: "bazel/bazel-at-head-plus-downstream"
-    soft_fail: true    
-    build:
-      message: "Test"
+#  - label: "Trigger downstream build"
+#    trigger: "bazel/bazel-at-head-plus-downstream"
+#    soft_fail: true    
+#    build:
+#      message: "Test"
 
   
   
