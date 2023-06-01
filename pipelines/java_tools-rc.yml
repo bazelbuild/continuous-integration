@@ -9,6 +9,8 @@ steps:
         key: "rc"
         required: true
         default: "1" 
+
+  - wait 
       
   - label: "Set up"
     agents:
@@ -29,8 +31,8 @@ steps:
   - label: "Trigger java_tools binaries pipeline"
     trigger: "test-pipeline"
     build:
-      message: "java_tools release $(buildkite-agent meta-data get \"version\") RC $(buildkite-agent meta-data get \"rc\")"
-      commit: $(buildkite-agent meta-data get "commit_hash")
+      message: ${BUILDKITE_MESSAGE}
+      commit: ${BUILDKITE_COMMIT}
       
   - wait
 
@@ -73,7 +75,9 @@ steps:
 #  - wait  
   
 #  - label: "Trigger downstream build"
-#    trigger: "bazel/bazel-at-head-plus-downstream"
+#    trigger: 
+#      organization: "bazel"
+#      pipeline: "bazel-at-head-plus-downstream"
 #    soft_fail: true    
 #    build:
 #      message: "Test"
