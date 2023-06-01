@@ -48,8 +48,7 @@ steps:
       git fetch origin master
       git checkout master
 
-      commit_hash=$(buildkite-agent meta-data get "commit_hash")
-      echo "commit_hash = \"\$commit_hash\""
+      echo "commit_hash = \"\${BUILDKITE_COMMIT}\""   
 
       version=$(buildkite-agent meta-data get "version")
       echo "version = \"\$version\""
@@ -57,7 +56,7 @@ steps:
       rc=$(buildkite-agent meta-data get "rc")
       echo "rc = \"\$rc\""
       
-      # release_candidates=$(src/create_java_tools_release.sh --commit_hash ${commit_hash} --java_tools_version ${version} --rc ${rc} --release false)
+      # release_candidates=$(src/create_java_tools_release.sh --commit_hash ${BUILDKITE_COMMIT} --java_tools_version ${version} --rc ${rc} --release false)
       # echo "release_candidates = \"\$release_candidates\""
       # buildkite-agent meta-data set "release_candidates" "\$release_candidates"
 
