@@ -1,0 +1,8 @@
+---
+steps:    
+  - label: "Test"   
+    command: |
+      echo "+++ Checking out Git branch"
+      git fetch origin ${BUILDKITE_BRANCH}
+      git checkout ${BUILDKITE_BRANCH}
+      git rev-parse HEAD
