@@ -34,6 +34,8 @@ steps:
       
   - wait
 
+  - block: ":rocket: Create release candidate"
+
   - label: "Create release candidate"
     agents:
       - "queue=default"
@@ -55,6 +57,8 @@ steps:
       # echo "release_candidates = \"\$release_candidates\""
       # buildkite-agent meta-data set "release_candidates" "\$release_candidates"
 
+  - wait
+  
   - label: "Create/update pull request"
     agents:
       - "queue=default"
