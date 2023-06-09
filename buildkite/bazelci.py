@@ -1959,6 +1959,7 @@ def common_build_flags(bep_file, platform):
         "--jobs=" + concurrent_jobs(platform),
         "--announce_rc",
         "--experimental_repository_cache_hardlinks",
+        "--experimental_worker_for_repo_fetching=platform",
         # Some projects set --disk_cache in their project-specific bazelrc, which we never want on
         # CI, so let's just disable it explicitly.
         "--disk_cache=",
