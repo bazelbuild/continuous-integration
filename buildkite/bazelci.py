@@ -1889,6 +1889,12 @@ def remote_caching_flags(platform, accept_cached=True):
             "--remote_cache=remotebuildexecution.googleapis.com",
             "--remote_instance_name=projects/{}/instances/default_instance".format(CLOUD_PROJECT),
         ]
+        # Enable BES / Build Results reporting.
+        flags += [
+            "--bes_backend=buildeventservice.googleapis.com",
+            "--bes_timeout=360s",
+            "--bes_instance_name=bazel-untrusted",
+        ]
 
     platform_cache_digest = hashlib.sha256()
     for key in platform_cache_key:
@@ -1999,7 +2005,7 @@ def rbe_flags(original_flags, accept_cached):
     flags += [
         "--bes_backend=buildeventservice.googleapis.com",
         "--bes_timeout=360s",
-        "--project_id=bazel-untrusted",
+        "--bes_instance_name=bazel-untrusted",
     ]
 
     if not accept_cached:
