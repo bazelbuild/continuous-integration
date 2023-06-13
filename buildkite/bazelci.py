@@ -1351,11 +1351,6 @@ def execute_commands(
 
         execute_bazel_run(bazel_binary, platform, task_config.get("run_targets", None))
 
-        if platform == "windows":
-            execute_batch_commands(task_config.get("post_batch_commands", None), True, ":batch: Post Processing (Batch Commands)")
-        else:
-            execute_shell_commands(task_config.get("post_shell_commands", None), True, ":bash: Post Processing (Shell Commands)")
-
         if needs_clean:
             execute_bazel_clean(bazel_binary, platform)
 
@@ -1522,6 +1517,11 @@ def execute_commands(
                     upload_json_profile(json_profile_out_index, tmpdir)
                 if capture_corrupted_outputs_dir_index:
                     upload_corrupted_outputs(capture_corrupted_outputs_dir_index, tmpdir)
+
+        if platform == "windows":
+            execute_batch_commands(task_config.get("post_batch_commands", None), True, ":batch: Post Processing (Batch Commands)")
+        else:
+            execute_shell_commands(task_config.get("post_shell_commands", None), True, ":bash: Post Processing (Shell Commands)")
 
     finally:
         terminate_background_process(sc_process)
