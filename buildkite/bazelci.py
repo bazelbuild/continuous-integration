@@ -1882,7 +1882,7 @@ def remote_caching_flags(platform, accept_cached=True):
             subprocess.check_output(["/usr/bin/xcodebuild", "-version"]),
         ]
         # Use a local cache server for our macOS machines.
-        flags = ["--remote_cache=http://100.107.73.148"]
+        flags = ["--remote_cache=http://100.107.73.147"]
     else:
         platform_cache_key += [
             # Platform name:
@@ -1898,7 +1898,7 @@ def remote_caching_flags(platform, accept_cached=True):
         flags += [
             "--bes_backend=buildeventservice.googleapis.com",
             "--bes_timeout=360s",
-            "--bes_instance_name=bazel-untrusted",
+            "--project_id=bazel-untrusted",
         ]
 
     platform_cache_digest = hashlib.sha256()
@@ -2010,7 +2010,7 @@ def rbe_flags(original_flags, accept_cached):
     flags += [
         "--bes_backend=buildeventservice.googleapis.com",
         "--bes_timeout=360s",
-        "--bes_instance_name=bazel-untrusted",
+        "--project_id=bazel-untrusted",
     ]
 
     if not accept_cached:

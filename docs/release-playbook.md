@@ -245,9 +245,11 @@ Note: the above policies are for final releases only. RCs can be created without
     - https://releases.bazel.build/6.2.0/release/index.html
     ```
 
-### Updating .bazelversion file for the Bazel repository
+### Updating .bazelversion and the release documentation page
 
-Please update https://github.com/bazelbuild/bazel/blob/master/.bazelversion if this is the newest version of the most recent Bazel LTS release.
+Submit an internal CL for the following:
+1. If this is the newest version of the most recent Bazel LTS release, update https://github.com/bazelbuild/bazel/blob/master/.bazelversion.
+2. Update the [support matrix](https://bazel.build/release/index.html#support-matrix) on bazel.build to reflect the latest version (for all LTS releases).
 
 ### Updating Google's internal mirror
 
