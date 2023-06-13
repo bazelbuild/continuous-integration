@@ -249,7 +249,7 @@ Note: the above policies are for final releases only. RCs can be created without
 
 Submit an internal CL for the following:
 1. If this is the newest version of the most recent Bazel LTS release, update https://github.com/bazelbuild/bazel/blob/master/.bazelversion.
-2. Update the [support matrix](https://bazel.build/release/index.html#support-matrix) on bazel.build to reflect the latest version.
+2. Update the [support matrix](https://bazel.build/release/index.html#support-matrix) on bazel.build to reflect the latest version (for all LTS releases).
 
 ### Updating Google's internal mirror
 
