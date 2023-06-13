@@ -1518,6 +1518,11 @@ def execute_commands(
                 if capture_corrupted_outputs_dir_index:
                     upload_corrupted_outputs(capture_corrupted_outputs_dir_index, tmpdir)
 
+        if platform == "windows":
+            execute_batch_commands(task_config.get("post_batch_commands", None), True, ":batch: Post Processing (Batch Commands)")
+        else:
+            execute_shell_commands(task_config.get("post_shell_commands", None), True, ":bash: Post Processing (Shell Commands)")
+
     finally:
         terminate_background_process(sc_process)
         if tmpdir:
@@ -1806,23 +1811,23 @@ def clone_git_repository(git_repository, platform, git_commit=None):
     return clone_path
 
 
-def execute_batch_commands(commands, print_group=True):
+def execute_batch_commands(commands, print_group=True, group_message=":batch: Setup (Batch Commands)"):
     if not commands:
         return
 
     if print_group:
-        print_collapsed_group(":batch: Setup (Batch Commands)")
+        print_collapsed_group(group_message)
 
     batch_commands = "&".join(commands)
     return subprocess.run(batch_commands, shell=True, check=True, env=os.environ).returncode
 
 
-def execute_shell_commands(commands, print_group=True):
+def execute_shell_commands(commands, print_group=True, group_message=":bash: Setup (Shell Commands)"):
     if not commands:
         return
 
     if print_group:
-        print_collapsed_group(":bash: Setup (Shell Commands)")
+        print_collapsed_group(group_message)
 
     shell_command = "\n".join(["set -e"] + commands)
     execute_command([shell_command], shell=True)
