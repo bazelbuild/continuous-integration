@@ -1893,7 +1893,7 @@ def remote_caching_flags(platform, accept_cached=True):
         flags += [
             "--bes_backend=buildeventservice.googleapis.com",
             "--bes_timeout=360s",
-            "--bes_instance_name=bazel-untrusted",
+            "--project_id=bazel-untrusted",
         ]
 
     platform_cache_digest = hashlib.sha256()
@@ -2005,7 +2005,7 @@ def rbe_flags(original_flags, accept_cached):
     flags += [
         "--bes_backend=buildeventservice.googleapis.com",
         "--bes_timeout=360s",
-        "--bes_instance_name=bazel-untrusted",
+        "--project_id=bazel-untrusted",
     ]
 
     if not accept_cached:
