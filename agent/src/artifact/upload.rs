@@ -216,7 +216,7 @@ fn upload_bep_json_file(
 fn gen_error_content(bazelci_task: &str, label: &str, name: &str, test_log: &str) -> String {
     let mut buf = String::new();
     buf.push_str(&format!("BAZELCI_TASK={}\n", bazelci_task));
-    buf.push_str(&format!("TEST_LABEL={}\n", label));
+    buf.push_str(&format!("TEST_TARGET={}\n", label));
     buf.push_str(&format!("TEST_NAME={}\n", name));
     buf.push_str("\n");
     buf.push_str(&format!("bazel test {} --test_filter={}\n", &label, &name));
