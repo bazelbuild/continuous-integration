@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context, Result};
-use quick_xml::events::{BytesCData, BytesStart, BytesEnd};
+use quick_xml::events::{BytesCData, BytesEnd, BytesStart};
 use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{
