@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context, Result};
-use quick_xml::events::BytesStart;
+use quick_xml::events::{BytesCData, BytesEnd, BytesStart};
 use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{
@@ -213,7 +213,19 @@ fn upload_bep_json_file(
     uploader.upload_artifact(dry, None, build_event_json_file, mode)
 }
 
-fn parse_test_xml(path: &Path, label: &str) -> Result<Option<Vec<u8>>> {
+fn gen_error_content(bazelci_task: &str, label: &str, name: &str, test_log: &str) -> String {
+    let mut buf = String::new();
+    buf.push_str(&format!("BAZELCI_TASK={}\n", bazelci_task));
+    buf.push_str(&format!("TEST_TARGET={}\n", label));
+    buf.push_str(&format!("TEST_NAME={}\n", name));
+    buf.push_str("\n");
+    buf.push_str(&format!("bazel test {} --test_filter={}\n", &label, &name));
+    buf.push_str("\n\n");
+    buf.push_str(test_log);
+    buf
+}
+
+fn parse_test_xml(path: &Path, bazelci_task: &str, label: &str) -> Result<Option<Vec<u8>>> {
     use quick_xml::{events::Event, reader::Reader, writer::Writer};
     use std::io::Cursor;
 
@@ -222,10 +234,17 @@ fn parse_test_xml(path: &Path, label: &str) -> Result<Option<Vec<u8>>> {
     let mut buf = Vec::new();
     let mut reader = Reader::from_file(&path)?;
     let fallback_classname = label.replace("//", "").replace("/", ".").replace(":", ".");
+    let mut in_error_tag = false;
+    let mut error_tag_stack = 0;
+    let mut name = String::new();
     loop {
         match reader.read_event_into(&mut buf)? {
             Event::Eof => break,
             Event::Start(tag) => {
+                if in_error_tag {
+                    error_tag_stack += 1;
+                }
+
                 let tag = match tag.name().as_ref() {
                     b"testcase" => {
                         has_testcase = true;
@@ -241,6 +260,8 @@ fn parse_test_xml(path: &Path, label: &str) -> Result<Option<Vec<u8>>> {
                                 if attr.value.len() == 0 {
                                     attr.value = fallback_classname.clone().into_bytes().into();
                                 }
+                            } else if attr.key.as_ref() == b"name" {
+                                name = String::from_utf8_lossy(&attr.value).to_string();
                             }
                             new_tag.push_attribute(attr);
                         }
@@ -251,9 +272,51 @@ fn parse_test_xml(path: &Path, label: &str) -> Result<Option<Vec<u8>>> {
 
                         new_tag
                     }
+                    b"failure" => {
+                        in_error_tag = true;
+                        // replace failure with error
+                        let mut new_tag = BytesStart::new("error");
+                        new_tag.push_attribute(("message", ""));
+                        new_tag
+                    }
+                    b"error" => {
+                        in_error_tag = true;
+                        tag
+                    }
                     _ => tag,
                 };
                 writer.write_event(Event::Start(tag))?;
+            }
+            Event::CData(mut cdata) => {
+                if in_error_tag {
+                    let test_log = String::from_utf8_lossy(&*cdata);
+                    let new_content = gen_error_content(bazelci_task, label, &name, &test_log);
+                    cdata = BytesCData::new(new_content);
+                }
+
+                writer.write_event(Event::CData(cdata))?;
+            }
+            Event::Text(text) => {
+                if in_error_tag {
+                    let test_log = String::from_utf8_lossy(&*text);
+                    let new_content = gen_error_content(bazelci_task, label, &name, &test_log);
+                    let cdata = BytesCData::new(new_content);
+                    writer.write_event(Event::CData(cdata))?;
+                } else {
+                    writer.write_event(Event::Text(text))?;
+                }
+            }
+            Event::End(mut tag) => {
+                if in_error_tag {
+                    if error_tag_stack > 0 {
+                        error_tag_stack -= 1;
+                    } else {
+                        in_error_tag = false;
+                        tag = BytesEnd::new("error");
+                    }
+                }
+
+                writer.write_event(Event::End(tag))?;
             }
             e => writer.write_event(e)?,
         }
@@ -366,18 +429,19 @@ impl Uploader {
         dry: bool,
         cwd: Option<&Path>,
         token: &str,
-        data: &Path,
+        bazelci_task: &str,
+        test_xml: &Path,
         label: &str,
         format: &str,
         forms: &[(impl AsRef<str>, impl AsRef<str>)],
     ) -> Result<()> {
         let full_path = if let Some(cwd) = cwd {
-            cwd.join(data)
+            cwd.join(test_xml)
         } else {
-            data.to_path_buf()
+            test_xml.to_path_buf()
         };
 
-        let content = parse_test_xml(&full_path, label)?;
+        let content = parse_test_xml(&full_path, &bazelci_task, label)?;
         if content.is_none() {
             return Ok(());
         }
@@ -441,18 +505,21 @@ impl Uploader {
         let token = maybe_get_env("BUILDKITE_ANALYTICS_TOKEN");
         let build_id = maybe_get_env("BUILDKITE_BUILD_ID");
         let step_id = maybe_get_env("BUILDKITE_STEP_ID");
-        if token.is_none() || build_id.is_none() || step_id.is_none() {
+        let bazelci_task = maybe_get_env("BAZELCI_TASK");
+        if token.is_none() || build_id.is_none() || step_id.is_none() || bazelci_task.is_none() {
             return Ok(());
         }
 
         let token = token.unwrap();
         let build_id = build_id.unwrap();
         let step_id = step_id.unwrap();
+        let bazelci_task = bazelci_task.unwrap();
 
         let mut forms = vec![
             ("run_env[CI]", "buildkite".to_string()),
             ("run_env[key]", format!("{}/{}", &build_id, &step_id)),
             ("run_env[build_id]", build_id),
+            ("run_env[tags][]", bazelci_task.clone()),
         ];
 
         for (name, env) in [
@@ -462,14 +529,22 @@ impl Uploader {
             ("run_env[number]", "BUILDKITE_BUILD_NUMBER"),
             ("run_env[job_id]", "BUILDKITE_JOB_ID"),
             ("run_env[message]", "BUILDKITE_MESSAGE"),
-            ("run_env[tags][]", "BAZELCI_TASK"),
         ] {
             if let Some(value) = maybe_get_env(env) {
                 forms.push((name, value));
             }
         }
 
-        self.upload_test_analytics(dry, cwd, &token, test_xml, label, "junit", &forms)
+        self.upload_test_analytics(
+            dry,
+            cwd,
+            &token,
+            &bazelci_task,
+            test_xml,
+            label,
+            "junit",
+            &forms,
+        )
     }
 }
 
