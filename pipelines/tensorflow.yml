@@ -5,7 +5,7 @@ platforms:
       TF_IGNORE_MAX_BAZEL_VERSION: 1
     shell_commands:
     - pip3 install portpicker keras_applications keras_preprocessing future packaging dataclasses
-    - apt-get update && apt-get install -y llvm-16 clang-16
+    - sudo apt-get update && sudo apt-get install -y llvm-16 clang-16
     - yes '' | python3 ./configure.py
     build_flags:
     # Suppress warning messages from all actions
