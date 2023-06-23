@@ -46,9 +46,9 @@ steps:
     agents:
       - "queue=default"
     command: |
-  #     echo "+++ Checking out Git branch" 
-  #     git fetch origin master
-  #     git checkout master
+      echo "+++ Checking out Git branch" 
+      git fetch origin master
+      git checkout master
 
   #     echo "+++ Identify required variables"
   #     version=$(buildkite-agent meta-data get "version")
