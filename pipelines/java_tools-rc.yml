@@ -1,16 +1,16 @@
 ---
 steps:
-  # - input: "Release information"
-  #   fields:
-  #     - text: "Version (e.g. 12.1)"
-  #       key: "version"
-  #       required: true      
-  #     - text: "RC (e.g. 1)"
-  #       key: "rc"
-  #       required: true
-  #       default: "1" 
+  - input: "Release information"
+    fields:
+      - text: "Version (e.g. 12.1)"
+        key: "version"
+        required: true      
+      - text: "RC (e.g. 1)"
+        key: "rc"
+        required: true
+        default: "1" 
 
-  # - wait 
+  - wait 
       
   - label: "Set up"
     agents:
@@ -30,17 +30,17 @@ steps:
   - wait
 
   # TO DO
-  # - label: "Trigger java_tools binaries pipeline"
-  #   trigger: "test-pipeline"
-  #   # trigger: "java-tools-binaries"
-  #   build:
-  #     message: ${BUILDKITE_MESSAGE}
-  #     commit: ${BUILDKITE_COMMIT}
-  #     branch: master
+  - label: "Trigger java_tools binaries pipeline"
+    trigger: "test-pipeline"
+    # trigger: "java-tools-binaries"
+    build:
+      message: ${BUILDKITE_MESSAGE}
+      commit: ${BUILDKITE_COMMIT}
+      branch: master
       
   - wait
 
-  # - block: ":rocket: Create release candidate"
+  - block: ":rocket: Create release candidate"
 
   - label: "Create release candidate"
     agents:
@@ -50,22 +50,22 @@ steps:
       git fetch origin master
       git checkout master
 
-  #     echo "+++ Identify required variables"
-  #     version=$(buildkite-agent meta-data get "version")
-  #     rc=$(buildkite-agent meta-data get "rc")
+      echo "+++ Identify required variables"
+      version=$(buildkite-agent meta-data get "version")
+      rc=$(buildkite-agent meta-data get "rc")
  
-  #     echo "commit_hash = \"\${BUILDKITE_COMMIT}\""    
-  #     echo "version = \"\$version\""      
-  #     echo "rc = \"\$rc\""      
+      echo "commit_hash = \"\${BUILDKITE_COMMIT}\""    
+      echo "version = \"\$version\""      
+      echo "rc = \"\$rc\""      
 
       echo "+++ Run create_java_tools_release.sh script"
       release_candidates="dummy script output"
       # release_candidates=$(src/create_java_tools_release.sh --commit_hash ${BUILDKITE_COMMIT} --java_tools_version ${version} --rc ${rc} --release false)
       # echo "release_candidates = \"\$release_candidates\""
       buildkite-agent meta-data set "release_candidates" "\$release_candidates"
-      trigger-pipeline.sh
+      ./trigger-pipeline.sh
 
-  - wait
+  # - wait
   
   # TO DO
   # - label: "Update rules_java"
