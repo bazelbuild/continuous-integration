@@ -44,10 +44,6 @@ steps:
     agents:
       - "queue=default"
     command: |
-      echo "+++ Checking out Git branch" 
-      git fetch origin master
-      git checkout master
-
       echo "+++ Identify required variables"
       version=$(buildkite-agent meta-data get "version")
       rc=$(buildkite-agent meta-data get "rc")
@@ -61,6 +57,9 @@ steps:
       # release_candidates=$(src/create_java_tools_release.sh --commit_hash ${BUILDKITE_COMMIT} --java_tools_version ${version} --rc ${rc} --release false)
       # echo "release_candidates = \"\$release_candidates\""
       buildkite-agent meta-data set "release_candidates" "\$release_candidates"
+
+      # Note: this has to be done through a script since Buildkite doesn't allow passing of meta-data directly to the triggered pipeline yet
+      echo "+++ Trigger rules_java-updates pipeline"
       sh trigger-pipeline.sh
 
   # - wait
