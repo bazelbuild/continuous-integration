@@ -10,7 +10,7 @@ steps:
         required: true
         default: "1" 
  
-  - wait
+  - wait 
       
   - label: "Set up"
     agents:
