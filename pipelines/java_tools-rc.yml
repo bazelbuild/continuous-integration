@@ -73,7 +73,7 @@ steps:
       message: ${BUILDKITE_MESSAGE}
       env:
         release_candidates: "dummy script output"  
-        release_candidates-buildkite: $(buildkite-agent meta-data get release_candidates)
+        release_candidates_buildkite: $(buildkite-agent meta-data get release_candidates)
       
   # - wait
   
