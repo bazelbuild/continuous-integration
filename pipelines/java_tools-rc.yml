@@ -37,8 +37,6 @@ steps:
       message: ${BUILDKITE_MESSAGE}
       commit: ${BUILDKITE_COMMIT}
       branch: master
-      
-  - wait
 
   - block: ":rocket: Create release candidate"
 
@@ -63,7 +61,7 @@ steps:
       # release_candidates=$(src/create_java_tools_release.sh --commit_hash ${BUILDKITE_COMMIT} --java_tools_version ${version} --rc ${rc} --release false)
       # echo "release_candidates = \"\$release_candidates\""
       buildkite-agent meta-data set "release_candidates" "\$release_candidates"
-      ./trigger-pipeline.sh
+      sh trigger-pipeline.sh
 
   # - wait
   
