@@ -1,11 +1,14 @@
 ---
 steps:    
-  - label: "Test"   
+  - label: "Set up"   
     command: |
       echo "+++ Checking out Git branch"
       git fetch origin ${BUILDKITE_BRANCH}
       git checkout ${BUILDKITE_BRANCH}      
 
       echo "+++ Print release candidates"
-      echo $(buildkite-agent meta-data get "release_candidates")
-      echo $(buildkite-agent meta-data get "release_candidates_buildkite")
+      echo "release_candidates = \"\$release_candidates\""
+      echo "release_candidates_buildkite = \"\$release_candidates_buildkite\""
+      
+      # echo $(buildkite-agent meta-data get "release_candidates")
+      # echo $(buildkite-agent meta-data get "release_candidates_buildkite")
