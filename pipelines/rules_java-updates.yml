@@ -8,4 +8,4 @@ steps:
 
       echo "+++ Print release candidates"
       echo $(buildkite-agent meta-data get "release_candidates")
-      echo $(buildkite-agent meta-data get "release_candidates-buildkite")
+      echo $(buildkite-agent meta-data get "release_candidates_buildkite")
