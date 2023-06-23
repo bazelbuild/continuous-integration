@@ -20,21 +20,23 @@ steps:
       git fetch origin master
       git checkout master
       
-      echo "+++ Getting latest commit hash"
-      commit_hash=$(git rev-parse HEAD)
-      echo "commit_hash = \"\$commit_hash\""   
+      echo "+++ Print latest commit hash"
+      echo "commit_hash = \"\${BUILDKITE_COMMIT}\""
       
-      echo "buildkite commit_hash = \"\${BUILDKITE_COMMIT}\""   
+      # commit_hash=$(git rev-parse HEAD)
+      # echo "commit_hash = \"\$commit_hash\""                     
+      # buildkite-agent meta-data set "commit_hash" "\$commit_hash"
       
-      buildkite-agent meta-data set "commit_hash" "\$commit_hash"
-      
-  - wait     
-      
+  - wait
+
+  # TO DO
   - label: "Trigger java_tools binaries pipeline"
     trigger: "test-pipeline"
+    # trigger: "java-tools-binaries"
     build:
       message: ${BUILDKITE_MESSAGE}
       commit: ${BUILDKITE_COMMIT}
+      branch: master
       
   - wait
 
@@ -44,34 +46,47 @@ steps:
     agents:
       - "queue=default"
     command: |
-      echo "+++ Checking out Git branch"    
+      echo "+++ Checking out Git branch" 
       git fetch origin master
       git checkout master
 
-      echo "commit_hash = \"\${BUILDKITE_COMMIT}\""   
-
+      echo "+++ Identify required variables"
       version=$(buildkite-agent meta-data get "version")
-      echo "version = \"\$version\""
-
       rc=$(buildkite-agent meta-data get "rc")
-      echo "rc = \"\$rc\""
-      
+ 
+      echo "commit_hash = \"\${BUILDKITE_COMMIT}\""    
+      echo "version = \"\$version\""      
+      echo "rc = \"\$rc\""      
+
+      echo "+++ Run create_java_tools_release.sh script"
+      release_candidates="dummy script output"
       # release_candidates=$(src/create_java_tools_release.sh --commit_hash ${BUILDKITE_COMMIT} --java_tools_version ${version} --rc ${rc} --release false)
       # echo "release_candidates = \"\$release_candidates\""
-      # buildkite-agent meta-data set "release_candidates" "\$release_candidates"
+      buildkite-agent meta-data set "release_candidates" "\$release_candidates"
 
   - wait
   
-  - label: "Create/update pull request"
-    agents:
-      - "queue=default"
-    command: |
-      echo "+++ Checking out Git branch"    
-      git fetch origin master
-      git checkout master
+  # TO DO
+  - label: "Update rules_java"
+    trigger: "rules-java-updates"
+    build:
+      message: ${BUILDKITE_MESSAGE}
+      env:
+        release_candidates: "dummy script output"  
+        release_candidates-buildkite: $(buildkite-agent meta-data get release_candidates)
+      
+  # - wait
+  
+  # - label: "Create/update pull request"
+  #   agents:
+  #     - "queue=default"
+  #   command: |
+  #     echo "+++ Checking out Git branch"    
+  #     git fetch origin master
+  #     git checkout master
 
-      # release_candidates=$(buildkite-agent meta-data get "release_candidates")
-      # echo "release_candidates = \"\$release_candidates\""
+  #     # release_candidates=$(buildkite-agent meta-data get "release_candidates")
+  #     # echo "release_candidates = \"\$release_candidates\""
 
 #  - wait  
   
