@@ -5,3 +5,6 @@ steps:
       echo "+++ Checking out Git branch"
       git fetch origin ${BUILDKITE_BRANCH}
       git checkout ${BUILDKITE_BRANCH}      
+
+      echo "+++ Print release candidates"
+      echo $(buildkite-agent meta-data get "release_candidates")
