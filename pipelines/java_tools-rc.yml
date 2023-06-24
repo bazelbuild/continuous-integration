@@ -57,20 +57,14 @@ steps:
       # echo "release_candidates = \"\$release_candidates\""
       buildkite-agent meta-data set "release_candidates" "\$release_candidates"
 
-      # Note: this has to be done through a script since Buildkite doesn't allow passing of meta-data directly to the triggered pipeline yet
-      # echo "+++ Trigger rules_java-updates pipeline"
-      # sh trigger-pipeline.sh
+      # Note: Buildkite doesn't allow passing of meta-data directly to the triggered pipeline; we need to manually copy over the script output for now
 
   - wait
   
-  # Temporary
   - label: "Update rules_java"
     trigger: "rules-java-updates"
     build:
       message: ${BUILDKITE_MESSAGE}
-      # env:
-      #   release_candidates: "dummy script output"  
-      #   release_candidates_buildkite: $(buildkite-agent meta-data get release_candidates)
       
   # - wait
   
