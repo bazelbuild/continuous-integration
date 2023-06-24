@@ -13,7 +13,7 @@ steps:
           release_candidates/java/v11.9/java_tools_darwin_x86_64-v11.9-rc1.zip {sha}
           release_candidates/java/v11.9/java_tools_darwin_arm64-v11.9-rc1.zip {sha}
           release_candidates/java/v11.9/java_tools-v11.9-rc1.zip {sha}
-          
+           
   - wait 
       
   - label: "Update rules_java"
