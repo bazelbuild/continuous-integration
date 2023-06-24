@@ -5,14 +5,7 @@ steps:
       - text: "Artifacts output"
         key: "artifacts"
         required: true
-        hint: |
-          Output from create_java_tools_release.sh. E.g.:
-          
-          release_candidates/java/v11.9/java_tools_linux-v11.9-rc1.zip {sha}
-          release_candidates/java/v11.9/java_tools_windows-v11.9-rc1.zip {sha}
-          release_candidates/java/v11.9/java_tools_darwin_x86_64-v11.9-rc1.zip {sha}
-          release_candidates/java/v11.9/java_tools_darwin_arm64-v11.9-rc1.zip {sha}
-          release_candidates/java/v11.9/java_tools-v11.9-rc1.zip {sha}
+        hint: Output from create_java_tools_release.sh
            
   - wait 
       
@@ -29,7 +22,7 @@ steps:
       echo "artifacts = \"\$artifacts\""          
       
       echo "+++ Check if RC"
-      if [[ \"\$artifacts\" =~ \"-rc\" ]]; then
+      if [[ \"\$artifacts\" =~ .*-rc.* ]]; then
         echo "RC"
       else
         echo "Not RC"
