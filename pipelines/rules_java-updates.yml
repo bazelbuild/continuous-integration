@@ -16,7 +16,7 @@ steps:
            
   - wait 
       
-  - label: "Update rules_java"
+  - label: "Update rules_java" 
     agents:
       - "queue=default"
     command: |
