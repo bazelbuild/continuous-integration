@@ -8,15 +8,15 @@ steps:
         hint: |
           Output from create_java_tools_release.sh. E.g.:
           
-          release_candidates/java/v11.9/java_tools_linux-v11.9-rc1.zip 512582cac5b7ea7974a77b0da4581b21f546c9478f206eedf54687eeac035989
-          release_candidates/java/v11.9/java_tools_windows-v11.9-rc1.zip 677ab910046205020fd715489147c2bcfad8a35d9f5d94fdc998d217545bd87a
-          release_candidates/java/v11.9/java_tools_darwin_x86_64-v11.9-rc1.zip b9e962c6a836ba1d7573f2473fab3a897c6370d4c2724bde4017b40932ff4fe4
-          release_candidates/java/v11.9/java_tools_darwin_arm64-v11.9-rc1.zip 3a897c6370d4c2724bde4017b40932ff4fe4b9e962c6a836ba1d7573f2473fab
-          release_candidates/java/v11.9/java_tools-v11.9-rc1.zip 5cd59ea6bf938a1efc1e11ea562d37b39c82f76781211b7cd941a2346ea8484d
+          release_candidates/java/v11.9/java_tools_linux-v11.9-rc1.zip {sha}
+          release_candidates/java/v11.9/java_tools_windows-v11.9-rc1.zip {sha}
+          release_candidates/java/v11.9/java_tools_darwin_x86_64-v11.9-rc1.zip {sha}
+          release_candidates/java/v11.9/java_tools_darwin_arm64-v11.9-rc1.zip {sha}
+          release_candidates/java/v11.9/java_tools-v11.9-rc1.zip {sha}
           
   - wait 
       
-  - label: "Set up"
+  - label: "Update rules_java"
     agents:
       - "queue=default"
     command: |
@@ -29,10 +29,11 @@ steps:
       echo "artifacts = \"\$artifacts\""          
       
       echo "+++ Check if RC"
-      if [[ \"\$artifacts\" =~ "-rc" ]]; then
+      if [[ \"\$artifacts\" =~ \"-rc\" ]]; then
         echo "RC"
       else
         echo "Not RC"
+      fi
       # if rc: 
       # create a new branch
 
