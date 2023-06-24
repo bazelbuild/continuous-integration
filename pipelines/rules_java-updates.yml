@@ -9,19 +9,15 @@ steps:
       - text: "java_tools_windows"
         key: "java_tools_windows"
         required: true
-        hint: E.g. release_candidates/java/v11.9/java_tools_windows-v11.9-rc1.zip 677ab910046205020fd715489147c2bcfad8a35d9f5d94fdc998d217545bd87a
       - text: "java_tools_darwin_x86_64"
         key: "java_tools_darwin_x86_64"
         required: true
-        hint: E.g. release_candidates/java/v11.9/java_tools_darwin_x86_64-v11.9-rc1.zip b9e962c6a836ba1d7573f2473fab3a897c6370d4c2724bde4017b40932ff4fe4
       - text: "java_tools_darwin_arm64"
         key: "java_tools_darwin_arm64"
         required: true
-        hint: E.g. release_candidates/java/v11.9/java_tools_darwin_arm64-v11.9-rc1.zip 3a897c6370d4c2724bde4017b40932ff4fe4b9e962c6a836ba1d7573f2473fab
       - text: "java_tools"
         key: "java_tools"
         required: true
-        hint: E.g. release_candidates/java/v11.9/java_tools-v11.9-rc1.zip 5cd59ea6bf938a1efc1e11ea562d37b39c82f76781211b7cd941a2346ea8484d
            
   - wait 
       
@@ -56,7 +52,8 @@ steps:
 
         echo "+++ Create or check out branch"
         version=$(echo $java_tools | sed -e 's/.*java\/\(.*\)\/java_tools.*/\1/')
-        echo "java_tools-\${version}"
+        echo "version = \"\$version\"" 
+        echo "java_tools-\"\$version\""
         # git checkout java_tools-\${version} || git checkout -b java_tools-\${version}
 
         echo "+++ Update repositories.bzl"    
