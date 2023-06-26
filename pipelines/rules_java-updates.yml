@@ -2,19 +2,19 @@
 steps:
   - input: "Artifacts information"
     fields:
-      - text: "java_tools_linux"
-        key: "java_tools_linux"
-        required: true
-        hint: E.g. release_candidates/java/v11.9/java_tools_linux-v11.9-rc1.zip 512582cac5b7ea7974a77b0da4581b21f546c9478f206eedf54687eeac035989
-      - text: "java_tools_windows"
-        key: "java_tools_windows"
-        required: true
-      - text: "java_tools_darwin_x86_64"
-        key: "java_tools_darwin_x86_64"
-        required: true
-      - text: "java_tools_darwin_arm64"
-        key: "java_tools_darwin_arm64"
-        required: true
+      # - text: "java_tools_linux"
+      #   key: "java_tools_linux"
+      #   required: true
+      #   hint: E.g. release_candidates/java/v11.9/java_tools_linux-v11.9-rc1.zip 512582cac5b7ea7974a77b0da4581b21f546c9478f206eedf54687eeac035989
+      # - text: "java_tools_windows"
+      #   key: "java_tools_windows"
+      #   required: true
+      # - text: "java_tools_darwin_x86_64"
+      #   key: "java_tools_darwin_x86_64"
+      #   required: true
+      # - text: "java_tools_darwin_arm64"
+      #   key: "java_tools_darwin_arm64"
+      #   required: true
       - text: "java_tools"
         key: "java_tools"
         required: true
@@ -23,29 +23,7 @@ steps:
       
   - label: "Update rules_java" 
     agents:
-      - "queue=default"
-    plugins:
-      docker#v3.8.0:
-        always-pull: true
-        environment:
-          - ANDROID_HOME
-          - ANDROID_NDK_HOME
-          - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/ubuntu1804-java11
-        network: host
-        privileged: true
-        propagate-environment: true
-        propagate-uid-gid: true
-        shell: ["/bin/bash", "-e", "-c"]
-        volumes:
-          - "/etc/group:/etc/group:ro"
-          - "/etc/passwd:/etc/passwd:ro"
-          - "/etc/shadow:/etc/shadow:ro"
-          - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
-          - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
-          - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
-          - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
-          - "/var/run/docker.sock:/var/run/docker.sock"    
+      - "queue=default"    
     command: |
       echo "+++ Checking out Git branch"    
       git fetch origin master
@@ -53,17 +31,17 @@ steps:
 
       echo "+++ Identify required variables"
       
-      java_tools_linux=$(buildkite-agent meta-data get "java_tools_linux") 
-      echo "java_tools_linux = \"\$java_tools_linux\""
+      # java_tools_linux=$(buildkite-agent meta-data get "java_tools_linux") 
+      # echo "java_tools_linux = \"\$java_tools_linux\""
       
-      java_tools_windows=$(buildkite-agent meta-data get "java_tools_windows") 
-      echo "java_tools_windows = \"\$java_tools_windows\""
+      # java_tools_windows=$(buildkite-agent meta-data get "java_tools_windows") 
+      # echo "java_tools_windows = \"\$java_tools_windows\""
       
-      java_tools_darwin_x86_64=$(buildkite-agent meta-data get "java_tools_darwin_x86_64") 
-      echo "java_tools_darwin_x86_64 = \"\$java_tools_darwin_x86_64\""      
+      # java_tools_darwin_x86_64=$(buildkite-agent meta-data get "java_tools_darwin_x86_64") 
+      # echo "java_tools_darwin_x86_64 = \"\$java_tools_darwin_x86_64\""      
       
-      java_tools_darwin_arm64=$(buildkite-agent meta-data get "java_tools_darwin_arm64") 
-      echo "java_tools_darwin_arm64 = \"\$java_tools_darwin_arm64\""
+      # java_tools_darwin_arm64=$(buildkite-agent meta-data get "java_tools_darwin_arm64") 
+      # echo "java_tools_darwin_arm64 = \"\$java_tools_darwin_arm64\""
       
       java_tools=$(buildkite-agent meta-data get "java_tools") 
       echo "java_tools = \"\$java_tools\""      
@@ -74,7 +52,7 @@ steps:
 
         echo "+++ Create or check out branch"
         echo "java_tools = \"\$java_tools\""
-        version=$(echo $java_tools)
+        version=$(echo \"\$java_tools\"")
         # version=$(echo $java_tools | sed 's/.*java\/\(.*\)\/java_tools.*/\1/')
         echo "version = \"\$version\"" 
         echo "java_tools-\"\$version\""
