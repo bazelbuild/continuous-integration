@@ -2,22 +2,10 @@
 steps:
   - input: "Artifacts information"
     fields:
-      # - text: "java_tools_linux"
-      #   key: "java_tools_linux"
-      #   required: true
-      #   hint: E.g. release_candidates/java/v11.9/java_tools_linux-v11.9-rc1.zip 512582cac5b7ea7974a77b0da4581b21f546c9478f206eedf54687eeac035989
-      # - text: "java_tools_windows"
-      #   key: "java_tools_windows"
-      #   required: true
-      # - text: "java_tools_darwin_x86_64"
-      #   key: "java_tools_darwin_x86_64"
-      #   required: true
-      # - text: "java_tools_darwin_arm64"
-      #   key: "java_tools_darwin_arm64"
-      #   required: true
-      - text: "java_tools"
-        key: "java_tools"
+      - text: "Artifacts output"
+        key: "artifacts"
         required: true
+        hint: "Output from create_java_tools_release.sh"
            
   - wait 
       
@@ -29,50 +17,9 @@ steps:
       git fetch origin master
       git checkout master
 
-      echo "+++ Identify required variables"
+      echo "+++ Identify required variable"      
+      sha=$(buildkite-agent meta-data get "artifacts") 
+      echo "sha = \"\$sha\""      
       
-      # java_tools_linux=$(buildkite-agent meta-data get "java_tools_linux") 
-      # echo "java_tools_linux = \"\$java_tools_linux\""
-      
-      # java_tools_windows=$(buildkite-agent meta-data get "java_tools_windows") 
-      # echo "java_tools_windows = \"\$java_tools_windows\""
-      
-      # java_tools_darwin_x86_64=$(buildkite-agent meta-data get "java_tools_darwin_x86_64") 
-      # echo "java_tools_darwin_x86_64 = \"\$java_tools_darwin_x86_64\""      
-      
-      # java_tools_darwin_arm64=$(buildkite-agent meta-data get "java_tools_darwin_arm64") 
-      # echo "java_tools_darwin_arm64 = \"\$java_tools_darwin_arm64\""
-      
-      java_tools=$(buildkite-agent meta-data get "java_tools") 
-      echo "java_tools = \"\$java_tools\""      
-      
-      echo "+++ Check if RC"
-      if [[ \"\$java_tools\" =~ .*-rc.* ]]; then
-        echo "RC"
-
-        echo "+++ Create or check out branch"
-        echo "java_tools = \"\$java_tools\""
-        version=$(echo \"\$java_tools\"")
-        # version=$(echo $java_tools | sed 's/.*java\/\(.*\)\/java_tools.*/\1/')
-        echo "version = \"\$version\"" 
-        echo "java_tools-\"\$version\""
-
-        version=$(echo $java_tools | sed 's/release_candidates//g')
-        version=$(echo $version | sed 's/java_tools_//g')
-        echo "version = \"\$version\"" 
-        echo "java_tools-\"\$version\""
-
-        release_name="release-6.2.0"
-        version=$(echo $release_name | sed 's/release-//g')
-        echo "version = \"\$version\"" 
-        echo "java_tools-\"\$version\""        
-        
-        # git checkout java_tools-\${version} || git checkout -b java_tools-\${version}
-
-        echo "+++ Update repositories.bzl"    
-      
-        # edit java_tools_repos()
-        
-      else
-        echo "Not RC"
-      fi
+      echo "+++ Run release script"
+      # python3 release.py
