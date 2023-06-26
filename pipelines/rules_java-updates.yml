@@ -51,9 +51,17 @@ steps:
         echo "RC"
 
         echo "+++ Create or check out branch"
-        version=$(echo $java_tools | sed -e 's/.*java\/\(.*\)\/java_tools.*/\1/')
+        version=$(echo $java_tools | sed 's/.*java\/\(.*\)\/java_tools.*/\1/')
         echo "version = \"\$version\"" 
         echo "java_tools-\"\$version\""
+
+        version=$(echo $java_tools | sed 's/release_candidates\/java\///g')
+        version=$(echo $version | sed 's/release_candidates\/java\///g')
+        echo "version = \"\$version\"" 
+        echo "java_tools-\"\$version\""
+        
+        version=$(echo $release_name | sed 's/release-//g')
+        
         # git checkout java_tools-\${version} || git checkout -b java_tools-\${version}
 
         echo "+++ Update repositories.bzl"    
