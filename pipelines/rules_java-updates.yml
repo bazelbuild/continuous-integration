@@ -73,7 +73,9 @@ steps:
         echo "RC"
 
         echo "+++ Create or check out branch"
-        version=$(echo $java_tools | sed 's/.*java\/\(.*\)\/java_tools.*/\1/')
+        echo "java_tools = \"\$java_tools\""
+        version=$(echo $java_tools)
+        # version=$(echo $java_tools | sed 's/.*java\/\(.*\)\/java_tools.*/\1/')
         echo "version = \"\$version\"" 
         echo "java_tools-\"\$version\""
 
