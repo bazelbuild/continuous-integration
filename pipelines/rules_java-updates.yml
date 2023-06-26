@@ -59,8 +59,11 @@ steps:
         version=$(echo $version | sed 's/java_tools_//g')
         echo "version = \"\$version\"" 
         echo "java_tools-\"\$version\""
-        
-        # version=$(echo $release_name | sed 's/release-//g')
+
+        release_name="release-6.2.0"
+        version=$(echo $release_name | sed 's/release-//g')
+        echo "version = \"\$version\"" 
+        echo "java_tools-\"\$version\""        
         
         # git checkout java_tools-\${version} || git checkout -b java_tools-\${version}
 
