@@ -55,8 +55,8 @@ steps:
         echo "version = \"\$version\"" 
         echo "java_tools-\"\$version\""
 
-        version=$(echo $java_tools | sed 's/release_candidates\/java\///g')
-        version=$(echo $version | sed 's/release_candidates\/java\///g')
+        version=$(echo $java_tools | sed 's/release_candidates//g')
+        version=$(echo $version | sed 's/java_tools_//g')
         echo "version = \"\$version\"" 
         echo "java_tools-\"\$version\""
         
