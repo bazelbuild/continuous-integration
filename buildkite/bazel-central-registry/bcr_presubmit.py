@@ -340,6 +340,8 @@ def should_bcr_validation_block_presubmit(modules):
     bazelci.print_collapsed_group("Running BCR validations:")
     skip_validation_flags = []
     pr_labels = get_labels_from_pr()
+    if "skip-source-repo-check" in pr_labels:
+        skip_validation_flags.append("--skip_validation=source_repo")
     if "skip-url-stability-check" in pr_labels:
         skip_validation_flags.append("--skip_validation=url_stability")
     if "presubmit-auto-run" in pr_labels:
