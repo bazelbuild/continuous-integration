@@ -497,7 +497,7 @@ PLATFORMS = {
     },
     "debian11": {
         "name": "Debian 11 Bullseye (OpenJDK 17, gcc 10.2.1)",
-        "emoji-name": ":debian: 11 Buster (OpenJDK 17, gcc 10.2.1)",
+        "emoji-name": ":debian: 11 Bullseye (OpenJDK 17, gcc 10.2.1)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian11-java17",
