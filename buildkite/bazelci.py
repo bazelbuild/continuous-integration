@@ -675,6 +675,12 @@ INDEX_UPLOAD_POLICY_NEVER = "Never"
 # This is to prevent accidentally creating too many tasks with the martix testing feature.
 MAX_TASK_NUMBER = 80
 
+LAB_AGENT_PATTERNS = [
+    re.compile(r"^bk-imacpro-\d+$"),
+    re.compile(r"^bk-(trusted|testing)-macpro-\d+$"),
+    re.compile(r"^bk-(trusted-)?macstudio-\d+$"),
+]
+
 
 class BuildkiteException(Exception):
     """
@@ -962,6 +968,11 @@ def is_windows():
 
 def is_mac():
     return platform_module.system() == "Darwin"
+
+
+def is_lab_machine():
+    agent = os.getenv("BUILDKITE_AGENT_NAME")
+    return any(p.match(agent) for p in LAB_AGENT_PATTERNS)
 
 
 def gsutil_command():
@@ -1869,14 +1880,10 @@ def execute_bazel_run(bazel_binary, platform, targets):
 
 def remote_caching_flags(platform, accept_cached=True):
     # Only enable caching for untrusted and testing builds.
-    if CLOUD_PROJECT not in ["bazel-untrusted"]:
+    if CLOUD_PROJECT != "bazel-untrusted":
         return []
     # We don't enable remote caching on the Linux ARM64 machine since it doesn't have access to GCS.
     if platform == "ubuntu2004_arm64":
-        return []
-
-    # TODO(#1708): remove once caching works on QA machines
-    if platform.endswith("_qa"):
         return []
 
     platform_cache_key = [
@@ -1895,19 +1902,17 @@ def remote_caching_flags(platform, accept_cached=True):
             # Xcode version:
             subprocess.check_output(["/usr/bin/xcodebuild", "-version"]),
         ]
-        # Use a local cache server for our macOS machines.
+    
+    if is_mac() and is_lab_machine():
+        # Use a local cache server for our physical macOS machines in the lab.
         flags = ["--remote_cache=http://100.107.73.147"]
-
-        # TODO(#1708): Specify flags and server for GCS cache
     else:
         # Use RBE for caching builds running on GCE.
         flags = [
             "--google_default_credentials",
             "--remote_cache=remotebuildexecution.googleapis.com",
             "--remote_instance_name=projects/{}/instances/default_instance".format(CLOUD_PROJECT),
-        ]
-        # Enable BES / Build Results reporting.
-        flags += [
+            # Enable BES / Build Results reporting.
             "--bes_backend=buildeventservice.googleapis.com",
             "--bes_timeout=360s",
             "--project_id=bazel-untrusted",
