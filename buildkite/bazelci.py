@@ -1871,14 +1871,20 @@ def remote_caching_flags(platform, accept_cached=True):
     # Only enable caching for untrusted and testing builds.
     if CLOUD_PROJECT not in ["bazel-untrusted"]:
         return []
-
-    platform_cache_key = [BUILDKITE_ORG.encode("utf-8")]
-    # Whenever the remote cache was known to have been poisoned increase the number below
-    platform_cache_key += ["cache-poisoning-20220912".encode("utf-8")]
-
     # We don't enable remote caching on the Linux ARM64 machine since it doesn't have access to GCS.
     if platform == "ubuntu2004_arm64":
         return []
+
+    # TODO(#1708): remove once caching works on QA machines
+    if platform.endswith("_qa"):
+        return []
+
+    platform_cache_key = [
+        BUILDKITE_ORG.encode("utf-8"),
+        # Whenever the remote cache was known to have been poisoned increase the number below
+        "cache-poisoning-20220912".encode("utf-8"),
+        platform.encode("utf-8"),
+    ]
 
     if is_mac():
         platform_cache_key += [
@@ -1891,11 +1897,9 @@ def remote_caching_flags(platform, accept_cached=True):
         ]
         # Use a local cache server for our macOS machines.
         flags = ["--remote_cache=http://100.107.73.147"]
+
+        # TODO(#1708): Specify flags and server for GCS cache
     else:
-        platform_cache_key += [
-            # Platform name:
-            platform.encode("utf-8")
-        ]
         # Use RBE for caching builds running on GCE.
         flags = [
             "--google_default_credentials",
