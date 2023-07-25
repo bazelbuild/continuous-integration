@@ -200,7 +200,7 @@ Note: the above policies are for final releases only. RCs can be created without
 
 1.  **Push the final release (do not cancel midway)** by running the following commands in a Bazel git repo on a Linux machine. But first make sure that:
       * the master branch is up to date to avoid overwriting parts of the CHANGELOG file
-      * The final `release-X.Y.ZrcN` branch is identical to the `release-X.Y.Z` branch to avoid missing any commits
+      * the final `release-X.Y.ZrcN` branch is identical to the `release-X.Y.Z` branch to avoid missing any commits
 
     ```bash
     git fetch origin release-X.Y.ZrcN
