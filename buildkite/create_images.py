@@ -132,6 +132,7 @@ def print_windows_instructions(project, zone, instance_name):
     with open(rdp_file, "w") as f:
         f.write("full address:s:" + pw["ip_address"] + "\n")
         f.write("username:s:" + pw["username"] + "\n")
+    print("Opening ", rdp_file)
     subprocess.run(["open", rdp_file])
     write_to_clipboard(pw["password"])
     with gcloud.PRINT_LOCK:
