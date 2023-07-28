@@ -127,6 +127,8 @@ While the release is active, you should make sure to do the following:
 
 1.  Add a comment to the release GitHub issue announcing that a new RC is out. See [example](https://github.com/bazelbuild/bazel/issues/16159#issuecomment-1333775711).
 
+1.  Post on the #general channel on the [Bazel Slack](https://bazelbuild.slack.com/) announcing that a new RC is out. See [example](https://bazelbuild.slack.com/archives/CA31HN1T3/p1690501374818279).
+
 1.  Trigger a new pipeline in BuildKite to test the release candidate with all the downstream projects.
     *   Go to https://buildkite.com/bazel/bazel-with-downstream-projects-bazel
     *   Click "New Build", then fill in the fields like this:
@@ -188,11 +190,13 @@ After a few days of iteration:
 ## Release requirements
 
 1.  The release announcement must be ready and approved.
-1.  Verify that the [conditions outlined in our policy](https://bazel.build/support.html#policy) **all apply**. As of
-    May 2019 those were the following, but _double check_ that they have not changed since then.
-    1.  at least **1 week passed since you pushed RC1**, and
-    1.  at least **2 business days passed since you pushed the last RC**, and
-    1.  there are no more release blocking issues.
+1.  The internal approval process is complete with all approvals granted.
+1.  Verify that the [conditions outlined in our policy](https://bazel.build/release#release-procedure-policies) **all apply**. As of
+    July 2023 those were the following, but _double check_ that they have not changed since then.
+    1.  there are no more release blocking issues
+    2.  at least **2 business days passed since you pushed the last RC**
+    3.  [for major and minor releases only] at least **1 week passed since you pushed RC1**
+    4.  the next day is a business day (i.e. no releases on Fridays or weekends)
 
 Note: the above policies are for final releases only. RCs can be created without waiting for days in between each.
 
@@ -246,6 +250,7 @@ Note: the above policies are for final releases only. RCs can be created without
     - https://github.com/bazelbuild/bazel/releases/tag/6.2.0
     - https://releases.bazel.build/6.2.0/release/index.html
     ```
+1.  Post on the #general channel on the [Bazel Slack](https://bazelbuild.slack.com/) about the new release (same content as above).
 
 ### Updating .bazelversion and the release documentation page
 
