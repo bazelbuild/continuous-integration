@@ -519,7 +519,8 @@ steps:
       echo "+++ Checking out Git branch"
       git fetch origin ${BUILDKITE_BRANCH}
       git checkout ${BUILDKITE_BRANCH}
-      
+
+      echo "+++ Getting release info"
       buildkite-agent meta-data get "release_name" > release_name.txt
       SET /p RELEASE_NAME=<release_name.txt
       DEL /q release_name.txt
@@ -533,7 +534,8 @@ steps:
       buildkite-agent meta-data get "choco_key" > choco_key.txt
       SET /p KEY=<choco_key.txt
       DEL /q choco_key.txt
-                
+
+      echo "+++ Authenticating"
       cd "scripts/packages/chocolatey"    
       choco apikey -k %KEY% -s https://push.chocolatey.org/
       
@@ -545,8 +547,11 @@ steps:
       )
       echo RC: %RC%
       echo VERSION: %VERSION%
-      
+
+      echo "+++ Building package"
       powershell -Command "./build.ps1 -version %VERSION% -mode %MODE% -rc %RC%"
+
+      echo "+++ Pushing package"
       choco push --source https://push.chocolatey.org/
 
   - label: "Update Docker"
