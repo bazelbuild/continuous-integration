@@ -547,7 +547,7 @@ steps:
       echo VERSION: %VERSION%
       
       powershell -Command "./build.ps1 -version %VERSION% -mode %MODE% -rc %RC%"
-      choco push
+      choco push --source https://push.chocolatey.org/
 
   - label: "Update Docker"
     if: |
