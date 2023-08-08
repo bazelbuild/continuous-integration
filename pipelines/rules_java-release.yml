@@ -47,7 +47,7 @@ steps:
       sudo chown root:root /usr/local/bin/github-release
       sudo chmod 0755 /usr/local/bin/github-release
 
-      echo "+++ Importing GPG release key"
+      echo "+++ Importing GitHub token"
       github_token=$(gsutil cat gs://bazel-trusted-encrypted-secrets/github-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key github-trusted-token --ciphertext-file - --plaintext-file -)
 
       echo "+++ Creating a release on GitHub"
