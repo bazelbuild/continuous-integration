@@ -275,7 +275,7 @@ steps:
       mkdir output
       copy bazel-bin\src\bazel.exe output\bazel.exe
 
-      output\bazel build -c opt --cpu=x64_arm64_windows --copt=-w --host_copt=-w --stamp --embed_label %RELEASE_NAME% src/bazel src/bazel_nojdk scripts/packages/bazel.zip
+      output\bazel build -c opt --config=windows_arm64 --copt=-w --host_copt=-w --stamp --embed_label %RELEASE_NAME% src/bazel src/bazel_nojdk scripts/packages/bazel.zip
 
       mkdir artifacts
       move bazel-bin\src\bazel artifacts\bazel-%RELEASE_NAME%-windows-arm64.exe
