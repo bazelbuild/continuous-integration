@@ -1902,7 +1902,7 @@ def remote_caching_flags(platform, accept_cached=True):
             # Xcode version:
             subprocess.check_output(["/usr/bin/xcodebuild", "-version"]),
         ]
-    
+
     if is_mac() and is_lab_machine():
         # Use a local cache server for our physical macOS machines in the lab.
         flags = ["--remote_cache=http://100.107.73.147"]
@@ -3298,7 +3298,7 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
             )
         )
 
-    pipeline_steps.append("wait")
+    pipeline_steps.append({"wait": None, "continue_on_failure": True})
 
     # If all builds succeed, publish the Bazel binaries to GCS.
     pipeline_steps.append(
@@ -3694,6 +3694,7 @@ def upload_bazel_binaries():
     """
     bazel_hashes = {}
     bazel_nojdk_hashes = {}
+    error = None
     for platform_name, platform in PLATFORMS.items():
         if not should_publish_binaries_for_platform(platform_name):
             continue
@@ -3729,19 +3730,19 @@ def upload_bazel_binaries():
                 )
                 bazel_nojdk_hashes[target_platform_name] = sha256_hexdigest(bazel_nojdk_binary_path)
         except subprocess.CalledProcessError as e:
-            # If we're not on the main branch, we're probably building a custom one-off binary and
-            # ignore failures for individual platforms (it's possible that we didn't build binaries
-            # for all platforms).
-            if not current_branch_is_main_branch():
-                eprint(
-                    "Ignoring failure to download and publish Bazel binary for platform {}: {}".format(
-                        platform_name, e
-                    )
+            eprint(
+                "Failured to download and publish Bazel binary for platform {}: {}".format(
+                    platform_name, e
                 )
-            else:
-                raise e
+            )
+            error = e
         finally:
             shutil.rmtree(tmpdir)
+    # If we're not on the main branch, we're probably building a custom one-off binary and
+    # ignore failures for individual platforms (it's possible that we didn't build binaries
+    # for all platforms).
+    if error and current_branch_is_main_branch():
+        raise error
     return bazel_hashes, bazel_nojdk_hashes
 
 
