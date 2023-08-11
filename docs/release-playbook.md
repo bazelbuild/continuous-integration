@@ -119,15 +119,16 @@ While the release is active, you should make sure to do the following:
     ```
     Bazel 6.1.0rc1 is now available for those that want to try it out.
 
-    You can download it from: https://releases.bazel.build/6.1.0/rc1/index.html. 
-    Please report regressions to https://github.com/bazelbuild/bazel/issues as soon as possible.
+    You can download it from: https://releases.bazel.build/6.1.0/rc1/index.html.
+    If you're using Bazelisk, you can point to the latest RC by setting USE_BAZEL_VERSION=last_rc.
     
+    Please report regressions [here](https://github.com/bazelbuild/bazel/issues) as soon as possible.
     Draft release notes can be found [here](https://docs.google.com/document/d/1pu2ARPweOCTxPsRR8snoDtkC9R51XWRyBXeiC6Ql5so/edit).
     ```
 
-1.  Add a comment to the release GitHub issue announcing that a new RC is out. See [example](https://github.com/bazelbuild/bazel/issues/16159#issuecomment-1333775711).
+1.  Add a comment to the release GitHub issue announcing that a new RC is out. See [example](https://github.com/bazelbuild/bazel/issues/19165#issuecomment-1666242667).
 
-1.  Post on the #general channel on the [Bazel Slack](https://bazelbuild.slack.com/) announcing that a new RC is out. See [example](https://bazelbuild.slack.com/archives/CA31HN1T3/p1690501374818279).
+1.  Post on the #general channel on the [Bazel Slack](https://bazelbuild.slack.com/) announcing that a new RC is out. See [example](https://bazelbuild.slack.com/archives/CA31HN1T3/p1691188645927659).
 
 1.  Trigger a new pipeline in BuildKite to test the release candidate with all the downstream projects.
     *   Go to https://buildkite.com/bazel/bazel-with-downstream-projects-bazel
