@@ -17,9 +17,9 @@ steps:
       git fetch origin master
       git checkout master
 
-      echo "+++ Identify required variable"      
+      echo "+++ Identifying required variable"      
       sha=$(buildkite-agent meta-data get "artifacts") 
-      echo "sha = \"\$sha\""      
+      echo "sha = \"\$sha\""
       
       echo "+++ Run release script"
-      # python3 release.py
+      # python3 distro/release.py "\$sha"
