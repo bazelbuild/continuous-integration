@@ -10,24 +10,25 @@ platforms:
     build_flags:
     # Suppress warning messages from all actions
     - "--output_filter=^$"
+    - "--host_features=-force_no_whole_archive"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
-  # TODO(pcloudy): Re-enable when macOS VMs are all upgraded to Xcode 14.3
-  # macos:
-  #   environment:
-  #     TF_IGNORE_MAX_BAZEL_VERSION: 1
-  #   shell_commands:
-  #   - pip3 install -U --user pip six 'numpy<1.19.0' wheel setuptools mock 'future>=0.17.1' portpicker packaging
-  #   - pip3 install -U --user keras_applications==1.0.6 --no-deps
-  #   - pip3 install -U --user keras_preprocessing==1.0.5 --no-deps
-  #   - yes '' | python3 ./configure.py
-  #   xcode_version: "14.3"
-  #   build_flags:
-  #   # Suppress warning messages from all actions
-  #   - "--output_filter=^$"
-  #   - "--remote_download_outputs=all"
-  #   build_targets:
-  #   - "//tensorflow/tools/pip_package:build_pip_package"
+  macos:
+    environment:
+      TF_IGNORE_MAX_BAZEL_VERSION: 1
+    shell_commands:
+    - pip3 install -U --user pip six 'numpy<1.19.0' wheel setuptools mock 'future>=0.17.1' portpicker packaging
+    - pip3 install -U --user keras_applications==1.0.6 --no-deps
+    - pip3 install -U --user keras_preprocessing==1.0.5 --no-deps
+    - yes '' | python3 ./configure.py
+    xcode_version: "14.3"
+    build_flags:
+    # Suppress warning messages from all actions
+    - "--output_filter=^$"
+    - "--remote_download_outputs=all"
+    - "--host_features=-force_no_whole_archive"
+    build_targets:
+    - "//tensorflow/tools/pip_package:build_pip_package"
   windows:
     environment:
       TF_IGNORE_MAX_BAZEL_VERSION: 1
@@ -38,5 +39,6 @@ platforms:
     build_flags:
     # Suppress warning messages from all actions
     - "--output_filter=^$"
+    - "--host_features=-force_no_whole_archive"
     build_targets:
     - "//tensorflow/tools/pip_package:build_pip_package"
