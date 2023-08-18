@@ -43,17 +43,12 @@ def generate_configs(output_root: str, bazel_version: str, toolchain_name: str,
   os.makedirs(output_dir, exist_ok=True)
 
   toolchain_container = 'gcr.io/bazel-public/{}:latest'.format(toolchain_name)
-  exec_constraints = [
-      '@platforms//os:linux', '@platforms//cpu:x86_64',
-      '@bazel_tools//tools/cpp:gcc'
-  ]
   subprocess.run(
       [
           'rbe_configs_gen',
           '--bazel_version={}'.format(bazel_version),
           '--toolchain_container={}'.format(toolchain_container),
           '--cpp_env_json={}'.format(cpp_env_json),
-          '--exec_constraints={}'.format(','.join(exec_constraints)),
           '--output_tarball={}'.format(output_tarball),
           '--output_manifest={}'.format(output_manifest),
           '--exec_os=linux',
