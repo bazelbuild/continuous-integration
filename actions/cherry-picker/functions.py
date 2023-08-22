@@ -99,7 +99,6 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, issue_number
 
         # Need to let the user know that there is already a created branch with the same name and bazel-io needs to delete the branch
         if status_checkout_target.returncode != 0:
-            # issue_comment(issue_number, f"Cherry-pick was being attempted. But, it failed due to already existent branch called {target_branch_name}\ncc: @bazelbuild/triage", input_data["api_repo_name"], input_data["is_prod"])
             raise Exception(f"Cherry-pick was being attempted. But, it failed due to already existent branch called {target_branch_name}\ncc: @bazelbuild/triage")
 
     def run_cherrypick():
@@ -113,10 +112,8 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, issue_number
             print(f"Successfully Cherry-picked, pushing it to branch: {target_branch_name}")
             push_status = subprocess.run(['git', 'push', '--set-upstream', 'origin', target_branch_name])
             if push_status.returncode != 0:
-                # issue_comment(issue_number, f"Cherry-pick was attempted, but failed to push. Please check if the branch, {target_branch_name}, already exists\ncc: @bazelbuild/triage", input_data["api_repo_name"], input_data["is_prod"])
                 raise Exception(f"Cherry-pick was attempted, but failed to push. Please check if the branch, {target_branch_name}, already exists\ncc: @bazelbuild/triage")
         else:
-            # issue_comment(issue_number, "Cherry-pick was attempted but there were merge conflicts. Please resolve manually.\ncc: @bazelbuild/triage", input_data["api_repo_name"], input_data["is_prod"])
             raise Exception("Cherry-pick was attempted but there were merge conflicts. Please resolve manually.\ncc: @bazelbuild/triage")
         
     if is_first_time == True:
