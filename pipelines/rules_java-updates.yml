@@ -25,5 +25,6 @@ steps:
       github_token=$(gsutil cat gs://bazel-trusted-encrypted-secrets/github-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key github-trusted-token --ciphertext-file - --plaintext-file -)
       
       echo "+++ Running release updates script"
+      git branch keertk-testing
       cd java      
       python3 ../distro/release-updates.py --token "\$github_token" --artifacts "\$sha"
