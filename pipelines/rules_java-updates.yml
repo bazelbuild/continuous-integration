@@ -16,7 +16,6 @@ steps:
       echo "+++ Checking out Git branch"    
       git fetch origin master
       git checkout master
-      git checkout keertk-testing
 
       echo "+++ Identifying required variable"      
       sha=$(buildkite-agent meta-data get "artifacts") 
