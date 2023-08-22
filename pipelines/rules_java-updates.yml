@@ -23,4 +23,4 @@ steps:
       
       echo "+++ Running release updates script"
       cd java      
-      python3 distro/release.py --artifacts "\$sha"
+      python3 distro/release-updates.py --artifacts "\$sha"
