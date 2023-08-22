@@ -20,7 +20,10 @@ steps:
       echo "+++ Identifying required variable"      
       sha=$(buildkite-agent meta-data get "artifacts") 
       echo "sha = \"\$sha\""
+
+      echo "+++ Importing GitHub token"
+      github_token=$(gsutil cat gs://bazel-trusted-encrypted-secrets/github-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key github-trusted-token --ciphertext-file - --plaintext-file -)
       
       echo "+++ Running release updates script"
       cd java      
-      python3 ../distro/release-updates.py --artifacts "\$sha"
+      python3 ../distro/release-updates.py --token "\$github_token" --artifacts "\$sha"
