@@ -21,5 +21,6 @@ steps:
       sha=$(buildkite-agent meta-data get "artifacts") 
       echo "sha = \"\$sha\""
       
-      echo "+++ Run release script"
-      # python3 distro/release.py "\$sha"
+      echo "+++ Running release updates script"
+      cd java      
+      python3 distro/release.py "\$sha"
