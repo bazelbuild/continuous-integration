@@ -190,40 +190,6 @@ tasks:
     - ":clwb_tests"
 ```
 
-### Sharing Configuration Between Tasks
-
-You can define common configurations and share them between tasks using `*aliases` and the [`<<:` merge key](https://yaml.org/type/merge.html). YAML allows merging maps and sets, but not lists; to merge flags or targets, represent them as a set instead of a list:
-
-```yaml
-# This is a set, not a list, to allow merging into windows.build_flags and windows.test_flags
-.common_flags: !!set &common_flags
-  ? "--incompatible_disable_starlark_host_transitions"
-  ? "--enable_bzlmod"
-
-.common_task_config: &common_task_config
-  build_flags: *common_flags
-  build_targets:
-    - "//..."
-  test_flags: *common_flags
-  test_targets:
-    - "//tests/..."
-
-tasks:
-  ubuntu1804:
-    <<: *common_task_config
-  ubuntu2004:
-    <<: *common_task_config
-  windows:
-    <<: *common_task_config
-    # These are sets, not lists, to allow merging
-    build_flags: !!set
-      <<: *common_flags
-      ? "--noexperimental_repository_cache_hardlinks"
-    test_flags: !!set
-      <<: *common_flags
-      ? "--noexperimental_repository_cache_hardlinks"
-```
-
 ### Specifying a Display Name
 
 Each task may have an optional display name that can include Emojis. This feature is especially useful if you have several tasks that run on the same platform, but use different Bazel binaries.
