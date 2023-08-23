@@ -38,6 +38,7 @@ public class GithubIssueCommentService {
         if (node.size() < PER_PAGE) {
           break;
         }
+        page += 1;
       } catch (IOException e) {
         log.error("Failed to sync issue comments: " + e.getMessage(), e);
         return;
