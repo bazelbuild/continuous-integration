@@ -1209,7 +1209,7 @@ def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_v
             )
         ]
 
-    flags = task_config.get(task_config_key) or []
+    flags = list(task_config.get(task_config_key)) or []
     flags += json_profile_flags
     flags += capture_corrupted_outputs_flags
     # We have to add --test_env flags to `build`, too, otherwise Bazel
@@ -2191,10 +2191,10 @@ def calculate_targets(
 ):
     print_collapsed_group(":dart: Calculating targets")
 
-    build_targets = [] if test_only else task_config.get("build_targets", [])
-    test_targets = [] if build_only else task_config.get("test_targets", [])
-    coverage_targets = [] if (build_only or test_only) else task_config.get("coverage_targets", [])
-    index_targets = [] if (build_only or test_only) else task_config.get("index_targets", [])
+    build_targets = [] if test_only else list(task_config.get("build_targets", []))
+    test_targets = [] if build_only else list(task_config.get("test_targets", []))
+    coverage_targets = [] if (build_only or test_only) else list(task_config.get("coverage_targets", []))
+    index_targets = [] if (build_only or test_only) else list(task_config.get("index_targets", []))
 
     index_targets_query = (
         None if (build_only or test_only) else task_config.get("index_targets_query", None)
