@@ -34,7 +34,7 @@ As of May 2023, some projects' pipeline config files live under [the "pipeline" 
 
 ## Testing Local Changes With All Downstream Projects
 
-To initiate a build for your local change, you'll need "Build & Read" access to https://buildkite.com/bazel/bazel-at-head-plus-downstream. If you are a core Bazel contributor, you can request the access by filing an issue against https://github.com/bazelbuild/continuous-integration, otherwise please reach out to someone who can have access to initate the downstream testing for your PR (e.g. `@meteorcloudy`, `@fweikert`, or `@Wyverald`).
+To initiate a build for your local change, you'll need "Build & Read" access to https://buildkite.com/bazel/bazel-at-head-plus-downstream. If you are a core Bazel contributor, you can request the access by filing an issue against https://github.com/bazelbuild/continuous-integration, otherwise please reach out to someone who can have access to initate the downstream testing for your PR (e.g. @meteorcloudy, @fweikert, or @Wyverald).
 
 There is a daily scheduled build on this pipeline with the latest HEAD of the [master Bazel branch](https://github.com/bazelbuild/bazel/tree/master), but frequently it can be useful to run these tests with your own changes before merging a pull request.
 
