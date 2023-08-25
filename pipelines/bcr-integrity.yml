@@ -1,6 +1,6 @@
 ---
 steps:
-  - input: "rules_java archive"
+  - input: "Get archive"
     fields:
       - text: "rules_java archive"
         key: "archive"
