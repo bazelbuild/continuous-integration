@@ -2,10 +2,10 @@
 steps:
   - input: "Input information"
     fields:
-      - text: "Archive, sha256, integrity"
+      - text: "Version, archive, sha256, integrity"
         key: "input"
         required: true
-        hint: "e.g. d1196d250c17dfffed52db13c75d4f9b9cd20617.tar.gz, 0f65c471b99c79e97dd18a3571d3707b4dbfc31ff8e9bf7083a09aae0adb7b5e, sha256-4YvfBdBJhBvZNJh8nz0RRpdMI+CFuM4O8xRb3d1GinA="
+        hint: "e.g. v12.1, d1196d250c17dfffed52db13c75d4f9b9cd20617.tar.gz, 0f65c471b99c79e97dd18a3571d3707b4dbfc31ff8e9bf7083a09aae0adb7b5e, sha256-4YvfBdBJhBvZNJh8nz0RRpdMI+CFuM4O8xRb3d1GinA="
            
   - wait
 
@@ -19,11 +19,13 @@ steps:
 
       echo "+++ Identifying required variables"      
       input=$(buildkite-agent meta-data get "input") 
-      # Break down into archive, sha, integrity
-      # echo "sha = \"\$sha\""
+      IFS=$','
+      lines=(\$input)
+      version = "\${lines[0]}"
+      echo "version = \"\$version\""
 
       echo "+++ Importing GitHub token"
-      github_token=$(gsutil cat gs://bazel-trusted-encrypted-secrets/github-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key github-trusted-token --ciphertext-file - --plaintext-file -)
+      # github_token=$(gsutil cat gs://bazel-trusted-encrypted-secrets/github-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key github-trusted-token --ciphertext-file - --plaintext-file -)
       
       echo "+++ Running release updates script"
-      # python3 scripts/release/rules_java-bazel-updates.py --token "\$github_token" --archive "\$archive" --sha "\$sha" --integrity "\$integrity" --token "\$github_token"
+      # python3 scripts/release/java_tools-release-updates.py --token "\$github_token" --archive "\$archive" --sha "\$sha" --integrity "\$integrity" --token "\$github_token" --version "\$version"
