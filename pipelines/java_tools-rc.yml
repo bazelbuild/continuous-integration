@@ -20,25 +20,19 @@ steps:
       git fetch origin master
       git checkout master
       
-      echo "+++ Print latest commit hash"
+      echo "+++ Printing latest commit hash"
       echo "commit_hash = \"\${BUILDKITE_COMMIT}\""
-      
-      # commit_hash=$(git rev-parse HEAD)
-      # echo "commit_hash = \"\$commit_hash\""                     
-      # buildkite-agent meta-data set "commit_hash" "\$commit_hash"
       
   - wait
 
-  # TO DO
   - label: "Trigger java_tools binaries pipeline"
-    trigger: "test-pipeline"
-    # trigger: "java-tools-binaries"
+    trigger: "java-tools-binaries-java"
     build:
       message: ${BUILDKITE_MESSAGE}
       commit: ${BUILDKITE_COMMIT}
       branch: master
 
-  - block: ":rocket: Create release candidate"
+  - block: "Create release candidate"
 
   - label: "Create release candidate"
     agents:
@@ -53,8 +47,8 @@ steps:
       echo "rc = \"\$rc\""      
 
       echo "+++ Run create_java_tools_release.sh script"
-      # release_candidates=$(src/create_java_tools_release.sh --commit_hash ${BUILDKITE_COMMIT} --java_tools_version ${version} --rc ${rc} --release false)
-      # echo "release_candidates = \"\$release_candidates\""
+      release_candidates=$(src/create_java_tools_release.sh --commit_hash ${BUILDKITE_COMMIT} --java_tools_version ${version} --rc ${rc} --release false)
+      echo "release_candidates = \"\$release_candidates\""
       buildkite-agent meta-data set "release_candidates" "\$release_candidates"
 
       # Note: Buildkite doesn't allow passing of meta-data directly to the triggered pipeline; we need to manually copy over the script output for now
@@ -66,7 +60,19 @@ steps:
     build:
       message: ${BUILDKITE_MESSAGE}
       
-  # - wait
+  - wait
+  
+  - label: "Calculate integrity"
+    trigger: "bcr-integrity"
+    build:
+      message: ${BUILDKITE_MESSAGE}
+
+  - wait
+  
+  - label: "Update Bazel"
+    trigger: "bazel-java_tools-updates"
+    build:
+      message: ${BUILDKITE_MESSAGE}      
   
   # - label: "Create/update pull request"
   #   agents:
