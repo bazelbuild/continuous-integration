@@ -11,7 +11,7 @@ steps:
 
   - label: "Calculate integrity value" 
     agents:
-      - "queue=default"
+      - "queue=default" 
     plugins:
       docker#v3.8.0:
         always-pull: true
