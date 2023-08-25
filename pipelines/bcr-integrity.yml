@@ -22,4 +22,4 @@ steps:
       echo "archive = \"\$archive\""
 
       echo "+++ Running calc_integrity.py"
-      python3 ./tools/calc_integrity.py https://github.com/bazelbuild/rules_java/archive/\${archive}.tar.gz
+      python3 ./tools/calc_integrity.py https://github.com/bazelbuild/rules_java/archive/\${archive}
