@@ -14,8 +14,8 @@ steps:
       - "queue=default"    
     command: |
       echo "+++ Checking out Git branch"   
-      git fetch origin master
-      git checkout master
+      git fetch origin main
+      git checkout main
 
       echo "+++ Getting rules_java archive"
       archive=$(buildkite-agent meta-data get "archive")
