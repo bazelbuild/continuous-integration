@@ -19,7 +19,7 @@ steps:
 
       echo "+++ Identifying required variables"      
       input=$(buildkite-agent meta-data get "input") 
-      IFS=$','
+      IFS=\$','
       lines=(\$input)
       version = "\${lines[0]}"
       echo "version = \"\$version\""
