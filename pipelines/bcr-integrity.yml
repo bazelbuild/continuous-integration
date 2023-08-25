@@ -2,10 +2,10 @@
 steps:
   - input: "Get archive"
     fields:
-      - text: "rules_java archive"
+      - text: "rules_java archive file"
         key: "archive"
         required: true
-        hint: ".tar.gz archive file"
+        hint: "e.g. d1196d250c17dfffed52db13c75d4f9b9cd20617.tar.gz"
            
   - wait
 
