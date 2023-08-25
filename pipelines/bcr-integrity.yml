@@ -1,0 +1,25 @@
+---
+steps:
+  - input: "rules_java archive"
+    fields:
+      - text: "rules_java archive"
+        key: "archive"
+        required: true
+        hint: ".tar.gz archive file"
+           
+  - wait
+
+  - label: "Calculate integrity value" 
+    agents:
+      - "queue=default"    
+    command: |
+      echo "+++ Checking out Git branch"   
+      git fetch origin master
+      git checkout master
+
+      echo "+++ Getting rules_java archive"
+      archive=$(buildkite-agent meta-data get "archive")
+      echo "archive = \"\$archive\""
+
+      echo "+++ Running calc_integrity.py"
+      python3 ./tools/calc_integrity.py https://github.com/bazelbuild/rules_java/archive/\${archive}.tar.gz
