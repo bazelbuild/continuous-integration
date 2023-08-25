@@ -44,4 +44,5 @@ steps:
       echo "archive = \"\$archive\""
 
       echo "+++ Running calc_integrity.py"
+      pip3 install validators
       python3 ./tools/calc_integrity.py https://github.com/bazelbuild/rules_java/archive/\${archive}
