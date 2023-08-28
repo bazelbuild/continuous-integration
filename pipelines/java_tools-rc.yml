@@ -72,28 +72,7 @@ steps:
   - label: "Update Bazel"
     trigger: "bazel-java_tools-updates"
     build:
-      message: ${BUILDKITE_MESSAGE}      
-  
-  # - label: "Create/update pull request"
-  #   agents:
-  #     - "queue=default"
-  #   command: |
-  #     echo "+++ Checking out Git branch"    
-  #     git fetch origin master
-  #     git checkout master
-
-  #     # release_candidates=$(buildkite-agent meta-data get "release_candidates")
-  #     # echo "release_candidates = \"\$release_candidates\""
-
-#  - wait  
-  
-#  - label: "Trigger downstream build"
-#    trigger: 
-#      organization: "bazel"
-#      pipeline: "bazel-at-head-plus-downstream"
-#    soft_fail: true    
-#    build:
-#      message: "Test"
+      message: ${BUILDKITE_MESSAGE}
 
   
   
