@@ -74,6 +74,12 @@ steps:
 
       # Note: Buildkite doesn't allow passing of meta-data directly to the triggered pipeline; we need to manually copy over the script output for now
 
+  - label: "Update GitHub"
+    if: build.message =~ /final/i
+    trigger: "java-tools-release"
+    build:
+      message: ${BUILDKITE_MESSAGE}
+      
   - wait
   
   - label: "Update rules_java"
@@ -84,6 +90,7 @@ steps:
   - wait
   
   - label: "Calculate integrity"
+    if: build.message !~ /final/i
     trigger: "bcr-integrity"
     build:
       message: ${BUILDKITE_MESSAGE}
