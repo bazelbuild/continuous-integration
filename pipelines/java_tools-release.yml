@@ -6,7 +6,10 @@ steps:
         key: "artifacts"
         required: true
         hint: "Output from create_java_tools_release.sh"
-  - label: "Release rules_java"
+
+  - wait 
+        
+  - label: "Release java_tools"
     agents:
       - "queue=default"
     plugins:
@@ -56,4 +59,4 @@ steps:
 
       echo "+++ Creating a release on GitHub"
       relnotes=$(cat relnotes.txt)
-      GITHUB_TOKEN=\${github_token} github-release "bazelbuild/java_tools" java_v\${version} "master" "\${relnotes}" *.tar.gz 
+      GITHUB_TOKEN=\${github_token} github-release "keertk/java_tools" java_v\${version} "master" "\${relnotes}" *.tar.gz 
