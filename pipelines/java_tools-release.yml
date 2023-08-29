@@ -59,8 +59,9 @@ steps:
       sudo chmod 0755 /usr/local/bin/github-release
 
       echo "+++ Importing GitHub token"
-      github_token=$(gsutil cat gs://bazel-trusted-encrypted-secrets/github-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key github-trusted-token --ciphertext-file - --plaintext-file -)
+      # github_token=$(gsutil cat gs://bazel-trusted-encrypted-secrets/github-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key github-trusted-token --ciphertext-file - --plaintext-file -)
+      github_token = "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"
 
       echo "+++ Creating a release on GitHub"
       relnotes=$(cat relnotes.txt)
-      GITHUB_TOKEN=\${github_token} github-release "keertk/java_tools" \${version} "master" "\${relnotes}" "rules_java-6.5.0.tar.gz"
+      GITHUB_TOKEN=\${github_token} github-release "keertk/rules_java" \${version} "master" "\${relnotes}" rules_java-\${version}.tar.gz 
