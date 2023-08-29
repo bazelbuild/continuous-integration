@@ -45,7 +45,7 @@ steps:
 
       echo "+++ Getting java_tools version"
       # to do
-      version="1.1"
+      version="java_v1.1"
 
       echo "+++ Preparing release notes and .tar.gz"
       cd scripts
