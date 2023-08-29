@@ -61,4 +61,4 @@ steps:
 
       echo "+++ Creating a release on GitHub"
       relnotes=$(cat relnotes.txt)
-      GITHUB_TOKEN=\${github_token} github-release "keertk/java_tools" \${version} "master" "\${relnotes}" *.tar.gz 
+      GITHUB_TOKEN=\${github_token} github-release "keertk/java_tools" \${version} "master" "\${relnotes}" *.zip
