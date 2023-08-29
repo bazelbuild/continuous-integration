@@ -51,6 +51,7 @@ steps:
       cd scripts
       pip3 install wget
       python3 release.py --artifacts "\$sha"
+      ls
 
       echo "+++ Downloading github-release"
       curl -L https://mirror.bazel.build/github.com/c4milo/github-release/releases/download/v1.1.0/github-release_v1.1.0_linux_amd64.tar.gz | sudo tar xz -C /usr/local/bin
@@ -62,4 +63,4 @@ steps:
 
       echo "+++ Creating a release on GitHub"
       relnotes=$(cat relnotes.txt)
-      GITHUB_TOKEN=\${github_token} github-release "keertk/java_tools" \${version} "master" "\${relnotes}" "*.zip"
+      GITHUB_TOKEN=\${github_token} github-release "keertk/java_tools" \${version} "master" "\${relnotes}" "rules_java-6.5.0.tar.gz"
