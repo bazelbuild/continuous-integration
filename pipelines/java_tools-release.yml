@@ -49,6 +49,7 @@ steps:
 
       echo "+++ Preparing release notes and .tar.gz"
       cd scripts
+      pip3 install wget
       python3 release.py --artifacts "\$sha"
 
       echo "+++ Downloading github-release"
