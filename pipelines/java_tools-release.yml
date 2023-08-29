@@ -6,6 +6,9 @@ steps:
         key: "artifacts"
         required: true
         hint: "Output from create_java_tools_release.sh"
+      - text: "Token"
+        key: "token"
+        required: true        
 
   - wait 
         
@@ -60,7 +63,8 @@ steps:
 
       echo "+++ Importing GitHub token"
       # github_token=$(gsutil cat gs://bazel-trusted-encrypted-secrets/github-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key github-trusted-token --ciphertext-file - --plaintext-file -)
+      github_token=$(buildkite-agent meta-data get "token") 
 
       echo "+++ Creating a release on GitHub"
       relnotes=$(cat relnotes.txt)
-      github-release "keertk/rules_java" \${version} "master" "\${relnotes}" rules_java-\${version}.tar.gz 
+      GITHUB_TOKEN=\${github_token} github-release "keertk/rules_java" \${version} "master" "\${relnotes}" rules_java-\${version}.tar.gz 
