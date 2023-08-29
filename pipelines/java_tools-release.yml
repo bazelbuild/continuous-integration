@@ -48,7 +48,8 @@ steps:
       version="1.1"
 
       echo "+++ Preparing release notes and .tar.gz"
-      python3 scripts/release.py --artifacts "\$sha"
+      cd scripts
+      python3 release.py --artifacts "\$sha"
 
       echo "+++ Downloading github-release"
       curl -L https://mirror.bazel.build/github.com/c4milo/github-release/releases/download/v1.1.0/github-release_v1.1.0_linux_amd64.tar.gz | sudo tar xz -C /usr/local/bin
