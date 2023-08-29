@@ -25,7 +25,7 @@ steps:
       # to do
       version="java_v1.1"
 
-      echo "+++ Preparing release notes and .tar.gz"
+      echo "+++ Preparing release notes and .zip files"
       cd scripts
       pip3 install wget
       python3 release.py --artifacts "\$sha"
