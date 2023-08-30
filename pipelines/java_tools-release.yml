@@ -47,24 +47,25 @@ steps:
       echo "sha = \"\$sha\""
 
       echo "+++ Getting java_tools version"
-      # to do
-      version="java_v1.1"
+      IFS='/'
+      read -a strarr <<< \${sha}      
+      version="\${strarr[2]}"
+      echo "version = \"\$version\""
 
-      echo "+++ Preparing release notes and .zip files"
-      cd scripts
-      pip3 install wget
-      python3 release.py --artifacts "\$sha"
-      ls
+      # echo "+++ Preparing release notes and .zip files"
+      # cd scripts
+      # pip3 install wget
+      # python3 release.py --artifacts "\$sha"
 
-      echo "+++ Downloading github-release"
-      curl -L https://mirror.bazel.build/github.com/c4milo/github-release/releases/download/v1.1.0/github-release_v1.1.0_linux_amd64.tar.gz | sudo tar xz -C /usr/local/bin
-      sudo chown root:root /usr/local/bin/github-release
-      sudo chmod 0755 /usr/local/bin/github-release
+      # echo "+++ Downloading github-release"
+      # curl -L https://mirror.bazel.build/github.com/c4milo/github-release/releases/download/v1.1.0/github-release_v1.1.0_linux_amd64.tar.gz | sudo tar xz -C /usr/local/bin
+      # sudo chown root:root /usr/local/bin/github-release
+      # sudo chmod 0755 /usr/local/bin/github-release
 
-      echo "+++ Importing GitHub token"
-      # github_token=$(gsutil cat gs://bazel-trusted-encrypted-secrets/github-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key github-trusted-token --ciphertext-file - --plaintext-file -)
-      github_token=$(buildkite-agent meta-data get "token") 
+      # echo "+++ Importing GitHub token"
+      # # github_token=$(gsutil cat gs://bazel-trusted-encrypted-secrets/github-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key github-trusted-token --ciphertext-file - --plaintext-file -)
+      # github_token=$(buildkite-agent meta-data get "token") 
 
-      echo "+++ Creating a release on GitHub"
-      relnotes=$(cat relnotes.txt)
-      GITHUB_TOKEN=\${github_token} github-release "keertk/java_tools" \${version} "master" "\${relnotes}" "*.zip"
+      # echo "+++ Creating a release on GitHub"
+      # relnotes=$(cat relnotes.txt)
+      # GITHUB_TOKEN=\${github_token} github-release "keertk/java_tools" \${version} "master" "\${relnotes}" "*.zip"
