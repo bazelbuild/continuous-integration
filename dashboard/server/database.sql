@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS citext;
+
 CREATE TABLE json_state
 (
     key       TEXT PRIMARY KEY,
@@ -55,7 +57,7 @@ CREATE TABLE github_issue
     title           TEXT        NOT NULL,
     body            TEXT        NOT NULL,
     milestone       TEXT        NOT NULL,
-    labels          TEXT[]      NOT NULL,
+    labels          CITEXT[]    NOT NULL,
     created_at      TIMESTAMPTZ NOT NULL,
     updated_at      TIMESTAMPTZ,
     closed_at       TIMESTAMPTZ,

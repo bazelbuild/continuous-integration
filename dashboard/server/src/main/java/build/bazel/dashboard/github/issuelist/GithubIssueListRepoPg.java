@@ -8,6 +8,8 @@ import build.bazel.dashboard.github.issuestatus.GithubIssueStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import io.r2dbc.postgresql.codec.Json;
+import io.r2dbc.postgresql.codec.PostgresqlObjectId;
+import io.r2dbc.spi.Parameters;
 import io.r2dbc.spi.Readable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
@@ -76,7 +78,9 @@ public class GithubIssueListRepoPg implements GithubIssueListRepo {
 
     if (params.getLabels() != null && !params.getLabels().isEmpty()) {
       where.append(" AND gi.labels @> :labels");
-      bindings.put("labels", params.getLabels().toArray(new String[0]));
+      bindings.put(
+          "labels",
+          Parameters.in(PostgresqlObjectId.UNSPECIFIED, params.getLabels().toArray(new String[0])));
     }
 
     if (where.length() > 0) {
