@@ -20,7 +20,7 @@ public class GithubTeamTableRepoPg implements GithubTeamTableRepo {
         Optional.ofNullable(
             databaseClient
                 .sql(
-                    "SELECT owner, repo, id, created_at, updated_at, name, none_team_owner FROM"
+                    "SELECT owner, repo, id, created_at, updated_at, name FROM"
                         + " github_team_table WHERE owner = :owner AND repo = :repo AND id = :id")
                 .bind("owner", owner)
                 .bind("repo", repo)
@@ -33,8 +33,7 @@ public class GithubTeamTableRepoPg implements GithubTeamTableRepo {
                             .id(row.get("id", String.class))
                             .createdAt(row.get("created_at", Instant.class))
                             .updatedAt(row.get("updated_at", Instant.class))
-                            .name(row.get("name", String.class))
-                            .noneTeamOwner(row.get("none_team_owner", String.class)))
+                            .name(row.get("name", String.class)))
                 .one()
                 .block());
     if (builderOptional.isEmpty()) {

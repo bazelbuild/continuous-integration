@@ -4,6 +4,7 @@ import static build.bazel.dashboard.github.teamtable.GithubTeamTable.Cell;
 
 import build.bazel.dashboard.github.GithubUtils;
 import build.bazel.dashboard.github.issuequery.GithubIssueQueryExecutor;
+import build.bazel.dashboard.github.repo.GithubRepoService;
 import build.bazel.dashboard.github.team.GithubTeam;
 import build.bazel.dashboard.github.team.GithubTeamService;
 import build.bazel.dashboard.github.teamtable.GithubTeamTable.Row;
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class GithubTeamTableService {
   private final GithubTeamTableRepo githubTeamTableRepo;
+  private final GithubRepoService githubRepoService;
   private final GithubTeamService githubTeamService;
   private final GithubIssueQueryExecutor githubIssueQueryExecutor;
 
@@ -62,13 +64,21 @@ public class GithubTeamTableService {
   }
 
   GithubTeamTable loadOne(String owner, String repo, String tableId) {
-    return githubTeamTableRepo
-        .findOne(owner, repo, tableId)
-        .map(
-            table -> {
-              var teams = findAllTeams(owner, repo, table.getNoneTeamOwner());
-              return fetchTable(teams, table);
-            })
+    return githubRepoService
+        .findOne(owner, repo)
+        .flatMap(
+            githubRepo ->
+                githubTeamTableRepo
+                    .findOne(githubRepo.getOwner(), githubRepo.getRepo(), tableId)
+                    .map(
+                        table -> {
+                          var noneTeamOwner = "";
+                          if (githubRepo.getActionOwner() != null) {
+                            noneTeamOwner = githubRepo.getActionOwner();
+                          }
+                          var teams = findAllTeams(owner, repo, noneTeamOwner);
+                          return fetchTable(teams, table);
+                        }))
         .orElseGet(() -> GithubTeamTable.buildNone(owner, repo, tableId, ""));
   }
 
