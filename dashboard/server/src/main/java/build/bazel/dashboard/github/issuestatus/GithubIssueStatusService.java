@@ -84,17 +84,17 @@ public class GithubIssueStatusService {
 
     var actionOwners = findActionOwner(repo, issue, data, newStatus);
     return GithubIssueStatus.builder()
-            .owner(issue.getOwner())
-            .repo(issue.getRepo())
-            .issueNumber(issue.getIssueNumber())
-            .status(newStatus)
+        .owner(issue.getOwner())
+        .repo(issue.getRepo())
+        .issueNumber(issue.getIssueNumber())
+        .status(newStatus)
         .actionOwners(actionOwners)
         .updatedAt(data.getUpdatedAt())
-            .expectedRespondAt(expectedRespondAt)
-            .lastNotifiedAt(lastNotifiedAt)
-            .nextNotifyAt(nextNotifyAt)
-            .checkedAt(now)
-            .build();
+        .expectedRespondAt(expectedRespondAt)
+        .lastNotifiedAt(lastNotifiedAt)
+        .nextNotifyAt(nextNotifyAt)
+        .checkedAt(now)
+        .build();
   }
 
   static Status newStatus(GithubRepo repo, GithubIssue.Data data) {
@@ -164,21 +164,26 @@ public class GithubIssueStatusService {
           return ImmutableList.of(assignee.getLogin());
         } else {
           List<Label> labels = data.getLabels();
-          githubTeamService
-              .findAll(issue.getOwner(), issue.getRepo())
-              .stream()
+          return githubTeamService.findAll(issue.getOwner(), issue.getRepo()).stream()
               .filter(
                   team ->
-                      labels.stream().anyMatch(label -> label.getName().equals(team.getLabel()))
+                      labels.stream()
+                              .anyMatch(
+                                  label ->
+                                      label
+                                          .getName()
+                                          .toLowerCase()
+                                          .equals(team.getLabel().toLowerCase()))
                           && !team.getTeamOwners().isEmpty())
               .findFirst()
               .map(GithubTeam::getTeamOwners)
-              .orElseGet(() -> {
-                if (repo.getActionOwner() != null) {
-                  return ImmutableList.of(repo.getActionOwner());
-                }
-                return ImmutableList.of();
-              });
+              .orElseGet(
+                  () -> {
+                    if (repo.getActionOwner() != null) {
+                      return ImmutableList.of(repo.getActionOwner());
+                    }
+                    return ImmutableList.of();
+                  });
         }
     }
 
@@ -190,16 +195,30 @@ public class GithubIssueStatusService {
   }
 
   private static boolean hasMoreDataNeededLabel(List<Label> labels) {
-    return hasLabelPrefix(labels, "more data needed");
+    return hasLabel(labels, "more data needed");
   }
 
   private static boolean hasPriorityLabel(List<Label> labels) {
-    return hasLabelPrefix(labels, "P");
+    return hasLabel(labels, "P0")
+        || hasLabel(labels, "P1")
+        || hasLabel(labels, "P2")
+        || hasLabel(labels, "P3")
+        || hasLabel(labels, "P4");
   }
 
   private static boolean hasLabelPrefix(List<Label> labels, String prefix) {
     for (Label label : labels) {
-      if (label.getName().startsWith(prefix)) {
+      if (label.getName().toLowerCase().startsWith(prefix.toLowerCase())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private static boolean hasLabel(List<Label> labels, String name) {
+    for (Label label : labels) {
+      if (label.getName().equalsIgnoreCase(name)) {
         return true;
       }
     }
