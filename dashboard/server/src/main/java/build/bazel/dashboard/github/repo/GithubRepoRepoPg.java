@@ -36,7 +36,7 @@ public class GithubRepoRepoPg implements GithubRepoRepo {
     return databaseClient
         .sql(
             "SELECT owner, repo, created_at, updated_at, action_owner, is_team_label_enabled"
-                + " FROM github_repo")
+                + " FROM github_repo ORDER BY owner, repo")
         .map(this::toGithubRepo)
         .all()
         .collect(toImmutableList())
