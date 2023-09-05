@@ -195,7 +195,8 @@ public class GithubIssueStatusService {
   }
 
   private static boolean hasMoreDataNeededLabel(List<Label> labels) {
-    return hasLabel(labels, "more data needed");
+    return hasLabel(labels, "more data needed")
+        || hasLabel(labels, "awaiting-user-response");
   }
 
   private static boolean hasPriorityLabel(List<Label> labels) {
