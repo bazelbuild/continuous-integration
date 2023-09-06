@@ -1,4 +1,4 @@
-import os, subprocess, requests, sys
+import os, subprocess, requests
 from pprint import pprint
 
 headers = {
