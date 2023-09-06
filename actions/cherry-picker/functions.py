@@ -1,4 +1,4 @@
-import os, subprocess, requests
+import os, subprocess, requests, sys
 from pprint import pprint
 
 headers = {
@@ -16,18 +16,25 @@ def get_commit_id(pr_number, actor_name, action_event, api_repo_name):
         if (event["actor"]["login"] in actor_name) and (event["commit_id"] != None) and (commit_id == None) and (event["event"] == action_event):
             commit_id = event["commit_id"]
         elif (event["actor"]["login"] in actor_name) and (event["commit_id"] != None) and (commit_id != None) and (event["event"] == action_event):
-            raise Exception(f'PR#{pr_number} has multiple commits made by {actor_name}')
-    if commit_id == None: raise Exception(f'PR#{pr_number} has NO commit made by {actor_name}')
+            print(f'PR#{pr_number} has multiple commits made by {actor_name}')
+            raise SystemExit(0)
+    if commit_id == None:
+        print(f'PR#{pr_number} has NO commit made by {actor_name}')
+        raise SystemExit(0)
     return commit_id
 
 def get_reviewers(pr_number, api_repo_name, issues_data):
     if "pull_request" not in issues_data: return []
     r = requests.get(f'https://api.github.com/repos/{api_repo_name}/pulls/{pr_number}/reviews', headers=headers)
-    if len(r.json()) == 0: raise Exception(f"PR#{pr_number} has no approver at all.")
+    if len(r.json()) == 0:
+        print(f"PR#{pr_number} has no approver at all.")
+        raise SystemExit(0)
     approvers_list = []
     for review in r.json():
         if review["state"] == "APPROVED": approvers_list.append(review["user"]["login"])
-    if len(approvers_list) == 0: raise Exception(f"PR#{pr_number} has no approval from the approver(s).")
+    if len(approvers_list) == 0:
+        print(f"PR#{pr_number} has no approval from the approver(s).")
+        raise SystemExit(0)
     return approvers_list
 
 def extract_release_numbers_data(pr_number, api_repo_name):
