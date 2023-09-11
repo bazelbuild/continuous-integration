@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -124,70 +125,64 @@ public class GithubIssueStatusService {
     Instant updatedAt = data.getUpdatedAt();
 
     switch (status) {
-      case TO_BE_REVIEWED:
-      case MORE_DATA_NEEDED:
-      case REVIEWED:
+      case TO_BE_REVIEWED, MORE_DATA_NEEDED, REVIEWED -> {
         return updatedAt.plus(7, DAYS);
-      case TRIAGED:
-        {
-          List<Label> labels = data.getLabels();
-          if (hasLabelPrefix(labels, "type: bug")) {
-            if (hasLabelPrefix(labels, "P0")) {
-              return updatedAt.plus(1, DAYS);
-            } else if (hasLabelPrefix(labels, "P1")) {
-              return updatedAt.plus(7, DAYS);
-            } else if (hasLabelPrefix(labels, "P2")) {
-              return updatedAt.plus(120, DAYS);
-            }
+      }
+      case TRIAGED -> {
+        List<Label> labels = data.getLabels();
+        if (hasLabelPrefix(labels, "type: bug")) {
+          if (hasLabelPrefix(labels, "P0")) {
+            return updatedAt.plus(1, DAYS);
+          } else if (hasLabelPrefix(labels, "P1")) {
+            return updatedAt.plus(7, DAYS);
+          } else if (hasLabelPrefix(labels, "P2")) {
+            return updatedAt.plus(120, DAYS);
           }
-
-          return null;
         }
 
-      default:
+        return null;
+      }
+      default -> {
+        return null;
+      }
     }
-
-    return null;
   }
 
   private ImmutableList<String> findActionOwner(
       GithubRepo repo, GithubIssue issue, GithubIssue.Data data, Status status) {
     switch (status) {
-      case TO_BE_REVIEWED:
-        return ImmutableList.of();
-      case MORE_DATA_NEEDED:
+      case MORE_DATA_NEEDED -> {
         return ImmutableList.of(data.getUser().getLogin());
-      case REVIEWED:
-      case TRIAGED:
+      }
+      case REVIEWED, TRIAGED -> {
         User assignee = data.getAssignee();
         if (assignee != null) {
           return ImmutableList.of(assignee.getLogin());
         } else {
           List<Label> labels = data.getLabels();
-          return githubTeamService.findAll(issue.getOwner(), issue.getRepo()).stream()
-              .filter(
-                  team ->
-                      labels.stream()
-                              .anyMatch(
-                                  label ->
-                                      label
-                                          .getName()
-                                          .toLowerCase()
-                                          .equals(team.getLabel().toLowerCase()))
-                          && !team.getTeamOwners().isEmpty())
-              .findFirst()
-              .map(GithubTeam::getTeamOwners)
-              .orElseGet(
-                  () -> {
-                    if (repo.getActionOwner() != null) {
-                      return ImmutableList.of(repo.getActionOwner());
-                    }
-                    return ImmutableList.of();
-                  });
+          var teams =
+              githubTeamService.findAll(issue.getOwner(), issue.getRepo()).stream()
+                  .filter(
+                      team ->
+                          labels.stream()
+                              .anyMatch(label -> label.getName().equalsIgnoreCase(team.getLabel())))
+                  .toList();
+          if (teams.isEmpty()) {
+            if (repo.getActionOwner() != null) {
+              return ImmutableList.of(repo.getActionOwner());
+            } else {
+              return ImmutableList.of();
+            }
+          }
+          return teams.stream()
+              .flatMap(team -> team.getTeamOwners().stream())
+              .collect(ImmutableList.toImmutableList());
         }
+      }
+      default -> {
+        return ImmutableList.of();
+      }
     }
-
-    return ImmutableList.of();
   }
 
   private static boolean hasTeamLabel(List<Label> labels) {
