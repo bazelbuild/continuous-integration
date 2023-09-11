@@ -96,7 +96,6 @@ public class GithubSyncIssueTask {
               buildSyncStateKey(repo.getOwner(), repo.getRepo()), SyncIssueState.class);
       if (jsonState.getData() != null) {
         this.syncGithubIssue(jsonState);
-        return;
       }
     }
   }
