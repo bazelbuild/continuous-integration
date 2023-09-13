@@ -5,22 +5,16 @@ import static java.time.temporal.ChronoUnit.DAYS;
 import build.bazel.dashboard.github.issue.GithubIssue;
 import build.bazel.dashboard.github.issue.GithubIssue.Label;
 import build.bazel.dashboard.github.issue.GithubIssue.User;
-import build.bazel.dashboard.github.issuestatus.GithubIssueStatus.GithubIssueStatusBuilder;
 import build.bazel.dashboard.github.issuestatus.GithubIssueStatus.Status;
 import build.bazel.dashboard.github.repo.GithubRepo;
 import build.bazel.dashboard.github.repo.GithubRepoService;
-import build.bazel.dashboard.github.team.GithubTeam;
 import build.bazel.dashboard.github.team.GithubTeamService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
-import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.rxjava3.core.Maybe;
-import io.reactivex.rxjava3.core.Single;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -109,8 +103,12 @@ public class GithubIssueStatusService {
       return Status.MORE_DATA_NEEDED;
     }
 
+    if (data.getAssignee() != null) {
+      return Status.TRIAGED;
+    }
+
     if (!repo.isTeamLabelEnabled() || hasTeamLabel(labels)) {
-      if (hasPriorityLabel(labels)) {
+      if (isTriaged(labels)) {
         return Status.TRIAGED;
       } else {
         return Status.REVIEWED;
@@ -194,12 +192,13 @@ public class GithubIssueStatusService {
         || hasLabel(labels, "awaiting-user-response");
   }
 
-  private static boolean hasPriorityLabel(List<Label> labels) {
+  private static boolean isTriaged(List<Label> labels) {
     return hasLabel(labels, "P0")
         || hasLabel(labels, "P1")
         || hasLabel(labels, "P2")
         || hasLabel(labels, "P3")
-        || hasLabel(labels, "P4");
+        || hasLabel(labels, "P4")
+        || hasLabel(labels, "awaiting-review");
   }
 
   private static boolean hasLabelPrefix(List<Label> labels, String prefix) {
