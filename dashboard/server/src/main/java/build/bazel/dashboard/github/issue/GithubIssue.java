@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.time.Instant;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -21,13 +23,15 @@ public class GithubIssue {
   String etag;
   JsonNode data;
 
-  public static GithubIssue empty(String owner, String repo, int issueNumber) {
+  public static GithubIssue empty(
+      String owner, String repo, int issueNumber, ObjectMapper objectMapper) {
     return GithubIssue.builder()
         .owner(owner)
         .repo(repo)
         .issueNumber(issueNumber)
         .timestamp(Instant.EPOCH)
         .etag("")
+        .data(objectMapper.createObjectNode())
         .build();
   }
 
@@ -48,9 +52,14 @@ public class GithubIssue {
     String title;
     String state;
     List<Label> labels;
-    @Nullable User assignee;
+    List<User> assignees;
     Instant createdAt;
     Instant updatedAt;
+    @Nullable JsonNode pullRequest;
+
+    public boolean isPullRequest() {
+      return pullRequest != null;
+    }
   }
 
   @Builder

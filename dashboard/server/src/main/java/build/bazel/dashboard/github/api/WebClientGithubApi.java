@@ -105,6 +105,24 @@ public class WebClientGithubApi extends RestApiClient implements GithubApi {
   }
 
   @Override
+  public RestApiResponse fetchPullRequest(FetchPullRequestRequest request) {
+    log.debug("{}", request);
+
+    WebClient.RequestHeadersSpec<?> spec =
+        get(
+            uriBuilder ->
+                uriBuilder
+                    .pathSegment(
+                        "repos",
+                        request.owner(),
+                        request.repo(),
+                        "pulls",
+                        String.valueOf(request.issueNumber()))
+                    .build(), request.etag());
+    return exchange(spec);
+  }
+
+  @Override
   public RestApiResponse listIssueComments(ListIssueCommentsRequest request) {
     log.debug("{}", request);
 

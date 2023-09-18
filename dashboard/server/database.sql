@@ -279,6 +279,20 @@ CREATE TABLE github_issue_comment_data
 );
 
 --
+-- Table that stores the raw pull requests data fetched from Github
+--
+CREATE TABLE github_pull_request_data
+(
+    owner        TEXT        NOT NULL,
+    repo         TEXT        NOT NULL,
+    issue_number INTEGER     NOT NULL,
+    timestamp    TIMESTAMPTZ NOT NULL,
+    etag         TEXT        NOT NULL,
+    data         JSONB       NOT NULL,
+    PRIMARY KEY (owner, repo, issue_number)
+);
+
+--
 -- Table that stores the raw builds data fetched from Buildkite
 --
 CREATE TABLE buildkite_build_data

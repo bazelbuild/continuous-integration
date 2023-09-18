@@ -5,6 +5,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 import build.bazel.dashboard.github.issue.GithubIssue;
 import build.bazel.dashboard.github.issue.GithubIssue.Label;
 import build.bazel.dashboard.github.issue.GithubIssue.User;
+import build.bazel.dashboard.github.issue.GithubPullRequest;
 import build.bazel.dashboard.github.issuestatus.GithubIssueStatus.Status;
 import build.bazel.dashboard.github.repo.GithubRepo;
 import build.bazel.dashboard.github.repo.GithubRepoService;
@@ -33,7 +34,8 @@ public class GithubIssueStatusService {
     return githubIssueStatusRepo.findOne(owner, repo, issueNumber);
   }
 
-  public Optional<GithubIssueStatus> check(GithubIssue issue, Instant now) throws IOException {
+  public Optional<GithubIssueStatus> check(
+      GithubIssue issue, @Nullable GithubPullRequest pullRequest, Instant now) throws IOException {
     String owner = issue.getOwner();
     String repo = issue.getRepo();
 
@@ -45,7 +47,8 @@ public class GithubIssueStatusService {
     var githubRepo = githubRepoOptional.get();
     var existingIssueStatus = githubIssueStatusRepo.findOne(owner, repo, issue.getIssueNumber());
 
-    var newIssueStatus = buildStatus(githubRepo, existingIssueStatus.orElse(null), issue, now);
+    var newIssueStatus =
+        buildStatus(githubRepo, existingIssueStatus.orElse(null), issue, pullRequest, now);
     githubIssueStatusRepo.save(newIssueStatus);
     return Optional.of(newIssueStatus);
   }
@@ -59,9 +62,17 @@ public class GithubIssueStatusService {
 
   private GithubIssueStatus buildStatus(
       GithubRepo repo,
-      @Nullable GithubIssueStatus oldStatus, GithubIssue issue, Instant now) throws IOException  {
+      @Nullable GithubIssueStatus oldStatus,
+      GithubIssue issue,
+      @Nullable GithubPullRequest pullRequest,
+      Instant now)
+      throws IOException {
     var data = issue.parseData(objectMapper);
-    Status newStatus = newStatus(repo, data);
+    GithubPullRequest.Data pullRequestData = null;
+    if (pullRequest != null) {
+      pullRequestData = pullRequest.parseData(objectMapper);
+    }
+    Status newStatus = newStatus(repo, data, pullRequestData);
     Instant lastNotifiedAt = null;
 
     if (oldStatus != null) {
@@ -77,7 +88,7 @@ public class GithubIssueStatusService {
       nextNotifyAt = lastNotifiedAt.plus(1, DAYS);
     }
 
-    var actionOwners = findActionOwner(repo, issue, data, newStatus);
+    var actionOwners = findActionOwner(repo, issue, data, pullRequestData, newStatus);
     return GithubIssueStatus.builder()
         .owner(issue.getOwner())
         .repo(issue.getRepo())
@@ -92,7 +103,8 @@ public class GithubIssueStatusService {
         .build();
   }
 
-  static Status newStatus(GithubRepo repo, GithubIssue.Data data) {
+  static Status newStatus(
+      GithubRepo repo, GithubIssue.Data data, @Nullable GithubPullRequest.Data pullRequestData) {
     if (data.getState().equals("closed")) {
       return Status.CLOSED;
     }
@@ -103,7 +115,11 @@ public class GithubIssueStatusService {
       return Status.MORE_DATA_NEEDED;
     }
 
-    if (data.getAssignee() != null) {
+    if (pullRequestData != null && !pullRequestData.requestedReviewers().isEmpty()) {
+      return Status.TRIAGED;
+    }
+
+    if (!data.getAssignees().isEmpty()) {
       return Status.TRIAGED;
     }
 
@@ -147,15 +163,27 @@ public class GithubIssueStatusService {
   }
 
   private ImmutableList<String> findActionOwner(
-      GithubRepo repo, GithubIssue issue, GithubIssue.Data data, Status status) {
+      GithubRepo repo,
+      GithubIssue issue,
+      GithubIssue.Data data,
+      @Nullable GithubPullRequest.Data pullRequestData,
+      Status status) {
     switch (status) {
       case MORE_DATA_NEEDED -> {
         return ImmutableList.of(data.getUser().getLogin());
       }
       case REVIEWED, TRIAGED -> {
-        User assignee = data.getAssignee();
-        if (assignee != null) {
-          return ImmutableList.of(assignee.getLogin());
+        if (pullRequestData != null) {
+          if (!pullRequestData.requestedReviewers().isEmpty()) {
+            return pullRequestData.requestedReviewers().stream()
+                .map(User::getLogin)
+                .collect(ImmutableList.toImmutableList());
+          }
+        }
+
+        var assignees = data.getAssignees();
+        if (!assignees.isEmpty()) {
+          return assignees.stream().map(User::getLogin).collect(ImmutableList.toImmutableList());
         } else {
           List<Label> labels = data.getLabels();
           var teams =
@@ -198,7 +226,8 @@ public class GithubIssueStatusService {
         || hasLabel(labels, "P2")
         || hasLabel(labels, "P3")
         || hasLabel(labels, "P4")
-        || hasLabel(labels, "awaiting-review");
+        || hasLabel(labels, "awaiting-review")
+        || hasLabel(labels, "awaiting-PR-merge");
   }
 
   private static boolean hasLabelPrefix(List<Label> labels, String prefix) {
