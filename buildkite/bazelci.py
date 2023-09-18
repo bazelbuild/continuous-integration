@@ -157,12 +157,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/buildtools/master/.bazelci/presubmit.yml",
         "pipeline_slug": "buildtools",
     },
-    "Cargo-Raze": {
-        "git_repository": "https://github.com/google/cargo-raze.git",
-        "http_config": "https://raw.githubusercontent.com/google/cargo-raze/main/.bazelci/presubmit.yml",
-        "pipeline_slug": "cargo-raze",
-        "disabled_reason": "https://github.com/bazelbuild/continuous-integration/issues/1594 (broken by Xcode 14.2)",
-    },
     "CLion Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/clion.yml",
