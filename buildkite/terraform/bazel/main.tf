@@ -231,25 +231,6 @@ resource "buildkite_pipeline" "google-bazel-docs-staging" {
   team = [{ access_level = "READ_ONLY", slug = "bazel" }, { access_level = "BUILD_AND_READ", slug = "googlers" }]
 }
 
-resource "buildkite_pipeline" "cargo-raze" {
-  name = "Cargo-Raze"
-  repository = "https://github.com/google/cargo-raze.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
-  default_branch = "main"
-  skip_intermediate_builds = true
-  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
-  provider_settings {
-    trigger_mode = "code"
-    build_pull_requests = true
-    skip_pull_request_builds_for_existing_commits = true
-    build_pull_request_ready_for_review = true
-    build_pull_request_forks = true
-    prefix_pull_request_fork_branch_names = true
-    build_branches = true
-    publish_commit_status = true
-  }
-}
-
 resource "buildkite_pipeline" "rules-qt" {
   name = "rules_qt"
   repository = "https://github.com/justbuchanan/bazel_rules_qt"
