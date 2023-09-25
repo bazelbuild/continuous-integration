@@ -6,6 +6,10 @@ steps:
         key: "artifacts"
         required: true
         hint: "Output from create_java_tools_release.sh"  
+      - text: "Version"
+        key: "version"
+        required: true
+        hint: "E.g. v12.1"          
 
   - wait 
         
@@ -40,19 +44,15 @@ steps:
       git checkout ${BUILDKITE_BRANCH}
 
       echo "+++ Identifying required variable"      
-      sha=$(buildkite-agent meta-data get "artifacts") 
-      echo "sha = \"\$sha\""
-
-      echo "+++ Getting java_tools version"
-      IFS='/'
-      read -a strarr <<< \${sha}      
-      version="\${strarr[2]}"
+      artifacts=$(buildkite-agent meta-data get "artifacts") 
+      echo "artifacts = \"\$artifacts\""
+      version=$(buildkite-agent meta-data get "version") 
       echo "version = \"\$version\""
 
       echo "+++ Preparing release notes and .zip files"
       cd scripts
       pip3 install wget
-      python3 release.py --artifacts "\$sha"
+      python3 release.py --artifacts "\$artifacts"
 
       echo "+++ Downloading github-release"
       curl -L https://mirror.bazel.build/github.com/c4milo/github-release/releases/download/v1.1.0/github-release_v1.1.0_linux_amd64.tar.gz | sudo tar xz -C /usr/local/bin
