@@ -136,30 +136,25 @@ public class GithubIssueStatusService {
 
   // TODO: More serious business days handling
   static @Nullable Instant getExpectedRespondAt(GithubIssue.Data data, Status status) {
-    Instant updatedAt = data.getUpdatedAt();
+    return switch (status) {
+      case TO_BE_REVIEWED, MORE_DATA_NEEDED, REVIEWED -> data.getUpdatedAt().plus(7, DAYS);
+      case TRIAGED -> getExpectedRespondAtForTriaged(data);
+      default -> null;
+    };
+  }
 
-    switch (status) {
-      case TO_BE_REVIEWED, MORE_DATA_NEEDED, REVIEWED -> {
-        return updatedAt.plus(7, DAYS);
-      }
-      case TRIAGED -> {
-        List<Label> labels = data.getLabels();
-        if (hasLabelPrefix(labels, "type: bug")) {
-          if (hasLabelPrefix(labels, "P0")) {
-            return updatedAt.plus(1, DAYS);
-          } else if (hasLabelPrefix(labels, "P1")) {
-            return updatedAt.plus(7, DAYS);
-          } else if (hasLabelPrefix(labels, "P2")) {
-            return updatedAt.plus(120, DAYS);
-          }
-        }
-
-        return null;
-      }
-      default -> {
-        return null;
+  static @Nullable Instant getExpectedRespondAtForTriaged(GithubIssue.Data data) {
+    List<Label> labels = data.getLabels();
+    if (hasLabelPrefix(labels, "type: bug")) {
+      if (hasLabelPrefix(labels, "P0")) {
+        return data.getUpdatedAt().plus(1, DAYS);
+      } else if (hasLabelPrefix(labels, "P1")) {
+        return data.getUpdatedAt().plus(7, DAYS);
+      } else if (hasLabelPrefix(labels, "P2")) {
+        return data.getUpdatedAt().plus(120, DAYS);
       }
     }
+    return null;
   }
 
   private ImmutableList<String> findActionOwner(
@@ -168,46 +163,50 @@ public class GithubIssueStatusService {
       GithubIssue.Data data,
       @Nullable GithubPullRequest.Data pullRequestData,
       Status status) {
-    switch (status) {
-      case MORE_DATA_NEEDED -> {
-        return ImmutableList.of(data.getUser().getLogin());
-      }
-      case REVIEWED, TRIAGED -> {
-        if (pullRequestData != null) {
-          if (!pullRequestData.requestedReviewers().isEmpty()) {
-            return pullRequestData.requestedReviewers().stream()
-                .map(User::getLogin)
-                .collect(ImmutableList.toImmutableList());
-          }
-        }
+    return switch (status) {
+      case MORE_DATA_NEEDED -> ImmutableList.of(data.getUser().getLogin());
+      case REVIEWED, TRIAGED -> findActionOwnerForReviewedOrTriaged(
+          repo, issue, data, pullRequestData);
+      default -> ImmutableList.of();
+    };
+  }
 
-        var assignees = data.getAssignees();
-        if (!assignees.isEmpty()) {
-          return assignees.stream().map(User::getLogin).collect(ImmutableList.toImmutableList());
+  private ImmutableList<String> findActionOwnerForReviewedOrTriaged(
+      GithubRepo repo,
+      GithubIssue issue,
+      GithubIssue.Data data,
+      @Nullable GithubPullRequest.Data pullRequestData) {
+
+    if (pullRequestData != null) {
+      if (!pullRequestData.requestedReviewers().isEmpty()) {
+        return pullRequestData.requestedReviewers().stream()
+            .map(User::getLogin)
+            .collect(ImmutableList.toImmutableList());
+      }
+    }
+
+    var assignees = data.getAssignees();
+    if (!assignees.isEmpty()) {
+      return assignees.stream().map(User::getLogin).collect(ImmutableList.toImmutableList());
+    } else {
+      List<Label> labels = data.getLabels();
+      var teams =
+          githubTeamService.findAll(issue.getOwner(), issue.getRepo()).stream()
+              .filter(
+                  team ->
+                      labels.stream()
+                          .anyMatch(label -> label.getName().equalsIgnoreCase(team.getLabel())))
+              .toList();
+      if (teams.isEmpty()) {
+        if (repo.getActionOwner() != null) {
+          return ImmutableList.of(repo.getActionOwner());
         } else {
-          List<Label> labels = data.getLabels();
-          var teams =
-              githubTeamService.findAll(issue.getOwner(), issue.getRepo()).stream()
-                  .filter(
-                      team ->
-                          labels.stream()
-                              .anyMatch(label -> label.getName().equalsIgnoreCase(team.getLabel())))
-                  .toList();
-          if (teams.isEmpty()) {
-            if (repo.getActionOwner() != null) {
-              return ImmutableList.of(repo.getActionOwner());
-            } else {
-              return ImmutableList.of();
-            }
-          }
-          return teams.stream()
-              .flatMap(team -> team.getTeamOwners().stream())
-              .collect(ImmutableList.toImmutableList());
+          return ImmutableList.of();
         }
       }
-      default -> {
-        return ImmutableList.of();
-      }
+      return teams.stream()
+          .flatMap(team -> team.getTeamOwners().stream())
+          .collect(ImmutableList.toImmutableList());
     }
   }
 
