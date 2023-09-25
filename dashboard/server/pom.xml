@@ -15,7 +15,7 @@
     <description>The server for the dashboard</description>
 
     <properties>
-        <java.version>19</java.version>
+        <java.version>20</java.version>
         <project.version>DEV</project.version>
     </properties>
 

@@ -1,12 +1,15 @@
 package build.bazel.dashboard.github.issue;
 
 import build.bazel.dashboard.github.api.FetchIssueRequest;
+import build.bazel.dashboard.github.api.FetchPullRequestRequest;
 import build.bazel.dashboard.github.api.GithubApi;
 import build.bazel.dashboard.github.issuestatus.GithubIssueStatus;
 import build.bazel.dashboard.github.issuestatus.GithubIssueStatusService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -20,12 +23,15 @@ public class GithubIssueService {
 
   private final GithubApi githubApi;
   private final GithubIssueRepo githubIssueRepo;
+  private final GithubPullRequestRepo githubPullRequestRepo;
   private final GithubIssueStatusService githubIssueStatusService;
+  private final ObjectMapper objectMapper;
 
   @Builder
   @Value
   public static class FetchResult {
     GithubIssue issue;
+    @Nullable GithubPullRequest pullRequest;
     GithubIssueStatus status;
     boolean added;
     boolean updated;
@@ -33,8 +39,17 @@ public class GithubIssueService {
     Throwable error;
 
     static FetchResult create(
-        GithubIssue result, GithubIssueStatus status, boolean added, boolean updated, boolean deleted, Throwable error) {
+        GithubIssue result,
+        GithubPullRequest pullRequest,
+        GithubIssueStatus status,
+        boolean added,
+        boolean updated,
+        boolean deleted,
+        Throwable error) {
       FetchResultBuilder builder = FetchResult.builder().issue(result).status(status);
+      if (pullRequest != null) {
+        builder.pullRequest(pullRequest);
+      }
       if (error != null) {
         builder.error(error);
       } else if (added) {
@@ -56,7 +71,7 @@ public class GithubIssueService {
     var existed =
         githubIssueRepo
             .findOne(owner, repo, issueNumber)
-            .orElse(GithubIssue.empty(owner, repo, issueNumber));
+            .orElse(GithubIssue.empty(owner, repo, issueNumber, objectMapper));
 
     FetchIssueRequest request =
         FetchIssueRequest.builder()
@@ -79,27 +94,32 @@ public class GithubIssueService {
               .build();
       try {
         githubIssueRepo.save(githubIssue);
-        var status = githubIssueStatusService.check(githubIssue, Instant.now());
-        return FetchResult.create(githubIssue, status.orElse(null), !exists, exists, false, null);
+        var pullRequest = fetchAndSavePullRequest(githubIssue);
+        var status = githubIssueStatusService.check(githubIssue, pullRequest, Instant.now());
+        return FetchResult.create(
+            githubIssue, pullRequest, status.orElse(null), !exists, exists, false, null);
       } catch (IOException e) {
-        return FetchResult.create(githubIssue, null, !exists, exists, false, e);
+        return FetchResult.create(githubIssue, null, null, !exists, exists, false, e);
       }
     } else if (response.getStatus().value() == 304) {
       // Not modified
       try {
-        var status = githubIssueStatusService.check(existed, Instant.now());
-        return FetchResult.create(existed, status.orElse(null), false, false, false, null);
+        var pullRequest = fetchAndSavePullRequest(existed);
+        var status = githubIssueStatusService.check(existed, pullRequest, Instant.now());
+        return FetchResult.create(
+            existed, pullRequest, status.orElse(null), false, false, false, null);
       } catch (IOException e) {
-        return FetchResult.create(existed, null, false, false, false, e);
+        return FetchResult.create(existed, null, null, false, false, false, e);
       }
     } else if (response.getStatus().value() == 301
         || response.getStatus().value() == 404
         || response.getStatus().value() == 410) {
       // Transferred or deleted
       githubIssueRepo.delete(owner, repo, issueNumber);
+      githubPullRequestRepo.delete(owner, repo, issueNumber);
       // Mark existing status to DELETED
       githubIssueStatusService.markDeleted(owner, repo, issueNumber);
-      return FetchResult.create(existed, null, false, false, true, null);
+      return FetchResult.create(existed, null, null, false, false, true, null);
     } else {
       log.error(
           "Failed to fetch {}/{}/issues/{}: {}",
@@ -108,11 +128,57 @@ public class GithubIssueService {
           issueNumber,
           response.getStatus().toString());
       return FetchResult.create(
-          existed, null, false, false, false, new IOException(response.getStatus().toString()));
+          existed,
+          null,
+          null,
+          false,
+          false,
+          false,
+          new IOException(response.getStatus().toString()));
     }
   }
 
   public Integer findMaxIssueNumber(String owner, String repo) {
     return githubIssueRepo.findMaxIssueNumber(owner, repo);
+  }
+
+  @Nullable
+  private GithubPullRequest fetchAndSavePullRequest(GithubIssue issue) throws IOException {
+    if (!issue.parseData(objectMapper).isPullRequest()) {
+      return null;
+    }
+
+    var existed =
+        githubPullRequestRepo
+            .findOne(issue.getOwner(), issue.getRepo(), issue.getIssueNumber())
+            .orElse(
+                GithubPullRequest.empty(
+                    issue.getOwner(), issue.getRepo(), issue.getIssueNumber(), objectMapper));
+
+    var request =
+        new FetchPullRequestRequest(
+            existed.owner(), existed.repo(), existed.issueNumber(), existed.etag());
+
+    var response = githubApi.fetchPullRequest(request);
+    if (response.getStatus().is2xxSuccessful()) {
+      var pullRequest =
+          new GithubPullRequest(
+              existed.owner(),
+              existed.repo(),
+              existed.issueNumber(),
+              Instant.now(),
+              response.getEtag(),
+              response.getBody());
+      githubPullRequestRepo.save(pullRequest);
+      return pullRequest;
+    } else if (response.getStatus().value() == 304) {
+      // Not modified
+      return existed;
+    } else {
+      throw new IOException(
+          String.format(
+              "Failed to fetch %s/%s/pulls/%s: %s",
+              existed.owner(), existed.repo(), existed.issueNumber(), response.getStatus()));
+    }
   }
 }

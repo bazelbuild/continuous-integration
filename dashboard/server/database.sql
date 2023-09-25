@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS citext;
+
 CREATE TABLE json_state
 (
     key       TEXT PRIMARY KEY,
@@ -55,7 +57,7 @@ CREATE TABLE github_issue
     title           TEXT        NOT NULL,
     body            TEXT        NOT NULL,
     milestone       TEXT        NOT NULL,
-    labels          TEXT[]      NOT NULL,
+    labels          CITEXT[]    NOT NULL,
     created_at      TIMESTAMPTZ NOT NULL,
     updated_at      TIMESTAMPTZ,
     closed_at       TIMESTAMPTZ,
@@ -204,7 +206,6 @@ CREATE TABLE github_team_table
     created_at      TIMESTAMPTZ NOT NULL,
     updated_at      TIMESTAMPTZ NOT NULL,
     name            TEXT        NOT NULL,
-    none_team_owner TEXT        NOT NULL DEFAULT '',
     PRIMARY KEY (owner, repo, id)
 );
 
@@ -275,6 +276,20 @@ CREATE TABLE github_issue_comment_data
     etag         TEXT        NOT NULL,
     data         JSONB       NOT NULL,
     PRIMARY KEY (owner, repo, issue_number, page)
+);
+
+--
+-- Table that stores the raw pull requests data fetched from Github
+--
+CREATE TABLE github_pull_request_data
+(
+    owner        TEXT        NOT NULL,
+    repo         TEXT        NOT NULL,
+    issue_number INTEGER     NOT NULL,
+    timestamp    TIMESTAMPTZ NOT NULL,
+    etag         TEXT        NOT NULL,
+    data         JSONB       NOT NULL,
+    PRIMARY KEY (owner, repo, issue_number)
 );
 
 --

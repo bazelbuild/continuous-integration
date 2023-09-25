@@ -326,6 +326,7 @@ public class NotificationTask {
   private Single<String> buildUserNotificationBody(GithubUser user) {
     return Flowable.concatArray(
             buildNeedTriageMessage(user).toFlowable(),
+            buildReviewPrMessage(user).toFlowable(),
             buildFixP0BugsMessage(user).toFlowable(),
             buildFixP1BugsMessage(user).toFlowable(),
             buildFixP2BugsMessage(user).toFlowable())
@@ -372,8 +373,31 @@ public class NotificationTask {
             });
   }
 
+  Single<String> buildReviewPrMessage(GithubUser user) {
+    ListParams params = new ListParams();
+    params.setIsPullRequest(true);
+    params.setLabels(ImmutableList.of("awaiting-review"));
+    params.setActionOwner(user.getUsername());
+
+    return githubIssueListService
+        .find(params)
+        .flatMap(
+            list -> {
+              if (list.getTotal() > 0) {
+                String reviewLink =
+                    dashboardConfig.getHost()
+                        + "/issues?q=%7B%22isPullRequest%22%3Atrue%2C%22actionOwner%22%3A%22"
+                        + user.getUsername()
+                        + "%22%2C%22page%22%3A1%2C%22extraLabels%22%3A%5B%22awaiting-review%22%5D%7D";
+                return buildNotificationBody(reviewLink, "PRs", "review", list);
+              }
+              return Single.just("");
+            });
+  }
+
   Single<String> buildFixP0BugsMessage(GithubUser user) {
     ListParams params = new ListParams();
+    params.setIsPullRequest(false);
     params.setStatus(GithubIssueStatus.Status.TRIAGED);
     params.setLabels(ImmutableList.of("P0", "type: bug"));
     params.setActionOwner(user.getUsername());
@@ -396,6 +420,7 @@ public class NotificationTask {
 
   Single<String> buildFixP1BugsMessage(GithubUser user) {
     ListParams params = new ListParams();
+    params.setIsPullRequest(false);
     params.setStatus(GithubIssueStatus.Status.TRIAGED);
     params.setLabels(ImmutableList.of("P1", "type: bug"));
     params.setActionOwner(user.getUsername());
@@ -418,6 +443,7 @@ public class NotificationTask {
 
   Single<String> buildFixP2BugsMessage(GithubUser user) {
     ListParams params = new ListParams();
+    params.setIsPullRequest(false);
     params.setStatus(GithubIssueStatus.Status.TRIAGED);
     params.setLabels(ImmutableList.of("P2", "type: bug"));
     params.setActionOwner(user.getUsername());

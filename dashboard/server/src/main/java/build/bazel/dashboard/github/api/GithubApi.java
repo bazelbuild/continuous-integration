@@ -11,6 +11,8 @@ public interface GithubApi {
 
   RestApiResponse fetchIssue(FetchIssueRequest request);
 
+  RestApiResponse fetchPullRequest(FetchPullRequestRequest request);
+
   RestApiResponse listIssueComments(ListIssueCommentsRequest request);
 
   RestApiResponse searchIssues(SearchIssuesRequest request);

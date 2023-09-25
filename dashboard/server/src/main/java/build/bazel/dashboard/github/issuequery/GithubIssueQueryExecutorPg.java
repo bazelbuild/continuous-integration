@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import io.r2dbc.postgresql.codec.Json;
-import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Single;
+import io.r2dbc.postgresql.codec.PostgresqlObjectId;
+import io.r2dbc.spi.Parameters;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -129,12 +129,19 @@ public class GithubIssueQueryExecutorPg implements GithubIssueQueryExecutor {
 
     if (!parsedQuery.getLabels().isEmpty()) {
       and(condition, "labels @> :labels");
-      bindings.put("labels", parsedQuery.getLabels().toArray(new String[0]));
+      bindings.put(
+          "labels",
+          Parameters.in(
+              PostgresqlObjectId.UNSPECIFIED, parsedQuery.getLabels().toArray(new String[0])));
     }
 
     if (!parsedQuery.getExcludeLabels().isEmpty()) {
       and(condition, "NOT labels && :excluded_labels");
-      bindings.put("excluded_labels", parsedQuery.getExcludeLabels().toArray(new String[0]));
+      bindings.put(
+          "excluded_labels",
+          Parameters.in(
+              PostgresqlObjectId.UNSPECIFIED,
+              parsedQuery.getExcludeLabels().toArray(new String[0])));
     }
 
     return SqlCondition.builder().condition(condition.toString()).bindings(bindings).build();

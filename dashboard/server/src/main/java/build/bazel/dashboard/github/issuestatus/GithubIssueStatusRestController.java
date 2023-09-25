@@ -3,6 +3,7 @@ package build.bazel.dashboard.github.issuestatus;
 import static build.bazel.dashboard.utils.RxJavaVirtualThread.completable;
 
 import build.bazel.dashboard.github.issue.GithubIssueService;
+import build.bazel.dashboard.github.issue.GithubPullRequestRepo;
 import io.reactivex.rxjava3.core.Completable;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class GithubIssueStatusRestController {
   private final GithubIssueService githubIssueService;
+  private final GithubPullRequestRepo githubPullRequestRepo;
   private final GithubIssueStatusService githubIssueStatusService;
 
   @PutMapping("/internal/github/{owner}/{repo}/issues/status")
@@ -29,8 +31,9 @@ public class GithubIssueStatusRestController {
         () -> {
           for (var number = start; number < start + count; ++number) {
             var issue = githubIssueService.findOne(owner, repo, number);
+            var pullRequest = githubPullRequestRepo.findOne(owner, repo, number).orElse(null);
             if (issue.isPresent()) {
-              githubIssueStatusService.check(issue.get(), Instant.now());
+              githubIssueStatusService.check(issue.get(), pullRequest, Instant.now());
             }
           }
         });

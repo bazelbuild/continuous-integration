@@ -8,6 +8,8 @@ import build.bazel.dashboard.github.issuecomment.GithubIssueCommentService;
 import build.bazel.dashboard.github.repo.GithubRepoService;
 import build.bazel.dashboard.utils.JsonStateStore;
 import build.bazel.dashboard.utils.JsonStateStore.JsonState;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import io.reactivex.rxjava3.core.Completable;
 import java.time.Instant;
 import javax.annotation.Nullable;
@@ -33,12 +35,14 @@ public class GithubSyncIssueTask {
 
   @Builder
   @Value
+  @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
   static class SyncIssueState {
     String owner;
     String repo;
     int start;
     @With int current;
     int end;
+    Instant createdAt;
   }
 
   @PutMapping("/internal/github/{owner}/{repo}/sync/issues")
@@ -67,6 +71,7 @@ public class GithubSyncIssueTask {
             .start(start)
             .current(start)
             .end(end)
+            .createdAt(Instant.now())
             .build());
   }
 
@@ -80,10 +85,9 @@ public class GithubSyncIssueTask {
     for (var repo : githubRepoService.findAll()) {
       String stateKey = buildSyncStateKey(repo.getOwner(), repo.getRepo());
       var jsonState = jsonStateStore.load(stateKey, SyncIssueState.class);
-      if (jsonState.getData() != null) {
-        return;
+      if (jsonState.getData() == null) {
+        saveAllSyncIssueState(repo.getOwner(), repo.getRepo(), jsonState.getTimestamp());
       }
-      saveAllSyncIssueState(repo.getOwner(), repo.getRepo(), jsonState.getTimestamp());
     }
   }
 
@@ -96,7 +100,6 @@ public class GithubSyncIssueTask {
               buildSyncStateKey(repo.getOwner(), repo.getRepo()), SyncIssueState.class);
       if (jsonState.getData() != null) {
         this.syncGithubIssue(jsonState);
-        return;
       }
     }
   }

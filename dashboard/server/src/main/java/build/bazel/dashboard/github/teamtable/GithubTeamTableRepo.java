@@ -18,7 +18,6 @@ public interface GithubTeamTableRepo {
     Instant createdAt;
     Instant updatedAt;
     String name;
-    String noneTeamOwner;
     List<Header> headers;
 
     @Builder
