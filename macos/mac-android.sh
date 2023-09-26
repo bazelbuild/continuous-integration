@@ -34,4 +34,5 @@ latest/bin/sdkmanager \
     "platforms;android-28" \
     "platforms;android-29" \
     "platforms;android-30" \
-    "platforms;android-31"
+    "platforms;android-31" \
+    "platforms;android-32"
