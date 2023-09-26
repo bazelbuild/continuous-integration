@@ -1,0 +1,48 @@
+---
+steps:
+  - input: "Get archive"
+    fields:
+      - text: "rules_java archive file"
+        key: "archive"
+        required: true
+        hint: "e.g. d1196d250c17dfffed52db13c75d4f9b9cd20617.tar.gz"
+           
+  - wait
+
+  - label: "Calculate integrity value" 
+    agents:
+      - "queue=default"
+    plugins:
+      docker#v3.8.0:
+        always-pull: true
+        environment:
+          - ANDROID_HOME
+          - ANDROID_NDK_HOME
+          - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+        image: gcr.io/bazel-public/ubuntu2004-java11
+        network: host
+        privileged: true
+        propagate-environment: true
+        propagate-uid-gid: true
+        shell: ["/bin/bash", "-e", "-c"]
+        volumes:
+          - "/etc/group:/etc/group:ro"
+          - "/etc/passwd:/etc/passwd:ro"
+          - "/etc/shadow:/etc/shadow:ro"
+          - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+          - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
+          - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+          - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+          - "/var/run/docker.sock:/var/run/docker.sock"      
+    command: |
+      echo "+++ Checking out Git branch"   
+      git fetch origin main
+      git checkout main
+
+      echo "+++ Getting rules_java archive"
+      archive=$(buildkite-agent meta-data get "archive")
+      echo "archive = \"\$archive\""
+
+      echo "+++ Running calc_integrity.py"
+      pip3 install validators
+      python3 ./tools/calc_integrity.py https://github.com/bazelbuild/rules_java/archive/\${archive}
