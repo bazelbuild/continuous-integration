@@ -75,7 +75,7 @@ RUN export PYTHON_VERSION="3.6.14" && \
     make -s -j all && \
     echo "Installing Python ${PYTHON_VERSION} ..." && \
     make -s altinstall && \
-    pip3.6 install --require-hashes -r requirements.txt requests==2.22.0 pyyaml==3.13 && \
+    pip3.6 install --require-hashes -r /usr/local/src/requirements.txt requests==2.22.0 pyyaml==3.13 && \
     rm -rf "/usr/local/src/Python-${PYTHON_VERSION}"
 
 ### Install Google Cloud SDK.
