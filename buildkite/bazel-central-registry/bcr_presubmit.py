@@ -336,10 +336,9 @@ def get_labels_from_pr():
         error(f"Error: {response.status_code}. Could not fetch labels for PR https://github.com/bazelbuild/bazel-central-registry/pull/{pr_number}")
 
 
-def should_bcr_validation_block_presubmit(modules):
+def should_bcr_validation_block_presubmit(modules, pr_labels):
     bazelci.print_collapsed_group("Running BCR validations:")
     skip_validation_flags = []
-    pr_labels = get_labels_from_pr()
     if "skip-source-repo-check" in pr_labels:
         skip_validation_flags.append("--skip_validation=source_repo")
     if "skip-url-stability-check" in pr_labels:
@@ -364,13 +363,15 @@ def should_wait_bcr_maintainer_review(modules):
     Throws an error if the changes violate BCR policies or the BCR validations fail.
     """
     # If existing modules are changed, fail the presubmit.
-    validate_existing_modules_are_not_modified()
+    pr_labels = get_labels_from_pr()
+    if "skip-modification-check" not in pr_labels:
+        validate_existing_modules_are_not_modified()
 
     # If files outside of the modules/ directory are changed, fail the presubmit.
     validate_files_outside_of_modules_dir_are_not_modified(modules)
 
     # Run BCR validations on target modules and decide if the presubmit jobs should be blocked.
-    return should_bcr_validation_block_presubmit(modules)
+    return should_bcr_validation_block_presubmit(modules, pr_labels)
 
 
 def upload_jobs_to_pipeline(pipeline_steps):
