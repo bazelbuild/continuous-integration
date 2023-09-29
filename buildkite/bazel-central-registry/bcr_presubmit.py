@@ -364,7 +364,7 @@ def should_wait_bcr_maintainer_review(modules):
     """
     # If existing modules are changed, fail the presubmit.
     pr_labels = get_labels_from_pr()
-    if "skip-modification-check" not in pr_labels:
+    if "USE-WITH-CAUTION-skip-modification-check" not in pr_labels:
         validate_existing_modules_are_not_modified()
 
     # If files outside of the modules/ directory are changed, fail the presubmit.
