@@ -193,7 +193,8 @@ EOF
       "platforms;android-28" \
       "platforms;android-29" \
       "platforms;android-30" \
-      "platforms;android-31"
+      "platforms;android-31" \
+      "platforms;android-32"
 }
 
 ### Fix permissions in /opt.
