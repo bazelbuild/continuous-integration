@@ -300,12 +300,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "pipeline_slug": "rules-closure-closure-compiler",
         "owned_by_bazel": True,
     },
-    "rules_docker": {
-        "git_repository": "https://github.com/bazelbuild/rules_docker.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_docker/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-docker-docker",
-        "disabled_reason": "https://github.com/bazelbuild/rules_docker/issues/1988",
-    },
     "rules_dotnet": {
         "git_repository": "https://github.com/bazelbuild/rules_dotnet.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_dotnet/master/.bazelci/presubmit.yml",
@@ -431,7 +425,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
 DOWNSTREAM_PROJECTS_TESTING = {
     "Bazel": DOWNSTREAM_PROJECTS_PRODUCTION["Bazel"],
     "Bazelisk": DOWNSTREAM_PROJECTS_PRODUCTION["Bazelisk"],
-    "rules_docker": DOWNSTREAM_PROJECTS_PRODUCTION["rules_docker"],
     "rules_go": DOWNSTREAM_PROJECTS_PRODUCTION["rules_go"],
     "rules_groovy": DOWNSTREAM_PROJECTS_PRODUCTION["rules_groovy"],
     "rules_kotlin": DOWNSTREAM_PROJECTS_PRODUCTION["rules_kotlin"],

@@ -134,13 +134,6 @@ resource "buildkite_pipeline" "rules-kotlin-kotlin" {
   default_branch = "master"
 }
 
-resource "buildkite_pipeline" "rules-docker-docker" {
-  name = "rules_docker :docker:"
-  repository = "https://github.com/bazelbuild/rules_docker.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
-  default_branch = "master"
-}
-
 resource "buildkite_pipeline" "rules-go-golang" {
   name = "rules_go :golang:"
   repository = "https://github.com/bazelbuild/rules_go.git"
