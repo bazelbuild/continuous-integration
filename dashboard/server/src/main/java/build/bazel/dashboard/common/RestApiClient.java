@@ -2,6 +2,7 @@ package build.bazel.dashboard.common;
 
 import com.google.common.base.Strings;
 import java.net.URI;
+import java.time.Duration;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,7 @@ public abstract class RestApiClient {
     return spec.exchangeToMono(response -> {
       log.debug("{} {}", response.statusCode(), response.headers().asHttpHeaders().toSingleValueMap());
       return RestApiResponse.fromClientResponse(response);
-    }).block();
+    }).block(Duration.ofSeconds(120));
   }
 
 }
