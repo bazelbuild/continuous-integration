@@ -1,3 +1,10 @@
+"""Defines the rbe_preconfig rule for Bazel CI
+
+Note: this implementation is deliberately incrementally-incorrect. The
+same manifest.json file is overwritten with new configurations, and we don't
+validate it's checksum. A clean build / re-sync is required to pick up the changes.
+"""
+
 def _available_bazel_versions(manifests):
     bazel_versions = []
     for manifest in manifests:
@@ -48,11 +55,12 @@ def _rbe_preconfig_impl(repository_ctx):
 
     toolchain_name = repository_ctx.attr.toolchain
 
-    manifest_json = 'manifest.json'
+    manifest_json = "manifest.json"
+
     # Omit sha256 since remote file can be changed
     repository_ctx.download(
         output = manifest_json,
-        url = ["https://storage.googleapis.com/bazel-ci/rbe-configs/manifest.json"]
+        url = ["https://storage.googleapis.com/bazel-ci/rbe-configs/manifest.json"],
     )
 
     manifests = json.decode(repository_ctx.read(manifest_json))
