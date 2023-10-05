@@ -1,4 +1,4 @@
-import os, requests, sys
+import os, requests
 from functions import get_commit_id, get_reviewers, extract_release_numbers_data, cherry_pick, create_pr, get_labels, get_pr_body, issue_comment, push_to_branch
 from vars import headers, upstream_repo, input_data
 
