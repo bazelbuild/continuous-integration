@@ -1,0 +1,61 @@
+name: "Cherry-picker when comment is created or issue/pr is closed"
+description: "Cherry-picks the commit"
+inputs:
+  triggered-on:
+    required: true
+    default: ${{ github.triggered-on }}
+  pr-number:
+    required: false
+    default: ${{ github.pr-number }}
+  milestone-title:
+    required: false
+    default: ${{ github.milestone-title }}
+  milestoned-issue-number:
+    required: false
+    default: ${{ github.milestoned-issue-number }}
+  is-prod:
+    required: true
+    default: ${{ github.is-prod }}
+  issue-body:
+    required: false
+    default: ${{ github.issue-body }}
+  issue-title:
+    required: false
+    default: ${{ github.issue-title }}
+runs:
+  using: "composite"
+  steps:
+    - name: Install Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+    - name: Install Dependencies
+      run: |
+        pip install -r ${{ github.action_path }}/requirements.txt
+      shell: bash
+    - name: Pass Inputs to Shell
+      run: |
+        echo "INPUT_TRIGGERED_ON=${{ inputs.triggered-on }}" >> $GITHUB_ENV
+        echo "INPUT_PR_NUMBER=${{ inputs.pr-number }}" >> $GITHUB_ENV
+        echo "INPUT_MILESTONE_TITLE=${{ inputs.milestone-title }}" >> $GITHUB_ENV
+        echo "INPUT_MILESTONED_ISSUE_NUMBER=${{ inputs.milestoned-issue-number }}" >> $GITHUB_ENV
+        echo "INPUT_IS_PROD=${{ inputs.is-prod }}" >> $GITHUB_ENV
+
+        echo "INPUT_ISSUE_BODY<<EOF" >> $GITHUB_ENV
+        echo "${{ inputs.issue-body }}" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+
+        echo "INPUT_ISSUE_TITLE=${{ inputs.issue-title }}" >> $GITHUB_ENV
+      shell: bash
+    - if: ${{ inputs.triggered-on == 'commented' || inputs.triggered-on == 'closed' }}
+      name: Run python cherrypick_with_milestones.py
+      run: |
+        chmod +x ${{ github.action_path }}/cherrypick_with_milestones.py
+        python -u ${{ github.action_path }}/cherrypick_with_milestones.py
+      shell: bash
+    - if: ${{ inputs.triggered-on == 'ondemand' }}
+      name: Run python cherrypick_with_commits.py
+      run: |
+        chmod +x ${{ github.action_path }}/cherrypick_with_commits.py
+        python -u ${{ github.action_path }}/cherrypick_with_commits.py
+      shell: bash

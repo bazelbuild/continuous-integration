@@ -1,12 +1,8 @@
 import os, subprocess, requests
-from pprint import pprint
+from vars import headers, token, upstream_repo, upstream_url
 
-headers = {
-    'X-GitHub-Api-Version': '2022-11-28'
-}
-token = os.environ["GH_TOKEN"]
-upstream_url = "https://github.com/bazelbuild/bazel.git"
-upstream_repo = upstream_url.replace("https://github.com/", "").replace(".git", "")
+class PushCpException(Exception):
+    pass
 
 def get_commit_id(pr_number, actor_name, action_event, api_repo_name):
     params = {"per_page": 100}
@@ -67,24 +63,25 @@ def issue_comment(issue_number, body_content, api_repo_name, is_prod):
     else:
         subprocess.run(['gh', 'issue', 'comment', str(issue_number), '--body', body_content])
 
-def cherry_pick(commit_id, release_branch_name, target_branch_name, issue_number, is_first_time, input_data):
+def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clone, requires_checkout, input_data):
     gh_cli_repo_name = f"{input_data['user_name']}/bazel"
     gh_cli_repo_url = f"git@github.com:{gh_cli_repo_name}.git"
     master_branch = input_data["master_branch"]
     user_name = input_data["user_name"]
+    user_email = input_data["email"]
 
-    def clone_and_sync_repo():
+    def clone_and_sync_repo(gh_cli_repo_name, master_branch, release_branch_name, user_name, gh_cli_repo_url, user_email):
         print("Cloning and syncing the repo...")
         subprocess.run(['gh', 'repo', 'sync', gh_cli_repo_name, "-b", master_branch])
         subprocess.run(['gh', 'repo', 'sync', gh_cli_repo_name, "-b", release_branch_name])
         subprocess.run(['git', 'clone', f"https://{user_name}:{token}@github.com/{gh_cli_repo_name}.git"])
         subprocess.run(['git', 'config', '--global', 'user.name', user_name])
-        subprocess.run(['git', 'config', '--global', 'user.email', input_data["email"]])
+        subprocess.run(['git', 'config', '--global', 'user.email', user_email])
         os.chdir("bazel")
         subprocess.run(['git', 'remote', 'add', 'origin', gh_cli_repo_url])
         subprocess.run(['git', 'remote', '-v'])
 
-    def checkout_release_number():
+    def checkout_release_number(release_branch_name, target_branch_name):
         subprocess.run(['git', 'fetch', '--all'])
         status_checkout_release = subprocess.run(['git', 'checkout', release_branch_name])
         
@@ -101,57 +98,46 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, issue_number
                 raise Exception(f"Could not create and push the branch, {release_branch_name}")
             subprocess.run(['git', 'remote', 'rm', 'upstream'])
             subprocess.run(['git', 'checkout', release_branch_name])
-
         status_checkout_target = subprocess.run(['git', 'checkout', '-b', target_branch_name])
+        if status_checkout_target.returncode != 0: raise Exception(f"Cherry-pick was being attempted. But, it failed due to already existent branch called {target_branch_name}\ncc: @bazelbuild/triage")
 
-        # Need to let the user know that there is already a created branch with the same name and bazel-io needs to delete the branch
-        if status_checkout_target.returncode != 0:
-            raise Exception(f"Cherry-pick was being attempted. But, it failed due to already existent branch called {target_branch_name}\ncc: @bazelbuild/triage")
-
-    def run_cherrypick():
+    def run_cherry_pick(is_prod, commit_id, target_branch_name):
         print(f"Cherry-picking the commit id {commit_id} in CP branch: {target_branch_name}")
-        if input_data["is_prod"] == True:
-            cherrypick_status = subprocess.run(['git', 'cherry-pick', commit_id])
-        else:
-            cherrypick_status = subprocess.run(['git', 'cherry-pick', '-m', '1', commit_id])
+        if is_prod == True: cherrypick_status = subprocess.run(['git', 'cherry-pick', commit_id])
+        else: cherrypick_status = subprocess.run(['git', 'cherry-pick', '-m', '1', commit_id])
+        if cherrypick_status.returncode != 0:
+            subprocess.run(['git', 'cherry-pick', '--skip'])
+            raise Exception("Cherry-pick was attempted, but there may be merge conflict(s). Please resolve manually.\ncc: @bazelbuild/triage")
 
-        if cherrypick_status.returncode == 0:
-            print(f"Successfully Cherry-picked, pushing it to branch: {target_branch_name}")
-            push_status = subprocess.run(['git', 'push', '--set-upstream', 'origin', target_branch_name])
-            if push_status.returncode != 0:
-                raise Exception(f"Cherry-pick was attempted, but failed to push. Please check if the branch, {target_branch_name}, already exists\ncc: @bazelbuild/triage")
-        else:
-            raise Exception("Cherry-pick was attempted but there were merge conflicts. Please resolve manually.\ncc: @bazelbuild/triage")
-        
-    if is_first_time == True:
-        clone_and_sync_repo()
-    checkout_release_number()
-    run_cherrypick()
+    if requires_clone == True: clone_and_sync_repo(gh_cli_repo_name, master_branch, release_branch_name, user_name, gh_cli_repo_url, user_email)
+    if requires_checkout == True: checkout_release_number(release_branch_name, target_branch_name)
+    run_cherry_pick(input_data["is_prod"], commit_id, target_branch_name)
 
-def create_pr(reviewers, release_number, issue_number, labels, issue_data, release_branch_name, target_branch_name, user_name, api_repo_name, is_prod):
-    def send_pr_msg(issue_number, head_branch, release_branch):
-        params = {
-            "head": head_branch,
-            "base": release_branch,
-            "state": "open"
-        }
-        r = requests.get(f'https://api.github.com/repos/{upstream_repo}/pulls', headers=headers, params=params).json()
-        if len(r) == 1:
-            cherry_picked_pr_number = r[0]["number"]
-            issue_comment(issue_number, f"Cherry-picked in https://github.com/{upstream_repo}/pull/{cherry_picked_pr_number}", api_repo_name, is_prod)
-        else:
-            issue_comment(issue_number, "Failed to send PR msg \ncc: @bazelbuild/triage", api_repo_name, is_prod)
+def push_to_branch(target_branch_name):
+    print(f"Pushing it to branch: {target_branch_name}")
+    push_status = subprocess.run(['git', 'push', '--set-upstream', 'origin', target_branch_name])
+    if push_status.returncode != 0: raise PushCpException(f"Cherry-pick was attempted, but failed to push. Please check if the branch, {target_branch_name}, already exists\ncc: @bazelbuild/triage")
 
+def get_cherry_picked_pr_number(head_branch, release_branch):
+    params = {
+        "head": head_branch,
+        "base": release_branch,
+        "state": "open"
+    }
+    r = requests.get(f'https://api.github.com/repos/{upstream_repo}/pulls', headers=headers, params=params).json()
+    if len(r) == 1: return r[0]["number"]
+    else: raise Exception(f"Could not find the cherry-picked PR number \ncc: @bazelbuild/triage")
+
+def create_pr(reviewers, release_number, labels, pr_title, pr_body, release_branch_name, target_branch_name, user_name):
     head_branch = f"{user_name}:{target_branch_name}"
     reviewers_str = ",".join(reviewers)
     labels_str = ",".join(labels)
-    pr_title = f"[{release_number}] {issue_data['title']}"
-    pr_body = issue_data['body']
-    status_create_pr = subprocess.run(['gh', 'pr', 'create', "--repo", upstream_repo, "--title", pr_title, "--body", pr_body, "--head", head_branch, "--base", release_branch_name,  '--label', labels_str, '--reviewer', reviewers_str])
+    modified_pr_title = f"[{release_number}] {pr_title}" if f"[{release_number}]" not in pr_title else pr_title
+    status_create_pr = subprocess.run(['gh', 'pr', 'create', "--repo", upstream_repo, "--title", modified_pr_title, "--body", pr_body, "--head", head_branch, "--base", release_branch_name,  '--label', labels_str, '--reviewer', reviewers_str])
     if status_create_pr.returncode == 0:
-        send_pr_msg(issue_number, head_branch, release_branch_name)
-    else:
-        subprocess.run(['gh', 'issue', 'comment', str(issue_number), '--body', "PR failed to be created."])
+        cherry_picked_pr_number = get_cherry_picked_pr_number(head_branch, release_branch_name)
+        return cherry_picked_pr_number
+    else: raise Exception("PR failed to be created.")
 
 def get_labels(pr_number, api_repo_name):
     r = requests.get(f'https://api.github.com/repos/{api_repo_name}/issues/{pr_number}/labels', headers=headers)
@@ -159,20 +145,22 @@ def get_labels(pr_number, api_repo_name):
     if "awaiting-review" not in labels_list: labels_list.append("awaiting-review")
     return labels_list
 
-def get_pr_title_body(commit_id, api_repo_name, issue_data):
-    data = {}
-    data["title"] = issue_data["title"]
+def get_pr_body(commit_id, api_repo_name):
     response_commit = requests.get(f"https://api.github.com/repos/{api_repo_name}/commits/{commit_id}")
     original_msg = response_commit.json()["commit"]["message"]
     pr_body = original_msg[original_msg.index("\n\n") + 2:] if "\n\n" in original_msg else original_msg
     commit_str_body = f"Commit https://github.com/{api_repo_name}/commit/{commit_id}"
-
     if "PiperOrigin-RevId" in pr_body:
         piper_index = pr_body.index("PiperOrigin-RevId")
         pr_body = pr_body[:piper_index] + f"{commit_str_body}\n\n" + pr_body[piper_index:]
     else:
         pr_body += f"\n\n{commit_str_body}"
+    return pr_body
 
-    data["body"] = pr_body
-    return data
-
+def get_middle_text(all_str, left_str, right_str):
+    left_index = all_str.index(left_str) + len(left_str)
+    if right_str == None:
+        right_index = len(all_str)
+    else:
+        right_index = all_str.index(right_str)
+    return all_str[left_index:right_index]
