@@ -1525,9 +1525,17 @@ def execute_commands(
                     upload_corrupted_outputs(capture_corrupted_outputs_dir_index, tmpdir)
 
         if platform == "windows":
-            execute_batch_commands(task_config.get("post_batch_commands", None), True, ":batch: Post Processing (Batch Commands)")
+            execute_batch_commands(
+                task_config.get("post_batch_commands", None),
+                True,
+                ":batch: Post Processing (Batch Commands)",
+            )
         else:
-            execute_shell_commands(task_config.get("post_shell_commands", None), True, ":bash: Post Processing (Shell Commands)")
+            execute_shell_commands(
+                task_config.get("post_shell_commands", None),
+                True,
+                ":bash: Post Processing (Shell Commands)",
+            )
 
     finally:
         terminate_background_process(sc_process)
@@ -1634,8 +1642,21 @@ def get_release_name_from_branch_name():
 
 
 def is_pull_request():
-    third_party_repo = os.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
-    return len(third_party_repo) > 0
+    try:
+        return int(os.getenv("BUILDKITE_PULL_REQUEST")) > 0
+    except:
+        return False
+
+
+def is_third_party_fork():
+    if ":" in os.getenv(
+        "BUILDKITE_BRANCH", ""
+    ):  # Only works if "Prefix third-party fork branch names" is enabled
+        return True
+
+    pr_repo = os.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
+    # We don't accept PRs for GoB repos.
+    return pr_repo and not pr_repo.startswith("https://github.com/bazelbuild/")
 
 
 def print_bazel_version_info(bazel_binary, platform):
@@ -1817,7 +1838,9 @@ def clone_git_repository(git_repository, platform, git_commit=None):
     return clone_path
 
 
-def execute_batch_commands(commands, print_group=True, group_message=":batch: Setup (Batch Commands)"):
+def execute_batch_commands(
+    commands, print_group=True, group_message=":batch: Setup (Batch Commands)"
+):
     if not commands:
         return
 
@@ -1828,7 +1851,9 @@ def execute_batch_commands(commands, print_group=True, group_message=":batch: Se
     return subprocess.run(batch_commands, shell=True, check=True, env=os.environ).returncode
 
 
-def execute_shell_commands(commands, print_group=True, group_message=":bash: Setup (Shell Commands)"):
+def execute_shell_commands(
+    commands, print_group=True, group_message=":bash: Setup (Shell Commands)"
+):
     if not commands:
         return
 
@@ -2181,7 +2206,9 @@ def calculate_targets(
 
     build_targets = [] if test_only else list(task_config.get("build_targets", []))
     test_targets = [] if build_only else list(task_config.get("test_targets", []))
-    coverage_targets = [] if (build_only or test_only) else list(task_config.get("coverage_targets", []))
+    coverage_targets = (
+        [] if (build_only or test_only) else list(task_config.get("coverage_targets", []))
+    )
     index_targets = [] if (build_only or test_only) else list(task_config.get("index_targets", []))
 
     index_targets_query = (
@@ -2766,6 +2793,19 @@ def print_project_pipeline(
     buildkite_repo = os.getenv("BUILDKITE_REPO")
     if is_git_on_borg_repo(buildkite_repo):
         show_gerrit_review_link(buildkite_repo, pipeline_steps)
+
+    # Only run presubmits from third-party forks after getting approval from someone with "Build & Read" permissions.
+    if is_pull_request() and is_third_party_fork():
+        pipeline_steps.append(
+            {
+                "block": ":cop: Authorize third-party presubmit run?",
+                "prompt": (
+                    ":rotating_light: :warning: This is an untrusted pull request from a third-party fork. "
+                    "Only unblock the build if the code is not malicious."
+                ),
+                "blocked_state": "running",
+            }
+        )
 
     task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
