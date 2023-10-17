@@ -81,6 +81,8 @@ KZIPS_BUCKET = {
     "bazel": "gs://bazel-kzips/",
 }[BUILDKITE_ORG]
 
+BAZELCI_ENABLE_REMOTE = os.environ.get("BAZELCI_ENABLE_REMOTE", "true") == "true"
+
 # Projects can opt out of receiving GitHub issues from --notify by adding `"do_not_notify": True` to their respective downstream entry.
 DOWNSTREAM_PROJECTS_PRODUCTION = {
     "Android Studio Plugin": {
@@ -1658,6 +1660,8 @@ def print_environment_variables_info():
 
 
 def upload_bazel_binary(platform):
+    if not BAZELCI_ENABLE_REMOTE:
+        return
     print_collapsed_group(":gcloud: Uploading Bazel Under Test")
     if platform == "windows":
         binary_dir = r"bazel-bin\src"
@@ -1672,6 +1676,8 @@ def upload_bazel_binary(platform):
 
 
 def merge_and_upload_kythe_kzip(platform, index_upload_gcs):
+    if not BAZELCI_ENABLE_REMOTE:
+        return
     print_collapsed_group(":gcloud: Uploading kythe kzip")
 
     kzips = glob("bazel-out/*/extra_actions/**/*.kzip", recursive=True)
@@ -2072,7 +2078,7 @@ def get_output_base(bazel_binary):
 def compute_flags(platform, flags, bep_file, bazel_binary, enable_remote_cache=False):
     aggregated_flags = common_build_flags(bep_file, platform)
 
-    if os.environ.get("BAZEL_CI_ENABLE_REMOTE", "true") == "true":
+    if BAZELCI_ENABLE_REMOTE:
         if not remote_enabled(flags):
             if platform.startswith("rbe_"):
                 aggregated_flags += rbe_flags(flags, accept_cached=enable_remote_cache)
@@ -2592,6 +2598,8 @@ def execute_bazel_coverage(bazel_version, bazel_binary, platform, flags, targets
 
 
 def upload_test_logs_from_bep(bep_file, tmpdir, monitor_flaky_tests):
+    if not BAZELCI_ENABLE_REMOTE:
+        return
     bazelci_agent_binary = download_bazelci_agent(tmpdir)
     execute_command(
         [
@@ -2607,6 +2615,8 @@ def upload_test_logs_from_bep(bep_file, tmpdir, monitor_flaky_tests):
 
 
 def upload_json_profile(json_profile_path, tmpdir):
+    if not BAZELCI_ENABLE_REMOTE:
+        return
     if not os.path.exists(json_profile_path):
         return
     print_collapsed_group(":gcloud: Uploading JSON Profile")
@@ -2614,6 +2624,8 @@ def upload_json_profile(json_profile_path, tmpdir):
 
 
 def upload_corrupted_outputs(capture_corrupted_outputs_dir, tmpdir):
+    if not BAZELCI_ENABLE_REMOTE:
+        return
     if not os.path.exists(capture_corrupted_outputs_dir):
         return
     print_collapsed_group(":gcloud: Uploading corrupted outputs")
@@ -3107,6 +3119,8 @@ def fetch_aggregate_incompatible_flags_test_result_command():
 
 
 def upload_project_pipeline_step(project_name, git_repository, http_config, file_config):
+    if not BAZELCI_ENABLE_REMOTE:
+        return
     pipeline_command = (
         '{0} bazelci.py project_pipeline --project_name="{1}" ' + "--git_repository={2}"
     ).format(PLATFORMS[DEFAULT_PLATFORM]["python"], project_name, git_repository)
@@ -3681,6 +3695,8 @@ def upload_bazel_binaries():
 
     Returns maps of platform names to sha256 hashes of the corresponding bazel and bazel_nojdk binaries.
     """
+    if not BAZELCI_ENABLE_REMOTE:
+        return
     bazel_hashes = {}
     bazel_nojdk_hashes = {}
     error = None
