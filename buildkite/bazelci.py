@@ -2071,11 +2071,13 @@ def get_output_base(bazel_binary):
 
 def compute_flags(platform, flags, bep_file, bazel_binary, enable_remote_cache=False):
     aggregated_flags = common_build_flags(bep_file, platform)
-    if not remote_enabled(flags):
-        if platform.startswith("rbe_"):
-            aggregated_flags += rbe_flags(flags, accept_cached=enable_remote_cache)
-        else:
-            aggregated_flags += remote_caching_flags(platform, accept_cached=enable_remote_cache)
+
+    if os.environ.get("BAZEL_CI_ENABLE_REMOTE", "true") == "true":
+        if not remote_enabled(flags):
+            if platform.startswith("rbe_"):
+                aggregated_flags += rbe_flags(flags, accept_cached=enable_remote_cache)
+            else:
+                aggregated_flags += remote_caching_flags(platform, accept_cached=enable_remote_cache)
     aggregated_flags += flags
 
     for i, flag in enumerate(aggregated_flags):
