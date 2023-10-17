@@ -1,0 +1,79 @@
+---
+platforms:
+  centos7_java11_devtoolset10:
+    shell_commands:
+      - git checkout 2b8219042c132483e0af39ef20d67dfd6442af01 -- third_party/remoteapis/MODULE.bazel
+      - git checkout 2b8219042c132483e0af39ef20d67dfd6442af01 -- third_party/googleapis/MODULE.bazel
+    build_targets:
+      - "//src:bazel"
+      - "//src:bazel_nojdk"
+    build_flags:
+      - "-c"
+      - "opt"
+  ubuntu1804:
+    shell_commands:
+      - git checkout 2b8219042c132483e0af39ef20d67dfd6442af01 -- third_party/remoteapis/MODULE.bazel
+      - git checkout 2b8219042c132483e0af39ef20d67dfd6442af01 -- third_party/googleapis/MODULE.bazel
+    build_targets:
+      - "//src:bazel"
+      - "//src:bazel_nojdk"
+    build_flags:
+      - "-c"
+      - "opt"
+  ubuntu2004:
+    shell_commands:
+      - git checkout 2b8219042c132483e0af39ef20d67dfd6442af01 -- third_party/remoteapis/MODULE.bazel
+      - git checkout 2b8219042c132483e0af39ef20d67dfd6442af01 -- third_party/googleapis/MODULE.bazel
+    build_targets:
+      - "//src:bazel"
+      - "//src:bazel_nojdk"
+    build_flags:
+      - "-c"
+      - "opt"
+  macos:
+    shell_commands:
+      - git checkout 2b8219042c132483e0af39ef20d67dfd6442af01 -- third_party/remoteapis/MODULE.bazel
+      - git checkout 2b8219042c132483e0af39ef20d67dfd6442af01 -- third_party/googleapis/MODULE.bazel
+    xcode_version: "13.0"
+    build_targets:
+      - "//src:bazel"
+      - "//src:bazel_nojdk"
+    build_flags:
+      - "-c"
+      - "opt"
+  macos_arm64:
+    shell_commands:
+      - git checkout 2b8219042c132483e0af39ef20d67dfd6442af01 -- third_party/remoteapis/MODULE.bazel
+      - git checkout 2b8219042c132483e0af39ef20d67dfd6442af01 -- third_party/googleapis/MODULE.bazel
+    xcode_version: "13.0"
+    build_targets:
+      - "//src:bazel"
+      - "//src:bazel_nojdk"
+    build_flags:
+      - "-c"
+      - "opt"
+  windows:
+    batch_commands:
+      - git checkout 2b8219042c132483e0af39ef20d67dfd6442af01 -- third_party/remoteapis/MODULE.bazel
+      - git checkout 2b8219042c132483e0af39ef20d67dfd6442af01 -- third_party/googleapis/MODULE.bazel
+    build_flags:
+      - "--copt=-w"
+      - "--host_copt=-w"
+      - "-c"
+      - "opt"
+    build_targets:
+      - "//src:bazel.exe"
+      - "//src:bazel_nojdk.exe"
+  windows_arm64:
+    batch_commands:
+      - git checkout 2b8219042c132483e0af39ef20d67dfd6442af01 -- third_party/remoteapis/MODULE.bazel
+      - git checkout 2b8219042c132483e0af39ef20d67dfd6442af01 -- third_party/googleapis/MODULE.bazel
+    build_flags:
+      - "--copt=-w"
+      - "--host_copt=-w"
+      - "-c"
+      - "opt"
+      - "--config=windows_arm64"
+    build_targets:
+      - "//src:bazel.exe"
+      - "//src:bazel_nojdk.exe"
