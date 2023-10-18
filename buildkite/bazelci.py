@@ -3119,8 +3119,6 @@ def fetch_aggregate_incompatible_flags_test_result_command():
 
 
 def upload_project_pipeline_step(project_name, git_repository, http_config, file_config):
-    if not BAZELCI_ENABLE_REMOTE:
-        return
     pipeline_command = (
         '{0} bazelci.py project_pipeline --project_name="{1}" ' + "--git_repository={2}"
     ).format(PLATFORMS[DEFAULT_PLATFORM]["python"], project_name, git_repository)
@@ -3695,8 +3693,6 @@ def upload_bazel_binaries():
 
     Returns maps of platform names to sha256 hashes of the corresponding bazel and bazel_nojdk binaries.
     """
-    if not BAZELCI_ENABLE_REMOTE:
-        return
     bazel_hashes = {}
     bazel_nojdk_hashes = {}
     error = None
