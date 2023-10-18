@@ -502,7 +502,7 @@ PLATFORMS = {
         "name": "Ubuntu 18.04 LTS (OpenJDK 11, gcc 7.5.0)",
         "emoji-name": ":ubuntu: 18.04 LTS (OpenJDK 11, gcc 7.5.0)",
         "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": ["ubuntu1804"],
+        "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1804-java11",
         "python": "python3.6",
     },
