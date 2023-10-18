@@ -81,11 +81,6 @@ KZIPS_BUCKET = {
     "bazel": "gs://bazel-kzips/",
 }[BUILDKITE_ORG]
 
-# Set this to 'true' to run bazelci in local-only mode, with no attempt to
-# use remote cache/execution, and no attempt to upload test results.
-# Only compatible with `bazelci.py runner`, not other subcommands.
-BAZELCI_LOCAL_RUN = os.environ.get("BAZELCI_LOCAL_RUN", "false") == "true"
-
 # Projects can opt out of receiving GitHub issues from --notify by adding `"do_not_notify": True` to their respective downstream entry.
 DOWNSTREAM_PROJECTS_PRODUCTION = {
     "Android Studio Plugin": {
@@ -1175,6 +1170,14 @@ def use_bazelisk_migrate():
     """
     return is_trueish(os.environ.get("USE_BAZELISK_MIGRATE"))
 
+def local_run_only():
+    """
+    If BAZELCI_LOCAL_RUN is set, run bazelci in local-only mode, with no attempt
+    to use remote cache/execution, and no attempt to upload test results. Only
+    compatible with `bazelci.py runner`, not other subcommands.
+    """
+    return is_trueish(os.environ.get("BAZELCI_LOCAL_RUN", "false"))
+
 
 def bazelisk_flags():
     return ["--migrate"] if use_bazelisk_migrate() else []
@@ -1663,7 +1666,7 @@ def print_environment_variables_info():
 
 
 def upload_bazel_binary(platform):
-    if BAZELCI_LOCAL_RUN:
+    if local_run_only():
         return
     print_collapsed_group(":gcloud: Uploading Bazel Under Test")
     if platform == "windows":
@@ -1679,7 +1682,7 @@ def upload_bazel_binary(platform):
 
 
 def merge_and_upload_kythe_kzip(platform, index_upload_gcs):
-    if BAZELCI_LOCAL_RUN:
+    if local_run_only():
         return
     print_collapsed_group(":gcloud: Uploading kythe kzip")
 
@@ -2081,7 +2084,7 @@ def get_output_base(bazel_binary):
 def compute_flags(platform, flags, bep_file, bazel_binary, enable_remote_cache=False):
     aggregated_flags = common_build_flags(bep_file, platform)
 
-    if not BAZELCI_LOCAL_RUN:
+    if not local_run_only():
         if not remote_enabled(flags):
             if platform.startswith("rbe_"):
                 aggregated_flags += rbe_flags(flags, accept_cached=enable_remote_cache)
@@ -2601,7 +2604,7 @@ def execute_bazel_coverage(bazel_version, bazel_binary, platform, flags, targets
 
 
 def upload_test_logs_from_bep(bep_file, tmpdir, monitor_flaky_tests):
-    if BAZELCI_LOCAL_RUN:
+    if local_run_only():
         return
     bazelci_agent_binary = download_bazelci_agent(tmpdir)
     execute_command(
@@ -2618,7 +2621,7 @@ def upload_test_logs_from_bep(bep_file, tmpdir, monitor_flaky_tests):
 
 
 def upload_json_profile(json_profile_path, tmpdir):
-    if BAZELCI_LOCAL_RUN:
+    if local_run_only():
         return
     if not os.path.exists(json_profile_path):
         return
@@ -2627,7 +2630,7 @@ def upload_json_profile(json_profile_path, tmpdir):
 
 
 def upload_corrupted_outputs(capture_corrupted_outputs_dir, tmpdir):
-    if BAZELCI_LOCAL_RUN:
+    if local_run_only():
         return
     if not os.path.exists(capture_corrupted_outputs_dir):
         return
