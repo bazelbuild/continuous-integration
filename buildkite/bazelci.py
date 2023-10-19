@@ -599,15 +599,15 @@ PLATFORMS = {
         "queue": "windows",
         "python": "python.exe",
     },
-    "rbe_ubuntu1604": {
-        "name": "RBE (Ubuntu 16.04, OpenJDK 8)",
-        "emoji-name": "RBE (:ubuntu: 16.04, OpenJDK 8)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
-        "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1604-java8",
-        "python": "python3.6",
-    },
 }
+
+# Generate rbe_ubuntu* platforms based on ubuntu* platforms.
+for platform, platform_dict in PLATFORMS.copy().items():
+    if platform.startswith("ubuntu"):
+        rbe_platform_dict = copy.deepcopy(platform_dict)
+        rbe_platform_dict["name"] = "RBE {}".format(platform_dict["name"])
+        rbe_platform_dict["emoji-name"] = "RBE {}".format(platform_dict["emoji-name"])
+        PLATFORMS["rbe_{}".format(platform)] = rbe_platform_dict
 
 BUILDIFIER_DOCKER_IMAGE = "gcr.io/bazel-public/buildifier"
 
