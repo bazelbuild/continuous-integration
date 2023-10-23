@@ -229,7 +229,7 @@ steps:
     agents:
       - queue=windows
     command: |
-      set BUILDKITE_MESSAGE=%BUILDKITE_MESSAGE:~0,1000%
+      set "BUILDKITE_MESSAGE=%BUILDKITE_MESSAGE:~0,1000%"
 
       git fetch origin ${BUILDKITE_BRANCH}
       git checkout ${BUILDKITE_BRANCH}
@@ -260,7 +260,7 @@ steps:
       # current we just use x86_64 machines to do cross compile.
       - queue=windows
     command: |
-      set BUILDKITE_MESSAGE=%BUILDKITE_MESSAGE:~0,1000%
+      set "BUILDKITE_MESSAGE=%BUILDKITE_MESSAGE:~0,1000%"
 
       git fetch origin ${BUILDKITE_BRANCH}
       git checkout ${BUILDKITE_BRANCH}
@@ -397,7 +397,7 @@ steps:
     agents:
       - queue=windows
     command: |
-      set BUILDKITE_MESSAGE=%BUILDKITE_MESSAGE:~0,1000%
+      set "BUILDKITE_MESSAGE=%BUILDKITE_MESSAGE:~0,1000%"
 
       git fetch origin ${BUILDKITE_BRANCH}
       git checkout ${BUILDKITE_BRANCH}
@@ -418,7 +418,7 @@ steps:
       # current we just use x86_64 machines to do cross compile.
       - queue=windows
     command: |
-      set BUILDKITE_MESSAGE=%BUILDKITE_MESSAGE:~0,1000%
+      set "BUILDKITE_MESSAGE=%BUILDKITE_MESSAGE:~0,1000%"
 
       git fetch origin ${BUILDKITE_BRANCH}
       git checkout ${BUILDKITE_BRANCH}
