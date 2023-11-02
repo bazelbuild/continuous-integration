@@ -124,13 +124,13 @@ Write-Host "Installing Visual C++ 2017 Build Tools..."
 Write-Host "Installing Visual C++ 2019 Build Tools..."
 & choco install visualstudio2019buildtools
 & choco install visualstudio2019-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.Tools.ARM --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
-[Environment]::SetEnvironmentVariable("BAZEL_VC", "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC", "Machine")
-$env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 
 ## Install Visual C++ 2022 Build Tools.
 Write-Host "Installing Visual C++ 2022 Build Tools..."
 & choco install visualstudio2022buildtools
 & choco install visualstudio2022-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.Tools.ARM --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
+[Environment]::SetEnvironmentVariable("BAZEL_VC", "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC", "Machine")
+$env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 
 ## Install Windows 10 SDK
 ## https://github.com/bazelbuild/continuous-integration/issues/768
