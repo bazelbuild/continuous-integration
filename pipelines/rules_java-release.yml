@@ -53,4 +53,4 @@ steps:
       echo "+++ Creating a release on GitHub"
       cd bazel-bin/distro
       relnotes=$(cat relnotes.txt)
-      GITHUB_TOKEN=\${github_token} github-release "bazelbuild/rules_java" \${version} "master" "\${relnotes}" rules_java-\${version}.tar.gz      
+      GITHUB_TOKEN=\${github_token} github-release "bazelbuild/rules_java" \${version} "\${BUILDKITE_BRANCH}" "\${relnotes}" rules_java-\${version}.tar.gz      
