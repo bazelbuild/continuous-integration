@@ -256,6 +256,8 @@ def prepare_test_module_repo(module_name, module_version, task):
     # Write necessary options to the .bazelrc file
     test_module_root = source_root.joinpath(orig_presubmit["bcr_test_module"]["module_path"])
     scratch_file(test_module_root, ".bazelrc", [
+        # .bazelrc may not end with a newline.
+        "",
         "build --experimental_enable_bzlmod",
         "build --registry=%s" % BCR_REPO_DIR.as_uri(),
     ], mode="a")
