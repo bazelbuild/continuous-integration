@@ -64,4 +64,4 @@ steps:
 
       echo "+++ Creating a release on GitHub"
       relnotes=$(cat relnotes.txt)
-      GITHUB_TOKEN=\${github_token} github-release "bazelbuild/java_tools" java_\${version} "master" "\${relnotes}" "*.zip"
+      GITHUB_TOKEN=\${github_token} github-release "bazelbuild/java_tools" java_\${version} "\${BUILDKITE_BRANCH}" "\${relnotes}" "*.zip"

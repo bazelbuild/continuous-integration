@@ -1,0 +1,69 @@
+---
+steps:
+  - input: "Release information"
+    fields:
+      - text: "Version (e.g. 13.1)"
+        key: "version"
+        required: true      
+      - text: "RC (e.g. 1, 2)"
+        key: "rc"
+        required: true
+        default: "1"
+        hint: "For final releases, enter the latest RC to be released."
+      - text: "Commit hash"
+        key: "commit"
+        required: true
+      - select: "Final release"
+        key: "final"
+        required: true
+        default: "false"
+        options:
+          - label: "True"
+            value: "true"
+          - label: "False"
+            value: "false"        
+ 
+  - wait 
+
+  - label: "Create release"
+    agents:
+      - "queue=default"
+    plugins:
+      docker#v3.8.0:
+        always-pull: true
+        environment:
+          - ANDROID_HOME
+          - ANDROID_NDK_HOME
+          - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
+        image: gcr.io/bazel-public/ubuntu2004-java11
+        network: host
+        privileged: true
+        propagate-environment: true
+        propagate-uid-gid: true
+        shell: ["/bin/bash", "-e", "-c"]
+        volumes:
+          - "/etc/group:/etc/group:ro"
+          - "/etc/passwd:/etc/passwd:ro"
+          - "/etc/shadow:/etc/shadow:ro"
+          - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+          - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
+          - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+          - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+          - "/var/run/docker.sock:/var/run/docker.sock"
+    command: |
+      echo "+++ Identifying required variables"
+      version=$(buildkite-agent meta-data get "version")
+      rc=$(buildkite-agent meta-data get "rc")
+      final=$(buildkite-agent meta-data get "final")
+      commit_hash=$(buildkite-agent meta-data get "commit")
+
+      echo "commit_hash = \"\$commit_hash\""
+      echo "version = \"\$version\""      
+      echo "rc = \"\$rc\""
+      echo "final = \"\$final\""
+
+      echo "+++ Installing required packages"
+      sudo apt -y update && sudo apt -y install jq
+      
+      echo "+++ Running create_java_tools_release.sh"
+      src/create_java_tools_release.sh --commit_hash \${commit_hash} --java_tools_version \${version} --rc \${rc} --release \${final}
