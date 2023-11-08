@@ -30,6 +30,8 @@ The Bazel team monitors the downstream pipeline status and report issues for bre
 - The downstream project is expected to respond to the issue within 5 working days. Otherwise, the project is eligible to be temporarily disabled in the downstream pipeline. Note that, even if a pipeline is disabled from the [Bazel@HEAD + downstream](https://buildkite.com/bazel/bazel-at-head-plus-downstream) pipeline, the nightly result can still be checked from the [Bazel@HEAD+ Disabled](https://buildkite.com/bazel/bazel-at-head-plus-disabled) pipeline.
 - If a project remains disabled in the downstream pipeline for more than 6 months without any indication of a fix, we will remove the pipeline configuration from Bazel's downstream pipeline.
 
+Note that: if you want to skip some builds in the downstream pipeline, you can specify `skip_in_bazel_downstream_pipeline: <reason>` for a given job in your [Bazel CI configuration file](../buildkite/README.md#configuring-a-pipeline) or add `no_bazel_downstream` tag for certain build and test targets.
+
 As of May 2023, some projects' pipeline config files live under [the "pipeline" directory](https://github.com/bazelbuild/continuous-integration/tree/master/pipelines) of this repository, which means the Bazel team is responsible for their setup for now, ideally they should be moved to their corresponding repository or the project should be removed.
 
 ## Testing Local Changes With All Downstream Projects
