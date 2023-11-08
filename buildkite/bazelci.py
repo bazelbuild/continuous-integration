@@ -1170,11 +1170,13 @@ def use_bazelisk_migrate():
     """
     return is_trueish(os.environ.get("USE_BAZELISK_MIGRATE"))
 
+
 def is_downstream_pipeline():
     """
     Return true if BAZELCI_DOWNSTREAM_PIPELINE is set
     """
-    return is_trueish(os.environ.get("BAZELCI_DOWNSTREAM_PIPELINE")
+    return is_trueish(os.environ.get("BAZELCI_DOWNSTREAM_PIPELINE"))
+
 
 def local_run_only():
     """
