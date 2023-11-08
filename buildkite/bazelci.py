@@ -1999,9 +1999,11 @@ def common_build_flags(bep_file, platform):
         "--disk_cache=",
     ]
 
-    # If we are in a downstream pipeline, turn off the lockfile update since changing Bazel version could affect the lockfile.
     if is_downstream_pipeline():
+        # If we are in a downstream pipeline, turn off the lockfile update since changing Bazel version could affect the lockfile.
         flags.append("--lockfile_mode=off")
+        # Filter out targets that should not be built in downstream pipelines.
+        flags.append("--build_tag_filters=-no_bazel_downstream")
 
     if is_windows():
         pass
@@ -2559,6 +2561,10 @@ def execute_bazel_test(
         "--build_tests_only",
         "--local_test_jobs=" + concurrent_test_jobs(platform),
     ]
+    if is_downstream_pipeline():
+        # Filter out targets that should not be built in downstream pipelines.
+        aggregated_flags.append("--test_tag_filters=-no_bazel_downstream")
+
     # Don't enable remote caching if the user enabled remote execution / caching themselves
     # or flaky test monitoring is enabled, as remote caching makes tests look less flaky than
     # they are.
