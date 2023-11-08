@@ -1170,6 +1170,12 @@ def use_bazelisk_migrate():
     """
     return is_trueish(os.environ.get("USE_BAZELISK_MIGRATE"))
 
+def is_downstream_pipeline():
+    """
+    Return true if BAZELCI_DOWNSTREAM_PIPELINE is set
+    """
+    return is_trueish(os.environ.get("BAZELCI_DOWNSTREAM_PIPELINE")
+
 def local_run_only():
     """
     If BAZELCI_LOCAL_RUN is set, run bazelci in local-only mode, with no attempt
@@ -1991,6 +1997,10 @@ def common_build_flags(bep_file, platform):
         "--disk_cache=",
     ]
 
+    # If we are in a downstream pipeline, turn off the lockfile update since changing Bazel version could affect the lockfile.
+    if is_downstream_pipeline():
+        flags.append("--lockfile_mode=off")
+
     if is_windows():
         pass
     elif is_mac():
@@ -2789,12 +2799,9 @@ def print_project_pipeline(
 
     task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
-    # In Bazel Downstream Project pipelines, git_repository and project_name must be specified.
-    is_downstream_project = use_but and git_repository and project_name
-
     buildifier_config = configs.get("buildifier")
     # Skip Buildifier when we test downstream projects.
-    if buildifier_config and not is_downstream_project:
+    if buildifier_config and not is_downstream_pipeline():
         buildifier_env_vars = {}
         if isinstance(buildifier_config, str):
             # Simple format:
@@ -2827,7 +2834,7 @@ def print_project_pipeline(
 
     # In Bazel Downstream Project pipelines, we should test the project at the last green commit.
     git_commit = None
-    if is_downstream_project:
+    if is_downstream_pipeline():
         last_green_commit_url = bazelci_last_green_commit_url(
             git_repository, DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"]
         )
@@ -2844,7 +2851,7 @@ def print_project_pipeline(
         # only differ in the value of their explicit "bazel" field will be identical in the
         # downstream pipeline, thus leading to duplicate work.
         # Consequently, we filter those duplicate tasks here.
-        if is_downstream_project:
+        if is_downstream_pipeline():
             h = hash_task_config(task, task_config)
             if h in config_hashes:
                 skipped_downstream_tasks.append(
@@ -2945,14 +2952,14 @@ def print_project_pipeline(
     if "validate_config" in configs:
         pipeline_steps += create_config_validation_steps()
 
-    if use_bazelisk_migrate() and not is_downstream_project:
+    if use_bazelisk_migrate() and not is_downstream_pipeline():
         # Print results of bazelisk --migrate in project pipelines that explicitly set
         # the USE_BAZELISK_MIGRATE env var, but that are not being run as part of a
         # downstream pipeline.
         number = os.getenv("BUILDKITE_BUILD_NUMBER")
         pipeline_steps += get_steps_for_aggregating_migration_results(number, notify)
 
-    print_pipeline_steps(pipeline_steps, handle_emergencies=not is_downstream_project)
+    print_pipeline_steps(pipeline_steps, handle_emergencies=not is_downstream_pipeline())
 
 
 def show_gerrit_review_link(git_repository, pipeline_steps):
