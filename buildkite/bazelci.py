@@ -171,6 +171,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/googlecartographer/cartographer.git",
         "http_config": "https://raw.githubusercontent.com/googlecartographer/cartographer/master/.bazelci/presubmit.yml",
         "pipeline_slug": "cartographer",
+        "disabled_reason": "https://github.com/cartographer-project/cartographer/issues/1938#issuecomment-1804795113",
     },
     "Cloud Robotics Core": {
         "git_repository": "https://github.com/googlecloudrobotics/core.git",
