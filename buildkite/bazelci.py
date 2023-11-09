@@ -174,7 +174,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "Cloud Robotics Core": {
         "git_repository": "https://github.com/googlecloudrobotics/core.git",
-        "file_config": "pipelines/cloud-robotics.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/cloud-robotics.yml",
         "pipeline_slug": "cloud-robotics-core",
     },
     "Envoy": {
@@ -190,12 +190,12 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "Flogger": {
         "git_repository": "https://github.com/google/flogger.git",
-        "file_config": "pipelines/flogger.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/flogger.yml",
         "pipeline_slug": "flogger",
     },
     "Gerrit": {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
-        "file_config": "pipelines/gerrit.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/gerrit.yml",
         "pipeline_slug": "gerrit",
     },
     "Google Logging": {
@@ -240,7 +240,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "Protobuf": {
         "git_repository": "https://github.com/google/protobuf.git",
-        "file_config": "pipelines/protobuf.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/protobuf.yml",
         "pipeline_slug": "protobuf",
         "owned_by_bazel": True,
     },
@@ -250,22 +250,15 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "pipeline_slug": "stardoc",
         "owned_by_bazel": True,
     },
-    "Subpar": {
-        "git_repository": "https://github.com/google/subpar.git",
-        "file_config": "pipelines/subpar.yml",
-        "pipeline_slug": "subpar",
-        "owned_by_bazel": True,
-        "disabled_reason": "https://github.com/google/subpar/issues/133",
-    },
     "TensorFlow": {
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
-        "file_config": "pipelines/tensorflow.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/tensorflow.yml",
         "pipeline_slug": "tensorflow",
         "disabled_reason": "https://github.com/tensorflow/tensorflow/issues/60508",
     },
     "re2": {
         "git_repository": "https://github.com/google/re2.git",
-        "file_config": "pipelines/re2.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/re2.yml",
         "pipeline_slug": "re2",
     },
     "rules_android": {
