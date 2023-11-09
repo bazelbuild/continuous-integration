@@ -271,12 +271,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "file_config": ".bazelci/presubmit.yml",
         "pipeline_slug": "rules-android-ndk",
     },
-    "rules_appengine": {
-        "git_repository": "https://github.com/bazelbuild/rules_appengine.git",
-        "file_config": ".bazelci/presubmit.yml",
-        "pipeline_slug": "rules-appengine-appengine",
-        "disabled_reason": "https://github.com/bazelbuild/rules_appengine/issues/127",
-    },
     "rules_apple": {
         "git_repository": "https://github.com/bazelbuild/rules_apple.git",
         "file_config": ".bazelci/presubmit.yml",
@@ -342,12 +336,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "file_config": ".bazelci/examples.yml",
         "pipeline_slug": "rules-jvm-external-examples",
         "owned_by_bazel": True,
-    },
-    "rules_k8s": {
-        "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
-        "file_config": ".bazelci/presubmit.yml",
-        "pipeline_slug": "rules-k8s-k8s",
-        "disabled_reason": "https://github.com/bazelbuild/rules_k8s/issues/668",
     },
     "rules_kotlin": {
         "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
