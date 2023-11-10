@@ -154,16 +154,9 @@ def scratch_file(root, relative_path, lines=None, mode="w"):
     return abspath
 
 
-def get_root_dir(module_name, module_version, task, is_test_module=False):
-    # TODO(pcloudy): We use the "downstream root" as the repo root, find a better root path for BCR presubmit.
-    configs = get_test_module_task_config(module_name, module_version) if is_test_module else get_task_config(module_name, module_version)
-    platform = bazelci.get_platform_for_task(task, configs["tasks"][task])
-    return pathlib.Path(bazelci.downstream_projects_root(platform))
-
-
-def create_simple_repo(module_name, module_version, task):
+def create_simple_repo(module_name, module_version):
     """Create a simple Bazel module repo which depends on the target module."""
-    root = get_root_dir(module_name, module_version, task)
+    root = bazelci.get_repositories_root()
     scratch_file(root, "WORKSPACE")
     scratch_file(root, "BUILD")
     # TODO(pcloudy): Should we test this module as the root module? Maybe we do if we support dev dependency.
@@ -217,10 +210,10 @@ def unpack_archive(archive_file, output_dir):
     else:
         shutil.unpack_archive(archive_file, output_dir)
 
-def prepare_test_module_repo(module_name, module_version, task):
+def prepare_test_module_repo(module_name, module_version):
     """Prepare the test module repo and the presubmit yml file it should use"""
     bazelci.print_collapsed_group(":information_source: Prepare test module repo")
-    root = get_root_dir(module_name, module_version, task, is_test_module = True)
+    root = bazelci.get_repositories_root()
     source = load_source_json(module_name, module_version)
 
     # Download and unpack the source archive to ./output
@@ -420,11 +413,11 @@ def main(argv=None):
             pipeline_steps = [{"block": "Wait on BCR maintainer review", "blocked_state": "running"}] + pipeline_steps
         upload_jobs_to_pipeline(pipeline_steps)
     elif args.subparsers_name == "runner":
-        repo_location = create_simple_repo(args.module_name, args.module_version, args.task)
+        repo_location = create_simple_repo(args.module_name, args.module_version)
         config_file = get_presubmit_yml(args.module_name, args.module_version)
         return run_test(repo_location, config_file, args.task)
     elif args.subparsers_name == "test_module_runner":
-        repo_location, config_file = prepare_test_module_repo(args.module_name, args.module_version, args.task)
+        repo_location, config_file = prepare_test_module_repo(args.module_name, args.module_version)
         return run_test(repo_location, config_file, args.task)
     else:
         parser.print_help()

@@ -57,8 +57,9 @@ def get_bazel_commits_between(first_commit, second_commit):
 
 
 def get_configs(project_name):
-    http_config = bazelci.DOWNSTREAM_PROJECTS[project_name]["http_config"]
-    configs = bazelci.fetch_configs(http_config, None)
+    http_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("http_config", None)
+    file_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("file_config", None)
+    configs = bazelci.fetch_configs(http_config, file_config)
     return configs
 
 
@@ -76,7 +77,8 @@ def get_tasks(project_name):
 def test_with_bazel_at_commit(
     project_name, task_name, repo_location, bazel_commit, needs_clean, repeat_times
 ):
-    http_config = bazelci.DOWNSTREAM_PROJECTS[project_name]["http_config"]
+    http_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("http_config", None)
+    file_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("file_config", None)
     for i in range(1, repeat_times + 1):
         if repeat_times > 1:
             bazelci.print_collapsed_group(":bazel: Try %s time" % i)
@@ -85,10 +87,11 @@ def test_with_bazel_at_commit(
                 [
                     "runner",
                     "--task=" + task_name,
-                    "--http_config=" + http_config,
                     "--repo_location=" + repo_location,
                     "--use_bazel_at_commit=" + bazel_commit,
                 ]
+                + (["--http_config=" + http_config] if http_config else [])
+                + (["--file_config=" + file_config,] if file_config else [])
                 + (["--needs_clean"] if needs_clean else [])
             )
         except subprocess.CalledProcessError as e:
@@ -99,14 +102,13 @@ def test_with_bazel_at_commit(
     return True
 
 
-def clone_git_repository(project_name, task_name):
-    platform_name = get_platform(project_name, task_name)
+def clone_git_repository(project_name):
     git_repository = bazelci.DOWNSTREAM_PROJECTS[project_name]["git_repository"]
     last_green_commit_url = bazelci.bazelci_last_green_commit_url(
         git_repository, bazelci.DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"]
     )
     git_commit = bazelci.get_last_green_commit(last_green_commit_url)
-    return bazelci.clone_git_repository(git_repository, platform_name, git_commit)
+    return bazelci.clone_git_repository(git_repository, git_commit)
 
 
 def get_previous_bazel_commit(current_commit, count):
@@ -266,6 +268,9 @@ def main(argv=None):
                 "Project name '%s' not recognized, available projects are %s"
                 % (project_name, str((bazelci.DOWNSTREAM_PROJECTS.keys())))
             )
+
+        # Clone the project repo so that we can get its CI config file at the same last green commit.
+        clone_git_repository(project_name, "ubuntu2004")
 
         print_culprit_finder_pipeline(
             project_name=project_name,

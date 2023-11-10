@@ -398,7 +398,6 @@ PLATFORMS = {
     "centos7": {
         "name": "CentOS 7 (OpenJDK 8, gcc 4.8.5)",
         "emoji-name": ":centos: 7 (OpenJDK 8, gcc 4.8.5)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7-java8",
         "python": "python3.6",
@@ -406,7 +405,6 @@ PLATFORMS = {
     "centos7_java11": {
         "name": "CentOS 7 (OpenJDK 11, gcc 4.8.5)",
         "emoji-name": ":centos: 7 (OpenJDK 11, gcc 4.8.5)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7-java11",
         "python": "python3.6",
@@ -414,7 +412,6 @@ PLATFORMS = {
     "centos7_java11_devtoolset10": {
         "name": "CentOS 7 (OpenJDK 11, gcc 10.2.1)",
         "emoji-name": ":centos: 7 (OpenJDK 11, gcc 10.2.1)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["ubuntu1404", "centos7", "linux"],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7-java11-devtoolset10",
         "python": "python3.6",
@@ -422,7 +419,6 @@ PLATFORMS = {
     "debian10": {
         "name": "Debian 10 Buster (OpenJDK 11, gcc 8.3.0)",
         "emoji-name": ":debian: 10 Buster (OpenJDK 11, gcc 8.3.0)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian10-java11",
         "python": "python3.7",
@@ -430,7 +426,6 @@ PLATFORMS = {
     "debian11": {
         "name": "Debian 11 Bullseye (OpenJDK 17, gcc 10.2.1)",
         "emoji-name": ":debian: 11 Bullseye (OpenJDK 17, gcc 10.2.1)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian11-java17",
         "python": "python3.9",
@@ -438,7 +433,6 @@ PLATFORMS = {
     "ubuntu1604": {
         "name": "Ubuntu 16.04 LTS (OpenJDK 8, gcc 5.4.0)",
         "emoji-name": ":ubuntu: 16.04 LTS (OpenJDK 8, gcc 5.4.0)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1604-java8",
         "python": "python3.6",
@@ -446,7 +440,6 @@ PLATFORMS = {
     "ubuntu1804": {
         "name": "Ubuntu 18.04 LTS (OpenJDK 11, gcc 7.5.0)",
         "emoji-name": ":ubuntu: 18.04 LTS (OpenJDK 11, gcc 7.5.0)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1804-java11",
         "python": "python3.6",
@@ -454,7 +447,6 @@ PLATFORMS = {
     "ubuntu2004": {
         "name": "Ubuntu 20.04 LTS (OpenJDK 11, gcc 9.4.0)",
         "emoji-name": ":ubuntu: 20.04 LTS (OpenJDK 11, gcc 9.4.0)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11",
         "python": "python3.8",
@@ -462,7 +454,6 @@ PLATFORMS = {
     "ubuntu2004_arm64": {
         "name": "Ubuntu 20.04 LTS ARM64 (OpenJDK 11, gcc 9.4.0)",
         "emoji-name": ":ubuntu: 20.04 LTS ARM64 (OpenJDK 11, gcc 9.4.0)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11",
         "python": "python3.8",
@@ -473,7 +464,6 @@ PLATFORMS = {
     "kythe_ubuntu2004": {
         "name": "Kythe (Ubuntu 20.04 LTS, OpenJDK 11, gcc 9.4.0)",
         "emoji-name": "Kythe (:ubuntu: 20.04 LTS, OpenJDK 11, gcc 9.4.0)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11-kythe",
         "python": "python3.8",
@@ -481,7 +471,6 @@ PLATFORMS = {
     "ubuntu2204": {
         "name": "Ubuntu 22.04 (OpenJDK 17, gcc 11.2.0)",
         "emoji-name": ":ubuntu: 22.04 (OpenJDK 17, gcc 11.2.0)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2204-java17",
         "python": "python3",
@@ -489,7 +478,6 @@ PLATFORMS = {
     "fedora39": {
         "name": "Fedora 39 (OpenJDK 17, gcc 13.1.1)",
         "emoji-name": ":fedora: 39 (OpenJDK 17, gcc 13.1.1)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/fedora39-java17",
         "python": "python3",
@@ -497,7 +485,6 @@ PLATFORMS = {
     "macos": {
         "name": "macOS (OpenJDK 11, Xcode)",
         "emoji-name": ":darwin: (OpenJDK 11, Xcode)",
-        "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["macos"],
         "queue": "macos",
         "python": "python3",
@@ -505,7 +492,6 @@ PLATFORMS = {
     "macos_qa": {
         "name": "macOS QA (OpenJDK 11, Xcode)",
         "emoji-name": ":darwin: :fire_extinguisher: (OpenJDK 11, Xcode)",
-        "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "queue": "macos_qa",
         "python": "python3",
@@ -513,7 +499,6 @@ PLATFORMS = {
     "macos_arm64_qa": {
         "name": "macOS arm64 QA (OpenJDK 8, Xcode)",
         "emoji-name": ":darwin: arm64 :fire_extinguisher: (OpenJDK 8, Xcode)",
-        "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "queue": "macos_arm64_qa",
         "python": "python3",
@@ -521,7 +506,6 @@ PLATFORMS = {
     "macos_arm64": {
         "name": "macOS arm64 (OpenJDK 8, Xcode)",
         "emoji-name": ":darwin: arm64 (OpenJDK 8, Xcode)",
-        "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["macos_arm64"],
         "queue": "macos_arm64",
         "python": "python3",
@@ -529,7 +513,6 @@ PLATFORMS = {
     "windows": {
         "name": "Windows (OpenJDK 11, VS2022)",
         "emoji-name": ":windows: (OpenJDK 11, VS2022)",
-        "downstream-root": "c:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["windows"],
         "queue": "windows",
         "python": "python.exe",
@@ -537,7 +520,6 @@ PLATFORMS = {
     "windows_arm64": {
         "name": "Windows ARM64 (OpenJDK 11, VS2022)",
         "emoji-name": ":windows: arm64 (OpenJDK 11, VS2022)",
-        "downstream-root": "c:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["windows_arm64"],
         # TODO(pcloudy): Switch to windows_arm64 queue when Windows ARM64 machines are available,
         # current we just use x86_64 machines to do cross compile.
@@ -915,17 +897,6 @@ def gcloud_command():
     return "gcloud.cmd" if is_windows() else "gcloud"
 
 
-def downstream_projects_root(platform):
-    downstream_root = os.path.expandvars(PLATFORMS[platform]["downstream-root"])
-    if platform == "windows" and os.path.exists("d:/b"):
-        # If this is a Windows machine with a local SSD, the build directory is
-        # on drive D.
-        downstream_root = downstream_root.replace("c:/b/", "d:/b/")
-    if not os.path.exists(downstream_root):
-        os.makedirs(downstream_root)
-    return downstream_root
-
-
 def match_matrix_attr_pattern(s):
     return re.match("^\${{\s*(\w+)\s*}}$", s)
 
@@ -1172,9 +1143,6 @@ def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_v
 def execute_commands(
     task_config,
     platform,
-    git_repository,
-    git_commit,
-    repo_location,
     use_bazel_at_commit,
     use_but,
     save_but,
@@ -1232,11 +1200,6 @@ def execute_commands(
         # CI should have its own user agent so that we can remove it from Bazel download statistics.
         os.environ["BAZELISK_USER_AGENT"] = "Bazelisk/BazelCI"
         test_env_vars.append("BAZELISK_USER_AGENT")
-
-        if repo_location:
-            os.chdir(repo_location)
-        elif git_repository:
-            clone_git_repository(git_repository, platform, git_commit)
 
         # We use one binary for all Linux platforms (because we also just release one binary for all
         # Linux versions and we have to ensure that it works on all of them).
@@ -1321,9 +1284,8 @@ def execute_commands(
         if needs_clean:
             execute_bazel_clean(bazel_binary, platform)
 
-        # The git_commit paramter only has a value in the downstream pipeline,
-        # but we need the commit here in order to calculate the correct targets.
-        git_commit = git_commit or os.getenv("BUILDKITE_COMMIT")
+        # we need the commit here in order to calculate the correct targets.
+        git_commit = os.getenv("BUILDKITE_COMMIT")
         if not git_commit:
             raise BuildkiteInfraException("Unable to determine Git commit for this build")
 
@@ -1739,9 +1701,25 @@ def get_mirror_root():
 
     return "/var/lib/bazelbuild/"
 
+def get_repositories_root():
+    """A root directory for preparing the reposioty to be tested."""
+    repo_root = "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-org-repo-root"
+    if is_mac():
+        repo_root = "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-org-repo-root"
+    elif is_windows():
+        repo_root = "c:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-org-repo-root"
+        # If this is a Windows machine with a local SSD, the build directory is on drive D.
+        if os.path.exists("d:/b"):
+            repo_root = repo_root.replace("c:/b/", "d:/b/")
 
-def clone_git_repository(git_repository, platform, git_commit=None):
-    root = downstream_projects_root(platform)
+    repo_root = os.path.expandvars(repo_root)
+
+    if not os.path.exists(repo_root):
+        os.makedirs(repo_root)
+    return repo_root
+
+def clone_git_repository(git_repository, git_commit=None):
+    root = get_repositories_root()
     project_name = re.search(r"/([^/]+)\.git$", git_repository).group(1)
     clone_path = os.path.join(root, project_name)
     print_collapsed_group(
@@ -2786,12 +2764,7 @@ def print_project_pipeline(
         )
 
     # In Bazel Downstream Project pipelines, we should test the project at the last green commit.
-    git_commit = None
-    if is_downstream_pipeline():
-        last_green_commit_url = bazelci_last_green_commit_url(
-            git_repository, DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"]
-        )
-        git_commit = get_last_green_commit(last_green_commit_url)
+    git_commit = get_last_green_commit(project_name) if is_downstream_pipeline() else None
 
     config_hashes = set()
     skipped_downstream_tasks = []
@@ -3516,7 +3489,7 @@ def bazelci_last_green_downstream_commit_url():
     return "gs://{}/last_green_commit/downstream_pipeline".format(bucket_name)
 
 
-def get_last_green_commit(last_green_commit_url):
+def get_last_green_commit_by_url(last_green_commit_url):
     try:
         return (
             subprocess.check_output(
@@ -3527,6 +3500,13 @@ def get_last_green_commit(last_green_commit_url):
         )
     except subprocess.CalledProcessError:
         return None
+
+
+def get_last_green_commit(project_name):
+    last_green_commit_url = bazelci_last_green_commit_url(
+        DOWNSTREAM_PROJECTS[project_name]["git_repository"], DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"]
+    )
+    return get_last_green_commit_by_url(last_green_commit_url)
 
 
 def try_update_last_green_commit():
@@ -3564,7 +3544,7 @@ def try_update_last_green_commit():
 
 
 def update_last_green_commit_if_newer(last_green_commit_url):
-    last_green_commit = get_last_green_commit(last_green_commit_url)
+    last_green_commit = get_last_green_commit_by_url(last_green_commit_url)
     current_commit = resolve_revision("HEAD")
     if last_green_commit:
         success = False
@@ -3910,6 +3890,11 @@ def main(argv=None):
                 notify=args.notify,
             )
         elif args.subparsers_name == "project_pipeline":
+            # Fetch the repo in case we need to use file_config.
+            if args.git_repository:
+                git_commit = get_last_green_commit(args.project_name) if is_downstream_pipeline() else None
+                clone_git_repository(args.git_repository, git_commit)
+
             configs = fetch_configs(args.http_config, args.file_config)
             print_project_pipeline(
                 configs=configs,
@@ -3922,6 +3907,12 @@ def main(argv=None):
                 notify=args.notify,
             )
         elif args.subparsers_name == "runner":
+            # Fetch the repo in case we need to use file_config.
+            if args.repo_location:
+                os.chdir(args.repo_location)
+            elif args.git_repository:
+                clone_git_repository(args.git_repository, args.git_commit)
+
             configs = fetch_configs(args.http_config, args.file_config)
             tasks = configs.get("tasks", {})
             task_config = tasks.get(args.task)
@@ -3945,9 +3936,6 @@ def main(argv=None):
             execute_commands(
                 task_config=task_config,
                 platform=platform,
-                git_repository=args.git_repository,
-                git_commit=args.git_commit,
-                repo_location=args.repo_location,
                 use_bazel_at_commit=args.use_bazel_at_commit,
                 use_but=args.use_but,
                 save_but=args.save_but,
