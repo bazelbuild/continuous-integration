@@ -57,8 +57,8 @@ def get_bazel_commits_between(first_commit, second_commit):
 
 
 def get_configs(project_name):
-    http_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("http_config", None)
-    file_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("file_config", None)
+    http_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("http_config")
+    file_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("file_config")
     configs = bazelci.fetch_configs(http_config, file_config)
     return configs
 
@@ -77,8 +77,8 @@ def get_tasks(project_name):
 def test_with_bazel_at_commit(
     project_name, task_name, repo_location, bazel_commit, needs_clean, repeat_times
 ):
-    http_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("http_config", None)
-    file_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("file_config", None)
+    http_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("http_config")
+    file_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("file_config")
     for i in range(1, repeat_times + 1):
         if repeat_times > 1:
             bazelci.print_collapsed_group(":bazel: Try %s time" % i)
