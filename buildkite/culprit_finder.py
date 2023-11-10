@@ -102,13 +102,10 @@ def test_with_bazel_at_commit(
     return True
 
 
-def clone_git_repository(project_name):
+def clone_git_repository(project_name, suppress_stdout=False):
     git_repository = bazelci.DOWNSTREAM_PROJECTS[project_name]["git_repository"]
-    last_green_commit_url = bazelci.bazelci_last_green_commit_url(
-        git_repository, bazelci.DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"]
-    )
-    git_commit = bazelci.get_last_green_commit(last_green_commit_url)
-    return bazelci.clone_git_repository(git_repository, git_commit)
+    git_commit = bazelci.get_last_green_commit(project_name)
+    return bazelci.clone_git_repository(git_repository, git_commit, suppress_stdout=suppress_stdout)
 
 
 def get_previous_bazel_commit(current_commit, count):
@@ -231,6 +228,15 @@ def main(argv=None):
         try:
             project_name = os.environ["PROJECT_NAME"]
 
+            if project_name not in bazelci.DOWNSTREAM_PROJECTS:
+                raise Exception(
+                    "Project name '%s' not recognized, available projects are %s"
+                    % (project_name, str((bazelci.DOWNSTREAM_PROJECTS.keys())))
+                )
+
+            # Clone the project repo so that we can get its CI config file at the same last green commit.
+            clone_git_repository(project_name, suppress_stdout=True)
+
             # For old config file, we can still set PLATFORM_NAME as task name.
             task = os.environ.get("PLATFORM_NAME") or os.environ.get("TASK_NAME")
             if task:
@@ -244,7 +250,7 @@ def main(argv=None):
             if not good_bazel_commit:
                 # If GOOD_BAZEL_COMMIT is not set, use recorded last bazel green commit for downstream project
                 last_green_commit_url = bazelci.bazelci_last_green_downstream_commit_url()
-                good_bazel_commit = bazelci.get_last_green_commit(last_green_commit_url)
+                good_bazel_commit = bazelci.get_last_green_commit_by_url(last_green_commit_url)
 
             bad_bazel_commit = os.environ.get("BAD_BAZEL_COMMIT")
             if not bad_bazel_commit:
@@ -263,15 +269,6 @@ def main(argv=None):
         if "REPEAT_TIMES" in os.environ:
             repeat_times = int(os.environ["REPEAT_TIMES"])
 
-        if project_name not in bazelci.DOWNSTREAM_PROJECTS:
-            raise Exception(
-                "Project name '%s' not recognized, available projects are %s"
-                % (project_name, str((bazelci.DOWNSTREAM_PROJECTS.keys())))
-            )
-
-        # Clone the project repo so that we can get its CI config file at the same last green commit.
-        clone_git_repository(project_name, "ubuntu2004")
-
         print_culprit_finder_pipeline(
             project_name=project_name,
             tasks=tasks,
@@ -281,7 +278,7 @@ def main(argv=None):
             repeat_times=repeat_times,
         )
     elif args.subparsers_name == "runner":
-        repo_location = clone_git_repository(args.project_name, args.task_name)
+        repo_location = clone_git_repository(args.project_name)
         good_bazel_commit, bad_bazel_commit = identify_bisect_range(args, repo_location)
         start_bisecting(
             project_name=args.project_name,

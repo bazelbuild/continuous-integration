@@ -1718,32 +1718,37 @@ def get_repositories_root():
         os.makedirs(repo_root)
     return repo_root
 
-def clone_git_repository(git_repository, git_commit=None):
+def clone_git_repository(git_repository, git_commit=None, suppress_stdout=False):
+
+    def execute_git_command(args):
+        execute_command(args, print_output=not suppress_stdout, suppress_stdout=suppress_stdout)
+
     root = get_repositories_root()
     project_name = re.search(r"/([^/]+)\.git$", git_repository).group(1)
     clone_path = os.path.join(root, project_name)
-    print_collapsed_group(
-        "Fetching %s sources at %s" % (project_name, git_commit if git_commit else "HEAD")
-    )
+    if not suppress_stdout:
+        print_collapsed_group(
+            "Fetching %s sources at %s" % (project_name, git_commit if git_commit else "HEAD")
+        )
 
     mirror_path = get_mirror_root() + re.sub(r"[^0-9A-Za-z]", "-", git_repository)
 
     if not os.path.exists(clone_path):
         if os.path.exists(mirror_path):
-            execute_command(
+            execute_git_command(
                 ["git", "clone", "-v", "--reference", mirror_path, git_repository, clone_path]
             )
         else:
-            execute_command(["git", "clone", "-v", git_repository, clone_path])
+            execute_git_command(["git", "clone", "-v", git_repository, clone_path])
 
     os.chdir(clone_path)
-    execute_command(["git", "remote", "set-url", "origin", git_repository])
-    execute_command(["git", "clean", "-fdqx"])
-    execute_command(["git", "submodule", "foreach", "--recursive", "git clean -fdqx"])
-    execute_command(["git", "fetch", "origin"])
+    execute_git_command(["git", "remote", "set-url", "origin", git_repository])
+    execute_git_command(["git", "clean", "-fdqx"])
+    execute_git_command(["git", "submodule", "foreach", "--recursive", "git clean -fdqx"])
+    execute_git_command(["git", "fetch", "origin"])
     if git_commit:
         # sync to a specific commit of this repository
-        execute_command(["git", "reset", git_commit, "--hard"])
+        execute_git_command(["git", "reset", git_commit, "--hard"])
     else:
         # sync to the latest commit of HEAD. Unlikely git pull this also works after a force push.
         remote_head = (
@@ -1751,12 +1756,12 @@ def clone_git_repository(git_repository, git_commit=None):
             .decode("utf-8")
             .rstrip()
         )
-        execute_command(["git", "reset", remote_head, "--hard"])
-    execute_command(["git", "submodule", "sync", "--recursive"])
-    execute_command(["git", "submodule", "update", "--init", "--recursive", "--force"])
-    execute_command(["git", "submodule", "foreach", "--recursive", "git reset --hard"])
-    execute_command(["git", "clean", "-fdqx"])
-    execute_command(["git", "submodule", "foreach", "--recursive", "git clean -fdqx"])
+        execute_git_command(["git", "reset", remote_head, "--hard"])
+    execute_git_command(["git", "submodule", "sync", "--recursive"])
+    execute_git_command(["git", "submodule", "update", "--init", "--recursive", "--force"])
+    execute_git_command(["git", "submodule", "foreach", "--recursive", "git reset --hard"])
+    execute_git_command(["git", "clean", "-fdqx"])
+    execute_git_command(["git", "submodule", "foreach", "--recursive", "git clean -fdqx"])
     return clone_path
 
 
@@ -2600,7 +2605,7 @@ def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True, prin
 
 
 def execute_command(
-    args, shell=False, fail_if_nonzero=True, cwd=None, print_output=True, capture_stderr=False
+    args, shell=False, fail_if_nonzero=True, cwd=None, print_output=True, capture_stderr=False, suppress_stdout=False
 ):
     if print_output:
         eprint(" ".join(args))
@@ -2611,6 +2616,9 @@ def execute_command(
         env=os.environ,
         cwd=cwd,
         errors="replace",
+        stdout=subprocess.DEVNULL
+        if suppress_stdout
+        else subprocess.PIPE,  # suppress_stdout=True when we don't want the output to be printed
         stderr=subprocess.PIPE
         if capture_stderr
         else None,  # capture_stderr=True when we want exceptions to contain stderr
@@ -3893,7 +3901,7 @@ def main(argv=None):
             # Fetch the repo in case we need to use file_config.
             if args.git_repository:
                 git_commit = get_last_green_commit(args.project_name) if is_downstream_pipeline() else None
-                clone_git_repository(args.git_repository, git_commit)
+                clone_git_repository(args.git_repository, git_commit, suppress_stdout=True)
 
             configs = fetch_configs(args.http_config, args.file_config)
             print_project_pipeline(
