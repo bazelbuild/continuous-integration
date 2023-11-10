@@ -2164,7 +2164,7 @@ def calculate_targets(
     shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
     sharding_enabled = shard_id > -1 and shard_count > -1
 
-    use_bazel_diff = diffbase and can_use_bazel_diff()
+    use_bazel_diff = diffbase and can_use_bazel_diff(git_commit)
 
     # Skip target expansion if we don't need to calculate test targets
     if not use_bazel_diff and not sharding_enabled:
@@ -2197,9 +2197,9 @@ def calculate_targets(
     return build_targets, actual_test_targets, coverage_targets, index_targets
 
 
-def can_use_bazel_diff():
+def can_use_bazel_diff(git_commit):
     matched_files = []
-    for f in get_modified_files():
+    for f in get_modified_files(git_commit):
         for d in DISABLE_BAZEL_DIFF_IF_MODIFIED:
             if d.endswith("/") and f.startswith(d) or f == d:
                 matched_files.append(f)
@@ -2884,7 +2884,7 @@ def print_project_pipeline(
         )
 
     if "validate_config" in configs:
-        pipeline_steps += create_config_validation_steps()
+        pipeline_steps += create_config_validation_steps(git_commit or os.getenv("BUILDKITE_COMMIT"))
 
     if use_bazelisk_migrate() and not is_downstream_pipeline():
         # Print results of bazelisk --migrate in project pipelines that explicitly set
@@ -2946,10 +2946,10 @@ def get_platform_for_task(task, task_config):
     return task_config.get("platform", task)
 
 
-def create_config_validation_steps():
+def create_config_validation_steps(git_commit):
     config_files = [
         path
-        for path in get_modified_files()
+        for path in get_modified_files(git_commit)
         if path.startswith(".bazelci/") and os.path.splitext(path)[1] in CONFIG_FILE_EXTENSIONS
     ]
     return [
@@ -2967,9 +2967,9 @@ def create_config_validation_steps():
     ]
 
 
-def get_modified_files():
+def get_modified_files(git_commit):
     output = execute_command_and_get_output(
-        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", os.getenv("BUILDKITE_COMMIT")]
+        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", git_commit]
     )
     return output.split("\n")
 
