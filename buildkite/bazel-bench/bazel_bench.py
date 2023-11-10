@@ -77,7 +77,6 @@ BAZEL_BENCH_RESULT_FILENAME = "perf_data.csv"
 AGGR_JSON_PROFILES_FILENAME = "aggr_json_profiles.csv"
 PLATFORMS_WHITELIST = ['macos', 'ubuntu1804']
 REPORT_GENERATION_PLATFORM = 'ubuntu1804'
-STARTER_JOB_PLATFORM = 'ubuntu1804'
 
 
 def _bazel_bench_env_setup_command(platform, bazel_commits):
@@ -425,8 +424,7 @@ def main(args=None):
         else datetime.date.today()
     )
 
-    bazel_clone_path = bazelci.clone_git_repository(
-        BAZEL_REPOSITORY, STARTER_JOB_PLATFORM)
+    bazel_clone_path = bazelci.clone_git_repository(BAZEL_REPOSITORY)
     bazel_commits_full_list, bazel_commits_to_benchmark = _get_bazel_commits(
         date, bazel_clone_path, parsed_args.max_commits)
     bazel_bench_ci_steps = []

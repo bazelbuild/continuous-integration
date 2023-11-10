@@ -85,91 +85,82 @@ KZIPS_BUCKET = {
 DOWNSTREAM_PROJECTS_PRODUCTION = {
     "Android Studio Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/android-studio.yml",
+        "file_config": ".bazelci/android-studio.yml",
         "pipeline_slug": "android-studio-plugin",
     },
     "Android Studio Plugin Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/google/.bazelci/android-studio.yml",
+        "file_config": ".bazelci/android-studio.yml",
         "pipeline_slug": "android-studio-plugin-google",
     },
     "Android Testing": {
         "git_repository": "https://github.com/googlesamples/android-testing.git",
-        "http_config": "https://raw.githubusercontent.com/googlesamples/android-testing/master/bazelci/buildkite-pipeline.yml",
+        "file_config": "bazelci/buildkite-pipeline.yml",
         "pipeline_slug": "android-testing",
         "disabled_reason": "https://github.com/android/testing-samples/issues/417",
     },
     "Bazel": {
         "git_repository": "https://github.com/bazelbuild/bazel.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/postsubmit.yml",
+        "file_config": ".bazelci/postsubmit.yml",
         "pipeline_slug": "bazel-bazel",
     },
     "Bazel Bench": {
         "git_repository": "https://github.com/bazelbuild/bazel-bench.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-bench/master/.bazelci/postsubmit.yml",
+        "file_config": ".bazelci/postsubmit.yml",
         "pipeline_slug": "bazel-bench",
     },
     "Bazel Codelabs": {
         "git_repository": "https://github.com/bazelbuild/codelabs.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/codelabs/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-codelabs",
         "disabled_reason": "https://github.com/bazelbuild/codelabs/issues/38",
     },
     "Bazel Examples": {
         "git_repository": "https://github.com/bazelbuild/examples.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/examples/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-bazel-examples",
     },
     "Bazel Remote Cache": {
         "git_repository": "https://github.com/buchgr/bazel-remote.git",
-        "http_config": "https://raw.githubusercontent.com/buchgr/bazel-remote/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-remote-cache",
     },
     "Bazel skylib": {
         "git_repository": "https://github.com/bazelbuild/bazel-skylib.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-skylib/main/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-skylib",
         "owned_by_bazel": True,
     },
     "Bazel toolchains": {
         "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-toolchains/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-toolchains",
     },
     "Bazel watcher": {
         "git_repository": "https://github.com/bazelbuild/bazel-watcher.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-watcher/master/.bazelci/presubmit.yml",
         "pipeline_slug": "bazel-watcher",
         "disabled_reason": "https://github.com/bazelbuild/bazel-watcher/issues/590",
     },
     "Bazelisk": {
         "git_repository": "https://github.com/bazelbuild/bazelisk.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazelisk/master/.bazelci/config.yml",
+        "file_config": ".bazelci/config.yml",
         "pipeline_slug": "bazelisk",
     },
     "Buildfarm": {
         "git_repository": "https://github.com/bazelbuild/bazel-buildfarm.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/bazel-buildfarm/main/.bazelci/presubmit.yml",
         "pipeline_slug": "buildfarm-farmer",
     },
     "Buildtools": {
         "git_repository": "https://github.com/bazelbuild/buildtools.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/buildtools/master/.bazelci/presubmit.yml",
         "pipeline_slug": "buildtools",
     },
     "CLion Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/clion.yml",
+        "file_config": ".bazelci/clion.yml",
         "pipeline_slug": "clion-plugin",
     },
     "CLion Plugin Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/google/.bazelci/clion.yml",
+        "file_config": ".bazelci/clion.yml",
         "pipeline_slug": "clion-plugin-google",
     },
     "Cartographer": {
         "git_repository": "https://github.com/googlecartographer/cartographer.git",
-        "http_config": "https://raw.githubusercontent.com/googlecartographer/cartographer/master/.bazelci/presubmit.yml",
         "pipeline_slug": "cartographer",
         "disabled_reason": "https://github.com/cartographer-project/cartographer/issues/1938#issuecomment-1804795113",
     },
@@ -180,13 +171,11 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "Envoy": {
         "git_repository": "https://github.com/envoyproxy/envoy.git",
-        "http_config": "https://raw.githubusercontent.com/envoyproxy/envoy/main/.bazelci/presubmit.yml",
         "pipeline_slug": "envoy",
         "disabled_reason": "https://github.com/envoyproxy/envoy/issues/29723",
     },
     "FlatBuffers": {
         "git_repository": "https://github.com/google/flatbuffers.git",
-        "http_config": "https://raw.githubusercontent.com/google/flatbuffers/master/.bazelci/presubmit.yml",
         "pipeline_slug": "flatbuffers",
         "disabled_reason": "https://github.com/google/flatbuffers/issues/7992",
     },
@@ -202,42 +191,40 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "Google Logging": {
         "git_repository": "https://github.com/google/glog.git",
-        "http_config": "https://raw.githubusercontent.com/google/glog/master/.bazelci/presubmit.yml",
         "pipeline_slug": "google-logging",
     },
     "IntelliJ Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/intellij.yml",
+        "file_config": ".bazelci/intellij.yml",
         "pipeline_slug": "intellij-plugin",
     },
     "IntelliJ Plugin Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/google/.bazelci/intellij.yml",
+        "file_config": ".bazelci/intellij.yml",
         "pipeline_slug": "intellij-plugin-google",
     },
     "IntelliJ UE Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/intellij-ue.yml",
+        "file_config": ".bazelci/intellij-ue.yml",
         "pipeline_slug": "intellij-ue-plugin",
     },
     "IntelliJ UE Plugin Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/google/.bazelci/intellij-ue.yml",
+        "file_config": ".bazelci/intellij-ue.yml",
         "pipeline_slug": "intellij-ue-plugin-google",
     },
     "IntelliJ Plugin Aspect": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/master/.bazelci/aspect.yml",
+        "file_config": ".bazelci/aspect.yml",
         "pipeline_slug": "intellij-plugin-aspect",
     },
     "IntelliJ Plugin Aspect Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/intellij/google/.bazelci/aspect.yml",
+        "file_config": ".bazelci/aspect.yml",
         "pipeline_slug": "intellij-plugin-aspect-google",
     },
     "Kythe": {
         "git_repository": "https://github.com/kythe/kythe.git",
-        "http_config": "https://raw.githubusercontent.com/kythe/kythe/master/.bazelci/presubmit.yml",
         "pipeline_slug": "kythe",
     },
     "Protobuf": {
@@ -248,16 +235,8 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "Stardoc": {
         "git_repository": "https://github.com/bazelbuild/stardoc.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/stardoc/master/.bazelci/presubmit.yml",
         "pipeline_slug": "stardoc",
         "owned_by_bazel": True,
-    },
-    "Subpar": {
-        "git_repository": "https://github.com/google/subpar.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/subpar.yml",
-        "pipeline_slug": "subpar",
-        "owned_by_bazel": True,
-        "disabled_reason": "https://github.com/google/subpar/issues/133",
     },
     "TensorFlow": {
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
@@ -272,154 +251,118 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "rules_android": {
         "git_repository": "https://github.com/bazelbuild/rules_android.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_android/main/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-android",
     },
     "rules_android_ndk": {
         "git_repository": "https://github.com/bazelbuild/rules_android_ndk.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_android_ndk/main/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-android-ndk",
-    },
-    "rules_appengine": {
-        "git_repository": "https://github.com/bazelbuild/rules_appengine.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_appengine/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-appengine-appengine",
-        "disabled_reason": "https://github.com/bazelbuild/rules_appengine/issues/127",
     },
     "rules_apple": {
         "git_repository": "https://github.com/bazelbuild/rules_apple.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_apple/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-apple-darwin",
     },
     "rules_cc": {
         "git_repository": "https://github.com/bazelbuild/rules_cc.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_cc/main/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-cc",
         "owned_by_bazel": True,
     },
     "rules_closure": {
         "git_repository": "https://github.com/bazelbuild/rules_closure.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_closure/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-closure-closure-compiler",
         "owned_by_bazel": True,
     },
     "rules_dotnet": {
         "git_repository": "https://github.com/bazelbuild/rules_dotnet.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_dotnet/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-dotnet-edge",
     },
     "rules_foreign_cc": {
         "git_repository": "https://github.com/bazelbuild/rules_foreign_cc.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_foreign_cc/main/.bazelci/config.yaml",
+        "file_config": ".bazelci/config.yaml",
         "pipeline_slug": "rules-foreign-cc",
         "owned_by_bazel": True,
     },
     "rules_go": {
         "git_repository": "https://github.com/bazelbuild/rules_go.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_go/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-go-golang",
     },
     "rules_groovy": {
         "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_groovy/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-groovy",
     },
     "rules_gwt": {
         "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_gwt/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-gwt",
         "disabled_reason": "https://github.com/bazelbuild/continuous-integration/issues/1202",
     },
     "rules_haskell": {
         "git_repository": "https://github.com/tweag/rules_haskell.git",
-        "http_config": "https://raw.githubusercontent.com/tweag/rules_haskell/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-haskell-haskell",
     },
     "rules_jsonnet": {
         "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jsonnet/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-jsonnet",
     },
     "rules_jvm_external": {
         "git_repository": "https://github.com/bazelbuild/rules_jvm_external.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jvm_external/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-jvm-external",
         "owned_by_bazel": True,
     },
     "rules_jvm_external - examples": {
         "git_repository": "https://github.com/bazelbuild/rules_jvm_external.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_jvm_external/master/.bazelci/examples.yml",
+        "file_config": ".bazelci/examples.yml",
         "pipeline_slug": "rules-jvm-external-examples",
         "owned_by_bazel": True,
     },
-    "rules_k8s": {
-        "git_repository": "https://github.com/bazelbuild/rules_k8s.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_k8s/master/.bazelci/presubmit.yml",
-        "pipeline_slug": "rules-k8s-k8s",
-        "disabled_reason": "https://github.com/bazelbuild/rules_k8s/issues/668",
-    },
     "rules_kotlin": {
         "git_repository": "https://github.com/bazelbuild/rules_kotlin.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_kotlin/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-kotlin-kotlin",
     },
     "rules_nodejs": {
         "git_repository": "https://github.com/bazelbuild/rules_nodejs.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_nodejs/main/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-nodejs-nodejs",
     },
     "rules_perl": {
         "git_repository": "https://github.com/bazelbuild/rules_perl.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_perl/main/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-perl",
     },
     "rules_proto": {
         "git_repository": "https://github.com/bazelbuild/rules_proto.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_proto/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-proto",
         "owned_by_bazel": True,
     },
     "rules_python": {
         "git_repository": "https://github.com/bazelbuild/rules_python.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_python/main/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-python-python",
         "owned_by_bazel": True,
     },
     "rules_rust": {
         "git_repository": "https://github.com/bazelbuild/rules_rust.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_rust/main/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-rust-rustlang",
     },
     "rules_sass": {
         "git_repository": "https://github.com/bazelbuild/rules_sass.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_sass/main/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-sass",
     },
     "rules_scala": {
         "git_repository": "https://github.com/bazelbuild/rules_scala.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_scala/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-scala-scala",
         "disabled_reason": "waiting on https://github.com/bazelbuild/rules_scala/pull/1422",
     },
     "rules_swift": {
         "git_repository": "https://github.com/bazelbuild/rules_swift.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_swift/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-swift-swift",
     },
     "rules_testing": {
         "git_repository": "https://github.com/bazelbuild/rules_testing.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_testing/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-testing",
         "owned_by_bazel": True,
     },
     "rules_webtesting": {
         "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
-        "http_config": "https://raw.githubusercontent.com/bazelbuild/rules_webtesting/master/.bazelci/presubmit.yml",
         "pipeline_slug": "rules-webtesting-saucelabs",
     },
     "upb": {
         "git_repository": "https://github.com/protocolbuffers/upb.git",
-        "http_config": "https://raw.githubusercontent.com/protocolbuffers/upb/master/.bazelci/presubmit.yml",
         "pipeline_slug": "upb",
         "disabled_reason": "https://github.com/protocolbuffers/upb/issues/1290",
     },
@@ -455,7 +398,6 @@ PLATFORMS = {
     "centos7": {
         "name": "CentOS 7 (OpenJDK 8, gcc 4.8.5)",
         "emoji-name": ":centos: 7 (OpenJDK 8, gcc 4.8.5)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7-java8",
         "python": "python3.6",
@@ -463,7 +405,6 @@ PLATFORMS = {
     "centos7_java11": {
         "name": "CentOS 7 (OpenJDK 11, gcc 4.8.5)",
         "emoji-name": ":centos: 7 (OpenJDK 11, gcc 4.8.5)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7-java11",
         "python": "python3.6",
@@ -471,7 +412,6 @@ PLATFORMS = {
     "centos7_java11_devtoolset10": {
         "name": "CentOS 7 (OpenJDK 11, gcc 10.2.1)",
         "emoji-name": ":centos: 7 (OpenJDK 11, gcc 10.2.1)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["ubuntu1404", "centos7", "linux"],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7-java11-devtoolset10",
         "python": "python3.6",
@@ -479,7 +419,6 @@ PLATFORMS = {
     "debian10": {
         "name": "Debian 10 Buster (OpenJDK 11, gcc 8.3.0)",
         "emoji-name": ":debian: 10 Buster (OpenJDK 11, gcc 8.3.0)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian10-java11",
         "python": "python3.7",
@@ -487,7 +426,6 @@ PLATFORMS = {
     "debian11": {
         "name": "Debian 11 Bullseye (OpenJDK 17, gcc 10.2.1)",
         "emoji-name": ":debian: 11 Bullseye (OpenJDK 17, gcc 10.2.1)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian11-java17",
         "python": "python3.9",
@@ -495,7 +433,6 @@ PLATFORMS = {
     "ubuntu1604": {
         "name": "Ubuntu 16.04 LTS (OpenJDK 8, gcc 5.4.0)",
         "emoji-name": ":ubuntu: 16.04 LTS (OpenJDK 8, gcc 5.4.0)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1604-java8",
         "python": "python3.6",
@@ -503,7 +440,6 @@ PLATFORMS = {
     "ubuntu1804": {
         "name": "Ubuntu 18.04 LTS (OpenJDK 11, gcc 7.5.0)",
         "emoji-name": ":ubuntu: 18.04 LTS (OpenJDK 11, gcc 7.5.0)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1804-java11",
         "python": "python3.6",
@@ -511,7 +447,6 @@ PLATFORMS = {
     "ubuntu2004": {
         "name": "Ubuntu 20.04 LTS (OpenJDK 11, gcc 9.4.0)",
         "emoji-name": ":ubuntu: 20.04 LTS (OpenJDK 11, gcc 9.4.0)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11",
         "python": "python3.8",
@@ -519,7 +454,6 @@ PLATFORMS = {
     "ubuntu2004_arm64": {
         "name": "Ubuntu 20.04 LTS ARM64 (OpenJDK 11, gcc 9.4.0)",
         "emoji-name": ":ubuntu: 20.04 LTS ARM64 (OpenJDK 11, gcc 9.4.0)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11",
         "python": "python3.8",
@@ -530,7 +464,6 @@ PLATFORMS = {
     "kythe_ubuntu2004": {
         "name": "Kythe (Ubuntu 20.04 LTS, OpenJDK 11, gcc 9.4.0)",
         "emoji-name": "Kythe (:ubuntu: 20.04 LTS, OpenJDK 11, gcc 9.4.0)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11-kythe",
         "python": "python3.8",
@@ -538,7 +471,6 @@ PLATFORMS = {
     "ubuntu2204": {
         "name": "Ubuntu 22.04 (OpenJDK 17, gcc 11.2.0)",
         "emoji-name": ":ubuntu: 22.04 (OpenJDK 17, gcc 11.2.0)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2204-java17",
         "python": "python3",
@@ -546,7 +478,6 @@ PLATFORMS = {
     "fedora39": {
         "name": "Fedora 39 (OpenJDK 17, gcc 13.1.1)",
         "emoji-name": ":fedora: 39 (OpenJDK 17, gcc 13.1.1)",
-        "downstream-root": "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/fedora39-java17",
         "python": "python3",
@@ -554,7 +485,6 @@ PLATFORMS = {
     "macos": {
         "name": "macOS (OpenJDK 11, Xcode)",
         "emoji-name": ":darwin: (OpenJDK 11, Xcode)",
-        "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["macos"],
         "queue": "macos",
         "python": "python3",
@@ -562,7 +492,6 @@ PLATFORMS = {
     "macos_qa": {
         "name": "macOS QA (OpenJDK 11, Xcode)",
         "emoji-name": ":darwin: :fire_extinguisher: (OpenJDK 11, Xcode)",
-        "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "queue": "macos_qa",
         "python": "python3",
@@ -570,7 +499,6 @@ PLATFORMS = {
     "macos_arm64_qa": {
         "name": "macOS arm64 QA (OpenJDK 8, Xcode)",
         "emoji-name": ":darwin: arm64 :fire_extinguisher: (OpenJDK 8, Xcode)",
-        "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": [],
         "queue": "macos_arm64_qa",
         "python": "python3",
@@ -578,7 +506,6 @@ PLATFORMS = {
     "macos_arm64": {
         "name": "macOS arm64 (OpenJDK 8, Xcode)",
         "emoji-name": ":darwin: arm64 (OpenJDK 8, Xcode)",
-        "downstream-root": "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["macos_arm64"],
         "queue": "macos_arm64",
         "python": "python3",
@@ -586,7 +513,6 @@ PLATFORMS = {
     "windows": {
         "name": "Windows (OpenJDK 11, VS2022)",
         "emoji-name": ":windows: (OpenJDK 11, VS2022)",
-        "downstream-root": "c:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["windows"],
         "queue": "windows",
         "python": "python.exe",
@@ -594,7 +520,6 @@ PLATFORMS = {
     "windows_arm64": {
         "name": "Windows ARM64 (OpenJDK 11, VS2022)",
         "emoji-name": ":windows: arm64 (OpenJDK 11, VS2022)",
-        "downstream-root": "c:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-downstream-projects",
         "publish_binary": ["windows_arm64"],
         # TODO(pcloudy): Switch to windows_arm64 queue when Windows ARM64 machines are available,
         # current we just use x86_64 machines to do cross compile.
@@ -972,17 +897,6 @@ def gcloud_command():
     return "gcloud.cmd" if is_windows() else "gcloud"
 
 
-def downstream_projects_root(platform):
-    downstream_root = os.path.expandvars(PLATFORMS[platform]["downstream-root"])
-    if platform == "windows" and os.path.exists("d:/b"):
-        # If this is a Windows machine with a local SSD, the build directory is
-        # on drive D.
-        downstream_root = downstream_root.replace("c:/b/", "d:/b/")
-    if not os.path.exists(downstream_root):
-        os.makedirs(downstream_root)
-    return downstream_root
-
-
 def match_matrix_attr_pattern(s):
     return re.match("^\${{\s*(\w+)\s*}}$", s)
 
@@ -1229,9 +1143,6 @@ def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_v
 def execute_commands(
     task_config,
     platform,
-    git_repository,
-    git_commit,
-    repo_location,
     use_bazel_at_commit,
     use_but,
     save_but,
@@ -1289,11 +1200,6 @@ def execute_commands(
         # CI should have its own user agent so that we can remove it from Bazel download statistics.
         os.environ["BAZELISK_USER_AGENT"] = "Bazelisk/BazelCI"
         test_env_vars.append("BAZELISK_USER_AGENT")
-
-        if repo_location:
-            os.chdir(repo_location)
-        elif git_repository:
-            clone_git_repository(git_repository, platform, git_commit)
 
         # We use one binary for all Linux platforms (because we also just release one binary for all
         # Linux versions and we have to ensure that it works on all of them).
@@ -1378,9 +1284,8 @@ def execute_commands(
         if needs_clean:
             execute_bazel_clean(bazel_binary, platform)
 
-        # The git_commit paramter only has a value in the downstream pipeline,
-        # but we need the commit here in order to calculate the correct targets.
-        git_commit = git_commit or os.getenv("BUILDKITE_COMMIT")
+        # we need the commit here in order to calculate the correct targets.
+        git_commit = os.getenv("BUILDKITE_COMMIT")
         if not git_commit:
             raise BuildkiteInfraException("Unable to determine Git commit for this build")
 
@@ -1796,33 +1701,54 @@ def get_mirror_root():
 
     return "/var/lib/bazelbuild/"
 
+def get_repositories_root():
+    """A root directory for preparing the reposioty to be tested."""
+    repo_root = "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-org-repo-root"
+    if is_mac():
+        repo_root = "/Users/buildkite/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-org-repo-root"
+    elif is_windows():
+        repo_root = "c:/b/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-org-repo-root"
+        # If this is a Windows machine with a local SSD, the build directory is on drive D.
+        if os.path.exists("d:/b"):
+            repo_root = repo_root.replace("c:/b/", "d:/b/")
 
-def clone_git_repository(git_repository, platform, git_commit=None):
-    root = downstream_projects_root(platform)
+    repo_root = os.path.expandvars(repo_root)
+
+    if not os.path.exists(repo_root):
+        os.makedirs(repo_root)
+    return repo_root
+
+def clone_git_repository(git_repository, git_commit=None, suppress_stdout=False):
+
+    def execute_git_command(args):
+        execute_command(args, print_output=not suppress_stdout, suppress_stdout=suppress_stdout)
+
+    root = get_repositories_root()
     project_name = re.search(r"/([^/]+)\.git$", git_repository).group(1)
     clone_path = os.path.join(root, project_name)
-    print_collapsed_group(
-        "Fetching %s sources at %s" % (project_name, git_commit if git_commit else "HEAD")
-    )
+    if not suppress_stdout:
+        print_collapsed_group(
+            "Fetching %s sources at %s" % (project_name, git_commit if git_commit else "HEAD")
+        )
 
     mirror_path = get_mirror_root() + re.sub(r"[^0-9A-Za-z]", "-", git_repository)
 
     if not os.path.exists(clone_path):
         if os.path.exists(mirror_path):
-            execute_command(
+            execute_git_command(
                 ["git", "clone", "-v", "--reference", mirror_path, git_repository, clone_path]
             )
         else:
-            execute_command(["git", "clone", "-v", git_repository, clone_path])
+            execute_git_command(["git", "clone", "-v", git_repository, clone_path])
 
     os.chdir(clone_path)
-    execute_command(["git", "remote", "set-url", "origin", git_repository])
-    execute_command(["git", "clean", "-fdqx"])
-    execute_command(["git", "submodule", "foreach", "--recursive", "git clean -fdqx"])
-    execute_command(["git", "fetch", "origin"])
+    execute_git_command(["git", "remote", "set-url", "origin", git_repository])
+    execute_git_command(["git", "clean", "-fdqx"])
+    execute_git_command(["git", "submodule", "foreach", "--recursive", "git clean -fdqx"])
+    execute_git_command(["git", "fetch", "origin"])
     if git_commit:
         # sync to a specific commit of this repository
-        execute_command(["git", "reset", git_commit, "--hard"])
+        execute_git_command(["git", "reset", git_commit, "--hard"])
     else:
         # sync to the latest commit of HEAD. Unlikely git pull this also works after a force push.
         remote_head = (
@@ -1830,12 +1756,12 @@ def clone_git_repository(git_repository, platform, git_commit=None):
             .decode("utf-8")
             .rstrip()
         )
-        execute_command(["git", "reset", remote_head, "--hard"])
-    execute_command(["git", "submodule", "sync", "--recursive"])
-    execute_command(["git", "submodule", "update", "--init", "--recursive", "--force"])
-    execute_command(["git", "submodule", "foreach", "--recursive", "git reset --hard"])
-    execute_command(["git", "clean", "-fdqx"])
-    execute_command(["git", "submodule", "foreach", "--recursive", "git clean -fdqx"])
+        execute_git_command(["git", "reset", remote_head, "--hard"])
+    execute_git_command(["git", "submodule", "sync", "--recursive"])
+    execute_git_command(["git", "submodule", "update", "--init", "--recursive", "--force"])
+    execute_git_command(["git", "submodule", "foreach", "--recursive", "git reset --hard"])
+    execute_git_command(["git", "clean", "-fdqx"])
+    execute_git_command(["git", "submodule", "foreach", "--recursive", "git clean -fdqx"])
     return clone_path
 
 
@@ -2238,7 +2164,7 @@ def calculate_targets(
     shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
     sharding_enabled = shard_id > -1 and shard_count > -1
 
-    use_bazel_diff = diffbase and can_use_bazel_diff()
+    use_bazel_diff = diffbase and can_use_bazel_diff(git_commit)
 
     # Skip target expansion if we don't need to calculate test targets
     if not use_bazel_diff and not sharding_enabled:
@@ -2271,9 +2197,9 @@ def calculate_targets(
     return build_targets, actual_test_targets, coverage_targets, index_targets
 
 
-def can_use_bazel_diff():
+def can_use_bazel_diff(git_commit):
     matched_files = []
-    for f in get_modified_files():
+    for f in get_modified_files(git_commit):
         for d in DISABLE_BAZEL_DIFF_IF_MODIFIED:
             if d.endswith("/") and f.startswith(d) or f == d:
                 matched_files.append(f)
@@ -2679,7 +2605,7 @@ def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True, prin
 
 
 def execute_command(
-    args, shell=False, fail_if_nonzero=True, cwd=None, print_output=True, capture_stderr=False
+    args, shell=False, fail_if_nonzero=True, cwd=None, print_output=True, capture_stderr=False, suppress_stdout=False
 ):
     if print_output:
         eprint(" ".join(args))
@@ -2690,6 +2616,9 @@ def execute_command(
         env=os.environ,
         cwd=cwd,
         errors="replace",
+        stdout=subprocess.DEVNULL
+        if suppress_stdout
+        else subprocess.PIPE,  # suppress_stdout=True when we don't want the output to be printed
         stderr=subprocess.PIPE
         if capture_stderr
         else None,  # capture_stderr=True when we want exceptions to contain stderr
@@ -2843,12 +2772,7 @@ def print_project_pipeline(
         )
 
     # In Bazel Downstream Project pipelines, we should test the project at the last green commit.
-    git_commit = None
-    if is_downstream_pipeline():
-        last_green_commit_url = bazelci_last_green_commit_url(
-            git_repository, DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"]
-        )
-        git_commit = get_last_green_commit(last_green_commit_url)
+    git_commit = get_last_green_commit(project_name) if is_downstream_pipeline() else None
 
     config_hashes = set()
     skipped_downstream_tasks = []
@@ -2960,7 +2884,7 @@ def print_project_pipeline(
         )
 
     if "validate_config" in configs:
-        pipeline_steps += create_config_validation_steps()
+        pipeline_steps += create_config_validation_steps(git_commit or os.getenv("BUILDKITE_COMMIT"))
 
     if use_bazelisk_migrate() and not is_downstream_pipeline():
         # Print results of bazelisk --migrate in project pipelines that explicitly set
@@ -3022,10 +2946,10 @@ def get_platform_for_task(task, task_config):
     return task_config.get("platform", task)
 
 
-def create_config_validation_steps():
+def create_config_validation_steps(git_commit):
     config_files = [
         path
-        for path in get_modified_files()
+        for path in get_modified_files(git_commit)
         if path.startswith(".bazelci/") and os.path.splitext(path)[1] in CONFIG_FILE_EXTENSIONS
     ]
     return [
@@ -3043,9 +2967,9 @@ def create_config_validation_steps():
     ]
 
 
-def get_modified_files():
+def get_modified_files(git_commit):
     output = execute_command_and_get_output(
-        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", os.getenv("BUILDKITE_COMMIT")]
+        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", git_commit]
     )
     return output.split("\n")
 
@@ -3573,7 +3497,7 @@ def bazelci_last_green_downstream_commit_url():
     return "gs://{}/last_green_commit/downstream_pipeline".format(bucket_name)
 
 
-def get_last_green_commit(last_green_commit_url):
+def get_last_green_commit_by_url(last_green_commit_url):
     try:
         return (
             subprocess.check_output(
@@ -3584,6 +3508,13 @@ def get_last_green_commit(last_green_commit_url):
         )
     except subprocess.CalledProcessError:
         return None
+
+
+def get_last_green_commit(project_name):
+    last_green_commit_url = bazelci_last_green_commit_url(
+        DOWNSTREAM_PROJECTS[project_name]["git_repository"], DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"]
+    )
+    return get_last_green_commit_by_url(last_green_commit_url)
 
 
 def try_update_last_green_commit():
@@ -3621,7 +3552,7 @@ def try_update_last_green_commit():
 
 
 def update_last_green_commit_if_newer(last_green_commit_url):
-    last_green_commit = get_last_green_commit(last_green_commit_url)
+    last_green_commit = get_last_green_commit_by_url(last_green_commit_url)
     current_commit = resolve_revision("HEAD")
     if last_green_commit:
         success = False
@@ -3967,6 +3898,11 @@ def main(argv=None):
                 notify=args.notify,
             )
         elif args.subparsers_name == "project_pipeline":
+            # Fetch the repo in case we need to use file_config.
+            if args.git_repository:
+                git_commit = get_last_green_commit(args.project_name) if is_downstream_pipeline() else None
+                clone_git_repository(args.git_repository, git_commit, suppress_stdout=True)
+
             configs = fetch_configs(args.http_config, args.file_config)
             print_project_pipeline(
                 configs=configs,
@@ -3979,6 +3915,12 @@ def main(argv=None):
                 notify=args.notify,
             )
         elif args.subparsers_name == "runner":
+            # Fetch the repo in case we need to use file_config.
+            if args.repo_location:
+                os.chdir(args.repo_location)
+            elif args.git_repository:
+                clone_git_repository(args.git_repository, args.git_commit)
+
             configs = fetch_configs(args.http_config, args.file_config)
             tasks = configs.get("tasks", {})
             task_config = tasks.get(args.task)
@@ -4002,9 +3944,6 @@ def main(argv=None):
             execute_commands(
                 task_config=task_config,
                 platform=platform,
-                git_repository=args.git_repository,
-                git_commit=args.git_commit,
-                repo_location=args.repo_location,
                 use_bazel_at_commit=args.use_bazel_at_commit,
                 use_but=args.use_but,
                 save_but=args.save_but,

@@ -126,11 +126,7 @@ class BuildInfoAnalyzer(threading.Thread):
         job_infos = filter(lambda x: bool(x), (extract_job_info_by_key(job) for job in main_build_info["jobs"] if not ("soft_failed" in job and job["soft_failed"])))
         self.main_result["tasks"] = group_job_info_by_task(job_infos)
         self.main_result["state"] = get_project_state(self.main_result["tasks"])
-
-        last_green_commit_url = bazelci.bazelci_last_green_commit_url(
-            bazelci.DOWNSTREAM_PROJECTS[self.project]["git_repository"], self.pipeline
-        )
-        self.main_result["last_green_commit"] = bazelci.get_last_green_commit(last_green_commit_url)
+        self.main_result["last_green_commit"] = bazelci.get_last_green_commit(self.project)
 
 
     # Log all succeeded projects in the same annotate block
