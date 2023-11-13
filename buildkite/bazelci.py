@@ -2616,7 +2616,7 @@ def execute_command(
         errors="replace",
         stdout=subprocess.DEVNULL
         if suppress_stdout
-        else subprocess.PIPE,  # suppress_stdout=True when we don't want the output to be printed
+        else None,  # suppress_stdout=True when we don't want the output to be printed
         stderr=subprocess.PIPE
         if capture_stderr
         else None,  # capture_stderr=True when we want exceptions to contain stderr
