@@ -531,10 +531,11 @@ def extract_job_info_by_key(job, info_from_command = [], info_from_job = ["name"
     # Assume there is no space in each argument
     args = job["command"].split(" ")
     for info in info_from_command:
+        prefix = "--" + info + "="
         for arg in args:
-            prefix = "--" + info + "="
             if arg.startswith(prefix):
                 job_info[info] = arg[len(prefix):]
+                break
         if info not in job_info:
             return None
 
@@ -597,10 +598,6 @@ def get_project_state(tasks):
 #     }
 # }
 def get_downstream_result_by_project(downstream_build_info):
-    config_to_project = {}
-    for project_name, project_info in bazelci.DOWNSTREAM_PROJECTS.items():
-        config_to_project[project_info["http_config"]] = project_name
-
     downstream_result = {}
     jobs_per_project = {}
 
@@ -608,15 +605,16 @@ def get_downstream_result_by_project(downstream_build_info):
         # Skip all soft failed jobs
         if "soft_failed" in job and job["soft_failed"]:
             continue
-        job_info = extract_job_info_by_key(job = job, info_from_command = ["http_config", "git_commit"])
+        job_info = extract_job_info_by_key(job = job, info_from_command = ["git_commit"])
         if job_info:
-            project_name = config_to_project[job_info["http_config"]]
+            project_name = get_project_name_from_job(job_info)
             if project_name not in downstream_result:
                 jobs_per_project[project_name] = []
-                downstream_result[project_name] = {}
-                downstream_result[project_name]["bazel_commit"] = downstream_build_info["commit"]
-                downstream_result[project_name]["build_number"] = downstream_build_info["number"]
-                downstream_result[project_name]["commit"] = job_info["git_commit"]
+                downstream_result[project_name] = {
+                    "bazel_commit": downstream_build_info["commit"],
+                    "build_number": downstream_build_info["number"],
+                    "commit": job_info["git_commit"],
+                }
             jobs_per_project[project_name].append(job_info)
 
     for project_name in jobs_per_project:
@@ -625,6 +623,12 @@ def get_downstream_result_by_project(downstream_build_info):
         downstream_result[project_name]["state"] = get_project_state(tasks)
 
     return downstream_result
+
+
+def get_project_name_from_job(job_info):
+    # This is a bit of a hack that depends on how bazelci.create_label()
+    # formats job names in downstream pipelines.
+    return job_info.get("name").partition(" (")[0]
 
 
 def main(argv=None):

@@ -3100,6 +3100,8 @@ def create_label(platform, project_name, build_only=False, test_only=False, task
     )
 
     if project_name:
+        # Update get_project_name_from_job in bazel_auto_sheriff.py if you change
+        # the expected format of "Project Foo (Task bar on OS)"
         label += "{0} ({1})".format(project_name, platform_label)
     else:
         label += platform_label
