@@ -1861,7 +1861,7 @@ def remote_caching_flags(platform, accept_cached=True):
         platform_cache_digest.update(b":")
 
     flags += [
-        "--remote_timeout=60",
+        "--remote_timeout=600",
         "--remote_max_connections=200",
         '--remote_default_platform_properties=properties:{name:"cache-silo-key" value:"%s"}'
         % platform_cache_digest.hexdigest(),
