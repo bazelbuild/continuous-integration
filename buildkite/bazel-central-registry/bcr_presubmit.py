@@ -156,7 +156,7 @@ def scratch_file(root, relative_path, lines=None, mode="w"):
 
 def create_simple_repo(module_name, module_version):
     """Create a simple Bazel module repo which depends on the target module."""
-    root = bazelci.get_repositories_root()
+    root = pathlib.Path(bazelci.get_repositories_root())
     scratch_file(root, "WORKSPACE")
     scratch_file(root, "BUILD")
     # TODO(pcloudy): Should we test this module as the root module? Maybe we do if we support dev dependency.
@@ -213,7 +213,7 @@ def unpack_archive(archive_file, output_dir):
 def prepare_test_module_repo(module_name, module_version):
     """Prepare the test module repo and the presubmit yml file it should use"""
     bazelci.print_collapsed_group(":information_source: Prepare test module repo")
-    root = bazelci.get_repositories_root()
+    root = pathlib.Path(bazelci.get_repositories_root())
     source = load_source_json(module_name, module_version)
 
     # Download and unpack the source archive to ./output
