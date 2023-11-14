@@ -1843,9 +1843,10 @@ def remote_caching_flags(platform, accept_cached=True):
         flags = ["--remote_cache=http://100.107.73.147"]
     else:
         # Use RBE for caching builds running on GCE.
+        protocol = "grpcs://" if is_mac() else ""
         flags = [
             "--google_default_credentials",
-            "--remote_cache=remotebuildexecution.googleapis.com",
+            "--remote_cache={}remotebuildexecution.googleapis.com".format(protocol),
             "--remote_instance_name=projects/{}/instances/default_instance".format(CLOUD_PROJECT),
             # Enable BES / Build Results reporting.
             "--bes_backend=buildeventservice.googleapis.com",
