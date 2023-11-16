@@ -1107,7 +1107,7 @@ def bazelisk_flags():
     return ["--migrate"] if use_bazelisk_migrate() else []
 
 
-def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_vars):
+def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_vars, additional_flags=None):
     include_json_profile = task_config.get("include_json_profile", [])
     capture_corrupted_outputs = task_config.get("capture_corrupted_outputs", [])
 
@@ -1136,6 +1136,8 @@ def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_v
     # discards its analysis cache between `build` and `test`.
     if test_env_vars:
         flags += ["--test_env={}".format(v) for v in test_env_vars]
+    if additional_flags:
+        flags += additional_flags
 
     return flags, json_profile_out, capture_corrupted_outputs_dir
 
@@ -1289,8 +1291,17 @@ def execute_commands(
         if not git_commit:
             raise BuildkiteInfraException("Unable to determine Git commit for this build")
 
+        additional_test_flags = []
+        if is_mac() and not is_lab_machine():
+            # IPv6 -> forward env variables and test flags
+            test_env_vars += ["JAVA_TOOL_OPTIONS", "COURSIER_OPTS"]
+            additional_test_flags += [
+                '--test_arg="--jvmopt=-Djava.net.preferIPv6Addresses"',
+                '--test_arg="--host_jvm_args=-Djava.net.preferIPv6Addresses=true"',
+            ]
+
         test_flags, json_profile_out_test, capture_corrupted_outputs_dir_test = calculate_flags(
-            task_config, "test_flags", "test", tmpdir, test_env_vars
+            task_config, "test_flags", "test", tmpdir, test_env_vars, additional_test_flags
         )
 
         build_targets, test_targets, coverage_targets, index_targets = calculate_targets(
