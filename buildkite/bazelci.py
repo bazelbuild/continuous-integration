@@ -1294,7 +1294,8 @@ def execute_commands(
         additional_test_flags = []
         if is_mac() and not is_lab_machine():
             # IPv6 -> forward env variables and test flags
-            test_env_vars += ["JAVA_TOOL_OPTIONS", "COURSIER_OPTS"]
+            val = '"-Djava.net.preferIPv6Addresses=true"'
+            test_env_vars += ["{}={}".format(e, val) for e in ("JAVA_TOOL_OPTIONS", "COURSIER_OPTS")]
             additional_test_flags += [
                 '--test_arg="--jvmopt=-Djava.net.preferIPv6Addresses"',
                 '--test_arg="--host_jvm_args=-Djava.net.preferIPv6Addresses=true"',
