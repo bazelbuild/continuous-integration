@@ -482,6 +482,13 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/fedora39-java17",
         "python": "python3",
     },
+    "nixos": {
+        "name": "NixOS",
+        "emoji-name": ":nixos:",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/nixos",
+        "python": "python3",
+    },
     "macos": {
         "name": "macOS (OpenJDK 11, Xcode)",
         "emoji-name": ":darwin: (OpenJDK 11, Xcode)",
