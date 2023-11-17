@@ -482,11 +482,11 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/fedora39-java17",
         "python": "python3",
     },
-    "nixos": {
-        "name": "NixOS",
-        "emoji-name": ":nixos:",
+    "ubuntu2204-nix": {
+        "name": "Ubuntu (Nix)",
+        "emoji-name": ":nix:",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/nixos",
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2204-nix",
         "python": "python3",
     },
     "macos": {
