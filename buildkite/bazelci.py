@@ -1302,7 +1302,6 @@ def execute_commands(
             test_env_vars += ["{}={}".format(e, val) for e in ("JAVA_TOOL_OPTIONS", "COURSIER_OPTS")]
             additional_test_flags += [
                 '--test_arg="--jvmopt=-Djava.net.preferIPv6Addresses"',
-                '--test_arg="--host_jvm_args=-Djava.net.preferIPv6Addresses=true"',
             ]
 
         test_flags, json_profile_out_test, capture_corrupted_outputs_dir_test = calculate_flags(
