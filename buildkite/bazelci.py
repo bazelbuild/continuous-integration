@@ -2822,21 +2822,22 @@ def print_project_pipeline(
         except ValueError:
             raise BuildkiteException("Task {} has invalid shard value '{}'".format(task, shards))
 
-        step = runner_step(
-            platform=platform,
-            task=task,
-            task_name=task_name,
-            project_name=project_name,
-            http_config=http_config,
-            file_config=file_config,
-            git_repository=git_repository,
-            git_commit=git_commit,
-            monitor_flaky_tests=monitor_flaky_tests,
-            use_but=use_but,
-            shards=shards,
-            soft_fail=soft_fail,
-        )
-        pipeline_steps.append(step)
+        if "mac" not in platform:
+            step = runner_step(
+                platform=platform,
+                task=task,
+                task_name=task_name,
+                project_name=project_name,
+                http_config=http_config,
+                file_config=file_config,
+                git_repository=git_repository,
+                git_commit=git_commit,
+                monitor_flaky_tests=monitor_flaky_tests,
+                use_but=use_but,
+                shards=shards,
+                soft_fail=soft_fail,
+            )
+            pipeline_steps.append(step)
 
     if skipped_downstream_tasks:
         lines = ["\n- {}".format(s) for s in skipped_downstream_tasks]
