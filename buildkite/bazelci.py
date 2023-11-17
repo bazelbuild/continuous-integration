@@ -1567,6 +1567,39 @@ def is_pull_request():
     third_party_repo = os.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
     return len(third_party_repo) > 0
 
+def parse_github_repo_url(url):
+    # Regular expression to match the GitHub URL pattern and capture the organization and repo name
+    pattern = r'https?://github\.com/([^/]+)/([^/]+?)(\.git)?$'
+    match = re.search(pattern, url)
+    if match:
+        org_name, repo_name = match.group(1), match.group(2)
+        return (org_name, repo_name)
+    else:
+        return None
+
+def get_labels_from_pr():
+    """Get the labels from the GitHub PR and return them as a list of strings."""
+
+    if os.getenv("BUILDKITE_PIPELINE_PROVIDER") != "github" or not is_pull_request():
+        raise BuildkiteException("The current build is not for a GitHub pull request.")
+
+    pr_number = os.environ.get("BUILDKITE_PULL_REQUEST")
+    if not pr_number or pr_number == "false":
+        raise BuildkiteException("Could not fetch pull request number.")
+
+    github_repo_url = os.environ.get("BUILDKITE_REPO", "")
+    result = parse_github_repo_url(github_repo_url)
+    if not result:
+        raise BuildkiteException(f"Could not parse the GitHub URL: {github_repo_url}")
+    org_name, repo_name = result
+
+    response = requests.get(f"https://api.github.com/repos/{org_name}/{repo_name}/pulls/{pr_number}")
+    if response.status_code == 200:
+        pr = response.json()
+        return [label["name"] for label in pr["labels"]]
+    else:
+        raise BuildkiteException(f"Error: {response.status_code}. Could not fetch labels for PR https://github.com/{org_name}/{repo_name}/pull/{pr_number}")
+
 
 def print_bazel_version_info(bazel_binary, platform):
     print_collapsed_group(":information_source: Bazel Info")
@@ -2723,6 +2756,12 @@ def create_docker_step(
     return step
 
 
+def validate_label_for_presubmit():
+    labels = get_labels_from_pr()
+    if "presubmit-auto-run" not in labels:
+        raise BuildkiteException("Error: 'presubmit-auto-run' label not found. CI presubmit process cannot be triggered without this label. Please ask a PR reviewer to add the 'presubmit-auto-run' label to the PR and try again.")
+
+
 def print_project_pipeline(
     configs,
     project_name,
@@ -2733,6 +2772,9 @@ def print_project_pipeline(
     use_but,
     notify,
 ):
+    if is_pull_request():
+        validate_label_for_presubmit()
+
     task_configs = configs.get("tasks", None)
     if not task_configs:
         raise BuildkiteException("{0} pipeline configuration is empty.".format(project_name))
