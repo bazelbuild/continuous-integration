@@ -889,6 +889,10 @@ def is_lab_machine():
     return any(p.match(agent) for p in LAB_AGENT_PATTERNS)
 
 
+def is_ipv6():
+    return is_mac() and not is_lab_machine()
+
+
 def gsutil_command():
     return "gsutil.cmd" if is_windows() else "gsutil"
 
@@ -1292,8 +1296,8 @@ def execute_commands(
             raise BuildkiteInfraException("Unable to determine Git commit for this build")
 
         additional_test_flags = []
-        if is_mac() and not is_lab_machine():
-            # IPv6 -> forward env variables and test flags
+        if is_ipv6():
+            # Forward required env variables and test flags
             val = '"-Djava.net.preferIPv6Addresses=true"'
             test_env_vars += ["{}={}".format(e, val) for e in ("JAVA_TOOL_OPTIONS", "COURSIER_OPTS")]
             additional_test_flags += [
@@ -1921,6 +1925,8 @@ def common_startup_flags():
         else:
             # This machine uses its PD-SSD as the build directory.
             return ["--output_user_root=C:/b"]
+    elif is_ipv6():
+        return ["--host_jvm_args=-Djava.net.preferIPv6Addresses=true"]
     return []
 
 
@@ -1955,6 +1961,9 @@ def common_build_flags(bep_file, platform):
             "--experimental_build_event_json_file_path_conversion=false",
             "--build_event_json_file=" + bep_file,
         ]
+
+    if is_ipv6():
+        flags += ["--jvmopt=-Djava.net.preferIPv6Addresses"]
 
     return flags
 
