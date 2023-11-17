@@ -2156,7 +2156,7 @@ def calculate_targets(
         output = execute_command_and_get_output(
             [bazel_binary]
             + common_startup_flags()
-            + ["--nosystem_rc", "--nohome_rc", "query", index_targets_query],
+            + ["--nosystem_rc", "--nohome_rc", "query", "--lockfile_mode=off", index_targets_query],
             print_output=False,
         )
         index_targets += output.strip().split("\n")
@@ -2236,6 +2236,7 @@ def expand_test_target_patterns(bazel_binary, test_targets, test_flags):
             "--nosystem_rc",
             "--nohome_rc",
             "cquery" if os.getenv("EXP_USE_CQUERY") else "query",
+            "--lockfile_mode=off",
             get_test_query(test_targets, test_flags),
         ],
         print_output=False,
