@@ -17,6 +17,6 @@
 # Please do not clear or delete this file when an incident is over.
 # Instead, simply replace all values with empty strings ("").
 ---
-message: ""
-issue_url: ""
+message: "All Macs are currently offline due to a network issue. We don't expect a resolution before Monday, so we have a workaround in place to not block builds on MacOS tasks."
+issue_url: "https://github.com/bazelbuild/continuous-integration/issues/1800"
 last_good_bazel: ""
