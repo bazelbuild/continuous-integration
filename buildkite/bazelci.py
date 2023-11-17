@@ -2822,6 +2822,7 @@ def print_project_pipeline(
         except ValueError:
             raise BuildkiteException("Task {} has invalid shard value '{}'".format(task, shards))
 
+        # TODO(https://github.com/bazelbuild/continuous-integration/issues/1800): enable Mac workers again once they are back online
         if "mac" not in platform:
             step = runner_step(
                 platform=platform,
