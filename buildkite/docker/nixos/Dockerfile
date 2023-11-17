@@ -10,7 +10,7 @@ RUN echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
 
 # Setup nix-ld for prebuilt non-nix binaries (https://github.com/Mic92/nix-ld)
 RUN nix profile install \
-    nixpkgs#glibc.out \ 
+    nixpkgs#glibc.out \
     nixpkgs#nix-ld \
     nixpkgs#stdenv.cc.cc.lib && \
     mkdir /lib64 && \
@@ -23,5 +23,29 @@ RUN nix profile install \
     nixpkgs#bazel-buildtools \
     nixpkgs#bazelisk \
     nixpkgs#coreutils-full \
-    nixpkgs#python39 && \
+    nixpkgs#dnsutils \
+    nixpkgs#ed \
+    nixpkgs#expect \
+    nixpkgs#file \
+    nixpkgs#gnupg \
+    nixpkgs#iproute2 \
+    nixpkgs#iputils \
+    nixpkgs#lcov \
+    nixpkgs#netcat \
+    nixpkgs#openssl \
+    nixpkgs#python310 \
+    nixpkgs#python310Packages.certifi \
+    nixpkgs#python310Packages.charset-normalizer \
+    nixpkgs#python310Packages.idna \
+    nixpkgs#python310Packages.pip \
+    nixpkgs#python310Packages.pyyaml \
+    nixpkgs#python310Packages.requests \
+    nixpkgs#python310Packages.setuptools \
+    nixpkgs#python310Packages.six \
+    nixpkgs#python310Packages.urllib3 \
+    nixpkgs#python310Packages.wheel \
+    nixpkgs#sudo \
+    nixpkgs#unzip \
+    nixpkgs#zip && \
     ln -s /root/.nix-profile/bin/bazelisk /root/.nix-profile/bin/bazel
+ENV PYTHONPATH="/root/.nix-profile/lib/python3.10/site-packages"
