@@ -1,5 +1,11 @@
 ---
 platforms:
+  fedora39:
+    build_targets:
+      - "//:release"
+      - "//:api"
+    test_targets:
+      - "//..."
   ubuntu2204:
     shell_commands:
       - "sudo apt -y update && sudo apt -y install openssh-client"
@@ -12,5 +18,15 @@ platforms:
     build_targets:
       - "//:release"
       - "//:api"
+    test_targets:
+      - "//..."
+  rbe_ubuntu2204:
+    shell_commands:
+      - "sudo apt -y update && sudo apt -y install openssh-client"
+    build_targets:
+      - "//:release"
+      - "//:api-skip-javadocs"
+    test_flags:
+      - "--config=remote"
     test_targets:
       - "//..."
