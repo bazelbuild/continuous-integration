@@ -1,34 +1,16 @@
 ---
 platforms:
-  ubuntu2004:
+  ubuntu2204:
     shell_commands:
       - "sudo apt -y update && sudo apt -y install openssh-client"
-      - "curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash - && sudo apt -y install nodejs && sudo npm install -g npm@latest"
-    build_flags:
-      - "--host_javabase=@bazel_tools//tools/jdk:remote_jdk11"
-      - "--javabase=@bazel_tools//tools/jdk:remote_jdk11"
-      - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_java11"
-      - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_java11"
     build_targets:
       - "//:release"
       - "//:api"
-    test_flags:
-      - "--host_javabase=@bazel_tools//tools/jdk:remote_jdk11"
-      - "--javabase=@bazel_tools//tools/jdk:remote_jdk11"
-      - "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_java11"
-      - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_java11"
-      - "--test_tag_filters=-slow,-flaky,-docker"
     test_targets:
       - "//..."
   macos:
-    build_flags:
-      - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_java8"
     build_targets:
       - "//:release"
       - "//:api"
-    test_flags:
-      - "--java_toolchain=@bazel_tools//tools/jdk:toolchain_java8"
-      - "--test_tag_filters=-slow,-flaky,-docker"
     test_targets:
       - "//..."
-      - "-//javatests/com/google/gerrit/server:server_tests"
