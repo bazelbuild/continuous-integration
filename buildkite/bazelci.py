@@ -69,6 +69,10 @@ EMERGENCY_FILE_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-in
     GITHUB_BRANCH, int(time.time())
 )
 
+CONTRIBUTORS_FILE_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/contributors.json?{}".format(
+    GITHUB_BRANCH, int(time.time())
+)
+
 FLAKY_TESTS_BUCKET = {
     "bazel-testing": "gs://bazel-testing-buildkite-stats/flaky-tests-bep/",
     "bazel-trusted": "gs://bazel-buildkite-stats/flaky-tests-bep/",
@@ -1030,6 +1034,12 @@ def load_config(http_url, file_config, allow_imports=True):
     return config
 
 
+def load_remote_json_file(http_url):
+    with urllib.request.urlopen(http_url) as resp:
+        reader = codecs.getreader("utf-8")
+        return json.loads(reader(resp))
+
+
 def load_remote_yaml_file(http_url):
     with urllib.request.urlopen(http_url) as resp:
         reader = codecs.getreader("utf-8")
@@ -1575,7 +1585,7 @@ def parse_github_repo_url(url):
         org_name, repo_name = match.group(1), match.group(2)
         return (org_name, repo_name)
     else:
-        return None
+        raise BuildkiteException(f"Could not parse the GitHub URL: {url}")
 
 def get_labels_from_pr():
     """Get the labels from the GitHub PR and return them as a list of strings."""
@@ -1588,10 +1598,7 @@ def get_labels_from_pr():
         raise BuildkiteException("Could not fetch pull request number.")
 
     github_repo_url = os.environ.get("BUILDKITE_REPO", "")
-    result = parse_github_repo_url(github_repo_url)
-    if not result:
-        raise BuildkiteException(f"Could not parse the GitHub URL: {github_repo_url}")
-    org_name, repo_name = result
+    org_name, repo_name = parse_github_repo_url(github_repo_url)
 
     response = requests.get(f"https://api.github.com/repos/{org_name}/{repo_name}/pulls/{pr_number}")
     if response.status_code == 200:
@@ -1599,6 +1606,26 @@ def get_labels_from_pr():
         return [label["name"] for label in pr["labels"]]
     else:
         raise BuildkiteException(f"Error: {response.status_code}. Could not fetch labels for PR https://github.com/{org_name}/{repo_name}/pull/{pr_number}")
+
+
+def remove_label_from_pr(label):
+    """Remove the given label from the GitHub PR."""
+
+    if os.getenv("BUILDKITE_PIPELINE_PROVIDER") != "github" or not is_pull_request():
+        raise BuildkiteException("The current build is not for a GitHub pull request.")
+
+    pr_number = os.environ.get("BUILDKITE_PULL_REQUEST")
+    if not pr_number or pr_number == "false":
+        raise BuildkiteException("Could not fetch pull request number.")
+
+    github_repo_url = os.environ.get("BUILDKITE_REPO", "")
+    org_name, repo_name = parse_github_repo_url(github_repo_url)
+
+    url = f"https://api.github.com/repos/{org_name}/{repo_name}/issues/{pr_number}/labels/{label}"
+    response = requests.delete(url, headers={'Authorization': f'token {github_token}'})
+
+    if response.status_code != 200:
+        raise BuildkiteException(f"Failed to remove label {label} for PR https://github.com/{org_name}/{repo_name}/pull/{pr_number}: {response.content}")
 
 
 def print_bazel_version_info(bazel_binary, platform):
@@ -2757,9 +2784,19 @@ def create_docker_step(
 
 
 def validate_label_for_presubmit():
+    github_repo_url = os.environ.get("BUILDKITE_PULL_REQUEST_REPO", "")
+    org_name, repo_name = parse_github_repo_url(github_repo_url)
+    contributors = load_remote_json_file(CONTRIBUTORS_FILE_URL)
+
+    # Bypass the check if tge pull request comes from a known contributor for the repository.
+    if org_name in contributors[repo_name]:
+        return
+
     labels = get_labels_from_pr()
     if "presubmit-auto-run" not in labels:
         raise BuildkiteException("Error: 'presubmit-auto-run' label not found. CI presubmit process cannot be triggered without this label. Please ask a PR reviewer to add the 'presubmit-auto-run' label to the PR and try again.")
+    else:
+        remove_label_from_pr("presubmit-auto-run")
 
 
 def print_project_pipeline(
