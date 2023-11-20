@@ -1455,9 +1455,17 @@ def execute_commands(
                     upload_corrupted_outputs(capture_corrupted_outputs_dir_index, tmpdir)
 
         if platform == "windows":
-            execute_batch_commands(task_config.get("post_batch_commands", None), True, ":batch: Post Processing (Batch Commands)")
+            execute_batch_commands(
+                task_config.get("post_batch_commands", None),
+                True,
+                ":batch: Post Processing (Batch Commands)",
+            )
         else:
-            execute_shell_commands(task_config.get("post_shell_commands", None), True, ":bash: Post Processing (Shell Commands)")
+            execute_shell_commands(
+                task_config.get("post_shell_commands", None),
+                True,
+                ":bash: Post Processing (Shell Commands)",
+            )
 
     finally:
         terminate_background_process(sc_process)
@@ -1708,6 +1716,7 @@ def get_mirror_root():
 
     return "/var/lib/bazelbuild/"
 
+
 def get_repositories_root():
     """A root directory for preparing the reposioty to be tested."""
     repo_root = "/var/lib/buildkite-agent/builds/${BUILDKITE_AGENT_NAME}/${BUILDKITE_ORGANIZATION_SLUG}-org-repo-root"
@@ -1725,8 +1734,8 @@ def get_repositories_root():
         os.makedirs(repo_root)
     return repo_root
 
-def clone_git_repository(git_repository, git_commit=None, suppress_stdout=False):
 
+def clone_git_repository(git_repository, git_commit=None, suppress_stdout=False):
     def execute_git_command(args):
         execute_command(args, print_output=not suppress_stdout, suppress_stdout=suppress_stdout)
 
@@ -1772,7 +1781,9 @@ def clone_git_repository(git_repository, git_commit=None, suppress_stdout=False)
     return clone_path
 
 
-def execute_batch_commands(commands, print_group=True, group_message=":batch: Setup (Batch Commands)"):
+def execute_batch_commands(
+    commands, print_group=True, group_message=":batch: Setup (Batch Commands)"
+):
     if not commands:
         return
 
@@ -1783,7 +1794,9 @@ def execute_batch_commands(commands, print_group=True, group_message=":batch: Se
     return subprocess.run(batch_commands, shell=True, check=True, env=os.environ).returncode
 
 
-def execute_shell_commands(commands, print_group=True, group_message=":bash: Setup (Shell Commands)"):
+def execute_shell_commands(
+    commands, print_group=True, group_message=":bash: Setup (Shell Commands)"
+):
     if not commands:
         return
 
@@ -2033,7 +2046,9 @@ def compute_flags(platform, flags, bep_file, bazel_binary, enable_remote_cache=F
             if platform.startswith("rbe_"):
                 aggregated_flags += rbe_flags(flags, accept_cached=enable_remote_cache)
             else:
-                aggregated_flags += remote_caching_flags(platform, accept_cached=enable_remote_cache)
+                aggregated_flags += remote_caching_flags(
+                    platform, accept_cached=enable_remote_cache
+                )
     aggregated_flags += flags
 
     for i, flag in enumerate(aggregated_flags):
@@ -2146,7 +2161,9 @@ def calculate_targets(
 
     build_targets = [] if test_only else list(task_config.get("build_targets", []))
     test_targets = [] if build_only else list(task_config.get("test_targets", []))
-    coverage_targets = [] if (build_only or test_only) else list(task_config.get("coverage_targets", []))
+    coverage_targets = (
+        [] if (build_only or test_only) else list(task_config.get("coverage_targets", []))
+    )
     index_targets = [] if (build_only or test_only) else list(task_config.get("index_targets", []))
 
     index_targets_query = (
@@ -2612,7 +2629,13 @@ def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True, prin
 
 
 def execute_command(
-    args, shell=False, fail_if_nonzero=True, cwd=None, print_output=True, capture_stderr=False, suppress_stdout=False
+    args,
+    shell=False,
+    fail_if_nonzero=True,
+    cwd=None,
+    print_output=True,
+    capture_stderr=False,
+    suppress_stdout=False,
 ):
     if print_output:
         eprint(" ".join(args))
@@ -2822,8 +2845,8 @@ def print_project_pipeline(
         except ValueError:
             raise BuildkiteException("Task {} has invalid shard value '{}'".format(task, shards))
 
-        # TODO(https://github.com/bazelbuild/continuous-integration/issues/1800): enable Mac workers again once they are back online
-        if "mac" not in platform:
+        # TODO(https://github.com/bazelbuild/continuous-integration/issues/1800): enable Mac workers for all tasks
+        if "mac" not in platform or is_high_priority_backlog_task():
             step = runner_step(
                 platform=platform,
                 task=task,
@@ -2893,7 +2916,9 @@ def print_project_pipeline(
         )
 
     if "validate_config" in configs:
-        pipeline_steps += create_config_validation_steps(git_commit or os.getenv("BUILDKITE_COMMIT"))
+        pipeline_steps += create_config_validation_steps(
+            git_commit or os.getenv("BUILDKITE_COMMIT")
+        )
 
     if use_bazelisk_migrate() and not is_downstream_pipeline():
         # Print results of bazelisk --migrate in project pipelines that explicitly set
@@ -2903,6 +2928,14 @@ def print_project_pipeline(
         pipeline_steps += get_steps_for_aggregating_migration_results(number, notify)
 
     print_pipeline_steps(pipeline_steps, handle_emergencies=not is_downstream_pipeline())
+
+
+# TODO(https://github.com/bazelbuild/continuous-integration/issues/1800): Remove once we've processed the backlog of high-priority tasks.
+def is_high_priority_backlog_task():
+    return os.getenv("BUILDKITE_REPO") in (
+        "https://github.com/bazelbuild/bazel.git",
+        "https://bazel.googlesource.com/bazel.git",
+    ) and not os.getenv("BUILDKITE_PULL_REQUEST_REPO")
 
 
 def show_gerrit_review_link(git_repository, pipeline_steps):
@@ -3523,7 +3556,8 @@ def get_last_green_commit_by_url(last_green_commit_url):
 
 def get_last_green_commit(project_name):
     last_green_commit_url = bazelci_last_green_commit_url(
-        DOWNSTREAM_PROJECTS[project_name]["git_repository"], DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"]
+        DOWNSTREAM_PROJECTS[project_name]["git_repository"],
+        DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"],
     )
     return get_last_green_commit_by_url(last_green_commit_url)
 
@@ -3911,7 +3945,9 @@ def main(argv=None):
         elif args.subparsers_name == "project_pipeline":
             # Fetch the repo in case we need to use file_config.
             if args.git_repository:
-                git_commit = get_last_green_commit(args.project_name) if is_downstream_pipeline() else None
+                git_commit = (
+                    get_last_green_commit(args.project_name) if is_downstream_pipeline() else None
+                )
                 clone_git_repository(args.git_repository, git_commit, suppress_stdout=True)
 
             configs = fetch_configs(args.http_config, args.file_config)
@@ -3945,6 +3981,13 @@ def main(argv=None):
             os.environ["BAZELCI_TASK"] = args.task
 
             platform = get_platform_for_task(args.task, task_config)
+
+            # TODO(https://github.com/bazelbuild/continuous-integration/issues/1800): Remove once we've processed the backlog of high-priority tasks.
+            if "mac" in platform and not is_high_priority_backlog_task():
+                raise BuildkiteException(
+                    "This job is currently blocked since we're still working through "
+                    "our backlog on MacOS after a three-day-outage."
+                )
 
             # The value of `BUILDKITE_MESSAGE` defaults to the commit message, which can be too large
             # on Windows, therefore we truncate the value to 1000 characters.
