@@ -1299,7 +1299,7 @@ def execute_commands(
         if is_ipv6():
             # Forward required env variables and test flags
             val = '"-Djava.net.preferIPv6Addresses=true"'
-            test_env_vars += ["{}={}".format(e, val) for e in ("JAVA_TOOL_OPTIONS", "COURSIER_OPTS")]
+            # TODO(fwe) test_env_vars += ["{}={}".format(e, val) for e in ("JAVA_TOOL_OPTIONS", "COURSIER_OPTS")]
 
         test_flags, json_profile_out_test, capture_corrupted_outputs_dir_test = calculate_flags(
             task_config, "test_flags", "test", tmpdir, test_env_vars, additional_test_flags
