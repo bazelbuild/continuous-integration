@@ -3984,10 +3984,11 @@ def main(argv=None):
 
             # TODO(https://github.com/bazelbuild/continuous-integration/issues/1800): Remove once we've processed the backlog of high-priority tasks.
             if "mac" in platform and not is_high_priority_backlog_task():
-                raise BuildkiteException(
+                eprint(
                     "This job is currently blocked since we're still working through "
                     "our backlog on MacOS after a three-day-outage."
                 )
+                return 0
 
             # The value of `BUILDKITE_MESSAGE` defaults to the commit message, which can be too large
             # on Windows, therefore we truncate the value to 1000 characters.
