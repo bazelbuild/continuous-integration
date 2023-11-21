@@ -894,7 +894,7 @@ def is_lab_machine():
     return any(p.match(agent) for p in LAB_AGENT_PATTERNS)
 
 
-def is_ipv6():
+def is_ipv6_mac():
     return is_mac() and not is_lab_machine()
 
 
@@ -1876,7 +1876,7 @@ def remote_caching_flags(platform, accept_cached=True):
         platform_cache_digest.update(key)
         platform_cache_digest.update(b":")
 
-    remote_timeout = 600 if is_ipv6() else 60
+    remote_timeout = 600 if is_ipv6_mac() else 60
     flags += [
         f"--remote_timeout={remote_timeout}",
         "--remote_max_connections=200",
@@ -1926,7 +1926,7 @@ def common_startup_flags():
         else:
             # This machine uses its PD-SSD as the build directory.
             return ["--output_user_root=C:/b"]
-    elif is_ipv6():
+    elif is_ipv6_mac():
         return ["--host_jvm_args=-Djava.net.preferIPv6Addresses=true"]
     return []
 
@@ -1963,7 +1963,7 @@ def common_build_flags(bep_file, platform):
             "--build_event_json_file=" + bep_file,
         ]
 
-    if is_ipv6():
+    if is_ipv6_mac():
         flags += ["--jvmopt=-Djava.net.preferIPv6Addresses"]
 
     return flags
