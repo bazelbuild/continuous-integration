@@ -27,7 +27,7 @@ platforms:
   rbe_ubuntu2204:
     build_targets:
       - "//:release"
-      - "//:api-skip-javadocs"
+      - "//:api-skip-javadoc"
     test_flags:
       - "--config=remote"
       - "--test_tag_filters=-git,-git-protocol-v2,-git-upload-archive,-ssh"
