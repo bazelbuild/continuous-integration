@@ -510,6 +510,20 @@ PLATFORMS = {
         "queue": "macos_arm64_qa",
         "python": "python3",
     },
+        "m112": {
+        "name": "macOS arm64 QA (OpenJDK 8, Xcode)",
+        "emoji-name": ":darwin: arm64 :fire_extinguisher: (OpenJDK 8, Xcode)",
+        "publish_binary": [],
+        "queue": "m112",
+        "python": "python3",
+    },
+        "m113": {
+        "name": "macOS arm64 QA (OpenJDK 8, Xcode)",
+        "emoji-name": ":darwin: arm64 :fire_extinguisher: (OpenJDK 8, Xcode)",
+        "publish_binary": [],
+        "queue": "m113",
+        "python": "python3",
+    },
     "macos_arm64": {
         "name": "macOS arm64 (OpenJDK 8, Xcode)",
         "emoji-name": ":darwin: arm64 (OpenJDK 8, Xcode)",
