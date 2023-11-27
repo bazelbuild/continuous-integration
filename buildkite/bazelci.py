@@ -1493,7 +1493,7 @@ def activate_xcode(task_config):
     #  or the requested version is not installed.
     if xcode_version not in supported_versions:
         xcode_version = supported_versions[0]
-    
+
     if not wanted_xcode_version or wanted_xcode_version == xcode_version:
         print_collapsed_group(":xcode: Activating Xcode {}...".format(xcode_version))
     else:
@@ -1603,6 +1603,9 @@ def upload_bazel_binary(platform):
         binary_dir = "bazel-bin/src"
         binary_name = "bazel"
         binary_nojdk_name = "bazel_nojdk"
+    if is_lab_machine():
+        eprint("Uploading to GCS through buildkite-agent is currently not supported on lab machines.")
+        return
     execute_command(["buildkite-agent", "artifact", "upload", binary_name], cwd=binary_dir)
     execute_command(["buildkite-agent", "artifact", "upload", binary_nojdk_name], cwd=binary_dir)
 
@@ -2598,6 +2601,9 @@ def upload_json_profile(json_profile_path, tmpdir):
     if not os.path.exists(json_profile_path):
         return
     print_collapsed_group(":gcloud: Uploading JSON Profile")
+    if is_lab_machine():
+        eprint("Uploading to GCS through buildkite-agent is currently not supported on lab machines.")
+        return
     execute_command(["buildkite-agent", "artifact", "upload", json_profile_path], cwd=tmpdir)
 
 
@@ -2607,6 +2613,9 @@ def upload_corrupted_outputs(capture_corrupted_outputs_dir, tmpdir):
     if not os.path.exists(capture_corrupted_outputs_dir):
         return
     print_collapsed_group(":gcloud: Uploading corrupted outputs")
+    if is_lab_machine():
+        eprint("Uploading to GCS through buildkite-agent is currently not supported on lab machines.")
+        return
     execute_command(
         ["buildkite-agent", "artifact", "upload", "{}/**/*".format(capture_corrupted_outputs_dir)],
         cwd=tmpdir,
