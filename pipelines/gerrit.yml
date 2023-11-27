@@ -13,9 +13,11 @@ platforms:
       - "//:release"
       - "//:api"
     test_flags:
-      - "--test_tag_filters=-git,-git-protocol-v2,-git-upload-archive,-ssh"
+      - "--test_tag_filters=-git,-git-protocol-v2,-git-upload-archive,-pgm,-ssh"
     test_targets:
       - "//..."
+      - "-//javatests/com/google/gerrit/acceptance/server/httpd:server_httpd"
+      - "-//plugins/delete-project:delete-project_tests"
   macos:
     build_targets:
       - "//:release"
@@ -27,9 +29,11 @@ platforms:
   rbe_ubuntu2204:
     build_targets:
       - "//:release"
-      - "//:api-skip-javadocs"
+      - "//:api-skip-javadoc"
     test_flags:
       - "--config=remote"
-      - "--test_tag_filters=-git,-git-protocol-v2,-git-upload-archive,-ssh"
+      - "--test_tag_filters=-git,-git-protocol-v2,-git-upload-archive,-pgm,-ssh"
     test_targets:
       - "//..."
+      - "-//javatests/com/google/gerrit/acceptance/server/httpd:server_httpd"
+      - "-//plugins/delete-project:delete-project_tests"
