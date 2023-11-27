@@ -33,6 +33,7 @@ RUN apt-get -y update && \
     lsb-release \
     netcat-openbsd \
     openjdk-17-jdk-headless \
+    openssh-client \
     python-is-python3 \
     python2 \
     python2-dev \
