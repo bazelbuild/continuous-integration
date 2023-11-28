@@ -9,13 +9,15 @@ ENV LC_ALL "C.UTF-8"
 # (https://github.com/odyslam/ddapptools/blob/e255c2dd48222bf82d881e48f58a6000fcb9f1f7/docker/Dockerfile)
 # ENV values reverse-engineered from `/root/.nix-profile/etc/profile.d/nix.sh` after Nix is installed, so
 # we don't need to worry about every shell `source`ing it.
+# Global read+execute (aka read directory) permission added to `/root` so that injected UIDs still work.
 RUN apt-get update && apt-get install --no-install-recommends -y  locales curl xz-utils vim  ca-certificates && apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && mkdir -m 0755 /nix && groupadd -r nixbld && chown root /nix \
-    && for n in $(seq 1 10); do useradd -c "Nix build user $n" -d /var/empty -g nixbld -G nixbld -M -N -r -s "$(command -v nologin)" "nixbld$n"; done
+    && mkdir -m 0755 /nix && groupadd --gid 30000 nixbld && chown root /nix \
+    && for n in $(seq 1 10); do useradd --comment "Nix build user $n" --home-dir /var/empty --gid nixbld --groups nixbld --no-create-home --no-user-group --uid $((30000 + $n)) --shell "$(command -v nologin)" "nixbld$n"; done
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN (curl -L https://nixos.org/nix/install | bash) && \
     mkdir -p /etc/nix && \
-    echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+    echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf && \
+    chmod +xr /root
 ENV USER="root"
 ENV NIX_PROFILES="/nix/var/nix/profiles/default /root/.nix-profile"
 ENV NIX_SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
