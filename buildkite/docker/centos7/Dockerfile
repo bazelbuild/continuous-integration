@@ -35,6 +35,9 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf && 
     && \
     yum clean all
 
+# Ensure python3.6 (installed earlier) is the default.
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.6 60
+
 # Allow using sudo inside the container.
 RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
