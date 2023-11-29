@@ -56,7 +56,7 @@ THIS_IS_SPARTA = True
 
 CLOUD_PROJECT = "bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"
 
-GITHUB_BRANCH = {"bazel": "master", "bazel-trusted": "master", "bazel-testing": "testing"}[
+GITHUB_BRANCH = {"bazel": "master", "bazel-trusted": "publish_bin_platform", "bazel-testing": "testing"}[
     BUILDKITE_ORG
 ]
 
@@ -401,7 +401,7 @@ PLATFORMS = {
     "centos7": {
         "name": "CentOS 7",
         "emoji-name": ":centos: CentOS 7",
-        "publish_binary": ["ubuntu1404", "centos7", "linux"],
+        "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7",
         "python": "python3.6",
     },
@@ -516,7 +516,7 @@ PLATFORMS = {
     "macos": {
         "name": "macOS",
         "emoji-name": ":darwin: macOS",
-        "publish_binary": ["macos"],
+        "publish_binary": [],
         "queue": "macos",
         "python": "python3",
     },
@@ -544,7 +544,7 @@ PLATFORMS = {
     "macos_arm64": {
         "name": "macOS arm64",
         "emoji-name": ":darwin: macOS arm64",
-        "publish_binary": ["macos_arm64"],
+        "publish_binary": [],
         "queue": "macos_arm64",
         "python": "python3",
     },
