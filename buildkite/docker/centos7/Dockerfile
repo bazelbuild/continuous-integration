@@ -35,9 +35,6 @@ RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf && 
     && \
     yum clean all
 
-# Ensure python3.6 (installed earlier) is the default.
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.6 60
-
 # Allow using sudo inside the container.
 RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
@@ -157,3 +154,8 @@ RUN pushd /usr/local/src && \
     popd && \
     rm -rf /usr/local/src/tar-1.34 && \
     ln -s tar /usr/local/bin/gtar
+
+# Ensure python3.6 (installed earlier) is the default.
+# NOTE: This has to be after every `yum` command because the version of yum in Centos 7 is a python 2 app.
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.6 60
+
