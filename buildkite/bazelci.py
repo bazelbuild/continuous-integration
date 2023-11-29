@@ -53,7 +53,7 @@ THIS_IS_SPARTA = True
 
 CLOUD_PROJECT = "bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"
 
-GITHUB_BRANCH = {"bazel": "master", "bazel-trusted": "master", "bazel-testing": "testing"}[
+GITHUB_BRANCH = {"bazel": "master", "bazel-trusted": "publish_macos_bin", "bazel-testing": "testing"}[
     BUILDKITE_ORG
 ]
 
@@ -412,7 +412,7 @@ PLATFORMS = {
     "centos7_java11_devtoolset10": {
         "name": "CentOS 7 (OpenJDK 11, gcc 10.2.1)",
         "emoji-name": ":centos: 7 (OpenJDK 11, gcc 10.2.1)",
-        "publish_binary": ["ubuntu1404", "centos7", "linux"],
+        "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7-java11-devtoolset10",
         "python": "python3.6",
     },
@@ -520,14 +520,14 @@ PLATFORMS = {
     "windows": {
         "name": "Windows (OpenJDK 11, VS2022)",
         "emoji-name": ":windows: (OpenJDK 11, VS2022)",
-        "publish_binary": ["windows"],
+        "publish_binary": [],
         "queue": "windows",
         "python": "python.exe",
     },
     "windows_arm64": {
         "name": "Windows ARM64 (OpenJDK 11, VS2022)",
         "emoji-name": ":windows: arm64 (OpenJDK 11, VS2022)",
-        "publish_binary": ["windows_arm64"],
+        "publish_binary": [],
         # TODO(pcloudy): Switch to windows_arm64 queue when Windows ARM64 machines are available,
         # current we just use x86_64 machines to do cross compile.
         "queue": "windows",
@@ -1493,7 +1493,7 @@ def activate_xcode(task_config):
     #  or the requested version is not installed.
     if xcode_version not in supported_versions:
         xcode_version = supported_versions[0]
-    
+
     if not wanted_xcode_version or wanted_xcode_version == xcode_version:
         print_collapsed_group(":xcode: Activating Xcode {}...".format(xcode_version))
     else:
