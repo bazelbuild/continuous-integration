@@ -155,7 +155,3 @@ RUN pushd /usr/local/src && \
     rm -rf /usr/local/src/tar-1.34 && \
     ln -s tar /usr/local/bin/gtar
 
-# Ensure python3.6 (installed earlier) is the default.
-# NOTE: This has to be after every `yum` command because the version of yum in Centos 7 is a python 2 app.
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.6 60
-
