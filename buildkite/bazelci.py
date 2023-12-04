@@ -2065,9 +2065,6 @@ def compute_flags(platform, flags, bep_file, bazel_binary, enable_remote_cache=F
     if is_downstream_pipeline():
         # If we are in a downstream pipeline, turn off the lockfile update since changing Bazel version could affect the lockfile.
         aggregated_flags.append("--lockfile_mode=off")
-        # Filter out targets that should not be built and tested in downstream pipelines.
-        aggregated_flags.append("--build_tag_filters=-no_bazel_downstream")
-        aggregated_flags.append("--test_tag_filters=-no_bazel_downstream")
 
     return aggregated_flags
 
