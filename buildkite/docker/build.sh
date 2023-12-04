@@ -27,7 +27,6 @@ docker build -f ubuntu1804/Dockerfile --target ubuntu1804-java11 -t "gcr.io/$PRE
 docker build -f ubuntu2004/Dockerfile --target ubuntu2004-java11 -t "gcr.io/$PREFIX/ubuntu2004-java11" ubuntu2004 &
 docker build -f ubuntu2204/Dockerfile --target ubuntu2204-java17 -t "gcr.io/$PREFIX/ubuntu2204-java17" ubuntu2204 &
 docker build -f fedora39/Dockerfile   --target fedora39-java17   -t "gcr.io/$PREFIX/fedora39-java17" fedora39 &
-docker build -f ubuntu2204-nix/Dockerfile                        -t "gcr.io/$PREFIX/ubuntu2204-nix" ubuntu2204-nix &
 wait
 
 docker build -f centos7/Dockerfile    --target centos7-java8               -t "gcr.io/$PREFIX/centos7-java8" centos7

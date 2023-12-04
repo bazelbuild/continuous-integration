@@ -482,13 +482,6 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/fedora39-java17",
         "python": "python3",
     },
-    "ubuntu2204-nix": {
-        "name": "Ubuntu (Nix)",
-        "emoji-name": ":nix:",
-        "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2204-nix",
-        "python": "python3",
-    },
     "macos": {
         "name": "macOS (OpenJDK 11, Xcode)",
         "emoji-name": ":darwin: (OpenJDK 11, Xcode)",
@@ -1493,7 +1486,7 @@ def activate_xcode(task_config):
     #  or the requested version is not installed.
     if xcode_version not in supported_versions:
         xcode_version = supported_versions[0]
-    
+
     if not wanted_xcode_version or wanted_xcode_version == xcode_version:
         print_collapsed_group(":xcode: Activating Xcode {}...".format(xcode_version))
     else:
