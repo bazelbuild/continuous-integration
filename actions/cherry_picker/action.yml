@@ -33,28 +33,26 @@ runs:
       run: |
         pip install -r ${{ github.action_path }}/requirements.txt
       shell: bash
-    - name: Pass Inputs to Shell
-      run: |
-        echo "INPUT_TRIGGERED_ON=${{ inputs.triggered-on }}" >> $GITHUB_ENV
-        echo "INPUT_PR_NUMBER=${{ inputs.pr-number }}" >> $GITHUB_ENV
-        echo "INPUT_MILESTONE_TITLE=${{ inputs.milestone-title }}" >> $GITHUB_ENV
-        echo "INPUT_MILESTONED_ISSUE_NUMBER=${{ inputs.milestoned-issue-number }}" >> $GITHUB_ENV
-        echo "INPUT_IS_PROD=${{ inputs.is-prod }}" >> $GITHUB_ENV
-
-        echo "INPUT_ISSUE_BODY<<EOF" >> $GITHUB_ENV
-        echo "${{ inputs.issue-body }}" >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
-
-        echo "INPUT_ISSUE_TITLE=${{ inputs.issue-title }}" >> $GITHUB_ENV
-      shell: bash
     - if: ${{ inputs.triggered-on == 'commented' || inputs.triggered-on == 'closed' }}
       name: Run python cherrypick_with_milestones.py
+      env:
+        INPUT_TRIGGERED_ON: ${{ inputs.triggered-on }}
+        INPUT_PR_NUMBER: ${{ inputs.pr-number }}
+        INPUT_MILESTONE_TITLE: ${{ inputs.milestone-title }}
+        INPUT_MILESTONED_ISSUE_NUMBER: ${{ inputs.milestoned-issue-number }}
+        INPUT_IS_PROD: ${{ inputs.is-prod }}
       run: |
         chmod +x ${{ github.action_path }}/cherrypick_with_milestones.py
         python -u ${{ github.action_path }}/cherrypick_with_milestones.py
       shell: bash
     - if: ${{ inputs.triggered-on == 'ondemand' }}
       name: Run python cherrypick_with_commits.py
+      env:
+        INPUT_MILESTONE_TITLE: ${{ inputs.milestone-title }}
+        INPUT_MILESTONED_ISSUE_NUMBER: ${{ inputs.milestoned-issue-number }}
+        INPUT_ISSUE_TITLE: ${{ inputs.issue-title }}
+        INPUT_ISSUE_BODY: ${{ inputs.issue-body }}
+        INPUT_IS_PROD: ${{ inputs.is-prod }}
       run: |
         chmod +x ${{ github.action_path }}/cherrypick_with_commits.py
         python -u ${{ github.action_path }}/cherrypick_with_commits.py
