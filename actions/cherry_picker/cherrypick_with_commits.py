@@ -1,6 +1,6 @@
 import os, re
 from vars import input_data, upstream_repo, cherrypick_with_commits_infos
-from functions import cherry_pick, create_pr, issue_comment, get_pr_body, PushCpException, push_to_branch, get_middle_text
+from functions import cherry_pick, create_pr, issue_comment, get_pr_title_body, PushCpException, push_to_branch, get_middle_text
 
 milestone_title = os.environ["INPUT_MILESTONE_TITLE"]
 milestoned_issue_number = os.environ["INPUT_MILESTONED_ISSUE_NUMBER"]
@@ -32,7 +32,7 @@ failed_commits = []
 for idx, commit_id in enumerate(issue_body_dict["commits"]):
     try:
         cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clone, requires_checkout, input_data)
-        msg_body = get_pr_body(commit_id, input_data["api_repo_name"])
+        msg_body = get_pr_title_body(commit_id, input_data["api_repo_name"])["body"]
         success_msg = {"commit_id": commit_id, "msg": msg_body}
         successful_commits.append(success_msg)
     except PushCpException as pe:
