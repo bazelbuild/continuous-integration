@@ -95,7 +95,7 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
             subprocess.run(['git', 'branch', release_branch_name, f"upstream/{release_branch_name}"])
             release_push_status = subprocess.run(['git', 'push', '--set-upstream', 'origin', release_branch_name])
             if release_push_status.returncode != 0:
-                raise Exception(f"Could not create and push the branch, {release_branch_name}")
+                raise Exception(f"The branch, {release_branch_name}, may not exist. Please retry the cherry-pick after the branch is created.")
             subprocess.run(['git', 'remote', 'rm', 'upstream'])
             subprocess.run(['git', 'checkout', release_branch_name])
         status_checkout_target = subprocess.run(['git', 'checkout', '-b', target_branch_name])
@@ -133,6 +133,7 @@ def create_pr(reviewers, release_number, labels, pr_title, pr_body, release_bran
     reviewers_str = ",".join(reviewers)
     labels_str = ",".join(labels)
     modified_pr_title = f"[{release_number}] {pr_title}" if f"[{release_number}]" not in pr_title else pr_title
+    # status_create_pr = subprocess.run(['gh', 'pr', 'create', "--repo", upstream_repo, "--title", modified_pr_title, "--body", pr_body, "--head", head_branch, "--base", release_branch_name,  '--label', labels_str, '--reviewer', reviewers_str])
     status_create_pr = subprocess.run(['gh', 'pr', 'create', "--repo", "iancha1992/bazel", "--title", modified_pr_title, "--body", pr_body, "--head", head_branch, "--base", release_branch_name,  '--label', labels_str, '--reviewer', reviewers_str])
     if status_create_pr.returncode == 0:
         cherry_picked_pr_number = get_cherry_picked_pr_number(head_branch, release_branch_name)
