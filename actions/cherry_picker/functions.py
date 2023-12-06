@@ -95,7 +95,7 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
             subprocess.run(['git', 'branch', release_branch_name, f"upstream/{release_branch_name}"])
             release_push_status = subprocess.run(['git', 'push', '--set-upstream', 'origin', release_branch_name])
             if release_push_status.returncode != 0:
-                raise Exception(f"Could not create and push the branch, {release_branch_name}")
+                raise Exception(f"The branch, {release_branch_name}, may not exist. Please retry the cherry-pick after the branch is created.")
             subprocess.run(['git', 'remote', 'rm', 'upstream'])
             subprocess.run(['git', 'checkout', release_branch_name])
         status_checkout_target = subprocess.run(['git', 'checkout', '-b', target_branch_name])
@@ -145,9 +145,10 @@ def get_labels(pr_number, api_repo_name):
     if "awaiting-review" not in labels_list: labels_list.append("awaiting-review")
     return labels_list
 
-def get_pr_body(commit_id, api_repo_name):
+def get_pr_title_body(commit_id, api_repo_name):
     response_commit = requests.get(f"https://api.github.com/repos/{api_repo_name}/commits/{commit_id}")
     original_msg = response_commit.json()["commit"]["message"]
+    pr_title = original_msg[:original_msg.index("\n\n")] if "\n\n" in original_msg else original_msg
     pr_body = original_msg[original_msg.index("\n\n") + 2:] if "\n\n" in original_msg else original_msg
     commit_str_body = f"Commit https://github.com/{api_repo_name}/commit/{commit_id}"
     if "PiperOrigin-RevId" in pr_body:
@@ -155,7 +156,7 @@ def get_pr_body(commit_id, api_repo_name):
         pr_body = pr_body[:piper_index] + f"{commit_str_body}\n\n" + pr_body[piper_index:]
     else:
         pr_body += f"\n\n{commit_str_body}"
-    return pr_body
+    return {"title": pr_title, "body": pr_body}
 
 def get_middle_text(all_str, left_str, right_str):
     left_index = all_str.index(left_str) + len(left_str)
