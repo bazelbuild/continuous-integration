@@ -489,6 +489,13 @@ PLATFORMS = {
         "queue": "macos",
         "python": "python3",
     },
+    "macos_v2": {
+        "name": "macOS (OpenJDK 11, Xcode)",
+        "emoji-name": ":darwin: (OpenJDK 11, Xcode)",
+        "publish_binary": [],
+        "queue": "macos_v2",
+        "python": "python3",
+    },
     "macos_qa": {
         "name": "macOS QA (OpenJDK 11, Xcode)",
         "emoji-name": ":darwin: :fire_extinguisher: (OpenJDK 11, Xcode)",
@@ -508,6 +515,13 @@ PLATFORMS = {
         "emoji-name": ":darwin: arm64 (OpenJDK 8, Xcode)",
         "publish_binary": ["macos_arm64"],
         "queue": "macos_arm64",
+        "python": "python3",
+    },
+    "macos_arm64_v2": {
+        "name": "macOS arm64 (OpenJDK 8, Xcode)",
+        "emoji-name": ":darwin: arm64 (OpenJDK 8, Xcode)",
+        "publish_binary": [],
+        "queue": "macos_arm64_v2",
         "python": "python3",
     },
     "windows": {
