@@ -1217,6 +1217,10 @@ def execute_commands(
         os.environ["BAZELISK_USER_AGENT"] = "Bazelisk/BazelCI"
         test_env_vars.append("BAZELISK_USER_AGENT")
 
+        # Avoid "Network is unreachable" problems in Python tests due to IPv6
+        if os.getenv("SSL_CERT_FILE"):
+            test_env_vars.append("SSL_CERT_FILE")
+
         # We use one binary for all Linux platforms (because we also just release one binary for all
         # Linux versions and we have to ensure that it works on all of them).
         binary_platform = platform if is_mac() or is_windows() else LINUX_BINARY_PLATFORM
