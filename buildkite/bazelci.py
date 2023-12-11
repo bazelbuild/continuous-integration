@@ -2925,7 +2925,7 @@ def print_project_pipeline(
             )
         )
 
-    if "validate_config" in configs:
+    if "validate_config" in configs and not is_downstream_pipeline():
         pipeline_steps += create_config_validation_steps(
             git_commit or os.getenv("BUILDKITE_COMMIT")
         )
