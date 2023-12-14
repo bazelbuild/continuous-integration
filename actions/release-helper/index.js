@@ -74,7 +74,7 @@ async function run() {
         name: FLAGGED_LABEL,
       });
     }
-  } else if (command === "flag") {
+  } else if (command === "flag" || command.startsWith("flag ")) {
     await octokit.rest.issues.addLabels({
       owner,
       repo,
