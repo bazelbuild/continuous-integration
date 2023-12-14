@@ -80,6 +80,7 @@ While the release is active, you should make sure to do the following:
     *   When a few days pass and no more release blockers show up, push the candidate as the release (issues and pull requests with the "nice-to-have" labels should be ignored as they can go to the next release). Otherwise, rinse and repeat the steps above. 
 *   Keep the task list in the release tracking issue updated and check boxes as you follow the release process.
     *   In particular, try and keep the estimated release date updated.
+*   In case there is a request to backport a fix to a previous major release, then add the "potential N.x cherry-picks" label (for example, if we just released 7.2.0 release, but there is a request to make some changes to fix 6.4.0, then we should put the label, "potential 6.x cherry-picks" label). If there is about five or more issues/PR's with the label, then we should start a discussion to release a new minor release for the previous LTS track.
 
 ## Create a release candidate
 
