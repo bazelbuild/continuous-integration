@@ -76,7 +76,8 @@ While the release is active, you should make sure to do the following:
     *   Before closing a release blocker issue, add a comment indicating how the issue was resolved, for better tracking (e.g. `cherry-picked in #XYZ` - see [this example](https://github.com/bazelbuild/bazel/issues/16629#issuecomment-1302743541))
 *   Periodically check downstream tests that are run against the release branch to catch any breakages early on in the process. If you see any failures that don't appear at HEAD, reach out to the Bazel team, open an issue if needed, and add the issue to the release blockers list.
 *   When enough PRs have been cherry-picked and the release is nearing a ready state, create a release candidate (see [below](#create-a-release-candidate)).
-    *   When a few days pass and no more release blockers show up, push the candidate as the release. Otherwise, rinse and repeat the steps above.
+    *   One week before pushing the release candidate, go through all the remaining issues on the milestone to triage and add the "nice-to-have" label.
+    *   When a few days pass and no more release blockers show up, push the candidate as the release (issues and pull requests with the "nice-to-have" labels should be ignored as they can go to the next release). Otherwise, rinse and repeat the steps above. 
 *   Keep the task list in the release tracking issue updated and check boxes as you follow the release process.
     *   In particular, try and keep the estimated release date updated.
 
