@@ -2856,23 +2856,21 @@ def print_project_pipeline(
         except ValueError:
             raise BuildkiteException("Task {} has invalid shard value '{}'".format(task, shards))
 
-        # TODO(https://github.com/bazelbuild/continuous-integration/issues/1800): enable Mac workers for all tasks
-        if "mac" not in platform or is_high_priority_backlog_task():
-            step = runner_step(
-                platform=platform,
-                task=task,
-                task_name=task_name,
-                project_name=project_name,
-                http_config=http_config,
-                file_config=file_config,
-                git_repository=git_repository,
-                git_commit=git_commit,
-                monitor_flaky_tests=monitor_flaky_tests,
-                use_but=use_but,
-                shards=shards,
-                soft_fail=soft_fail,
-            )
-            pipeline_steps.append(step)
+        step = runner_step(
+            platform=platform,
+            task=task,
+            task_name=task_name,
+            project_name=project_name,
+            http_config=http_config,
+            file_config=file_config,
+            git_repository=git_repository,
+            git_commit=git_commit,
+            monitor_flaky_tests=monitor_flaky_tests,
+            use_but=use_but,
+            shards=shards,
+            soft_fail=soft_fail,
+        )
+        pipeline_steps.append(step)
 
     if skipped_downstream_tasks:
         lines = ["\n- {}".format(s) for s in skipped_downstream_tasks]
@@ -2939,14 +2937,6 @@ def print_project_pipeline(
         pipeline_steps += get_steps_for_aggregating_migration_results(number, notify)
 
     print_pipeline_steps(pipeline_steps, handle_emergencies=not is_downstream_pipeline())
-
-
-# TODO(https://github.com/bazelbuild/continuous-integration/issues/1800): Remove once we've processed the backlog of high-priority tasks.
-def is_high_priority_backlog_task():
-    return os.getenv("BUILDKITE_REPO") in (
-        "https://github.com/bazelbuild/bazel.git",
-        "https://bazel.googlesource.com/bazel.git",
-    ) and not os.getenv("BUILDKITE_PULL_REQUEST_REPO")
 
 
 def show_gerrit_review_link(git_repository, pipeline_steps):
@@ -3992,14 +3982,6 @@ def main(argv=None):
             os.environ["BAZELCI_TASK"] = args.task
 
             platform = get_platform_for_task(args.task, task_config)
-
-            # TODO(https://github.com/bazelbuild/continuous-integration/issues/1800): Remove once we've processed the backlog of high-priority tasks.
-            if "mac" in platform and not is_high_priority_backlog_task():
-                eprint(
-                    "This job is currently blocked since we're still working through "
-                    "our backlog on MacOS after a three-day-outage."
-                )
-                return 0
 
             # The value of `BUILDKITE_MESSAGE` defaults to the commit message, which can be too large
             # on Windows, therefore we truncate the value to 1000 characters.
