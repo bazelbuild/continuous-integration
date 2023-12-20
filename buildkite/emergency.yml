@@ -17,6 +17,6 @@
 # Please do not clear or delete this file when an incident is over.
 # Instead, simply replace all values with empty strings ("").
 ---
-message: "MacOS network issues have been mitigated and all of our Macs are back online. However, due to the huge backlog we've only enabled MacOS for a small number of pipelines. We hope to be able to operate at full capacity again later this week."
-issue_url: "https://github.com/bazelbuild/continuous-integration/issues/1800"
+message: ""
+issue_url: ""
 last_good_bazel: ""
