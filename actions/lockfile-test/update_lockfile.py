@@ -13,7 +13,9 @@ subprocess.run(['git', 'remote', 'add', 'origin', "git@github.com:iancha1992/baz
 subprocess.run(['git', 'remote', '-v'])
 
 subprocess.run([github_dir, "run", "//src/test/tools/bzlmod:update_default_lock_file"])
-
+subprocess.run(["git", "add", ".", "Testing!"])
+subprocess.run(["git", "commit", "-m", "Testing!"])
+subprocess.run(["git", "push"])
 
 # "${GITHUB_WORKSPACE}/bin/bazel" run //src/test/tools/bzlmod:update_default_lock_file
 # "${GITHUB_WORKSPACE}/bin/bazel" mod deps --lockfile_mode=update
