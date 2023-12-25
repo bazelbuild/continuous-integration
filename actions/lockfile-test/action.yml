@@ -1,0 +1,18 @@
+name: "lockfile test"
+description: "Testing lockfile"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+    - name: Install Dependencies
+      run: |
+        pip install -r ${{ github.action_path }}/requirements.txt
+      shell: bash
+    - run: |
+        chmod +x ${{ github.action_path }}/update_lockfile.py
+        python -u ${{ github.action_path }}/update_lockfile.py
+      shell: bash
