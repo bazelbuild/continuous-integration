@@ -1,10 +1,10 @@
 name: "lockfile test"
 description: "Testing lockfile"
 
-inputs:
-  github-dir:
-    required: true
-    default: ${{ github.github-dir }}
+# inputs:
+#   github-dir:
+#     required: true
+#     default: ${{ github.github-dir }}
 
 runs:
   using: "composite"
@@ -18,8 +18,8 @@ runs:
         pip install -r ${{ github.action_path }}/requirements.txt
       shell: bash
     - name: Run update_lockfile.py
-      env:
-        INPUT_GITHUB_DIR: ${{ inputs.github-dir }}
+      # env:
+      #   INPUT_GITHUB_DIR: ${{ inputs.github-dir }}
       run: |
         chmod +x ${{ github.action_path }}/update_lockfile.py
         python -u ${{ github.action_path }}/update_lockfile.py
