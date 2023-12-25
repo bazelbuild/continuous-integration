@@ -22,5 +22,6 @@ runs:
       #   INPUT_GITHUB_DIR: ${{ inputs.github-dir }}
       run: |
         chmod +x ${{ github.action_path }}/update_lockfile.py
+        chmod +x ${{ github.action_path }}/bin/bazel
         python -u ${{ github.action_path }}/update_lockfile.py
       shell: bash
