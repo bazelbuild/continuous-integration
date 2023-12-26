@@ -18,6 +18,7 @@ runs:
         ls
         mv bazelisk-linux-amd64 "bin/bazel"
         chmod +x "bin/bazel"
+      shell: bash
     - name: Install Python
       uses: actions/setup-python@v4
       with:
