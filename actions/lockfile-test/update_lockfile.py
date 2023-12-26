@@ -9,6 +9,9 @@ os.chdir("bazel")
 subprocess.run(['git', 'remote', 'add', 'origin', "git@github.com:iancha1992/bazel.git"])
 subprocess.run(['git', 'remote', '-v'])
 
+print("checking branches")
+subprocess.run(['git', 'branch'])
+
 # subprocess.run(["../bazelisk-linux-amd64", "run", "//src/test/tools/bzlmod:update_default_lock_file"])
 print("Create hiword.txt")
 subprocess.run(["touch", "hiword.txt"])
