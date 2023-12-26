@@ -13,7 +13,7 @@ os.chdir("bazel")
 subprocess.run(['git', 'remote', 'add', 'origin', "git@github.com:iancha1992/bazel.git"])
 subprocess.run(['git', 'remote', '-v'])
 
-subprocess.run(["bazelisk-linux-amd64", "run", "//src/test/tools/bzlmod:update_default_lock_file"])
+subprocess.run(["bin/bazel/bazelisk-linux-amd64", "run", "//src/test/tools/bzlmod:update_default_lock_file"])
 subprocess.run(["git", "add", ".", "Testing!"])
 subprocess.run(["git", "commit", "-m", "Testing!"])
 subprocess.run(["git", "push"])
