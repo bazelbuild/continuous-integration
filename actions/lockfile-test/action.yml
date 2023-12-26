@@ -1,22 +1,12 @@
 name: "lockfile test"
 description: "Testing lockfile"
 
-# inputs:
-#   github-dir:
-#     required: true
-#     default: ${{ github.github-dir }}
-
 runs:
   using: "composite"
   steps:
     - name: Install bazelisk
       run: |
         curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.19.0/bazelisk-linux-amd64"
-        # mkdir -p "bin/"
-        echo fan
-        pwd
-        ls
-        # mv bazelisk-linux-amd64 "bin/bazel"
         chmod +x bazelisk-linux-amd64
       shell: bash
     - name: Install Python
@@ -28,10 +18,7 @@ runs:
         pip install -r ${{ github.action_path }}/requirements.txt
       shell: bash
     - name: Run update_lockfile.py
-      # env:
-      #   INPUT_GITHUB_DIR: ${{ inputs.github-dir }}
       run: |
         chmod +x ${{ github.action_path }}/update_lockfile.py
-        # chmod +x ${{ github.action_path }}/bin/bazel
         python -u ${{ github.action_path }}/update_lockfile.py
       shell: bash
