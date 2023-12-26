@@ -12,7 +12,7 @@ subprocess.run(['git', 'remote', '-v'])
 # subprocess.run(["../bazelisk-linux-amd64", "run", "//src/test/tools/bzlmod:update_default_lock_file"])
 print("Create hiword.txt")
 subprocess.run(["touch", "hiword.txt"])
-subprocess.run(["git", "add", ".", "Testing!"])
+subprocess.run(["git", "add", "."])
 subprocess.run(["git", "commit", "-m", "Testing!"])
 subprocess.run(["git", "push"])
 
