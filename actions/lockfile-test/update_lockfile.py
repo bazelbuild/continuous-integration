@@ -1,9 +1,9 @@
 import os, requests, subprocess
 token = os.environ["GH_TOKEN"]
-github_dir = os.environ["GITHUB_WORKSPACE"]
+# github_dir = os.environ["GITHUB_WORKSPACE"]
 
 print("Cloning and syncing the repo...")
-print(github_dir)
+# print(github_dir)
 # subprocess.run(['gh', 'repo', 'sync', gh_cli_repo_name, "-b", master_branch])
 # subprocess.run(['gh', 'repo', 'sync', gh_cli_repo_name, "-b", release_branch_name])
 subprocess.run(['git', 'clone', f"https://bazel-io:{token}@github.com/iancha1992/bazel.git"])
@@ -13,7 +13,7 @@ os.chdir("bazel")
 subprocess.run(['git', 'remote', 'add', 'origin', "git@github.com:iancha1992/bazel.git"])
 subprocess.run(['git', 'remote', '-v'])
 
-subprocess.run([github_dir, "run", "//src/test/tools/bzlmod:update_default_lock_file"])
+subprocess.run(["bazelisk-linux-amd64", "run", "//src/test/tools/bzlmod:update_default_lock_file"])
 subprocess.run(["git", "add", ".", "Testing!"])
 subprocess.run(["git", "commit", "-m", "Testing!"])
 subprocess.run(["git", "push"])
