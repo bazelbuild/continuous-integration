@@ -32,6 +32,8 @@ headers = {
 }
 r = requests.get(f'https://api.github.com/repos/bazelbuild/bazel/pulls/{pr_number}', headers=headers).json()
 
+print("This is the branchname!!!!!")
+print(r["head"]["ref"])
 
 print("Cloning and syncing the repo...")
 subprocess.run(['git', 'clone', f"https://bazel-io:{token}@github.com/bazelbuild/bazel.git"])
