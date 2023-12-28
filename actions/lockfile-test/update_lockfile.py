@@ -30,7 +30,7 @@ print("This is the pr number", pr_number)
 headers = {
     'X-GitHub-Api-Version': '2022-11-28'
 }
-r = requests.get(f'https://api.github.com/repos/bazelbuild/bazel/pulls/', headers=headers).json()
+r = requests.get(f'https://api.github.com/repos/bazelbuild/bazel/pulls/{pr_number}', headers=headers).json()
 
 
 print("Cloning and syncing the repo...")
