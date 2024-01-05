@@ -237,6 +237,10 @@ def prepare_test_module_repo(module_name, module_version):
     # Make sure the checked-in MODULE.bazel file is used.
     checked_in_module_dot_bazel = get_module_dot_bazel(module_name, module_version)
     bazelci.eprint("\n* Copy checked-in MODULE.bazel file to source root:\n%s\n" % read(checked_in_module_dot_bazel))
+    module_dot_bazel = source_root.joinpath("MODULE.bazel")
+    # In case the existing MODULE.bazel has no write permission.
+    if module_dot_bazel.exists():
+        os.remove(module_dot_bazel)
     shutil.copy(checked_in_module_dot_bazel, source_root.joinpath("MODULE.bazel"))
 
     # Generate the presubmit.yml file for the test module, it should be the content under "bcr_test_module"
