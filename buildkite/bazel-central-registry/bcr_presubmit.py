@@ -241,7 +241,7 @@ def prepare_test_module_repo(module_name, module_version):
     # In case the existing MODULE.bazel has no write permission.
     if module_dot_bazel.exists():
         os.remove(module_dot_bazel)
-    shutil.copy(checked_in_module_dot_bazel, source_root.joinpath("MODULE.bazel"))
+    shutil.copy(checked_in_module_dot_bazel, module_dot_bazel)
 
     # Generate the presubmit.yml file for the test module, it should be the content under "bcr_test_module"
     orig_presubmit = yaml.safe_load(open(get_presubmit_yml(module_name, module_version), "r"))
