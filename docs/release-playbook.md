@@ -130,7 +130,7 @@ While the release is active, you should make sure to do the following:
     *   Subject: Bazel 7.0.1 release candidate 1 is available for testing
     *   Body:
     ```
-    Bazel 6.1.0rc1 is now available for those that want to try it out.
+    Bazel 7.0.1rc1 is now available for those that want to try it out.
 
     You can download it from here:
         - https://releases.bazel.build/7.0.1/rc1/index.html
