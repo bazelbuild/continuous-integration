@@ -80,7 +80,8 @@ While the release is active, you should make sure to do the following:
     *   When a few days pass and no more release blockers show up, push the candidate as the release (issues and pull requests with the "nice-to-have" labels can move to the next release if they are not resolved/merged yet). Otherwise, rinse and repeat the steps above. 
 *   Keep the task list in the release tracking issue updated and check boxes as you follow the release process.
     *   In particular, try and keep the estimated release date updated.
-*   If there is a request to backport a fix to a previous major release, then add the "potential N.x cherry-picks" label (for example, if we just released 7.2.0 release, but there is a request to make some changes to fix 6.4.0, then we should put the label, "potential 6.x cherry-picks" label). If there is about five or more issues/PR's with the label, then we should start a discussion to release a new minor release for the previous LTS track.
+*   If there is a request to backport a fix to a previous minor release, then add the "potential N.x cherry-picks" label (for example, if we just released 7.2.0 release, but there is a request to make some changes to fix 6.4.0, then we should put the label, "potential 6.x cherry-picks" label). If there are about five or more issues/PRs with the label, then we should start a discussion to release a new minor release for the previous LTS track.
+    *   Note: Create and monitor this label when once we start working on a major release; we'll always have another minor release in the previous LTS track.
 
 ## Create a release candidate
 
@@ -110,18 +111,30 @@ While the release is active, you should make sure to do the following:
     click "Deploy release artifacts" for the deployment step.
 
     *   This will upload the release candidate binaries to GitHub and our
-        apt-get repository. The github link is probably of the form:
+        apt-get repository. The link is probably of the form:
         https://releases.bazel.build/3.6.0/rc1/index.html
         
 1.  If that worked, click on the "Generate release notes" step to unblock it. If this is the first release candidate, copy and paste the generated text into the release announcements doc. For rcX where X>2, compare the generated notes with the release announcements working doc and add only the new/missing notes. Refer to the "Release announcement" section below for more details.
 
+1. Publish the RC to GitHub (this is manual step for now until it is automated through the release script)
+
+    *   Click on "draft a new release" on the [release page](https://github.com/bazelbuild/bazel/releases)
+    *   Set the tag as X.Y.ZrcN (e.g. `7.0.1rc1`)
+    *   Set the target as the release branch (e.g. `release-7.0.1rc1`)
+    *   Copy the release notes into the description
+    *   Download all artifacts from the index page (e.g. everything under "Index of files" in https://releases.bazel.build/7.0.1/rc1/index.html) and upload them here
+    *   Select "set as a pre-release"
+    *   Publish the release
+
 1.  Send out an email to `bazel-discuss@googlegroups.com` about the new release candidate. E.g.:
-    *   Subject: Bazel 6.1.0 release candidate 1 is available for testing
+    *   Subject: Bazel 7.0.1 release candidate 1 is available for testing
     *   Body:
     ```
     Bazel 6.1.0rc1 is now available for those that want to try it out.
 
-    You can download it from: https://releases.bazel.build/6.1.0/rc1/index.html.
+    You can download it from here:
+        - https://releases.bazel.build/7.0.1/rc1/index.html
+        - https://github.com/bazelbuild/bazel/releases/tag/7.0.1rc1
     If you're using Bazelisk, you can point to the latest RC by setting USE_BAZEL_VERSION=last_rc.
     
     Please report regressions [here](https://github.com/bazelbuild/bazel/issues) as soon as possible.
@@ -259,6 +272,7 @@ Note: the above policies are for final releases only. RCs can be created without
 
 Submit an internal CL for the following:
 1. If this is the newest version of the most recent Bazel LTS release, update https://github.com/bazelbuild/bazel/blob/master/.bazelversion.
+    *   Make sure that the CI isn't skipped (no `SKIP_CI` tag) so that we don't miss any errors
 2. Update the [support matrix](https://bazel.build/release/index.html#support-matrix) on bazel.build to reflect the latest version (for all LTS releases).
 
 ### Updating Google's internal mirror
