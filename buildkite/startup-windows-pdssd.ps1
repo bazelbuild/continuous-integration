@@ -101,16 +101,33 @@ if ($myhostname -like "*trusted*") {
   $key = "buildkite-untrusted-agent-token"
 }
 $buildkite_agent_token_file = "c:\buildkite\buildkite_agent_token.enc"
+
 Write-Host "Getting Buildkite Agent token from GCS..."
-while ($true) {
+
+# Try at most 30 times to download file, if not succeeding, shutdown the VM.
+$maxAttempts = 30
+$attemptCount = 0
+
+while ($attemptCount -lt $maxAttempts) {
   try {
     (New-Object Net.WebClient).DownloadFile($buildkite_agent_token_url, $buildkite_agent_token_file)
+    Write-Host "Token downloaded successfully."
     break
   } catch {
     $msg = $_.Exception.Message
     Write-Host "Failed to download token: $msg"
+
+    $attemptCount++
+    Write-Host "Attempt $attemptCount of $maxAttempts"
+
     Start-Sleep -Seconds 10
   }
+}
+
+# Check if maximum attempts were reached and shut down if necessary
+if ($attemptCount -eq $maxAttempts) {
+  Write-Host "Maximum attempts reached. Shutting down the machine..."
+  Stop-Computer
 }
 
 ## Decrypt the Buildkite agent token.
