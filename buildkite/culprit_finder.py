@@ -256,7 +256,7 @@ def main(argv=None):
             if not bad_bazel_commit:
                 # If BAD_BAZEL_COMMIT is not set, use HEAD commit.
                 bad_bazel_commit = (
-                    subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
+                    subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=BAZEL_REPO_DIR).decode("utf-8").strip()
                 )
         except KeyError as e:
             raise Exception("Environment variable %s must be set" % str(e))
