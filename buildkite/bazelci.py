@@ -1888,7 +1888,7 @@ def remote_caching_flags(platform, accept_cached=True):
         platform_cache_digest.update(key)
         platform_cache_digest.update(b":")
 
-    remote_timeout = 600 if is_ipv6_mac() else 60
+    remote_timeout = 3600 if is_ipv6_mac() else 60
     flags += [
         f"--remote_timeout={remote_timeout}",
         "--remote_max_connections=200",
