@@ -51,6 +51,7 @@ These steps only have to be performed once, ever.
 1.  After creating the branch, edit the CODEOWNERS file on that branch, replace the entire contents of the file with the line `* @your-github-username` and submit it directly.
     *   This makes sure that all PRs sent against that branch have you as a reviewer.
 1.  Update the branch name in the scheduled build for release branches by editing the "build branch" field [here](https://buildkite.com/bazel/bazel-at-head-plus-downstream/settings/schedules/b63d6589-2658-4850-a9b9-b588b9ea5c99/edit). Set it to `release-X.Y.Z` so that downstream tests run against this branch.
+1.  Ping [@meteorcloudy](https://github.com/meteorcloudy) to configure a [GitHub merge queue](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue#about-merge-queues) for this new branch.
 1.  (For minor release only) Send an email to bazel-discuss@googlegroups.com announcing the next release.
     *   It should contain the text: `The Bazel X.Y.Z release branch (release-X.Y.Z [link]) is open for business. Please send cherry-pick PRs against this branch if you'd like your change to be in X.Y.Z. Please follow the release tracking issue [link] for updates.`
 1.  Meanwhile, begin the [internal approval process](http://go/bazel-internal-launch-checklist), too.
@@ -135,15 +136,16 @@ While the release is active, you should make sure to do the following:
     You can download it from here:
         - https://releases.bazel.build/7.0.1/rc1/index.html
         - https://github.com/bazelbuild/bazel/releases/tag/7.0.1rc1
+
     If you're using Bazelisk, you can point to the latest RC by setting USE_BAZEL_VERSION=last_rc.
     
-    Please report regressions [here](https://github.com/bazelbuild/bazel/issues) as soon as possible.
-    Draft release notes can be found [here](https://docs.google.com/document/d/1pu2ARPweOCTxPsRR8snoDtkC9R51XWRyBXeiC6Ql5so/edit).
+    Please test it out and report any issues [here](https://github.com/bazelbuild/bazel/issues) as soon as possible.
+    A draft of the release notes can be found [here](https://docs.google.com/document/d/1pu2ARPweOCTxPsRR8snoDtkC9R51XWRyBXeiC6Ql5so/edit?usp=sharing).
     ```
 
-1.  Add a comment to the release GitHub issue announcing that a new RC is out. See [example](https://github.com/bazelbuild/bazel/issues/19165#issuecomment-1666242667).
+1.  Add a comment to the release GitHub issue announcing that a new RC is out. See [example](https://github.com/bazelbuild/bazel/issues/20470#issuecomment-1889975586).
 
-1.  Post on the #general channel on the [Bazel Slack](https://bazelbuild.slack.com/) announcing that a new RC is out. See [example](https://bazelbuild.slack.com/archives/CA31HN1T3/p1691188645927659).
+1.  Post on the #general channel on the [Bazel Slack](https://bazelbuild.slack.com/) announcing that a new RC is out. See [example](https://bazelbuild.slack.com/archives/CA31HN1T3/p1705095377557259).
 
 1.  Trigger a new pipeline in BuildKite to test the release candidate with all the downstream projects.
     *   Go to https://buildkite.com/bazel/bazel-with-downstream-projects-bazel
