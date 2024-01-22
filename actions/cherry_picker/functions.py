@@ -4,6 +4,9 @@ from vars import headers, token, upstream_repo, upstream_url
 class PushCpException(Exception):
     pass
 
+class UpdateLockfileException(Exception):
+    pass
+
 def get_commit_id(pr_number, actor_name, action_event, api_repo_name):
     params = {"per_page": 100}
     response = requests.get(f'https://api.github.com/repos/{api_repo_name}/issues/{pr_number}/events', headers=headers, params=params)
@@ -112,6 +115,10 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
     if requires_clone == True: clone_and_sync_repo(gh_cli_repo_name, master_branch, release_branch_name, user_name, gh_cli_repo_url, user_email)
     if requires_checkout == True: checkout_release_number(release_branch_name, target_branch_name)
     run_cherry_pick(input_data["is_prod"], commit_id, target_branch_name)
+
+def update_lockfile():
+    update_lockfile_status = subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
+    if update_lockfile_status != 0: raise UpdateLockfileException("Error updating the lockfile...")
 
 def push_to_branch(target_branch_name):
     print(f"Pushing it to branch: {target_branch_name}")

@@ -35,13 +35,28 @@ r = requests.get(f'https://api.github.com/repos/bazelbuild/bazel/pulls/{pr_numbe
 print("This is the branchname!!!!!")
 print(r["head"]["ref"])
 
+user_login = r["user"]["login"]
+head_branch = r["head"]["ref"]
+
+
 print("Cloning and syncing the repo...")
-subprocess.run(['git', 'clone', f"https://bazel-io:{token}@github.com/bazelbuild/bazel.git"])
+subprocess.run(['git', 'clone', f"https://bazel-io:{token}@github.com/bazel-io/bazel.git"])
 subprocess.run(['git', 'config', '--global', 'user.name', "bazel-io"])
 subprocess.run(['git', 'config', '--global', 'user.email', "bazel-io-bot@google.com"])
 os.chdir("bazel")
-# subprocess.run(['git', 'remote', 'add', 'origin', "git@github.com:iancha1992/bazel.git"])
-subprocess.run(['git', 'remote', '-v'])
+# subprocess.run(['git', 'remote', 'add', 'origin', "git@github.com:bazel-io/bazel.git"])
+
+subprocess.run(['git', 'checkout', '-b', f'update_lockfile_{head_branch}'])
+subprocess.run(['git', 'remote', 'add', 'fork', f'git@github.com:{user_login}/bazel.git'])
+subprocess.run(['git', 'pull', 'fork', head_branch])
+
+# subprocess.run(['git', 'checkout', '-b', ''])
+# subprocess.run([])
+# subprocess.run([])
+# subprocess.run([])
+# subprocess.run([])
+# subprocess.run([])
+
 
 print("checking branches")
 subprocess.run(['git', 'branch'])
