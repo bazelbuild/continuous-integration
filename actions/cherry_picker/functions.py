@@ -117,11 +117,17 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
     run_cherry_pick(input_data["is_prod"], commit_id, target_branch_name)
 
 def update_lockfile():
-    print("Updating the lockfile...")
-    update_lockfile_status = subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
-    git_add_status = subprocess.run(["git", "add", "."])
-    git_commit_status = subprocess.run(["git", "commit", "-m", "'Updated the MODULE.bazel.lock'"])
-    if update_lockfile_status != 0 or git_add_status != 0 or git_commit_status != 0: raise UpdateLockfileException("Error updating the lockfile...")
+    lockfile_mode_status = subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=error"])
+    if lockfile_mode_status.returncode != 0:
+        print("Lockfile(s) may need to be updated...")
+        print("Updating the lockfile...")
+        subprocess.run(["../bazelisk-linux-amd64", "run", "//src/test/tools/bzlmod:update_default_lock_file"])
+        update_lockfile_status = subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
+        if update_lockfile_status.returncode != 0: raise UpdateLockfileException("Error updating the lockfile...")
+        git_add_status = subprocess.run(["git", "diff", "--exit-code"])
+        if git_add_status.returncode == 0: raise UpdateLockfileException("There is nothing to add although 'bazel mod deps --lockfile_mode=update' was run...")
+        subprocess.run(["git", "add", "."])
+        subprocess.run(["git", "commit", "-m", "'Updated the MODULE.bazel.lock'"])
 
 def push_to_branch(target_branch_name):
     print(f"Pushing it to branch: {target_branch_name}")
