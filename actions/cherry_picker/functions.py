@@ -117,8 +117,11 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
     run_cherry_pick(input_data["is_prod"], commit_id, target_branch_name)
 
 def update_lockfile():
+    print("Updating the lockfile...")
     update_lockfile_status = subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
-    if update_lockfile_status != 0: raise UpdateLockfileException("Error updating the lockfile...")
+    git_add_status = subprocess.run(["git", "add", "."])
+    git_commit_status = subprocess.run(["git", "commit", "-m", "'Updated the MODULE.bazel.lock'"])
+    if update_lockfile_status != 0 or git_add_status != 0 or git_commit_status != 0: raise UpdateLockfileException("Error updating the lockfile...")
 
 def push_to_branch(target_branch_name):
     print(f"Pushing it to branch: {target_branch_name}")
