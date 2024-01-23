@@ -342,6 +342,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     "rules_sass": {
         "git_repository": "https://github.com/bazelbuild/rules_sass.git",
         "pipeline_slug": "rules-sass",
+        "disabled_reason": "https://github.com/bazelbuild/rules_sass/issues/153",
     },
     "rules_scala": {
         "git_repository": "https://github.com/bazelbuild/rules_scala.git",
