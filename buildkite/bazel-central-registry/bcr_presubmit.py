@@ -367,7 +367,7 @@ def should_metadata_change_block_presubmit(modules, pr_labels):
 
     bazelci.print_collapsed_group("Checking metadata.json file changes:")
 
-    # Collect changed modules
+    # Collect changed modules from module, version pairs.
     changed_modules = set([module[0] for module in modules])
 
     # If information like, maintainers, homepage, repository is changed, the presubmit should wait for a BCR maintainer review.
@@ -376,11 +376,11 @@ def should_metadata_change_block_presubmit(modules, pr_labels):
     for name in changed_modules:
         # Read the new metadata.json file.
         metadata_json = get_metadata_json(name)
-        metadata_old = json.load(open(metadata_json, "r"))
+        metadata_new = json.load(open(metadata_json, "r"))
 
         # Check out and read the original metadata.json file from the main branch.
         subprocess.run(["git", "checkout", "main", "--", metadata_json], check=True)
-        metadata_new = json.load(open(metadata_json, "r"))
+        metadata_old = json.load(open(metadata_json, "r"))
 
         # Revert the metadata.json file to the HEAD of current branch.
         subprocess.run(["git", "checkout", "HEAD", "--", metadata_json], check=True)
