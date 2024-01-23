@@ -81,6 +81,12 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
         subprocess.run(['git', 'config', '--global', 'user.name', user_name])
         subprocess.run(['git', 'config', '--global', 'user.email', user_email])
         os.chdir("bazel")
+        print("pwd")
+        subprocess.run(['pwd'])
+        print("ls")
+        subprocess.run(['ls'])
+        print("ls ..")
+        subprocess.run(['ls', '..'])
         subprocess.run(['git', 'remote', 'add', 'origin', gh_cli_repo_url])
         subprocess.run(['git', 'remote', '-v'])
 
