@@ -90,6 +90,10 @@ def get_target_modules():
     return list(set(modules))
 
 
+def get_metadata_json(module_name):
+    return BCR_REPO_DIR.joinpath("modules/%s/metadata.json" % module_name)
+
+
 def get_presubmit_yml(module_name, module_version):
     return BCR_REPO_DIR.joinpath("modules/%s/%s/presubmit.yml" % (module_name, module_version))
 
@@ -356,6 +360,43 @@ def should_bcr_validation_block_presubmit(modules, pr_labels):
     return False
 
 
+def should_metadata_change_block_presubmit(modules, pr_labels):
+    # Skip the metadata.json check if the PR is labeled with "presubmit-auto-run".
+    if "presubmit-auto-run" in pr_labels:
+        return False
+
+    bazelci.print_collapsed_group("Checking metadata.json file changes:")
+
+    # Collect changed modules
+    changed_modules = set([module[0] for module in modules])
+
+    # If information like, maintainers, homepage, repository is changed, the presubmit should wait for a BCR maintainer review.
+    # For each changed module, check if anything other than the "versions" field is changed in the metadata.json file.
+    needs_bcr_maintainer_review = False
+    for name in changed_modules:
+        # Read the new metadata.json file.
+        metadata_json = get_metadata_json(name)
+        metadata_old = json.load(open(metadata_json, "r"))
+
+        # Check out and read the original metadata.json file from the main branch.
+        subprocess.run(["git", "checkout", "main", "--", metadata_json], check=True)
+        metadata_new = json.load(open(metadata_json, "r"))
+
+        # Revert the metadata.json file to the HEAD of current branch.
+        subprocess.run(["git", "checkout", "HEAD", "--", metadata_json], check=True)
+
+        # Clear the "versions" field and compare the rest of the metadata.json file.
+        metadata_old["versions"] = []
+        metadata_new["versions"] = []
+        if metadata_old != metadata_new:
+            bazelci.eprint("The change in metadata.json file for '%s' needs BCR maintainer review!\n" % name)
+            needs_bcr_maintainer_review = True
+        else:
+            bazelci.eprint("The change in metadata.json file for '%s' looks good!\n" % name)
+
+    return needs_bcr_maintainer_review
+
+
 def should_wait_bcr_maintainer_review(modules):
     """Validate the changes and decide whether the presubmit should wait for a BCR maintainer review.
     Returns False if all changes look good and the presubmit can proceed.
@@ -370,8 +411,17 @@ def should_wait_bcr_maintainer_review(modules):
     # If files outside of the modules/ directory are changed, fail the presubmit.
     validate_files_outside_of_modules_dir_are_not_modified(modules)
 
+    needs_bcr_maintainer_review = False
+
+    # Check if any changes in the metadata.json file need a manual review.
+    if should_metadata_change_block_presubmit():
+        needs_bcr_maintainer_review = True
+
     # Run BCR validations on target modules and decide if the presubmit jobs should be blocked.
-    return should_bcr_validation_block_presubmit(modules, pr_labels)
+    if should_bcr_validation_block_presubmit(modules, pr_labels):
+        needs_bcr_maintainer_review = True
+
+    return needs_bcr_maintainer_review
 
 
 def upload_jobs_to_pipeline(pipeline_steps):
