@@ -412,7 +412,7 @@ def should_wait_bcr_maintainer_review(modules):
     validate_files_outside_of_modules_dir_are_not_modified(modules)
 
     # Check if any changes in the metadata.json file need a manual review.
-    needs_bcr_maintainer_review = should_metadata_change_block_presubmit()
+    needs_bcr_maintainer_review = should_metadata_change_block_presubmit(modules, pr_labels)
 
     # Run BCR validations on target modules and decide if the presubmit jobs should be blocked.
     if should_bcr_validation_block_presubmit(modules, pr_labels):
