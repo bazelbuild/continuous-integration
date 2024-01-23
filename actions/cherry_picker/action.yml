@@ -32,6 +32,8 @@ runs:
         chmod +x bazelisk-linux-amd64
         pwd
         ls
+        echo this is thels..;
+        ls ..
       shell: bash
     - name: Install Python
       uses: actions/setup-python@v4
