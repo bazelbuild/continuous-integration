@@ -365,7 +365,7 @@ def should_metadata_change_block_presubmit(modules, pr_labels):
     if "presubmit-auto-run" in pr_labels:
         return False
 
-    bazelci.print_collapsed_group("Checking metadata.json file changes:")
+    bazelci.print_expanded_group("Checking metadata.json file changes:")
 
     # Collect changed modules from module, version pairs.
     changed_modules = set([module[0] for module in modules])
@@ -389,7 +389,7 @@ def should_metadata_change_block_presubmit(modules, pr_labels):
         metadata_old["versions"] = []
         metadata_new["versions"] = []
         if metadata_old != metadata_new:
-            bazelci.eprint("The change in metadata.json file for '%s' needs BCR maintainer review!\n" % name)
+            bazelci.eprint("\x1b[33mWARNING\x1b[0m: The change in metadata.json file for '%s' needs BCR maintainer review!\n" % name)
             needs_bcr_maintainer_review = True
         else:
             bazelci.eprint("The change in metadata.json file for '%s' looks good!\n" % name)
