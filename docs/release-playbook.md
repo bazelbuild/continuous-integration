@@ -145,6 +145,19 @@ While the release is active, you should make sure to do the following:
 
 1.  Post on the #general channel on the [Bazel Slack](https://bazelbuild.slack.com/) announcing that a new RC is out. See [example](https://bazelbuild.slack.com/archives/CA31HN1T3/p1705095377557259).
 
+1.  Post a comment on all issues / PRs addressed in this RC to ask users to test (this is a manual step for now but will eventually be automated).
+
+    Issues:   
+      ```
+      A fix for this issue has been included in [Bazel 7.0.2 RC1](https://github.com/bazelbuild/bazel/releases/tag/7.0.2rc1). Please test out the release candidate and report any issues as soon as possible.
+    If you're using Bazelisk, you can point to the latest RC by setting USE_BAZEL_VERSION=7.0.2rc1. Thanks!
+      ```
+    PRs: 
+      ```
+      The changes in this PR have been included in [Bazel 6.5.0 RC2](https://github.com/bazelbuild/bazel/releases/tag/6.5.0rc2). Please test out the release candidate and report any issues as soon as possible.
+    If you're using Bazelisk, you can point to the latest RC by setting USE_BAZEL_VERSION=6.5.0rc2. Thanks!
+      ```
+
 1.  Trigger a new pipeline in BuildKite to test the release candidate with all the downstream projects.
     *   Go to https://buildkite.com/bazel/bazel-with-downstream-projects-bazel
     *   Click "New Build", then fill in the fields like this:
