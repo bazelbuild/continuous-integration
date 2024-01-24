@@ -132,11 +132,11 @@ def update_lockfile():
     print("bazelversion version!!!!")
 
     std_out_bazel_version = subprocess.Popen(["../bazelisk-linux-amd64", "--version"], stdout=subprocess.PIPE)
-    bazel_version = std_out_bazel_version.communicate()[0].decode()
-    bazel_version_number = re.findall(r"\d.\d.\d", bazel_version)
+    bazel_version_std_out = std_out_bazel_version.communicate()[0].decode()
+    bazel_version = re.finditer(r"\d.\d.\d", bazel_version_std_out)
 
     print("hi")
-    print(bazel_version_number)
+    print(bazel_version)
     print("bye")
 
     print(len(bazel_version))
