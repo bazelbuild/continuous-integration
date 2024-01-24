@@ -448,17 +448,17 @@ def upload_jobs_to_pipeline(pipeline_steps):
 def duplicate_configs_for_supported_bazel_lts_releases(configs):
     # For each task, if bazel version is not specified, duplicate the task for each supported Bazel LTS releases.
     BAZEL_LTS = [("7.x", ":seven:"), ("6.x", ":six:")] # the second element is the emoji name
-    new_configs = {}
+    new_tasks = {}
     for task_name, task_config in configs.get("tasks", {}).items():
         if "bazel" in task_config:
-            new_configs[task_name] = task_config
+            new_tasks[task_name] = task_config
         else:
             for bazel_version, emoji in BAZEL_LTS:
                 new_task_config = task_config.copy()
                 new_task_config["bazel"] = bazel_version
                 new_task_config["name"] = task_config["name"] + " (:bazel: " + emoji + ")"
-                new_configs[task_name + "_" + bazel_version] = new_task_config
-    return new_configs
+                new_tasks[task_name + "_" + bazel_version] = new_task_config
+    return {"tasks": new_tasks}
 
 
 def main(argv=None):
