@@ -360,6 +360,15 @@ def should_bcr_validation_block_presubmit(modules, pr_labels):
     return False
 
 
+def file_exists_in_main_branch(file_path):
+    # Run the git ls-tree command to check for the file in the main branch
+    result = subprocess.run(
+        ["git", "ls-tree", "-r", "main", "--name-only", file_path],
+        capture_output=True, text=True, check=True
+    )
+    return result.stdout.strip() != ""
+
+
 def should_metadata_change_block_presubmit(modules, pr_labels):
     # Skip the metadata.json check if the PR is labeled with "presubmit-auto-run".
     if "presubmit-auto-run" in pr_labels:
@@ -374,8 +383,14 @@ def should_metadata_change_block_presubmit(modules, pr_labels):
     # For each changed module, check if anything other than the "versions" field is changed in the metadata.json file.
     needs_bcr_maintainer_review = False
     for name in changed_modules:
-        # Read the new metadata.json file.
         metadata_json = get_metadata_json(name)
+
+        if not file_exists_in_main_branch(metadata_json):
+            bazelci.eprint("\x1b[33mWARNING\x1b[0m: The metadata.json file for '%s' is newly created!\n" % name)
+            needs_bcr_maintainer_review = True
+            continue
+
+        # Read the new metadata.json file.
         metadata_new = json.load(open(metadata_json, "r"))
 
         # Check out and read the original metadata.json file from the main branch.
