@@ -458,7 +458,7 @@ def duplicate_configs_for_supported_bazel_lts_releases(configs):
                 new_task_config["bazel"] = bazel_version
                 new_task_config["name"] = task_config["name"] + " (:bazel: " + emoji + ")"
                 new_configs[task_name + "_" + bazel_version] = new_task_config
-    return new_task_config
+    return new_configs
 
 
 def main(argv=None):
