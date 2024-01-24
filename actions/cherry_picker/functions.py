@@ -136,7 +136,7 @@ def update_lockfile():
     bazel_version_number = re.findall(r"\d.\d.\d", bazel_version)
 
     print("hi")
-    print(bazel_version)
+    print(bazel_version_number)
     print("bye")
 
     print(len(bazel_version))
