@@ -57,8 +57,8 @@ GITHUB_BRANCH = {"bazel": "master", "bazel-trusted": "master", "bazel-testing": 
     BUILDKITE_ORG
 ]
 
-SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazelci.py?{}".format(
-    GITHUB_BRANCH, int(time.time())
+SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazelci.py".format(
+    GITHUB_BRANCH
 )
 
 AGGREGATE_INCOMPATIBLE_TEST_RESULT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/aggregate_incompatible_flags_test_result.py?{}".format(
@@ -3109,7 +3109,7 @@ def runner_step(
 
 
 def fetch_bazelcipy_command():
-    return "curl -sS {0} -o bazelci.py".format(SCRIPT_URL)
+    return "curl -sS {0}?{1} -o bazelci.py".format(SCRIPT_URL, int(time.time()))
 
 
 def fetch_aggregate_incompatible_flags_test_result_command():
