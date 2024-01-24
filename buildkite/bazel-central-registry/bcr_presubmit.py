@@ -445,20 +445,20 @@ def upload_jobs_to_pipeline(pipeline_steps):
     )
 
 
-def duplicate_configs_for_supported_bazel_lts_releases(configs):
+def duplicate_configs_for_supported_bazel_lts_releases(task_configs):
     # For each task, if bazel version is not specified, duplicate the task for each supported Bazel LTS releases.
     BAZEL_LTS = [("7.x", ":seven:"), ("6.x", ":six:")] # the second element is the emoji name
-    new_tasks = {}
-    for task_name, task_config in configs.get("tasks", {}).items():
+    new_task_configs = {}
+    for task_name, task_config in task_configs.items():
         if "bazel" in task_config:
-            new_tasks[task_name] = task_config
+            new_task_configs[task_name] = task_config
         else:
             for bazel_version, emoji in BAZEL_LTS:
                 new_task_config = task_config.copy()
                 new_task_config["bazel"] = bazel_version
                 new_task_config["name"] = task_config["name"] + " (:bazel: " + emoji + ")"
-                new_tasks[task_name + "_" + bazel_version] = new_task_config
-    return {"tasks": new_tasks}
+                new_task_configs[task_name + "_" + bazel_version] = new_task_config
+    return new_task_configs
 
 
 def main(argv=None):
@@ -489,11 +489,11 @@ def main(argv=None):
         pipeline_steps = []
         for module_name, module_version in modules:
             configs = get_task_config(module_name, module_version)
-            configs = duplicate_configs_for_supported_bazel_lts_releases(configs)
-            add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps)
+            task_configs = duplicate_configs_for_supported_bazel_lts_releases(configs.get("tasks", {}))
+            add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps)
             configs = get_test_module_task_config(module_name, module_version)
-            configs = duplicate_configs_for_supported_bazel_lts_releases(configs)
-            add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True)
+            task_configs = duplicate_configs_for_supported_bazel_lts_releases(configs.get("tasks", {}))
+            add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=True)
         if should_wait_bcr_maintainer_review(modules) and pipeline_steps:
             pipeline_steps = [{"block": "Wait on BCR maintainer review", "blocked_state": "running"}] + pipeline_steps
         upload_jobs_to_pipeline(pipeline_steps)
