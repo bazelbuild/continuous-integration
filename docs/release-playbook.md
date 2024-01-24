@@ -133,11 +133,9 @@ While the release is active, you should make sure to do the following:
     ```
     Bazel 7.0.1rc1 is now available for those that want to try it out.
 
-    You can download it from here:
-        - https://releases.bazel.build/7.0.1/rc1/index.html
-        - https://github.com/bazelbuild/bazel/releases/tag/7.0.1rc1
+    You can download it from here: https://github.com/bazelbuild/bazel/releases/tag/7.0.1rc1
 
-    If you're using Bazelisk, you can point to the latest RC by setting USE_BAZEL_VERSION=last_rc.
+    If you're using Bazelisk, you can point to the latest RC by setting USE_BAZEL_VERSION=7.0.1rc1.
     
     Please test it out and report any issues [here](https://github.com/bazelbuild/bazel/issues) as soon as possible.
     A draft of the release notes can be found [here](https://docs.google.com/document/d/1pu2ARPweOCTxPsRR8snoDtkC9R51XWRyBXeiC6Ql5so/edit?usp=sharing).
@@ -264,9 +262,7 @@ Note: the above policies are for final releases only. RCs can be created without
     *   Subject: Bazel 6.2.0 is released
     *   Body:
     ```
-    Bazel 6.2.0 is now available:
-    - https://github.com/bazelbuild/bazel/releases/tag/6.2.0
-    - https://releases.bazel.build/6.2.0/release/index.html
+    Bazel 6.2.0 is now available: https://github.com/bazelbuild/bazel/releases/tag/6.2.0
     ```
 1.  Post on the #general channel on the [Bazel Slack](https://bazelbuild.slack.com/) about the new release (same content as above).
 
