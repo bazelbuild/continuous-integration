@@ -135,7 +135,7 @@ While the release is active, you should make sure to do the following:
 
     You can download it from here: https://github.com/bazelbuild/bazel/releases/tag/7.0.1rc1
 
-    If you're using Bazelisk, you can point to the latest RC by setting USE_BAZEL_VERSION=7.0.1rc1.
+    If you're using Bazelisk, you can point to this RC by setting USE_BAZEL_VERSION=7.0.1rc1.
     
     Please test it out and report any issues [here](https://github.com/bazelbuild/bazel/issues) as soon as possible.
     A draft of the release notes can be found [here](https://docs.google.com/document/d/1pu2ARPweOCTxPsRR8snoDtkC9R51XWRyBXeiC6Ql5so/edit?usp=sharing).
