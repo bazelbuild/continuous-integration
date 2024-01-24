@@ -87,6 +87,8 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
         subprocess.run(['ls'])
         print("ls ..")
         subprocess.run(['ls', '..'])
+        print("cat .bazelversion")
+        subprocess.run(['cat', '.bazelversion'])
         subprocess.run(['git', 'remote', 'add', 'origin', gh_cli_repo_url])
         subprocess.run(['git', 'remote', '-v'])
 
