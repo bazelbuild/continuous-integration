@@ -126,6 +126,9 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
 
 def update_lockfile():
     bazelversion_file = open(".bazelversion", "r")
+    print("bazelverison file read")
+    print(bazelversion_file)
+
     print("bazelversion version!!!!")
     subprocess.run(["../bazelisk-linux-amd64", "--version"])
 
