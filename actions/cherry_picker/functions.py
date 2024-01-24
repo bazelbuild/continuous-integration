@@ -1,4 +1,4 @@
-import os, subprocess, requests
+import os, subprocess, requests, re
 from vars import headers, token, upstream_repo, upstream_url
 
 class PushCpException(Exception):
@@ -133,6 +133,7 @@ def update_lockfile():
 
     std_out_bazel_version = subprocess.Popen(["../bazelisk-linux-amd64", "--version"], stdout=subprocess.PIPE)
     bazel_version = std_out_bazel_version.communicate()[0].decode()
+    bazel_version_number = re.findall(r"\d.\d.\d", bazel_version)
 
     print("hi")
     print(bazel_version)
