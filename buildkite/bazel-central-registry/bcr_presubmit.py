@@ -364,7 +364,7 @@ def file_exists_in_main_branch(file_path):
     # Run the git ls-tree command to check for the file in the main branch
     result = subprocess.run(
         ["git", "ls-tree", "-r", "main", "--name-only", file_path],
-        capture_output=True, text=True, check=True
+        stdout=subprocess.PIPE, text=True, check=True
     )
     return result.stdout.strip() != ""
 
