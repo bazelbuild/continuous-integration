@@ -183,6 +183,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/google/flogger.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/flogger.yml",
         "pipeline_slug": "flogger",
+        "disabled_reason": "https://github.com/bazelbuild/continuous-integration/issues/1588#issuecomment-1874630563",
     },
     "Gerrit": {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
@@ -265,6 +266,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_cc.git",
         "pipeline_slug": "rules-cc",
         "owned_by_bazel": True,
+        "disabled_reason": "https://github.com/bazelbuild/rules_cc/issues/190",
     },
     "rules_closure": {
         "git_repository": "https://github.com/bazelbuild/rules_closure.git",
