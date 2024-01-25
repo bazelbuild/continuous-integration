@@ -2469,6 +2469,7 @@ def run_bazel_diff(bazel_diff_path, old_workspace_dir, new_workspace_dir, bazel_
                     repo_dir,
                     "-b",
                     bazel_binary,
+                    "--bazelCommandOptions=--lockfile_mode=off",
                     json_path,
                 ],
                 capture_stderr=True,
