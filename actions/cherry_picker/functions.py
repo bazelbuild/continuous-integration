@@ -147,7 +147,7 @@ def update_lockfile():
             subprocess.run(["git", "add", "."])
             subprocess.run(["git", "commit", "-m", "'Updated the MODULE.bazel.lock'"])
     else: 
-        print("bazelisk-linux-amd64 --version is less than 7. It will not need to update the lockfile. Check the .bazelversion...")
+        print("bazelisk-linux-amd64 --version is less than 7. It will not update the lockfile. Check the .bazelversion...")
 
 def push_to_branch(target_branch_name):
     print(f"Pushing it to branch: {target_branch_name}")
