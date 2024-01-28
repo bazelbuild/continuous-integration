@@ -166,22 +166,6 @@ Write-Host "Installing Python packages..."
     keras_preprocessing `
     pywin32
 
-## CMake (for rules_foreign_cc).
-Write-Host "Installing CMake..."
-& choco install cmake
-$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";C:\Program Files\CMake\bin"
-[Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
-
-## Ninja 1.8.2 (for rules_foreign_cc).
-Write-Host "Installing Ninja 1.8.2..."
-$ninja_zip = "c:\temp\ninja-win.zip"
-$ninja_root = "c:\ninja"
-(New-Object Net.WebClient).DownloadFile("https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-win.zip", $ninja_zip)
-[System.IO.Compression.ZipFile]::ExtractToDirectory($ninja_zip, $ninja_root)
-Remove-Item $ninja_zip
-$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${ninja_root}"
-[Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
-
 ## Get the latest release version number of Bazelisk.
 Write-Host "Grabbing latest Bazelisk version number from GitHub..."
 $url = "https://github.com/bazelbuild/bazelisk/releases/latest"
