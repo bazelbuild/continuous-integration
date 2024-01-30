@@ -125,13 +125,9 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
     run_cherry_pick(input_data["is_prod"], commit_id, target_branch_name)
 
 def update_lockfile():
-    print("std bazel version!")
     std_out_bazel_version = subprocess.Popen(["../bazelisk-linux-amd64", "--version"], stdout=subprocess.PIPE)
     bazel_version_std_out = std_out_bazel_version.communicate()[0].decode()
-    print(bazel_version_std_out)
     major_version_digit = int(re.findall(r"\d.\d.\d", bazel_version_std_out)[0].split(".")[0])
-    print("cat .bazelversion in the update_lockfile")
-    subprocess.run(['cat', '.bazelversion'])
     if major_version_digit >= 7:
         lockfile_mode_status = subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=error"])
         if lockfile_mode_status.returncode == 0: print("The lockfile(s) is already updated")
