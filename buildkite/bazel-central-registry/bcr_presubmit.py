@@ -135,7 +135,7 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
         # But fall back to empty string for more robustness.
         bazel_version = task_config.get("bazel", "")
         if bazel_version:
-            label = "(:bazel: {}) ".format(bazel_version) + label
+            label = ":bazel:{} - ".format(bazel_version) + label
         command = (
             '%s bcr_presubmit.py %s --module_name="%s" --module_version="%s" --task=%s'
             % (
