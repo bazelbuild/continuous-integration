@@ -20,6 +20,7 @@ def get_commit_id(pr_number, actor_name, action_event, api_repo_name):
     if commit_id == None:
         print(f'PR#{pr_number} has NO commit made by {actor_name}')
         raise SystemExit(0)
+    # return
     return commit_id
 
 def get_reviewers(pr_number, api_repo_name, issues_data):
@@ -124,26 +125,24 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
     if requires_checkout == True: checkout_release_number(release_branch_name, target_branch_name)
     run_cherry_pick(input_data["is_prod"], commit_id, target_branch_name)
 
+# def has_unmergedfile
+
+
 def update_lockfile():
     std_out_bazel_version = subprocess.Popen(["../bazelisk-linux-amd64", "--version"], stdout=subprocess.PIPE)
     bazel_version_std_out = std_out_bazel_version.communicate()[0].decode()
     major_version_digit = int(re.findall(r"\d.\d.\d", bazel_version_std_out)[0].split(".")[0])
-    if major_version_digit >= 7:
-        lockfile_mode_status = subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=error"])
-        if lockfile_mode_status.returncode == 0: print("The lockfile(s) is already updated")
-        else:
-            print("Lockfile(s) may need to be updated...")
-            print("Updating the lockfile...")
-            # update_lockfile_status = subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
-            subprocess.run(["../bazelisk-linux-amd64", "run", "//src/test/tools/bzlmod:update_default_lock_file"])
-            update_lockfile_status = subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
-            if update_lockfile_status.returncode != 0: raise UpdateLockfileException("Error updating the lockfile...")
-            git_add_status = subprocess.run(["git", "diff", "--exit-code"])
-            if git_add_status.returncode == 0: raise UpdateLockfileException("There is nothing to add although 'bazel mod deps --lockfile_mode=update' was run...")
-            subprocess.run(["git", "add", "."])
-            subprocess.run(["git", "commit", "-m", "'Updated the MODULE.bazel.lock'"])
-    else: 
-        print("bazelisk-linux-amd64 --version is less than 7. It will not update the lockfile. Check the .bazelversion...")
+    if major_version_digit < 7:
+        print("Warning: The .bazelversion is less than 7. Therefore, the lockfiles may not be updated...")
+        return
+    
+    check_unmerged_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode())
+    if "src/test/tools/bzlmod/MODULE.bazel.lock" in check_unmerged_files:
+        subprocess.run(["../bazelisk-linux-amd64", "run", "//src/test/tools/bzlmod:update_default_lock_file"])
+    update_lockfile_status = subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
+    if update_lockfile_status.returncode != 0: raise Exception("Error updating the lockfile...")
+    subprocess.run(["git", "add", "."])
+    subprocess.run(["git", "commit", "-m", "'Updated the MODULE.bazel.lock'"])
 
 def push_to_branch(target_branch_name):
     print(f"Pushing it to branch: {target_branch_name}")
