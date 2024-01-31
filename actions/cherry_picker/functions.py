@@ -141,10 +141,11 @@ def update_lockfile():
         print("src/test/tools/bzlmod/MODULE.bazel.lock needs to be updated. This may take awhile...")
         subprocess.run(["../bazelisk-linux-amd64", "run", "//src/test/tools/bzlmod:update_default_lock_file"])
     print("Updating the lockfile(s)...")
-    update_lockfile_status = subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
-    if update_lockfile_status.returncode != 0: raise Exception("Error updating the lockfile...")
-    subprocess.run(["git", "add", "."])
-    subprocess.run(["git", "commit", "-m", "'Updated the MODULE.bazel.lock'"])
+    subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
+    git_add_status = subprocess.run(["git", "diff", "--exit-code"])
+    if git_add_status.returncode != 0: 
+        subprocess.run(["git", "add", "."])
+        subprocess.run(["git", "commit", "-m", "'Updated the MODULE.bazel.lock'"])
 
 def push_to_branch(target_branch_name):
     print(f"Pushing it to branch: {target_branch_name}")
