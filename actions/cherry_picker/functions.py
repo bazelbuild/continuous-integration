@@ -135,10 +135,12 @@ def update_lockfile():
     if major_version_digit < 7:
         print("Warning: The .bazelversion is less than 7. Therefore, the lockfiles may not be updated...")
         return
-    
+
     check_unmerged_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode())
     if "src/test/tools/bzlmod/MODULE.bazel.lock" in check_unmerged_files:
+        print("src/test/tools/bzlmod/MODULE.bazel.lock needs to be updated. This may take awhile...")
         subprocess.run(["../bazelisk-linux-amd64", "run", "//src/test/tools/bzlmod:update_default_lock_file"])
+    print("Updating the lockfile(s)...")
     update_lockfile_status = subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
     if update_lockfile_status.returncode != 0: raise Exception("Error updating the lockfile...")
     subprocess.run(["git", "add", "."])
