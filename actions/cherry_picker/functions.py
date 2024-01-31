@@ -67,6 +67,24 @@ def issue_comment(issue_number, body_content, api_repo_name, is_prod):
     else:
         subprocess.run(['gh', 'issue', 'comment', str(issue_number), '--body', body_content])
 
+def update_lockfile(unmerged_file_names):
+    std_out_bazel_version = subprocess.Popen(["../bazelisk-linux-amd64", "--version"], stdout=subprocess.PIPE)
+    bazel_version_std_out = std_out_bazel_version.communicate()[0].decode()
+    major_version_digit = int(re.findall(r"\d.\d.\d", bazel_version_std_out)[0].split(".")[0])
+    if major_version_digit < 7:
+        print("Warning: The .bazelversion is less than 7. Therefore, the lockfiles may not be updated...")
+        return
+
+    if "src/test/tools/bzlmod/MODULE.bazel.lock" in unmerged_file_names:
+        print("src/test/tools/bzlmod/MODULE.bazel.lock needs to be updated. This may take awhile...")
+        subprocess.run(["../bazelisk-linux-amd64", "run", "//src/test/tools/bzlmod:update_default_lock_file"])
+    print("Updating the lockfile(s)...")
+    subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
+    git_add_status = subprocess.run(["git", "diff", "--exit-code"])
+    if git_add_status.returncode != 0: 
+        subprocess.run(["git", "add", "."])
+        subprocess.run(["git", "commit", "-m", "'Updated the lockfile(s)'"])
+
 def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clone, requires_checkout, input_data):
     gh_cli_repo_name = f"{input_data['user_name']}/bazel"
     gh_cli_repo_url = f"git@github.com:{gh_cli_repo_name}.git"
@@ -117,35 +135,15 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
         print(f"Cherry-picking the commit id {commit_id} in CP branch: {target_branch_name}")
         if is_prod == True: cherrypick_status = subprocess.run(['git', 'cherry-pick', commit_id])
         else: cherrypick_status = subprocess.run(['git', 'cherry-pick', '-m', '1', commit_id])
-        if cherrypick_status.returncode != 0:
+        unmerged_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode())
+        if cherrypick_status.returncode != 0 and "src/test/tools/bzlmod/MODULE.bazel.lock" not in unmerged_files and "MODULE.bazel.lock" not in unmerged_files:
             subprocess.run(['git', 'cherry-pick', '--skip'])
             raise Exception("Cherry-pick was attempted, but there may be merge conflict(s). Please resolve manually.\ncc: @bazelbuild/triage")
-
+        elif cherrypick_status.returncode != 0 and ("src/test/tools/bzlmod/MODULE.bazel.lock" in unmerged_files or "MODULE.bazel.lock" in unmerged_files):
+            update_lockfile(unmerged_files)
     if requires_clone == True: clone_and_sync_repo(gh_cli_repo_name, master_branch, release_branch_name, user_name, gh_cli_repo_url, user_email)
     if requires_checkout == True: checkout_release_number(release_branch_name, target_branch_name)
     run_cherry_pick(input_data["is_prod"], commit_id, target_branch_name)
-
-# def has_unmergedfile
-
-
-def update_lockfile():
-    std_out_bazel_version = subprocess.Popen(["../bazelisk-linux-amd64", "--version"], stdout=subprocess.PIPE)
-    bazel_version_std_out = std_out_bazel_version.communicate()[0].decode()
-    major_version_digit = int(re.findall(r"\d.\d.\d", bazel_version_std_out)[0].split(".")[0])
-    if major_version_digit < 7:
-        print("Warning: The .bazelversion is less than 7. Therefore, the lockfiles may not be updated...")
-        return
-
-    check_unmerged_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode())
-    if "src/test/tools/bzlmod/MODULE.bazel.lock" in check_unmerged_files:
-        print("src/test/tools/bzlmod/MODULE.bazel.lock needs to be updated. This may take awhile...")
-        subprocess.run(["../bazelisk-linux-amd64", "run", "//src/test/tools/bzlmod:update_default_lock_file"])
-    print("Updating the lockfile(s)...")
-    subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
-    git_add_status = subprocess.run(["git", "diff", "--exit-code"])
-    if git_add_status.returncode != 0: 
-        subprocess.run(["git", "add", "."])
-        subprocess.run(["git", "commit", "-m", "'Updated the MODULE.bazel.lock'"])
 
 def push_to_branch(target_branch_name):
     print(f"Pushing it to branch: {target_branch_name}")
