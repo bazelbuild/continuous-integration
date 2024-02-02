@@ -67,19 +67,19 @@ async function generateMaintainersMap(octokit, owner, repo, modifiedModules) {
 
 async function notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap) {
   // For the list of maintainers who maintain the same set of modules, we want to group them together
-  const moduleSetToMaintainers = new Map(); // Map: Serialized Module Set -> Maintainers
+  const moduleListToMaintainers = new Map(); // Map: Serialized Module List -> Maintainers
 
-  // Step 1: Populate moduleSetToMaintainers based on maintainersMap
+  // Populate moduleListToMaintainers based on maintainersMap
   for (const [maintainer, modules] of maintainersMap.entries()) {
-    const modulesList = Array.from(modules).sort().join(', '); // Serialize module set
-    if (!moduleSetToMaintainers.has(modulesList)) {
-      moduleSetToMaintainers.set(modulesList, new Set());
+    const modulesList = Array.from(modules).sort().join(', '); // Serialize module list
+    if (!moduleListToMaintainers.has(modulesList)) {
+      moduleListToMaintainers.set(modulesList, new Set());
     }
-    moduleSetToMaintainers.get(modulesList).add(`@${maintainer}`);
+    moduleListToMaintainers.get(modulesList).add(`@${maintainer}`);
   }
 
-  // Step 2: Notify maintainers based on grouped module sets
-  for (const [modulesList, maintainers] of moduleSetToMaintainers.entries()) {
+  // Notify maintainers based on grouped module lists
+  for (const [modulesList, maintainers] of moduleListToMaintainers.entries()) {
     const maintainersList = Array.from(maintainers).join(', ');
     console.log(`Notifying ${maintainersList} for modules: ${modulesList}`);
     const commentBody = `Hello ${maintainersList}, modules you maintain (${modulesList}) have been updated in this PR. Please review the changes.`;
