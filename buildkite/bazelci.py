@@ -253,6 +253,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     "rules_android": {
         "git_repository": "https://github.com/bazelbuild/rules_android.git",
         "pipeline_slug": "rules-android",
+        "disabled_reason": "https://github.com/bazelbuild/rules_android/issues/187",
     },
     "rules_android_ndk": {
         "git_repository": "https://github.com/bazelbuild/rules_android_ndk.git",
@@ -323,6 +324,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     "rules_nodejs": {
         "git_repository": "https://github.com/bazelbuild/rules_nodejs.git",
         "pipeline_slug": "rules-nodejs-nodejs",
+        "disabled_reason": "https://github.com/bazelbuild/rules_nodejs/issues/3713"
     },
     "rules_perl": {
         "git_repository": "https://github.com/bazelbuild/rules_perl.git",
