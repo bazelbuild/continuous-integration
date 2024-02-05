@@ -31,7 +31,7 @@ async function fetchAllModifiedModules(octokit, owner, repo, prNumber) {
 
 async function generateMaintainersMap(octokit, owner, repo, modifiedModules) {
   const maintainersMap = new Map(); // Map: maintainer GitHub username -> Set of module they maintain
-  const modulesWithoutGithubMaintainers = new Set(); // Set of module names without GitHub-maintained maintainers
+  const modulesWithoutGithubMaintainers = new Set(); // Set of module names without module maintainers
   for (const moduleName of modifiedModules) {
     console.log(`Fetching metadata for module: ${moduleName}`);
     try {
