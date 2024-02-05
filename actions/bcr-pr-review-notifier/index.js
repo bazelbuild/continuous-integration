@@ -84,8 +84,18 @@ async function notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap)
   }
 
   // Notify maintainers based on grouped module lists
+  const prAuthor = context.payload.pull_request.user.login;
   for (const [modulesList, maintainers] of moduleListToMaintainers.entries()) {
-    const maintainersList = Array.from(maintainers).join(', ');
+    // Skip notifying the PR author if they are one of the module maintainers
+    const maintainersCopy = new Set(maintainers);
+    if (maintainersCopy.has(`@${prAuthor}`)) {
+      console.log(`Skipping notifying PR author ${prAuthor} from the maintainers list for modules: ${modulesList}`);
+      maintainersCopy.delete(`@${prAuthor}`);
+    }
+    if (maintainersCopy.size === 0) {
+      continue;
+    }
+    const maintainersList = Array.from(maintainersCopy).join(', ');
     console.log(`Notifying ${maintainersList} for modules: ${modulesList}`);
     const commentBody = `Hello ${maintainersList}, modules you maintain (${modulesList}) have been updated in this PR. Please review the changes.`;
     await postComment(octokit, owner, repo, prNumber, commentBody);
@@ -93,6 +103,20 @@ async function notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap)
 }
 
 async function postComment(octokit, owner, repo, prNumber, body) {
+  // Check if the same comment already exists for the PR in the past two weeks
+  const existingComments = await octokit.rest.issues.listComments({
+    owner,
+    repo,
+    issue_number: prNumber,
+    since: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(), // Two weeks ago
+  });
+
+  const commentExists = existingComments.data.some(comment => comment.body === body);
+  if (commentExists) {
+    console.log('Skipping comment as it\'s already posted for the PR within the past two weeks.');
+    return;
+  }
+
   const comment = {
     owner,
     repo,
