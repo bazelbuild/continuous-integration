@@ -19,9 +19,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.StructuredTaskScope.Subtask;
 import java.util.stream.Collectors;
-import jdk.incubator.concurrent.StructuredTaskScope;
+import java.util.concurrent.StructuredTaskScope;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -85,19 +85,19 @@ public class GithubTeamTableService {
   private GithubTeamTable fetchTable(List<GithubTeam> teams, GithubTeamTableData table) {
     var rows = Lists.<Row>newArrayListWithExpectedSize(teams.size());
     try (var scope = new StructuredTaskScope<>()) {
-      var futures = ImmutableList.<Future<Row>>builderWithExpectedSize(teams.size());
+      var subtasks = ImmutableList.<Subtask<Row>>builderWithExpectedSize(teams.size());
       for (var team : teams) {
-        var future = scope.fork(() -> fetchRow(teams, team, table));
-        futures.add(future);
+        var subtask = scope.fork(() -> fetchRow(teams, team, table));
+        subtasks.add(subtask);
       }
 
       try {
         scope.join();
 
-        for (var future : futures.build()) {
-          rows.add(future.get());
+        for (var subtask : subtasks.build()) {
+          rows.add(subtask.get());
         }
-      } catch (InterruptedException | ExecutionException e) {
+      } catch (InterruptedException e) {
         throw new RuntimeException(e);
       }
     }
@@ -126,11 +126,11 @@ public class GithubTeamTableService {
   private Row fetchRow(List<GithubTeam> teams, GithubTeam team, GithubTeamTableData table) {
     var cells = new HashMap<String, Cell>();
     try (var scope = new StructuredTaskScope<>()) {
-      var futures =
-          ImmutableList.<Future<CellEntry>>builderWithExpectedSize(table.getHeaders().size());
+      var subtasks =
+          ImmutableList.<Subtask<CellEntry>>builderWithExpectedSize(table.getHeaders().size());
       for (var header : table.getHeaders()) {
         String query = interceptQuery(teams, team, header.getQuery());
-        var future =
+        var subtask =
             scope.fork(
                 () -> {
                   var count =
@@ -145,16 +145,16 @@ public class GithubTeamTableService {
                           .count(count)
                           .build());
                 });
-        futures.add(future);
+        subtasks.add(subtask);
       }
       try {
         scope.join();
 
-        for (var future : futures.build()) {
+        for (var future : subtasks.build()) {
           var entry = future.get();
           cells.put(entry.headerId, entry.cell);
         }
-      } catch (InterruptedException | ExecutionException e) {
+      } catch (InterruptedException e) {
         throw new RuntimeException(e);
       }
     }
