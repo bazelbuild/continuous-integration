@@ -84,17 +84,18 @@ async function notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap)
   }
 
   // Notify maintainers based on grouped module lists
-  prAuthor = context.payload.pull_request.user.login;
+  const prAuthor = context.payload.pull_request.user.login;
   for (const [modulesList, maintainers] of moduleListToMaintainers.entries()) {
     // Skip notifying the PR author if they are one of the module maintainers
-    if (maintainers.has(`@${prAuthor}`)) {
+    const maintainersCopy = new Set(maintainers);
+    if (maintainersCopy.has(`@${prAuthor}`)) {
       console.log(`Skipping notifying PR author ${prAuthor} from the maintainers list for modules: ${modulesList}`);
-      maintainers.delete(`@${prAuthor}`);
+      maintainersCopy.delete(`@${prAuthor}`);
     }
-    if (maintainers.size === 0) {
+    if (maintainersCopy.size === 0) {
       continue;
     }
-    const maintainersList = Array.from(maintainers).join(', ');
+    const maintainersList = Array.from(maintainersCopy).join(', ');
     console.log(`Notifying ${maintainersList} for modules: ${modulesList}`);
     const commentBody = `Hello ${maintainersList}, modules you maintain (${modulesList}) have been updated in this PR. Please review the changes.`;
     await postComment(octokit, owner, repo, prNumber, commentBody);
