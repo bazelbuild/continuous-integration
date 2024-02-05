@@ -58,8 +58,13 @@ async function generateMaintainersMap(octokit, owner, repo, modifiedModules) {
         modulesWithoutGithubMaintainers.add(moduleName);
       }
     } catch (error) {
-      console.error(`Error processing module ${moduleName}: ${error}`);
-      setFailed(`Failed to notify maintainers for module ${moduleName}`);
+      if (error.status === 404) {
+        console.log(`Module ${moduleName} does not have a metadata.json file on the main branch.`);
+        modulesWithoutGithubMaintainers.add(moduleName);
+      } else {
+        console.error(`Error processing module ${moduleName}: ${error}`);
+        setFailed(`Failed to notify maintainers for module ${moduleName}`);
+      }
     }
   }
   return [maintainersMap, modulesWithoutGithubMaintainers];
@@ -127,7 +132,7 @@ async function run() {
   if (modulesWithoutGithubMaintainers.size > 0) {
     const modulesList = Array.from(modulesWithoutGithubMaintainers).join(', ');
     console.log(`Notifying @bazelbuild/bcr-maintainers for modules: ${modulesList}`);
-    await postComment(octokit, owner, repo, prNumber, `Hello @bazelbuild/bcr-maintainers, modules without specific maintainers (${modulesList}) have been updated in this PR. Please review the changes.`);
+    await postComment(octokit, owner, repo, prNumber, `Hello @bazelbuild/bcr-maintainers, modules without existing maintainers (${modulesList}) have been updated in this PR. Please review the changes.`);
   }
 }
 
