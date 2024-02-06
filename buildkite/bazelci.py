@@ -3995,7 +3995,7 @@ class TestExecution:
             # TODO: show log links for failing attempts > 1?
             return f"- {self.label} {format_shard(shard)}"
 
-        shard_info = "".join(
+        shard_info = "\n".join(
             f"  - Shard {s.number}/{len(self.shards)}: {format_shard(s)}" for s in failing_shards
         )
         return f"- {self.label}\n{shard_info}"
