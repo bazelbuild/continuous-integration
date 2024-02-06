@@ -3762,7 +3762,6 @@ def print_shard_summary():
                         f"{base_task}",
                     ]
                 )
-        raise Exception("just to allow retries")
     finally:
         shutil.rmtree(tmpdir)
 
