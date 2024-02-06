@@ -3984,9 +3984,9 @@ class TestExecution:
             return os.path.join(LOG_BUCKET, job_id, local_log_path)
 
         def format_shard(s):
-            overall, statistics = shard.get_details()
+            overall, statistics = s.get_details()
             return (
-                f"{format_test_status(overall)} {statistics}: [log]({get_log_url_for_shard(shard)})"
+                f"{format_test_status(overall)} {statistics}: [log]({get_log_url_for_shard(s)})"
             )
 
         failing_shards = [s for s in self.shards if s.overall_status != "PASSED"]
