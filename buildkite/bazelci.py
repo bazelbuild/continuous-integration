@@ -87,6 +87,7 @@ KZIPS_BUCKET = {
 # We don't collect logs in the trusted org
 LOG_BUCKET = {
     "bazel-testing": "https://storage.googleapis.com/bazel-testing-buildkite-artifacts",
+    "bazel-trusted": "",
     "bazel": "https://storage.googleapis.com/bazel-untrusted-buildkite-artifacts",
 }[BUILDKITE_ORG]
 
