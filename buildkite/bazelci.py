@@ -1236,7 +1236,7 @@ def execute_commands(
         test_env_vars.append("BAZELISK_USER_AGENT")
 
         # Avoid "Network is unreachable" errors in IPv6-only environments
-        for e in ("JAVA_TOOL_OPTIONS", "SSL_CERT_FILE"):
+        for e in ("COURSIER_OPTS", "JAVA_TOOL_OPTIONS", "SSL_CERT_FILE"):
             if os.getenv(e):
                 test_env_vars.append(e)
 
