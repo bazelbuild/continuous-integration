@@ -44,7 +44,7 @@ for idx, commit_id in enumerate(issue_body_dict["commits"]):
     requires_checkout = False
 
 try:
-    update_lockfile()
+    # update_lockfile()
     push_to_branch(target_branch_name)
 
 except Exception as e:
