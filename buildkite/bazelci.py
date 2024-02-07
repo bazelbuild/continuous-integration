@@ -598,7 +598,7 @@ AUTO_DIFFBASE_VALUES = frozenset(["1", "true", "auto"])
 
 # Always run all test targets if any of the paths here are modified by the current commit.
 # Values can be directory paths (with a trailing slash) or file paths.
-DISABLE_BAZEL_DIFF_IF_MODIFIED = (".bazelci/", ".bazelversion")
+DISABLE_BAZEL_DIFF_IF_MODIFIED = (".bazelci/", ".bazelversion", "MODULE.bazel")
 
 COMMIT_RE = re.compile(r"[0-9a-z]{40}")
 
