@@ -73,17 +73,29 @@ def update_lockfile(unmerged_file_names):
     major_version_digit = int(re.findall(r"\d.\d.\d", bazel_version_std_out)[0].split(".")[0])
     if major_version_digit < 7:
         print("Warning: The .bazelversion is less than 7. Therefore, the lockfiles may not be updated...")
-        return
+        raise Exception(f"The bazel major version is {bazel_version_std_out}. We cannot use bazel to update the lockfiles.")
+    
+    subprocess.run(["git", "checkout", "--theirs", "MODULE.bazel.lock", "src/test/tools/bzlmod/MODULE.bazel.lock"])
+    subprocess.run(["git", "add", "."])
 
     if "src/test/tools/bzlmod/MODULE.bazel.lock" in unmerged_file_names:
-        print("src/test/tools/bzlmod/MODULE.bazel.lock needs to be updated. This may take awhile...")
+        print("src/test/tools/bzlmod/MODULE.bazel.lock needs to be updated. This may take awhile... Please be patient.")
         subprocess.run(["../bazelisk-linux-amd64", "run", "//src/test/tools/bzlmod:update_default_lock_file"])
+        subprocess.run(["git", "add", "."])
     print("Updating the lockfile(s)...")
     subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
-    git_add_status = subprocess.run(["git", "diff", "--exit-code"])
-    if git_add_status.returncode != 0: 
-        subprocess.run(["git", "add", "."])
-        subprocess.run(["git", "commit", "-m", "'Updated the lockfile(s)'"])
+    subprocess.run(["git", "add", "."])
+    # git -c core.editor=true cherry-pick --continue
+    subprocess.run(["git", "-c", "core.editor=true", "cherry-pick", "--continue"])
+
+    
+
+
+
+    # git_add_status = subprocess.run(["git", "diff", "--exit-code"])
+    # if git_add_status.returncode != 0: 
+    #     subprocess.run(["git", "add", "."])
+    #     subprocess.run(["git", "commit", "-m", "'Updated the lockfile(s)'"])
 
 def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clone, requires_checkout, input_data):
     gh_cli_repo_name = f"{input_data['user_name']}/bazel"
