@@ -4026,11 +4026,18 @@ def get_test_results_from_bep(path):
     with open(path, "rt") as f:
         for line in f:
             if "testResult" not in line:
+                # TODO: also look at targetCompleted events that don't have
+                # a matching testResult event, since these are FAILED_TO_BUILD
                 continue
 
             data = json.loads(line)
-            meta = data.get("id").get("testResult")
+            meta = data.get("id", {}).get("testResult")
             if not meta:
+                continue
+
+            if "testResult" not in data:
+                # No testResult field means "aborted" -> NO_STATUS
+                # TODO: show these targets in the UI?
                 continue
 
             yield (
