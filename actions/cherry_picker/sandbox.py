@@ -21,5 +21,15 @@ import os, subprocess
 
 # subprocess.run(["echo", "7.0.2", ">", ".bazelversion"], shell=True, capture_output=True, text=True)
 
-subprocess.call("echo 7.0.2 > .bazelversion", shell=True)
+# subprocess.call("echo 7.0.2 > .bazelversion", shell=True)
 
+# unmerged_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode())
+
+unmerged_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode())
+added_files = str(subprocess.Popen(["git", "ls-files", "--others", "--exclude-standard"], stdout=subprocess.PIPE).communicate()[0].decode())
+print("Hey")
+# print(unmerged_files == "")
+
+print("bye")
+print(unmerged_files)
+print(added_files)

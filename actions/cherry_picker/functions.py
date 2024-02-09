@@ -145,14 +145,24 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
 
     def run_cherry_pick(is_prod, commit_id, target_branch_name):
         print(f"Cherry-picking the commit id {commit_id} in CP branch: {target_branch_name}")
-        if is_prod == True: cherrypick_status = subprocess.run(['git', 'cherry-pick', commit_id])
-        else: cherrypick_status = subprocess.run(['git', 'cherry-pick', '-m', '1', commit_id])
+        if is_prod == True:
+            cherrypick_status = subprocess.run(['git', 'cherry-pick', commit_id])
+        else:
+            cherrypick_status = subprocess.run(['git', 'cherry-pick', '-m', '1', commit_id])
         unmerged_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode())
+        added_files = str(subprocess.Popen(["git", "ls-files", "--others", "--exclude-standard"], stdout=subprocess.PIPE).communicate()[0].decode())
+        
+
         if cherrypick_status.returncode != 0 and "src/test/tools/bzlmod/MODULE.bazel.lock" not in unmerged_files and "MODULE.bazel.lock" not in unmerged_files:
             subprocess.run(['git', 'cherry-pick', '--skip'])
             raise Exception("Cherry-pick was attempted, but there may be merge conflict(s). Please resolve manually.\ncc: @bazelbuild/triage")
         elif cherrypick_status.returncode != 0 and ("src/test/tools/bzlmod/MODULE.bazel.lock" in unmerged_files or "MODULE.bazel.lock" in unmerged_files):
             update_lockfile(unmerged_files)
+        # Add a case where the cherry_status is good BUT has the lockfile
+        # git ls-files --others --exclude-standard
+        elif cherrypick_status.returncode == 0 and ("src/test/tools/bzlmod/MODULE.bazel.lock" in added_files or "MODULE.bazel.lock" in added_files):
+            update_lockfile(added_files)
+        
     if requires_clone == True: clone_and_sync_repo(gh_cli_repo_name, master_branch, release_branch_name, user_name, gh_cli_repo_url, user_email)
     if requires_checkout == True: checkout_release_number(release_branch_name, target_branch_name)
     run_cherry_pick(input_data["is_prod"], commit_id, target_branch_name)
