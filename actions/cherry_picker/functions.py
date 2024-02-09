@@ -67,7 +67,7 @@ def issue_comment(issue_number, body_content, api_repo_name, is_prod):
     else:
         subprocess.run(['gh', 'issue', 'comment', str(issue_number), '--body', body_content])
 
-def update_lockfile(unmerged_file_names):
+def update_lockfile(changed_files, has_conflicts):
     std_out_bazel_version = subprocess.Popen(["../bazelisk-linux-amd64", "--version"], stdout=subprocess.PIPE)
     bazel_version_std_out = std_out_bazel_version.communicate()[0].decode()
     major_version_digit = int(re.findall(r"\d.\d.\d", bazel_version_std_out)[0].split(".")[0])
@@ -75,27 +75,19 @@ def update_lockfile(unmerged_file_names):
         print("Warning: The .bazelversion is less than 7. Therefore, the lockfiles may not be updated...")
         raise Exception(f"The bazel major version is {bazel_version_std_out}. We cannot use bazel to update the lockfiles.")
     
-    subprocess.run(["git", "checkout", "--theirs", "MODULE.bazel.lock", "src/test/tools/bzlmod/MODULE.bazel.lock"])
-    subprocess.run(["git", "add", "."])
+    if has_conflicts == True:
+        subprocess.run(["git", "checkout", "--theirs", "MODULE.bazel.lock", "src/test/tools/bzlmod/MODULE.bazel.lock"])
+        subprocess.run(["git", "add", "."])
 
-    if "src/test/tools/bzlmod/MODULE.bazel.lock" in unmerged_file_names:
+    if "src/test/tools/bzlmod/MODULE.bazel.lock" in changed_files:
         print("src/test/tools/bzlmod/MODULE.bazel.lock needs to be updated. This may take awhile... Please be patient.")
         subprocess.run(["../bazelisk-linux-amd64", "run", "//src/test/tools/bzlmod:update_default_lock_file"])
         subprocess.run(["git", "add", "."])
+
     print("Updating the lockfile(s)...")
     subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
     subprocess.run(["git", "add", "."])
-    # git -c core.editor=true cherry-pick --continue
     subprocess.run(["git", "-c", "core.editor=true", "cherry-pick", "--continue"])
-
-    
-
-
-
-    # git_add_status = subprocess.run(["git", "diff", "--exit-code"])
-    # if git_add_status.returncode != 0: 
-    #     subprocess.run(["git", "add", "."])
-    #     subprocess.run(["git", "commit", "-m", "'Updated the lockfile(s)'"])
 
 def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clone, requires_checkout, input_data):
     gh_cli_repo_name = f"{input_data['user_name']}/bazel"
@@ -149,19 +141,19 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
             cherrypick_status = subprocess.run(['git', 'cherry-pick', commit_id])
         else:
             cherrypick_status = subprocess.run(['git', 'cherry-pick', '-m', '1', commit_id])
-        unmerged_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode())
-        added_files = str(subprocess.Popen(["git", "ls-files", "--others", "--exclude-standard"], stdout=subprocess.PIPE).communicate()[0].decode())
-        
+        lockfile_names = ["src/test/tools/bzlmod/MODULE.bazel.lock", "MODULE.bazel.lock", ""]
+        unmerged_all_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode()).split("\n")
+        unmerged_rest = [j for i,j in enumerate(unmerged_all_files) if j not in lockfile_names]
+        changed_files = str(subprocess.Popen(["git", "diff", "--name-only"], stdout=subprocess.PIPE).communicate()[0].decode()).split("\n")
 
-        if cherrypick_status.returncode != 0 and "src/test/tools/bzlmod/MODULE.bazel.lock" not in unmerged_files and "MODULE.bazel.lock" not in unmerged_files:
+        if cherrypick_status.returncode != 0 and "src/test/tools/bzlmod/MODULE.bazel.lock" not in changed_files and "MODULE.bazel.lock" not in changed_files:
             subprocess.run(['git', 'cherry-pick', '--skip'])
             raise Exception("Cherry-pick was attempted, but there may be merge conflict(s). Please resolve manually.\ncc: @bazelbuild/triage")
-        elif cherrypick_status.returncode != 0 and ("src/test/tools/bzlmod/MODULE.bazel.lock" in unmerged_files or "MODULE.bazel.lock" in unmerged_files):
-            update_lockfile(unmerged_files)
-        # Add a case where the cherry_status is good BUT has the lockfile
-        # git ls-files --others --exclude-standard
-        elif cherrypick_status.returncode == 0 and ("src/test/tools/bzlmod/MODULE.bazel.lock" in added_files or "MODULE.bazel.lock" in added_files):
-            update_lockfile(added_files)
+        elif (cherrypick_status.returncode != 0 and len(unmerged_rest) == 0):
+            update_lockfile(changed_files, True)
+        elif cherrypick_status.returncode == 0 and ("src/test/tools/bzlmod/MODULE.bazel.lock" in changed_files or "MODULE.bazel.lock" in changed_files):
+            update_lockfile(changed_files, False)
+        #     update_lockfile(changed_files)
         
     if requires_clone == True: clone_and_sync_repo(gh_cli_repo_name, master_branch, release_branch_name, user_name, gh_cli_repo_url, user_email)
     if requires_checkout == True: checkout_release_number(release_branch_name, target_branch_name)
