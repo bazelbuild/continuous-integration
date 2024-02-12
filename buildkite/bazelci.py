@@ -334,6 +334,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     "rules_nodejs": {
         "git_repository": "https://github.com/bazelbuild/rules_nodejs.git",
         "pipeline_slug": "rules-nodejs-nodejs",
+        "disabled_reason": "https://github.com/bazelbuild/rules_nodejs/issues/3713",
     },
     "rules_perl": {
         "git_repository": "https://github.com/bazelbuild/rules_perl.git",
