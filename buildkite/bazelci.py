@@ -111,7 +111,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     },
     "Bazel": {
         "git_repository": "https://github.com/bazelbuild/bazel.git",
-        "file_config": ".bazelci/postsubmit.yml",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-postsubmit.yml",
         "pipeline_slug": "bazel-bazel",
     },
     "Bazel Bench": {
