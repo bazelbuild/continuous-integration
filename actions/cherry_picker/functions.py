@@ -148,6 +148,7 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
         unmerged_all_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode()).split("\n")
         unmerged_rest = [j for i,j in enumerate(unmerged_all_files) if j not in lockfile_names]
         changed_files = str(subprocess.Popen(["git", "diff", "--name-only"], stdout=subprocess.PIPE).communicate()[0].decode()).split("\n")
+        print(changed_files)
 
         if cherrypick_status.returncode != 0 and "src/test/tools/bzlmod/MODULE.bazel.lock" not in changed_files and "MODULE.bazel.lock" not in changed_files:
             subprocess.run(['git', 'cherry-pick', '--skip'])
