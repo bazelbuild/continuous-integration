@@ -340,6 +340,10 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_perl.git",
         "pipeline_slug": "rules-perl",
     },
+    "rules_platform": {
+        "git_repository": "https://github.com/bazelbuild/rules_platform.git",
+        "pipeline_slug": "rules-platform",
+    },
     "rules_proto": {
         "git_repository": "https://github.com/bazelbuild/rules_proto.git",
         "pipeline_slug": "rules-proto",
