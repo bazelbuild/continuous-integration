@@ -139,17 +139,26 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
         if status_checkout_target.returncode != 0: raise Exception(f"Cherry-pick was being attempted. But, it failed due to already existent branch called {target_branch_name}\ncc: @bazelbuild/triage")
 
     def run_cherry_pick(is_prod, commit_id, target_branch_name):
-        print(f"Cherry-picking the commit id {commit_id} in CP branch: {target_branch_name}")
-        if is_prod == True:
-            cherrypick_status = subprocess.run(['git', 'cherry-pick', commit_id])
-        else:
-            cherrypick_status = subprocess.run(['git', 'cherry-pick', '-m', '1', commit_id])
+        print("testingall")
         lockfile_names = ["src/test/tools/bzlmod/MODULE.bazel.lock", "MODULE.bazel.lock", ""]
         unmerged_all_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode()).split("\n")
         unmerged_rest = [j for i,j in enumerate(unmerged_all_files) if j not in lockfile_names]
         changed_files = str(subprocess.Popen(["git", "diff", commit_id, "--name-only"], stdout=subprocess.PIPE).communicate()[0].decode()).split("\n")
         print("This is the changed files")
         print(changed_files)
+
+
+        print(f"Cherry-picking the commit id {commit_id} in CP branch: {target_branch_name}")
+        if is_prod == True:
+            cherrypick_status = subprocess.run(['git', 'cherry-pick', commit_id])
+        else:
+            cherrypick_status = subprocess.run(['git', 'cherry-pick', '-m', '1', commit_id])
+        # lockfile_names = ["src/test/tools/bzlmod/MODULE.bazel.lock", "MODULE.bazel.lock", ""]
+        # unmerged_all_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode()).split("\n")
+        # unmerged_rest = [j for i,j in enumerate(unmerged_all_files) if j not in lockfile_names]
+        # changed_files = str(subprocess.Popen(["git", "diff", commit_id, "--name-only"], stdout=subprocess.PIPE).communicate()[0].decode()).split("\n")
+        # print("This is the changed files")
+        # print(changed_files)
 
         if cherrypick_status.returncode != 0 and "src/test/tools/bzlmod/MODULE.bazel.lock" not in changed_files and "MODULE.bazel.lock" not in changed_files:
             subprocess.run(['git', 'cherry-pick', '--skip'])
