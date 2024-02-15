@@ -146,6 +146,10 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
         changed_files = str(subprocess.Popen(["git", "diff", commit_id, "--name-only"], stdout=subprocess.PIPE).communicate()[0].decode()).split("\n")
         print("This is the changed files")
         print(changed_files)
+        print("This is the unmerged all files")
+        print(unmerged_all_files)
+        print("This is the unmerged_rest")
+        print(unmerged_rest)
 
 
         print(f"Cherry-picking the commit id {commit_id} in CP branch: {target_branch_name}")
@@ -160,7 +164,7 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
         # print("This is the changed files")
         # print(changed_files)
 
-        if cherrypick_status.returncode != 0 and "src/test/tools/bzlmod/MODULE.bazel.lock" not in changed_files and "MODULE.bazel.lock" not in changed_files:
+        if cherrypick_status.returncode != 0 and ("src/test/tools/bzlmod/MODULE.bazel.lock" not in changed_files and "MODULE.bazel.lock" not in changed_files):
             subprocess.run(['git', 'cherry-pick', '--skip'])
             raise Exception("Cherry-pick was attempted, but there may be merge conflict(s). Please resolve manually.\ncc: @bazelbuild/triage")
         elif (cherrypick_status.returncode != 0 and len(unmerged_rest) == 0):
