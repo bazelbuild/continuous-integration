@@ -2433,7 +2433,12 @@ def filter_unchanged_targets(
 
 def resolve_diffbase(diffbase):
     if diffbase in AUTO_DIFFBASE_VALUES:
-        return resolve_revision("HEAD^")
+        base_branch = os.getenv("BUILDKITE_PULL_REQUEST_BASE_BRANCH", "")
+        # Fallback to the default branch for this repository if BUILDKITE_PULL_REQUEST_BASE_BRANCH is not set.
+        if not base_branch:
+            base_branch = os.getenv("BUILDKITE_BRANCH", "")
+        execute_command(["git", "fetch", "origin", base_branch])
+        return execute_command_and_get_output(["git", "merge-base", "HEAD", 'FETCH_HEAD']).decode("utf-8").strip()
     elif COMMIT_RE.fullmatch(diffbase):
         return diffbase
 
