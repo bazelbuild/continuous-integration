@@ -2436,7 +2436,7 @@ def resolve_diffbase(diffbase):
         base_branch = os.getenv("BUILDKITE_PULL_REQUEST_BASE_BRANCH", "")
         # Fallback to the default branch for this repository if BUILDKITE_PULL_REQUEST_BASE_BRANCH is not set.
         if not base_branch:
-            base_branch = os.getenv("BUILDKITE_BRANCH", "")
+            base_branch = os.getenv("BUILDKITE_PIPELINE_DEFAULT_BRANCH", "")
         execute_command(["git", "fetch", "origin", base_branch])
         return execute_command_and_get_output(["git", "merge-base", "HEAD", 'FETCH_HEAD']).strip()
     elif COMMIT_RE.fullmatch(diffbase):
