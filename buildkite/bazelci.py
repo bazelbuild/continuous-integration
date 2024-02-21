@@ -2467,8 +2467,7 @@ def extract_archive(archive_path, dest_dir, strip_top_level_dir):
         with tarfile.open(archive_path, mode="r:gz") as archive:
             if strip_top_level_dir:
                 for member in archive.getmembers():
-                    if member.name.startswith("bazel-"):
-                        member.name = "/".join(member.name.split("/")[1:])
+                    member.name = "/".join(member.name.split("/")[1:])
                     archive.extract(member, dest_dir)
             else:
                 archive.extractall(dest_dir)
