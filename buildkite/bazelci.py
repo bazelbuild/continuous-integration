@@ -2445,13 +2445,7 @@ def resolve_diffbase(diffbase):
 
 
 def get_commit_archive_url(resolved_diffbase):
-    # If this is a GitHub pull request presubmit
-    repo_url = os.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
-
-    # If this is a Google presubmit, BUILDKITE_PULL_REQUEST_REPO is not set, fallback to BUILDKITE_REPO
-    if not repo_url:
-        repo_url = os.getenv("BUILDKITE_REPO", "")
-
+    repo_url = os.getenv("BUILDKITE_REPO", "")
     prefix = "+" if "googlesource" in repo_url else ""
     return repo_url.replace(".git", "/{}archive/{}.tar.gz".format(prefix, resolved_diffbase))
 
