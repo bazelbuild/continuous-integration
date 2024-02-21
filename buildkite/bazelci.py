@@ -2363,7 +2363,7 @@ def filter_unchanged_targets(
         diffbase_archive_url = get_commit_archive_url(resolved_diffbase)
         local_archive_path = download_file(diffbase_archive_url, tmpdir, "repo.tar.gz")
         diffbase_repo_dir = os.path.join(tmpdir, resolved_diffbase)
-        extract_archive(local_archive_path, diffbase_repo_dir)
+        extract_archive(local_archive_path, diffbase_repo_dir, strip_top_level_dir = not is_googlesource_repo(diffbase_archive_url))
 
         eprint("Setting up comparison repository...")
         os.chdir(diffbase_repo_dir)
@@ -2449,19 +2449,28 @@ def resolve_diffbase(diffbase):
     )
 
 
+def is_googlesource_repo(repo_url):
+    return "googlesource" in repo_url
+
+
 def get_commit_archive_url(resolved_diffbase):
     repo_url = os.getenv("BUILDKITE_REPO", "")
-    prefix = "+" if "googlesource" in repo_url else ""
+    prefix = "+" if is_googlesource_repo(repo_url) else ""
     return repo_url.replace(".git", "/{}archive/{}.tar.gz".format(prefix, resolved_diffbase))
 
 
-def extract_archive(archive_url, dest_dir):
+def extract_archive(archive_path, dest_dir, strip_top_level_dir):
     if not os.path.isdir(dest_dir):
         os.mkdir(dest_dir)
 
     try:
-        with tarfile.open(archive_url, mode="r:gz") as archive:
-            archive.extractall(dest_dir)
+        with tarfile.open(archive_path, mode="r:gz") as archive:
+            if strip_top_level_dir:
+                for member in archive.getmembers():
+                    member.name = "/".join(member.name.split("/")[1:])
+                    archive.extract(member, dest_dir)
+            else:
+                archive.extractall(dest_dir)
     except tarfile.TarError as ex:
         raise BuildkiteInfraException("Failed to extract repository archive: {}".format(ex)) from ex
 
