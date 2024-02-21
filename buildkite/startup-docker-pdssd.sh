@@ -110,6 +110,8 @@ docker pull "gcr.io/$PREFIX/ubuntu2004-java11" &
 docker pull "gcr.io/$PREFIX/ubuntu2004-java11-kythe" &
 docker pull "gcr.io/$PREFIX/ubuntu2204-java17" &
 docker pull "gcr.io/$PREFIX/ubuntu2204-bazel-java17" &
+docker pull "gcr.io/$PREFIX/fedora39-java17" &
+docker pull "gcr.io/$PREFIX/fedora39-bazel-java17" &
 wait
 
 ### Start the Buildkite agent service.
