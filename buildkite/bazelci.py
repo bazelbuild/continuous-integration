@@ -2438,7 +2438,7 @@ def resolve_diffbase(diffbase):
         if not base_branch:
             base_branch = os.getenv("BUILDKITE_BRANCH", "")
         execute_command(["git", "fetch", "origin", base_branch])
-        return execute_command_and_get_output(["git", "merge-base", "HEAD", 'FETCH_HEAD']).decode("utf-8").strip()
+        return execute_command_and_get_output(["git", "merge-base", "HEAD", 'FETCH_HEAD']).strip()
     elif COMMIT_RE.fullmatch(diffbase):
         return diffbase
 
