@@ -215,7 +215,7 @@ systemctl start docker
 ### Ensure that Docker images can be downloaded from GCR.
 gcloud auth configure-docker --quiet
 
-### Pull the Docker images that we need.
+### Pull the Docker images that we need in production.
 docker pull "gcr.io/bazel-public/centos7-java8" &
 docker pull "gcr.io/bazel-public/centos7-java11" &
 docker pull "gcr.io/bazel-public/centos7-java11-devtoolset10" &
@@ -231,6 +231,8 @@ docker pull "gcr.io/bazel-public/ubuntu2004-java11" &
 docker pull "gcr.io/bazel-public/ubuntu2004-java11-kythe" &
 docker pull "gcr.io/bazel-public/ubuntu2204-java17" &
 docker pull "gcr.io/bazel-public/ubuntu2204-bazel-java17" &
+docker pull "gcr.io/bazel-public/fedora39-java17" &
+docker pull "gcr.io/bazel-public/fedora39-bazel-java17" &
 wait
 
 poweroff
