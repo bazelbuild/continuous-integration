@@ -2433,7 +2433,12 @@ def filter_unchanged_targets(
 
 def resolve_diffbase(diffbase):
     if diffbase in AUTO_DIFFBASE_VALUES:
-        return resolve_revision("HEAD^")
+        base_branch = os.getenv("BUILDKITE_PULL_REQUEST_BASE_BRANCH", "")
+        # Fallback to the default branch for this repository if BUILDKITE_PULL_REQUEST_BASE_BRANCH is not set.
+        if not base_branch:
+            base_branch = os.getenv("BUILDKITE_BRANCH", "")
+        execute_command(["git", "fetch", "origin", base_branch])
+        return execute_command_and_get_output(["git", "merge-base", "HEAD", 'FETCH_HEAD']).decode("utf-8").strip()
     elif COMMIT_RE.fullmatch(diffbase):
         return diffbase
 
@@ -2445,13 +2450,7 @@ def resolve_diffbase(diffbase):
 
 
 def get_commit_archive_url(resolved_diffbase):
-    # If this is a GitHub pull request presubmit
-    repo_url = os.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
-
-    # If this is a Google presubmit, BUILDKITE_PULL_REQUEST_REPO is not set, fallback to BUILDKITE_REPO
-    if not repo_url:
-        repo_url = os.getenv("BUILDKITE_REPO", "")
-
+    repo_url = os.getenv("BUILDKITE_REPO", "")
     prefix = "+" if "googlesource" in repo_url else ""
     return repo_url.replace(".git", "/{}archive/{}.tar.gz".format(prefix, resolved_diffbase))
 
