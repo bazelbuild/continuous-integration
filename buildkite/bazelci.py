@@ -2431,13 +2431,18 @@ def filter_unchanged_targets(
     return remaining_targets
 
 
+def fetch_base_branch():
+    """Fetch the base branch for the current build, set FETCH_HEAD for git."""
+    base_branch = os.getenv("BUILDKITE_PULL_REQUEST_BASE_BRANCH", "")
+    # Fallback to the default branch for this repository if BUILDKITE_PULL_REQUEST_BASE_BRANCH is not set.
+    if not base_branch:
+        base_branch = os.getenv("BUILDKITE_PIPELINE_DEFAULT_BRANCH", "")
+    execute_command(["git", "fetch", "origin", base_branch])
+
+
 def resolve_diffbase(diffbase):
     if diffbase in AUTO_DIFFBASE_VALUES:
-        base_branch = os.getenv("BUILDKITE_PULL_REQUEST_BASE_BRANCH", "")
-        # Fallback to the default branch for this repository if BUILDKITE_PULL_REQUEST_BASE_BRANCH is not set.
-        if not base_branch:
-            base_branch = os.getenv("BUILDKITE_PIPELINE_DEFAULT_BRANCH", "")
-        execute_command(["git", "fetch", "origin", base_branch])
+        fetch_base_branch()
         return execute_command_and_get_output(["git", "merge-base", "HEAD", 'FETCH_HEAD']).strip()
     elif COMMIT_RE.fullmatch(diffbase):
         return diffbase
@@ -3074,8 +3079,10 @@ def create_config_validation_steps(git_commit):
 
 
 def get_modified_files(git_commit):
+    fetch_base_branch()
+    merge_base_commit = execute_command_and_get_output(["git", "merge-base", git_commit, 'FETCH_HEAD']).strip()
     output = execute_command_and_get_output(
-        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", git_commit]
+        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", "{}..{}".format(merge_base_commit, git_commit)]
     )
     return output.split("\n")
 
