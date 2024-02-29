@@ -140,7 +140,7 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
 
     def run_cherry_pick(is_prod, commit_id, target_branch_name):
         print("testingall")
-        changed_files = str(subprocess.Popen(["git", "diff-tree", "--no-commit-id", "--name-only", commit_id, "-r"], stdout=subprocess.PIPE).communicate()[0].decode()).split("\n")
+        changed_files = str(subprocess.Popen(["git", "diff-tree", "--no-commit-id", "--name-only", commit_id, "-r", "-m"], stdout=subprocess.PIPE).communicate()[0].decode()).split("\n")
         print(f"Cherry-picking the commit id {commit_id} in CP branch: {target_branch_name}")
         if is_prod == True:
             cherrypick_status = subprocess.run(['git', 'cherry-pick', commit_id])
