@@ -158,7 +158,6 @@ tasks:
         self.assertEqual(build_targets, ["//...", "-//bad/..."])
         self.assertEqual(test_targets, [])
         self.assertEqual(coverage_targets, [])
-        self.assertEqual(mobile_install_targets, [])
         self.assertEqual(index_targets, [])
         self.assertEqual(mobile_install_targets, [])
 
