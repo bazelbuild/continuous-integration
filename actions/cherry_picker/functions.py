@@ -77,7 +77,7 @@ def update_lockfile(changed_files, has_conflicts):
     
     if has_conflicts == True:
         print("has_conflicts is on")
-        subprocess.run(["git", "checkout", "--theirs", "MODULE.bazel.lock", "src/test/tools/bzlmod/MODULE.bazel.lock"])
+        subprocess.run(["git", "checkout", "--ours", "MODULE.bazel.lock", "src/test/tools/bzlmod/MODULE.bazel.lock"])
         subprocess.run(["git", "add", "."])
 
     if "src/test/tools/bzlmod/MODULE.bazel.lock" in changed_files:
