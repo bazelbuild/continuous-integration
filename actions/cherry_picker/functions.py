@@ -152,6 +152,8 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
         unmerged_rest = [j for i,j in enumerate(unmerged_all_files) if j not in lockfile_names and j != ""]
         print("Thisistheunmerged_rest")
         print(unmerged_rest)
+        print("This is the changed files")
+        print(changed_files)
         if cherrypick_status.returncode != 0:
             if len(unmerged_rest) == 0 and ("src/test/tools/bzlmod/MODULE.bazel.lock" in changed_files or "MODULE.bazel.lock" in changed_files):
                 update_lockfile(changed_files, True)
