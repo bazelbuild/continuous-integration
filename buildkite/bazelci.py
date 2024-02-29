@@ -1325,6 +1325,8 @@ def execute_commands(
 
         execute_bazel_run(bazel_binary, platform, task_config.get("run_targets", None))
 
+        execute_bazel_mobile_install(bazel_binary, platform, task_config.get("mobile_install_targets", None))
+
         if needs_clean:
             execute_bazel_clean(bazel_binary, platform)
 
@@ -1337,7 +1339,7 @@ def execute_commands(
             task_config, "test_flags", "test", tmpdir, test_env_vars
         )
 
-        build_targets, test_targets, coverage_targets, index_targets = calculate_targets(
+        build_targets, test_targets, coverage_targets, index_targets, mobile_install_targets = calculate_targets(
             task_config,
             bazel_binary,
             build_only,
@@ -1845,22 +1847,47 @@ def handle_bazel_failure(exception, action):
         raise BuildkiteException(msg)
 
 
-def execute_bazel_run(bazel_binary, platform, targets):
+def execute_bazel_mobile_install(bazel_binary, platform, targets):
+    # Assumption: There are no android emulators set up with buildkite +
+    # bazelci. Therefore, all mobile-install commands should skip the actual
+    # deployment (i.e. installation, app launching) step.
+    # Therefore, we need to set `--nodeploy` for mobile-install runtime flags.
+    extra_run_flags = ["--nodeploy"]
+    execute_bazel_run_or_mi(bazel_binary, platform, targets, command_name = "mobile-install", extra_run_flags = extra_run_flags)
+
+
+def execute_bazel_run(bazel_binary, platform, targets, command_name = "run"):
+    execute_bazel_run_or_mi(bazel_binary, platform, targets, command_name = "run")
+
+
+def execute_bazel_run_or_mi(bazel_binary, platform, targets, command_name = "run", extra_run_flags = []):
+    """Entrypoint wrapper for bazel {run, mobile-install}.
+
+    Args:
+        bazel_binary: Path to the bazel(isk) binary
+        platform: The build platform for this task.
+        targets: A list of targets to run or mobile-install.
+        command_name: Either 'run' or 'mobile-install'.
+        extra_run_flags: Extra runtime flags appended to the end of the command.
+    """
+    if command_name not in ["run", "mobile-install"]:
+        raise BuildkiteException(f"command_name must be 'run' or 'mobile-install', got {command_name}.")
     if not targets:
         return
-    print_collapsed_group("Setup (Run Targets)")
+    print_collapsed_group(f"Setup ({command_name} Targets)")
     for target in targets:
         try:
             execute_command(
                 [bazel_binary]
                 + bazelisk_flags()
                 + common_startup_flags()
-                + ["run"]
+                + [command_name]
                 + common_build_flags(None, platform)
                 + [target]
+                + extra_run_flags
             )
         except subprocess.CalledProcessError as e:
-            handle_bazel_failure(e, "run")
+            handle_bazel_failure(e, command_name)
 
 
 def remote_caching_flags(platform, accept_cached=True):
@@ -2198,6 +2225,7 @@ def calculate_targets(
         [] if (build_only or test_only) else list(task_config.get("coverage_targets", []))
     )
     index_targets = [] if (build_only or test_only) else list(task_config.get("index_targets", []))
+    mobile_install_targets = list(task_config.get("mobile_install_targets", []))
 
     index_targets_query = (
         None if (build_only or test_only) else task_config.get("index_targets_query", None)
@@ -2217,6 +2245,7 @@ def calculate_targets(
     test_targets = [x.strip() for x in test_targets if x.strip() != "--"]
     coverage_targets = [x.strip() for x in coverage_targets if x.strip() != "--"]
     index_targets = [x.strip() for x in index_targets if x.strip() != "--"]
+    mobile_install_targets = [x.strip() for x in mobile_install_targets if x.strip() != "--"]
 
     diffbase = os.getenv(USE_BAZEL_DIFF_ENV_VAR, "").lower()
     shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
@@ -2227,7 +2256,7 @@ def calculate_targets(
 
     # Skip target expansion if we don't need to calculate test targets
     if not use_bazel_diff and not sharding_enabled:
-        return build_targets, test_targets, coverage_targets, index_targets
+        return build_targets, test_targets, coverage_targets, index_targets, mobile_install_targets
 
     # TODO(#1614): Fix target expansion
     expanded_test_targets = expand_test_target_patterns(bazel_binary, test_targets, test_flags)
@@ -2253,7 +2282,7 @@ def calculate_targets(
         )
         actual_test_targets = get_targets_for_shard(actual_test_targets, shard_id, shard_count)
 
-    return build_targets, actual_test_targets, coverage_targets, index_targets
+    return build_targets, actual_test_targets, coverage_targets, index_targets, mobile_install_targets
 
 
 def can_use_bazel_diff(git_commit):
