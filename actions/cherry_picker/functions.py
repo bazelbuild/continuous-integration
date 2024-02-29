@@ -76,6 +76,7 @@ def update_lockfile(changed_files, has_conflicts):
         raise Exception(f"The bazel major version is {bazel_version_std_out}. We cannot use bazel to update the lockfiles.")
     
     if has_conflicts == True:
+        print("has_conflicts is on")
         subprocess.run(["git", "checkout", "--theirs", "MODULE.bazel.lock", "src/test/tools/bzlmod/MODULE.bazel.lock"])
         subprocess.run(["git", "add", "."])
 
