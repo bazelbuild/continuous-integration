@@ -28,18 +28,8 @@ import os, subprocess
 # unmerged_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode())
 
 
-lockfile_names = ["actions/cherry_picker/functions.py"]
-# unmerged_all_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode()).split("\n")
-unmerged_all_files = ["actions/cherry_picker/functions.py", "actions/sandbox.py", "zzz"]
-unmerged_rest = [j for i,j in enumerate(unmerged_all_files) if j not in lockfile_names]
+hi = {"a", "b", "c"}
 
 
 
-print("Hey")
-print(unmerged_all_files)
-print("bye")
-print(unmerged_rest)
-
-
-
-
+print("a" in hi)
