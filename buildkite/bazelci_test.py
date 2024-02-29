@@ -121,38 +121,6 @@ tasks:
         )
 
 
-class CalculateTargetsMobileInstall(unittest.TestCase):
-    _CONFIGS = yaml.safe_load(
-        """
-.base_targets: &base_targets
-  ? "//..."
-  ? "-//experimental/..."
-
-tasks:
-  basic:
-    mobile_install_targets:
-      - "//:basic_app"
-    """
-    )
-    def test_basic_mobile_install_target_calculation(self):
-        tasks = self._CONFIGS.get("tasks")
-        build_targets, test_targets, coverage_targets, index_targets, mobile_install_targets = bazelci.calculate_targets(
-            tasks.get("basic"),
-            "bazel",
-            build_only=False,
-            test_only=False,
-            workspace_dir="/tmp",
-            ws_setup_func=None,
-            git_commit="abcd",
-            test_flags=[],
-        )
-        self.assertEqual(build_targets, [])
-        self.assertEqual(test_targets, [])
-        self.assertEqual(coverage_targets, [])
-        self.assertEqual(index_targets, [])
-        self.assertEqual(mobile_install_targets, ["//:basic_app"])
-
-
 class CalculateTargets(unittest.TestCase):
     _CONFIGS = yaml.safe_load(
         """
@@ -161,6 +129,9 @@ class CalculateTargets(unittest.TestCase):
   ? "-//experimental/..."
 
 tasks:
+  app:
+    mobile_install_targets:
+      - "//:basic_app"
   basic:
     build_targets:
       - "//..."
@@ -204,6 +175,25 @@ tasks:
             test_flags=[],
         )
         self.assertEqual(build_targets, ["//...", "-//experimental/...", "//experimental/good/..."])
+
+    def test_mobile_install_target_calculation(self):
+        tasks = self._CONFIGS.get("tasks")
+        build_targets, test_targets, coverage_targets, index_targets, mobile_install_targets = bazelci.calculate_targets(
+            tasks.get("app"),
+            "bazel",
+            build_only=False,
+            test_only=False,
+            workspace_dir="/tmp",
+            ws_setup_func=None,
+            git_commit="abcd",
+            test_flags=[],
+        )
+        self.assertEqual(build_targets, [])
+        self.assertEqual(test_targets, [])
+        self.assertEqual(coverage_targets, [])
+        self.assertEqual(index_targets, [])
+        self.assertEqual(mobile_install_targets, ["//:basic_app"])
+
 
 
 if __name__ == "__main__":
