@@ -92,6 +92,9 @@ def update_lockfile(changed_files, has_conflicts):
     # If there was a conflict, then run this
     if has_conflicts == True:
         subprocess.run(["git", "-c", "core.editor=true", "cherry-pick", "--continue"])
+    
+    print("ls.... This is after")
+    subprocess.run(['ls'])
 
 def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clone, requires_checkout, input_data):
     gh_cli_repo_name = f"{input_data['user_name']}/bazel"
