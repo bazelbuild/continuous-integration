@@ -90,6 +90,8 @@ def update_lockfile(changed_files, has_conflicts):
     subprocess.run(["git", "add", "."])
     print("before git status")
     subprocess.run(['git', 'status'])
+    print("Thisisbranch!!!")
+    subprocess.run(['git', 'branch'])
 
     # If there was a conflict, then run this
     if has_conflicts == True:
