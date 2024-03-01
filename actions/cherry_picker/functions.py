@@ -88,6 +88,8 @@ def update_lockfile(changed_files, has_conflicts):
     print("Updating the lockfile(s)...")
     subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
     subprocess.run(["git", "add", "."])
+    print("After git status")
+    subprocess.run(['git', 'status'])
 
     # If there was a conflict, then run this
     if has_conflicts == True:
