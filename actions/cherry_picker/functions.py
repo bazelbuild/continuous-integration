@@ -124,14 +124,12 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
         subprocess.run(['ls', '..'])
         print("cat .bazelversion")
         subprocess.run(['cat', '.bazelversion'])
-        print("Thisisbefore...")
-        subprocess.run(['cat', 'MODULE.bazel.lock'])
         subprocess.run(['git', 'remote', 'add', 'origin', gh_cli_repo_url])
         subprocess.run(['git', 'remote', '-v'])
 
     def checkout_release_number(release_branch_name, target_branch_name):
         subprocess.run(['git', 'fetch', '--all'])
-        status_checkout_release = subprocess.run(['git', 'checkout', 'fake-release-7.1.0'])
+        status_checkout_release = subprocess.run(['git', 'checkout', release_branch_name])
         
         # Create the new release branch from the upstream if not exists already.
         if status_checkout_release.returncode != 0:
@@ -146,6 +144,8 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
                 raise Exception(f"The branch, {release_branch_name}, may not exist. Please retry the cherry-pick after the branch is created.")
             subprocess.run(['git', 'remote', 'rm', 'upstream'])
             subprocess.run(['git', 'checkout', release_branch_name])
+            print("Thisisbefore...")
+            subprocess.run(['cat', 'MODULE.bazel.lock'])
         status_checkout_target = subprocess.run(['git', 'checkout', '-b', target_branch_name])
         if status_checkout_target.returncode != 0: raise Exception(f"Cherry-pick was being attempted. But, it failed due to already existent branch called {target_branch_name}\ncc: @bazelbuild/triage")
 
