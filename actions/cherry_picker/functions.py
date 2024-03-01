@@ -144,10 +144,10 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
                 raise Exception(f"The branch, {release_branch_name}, may not exist. Please retry the cherry-pick after the branch is created.")
             subprocess.run(['git', 'remote', 'rm', 'upstream'])
             subprocess.run(['git', 'checkout', release_branch_name])
-            print("Thisisbefore...")
-            subprocess.run(['cat', 'MODULE.bazel.lock'])
         status_checkout_target = subprocess.run(['git', 'checkout', '-b', target_branch_name])
         if status_checkout_target.returncode != 0: raise Exception(f"Cherry-pick was being attempted. But, it failed due to already existent branch called {target_branch_name}\ncc: @bazelbuild/triage")
+        print("Thisisbefore...")
+        subprocess.run(['cat', 'MODULE.bazel.lock'])
 
     def run_cherry_pick(is_prod, commit_id, target_branch_name):
         print("testingall")
