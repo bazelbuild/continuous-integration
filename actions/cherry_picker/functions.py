@@ -131,7 +131,7 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
 
     def checkout_release_number(release_branch_name, target_branch_name):
         subprocess.run(['git', 'fetch', '--all'])
-        status_checkout_release = subprocess.run(['git', 'checkout', release_branch_name])
+        status_checkout_release = subprocess.run(['git', 'checkout', 'fake-release-7.1.0'])
         
         # Create the new release branch from the upstream if not exists already.
         if status_checkout_release.returncode != 0:
