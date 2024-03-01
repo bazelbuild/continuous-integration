@@ -95,6 +95,7 @@ def update_lockfile(changed_files, has_conflicts):
     
     print("ls.... This is after")
     subprocess.run(['ls'])
+    subprocess.run(['cat', 'MODULE.bazel.lock'])
 
 def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clone, requires_checkout, input_data):
     gh_cli_repo_name = f"{input_data['user_name']}/bazel"
@@ -119,6 +120,8 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
         subprocess.run(['ls', '..'])
         print("cat .bazelversion")
         subprocess.run(['cat', '.bazelversion'])
+        print("Thisisbefore...")
+        subprocess.run(['cat', 'MODULE.bazel.lock'])
         subprocess.run(['git', 'remote', 'add', 'origin', gh_cli_repo_url])
         subprocess.run(['git', 'remote', '-v'])
 
