@@ -11,6 +11,7 @@ __pycache__/
 
 # Bazel output files.
 /bazel-*
+MODULE.bazel.lock
 
 # Intermediate files created by the gitbundle tool.
 /gitbundle/bazelbuild/
