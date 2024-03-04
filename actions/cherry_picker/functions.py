@@ -77,7 +77,7 @@ def update_lockfile(changed_files, has_conflicts):
         raise Exception(f"The bazel major version is {bazel_version_std_out}. We cannot use bazel to update the lockfiles.")
     
     if has_conflicts == True:
-        print("has_conflicts is on")
+        print("The file(s) has conflict(s)... We may need to accept our changes")
         subprocess.run(["git", "checkout", "--ours", "MODULE.bazel.lock", "src/test/tools/bzlmod/MODULE.bazel.lock"])
         subprocess.run(["git", "add", "."])
 
@@ -87,6 +87,7 @@ def update_lockfile(changed_files, has_conflicts):
         subprocess.run(["git", "add", "."])
 
     print("Updating the lockfile(s)...")
+
     subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
     subprocess.run(["git", "add", "."])
     print("before git status")
@@ -203,7 +204,8 @@ def create_pr(reviewers, release_number, labels, pr_title, pr_body, release_bran
     reviewers_str = ",".join(reviewers)
     labels_str = ",".join(labels)
     modified_pr_title = f"[{release_number}] {pr_title}" if f"[{release_number}]" not in pr_title else pr_title
-    status_create_pr = subprocess.run(['gh', 'pr', 'create', "--repo", upstream_repo, "--title", modified_pr_title, "--body", pr_body, "--head", head_branch, "--base", release_branch_name,  '--label', labels_str, '--reviewer', reviewers_str])
+    # status_create_pr = subprocess.run(['gh', 'pr', 'create', "--repo", upstream_repo, "--title", modified_pr_title, "--body", pr_body, "--head", head_branch, "--base", release_branch_name,  '--label', labels_str, '--reviewer', reviewers_str])
+    status_create_pr = subprocess.run(['gh', 'pr', 'create', "--repo", "iancha1992/bazel", "--title", modified_pr_title, "--body", pr_body, "--head", head_branch, "--base", release_branch_name,  '--label', labels_str, '--reviewer', reviewers_str])
     if status_create_pr.returncode == 0:
         cherry_picked_pr_number = get_cherry_picked_pr_number(head_branch, release_branch_name)
         return cherry_picked_pr_number
