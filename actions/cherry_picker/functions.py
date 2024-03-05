@@ -100,6 +100,8 @@ def update_lockfile(changed_files, has_conflicts):
     # If there was a conflict, then run this
     if has_conflicts == True:
         subprocess.run(["git", "-c", "core.editor=true", "cherry-pick", "--continue"])
+    else:
+        subprocess.run(["git", "commit", "-m", "Update lockfile(s)"])
     
     print("ls.... This is after")
     subprocess.run(['ls'])
