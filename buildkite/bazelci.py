@@ -199,6 +199,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/gerrit.yml",
         "pipeline_slug": "gerrit",
+        "disabled_reason": "https://github.com/bazelbuild/continuous-integration/issues/1881",
     },
     "Google Logging": {
         "git_repository": "https://github.com/google/glog.git",
