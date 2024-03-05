@@ -33,6 +33,7 @@ RUN apt-get -y update && \
     lsb-release \
     netcat-openbsd \
     openjdk-11-jdk-headless \
+    openjdk-21-jdk-headless \
     python-is-python3 \
     python2 \
     python2-dev \
@@ -57,6 +58,8 @@ RUN apt-get -y update && \
 # Allow using sudo inside the container.
 RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
+# Use openjdk-11 as the default JDK for backwards compatibility
+RUN update-java-alternatives -s java-1.11.0-openjdk-${BUILDARCH}
 ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-${BUILDARCH}
 
 FROM ubuntu2004-bazel-java11 AS ubuntu2004-java11

@@ -132,6 +132,10 @@ RUN mkdir -p /usr/lib/jvm/zulu-11 && \
     java -version && \
     javac -version
 
+RUN mkdir -p /usr/lib/jvm/zulu-21 && \
+    pushd /usr/lib/jvm/zulu-21 && \
+    curl "https://cdn.azul.com/zulu/bin/zulu21.32.17-ca-jdk21.0.2-linux_x64.tar.gz" | tar xvz --strip-components=1
+
 FROM centos7-java11 AS centos7-java11-devtoolset10
 RUN yum install -y centos-release-scl && yum install -y devtoolset-10 && yum clean all
 
