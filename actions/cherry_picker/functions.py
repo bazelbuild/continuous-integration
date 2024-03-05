@@ -69,6 +69,8 @@ def issue_comment(issue_number, body_content, api_repo_name, is_prod):
 
 def update_lockfile(changed_files, has_conflicts):
     print("The lockfile(s) may need to be updated!")
+    print("This is the has_conflicts value")
+    print(has_conflicts)
     std_out_bazel_version = subprocess.Popen(["../bazelisk-linux-amd64", "--version"], stdout=subprocess.PIPE)
     bazel_version_std_out = std_out_bazel_version.communicate()[0].decode()
     major_version_digit = int(re.findall(r"\d.\d.\d", bazel_version_std_out)[0].split(".")[0])
