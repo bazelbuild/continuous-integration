@@ -33,6 +33,7 @@ RUN apt-get -y update && \
     lsb-release \
     netcat-openbsd \
     openjdk-17-jdk-headless \
+    openjdk-21-jdk-headless \
     openssh-client \
     python-is-python3 \
     python2 \
@@ -58,6 +59,8 @@ RUN apt-get -y update && \
 # Allow using sudo inside the container.
 RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
+# Use openjdk-17 as the default JDK for backwards compatibility
+RUN update-java-alternatives -s java-1.17.0-openjdk-${BUILDARCH}
 ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-${BUILDARCH}
 
 FROM ubuntu2204-bazel-java17 AS ubuntu2204-java17
