@@ -689,12 +689,16 @@ P9w8kNhEbw==
 
     def _get_buildkite_token(self):
         return decrypt_token(
-            encrypted_token=self._ENCRYPTED_BUILDKITE_API_TESTING_TOKEN
-            if THIS_IS_TESTING
-            else self._ENCRYPTED_BUILDKITE_API_TOKEN,
-            kms_key="buildkite-testing-api-token"
-            if THIS_IS_TESTING
-            else "buildkite-untrusted-api-token",
+            encrypted_token=(
+                self._ENCRYPTED_BUILDKITE_API_TESTING_TOKEN
+                if THIS_IS_TESTING
+                else self._ENCRYPTED_BUILDKITE_API_TOKEN
+            ),
+            kms_key=(
+                "buildkite-testing-api-token"
+                if THIS_IS_TESTING
+                else "buildkite-untrusted-api-token"
+            ),
         )
 
     def _open_url(self, url, params=[]):
@@ -2364,7 +2368,11 @@ def filter_unchanged_targets(
         diffbase_archive_url = get_commit_archive_url(resolved_diffbase)
         local_archive_path = download_file(diffbase_archive_url, tmpdir, "repo.tar.gz")
         diffbase_repo_dir = os.path.join(tmpdir, resolved_diffbase)
-        extract_archive(local_archive_path, diffbase_repo_dir, strip_top_level_dir = not is_googlesource_repo(diffbase_archive_url))
+        extract_archive(
+            local_archive_path,
+            diffbase_repo_dir,
+            strip_top_level_dir=not is_googlesource_repo(diffbase_archive_url),
+        )
 
         eprint("Setting up comparison repository...")
         os.chdir(diffbase_repo_dir)
@@ -2444,7 +2452,7 @@ def fetch_base_branch():
 def resolve_diffbase(diffbase):
     if diffbase in AUTO_DIFFBASE_VALUES:
         fetch_base_branch()
-        return execute_command_and_get_output(["git", "merge-base", "HEAD", 'FETCH_HEAD']).strip()
+        return execute_command_and_get_output(["git", "merge-base", "HEAD", "FETCH_HEAD"]).strip()
     elif COMMIT_RE.fullmatch(diffbase):
         return diffbase
 
@@ -2702,12 +2710,12 @@ def execute_command(
         env=os.environ,
         cwd=cwd,
         errors="replace",
-        stdout=subprocess.DEVNULL
-        if suppress_stdout
-        else None,  # suppress_stdout=True when we don't want the output to be printed
-        stderr=subprocess.PIPE
-        if capture_stderr
-        else None,  # capture_stderr=True when we want exceptions to contain stderr
+        stdout=(
+            subprocess.DEVNULL if suppress_stdout else None
+        ),  # suppress_stdout=True when we don't want the output to be printed
+        stderr=(
+            subprocess.PIPE if capture_stderr else None
+        ),  # capture_stderr=True when we want exceptions to contain stderr
     ).returncode
 
 
@@ -3081,9 +3089,18 @@ def create_config_validation_steps(git_commit):
 
 def get_modified_files(git_commit):
     fetch_base_branch()
-    merge_base_commit = execute_command_and_get_output(["git", "merge-base", git_commit, 'FETCH_HEAD']).strip()
+    merge_base_commit = execute_command_and_get_output(
+        ["git", "merge-base", git_commit, "FETCH_HEAD"]
+    ).strip()
     output = execute_command_and_get_output(
-        ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", "{}..{}".format(merge_base_commit, git_commit)]
+        [
+            "git",
+            "diff-tree",
+            "--no-commit-id",
+            "--name-only",
+            "-r",
+            "{}..{}".format(merge_base_commit, git_commit),
+        ]
     )
     return output.split("\n")
 
@@ -3769,7 +3786,10 @@ def print_shard_summary():
             for test_artifact in current_test_artifacts:
                 local_bep_path = test_artifact.download_bep(tmpdir)
                 if not local_bep_path:
-                    # TODO: propagate errors
+                    eprint(
+                        f"Skipping step {test_artifact.job_id} since "
+                        "{test_artifact.relative_bep_path} could not be downloaded..."
+                    )
                     continue
 
                 for test_execution in parse_bep(local_bep_path):
@@ -3790,6 +3810,8 @@ def print_shard_summary():
                         f"{base_task}",
                     ]
                 )
+    except Exception as ex:
+        eprint(f"Failed to print shard summary: {ex}")
     finally:
         shutil.rmtree(tmpdir)
 
@@ -3841,32 +3863,27 @@ def get_artifacts_for_failing_tests():
 
 
 class TestArtifacts:
+
     def __init__(self, job_id, relative_bep_path, relative_log_paths) -> None:
         self.job_id = job_id
         self.relative_bep_path = relative_bep_path
         self.relative_log_paths = relative_log_paths
 
     def download_bep(self, dest_dir: str) -> str:
+        if not LOG_BUCKET:
+            return None
+
         job_dir = os.path.join(dest_dir, self.job_id)
         os.makedirs(job_dir)
 
+        # We cannot use `buildkite agent download *` since it cannot handle backslashes in Windows artifact paths.
+        # Consequently, we just escape all backslashes and download files directly from GCS.
+        url = "/".join([LOG_BUCKET, self.job_id, self.relative_bep_path.replace("\\", "%5C")])
         try:
-            execute_command(
-                [
-                    "buildkite-agent",
-                    "artifact",
-                    "download",
-                    f"*/{_TEST_BEP_FILE}",
-                    job_dir,
-                    "--step",
-                    self.job_id,
-                ]
-            )
+            return download_file(url, job_dir, _TEST_BEP_FILE)
         except:
             # TODO: handle exception
             return None
-
-        return os.path.join(job_dir, self.relative_bep_path)
 
 
 def get_test_file_paths(job_id):
@@ -4013,9 +4030,7 @@ class TestExecution:
 
         def format_shard(s):
             overall, statistics = s.get_details()
-            return (
-                f"{format_test_status(overall)} {statistics}: [log]({get_log_url_for_shard(s)})"
-            )
+            return f"{format_test_status(overall)} {statistics}: [log]({get_log_url_for_shard(s)})"
 
         failing_shards = [s for s in self.shards if s.overall_status != "PASSED"]
         if len(failing_shards) == 1:
