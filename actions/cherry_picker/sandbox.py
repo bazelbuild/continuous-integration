@@ -28,8 +28,7 @@ import os, subprocess
 # unmerged_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode())
 
 
-hi = {"a", "b", "c"}
+hi = set(["a", "b", "c"])
+hi.discard("cd")
 
-
-
-print("a" in hi)
+print(hi)
