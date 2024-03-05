@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 as ubuntu2004-bazel-java11
+FROM ubuntu:20.04 as ubuntu2004-bazel-nojdk
 ARG BUILDARCH
 
 ENV DEBIAN_FRONTEND="noninteractive"
@@ -32,8 +32,6 @@ RUN apt-get -y update && \
     llvm-dev \
     lsb-release \
     netcat-openbsd \
-    openjdk-11-jdk-headless \
-    openjdk-21-jdk-headless \
     python-is-python3 \
     python2 \
     python2-dev \
@@ -58,11 +56,7 @@ RUN apt-get -y update && \
 # Allow using sudo inside the container.
 RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-# Use openjdk-11 as the default JDK for backwards compatibility
-RUN update-java-alternatives -s java-1.11.0-openjdk-${BUILDARCH}
-ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-${BUILDARCH}
-
-FROM ubuntu2004-bazel-java11 AS ubuntu2004-java11
+FROM ubuntu2004-bazel-nojdk AS ubuntu2004-nojdk
 
 ### Install Google Cloud SDK.
 ### https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
@@ -92,6 +86,22 @@ RUN LATEST_BUILDIFIER=$(curl -sSI https://github.com/bazelbuild/buildtools/relea
     chown root:root /usr/local/bin/buildifier && \
     chmod 0755 /usr/local/bin/buildifier
 
+FROM ubuntu2004-bazel-nojdk AS ubuntu2004-bazel-java11
+
+RUN apt-get -y update && \
+    apt-get -y install openjdk-11-jdk-headless && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-${BUILDARCH}
+
+FROM ubuntu2004-nojdk AS ubuntu2004-java11
+
+RUN apt-get -y update && \
+    apt-get -y install openjdk-11-jdk-headless && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-${BUILDARCH}
+
 FROM ubuntu2004-java11 AS ubuntu2004-java11-kythe
 
 RUN LATEST_KYTHE=v0.0.52 && \
@@ -100,3 +110,11 @@ RUN LATEST_KYTHE=v0.0.52 && \
     tar xvz --no-same-owner --strip-components 1 --directory /usr/local/kythe && \
     chmod -R a+r /usr/local/kythe && \
     test -f /usr/local/kythe/WORKSPACE
+
+FROM ubuntu2004-nojdk AS ubuntu2004
+
+RUN apt-get -y update && \
+    apt-get -y install openjdk-21-jdk-headless && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME /usr/lib/jvm/java-21-openjdk-${BUILDARCH}

@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 as ubuntu2204-bazel-java17
+FROM ubuntu:22.04 as ubuntu2204-bazel-nojdk
 ARG BUILDARCH
 
 ENV DEBIAN_FRONTEND="noninteractive"
@@ -32,8 +32,6 @@ RUN apt-get -y update && \
     llvm-dev \
     lsb-release \
     netcat-openbsd \
-    openjdk-17-jdk-headless \
-    openjdk-21-jdk-headless \
     openssh-client \
     python-is-python3 \
     python2 \
@@ -59,11 +57,7 @@ RUN apt-get -y update && \
 # Allow using sudo inside the container.
 RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-# Use openjdk-17 as the default JDK for backwards compatibility
-RUN update-java-alternatives -s java-1.17.0-openjdk-${BUILDARCH}
-ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-${BUILDARCH}
-
-FROM ubuntu2204-bazel-java17 AS ubuntu2204-java17
+FROM ubuntu2204-bazel-nojdk AS ubuntu2204-nojdk
 
 ### Install Google Cloud SDK.
 ### https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
@@ -83,3 +77,27 @@ RUN LATEST_BUILDIFIER=$(curl -sSI https://github.com/bazelbuild/buildtools/relea
     curl -Lo /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/${LATEST_BUILDIFIER}/buildifier-linux-${BUILDARCH} && \
     chown root:root /usr/local/bin/buildifier && \
     chmod 0755 /usr/local/bin/buildifier
+
+FROM ubuntu2204-bazel-nojdk AS ubuntu2204-bazel-java17
+
+RUN apt-get -y update && \
+    apt-get -y install openjdk-17-jdk-headless && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-${BUILDARCH}
+
+FROM ubuntu2204-nojdk AS ubuntu2204-java17
+
+RUN apt-get -y update && \
+    apt-get -y install openjdk-17-jdk-headless && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-${BUILDARCH}
+
+FROM ubuntu2204-nojdk AS ubuntu2204
+
+RUN apt-get -y update && \
+    apt-get -y install openjdk-21-jdk-headless && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME /usr/lib/jvm/java-21-openjdk-${BUILDARCH}
