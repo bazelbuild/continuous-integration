@@ -100,19 +100,32 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 # Turn on long path support on Windows
 & git config --system core.longpaths true
 
-## Install Azul Zulu.
-$zulu_filename = "zulu11.52.13-ca-jdk11.0.13-win_x64.zip"
-$zulu_url = "https://cdn.azul.com/zulu/bin/${zulu_filename}"
-$zulu_zip = "c:\temp\${zulu_filename}"
-$zulu_extracted_path = "c:\temp\" + [IO.Path]::GetFileNameWithoutExtension($zulu_zip)
-$zulu_root = "c:\openjdk"
-(New-Object Net.WebClient).DownloadFile($zulu_url, $zulu_zip)
-[System.IO.Compression.ZipFile]::ExtractToDirectory($zulu_zip, "c:\temp")
-Move-Item $zulu_extracted_path -Destination $zulu_root
-Remove-Item $zulu_zip
-$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${zulu_root}\bin"
+# Function to install Azul Zulu JDK
+function InstallAzulZuluJDK($filename, $rootPath) {
+    $url = "https://cdn.azul.com/zulu/bin/${filename}"
+    $zip = "c:\temp\${filename}"
+    $extractedPath = "c:\temp\" + [IO.Path]::GetFileNameWithoutExtension($zip)
+    $destination = "${rootPath}"
+
+    (New-Object Net.WebClient).DownloadFile($url, $zip)
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($zip, "c:\temp")
+    Move-Item $extractedPath -Destination $destination
+    Remove-Item $zip
+}
+
+## Install Azul Zulu JDK 11
+Write-Host "Installing Azul Zulu JDK 11..."
+InstallAzulZuluJDK "zulu11.52.13-ca-jdk11.0.13-win_x64.zip" "c:\openjdk11"
+
+## Install Azul Zulu JDK 21
+Write-Host "Installing Azul Zulu JDK 21..."
+InstallAzulZuluJDK "zulu21.28.85-ca-jdk21.0.0-win_x64.zip" "c:\openjdk21"
+
+## Set default JDK to Zulu 11
+$jdk_root = "c:\openjdk11"
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${jdk_root}\bin"
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
-$env:JAVA_HOME = $zulu_root
+$env:JAVA_HOME = $jdk_root
 [Environment]::SetEnvironmentVariable("JAVA_HOME", $env:JAVA_HOME, "Machine")
 
 ## Install Visual C++ 2017 Build Tools.
