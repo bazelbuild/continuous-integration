@@ -44,8 +44,8 @@ for k in release_numbers_data.keys():
     try:
         cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clone, True, input_data)
         push_to_branch(target_branch_name)
-        # cherry_picked_pr_number = create_pr(reviewers, release_number, labels, pr_title, pr_body, release_branch_name, target_branch_name, input_data["user_name"])
-        cherry_picked_pr_number = 1000
+        cherry_picked_pr_number = create_pr(reviewers, release_number, labels, pr_title, pr_body, release_branch_name, target_branch_name, input_data["user_name"])
+        # cherry_picked_pr_number = 1000
         issue_comment(issue_number, f"Cherry-picked in https://github.com/{upstream_repo}/pull/{cherry_picked_pr_number}", input_data["api_repo_name"], input_data["is_prod"])
     except Exception as e:
         issue_comment(issue_number, str(e), input_data["api_repo_name"], input_data["is_prod"])
