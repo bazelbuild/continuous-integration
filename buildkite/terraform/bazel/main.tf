@@ -1152,7 +1152,7 @@ resource "buildkite_pipeline" "rules-android" {
   repository = "https://github.com/bazelbuild/rules_android.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
   description = "Android rules for Bazel"
-  default_branch = "pre-alpha"
+  default_branch = "main"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "android-team" }]
   provider_settings {
     trigger_mode = "code"
@@ -1163,6 +1163,15 @@ resource "buildkite_pipeline" "rules-android" {
     prefix_pull_request_fork_branch_names = true
     publish_commit_status = true
   }
+}
+
+resource "buildkite_pipeline" "google-rules-android-presubmit" {
+  name = "Google rules_android Presubmit"
+  repository = "https://team.git.corp.google.com/mobile-ninjas-releaser/rules_android.git"
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
+  description = "Android rules for Bazel on Gerrit"
+  default_branch = "main"
+  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }, { access_level = "BUILD_AND_READ", slug = "googlers" }, { access_level = "MANAGE_BUILD_AND_READ", slug = "android-team" }]
 }
 
 resource "buildkite_pipeline" "rules-android-ndk" {
