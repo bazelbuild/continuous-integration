@@ -43,7 +43,6 @@ for k in release_numbers_data.keys():
     pr_body = pr_title_body["body"]
     try:
         cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clone, True, input_data)
-        # update_lockfile()
         push_to_branch(target_branch_name)
         # cherry_picked_pr_number = create_pr(reviewers, release_number, labels, pr_title, pr_body, release_branch_name, target_branch_name, input_data["user_name"])
         cherry_picked_pr_number = 1000
