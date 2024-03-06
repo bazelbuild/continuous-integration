@@ -1542,10 +1542,10 @@ def activate_xcode(task_config):
     # This is used to replace e.g. 11.2 with 11.2.1 without having to update all configs.
     xcode_version = XCODE_VERSION_OVERRIDES.get(wanted_xcode_version, wanted_xcode_version)
 
-    # Default to the oldest installed version if no version was requested
+    # Default to the latest installed version if no version was requested
     #  or the requested version is not installed.
     if xcode_version not in supported_versions:
-        xcode_version = supported_versions[0]
+        xcode_version = supported_versions[-1]
 
     if not wanted_xcode_version or wanted_xcode_version == xcode_version:
         print_collapsed_group(":xcode: Activating Xcode {}...".format(xcode_version))
