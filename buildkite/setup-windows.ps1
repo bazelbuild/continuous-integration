@@ -121,8 +121,8 @@ InstallAzulZuluJDK "zulu11.52.13-ca-jdk11.0.13-win_x64.zip" "c:\openjdk11"
 Write-Host "Installing Azul Zulu JDK 21..."
 InstallAzulZuluJDK "zulu21.28.85-ca-jdk21.0.0-win_x64.zip" "c:\openjdk21"
 
-## Set default JDK to Zulu 11
-$jdk_root = "c:\openjdk11"
+## Set default JDK to Zulu 21
+$jdk_root = "c:\openjdk21"
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";${jdk_root}\bin"
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 $env:JAVA_HOME = $jdk_root
