@@ -105,7 +105,7 @@ def update_lockfile(changed_files, has_conflicts):
     
     print("ls.... This is after")
     subprocess.run(['ls'])
-    subprocess.run(['cat', 'MODULE.bazel.lock'])
+    # subprocess.run(['cat', 'MODULE.bazel.lock'])
     print("After git status")
     subprocess.run(['git', 'status'])
 
@@ -157,7 +157,7 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
         status_checkout_target = subprocess.run(['git', 'checkout', '-b', target_branch_name])
         if status_checkout_target.returncode != 0: raise Exception(f"Cherry-pick was being attempted. But, it failed due to already existent branch called {target_branch_name}\ncc: @bazelbuild/triage")
         print("Thisisbefore...")
-        subprocess.run(['cat', 'MODULE.bazel.lock'])
+        # subprocess.run(['cat', 'MODULE.bazel.lock'])
 
     def run_cherry_pick(is_prod, commit_id, target_branch_name):
         print("testingall")
