@@ -1,5 +1,26 @@
 configs = [
   {
+    "bazel_version": "7.0.2",
+    "containers": [
+      {
+          'toolchain_name': 'ubuntu1804-bazel-java11',
+          'cpp_env_json': 'cpp_env/ubuntu1804.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+      {
+        'toolchain_name': 'ubuntu2004-bazel-java11',
+        'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2204',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      }
+    ]
+  },
+  {
     "bazel_version": "6.3.2",
     "containers": [
       {
