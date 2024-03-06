@@ -417,10 +417,10 @@ DOCKER_REGISTRY_PREFIX = {
 # working directory.
 PLATFORMS = {
     "centos7": {
-        "name": "CentOS 7 (OpenJDK 8, gcc 4.8.5)",
-        "emoji-name": ":centos: 7 (OpenJDK 8, gcc 4.8.5)",
+        "name": "CentOS 7",
+        "emoji-name": ":centos: 7",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7-java8",
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7",
         "python": "python3.6",
     },
     "centos7_java11": {
@@ -465,11 +465,18 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1804-java11",
         "python": "python3.6",
     },
-    "ubuntu2004": {
+    "ubuntu2004_java11": {
         "name": "Ubuntu 20.04 LTS (OpenJDK 11, gcc 9.4.0)",
         "emoji-name": ":ubuntu: 20.04 LTS (OpenJDK 11, gcc 9.4.0)",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11",
+        "python": "python3.8",
+    },
+    "ubuntu2004": {
+        "name": "Ubuntu 20.04 LTS",
+        "emoji-name": ":ubuntu: 20.04 LTS",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004",
         "python": "python3.8",
     },
     "ubuntu2004_arm64": {
@@ -489,11 +496,18 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11-kythe",
         "python": "python3.8",
     },
-    "ubuntu2204": {
+    "ubuntu2204_java17": {
         "name": "Ubuntu 22.04 (OpenJDK 17, gcc 11.2.0)",
         "emoji-name": ":ubuntu: 22.04 (OpenJDK 17, gcc 11.2.0)",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2204-java17",
+        "python": "python3",
+    },
+    "ubuntu2204": {
+        "name": "Ubuntu 22.04",
+        "emoji-name": ":ubuntu: 22.04",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2204",
         "python": "python3",
     },
     "fedora39": {
