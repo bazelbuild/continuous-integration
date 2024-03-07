@@ -192,6 +192,8 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
 def push_to_branch(target_branch_name):
     print(f"Pushing it to branch: {target_branch_name}")
     push_status = subprocess.run(['git', 'push', '--set-upstream', 'origin', target_branch_name])
+    print("This is the push_status_returncode")
+    print(push_status.returncode)
     if push_status.returncode != 0: raise PushCpException(f"Cherry-pick was attempted, but failed to push. Please check if the branch, {target_branch_name}, already exists\ncc: @bazelbuild/triage")
 
 def get_cherry_picked_pr_number(head_branch, release_branch):
