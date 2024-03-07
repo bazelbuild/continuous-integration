@@ -1,6 +1,6 @@
 import os, re
 from vars import input_data, upstream_repo, cherrypick_with_commits_infos
-from functions import cherry_pick, create_pr, issue_comment, get_pr_title_body, PushCpException, push_to_branch, get_middle_text, update_lockfile
+from functions import cherry_pick, create_pr, issue_comment, get_pr_title_body, PushCpException, push_to_branch, get_middle_text
 
 milestone_title = os.environ["INPUT_MILESTONE_TITLE"]
 milestoned_issue_number = os.environ["INPUT_MILESTONED_ISSUE_NUMBER"]
