@@ -4,9 +4,6 @@ from vars import headers, token, upstream_repo, upstream_url
 class PushCpException(Exception):
     pass
 
-class UpdateLockfileException(Exception):
-    pass
-
 def get_commit_id(pr_number, actor_name, action_event, api_repo_name):
     params = {"per_page": 100}
     response = requests.get(f'https://api.github.com/repos/{api_repo_name}/issues/{pr_number}/events', headers=headers, params=params)
@@ -20,7 +17,6 @@ def get_commit_id(pr_number, actor_name, action_event, api_repo_name):
     if commit_id == None:
         print(f'PR#{pr_number} has NO commit made by {actor_name}')
         raise SystemExit(0)
-    # return
     return commit_id
 
 def get_reviewers(pr_number, api_repo_name, issues_data):
@@ -69,45 +65,36 @@ def issue_comment(issue_number, body_content, api_repo_name, is_prod):
 
 def update_lockfile(changed_files, has_conflicts):
     print("The lockfile(s) may need to be updated!")
-    print("This is the has_conflicts value")
-    print(has_conflicts)
     std_out_bazel_version = subprocess.Popen(["../bazelisk-linux-amd64", "--version"], stdout=subprocess.PIPE)
     bazel_version_std_out = std_out_bazel_version.communicate()[0].decode()
     major_version_digit = int(re.findall(r"\d.\d.\d", bazel_version_std_out)[0].split(".")[0])
+
     if major_version_digit < 7:
-        print("Warning: The .bazelversion is less than 7. Therefore, the lockfiles may not be updated...")
-        raise Exception(f"The bazel major version is {bazel_version_std_out}. We cannot use bazel to update the lockfiles.")
-    
-    if has_conflicts == True:
-        print("The file(s) has conflict(s)... We may need to accept our changes")
-        subprocess.run(["git", "checkout", "--ours", "MODULE.bazel.lock", "src/test/tools/bzlmod/MODULE.bazel.lock"])
+        print("Warning: The .bazelversion is less than 7. Therefore, the lockfiles will not be updated...")
+    else: 
+        if has_conflicts == True:
+            print("The file(s) has conflict(s)... We may need to accept all current changes first")
+            subprocess.run(["git", "checkout", "--ours", "MODULE.bazel.lock", "src/test/tools/bzlmod/MODULE.bazel.lock"])
+            subprocess.run(["git", "add", "."])
+
+        if "src/test/tools/bzlmod/MODULE.bazel.lock" in changed_files:
+            print("src/test/tools/bzlmod/MODULE.bazel.lock needs to be updated. This may take awhile... Please be patient.")
+            subprocess.run(["../bazelisk-linux-amd64", "run", "//src/test/tools/bzlmod:update_default_lock_file"])
+            subprocess.run(["git", "add", "."])
+
+        print("Running:  bazelisk-linux-amd64 mod deps --lockfile_mode=update")
+        subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
         subprocess.run(["git", "add", "."])
+        # Just leave this for now for debugging
+        subprocess.run(['git', 'status'])
 
-    if "src/test/tools/bzlmod/MODULE.bazel.lock" in changed_files:
-        print("src/test/tools/bzlmod/MODULE.bazel.lock needs to be updated. This may take awhile... Please be patient.")
-        subprocess.run(["../bazelisk-linux-amd64", "run", "//src/test/tools/bzlmod:update_default_lock_file"])
-        subprocess.run(["git", "add", "."])
-
-    print("Updating the lockfile(s)...")
-
-    subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
-    subprocess.run(["git", "add", "."])
-    print("before git status")
-    subprocess.run(['git', 'status'])
-    print("Thisisbranch!!!")
-    subprocess.run(['git', 'branch'])
-
-    # If there was a conflict, then run this
-    if has_conflicts == True:
-        subprocess.run(["git", "-c", "core.editor=true", "cherry-pick", "--continue"])
-    else:
-        subprocess.run(["git", "commit", "-m", "Update lockfile(s)"])
-    
-    print("ls.... This is after")
-    subprocess.run(['ls'])
-    # subprocess.run(['cat', 'MODULE.bazel.lock'])
-    print("After git status")
-    subprocess.run(['git', 'status'])
+        if has_conflicts == True:
+            print("There was conflict(s)... Running cherry-pick --continue")
+            subprocess.run(["git", "-c", "core.editor=true", "cherry-pick", "--continue"])
+        else:
+            print("Committing the changes...")
+            subprocess.run(["git", "commit", "-m", "Update lockfile(s)"])
+        subprocess.run(['git', 'status'])
 
 def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clone, requires_checkout, input_data):
     gh_cli_repo_name = f"{input_data['user_name']}/bazel"
@@ -124,14 +111,6 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
         subprocess.run(['git', 'config', '--global', 'user.name', user_name])
         subprocess.run(['git', 'config', '--global', 'user.email', user_email])
         os.chdir("bazel")
-        print("pwd")
-        subprocess.run(['pwd'])
-        print("ls")
-        subprocess.run(['ls'])
-        print("ls ..")
-        subprocess.run(['ls', '..'])
-        print("cat .bazelversion")
-        subprocess.run(['cat', '.bazelversion'])
         subprocess.run(['git', 'remote', 'add', 'origin', gh_cli_repo_url])
         subprocess.run(['git', 'remote', '-v'])
 
@@ -152,15 +131,10 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
                 raise Exception(f"The branch, {release_branch_name}, may not exist. Please retry the cherry-pick after the branch is created.")
             subprocess.run(['git', 'remote', 'rm', 'upstream'])
             subprocess.run(['git', 'checkout', release_branch_name])
-        print("hiyaThisisbranch!!!")
-        subprocess.run(['git', 'branch'])
         status_checkout_target = subprocess.run(['git', 'checkout', '-b', target_branch_name])
         if status_checkout_target.returncode != 0: raise Exception(f"Cherry-pick was being attempted. But, it failed due to already existent branch called {target_branch_name}\ncc: @bazelbuild/triage")
-        print("Thisisbefore...")
-        # subprocess.run(['cat', 'MODULE.bazel.lock'])
 
     def run_cherry_pick(is_prod, commit_id, target_branch_name):
-        print("testingall")
         changed_files = set(str(subprocess.Popen(["git", "diff-tree", "--no-commit-id", "--name-only", commit_id, "-r", "-m"], stdout=subprocess.PIPE).communicate()[0].decode()).split("\n"))
         changed_files.discard("")
         print(f"Cherry-picking the commit id {commit_id} in CP branch: {target_branch_name}")
@@ -172,10 +146,7 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
         lockfile_names = {"src/test/tools/bzlmod/MODULE.bazel.lock", "MODULE.bazel.lock"}
         unmerged_all_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode()).split("\n")
         unmerged_rest = [j for i,j in enumerate(unmerged_all_files) if j not in lockfile_names and j != ""]
-        print("Thisistheunmerged_rest")
-        print(unmerged_rest)
-        print("This is the changed files")
-        print(changed_files)
+ 
         if cherrypick_status.returncode != 0:
             if len(unmerged_rest) == 0 and ("src/test/tools/bzlmod/MODULE.bazel.lock" in changed_files or "MODULE.bazel.lock" in changed_files):
                 update_lockfile(changed_files, True)
@@ -192,8 +163,6 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
 def push_to_branch(target_branch_name):
     print(f"Pushing it to branch: {target_branch_name}")
     push_status = subprocess.run(['git', 'push', '--set-upstream', 'origin', target_branch_name])
-    print("This is the push_status_returncode")
-    print(push_status.returncode)
     if push_status.returncode != 0: raise PushCpException(f"Cherry-pick was attempted, but failed to push. Please check if the branch, {target_branch_name}, already exists\ncc: @bazelbuild/triage")
 
 def get_cherry_picked_pr_number(head_branch, release_branch):
@@ -202,19 +171,16 @@ def get_cherry_picked_pr_number(head_branch, release_branch):
         "base": release_branch,
         "state": "open"
     }
-    # r = requests.get(f'https://api.github.com/repos/{upstream_repo}/pulls', headers=headers, params=params).json()
-    r = requests.get(f'https://api.github.com/repos/iancha1992/bazel/pulls', headers=headers, params=params).json()
+    r = requests.get(f'https://api.github.com/repos/{upstream_repo}/pulls', headers=headers, params=params).json()
     if len(r) == 1: return r[0]["number"]
     else: raise Exception(f"Could not find the cherry-picked PR number \ncc: @bazelbuild/triage")
 
 def create_pr(reviewers, release_number, labels, pr_title, pr_body, release_branch_name, target_branch_name, user_name):
-    # head_branch = f"{user_name}:{target_branch_name}"
-    head_branch = f"iancha1992:{target_branch_name}"
+    head_branch = f"{user_name}:{target_branch_name}"
     reviewers_str = ",".join(reviewers)
     labels_str = ",".join(labels)
     modified_pr_title = f"[{release_number}] {pr_title}" if f"[{release_number}]" not in pr_title else pr_title
-    # status_create_pr = subprocess.run(['gh', 'pr', 'create', "--repo", upstream_repo, "--title", modified_pr_title, "--body", pr_body, "--head", head_branch, "--base", release_branch_name,  '--label', labels_str, '--reviewer', reviewers_str])
-    status_create_pr = subprocess.run(['gh', 'pr', 'create', "--repo", "iancha1992/bazel", "--title", modified_pr_title, "--body", pr_body, "--head", head_branch, "--base", release_branch_name,  '--label', labels_str, '--reviewer', reviewers_str])
+    status_create_pr = subprocess.run(['gh', 'pr', 'create', "--repo", upstream_repo, "--title", modified_pr_title, "--body", pr_body, "--head", head_branch, "--base", release_branch_name,  '--label', labels_str, '--reviewer', reviewers_str])
     if status_create_pr.returncode == 0:
         cherry_picked_pr_number = get_cherry_picked_pr_number(head_branch, release_branch_name)
         return cherry_picked_pr_number

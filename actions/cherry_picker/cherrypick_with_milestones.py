@@ -1,5 +1,5 @@
 import os, requests
-from functions import get_commit_id, get_reviewers, extract_release_numbers_data, cherry_pick, create_pr, get_labels, get_pr_title_body, issue_comment, push_to_branch, update_lockfile
+from functions import get_commit_id, get_reviewers, extract_release_numbers_data, cherry_pick, create_pr, get_labels, get_pr_title_body, issue_comment, push_to_branch
 from vars import headers, upstream_repo, input_data
 
 triggered_on = os.environ["INPUT_TRIGGERED_ON"]
@@ -45,9 +45,7 @@ for k in release_numbers_data.keys():
         cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clone, True, input_data)
         push_to_branch(target_branch_name)
         cherry_picked_pr_number = create_pr(reviewers, release_number, labels, pr_title, pr_body, release_branch_name, target_branch_name, input_data["user_name"])
-        # cherry_picked_pr_number = 1000
-        # issue_comment(issue_number, f"Cherry-picked in https://github.com/{upstream_repo}/pull/{cherry_picked_pr_number}", input_data["api_repo_name"], input_data["is_prod"])
-        issue_comment(issue_number, f"Cherry-picked in https://github.com/iancha1992/bazel/pull/{cherry_picked_pr_number}", input_data["api_repo_name"], input_data["is_prod"])
+        issue_comment(issue_number, f"Cherry-picked in https://github.com/{upstream_repo}/pull/{cherry_picked_pr_number}", input_data["api_repo_name"], input_data["is_prod"])
     except Exception as e:
         issue_comment(issue_number, str(e), input_data["api_repo_name"], input_data["is_prod"])
     requires_clone = False

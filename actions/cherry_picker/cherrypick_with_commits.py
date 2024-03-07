@@ -44,9 +44,7 @@ for idx, commit_id in enumerate(issue_body_dict["commits"]):
     requires_checkout = False
 
 try:
-    # update_lockfile()
     push_to_branch(target_branch_name)
-
 except Exception as e:
     issue_comment(milestoned_issue_number, str(e), input_data["api_repo_name"], input_data["is_prod"])
     raise SystemExit(0)
