@@ -1,6 +1,11 @@
 ---
 steps:
   - label: "Release rules_platform"
+  - input: "Artifacts information"
+    fields:
+      - text: "Token"
+        key: "token"
+        required: true       
     agents:
       - "queue=default"
     plugins:
@@ -24,7 +29,7 @@ steps:
           - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
           - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
-          - "/var/run/docker.sock:/var/run/docker.sock"
+          - "/var/run/docker.sock:/var/run/docker.sock"          
     command: | 
       echo "+++ Checking out Git branch"
       git fetch origin ${BUILDKITE_BRANCH}
@@ -48,9 +53,11 @@ steps:
       sudo chmod 0755 /usr/local/bin/github-release
 
       echo "+++ Importing GitHub token"
-      github_token=$(gsutil cat gs://bazel-trusted-encrypted-secrets/github-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key github-trusted-token --ciphertext-file - --plaintext-file -)
+      # github_token=$(gsutil cat gs://bazel-trusted-encrypted-secrets/github-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key github-trusted-token --ciphertext-file - --plaintext-file -)
+      github_token=$(buildkite-agent meta-data get "token") 
 
       echo "+++ Creating a release on GitHub"
       cd bazel-bin/distro
       relnotes=$(cat relnotes.txt)
-      GITHUB_TOKEN=\${github_token} github-release "keertk/rules_platform" \${version} "\${BUILDKITE_BRANCH}" "\${relnotes}" rules_platform-\${version}.tar.gz   
+      echo "relnotes = \"\$relnotes\""
+      # GITHUB_TOKEN=\${github_token} github-release "keertk/rules_platform" \${version} "\${BUILDKITE_BRANCH}" "\${relnotes}" rules_platform-\${version}.tar.gz
