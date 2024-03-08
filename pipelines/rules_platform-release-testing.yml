@@ -63,4 +63,4 @@ steps:
       cd bazel-bin/distro
       relnotes=$(cat relnotes.txt)
       echo "relnotes = \"\$relnotes\""
-      # GITHUB_TOKEN=\${github_token} github-release "keertk/rules_platform" \${version} "\${BUILDKITE_BRANCH}" "\${relnotes}" rules_platform-\${version}.tar.gz
+      GITHUB_TOKEN=\${github_token} github-release "keertk/rules_platform" \${version} "\${BUILDKITE_BRANCH}" "\${relnotes}" rules_platform-\${version}.tar.gz
