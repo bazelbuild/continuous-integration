@@ -1,11 +1,11 @@
 ---
 steps:
-  - label: "Release rules_platform"
   - input: "Artifacts information"
     fields:
       - text: "Token"
         key: "token"
-        required: true       
+        required: true
+  - label: "Release rules_platform"   
     agents:
       - "queue=default"
     plugins:
