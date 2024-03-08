@@ -130,6 +130,15 @@ if ($attemptCount -eq $maxAttempts) {
   Stop-Computer
 }
 
+# Fix ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1129)
+# Apply changes from https://github.com/bazelbuild/rules_foreign_cc/pull/1171
+cd $env:USERPROFILE;
+Invoke-WebRequest https://curl.haxx.se/ca/cacert.pem -OutFile $env:USERPROFILE\cacert.pem;
+$plaintext_pw = 'PASSWORD';
+$secure_pw = ConvertTo-SecureString $plaintext_pw -AsPlainText -Force;
+& openssl.exe pkcs12 -export -nokeys -out certs.pfx -in cacert.pem -passout pass:$plaintext_pw;
+Import-PfxCertificate -Password $secure_pw  -CertStoreLocation Cert:\LocalMachine\Root -FilePath certs.pfx;
+
 ## Decrypt the Buildkite agent token.
 Write-Host "Decrypting Buildkite Agent token using KMS..."
 $buildkite_agent_token = & gcloud kms decrypt --project $project --location global --keyring buildkite --key $key --ciphertext-file $buildkite_agent_token_file --plaintext-file -
