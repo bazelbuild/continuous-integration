@@ -5,6 +5,9 @@ steps:
       - text: "Token"
         key: "token"
         required: true
+
+  - wait
+
   - label: "Release rules_platform"   
     agents:
       - "queue=default"
