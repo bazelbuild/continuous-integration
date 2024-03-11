@@ -419,7 +419,7 @@ PLATFORMS = {
     "centos7": {
         "name": "CentOS 7",
         "emoji-name": ":centos: CentOS 7",
-        "publish_binary": [],
+        "publish_binary": ["ubuntu2004", "centos7", "linux"],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7",
         "python": "python3.6",
     },
@@ -433,7 +433,7 @@ PLATFORMS = {
     "centos7_java11_devtoolset10": {
         "name": "CentOS 7 (OpenJDK 11, gcc 10.2.1)",
         "emoji-name": ":centos: CentOS 7 (OpenJDK 11, gcc 10.2.1)",
-        "publish_binary": ["ubuntu1404", "centos7", "linux"],
+        "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7-java11-devtoolset10",
         "python": "python3.6",
     },
