@@ -78,7 +78,7 @@ While the release is active, you should make sure to do the following:
 *   Periodically check downstream tests that are run against the release branch to catch any breakages early on in the process. If you see any failures that don't appear at HEAD, reach out to the Bazel team, open an issue if needed, and add the issue to the release blockers list.
 *   When enough PRs have been cherry-picked and the release is nearing a ready state, create a release candidate (see [below](#create-a-release-candidate)).
     *   One week before pushing the final release candidate, go through all the remaining issues on the milestone to triage and add the "soft-release-blocker" label.
-    *   When a few days pass and no more release blockers show up, push the candidate as the release (issues and pull requests with the "soft-release-blocker" labels can move to the next release if they are not resolved/merged yet). Otherwise, rinse and repeat the steps above. 
+    *   Make sure all issues without the "soft-release-blocker" label are addressed before the final release.
 *   Keep the task list in the release tracking issue updated and check boxes as you follow the release process.
     *   In particular, try and keep the estimated release date updated.
 *   If there is a request to backport a fix to a previous minor release, then add the "potential N.x cherry-picks" label (for example, if we just released 7.2.0 release, but there is a request to make some changes to fix 6.4.0, then we should put the label, "potential 6.x cherry-picks" label). If there are about five or more issues/PRs with the label, then we should start a discussion to release a new minor release for the previous LTS track.
@@ -117,7 +117,7 @@ While the release is active, you should make sure to do the following:
         
 1.  If that worked, click on the "Generate release notes" step to unblock it. If this is the first release candidate, copy and paste the generated text into the release announcements doc. For rcX where X>2, compare the generated notes with the release announcements working doc and add only the new/missing notes. Refer to the "Release announcement" section below for more details.
 
-1. Publish the RC to GitHub (this is manual step for now until it is automated through the release script)
+1. Confirm that the RC published to GitHub looks good. If it's the first RC, add a note stating that the release notes are still being reviewed.
 
     *   Click on "draft a new release" on the [release page](https://github.com/bazelbuild/bazel/releases)
     *   Set the tag as X.Y.ZrcN (e.g. `7.0.1rc1`)
@@ -278,6 +278,7 @@ Note: the above policies are for final releases only. RCs can be created without
     Bazel 6.2.0 is now available: https://github.com/bazelbuild/bazel/releases/tag/6.2.0
     ```
 1.  Post on the #general channel on the [Bazel Slack](https://bazelbuild.slack.com/) about the new release (same content as above).
+1.  Move all issues with the "soft-release-blocker" label to the next release milestone.
 
 ### Updating .bazelversion and the release documentation page
 
