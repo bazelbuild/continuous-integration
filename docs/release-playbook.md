@@ -119,14 +119,6 @@ While the release is active, you should make sure to do the following:
 
 1. Confirm that the RC published to GitHub looks good. If it's the first RC, add a note stating that the release notes are still being reviewed.
 
-    *   Click on "draft a new release" on the [release page](https://github.com/bazelbuild/bazel/releases)
-    *   Set the tag as X.Y.ZrcN (e.g. `7.0.1rc1`)
-    *   Set the target as the release branch (e.g. `release-7.0.1rc1`)
-    *   Copy the release notes into the description
-    *   Download all artifacts from the index page (e.g. everything under "Index of files" in https://releases.bazel.build/7.0.1/rc1/index.html) and upload them here
-    *   Select "set as a pre-release"
-    *   Publish the release
-
 1.  Send out an email to `bazel-discuss@googlegroups.com` about the new release candidate. E.g.:
     *   Subject: Bazel 7.0.1 release candidate 1 is available for testing
     *   Body:
