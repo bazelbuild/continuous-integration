@@ -480,10 +480,10 @@ PLATFORMS = {
         "python": "python3.8",
     },
     "ubuntu2004_arm64": {
-        "name": "Ubuntu 20.04 LTS ARM64 (OpenJDK 11, gcc 9.4.0)",
-        "emoji-name": ":ubuntu: Ubuntu 20.04 LTS ARM64 (OpenJDK 11, gcc 9.4.0)",
+        "name": "Ubuntu 20.04 LTS ARM64",
+        "emoji-name": ":ubuntu: Ubuntu 20.04 LTS ARM64",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11",
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004",
         "python": "python3.8",
         "queue": "arm64",
         # TODO: Re-enable always-pull if we also publish docker containers for Linux ARM64
