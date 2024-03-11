@@ -1,7 +1,6 @@
 const { getInput, setFailed } = require('@actions/core');
 const { context, getOctokit } = require("@actions/github");
 
-// Keep this function in sync with the one in actions/bcr-pr-review-notifier/index.js
 async function fetchAllModifiedModules(octokit, owner, repo, prNumber) {
   let page = 1;
   const perPage = 100; // GitHub's max per_page value
@@ -30,7 +29,6 @@ async function fetchAllModifiedModules(octokit, owner, repo, prNumber) {
   return accumulate;
 }
 
-// Keep this function in sync with the one in actions/bcr-pr-review-notifier/index.js
 async function generateMaintainersMap(octokit, owner, repo, modifiedModules) {
   const maintainersMap = new Map(); // Map: maintainer GitHub username -> Set of module they maintain
   const modulesWithoutGithubMaintainers = new Set(); // Set of module names without module maintainers
