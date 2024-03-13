@@ -1,4 +1,4 @@
-import os, subprocess, requests
+import os, subprocess, requests, re
 from vars import headers, token, upstream_repo, upstream_url
 
 class PushCpException(Exception):
@@ -63,6 +63,39 @@ def issue_comment(issue_number, body_content, api_repo_name, is_prod):
     else:
         subprocess.run(['gh', 'issue', 'comment', str(issue_number), '--body', body_content])
 
+def update_lockfile(changed_files, has_conflicts):
+    print("The lockfile(s) may need to be updated!")
+    print(changed_files)
+    std_out_bazel_version = subprocess.Popen(["../bazelisk-linux-amd64", "--version"], stdout=subprocess.PIPE)
+    bazel_version_std_out = std_out_bazel_version.communicate()[0].decode()
+    major_version_digit = int(re.findall(r"\d.\d.\d", bazel_version_std_out)[0].split(".")[0])
+
+    if major_version_digit < 7:
+        print("Warning: The .bazelversion is less than 7. Therefore, the lockfiles will not be updated...")
+    else: 
+        if has_conflicts == True:
+            print("The file(s) has conflict(s)... We may need to accept all current changes first")
+            subprocess.run(["git", "checkout", "--ours", "MODULE.bazel.lock", "src/test/tools/bzlmod/MODULE.bazel.lock"])
+            subprocess.run(["git", "add", "."])
+
+        if "src/test/tools/bzlmod/MODULE.bazel.lock" in changed_files:
+            print("src/test/tools/bzlmod/MODULE.bazel.lock needs to be updated. This may take awhile... Please be patient.")
+            subprocess.run(["../bazelisk-linux-amd64", "run", "//src/test/tools/bzlmod:update_default_lock_file"])
+            subprocess.run(["git", "add", "."])
+
+        print("Running:  bazelisk-linux-amd64 mod deps --lockfile_mode=update")
+        subprocess.run(["../bazelisk-linux-amd64", "mod", "deps", "--lockfile_mode=update"])
+        subprocess.run(["git", "add", "."])
+        subprocess.run(['git', 'status'])
+
+        if has_conflicts == True:
+            print("There was conflict(s)... Running cherry-pick --continue")
+            subprocess.run(["git", "-c", "core.editor=true", "cherry-pick", "--continue"])
+        else:
+            print("Committing the changes...")
+            subprocess.run(["git", "commit", "-m", "Update lockfile(s)"])
+        subprocess.run(['git', 'status'])
+
 def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clone, requires_checkout, input_data):
     gh_cli_repo_name = f"{input_data['user_name']}/bazel"
     gh_cli_repo_url = f"git@github.com:{gh_cli_repo_name}.git"
@@ -102,13 +135,27 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
         if status_checkout_target.returncode != 0: raise Exception(f"Cherry-pick was being attempted. But, it failed due to already existent branch called {target_branch_name}\ncc: @bazelbuild/triage")
 
     def run_cherry_pick(is_prod, commit_id, target_branch_name):
+        changed_files = set(str(subprocess.Popen(["git", "diff-tree", "--no-commit-id", "--name-only", commit_id, "-r", "-m"], stdout=subprocess.PIPE).communicate()[0].decode()).split("\n"))
+        changed_files.discard("")
         print(f"Cherry-picking the commit id {commit_id} in CP branch: {target_branch_name}")
-        if is_prod == True: cherrypick_status = subprocess.run(['git', 'cherry-pick', commit_id])
-        else: cherrypick_status = subprocess.run(['git', 'cherry-pick', '-m', '1', commit_id])
-        if cherrypick_status.returncode != 0:
-            subprocess.run(['git', 'cherry-pick', '--skip'])
-            raise Exception("Cherry-pick was attempted, but there may be merge conflict(s). Please resolve manually.\ncc: @bazelbuild/triage")
+        if is_prod == True:
+            cherrypick_status = subprocess.run(['git', 'cherry-pick', commit_id])
+        else:
+            cherrypick_status = subprocess.run(['git', 'cherry-pick', '-m', '1', commit_id])
 
+        lockfile_names = {"src/test/tools/bzlmod/MODULE.bazel.lock", "MODULE.bazel.lock"}
+        unmerged_all_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode()).split("\n")
+        unmerged_rest = [j for i,j in enumerate(unmerged_all_files) if j not in lockfile_names and j != ""]
+ 
+        if cherrypick_status.returncode != 0:
+            if len(unmerged_rest) == 0 and ("src/test/tools/bzlmod/MODULE.bazel.lock" in changed_files or "MODULE.bazel.lock" in changed_files):
+                update_lockfile(changed_files, True)
+            else:
+                subprocess.run(['git', 'cherry-pick', '--skip'])
+                raise Exception("Cherry-pick was attempted, but there may be merge conflict(s). Please resolve manually.\ncc: @bazelbuild/triage")
+        elif cherrypick_status.returncode == 0 and ("src/test/tools/bzlmod/MODULE.bazel.lock" in changed_files or "MODULE.bazel.lock" in changed_files):
+            update_lockfile(changed_files, False)
+        
     if requires_clone == True: clone_and_sync_repo(gh_cli_repo_name, master_branch, release_branch_name, user_name, gh_cli_repo_url, user_email)
     if requires_checkout == True: checkout_release_number(release_branch_name, target_branch_name)
     run_cherry_pick(input_data["is_prod"], commit_id, target_branch_name)
