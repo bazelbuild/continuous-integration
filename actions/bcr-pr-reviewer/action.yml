@@ -1,0 +1,15 @@
+name: 'BCR PR Reviewer'
+description: 'Helps notify module maintainers and approve PRs of Bazel Central Registry.'
+inputs:
+  token:
+    description: 'The GitHub token'
+    required: false
+    default: ${{ github.token }}
+
+  action-type:
+    description: 'The type of action this reviewer should perform, valid values are: notify_maintainers, review_prs, dismiss_approvals'
+    required: true
+
+runs:
+  using: 'node20'
+  main: 'index.js'
