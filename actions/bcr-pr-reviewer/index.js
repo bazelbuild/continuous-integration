@@ -336,28 +336,34 @@ async function waitForDismissApprovalsWorkflow(octokit, owner, repo) {
     setFailed('The dismiss_approvals workflow is not found');
     return false;
   }
+  console.log(`Found dismiss_approvals workflow: ${dismissApprovalsWorkflow.id}`);
 
   // Wait until all runs of the dismiss_approvals workflow are completed
   // https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#list-workflow-runs-for-a-repository
   shouldWaitStatues = ['queued', 'in_progress', 'requested', 'pending', 'waiting'];
   let response;
   while (true) {
-    response = await octokit.rest.actions.listWorkflowRuns({
-      owner,
-      repo,
-      workflow_id: dismissApprovalsWorkflow.id,
-      status: shouldWaitStatues.join(','),
-    });
+    total_count = 0;
+    for (const status of shouldWaitStatues) {
+      response = await octokit.rest.actions.listWorkflowRuns({
+        owner,
+        repo,
+        workflow_id: dismissApprovalsWorkflow.id,
+        status: status,
+      });
 
-    for (const run of response.data.workflow_runs) {
-      console.log(`Dismiss approvals workflow run #${run.run_number} is ${run.status}`);
-      console.log(`Waiting for dismiss approvals workflow run #${run.run_number} to complete`);
+      for (const run of response.data.workflow_runs) {
+        console.log(`Dismiss approvals workflow run #${run.run_number} is ${run.status}`);
+      }
+
+      total_count += response.data.total_count;
     }
 
-    if (response.data.workflow_runs.length > 0) {
+    if (total_count > 0) {
       console.log('Waiting 5s for dismiss approvals workflow runs to complete');
       await new Promise(resolve => setTimeout(resolve, 5000));
     } else {
+      console.log('All dismiss approvals workflow runs are completed');
       break;
     }
   }
