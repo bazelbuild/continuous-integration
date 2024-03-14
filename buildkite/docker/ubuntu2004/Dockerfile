@@ -111,15 +111,6 @@ RUN apt-get -y update && \
 
 ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-${BUILDARCH}
 
-FROM ubuntu2004-java11 AS ubuntu2004-java11-kythe
-
-RUN LATEST_KYTHE=v0.0.52 && \
-    mkdir /usr/local/kythe && \
-    curl -fsSL https://github.com/kythe/kythe/releases/download/${LATEST_KYTHE}/kythe-{$LATEST_KYTHE}.tar.gz | \
-    tar xvz --no-same-owner --strip-components 1 --directory /usr/local/kythe && \
-    chmod -R a+r /usr/local/kythe && \
-    test -f /usr/local/kythe/WORKSPACE
-
 FROM ubuntu2004-nojdk AS ubuntu2004
 
 RUN apt-get -y update && \
@@ -127,3 +118,13 @@ RUN apt-get -y update && \
     rm -rf /var/lib/apt/lists/*
 
 ENV JAVA_HOME /usr/lib/jvm/java-21-openjdk-${BUILDARCH}
+
+FROM ubuntu2004 AS ubuntu2004-kythe
+
+RUN LATEST_KYTHE=v0.0.67 && \
+    mkdir /usr/local/kythe && \
+    curl -fsSL https://github.com/kythe/kythe/releases/download/${LATEST_KYTHE}/kythe-{$LATEST_KYTHE}.tar.gz | \
+    tar xvz --no-same-owner --strip-components 1 --directory /usr/local/kythe && \
+    chmod -R a+r /usr/local/kythe && \
+    test -f /usr/local/kythe/WORKSPACE
+
