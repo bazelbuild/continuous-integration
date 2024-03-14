@@ -490,10 +490,10 @@ PLATFORMS = {
         "always-pull": False,
     },
     "kythe_ubuntu2004": {
-        "name": "Kythe (Ubuntu 20.04 LTS, OpenJDK 11, gcc 9.4.0)",
-        "emoji-name": "Kythe (:ubuntu: 20.04 LTS, OpenJDK 11, gcc 9.4.0)",
+        "name": "Kythe (Ubuntu 20.04 LTS)",
+        "emoji-name": "Kythe (:ubuntu: Ubuntu 20.04 LTS)",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11-kythe",
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-kythe",
         "python": "python3.8",
     },
     "ubuntu2204_java17": {
