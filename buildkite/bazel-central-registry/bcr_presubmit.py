@@ -262,6 +262,11 @@ def prepare_test_module_repo(module_name, module_version):
 
     # Write necessary options to the .bazelrc file
     test_module_root = source_root.joinpath(orig_presubmit["bcr_test_module"]["module_path"])
+
+    # Check if test_module_root is a directory
+    if not test_module_root.is_dir():
+        error("The test module directory does not exist in the source archive: %s" % test_module_root)
+
     scratch_file(test_module_root, ".bazelrc", [
         # .bazelrc may not end with a newline.
         "",
