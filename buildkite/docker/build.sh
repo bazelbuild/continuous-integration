@@ -38,6 +38,6 @@ docker build -f centos7/Dockerfile    --target centos7-releaser            -t "g
 docker build -f ubuntu1604/Dockerfile --target ubuntu1604-bazel-java8      -t "gcr.io/$PREFIX/ubuntu1604-bazel-java8" ubuntu1604
 docker build -f ubuntu1804/Dockerfile --target ubuntu1804-bazel-java11     -t "gcr.io/$PREFIX/ubuntu1804-bazel-java11" ubuntu1804
 docker build -f ubuntu2004/Dockerfile --target ubuntu2004-bazel-java11     -t "gcr.io/$PREFIX/ubuntu2004-bazel-java11" ubuntu2004
-docker build -f ubuntu2004/Dockerfile --target ubuntu2004-kythe            -t "gcr.io/$PREFIX/ubuntu2004-kythe" ubuntu2004
+docker build -f ubuntu2204/Dockerfile --target ubuntu2204-kythe            -t "gcr.io/$PREFIX/ubuntu2204-kythe" ubuntu2204
 docker build -f ubuntu2204/Dockerfile --target ubuntu2204-bazel-java17     -t "gcr.io/$PREFIX/ubuntu2204-bazel-java17" ubuntu2204
 docker build -f fedora39/Dockerfile   --target fedora39-bazel-java17       -t "gcr.io/$PREFIX/fedora39-bazel-java17" fedora39

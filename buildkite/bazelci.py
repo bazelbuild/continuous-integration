@@ -496,6 +496,13 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-kythe",
         "python": "python3.8",
     },
+    "kythe_ubuntu2204": {
+        "name": "Kythe (Ubuntu 22.04 LTS)",
+        "emoji-name": "Kythe (:ubuntu: Ubuntu 22.04 LTS)",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2204-kythe",
+        "python": "python3",
+    },
     "ubuntu2204_java17": {
         "name": "Ubuntu 22.04 (OpenJDK 17, gcc 11.2.0)",
         "emoji-name": ":ubuntu: Ubuntu 22.04 (OpenJDK 17, gcc 11.2.0)",
