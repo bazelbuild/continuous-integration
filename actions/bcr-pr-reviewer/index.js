@@ -253,7 +253,8 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   // Verify if all modified modules have at least one maintainer's approval
   const allModulesApproved = await checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers);
 
-  const myLogin = context.actor;
+  const { data } = await octokit.rest.users.getAuthenticated();
+  const myLogin = data.login;
 
   // Approve the PR if not previously approved and all modules are approved
   if (allModulesApproved) {
