@@ -150,6 +150,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/bazelisk.git",
         "file_config": ".bazelci/config.yml",
         "pipeline_slug": "bazelisk",
+        "disabled_reason": "https://github.com/bazelbuild/bazelisk/issues/558",
     },
     "Buildfarm": {
         "git_repository": "https://github.com/bazelbuild/bazel-buildfarm.git",
