@@ -358,6 +358,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     "rules_rust": {
         "git_repository": "https://github.com/bazelbuild/rules_rust.git",
         "pipeline_slug": "rules-rust-rustlang",
+        "disabled_reason": "https://github.com/bazelbuild/rules_rust/issues/2519, https://github.com/bazelbuild/rules_rust/issues/2464"
     },
     "rules_sass": {
         "git_repository": "https://github.com/bazelbuild/rules_sass.git",
