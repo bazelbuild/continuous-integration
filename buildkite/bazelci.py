@@ -302,6 +302,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     "rules_groovy": {
         "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
         "pipeline_slug": "rules-groovy",
+        "disabled_reason": "https://github.com/bazelbuild/rules_groovy/issues/68",
     },
     "rules_gwt": {
         "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
