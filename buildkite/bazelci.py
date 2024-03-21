@@ -300,6 +300,10 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_go.git",
         "pipeline_slug": "rules-go-golang",
     },
+    "rules_graalvm": {
+        "git_repository": "https://github.com/sgammon/rules_graalvm.git",
+        "pipeline_slug": "rules-graalvm",
+    },
     "rules_groovy": {
         "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
         "pipeline_slug": "rules-groovy",
