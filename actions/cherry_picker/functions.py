@@ -196,13 +196,8 @@ def get_pr_title_body(commit_id, api_repo_name):
     response_commit = requests.get(f"https://api.github.com/repos/{api_repo_name}/commits/{commit_id}")
     original_msg = response_commit.json()["commit"]["message"]
     pr_title = original_msg[:original_msg.index("\n\n")] if "\n\n" in original_msg else original_msg
-    pr_body = original_msg[original_msg.index("\n\n") + 2:] if "\n\n" in original_msg else original_msg
     commit_str_body = f"Commit https://github.com/{api_repo_name}/commit/{commit_id}"
-    if "PiperOrigin-RevId" in pr_body:
-        piper_index = pr_body.index("PiperOrigin-RevId")
-        pr_body = pr_body[:piper_index] + f"{commit_str_body}\n\n" + pr_body[piper_index:]
-    else:
-        pr_body += f"\n\n{commit_str_body}"
+    pr_body = (original_msg[original_msg.index("\n\n") + 2:] if "\n\n" in original_msg else original_msg) + f"\n\n{commit_str_body}"
     return {"title": pr_title, "body": pr_body}
 
 def get_middle_text(all_str, left_str, right_str):
