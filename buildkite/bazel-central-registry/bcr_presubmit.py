@@ -482,15 +482,18 @@ def main(argv=None):
             bazelci.eprint("No target module versions detected in this branch!")
         pipeline_steps = []
         for module_name, module_version in modules:
+            previous_size = len(pipeline_steps)
+
             configs = get_task_config(module_name, module_version)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps)
             configs = get_test_module_task_config(module_name, module_version)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True)
+
+            if len(pipeline_steps) == previous_size:
+                error("No pipeline steps generated for %s@%s. Please check the configuration." % (module_name, module_version))
+
         if should_wait_bcr_maintainer_review(modules) and pipeline_steps:
             pipeline_steps = [{"block": "Wait on BCR maintainer review", "blocked_state": "running"}] + pipeline_steps
-
-        if not pipeline_steps:
-            error("No pipeline steps generated. Please check the configuration.")
 
         upload_jobs_to_pipeline(pipeline_steps)
     elif args.subparsers_name == "runner":
