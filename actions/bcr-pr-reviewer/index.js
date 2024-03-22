@@ -222,7 +222,10 @@ async function checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap
 }
 
 async function reviewPR(octokit, owner, repo, prNumber) {
+  console.log('\n');
+  console.log(`Processing PR #${prNumber}`);
 
+  // Skip if the PR is a draft
   const prInfo = await octokit.rest.pulls.get({
     owner,
     repo,
@@ -233,9 +236,6 @@ async function reviewPR(octokit, owner, repo, prNumber) {
     console.log('Skipping draft PR');
     return;
   }
-
-  console.log('\n');
-  console.log(`Processing PR #${prNumber}`);
 
   // Fetch modified modules
   const modifiedModules = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
