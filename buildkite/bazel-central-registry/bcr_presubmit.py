@@ -488,6 +488,10 @@ def main(argv=None):
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True)
         if should_wait_bcr_maintainer_review(modules) and pipeline_steps:
             pipeline_steps = [{"block": "Wait on BCR maintainer review", "blocked_state": "running"}] + pipeline_steps
+
+        if not pipeline_steps:
+            error("No pipeline steps generated. Please check the configuration.")
+
         upload_jobs_to_pipeline(pipeline_steps)
     elif args.subparsers_name == "runner":
         repo_location = create_simple_repo(args.module_name, args.module_version)
