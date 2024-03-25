@@ -507,7 +507,7 @@ steps:
       
       echo "+++ Generating release notes"
       cd scripts/release
-      python3 relnotes.py sort
+      python3 relnotes.py
 
   - wait
 
