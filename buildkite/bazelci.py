@@ -379,7 +379,6 @@ DOWNSTREAM_PROJECTS_TESTING = {
     "Bazel": DOWNSTREAM_PROJECTS_PRODUCTION["Bazel"],
     "Bazelisk": DOWNSTREAM_PROJECTS_PRODUCTION["Bazelisk"],
     "rules_go": DOWNSTREAM_PROJECTS_PRODUCTION["rules_go"],
-    "rules_groovy": DOWNSTREAM_PROJECTS_PRODUCTION["rules_groovy"],
     "rules_kotlin": DOWNSTREAM_PROJECTS_PRODUCTION["rules_kotlin"],
     "rules_nodejs": DOWNSTREAM_PROJECTS_PRODUCTION["rules_nodejs"],
     "rules_rust": DOWNSTREAM_PROJECTS_PRODUCTION["rules_rust"],
