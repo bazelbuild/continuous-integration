@@ -194,7 +194,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/google/flogger.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/flogger.yml",
         "pipeline_slug": "flogger",
-        "disabled_reason": "https://github.com/bazelbuild/continuous-integration/issues/1588#issuecomment-1874630563",
     },
     "Gerrit": {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
@@ -304,16 +303,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/sgammon/rules_graalvm.git",
         "pipeline_slug": "rules-graalvm",
     },
-    "rules_groovy": {
-        "git_repository": "https://github.com/bazelbuild/rules_groovy.git",
-        "pipeline_slug": "rules-groovy",
-        "disabled_reason": "https://github.com/bazelbuild/rules_groovy/issues/68",
-    },
-    "rules_gwt": {
-        "git_repository": "https://github.com/bazelbuild/rules_gwt.git",
-        "pipeline_slug": "rules-gwt",
-        "disabled_reason": "https://github.com/bazelbuild/continuous-integration/issues/1202",
-    },
     "rules_haskell": {
         "git_repository": "https://github.com/tweag/rules_haskell.git",
         "pipeline_slug": "rules-haskell-haskell",
@@ -366,11 +355,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "pipeline_slug": "rules-rust-rustlang",
         "disabled_reason": "https://github.com/bazelbuild/rules_rust/issues/2519, https://github.com/bazelbuild/rules_rust/issues/2464"
     },
-    "rules_sass": {
-        "git_repository": "https://github.com/bazelbuild/rules_sass.git",
-        "pipeline_slug": "rules-sass",
-        "disabled_reason": "https://github.com/bazelbuild/rules_sass/issues/153",
-    },
     "rules_scala": {
         "git_repository": "https://github.com/bazelbuild/rules_scala.git",
         "pipeline_slug": "rules-scala-scala",
@@ -388,11 +372,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     "rules_webtesting": {
         "git_repository": "https://github.com/bazelbuild/rules_webtesting.git",
         "pipeline_slug": "rules-webtesting-saucelabs",
-    },
-    "upb": {
-        "git_repository": "https://github.com/protocolbuffers/upb.git",
-        "pipeline_slug": "upb",
-        "disabled_reason": "https://github.com/protocolbuffers/upb/issues/1290",
     },
 }
 
