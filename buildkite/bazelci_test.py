@@ -129,6 +129,9 @@ class CalculateTargets(unittest.TestCase):
   ? "-//experimental/..."
 
 tasks:
+  app:
+    mobile_install_targets:
+      - "//:basic_app"
   basic:
     build_targets:
       - "//..."
@@ -142,7 +145,7 @@ tasks:
 
     def test_basic_functionality(self):
         tasks = self._CONFIGS.get("tasks")
-        build_targets, test_targets, coverage_targets, index_targets = bazelci.calculate_targets(
+        build_targets, test_targets, coverage_targets, index_targets, mobile_install_targets = bazelci.calculate_targets(
             tasks.get("basic"),
             "bazel",
             build_only=False,
@@ -156,10 +159,11 @@ tasks:
         self.assertEqual(test_targets, [])
         self.assertEqual(coverage_targets, [])
         self.assertEqual(index_targets, [])
+        self.assertEqual(mobile_install_targets, [])
 
     def test_merge(self):
         tasks = self._CONFIGS.get("tasks")
-        build_targets, test_targets, coverage_targets, index_targets = bazelci.calculate_targets(
+        build_targets, test_targets, coverage_targets, index_targets, mobile_install_targets = bazelci.calculate_targets(
             tasks.get("merge"),
             "bazel",
             build_only=False,
@@ -170,6 +174,25 @@ tasks:
             test_flags=[],
         )
         self.assertEqual(build_targets, ["//...", "-//experimental/...", "//experimental/good/..."])
+
+    def test_mobile_install_target_calculation(self):
+        tasks = self._CONFIGS.get("tasks")
+        build_targets, test_targets, coverage_targets, index_targets, mobile_install_targets = bazelci.calculate_targets(
+            tasks.get("app"),
+            "bazel",
+            build_only=False,
+            test_only=False,
+            workspace_dir="/tmp",
+            ws_setup_func=None,
+            git_commit="abcd",
+            test_flags=[],
+        )
+        self.assertEqual(build_targets, [])
+        self.assertEqual(test_targets, [])
+        self.assertEqual(coverage_targets, [])
+        self.assertEqual(index_targets, [])
+        self.assertEqual(mobile_install_targets, ["//:basic_app"])
+
 
 
 if __name__ == "__main__":
