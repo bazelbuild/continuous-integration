@@ -150,7 +150,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/bazelisk.git",
         "file_config": ".bazelci/config.yml",
         "pipeline_slug": "bazelisk",
-        "disabled_reason": "https://github.com/bazelbuild/bazelisk/issues/558",
     },
     "Buildfarm": {
         "git_repository": "https://github.com/bazelbuild/bazel-buildfarm.git",
@@ -199,7 +198,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://gerrit.googlesource.com/gerrit.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/gerrit.yml",
         "pipeline_slug": "gerrit",
-        "disabled_reason": "https://github.com/bazelbuild/continuous-integration/issues/1881",
     },
     "Google Logging": {
         "git_repository": "https://github.com/google/glog.git",
@@ -264,7 +262,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     "rules_android": {
         "git_repository": "https://github.com/bazelbuild/rules_android.git",
         "pipeline_slug": "rules-android",
-        "disabled_reason": "https://github.com/bazelbuild/rules_android/issues/187",
     },
     "rules_android_ndk": {
         "git_repository": "https://github.com/bazelbuild/rules_android_ndk.git",
