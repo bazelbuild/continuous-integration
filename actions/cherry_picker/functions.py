@@ -152,7 +152,8 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
                 update_lockfile(changed_files, True)
             else:
                 subprocess.run(['git', 'cherry-pick', '--skip'])
-                raise Exception("Cherry-pick was attempted, but there may be merge conflict(s). Please resolve manually.\ncc: @bazelbuild/triage")
+                unmerged_files_names = ("`" + "`\n`".join(unmerged_all_files)).rstrip("`")
+                raise Exception(f"Cherry-pick was attempted but there were merge conflicts in the following file(s). Please resolve manually.\n\n{unmerged_files_names}\n\ncc: @bazelbuild/triage")
         elif cherrypick_status.returncode == 0 and ("src/test/tools/bzlmod/MODULE.bazel.lock" in changed_files or "MODULE.bazel.lock" in changed_files):
             update_lockfile(changed_files, False)
         

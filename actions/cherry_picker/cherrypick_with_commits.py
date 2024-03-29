@@ -72,7 +72,7 @@ if len(successful_commits):
         failure_commits_str += "\n\nThe failed commits are NOT included in the PR. Please resolve manually.\ncc: @bazelbuild/triage"
         issue_comment_body += failure_commits_str
 elif len(failed_commits):
-    issue_comment_body = "Failed commmits (likely due to merge conflicts): "
+    issue_comment_body = "Failed commits (likely due to merge conflicts): "
     for fail_commit in failed_commits:
         issue_comment_body += f"https://github.com/{input_data['api_repo_name']}/commit/{fail_commit}, "
     issue_comment_body = issue_comment_body[::-1].replace(" ,", ".", 1)[::-1] + "\nPlease resolve manually.\ncc: @bazelbuild/triage"
