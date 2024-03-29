@@ -144,7 +144,7 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
             cherrypick_status = subprocess.run(['git', 'cherry-pick', '-m', '1', commit_id])
 
         lockfile_names = {"src/test/tools/bzlmod/MODULE.bazel.lock", "MODULE.bazel.lock"}
-        unmerged_all_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode()).split("\n")
+        unmerged_all_files = str(subprocess.Popen(["git", "diff", "--name-only", "--diff-filter=U"], stdout=subprocess.PIPE).communicate()[0].decode()).strip().split("\n")
         unmerged_rest = [j for i,j in enumerate(unmerged_all_files) if j not in lockfile_names and j != ""]
  
         if cherrypick_status.returncode != 0:
@@ -152,7 +152,8 @@ def cherry_pick(commit_id, release_branch_name, target_branch_name, requires_clo
                 update_lockfile(changed_files, True)
             else:
                 subprocess.run(['git', 'cherry-pick', '--skip'])
-                raise Exception("Cherry-pick was attempted, but there may be merge conflict(s). Please resolve manually.\ncc: @bazelbuild/triage")
+                unmerged_files_names = "`" + "`\n`".join(unmerged_all_files) + "`"
+                raise Exception(f"Cherry-pick was attempted but there were merge conflicts in the following file(s). Please resolve manually.\n\n{unmerged_files_names}\n\ncc: @bazelbuild/triage")
         elif cherrypick_status.returncode == 0 and ("src/test/tools/bzlmod/MODULE.bazel.lock" in changed_files or "MODULE.bazel.lock" in changed_files):
             update_lockfile(changed_files, False)
         
