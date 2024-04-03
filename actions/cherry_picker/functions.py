@@ -22,15 +22,9 @@ def get_commit_id(pr_number, actor_name, action_event, api_repo_name):
 def get_reviewers(pr_number, api_repo_name, issues_data):
     if "pull_request" not in issues_data: return []
     r = requests.get(f'https://api.github.com/repos/{api_repo_name}/pulls/{pr_number}/reviews', headers=headers)
-    if len(r.json()) == 0:
-        print(f"PR#{pr_number} has no approver at all.")
-        raise SystemExit(0)
     approvers_list = []
     for review in r.json():
         if review["state"] == "APPROVED": approvers_list.append(review["user"]["login"])
-    if len(approvers_list) == 0:
-        print(f"PR#{pr_number} has no approval from the approver(s).")
-        raise SystemExit(0)
     return approvers_list
 
 def extract_release_numbers_data(pr_number, api_repo_name):
