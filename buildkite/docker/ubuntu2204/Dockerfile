@@ -115,5 +115,5 @@ RUN LATEST_KYTHE=v0.0.67 && \
     mkdir /usr/local/kythe && \
     curl -fsSL https://github.com/kythe/kythe/releases/download/${LATEST_KYTHE}/kythe-{$LATEST_KYTHE}.tar.gz | \
     tar xvz --no-same-owner --strip-components 1 --directory /usr/local/kythe && \
-    chmod -R a+r /usr/local/kythe && \
+    chmod -R a+rw /usr/local/kythe && \
     test -f /usr/local/kythe/WORKSPACE
