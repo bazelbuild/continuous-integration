@@ -22,6 +22,9 @@ $env:TEMP = [Environment]::GetEnvironmentVariable("TEMP", "Machine")
 $env:TMP = [Environment]::GetEnvironmentVariable("TMP", "Machine")
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 
+# Create a junction to the MSYS2 directory at a default path when installed with the installer.
+New-Item -ItemType Junction -Path "C:\msys64" -Target "C:\tools\msys64"
+
 ## Create an environment hook for the Buildkite agent.
 $myhostname = [System.Net.Dns]::GetHostName()
 if ($myhostname -like "*trusted*") {
