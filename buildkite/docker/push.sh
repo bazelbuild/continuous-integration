@@ -35,4 +35,6 @@ docker push "gcr.io/$PREFIX/ubuntu2204-bazel-java17" &
 docker push "gcr.io/$PREFIX/ubuntu2204" &
 docker push "gcr.io/$PREFIX/fedora39-java17" &
 docker push "gcr.io/$PREFIX/fedora39-bazel-java17" &
+docker push "gcr.io/$PREFIX/fedora40-java21" &
+docker push "gcr.io/$PREFIX/fedora40-bazel-java21" &
 wait
