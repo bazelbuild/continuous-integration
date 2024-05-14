@@ -53,9 +53,7 @@ def push_to_branch():
     push_status = subprocess.run(['git', 'push', '-f'])
     if push_status.returncode != 0: raise Exception(f"Cherry-pick was attempted, but failed to push.\ncc: @bazelbuild/triage")
 
-def update_lockfiles(lockfiles, head_branch, requires_clone, release_branch, lockfile_names):
-    if requires_clone == True:
-        clone_repo()
+def update_lockfiles(lockfiles, head_branch, release_branch, lockfile_names):
     if checkout_branch(head_branch, release_branch).returncode != 0:
         print(f"{input_data['user_name']} does not have the branch: {head_branch}...")
         return

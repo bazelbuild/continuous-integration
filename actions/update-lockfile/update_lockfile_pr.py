@@ -1,5 +1,5 @@
 import os
-from functions import get_release_prs, get_files_for_pr, update_lockfiles
+from functions import get_release_prs, get_files_for_pr, update_lockfiles, clone_repo
 
 lockfile_names = {"MODULE.bazel.lock", "src/test/tools/bzlmod/MODULE.bazel.lock"}
 original_pr_number = os.environ["PR_NUMBER"]
@@ -32,8 +32,9 @@ for pr in pr_list:
         if file["filename"] in lockfile_names:
             pr["lockfiles"].add(file["filename"])
     if len(pr["lockfiles"]) > 0:
+        if requires_clone == True: clone_repo()
         try:
-            update_lockfiles(pr["lockfiles"], pr["head"]["ref"], requires_clone, release_branch, lockfile_names)
+            update_lockfiles(pr["lockfiles"], pr["head"]["ref"], release_branch, lockfile_names)
         except Exception as e:
             print(f"Failed updating lockfiles: {pr['number']} in {pr['head']['ref']}")
         requires_clone = False
