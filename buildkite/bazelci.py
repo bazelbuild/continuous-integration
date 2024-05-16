@@ -350,7 +350,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     "rules_rust": {
         "git_repository": "https://github.com/bazelbuild/rules_rust.git",
         "pipeline_slug": "rules-rust-rustlang",
-        "disabled_reason": "https://github.com/bazelbuild/rules_rust/issues/2519, https://github.com/bazelbuild/rules_rust/issues/2464"
+        "disabled_reason": "https://github.com/bazelbuild/rules_rust/issues/2519, https://github.com/bazelbuild/rules_rust/issues/2464",
     },
     "rules_scala": {
         "git_repository": "https://github.com/bazelbuild/rules_scala.git",
@@ -3970,9 +3970,8 @@ class TestShard:
     def get_details(self):
         overall, bad_runs, total_runs = self._get_detailed_overall_status()
         qualifier = "" if not bad_runs else f"{bad_runs} out of "
-        return overall, (
-            f"in {qualifier}{total_runs} runs over {format_millis(self.attempt_millis)}"
-        )
+        time = f" over {format_millis(self.attempt_millis)}" if self.attempt_millis else ""
+        return overall, (f"in {qualifier}{total_runs} run(s){time}")
 
     @property
     def overall_status(self):
@@ -4033,7 +4032,10 @@ class TestExecution:
 
         def format_shard(s):
             overall, statistics = s.get_details()
-            return f"{format_test_status(overall)} {statistics}: [log]({get_log_url_for_shard(s)})"
+            # There are no per-target log files for FAILED_TO_BUILD tests, so we simply
+            # link to the step's test log in this case.
+            log = f"#{job_id}" if overall == "FAILED_TO_BUILD" else get_log_url_for_shard(s)
+            return f"{format_test_status(overall)} {statistics}: [log]({log})"
 
         failing_shards = [s for s in self.shards if s.overall_status != "PASSED"]
         if len(failing_shards) == 1:
@@ -4070,28 +4072,36 @@ def parse_bep(path):
 def get_test_results_from_bep(path):
     with open(path, "rt") as f:
         for line in f:
-            if "testResult" not in line:
-                # TODO: also look at targetCompleted events that don't have
-                # a matching testResult event, since these are FAILED_TO_BUILD
-                continue
-
             data = json.loads(line)
-            meta = data.get("id", {}).get("testResult")
-            if not meta:
-                continue
+            entry = data.get("id", {})
+            test_result = entry.get("testResult")
+            target_completed = entry.get("targetCompleted")
 
-            if "testResult" not in data:
-                # No testResult field means "aborted" -> NO_STATUS
-                # TODO: show these targets in the UI?
-                continue
+            if test_result:
+                if "testResult" not in data:
+                    # No testResult field means "aborted" -> NO_STATUS
+                    # TODO: show these targets in the UI?
+                    continue
 
-            yield (
-                meta["label"],
-                meta["shard"],
-                meta["attempt"],
-                data["testResult"]["status"],
-                int(data["testResult"]["testAttemptDurationMillis"]),
-            )
+                yield (
+                    test_result["label"],
+                    test_result["shard"],
+                    test_result["attempt"],
+                    data["testResult"]["status"],
+                    int(data["testResult"]["testAttemptDurationMillis"]),
+                )
+            elif target_completed:
+                # There are no "testResult" events for targets that fail to build,
+                # so we have to check for targetCompleted events that have a failureDetail
+                # message.
+                if data.get("completed", {}).get("failureDetail"):
+                    yield (
+                        target_completed["label"],
+                        1,
+                        1,
+                        "FAILED_TO_BUILD",
+                        0,
+                    )
 
 
 def upload_bazel_binaries():
