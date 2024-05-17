@@ -1547,7 +1547,7 @@ def activate_xcode(task_config):
                 wanted_xcode_version
             ),
             "Bazel CI automatically picked a fallback version: {}.".format(xcode_version),
-            "Available versions are: {}.".format(supported_versions),
+            "Available versions are: {}.".format(", ".join(supported_versions)),
         ]
         execute_command(
             [
