@@ -3942,10 +3942,11 @@ def format_test_status(status):
 
 # TODO here and below: use @dataclasses.dataclass(frozen=True) once Python has been updated on Docker machines
 class TestAttempt:
-    def __init__(self, number, status, millis) -> None:
+    def __init__(self, number, status, millis, root_cause) -> None:
         self.number = number
         self.status = status
         self.millis = millis
+        self.root_cause = root_cause
 
 
 class TestShard:
@@ -3971,7 +3972,8 @@ class TestShard:
         overall, bad_runs, total_runs = self._get_detailed_overall_status()
         qualifier = "" if not bad_runs else f"{bad_runs} out of "
         time = f" over {format_millis(self.attempt_millis)}" if self.attempt_millis else ""
-        return overall, (f"in {qualifier}{total_runs} run(s){time}")
+        cause = f" because of {self.root_cause}" if self.root_cause else ""
+        return overall, (f"in {qualifier}{total_runs} run(s){time}{cause}")
 
     @property
     def overall_status(self):
@@ -3980,6 +3982,12 @@ class TestShard:
     @property
     def attempt_millis(self):
         return [a.millis for a in self.attempts]
+
+    @property
+    def root_cause(self):
+        for a in self.attempts:
+            if a.root_cause:
+                return a.root_cause
 
 
 class TestExecution:
@@ -4051,8 +4059,8 @@ class TestExecution:
 
 def parse_bep(path):
     data = collections.defaultdict(dict)
-    for test, shard, attempt, status, millis in get_test_results_from_bep(path):
-        ta = TestAttempt(number=attempt, status=status, millis=millis)
+    for test, shard, attempt, status, millis, root_cause in get_test_results_from_bep(path):
+        ta = TestAttempt(number=attempt, status=status, millis=millis, root_cause=root_cause)
         if shard not in data[test]:
             data[test][shard] = []
 
@@ -4089,6 +4097,7 @@ def get_test_results_from_bep(path):
                     test_result["attempt"],
                     data["testResult"]["status"],
                     int(data["testResult"]["testAttemptDurationMillis"]),
+                    None,
                 )
             elif target_completed:
                 # There are no "testResult" events for targets that fail to build,
@@ -4101,7 +4110,15 @@ def get_test_results_from_bep(path):
                         1,
                         "FAILED_TO_BUILD",
                         0,
+                        get_root_cause(data),
                     )
+
+
+def get_root_cause(bep_event):
+    for c in bep_event.get("children", ()):
+        for v in c.values():
+            if "label" in v:
+                return v["label"]
 
 
 def upload_bazel_binaries():
