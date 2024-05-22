@@ -1,0 +1,36 @@
+name: "Update the lockfile on all the PRs merging to 'release-' branches"
+inputs:
+  release-branch:
+    required: true
+    default: ${{ github.release-branch }}
+  is-prod:
+    required: true
+    default: ${{ github.is-prod }}
+  pr-number:
+    required: true
+    default: ${{ github.pr-number }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install bazelisk
+      run: |
+        curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.19.0/bazelisk-linux-amd64"
+        chmod +x bazelisk-linux-amd64
+      shell: bash
+    - name: Install Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+    - name: Install Dependencies
+      run: |
+        pip install -r ${{ github.action_path }}/requirements.txt
+      shell: bash
+    - name: Run python update_lockfile_pr.py
+      env:
+        RELEASE_BRANCH: ${{ inputs.release-branch }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+      run: |
+        chmod +x ${{ github.action_path }}/update_lockfile_pr.py
+        python -u ${{ github.action_path }}/update_lockfile_pr.py
+      shell: bash
