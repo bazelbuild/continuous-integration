@@ -506,6 +506,13 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/fedora39-java17",
         "python": "python3",
     },
+    "fedora40": {
+        "name": "Fedora 40 (OpenJDK 21, gcc 14.1.1)",
+        "emoji-name": ":fedora: Fedora 40 (OpenJDK 21, gcc 14.1.1)",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/fedora40-java21",
+        "python": "python3",
+    },
     "macos": {
         "name": "macOS",
         "emoji-name": ":darwin: macOS",
