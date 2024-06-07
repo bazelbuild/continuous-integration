@@ -150,9 +150,9 @@ $tool_version="14.39.17.9."
 $versionPrefix = "14.39" # The installed version doesn't match the version in the component name, so we need to use a substring match.
 $msvcPath = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC"
 $directories = Get-ChildItem -Path $msvcPath -Directory | Where-Object { $_.Name -notlike "$versionPrefix*" }
-
 foreach ($directory in $directories) {
     $directoryPath = Join-Path -Path $msvcPath -ChildPath $directory.Name
+    Write-Host "Deleting $directoryPath"
     Remove-Item -Path $directoryPath -Recurse -Force
 }
 
