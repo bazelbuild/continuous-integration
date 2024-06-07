@@ -140,7 +140,7 @@ Write-Host "Installing Visual C++ 2019 Build Tools..."
 
 ## Install Visual C++ 2022 Build Tools.
 Write-Host "Installing Visual C++ 2022 Build Tools..."
-$version="14.39.17.9."
+$tool_version="14.39.17.9."
 & choco install visualstudio2022buildtools
 # & choco install visualstudio2022-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.Tools.ARM --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
 & choco install visualstudio2022-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.${tool_version}x86.x64 --add Microsoft.VisualStudio.Component.VC.${tool_version}ARM --add Microsoft.VisualStudio.Component.VC.${tool_version}ARM64"
