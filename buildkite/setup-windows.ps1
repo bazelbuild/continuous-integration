@@ -140,8 +140,22 @@ Write-Host "Installing Visual C++ 2019 Build Tools..."
 
 ## Install Visual C++ 2022 Build Tools.
 Write-Host "Installing Visual C++ 2022 Build Tools..."
+$tool_version="14.39.17.9."
 & choco install visualstudio2022buildtools
-& choco install visualstudio2022-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.Tools.ARM --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
+# & choco install visualstudio2022-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.Tools.ARM --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
+& choco install visualstudio2022-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.${tool_version}x86.x64 --add Microsoft.VisualStudio.Component.VC.${tool_version}ARM --add Microsoft.VisualStudio.Component.VC.${tool_version}ARM64"
+
+## Prevent mysteirous failure caused by newer version of MSVC (14.40.33810). See https://github.com/bazelbuild/bazel/issues/22656
+## Remove directories under C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC that don't match the specified version.
+$versionPrefix = "14.39" # The installed version doesn't match the version in the component name, so we need to use a substring match.
+$msvcPath = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC"
+$directories = Get-ChildItem -Path $msvcPath -Directory | Where-Object { $_.Name -notlike "$versionPrefix*" }
+foreach ($directory in $directories) {
+    $directoryPath = Join-Path -Path $msvcPath -ChildPath $directory.Name
+    Write-Host "Deleting $directoryPath"
+    Remove-Item -Path $directoryPath -Recurse -Force
+}
+
 [Environment]::SetEnvironmentVariable("BAZEL_VC", "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC", "Machine")
 $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 
