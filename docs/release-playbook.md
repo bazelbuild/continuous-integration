@@ -72,6 +72,7 @@ While the release is active, you should make sure to do the following:
         *   All cherry-pick PRs sent to a release branch should be reviewed and approved by a Bazel team member (usually the reviewer of the original PR)
         *   Before merging a change into the release branch, confirm that the original change is already merged at Bazel@HEAD. One simple way to do this is to make sure all cherry-picked commits contain `PiperOrigin-RevId: <CL number>` in the commit message. For some exceptions, if it's really specific to the release branch, include a good reason in the PR description and make sure it's signed-off by a Bazel team member.
         *   If a requested cherry-pick has merge conflicts that cannot be resolved without cherry-picking additional commits, ask the author of the original commit to submit a PR directly against the release branch.
+        *   After RC1, cherry-picks are limited to critical fixes only. If a cherry-pick is needed, ask the requester to answer the following questions: Why is this change critical, and what benefits does it provide? What is the likelihood of this change introducing a regression?
 *   Review any PRs sent to the release branch and merge them as necessary.
     *   Make sure to close any related release blocker issues after merging the PRs; merging PRs into non-main branches does *not* automatically close related issues (see [GitHub docs](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue)).
     *   Before closing a release blocker issue, add a comment indicating how the issue was resolved, for better tracking (e.g. `cherry-picked in #XYZ` - see [this example](https://github.com/bazelbuild/bazel/issues/16629#issuecomment-1302743541))
@@ -136,6 +137,8 @@ While the release is active, you should make sure to do the following:
 1.  Add a comment to the release GitHub issue announcing that a new RC is out. See [example](https://github.com/bazelbuild/bazel/issues/20470#issuecomment-1889975586).
 
 1.  Post on the #general channel on the [Bazel Slack](https://bazelbuild.slack.com/) announcing that a new RC is out. See [example](https://bazelbuild.slack.com/archives/CA31HN1T3/p1705095377557259).
+
+1. Post a comment on all internal chats announcing that a new RC is out. 
 
 1.  Post a comment on all issues / PRs addressed in this RC to ask users to test (this is a manual step for now but will eventually be automated).
 
@@ -257,6 +260,7 @@ Note: the above policies are for final releases only. RCs can be created without
         [@vbatts](https://github.com/vbatts) [@excitoon](https://github.com/excitoon)
     1.  Example: [https://github.com/bazelbuild/bazel/issues/17695#issuecomment-1540757336]
 1.  Publish versioned documentation by following [go/bazel-release-docs](http://go/bazel-release-docs) (for major and minor releases only)
+    1.  Make sure  the documentation is built and ready to be published after the final RC has been created, in order to avoid any delays.
 1.  [For major releases only] Coordinate with "+[radvani@google.com](mailto:radvani@google.com)" and merge the blog post pull request as needed.
     1.  Make sure you update the date in your post (and the path) to reflect when
     it is actually published.
@@ -270,6 +274,7 @@ Note: the above policies are for final releases only. RCs can be created without
     Bazel 6.2.0 is now available: https://github.com/bazelbuild/bazel/releases/tag/6.2.0
     ```
 1.  Post on the #general channel on the [Bazel Slack](https://bazelbuild.slack.com/) about the new release (same content as above).
+1.  Post on all internal chats about the new release.
 1.  Move all issues with the "soft-release-blocker" label to the next release milestone.
 
 ### Updating .bazelversion and the release documentation page
