@@ -3791,6 +3791,7 @@ def print_shard_summary():
         print_collapsed_group("Fetching test artifacts...")
         all_test_artifacts = get_artifacts_for_failing_tests()
         print_collapsed_group("Dwonloading & parsing BEP files...")
+        print_repro_instruction = False
         for base_task, current_test_artifacts in all_test_artifacts.items():
             failures = []
             for test_artifact in current_test_artifacts:
@@ -3810,6 +3811,7 @@ def print_shard_summary():
 
             if failures:
                 message = "\n".join(failures)
+                print_repro_instruction = True
                 execute_command(
                     [
                         "buildkite-agent",
@@ -3820,6 +3822,18 @@ def print_shard_summary():
                         f"{base_task}",
                     ]
                 )
+        if print_repro_instruction:
+            execute_command(
+                [
+                    "buildkite-agent",
+                    "annotate",
+                    "--style=info",
+                    "For Googlers, check <a href=\"go/bazel-playgrounds\" target=\"_blank\">go/bazel-playgrounds</a> to reproduce failures locally.\n",
+                    "--context",
+                    "repro_instructions",
+                ]
+            )
+
     except Exception as ex:
         eprint(f"Failed to print shard summary: {ex}")
     finally:
