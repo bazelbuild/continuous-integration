@@ -1907,12 +1907,13 @@ def remote_caching_flags(platform, accept_cached=True):
         # Use a local cache server for our physical macOS machines in the lab.
         flags = ["--remote_cache=grpc://[2a00:79e1:abc:8602:a28c:fdff:fed0:ec39]:9092"]
     else:
+        # Use GCS for caching builds running on MacService.
         # Use RBE for caching builds running on GCE.
-        protocol = "grpcs://" if is_mac() else ""
+        remote_cache = "https://storage.googleapis.com/bazel-unstrusted-build-cache" if is_mac() else "remotebuildexecution.googleapis.com"
         flags = [
             "--google_default_credentials",
-            "--remote_cache={}remotebuildexecution.googleapis.com".format(protocol),
-            "--remote_instance_name=projects/{}/instances/default_instance".format(CLOUD_PROJECT),
+            "--remote_cache={}".format(remote_cache),
+            "" if is_mac() else "--remote_instance_name=projects/{}/instances/default_instance".format(CLOUD_PROJECT),
             # Enable BES / Build Results reporting.
             "--bes_backend=buildeventservice.googleapis.com",
             "--bes_timeout=360s",
