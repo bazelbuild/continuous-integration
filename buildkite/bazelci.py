@@ -1919,11 +1919,12 @@ def remote_caching_flags(platform, accept_cached=True):
             ]
         flags = remote_cache_flags + [
             "--google_default_credentials",
+        ] + ([] if is_mac() else [ # Re-enable on macOS once b/346751326 is resolved.
             # Enable BES / Build Results reporting.
             "--bes_backend=buildeventservice.googleapis.com",
             "--bes_timeout=360s",
             "--project_id=bazel-untrusted",
-        ]
+        ])
 
     platform_cache_digest = hashlib.sha256()
     for key in platform_cache_key:
