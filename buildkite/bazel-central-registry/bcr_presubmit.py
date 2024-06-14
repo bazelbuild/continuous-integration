@@ -228,7 +228,7 @@ def prepare_test_module_repo(module_name, module_version):
 
     # Download and unpack the source archive to ./output
     archive_url = source["url"]
-    archive_file = root.joinpath(archive_url.split("/")[-1])
+    archive_file = root.joinpath(archive_url.split("/")[-1].split("?")[0])
     output_dir = root.joinpath("output")
     bazelci.eprint("* Download and unpack %s\n" % archive_url)
     download(archive_url, archive_file)
