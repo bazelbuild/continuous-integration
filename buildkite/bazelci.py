@@ -628,6 +628,8 @@ INDEX_UPLOAD_POLICY_IF_BUILD_SUCCESS = "IfBuildSuccess"
 
 INDEX_UPLOAD_POLICY_NEVER = "Never"
 
+ESCAPED_BACKSLASH = "%5C"
+
 # The maximum number of tasks allowed in one pipeline yaml config file.
 # This is to prevent accidentally creating too many tasks with the martix testing feature.
 MAX_TASK_NUMBER = 80
@@ -1911,20 +1913,32 @@ def remote_caching_flags(platform, accept_cached=True):
         # Use RBE for caching builds running on GCE.
         remote_cache_flags = []
         if is_mac():
-            remote_cache_flags = ["--remote_cache=https://storage.googleapis.com/bazel-unstrusted-build-cache"]
+            remote_cache_flags = [
+                "--remote_cache=https://storage.googleapis.com/bazel-unstrusted-build-cache"
+            ]
         else:
             remote_cache_flags = [
                 "--remote_cache=remotebuildexecution.googleapis.com",
-                "--remote_instance_name=projects/{}/instances/default_instance".format(CLOUD_PROJECT),
+                "--remote_instance_name=projects/{}/instances/default_instance".format(
+                    CLOUD_PROJECT
+                ),
             ]
-        flags = remote_cache_flags + [
-            "--google_default_credentials",
-        ] + ([] if is_mac() else [ # Re-enable on macOS once b/346751326 is resolved.
-            # Enable BES / Build Results reporting.
-            "--bes_backend=buildeventservice.googleapis.com",
-            "--bes_timeout=360s",
-            "--project_id=bazel-untrusted",
-        ])
+        flags = (
+            remote_cache_flags
+            + [
+                "--google_default_credentials",
+            ]
+            + (
+                []
+                if is_mac()
+                else [  # Re-enable on macOS once b/346751326 is resolved.
+                    # Enable BES / Build Results reporting.
+                    "--bes_backend=buildeventservice.googleapis.com",
+                    "--bes_timeout=360s",
+                    "--project_id=bazel-untrusted",
+                ]
+            )
+        )
 
     platform_cache_digest = hashlib.sha256()
     for key in platform_cache_key:
@@ -3813,7 +3827,9 @@ def print_shard_summary():
                     if test_execution.overall_status == "PASSED":
                         continue
 
-                    failures.append(test_execution.Format(test_artifact.job_id))
+                    failures.append(
+                        test_execution.Format(test_artifact.job_id, test_artifact.is_windows)
+                    )
 
             if failures:
                 message = "\n".join(failures)
@@ -3833,7 +3849,7 @@ def print_shard_summary():
         shutil.rmtree(tmpdir)
 
 
-def get_log_path_for_label(label, shard, total_shards, attempt, total_attempts):
+def get_log_path_for_label(label, shard, total_shards, attempt, total_attempts, is_windows):
     parts = [label.lstrip("/").replace(":", "/")]
     if total_shards > 1:
         parts.append(f"shard_{shard}_of_{total_shards}")
@@ -3842,7 +3858,8 @@ def get_log_path_for_label(label, shard, total_shards, attempt, total_attempts):
     else:
         parts.append("test.log")
 
-    return "/".join(parts)
+    path = "/".join(parts)
+    return path.replace("/", ESCAPED_BACKSLASH) if is_windows else path
 
 
 def get_artifacts_for_failing_tests():
@@ -3895,12 +3912,19 @@ class TestArtifacts:
 
         # We cannot use `buildkite agent download *` since it cannot handle backslashes in Windows artifact paths.
         # Consequently, we just escape all backslashes and download files directly from GCS.
-        url = "/".join([LOG_BUCKET, self.job_id, self.relative_bep_path.replace("\\", "%5C")])
+        url = "/".join(
+            [LOG_BUCKET, self.job_id, self.relative_bep_path.replace("\\", ESCAPED_BACKSLASH)]
+        )
         try:
             return download_file(url, job_dir, _TEST_BEP_FILE)
         except:
             # TODO: handle exception
             return None
+
+    @property
+    def is_windows(self) -> bool:
+        # Dirty hack
+        return "\\" in self.relative_bep_path
 
 
 def get_test_file_paths(job_id):
@@ -4040,7 +4064,7 @@ class TestExecution:
 
         return format_millis(path)
 
-    def Format(self, job_id: str) -> str:
+    def Format(self, job_id: str, is_windows: bool) -> str:
         def get_log_url_for_shard(s):
             local_log_path = get_log_path_for_label(
                 self.label,
@@ -4048,6 +4072,7 @@ class TestExecution:
                 len(self.shards),
                 1,
                 len(s.attempts),
+                is_windows,
             )
             # TODO: check in relative_log_paths if log really exists?
             return os.path.join(LOG_BUCKET, job_id, local_log_path)
