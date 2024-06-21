@@ -3811,7 +3811,7 @@ def print_shard_summary():
     try:
         print_collapsed_group("Fetching test artifacts...")
         all_test_artifacts = get_artifacts_for_failing_tests()
-        print_collapsed_group("Dwonloading & parsing BEP files...")
+        print_collapsed_group("Downloading & parsing BEP files...")
         for base_task, current_test_artifacts in all_test_artifacts.items():
             failures = []
             for test_artifact in current_test_artifacts:
