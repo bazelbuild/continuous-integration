@@ -301,6 +301,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     "rules_graalvm": {
         "git_repository": "https://github.com/sgammon/rules_graalvm.git",
         "pipeline_slug": "rules-graalvm",
+        "disabled_reason": "https://github.com/sgammon/rules_graalvm/issues/409",
     },
     "rules_haskell": {
         "git_repository": "https://github.com/tweag/rules_haskell.git",
