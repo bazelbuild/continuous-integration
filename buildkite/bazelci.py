@@ -521,6 +521,13 @@ PLATFORMS = {
         "queue": "macos",
         "python": "python3",
     },
+    "macos_legacy": {
+        "name": "macOS",
+        "emoji-name": ":darwin: macOS",
+        "publish_binary": ["macos"],
+        "queue": "macos_legacy",
+        "python": "python3",
+    },
     "macos_v2": {
         "name": "macOS",
         "emoji-name": ":darwin: macOS",
