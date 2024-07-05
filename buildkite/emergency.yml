@@ -17,6 +17,6 @@
 # Please do not clear or delete this file when an incident is over.
 # Instead, simply replace all values with empty strings ("").
 ---
-message: "We've migrated most of our MacService workers to VMs. Please reply to the linked issue if you encounter any problems."
+message: "We've migrated most of our MacOS workers to VMs. Please reply to the linked issue if you encounter any problems."
 issue_url: "https://github.com/bazelbuild/continuous-integration/issues/1981"
 last_good_bazel: ""
