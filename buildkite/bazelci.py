@@ -524,7 +524,6 @@ PLATFORMS = {
     "macos_legacy": {
         "name": "macOS",
         "emoji-name": ":darwin: macOS",
-        "publish_binary": ["macos"],
         "queue": "macos_legacy",
         "python": "python3",
     },
@@ -559,7 +558,6 @@ PLATFORMS = {
     "macos_arm64_legacy": {
         "name": "macOS arm64",
         "emoji-name": ":darwin: macOS arm64",
-        "publish_binary": ["macos_arm64"],
         "queue": "macos_arm64_legacy",
         "python": "python3",
     },
