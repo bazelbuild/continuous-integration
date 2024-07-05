@@ -521,6 +521,13 @@ PLATFORMS = {
         "queue": "macos",
         "python": "python3",
     },
+    "macos_legacy": {
+        "name": "macOS",
+        "emoji-name": ":darwin: macOS",
+        "publish_binary": [],
+        "queue": "macos_legacy",
+        "python": "python3",
+    },
     "macos_v2": {
         "name": "macOS",
         "emoji-name": ":darwin: macOS",
@@ -547,6 +554,13 @@ PLATFORMS = {
         "emoji-name": ":darwin: macOS arm64",
         "publish_binary": ["macos_arm64"],
         "queue": "macos_arm64",
+        "python": "python3",
+    },
+    "macos_arm64_legacy": {
+        "name": "macOS arm64",
+        "emoji-name": ":darwin: macOS arm64",
+        "publish_binary": [],
+        "queue": "macos_arm64_legacy",
         "python": "python3",
     },
     "macos_arm64_v2": {
