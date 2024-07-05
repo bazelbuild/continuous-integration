@@ -556,6 +556,13 @@ PLATFORMS = {
         "queue": "macos_arm64",
         "python": "python3",
     },
+    "macos_arm64_legacy": {
+        "name": "macOS arm64",
+        "emoji-name": ":darwin: macOS arm64",
+        "publish_binary": ["macos_arm64"],
+        "queue": "macos_arm64_legacy",
+        "python": "python3",
+    },
     "macos_arm64_v2": {
         "name": "macOS arm64",
         "emoji-name": ":darwin: macOS arm64",
