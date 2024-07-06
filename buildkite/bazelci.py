@@ -1431,11 +1431,16 @@ def execute_commands(
                 else:
                     kms_key = "buildkite-untrusted-api-token"
                     project = "bazel-untrusted"
-                os.environ["BUILDKITE_ANALYTICS_TOKEN"] = decrypt_token(
-                    encrypted_token=os.environ["ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN"],
-                    kms_key=kms_key,
-                    project=project,
-                )
+
+                try:
+                    os.environ["BUILDKITE_ANALYTICS_TOKEN"] = decrypt_token(
+                        encrypted_token=os.environ["ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN"],
+                        kms_key=kms_key,
+                        project=project,
+                    )
+                except Exception as ex:
+                    print_collapsed_group(":rotating_light: Test analytics disabled due to an error :warning:")
+                    eprint(ex)
 
             test_bep_file = os.path.join(tmpdir, _TEST_BEP_FILE)
             with concurrent.futures.ThreadPoolExecutor() as executor:
