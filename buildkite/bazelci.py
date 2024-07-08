@@ -657,6 +657,7 @@ LAB_AGENT_PATTERNS = [
 
 _TEST_BEP_FILE = "test_bep.json"
 _SHARD_RE = re.compile(r"(.+) \(shard (\d+)\)")
+_SLOWEST_N_TARGETS = 20
 
 
 class BuildkiteException(Exception):
@@ -1439,7 +1440,9 @@ def execute_commands(
                         project=project,
                     )
                 except Exception as ex:
-                    print_collapsed_group(":rotating_light: Test analytics disabled due to an error :warning:")
+                    print_collapsed_group(
+                        ":rotating_light: Test analytics disabled due to an error :warning:"
+                    )
                     eprint(ex)
 
             test_bep_file = os.path.join(tmpdir, _TEST_BEP_FILE)
@@ -3833,8 +3836,9 @@ def print_shard_summary():
     tmpdir = tempfile.mkdtemp()
     try:
         print_collapsed_group("Fetching test artifacts...")
-        all_test_artifacts = get_artifacts_for_failing_tests()
+        all_test_artifacts = get_test_artifacts()
         print_collapsed_group("Downloading & parsing BEP files...")
+        perf_stats = []
         for base_task, current_test_artifacts in all_test_artifacts.items():
             failures = []
             for test_artifact in current_test_artifacts:
@@ -3847,7 +3851,12 @@ def print_shard_summary():
                     continue
 
                 for test_execution in parse_bep(local_bep_path):
+                    for shard in test_execution.shards:
+                        perf_stats.append(shard.get_metrics(test_execution.label, test_artifact))
+
                     if test_execution.overall_status == "PASSED":
+                        continue
+                    if len(test_execution.shards) == 1:
                         continue
 
                     failures.append(
@@ -3866,6 +3875,22 @@ def print_shard_summary():
                         f"{base_task}",
                     ]
                 )
+
+        if perf_stats:
+            slowest = sorted(perf_stats, key=lambda x: -x[0])
+            message = "\n".join(
+                f"{rank}. {tpl[1]}" for rank, tpl in enumerate(slowest[:_SLOWEST_N_TARGETS], 1)
+            )
+            execute_command(
+                [
+                    "buildkite-agent",
+                    "annotate",
+                    "--style=warning",
+                    f"**Slowest {_SLOWEST_N_TARGETS} targets**\n\n{message}",
+                    "--context",
+                    "slowest_targets",
+                ]
+            )
     except Exception as ex:
         eprint(f"Failed to print shard summary: {ex}")
     finally:
@@ -3885,7 +3910,7 @@ def get_log_path_for_label(label, shard, total_shards, attempt, total_attempts, 
     return path.replace("/", ESCAPED_BACKSLASH) if is_windows else path
 
 
-def get_artifacts_for_failing_tests():
+def get_test_artifacts():
     org_slug = os.getenv("BUILDKITE_ORGANIZATION_SLUG")
     pipeline_slug = os.getenv("BUILDKITE_PIPELINE_SLUG")
     build_number = os.getenv("BUILDKITE_BUILD_NUMBER")
@@ -3895,24 +3920,26 @@ def get_artifacts_for_failing_tests():
 
     paths = collections.defaultdict(list)
     for job in build_info["jobs"]:
-        if job.get("state") in (None, "passed"):
+        state = job.get("state")
+        if not state:  # Wait steps etc.
             continue
 
+        job_name = job.get("name", "")
         # This is a bit hacky, but saves us one API request per job (to check for BUILDKITE_PARALLEL_JOB)
-        match = _SHARD_RE.search(job.get("name", ""))
-        if not match:
-            continue
+        match = _SHARD_RE.search(job_name)
+        base_task = match.group(1) if match else job_name
 
         relative_bep_path, relative_log_paths = get_test_file_paths(job["id"])
-        # TODO: show build failures in the annotation, too?
         if not relative_bep_path:
             continue
 
-        base_task = match.group(1)
         ta = TestArtifacts(
             job_id=job["id"],
+            job_name=job_name,
+            job_url=job.get("web_url"),
             relative_bep_path=relative_bep_path,
             relative_log_paths=relative_log_paths,
+            passed=state == "passed",
         )
         paths[base_task].append(ta)
 
@@ -3921,10 +3948,15 @@ def get_artifacts_for_failing_tests():
 
 class TestArtifacts:
 
-    def __init__(self, job_id, relative_bep_path, relative_log_paths) -> None:
+    def __init__(
+        self, job_id, job_name, job_url, relative_bep_path, relative_log_paths, passed
+    ) -> None:
         self.job_id = job_id
+        self.job_name = job_name
+        self.job_url = job_url
         self.relative_bep_path = relative_bep_path
         self.relative_log_paths = relative_log_paths
+        self.passed = passed
 
     def download_bep(self, dest_dir: str) -> str:
         if not LOG_BUCKET:
@@ -4011,8 +4043,9 @@ class TestAttempt:
 
 
 class TestShard:
-    def __init__(self, number, attempts) -> None:
+    def __init__(self, number, total_shards, attempts) -> None:
         self.number = number
+        self.total_shards = total_shards
         self.attempts = attempts
 
     def _get_detailed_overall_status(self):
@@ -4032,9 +4065,19 @@ class TestShard:
     def get_details(self):
         overall, bad_runs, total_runs = self._get_detailed_overall_status()
         qualifier = "" if not bad_runs else f"{bad_runs} out of "
-        time = f" over {format_millis(self.attempt_millis)}" if self.attempt_millis else ""
+        runs = f" in {qualifier}{total_runs} runs" if total_runs > 1 else ""
+        time = f" in {format_millis(self.attempt_millis)}" if self.attempt_millis else ""
         cause = f" because of {self.root_cause}" if self.root_cause else ""
-        return overall, (f"in {qualifier}{total_runs} run(s){time}{cause}")
+        return overall, f"{runs}{time}{cause}"
+
+    def get_metrics(self, label, test_artifact):
+        total_time = sum(self.attempt_millis)
+        shard_info = "" if self.total_shards == 1 else f" (shard {self.number}/{self.total_shards})"
+        overall, stats = self.get_details()
+        return (
+            total_time,
+            f"{label}{shard_info} on {test_artifact.job_name}: {format_test_status(overall)} {stats} ([log]({test_artifact.job_url}))",
+        )
 
     @property
     def overall_status(self):
@@ -4131,7 +4174,9 @@ def parse_bep(path):
     tests = []
     for test, attempts_per_shard in data.items():
         shards = [
-            TestShard(number=shard, attempts=attempts_per_shard[shard])
+            TestShard(
+                number=shard, total_shards=len(data[test]), attempts=attempts_per_shard[shard]
+            )
             for shard in sorted(attempts_per_shard.keys())
         ]
         tests.append(TestExecution(label=test, shards=shards))
@@ -4149,8 +4194,6 @@ def get_test_results_from_bep(path):
 
             if test_result:
                 if "testResult" not in data:
-                    # No testResult field means "aborted" -> NO_STATUS
-                    # TODO: show these targets in the UI?
                     continue
 
                 yield (
