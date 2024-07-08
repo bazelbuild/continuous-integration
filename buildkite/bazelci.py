@@ -3074,7 +3074,7 @@ def show_gerrit_review_link(git_repository, pipeline_steps):
     commit = os.getenv("BUILDKITE_COMMIT")
     text = f"- The transformed code used in this pipeline can be found under https://{host}-review.googlesource.com/q/{commit}\n" \
            f"- Fetch the source with `git fetch https://{host}.googlesource.com/bazel {commit}  && git checkout FETCH_HEAD`"
-    commands = ["buildkite-agent annotate --style=info --context 'gerrit' '{}'".format(text)]
+    commands = ['buildkite-agent annotate --style=info --context "gerrit" "{}"'.format(text)]
     pipeline_steps.append(
         create_step(
             label=":pipeline: Print information about Gerrit Review Link",
