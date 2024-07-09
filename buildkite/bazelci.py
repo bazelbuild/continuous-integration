@@ -612,6 +612,7 @@ XCODE_VERSION_OVERRIDES = {"10.2.1": "10.3", "11.2": "11.2.1", "11.3": "11.3.1"}
 BUILD_LABEL_PATTERN = re.compile(r"^Build label: (\S+)$", re.MULTILINE)
 
 BUILDIFIER_STEP_NAME = "Buildifier"
+SHARD_SUMMARY_STEP_NAME = "Print Test Summary for Shards"
 
 SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
 
@@ -3058,7 +3059,7 @@ def print_project_pipeline(
     if actually_print_shard_summary:
         pipeline_steps.append(
             create_step(
-                label="Print Test Summary for Shards",
+                label=SHARD_SUMMARY_STEP_NAME,
                 commands=[
                     fetch_bazelcipy_command(),
                     PLATFORMS[DEFAULT_PLATFORM]["python"] + " bazelci.py print_shard_summary",
@@ -3722,11 +3723,11 @@ def try_update_last_green_commit():
         state = job.get("state")
         # Ignore steps that don't have a state (like "wait").
         return (
-            state is not None
+            state
             and state != "passed"
             and not job.get("soft_failed")
             and job["id"] != current_job_id
-            and job["name"] != BUILDIFIER_STEP_NAME
+            and job["name"] not in (BUILDIFIER_STEP_NAME, SHARD_SUMMARY_STEP_NAME)
         )
 
     failing_jobs = [j["name"] for j in build_info["jobs"] if has_failed(j)]
