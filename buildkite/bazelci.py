@@ -3946,10 +3946,7 @@ def get_test_artifacts():
 
 
 class TestArtifacts:
-
-    def __init__(
-        self, job_id, job_name, job_url, relative_bep_path, relative_log_paths
-    ) -> None:
+    def __init__(self, job_id, job_name, job_url, relative_bep_path, relative_log_paths) -> None:
         self.job_id = job_id
         self.job_name = job_name
         self.job_url = job_url
