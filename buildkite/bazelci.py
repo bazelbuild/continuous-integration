@@ -3939,7 +3939,6 @@ def get_test_artifacts():
             job_url=job.get("web_url"),
             relative_bep_path=relative_bep_path,
             relative_log_paths=relative_log_paths,
-            passed=state == "passed",
         )
         paths[base_task].append(ta)
 
@@ -3949,14 +3948,13 @@ def get_test_artifacts():
 class TestArtifacts:
 
     def __init__(
-        self, job_id, job_name, job_url, relative_bep_path, relative_log_paths, passed
+        self, job_id, job_name, job_url, relative_bep_path, relative_log_paths
     ) -> None:
         self.job_id = job_id
         self.job_name = job_name
         self.job_url = job_url
         self.relative_bep_path = relative_bep_path
         self.relative_log_paths = relative_log_paths
-        self.passed = passed
 
     def download_bep(self, dest_dir: str) -> str:
         if not LOG_BUCKET:
