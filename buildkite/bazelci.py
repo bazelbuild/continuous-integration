@@ -3072,8 +3072,8 @@ def show_gerrit_review_link(git_repository, pipeline_steps):
     if not host:
         raise BuildkiteException("Couldn't get host name from %s" % git_repository)
     commit = os.getenv("BUILDKITE_COMMIT")
-    line1 = f"- The transformed code used in this pipeline can be found under https://{host}-review.googlesource.com/q/{commit}"
-    line2 = f"- Fetch the source with `git fetch https://{host}.googlesource.com/bazel {commit}  && git checkout FETCH_HEAD`"
+    line1 = f"The transformed code used in this pipeline can be found under https://{host}-review.googlesource.com/q/{commit}"
+    line2 = f"Fetch the source with `git fetch https://{host}.googlesource.com/bazel {commit}  && git checkout FETCH_HEAD`"
     commands = [
         'buildkite-agent annotate --style=info "{}" --context "gerrit"'.format(line1),
         'buildkite-agent annotate --style=info "{}" --append --context "gerrit"'.format(line2),
