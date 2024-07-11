@@ -1447,6 +1447,9 @@ def execute_commands(
                     eprint(ex)
 
             test_bep_file = os.path.join(tmpdir, _TEST_BEP_FILE)
+            # Create an empty test_bep_file so that the bazelci-agent can start to follow the file right away. Otherwise,
+            # there is a race between when bazelci-agent starts to read the file and when Bazel creates the file.
+            open(test_bep_file, 'w').close()
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future = executor.submit(
                     upload_test_logs_from_bep, test_bep_file, tmpdir, monitor_flaky_tests
@@ -2701,7 +2704,6 @@ def upload_test_logs_from_bep(bep_file, tmpdir, monitor_flaky_tests):
             "artifact",
             "upload",
             "--debug",  # Force BEP upload for non-flaky failures
-            "--delay=5",
             "--mode=buildkite",
             "--build_event_json_file={}".format(bep_file),
         ]
