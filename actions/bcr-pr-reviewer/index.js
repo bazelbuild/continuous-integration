@@ -85,6 +85,16 @@ async function notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap)
 
   // Notify maintainers based on grouped module lists
   const prAuthor = context.payload.pull_request.user.login;
+
+  // If there are too many maintainers, it's likely to be an accidental change that will spam too many people.
+  if (moduleListToMaintainers.size > 10) {
+    console.log(`Skipping notifying maintainers as there are too many maintainers: ${moduleListToMaintainers.size}`);
+    // Notify the PR author that too many modules are modified
+    const commentBody = `Hello @${prAuthor}, too many modules have been updated in this PR. If this is intended, please consider breaking it down into multiple PRs.`;
+    await postComment(octokit, owner, repo, prNumber, commentBody);
+    return;
+  }
+
   for (const [modulesList, maintainers] of moduleListToMaintainers.entries()) {
     // Skip notifying the PR author if they are one of the module maintainers
     const maintainersCopy = new Set(maintainers);
