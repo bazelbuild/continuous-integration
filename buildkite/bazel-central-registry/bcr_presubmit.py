@@ -109,6 +109,8 @@ def get_source_json(module_name, module_version):
 def get_patch_file(module_name, module_version, patch):
     return BCR_REPO_DIR.joinpath("modules/%s/%s/patches/%s" % (module_name, module_version, patch))
 
+def get_overlay_file(module_name, module_version, filename):
+    return BCR_REPO_DIR.joinpath("modules/%s/%s/overlay/%s" % (module_name, module_version, filename))
 
 def get_task_config(module_name, module_version):
     return bazelci.load_config(http_url=None,
@@ -235,8 +237,14 @@ def prepare_test_module_repo(module_name, module_version):
     unpack_archive(str(archive_file), output_dir)
     bazelci.eprint("Source unpacked to %s\n" % output_dir)
 
-    # Apply patch files if there are any
+    # Apply overlay and patch files if there are any
     source_root = output_dir.joinpath(source["strip_prefix"] if "strip_prefix" in source else "")
+    if "overlay" in source:
+        bazelci.eprint("* Applying overlay")
+        for overlay_path in source["overlay"]:
+            bazelci.eprint("\nOverlaying %s:" % overlay_path)
+            overlay_file = get_overlay_file(module_name, module_version, overlay_path)
+            shutil.copy(overlay_file, source_root.joinpath(overlay_path))
     if "patches" in source:
         bazelci.eprint("* Applying patch files")
         for patch_name in source["patches"]:
@@ -306,6 +314,7 @@ def validate_existing_modules_are_not_modified():
         re.compile(r"modules\/([^\/]+)\/([^\/]+)\/source.json"),
         re.compile(r"modules\/([^\/]+)\/([^\/]+)\/MODULE.bazel"),
         re.compile(r"modules\/([^\/]+)\/([^\/]+)\/patches"),
+        re.compile(r"modules\/([^\/]+)\/([^\/]+)\/overlay"),
     ]
     changed_modules = []
     for line in output.decode("utf-8").split():
