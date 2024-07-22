@@ -244,7 +244,9 @@ def prepare_test_module_repo(module_name, module_version):
         for overlay_path in source["overlay"]:
             bazelci.eprint("\nOverlaying %s:" % overlay_path)
             overlay_file = get_overlay_file(module_name, module_version, overlay_path)
-            shutil.copy(overlay_file, source_root.joinpath(overlay_path))
+            target_path = source_root.joinpath(overlay_path)
+            target_path.parent.mkdir(parents=True)
+            shutil.copy(overlay_file, target_path)
     if "patches" in source:
         bazelci.eprint("* Applying patch files")
         for patch_name in source["patches"]:
