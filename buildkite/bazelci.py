@@ -911,31 +911,38 @@ P9w8kNhEbw==
 
 
 def decrypt_token(encrypted_token, kms_key, project="bazel-untrusted"):
-    return (
-        subprocess.check_output(
-            [
-                gcloud_command(),
-                "kms",
-                "decrypt",
-                "--project",
-                project,
-                "--location",
-                "global",
-                "--keyring",
-                "buildkite",
-                "--key",
-                kms_key,
-                "--ciphertext-file",
-                "-",
-                "--plaintext-file",
-                "-",
-            ],
-            input=base64.b64decode(encrypted_token),
-            env=os.environ,
+    try:
+        return (
+            subprocess.run(
+                [
+                    gcloud_command(),
+                    "kms",
+                    "decrypt",
+                    "--project",
+                    project,
+                    "--location",
+                    "global",
+                    "--keyring",
+                    "buildkite",
+                    "--key",
+                    kms_key,
+                    "--ciphertext-file",
+                    "-",
+                    "--plaintext-file",
+                    "-",
+                ],
+                input=base64.b64decode(encrypted_token),
+                env=os.environ,
+                check=True,
+                stdout=subprocess.PIPE,  # We cannot use capture_output since some workers run Python <3.7
+                stderr=subprocess.PIPE,  # We cannot use capture_output since some workers run Python <3.7
+            )
+            .decode("utf-8")
+            .strip()
         )
-        .decode("utf-8")
-        .strip()
-    )
+    except subprocess.CalledProcessError as ex:
+        cause = ex.stderr.decode("utf-8")
+        raise BuildkiteException(f"Failed to decrypt token:\n{cause}")
 
 
 def eprint(*args, **kwargs):
@@ -1449,7 +1456,7 @@ def execute_commands(
             test_bep_file = os.path.join(tmpdir, _TEST_BEP_FILE)
             # Create an empty test_bep_file so that the bazelci-agent can start to follow the file right away. Otherwise,
             # there is a race between when bazelci-agent starts to read the file and when Bazel creates the file.
-            open(test_bep_file, 'w').close()
+            open(test_bep_file, "w").close()
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future = executor.submit(
                     upload_test_logs_from_bep, test_bep_file, tmpdir, monitor_flaky_tests
