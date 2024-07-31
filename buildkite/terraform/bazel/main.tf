@@ -1206,7 +1206,7 @@ resource "buildkite_pipeline" "rules-foreign-cc" {
 
 resource "buildkite_pipeline" "cartographer" {
   name = "Cartographer"
-  repository = "https://github.com/googlecartographer/cartographer.git"
+  repository = "https://github.com/cartographer-project/cartographer.git"
   steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
   default_branch = "master"
   team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
