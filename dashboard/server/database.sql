@@ -340,6 +340,9 @@ WITH buildkite_job AS (WITH buildkite_job_data AS (SELECT org,
                                                  '--task=(\S+)'),
                                        SUBSTRING(data ->> 'command' FROM
                                                  '--platform=(\S+)')) AS bazelci_task,
+                              COALESCE(
+                                      (data ->> 'parallel_group_index')::integer,
+                                      0)                              AS parallel_group_index,
                               data ->> 'state'                        AS state,
                               (data ->> 'scheduled_at')::timestamptz  AS scheduled_at,
                               (data ->> 'created_at')::timestamptz    AS created_at,
@@ -353,7 +356,8 @@ FROM buildkite_job
 WHERE bazelci_task is NOT NULL;
 
 CREATE UNIQUE INDEX buildkite_job_mview_pkey
-    ON buildkite_job_mview (org, pipeline, build_number, bazelci_task);
+    ON buildkite_job_mview (org, pipeline, build_number, bazelci_task,
+                            parallel_group_index);
 CREATE INDEX buildkite_job_mview_created_at
     on buildkite_job_mview (created_at);
 CREATE INDEX buildkite_job_mview_state
