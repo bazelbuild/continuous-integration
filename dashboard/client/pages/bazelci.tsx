@@ -214,7 +214,7 @@ function JobStats({
     }
 
     const data = stats.data.items;
-    var group = _.groupBy(data, (item) => item.bazelCITask);
+    var group = _.groupBy(data, (item) => item.name);
 
     return _.map(
       _.sortBy(
@@ -240,7 +240,7 @@ function JobStats({
     <>
       {_.map(sortedGroup, (data) => (
         <div
-          key={data[0].bazelCITask}
+          key={data[0].name}
           className="flex flex-col border shadow rounded bg-white ring-1 ring-black ring-opacity-5 flex-auto"
         >
           <div className="bg-gray-100 flex flex-row items-center border-b">
