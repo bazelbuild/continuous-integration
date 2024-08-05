@@ -607,7 +607,7 @@ ESCAPED_BACKSLASH = "%5C"
 MAX_TASK_NUMBER = 80
 
 LAB_AGENT_PATTERNS = [
-    re.compile(r"^bk-imacpro-\d+$"),
+    re.compile(r"^bk-(trusted-)?imacpro-\d+$"),
     re.compile(r"^bk-(trusted|testing)-macpro-\d+$"),
     re.compile(r"^bk-(trusted-)?macstudio-\d+$"),
 ]
