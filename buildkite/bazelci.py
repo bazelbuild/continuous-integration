@@ -2351,7 +2351,7 @@ def get_test_tags(test_flags):
             continue
 
         tags = removeprefix(f, wanted_prefix).split(",")
-        include, exclude = partition_list(tags)
+        include, exclude, _ = partition_list(tags)
 
         # Skip tests tagged as "manual" by default, unless explicitly requested
         manual_tag = "manual"
