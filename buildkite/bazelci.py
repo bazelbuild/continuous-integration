@@ -2318,7 +2318,7 @@ def expand_test_target_patterns(bazel_binary, test_targets, test_flags):
 
 
 def get_test_query(test_targets, test_flags):
-    included_targets, excluded_targets = partition_list(test_targets)
+    included_targets, excluded_targets, added_back = partition_list(test_targets)
 
     def FormatTargetList(targets):
         return " ".join("'{}'".format(t) for t in targets)
@@ -2327,6 +2327,9 @@ def get_test_query(test_targets, test_flags):
 
     if excluded_targets:
         query += " except tests(set({}))".format(FormatTargetList(excluded_targets))
+
+    if added_back:
+        query += " union tests(set({}))".format(FormatTargetList(added_back))
 
     included_tags, excluded_tags = get_test_tags(test_flags)
 
@@ -2567,14 +2570,16 @@ def run_bazel_diff(bazel_diff_path, old_workspace_dir, new_workspace_dir, bazel_
 
 
 def partition_list(items):
-    included, excluded = [], []
+    included, excluded, added_back = [], [], []
     for i in items:
         if i.startswith("-"):
             excluded.append(i[1:])
+        elif i.startswith("+"):
+            added_back.append(i[1:])
         else:
             included.append(i)
 
-    return included, excluded
+    return included, excluded, added_back
 
 
 def get_targets_for_shard(test_targets, shard_id, shard_count):
