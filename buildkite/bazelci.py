@@ -2785,11 +2785,6 @@ def create_step(label, commands, platform, shards=1, soft_fail=None):
         ]
     }
 
-    # Automatically retry on Intel Macs to work around flaky failures.
-    if platform == "macos":
-        step["retry"]["automatic"].append({"exit_status": 128, "limit": 3})
-        step["retry"]["automatic"].append({"exit_status": 1, "limit": 3})
-
     return step
 
 
