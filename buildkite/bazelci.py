@@ -2803,6 +2803,9 @@ def create_docker_step(
     label, image, commands=None, additional_env_vars=None, queue="default", always_pull=True
 ):
     env = ["ANDROID_HOME", "ANDROID_NDK_HOME", "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"]
+    if THIS_IS_TRUSTED:
+        # For the trusted Linux arm64 machine to upload artifacts
+        env += ["GOOGLE_APPLICATION_CREDENTIALS"]
     if additional_env_vars:
         env += ["{}={}".format(k, v) for k, v in additional_env_vars.items()]
 
