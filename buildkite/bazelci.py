@@ -550,6 +550,7 @@ for platform, platform_dict in PLATFORMS.copy().items():
         rbe_platform_dict = copy.deepcopy(platform_dict)
         rbe_platform_dict["name"] = "RBE {}".format(platform_dict["name"])
         rbe_platform_dict["emoji-name"] = "RBE {}".format(platform_dict["emoji-name"])
+        rbe_platform_dict["publish_binary"] = []
         PLATFORMS["rbe_{}".format(platform)] = rbe_platform_dict
 
 BUILDIFIER_DOCKER_IMAGE = "gcr.io/bazel-public/buildifier"
