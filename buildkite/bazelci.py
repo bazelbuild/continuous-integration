@@ -463,7 +463,7 @@ PLATFORMS = {
     "ubuntu2004_arm64": {
         "name": "Ubuntu 20.04 LTS ARM64",
         "emoji-name": ":ubuntu: Ubuntu 20.04 LTS ARM64",
-        "publish_binary": [],
+        "publish_binary": ["linux_arm64"],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004",
         "python": "python3.8",
         "queue": "arm64",
