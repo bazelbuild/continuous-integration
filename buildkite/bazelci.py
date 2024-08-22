@@ -2791,6 +2791,11 @@ def create_step(label, commands, platform, shards=1, soft_fail=None):
         ]
     }
 
+    # Retry on macos_arm64 due to
+    # https://github.com/bazelbuild/continuous-integration/issues/2025
+    if platform == "macos_arm64":
+        step["retry"]["automatic"].append({"exit_status": 255, "limit": 1})
+
     # Automatically retry on Intel Macs to work around flaky failures.
     if platform == "macos":
         step["retry"]["automatic"].append({"exit_status": 128, "limit": 1})
