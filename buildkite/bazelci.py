@@ -308,6 +308,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     "rules_jsonnet": {
         "git_repository": "https://github.com/bazelbuild/rules_jsonnet.git",
         "pipeline_slug": "rules-jsonnet",
+        "disabled_reason": "https://github.com/bazelbuild/rules_jsonnet/issues/194",
     },
     "rules_jvm_external": {
         "git_repository": "https://github.com/bazelbuild/rules_jvm_external.git",
