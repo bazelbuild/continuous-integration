@@ -1272,8 +1272,12 @@ def execute_commands(
 
         for key, value in task_config.get("environment", {}).items():
             # We have to explicitly convert the value to a string, because sometimes YAML tries to
-            # be smart and converts strings like "true" and "false" to booleans.
-            os.environ[key] = os.path.expandvars(str(value))
+            # be smart and converts strings like "true" and "false" to booleans. We make an
+            # exception for None to allow users to remove env vars.
+            if value is None:
+                os.environ.pop(key)
+            else:
+                os.environ[key] = os.path.expandvars(str(value))
 
         # Set BAZELISK_SHUTDOWN to 1 when we use bazelisk --migrate on Windows.
         # This is a workaround for https://github.com/bazelbuild/continuous-integration/issues/1012
