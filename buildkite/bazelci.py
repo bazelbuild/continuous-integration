@@ -1236,11 +1236,6 @@ def execute_commands(
         os.environ["BAZELISK_USER_AGENT"] = "Bazelisk/BazelCI"
         test_env_vars.append("BAZELISK_USER_AGENT")
 
-        # Avoid "Network is unreachable" errors in IPv6-only environments
-        for e in ("COURSIER_OPTS", "JAVA_TOOL_OPTIONS", "SSL_CERT_FILE"):
-            if os.getenv(e):
-                test_env_vars.append(e)
-
         # We use one binary for all Linux platforms (because we also just release one binary for all
         # Linux versions and we have to ensure that it works on all of them).
         binary_platform = platform if is_mac() or is_windows() else LINUX_BINARY_PLATFORM
@@ -1272,12 +1267,14 @@ def execute_commands(
 
         for key, value in task_config.get("environment", {}).items():
             # We have to explicitly convert the value to a string, because sometimes YAML tries to
-            # be smart and converts strings like "true" and "false" to booleans. We make an
-            # exception for None to allow users to remove env vars.
-            if value is None:
-                os.environ.pop(key)
-            else:
-                os.environ[key] = os.path.expandvars(str(value))
+            # be smart and converts strings like "true" and "false" to booleans.
+            os.environ[key] = os.path.expandvars(str(value))
+
+        # Avoid "Network is unreachable" errors in IPv6-only environments
+        for e in ("COURSIER_OPTS", "JAVA_TOOL_OPTIONS", "SSL_CERT_FILE"):
+            # If users overrode a variable with an empty value above, it won't be added here.
+            if os.getenv(e):
+                test_env_vars.append(e)
 
         # Set BAZELISK_SHUTDOWN to 1 when we use bazelisk --migrate on Windows.
         # This is a workaround for https://github.com/bazelbuild/continuous-integration/issues/1012
