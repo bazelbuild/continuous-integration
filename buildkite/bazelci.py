@@ -1871,8 +1871,8 @@ def execute_bazel_run(bazel_binary, platform, targets):
 
 
 def remote_caching_flags(platform, accept_cached=True):
-    # Only enable caching for untrusted and testing builds.
-    if CLOUD_PROJECT != "bazel-untrusted":
+    # Only enable caching for untrusted and testing builds, except for trusted MacOS VMs.
+    if THIS_IS_TRUSTED and (not is_mac() or is_lab_machine()):
         return []
     # We don't enable remote caching on the Linux ARM64 machine since it doesn't have access to GCS.
     if platform == "ubuntu2004_arm64":
@@ -1903,8 +1903,10 @@ def remote_caching_flags(platform, accept_cached=True):
         # Use RBE for caching builds running on GCE.
         remote_cache_flags = []
         if is_mac():
+            # unStrusted -> Yes, the untrusted bucket name contains a typo :(
+            bucket_id = "trusted" if THIS_IS_TRUSTED else "unstrusted"
             remote_cache_flags = [
-                "--remote_cache=https://storage.googleapis.com/bazel-unstrusted-build-cache"
+                f"--remote_cache=https://storage.googleapis.com/bazel-{bucket_id}-build-cache"
             ]
         else:
             remote_cache_flags = [
