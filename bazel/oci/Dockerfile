@@ -8,7 +8,7 @@ RUN --mount=source=bazel/oci/install_packages.sh,target=/mnt/install_packages.sh
 
 FROM base_image AS downloader
 
-ARG TARGETOS TARGETARCH BAZEL_VERSION
+ARG TARGETARCH BAZEL_VERSION
 
 WORKDIR /var/bazel
 RUN --mount=source=bazel/oci/install_bazel.sh,target=/mnt/install_bazel.sh,type=bind \
