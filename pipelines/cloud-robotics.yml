@@ -1,6 +1,7 @@
 ---
 tasks:
   ubuntu1804:
+    skip_in_bazel_downstream_pipeline: True
     shell_commands:
     - |-
       echo '
@@ -10,4 +11,19 @@ tasks:
       - //...
     test_targets:
       - //...
+  ubuntu1804_latest_bazel:
+    bazel: latest
+    shell_commands:
+    - |-
+      echo '
+      CLOUD_ROBOTICS_CONTAINER_REGISTRY = "gcr.io/dummy"
+      DOCKER_TAG = "latest"' > config.bzl
+    build_targets:
+      - //...
+    test_targets:
+      - //...
+    build_flags:
+      - "--enable_workspace"
+    test_flags:
+      - "--enable_workspace"
 
