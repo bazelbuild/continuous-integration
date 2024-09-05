@@ -1903,8 +1903,7 @@ def remote_caching_flags(platform, accept_cached=True):
         # Use RBE for caching builds running on GCE.
         remote_cache_flags = []
         if is_mac():
-            # unStrusted -> Yes, the untrusted bucket name contains a typo :(
-            bucket_id = "trusted" if THIS_IS_TRUSTED else "unstrusted"
+            bucket_id = "trusted" if THIS_IS_TRUSTED else "untrusted"
             remote_cache_flags = [
                 f"--remote_cache=https://storage.googleapis.com/bazel-{bucket_id}-build-cache"
             ]
