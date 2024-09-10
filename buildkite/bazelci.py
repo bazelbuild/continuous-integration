@@ -608,12 +608,6 @@ ESCAPED_BACKSLASH = "%5C"
 # This is to prevent accidentally creating too many tasks with the martix testing feature.
 MAX_TASK_NUMBER = 80
 
-LAB_AGENT_PATTERNS = [
-    re.compile(r"^bk-(trusted-)?imacpro-\d+$"),
-    re.compile(r"^bk-(trusted|testing)-macpro-\d+$"),
-    re.compile(r"^bk-(trusted-)?macstudio-\d+$"),
-]
-
 _TEST_BEP_FILE = "test_bep.json"
 _SHARD_RE = re.compile(r"(.+) \(shard (\d+)\)")
 _SLOWEST_N_TARGETS = 20
@@ -913,15 +907,6 @@ def is_windows():
 
 def is_mac():
     return platform_module.system() == "Darwin"
-
-
-def is_lab_machine():
-    agent = os.getenv("BUILDKITE_AGENT_NAME")
-    return any(p.match(agent) for p in LAB_AGENT_PATTERNS)
-
-
-def is_ipv6_mac():
-    return is_mac() and not is_lab_machine()
 
 
 def gsutil_command():
@@ -1872,7 +1857,7 @@ def execute_bazel_run(bazel_binary, platform, targets):
 
 def remote_caching_flags(platform, accept_cached=True):
     # Only enable caching for untrusted and testing builds, except for trusted MacOS VMs.
-    if THIS_IS_TRUSTED and (not is_mac() or is_lab_machine()):
+    if THIS_IS_TRUSTED and not is_mac():
         return []
     # We don't enable remote caching on the Linux ARM64 machine since it doesn't have access to GCS.
     if platform == "ubuntu2004_arm64":
@@ -1895,41 +1880,39 @@ def remote_caching_flags(platform, accept_cached=True):
             subprocess.check_output(["/usr/bin/xcodebuild", "-version"]),
         ]
 
-    if is_mac() and is_lab_machine():
-        # Use a local cache server for our physical macOS machines in the lab.
-        flags = ["--remote_cache=grpc://[2a00:79e1:abc:8602:a28c:fdff:fed0:ec39]:9092"]
+
+    # Use GCS for caching builds running on MacService.
+    # Use RBE for caching builds running on GCE.
+    remote_cache_flags = []
+    if is_mac():
+        bucket_id = "trusted" if THIS_IS_TRUSTED else "untrusted"
+        remote_cache_flags = [
+            f"--remote_cache=https://storage.googleapis.com/bazel-{bucket_id}-build-cache"
+        ]
     else:
-        # Use GCS for caching builds running on MacService.
-        # Use RBE for caching builds running on GCE.
-        remote_cache_flags = []
-        if is_mac():
-            bucket_id = "trusted" if THIS_IS_TRUSTED else "untrusted"
-            remote_cache_flags = [
-                f"--remote_cache=https://storage.googleapis.com/bazel-{bucket_id}-build-cache"
+        remote_cache_flags = [
+            "--remote_cache=remotebuildexecution.googleapis.com",
+            "--remote_instance_name=projects/{}/instances/default_instance".format(
+                CLOUD_PROJECT
+            ),
+        ]
+
+    flags = (
+        remote_cache_flags
+        + [
+            "--google_default_credentials",
+        ]
+        + (
+            []
+            if is_mac()
+            else [  # Re-enable on macOS once b/346751326 is resolved.
+                # Enable BES / Build Results reporting.
+                "--bes_backend=buildeventservice.googleapis.com",
+                "--bes_timeout=360s",
+                "--project_id=bazel-untrusted",
             ]
-        else:
-            remote_cache_flags = [
-                "--remote_cache=remotebuildexecution.googleapis.com",
-                "--remote_instance_name=projects/{}/instances/default_instance".format(
-                    CLOUD_PROJECT
-                ),
-            ]
-        flags = (
-            remote_cache_flags
-            + [
-                "--google_default_credentials",
-            ]
-            + (
-                []
-                if is_mac()
-                else [  # Re-enable on macOS once b/346751326 is resolved.
-                    # Enable BES / Build Results reporting.
-                    "--bes_backend=buildeventservice.googleapis.com",
-                    "--bes_timeout=360s",
-                    "--project_id=bazel-untrusted",
-                ]
-            )
         )
+    )
 
     platform_cache_digest = hashlib.sha256()
     for key in platform_cache_key:
@@ -1937,7 +1920,7 @@ def remote_caching_flags(platform, accept_cached=True):
         platform_cache_digest.update(key)
         platform_cache_digest.update(b":")
 
-    remote_timeout = 3600 if is_ipv6_mac() else 60
+    remote_timeout = 3600 if is_mac() else 60
     flags += [
         f"--remote_timeout={remote_timeout}",
         "--remote_max_connections=200",
@@ -1987,7 +1970,7 @@ def common_startup_flags():
         else:
             # This machine uses its PD-SSD as the build directory.
             return ["--output_user_root=C:/b"]
-    elif is_ipv6_mac():
+    elif is_mac():
         return ["--host_jvm_args=-Djava.net.preferIPv6Addresses=true"]
     return []
 
@@ -2024,7 +2007,7 @@ def common_build_flags(bep_file, platform):
             "--build_event_json_file=" + bep_file,
         ]
 
-    if is_ipv6_mac():
+    if is_mac():
         flags += ["--jvmopt=-Djava.net.preferIPv6Addresses"]
 
     return flags
