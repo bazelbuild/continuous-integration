@@ -12,6 +12,7 @@ tasks:
     test_targets:
       - //...
   ubuntu1804_latest_bazel:
+    platform: ubuntu1804
     bazel: latest
     shell_commands:
     - |-
