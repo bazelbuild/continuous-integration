@@ -45,8 +45,8 @@ async function generateMaintainersMap(octokit, owner, repo, modifiedModules, toN
       const metadata = JSON.parse(Buffer.from(metadataContent.content, 'base64').toString('utf-8'));
       let hasGithubMaintainer = false;
       metadata.maintainers.forEach(maintainer => {
-        // Only add maintainers with a github handle set. When `toNotifyOnly`, also exclude those who have set "doNotNotify"
-        if (maintainer.github && !(toNotifyOnly && maintainer.doNotNotify)) {
+        // Only add maintainers with a github handle set. When `toNotifyOnly`, also exclude those who have set "do_not_notify"
+        if (maintainer.github && !(toNotifyOnly && maintainer["do_not_notify"])) {
           hasGithubMaintainer = true;
           if (!maintainersMap.has(maintainer.github)) {
             maintainersMap.set(maintainer.github, new Set());
