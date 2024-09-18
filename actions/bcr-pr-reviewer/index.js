@@ -29,7 +29,7 @@ async function fetchAllModifiedModules(octokit, owner, repo, prNumber) {
   return accumulate;
 }
 
-async function generateMaintainersMap(octokit, owner, repo, modifiedModules) {
+async function generateMaintainersMap(octokit, owner, repo, modifiedModules, toNotifyOnly) {
   const maintainersMap = new Map(); // Map: maintainer GitHub username -> Set of module they maintain
   const modulesWithoutGithubMaintainers = new Set(); // Set of module names without module maintainers
   for (const moduleName of modifiedModules) {
@@ -45,7 +45,8 @@ async function generateMaintainersMap(octokit, owner, repo, modifiedModules) {
       const metadata = JSON.parse(Buffer.from(metadataContent.content, 'base64').toString('utf-8'));
       let hasGithubMaintainer = false;
       metadata.maintainers.forEach(maintainer => {
-        if (maintainer.github) { // Check if the github field is specified
+        // Only add maintainers with a github handle set. When `toNotifyOnly`, also exclude those who have set "do_not_notify"
+        if (maintainer.github && !(toNotifyOnly && maintainer["do_not_notify"])) {
           hasGithubMaintainer = true;
           if (!maintainersMap.has(maintainer.github)) {
             maintainersMap.set(maintainer.github, new Set());
@@ -256,7 +257,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   }
 
   // Figure out maintainers for each modified module
-  const [ maintainersMap, modulesWithoutGithubMaintainers ] = await generateMaintainersMap(octokit, owner, repo, modifiedModules);
+  const [ maintainersMap, modulesWithoutGithubMaintainers ] = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ false);
   console.log('Maintainers Map:');
   for (const [maintainer, maintainedModules] of maintainersMap.entries()) {
     console.log(`- Maintainer: ${maintainer}, Modules: ${Array.from(maintainedModules).join(', ')}`);
@@ -332,7 +333,7 @@ async function runNotifier(octokit) {
   console.log(`Modified modules: ${Array.from(modifiedModules).join(', ')}`);
 
   // Figure out maintainers for each modified module
-  const [ maintainersMap, modulesWithoutGithubMaintainers ] = await generateMaintainersMap(octokit, owner, repo, modifiedModules);
+  const [ maintainersMap, modulesWithoutGithubMaintainers ] = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ true);
 
   // Notify maintainers for modules with module maintainers
   await notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap);
