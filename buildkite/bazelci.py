@@ -3644,14 +3644,14 @@ def bazelci_builds_metadata_url(git_commit):
 
 
 def bazelci_last_green_commit_url(git_repository, pipeline_slug):
-    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-untrusted-builds"
+    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-untrusted-last-green-commits"
     return "gs://{}/last_green_commit/{}/{}".format(
         bucket_name, git_repository[len("https://") :], pipeline_slug
     )
 
 
 def bazelci_last_green_downstream_commit_url():
-    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-untrusted-builds"
+    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-untrusted-last-green-commits"
     return "gs://{}/last_green_commit/downstream_pipeline".format(bucket_name)
 
 
