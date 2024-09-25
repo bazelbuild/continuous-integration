@@ -639,16 +639,22 @@ class BinaryUploadRaceException(Exception):
 
 
 class BuildkiteClient(object):
-    _ENCRYPTED_BUILDKITE_API_TOKEN = """
+    _ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN = """
 CiQA4DEB9ldzC+E39KomywtqXfaQ86hhulgeDsicds2BuvbCYzsSUAAqwcvXZPh9IMWlwWh94J2F
 exosKKaWB0tSRJiPKnv2NPDfEqGul0ZwVjtWeASpugwxxKeLhFhPMcgHMPfndH6j2GEIY6nkKRbP
 uwoRMCwe
 """.strip()
 
-    _ENCRYPTED_BUILDKITE_API_TESTING_TOKEN = """
+    _ENCRYPTED_BUILDKITE_TESTING_API_TOKEN = """
 CiQAMTBkWjL1C+F5oon3+cC1vmum5+c1y5+96WQY44p0Lxd0PeASUQAy7iU0c6E3W5EOSFYfD5fA
 MWy/SHaMno1NQSUa4xDOl5yc2kizrtxPPVkX4x9pLNuGUY/xwAn2n1DdiUdWZNWlY1bX2C4ex65e
 P9w8kNhEbw==
+""".strip()
+
+    _ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN = """
+CiQAeiOS8AkJ92+STSUmqW/jlR9DKDZdX5PZIWn30PtyKXWE/74SVwC7bbymSHneleAcgXtVJsMu
+2DEEVd/uEGIdiEJigmPAPTs4vtmX/7ZxTsMhJ+rxRYBGufw9LgT+G6Bjg0ETifavKWHGzw+NTgUa
+gwD6RBL0qz1PFfg7Zw==
 """.strip()
 
     _BUILD_STATUS_URL_TEMPLATE = (
@@ -671,14 +677,17 @@ P9w8kNhEbw==
     def _get_buildkite_token(self):
         return decrypt_token(
             encrypted_token=(
-                self._ENCRYPTED_BUILDKITE_API_TESTING_TOKEN
-                if THIS_IS_TESTING
-                else self._ENCRYPTED_BUILDKITE_API_TOKEN
+                self._ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN if THIS_IS_TRUSTED else
+                self._ENCRYPTED_BUILDKITE_TESTING_API_TOKEN if THIS_IS_TESTING else
+                self._ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN
             ),
             kms_key=(
-                "buildkite-testing-api-token"
-                if THIS_IS_TESTING
-                else "buildkite-untrusted-api-token"
+                "buildkite-trusted-api-token" if THIS_IS_TRUSTED else
+                "buildkite-testing-api-token" if THIS_IS_TESTING else
+                "buildkite-untrusted-api-token"
+            ),
+            project=(
+                "bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"
             ),
         )
 
