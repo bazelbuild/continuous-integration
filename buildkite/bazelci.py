@@ -3427,19 +3427,20 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
         )
     )
 
-    pipeline_steps.append({"wait": None, "continue_on_failure": False})
+    if current_branch_is_main_branch():
+        pipeline_steps.append({"wait": None, "continue_on_failure": False})
 
-    pipeline_steps.append(
-        create_step(
-            label="Update last green commit for Bazel",
-            commands=[
-                fetch_bazelcipy_command(),
-                PLATFORMS[DEFAULT_PLATFORM]["python"]
-                + " bazelci.py try_update_last_green_commit",
-            ],
-            platform=DEFAULT_PLATFORM,
+        pipeline_steps.append(
+            create_step(
+                label="Update last green commit for Bazel",
+                commands=[
+                    fetch_bazelcipy_command(),
+                    PLATFORMS[DEFAULT_PLATFORM]["python"]
+                    + " bazelci.py try_update_last_green_commit",
+                ],
+                platform=DEFAULT_PLATFORM,
+            )
         )
-    )
 
 
     print_pipeline_steps(pipeline_steps)
