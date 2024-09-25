@@ -3418,6 +3418,21 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
         )
     )
 
+    pipeline_steps.append({"wait": None, "continue_on_failure": False})
+
+    pipeline_steps.append(
+        create_step(
+            label="Update last green commit for Bazel",
+            commands=[
+                fetch_bazelcipy_command(),
+                PLATFORMS[DEFAULT_PLATFORM]["python"]
+                + " bazelci.py try_update_last_green_commit",
+            ],
+            platform=DEFAULT_PLATFORM,
+        )
+    )
+
+
     print_pipeline_steps(pipeline_steps)
 
 
@@ -3644,7 +3659,11 @@ def bazelci_builds_metadata_url(git_commit):
 
 
 def bazelci_last_green_commit_url(git_repository, pipeline_slug):
-    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-untrusted-last-green-commits"
+    bucket_name = (
+        "bazel-builds" if THIS_IS_TRUSTED else
+        "bazel-testing-builds" if THIS_IS_TESTING else
+        "bazel-untrusted-last-green-commits"
+    )
     return "gs://{}/last_green_commit/{}/{}".format(
         bucket_name, git_repository[len("https://") :], pipeline_slug
     )
