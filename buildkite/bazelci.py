@@ -569,10 +569,9 @@ XCODE_VERSION_OVERRIDES = {"10.2.1": "10.3", "11.2": "11.2.1", "11.3": "11.3.1"}
 
 BUILD_LABEL_PATTERN = re.compile(r"^Build label: (\S+)$", re.MULTILINE)
 
-BUILDIFIER_STEP_NAME = "Buildifier"
-SHARD_SUMMARY_STEP_NAME = "Print Test Summary for Shards"
-
 SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
+
+RUNNER_CMD = "bazelci.py runner"
 
 # TODO: change to USE_BAZEL_DIFF once the feature has been tested in QA
 USE_BAZEL_DIFF_ENV_VAR = "USE_BAZEL_DIFF"
@@ -2891,7 +2890,7 @@ def print_project_pipeline(
 
         pipeline_steps.append(
             create_docker_step(
-                BUILDIFIER_STEP_NAME,
+                "Buildifier",
                 image=BUILDIFIER_DOCKER_IMAGE,
                 additional_env_vars=buildifier_env_vars,
             )
@@ -3035,7 +3034,7 @@ def print_project_pipeline(
     if actually_print_shard_summary:
         pipeline_steps.append(
             create_step(
-                label=SHARD_SUMMARY_STEP_NAME,
+                label="Print Test Summary for Shards",
                 commands=[
                     fetch_bazelcipy_command(),
                     PLATFORMS[DEFAULT_PLATFORM]["python"] + " bazelci.py print_shard_summary",
@@ -3197,7 +3196,8 @@ def runner_step(
     shards=1,
     soft_fail=None,
 ):
-    command = PLATFORMS[platform]["python"] + " bazelci.py runner --task=" + task
+    py = PLATFORMS[platform]["python"]
+    command = f"{py} {RUNNER_CMD} --task={task}"
     if http_config:
         command += " --http_config=" + http_config
     if file_config:
@@ -3285,7 +3285,8 @@ def bazel_build_step(
     build_only=False,
     test_only=False,
 ):
-    pipeline_command = PLATFORMS[platform]["python"] + " bazelci.py runner"
+    py = PLATFORMS[platform]["python"]
+    pipeline_command = f"{py} {RUNNER_CMD}"
     if build_only:
         pipeline_command += " --build_only --save_but"
     if test_only:
@@ -3723,7 +3724,7 @@ def try_update_last_green_commit():
             and state != "passed"
             and not job.get("soft_failed")
             and job["id"] != current_job_id
-            and job["name"] not in (BUILDIFIER_STEP_NAME, SHARD_SUMMARY_STEP_NAME)
+            and RUNNER_CMD in job.get("command", "")  # Only look at test steps
         )
 
     failing_jobs = [j["name"] for j in build_info["jobs"] if has_failed(j)]
