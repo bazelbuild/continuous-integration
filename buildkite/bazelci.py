@@ -3854,8 +3854,6 @@ def print_shard_summary():
 
                     if test_execution.overall_status == "PASSED":
                         continue
-                    if len(test_execution.shards) == 1:
-                        continue
 
                     failures.append(
                         test_execution.Format(test_artifact.job_id, test_artifact.is_windows)
