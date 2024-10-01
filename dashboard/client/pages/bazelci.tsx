@@ -14,6 +14,8 @@ import {
 import { DateTime } from "luxon";
 import { intervalToDuration } from "date-fns";
 import _ from "lodash";
+import { useRouter } from "next/router";
+import Link from "next/link";
 
 function formatDuration(dur: Duration) {
   var items = [
@@ -261,7 +263,26 @@ function JobStats({
   );
 }
 
+const pipelines: { [key: string]: any } = {
+  "bazel-bazel-master": {
+    name: "Bazel",
+    org: "bazel",
+    pipeline: "bazel-bazel",
+  },
+  "google-bazel-presubmit": {
+    name: "Google Bazel Presubmit",
+    org: "bazel",
+    pipeline: "google-bazel-presubmit",
+  },
+};
+
 export default function Page() {
+  const router = useRouter();
+  const pipelineId = router.query.id;
+  const { name, org, pipeline } =
+    pipelines[pipelineId as string] || pipelines["bazel-bazel-master"];
+  const branch = "master";
+
   const [domain, setDomain] = useState<number[]>();
   const [monthOffset, setMonthOffset] = useState<number>(-1);
   const [excludeWaitTime, setExcludeWaitTime] = useState<boolean>(false);
@@ -269,28 +290,43 @@ export default function Page() {
 
   const param = useMemo(() => {
     return {
-      org: "bazel",
-      pipeline: "bazel-bazel",
-      branch: "master",
+      org,
+      pipeline,
+      branch,
       from:
         monthOffset < 0
           ? DateTime.now().minus({ month: -monthOffset }).toISO()
           : DateTime.fromSeconds(0).toISO(),
     };
-  }, [monthOffset]);
+  }, [org, pipeline, branch, monthOffset]);
 
   return (
     <Layout>
       <div className="m-8 flex flex-col gap-8">
+        <div className="flex flex-row gap-4">
+          {Object.entries(pipelines).map(([id, pipeline]) => {
+            return (
+              <Link key={id} href={`/bazelci?id=${id}`}>
+                <a
+                  className={`text-black-600 ${
+                    id == pipelineId ? "font-bold" : ""
+                  }`}
+                >
+                  {pipeline.name}
+                </a>
+              </Link>
+            );
+          })}
+        </div>
         <div className="flex flex-row">
           <p className="flex-auto">
-            The times of successful builds in Bazel's{" "}
+            The times of successful builds in{" "}
             <a
               className="text-blue-600"
               target="_blank"
-              href="https://buildkite.com/bazel/bazel-bazel/builds?branch=master"
+              href={`https://buildkite.com/${org}/${pipeline}/builds?branch=${branch}`}
             >
-              postsubmit
+              {name}
             </a>
             :
           </p>
