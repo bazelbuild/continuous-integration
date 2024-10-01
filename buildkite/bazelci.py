@@ -676,18 +676,20 @@ gwD6RBL0qz1PFfg7Zw==
     def _get_buildkite_token(self):
         return decrypt_token(
             encrypted_token=(
-                self._ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN if THIS_IS_TRUSTED else
-                self._ENCRYPTED_BUILDKITE_TESTING_API_TOKEN if THIS_IS_TESTING else
-                self._ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN
+                self._ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN
+                if THIS_IS_TRUSTED
+                else self._ENCRYPTED_BUILDKITE_TESTING_API_TOKEN
+                if THIS_IS_TESTING
+                else self._ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN
             ),
             kms_key=(
-                "buildkite-trusted-api-token" if THIS_IS_TRUSTED else
-                "buildkite-testing-api-token" if THIS_IS_TESTING else
-                "buildkite-untrusted-api-token"
+                "buildkite-trusted-api-token"
+                if THIS_IS_TRUSTED
+                else "buildkite-testing-api-token"
+                if THIS_IS_TESTING
+                else "buildkite-untrusted-api-token"
             ),
-            project=(
-                "bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"
-            ),
+            project=("bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"),
         )
 
     def _open_url(self, url, params=[]):
@@ -1888,7 +1890,6 @@ def remote_caching_flags(platform, accept_cached=True):
             subprocess.check_output(["/usr/bin/xcodebuild", "-version"]),
         ]
 
-
     # Use GCS for caching builds running on MacService.
     # Use RBE for caching builds running on GCE.
     remote_cache_flags = []
@@ -1900,9 +1901,7 @@ def remote_caching_flags(platform, accept_cached=True):
     else:
         remote_cache_flags = [
             "--remote_cache=remotebuildexecution.googleapis.com",
-            "--remote_instance_name=projects/{}/instances/default_instance".format(
-                CLOUD_PROJECT
-            ),
+            "--remote_instance_name=projects/{}/instances/default_instance".format(CLOUD_PROJECT),
         ]
 
     flags = (
@@ -3443,7 +3442,6 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
             )
         )
 
-
     print_pipeline_steps(pipeline_steps)
 
 
@@ -3671,9 +3669,11 @@ def bazelci_builds_metadata_url(git_commit):
 
 def bazelci_last_green_commit_url(git_repository, pipeline_slug):
     bucket_name = (
-        "bazel-builds" if THIS_IS_TRUSTED else
-        "bazel-testing-builds" if THIS_IS_TESTING else
-        "bazel-untrusted-last-green-commits"
+        "bazel-builds"
+        if THIS_IS_TRUSTED
+        else "bazel-testing-builds"
+        if THIS_IS_TESTING
+        else "bazel-untrusted-last-green-commits"
     )
     return "gs://{}/last_green_commit/{}/{}".format(
         bucket_name, git_repository[len("https://") :], pipeline_slug
@@ -3681,7 +3681,9 @@ def bazelci_last_green_commit_url(git_repository, pipeline_slug):
 
 
 def bazelci_last_green_downstream_commit_url():
-    bucket_name = "bazel-testing-builds" if THIS_IS_TESTING else "bazel-untrusted-last-green-commits"
+    bucket_name = (
+        "bazel-testing-builds" if THIS_IS_TESTING else "bazel-untrusted-last-green-commits"
+    )
     return "gs://{}/last_green_commit/downstream_pipeline".format(bucket_name)
 
 
