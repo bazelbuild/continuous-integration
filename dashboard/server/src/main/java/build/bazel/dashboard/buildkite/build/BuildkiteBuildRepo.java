@@ -24,6 +24,21 @@ public class BuildkiteBuildRepo {
   private final DatabaseClient databaseClient;
   private final ObjectMapper objectMapper;
 
+  public List<String> findBranches(String org, String pipeline) {
+    return databaseClient
+        .sql(
+            "SELECT branch FROM buildkite_job_mview "
+                + "WHERE org=:org AND pipeline=:pipeline "
+                + "GROUP BY branch "
+                + "ORDER BY MAX(build_created_at) DESC, branch")
+        .bind("org", org)
+        .bind("pipeline", pipeline)
+        .map(row -> requireNonNull(row.get("branch", String.class)))
+        .all()
+        .collectList()
+        .block();
+  }
+
   public Optional<BuildkiteBuild> findOne(String org, String pipeline, int buildNumber) {
     return Optional.ofNullable(
         databaseClient

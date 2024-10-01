@@ -8,6 +8,7 @@ import build.bazel.dashboard.buildkite.build.BuildkiteBuildRepo.JobStats;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -51,5 +52,11 @@ public class BuildkiteBuildRestController {
       @RequestParam(value = "to", required = false) Instant to
   ) {
     return single(() -> buildkiteBuildService.findJobStats(org, pipeline, branch, from, to));
+  }
+
+  @GetMapping("/buildkite/organizations/{org}/pipelines/{pipeline}/branches")
+  public Single<List<String>> findJobStats(
+      @PathVariable("org") String org, @PathVariable("pipeline") String pipeline) {
+    return single(() -> buildkiteBuildService.findBranches(org, pipeline));
   }
 }
