@@ -119,4 +119,8 @@ public class BuildkiteBuildService {
     }
     return buildkiteBuildRepo.findJobStats(org, pipeline, branch, from, to);
   }
+
+  public List<String> findBranches(String org, String pipeline) {
+    return buildkiteBuildRepo.findBranches(org, pipeline);
+  }
 }

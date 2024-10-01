@@ -44,3 +44,20 @@ export function useBuildkiteBuildStats(
     loading: !error && !data,
   };
 }
+
+export function useBuildkitePipelineBranches(org: string, pipeline: string) {
+  const { data, error } = useSWR(
+    queryString.stringifyUrl(
+      {
+        url: `/api/buildkite/organizations/${org}/pipelines/${pipeline}/branches`,
+      },
+      { skipNull: true }
+    ),
+    fetcher
+  );
+  return {
+    data: data as string[],
+    error,
+    loading: !error && !data,
+  };
+}

@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Layout from "../src/Layout";
-import { useBuildkiteBuildStats } from "../src/data/BuildkiteBuildStats";
+import {
+  useBuildkiteBuildStats,
+  useBuildkitePipelineBranches,
+} from "../src/data/BuildkiteBuildStats";
 import { useBuildkiteJobStats } from "../src/data/BuildkiteJobStats";
 import {
   Area,
@@ -263,7 +266,9 @@ function JobStats({
   );
 }
 
-const pipelines: { [key: string]: any } = {
+const pipelines: {
+  [key: string]: { name: string; org: string; pipeline: string };
+} = {
   "bazel-bazel-master": {
     name: "Bazel",
     org: "bazel",
@@ -281,12 +286,13 @@ export default function Page() {
   const pipelineId = router.query.id;
   const { name, org, pipeline } =
     pipelines[pipelineId as string] || pipelines["bazel-bazel-master"];
-  const branch = "master";
 
+  const [branch, setBranch] = useState<string>("master");
   const [domain, setDomain] = useState<number[]>();
   const [monthOffset, setMonthOffset] = useState<number>(-1);
   const [excludeWaitTime, setExcludeWaitTime] = useState<boolean>(false);
   const [useBuildDomain, setUseBuildDomain] = useState<boolean>(true);
+  const { data: branches } = useBuildkitePipelineBranches(org, pipeline);
 
   const param = useMemo(() => {
     return {
@@ -311,6 +317,7 @@ export default function Page() {
                   className={`text-black-600 ${
                     id == pipelineId ? "font-bold" : ""
                   }`}
+                  onClick={() => setBranch("master")}
                 >
                   {pipeline.name}
                 </a>
@@ -326,11 +333,27 @@ export default function Page() {
               target="_blank"
               href={`https://buildkite.com/${org}/${pipeline}/builds?branch=${branch}`}
             >
-              {name}
+              {name}, {branch}{" "}
             </a>
-            :
+            branch :
           </p>
           <div className="flex flex-row space-x-2">
+            <label>
+              <span className="mx-2">Branch:</span>
+              <select
+                value={branch}
+                onChange={(e) => {
+                  setBranch(e.target.value);
+                }}
+              >
+                {(branches || []).map((branch) => (
+                  <option key={branch} value={branch}>
+                    {branch}
+                  </option>
+                ))}
+              </select>
+            </label>
+
             <label>
               <span className="mx-2">Time:</span>
               <select
