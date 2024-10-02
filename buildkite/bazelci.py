@@ -2466,7 +2466,8 @@ def upload_shard_distribution(sorted_test_targets, shard_count):
             s: get_targets_for_shard(sorted_test_targets, s, shard_count)
             for s in range(shard_count)
         }
-        path = os.path.join(tmpdir, "shard_distribution.json")
+        base = f"{os.getenv('BUILDKITE_PIPELINE_SLUG')}_{os.getenv('BUILDKITE_BUILD_NUMBER')}_shards.json"
+        path = os.path.join(tmpdir, base)
         with open(path, mode="w", encoding="utf-8") as fp:
             json.dump(data, fp, indent=2, sort_keys=True)
 
