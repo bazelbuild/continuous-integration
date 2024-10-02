@@ -2268,7 +2268,11 @@ def calculate_targets(
                 shard_id + 1, shard_count
             )
         )
-        actual_test_targets = get_targets_for_shard(actual_test_targets, shard_id, shard_count)
+        sorted_test_targets = sorted(actual_test_targets)
+        actual_test_targets = get_targets_for_shard(sorted_test_targets, shard_id, shard_count)
+
+        if shard_id == 0:
+            upload_shard_distribution(sorted_test_targets, shard_count)
 
     return build_targets, actual_test_targets, coverage_targets, index_targets
 
@@ -2455,6 +2459,22 @@ def filter_unchanged_targets(
     return remaining_targets
 
 
+def upload_shard_distribution(sorted_test_targets, shard_count):
+    tmpdir = tempfile.mkdtemp()
+    try:
+        data = {
+            s: get_targets_for_shard(sorted_test_targets, s, shard_count)
+            for s in range(shard_count)
+        }
+        path = os.path.join(tmpdir, "shard_distribution.json")
+        with open(path, mode="w", encoding="utf-8") as fp:
+            json.dump(data, fp, indent=2, sort_keys=True)
+
+        execute_command(["buildkite-agent", "artifact", "upload", path], cwd=tmpdir)
+    finally:
+        shutil.rmtree(tmpdir)
+
+
 def fetch_base_branch():
     """Fetch the base branch for the current build, set FETCH_HEAD for git."""
     base_branch = os.getenv("BUILDKITE_PULL_REQUEST_BASE_BRANCH", "")
@@ -2576,9 +2596,9 @@ def partition_list(items):
     return included, excluded, added_back
 
 
-def get_targets_for_shard(test_targets, shard_id, shard_count):
+def get_targets_for_shard(sorted_test_targets, shard_id, shard_count):
     # TODO(fweikert): implement a more sophisticated algorithm
-    return sorted(test_targets)[shard_id::shard_count]
+    return sorted_test_targets[shard_id::shard_count]
 
 
 def execute_bazel_test(
@@ -2766,7 +2786,8 @@ def create_step(label, commands, platform, shards=1, soft_fail=None):
         }
 
     if shards > 1:
-        step["label"] += " (shard %n)"
+        # %N means shard counting starts at 1, not 0
+        step["label"] += " (shard %N)"
         step["parallelism"] = shards
 
     if soft_fail is not None:
