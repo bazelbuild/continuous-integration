@@ -33,7 +33,7 @@ steps:
       echo "+++ Getting the latest rules_java version"
       contents=$(cat MODULE.bazel)
       version=$(echo "\${contents}" | grep -m 1 "version")
-      version=$(echo "\${version}" | sed -E 's/[^0-9|\.]//g')
+      version=$(echo "\${version}" | cut -d\" -f2)
       echo "version = \"\$version\""
 
       echo "+++ Building the release"
