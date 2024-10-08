@@ -82,7 +82,7 @@ steps:
       cp bazel-bin/src/bazel output/bazel
 
       rm MODULE.bazel.lock
-      output/bazel mod deps --lockfile_mode=update
+      output/bazel query :bazel-distfile
 
       output/bazel build \
           -c opt \
