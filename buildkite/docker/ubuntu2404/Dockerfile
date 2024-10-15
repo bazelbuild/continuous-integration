@@ -26,7 +26,6 @@ RUN apt-get -y update && \
     lcov \
     less \
     libc++-dev \
-    libncurses5 \
     libssl-dev \
     llvm \
     llvm-dev \
@@ -34,8 +33,6 @@ RUN apt-get -y update && \
     netcat-openbsd \
     openssh-client \
     python-is-python3 \
-    python2 \
-    python2-dev \
     python3 \
     python3-dev \
     python3-pip \
@@ -47,6 +44,7 @@ RUN apt-get -y update && \
     software-properties-common \
     sudo \
     unzip \
+    vim \
     wget \
     zip \
     zlib1g-dev \
