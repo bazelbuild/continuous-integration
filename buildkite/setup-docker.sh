@@ -216,26 +216,19 @@ systemctl start docker
 gcloud auth configure-docker --quiet
 
 ### Pull the Docker images that we need in production.
-docker pull "gcr.io/bazel-public/centos7" &
-docker pull "gcr.io/bazel-public/centos7-java8" &
-docker pull "gcr.io/bazel-public/centos7-java11" &
 docker pull "gcr.io/bazel-public/centos7-java11-devtoolset10" &
 docker pull "gcr.io/bazel-public/centos7-releaser" &
 docker pull "gcr.io/bazel-public/debian10-java11" &
 docker pull "gcr.io/bazel-public/debian11-java17" &
-docker pull "gcr.io/bazel-public/ubuntu1604-bazel-java8" &
-docker pull "gcr.io/bazel-public/ubuntu1604-java8" &
-docker pull "gcr.io/bazel-public/ubuntu1804-bazel-java11" &
 docker pull "gcr.io/bazel-public/ubuntu1804-java11" &
 docker pull "gcr.io/bazel-public/ubuntu2004" &
-docker pull "gcr.io/bazel-public/ubuntu2004-bazel-java11" &
-docker pull "gcr.io/bazel-public/ubuntu2004-java11" &
 docker pull "gcr.io/bazel-public/ubuntu2004-java11-kythe" &
 docker pull "gcr.io/bazel-public/ubuntu2204" &
 docker pull "gcr.io/bazel-public/ubuntu2204-java17" &
-docker pull "gcr.io/bazel-public/ubuntu2204-bazel-java17" &
+docker pull "gcr.io/bazel-public/ubuntu2404" &
+docker pull "gcr.io/bazel-public/ubuntu2404-kythe" &
 docker pull "gcr.io/bazel-public/fedora39-java17" &
-docker pull "gcr.io/bazel-public/fedora39-bazel-java17" &
+docker pull "gcr.io/bazel-public/fedora40-java21" &
 wait
 
 poweroff
