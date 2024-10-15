@@ -47,6 +47,7 @@ RUN apt-get -y update && \
     software-properties-common \
     sudo \
     unzip \
+    vim \
     wget \
     zip \
     zlib1g-dev \
