@@ -499,6 +499,13 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2204",
         "python": "python3",
     },
+    "ubuntu2404": {
+        "name": "Ubuntu 24.04",
+        "emoji-name": ":ubuntu: Ubuntu 24.04 LTS",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2404",
+        "python": "python3",
+    },
     "fedora39": {
         "name": "Fedora 39 (OpenJDK 17, gcc 13.1.1)",
         "emoji-name": ":fedora: Fedora 39 (OpenJDK 17, gcc 13.1.1)",
