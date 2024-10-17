@@ -477,10 +477,6 @@ def should_wait_bcr_maintainer_review(modules):
     # Check if any changes in the metadata.json file need a manual review.
     needs_bcr_maintainer_review = should_metadata_change_block_presubmit(modules, pr_labels)
 
-    # If using MODULE_SELECTIONS, always wait for BCR maintainer's approval to proceed.
-    if is_using_module_selection():
-        needs_bcr_maintainer_review = True
-
     # Run BCR validations on target modules and decide if the presubmit jobs should be blocked.
     if should_bcr_validation_block_presubmit(modules, pr_labels):
         needs_bcr_maintainer_review = True
@@ -540,7 +536,8 @@ def main(argv=None):
             if len(pipeline_steps) == previous_size:
                 error("No pipeline steps generated for %s@%s. Please check the configuration." % (module_name, module_version))
 
-        if should_wait_bcr_maintainer_review(modules) and pipeline_steps:
+        # If using MODULE_SELECTIONS, always wait for BCR maintainer's approval to proceed and skip running BCR validations.
+        if (is_using_module_selection() or should_wait_bcr_maintainer_review(modules)) and pipeline_steps:
             pipeline_steps = [{"block": "Wait on BCR maintainer review", "blocked_state": "running"}] + pipeline_steps
 
         upload_jobs_to_pipeline(pipeline_steps)
