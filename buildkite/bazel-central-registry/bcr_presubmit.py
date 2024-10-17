@@ -537,8 +537,12 @@ def main(argv=None):
                 error("No pipeline steps generated for %s@%s. Please check the configuration." % (module_name, module_version))
 
         # If using MODULE_SELECTIONS, always wait for BCR maintainer's approval to proceed and skip running BCR validations.
-        if (is_using_module_selection() or should_wait_bcr_maintainer_review(modules)) and pipeline_steps:
-            pipeline_steps = [{"block": "Wait on BCR maintainer review", "blocked_state": "running"}] + pipeline_steps
+
+        if pipeline_steps:
+            if is_using_module_selection():
+                pipeline_steps = [{"block": "Please review generated jobs before proceeding", "blocked_state": "running"}] + pipeline_steps
+            elif should_wait_bcr_maintainer_review(modules):
+                pipeline_steps = [{"block": "Wait on BCR maintainer review", "blocked_state": "running"}] + pipeline_steps
 
         upload_jobs_to_pipeline(pipeline_steps)
     elif args.subparsers_name == "anonymous_module_runner":
