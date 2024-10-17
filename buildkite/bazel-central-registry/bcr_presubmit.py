@@ -101,7 +101,7 @@ def get_target_modules():
         modules = select_modules_from_env_vars()
         if modules:
             bazelci.print_expanded_group("The following modules are selected:\n\n%s" % "\n".join([f"{name}@{version}" for name, version in modules]))
-            return list(set(modules))
+            return sorted(list(set(modules)))
         else:
             raise BcrPipelineException("MODULE_SELECTIONS env var didn't select any modules!")
 
@@ -115,7 +115,7 @@ def get_target_modules():
         if s:
             modules.append(s.groups())
 
-    return list(set(modules))
+    return sorted(list(set(modules)))
 
 
 def get_metadata_json(module_name):
