@@ -536,9 +536,9 @@ def main(argv=None):
             if len(pipeline_steps) == previous_size:
                 error("No pipeline steps generated for %s@%s. Please check the configuration." % (module_name, module_version))
 
-        # If using MODULE_SELECTIONS, always wait for BCR maintainer's approval to proceed and skip running BCR validations.
 
         if pipeline_steps:
+            # If using MODULE_SELECTIONS, always wait for BCR maintainer's approval to proceed and skip running BCR validations.
             if is_using_module_selection():
                 pipeline_steps = [{"block": "Please review generated jobs before proceeding", "blocked_state": "running"}] + pipeline_steps
             elif should_wait_bcr_maintainer_review(modules):
