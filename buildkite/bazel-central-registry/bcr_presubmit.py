@@ -140,16 +140,23 @@ def get_patch_file(module_name, module_version, patch):
 def get_overlay_file(module_name, module_version, filename):
     return BCR_REPO_DIR.joinpath("modules/%s/%s/overlay/%s" % (module_name, module_version, filename))
 
-def get_anonymous_module_task_config(module_name, module_version):
-    return bazelci.load_config(http_url=None,
-                               file_config=get_presubmit_yml(module_name, module_version),
-                               allow_imports=False)
+def maybe_overwrite_bazel_version(bazel_version, config):
+    if not bazel_version:
+        return
+    for task in config.get("tasks"):
+        config["tasks"][task]["bazel"] = bazel_version
 
+def get_anonymous_module_task_config(module_name, module_version, bazel_version=None):
+    config = yaml.safe_load(open(get_presubmit_yml(module_name, module_version), "r"))
+    maybe_overwrite_bazel_version(bazel_version, config)
+    bazelci.expand_task_config(config)
+    return config
 
-def get_test_module_task_config(module_name, module_version):
+def get_test_module_task_config(module_name, module_version, bazel_version=None):
     orig_presubmit = yaml.safe_load(open(get_presubmit_yml(module_name, module_version), "r"))
     if "bcr_test_module" in orig_presubmit:
         config = orig_presubmit["bcr_test_module"]
+        maybe_overwrite_bazel_version(bazel_version, config)
         bazelci.expand_task_config(config)
         return config
     return {}
@@ -520,13 +527,17 @@ def main(argv=None):
         modules = get_target_modules()
         if not modules:
             bazelci.eprint("No target module versions detected in this branch!")
+
+        # Respect USE_BAZEL_VERSION to override bazel version when selecting modules with MODULE_SELECTIONS
+        bazel_version = os.environ.get("USE_BAZEL_VERSION") if is_using_module_selection() else None
+
         pipeline_steps = []
         for module_name, module_version in modules:
             previous_size = len(pipeline_steps)
 
-            configs = get_anonymous_module_task_config(module_name, module_version)
+            configs = get_anonymous_module_task_config(module_name, module_version, bazel_version)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps)
-            configs = get_test_module_task_config(module_name, module_version)
+            configs = get_test_module_task_config(module_name, module_version, bazel_version)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True)
 
             if len(pipeline_steps) == previous_size:
