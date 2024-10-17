@@ -1057,7 +1057,7 @@ def load_config(http_url, file_config, allow_imports=True, bazel_version=None):
             raise BuildkiteException("Nested imports are not allowed")
 
         for i in imports:
-            imported_tasks = load_imported_tasks(i, http_url, file_config)
+            imported_tasks = load_imported_tasks(i, http_url, file_config, bazel_version)
             config["tasks"].update(imported_tasks)
 
     if len(config["tasks"]) > MAX_TASK_NUMBER:
@@ -1074,7 +1074,7 @@ def load_remote_yaml_file(http_url):
         return yaml.safe_load(reader(resp))
 
 
-def load_imported_tasks(import_name, http_url, file_config):
+def load_imported_tasks(import_name, http_url, file_config, bazel_version):
     if "/" in import_name:
         raise BuildkiteException("Invalid import '%s'" % import_name)
 
@@ -1085,7 +1085,7 @@ def load_imported_tasks(import_name, http_url, file_config):
     else:
         file_config = new_path
 
-    imported_config = load_config(http_url=http_url, file_config=file_config, allow_imports=False)
+    imported_config = load_config(http_url=http_url, file_config=file_config, allow_imports=False, bazel_version=bazel_version)
 
     namespace = import_name.partition(".")[0]
     tasks = {}
