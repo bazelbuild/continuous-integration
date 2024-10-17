@@ -1026,7 +1026,7 @@ def expand_task_config(config):
 def maybe_overwrite_bazel_version(bazel_version, config):
     if not bazel_version:
         return
-    for task in config.get("tasks"):
+    for task in config.get("tasks", {}):
         config["tasks"][task]["bazel"] = bazel_version
 
 
