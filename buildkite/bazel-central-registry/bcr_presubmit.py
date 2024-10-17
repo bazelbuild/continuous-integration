@@ -290,7 +290,7 @@ def run_test(repo_location, task_config_file, task):
     try:
         return bazelci.main(
             [
-                "anonymous_module_runner",
+                "runner",
                 "--task=" + task,
                 "--file_config=%s" % task_config_file,
                 "--repo_location=%s" % repo_location,
