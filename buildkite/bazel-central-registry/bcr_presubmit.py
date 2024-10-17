@@ -140,15 +140,9 @@ def get_patch_file(module_name, module_version, patch):
 def get_overlay_file(module_name, module_version, filename):
     return BCR_REPO_DIR.joinpath("modules/%s/%s/overlay/%s" % (module_name, module_version, filename))
 
-def maybe_overwrite_bazel_version(bazel_version, config):
-    if not bazel_version:
-        return
-    for task in config.get("tasks"):
-        config["tasks"][task]["bazel"] = bazel_version
-
 def get_anonymous_module_task_config(module_name, module_version, bazel_version=None):
     config = yaml.safe_load(open(get_presubmit_yml(module_name, module_version), "r"))
-    maybe_overwrite_bazel_version(bazel_version, config)
+    bazelci.maybe_overwrite_bazel_version(bazel_version, config)
     bazelci.expand_task_config(config)
     return config
 
@@ -156,7 +150,7 @@ def get_test_module_task_config(module_name, module_version, bazel_version=None)
     orig_presubmit = yaml.safe_load(open(get_presubmit_yml(module_name, module_version), "r"))
     if "bcr_test_module" in orig_presubmit:
         config = orig_presubmit["bcr_test_module"]
-        maybe_overwrite_bazel_version(bazel_version, config)
+        bazelci.maybe_overwrite_bazel_version(bazel_version, config)
         bazelci.expand_task_config(config)
         return config
     return {}

@@ -984,7 +984,7 @@ def get_expanded_task(task, combination):
     return expanded_task
 
 
-def fetch_configs(http_url, file_config):
+def fetch_configs(http_url, file_config, bazel_version=None):
     """
     If specified fetches the build configuration from file_config or http_url, else tries to
     read it from .bazelci/presubmit.yml.
@@ -993,7 +993,7 @@ def fetch_configs(http_url, file_config):
     if file_config is not None and http_url is not None:
         raise BuildkiteException("file_config and http_url cannot be set at the same time")
 
-    return load_config(http_url, file_config)
+    return load_config(http_url, file_config, bazel_version)
 
 
 def expand_task_config(config):
@@ -1023,7 +1023,14 @@ def expand_task_config(config):
     config["tasks"].update(expanded_tasks)
 
 
-def load_config(http_url, file_config, allow_imports=True):
+def maybe_overwrite_bazel_version(bazel_version, config):
+    if not bazel_version:
+        return
+    for task in config.get("tasks"):
+        config["tasks"][task]["bazel"] = bazel_version
+
+
+def load_config(http_url, file_config, allow_imports=True, bazel_version=None):
     if http_url:
         config = load_remote_yaml_file(http_url)
     else:
@@ -1041,6 +1048,7 @@ def load_config(http_url, file_config, allow_imports=True):
     if "tasks" not in config:
         config["tasks"] = {}
 
+    maybe_overwrite_bazel_version(bazel_version, config)
     expand_task_config(config)
 
     imports = config.pop("imports", None)
@@ -4455,6 +4463,7 @@ def main(argv=None):
     runner.add_argument("--task", action="store", type=str, default="")
     runner.add_argument("--file_config", type=str)
     runner.add_argument("--http_config", type=str)
+    runner.add_argument("--overwrite_bazel_version", type=str, help="Overwrite the bazel version in the config file.")
     runner.add_argument("--git_repository", type=str)
     runner.add_argument(
         "--git_commit", type=str, help="Reset the git repository to this commit after cloning it"
@@ -4533,7 +4542,9 @@ def main(argv=None):
             elif args.git_repository:
                 clone_git_repository(args.git_repository, args.git_commit)
 
-            configs = fetch_configs(args.http_config, args.file_config)
+            # Maybe overwrite the bazel version for each task, we have to do it before the config expansion.
+            bazel_version = args.overwrite_bazel_version
+            configs = fetch_configs(args.http_config, args.file_config, bazel_version)
             tasks = configs.get("tasks", {})
             task_config = tasks.get(args.task)
             if not task_config:
