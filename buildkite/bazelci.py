@@ -993,7 +993,7 @@ def fetch_configs(http_url, file_config, bazel_version=None):
     if file_config is not None and http_url is not None:
         raise BuildkiteException("file_config and http_url cannot be set at the same time")
 
-    return load_config(http_url, file_config, bazel_version)
+    return load_config(http_url, file_config, bazel_version=bazel_version)
 
 
 def expand_task_config(config):
