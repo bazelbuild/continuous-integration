@@ -315,7 +315,7 @@ def prepare_test_module_repo(module_name, module_version):
     return test_module_root, test_module_presubmit
 
 
-def run_test(repo_location, task_config_file, task):
+def run_test(repo_location, task_config_file, task, bazel_version=None):
     try:
         return bazelci.main(
             [
@@ -323,7 +323,7 @@ def run_test(repo_location, task_config_file, task):
                 "--task=" + task,
                 "--file_config=%s" % task_config_file,
                 "--repo_location=%s" % repo_location,
-            ]
+            ] + (["--overwrite_bazel_version=%s" % bazel_version] if bazel_version else [])
         )
     except subprocess.CalledProcessError as e:
         bazelci.eprint(str(e))
@@ -517,13 +517,15 @@ def main(argv=None):
     test_module_runner.add_argument("--task", type=str)
 
     args = parser.parse_args(argv)
+
+    # Respect USE_BAZEL_VERSION to override bazel version when selecting modules with MODULE_SELECTIONS
+    bazel_version = os.environ.get("USE_BAZEL_VERSION") if is_using_module_selection() else None
+
     if args.subparsers_name == "bcr_presubmit":
         modules = get_target_modules()
         if not modules:
             bazelci.eprint("No target module versions detected in this branch!")
 
-        # Respect USE_BAZEL_VERSION to override bazel version when selecting modules with MODULE_SELECTIONS
-        bazel_version = os.environ.get("USE_BAZEL_VERSION") if is_using_module_selection() else None
 
         pipeline_steps = []
         for module_name, module_version in modules:
@@ -544,10 +546,10 @@ def main(argv=None):
     elif args.subparsers_name == "anonymous_module_runner":
         repo_location = create_anonymous_repo(args.module_name, args.module_version)
         config_file = get_presubmit_yml(args.module_name, args.module_version)
-        return run_test(repo_location, config_file, args.task)
+        return run_test(repo_location, config_file, args.task, bazel_version)
     elif args.subparsers_name == "test_module_runner":
         repo_location, config_file = prepare_test_module_repo(args.module_name, args.module_version)
-        return run_test(repo_location, config_file, args.task)
+        return run_test(repo_location, config_file, args.task, bazel_version)
     else:
         parser.print_help()
         return 2
