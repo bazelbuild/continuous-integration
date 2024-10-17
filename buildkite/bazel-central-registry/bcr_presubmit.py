@@ -112,7 +112,7 @@ def get_patch_file(module_name, module_version, patch):
 def get_overlay_file(module_name, module_version, filename):
     return BCR_REPO_DIR.joinpath("modules/%s/%s/overlay/%s" % (module_name, module_version, filename))
 
-def get_task_config(module_name, module_version):
+def get_anonymous_module_task_config(module_name, module_version):
     return bazelci.load_config(http_url=None,
                                file_config=get_presubmit_yml(module_name, module_version),
                                allow_imports=False)
@@ -142,7 +142,7 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
             '%s bcr_presubmit.py %s --module_name="%s" --module_version="%s" --task=%s'
             % (
                 bazelci.PLATFORMS[platform_name]["python"],
-                "test_module_runner" if is_test_module else "runner",
+                "test_module_runner" if is_test_module else "anonymous_module_runner",
                 module_name,
                 module_version,
                 task_name,
@@ -165,14 +165,11 @@ def scratch_file(root, relative_path, lines=None, mode="w"):
     return abspath
 
 
-def create_simple_repo(module_name, module_version):
-    """Create a simple Bazel module repo which depends on the target module."""
+def create_anonymous_repo(module_name, module_version):
+    """Create an anonymous Bazel module which depends on the target module."""
     root = pathlib.Path(bazelci.get_repositories_root())
     scratch_file(root, "WORKSPACE")
     scratch_file(root, "BUILD")
-    # TODO(pcloudy): Should we test this module as the root module? Maybe we do if we support dev dependency.
-    # Because if the module is not root module, dev dependencies are ignored, which can break test targets.
-    # Another work around is that we can copy the dev dependencies to the generated MODULE.bazel.
     scratch_file(root, "MODULE.bazel", ["bazel_dep(name = '%s', version = '%s')" % (module_name, module_version)])
     scratch_file(root, ".bazelrc", [
         "build --experimental_enable_bzlmod",
@@ -293,7 +290,7 @@ def run_test(repo_location, task_config_file, task):
     try:
         return bazelci.main(
             [
-                "runner",
+                "anonymous_module_runner",
                 "--task=" + task,
                 "--file_config=%s" % task_config_file,
                 "--repo_location=%s" % repo_location,
@@ -476,10 +473,10 @@ def main(argv=None):
 
     subparsers.add_parser("bcr_presubmit")
 
-    runner = subparsers.add_parser("runner")
-    runner.add_argument("--module_name", type=str)
-    runner.add_argument("--module_version", type=str)
-    runner.add_argument("--task", type=str)
+    anonymous_module_runner = subparsers.add_parser("anonymous_module_runner")
+    anonymous_module_runner.add_argument("--module_name", type=str)
+    anonymous_module_runner.add_argument("--module_version", type=str)
+    anonymous_module_runner.add_argument("--task", type=str)
 
     test_module_runner = subparsers.add_parser("test_module_runner")
     test_module_runner.add_argument("--module_name", type=str)
@@ -495,7 +492,7 @@ def main(argv=None):
         for module_name, module_version in modules:
             previous_size = len(pipeline_steps)
 
-            configs = get_task_config(module_name, module_version)
+            configs = get_anonymous_module_task_config(module_name, module_version)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps)
             configs = get_test_module_task_config(module_name, module_version)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True)
@@ -507,8 +504,8 @@ def main(argv=None):
             pipeline_steps = [{"block": "Wait on BCR maintainer review", "blocked_state": "running"}] + pipeline_steps
 
         upload_jobs_to_pipeline(pipeline_steps)
-    elif args.subparsers_name == "runner":
-        repo_location = create_simple_repo(args.module_name, args.module_version)
+    elif args.subparsers_name == "anonymous_module_runner":
+        repo_location = create_anonymous_repo(args.module_name, args.module_version)
         config_file = get_presubmit_yml(args.module_name, args.module_version)
         return run_test(repo_location, config_file, args.task)
     elif args.subparsers_name == "test_module_runner":
