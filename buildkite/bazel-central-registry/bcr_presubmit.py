@@ -60,6 +60,13 @@ def error(msg):
     raise BcrPipelineException("BCR Presubmit failed!")
 
 
+def is_using_module_selection():
+    """
+    Return true if MODULE_SELECTIONS is set
+    """
+    return os.environ.get("MODULE_SELECTIONS")
+
+
 def select_modules_from_env_vars():
     """
     Parses MODULE_SELECTIONS and SMOKE_TEST_PERCENTAGE environment variables
@@ -90,10 +97,13 @@ def get_target_modules():
     If the `MODULE_SELECTIONS` and `SMOKE_TEST_PERCENTAGE(S)` are specified, calculate the target modules from those env vars.
     Otherwise, calculate target modules based on changed files from the main branch.
     """
-    modules = select_modules_from_env_vars()
-    if modules:
-        bazelci.print_expanded_group("The following modules are selected:\n\n%s" % "\n".join([f"{name}@{version}" for name, version in modules]))
-        return list(set(modules))
+    if is_using_module_selection():
+        modules = select_modules_from_env_vars()
+        if modules:
+            bazelci.print_expanded_group("The following modules are selected:\n\n%s" % "\n".join([f"{name}@{version}" for name, version in modules]))
+            return list(set(modules))
+        else:
+            raise BcrPipelineException("MODULE_SELECTIONS env var didn't select any modules!")
 
     # Get the list of changed files compared to the main branch
     output = subprocess.check_output(
@@ -464,6 +474,10 @@ def should_wait_bcr_maintainer_review(modules):
 
     # Check if any changes in the metadata.json file need a manual review.
     needs_bcr_maintainer_review = should_metadata_change_block_presubmit(modules, pr_labels)
+
+    # If using MODULE_SELECTIONS, always wait for BCR maintainer's approval to proceed.
+    if is_using_module_selection():
+        needs_bcr_maintainer_review = True
 
     # Run BCR validations on target modules and decide if the presubmit jobs should be blocked.
     if should_bcr_validation_block_presubmit(modules, pr_labels):
