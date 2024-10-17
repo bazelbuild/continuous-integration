@@ -109,6 +109,7 @@ def get_target_modules():
     output = subprocess.check_output(
         ["git", "diff", "main...HEAD", "--name-only", "--pretty=format:"]
     )
+    modules = []
     # Matching modules/<name>/<version>/
     for line in output.decode("utf-8").split():
         s = re.match(r"modules\/([^\/]+)\/([^\/]+)\/", line)
