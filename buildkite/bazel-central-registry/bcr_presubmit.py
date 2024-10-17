@@ -60,21 +60,39 @@ def error(msg):
     raise BcrPipelineException("BCR Presubmit failed!")
 
 
+def select_modules_from_env_vars():
+    """
+    Parses MODULE_SELECTIONS and SMOKE_TEST_PERCENTAGE environment variables
+    and returns a list of selected module versions.
+    """
+    MODULE_SELECTIONS = os.environ.get('MODULE_SELECTIONS', '')
+    SMOKE_TEST_PERCENTAGE = os.environ.get('SMOKE_TEST_PERCENTAGE', None)
+
+    if not MODULE_SELECTIONS:
+        return []
+
+    selections = [s.strip() for s in MODULE_SELECTIONS.split(',') if s.strip()]
+    args = [f"--select={s}" for s in selections]
+    if SMOKE_TEST_PERCENTAGE:
+        args += [f"--random-percentage={SMOKE_TEST_PERCENTAGE}"]
+    output = subprocess.check_output(
+        ["python3", "./tools/module_selector.py"] + args,
+    )
+    modules = []
+    for line in output.decode("utf-8").split():
+        name, version = line.strip().split("@")
+        modules.append((name, version))
+    return modules
+
+
 def get_target_modules():
     """
-    If the `MODULE_NAME` and `MODULE_VERSION(S)` are specified, calculate the target modules from those env vars.
+    If the `MODULE_SELECTIONS` and `SMOKE_TEST_PERCENTAGE(S)` are specified, calculate the target modules from those env vars.
     Otherwise, calculate target modules based on changed files from the main branch.
     """
-    modules = []
-    if "MODULE_NAME" in os.environ:
-        name = os.environ["MODULE_NAME"]
-        if "MODULE_VERSION" in os.environ:
-            modules.append((name, os.environ["MODULE_VERSION"]))
-        elif "MODULE_VERSIONS" in os.environ:
-            for version in os.environ["MODULE_VERSIONS"].split(","):
-                modules.append((name, version))
-
+    modules = select_modules_from_env_vars()
     if modules:
+        bazelci.print_expanded_group("The following modules are selected:\n\n%s" % "\n".join([f"{name}@{version}" for name, version in modules]))
         return list(set(modules))
 
     # Get the list of changed files compared to the main branch
