@@ -46,6 +46,10 @@ RUN yum install -y yum-utils && \
 # Ensure that Bazel can use its beloved ISO-8859-1 locale.
 RUN localedef -i en_US -f ISO-8859-1 en_US.ISO-8859-1
 
+# CentOS 7 is EoL and doesn't ship with a C.UTF-8 locale out of the box, unlike more
+# modern distributions, so we need to simulate it.
+RUN localedef -i en_US -f UTF-8 C.UTF-8
+
 # Bazelisk
 RUN LATEST_BAZELISK=$(curl -sSI https://github.com/bazelbuild/bazelisk/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
     curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/${LATEST_BAZELISK}/bazelisk-linux-${BUILDARCH} && \
