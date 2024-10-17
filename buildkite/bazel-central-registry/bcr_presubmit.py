@@ -523,7 +523,6 @@ def main(argv=None):
         if not modules:
             bazelci.eprint("No target module versions detected in this branch!")
 
-
         pipeline_steps = []
         for module_name, module_version in modules:
             previous_size = len(pipeline_steps)
@@ -535,7 +534,6 @@ def main(argv=None):
 
             if len(pipeline_steps) == previous_size:
                 error("No pipeline steps generated for %s@%s. Please check the configuration." % (module_name, module_version))
-
 
         if pipeline_steps:
             # If using MODULE_SELECTIONS, always wait for BCR maintainer's approval to proceed and skip running BCR validations.
