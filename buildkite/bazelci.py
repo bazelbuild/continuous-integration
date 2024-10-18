@@ -2786,7 +2786,7 @@ def terminate_background_process(process):
             process.kill()
 
 
-def create_step(label, commands, platform, shards=1, soft_fail=None):
+def create_step(label, commands, platform, shards=1, soft_fail=None, concurrency=None, concurrency_group=None):
     if "docker-image" in PLATFORMS[platform]:
         step = create_docker_step(
             label,
@@ -2831,6 +2831,10 @@ def create_step(label, commands, platform, shards=1, soft_fail=None):
     if platform == "macos":
         step["retry"]["automatic"].append({"exit_status": 128, "limit": 1})
         step["retry"]["automatic"].append({"exit_status": 1, "limit": 1})
+
+    if concurrency and concurrency_group:
+        step["concurrency"] = concurrency
+        step["concurrency_group"] = concurrency_group
 
     return step
 

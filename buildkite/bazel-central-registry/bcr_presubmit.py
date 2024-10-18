@@ -179,7 +179,7 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
             )
         )
         commands = [bazelci.fetch_bazelcipy_command(), fetch_bcr_presubmit_py_command(), command]
-        pipeline_steps.append(bazelci.create_step(label, commands, platform_name))
+        pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=2, concurrency_group="bcr-compatibility-test"))
 
 
 def scratch_file(root, relative_path, lines=None, mode="w"):
