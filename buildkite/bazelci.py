@@ -1027,6 +1027,7 @@ def maybe_overwrite_bazel_version(bazel_version, config):
     if not bazel_version:
         return
     for task in config.get("tasks", {}):
+        config["tasks"][task]["old_bazel"] = config["tasks"][task].get("bazel")
         config["tasks"][task]["bazel"] = bazel_version
 
 
@@ -4563,6 +4564,12 @@ def main(argv=None):
             # See https://github.com/bazelbuild/continuous-integration/issues/1218
             if "BUILDKITE_MESSAGE" in os.environ:
                 os.environ["BUILDKITE_MESSAGE"] = os.environ["BUILDKITE_MESSAGE"][:1000]
+
+            # Give user a warning that the bazel version in the config file has been overridden.
+            old_bazel = task_config.get("old_bazel")
+            if old_bazel:
+                new_bazel = task_config.get("bazel")
+                print_collapsed_group(f":bazel: Bazel version overriden from {old_bazel} to {new_bazel}")
 
             execute_commands(
                 task_config=task_config,
