@@ -96,7 +96,7 @@ def get_html_link_text(content, link):
 def needs_bazel_team_migrate(jobs):
     for job in jobs:
         module, _ = get_module_and_platform(job)
-        if module.spilt("@")[0] in BAZEL_TEAM_OWNED_MODULES:
+        if module.split("@")[0] in BAZEL_TEAM_OWNED_MODULES:
             return True
     return False
 
@@ -195,7 +195,7 @@ def print_flags_need_to_migrate(failed_jobs_per_flag, incompatible_flags):
             jobs_per_module = merge_jobs(jobs.values())
             for module, platforms in jobs_per_module.items():
                 bazel_mark = ""
-                if module.spilt("@")[0] in BAZEL_TEAM_OWNED_MODULES:
+                if module.split("@")[0] in BAZEL_TEAM_OWNED_MODULES:
                     bazel_mark = ":bazel:"
                 platforms_text = ", ".join(platforms)
                 info_text.append(f"  - {bazel_mark}**{module}**: {platforms_text}")
