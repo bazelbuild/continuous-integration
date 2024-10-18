@@ -46,6 +46,22 @@ SCRIPT_URL = {
     "bazel": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py",
 }[BUILDKITE_ORG] + "?{}".format(int(time.time()))
 
+CI_MACHINE_NUM = {
+    "bazel": {
+        "default": 100,
+        "windows": 30,
+        "macos_arm64": 45,
+        "macos": 110,
+        "arm64": 1,
+    },
+    "bazel-testing": {
+        "default": 30,
+        "windows": 4,
+        "macos_arm64": 1,
+        "macos": 10,
+        "arm64": 1,
+    },
+}[BUILDKITE_ORG]
 
 def fetch_bcr_presubmit_py_command():
     return "curl -s {0} -o bcr_presubmit.py".format(SCRIPT_URL)
@@ -179,7 +195,11 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
             )
         )
         commands = [bazelci.fetch_bazelcipy_command(), fetch_bcr_presubmit_py_command(), command]
-        pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=2, concurrency_group="bcr-compatibility-test"))
+        percentage = os.environ.get('CI_RESOURCE_PERCENTAGE', 30) # Default to use only 30% of CI resources
+        queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
+        concurrency = max(1, (percentage * CI_MACHINE_NUM[queue]) // 100)
+        concurrency_group = f"bcr-compatibility-test-queue-{queue}"
+        pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=concurrency, concurrency_group=concurrency_group))
 
 
 def scratch_file(root, relative_path, lines=None, mode="w"):
