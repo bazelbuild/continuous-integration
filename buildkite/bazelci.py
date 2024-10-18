@@ -4573,7 +4573,7 @@ def main(argv=None):
             old_bazel = task_config.get("old_bazel")
             if old_bazel:
                 new_bazel = task_config.get("bazel")
-                print_collapsed_group(f":bazel: Bazel version overriden from {old_bazel} to {new_bazel}")
+                print_collapsed_group(f":bazel: Bazel version overridden from {old_bazel} to {new_bazel}")
 
             execute_commands(
                 task_config=task_config,
