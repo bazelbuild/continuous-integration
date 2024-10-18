@@ -195,7 +195,7 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
             )
         )
         commands = [bazelci.fetch_bazelcipy_command(), fetch_bcr_presubmit_py_command(), command]
-        percentage = os.environ.get('CI_RESOURCE_PERCENTAGE', 30) # Default to use only 30% of CI resources
+        percentage = int(os.environ.get('CI_RESOURCE_PERCENTAGE', 30)) # Default to use only 30% of CI resources
         queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
         concurrency = max(1, (percentage * CI_MACHINE_NUM[queue]) // 100)
         concurrency_group = f"bcr-compatibility-test-queue-{queue}"
