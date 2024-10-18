@@ -66,6 +66,10 @@ CI_MACHINE_NUM = {
 # Default to use only 30% of CI resources for each type of machines.
 CI_RESOURCE_PERCENTAGE = int(os.environ.get('CI_RESOURCE_PERCENTAGE', 30))
 
+REPORT_FLAGS_RESULTS_BCR_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/report_flags_results_bcr.py?{}".format(
+    bazelci.GITHUB_BRANCH, int(time.time())
+)
+
 def fetch_bcr_presubmit_py_command():
     return "curl -s {0} -o bcr_presubmit.py".format(SCRIPT_URL)
 
@@ -514,6 +518,30 @@ def upload_jobs_to_pipeline(pipeline_steps):
         check=True,
     )
 
+def fetch_report_flags_results_bcr_command():
+    return "curl -sS {0} -o report_flags_results_bcr.py".format(
+        REPORT_FLAGS_RESULTS_BCR_URL
+    )
+
+def create_step_for_report_flags_results():
+    parts = [
+        bazelci.PLATFORMS[bazelci.DEFAULT_PLATFORM]["python"],
+        "report_flags_results_bcr.py",
+        "--build_number=%s" % os.getenv("BUILDKITE_BUILD_NUMBER"),
+    ]
+    return [
+        {"wait": "~", "continue_on_failure": "true"},
+        bazelci.create_step(
+            label="Aggregate incompatible flags test result",
+            commands=[
+                bazelci.fetch_bazelcipy_command(),
+                fetch_report_flags_results_bcr_command(),
+                " ".join(parts),
+            ],
+            platform=bazelci.DEFAULT_PLATFORM,
+        ),
+    ]
+
 
 def main(argv=None):
     if argv is None:
@@ -561,6 +589,9 @@ def main(argv=None):
             # If using MODULE_SELECTIONS, always wait for BCR maintainer's approval to proceed and skip running BCR validations.
             if is_using_module_selection():
                 pipeline_steps = [{"block": "Please review generated jobs before proceeding", "blocked_state": "running"}] + pipeline_steps
+                if bazelci.use_bazelisk_migrate():
+                    pipeline_steps += create_step_for_report_flags_results()
+
             elif should_wait_bcr_maintainer_review(modules):
                 pipeline_steps = [{"block": "Wait on BCR maintainer review", "blocked_state": "running"}] + pipeline_steps
 
