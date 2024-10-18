@@ -63,6 +63,9 @@ CI_MACHINE_NUM = {
     },
 }[BUILDKITE_ORG]
 
+# Default to use only 30% of CI resources for each type of machines.
+CI_RESOURCE_PERCENTAGE = int(os.environ.get('CI_RESOURCE_PERCENTAGE', 30))
+
 def fetch_bcr_presubmit_py_command():
     return "curl -s {0} -o bcr_presubmit.py".format(SCRIPT_URL)
 
@@ -195,10 +198,9 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
             )
         )
         commands = [bazelci.fetch_bazelcipy_command(), fetch_bcr_presubmit_py_command(), command]
-        percentage = int(os.environ.get('CI_RESOURCE_PERCENTAGE', 30)) # Default to use only 30% of CI resources
         queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
-        concurrency = max(1, (percentage * CI_MACHINE_NUM[queue]) // 100)
-        concurrency_group = f"bcr-compatibility-test-queue-{queue}"
+        concurrency = max(1, (CI_RESOURCE_PERCENTAGE * CI_MACHINE_NUM[queue]) // 100)
+        concurrency_group = f"bcr-presubmit-test-queue-{queue}"
         pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=concurrency, concurrency_group=concurrency_group))
 
 
