@@ -227,8 +227,8 @@ def merge_jobs(jobs):
     jobs_per_project = collections.defaultdict(list)
     for job in sorted(jobs, key=lambda s: s["name"].lower()):
         project = get_project_name(job)
-        platform = get_platform_name(job)
-        jobs_per_project[project].append(get_html_link_text(platform, job["web_url"]))
+        platform_label = get_platform_emoji_name(job)
+        jobs_per_project[project].append(get_html_link_text(platform_label, job["web_url"]))
     return jobs_per_project
 
 
@@ -248,10 +248,8 @@ def merge_and_format_jobs(jobs, line_pattern):
 
 
 def get_project_name(job):
-    name = job["name"]
-    platform = get_platform_name(job)
-    platform_label = bazelci.PLATFORMS[platform].get("emoji-name")
-    name = name.replace(platform_label, "")
+    # Strip out platform label from job name
+    name = job["name"].replace(get_platform_emoji_name(job), "")
     if bazelci.is_downstream_pipeline():
         # This is for downstream pipeline, parse the pipeline name
         return name.partition("-")[0].partition("(")[0].strip()
@@ -260,19 +258,14 @@ def get_project_name(job):
         return extract_module_version(name)
 
 
-def get_platform_name(job):
+def get_platform_emoji_name(job):
     # By search for the platform label in the job name.
     name = job["name"]
-    platform = ""
     for p in bazelci.PLATFORMS.values():
         platform_label = p.get("emoji-name")
         if platform_label in name:
-            platform = platform_label
-            name = name.replace(platform_label, "")
-            break
-    if not platform:
-        raise bazelci.BuildkiteException("Cannot detect platform name for: " + job["web_url"])
-    return platform
+            return platform_label
+    raise bazelci.BuildkiteException("Cannot detect platform name for: " + job["web_url"])
 
 
 def print_info(context, style, info):
