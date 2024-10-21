@@ -23,15 +23,10 @@
 import os
 import sys
 import subprocess
-import time
 
 import bazelci
 import bcr_presubmit
 from bcr_presubmit import BcrPipelineException
-
-REPORT_FLAGS_RESULTS_BCR_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/report_flags_results_bcr.py?{}".format(
-    bazelci.GITHUB_BRANCH, int(time.time())
-)
 
 CI_MACHINE_NUM = {
     "bazel": {
@@ -53,8 +48,6 @@ CI_MACHINE_NUM = {
 # Default to use only 30% of CI resources for each type of machines.
 CI_RESOURCE_PERCENTAGE = int(os.environ.get('CI_RESOURCE_PERCENTAGE', 30))
 
-def fetch_bcr_presubmit_py_command():
-    return "curl -s {0} -o bcr_presubmit.py".format(bcr_presubmit.SCRIPT_URL)
 
 def select_modules_from_env_vars():
     """
@@ -96,15 +89,11 @@ def get_target_modules():
     else:
         raise BcrPipelineException("MODULE_SELECTIONS env var didn't select any modules!")
 
-def fetch_report_flags_results_bcr_command():
-    return "curl -sS {0} -o report_flags_results_bcr.py".format(
-        REPORT_FLAGS_RESULTS_BCR_URL
-    )
 
 def create_step_for_report_flags_results():
     parts = [
         bazelci.PLATFORMS[bazelci.DEFAULT_PLATFORM]["python"],
-        "report_flags_results_bcr.py",
+        "aggregate_incompatible_flags_test_result.py",
         "--build_number=%s" % os.getenv("BUILDKITE_BUILD_NUMBER"),
     ]
     return [
@@ -113,7 +102,7 @@ def create_step_for_report_flags_results():
             label="Aggregate incompatible flags test result",
             commands=[
                 bazelci.fetch_bazelcipy_command(),
-                fetch_report_flags_results_bcr_command(),
+                bazelci.fetch_aggregate_incompatible_flags_test_result_command(),
                 " ".join(parts),
             ],
             platform=bazelci.DEFAULT_PLATFORM,
@@ -121,13 +110,12 @@ def create_step_for_report_flags_results():
     ]
 
 def main():
-    # Always respect USE_BAZEL_VERSION to override bazel version
-    bazel_version = os.environ.get("USE_BAZEL_VERSION")
-
     modules = get_target_modules()
-
     pipeline_steps = []
+    # A function to calculate concurrency number for each BuildKite queue
     calc_concurrency = lambda queue : max(1, (CI_RESOURCE_PERCENTAGE * CI_MACHINE_NUM[queue]) // 100)
+    # Respect USE_BAZEL_VERSION to override bazel version in presubmit.yml files.
+    bazel_version = os.environ.get("USE_BAZEL_VERSION")
     for module_name, module_version in modules:
         previous_size = len(pipeline_steps)
 
