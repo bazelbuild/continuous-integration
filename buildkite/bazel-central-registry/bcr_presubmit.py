@@ -40,35 +40,10 @@ BCR_REPO_DIR = pathlib.Path(os.getcwd())
 
 BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
 
-SCRIPT_URL = {
-    "bazel-testing": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/pcloudy-bcr-test/buildkite/bazel-central-registry/bcr_presubmit.py",
-    "bazel-trusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py",
-    "bazel": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py",
-}[BUILDKITE_ORG] + "?{}".format(int(time.time()))
-
-CI_MACHINE_NUM = {
-    "bazel": {
-        "default": 100,
-        "windows": 30,
-        "macos_arm64": 45,
-        "macos": 110,
-        "arm64": 1,
-    },
-    "bazel-testing": {
-        "default": 30,
-        "windows": 4,
-        "macos_arm64": 1,
-        "macos": 10,
-        "arm64": 1,
-    },
-}[BUILDKITE_ORG]
-
-# Default to use only 30% of CI resources for each type of machines.
-CI_RESOURCE_PERCENTAGE = int(os.environ.get('CI_RESOURCE_PERCENTAGE', 30))
-
-REPORT_FLAGS_RESULTS_BCR_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/report_flags_results_bcr.py?{}".format(
+SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/bcr_presubmit.py?{}".format(
     bazelci.GITHUB_BRANCH, int(time.time())
 )
+
 
 def fetch_bcr_presubmit_py_command():
     return "curl -s {0} -o bcr_presubmit.py".format(SCRIPT_URL)
@@ -83,51 +58,10 @@ def error(msg):
     raise BcrPipelineException("BCR Presubmit failed!")
 
 
-def is_using_module_selection():
-    """
-    Return true if MODULE_SELECTIONS is set
-    """
-    return os.environ.get("MODULE_SELECTIONS")
-
-
-def select_modules_from_env_vars():
-    """
-    Parses MODULE_SELECTIONS and SMOKE_TEST_PERCENTAGE environment variables
-    and returns a list of selected module versions.
-    """
-    MODULE_SELECTIONS = os.environ.get('MODULE_SELECTIONS', '')
-    SMOKE_TEST_PERCENTAGE = os.environ.get('SMOKE_TEST_PERCENTAGE', None)
-
-    if not MODULE_SELECTIONS:
-        return []
-
-    selections = [s.strip() for s in MODULE_SELECTIONS.split(',') if s.strip()]
-    args = [f"--select={s}" for s in selections]
-    if SMOKE_TEST_PERCENTAGE:
-        args += [f"--random-percentage={SMOKE_TEST_PERCENTAGE}"]
-    output = subprocess.check_output(
-        ["python3", "./tools/module_selector.py"] + args,
-    )
-    modules = []
-    for line in output.decode("utf-8").split():
-        name, version = line.strip().split("@")
-        modules.append((name, version))
-    return modules
-
-
 def get_target_modules():
     """
-    If the `MODULE_SELECTIONS` and `SMOKE_TEST_PERCENTAGE(S)` are specified, calculate the target modules from those env vars.
-    Otherwise, calculate target modules based on changed files from the main branch.
+    Calculate target modules based on changed files from the main branch.
     """
-    if is_using_module_selection():
-        modules = select_modules_from_env_vars()
-        if modules:
-            bazelci.print_expanded_group("The following modules are selected:\n\n%s" % "\n".join([f"{name}@{version}" for name, version in modules]))
-            return sorted(list(set(modules)))
-        else:
-            raise BcrPipelineException("MODULE_SELECTIONS env var didn't select any modules!")
-
     # Get the list of changed files compared to the main branch
     output = subprocess.check_output(
         ["git", "diff", "main...HEAD", "--name-only", "--pretty=format:"]
@@ -180,7 +114,7 @@ def get_test_module_task_config(module_name, module_version, bazel_version=None)
     return {}
 
 
-def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False):
+def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False, overwrite_bazel_version=None, calc_concurrency=None):
     for task_name, task_config in task_configs.items():
         platform_name = bazelci.get_platform_for_task(task_name, task_config)
         label = bazelci.PLATFORMS[platform_name]["emoji-name"] + " {0}@{1} {2}".format(
@@ -192,19 +126,23 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
         if bazel_version:
             label = ":bazel:{} - ".format(bazel_version) + label
         command = (
-            '%s bcr_presubmit.py %s --module_name="%s" --module_version="%s" --task=%s'
+            '%s bcr_presubmit.py %s --module_name="%s" --module_version="%s" --task=%s %s'
             % (
                 bazelci.PLATFORMS[platform_name]["python"],
                 "test_module_runner" if is_test_module else "anonymous_module_runner",
                 module_name,
                 module_version,
                 task_name,
+                "--overwrite_bazel_version=%s" % overwrite_bazel_version if overwrite_bazel_version else ""
             )
         )
         commands = [bazelci.fetch_bazelcipy_command(), fetch_bcr_presubmit_py_command(), command]
-        queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
-        concurrency = max(1, (CI_RESOURCE_PERCENTAGE * CI_MACHINE_NUM[queue]) // 100)
-        concurrency_group = f"bcr-presubmit-test-queue-{queue}"
+        if calc_concurrency is None:
+            concurrency = concurrency_group = None
+        else:
+            queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
+            concurrency = calc_concurrency(queue)
+            concurrency_group = f"bcr-presubmit-test-queue-{queue}"
         pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=concurrency, concurrency_group=concurrency_group))
 
 
@@ -342,7 +280,7 @@ def prepare_test_module_repo(module_name, module_version):
     return test_module_root, test_module_presubmit
 
 
-def run_test(repo_location, task_config_file, task, bazel_version=None):
+def run_test(repo_location, task_config_file, task, overwrite_bazel_version=None):
     try:
         return bazelci.main(
             [
@@ -350,7 +288,7 @@ def run_test(repo_location, task_config_file, task, bazel_version=None):
                 "--task=" + task,
                 "--file_config=%s" % task_config_file,
                 "--repo_location=%s" % repo_location,
-            ] + (["--overwrite_bazel_version=%s" % bazel_version] if bazel_version else [])
+            ] + (["--overwrite_bazel_version=%s" % overwrite_bazel_version] if overwrite_bazel_version else [])
         )
     except subprocess.CalledProcessError as e:
         bazelci.eprint(str(e))
@@ -518,30 +456,6 @@ def upload_jobs_to_pipeline(pipeline_steps):
         check=True,
     )
 
-def fetch_report_flags_results_bcr_command():
-    return "curl -sS {0} -o report_flags_results_bcr.py".format(
-        REPORT_FLAGS_RESULTS_BCR_URL
-    )
-
-def create_step_for_report_flags_results():
-    parts = [
-        bazelci.PLATFORMS[bazelci.DEFAULT_PLATFORM]["python"],
-        "report_flags_results_bcr.py",
-        "--build_number=%s" % os.getenv("BUILDKITE_BUILD_NUMBER"),
-    ]
-    return [
-        {"wait": "~", "continue_on_failure": "true"},
-        bazelci.create_step(
-            label="Aggregate incompatible flags test result",
-            commands=[
-                bazelci.fetch_bazelcipy_command(),
-                fetch_report_flags_results_bcr_command(),
-                " ".join(parts),
-            ],
-            platform=bazelci.DEFAULT_PLATFORM,
-        ),
-    ]
-
 
 def main(argv=None):
     if argv is None:
@@ -556,17 +470,16 @@ def main(argv=None):
     anonymous_module_runner = subparsers.add_parser("anonymous_module_runner")
     anonymous_module_runner.add_argument("--module_name", type=str)
     anonymous_module_runner.add_argument("--module_version", type=str)
+    anonymous_module_runner.add_argument("--overwrite_bazel_version", type=str)
     anonymous_module_runner.add_argument("--task", type=str)
 
     test_module_runner = subparsers.add_parser("test_module_runner")
     test_module_runner.add_argument("--module_name", type=str)
     test_module_runner.add_argument("--module_version", type=str)
+    test_module_runner.add_argument("--overwrite_bazel_version", type=str)
     test_module_runner.add_argument("--task", type=str)
 
     args = parser.parse_args(argv)
-
-    # Respect USE_BAZEL_VERSION to override bazel version when selecting modules with MODULE_SELECTIONS
-    bazel_version = os.environ.get("USE_BAZEL_VERSION") if is_using_module_selection() else None
 
     if args.subparsers_name == "bcr_presubmit":
         modules = get_target_modules()
@@ -577,32 +490,25 @@ def main(argv=None):
         for module_name, module_version in modules:
             previous_size = len(pipeline_steps)
 
-            configs = get_anonymous_module_task_config(module_name, module_version, bazel_version)
+            configs = get_anonymous_module_task_config(module_name, module_version)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps)
-            configs = get_test_module_task_config(module_name, module_version, bazel_version)
+            configs = get_test_module_task_config(module_name, module_version)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True)
 
             if len(pipeline_steps) == previous_size:
                 error("No pipeline steps generated for %s@%s. Please check the configuration." % (module_name, module_version))
 
-        if pipeline_steps:
-            # If using MODULE_SELECTIONS, always wait for BCR maintainer's approval to proceed and skip running BCR validations.
-            if is_using_module_selection():
-                pipeline_steps = [{"block": "Please review generated jobs before proceeding", "blocked_state": "running"}] + pipeline_steps
-                if bazelci.use_bazelisk_migrate():
-                    pipeline_steps += create_step_for_report_flags_results()
-
-            elif should_wait_bcr_maintainer_review(modules):
-                pipeline_steps = [{"block": "Wait on BCR maintainer review", "blocked_state": "running"}] + pipeline_steps
+        if should_wait_bcr_maintainer_review(modules) and pipeline_steps:
+            pipeline_steps = [{"block": "Wait on BCR maintainer review", "blocked_state": "running"}] + pipeline_steps
 
         upload_jobs_to_pipeline(pipeline_steps)
     elif args.subparsers_name == "anonymous_module_runner":
         repo_location = create_anonymous_repo(args.module_name, args.module_version)
         config_file = get_presubmit_yml(args.module_name, args.module_version)
-        return run_test(repo_location, config_file, args.task, bazel_version)
+        return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
     elif args.subparsers_name == "test_module_runner":
         repo_location, config_file = prepare_test_module_repo(args.module_name, args.module_version)
-        return run_test(repo_location, config_file, args.task, bazel_version)
+        return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
     else:
         parser.print_help()
         return 2
