@@ -46,6 +46,8 @@ BAZEL_TEAM_OWNED_MODULES = [
     "rules_testing",
 ]
 
+PROJECT = "module" if PIPELINE == "bcr-bazel-compatibility-test" else "project"
+
 class LogFetcher(threading.Thread):
     def __init__(self, job, client):
         threading.Thread.__init__(self)
@@ -123,7 +125,7 @@ def needs_bazel_team_migrate(jobs):
 
 
 def print_flags_ready_to_flip(failed_jobs_per_flag, incompatible_flags):
-    info_text1 = ["#### The following flags didn't break any passing projects"]
+    info_text1 = [f"#### The following flags didn't break any passing {PROJECT}s"]
     for flag in sorted(list(incompatible_flags.keys())):
         if flag not in failed_jobs_per_flag:
             html_link_text = get_html_link_text(":github:", incompatible_flags[flag])
@@ -133,7 +135,7 @@ def print_flags_ready_to_flip(failed_jobs_per_flag, incompatible_flags):
         info_text1 = []
 
     info_text2 = [
-        "#### The following flags didn't break any passing Bazel team owned/co-owned projects"
+        f"#### The following flags didn't break any passing Bazel team owned/co-owned {PROJECT}s"
     ]
     for flag, jobs in failed_jobs_per_flag.items():
         if flag not in incompatible_flags:
@@ -162,7 +164,7 @@ def print_already_fail_jobs(already_failing_jobs):
 
 
 def print_projects_need_to_migrate(failed_jobs_per_flag):
-    info_text = ["#### The following projects need migration"]
+    info_text = [f"#### The following {PROJECT}s need migration"]
     jobs_need_migration = {}
     for jobs in failed_jobs_per_flag.values():
         for job in jobs.values():
@@ -182,7 +184,7 @@ def print_projects_need_to_migrate(failed_jobs_per_flag):
     s1 = "" if project_num == 1 else "s"
     s2 = "s" if project_num == 1 else ""
     info_text.append(
-        f"<details><summary>{project_num} project{s1} need{s2} migration, click to see details</summary><ul>"
+        f"<details><summary>{project_num} {PROJECT}{s1} need{s2} migration, click to see details</summary><ul>"
     )
 
     entries = merge_and_format_jobs(job_list, "    <li><strong>{}</strong>: {}</li>")
