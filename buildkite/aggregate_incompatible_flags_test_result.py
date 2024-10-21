@@ -302,8 +302,8 @@ def analyze_logs(build_number, client):
 
     threads = []
     for job in build_info["jobs"]:
-        # Some irrelevant job has no "state" field
-        if "state" in job:
+        # Some irrelevant job has no "state" or "raw_log_url" field
+        if "state" in job and "raw_log_url" in job:
             thread = LogFetcher(job, client)
             threads.append(thread)
             thread.start()
