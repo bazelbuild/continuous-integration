@@ -140,7 +140,7 @@ def main():
             bcr_presubmit.error("No pipeline steps generated for %s@%s. Please check the configuration." % (module_name, module_version))
 
     if pipeline_steps:
-        # Always wait for BCR maintainer's approval to proceed and skip running BCR validations.
+        # Always wait for approval to proceed
         pipeline_steps = [{"block": "Please review generated jobs before proceeding", "blocked_state": "running"}] + pipeline_steps
         if bazelci.use_bazelisk_migrate():
             pipeline_steps += create_step_for_report_flags_results()
