@@ -120,9 +120,9 @@ def main():
         previous_size = len(pipeline_steps)
 
         configs = bcr_presubmit.get_anonymous_module_task_config(module_name, module_version, bazel_version)
-        bcr_presubmit.add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, calc_concurrency=calc_concurrency)
+        bcr_presubmit.add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, overwrite_bazel_version=bazel_version, calc_concurrency=calc_concurrency)
         configs = bcr_presubmit.get_test_module_task_config(module_name, module_version, bazel_version)
-        bcr_presubmit.add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True, calc_concurrency=calc_concurrency)
+        bcr_presubmit.add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True, overwrite_bazel_version=bazel_version, calc_concurrency=calc_concurrency)
 
         if len(pipeline_steps) == previous_size:
             bcr_presubmit.error("No pipeline steps generated for %s@%s. Please check the configuration." % (module_name, module_version))
