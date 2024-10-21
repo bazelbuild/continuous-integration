@@ -34,7 +34,16 @@ FLAG_LINE_PATTERN = re.compile(r"\s*(?P<flag>--\S+)\s*")
 MODULE_VERSION_PATTERN = re.compile(r'(?P<module_version>[a-z](?:[a-z0-9._-]*[a-z0-9])?@[^\s]+)')
 
 BAZEL_TEAM_OWNED_MODULES = [
+    "bazel-skylib",
+    "rules_android",
+    "rules_android_ndk",
     "rules_cc",
+    "rules_java",
+    "rules_license",
+    "rules_pkg",
+    "rules_platform",
+    "rules_shell",
+    "rules_testing",
 ]
 
 class LogFetcher(threading.Thread):
@@ -217,7 +226,7 @@ def print_flags_need_to_migrate(failed_jobs_per_flag, incompatible_flags):
     if not printed_flag_boxes:
         return
     info_text = [
-        "#### Downstream projects need to migrate for the following flags:",
+        "#### Projects need to migrate for the following flags:",
         "Projects marked with :bazel: need to be migrated by the Bazel team.",
     ]
     print_info("flags_need_to_migrate", "error", info_text)
