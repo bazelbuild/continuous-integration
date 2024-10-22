@@ -66,6 +66,9 @@ WORKDIR /
 # Allow using sudo inside the container.
 RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
+# Ensure that Bazel can use its beloved ISO-8859-1 locale.
+RUN localedef -i en_US -f ISO-8859-1 en_US.ISO-8859-1
+
 FROM ubuntu2004-bazel-nojdk AS ubuntu2004-nojdk
 
 ### Install Google Cloud SDK.
