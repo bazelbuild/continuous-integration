@@ -699,16 +699,28 @@ gwD6RBL0qz1PFfg7Zw==
             project=("bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"),
         )
 
-    def _open_url(self, url, params=[]):
-        try:
-            params_str = "".join("&{}={}".format(k, v) for k, v in params)
-            return (
-                urllib.request.urlopen("{}?access_token={}{}".format(url, self._token, params_str))
-                .read()
-                .decode("utf-8", "ignore")
-            )
-        except urllib.error.HTTPError as ex:
-            raise BuildkiteException("Failed to open {}: {} - {}".format(url, ex.code, ex.reason))
+    def _open_url(self, url, params=[], retries=5):
+        params_str = "".join("&{}={}".format(k, v) for k, v in params)
+        full_url = "{}?access_token={}{}".format(url, self._token, params_str)
+
+        for attempt in range(retries):
+            try:
+                response = urllib.request.urlopen(full_url)
+                return response.read().decode("utf-8", "ignore")
+            except urllib.error.HTTPError as ex:
+                # Handle specific error codes
+                if ex.code == 429:  # Too Many Requests
+                    retry_after = ex.headers.get("Retry-After")
+                    if retry_after:
+                        wait_time = int(retry_after)
+                    else:
+                        wait_time = (2 ** attempt)  # Exponential backoff if no Retry-After header
+
+                    time.sleep(wait_time)
+                else:
+                    raise BuildkiteException("Failed to open {}: {} - {}".format(url, ex.code, ex.reason))
+
+        raise BuildkiteException(f"Failed to open {url} after {retries} retries.")
 
     def get_pipeline_info(self):
         """Get details for a pipeline given its organization slug
