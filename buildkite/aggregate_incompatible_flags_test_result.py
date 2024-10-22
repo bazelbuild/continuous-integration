@@ -31,6 +31,23 @@ FAIL_IF_MIGRATION_REQUIRED = os.environ.get("USE_BAZELISK_MIGRATE", "").upper() 
 
 FLAG_LINE_PATTERN = re.compile(r"\s*(?P<flag>--\S+)\s*")
 
+MODULE_VERSION_PATTERN = re.compile(r'(?P<module_version>[a-z](?:[a-z0-9._-]*[a-z0-9])?@[^\s]+)')
+
+BAZEL_TEAM_OWNED_MODULES = [
+    "bazel-skylib",
+    "rules_android",
+    "rules_android_ndk",
+    "rules_cc",
+    "rules_java",
+    "rules_license",
+    "rules_pkg",
+    "rules_platform",
+    "rules_shell",
+    "rules_testing",
+]
+
+PROJECT = "module" if PIPELINE == "bcr-bazel-compatibility-test" else "project"
+
 class LogFetcher(threading.Thread):
     def __init__(self, job, client):
         threading.Thread.__init__(self)
@@ -59,12 +76,22 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
         if index_success == -1 or index_failure == -1:
             raise bazelci.BuildkiteException("Cannot recognize log of " + job["web_url"])
         for line in log[index_failure:].split("\n"):
+            # Strip out BuildKite timestamp prefix
+            line = re.sub(r'\x1b.*?\x07', '', line.strip())
+            if not line:
+                break
             handle_failing_flags(line)
         log = log[0 : log.rfind("+++ Result")]
 
     # If the job failed for other reasons, we add it into already failing jobs.
     if job["state"] == "failed":
         already_failing_jobs.append(job)
+
+
+def extract_module_version(line):
+    match = MODULE_VERSION_PATTERN.search(line)
+    if match:
+        return match.group("module_version")
 
 
 def extract_flag(line):
@@ -77,19 +104,28 @@ def get_html_link_text(content, link):
     return f'<a href="{link}" target="_blank">{content}</a>'
 
 
+def is_project_owned_by_bazel_team(project):
+    if bazelci.is_downstream_pipeline() and project in bazelci.DOWNSTREAM_PROJECTS and bazelci.DOWNSTREAM_PROJECTS[project].get(
+        "owned_by_bazel"
+    ):
+        # Check the downstream projects definition.
+        return True
+    elif project.split("@")[0] in BAZEL_TEAM_OWNED_MODULES:
+        # Parse the module name and check if it's bazel team owned.
+        return True
+    return False
+
 # Check if any of the given jobs needs to be migrated by the Bazel team
 def needs_bazel_team_migrate(jobs):
     for job in jobs:
-        pipeline, _ = get_pipeline_and_platform(job)
-        if pipeline in bazelci.DOWNSTREAM_PROJECTS and bazelci.DOWNSTREAM_PROJECTS[pipeline].get(
-            "owned_by_bazel"
-        ):
+        project = get_project_name(job)
+        if is_project_owned_by_bazel_team(project):
             return True
     return False
 
 
 def print_flags_ready_to_flip(failed_jobs_per_flag, incompatible_flags):
-    info_text1 = ["#### The following flags didn't break any passing projects"]
+    info_text1 = [f"#### The following flags didn't break any passing {PROJECT}s"]
     for flag in sorted(list(incompatible_flags.keys())):
         if flag not in failed_jobs_per_flag:
             html_link_text = get_html_link_text(":github:", incompatible_flags[flag])
@@ -99,7 +135,7 @@ def print_flags_ready_to_flip(failed_jobs_per_flag, incompatible_flags):
         info_text1 = []
 
     info_text2 = [
-        "#### The following flags didn't break any passing Bazel team owned/co-owned projects"
+        f"#### The following flags didn't break any passing Bazel team owned/co-owned {PROJECT}s"
     ]
     for flag, jobs in failed_jobs_per_flag.items():
         if flag not in incompatible_flags:
@@ -128,7 +164,7 @@ def print_already_fail_jobs(already_failing_jobs):
 
 
 def print_projects_need_to_migrate(failed_jobs_per_flag):
-    info_text = ["#### The following projects need migration"]
+    info_text = [f"#### The following {PROJECT}s need migration"]
     jobs_need_migration = {}
     for jobs in failed_jobs_per_flag.values():
         for job in jobs.values():
@@ -141,14 +177,14 @@ def print_projects_need_to_migrate(failed_jobs_per_flag):
 
     projects = set()
     for job in job_list:
-        project, _ = get_pipeline_and_platform(job)
+        project = get_project_name(job)
         projects.add(project)
     project_num = len(projects)
 
     s1 = "" if project_num == 1 else "s"
     s2 = "s" if project_num == 1 else ""
     info_text.append(
-        f"<details><summary>{project_num} project{s1} need{s2} migration, click to see details</summary><ul>"
+        f"<details><summary>{project_num} {PROJECT}{s1} need{s2} migration, click to see details</summary><ul>"
     )
 
     entries = merge_and_format_jobs(job_list, "    <li><strong>{}</strong>: {}</li>")
@@ -179,62 +215,68 @@ def print_flags_need_to_migrate(failed_jobs_per_flag, incompatible_flags):
         if jobs:
             github_url = incompatible_flags[flag]
             info_text = [f"* **{flag}** " + get_html_link_text(":github:", github_url)]
-            jobs_per_pipeline = merge_jobs(jobs.values())
-            for pipeline, platforms in jobs_per_pipeline.items():
+            jobs_per_project = merge_jobs(jobs.values())
+            for project, platforms in jobs_per_project.items():
                 bazel_mark = ""
-                if pipeline in bazelci.DOWNSTREAM_PROJECTS and bazelci.DOWNSTREAM_PROJECTS[
-                    pipeline
-                ].get("owned_by_bazel"):
+                if is_project_owned_by_bazel_team(project):
                     bazel_mark = ":bazel:"
                 platforms_text = ", ".join(platforms)
-                info_text.append(f"  - {bazel_mark}**{pipeline}**: {platforms_text}")
+                info_text.append(f"  - {bazel_mark}**{project}**: {platforms_text}")
             # Use flag as the context so that each flag gets a different info box.
             print_info(flag, "error", info_text)
             printed_flag_boxes = True
     if not printed_flag_boxes:
         return
     info_text = [
-        "#### Downstream projects need to migrate for the following flags:",
+        "#### Projects need to migrate for the following flags:",
         "Projects marked with :bazel: need to be migrated by the Bazel team.",
     ]
     print_info("flags_need_to_migrate", "error", info_text)
 
 
 def merge_jobs(jobs):
-    jobs_per_pipeline = collections.defaultdict(list)
+    jobs_per_project = collections.defaultdict(list)
     for job in sorted(jobs, key=lambda s: s["name"].lower()):
-        pipeline, platform = get_pipeline_and_platform(job)
-        jobs_per_pipeline[pipeline].append(get_html_link_text(platform, job["web_url"]))
-    return jobs_per_pipeline
+        project = get_project_name(job)
+        platform_label = get_platform_emoji_name(job)
+        jobs_per_project[project].append(get_html_link_text(platform_label, job["web_url"]))
+    return jobs_per_project
 
 
 def merge_and_format_jobs(jobs, line_pattern):
-    # Merges all jobs for a single pipeline into one line.
+    # Merges all jobs for a single project into one line.
     # Example:
-    #   pipeline (platform1)
-    #   pipeline (platform2)
-    #   pipeline (platform3)
+    #   project (platform1)
+    #   project (platform2)
+    #   project (platform3)
     # with line_pattern ">> {}: {}" becomes
-    #   >> pipeline: platform1, platform2, platform3
-    jobs_per_pipeline = merge_jobs(jobs)
+    #   >> project: platform1, platform2, platform3
+    jobs_per_project = merge_jobs(jobs)
     return [
-        line_pattern.format(pipeline, ", ".join(platforms))
-        for pipeline, platforms in jobs_per_pipeline.items()
+        line_pattern.format(project, ", ".join(platforms))
+        for project, platforms in jobs_per_project.items()
     ]
 
 
-def get_pipeline_and_platform(job):
+def get_project_name(job):
+    # Strip out platform label from job name
+    name = job["name"].replace(get_platform_emoji_name(job), "")
+    if bazelci.is_downstream_pipeline():
+        # This is for downstream pipeline, parse the pipeline name
+        return name.partition("-")[0].partition("(")[0].strip()
+    else:
+        # This is for BCR compatibility test pipeline, parse the module name + version
+        return extract_module_version(name)
+
+
+def get_platform_emoji_name(job):
+    # By search for the platform label in the job name.
     name = job["name"]
-    platform = ""
     for p in bazelci.PLATFORMS.values():
         platform_label = p.get("emoji-name")
         if platform_label in name:
-            platform = platform_label
-            name = name.replace(platform_label, "")
-            break
-
-    name = name.partition("-")[0].partition("(")[0].strip()
-    return name, platform
+            return platform_label
+    raise bazelci.BuildkiteException("Cannot detect platform name for: " + job["web_url"])
 
 
 def print_info(context, style, info):
@@ -264,8 +306,8 @@ def analyze_logs(build_number, client):
 
     threads = []
     for job in build_info["jobs"]:
-        # Some irrelevant job has no "state" field
-        if "state" in job:
+        # Some irrelevant job has no "state" or "raw_log_url" field
+        if "state" in job and "raw_log_url" in job:
             thread = LogFetcher(job, client)
             threads.append(thread)
             thread.start()

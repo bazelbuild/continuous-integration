@@ -984,7 +984,7 @@ def get_expanded_task(task, combination):
     return expanded_task
 
 
-def fetch_configs(http_url, file_config):
+def fetch_configs(http_url, file_config, bazel_version=None):
     """
     If specified fetches the build configuration from file_config or http_url, else tries to
     read it from .bazelci/presubmit.yml.
@@ -993,7 +993,7 @@ def fetch_configs(http_url, file_config):
     if file_config is not None and http_url is not None:
         raise BuildkiteException("file_config and http_url cannot be set at the same time")
 
-    return load_config(http_url, file_config)
+    return load_config(http_url, file_config, bazel_version=bazel_version)
 
 
 def expand_task_config(config):
@@ -1023,7 +1023,15 @@ def expand_task_config(config):
     config["tasks"].update(expanded_tasks)
 
 
-def load_config(http_url, file_config, allow_imports=True):
+def maybe_overwrite_bazel_version(bazel_version, config):
+    if not bazel_version:
+        return
+    for task in config.get("tasks", {}):
+        config["tasks"][task]["old_bazel"] = config["tasks"][task].get("bazel")
+        config["tasks"][task]["bazel"] = bazel_version
+
+
+def load_config(http_url, file_config, allow_imports=True, bazel_version=None):
     if http_url:
         config = load_remote_yaml_file(http_url)
     else:
@@ -1041,6 +1049,7 @@ def load_config(http_url, file_config, allow_imports=True):
     if "tasks" not in config:
         config["tasks"] = {}
 
+    maybe_overwrite_bazel_version(bazel_version, config)
     expand_task_config(config)
 
     imports = config.pop("imports", None)
@@ -1049,7 +1058,7 @@ def load_config(http_url, file_config, allow_imports=True):
             raise BuildkiteException("Nested imports are not allowed")
 
         for i in imports:
-            imported_tasks = load_imported_tasks(i, http_url, file_config)
+            imported_tasks = load_imported_tasks(i, http_url, file_config, bazel_version)
             config["tasks"].update(imported_tasks)
 
     if len(config["tasks"]) > MAX_TASK_NUMBER:
@@ -1066,7 +1075,7 @@ def load_remote_yaml_file(http_url):
         return yaml.safe_load(reader(resp))
 
 
-def load_imported_tasks(import_name, http_url, file_config):
+def load_imported_tasks(import_name, http_url, file_config, bazel_version):
     if "/" in import_name:
         raise BuildkiteException("Invalid import '%s'" % import_name)
 
@@ -1077,7 +1086,7 @@ def load_imported_tasks(import_name, http_url, file_config):
     else:
         file_config = new_path
 
-    imported_config = load_config(http_url=http_url, file_config=file_config, allow_imports=False)
+    imported_config = load_config(http_url=http_url, file_config=file_config, allow_imports=False, bazel_version=bazel_version)
 
     namespace = import_name.partition(".")[0]
     tasks = {}
@@ -2777,7 +2786,7 @@ def terminate_background_process(process):
             process.kill()
 
 
-def create_step(label, commands, platform, shards=1, soft_fail=None):
+def create_step(label, commands, platform, shards=1, soft_fail=None, concurrency=None, concurrency_group=None):
     if "docker-image" in PLATFORMS[platform]:
         step = create_docker_step(
             label,
@@ -2822,6 +2831,10 @@ def create_step(label, commands, platform, shards=1, soft_fail=None):
     if platform == "macos":
         step["retry"]["automatic"].append({"exit_status": 128, "limit": 1})
         step["retry"]["automatic"].append({"exit_status": 1, "limit": 1})
+
+    if concurrency and concurrency_group:
+        step["concurrency"] = concurrency
+        step["concurrency_group"] = concurrency_group
 
     return step
 
@@ -4455,6 +4468,7 @@ def main(argv=None):
     runner.add_argument("--task", action="store", type=str, default="")
     runner.add_argument("--file_config", type=str)
     runner.add_argument("--http_config", type=str)
+    runner.add_argument("--overwrite_bazel_version", type=str, help="Overwrite the bazel version in the config file.")
     runner.add_argument("--git_repository", type=str)
     runner.add_argument(
         "--git_commit", type=str, help="Reset the git repository to this commit after cloning it"
@@ -4533,7 +4547,9 @@ def main(argv=None):
             elif args.git_repository:
                 clone_git_repository(args.git_repository, args.git_commit)
 
-            configs = fetch_configs(args.http_config, args.file_config)
+            # Maybe overwrite the bazel version for each task, we have to do it before the config expansion.
+            bazel_version = args.overwrite_bazel_version
+            configs = fetch_configs(args.http_config, args.file_config, bazel_version)
             tasks = configs.get("tasks", {})
             task_config = tasks.get(args.task)
             if not task_config:
@@ -4552,6 +4568,12 @@ def main(argv=None):
             # See https://github.com/bazelbuild/continuous-integration/issues/1218
             if "BUILDKITE_MESSAGE" in os.environ:
                 os.environ["BUILDKITE_MESSAGE"] = os.environ["BUILDKITE_MESSAGE"][:1000]
+
+            # Give user a warning that the bazel version in the config file has been overridden.
+            old_bazel = task_config.get("old_bazel")
+            if old_bazel:
+                new_bazel = task_config.get("bazel")
+                print_collapsed_group(f":bazel: Bazel version overridden from {old_bazel} to {new_bazel}")
 
             execute_commands(
                 task_config=task_config,
