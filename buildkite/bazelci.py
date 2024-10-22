@@ -710,11 +710,11 @@ gwD6RBL0qz1PFfg7Zw==
             except urllib.error.HTTPError as ex:
                 # Handle specific error codes
                 if ex.code == 429:  # Too Many Requests
-                    retry_after = ex.headers.get("Retry-After")
+                    retry_after = ex.headers.get("RateLimit-Reset")
                     if retry_after:
                         wait_time = int(retry_after)
                     else:
-                        wait_time = (2 ** attempt)  # Exponential backoff if no Retry-After header
+                        wait_time = (2 ** attempt)  # Exponential backoff if no RateLimit-Reset header
 
                     time.sleep(wait_time)
                 else:
