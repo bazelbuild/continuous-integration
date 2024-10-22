@@ -34,6 +34,6 @@ A new build can be triggered via the [BCR Bazel Compatibility Test](https://buil
 
 * `USE_BAZELISK_MIGRATE`: (Optional) Set this env var to `1` to enable testing incompatible flags with Bazelisk's [`--migrate`](https://github.com/bazelbuild/bazelisk?tab=readme-ov-file#--migrate) feature. A report will be generated for the pipeline if this feature is enabled.
 
-* `INCOMPATIBLE_FLAGS`: (Optional) Specifies the list of incompatible flags to be tested with Bazelisk. By default incompatible flags are fetched by parsing titles of [open Bazel Github issues](https://github.com/bazelbuild/bazel/issues?q=is%3Aopen+is%3Aissue+label%3Aincompatible-change+label%3Amigration-ready) with `incompatible-change` and `migration-ready` labels.
+* `INCOMPATIBLE_FLAGS`: (Optional) Specifies the list of incompatible flags to be tested with Bazelisk. By default incompatible flags are fetched by parsing titles of [open Bazel Github issues](https://github.com/bazelbuild/bazel/issues?q=is%3Aopen+is%3Aissue+label%3Aincompatible-change+label%3Amigration-ready) with `incompatible-change` and `migration-ready` labels. Make sure the Bazel version you select support those flags.
 
 * `CI_RESOURCE_PERCENTAGE`: (Optional) Specifies the percentage of CI machine resources to use for running tests. Default is 30%. **ATTENTION**: please do NOT overwhelm CI during busy hours.
