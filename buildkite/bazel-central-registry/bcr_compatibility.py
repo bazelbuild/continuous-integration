@@ -26,7 +26,6 @@ import subprocess
 
 import bazelci
 import bcr_presubmit
-from bcr_presubmit import BcrPipelineException
 
 CI_MACHINE_NUM = {
     "bazel": {
@@ -80,14 +79,14 @@ def get_target_modules():
     Otherwise, calculate target modules based on changed files from the main branch.
     """
     if "MODULE_SELECTIONS" not in os.environ:
-        raise BcrPipelineException("Please set MODULE_SELECTIONS env var to select modules for testing!")
+        raise ValueError("Please set MODULE_SELECTIONS env var to select modules for testing!")
 
     modules = select_modules_from_env_vars()
     if modules:
         bazelci.print_expanded_group("The following modules are selected:\n\n%s" % "\n".join([f"{name}@{version}" for name, version in modules]))
         return sorted(list(set(modules)))
     else:
-        raise BcrPipelineException("MODULE_SELECTIONS env var didn't select any modules!")
+        raise ValueError("MODULE_SELECTIONS env var didn't select any modules!")
 
 
 def create_step_for_report_flags_results():
