@@ -33,7 +33,7 @@ FLAG_LINE_PATTERN = re.compile(r"\s*(?P<flag>--\S+)\s*")
 
 MODULE_VERSION_PATTERN = re.compile(r'(?P<module_version>[a-z](?:[a-z0-9._-]*[a-z0-9])?@[^\s]+)')
 
-BAZEL_TEAM_OWNED_MODULES = [
+BAZEL_TEAM_OWNED_MODULES = frozenset([
     "bazel-skylib",
     "rules_android",
     "rules_android_ndk",
@@ -44,7 +44,7 @@ BAZEL_TEAM_OWNED_MODULES = [
     "rules_platform",
     "rules_shell",
     "rules_testing",
-]
+])
 
 PROJECT = "module" if PIPELINE == "bcr-bazel-compatibility-test" else "project"
 
