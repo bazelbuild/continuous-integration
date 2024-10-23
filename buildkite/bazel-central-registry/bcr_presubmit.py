@@ -73,7 +73,7 @@ def get_target_modules():
         if s:
             modules.append(s.groups())
 
-    return sorted(list(set(modules)))
+    return sorted(set(modules))
 
 
 def get_metadata_json(module_name):
