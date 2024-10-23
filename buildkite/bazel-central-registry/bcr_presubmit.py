@@ -118,14 +118,13 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
     for task_name, task_config in task_configs.items():
         platform_name = bazelci.get_platform_for_task(task_name, task_config)
         platform_label = bazelci.PLATFORMS[platform_name]["emoji-name"]
-        label = "{0}@{1} - {2} - {3}".format(
-            module_name, module_version, platform_label, task_config["name"] if "name" in task_config else ""
-        )
+        task_name = task_config.get("name", "")
+        label = f"{module_name}@{module_version} - {platform_label} - {task_name}"
         # The bazel version should always be set in the task config due to https://github.com/bazelbuild/bazel-central-registry/pull/1387
         # But fall back to empty string for more robustness.
         bazel_version = task_config.get("bazel", "")
         if bazel_version and not overwrite_bazel_version:
-            label = ":bazel:{} - ".format(bazel_version) + label
+            label = f":bazel:{bazel_version} - {label}"
         command = (
             '%s bcr_presubmit.py %s --module_name="%s" --module_version="%s" --task=%s %s'
             % (
