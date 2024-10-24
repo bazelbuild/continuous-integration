@@ -40,11 +40,9 @@ BCR_REPO_DIR = pathlib.Path(os.getcwd())
 
 BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
 
-SCRIPT_URL = {
-    "bazel-testing": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazel-central-registry/bcr_presubmit.py",
-    "bazel-trusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py",
-    "bazel": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py",
-}[BUILDKITE_ORG] + "?{}".format(int(time.time()))
+SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/bcr_presubmit.py?{}".format(
+    bazelci.GITHUB_BRANCH, int(time.time())
+)
 
 
 def fetch_bcr_presubmit_py_command():
@@ -62,32 +60,20 @@ def error(msg):
 
 def get_target_modules():
     """
-    If the `MODULE_NAME` and `MODULE_VERSION(S)` are specified, calculate the target modules from those env vars.
-    Otherwise, calculate target modules based on changed files from the main branch.
+    Calculate target modules based on changed files from the main branch.
     """
-    modules = []
-    if "MODULE_NAME" in os.environ:
-        name = os.environ["MODULE_NAME"]
-        if "MODULE_VERSION" in os.environ:
-            modules.append((name, os.environ["MODULE_VERSION"]))
-        elif "MODULE_VERSIONS" in os.environ:
-            for version in os.environ["MODULE_VERSIONS"].split(","):
-                modules.append((name, version))
-
-    if modules:
-        return list(set(modules))
-
     # Get the list of changed files compared to the main branch
     output = subprocess.check_output(
         ["git", "diff", "main...HEAD", "--name-only", "--pretty=format:"]
     )
+    modules = set()
     # Matching modules/<name>/<version>/
     for line in output.decode("utf-8").split():
         s = re.match(r"modules\/([^\/]+)\/([^\/]+)\/", line)
         if s:
-            modules.append(s.groups())
+            modules.add(s.groups())
 
-    return list(set(modules))
+    return sorted(modules)
 
 
 def get_metadata_json(module_name):
@@ -112,44 +98,52 @@ def get_patch_file(module_name, module_version, patch):
 def get_overlay_file(module_name, module_version, filename):
     return BCR_REPO_DIR.joinpath("modules/%s/%s/overlay/%s" % (module_name, module_version, filename))
 
-def get_task_config(module_name, module_version):
+def get_anonymous_module_task_config(module_name, module_version, bazel_version=None):
     return bazelci.load_config(http_url=None,
                                file_config=get_presubmit_yml(module_name, module_version),
-                               allow_imports=False)
+                               allow_imports=False,
+                               bazel_version=bazel_version)
 
-
-def get_test_module_task_config(module_name, module_version):
+def get_test_module_task_config(module_name, module_version, bazel_version=None):
     orig_presubmit = yaml.safe_load(open(get_presubmit_yml(module_name, module_version), "r"))
     if "bcr_test_module" in orig_presubmit:
         config = orig_presubmit["bcr_test_module"]
+        bazelci.maybe_overwrite_bazel_version(bazel_version, config)
         bazelci.expand_task_config(config)
         return config
     return {}
 
 
-def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False):
+def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False, overwrite_bazel_version=None, calc_concurrency=None):
     for task_name, task_config in task_configs.items():
         platform_name = bazelci.get_platform_for_task(task_name, task_config)
-        label = bazelci.PLATFORMS[platform_name]["emoji-name"] + " {0}@{1} {2}".format(
-            module_name, module_version, task_config["name"] if "name" in task_config else ""
-        )
+        platform_label = bazelci.PLATFORMS[platform_name]["emoji-name"]
+        task_name = task_config.get("name", "")
+        label = f"{module_name}@{module_version} - {platform_label} - {task_name}"
         # The bazel version should always be set in the task config due to https://github.com/bazelbuild/bazel-central-registry/pull/1387
         # But fall back to empty string for more robustness.
         bazel_version = task_config.get("bazel", "")
-        if bazel_version:
-            label = ":bazel:{} - ".format(bazel_version) + label
+        if bazel_version and not overwrite_bazel_version:
+            label = f":bazel:{bazel_version} - {label}"
         command = (
-            '%s bcr_presubmit.py %s --module_name="%s" --module_version="%s" --task=%s'
+            '%s bcr_presubmit.py %s --module_name="%s" --module_version="%s" --task=%s %s'
             % (
                 bazelci.PLATFORMS[platform_name]["python"],
-                "test_module_runner" if is_test_module else "runner",
+                "test_module_runner" if is_test_module else "anonymous_module_runner",
                 module_name,
                 module_version,
                 task_name,
+                "--overwrite_bazel_version=%s" % overwrite_bazel_version if overwrite_bazel_version else ""
             )
         )
         commands = [bazelci.fetch_bazelcipy_command(), fetch_bcr_presubmit_py_command(), command]
-        pipeline_steps.append(bazelci.create_step(label, commands, platform_name))
+        if calc_concurrency is None:
+            concurrency = concurrency_group = None
+        else:
+            queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
+            concurrency = calc_concurrency(queue)
+            concurrency_group = f"bcr-presubmit-test-queue-{queue}"
+        pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=concurrency, concurrency_group=concurrency_group))
 
 
 def scratch_file(root, relative_path, lines=None, mode="w"):
@@ -165,14 +159,11 @@ def scratch_file(root, relative_path, lines=None, mode="w"):
     return abspath
 
 
-def create_simple_repo(module_name, module_version):
-    """Create a simple Bazel module repo which depends on the target module."""
+def create_anonymous_repo(module_name, module_version):
+    """Create an anonymous Bazel module which depends on the target module."""
     root = pathlib.Path(bazelci.get_repositories_root())
     scratch_file(root, "WORKSPACE")
     scratch_file(root, "BUILD")
-    # TODO(pcloudy): Should we test this module as the root module? Maybe we do if we support dev dependency.
-    # Because if the module is not root module, dev dependencies are ignored, which can break test targets.
-    # Another work around is that we can copy the dev dependencies to the generated MODULE.bazel.
     scratch_file(root, "MODULE.bazel", ["bazel_dep(name = '%s', version = '%s')" % (module_name, module_version)])
     scratch_file(root, ".bazelrc", [
         "build --experimental_enable_bzlmod",
@@ -289,7 +280,7 @@ def prepare_test_module_repo(module_name, module_version):
     return test_module_root, test_module_presubmit
 
 
-def run_test(repo_location, task_config_file, task):
+def run_test(repo_location, task_config_file, task, overwrite_bazel_version=None):
     try:
         return bazelci.main(
             [
@@ -297,7 +288,7 @@ def run_test(repo_location, task_config_file, task):
                 "--task=" + task,
                 "--file_config=%s" % task_config_file,
                 "--repo_location=%s" % repo_location,
-            ]
+            ] + (["--overwrite_bazel_version=%s" % overwrite_bazel_version] if overwrite_bazel_version else [])
         )
     except subprocess.CalledProcessError as e:
         bazelci.eprint(str(e))
@@ -476,26 +467,30 @@ def main(argv=None):
 
     subparsers.add_parser("bcr_presubmit")
 
-    runner = subparsers.add_parser("runner")
-    runner.add_argument("--module_name", type=str)
-    runner.add_argument("--module_version", type=str)
-    runner.add_argument("--task", type=str)
+    anonymous_module_runner = subparsers.add_parser("anonymous_module_runner")
+    anonymous_module_runner.add_argument("--module_name", type=str)
+    anonymous_module_runner.add_argument("--module_version", type=str)
+    anonymous_module_runner.add_argument("--overwrite_bazel_version", type=str)
+    anonymous_module_runner.add_argument("--task", type=str)
 
     test_module_runner = subparsers.add_parser("test_module_runner")
     test_module_runner.add_argument("--module_name", type=str)
     test_module_runner.add_argument("--module_version", type=str)
+    test_module_runner.add_argument("--overwrite_bazel_version", type=str)
     test_module_runner.add_argument("--task", type=str)
 
     args = parser.parse_args(argv)
+
     if args.subparsers_name == "bcr_presubmit":
         modules = get_target_modules()
         if not modules:
             bazelci.eprint("No target module versions detected in this branch!")
+
         pipeline_steps = []
         for module_name, module_version in modules:
             previous_size = len(pipeline_steps)
 
-            configs = get_task_config(module_name, module_version)
+            configs = get_anonymous_module_task_config(module_name, module_version)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps)
             configs = get_test_module_task_config(module_name, module_version)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True)
@@ -507,13 +502,13 @@ def main(argv=None):
             pipeline_steps = [{"block": "Wait on BCR maintainer review", "blocked_state": "running"}] + pipeline_steps
 
         upload_jobs_to_pipeline(pipeline_steps)
-    elif args.subparsers_name == "runner":
-        repo_location = create_simple_repo(args.module_name, args.module_version)
+    elif args.subparsers_name == "anonymous_module_runner":
+        repo_location = create_anonymous_repo(args.module_name, args.module_version)
         config_file = get_presubmit_yml(args.module_name, args.module_version)
-        return run_test(repo_location, config_file, args.task)
+        return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
     elif args.subparsers_name == "test_module_runner":
         repo_location, config_file = prepare_test_module_repo(args.module_name, args.module_version)
-        return run_test(repo_location, config_file, args.task)
+        return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
     else:
         parser.print_help()
         return 2
