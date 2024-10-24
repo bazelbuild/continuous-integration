@@ -66,14 +66,14 @@ def get_target_modules():
     output = subprocess.check_output(
         ["git", "diff", "main...HEAD", "--name-only", "--pretty=format:"]
     )
-    modules = []
+    modules = set()
     # Matching modules/<name>/<version>/
     for line in output.decode("utf-8").split():
         s = re.match(r"modules\/([^\/]+)\/([^\/]+)\/", line)
         if s:
-            modules.append(s.groups())
+            modules.add(s.groups())
 
-    return sorted(set(modules))
+    return sorted(modules)
 
 
 def get_metadata_json(module_name):
