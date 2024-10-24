@@ -499,7 +499,7 @@ def main(argv=None):
                 error("No pipeline steps generated for %s@%s. Please check the configuration." % (module_name, module_version))
 
         if should_wait_bcr_maintainer_review(modules) and pipeline_steps:
-            pipeline_steps = [{"block": "Wait on BCR maintainer review", "blocked_state": "running"}] + pipeline_steps
+            pipeline_steps.insert(0, {"block": "Wait on BCR maintainer review", "blocked_state": "running"})
 
         upload_jobs_to_pipeline(pipeline_steps)
     elif args.subparsers_name == "anonymous_module_runner":
