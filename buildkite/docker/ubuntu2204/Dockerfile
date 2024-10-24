@@ -31,6 +31,7 @@ RUN apt-get -y update && \
     llvm \
     llvm-dev \
     lsb-release \
+    locales \
     netcat-openbsd \
     openssh-client \
     python-is-python3 \
