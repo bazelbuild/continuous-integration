@@ -31,6 +31,7 @@ RUN apt-get -y update && \
     llvm \
     llvm-dev \
     lsb-release \
+    locales \
     netcat-openbsd \
     openssh-client \
     python-is-python3 \
@@ -57,6 +58,9 @@ RUN apt-get -y update && \
 
 # Allow using sudo inside the container.
 RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# Ensure that Bazel can use its beloved ISO-8859-1 locale.
+RUN localedef -i en_US -f ISO-8859-1 en_US.ISO-8859-1
 
 FROM ubuntu2204-bazel-nojdk AS ubuntu2204-nojdk
 
