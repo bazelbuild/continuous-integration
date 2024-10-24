@@ -242,6 +242,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/protobuf.yml",
         "pipeline_slug": "protobuf",
         "owned_by_bazel": True,
+        "disabled_reason": "https://github.com/protocolbuffers/protobuf/issues/18328"
     },
     "Stardoc": {
         "git_repository": "https://github.com/bazelbuild/stardoc.git",
