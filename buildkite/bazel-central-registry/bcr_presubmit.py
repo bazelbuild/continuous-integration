@@ -115,8 +115,8 @@ def get_test_module_task_config(module_name, module_version, bazel_version=None)
 
 
 def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False, overwrite_bazel_version=None, calc_concurrency=None):
-    for task_name, task_config in task_configs.items():
-        platform_name = bazelci.get_platform_for_task(task_name, task_config)
+    for task_id, task_config in task_configs.items():
+        platform_name = bazelci.get_platform_for_task(task_id, task_config)
         platform_label = bazelci.PLATFORMS[platform_name]["emoji-name"]
         task_name = task_config.get("name", "")
         label = f"{module_name}@{module_version} - {platform_label} - {task_name}"
@@ -132,7 +132,7 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
                 "test_module_runner" if is_test_module else "anonymous_module_runner",
                 module_name,
                 module_version,
-                task_name,
+                task_id,
                 "--overwrite_bazel_version=%s" % overwrite_bazel_version if overwrite_bazel_version else ""
             )
         )
