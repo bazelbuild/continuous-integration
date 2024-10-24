@@ -31,6 +31,7 @@ RUN apt-get -y update && \
     llvm \
     llvm-dev \
     lsb-release \
+    locales \
     netcat-openbsd \
     python-is-python3 \
     python2 \
