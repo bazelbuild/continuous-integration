@@ -129,7 +129,7 @@ def main():
     if pipeline_steps:
         if not "SKIP_WAIT_FOR_APPROVAL" in os.environ:
             # Wait for approval to proceed
-            pipeline_steps = [{"block": "Please review generated jobs before proceeding", "blocked_state": "running"}] + pipeline_steps
+            pipeline_steps.insert(0, {"block": "Please review generated jobs before proceeding", "blocked_state": "running"})
         if bazelci.use_bazelisk_migrate():
             pipeline_steps += create_step_for_report_flags_results()
 
