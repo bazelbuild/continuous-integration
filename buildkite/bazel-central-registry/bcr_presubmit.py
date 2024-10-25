@@ -451,6 +451,14 @@ def should_wait_bcr_maintainer_review(modules):
 def upload_jobs_to_pipeline(pipeline_steps):
     """Upload jobs to Buildkite in batches."""
     BATCH_SIZE = 2000
+
+    # Make sure all jobs depends on the block step explicitly
+    # if we need multiple batches and the first step is a block step.
+    if len(pipeline_steps) > BATCH_SIZE and "block" in pipeline_steps[0]:
+        pipeline_steps[0]["key"] = "wait_for_approval"
+        for step in pipeline_steps[1:]:
+            step["depends_on"] = "wait_for_approval"
+
     for i in range(0, len(pipeline_steps), BATCH_SIZE):
         batch = pipeline_steps[i:i + BATCH_SIZE]
         # Upload the batch to Buildkite
