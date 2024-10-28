@@ -588,7 +588,7 @@ BAZEL_DIFF_ANNOTATION_CTX = "'diff'"
 
 # TODO(fweikert): Install bazel-diff on the Docker images and on the Mac machines
 BAZEL_DIFF_URL = (
-    "https://github.com/Tinder/bazel-diff/releases/download/4.5.0/bazel-diff_deploy.jar"
+    "https://github.com/Tinder/bazel-diff/releases/download/8.1.1/bazel-diff_deploy.jar"
 )
 
 AUTO_DIFFBASE_VALUES = frozenset(["1", "true", "auto"])
@@ -2579,6 +2579,7 @@ def run_bazel_diff(bazel_diff_path, old_workspace_dir, new_workspace_dir, bazel_
                     "-jar",
                     bazel_diff_path,
                     "generate-hashes",
+                    "--excludeExternalTargets",
                     "-w",
                     repo_dir,
                     "-b",
