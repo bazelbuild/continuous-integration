@@ -81,13 +81,12 @@ def main(argv=None):
         build_info = client.get_build_info(args.build_number)
         failed_jobs_per_module = {}
         for job in build_info["jobs"]:
-            if "state" in job and "name" in job:
+            if "state" in job and "name" in job and job["state"] == "failed":
                 module = extract_module_version(job["name"])
                 if module:
-                    if job["state"] == "failed":
-                        if module not in failed_jobs_per_module:
-                            failed_jobs_per_module[module] = []
-                        failed_jobs_per_module[module].append(job)
+                    if module not in failed_jobs_per_module:
+                        failed_jobs_per_module[module] = []
+                    failed_jobs_per_module[module].append(job)
 
         print_report_in_markdown(failed_jobs_per_module, build_info["web_url"])
     else:
