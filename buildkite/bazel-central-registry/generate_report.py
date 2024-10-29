@@ -17,7 +17,7 @@
 # pylint: disable=missing-function-docstring
 # pylint: disable=unspecified-encoding
 # pylint: disable=invalid-name
-"""The CI script for BCR Bazel Compatibility Test pipeline."""
+"""The CI script for generate report for BCR Bazel Compatibility Test pipeline."""
 
 
 import argparse
