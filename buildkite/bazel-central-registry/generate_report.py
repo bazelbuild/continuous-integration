@@ -55,10 +55,9 @@ def get_github_maintainer(module_name):
 
 def print_report_in_markdown(failed_jobs_per_module, pipeline_url):
     bazel_version = os.environ.get("USE_BAZEL_VERSION")
+    print("\n")
     print("## The following modules are broken%s:" % (f" with Bazel@{bazel_version}" if bazel_version else ""))
-
     print("BCR Bazel Compatibility Test: ", pipeline_url)
-
     for module, jobs in failed_jobs_per_module.items():
         module_name = module.strip().split("@")[0]
         github_maintainers = get_github_maintainer(module_name)
@@ -66,6 +65,7 @@ def print_report_in_markdown(failed_jobs_per_module, pipeline_url):
         print("Maintainers: ", ", ".join(f"@{maintainer}" for maintainer in github_maintainers))
         for job in jobs:
             print(f"- [{job['name']}]({job['web_url']})")
+    print("\n")
 
 
 def main(argv=None):
