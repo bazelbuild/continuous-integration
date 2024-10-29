@@ -21,6 +21,7 @@
 
 
 import argparse
+import collections
 import os
 import json
 import re
@@ -76,23 +77,21 @@ def main(argv=None):
     parser.add_argument("--build_number", type=str)
 
     args = parser.parse_args(argv)
-    if args.build_number:
-        client = bazelci.BuildkiteClient(org=BUILDKITE_ORG, pipeline=PIPELINE)
-        build_info = client.get_build_info(args.build_number)
-        failed_jobs_per_module = {}
-        for job in build_info["jobs"]:
-            if "state" in job and "name" in job and job["state"] == "failed":
-                module = extract_module_version(job["name"])
-                if not module:
-                    continue
-                if module not in failed_jobs_per_module:
-                    failed_jobs_per_module[module] = []
-                failed_jobs_per_module[module].append(job)
-
-        print_report_in_markdown(failed_jobs_per_module, build_info["web_url"])
-    else:
+    if not args.build_number:
         parser.print_help()
         return 2
+
+    client = bazelci.BuildkiteClient(org=BUILDKITE_ORG, pipeline=PIPELINE)
+    build_info = client.get_build_info(args.build_number)
+    failed_jobs_per_module = collections.defaultdict(list)
+    for job in build_info["jobs"]:
+        if job.get("state") == "failed" and "name" in job:
+            module = extract_module_version(job["name"])
+            if not module:
+                continue
+            failed_jobs_per_module[module].append(job)
+
+    print_report_in_markdown(failed_jobs_per_module, build_info["web_url"])
 
 if __name__ == "__main__":
     sys.exit(main())
