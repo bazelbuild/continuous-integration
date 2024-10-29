@@ -23,6 +23,7 @@
 import os
 import sys
 import subprocess
+import time
 
 import bazelci
 import bcr_presubmit
@@ -46,6 +47,14 @@ CI_MACHINE_NUM = {
 
 # Default to use only 30% of CI resources for each type of machines.
 CI_RESOURCE_PERCENTAGE = int(os.environ.get('CI_RESOURCE_PERCENTAGE', 30))
+
+SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/generate_report.py?{}".format(
+    bazelci.GITHUB_BRANCH, int(time.time())
+)
+
+
+def fetch_generate_report_py_command():
+    return "curl -s {0} -o generate_report.py".format(SCRIPT_URL)
 
 
 def select_modules_from_env_vars():
@@ -108,6 +117,26 @@ def create_step_for_report_flags_results():
         ),
     ]
 
+def create_step_for_generate_report():
+    parts = [
+        bazelci.PLATFORMS[bazelci.DEFAULT_PLATFORM]["python"],
+        "generate_report.py",
+        "--build_number=%s" % os.getenv("BUILDKITE_BUILD_NUMBER"),
+    ]
+    return [
+        {"wait": "~", "continue_on_failure": "true"},
+        bazelci.create_step(
+            label="Generate report in markdown",
+            commands=[
+                bazelci.fetch_bazelcipy_command(),
+                bcr_presubmit.fetch_bcr_presubmit_py_command(),
+                fetch_generate_report_py_command(),
+                " ".join(parts),
+            ],
+            platform=bazelci.DEFAULT_PLATFORM,
+        ),
+    ]
+
 def main():
     modules = get_target_modules()
     pipeline_steps = []
@@ -127,6 +156,8 @@ def main():
             pipeline_steps.insert(0, {"block": "Please review generated jobs before proceeding", "blocked_state": "running"})
         if bazelci.use_bazelisk_migrate():
             pipeline_steps += create_step_for_report_flags_results()
+        else:
+            pipeline_steps += create_step_for_generate_report()
 
     bcr_presubmit.upload_jobs_to_pipeline(pipeline_steps)
 
