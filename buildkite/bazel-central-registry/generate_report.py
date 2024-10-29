@@ -83,10 +83,11 @@ def main(argv=None):
         for job in build_info["jobs"]:
             if "state" in job and "name" in job and job["state"] == "failed":
                 module = extract_module_version(job["name"])
-                if module:
-                    if module not in failed_jobs_per_module:
-                        failed_jobs_per_module[module] = []
-                    failed_jobs_per_module[module].append(job)
+                if not module:
+                    continue
+                if module not in failed_jobs_per_module:
+                    failed_jobs_per_module[module] = []
+                failed_jobs_per_module[module].append(job)
 
         print_report_in_markdown(failed_jobs_per_module, build_info["web_url"])
     else:
