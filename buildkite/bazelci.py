@@ -1042,7 +1042,7 @@ def maybe_overwrite_bazel_version(bazel_version, config):
     for task in config.get("tasks", {}):
         config["tasks"][task]["old_bazel"] = config["tasks"][task].get("bazel")
         config["tasks"][task]["bazel"] = bazel_version
-    matrix = config.get("tasks", {})
+    matrix = config.get("matrix", {})
     if "bazel" in matrix:
         # This will only apply to "old_bazel" and avoid generate multiple tasks with the same config
         matrix["bazel"] = [", ".join(matrix["bazel"])]
