@@ -46,7 +46,7 @@ def get_github_maintainer(module_name):
     metadata = json.load(open(bcr_presubmit.get_metadata_json(module_name), "r"))
     github_maintainers = []
     for maintainer in metadata["maintainers"]:
-        if "github" in maintainer:
+        if "github" in maintainer and not maintainer.get("do_not_notify"):
             github_maintainers.append(maintainer["github"])
 
     if not github_maintainers:
