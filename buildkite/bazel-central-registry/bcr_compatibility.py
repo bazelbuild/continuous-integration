@@ -65,6 +65,14 @@ def select_modules_from_env_vars():
     MODULE_SELECTIONS = os.environ.get('MODULE_SELECTIONS', '')
     SMOKE_TEST_PERCENTAGE = os.environ.get('SMOKE_TEST_PERCENTAGE', None)
 
+    top_n = os.environ.get('SELECT_TOP_BCR_MODULES')
+    if top_n:
+        output = subprocess.check_output(
+            ["bazel", "run", "//tools:module_analyzer", "--", "--name-only", f"--top_n={top_n}"],
+        )
+        top_modules = output.decode("utf-8").split()
+        MODULE_SELECTIONS = ','.join([f"{module}@latest" for module in top_modules])
+
     if not MODULE_SELECTIONS:
         return []
 

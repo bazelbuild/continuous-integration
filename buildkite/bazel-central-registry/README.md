@@ -26,6 +26,8 @@ A new build can be triggered via the [BCR Bazel Compatibility Test](https://buil
 
     Examples: `rules_cc@0.0.13,rules_java@latest`, `rules_*@latest`, `protobuf@<29.0-rc1`
 
+* `SELECT_TOP_BCR_MODULES`: (Optional) Set this env var to select the top N most important modules from the BCR for testing (based on their PageRank values). This will override the `MODULE_SELECTIONS` env var.
+
 * `SMOKE_TEST_PERCENTAGE`: (Optional) Specifies a percentage of selected modules to be randomly sampled for smoke testing.
 
     For example, if `MODULE_SELECTIONS=rules_*@latest` and `SMOKE_TEST_PERCENTAGE=10`, then 10% of modules with name starting with `rules_` will be randomly selected.
