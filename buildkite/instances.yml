@@ -14,7 +14,7 @@
 default_vm:
   boot_disk_size: 500GB
   boot_disk_type: pd-ssd
-  machine_type: c3d-standard-30
+  machine_type: c2-standard-30
   network: default
   region: us-central1
   restart-on-failure: False
@@ -26,7 +26,7 @@ default_vm:
   initial_delay: 60
 instance_groups:
   - name: bk-docker
-    count: 200
+    count: 100
     project: bazel-untrusted
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-docker
@@ -44,7 +44,7 @@ instance_groups:
     image_family: bk-docker
     metadata_from_file: startup-script=startup-docker-pdssd.sh
   - name: bk-windows
-    count: 60
+    count: 30
     project: bazel-untrusted
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-windows
