@@ -92,18 +92,17 @@ def select_modules_from_env_vars():
 
 def get_target_modules():
     """
-    If the `MODULE_SELECTIONS` and `SMOKE_TEST_PERCENTAGE(S)` are specified, calculate the target modules from those env vars.
-    Otherwise, calculate target modules based on changed files from the main branch.
+    Returns a list of selected module versions.
     """
-    if "MODULE_SELECTIONS" not in os.environ:
-        raise ValueError("Please set MODULE_SELECTIONS env var to select modules for testing!")
+    if "MODULE_SELECTIONS" not in os.environ and "SELECT_TOP_BCR_MODULES" not in os.environ:
+        raise ValueError("Please set MODULE_SELECTIONS or SELECT_TOP_BCR_MODULES env var to select modules for testing!")
 
     modules = select_modules_from_env_vars()
     if modules:
         bazelci.print_expanded_group("The following modules are selected:\n\n%s" % "\n".join([f"{name}@{version}" for name, version in modules]))
         return sorted(list(set(modules)))
     else:
-        raise ValueError("MODULE_SELECTIONS env var didn't select any modules!")
+        raise ValueError("No modules were selected, please set MODULE_SELECTIONS or SELECT_TOP_BCR_MODULES correctly!")
 
 
 def create_step_for_report_flags_results():
