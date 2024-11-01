@@ -81,6 +81,13 @@ async function run() {
       issue_number: payload.issue.number,
       labels: [FLAGGED_LABEL],
     });
+  } else if (command === "unstable_ack" || command.startsWith("unstable_ack ")) {
+    await octokit.rest.issues.addLabels({
+      owner,
+      repo,
+      issue_number: payload.issue.number,
+      labels: ["skip-url-stability-check"],
+    });
   } else {
     await octokit.rest.reactions.createForIssueComment({
       owner,
