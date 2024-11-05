@@ -442,6 +442,41 @@ async function runDismissApproval(octokit) {
   }
 }
 
+const SKIP_CHECK_TRIGGER = "@bazel-io skip_check ";
+
+async function runSkipCheck(octokit) {
+  const payload = context.payload;
+  if (!payload.comment.body.startsWith(SKIP_CHECK_TRIGGER)) {
+    return;
+  }
+  const check = payload.comment.body.slice(SKIP_CHECK_TRIGGER.length);
+  const owner = payload.repository.owner.login;
+  const repo = payload.repository.name;
+  if (check == "unstable_url") {
+    await octokit.rest.issues.addLabels({
+      owner,
+      repo,
+      issue_number: payload.issue.number,
+      labels: ["skip-url-stability-check"],
+    });
+    await octokit.rest.reactions.createForIssueComment({
+      owner,
+      repo,
+      comment_id: payload.comment.id,
+      content: '+1',
+    });
+  } else {
+    await octokit.rest.reactions.createForIssueComment({
+      owner,
+      repo,
+      comment_id: payload.comment.id,
+      content: 'confused',
+    });
+    console.error(`unknown check: ${check}`);
+    setFailed(`unknown check: ${check}`);
+  }
+}
+
 async function run() {
   const action_type = getInput("action-type");
   const token = getInput("token");
@@ -453,6 +488,8 @@ async function run() {
     await runPrReviewer(octokit);
   } else if (action_type === "dismiss_approvals") {
     await runDismissApproval(octokit);
+  } else if (action_type === "skip_check") {
+    await runSkipCheck(octokit);
   } else {
     console.log(`Unknown action type: ${action_type}`);
   }
