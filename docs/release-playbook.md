@@ -68,7 +68,7 @@ While the release is active, you should make sure to do the following:
     *   If a Bazel team member has proposed the fixes, then proceed with the cherry-pick and merge it.
     *   If a Bazel team member authors a commit and a community member asks to cherry-pick, then confirm with the author before cherry-picking the PR to make sure this change is safe to merge.
     *   If a community member author a commit and asks to cherry-pick, then confirm with the reviewer before cherry-picking the PR to make sure that the change is safe to merge.
-    *   **Notes:** 
+    *   **Notes:**
         *   All cherry-pick PRs sent to a release branch should be reviewed and approved by a Bazel team member (usually the reviewer of the original PR)
         *   Before merging a change into the release branch, confirm that the original change is already merged at Bazel@HEAD. One simple way to do this is to make sure all cherry-picked commits contain `PiperOrigin-RevId: <CL number>` in the commit message. For some exceptions, if it's really specific to the release branch, include a good reason in the PR description and make sure it's signed-off by a Bazel team member.
         *   If a requested cherry-pick has merge conflicts that cannot be resolved without cherry-picking additional commits, ask the author of the original commit to submit a PR directly against the release branch.
@@ -99,7 +99,7 @@ While the release is active, you should make sure to do the following:
         *   Message: Release-4.2.3rc1 (Or any message you like)
         *   Commit: HEAD
         *   Branch: release-4.2.3rc1
-        *   Option: USE_BAZEL_VERSION=4.2.2 
+        *   Option: USE_BAZEL_VERSION=4.2.2
     *   If the previous version requires changes to the pipeline, create a new branch in the continuous-integration repository with the required changes (see release-4.2.4 [example](https://github.com/bazelbuild/continuous-integration/tree/release-4.2.4)) and explicitly set the buildkite script path. Refer to [this example](https://buildkite.com/bazel-trusted/bazel-release/builds/1076#01879e91-7694-420d-bc1a-4be9f84c0c51).
 1.  Check the postsubmit test run for the release branch to ensure that all
     tests on all platforms pass with the version you're about to release.
@@ -115,7 +115,7 @@ While the release is active, you should make sure to do the following:
     *   This will upload the release candidate binaries to GitHub and our
         apt-get repository. The link is probably of the form:
         https://releases.bazel.build/3.6.0/rc1/index.html
-        
+
 1.  If that worked, click on the "Generate release notes" step to unblock it. If this is the first release candidate, copy and paste the generated text into the release announcements doc. For rcX where X>2, compare the generated notes with the release announcements working doc and add only the new/missing notes. Refer to the "Release announcement" section below for more details.
 
 1. Confirm that the RC published to GitHub looks good. If it's the first RC, add a note stating that the release notes are still being reviewed.
@@ -129,7 +129,7 @@ While the release is active, you should make sure to do the following:
     You can download it from here: https://github.com/bazelbuild/bazel/releases/tag/7.0.1rc1
 
     If you're using Bazelisk, you can point to this RC by setting USE_BAZEL_VERSION=7.0.1rc1.
-    
+
     Please test it out and report any issues [here](https://github.com/bazelbuild/bazel/issues) as soon as possible.
     A draft of the release notes can be found [here](https://docs.google.com/document/d/1pu2ARPweOCTxPsRR8snoDtkC9R51XWRyBXeiC6Ql5so/edit?usp=sharing).
     ```
@@ -138,16 +138,16 @@ While the release is active, you should make sure to do the following:
 
 1.  Post on the #general channel on the [Bazel Slack](https://bazelbuild.slack.com/) announcing that a new RC is out. See [example](https://bazelbuild.slack.com/archives/CA31HN1T3/p1705095377557259).
 
-1. Post a comment on all internal chats announcing that a new RC is out. 
+1. Post a comment on all internal chats announcing that a new RC is out.
 
 1.  Post a comment on all issues / PRs addressed in this RC to ask users to test (this is a manual step for now but will eventually be automated).
 
-    Issues:   
+    Issues:
       ```
       A fix for this issue has been included in [Bazel 7.0.2 RC1](https://github.com/bazelbuild/bazel/releases/tag/7.0.2rc1). Please test out the release candidate and report any issues as soon as possible.
     If you're using Bazelisk, you can point to the latest RC by setting USE_BAZEL_VERSION=7.0.2rc1. Thanks!
       ```
-    PRs: 
+    PRs:
       ```
       The changes in this PR have been included in [Bazel 6.5.0 RC2](https://github.com/bazelbuild/bazel/releases/tag/6.5.0rc2). Please test out the release candidate and report any issues as soon as possible.
     If you're using Bazelisk, you can point to the latest RC by setting USE_BAZEL_VERSION=6.5.0rc2. Thanks!
@@ -161,25 +161,17 @@ While the release is active, you should make sure to do the following:
         *   Branch: release-3.0.0rc2
     *   **Note:** Make sure that downstream builds for the release candidate don't have any extra breakages compared to Bazel@HEAD so that Bazel postsubmits won’t be broken after the release.
 
-1.  Look for failing projects in red.
-    *   Compare the results with the latest Bazel release:
-        *   Jobs built with the latest Bazel:
-            https://buildkite.com/bazel?team=bazel
-        *   Jobs built with release candidate: e.g.
-            https://buildkite.com/bazel/bazel-with-downstream-projects-bazel/builds/287
-
-        If a project is failing with release candidate but not with the latest
-        Bazel release, then there's probably a regression in the candidate. Ask
-        the Bazel sheriff if the problem is already noticed. If not, find out
-        the culprit, file an issue at
-        https://github.com/bazelbuild/bazel/issues and mark it as release
-        blocker.
-
-        If a project is failing with both release candidate and the latest Bazel
-        release, it could be a breakage from the project itself. Go through the
-        build history (eg.
-        [TensorFlow_serving](https://buildkite.com/bazel/tensorflow-serving/builds?page=2))
-        to confirm this, then file an issue to their owners.
+1. Trigger a new pipeline in BuildKite to test the release candidate with top BCR modules.
+    *   Go to https://buildkite.com/bazel/bcr-bazel-compatibility-test
+    *   Click "New Build", then fill in the fields like this:
+        *   Message: Test Bazel 8.0.0rc2 with top BCR modules (Or any message you like)
+        *   Environment Variables:
+            - USE_BAZEL_VERSION=8.0.0rc2
+            - SELECT_TOP_BCR_MODULES=100
+            - SKIP_WAIT_FOR_APPROVAL=1
+    * For a major release, BCR modules might be broken due to incompatible changes. In this case, file or update an issue in the BCR repository to report those breakages.
+      For example, [#3056](https://github.com/bazelbuild/bazel-central-registry/issues/3056).
+    * For a minor release, BCR modules should be passing if there is no previous known breakages reported during the major release test. If there are new breakages, that means there is probably a regression in the release candidate. In this case, file an issue in the Bazel repo and ask the Bazel team to investigate.
 
 1.  Once issues are fixed, create a new candidate with the relevant cherry-picks.
 
@@ -194,11 +186,11 @@ Once the first candidate is available:
     the GitHub issue. Note that there should be a new Bazel Release Announcement document for every major release. For minor and patch releases, use the latest open doc.
 1.  Copy & paste the generated text from the "Generate release notes" step.
 1.  Reorganize the notes per category (C++, Java, etc.).
-1.  Assign a comment to "+[pcloudy@google.com](mailto:pcloudy@google.com)" and "+[wyv@google.com](mailto:wyv@google.com)" for initial review. 
+1.  Assign a comment to "+[pcloudy@google.com](mailto:pcloudy@google.com)" and "+[wyv@google.com](mailto:wyv@google.com)" for initial review.
 1.  Once approved, for each category, add a comment and assign it to the corresponding
     [team contact](https://bazel.build/contribute/maintainers-guide?hl=en#team-labels):
     "+person for review (see guidelines at the top of the doc)".
-    
+
 For each subsequent release candidate:
 
 1. Ensure that new commits are documented in the release announcement doc.
@@ -249,7 +241,7 @@ Note: the above policies are for final releases only. RCs can be created without
                 click "Edit", see if there's a red warning sign next to any binary. You
                 need to manually upload those; get them from
                 `https://storage.googleapis.com/bazel/$RELEASE_NUMBER/release/index.html`.
-    * Once the binaries are uploaded and the GitHub release page looks correct, click on "Build and Publish" to unblock this step. 
+    * Once the binaries are uploaded and the GitHub release page looks correct, click on "Build and Publish" to unblock this step.
     * Verify that the Chocolatey package has been successfully uploaded here: `https://community.chocolatey.org/packages/bazel/<version>`, e.g. [6.2.0](https://community.chocolatey.org/packages/bazel/6.2.0), [6.2.0-rc2](https://community.chocolatey.org/packages/bazel/6.2.0-rc2).
     * Verify that the docker container has been successfully build, pushed, and tagged as `latest` if needed, by checking the container registry. If there are any issues, follow the [instructions](../bazel/oci/README.md) to manually perform these steps. Ping [@meteorcloudy](https://github.com/meteorcloudy) for help.
 
