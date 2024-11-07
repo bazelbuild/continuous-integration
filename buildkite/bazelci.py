@@ -229,6 +229,10 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "pipeline_slug": "rules-platform",
         "owned_by_bazel": True,
     },
+    "rules_python": {
+        "git_repository": "https://github.com/bazelbuild/rules_python.git",
+        "pipeline_slug": "rules-python-python",
+    },
     "rules_testing": {
         "git_repository": "https://github.com/bazelbuild/rules_testing.git",
         "pipeline_slug": "rules-testing",
