@@ -131,19 +131,19 @@ $env:JAVA_HOME = $jdk_root
 ## Install Visual C++ 2017 Build Tools.
 Write-Host "Installing Visual C++ 2017 Build Tools..."
 & choco install visualstudio2017buildtools
-& choco install visualstudio2017-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.Tools.ARM --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
+& choco install visualstudio2017-workload-vctools --package-parameters "--includeRecommended" --params "--add Microsoft.VisualStudio.Component.VC.Tools.ARM --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
 
 ## Install Visual C++ 2019 Build Tools.
 Write-Host "Installing Visual C++ 2019 Build Tools..."
 & choco install visualstudio2019buildtools
-& choco install visualstudio2019-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.Tools.ARM --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
+& choco install visualstudio2019-workload-vctools --package-parameters "--includeRecommended" --params "--add Microsoft.VisualStudio.Component.VC.Tools.ARM --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
 
 ## Install Visual C++ 2022 Build Tools.
 Write-Host "Installing Visual C++ 2022 Build Tools..."
 $tool_version="14.39.17.9."
 & choco install visualstudio2022buildtools
 # & choco install visualstudio2022-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.Tools.ARM --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
-& choco install visualstudio2022-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.${tool_version}x86.x64 --add Microsoft.VisualStudio.Component.VC.${tool_version}ARM --add Microsoft.VisualStudio.Component.VC.${tool_version}ARM64"
+& choco install visualstudio2022-workload-vctools --package-parameters "--includeRecommended" --params "--add Microsoft.VisualStudio.Component.VC.${tool_version}x86.x64 --add Microsoft.VisualStudio.Component.VC.${tool_version}ARM --add Microsoft.VisualStudio.Component.VC.${tool_version}ARM64"
 
 ## Prevent mysteirous failure caused by newer version of MSVC (14.40.33810). See https://github.com/bazelbuild/bazel/issues/22656
 ## Remove directories under C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC that don't match the specified version.
@@ -159,24 +159,18 @@ foreach ($directory in $directories) {
 [Environment]::SetEnvironmentVariable("BAZEL_VC", "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC", "Machine")
 $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 
-## Install Windows 10 SDK
+## Install Windows 11 SDK
 ## https://github.com/bazelbuild/continuous-integration/issues/768
-& choco install windows-sdk-10-version-2004-all
-
-## Install Python2
-Write-Host "Installing Python 2..."
-& choco install python2 --params "/InstallDir:C:\python2"
-$env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+& choco install windows-sdk-11-version-21h2-all
 
 ## Install Python3
 Write-Host "Installing Python 3..."
-& choco install python3 --params "/InstallDir:C:\python3" --version=3.9.7
+& choco install python3 --params "/InstallDir:C:\python3" --version=3.12.3
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 New-Item -ItemType SymbolicLink -Path "C:\python3\python3.exe" -Target "C:\python3\python.exe"
 
 ## Install a couple of Python modules required by TensorFlow.
 Write-Host "Updating Python package management tools..."
-& "C:\Python2\python.exe" -m pip install --upgrade pip setuptools wheel
 & "C:\Python3\python.exe" -m pip install --upgrade pip setuptools wheel
 
 Write-Host "Installing Python packages..."
