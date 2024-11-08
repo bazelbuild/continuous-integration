@@ -175,7 +175,7 @@ Write-Host "Installing Python packages..."
     numpy `
     portpicker `
     protobuf `
-    pyreadline `
+    pyreadline3 `
     six `
     requests `
     pyyaml `
