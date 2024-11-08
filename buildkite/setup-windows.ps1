@@ -161,7 +161,7 @@ $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 
 ## Install Python3
 Write-Host "Installing Python 3..."
-& choco install python3 --params "/InstallDir:C:\python3" --version=3.12.3
+& choco install python312 --params "/InstallDir:C:\python3"
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 New-Item -ItemType SymbolicLink -Path "C:\python3\python3.exe" -Target "C:\python3\python.exe"
 
