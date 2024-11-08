@@ -172,7 +172,7 @@ Write-Host "Updating Python package management tools..."
 Write-Host "Installing Python packages..."
 & "C:\Python3\Scripts\pip.exe" install --upgrade `
     autograd `
-    numpy~=1.21.2 `
+    numpy `
     portpicker `
     protobuf `
     pyreadline `
