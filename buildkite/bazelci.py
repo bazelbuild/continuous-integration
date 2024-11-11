@@ -484,6 +484,10 @@ _TEST_BEP_FILE = "test_bep.json"
 _SHARD_RE = re.compile(r"(.+) \(shard (\d+)\)")
 _SLOWEST_N_TARGETS = 20
 
+# Pipelines with elevated priority. Values are project slugs,
+# i.e. "org_slug/pipeline_slug".
+_PRIORITY_PIPELINES = frozenset(["bazel/google-bazel-presubmit"])
+
 
 class BuildkiteException(Exception):
     """
@@ -580,11 +584,13 @@ gwD6RBL0qz1PFfg7Zw==
                     if retry_after:
                         wait_time = int(retry_after)
                     else:
-                        wait_time = (2 ** attempt)  # Exponential backoff if no RateLimit-Reset header
+                        wait_time = 2**attempt  # Exponential backoff if no RateLimit-Reset header
 
                     time.sleep(wait_time)
                 else:
-                    raise BuildkiteException("Failed to open {}: {} - {}".format(url, ex.code, ex.reason))
+                    raise BuildkiteException(
+                        "Failed to open {}: {} - {}".format(url, ex.code, ex.reason)
+                    )
 
         raise BuildkiteException(f"Failed to open {url} after {retries} retries.")
 
@@ -968,7 +974,9 @@ def load_imported_tasks(import_name, http_url, file_config, bazel_version):
     else:
         file_config = new_path
 
-    imported_config = load_config(http_url=http_url, file_config=file_config, allow_imports=False, bazel_version=bazel_version)
+    imported_config = load_config(
+        http_url=http_url, file_config=file_config, allow_imports=False, bazel_version=bazel_version
+    )
 
     namespace = import_name.partition(".")[0]
     tasks = {}
@@ -2669,7 +2677,9 @@ def terminate_background_process(process):
             process.kill()
 
 
-def create_step(label, commands, platform, shards=1, soft_fail=None, concurrency=None, concurrency_group=None):
+def create_step(
+    label, commands, platform, shards=1, soft_fail=None, concurrency=None, concurrency_group=None
+):
     if "docker-image" in PLATFORMS[platform]:
         step = create_docker_step(
             label,
@@ -2684,6 +2694,12 @@ def create_step(label, commands, platform, shards=1, soft_fail=None, concurrency
             "command": commands,
             "agents": {"queue": PLATFORMS[platform]["queue"]},
         }
+
+    project_slug = "{}/{}".format(
+        os.getenv("BUILDKITE_ORGANIZATION_SLUG"), os.getenv("BUILDKITE_PIPELINE_SLUG")
+    )
+    if project_slug in _PRIORITY_PIPELINES:
+        step["priority"] = 1
 
     if shards > 1:
         # %N means shard counting starts at 1, not 0
@@ -4351,7 +4367,11 @@ def main(argv=None):
     runner.add_argument("--task", action="store", type=str, default="")
     runner.add_argument("--file_config", type=str)
     runner.add_argument("--http_config", type=str)
-    runner.add_argument("--overwrite_bazel_version", type=str, help="Overwrite the bazel version in the config file.")
+    runner.add_argument(
+        "--overwrite_bazel_version",
+        type=str,
+        help="Overwrite the bazel version in the config file.",
+    )
     runner.add_argument("--git_repository", type=str)
     runner.add_argument(
         "--git_commit", type=str, help="Reset the git repository to this commit after cloning it"
@@ -4456,7 +4476,9 @@ def main(argv=None):
             old_bazel = task_config.get("old_bazel")
             if old_bazel:
                 new_bazel = task_config.get("bazel")
-                print_collapsed_group(f":bazel: Bazel version overridden from {old_bazel} to {new_bazel}")
+                print_collapsed_group(
+                    f":bazel: Bazel version overridden from {old_bazel} to {new_bazel}"
+                )
 
             execute_commands(
                 task_config=task_config,
