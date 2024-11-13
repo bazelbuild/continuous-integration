@@ -113,6 +113,17 @@ def get_test_module_task_config(module_name, module_version, bazel_version=None)
         return config
     return {}
 
+def collect_bazel_platform_pairs(task_configs, overwrite_bazel_version):
+    pairs = set()
+    for task_id, task_config in task_configs.items():
+        bazel_version = overwrite_bazel_version if overwrite_bazel_version else task_config.get("bazel", "")
+        platform = bazelci.get_platform_for_task(task_id, task_config)
+        pairs.insert((bazel_version, platform))
+    return pairs
+
+def add_resolution_check_jobs(bazel_platform_pairs):
+    pass
+
 
 def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False, overwrite_bazel_version=None, calc_concurrency=None):
     for task_id, task_config in task_configs.items():
@@ -278,6 +289,9 @@ def prepare_test_module_repo(module_name, module_version):
 
     bazelci.eprint("* Test module ready: %s\n" % test_module_root)
     return test_module_root, test_module_presubmit
+
+def prepare_resolution_check_repo():
+    pass
 
 
 def run_test(repo_location, task_config_file, task, overwrite_bazel_version=None):
@@ -495,6 +509,12 @@ def main(argv=None):
     test_module_runner.add_argument("--overwrite_bazel_version", type=str)
     test_module_runner.add_argument("--task", type=str)
 
+    resolution_check_runner = subparsers.add_parser("resolution_check_runner")
+    resolution_check_runner.add_argument("--module_name", type=str)
+    resolution_check_runner.add_argument("--module_version", type=str)
+    resolution_check_runner.add_argument("--bazel_version", type=str)
+    resolution_check_runner.add_argument("--platform", type=str)
+
     args = parser.parse_args(argv)
 
     if args.subparsers_name == "bcr_presubmit":
@@ -505,14 +525,19 @@ def main(argv=None):
         pipeline_steps = []
         for module_name, module_version in modules:
             previous_size = len(pipeline_steps)
+            bazel_platform_paris = set()
 
             configs = get_anonymous_module_task_config(module_name, module_version)
+            bazel_platform_paris = collect_bazel_platform_pairs(configs)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps)
             configs = get_test_module_task_config(module_name, module_version)
+            bazel_platform_paris |= collect_bazel_platform_pairs(configs)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True)
 
             if len(pipeline_steps) == previous_size:
                 error("No pipeline steps generated for %s@%s. Please check the configuration." % (module_name, module_version))
+
+            add_resolution_check_jobs(bazel_platform_paris)
 
         if should_wait_bcr_maintainer_review(modules) and pipeline_steps:
             pipeline_steps.insert(0, {"block": "Wait on BCR maintainer review", "blocked_state": "running"})
@@ -524,6 +549,9 @@ def main(argv=None):
         return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
     elif args.subparsers_name == "test_module_runner":
         repo_location, config_file = prepare_test_module_repo(args.module_name, args.module_version)
+        return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
+    elif args.subparsers_name == "resolution_check_runner":
+        repo_location, config_file = prepare_resolution_check_repo(args.module_name, args.module_version)
         return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
     else:
         parser.print_help()
