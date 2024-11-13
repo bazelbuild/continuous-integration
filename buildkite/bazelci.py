@@ -1510,8 +1510,21 @@ def get_release_name_from_branch_name():
 
 
 def is_pull_request():
-    third_party_repo = os.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
-    return len(third_party_repo) > 0
+    try:
+        return int(os.getenv("BUILDKITE_PULL_REQUEST")) > 0
+    except:
+        return False
+
+
+def is_third_party_fork():
+    if ":" in os.getenv(
+        "BUILDKITE_BRANCH", ""
+    ):  # Only works if "Prefix third-party fork branch names" is enabled
+        return True
+
+    pr_repo = os.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
+    # We don't accept PRs for GoB repos.
+    return pr_repo and not pr_repo.startswith("https://github.com/bazelbuild/")
 
 
 def print_bazel_version_info(bazel_binary, platform):
@@ -2800,6 +2813,19 @@ def print_project_pipeline(
     buildkite_repo = os.getenv("BUILDKITE_REPO")
     if is_git_on_borg_repo(buildkite_repo):
         show_gerrit_review_link(buildkite_repo, pipeline_steps)
+
+    # Only run presubmits from third-party forks after getting approval from someone with "Build & Read" permissions.
+    if is_pull_request() and is_third_party_fork():
+        pipeline_steps.append(
+            {
+                "block": ":cop: Authorize third-party presubmit run?",
+                "prompt": (
+                    ":rotating_light: :warning: This is an untrusted pull request from a third-party fork. "
+                    "Only unblock the build if the code is not malicious."
+                ),
+                "blocked_state": "running",
+            }
+        )
 
     task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
