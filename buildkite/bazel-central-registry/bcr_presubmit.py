@@ -118,7 +118,7 @@ def collect_bazel_platform_pairs(task_configs, overwrite_bazel_version=None):
     for task_id, task_config in task_configs.items():
         bazel_version = overwrite_bazel_version if overwrite_bazel_version else task_config.get("bazel", "")
         platform = bazelci.get_platform_for_task(task_id, task_config)
-        pairs.insert((bazel_version, platform))
+        pairs.add((bazel_version, platform))
     return pairs
 
 def add_resolution_check_jobs(module_name, module_version, bazel_platform_pairs, pipeline_steps, calc_concurrency=None):
