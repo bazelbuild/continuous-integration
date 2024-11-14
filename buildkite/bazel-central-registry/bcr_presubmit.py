@@ -333,7 +333,7 @@ def prepare_resolution_check_repo(module_name, module_version, bazel_version, pl
     bazelci.eprint("* Append Bzlmod flags to .bazelrc file:\n%s\n" % read(source_root.joinpath(".bazelrc")))
 
     # Use a generate the presubmit.yml file with resolution check commands
-    command_name = "shell_commands" if platform == "windows" else "batch_commands"
+    command_name = "batch_commands" if platform == "windows" else "shell_commands"
     presubmit = {
         "tasks": {
             "resolution_check": {
