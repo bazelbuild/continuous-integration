@@ -348,7 +348,7 @@ def prepare_resolution_check_repo(module_name, module_version, bazel_version, pl
         },
     }
     with presubmit_yml.open("w") as f:
-        yaml.dump(presubmit, f, sort_keys=False)
+        yaml.dump(presubmit, f)
 
     bazelci.eprint("* Resolution check repo ready: %s\n" % source_root)
 
