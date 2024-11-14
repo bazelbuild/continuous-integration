@@ -600,7 +600,7 @@ def main(argv=None):
             if len(pipeline_steps) == previous_size:
                 error("No pipeline steps generated for %s@%s. Please check the configuration." % (module_name, module_version))
 
-            add_resolution_check_jobs(module_name, module_version, bazel_platform_paris)
+            add_resolution_check_jobs(module_name, module_version, bazel_platform_paris, pipeline_steps)
 
         if should_wait_bcr_maintainer_review(modules) and pipeline_steps:
             pipeline_steps.insert(0, {"block": "Wait on BCR maintainer review", "blocked_state": "running"})
