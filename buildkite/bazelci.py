@@ -1411,11 +1411,6 @@ def execute_commands(
                 ":bash: Post Processing (Shell Commands)",
             )
 
-    finally:
-        terminate_background_process(sc_process)
-        if tmpdir:
-            shutil.rmtree(tmpdir)
-
 
 def activate_xcode(task_config):
     supported_versions = sorted(
@@ -2661,20 +2656,6 @@ def execute_command(
             subprocess.PIPE if capture_stderr else None
         ),  # capture_stderr=True when we want exceptions to contain stderr
     ).returncode
-
-
-def execute_command_background(args):
-    eprint(" ".join(args))
-    return subprocess.Popen(args, env=os.environ)
-
-
-def terminate_background_process(process):
-    if process:
-        process.terminate()
-        try:
-            process.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            process.kill()
 
 
 def create_step(
