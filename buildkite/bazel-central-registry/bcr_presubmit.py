@@ -113,7 +113,7 @@ def get_test_module_task_config(module_name, module_version, bazel_version=None)
         return config
     return {}
 
-def collect_bazel_platform_pairs(task_configs, overwrite_bazel_version):
+def collect_bazel_platform_pairs(task_configs, overwrite_bazel_version=None):
     pairs = set()
     for task_id, task_config in task_configs.items():
         bazel_version = overwrite_bazel_version if overwrite_bazel_version else task_config.get("bazel", "")
