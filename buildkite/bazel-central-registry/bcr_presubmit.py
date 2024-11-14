@@ -591,10 +591,10 @@ def main(argv=None):
             bazel_platform_paris = set()
 
             configs = get_anonymous_module_task_config(module_name, module_version)
-            bazel_platform_paris = collect_bazel_platform_pairs(configs)
+            bazel_platform_paris = collect_bazel_platform_pairs(configs.get("tasks", {}))
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps)
             configs = get_test_module_task_config(module_name, module_version)
-            bazel_platform_paris |= collect_bazel_platform_pairs(configs)
+            bazel_platform_paris |= collect_bazel_platform_pairs(configs.get("tasks", {}))
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True)
 
             if len(pipeline_steps) == previous_size:
