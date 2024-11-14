@@ -342,7 +342,7 @@ def prepare_resolution_check_repo(module_name, module_version, bazel_version, pl
                 "platform": f"{platform}",
                 f"{command_name}": [
                     "bazel info --check_direct_dependencies=error",
-                    "bazel mod deps --ignore_dev_dependencies",
+                    "bazel mod deps --ignore_dev_dependency",
                 ],
             },
         },
