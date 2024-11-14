@@ -1124,297 +1124,290 @@ def execute_commands(
         eprint(json.dumps(task_config, indent=2))
 
     tmpdir = tempfile.mkdtemp()
-    sc_process = None
-    try:
-        if is_mac():
-            activate_xcode(task_config)
+    if is_mac():
+        activate_xcode(task_config)
 
-        # If the CI worker runs Bazelisk, we need to forward all required env variables to the test.
-        # Otherwise any integration test that invokes Bazel (=Bazelisk in this case) will fail.
-        test_env_vars = ["LocalAppData"] if platform == "windows" else ["HOME"]
+    # If the CI worker runs Bazelisk, we need to forward all required env variables to the test.
+    # Otherwise any integration test that invokes Bazel (=Bazelisk in this case) will fail.
+    test_env_vars = ["LocalAppData"] if platform == "windows" else ["HOME"]
 
-        # CI should have its own user agent so that we can remove it from Bazel download statistics.
-        os.environ["BAZELISK_USER_AGENT"] = "Bazelisk/BazelCI"
-        test_env_vars.append("BAZELISK_USER_AGENT")
+    # CI should have its own user agent so that we can remove it from Bazel download statistics.
+    os.environ["BAZELISK_USER_AGENT"] = "Bazelisk/BazelCI"
+    test_env_vars.append("BAZELISK_USER_AGENT")
 
-        # We use one binary for all Linux platforms (because we also just release one binary for all
-        # Linux versions and we have to ensure that it works on all of them).
-        binary_platform = platform if is_mac() or is_windows() else LINUX_BINARY_PLATFORM
+    # We use one binary for all Linux platforms (because we also just release one binary for all
+    # Linux versions and we have to ensure that it works on all of them).
+    binary_platform = platform if is_mac() or is_windows() else LINUX_BINARY_PLATFORM
 
-        bazel_binary = "bazel"
-        if use_bazel_at_commit:
-            print_collapsed_group(":gcloud: Downloading Bazel built at " + use_bazel_at_commit)
-            # Linux binaries are published under platform name "centos7"
-            if binary_platform == LINUX_BINARY_PLATFORM:
-                binary_platform = "centos7"
-            os.environ["USE_BAZEL_VERSION"] = download_bazel_binary_at_commit(
-                tmpdir, binary_platform, use_bazel_at_commit
+    bazel_binary = "bazel"
+    if use_bazel_at_commit:
+        print_collapsed_group(":gcloud: Downloading Bazel built at " + use_bazel_at_commit)
+        # Linux binaries are published under platform name "centos7"
+        if binary_platform == LINUX_BINARY_PLATFORM:
+            binary_platform = "centos7"
+        os.environ["USE_BAZEL_VERSION"] = download_bazel_binary_at_commit(
+            tmpdir, binary_platform, use_bazel_at_commit
+        )
+        print_collapsed_group(":bazel: Using Bazel at " + os.environ["USE_BAZEL_VERSION"])
+    elif use_but:
+        print_collapsed_group(":gcloud: Downloading Bazel Under Test")
+        os.environ["USE_BAZEL_VERSION"] = download_bazel_binary(tmpdir, binary_platform)
+        print_collapsed_group(":bazel: Using Bazel at " + os.environ["USE_BAZEL_VERSION"])
+    else:
+        print_collapsed_group(":bazel: Using Bazel version " + bazel_version)
+        if bazel_version:
+            os.environ["USE_BAZEL_VERSION"] = bazel_version
+    if "USE_BAZEL_VERSION" in os.environ and not task_config.get(
+        "skip_use_bazel_version_for_test", False
+    ):
+        # This will only work if the bazel binary in $PATH is actually a bazelisk binary
+        # (https://github.com/bazelbuild/bazelisk).
+        test_env_vars.append("USE_BAZEL_VERSION")
+
+    for key, value in task_config.get("environment", {}).items():
+        # We have to explicitly convert the value to a string, because sometimes YAML tries to
+        # be smart and converts strings like "true" and "false" to booleans.
+        os.environ[key] = os.path.expandvars(str(value))
+
+    # Avoid "Network is unreachable" errors in IPv6-only environments
+    for e in ("COURSIER_OPTS", "JAVA_TOOL_OPTIONS", "SSL_CERT_FILE"):
+        # If users overrode a variable with an empty value above, it won't be added here.
+        if os.getenv(e):
+            test_env_vars.append(e)
+
+    # Set BAZELISK_SHUTDOWN to 1 when we use bazelisk --migrate on Windows.
+    # This is a workaround for https://github.com/bazelbuild/continuous-integration/issues/1012
+    if use_bazelisk_migrate() and platform == "windows":
+        os.environ["BAZELISK_SHUTDOWN"] = "1"
+
+    def PrepareRepoInCwd(print_cmd_groups, initial_setup=False):
+        # Allow the config to override the current working directory.
+        requested_working_dir = task_config.get("working_directory")
+        if requested_working_dir:
+            if os.path.isabs(requested_working_dir):
+                raise BuildkiteException(
+                    f"working_directory must be relative to the repository root, "
+                    "but was {requested_working_dir}"
+                )
+
+            full_requested_working_dir = os.path.abspath(requested_working_dir)
+            if not os.path.isdir(full_requested_working_dir):
+                raise BuildkiteException(
+                    f"{full_requested_working_dir} does not exist or is not a directory"
+                )
+
+            os.chdir(full_requested_working_dir)
+
+        # Dirty workaround for #1660
+        if initial_setup:
+            # Set OUTPUT_BASE environment variable
+            os.environ["OUTPUT_BASE"] = get_output_base(bazel_binary)
+
+            cmd_exec_func = (
+                execute_batch_commands if platform == "windows" else execute_shell_commands
             )
-            print_collapsed_group(":bazel: Using Bazel at " + os.environ["USE_BAZEL_VERSION"])
-        elif use_but:
-            print_collapsed_group(":gcloud: Downloading Bazel Under Test")
-            os.environ["USE_BAZEL_VERSION"] = download_bazel_binary(tmpdir, binary_platform)
-            print_collapsed_group(":bazel: Using Bazel at " + os.environ["USE_BAZEL_VERSION"])
-        else:
-            print_collapsed_group(":bazel: Using Bazel version " + bazel_version)
-            if bazel_version:
-                os.environ["USE_BAZEL_VERSION"] = bazel_version
-        if "USE_BAZEL_VERSION" in os.environ and not task_config.get(
-            "skip_use_bazel_version_for_test", False
-        ):
-            # This will only work if the bazel binary in $PATH is actually a bazelisk binary
-            # (https://github.com/bazelbuild/bazelisk).
-            test_env_vars.append("USE_BAZEL_VERSION")
-
-        for key, value in task_config.get("environment", {}).items():
-            # We have to explicitly convert the value to a string, because sometimes YAML tries to
-            # be smart and converts strings like "true" and "false" to booleans.
-            os.environ[key] = os.path.expandvars(str(value))
-
-        # Avoid "Network is unreachable" errors in IPv6-only environments
-        for e in ("COURSIER_OPTS", "JAVA_TOOL_OPTIONS", "SSL_CERT_FILE"):
-            # If users overrode a variable with an empty value above, it won't be added here.
-            if os.getenv(e):
-                test_env_vars.append(e)
-
-        # Set BAZELISK_SHUTDOWN to 1 when we use bazelisk --migrate on Windows.
-        # This is a workaround for https://github.com/bazelbuild/continuous-integration/issues/1012
-        if use_bazelisk_migrate() and platform == "windows":
-            os.environ["BAZELISK_SHUTDOWN"] = "1"
-
-        def PrepareRepoInCwd(print_cmd_groups, initial_setup=False):
-            # Allow the config to override the current working directory.
-            requested_working_dir = task_config.get("working_directory")
-            if requested_working_dir:
-                if os.path.isabs(requested_working_dir):
-                    raise BuildkiteException(
-                        f"working_directory must be relative to the repository root, "
-                        "but was {requested_working_dir}"
-                    )
-
-                full_requested_working_dir = os.path.abspath(requested_working_dir)
-                if not os.path.isdir(full_requested_working_dir):
-                    raise BuildkiteException(
-                        f"{full_requested_working_dir} does not exist or is not a directory"
-                    )
-
-                os.chdir(full_requested_working_dir)
-
-            # Dirty workaround for #1660
-            if initial_setup:
-                # Set OUTPUT_BASE environment variable
-                os.environ["OUTPUT_BASE"] = get_output_base(bazel_binary)
-
-                cmd_exec_func = (
-                    execute_batch_commands if platform == "windows" else execute_shell_commands
-                )
-                cmd_exec_func(task_config.get("setup", None))
-
-            if platform == "windows":
-                execute_batch_commands(task_config.get("batch_commands", None), print_cmd_groups)
-            else:
-                execute_shell_commands(task_config.get("shell_commands", None), print_cmd_groups)
-
-        PrepareRepoInCwd(True, initial_setup=True)
-
-        bazel_version = print_bazel_version_info(bazel_binary, platform)
-
-        print_environment_variables_info()
-
-        execute_bazel_run(bazel_binary, platform, task_config.get("run_targets", None))
-
-        if needs_clean:
-            execute_bazel_clean(bazel_binary, platform)
-
-        # we need the commit here in order to calculate the correct targets.
-        git_commit = os.getenv("BUILDKITE_COMMIT")
-        if not git_commit:
-            raise BuildkiteInfraException("Unable to determine Git commit for this build")
-
-        test_flags, json_profile_out_test, capture_corrupted_outputs_dir_test = calculate_flags(
-            task_config, "test_flags", "test", tmpdir, test_env_vars
-        )
-
-        build_targets, test_targets, coverage_targets, index_targets = calculate_targets(
-            task_config,
-            bazel_binary,
-            build_only,
-            test_only,
-            os.getcwd(),
-            PrepareRepoInCwd,
-            git_commit,
-            test_flags,
-        )
-
-        if build_targets:
-            (
-                build_flags,
-                json_profile_out_build,
-                capture_corrupted_outputs_dir_build,
-            ) = calculate_flags(task_config, "build_flags", "build", tmpdir, test_env_vars)
-            try:
-                release_name = get_release_name_from_branch_name()
-                execute_bazel_build(
-                    bazel_version,
-                    bazel_binary,
-                    platform,
-                    build_flags
-                    + (
-                        ["--stamp", "--embed_label=%s" % release_name]
-                        if save_but and release_name
-                        else []
-                    ),
-                    build_targets,
-                    None,
-                )
-                if save_but:
-                    upload_bazel_binary(platform)
-            finally:
-                if json_profile_out_build:
-                    upload_json_profile(json_profile_out_build, tmpdir)
-                if capture_corrupted_outputs_dir_build:
-                    upload_corrupted_outputs(capture_corrupted_outputs_dir_build, tmpdir)
-
-        if test_targets:
-            if not is_windows():
-                # On platforms that support sandboxing (Linux, MacOS) we have
-                # to allow access to Bazelisk's cache directory.
-                # However, the flag requires the directory to exist,
-                # so we create it here in order to not crash when a test
-                # does not invoke Bazelisk.
-                bazelisk_cache_dir = get_bazelisk_cache_directory()
-                os.makedirs(bazelisk_cache_dir, mode=0o755, exist_ok=True)
-                test_flags.append("--sandbox_writable_path={}".format(bazelisk_cache_dir))
-
-            # Set BUILDKITE_ANALYTICS_TOKEN so that bazelci-agent can upload test results to Test Analytics
-            if "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN" in os.environ:
-                if THIS_IS_TESTING:
-                    kms_key = "buildkite-testing-api-token"
-                    project = "bazel-untrusted"
-                elif THIS_IS_TRUSTED:
-                    kms_key = "buildkite-trusted-api-token"
-                    project = "bazel-public"
-                else:
-                    kms_key = "buildkite-untrusted-api-token"
-                    project = "bazel-untrusted"
-
-                try:
-                    os.environ["BUILDKITE_ANALYTICS_TOKEN"] = decrypt_token(
-                        encrypted_token=os.environ["ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN"],
-                        kms_key=kms_key,
-                        project=project,
-                    )
-                except Exception as ex:
-                    print_collapsed_group(
-                        ":rotating_light: Test analytics disabled due to an error :warning:"
-                    )
-                    eprint(ex)
-
-            test_bep_file = os.path.join(tmpdir, _TEST_BEP_FILE)
-            # Create an empty test_bep_file so that the bazelci-agent can start to follow the file right away. Otherwise,
-            # there is a race between when bazelci-agent starts to read the file and when Bazel creates the file.
-            open(test_bep_file, "w").close()
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(
-                    upload_test_logs_from_bep, test_bep_file, tmpdir, monitor_flaky_tests
-                )
-                try:
-                    execute_bazel_test(
-                        bazel_version,
-                        bazel_binary,
-                        platform,
-                        test_flags,
-                        test_targets,
-                        test_bep_file,
-                        monitor_flaky_tests,
-                    )
-                finally:
-                    if json_profile_out_test:
-                        upload_json_profile(json_profile_out_test, tmpdir)
-                    if capture_corrupted_outputs_dir_test:
-                        upload_corrupted_outputs(capture_corrupted_outputs_dir_test, tmpdir)
-
-                _ = future.result()
-                # TODO: print results
-
-        if coverage_targets:
-            (
-                coverage_flags,
-                json_profile_out_coverage,
-                capture_corrupted_outputs_dir_coverage,
-            ) = calculate_flags(task_config, "coverage_flags", "coverage", tmpdir, test_env_vars)
-            try:
-                execute_bazel_coverage(
-                    bazel_version,
-                    bazel_binary,
-                    platform,
-                    coverage_flags,
-                    coverage_targets,
-                )
-            finally:
-                if json_profile_out_coverage:
-                    upload_json_profile(json_profile_out_coverage, tmpdir)
-                if capture_corrupted_outputs_dir_coverage:
-                    upload_corrupted_outputs(capture_corrupted_outputs_dir_coverage, tmpdir)
-
-        if index_targets:
-            (
-                index_flags,
-                json_profile_out_index,
-                capture_corrupted_outputs_dir_index,
-            ) = calculate_flags(task_config, "index_flags", "index", tmpdir, test_env_vars)
-            index_upload_policy = task_config.get("index_upload_policy", "IfBuildSuccess")
-            index_upload_gcs = task_config.get("index_upload_gcs", False)
-
-            try:
-                should_upload_kzip = (
-                    True if index_upload_policy == INDEX_UPLOAD_POLICY_ALWAYS else False
-                )
-                try:
-                    execute_bazel_build_with_kythe(
-                        bazel_version,
-                        bazel_binary,
-                        platform,
-                        index_flags,
-                        index_targets,
-                        None,
-                    )
-
-                    if index_upload_policy == INDEX_UPLOAD_POLICY_IF_BUILD_SUCCESS:
-                        should_upload_kzip = True
-                except subprocess.CalledProcessError as e:
-                    # If not running with Always policy, raise the build error.
-                    if index_upload_policy != INDEX_UPLOAD_POLICY_ALWAYS:
-                        handle_bazel_failure(e, "build")
-
-                if should_upload_kzip and not is_pull_request():
-                    try:
-                        merge_and_upload_kythe_kzip(platform, index_upload_gcs)
-                    except subprocess.CalledProcessError:
-                        raise BuildkiteException("Failed to upload kythe kzip")
-            finally:
-                if json_profile_out_index:
-                    upload_json_profile(json_profile_out_index, tmpdir)
-                if capture_corrupted_outputs_dir_index:
-                    upload_corrupted_outputs(capture_corrupted_outputs_dir_index, tmpdir)
+            cmd_exec_func(task_config.get("setup", None))
 
         if platform == "windows":
-            execute_batch_commands(
-                task_config.get("post_batch_commands", None),
-                True,
-                ":batch: Post Processing (Batch Commands)",
-            )
+            execute_batch_commands(task_config.get("batch_commands", None), print_cmd_groups)
         else:
-            execute_shell_commands(
-                task_config.get("post_shell_commands", None),
-                True,
-                ":bash: Post Processing (Shell Commands)",
-            )
+            execute_shell_commands(task_config.get("shell_commands", None), print_cmd_groups)
 
-    finally:
-        terminate_background_process(sc_process)
-        if tmpdir:
-            shutil.rmtree(tmpdir)
+    PrepareRepoInCwd(True, initial_setup=True)
+
+    bazel_version = print_bazel_version_info(bazel_binary, platform)
+
+    print_environment_variables_info()
+
+    execute_bazel_run(bazel_binary, platform, task_config.get("run_targets", None))
+
+    if needs_clean:
+        execute_bazel_clean(bazel_binary, platform)
+
+    # we need the commit here in order to calculate the correct targets.
+    git_commit = os.getenv("BUILDKITE_COMMIT")
+    if not git_commit:
+        raise BuildkiteInfraException("Unable to determine Git commit for this build")
+
+    test_flags, json_profile_out_test, capture_corrupted_outputs_dir_test = calculate_flags(
+        task_config, "test_flags", "test", tmpdir, test_env_vars
+    )
+
+    build_targets, test_targets, coverage_targets, index_targets = calculate_targets(
+        task_config,
+        bazel_binary,
+        build_only,
+        test_only,
+        os.getcwd(),
+        PrepareRepoInCwd,
+        git_commit,
+        test_flags,
+    )
+
+    if build_targets:
+        (
+            build_flags,
+            json_profile_out_build,
+            capture_corrupted_outputs_dir_build,
+        ) = calculate_flags(task_config, "build_flags", "build", tmpdir, test_env_vars)
+        try:
+            release_name = get_release_name_from_branch_name()
+            execute_bazel_build(
+                bazel_version,
+                bazel_binary,
+                platform,
+                build_flags
+                + (
+                    ["--stamp", "--embed_label=%s" % release_name]
+                    if save_but and release_name
+                    else []
+                ),
+                build_targets,
+                None,
+            )
+            if save_but:
+                upload_bazel_binary(platform)
+        finally:
+            if json_profile_out_build:
+                upload_json_profile(json_profile_out_build, tmpdir)
+            if capture_corrupted_outputs_dir_build:
+                upload_corrupted_outputs(capture_corrupted_outputs_dir_build, tmpdir)
+
+    if test_targets:
+        if not is_windows():
+            # On platforms that support sandboxing (Linux, MacOS) we have
+            # to allow access to Bazelisk's cache directory.
+            # However, the flag requires the directory to exist,
+            # so we create it here in order to not crash when a test
+            # does not invoke Bazelisk.
+            bazelisk_cache_dir = get_bazelisk_cache_directory()
+            os.makedirs(bazelisk_cache_dir, mode=0o755, exist_ok=True)
+            test_flags.append("--sandbox_writable_path={}".format(bazelisk_cache_dir))
+
+        # Set BUILDKITE_ANALYTICS_TOKEN so that bazelci-agent can upload test results to Test Analytics
+        if "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN" in os.environ:
+            if THIS_IS_TESTING:
+                kms_key = "buildkite-testing-api-token"
+                project = "bazel-untrusted"
+            elif THIS_IS_TRUSTED:
+                kms_key = "buildkite-trusted-api-token"
+                project = "bazel-public"
+            else:
+                kms_key = "buildkite-untrusted-api-token"
+                project = "bazel-untrusted"
+
+            try:
+                os.environ["BUILDKITE_ANALYTICS_TOKEN"] = decrypt_token(
+                    encrypted_token=os.environ["ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN"],
+                    kms_key=kms_key,
+                    project=project,
+                )
+            except Exception as ex:
+                print_collapsed_group(
+                    ":rotating_light: Test analytics disabled due to an error :warning:"
+                )
+                eprint(ex)
+
+        test_bep_file = os.path.join(tmpdir, _TEST_BEP_FILE)
+        # Create an empty test_bep_file so that the bazelci-agent can start to follow the file right away. Otherwise,
+        # there is a race between when bazelci-agent starts to read the file and when Bazel creates the file.
+        open(test_bep_file, "w").close()
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(
+                upload_test_logs_from_bep, test_bep_file, tmpdir, monitor_flaky_tests
+            )
+            try:
+                execute_bazel_test(
+                    bazel_version,
+                    bazel_binary,
+                    platform,
+                    test_flags,
+                    test_targets,
+                    test_bep_file,
+                    monitor_flaky_tests,
+                )
+            finally:
+                if json_profile_out_test:
+                    upload_json_profile(json_profile_out_test, tmpdir)
+                if capture_corrupted_outputs_dir_test:
+                    upload_corrupted_outputs(capture_corrupted_outputs_dir_test, tmpdir)
+
+            _ = future.result()
+            # TODO: print results
+
+    if coverage_targets:
+        (
+            coverage_flags,
+            json_profile_out_coverage,
+            capture_corrupted_outputs_dir_coverage,
+        ) = calculate_flags(task_config, "coverage_flags", "coverage", tmpdir, test_env_vars)
+        try:
+            execute_bazel_coverage(
+                bazel_version,
+                bazel_binary,
+                platform,
+                coverage_flags,
+                coverage_targets,
+            )
+        finally:
+            if json_profile_out_coverage:
+                upload_json_profile(json_profile_out_coverage, tmpdir)
+            if capture_corrupted_outputs_dir_coverage:
+                upload_corrupted_outputs(capture_corrupted_outputs_dir_coverage, tmpdir)
+
+    if index_targets:
+        (
+            index_flags,
+            json_profile_out_index,
+            capture_corrupted_outputs_dir_index,
+        ) = calculate_flags(task_config, "index_flags", "index", tmpdir, test_env_vars)
+        index_upload_policy = task_config.get("index_upload_policy", "IfBuildSuccess")
+        index_upload_gcs = task_config.get("index_upload_gcs", False)
+
+        try:
+            should_upload_kzip = (
+                True if index_upload_policy == INDEX_UPLOAD_POLICY_ALWAYS else False
+            )
+            try:
+                execute_bazel_build_with_kythe(
+                    bazel_version,
+                    bazel_binary,
+                    platform,
+                    index_flags,
+                    index_targets,
+                    None,
+                )
+
+                if index_upload_policy == INDEX_UPLOAD_POLICY_IF_BUILD_SUCCESS:
+                    should_upload_kzip = True
+            except subprocess.CalledProcessError as e:
+                # If not running with Always policy, raise the build error.
+                if index_upload_policy != INDEX_UPLOAD_POLICY_ALWAYS:
+                    handle_bazel_failure(e, "build")
+
+            if should_upload_kzip and not is_pull_request():
+                try:
+                    merge_and_upload_kythe_kzip(platform, index_upload_gcs)
+                except subprocess.CalledProcessError:
+                    raise BuildkiteException("Failed to upload kythe kzip")
+        finally:
+            if json_profile_out_index:
+                upload_json_profile(json_profile_out_index, tmpdir)
+            if capture_corrupted_outputs_dir_index:
+                upload_corrupted_outputs(capture_corrupted_outputs_dir_index, tmpdir)
+
+    if platform == "windows":
+        execute_batch_commands(
+            task_config.get("post_batch_commands", None),
+            True,
+            ":batch: Post Processing (Batch Commands)",
+        )
+    else:
+        execute_shell_commands(
+            task_config.get("post_shell_commands", None),
+            True,
+            ":bash: Post Processing (Shell Commands)",
+        )
 
 
 def activate_xcode(task_config):
@@ -2661,20 +2654,6 @@ def execute_command(
             subprocess.PIPE if capture_stderr else None
         ),  # capture_stderr=True when we want exceptions to contain stderr
     ).returncode
-
-
-def execute_command_background(args):
-    eprint(" ".join(args))
-    return subprocess.Popen(args, env=os.environ)
-
-
-def terminate_background_process(process):
-    if process:
-        process.terminate()
-        try:
-            process.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            process.kill()
 
 
 def create_step(
