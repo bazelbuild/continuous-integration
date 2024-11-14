@@ -121,9 +121,29 @@ def collect_bazel_platform_pairs(task_configs, overwrite_bazel_version):
         pairs.insert((bazel_version, platform))
     return pairs
 
-def add_resolution_check_jobs(bazel_platform_pairs):
-    pass
-
+def add_resolution_check_jobs(module_name, module_version, bazel_platform_pairs, pipeline_steps, calc_concurrency=None):
+    for bazel_version, platform_name in bazel_platform_pairs:
+        platform_label = bazelci.PLATFORMS[platform_name]["emoji-name"]
+        task_name = "Verify Bzlmod resolution"
+        label = f":bazel:{bazel_version} - {module_name}@{module_version} - {platform_label} - {task_name}"
+        command = (
+            '%s bcr_presubmit.py resolution_check_runner --module_name="%s" --module_version="%s" --bazel_version="%s" --platform="%s"'
+            % (
+                bazelci.PLATFORMS[platform_name]["python"],
+                module_name,
+                module_version,
+                bazel_version,
+                platform_name,
+            )
+        )
+        commands = [bazelci.fetch_bazelcipy_command(), fetch_bcr_presubmit_py_command(), command]
+        if calc_concurrency is None:
+            concurrency = concurrency_group = None
+        else:
+            queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
+            concurrency = calc_concurrency(queue)
+            concurrency_group = f"bcr-presubmit-test-queue-{queue}"
+        pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=concurrency, concurrency_group=concurrency_group))
 
 def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False, overwrite_bazel_version=None, calc_concurrency=None):
     for task_id, task_config in task_configs.items():
@@ -224,9 +244,7 @@ def unpack_archive(archive_file, output_dir):
     else:
         shutil.unpack_archive(archive_file, output_dir)
 
-def prepare_test_module_repo(module_name, module_version):
-    """Prepare the test module repo and the presubmit yml file it should use"""
-    bazelci.print_collapsed_group(":information_source: Prepare test module repo")
+def extract_and_patch_sources(module_name, module_version):
     root = pathlib.Path(bazelci.get_repositories_root())
     source = load_source_json(module_name, module_version)
 
@@ -265,20 +283,28 @@ def prepare_test_module_repo(module_name, module_version):
         os.remove(module_dot_bazel)
     shutil.copy(checked_in_module_dot_bazel, module_dot_bazel)
 
+    return source_root
+
+
+def prepare_test_module_repo(module_name, module_version):
+    """Prepare the test module repo and the presubmit yml file it should use"""
+    bazelci.print_collapsed_group(":information_source: Prepare test module repo")
+
+    source_root = extract_and_patch_sources(module_name, module_version)
+
     # Generate the presubmit.yml file for the test module, it should be the content under "bcr_test_module"
     orig_presubmit = yaml.safe_load(open(get_presubmit_yml(module_name, module_version), "r"))
-    test_module_presubmit = root.joinpath("presubmit.yml")
+    test_module_presubmit = pathlib.Path(bazelci.get_repositories_root()).joinpath("presubmit.yml")
     with open(test_module_presubmit, "w") as f:
         yaml.dump(orig_presubmit["bcr_test_module"], f)
     bazelci.eprint("* Generate test module presubmit.yml:\n%s\n" % read(test_module_presubmit))
 
-    # Write necessary options to the .bazelrc file
-    test_module_root = source_root.joinpath(orig_presubmit["bcr_test_module"]["module_path"])
-
     # Check if test_module_root is a directory
+    test_module_root = source_root.joinpath(orig_presubmit["bcr_test_module"]["module_path"])
     if not test_module_root.is_dir():
         error("The test module directory does not exist in the source archive: %s" % test_module_root)
 
+    # Write necessary options to the .bazelrc file
     scratch_file(test_module_root, ".bazelrc", [
         # .bazelrc may not end with a newline.
         "",
@@ -290,8 +316,43 @@ def prepare_test_module_repo(module_name, module_version):
     bazelci.eprint("* Test module ready: %s\n" % test_module_root)
     return test_module_root, test_module_presubmit
 
-def prepare_resolution_check_repo():
-    pass
+
+def prepare_resolution_check_repo(module_name, module_version, bazel_version, platform):
+    bazelci.print_collapsed_group(":information_source: Prepare resolution check repo")
+
+    source_root = extract_and_patch_sources(module_name, module_version)
+    presubmit_yml = pathlib.Path(bazelci.get_repositories_root()).joinpath("presubmit.yml")
+
+    # Write necessary options to the .bazelrc file
+    scratch_file(source_root, ".bazelrc", [
+        # .bazelrc may not end with a newline.
+        "",
+        "build --experimental_enable_bzlmod",
+        "build --registry=%s" % BCR_REPO_DIR.as_uri(),
+    ], mode="a")
+    bazelci.eprint("* Append Bzlmod flags to .bazelrc file:\n%s\n" % read(source_root.joinpath(".bazelrc")))
+
+    # Use a generate the presubmit.yml file with resolution check commands
+    command_name = "shell_commands" if platform == "windows" else "batch_commands"
+    presubmit = {
+        "tasks": {
+            "resolution_check": {
+                "name": "Verify Bzlmod resolution",
+                "bazel": f"{bazel_version}",
+                "platform": f"{platform}",
+                f"{command_name}": [
+                    "bazel info --check_direct_dependencies=error",
+                    "bazel mod deps --ignore_dev_dependencies",
+                ],
+            },
+        },
+    }
+    with presubmit_yml.open("w") as f:
+        yaml.dump(presubmit, f, sort_keys=False)
+
+    bazelci.eprint("* Resolution check repo ready: %s\n" % source_root)
+
+    return source_root, presubmit_yml
 
 
 def run_test(repo_location, task_config_file, task, overwrite_bazel_version=None):
@@ -514,6 +575,8 @@ def main(argv=None):
     resolution_check_runner.add_argument("--module_version", type=str)
     resolution_check_runner.add_argument("--bazel_version", type=str)
     resolution_check_runner.add_argument("--platform", type=str)
+    resolution_check_runner.add_argument("--skip_direct_deps_check", type=str)
+    resolution_check_runner.add_argument("--skip_resolution_check", type=str)
 
     args = parser.parse_args(argv)
 
@@ -537,7 +600,7 @@ def main(argv=None):
             if len(pipeline_steps) == previous_size:
                 error("No pipeline steps generated for %s@%s. Please check the configuration." % (module_name, module_version))
 
-            add_resolution_check_jobs(bazel_platform_paris)
+            add_resolution_check_jobs(module_name, module_version, bazel_platform_paris)
 
         if should_wait_bcr_maintainer_review(modules) and pipeline_steps:
             pipeline_steps.insert(0, {"block": "Wait on BCR maintainer review", "blocked_state": "running"})
@@ -551,8 +614,8 @@ def main(argv=None):
         repo_location, config_file = prepare_test_module_repo(args.module_name, args.module_version)
         return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
     elif args.subparsers_name == "resolution_check_runner":
-        repo_location, config_file = prepare_resolution_check_repo(args.module_name, args.module_version)
-        return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
+        repo_location, config_file = prepare_resolution_check_repo(args.module_name, args.module_version, args.bazel_version, args.platform)
+        return run_test(repo_location, config_file, "resolution_check")
     else:
         parser.print_help()
         return 2
