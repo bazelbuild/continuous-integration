@@ -94,6 +94,8 @@ on:
         # NOTE: keep in-sync with env.TEST_IMAGE
         default: testimage
       PLATFORMS:
+        description: |-
+          Select platforms to build
         default: linux/amd64
       TAG_DATE:
         description: Tag image date in ISO format (YYYYMMDD)
@@ -147,11 +149,11 @@ jobs:
           # NOTE:
           # GH_SHA_BEFORE is empty on pushing the first commit of a new branch
           # or when running manually via workflow_dispatch
-          if [[ -z $GH_SHA_BEFORE ]]; then
-            DOCKERFILES="$(ls $SPARSE_PATH/*/Dockerfile)"
+          if [[ -z "$GH_SHA_BEFORE" ]]; then
+            DOCKERFILES="$(ls "$SPARSE_PATH"/*/Dockerfile)"
           else
             DOCKERFILES="$(
-              git diff --name-only $GH_SHA_BEFORE $GH_SHA |
+              git diff --name-only "$GH_SHA_BEFORE" "$GH_SHA" |
                 grep Dockerfile || {
                   # NOTE:
                   # this grep could fail if e.g. we are force-pushing a stack
@@ -167,22 +169,26 @@ jobs:
           DOCKERFILES_JSON="$(echo -n "$DOCKERFILES" | jq -R '.' | jq -sc '.' )"
 
           echo "DOCKERFILES_JSON=$DOCKERFILES_JSON"
-          echo "DOCKERFILES_JSON=$DOCKERFILES_JSON" >> $GITHUB_ENV
+          echo "DOCKERFILES_JSON=$DOCKERFILES_JSON" >> "$GITHUB_ENV"
 
       - name: Define targets
         id: define_targets
+        env:
+          RE_TARGET_INCLUDE: .
         run: |-
           if [[ "$GH_EVENT_NAME" == "push" ]]; then
             RE_TARGET_EXCLUDE="$RE_TARGET_EXCLUDE|$TEST_IMAGE"
           fi
 
-          DOCKERFILES=($(echo "$DOCKERFILES_JSON" | jq -r 'join(" ")'))
+          read -ra DOCKERFILES <<< "$(
+            echo "$DOCKERFILES_JSON" | jq -r 'join(" ")'
+          )"
 
-          if [[ ${#DOCKERFILES[@]} -gt 0 ]]; then
+          if [[ "${#DOCKERFILES[@]}" -gt 0 ]]; then
             TARGETS_LS="$(
-              grep -i '^FROM .* AS ' ${DOCKERFILES[@]} |
+              grep -i '^FROM .* AS ' "${DOCKERFILES[@]}" |
                 awk '{print $NF}' |
-                { grep -E "$RE_TARGET_INCLUDE" || true; } |
+                { grep -E "${RE_TARGET_INCLUDE:-}" || true; } |
                 { grep -vE "$RE_TARGET_EXCLUDE" || true; } |
                 jq -R '.'
             )"
@@ -259,12 +265,12 @@ jobs:
           CONTEXT="$SPARSE_PATH/$DISTRO"
 
           {
-            for tag in ${!TAGS[@]}; do
+            for tag in "${!TAGS[@]}"; do
               echo "IMAGE_TAG_${tag^^}=$IMAGE_NAME:${TAGS[$tag]}"
             done
 
             echo "CONTEXT=$CONTEXT"
-          } >> $GITHUB_ENV
+          } >> "$GITHUB_ENV"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
