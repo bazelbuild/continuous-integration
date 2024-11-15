@@ -1728,7 +1728,7 @@ def execute_batch_commands(
     if print_group:
         print_collapsed_group(group_message)
 
-    batch_commands = "&".join(commands)
+    batch_commands = "&&".join(commands)
     return subprocess.run(batch_commands, shell=True, check=True, env=os.environ).returncode
 
 
