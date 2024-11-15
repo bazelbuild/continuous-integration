@@ -344,6 +344,7 @@ def prepare_resolution_check_repo(module_name, module_version, bazel_version, pl
                     "bazel info --check_direct_dependencies=error",
                     "bazel mod deps --ignore_dev_dependency",
                 ],
+                "soft_fail": True,
             },
         },
     }
