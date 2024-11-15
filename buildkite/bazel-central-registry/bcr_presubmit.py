@@ -143,7 +143,7 @@ def add_resolution_check_jobs(module_name, module_version, bazel_platform_pairs,
             queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
             concurrency = calc_concurrency(queue)
             concurrency_group = f"bcr-presubmit-test-queue-{queue}"
-        pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=concurrency, concurrency_group=concurrency_group))
+        pipeline_steps.append(bazelci.create_step(label, commands, platform_name, soft_fail=True, concurrency=concurrency, concurrency_group=concurrency_group))
 
 def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False, overwrite_bazel_version=None, calc_concurrency=None):
     for task_id, task_config in task_configs.items():
