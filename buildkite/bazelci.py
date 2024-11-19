@@ -91,11 +91,6 @@ LOG_BUCKET = {
 
 # Projects can opt out of receiving GitHub issues from --notify by adding `"do_not_notify": True` to their respective downstream entry.
 DOWNSTREAM_PROJECTS_PRODUCTION = {
-    "Android Studio Plugin": {
-        "git_repository": "https://github.com/bazelbuild/intellij.git",
-        "file_config": ".bazelci/android-studio.yml",
-        "pipeline_slug": "android-studio-plugin",
-    },
     "Android Studio Plugin Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/android-studio.yml",

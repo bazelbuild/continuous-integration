@@ -1298,26 +1298,6 @@ resource "buildkite_pipeline" "intellij-plugin-aspect-google" {
   }
 }
 
-resource "buildkite_pipeline" "android-studio-plugin" {
-  name = "Android Studio Plugin"
-  repository = "https://github.com/bazelbuild/intellij.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/android-studio.yml --monitor_flaky_tests=true | tee /dev/tty | buildkite-agent pipeline upload"] } })
-  default_branch = "master"
-  branch_configuration = "!google"
-  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
-  provider_settings {
-    trigger_mode = "code"
-    build_pull_requests = true
-    skip_pull_request_builds_for_existing_commits = true
-    build_pull_request_forks = true
-    prefix_pull_request_fork_branch_names = true
-    build_branches = true
-    publish_commit_status = true
-    filter_enabled = true
-    filter_condition = "build.pull_request.base_branch != \"google\""
-  }
-}
-
 resource "buildkite_pipeline" "android-studio-plugin-google" {
   name = "Android Studio Plugin Google"
   repository = "https://github.com/bazelbuild/intellij.git"
