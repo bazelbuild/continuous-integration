@@ -2140,7 +2140,6 @@ def calculate_targets(
     if not use_bazel_diff and not sharding_enabled:
         return build_targets, test_targets, coverage_targets, index_targets
 
-    # TODO(#1614): Fix target expansion
     expanded_test_targets = expand_test_target_patterns(bazel_binary, test_targets, test_flags)
 
     actual_test_targets = (
@@ -2252,7 +2251,14 @@ def get_test_tags(test_flags):
 
         return include, exclude
 
-    return [], ["manual"]
+    exclude = ["manual"]
+    # Workaround for --test_tag_filters in .bazelrc
+    if is_mac():
+        exclude.append("no_macos")
+    elif is_windows():
+        exclude.append("no_windows")
+
+    return [], exclude
 
 
 def removeprefix(s, prefix):
