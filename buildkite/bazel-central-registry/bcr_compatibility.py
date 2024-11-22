@@ -32,7 +32,7 @@ CI_MACHINE_NUM = {
     "bazel": {
         "default": 100,
         "windows": 30,
-        "macos_arm64": 45,
+        "macos_arm64": 95,
         "macos": 110,
         "arm64": 1,
     },
