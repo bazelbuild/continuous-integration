@@ -19,7 +19,7 @@ fn test_logs_uploaded_to_buildkite() -> Result<()> {
     ]);
     cmd.assert()
         .success()
-        .stdout(predicates::str::contains("buildkite-agent artifact upload src\\test\\shell\\bazel\\resource_compiler_toolchain_test\\test.log"));
+        .stdout(predicates::ord::eq("buildkite-agent artifact upload src\\test\\shell\\bazel\\resource_compiler_toolchain_test\\test.log --content_type=text/plain;encoding=utf-8\n"));
 
     Ok(())
 }
@@ -37,7 +37,7 @@ fn test_logs_uploaded_to_buildkite() -> Result<()> {
     ]);
     cmd.assert()
         .success()
-        .stdout(predicates::str::contains("buildkite-agent artifact upload src/test/shell/bazel/starlark_repository_test/shard_4_of_6/test_attempts/attempt_1.log"));
+        .stdout(predicates::ord::eq("buildkite-agent artifact upload src/test/shell/bazel/starlark_repository_test/shard_4_of_6/test_attempts/attempt_1.log --content_type=text/plain;encoding=utf-8\n"));
 
     Ok(())
 }
