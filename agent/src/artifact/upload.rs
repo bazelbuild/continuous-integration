@@ -210,7 +210,7 @@ fn upload_bep_json_file(
     build_event_json_file: &Path,
     mode: Mode,
 ) -> Result<()> {
-    uploader.upload_artifact(dry, None, build_event_json_file, mode)
+    uploader.upload_artifact(dry, None, build_event_json_file, mode, None)
 }
 
 fn gen_error_content(bazelci_task: &str, label: &str, name: &str, test_log: &str) -> String {
@@ -329,7 +329,7 @@ fn parse_test_xml(path: &Path, bazelci_task: &str, label: &str) -> Result<Option
     Ok(Some(writer.into_inner().into_inner()))
 }
 
-fn execute_command(dry: bool, cwd: Option<&Path>, program: &str, args: &[&str]) -> Result<()> {
+fn execute_command(dry: bool, cwd: Option<&Path>, program: &str, args: &Vec<&str>) -> Result<()> {
     println!("{} {}", program, args.join(" "));
 
     if dry {
@@ -384,6 +384,7 @@ impl Uploader {
         cwd: Option<&Path>,
         artifact: &Path,
         mode: Mode,
+        content_type: Option<&str>,
     ) -> Result<()> {
         {
             let file = match cwd {
@@ -405,7 +406,7 @@ impl Uploader {
         }
 
         match mode {
-            Mode::Buildkite => self.upload_artifact_buildkite(dry, cwd, artifact),
+            Mode::Buildkite => self.upload_artifact_buildkite(dry, cwd, artifact, content_type),
         }
     }
 
@@ -414,14 +415,17 @@ impl Uploader {
         dry: bool,
         cwd: Option<&Path>,
         artifact: &Path,
+        content_type: Option<&str>,
     ) -> Result<()> {
         let artifact = artifact.display().to_string();
-        execute_command(
-            dry,
-            cwd,
-            "buildkite-agent",
-            &["artifact", "upload", artifact.as_str()],
-        )
+        let mut args = vec!["artifact", "upload", artifact.as_str()];
+        let ct_arg = content_type
+            .map(|ct| "--content_type=".to_owned() + ct)
+            .unwrap_or_default();
+        if !ct_arg.is_empty() {
+            args.push(ct_arg.as_str());
+        }
+        execute_command(dry, cwd, "buildkite-agent", &args)
     }
 
     fn upload_test_analytics(
@@ -631,7 +635,13 @@ fn upload_test_log(
     mode: Mode,
 ) -> Result<()> {
     let (cwd, artifact) = resolve_artifact(test_log, local_exec_root)?;
-    return uploader.upload_artifact(dry, cwd.as_ref().map(|pb| pb.as_path()), &artifact, mode);
+    return uploader.upload_artifact(
+        dry,
+        cwd.as_ref().map(|pb| pb.as_path()),
+        &artifact,
+        mode,
+        Some("text/plain;encoding=utf-8"),
+    );
 }
 
 fn upload_test_xml(
