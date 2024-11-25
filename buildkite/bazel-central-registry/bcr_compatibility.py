@@ -67,8 +67,12 @@ def select_modules_from_env_vars():
 
     top_n = os.environ.get('SELECT_TOP_BCR_MODULES')
     if top_n:
+        # Remove USE_BAZEL_VERSION to make this step more stable.
+        env = os.environ.copy()
+        env.pop("USE_BAZEL_VERSION", None)
         output = subprocess.check_output(
             ["bazel", "run", "//tools:module_analyzer", "--", "--name-only", f"--top_n={top_n}"],
+            env = env,
         )
         top_modules = output.decode("utf-8").split()
         MODULE_SELECTIONS = ','.join([f"{module}@latest" for module in top_modules])
