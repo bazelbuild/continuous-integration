@@ -473,7 +473,7 @@ ESCAPED_BACKSLASH = "%5C"
 
 # The maximum number of tasks allowed in one pipeline yaml config file.
 # This is to prevent accidentally creating too many tasks with the martix testing feature.
-MAX_TASK_NUMBER = 80
+MAX_TASK_NUMBER = 128
 
 _TEST_BEP_FILE = "test_bep.json"
 _SHARD_RE = re.compile(r"(.+) \(shard (\d+)\)")
@@ -946,7 +946,8 @@ def load_config(http_url, file_config, allow_imports=True, bazel_version=None):
 
     if len(config["tasks"]) > MAX_TASK_NUMBER:
         raise BuildkiteException(
-            "The number of tasks in one config file is limited to %s!" % MAX_TASK_NUMBER
+            "The number of tasks in one config file is limited to %s, found %s!"
+            % (MAX_TASK_NUMBER, len(config["tasks"])),
         )
 
     return config
