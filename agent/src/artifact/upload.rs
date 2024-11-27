@@ -418,13 +418,14 @@ impl Uploader {
         content_type: Option<&str>,
     ) -> Result<()> {
         let artifact = artifact.display().to_string();
-        let mut args = vec!["artifact", "upload", artifact.as_str()];
+        let mut args = vec!["artifact", "upload"];
         let ct_arg = content_type
             .map(|ct| "--content_type=".to_owned() + ct)
             .unwrap_or_default();
         if !ct_arg.is_empty() {
             args.push(ct_arg.as_str());
         }
+        args.push(artifact.as_str());
         execute_command(dry, cwd, "buildkite-agent", &args)
     }
 
