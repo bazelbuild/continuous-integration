@@ -11,11 +11,11 @@ Add-Type -AssemblyName "System.IO.Compression.FileSystem"
 ## Use TLS1.2 for HTTPS (fixes an issue where later steps can't connect to github.com)
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-## Check if choco is installed, if so exit the script.
+## If choco is already installed, this is the second time the VM starts up, run GCESysprep and then shutdown
 if (Get-Command choco -ErrorAction SilentlyContinue) {
     $port = New-Object System.IO.Ports.SerialPort COM1,9600,None,8,one
     $port.Open()
-    $port.WriteLine("[setup-windows.ps1]: Chocolatey is already installed, setup is probably done, running GCESysprep and then shutdown...")
+    $port.WriteLine("[setup-windows.ps1]: choco is already installed, this is the second time the VM starts up, running GCESysprep and then shutdown...")
     $port.Close()
     GCESysprep
     exit 0
