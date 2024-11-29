@@ -16,11 +16,8 @@
 
 from datetime import datetime
 import os
-import queue
-import subprocess
 import sys
 import tempfile
-import threading
 
 import gcloud
 import gcloud_utils
@@ -57,12 +54,6 @@ IMAGE_CREATION_VMS = {
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
     },
 }
-
-WORK_QUEUE = queue.Queue()
-
-
-def run(args, **kwargs):
-    return subprocess.run(args, **kwargs)
 
 
 def preprocess_setup_script(setup_script, is_windows):
@@ -145,17 +136,6 @@ def workflow(name, params):
         gcloud.delete_instance(instance_name, project=project, zone=zone)
 
 
-def worker():
-    while True:
-        item = WORK_QUEUE.get()
-        if not item:
-            break
-        try:
-            workflow(**item)
-        finally:
-            WORK_QUEUE.task_done()
-
-
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
@@ -173,27 +153,11 @@ def main(argv=None):
         )
         return 1
 
-    # Put VM creation instructions into the work queue.
-    for name in argv:
-        WORK_QUEUE.put({"name": name, "params": IMAGE_CREATION_VMS[name]})
+    if len(argv) > 1:
+        print("Only one platform can be created at a time.")
+        return 1
 
-    # Spawn worker threads that will create the VMs.
-    threads = []
-    for _ in range(WORK_QUEUE.qsize()):
-        t = threading.Thread(target=worker)
-        t.start()
-        threads.append(t)
-
-    # Wait for all VMs to be created.
-    WORK_QUEUE.join()
-
-    # Signal worker threads to exit.
-    for _ in range(len(threads)):
-        WORK_QUEUE.put(None)
-
-    # Wait for worker threads to exit.
-    for t in threads:
-        t.join()
+    workflow(argv[0], IMAGE_CREATION_VMS[argv[0]])
 
     return 0
 
