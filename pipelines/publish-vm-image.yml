@@ -34,7 +34,7 @@ steps:
 
   - command: |-
       cd buildkite
-      ./create_instances.py bk-testing-windows
+      ./create_instances.py ${BAZEL_TEST_VM_NAME}
     label: ":pipeline:"
     agents:
       - "queue=default"
