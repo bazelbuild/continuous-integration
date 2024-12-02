@@ -29,6 +29,10 @@ jobs:
           target: x86_64-pc-windows-msvc
 
     steps:
+    - name: Install deps (linux)
+      if: matrix.build == 'linux'
+      run: sudo apt-get install -y musl-tools
+
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
