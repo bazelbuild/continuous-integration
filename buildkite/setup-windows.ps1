@@ -11,6 +11,21 @@ Add-Type -AssemblyName "System.IO.Compression.FileSystem"
 ## Use TLS1.2 for HTTPS (fixes an issue where later steps can't connect to github.com)
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+## If choco is already installed, this is the second time the VM starts up, run GCESysprep and then shutdown
+if (Get-Command choco -ErrorAction SilentlyContinue) {
+    $port = New-Object System.IO.Ports.SerialPort COM1,9600,None,8,one
+    $port.Open()
+    $port.WriteLine("[setup-windows.ps1]: choco is already installed, this is the second time the VM starts up, running GCESysprep and then shutdown...")
+    $port.Close()
+    GCESysprep
+    exit 0
+}
+
+$port = New-Object System.IO.Ports.SerialPort COM1,9600,None,8,one
+$port.Open()
+$port.WriteLine("[setup-windows.ps1]: Starting to setup windows... This could take up to one hour, check C:/setup-stdout.log on the VM for progress.")
+$port.Close()
+
 ## Create C:\temp
 Write-Host "Creating temporary folder C:\temp..."
 if (-Not (Test-Path "c:\temp")) {
@@ -337,6 +352,11 @@ $pagefile.InitialSize = 4 * 1024;
 $pagefile.MaximumSize = 64 * 1024;
 $pagefile.Put();
 
-Write-Host "All done, adding GCESysprep to RunOnce and rebooting..."
-Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "GCESysprep" -Value "c:\Program Files\Google\Compute Engine\sysprep\gcesysprep.bat"
+Write-Host "All done, rebooting..."
+
+$port = New-Object System.IO.Ports.SerialPort COM1,9600,None,8,one
+$port.Open()
+$port.WriteLine("[setup-windows.ps1]: Setup windows done, rebooting...")
+$port.Close()
+
 Restart-Computer

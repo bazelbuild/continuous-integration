@@ -15,13 +15,9 @@
 # limitations under the License.
 
 from datetime import datetime
-import json
 import os
-import queue
-import subprocess
 import sys
 import tempfile
-import threading
 
 import gcloud
 import gcloud_utils
@@ -59,12 +55,6 @@ IMAGE_CREATION_VMS = {
     },
 }
 
-WORK_QUEUE = queue.Queue()
-
-
-def run(args, **kwargs):
-    return subprocess.run(args, **kwargs)
-
 
 def preprocess_setup_script(setup_script, is_windows):
     output_file = tempfile.mkstemp()[1]
@@ -77,6 +67,7 @@ def preprocess_setup_script(setup_script, is_windows):
             if is_windows:
                 f.write("'@\n")
                 f.write('[System.IO.File]::WriteAllLines("c:\\setup.ps1", $setup_script)\n')
+                f.write('Start-Process -FilePath "powershell.exe" -ArgumentList "-File c:\\setup.ps1" -RedirectStandardOutput "c:\\setup-stdout.log" -RedirectStandardError "c:\\setup-stderr.log" -NoNewWindow\n')
     return output_file
 
 
@@ -112,47 +103,6 @@ def create_instance(instance_name, params):
         os.remove(setup_script)
 
 
-# https://stackoverflow.com/a/25802742
-def write_to_clipboard(output):
-    process = subprocess.Popen("pbcopy", env={"LANG": "en_US.UTF-8"}, stdin=subprocess.PIPE)
-    process.communicate(output.encode("utf-8"))
-
-
-def print_windows_instructions(project, zone, instance_name):
-    tail_start = gcloud_utils.tail_serial_console(
-        instance_name, project=project, zone=zone, until="Finished running startup scripts"
-    )
-
-    pw = json.loads(
-        gcloud.reset_windows_password(
-            instance_name, format="json", project=project, zone=zone
-        ).stdout
-    )
-    rdp_file = tempfile.mkstemp(suffix=".rdp")[1]
-    with open(rdp_file, "w") as f:
-        f.write("full address:s:" + pw["ip_address"] + "\n")
-        f.write("username:s:" + pw["username"] + "\n")
-    print("Opening ", rdp_file)
-    subprocess.run(["open", rdp_file])
-    write_to_clipboard(pw["password"])
-    with gcloud.PRINT_LOCK:
-        print("Use this password to connect to the Windows VM: " + pw["password"])
-        print("Please run the setup script C:\\setup.ps1 once you're logged in.")
-
-    # Wait until the VM reboots once, then open RDP again.
-    tail_start = gcloud_utils.tail_serial_console(
-        instance_name,
-        project=project,
-        zone=zone,
-        start=tail_start,
-        until="GCEGuestAgent: GCE Agent Started",
-    )
-    print("Connecting via RDP a second time to finish the setup...")
-    write_to_clipboard(pw["password"])
-    run(["open", rdp_file])
-    return tail_start
-
-
 def workflow(name, params):
     instance_name = "%s-image-%s" % (name, int(datetime.now().timestamp()))
     project = params["project"]
@@ -164,16 +114,8 @@ def workflow(name, params):
         # Wait for the VM to become ready.
         gcloud_utils.wait_for_instance(instance_name, project=project, zone=zone, status="RUNNING")
 
-        if "windows" in instance_name:
-            # Wait for VM to be ready, then print setup instructions.
-            tail_start = print_windows_instructions(project, zone, instance_name)
-            # Continue printing the serial console until the VM shuts down.
-            gcloud_utils.tail_serial_console(
-                instance_name, project=project, zone=zone, start=tail_start
-            )
-        else:
-            # Continuously print the serial console.
-            gcloud_utils.tail_serial_console(instance_name, project=project, zone=zone)
+        # Continuously print the serial console.
+        gcloud_utils.tail_serial_console(instance_name, project=project, zone=zone)
 
         # Wait for the VM to completely shutdown.
         gcloud_utils.wait_for_instance(
@@ -194,17 +136,6 @@ def workflow(name, params):
         gcloud.delete_instance(instance_name, project=project, zone=zone)
 
 
-def worker():
-    while True:
-        item = WORK_QUEUE.get()
-        if not item:
-            break
-        try:
-            workflow(**item)
-        finally:
-            WORK_QUEUE.task_done()
-
-
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
@@ -222,27 +153,11 @@ def main(argv=None):
         )
         return 1
 
-    # Put VM creation instructions into the work queue.
-    for name in argv:
-        WORK_QUEUE.put({"name": name, "params": IMAGE_CREATION_VMS[name]})
+    if len(argv) > 1:
+        print("Only one platform can be created at a time.")
+        return 1
 
-    # Spawn worker threads that will create the VMs.
-    threads = []
-    for _ in range(WORK_QUEUE.qsize()):
-        t = threading.Thread(target=worker)
-        t.start()
-        threads.append(t)
-
-    # Wait for all VMs to be created.
-    WORK_QUEUE.join()
-
-    # Signal worker threads to exit.
-    for _ in range(len(threads)):
-        WORK_QUEUE.put(None)
-
-    # Wait for worker threads to exit.
-    for t in threads:
-        t.join()
+    workflow(argv[0], IMAGE_CREATION_VMS[argv[0]])
 
     return 0
 

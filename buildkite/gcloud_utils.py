@@ -49,12 +49,12 @@ def prettify_logs(instance_name, log, with_prefix=True):
         # Then drop the common prefix to make the output easier to read.
         # For unknown platforms, we just take every line unmodified.
         if "ubuntu" in instance_name or "docker" in instance_name:
-            match = re.match(r".*GCEMetadataScripts: startup-script: (.*)", line)
+            match = re.match(r".*: startup-script: (.*)", line)
             if not match:
                 continue
             line = match.group(1)
         elif "windows" in instance_name:
-            match = re.match(r".*windows-startup-script-ps1: (.*)", line)
+            match = re.match(r".*\[setup-windows.ps1\]: (.*)", line)
             if not match:
                 continue
             line = match.group(1)
