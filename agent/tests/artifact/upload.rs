@@ -19,7 +19,7 @@ fn test_logs_uploaded_to_buildkite() -> Result<()> {
     ]);
     cmd.assert()
         .success()
-        .stdout(predicates::ord::eq("buildkite-agent artifact upload --content_type=text/plain;encoding=utf-8 src\\test\\shell\\bazel\\resource_compiler_toolchain_test\\test.log\n"));
+        .stdout(predicates::ord::eq("buildkite-agent artifact upload --content-type text/plain;encoding=utf-8 src\\test\\shell\\bazel\\resource_compiler_toolchain_test\\test.log\n"));
 
     Ok(())
 }
@@ -37,7 +37,7 @@ fn test_logs_uploaded_to_buildkite() -> Result<()> {
     ]);
     cmd.assert()
         .success()
-        .stdout(predicates::ord::eq("buildkite-agent artifact upload --content_type=text/plain;encoding=utf-8 src/test/shell/bazel/starlark_repository_test/shard_4_of_6/test_attempts/attempt_1.log\n"));
+        .stdout(predicates::ord::eq("buildkite-agent artifact upload --content-type text/plain;encoding=utf-8 src/test/shell/bazel/starlark_repository_test/shard_4_of_6/test_attempts/attempt_1.log\n"));
 
     Ok(())
 }
@@ -139,7 +139,7 @@ fn test_logs_deduplicated() -> Result<()> {
     ]);
     cmd.assert()
         .success()
-        .stdout(predicates::str::contains("buildkite-agent artifact upload --content_type=text/plain;encoding=utf-8 src/test/shell/bazel/starlark_repository_test/shard_4_of_6/test_attempts/attempt_1.log").count(1));
+        .stdout(predicates::str::contains("buildkite-agent artifact upload --content-type text/plain;encoding=utf-8 src/test/shell/bazel/starlark_repository_test/shard_4_of_6/test_attempts/attempt_1.log").count(1));
 
     Ok(())
 }
@@ -178,7 +178,7 @@ fn test_running_json_file() -> Result<()> {
 
         cmd.assert()
         .success()
-        .stdout(predicates::str::contains("buildkite-agent artifact upload --content_type=text/plain;encoding=utf-8 src/test/shell/bazel/starlark_repository_test/shard_4_of_6/test_attempts/attempt_1.log"));
+        .stdout(predicates::str::contains("buildkite-agent artifact upload --content-type text/plain;encoding=utf-8 src/test/shell/bazel/starlark_repository_test/shard_4_of_6/test_attempts/attempt_1.log"));
         Ok(())
     })
 }
