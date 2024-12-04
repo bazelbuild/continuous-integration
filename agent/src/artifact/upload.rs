@@ -639,7 +639,7 @@ fn upload_test_log(
         cwd.as_ref().map(|pb| pb.as_path()),
         &artifact,
         mode,
-        Some("text/plain;encoding=utf-8"),
+        Some("text/plain;charset=utf-8"),
     );
 }
 
