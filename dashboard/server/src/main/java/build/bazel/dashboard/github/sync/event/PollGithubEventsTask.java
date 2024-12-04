@@ -150,7 +150,7 @@ public class PollGithubEventsTask {
         }
         var response = doRequest(owner, repo, perPage, page, etag);
         var body = response.getBody();
-        if (body != null) {
+        if (body != null && body.isArray() && !body.isEmpty()) {
           if (page == 1) {
             newState =
                 JsonState.<PollState>builder()
@@ -186,10 +186,14 @@ public class PollGithubEventsTask {
         JsonNode body = response.getBody();
         checkState(body != null && body.isArray());
 
-        for (JsonNode event : body) {
-          if (event.get("id").asLong() <= state.getEventId()) {
-            terminate = true;
-            break;
+        if (body.isEmpty()) {
+          terminate = true;
+        } else {
+          for (JsonNode event : body) {
+            if (event.get("id").asLong() <= state.getEventId()) {
+              terminate = true;
+              break;
+            }
           }
         }
       } else {
