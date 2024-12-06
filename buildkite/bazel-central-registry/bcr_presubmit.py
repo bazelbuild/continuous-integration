@@ -213,7 +213,7 @@ def unpack_archive(archive_file, output_dir):
     else:
         shutil.unpack_archive(archive_file, output_dir)
 
-def prepare_test_module_repo(module_name, module_version):
+def prepare_test_module_repo(module_name, module_version, overwrite_bazel_version=None):
     """Prepare the test module repo and the presubmit yml file it should use"""
     bazelci.print_collapsed_group(":information_source: Prepare test module repo")
     root = pathlib.Path(bazelci.get_repositories_root())
@@ -271,8 +271,10 @@ def prepare_test_module_repo(module_name, module_version):
     scratch_file(test_module_root, ".bazelrc", [
         # .bazelrc may not end with a newline.
         "",
-        "build --experimental_enable_bzlmod",
-        "build --registry=%s" % BCR_REPO_DIR.as_uri(),
+        "common --experimental_enable_bzlmod",
+        "common --registry=%s" % BCR_REPO_DIR.as_uri(),
+        # In case the test module sets --check_direct_dependencies=error and a different Bazel version may trigger the error.
+        "common --check_direct_dependencies=warning" if overwrite_bazel_version else "",
     ], mode="a")
     bazelci.eprint("* Append Bzlmod flags to .bazelrc file:\n%s\n" % read(test_module_root.joinpath(".bazelrc")))
 
@@ -523,7 +525,7 @@ def main(argv=None):
         config_file = get_presubmit_yml(args.module_name, args.module_version)
         return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
     elif args.subparsers_name == "test_module_runner":
-        repo_location, config_file = prepare_test_module_repo(args.module_name, args.module_version)
+        repo_location, config_file = prepare_test_module_repo(args.module_name, args.module_version, args.overwrite_bazel_version)
         return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
     else:
         parser.print_help()
