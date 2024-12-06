@@ -28,7 +28,7 @@ steps:
     command: | 
       echo "+++ Checking out Git branch"
       git fetch origin ${BUILDKITE_BRANCH}
-      git checkout ${BUILDKITE_BRANCH}
+      git checkout ${BUILDKITE_COMMIT}
 
       echo "+++ Getting the latest rules_java version"
       contents=$(cat MODULE.bazel)
@@ -53,4 +53,4 @@ steps:
       echo "+++ Creating a release on GitHub"
       cd bazel-bin/distro
       relnotes=$(cat relnotes.txt)
-      GITHUB_TOKEN=\${github_token} github-release "bazelbuild/rules_java" \${version} "\${BUILDKITE_BRANCH}" "\${relnotes}" rules_java-\${version}.tar.gz      
+      GITHUB_TOKEN=\${github_token} github-release "bazelbuild/rules_java" \${version} "\${BUILDKITE_COMMIT}" "\${relnotes}" rules_java-\${version}.tar.gz      
