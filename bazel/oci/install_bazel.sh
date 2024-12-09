@@ -2,6 +2,10 @@
 
 set -o errexit -o nounset -o pipefail
 
+if [ "$TARGETARCH" = "amd64" ]; then
+  TARGETARCH="x86_64"
+fi
+
 curl \
     --fail \
     --location \
