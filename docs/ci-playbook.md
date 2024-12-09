@@ -21,10 +21,10 @@ You will need to be a member of the `bazel-trusted` BuildKite org.
 
 1. Submit your change to this repository.
 1. Initiate a build on the [Create Windows VM image](https://buildkite.com/bazel-trusted/create-windows-vm-image) or [Create Linux VM image](https://buildkite.com/bazel-trusted/create-linux-vm-image) pipeline.
-1. Wait for the first build step to finish. This will create a new Windows VM image.
+1. Wait for the first build step to finish. This will create a new testing Windows VM image.
 1. Deploy the new image to the `bazel-testing` org by unblocking the next step.
-1. Initiate a new build on the [Bazel](https://buildkite.com/bazel-testing/bazel-bazel) pipeline to test the new image.
-1. Push the image to prod by unblocking the next step (eg. `bk-testing-windows` to `bk-windows`).
+1. Initiate a new build on the [Bazel](https://buildkite.com/bazel-testing/bazel-bazel) pipeline in the testing org to test the new image.
+1. Push the image to prod (bazel and bazel-trusted BuildKite orgs) by unblocking the next step.
 1. Wait for the VMs to be recreated in the bazel and bazel-trusted orgs and the new image to be deployed.
 
 Note: if anything goes wrong in the new image, you can always revert to the previous image by deleting the new image in the GCP console and re-create the VMs.
