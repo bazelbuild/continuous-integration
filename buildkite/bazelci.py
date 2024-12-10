@@ -1923,7 +1923,7 @@ def rbe_flags(original_flags, accept_cached):
         "--remote_timeout=3600",
         "--incompatible_strict_action_env",
         "--google_default_credentials",
-        "--toolchain_resolution_debug",
+        "--toolchain_resolution_debug=.*",
         "--remote_download_toplevel",
     ]
 
