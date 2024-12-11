@@ -141,6 +141,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     "Buildtools": {
         "git_repository": "https://github.com/bazelbuild/buildtools.git",
         "pipeline_slug": "buildtools",
+        "disabled_reason": "https://github.com/bazelbuild/buildtools/issues/1297, https://github.com/bazelbuild/buildtools/issues/1300, https://github.com/bazelbuild/buildtools/issues/1314",
     },
     "CLion Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
