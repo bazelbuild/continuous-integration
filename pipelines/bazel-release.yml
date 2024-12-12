@@ -421,6 +421,7 @@ steps:
       # current we just use x86_64 machines to do cross compile.
       - queue=windows
     command: |
+      set -ex
       set "BUILDKITE_MESSAGE=%BUILDKITE_MESSAGE:~0,1000%"
 
       git fetch origin ${BUILDKITE_BRANCH}
@@ -434,7 +435,7 @@ steps:
 
       buildkite-agent artifact download bazel-%RELEASE_NAME%-windows-arm64.exe .
 
-      file bazel-%RELEASE_NAME%-windows-arm64.exe | grep "Aarch64"
+      file bazel-%RELEASE_NAME%-windows-arm64.exe | grep -E "(ARM64|Aarch64)"
 
   - wait
 
