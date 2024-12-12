@@ -434,7 +434,7 @@ steps:
 
       buildkite-agent artifact download bazel-%RELEASE_NAME%-windows-arm64.exe .
 
-      file bazel-%RELEASE_NAME%-windows-arm64.exe | grep "Aarch64"
+      file bazel-%RELEASE_NAME%-windows-arm64.exe | grep "ARM64"
 
   - wait
 
