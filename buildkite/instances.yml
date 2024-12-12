@@ -26,7 +26,7 @@ default_vm:
   initial_delay: 60
 instance_groups:
   - name: bk-docker
-    count: 120
+    count: 140
     project: bazel-untrusted
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-docker
