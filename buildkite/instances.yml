@@ -26,13 +26,13 @@ default_vm:
   initial_delay: 60
 instance_groups:
   - name: bk-docker
-    count: 100
+    count: 120
     project: bazel-untrusted
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-docker
     metadata_from_file: startup-script=startup-docker-pdssd.sh
   - name: bk-testing-docker
-    count: 30
+    count: 10
     project: bazel-untrusted
     service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-testing-docker
