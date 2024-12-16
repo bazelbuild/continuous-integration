@@ -421,7 +421,6 @@ steps:
       # current we just use x86_64 machines to do cross compile.
       - queue=windows
     command: |
-      set -ex
       set "BUILDKITE_MESSAGE=%BUILDKITE_MESSAGE:~0,1000%"
 
       git fetch origin ${BUILDKITE_BRANCH}
