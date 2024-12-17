@@ -124,6 +124,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/bazel-skylib.git",
         "pipeline_slug": "bazel-skylib",
         "owned_by_bazel": True,
+        "disabled_reason": "https://github.com/bazelbuild/bazel-skylib/issues/542, https://github.com/bazelbuild/bazel-skylib/issues/547",
     },
     "Bazel toolchains": {
         "git_repository": "https://github.com/bazelbuild/bazel-toolchains.git",
