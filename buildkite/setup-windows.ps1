@@ -214,6 +214,15 @@ New-Item "c:\bazel" -ItemType "directory" -Force
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";c:\bazel"
 [Environment]::SetEnvironmentVariable("PATH", $env:PATH, "Machine")
 
+## Run Bazelisk to download the latest Bazel versions.
+$bazelisk_latest_versions = 10
+Write-Host "Running Bazelisk to prefetch the latest $bazelisk_latest_versions Bazel versions..."
+# Set USE_BAZEL_VERSION to latest-0 to latest-N to download the latest N versions in a loop
+for ($i = 0; $i -lt $bazelisk_latest_versions; $i++) {
+    $env:USE_BAZEL_VERSION = "latest-$i"
+    & bazel --version
+}
+
 ## Download the Android NDK r15c and install into C:\android-ndk\r15c.
 Write-Host "Installing Android NDK r15c..."
 $android_ndk_url = "https://dl.google.com/android/repository/android-ndk-r15c-windows-x86_64.zip"
