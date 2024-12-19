@@ -68,23 +68,9 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
     apt-get update -y && apt-get install google-cloud-sdk -y && \
     rm -rf /var/lib/apt/lists/*
 
-# Bazelisk
-RUN LATEST_BAZELISK=$(curl -sSI https://github.com/bazelbuild/bazelisk/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
-    curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/${LATEST_BAZELISK}/bazelisk-linux-${BUILDARCH} && \
-    chown root:root /usr/local/bin/bazel && \
-    chmod 0755 /usr/local/bin/bazel
-
-## Run Bazelisk to download the latest Bazel versions.
-RUN bazelisk_latest_versions=10 && \
-    for i in $(seq 0 $((bazelisk_latest_versions - 1))); do \
-        USE_BAZEL_VERSION="latest-$i" bazel --version; \
-    done
-
-# Buildifier
-RUN LATEST_BUILDIFIER=$(curl -sSI https://github.com/bazelbuild/buildtools/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
-    curl -Lo /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/${LATEST_BUILDIFIER}/buildifier-linux-${BUILDARCH} && \
-    chown root:root /usr/local/bin/buildifier && \
-    chmod 0755 /usr/local/bin/buildifier
+# Install Bazelisk & buildtools
+COPY ../install_common_deps.sh /tmp/install_common_deps.sh
+RUN /tmp/install_common_deps.sh
 
 FROM ubuntu2404-nojdk AS ubuntu2404
 
