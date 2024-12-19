@@ -76,7 +76,7 @@ RUN LATEST_BAZELISK=$(curl -sSI https://github.com/bazelbuild/bazelisk/releases/
 
 ## Run Bazelisk to download the latest Bazel versions.
 RUN bazelisk_latest_versions=10 && \
-    for ((i=0; i<bazelisk_latest_versions; i++)); do \
+    for i in $(seq 0 $((bazelisk_latest_versions - 1))); do \
         USE_BAZEL_VERSION="latest-$i" bazel --version; \
     done
 
