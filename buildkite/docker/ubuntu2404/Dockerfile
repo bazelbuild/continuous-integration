@@ -74,7 +74,7 @@ RUN LATEST_BAZELISK=$(curl -sSI https://github.com/bazelbuild/bazelisk/releases/
     chown root:root /usr/local/bin/bazel && \
     chmod 0755 /usr/local/bin/bazel
 
-## Run Bazelisk to download the latest Bazel versions.
+# Run Bazelisk to download the latest Bazel versions.
 RUN bazelisk_latest_versions=10 && \
     for i in $(seq 0 $((bazelisk_latest_versions - 1))); do \
         USE_BAZEL_VERSION="latest-$i" bazel --version; \
