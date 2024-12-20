@@ -1987,7 +1987,7 @@ def run_bazel_version(bazel_binary, max_retry=5):
     # Retry to address https://github.com/bazelbuild/continuous-integration/issues/2123
     retry = 0
     while retry < max_retry:
-        exit_code = execute_command([bazel_binary, "--version"])
+        exit_code = execute_command([bazel_binary, "--version"], fail_if_nonzero=False)
         if exit_code == 0:
             return
         retry += 1
