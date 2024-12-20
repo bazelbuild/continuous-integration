@@ -1196,6 +1196,9 @@ def execute_commands(
 
         # Dirty workaround for #1660
         if initial_setup:
+            # Run `bazel --version` to make sure Bazel is fetched.
+            run_bazel_version(bazel_binary)
+
             # Set OUTPUT_BASE environment variable
             os.environ["OUTPUT_BASE"] = get_output_base(bazel_binary)
 
@@ -1977,6 +1980,18 @@ def rbe_flags(original_flags, accept_cached):
             flags += [platform_flag + "=" + value]
 
     return flags
+
+
+def run_bazel_version(bazel_binary, max_retry=5):
+    """Run `bazel --version` to make sure Bazel is fetched by Bazelisk."""
+    # Retry to address https://github.com/bazelbuild/continuous-integration/issues/2123
+    retry = 0
+    while retry < max_retry:
+        exit_code = execute_command([bazel_binary, "--version"], fail_if_nonzero=False)
+        if exit_code == 0:
+            return
+        retry += 1
+        time.sleep(1)
 
 
 def get_output_base(bazel_binary):
