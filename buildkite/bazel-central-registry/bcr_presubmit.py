@@ -28,6 +28,7 @@ import re
 import sys
 import subprocess
 import shutil
+import stat
 import time
 import urllib.request
 import zipfile
@@ -251,6 +252,7 @@ def prepare_test_module_repo(module_name, module_version, overwrite_bazel_versio
     module_dot_bazel = source_root.joinpath("MODULE.bazel")
     # In case the existing MODULE.bazel has no write permission.
     if module_dot_bazel.exists():
+        os.chmod(module_dot_bazel, stat.S_IWRITE)
         os.remove(module_dot_bazel)
     shutil.copy(checked_in_module_dot_bazel, module_dot_bazel)
 
