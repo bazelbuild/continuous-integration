@@ -116,7 +116,7 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test && \
     apt-get -y install --only-upgrade libstdc++6 && \
     rm -rf /var/lib/apt/lists/*
 
-RUN LATEST_KYTHE=v0.0.67 && \
+RUN LATEST_KYTHE=v0.0.68 && \
     mkdir /usr/local/kythe && \
     curl -fsSL https://github.com/kythe/kythe/releases/download/${LATEST_KYTHE}/kythe-{$LATEST_KYTHE}.tar.gz | \
     tar xvz --no-same-owner --strip-components 1 --directory /usr/local/kythe && \
