@@ -39,7 +39,7 @@ import bazelci
 
 BCR_REPO_DIR = pathlib.Path(os.getcwd())
 
-BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
+BUILDKITE_ORG = os.environ.get("BUILDKITE_ORGANIZATION_SLUG", "bazel")
 
 SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/bcr_presubmit.py?{}".format(
     bazelci.GITHUB_BRANCH, int(time.time())
@@ -160,14 +160,15 @@ def scratch_file(root, relative_path, lines=None, mode="w"):
     return abspath
 
 
-def create_anonymous_repo(module_name, module_version):
+def create_anonymous_repo(module_name, module_version, root=None):
     """Create an anonymous Bazel module which depends on the target module."""
-    root = pathlib.Path(bazelci.get_repositories_root())
+    if not root:
+        root = pathlib.Path(bazelci.get_repositories_root())
     scratch_file(root, "WORKSPACE")
     scratch_file(root, "BUILD")
     scratch_file(root, "MODULE.bazel", ["bazel_dep(name = '%s', version = '%s')" % (module_name, module_version)])
     scratch_file(root, ".bazelrc", [
-        "build --experimental_enable_bzlmod",
+        "build --enable_bzlmod",
         "build --registry=%s" % BCR_REPO_DIR.as_uri(),
     ])
     return root
@@ -214,41 +215,42 @@ def unpack_archive(archive_file, output_dir):
     else:
         shutil.unpack_archive(archive_file, output_dir)
 
-def prepare_test_module_repo(module_name, module_version, overwrite_bazel_version=None):
+def prepare_test_module_repo(module_name, module_version, overwrite_bazel_version=None, root=None, suppress_log=False):
     """Prepare the test module repo and the presubmit yml file it should use"""
-    bazelci.print_collapsed_group(":information_source: Prepare test module repo")
-    root = pathlib.Path(bazelci.get_repositories_root())
+    suppress_log or bazelci.print_collapsed_group(":information_source: Prepare test module repo")
+    if not root:
+        root = pathlib.Path(bazelci.get_repositories_root())
     source = load_source_json(module_name, module_version)
 
     # Download and unpack the source archive to ./output
     archive_url = source["url"]
     archive_file = root.joinpath(archive_url.split("/")[-1].split("?")[0])
     output_dir = root.joinpath("output")
-    bazelci.eprint("* Download and unpack %s\n" % archive_url)
+    suppress_log or bazelci.eprint("* Download and unpack %s\n" % archive_url)
     download(archive_url, archive_file)
     unpack_archive(str(archive_file), output_dir)
-    bazelci.eprint("Source unpacked to %s\n" % output_dir)
+    suppress_log or bazelci.eprint("Source unpacked to %s\n" % output_dir)
 
     # Apply overlay and patch files if there are any
     source_root = output_dir.joinpath(source["strip_prefix"] if "strip_prefix" in source else "")
     if "overlay" in source:
-        bazelci.eprint("* Applying overlay")
+        suppress_log or bazelci.eprint("* Applying overlay")
         for overlay_path in source["overlay"]:
-            bazelci.eprint("\nOverlaying %s:" % overlay_path)
+            suppress_log or bazelci.eprint("\nOverlaying %s:" % overlay_path)
             overlay_file = get_overlay_file(module_name, module_version, overlay_path)
             destination_file = source_root.joinpath(overlay_path)
             os.makedirs(destination_file.parent, exist_ok=True)
             shutil.copy(overlay_file, destination_file)
     if "patches" in source:
-        bazelci.eprint("* Applying patch files")
+        suppress_log or bazelci.eprint("* Applying patch files")
         for patch_name in source["patches"]:
-            bazelci.eprint("\nApplying %s:" % patch_name)
+            suppress_log or bazelci.eprint("\nApplying %s:" % patch_name)
             patch_file = get_patch_file(module_name, module_version, patch_name)
             apply_patch(source_root, source["patch_strip"], patch_file)
 
     # Make sure the checked-in MODULE.bazel file is used.
     checked_in_module_dot_bazel = get_module_dot_bazel(module_name, module_version)
-    bazelci.eprint("\n* Copy checked-in MODULE.bazel file to source root:\n%s\n" % read(checked_in_module_dot_bazel))
+    suppress_log or bazelci.eprint("\n* Copy checked-in MODULE.bazel file to source root:\n%s\n" % read(checked_in_module_dot_bazel))
     module_dot_bazel = source_root.joinpath("MODULE.bazel")
     # In case the existing MODULE.bazel has no write permission.
     if module_dot_bazel.exists():
@@ -261,7 +263,7 @@ def prepare_test_module_repo(module_name, module_version, overwrite_bazel_versio
     test_module_presubmit = root.joinpath("presubmit.yml")
     with open(test_module_presubmit, "w") as f:
         yaml.dump(orig_presubmit["bcr_test_module"], f)
-    bazelci.eprint("* Generate test module presubmit.yml:\n%s\n" % read(test_module_presubmit))
+    suppress_log or bazelci.eprint("* Generate test module presubmit.yml:\n%s\n" % read(test_module_presubmit))
 
     # Write necessary options to the .bazelrc file
     test_module_root = source_root.joinpath(orig_presubmit["bcr_test_module"]["module_path"])
@@ -273,14 +275,14 @@ def prepare_test_module_repo(module_name, module_version, overwrite_bazel_versio
     scratch_file(test_module_root, ".bazelrc", [
         # .bazelrc may not end with a newline.
         "",
-        "common --experimental_enable_bzlmod",
+        "common --enable_bzlmod",
         "common --registry=%s" % BCR_REPO_DIR.as_uri(),
         # In case the test module sets --check_direct_dependencies=error and a different Bazel version may trigger the error.
         "common --check_direct_dependencies=warning" if overwrite_bazel_version else "",
     ], mode="a")
-    bazelci.eprint("* Append Bzlmod flags to .bazelrc file:\n%s\n" % read(test_module_root.joinpath(".bazelrc")))
+    suppress_log or bazelci.eprint("* Append Bzlmod flags to .bazelrc file:\n%s\n" % read(test_module_root.joinpath(".bazelrc")))
 
-    bazelci.eprint("* Test module ready: %s\n" % test_module_root)
+    suppress_log or bazelci.eprint("* Test module ready: %s\n" % test_module_root)
     return test_module_root, test_module_presubmit
 
 
