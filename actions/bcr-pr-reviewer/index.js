@@ -522,7 +522,7 @@ async function runDiffModule(octokit) {
       const previousVersion = metadata.versions[versionIndex - 1];
       console.log(`::group:: Generating diff for module ${moduleName}@${versionName} against version ${previousVersion}`);
 
-      const diffCommand = `diff --color -urN modules/${moduleName}/${previousVersion} modules/${moduleName}/${versionName}`;
+      const diffCommand = `diff --color=always -urN modules/${moduleName}/${previousVersion} modules/${moduleName}/${versionName}`;
       console.log(`Running command: ${diffCommand}`);
       const { execSync } = require('child_process');
 
