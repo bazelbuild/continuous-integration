@@ -17,9 +17,9 @@ async function fetchAllModifiedModules(octokit, owner, repo, prNumber) {
     });
 
     response.data.forEach(file => {
-      const match = file.filename.match(/^modules\/([^\/]+)\//);
+      const match = file.filename.match(/^modules\/([^\/]+)\/([^\/]+)\//);
       if (match) {
-        accumulate.add(match[1]);
+        accumulate.add([match[1], match[2]]);
       }
     });
 
@@ -249,7 +249,8 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   }
 
   // Fetch modified modules
-  const modifiedModules = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
+  const modifiedModulesSet = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
+  const modifiedModules = new Set(Array.from(modifiedModulesSet).map(module => module[0]));
   console.log(`Modified modules: ${Array.from(modifiedModules).join(', ')}`);
   if (modifiedModules.size === 0) {
     console.log('No modules are modified in this PR');
@@ -329,7 +330,8 @@ async function runNotifier(octokit) {
   const { owner, repo } = context.repo;
 
   // Fetch modified modules
-  const modifiedModules = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
+  const modifiedModulesSet = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
+  const modifiedModules = new Set(Array.from(modifiedModulesSet).map(module => module[0]));
   console.log(`Modified modules: ${Array.from(modifiedModules).join(', ')}`);
 
   // Figure out maintainers for each modified module
@@ -477,6 +479,64 @@ async function runSkipCheck(octokit) {
   }
 }
 
+async function runDiffModule(octokit) {
+  const prNumber = context.issue.number;
+  if (!prNumber) {
+    console.log('Could not get pull request number from context, exiting');
+    return;
+  }
+  console.log(`Diffing modules in PR #${prNumber}`);
+
+  const { owner, repo } = context.repo;
+
+  // Fetch modified modules
+  const modifiedModulesSet = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
+  console.log(`Modified modules: ${Array.from(modifiedModulesSet).map(module => module.join('@')).join(', ')}`);
+
+  for (const [moduleName, versionName] of modifiedModulesSet) {
+    try {
+      const { data: metadataContent } = await octokit.rest.repos.getContent({
+        owner,
+        repo,
+        path: `modules/${moduleName}/metadata.json`,
+        ref: `refs/pull/${prNumber}/head`,
+      });
+      const metadata = JSON.parse(Buffer.from(metadataContent.content, 'base64').toString('utf-8'));
+
+      // Assuming metadata.versions is sorted in ascending order, otherwise bcr_validation.py checks will fail anyway.
+      let versionIndex = metadata.versions.findIndex(version => version.name === versionName);
+
+      if (versionIndex === -1) {
+        console.error(`Version ${versionName} not found in metadata.json for module ${moduleName}`);
+        setFailed(`Failed to generate diff for module ${moduleName}@${versionName}`);
+        return;
+      }
+
+      if (versionIndex === 0) {
+        console.log(`No previous version to diff for module ${moduleName}@${versionName}`);
+        continue;
+      }
+
+      const previousVersion = metadata.versions[versionIndex - 1];
+      console.log(`::group:: Generating diff for module ${moduleName}@${versionName} against version ${previousVersion.name}`);
+
+      const diffCommand = `diff -urN modules/${moduleName}/${previousVersion} modules/${moduleName}/${versionName}`;
+      console.log(`Running command: ${diffCommand}`);
+      const { exec } = require('@actions/exec');
+      await exec(diffCommand);
+
+      console.log(`::endgroup::`);
+    } catch (error) {
+      if (error.status === 404) {
+        console.log(`Module ${moduleName} does not have a metadata.json file on the PR branch.`);
+      } else {
+        console.error(`Error processing module ${moduleName}: ${error}`);
+        setFailed(`Failed to generate diff for module ${moduleName}@${versionName}`);
+      }
+    }
+  }
+}
+
 async function run() {
   const action_type = getInput("action-type");
   const token = getInput("token");
@@ -490,6 +550,8 @@ async function run() {
     await runDismissApproval(octokit);
   } else if (action_type === "skip_check") {
     await runSkipCheck(octokit);
+  } else if (action_type === "diff_module") {
+    await runDiffModule(octokit);
   } else {
     console.log(`Unknown action type: ${action_type}`);
   }
