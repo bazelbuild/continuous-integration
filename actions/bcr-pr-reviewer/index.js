@@ -493,6 +493,10 @@ async function runDiffModule(octokit) {
   const modifiedModulesSet = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
   console.log(`Modified modules: ${Array.from(modifiedModulesSet).join(', ')}`);
 
+  // Use group if more than one module are modified
+  const groupStart = modifiedModulesSet.size === 1 ? "" : "::group::";
+  const groupEnd = modifiedModulesSet.size === 1 ? "" : "::endgroup::";
+
   for (const moduleVersion of modifiedModulesSet) {
     const [moduleName, versionName] = moduleVersion.split('@');
     try {
@@ -520,7 +524,7 @@ async function runDiffModule(octokit) {
       }
 
       const previousVersion = metadata.versions[versionIndex - 1];
-      console.log(`::group:: Generating diff for module ${moduleName}@${versionName} against version ${previousVersion}`);
+      console.log(`${groupStart}Generating diff for module ${moduleName}@${versionName} against version ${previousVersion}`);
 
       const diffCommand = `diff --color=always -urN modules/${moduleName}/${previousVersion} modules/${moduleName}/${versionName}`;
       console.log(`Running command: ${diffCommand}`);
@@ -539,7 +543,7 @@ async function runDiffModule(octokit) {
         }
       }
 
-      console.log(`::endgroup::`);
+      console.log(`${groupEnd}`);
     } catch (error) {
       if (error.status === 404) {
         console.log(`Module ${moduleName} does not have a metadata.json file on the PR branch.`);
