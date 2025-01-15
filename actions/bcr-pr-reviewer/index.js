@@ -524,8 +524,8 @@ async function runDiffModule(octokit) {
 
       const diffCommand = `diff -urN modules/${moduleName}/${previousVersion} modules/${moduleName}/${versionName}`;
       console.log(`Running command: ${diffCommand}`);
-      const { exec } = require('@actions/exec');
-      await exec(diffCommand);
+      const { execSync } = require('child_process');
+      await execSync(diffCommand, { stdio: 'inherit' });
 
       console.log(`::endgroup::`);
     } catch (error) {
