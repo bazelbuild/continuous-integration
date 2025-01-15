@@ -19,7 +19,7 @@ async function fetchAllModifiedModules(octokit, owner, repo, prNumber) {
     response.data.forEach(file => {
       const match = file.filename.match(/^modules\/([^\/]+)\/([^\/]+)\//);
       if (match) {
-        accumulate.add([match[1], match[2]]);
+        accumulate.add(`${match[1]}@${match[2]}`);
       }
     });
 
@@ -250,7 +250,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
 
   // Fetch modified modules
   const modifiedModulesSet = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
-  const modifiedModules = new Set(Array.from(modifiedModulesSet).map(module => module[0]));
+  const modifiedModules = new Set(Array.from(modifiedModulesSet).map(module => module.split('@')[0]));
   console.log(`Modified modules: ${Array.from(modifiedModules).join(', ')}`);
   if (modifiedModules.size === 0) {
     console.log('No modules are modified in this PR');
@@ -331,7 +331,7 @@ async function runNotifier(octokit) {
 
   // Fetch modified modules
   const modifiedModulesSet = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
-  const modifiedModules = new Set(Array.from(modifiedModulesSet).map(module => module[0]));
+  const modifiedModules = new Set(Array.from(modifiedModulesSet).map(module => module.split('@')[0]));
   console.log(`Modified modules: ${Array.from(modifiedModules).join(', ')}`);
 
   // Figure out maintainers for each modified module
@@ -491,9 +491,10 @@ async function runDiffModule(octokit) {
 
   // Fetch modified modules
   const modifiedModulesSet = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
-  console.log(`Modified modules: ${Array.from(modifiedModulesSet).map(module => module.join('@')).join(', ')}`);
+  console.log(`Modified modules: ${Array.from(modifiedModulesSet).join(', ')}`);
 
-  for (const [moduleName, versionName] of modifiedModulesSet) {
+  for (const moduleVersion of modifiedModulesSet) {
+    const [moduleName, versionName] = moduleVersion.split('@');
     try {
       const { data: metadataContent } = await octokit.rest.repos.getContent({
         owner,
@@ -508,6 +509,7 @@ async function runDiffModule(octokit) {
 
       if (versionIndex === -1) {
         console.error(`Version ${versionName} not found in metadata.json for module ${moduleName}`);
+        console.log(`Metadata content for module ${moduleName}@${versionName}: ${JSON.stringify(metadata, null, 2)}`);
         setFailed(`Failed to generate diff for module ${moduleName}@${versionName}`);
         return;
       }
