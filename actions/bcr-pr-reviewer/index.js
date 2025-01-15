@@ -520,12 +520,24 @@ async function runDiffModule(octokit) {
       }
 
       const previousVersion = metadata.versions[versionIndex - 1];
-      console.log(`::group:: Generating diff for module ${moduleName}@${versionName} against version ${previousVersion.name}`);
+      console.log(`::group:: Generating diff for module ${moduleName}@${versionName} against version ${previousVersion}`);
 
-      const diffCommand = `diff -urN modules/${moduleName}/${previousVersion} modules/${moduleName}/${versionName}`;
+      const diffCommand = `diff --color -urN modules/${moduleName}/${previousVersion} modules/${moduleName}/${versionName}`;
       console.log(`Running command: ${diffCommand}`);
       const { execSync } = require('child_process');
-      await execSync(diffCommand, { stdio: 'inherit' });
+
+      try {
+        await execSync(diffCommand, { stdio: 'inherit' });
+        console.log(`No differences found!`);
+      } catch (error) {
+        if (error.status === 1) {
+          // diff command returns 1 when differences are found
+          continue;
+        } else {
+          setFailed(`Failed to generate diff for module ${moduleName}@${versionName}`);
+          throw error;
+        }
+      }
 
       console.log(`::endgroup::`);
     } catch (error) {
