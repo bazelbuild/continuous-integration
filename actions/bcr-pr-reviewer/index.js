@@ -108,7 +108,8 @@ async function notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap)
     }
     const maintainersList = Array.from(maintainersCopy).join(', ');
     console.log(`Notifying ${maintainersList} for modules: ${modulesList}`);
-    const commentBody = `Hello ${maintainersList}, modules you maintain (${modulesList}) have been updated in this PR. Please review the changes.`;
+    const commentBody = `Hello ${maintainersList}, modules you maintain (${modulesList}) have been updated in this PR.
+      Please review the changes. You can view a diff against the previous version in the "Generate module diff" check.`;
     await postComment(octokit, owner, repo, prNumber, commentBody);
   }
 }
@@ -344,7 +345,9 @@ async function runNotifier(octokit) {
   if (modulesWithoutGithubMaintainers.size > 0) {
     const modulesList = Array.from(modulesWithoutGithubMaintainers).join(', ');
     console.log(`Notifying @bazelbuild/bcr-maintainers for modules: ${modulesList}`);
-    await postComment(octokit, owner, repo, prNumber, `Hello @bazelbuild/bcr-maintainers, modules without existing maintainers (${modulesList}) have been updated in this PR. Please review the changes.`);
+    await postComment(octokit, owner, repo, prNumber,
+      `Hello @bazelbuild/bcr-maintainers, modules without existing maintainers (${modulesList}) have been updated in this PR.
+      Please review the changes. You can view a diff against the previous version in the "Generate module diff" check.`);
   }
 }
 
