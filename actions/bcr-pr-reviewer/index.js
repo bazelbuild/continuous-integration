@@ -505,7 +505,7 @@ async function runDiffModule(octokit) {
       const metadata = JSON.parse(Buffer.from(metadataContent.content, 'base64').toString('utf-8'));
 
       // Assuming metadata.versions is sorted in ascending order, otherwise bcr_validation.py checks will fail anyway.
-      let versionIndex = metadata.versions.findIndex(version => version.name === versionName);
+      let versionIndex = metadata.versions.findIndex(version => version === versionName);
 
       if (versionIndex === -1) {
         console.error(`Version ${versionName} not found in metadata.json for module ${moduleName}`);
