@@ -17,9 +17,9 @@ async function fetchAllModifiedModules(octokit, owner, repo, prNumber) {
     });
 
     response.data.forEach(file => {
-      const match = file.filename.match(/^modules\/([^\/]+)\//);
+      const match = file.filename.match(/^modules\/([^\/]+)\/([^\/]+)\//);
       if (match) {
-        accumulate.add(match[1]);
+        accumulate.add(`${match[1]}@${match[2]}`);
       }
     });
 
@@ -108,7 +108,8 @@ async function notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap)
     }
     const maintainersList = Array.from(maintainersCopy).join(', ');
     console.log(`Notifying ${maintainersList} for modules: ${modulesList}`);
-    const commentBody = `Hello ${maintainersList}, modules you maintain (${modulesList}) have been updated in this PR. Please review the changes.`;
+    const commentBody = `Hello ${maintainersList}, modules you maintain (${modulesList}) have been updated in this PR.
+      Please review the changes. You can view a diff against the previous version in the "Generate module diff" check.`;
     await postComment(octokit, owner, repo, prNumber, commentBody);
   }
 }
@@ -249,7 +250,8 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   }
 
   // Fetch modified modules
-  const modifiedModules = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
+  const modifiedModuleVersions = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
+  const modifiedModules = new Set(Array.from(modifiedModuleVersions).map(module => module.split('@')[0]));
   console.log(`Modified modules: ${Array.from(modifiedModules).join(', ')}`);
   if (modifiedModules.size === 0) {
     console.log('No modules are modified in this PR');
@@ -329,7 +331,8 @@ async function runNotifier(octokit) {
   const { owner, repo } = context.repo;
 
   // Fetch modified modules
-  const modifiedModules = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
+  const modifiedModuleVersions = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
+  const modifiedModules = new Set(Array.from(modifiedModuleVersions).map(module => module.split('@')[0]));
   console.log(`Modified modules: ${Array.from(modifiedModules).join(', ')}`);
 
   // Figure out maintainers for each modified module
@@ -342,7 +345,9 @@ async function runNotifier(octokit) {
   if (modulesWithoutGithubMaintainers.size > 0) {
     const modulesList = Array.from(modulesWithoutGithubMaintainers).join(', ');
     console.log(`Notifying @bazelbuild/bcr-maintainers for modules: ${modulesList}`);
-    await postComment(octokit, owner, repo, prNumber, `Hello @bazelbuild/bcr-maintainers, modules without existing maintainers (${modulesList}) have been updated in this PR. Please review the changes.`);
+    await postComment(octokit, owner, repo, prNumber,
+      `Hello @bazelbuild/bcr-maintainers, modules without existing maintainers (${modulesList}) have been updated in this PR.
+      Please review the changes. You can view a diff against the previous version in the "Generate module diff" check.`);
   }
 }
 
@@ -477,6 +482,81 @@ async function runSkipCheck(octokit) {
   }
 }
 
+async function runDiffModule(octokit) {
+  const prNumber = context.issue.number;
+  if (!prNumber) {
+    console.log('Could not get pull request number from context, exiting');
+    return;
+  }
+  console.log(`Diffing modules in PR #${prNumber}`);
+
+  const { owner, repo } = context.repo;
+
+  // Fetch modified modules
+  const modifiedModuleVersions = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
+  console.log(`Modified modules: ${Array.from(modifiedModuleVersions).join(', ')}`);
+
+  // Use group if more than one module are modified
+  const groupStart = modifiedModuleVersions.size === 1 ? "" : "::group::";
+  const groupEnd = modifiedModuleVersions.size === 1 ? "" : "::endgroup::";
+
+  for (const moduleVersion of modifiedModuleVersions) {
+    const [moduleName, versionName] = moduleVersion.split('@');
+    try {
+      const { data: metadataContent } = await octokit.rest.repos.getContent({
+        owner,
+        repo,
+        path: `modules/${moduleName}/metadata.json`,
+        ref: `refs/pull/${prNumber}/head`,
+      });
+      const metadata = JSON.parse(Buffer.from(metadataContent.content, 'base64').toString('utf-8'));
+
+      // Assuming metadata.versions is sorted in ascending order, otherwise bcr_validation.py checks will fail anyway.
+      let versionIndex = metadata.versions.findIndex(version => version === versionName);
+
+      if (versionIndex === -1) {
+        console.error(`Version ${versionName} not found in metadata.json for module ${moduleName}`);
+        console.log(`Metadata content for module ${moduleName}@${versionName}: ${JSON.stringify(metadata, null, 2)}`);
+        setFailed(`Failed to generate diff for module ${moduleName}@${versionName}`);
+        return;
+      }
+
+      if (versionIndex === 0) {
+        console.log(`No previous version to diff for module ${moduleName}@${versionName}`);
+        continue;
+      }
+
+      const previousVersion = metadata.versions[versionIndex - 1];
+      console.log(`${groupStart}Generating diff for module ${moduleName}@${versionName} against version ${previousVersion}`);
+
+      const diffCommand = `diff --color=always -urN modules/${moduleName}/${previousVersion} modules/${moduleName}/${versionName}`;
+      console.log(`Running command: ${diffCommand}`);
+      const { execSync } = require('child_process');
+
+      try {
+        await execSync(diffCommand, { stdio: 'inherit' });
+        console.log(`No differences found!`);
+      } catch (error) {
+        if (error.status === 1) {
+          // diff command returns 1 when differences are found
+        } else {
+          setFailed(`Failed to generate diff for module ${moduleName}@${versionName}`);
+          throw error;
+        }
+      }
+
+      console.log(`${groupEnd}`);
+    } catch (error) {
+      if (error.status === 404) {
+        console.log(`Module ${moduleName} does not have a metadata.json file on the PR branch.`);
+      } else {
+        console.error(`Error processing module ${moduleName}: ${error}`);
+        setFailed(`Failed to generate diff for module ${moduleName}@${versionName}`);
+      }
+    }
+  }
+}
+
 async function run() {
   const action_type = getInput("action-type");
   const token = getInput("token");
@@ -490,6 +570,8 @@ async function run() {
     await runDismissApproval(octokit);
   } else if (action_type === "skip_check") {
     await runSkipCheck(octokit);
+  } else if (action_type === "diff_module") {
+    await runDiffModule(octokit);
   } else {
     console.log(`Unknown action type: ${action_type}`);
   }
