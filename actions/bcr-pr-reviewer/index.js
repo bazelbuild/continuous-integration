@@ -250,8 +250,8 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   }
 
   // Fetch modified modules
-  const modifiedModulesSet = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
-  const modifiedModules = new Set(Array.from(modifiedModulesSet).map(module => module.split('@')[0]));
+  const modifiedModuleVersions = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
+  const modifiedModules = new Set(Array.from(modifiedModuleVersions).map(module => module.split('@')[0]));
   console.log(`Modified modules: ${Array.from(modifiedModules).join(', ')}`);
   if (modifiedModules.size === 0) {
     console.log('No modules are modified in this PR');
@@ -331,8 +331,8 @@ async function runNotifier(octokit) {
   const { owner, repo } = context.repo;
 
   // Fetch modified modules
-  const modifiedModulesSet = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
-  const modifiedModules = new Set(Array.from(modifiedModulesSet).map(module => module.split('@')[0]));
+  const modifiedModuleVersions = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
+  const modifiedModules = new Set(Array.from(modifiedModuleVersions).map(module => module.split('@')[0]));
   console.log(`Modified modules: ${Array.from(modifiedModules).join(', ')}`);
 
   // Figure out maintainers for each modified module
@@ -493,14 +493,14 @@ async function runDiffModule(octokit) {
   const { owner, repo } = context.repo;
 
   // Fetch modified modules
-  const modifiedModulesSet = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
-  console.log(`Modified modules: ${Array.from(modifiedModulesSet).join(', ')}`);
+  const modifiedModuleVersions = await fetchAllModifiedModules(octokit, owner, repo, prNumber);
+  console.log(`Modified modules: ${Array.from(modifiedModuleVersions).join(', ')}`);
 
   // Use group if more than one module are modified
-  const groupStart = modifiedModulesSet.size === 1 ? "" : "::group::";
-  const groupEnd = modifiedModulesSet.size === 1 ? "" : "::endgroup::";
+  const groupStart = modifiedModuleVersions.size === 1 ? "" : "::group::";
+  const groupEnd = modifiedModuleVersions.size === 1 ? "" : "::endgroup::";
 
-  for (const moduleVersion of modifiedModulesSet) {
+  for (const moduleVersion of modifiedModuleVersions) {
     const [moduleName, versionName] = moduleVersion.split('@');
     try {
       const { data: metadataContent } = await octokit.rest.repos.getContent({
@@ -539,7 +539,6 @@ async function runDiffModule(octokit) {
       } catch (error) {
         if (error.status === 1) {
           // diff command returns 1 when differences are found
-          continue;
         } else {
           setFailed(`Failed to generate diff for module ${moduleName}@${versionName}`);
           throw error;
