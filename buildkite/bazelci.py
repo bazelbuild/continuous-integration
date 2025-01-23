@@ -207,11 +207,13 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_android.git",
         "pipeline_slug": "rules-android",
         "owned_by_bazel": True,
+        "disabled_reason": "https://github.com/bazelbuild/rules_android/issues/261, https://github.com/bazelbuild/rules_android/issues/266, https://github.com/bazelbuild/rules_android/issues/328"
     },
     "rules_android_ndk": {
         "git_repository": "https://github.com/bazelbuild/rules_android_ndk.git",
         "pipeline_slug": "rules-android-ndk",
         "owned_by_bazel": True,
+        "disabled_reason": "https://github.com/bazelbuild/rules_android_ndk/issues/83, https://github.com/bazelbuild/rules_android_ndk/issues/86, https://github.com/bazelbuild/rules_android_ndk/issues/88",
     },
     "rules_cc": {
         "git_repository": "https://github.com/bazelbuild/rules_cc.git",
