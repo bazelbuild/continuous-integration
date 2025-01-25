@@ -57,7 +57,7 @@ These steps only have to be performed once, ever.
             version = "8.1.0",
             repo_name = "io_bazel",
         )
-    ```
+      ```
 1.  Update the branch name in the scheduled build for release branches by editing the "build branch" field [here](https://buildkite.com/bazel/bazel-at-head-plus-downstream/settings/schedules/b63d6589-2658-4850-a9b9-b588b9ea5c99/edit). Set it to `release-X.Y.Z` so that downstream tests run against this branch.
 1.  Ping [@meteorcloudy](https://github.com/meteorcloudy) to configure a [GitHub merge queue](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue#about-merge-queues) for this new branch.
 1.  (For minor release only) Send an email to bazel-discuss@googlegroups.com announcing the next release.
