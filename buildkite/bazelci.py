@@ -169,7 +169,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/intellij.yml",
         "pipeline_slug": "intellij-plugin",
-   },
+    },
     "IntelliJ Plugin Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/intellij.yml",
