@@ -95,6 +95,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/android-studio.yml",
         "pipeline_slug": "android-studio-plugin-google",
+        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7232#issuecomment-2617127267",
     },
     "Android Testing": {
         "git_repository": "https://github.com/googlesamples/android-testing.git",
@@ -146,11 +147,13 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/clion.yml",
         "pipeline_slug": "clion-plugin",
+        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7232#issuecomment-2617127267",
     },
     "CLion Plugin Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/clion.yml",
         "pipeline_slug": "clion-plugin-google",
+        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7232#issuecomment-2617127267",
     },
     "Cloud Robotics Core": {
         "git_repository": "https://github.com/googlecloudrobotics/core.git",
@@ -171,6 +174,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/intellij.yml",
         "pipeline_slug": "intellij-plugin-google",
+        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7232#issuecomment-2617127267",
     },
     "IntelliJ UE Plugin": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
@@ -181,16 +185,19 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/intellij-ue.yml",
         "pipeline_slug": "intellij-ue-plugin-google",
+        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7232#issuecomment-2617127267",
     },
     "IntelliJ Plugin Aspect": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/aspect.yml",
         "pipeline_slug": "intellij-plugin-aspect",
+        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7232#issuecomment-2617127267",
     },
     "IntelliJ Plugin Aspect Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/aspect.yml",
         "pipeline_slug": "intellij-plugin-aspect-google",
+        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7232#issuecomment-2617127267",
     },
     "Stardoc": {
         "git_repository": "https://github.com/bazelbuild/stardoc.git",
