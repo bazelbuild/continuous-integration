@@ -509,8 +509,6 @@ steps:
       cd scripts/release
       python3 relnotes.py
 
-  - wait
-
   - block: "Build and publish"
     if: build.branch !~ /pre/i  
 
