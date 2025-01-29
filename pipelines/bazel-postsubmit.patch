@@ -1,38 +1,51 @@
-diff --git bazel-postsubmit.yml bazel-postsubmit.yml
-index 1ee30a9a94..7995b62de5 100644
---- bazel-postsubmit.yml
-+++ bazel-postsubmit.yml
-@@ -1,4 +1,5 @@
+--- bazel-postsubmit-orig.yml	2025-01-29 14:04:50
++++ bazel-postsubmit.yml	2025-01-29 14:07:11
+@@ -1,10 +1,12 @@
  ---
 +# Update this file by running ./update-bazel-postsubmit.sh under the same directory
-
+ 
  tasks:
-   centos7_java11_devtoolset10:
-@@ -8,6 +9,7 @@ tasks:
-       - rm -f WORKSPACE.bzlmod.bak
+   centos7:
+     shell_commands:
        - rm -rf $HOME/bazeltest
        - mkdir $HOME/bazeltest
 +      - bazel mod deps --lockfile_mode=update
      build_flags:
        - "--config=ci-linux"
      build_targets:
-@@ -73,6 +75,7 @@ tasks:
-       - rm -f WORKSPACE.bzlmod.bak
+@@ -47,6 +49,7 @@
+     shell_commands:
        - rm -rf $HOME/bazeltest
        - mkdir $HOME/bazeltest
 +      - bazel mod deps --lockfile_mode=update
      build_flags:
        - "--config=ci-linux"
      build_targets:
-@@ -132,6 +135,7 @@ tasks:
-       - rm -f WORKSPACE.bzlmod.bak
+@@ -60,6 +63,7 @@
+     shell_commands:
        - rm -rf $HOME/bazeltest
        - mkdir $HOME/bazeltest
 +      - bazel mod deps --lockfile_mode=update
      build_flags:
        - "--config=ci-linux"
      build_targets:
-@@ -165,6 +169,7 @@ tasks:
+@@ -94,6 +98,7 @@
+     shell_commands:
+       - rm -rf $HOME/bazeltest
+       - mkdir $HOME/bazeltest
++      - bazel mod deps --lockfile_mode=update
+     build_flags:
+       - "--config=ci-linux"
+     build_targets:
+@@ -112,6 +117,7 @@
+     shell_commands:
+       - rm -rf $HOME/bazeltest
+       - mkdir $HOME/bazeltest
++      - bazel mod deps --lockfile_mode=update
+     build_flags:
+       - "--config=ci-linux"
+     build_targets:
+@@ -143,6 +149,7 @@
        - rm -rf $HOME/bazeltest
        - mkdir $HOME/bazeltest
        - ln -sf $OUTPUT_BASE/external $HOME/bazeltest/external
@@ -40,7 +53,7 @@ index 1ee30a9a94..7995b62de5 100644
      build_flags:
        - "--config=ci-macos"
      build_targets:
-@@ -228,6 +233,7 @@ tasks:
+@@ -186,6 +193,7 @@
        - rm -rf $HOME/bazeltest
        - mkdir $HOME/bazeltest
        - ln -sf $OUTPUT_BASE/external $HOME/bazeltest/external
@@ -48,19 +61,28 @@ index 1ee30a9a94..7995b62de5 100644
      build_flags:
        - "--config=ci-macos"
      build_targets:
-@@ -289,6 +295,7 @@ tasks:
+@@ -219,6 +227,7 @@
+     setup:
+       - mkdir C:\b
        - mklink /J C:\b\bazeltest_external %OUTPUT_BASE:/=\%\external
-     batch_commands:
-       - powershell -Command "(Get-Content WORKSPACE.bzlmod) -Replace '# android_', 'android_' | Set-Content WORKSPACE.bzlmod"
 +      - bazel mod deps --lockfile_mode=update
      build_flags:
        - "--config=ci-windows"
      build_targets:
-@@ -359,6 +366,7 @@ tasks:
-         -e 's/^# android_sdk_repository/android_sdk_repository/'
-         -e 's/^# android_ndk_repository/android_ndk_repository/' WORKSPACE.bzlmod
-       - rm -f WORKSPACE.bzlmod.bak
+@@ -268,6 +277,7 @@
+     setup:
+       - mkdir C:\b
+       - mklink /J C:\b\bazeltest_external %OUTPUT_BASE:/=\%\external
 +      - bazel mod deps --lockfile_mode=update
      build_flags:
-       - "--config=ubuntu2004_java11"
+       - "--config=ci-windows"
+       - "--config=windows_arm64"
+@@ -279,6 +289,8 @@
+   rbe_ubuntu2004:
+     platform: ubuntu2004
+     name: "RBE"
++    shell_commands:
++      - bazel mod deps --lockfile_mode=update
+     build_flags:
+       - "--config=remote"
        - "--remote_executor=grpcs://remotebuildexecution.googleapis.com"
