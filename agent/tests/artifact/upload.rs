@@ -42,6 +42,24 @@ fn test_logs_uploaded_to_buildkite() -> Result<()> {
     Ok(())
 }
 
+#[cfg(not(target_os = "windows"))]
+#[test]
+fn test_undeclared_output_uploaded_to_buildkite() -> Result<()> {
+    let mut cmd = Command::cargo_bin("bazelci-agent")?;
+    cmd.args([
+        "artifact",
+        "upload",
+        "--dry",
+        "--mode=buildkite",
+        "--build_event_json_file=tests/data/test_bep_undeclared_output.json",
+    ]);
+    cmd.assert()
+        .success()
+        .stdout(predicates::str::contains("buildkite-agent artifact upload src/test/shell/bazel/tags_propagation_native_test/test_attempts/attempt_1.outputs/test_cc_library_tags_not_propagated_when_incompatible_flag_off/741B943E-B846-4453-A3AF-0D9010431815/output1\n"));
+
+    Ok(())
+}
+
 fn with_tmpfile<F>(f: F) -> Result<()>
 where
     F: Fn(File, &Path) -> Result<()>,

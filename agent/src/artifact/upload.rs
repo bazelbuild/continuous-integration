@@ -126,16 +126,16 @@ fn watch_bep_json_file(
                             .map(|str| Path::new(str).to_path_buf());
                     } else if build_event.is_test_result() {
                         let test_result = build_event.test_result();
+                        let include_output = ["FAILED", "TIMEOUT", "FLAKY"]
+                            .contains(&test_result.status.as_str());
                         for output in test_result.test_action_outputs.iter() {
                             match output.name.as_str() {
                                 "test.log" => {
-                                    if ["FAILED", "TIMEOUT", "FLAKY"]
-                                        .contains(&test_result.status.as_str())
-                                    {
+                                    if include_output {
                                         if let Err(error) = upload_test_log(
                                             &mut uploader,
                                             dry,
-                                            local_exec_root.as_ref().map(|p| p.as_path()),
+                                            local_exec_root.as_deref(),
                                             &output.uri,
                                             mode,
                                         ) {
@@ -148,9 +148,22 @@ fn watch_bep_json_file(
                                         if let Err(error) = upload_test_xml(
                                             &mut uploader,
                                             dry,
-                                            local_exec_root.as_ref().map(|p| p.as_path()),
+                                            local_exec_root.as_deref(),
                                             &output.uri,
                                             test_result.label.as_ref(),
+                                            mode,
+                                        ) {
+                                            error!("{:?}", error);
+                                        }
+                                    }
+                                }
+                                n if n.starts_with("test.outputs/") => {
+                                    if include_output {
+                                        if let Err(error) = upload_test_output(
+                                            &mut uploader,
+                                            dry,
+                                            local_exec_root.as_deref(),
+                                            &output.uri,
                                             mode,
                                         ) {
                                             error!("{:?}", error);
@@ -653,6 +666,23 @@ fn upload_test_xml(
 ) -> Result<()> {
     let (cwd, artifact) = resolve_artifact(test_xml, local_exec_root)?;
     return uploader.upload_test_xml(dry, cwd.as_ref().map(|pb| pb.as_path()), &artifact, label);
+}
+
+fn upload_test_output(
+    uploader: &mut Uploader,
+    dry: bool,
+    local_exec_root: Option<&Path>,
+    test_output: &str,
+    mode: Mode,
+) -> Result<()> {
+    let (cwd, artifact) = resolve_artifact(test_output, local_exec_root)?;
+    return uploader.upload_artifact(
+        dry,
+        cwd.as_ref().map(|pb| pb.as_path()),
+        &artifact,
+        mode,
+        None,
+    );
 }
 
 #[derive(Debug)]
