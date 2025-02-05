@@ -508,7 +508,7 @@ steps:
       echo "+++ Generating release notes"
       cd scripts/release
       python3 relnotes.py
-    allow_failure: true
+    soft_fail: true
 
   - wait
   
