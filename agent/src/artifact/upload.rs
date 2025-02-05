@@ -126,8 +126,8 @@ fn watch_bep_json_file(
                             .map(|str| Path::new(str).to_path_buf());
                     } else if build_event.is_test_result() {
                         let test_result = build_event.test_result();
-                        let include_output = ["FAILED", "TIMEOUT", "FLAKY"]
-                            .contains(&test_result.status.as_str());
+                        let include_output =
+                            ["FAILED", "TIMEOUT", "FLAKY"].contains(&test_result.status.as_str());
                         for output in test_result.test_action_outputs.iter() {
                             match output.name.as_str() {
                                 "test.log" => {
