@@ -508,9 +508,9 @@ steps:
       echo "+++ Generating release notes"
       cd scripts/release
       python3 relnotes.py
+    allow_failure: true
 
-  - wait: ~
-    continue_on_failure: true
+  - wait
   
   - block: "Build and publish"
     if: build.branch !~ /pre/i  
