@@ -457,7 +457,7 @@ async function runSkipCheck(octokit) {
   const check = payload.comment.body.slice(SKIP_CHECK_TRIGGER.length);
   const owner = payload.repository.owner.login;
   const repo = payload.repository.name;
-  if (check == "unstable_url") {
+  if (check.trim() == "unstable_url") {
     await octokit.rest.issues.addLabels({
       owner,
       repo,
