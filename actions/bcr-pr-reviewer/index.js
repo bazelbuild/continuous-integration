@@ -104,6 +104,10 @@ async function notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap)
       maintainersCopy.delete(`@${prAuthor}`);
     }
     if (maintainersCopy.size === 0) {
+      // If all maintainers are skipped, we should notify the BCR maintainers
+      await postComment(octokit, owner, repo, prNumber,
+        `Hello @bazelbuild/bcr-maintainers, modules (${modulesList}) have been updated in this PR.
+        Please review the changes. You can view a diff against the previous version in the "Generate module diff" check.`);
       continue;
     }
     const maintainersList = Array.from(maintainersCopy).join(', ');
