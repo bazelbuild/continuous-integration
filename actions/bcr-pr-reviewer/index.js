@@ -293,22 +293,31 @@ async function reviewPR(octokit, owner, repo, prNumber) {
         repo,
         pull_number: prNumber,
         event: 'APPROVE',
-        body: 'Hello @bazelbuild/bcr-maintainers, all modules in this PR have been approved by their maintainers. Please take a final look to merge this PR.',
+        body: 'Hello @bazelbuild/bcr-maintainers, all modules in this PR have been approved by their maintainers. This PR will be merged if all presubmit checks pass.',
       });
     }
 
-    // TODO: Enable the following when it's safe to do so.
-    // // Try to merge the PR
-    // try {
-    //   await octokit.rest.pulls.merge({
-    //     owner,
-    //     repo,
-    //     pull_number: prNumber,
-    //   });
-    // } catch (error) {
-    //   console.error('Failed to merge PR:', error.message);
-    //   console.error('This PR is not mergeable probably due to failed presubmits.');
-    // }
+    // Try to merge the PR
+    try {
+      await octokit.rest.pulls.merge({
+        owner,
+        repo,
+        pull_number: prNumber,
+      });
+
+      // Add auto-merged label
+      await octokit.rest.issues.addLabels({
+        owner,
+        repo,
+        issue_number: prNumber,
+        labels: ['auto-merged'],
+      });
+
+      console.log(`PR ${prNumber} merged successfully`);
+    } catch (error) {
+      console.error('Failed to merge PR:', error.message);
+      console.error('This PR is not mergeable probably due to failed presubmit checks.');
+    }
   }
 
   // Discard previous approvals if not all modules are approved
