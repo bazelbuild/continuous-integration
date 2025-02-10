@@ -303,6 +303,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
         owner,
         repo,
         pull_number: prNumber,
+        merge_method: 'squash',
       });
 
       // Add auto-merged label
