@@ -1,20 +1,64 @@
----
-platforms:
-  ubuntu2004:
-    test_flags:
-      - "--proto_toolchain_for_cc=//:cc_toolchain"
-    test_targets:
-      - "//:all"
-      - "//java/..."
-  macos:
-    test_flags:
-      - "--proto_toolchain_for_cc=//:cc_toolchain"
-    test_targets:
-      - "//:all"
-      - "//java/..."
-  windows:
+matrix:
+  platform: ["debian10", "macos", "ubuntu2004"]
+  bazel: [7.x]
+
+tasks:
+  verify_targets:
+    name: "Verify build targets"
+    platform: ${{ platform }}
+    bazel: ${{ bazel }}
     build_flags:
-      - "--proto_toolchain_for_cc=//:cc_toolchain"
+    - '--host_cxxopt=-std=c++17'
+    - '--cxxopt=-std=c++17'
     build_targets:
-      - "//:protobuf"
-      - "//:protobuf_java"
+    - '//:protobuf'
+    - '//:protobuf_lite'
+    - '//:protobuf_python'
+    - '//:protobuf_java'
+    - '//:protoc'
+    - '//:test_messages_proto2_cc_proto'
+    - '//:test_messages_proto3_cc_proto'
+
+  # Separate windows for different c++ build flags.
+  verify_targets_windows:
+    name: "Verify windows build targets"
+    platform: windows
+    bazel: ${{ bazel }}
+    build_flags:
+    - '--cxxopt=/std:c++17'
+    - '--host_cxxopt=/std:c++17'
+    # Run using clang-cl
+    - '--extra_execution_platforms=//build_defs:x64_windows-clang-cl'
+    - '--host_platform=//build_defs:x64_windows-clang-cl'
+    - '--extra_toolchains=@local_config_cc//:cc-toolchain-x64_windows-clang-cl'
+    build_targets:
+    - '//:protobuf'
+    - '//:protobuf_lite'
+    - '//:protobuf_python'
+    - '//:protobuf_java'
+    - '//:protoc'
+    - '//:test_messages_proto2_cc_proto'
+    - '//:test_messages_proto3_cc_proto'
+
+  run_test_module:
+    name: "Run test module"
+    working_directory: "examples"
+    platform: ${{ platform }}
+    bazel: ${{ bazel }}
+    build_flags:
+    - '--host_cxxopt=-std=c++17'
+    - '--cxxopt=-std=c++17'
+    build_targets:
+    - "//..."
+
+  # Separate windows for different c++ build flags.
+  run_test_module_windows:
+    name: "Run windows test module"
+    working_directory: "examples"
+    platform: windows
+    bazel: ${{ bazel }}
+    build_flags:
+    - '--cxxopt=/std:c++17'
+    - '--host_cxxopt=/std:c++17'
+    build_targets:
+    - "//..."
