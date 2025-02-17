@@ -170,6 +170,7 @@ def create_anonymous_repo(module_name, module_version, root=None):
     scratch_file(root, ".bazelrc", [
         "build --enable_bzlmod",
         "build --registry=%s" % BCR_REPO_DIR.as_uri(),
+        "query --registry=%s" % BCR_REPO_DIR.as_uri(),
     ])
     return root
 
