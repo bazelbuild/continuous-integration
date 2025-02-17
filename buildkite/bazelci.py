@@ -457,8 +457,9 @@ SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
 
 RUNNER_CMD = "bazelci.py runner"
 
-# TODO: change to USE_BAZEL_DIFF once the feature has been tested in QA
 USE_BAZEL_DIFF_ENV_VAR = "USE_BAZEL_DIFF"
+# DISABLE_BAZEL_DIFF wins, even if someone sets USE_BAZEL_DIFF (e.g. presubmit check).
+DISABLE_BAZEL_DIFF_ENV_VAR = "DISABLE_BAZEL_DIFF"
 
 BAZEL_DIFF_ANNOTATION_CTX = "'diff'"
 
@@ -2162,11 +2163,12 @@ def calculate_targets(
     index_targets = [x.strip() for x in index_targets if x.strip() != "--"]
 
     diffbase = os.getenv(USE_BAZEL_DIFF_ENV_VAR, "").lower()
+    disable_bazel_diff = os.getenv(DISABLE_BAZEL_DIFF_ENV_VAR, "")
     shard_id = int(os.getenv("BUILDKITE_PARALLEL_JOB", "-1"))
     shard_count = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "-1"))
     sharding_enabled = shard_id > -1 and shard_count > -1
 
-    use_bazel_diff = diffbase and can_use_bazel_diff(git_commit)
+    use_bazel_diff = not disable_bazel_diff and diffbase and can_use_bazel_diff(git_commit)
 
     # Skip target expansion if we don't need to calculate test targets
     if not use_bazel_diff and not sharding_enabled:
