@@ -1,5 +1,7 @@
 # Security Policy
 
+YOLO
+
 ## Reporting a Vulnerability
 
 To report a security issue, please email security@bazel.build with a description
