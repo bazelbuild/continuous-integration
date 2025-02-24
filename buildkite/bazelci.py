@@ -831,7 +831,7 @@ def gcloud_command():
 
 
 def match_matrix_attr_pattern(s):
-    return re.match("^\${{\s*(\w+)\s*}}$", s)
+    return re.match(r"^\${{\s*(\w+)\s*}}$", s)
 
 
 def get_matrix_attributes(task):
