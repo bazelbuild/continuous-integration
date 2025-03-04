@@ -49,9 +49,9 @@ def get_output(command):
           stdout=subprocess.PIPE,
       ).stdout
 
-def check_and_write_all_attestations():
+def check_and_write_new_attestations():
     print_expanded_group(":cop::copybara: Check & write attestations")
-    paths = get_attestations_json_paths()
+    paths = get_new_attestations_json_paths()
     if not paths:
         # TODO: turn this into an error
         print(f"No {ATTESTATION_METADATA_FILE} files were changed.")
@@ -60,7 +60,7 @@ def check_and_write_all_attestations():
     for p in paths:
         check_and_write_module_attestations(p)
 
-def get_attestations_json_paths():
+def get_new_attestations_json_paths():
     commit = os.getenv("BUILDKITE_COMMIT")
     cwd = os.getcwd()
     paths = get_output(["git", "diff-tree", "--no-commit-id", "--name-only", commit, "-r"])
@@ -130,7 +130,7 @@ def sync_bcr_content():
     )
 
 def main():
-    check_and_write_all_attestations()
+    check_and_write_new_attestations()
     sync_bcr_content()
     return 0
 
