@@ -35,6 +35,9 @@ import tempfile
 BCR_BUCKET = "gs://bcr.bazel.build/"
 ATTESTATION_METADATA_FILE = "attestations.json"
 FILES_WITH_ATTESTATIONS = ("source.json", "MODULE.bazel")
+
+# Basename of the file that contains the most recent commit
+# that passed through the post-submit pipeline successfully.
 LAST_GREEN_FILE = "last_green.txt"
 
 
