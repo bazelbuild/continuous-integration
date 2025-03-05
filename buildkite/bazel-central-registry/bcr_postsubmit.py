@@ -30,10 +30,12 @@ import os
 import requests
 import subprocess
 import sys
+import tempfile
 
 BCR_BUCKET = "gs://bcr.bazel.build/"
 ATTESTATION_METADATA_FILE = "attestations.json"
 FILES_WITH_ATTESTATIONS = ("source.json", "MODULE.bazel")
+LAST_GREEN_FILE = "last_green.txt"
 
 
 class AttestationError(Exception):
@@ -56,15 +58,40 @@ def check_and_write_new_attestations():
         # TODO: turn this into an error
         print(f"No {ATTESTATION_METADATA_FILE} files were changed.")
         return
-    
+
     for p in paths:
         check_and_write_module_attestations(p)
 
+
 def get_new_attestations_json_paths():
-    commit = os.getenv("BUILDKITE_COMMIT")
     cwd = os.getcwd()
-    paths = get_output(["git", "diff-tree", "--no-commit-id", "--name-only", commit, "-r"])
+    cmd = ["git", "diff-tree", "--no-commit-id", "--name-only", "-r"]
+
+    # last_green should be the parent commit. However, sometimes the
+    # pipeline can fail due to infra issues. In this case we need
+    # to mirror attestations in the commits of the failing runs, too.
+    last_green = get_last_green()
+    if last_green:
+        cmd.append(last_green)
+
+    paths = get_output(cmd + [get_commit()])
     return [os.path.join(cwd, p) for p in paths.split("\n") if p.endswith(f"/{ATTESTATION_METADATA_FILE}")]
+
+
+def get_last_green():
+    url = os.path.join(
+        BCR_BUCKET.replace("gs://", "https://storage.googleapis.com/"), LAST_GREEN_FILE
+    )
+    with requests.get(url) as response:
+        if response.status_code != 200:
+            return ""
+
+        return response.content.decode("utf-8")
+
+
+def get_commit():
+    return os.getenv("BUILDKITE_COMMIT")
+
 
 def check_and_write_module_attestations(attestations_json_path):
     print(f"Checking {attestations_json_path}...")
@@ -129,9 +156,20 @@ def sync_bcr_content():
         ["gsutil", "-h", "Cache-Control:no-cache", "-m", "rsync", "-r", "./modules", BCR_BUCKET + "modules"]
     )
 
+
+def update_last_green():
+    path = os.path.join(tempfile.mkdtemp(), LAST_GREEN_FILE)
+    with open(path, "wt") as f:
+        f.write(get_commit())
+
+    dest = os.path.join(BCR_BUCKET, LAST_GREEN_FILE)
+    subprocess.check_output(["gsutil", "cp", path, dest])
+
+
 def main():
     check_and_write_new_attestations()
     sync_bcr_content()
+    update_last_green()
     return 0
 
 if __name__ == "__main__":
