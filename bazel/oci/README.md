@@ -9,6 +9,15 @@ To build and publish docker container for new Bazel LTS release to `gcr.io/bazel
 $ ./build.sh gcr.io/bazel-public/bazel <bazel version>
 ```
 
+Note: this installs the Java 8 JDK on the docker container image. To build an image with a more recent JDK version, 
+specify the package name of the JDK to install as the third argument, for instance:
+
+```bash
+  $ ./build.sh gcr.io/bazel-public/bazel <bazel version> openjdk-21-jdk
+```
+
+This will append the JDK version to the tag of the Bazel container image.
+
 ### 2. Push the docker container to `gcr.io/bazel-public/bazel`
 ```bash
 $ docker push gcr.io/bazel-public/bazel:<bazel version>
