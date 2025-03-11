@@ -171,6 +171,46 @@ tasks:
         )
         self.assertEqual(build_targets, ["//...", "-//experimental/...", "//experimental/good/..."])
 
+class MatrixExpansion(unittest.TestCase):
+    _CONFIGS = yaml.safe_load(
+        """
+matrix:
+  bazel: ["1.2.3", "2.3.4"]
+  platform: ["pf1", "pf2"]
+tasks:
+  basic:
+    name: "Basic"
+  unformatted:
+    name: "Unformatted"
+    bazel: ${{ bazel }}
+  without_name:
+    bazel: ${{ bazel }}
+  formatted:
+    name: "Formatted w/ Bazel v{bazel} on {platform}"
+    bazel: ${{ bazel }}
+    platform: ${{ platform }}
+    """
+    )
+
+    def test_basic_functionality(self):
+        config = self._CONFIGS
+
+        bazelci.expand_task_config(config)
+        expanded_tasks = config["tasks"]
+        self.assertEqual(len(expanded_tasks), 9)
+        expanded_task_names = [task.get("name", None) for id, task in expanded_tasks.items()]
+        self.assertEqual(expanded_task_names, [
+            "Basic", # no matrix expansion
+            "Unformatted", # bazel v1.2.3
+            "Unformatted",  # bazel v2.3.4
+            None, # no name, bazel v1.2.3
+            None, # no name, bazel v2.3.4
+            "Formatted w/ Bazel v1.2.3 on pf1",
+            "Formatted w/ Bazel v1.2.3 on pf2",
+            "Formatted w/ Bazel v2.3.4 on pf1",
+            "Formatted w/ Bazel v2.3.4 on pf2",
+        ])
+
 
 if __name__ == "__main__":
     unittest.main()

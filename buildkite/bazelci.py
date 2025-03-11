@@ -877,6 +877,8 @@ def get_expanded_task(task, combination):
             if res:
                 attr = res.groups()[0]
                 expanded_task[key] = combination[attr]
+    if "name" in expanded_task:
+        expanded_task["name"] = expanded_task.get("name", "").format(**combination)
     return expanded_task
 
 
