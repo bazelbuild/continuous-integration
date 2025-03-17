@@ -1810,16 +1810,16 @@ def remote_caching_flags(platform, accept_cached=True):
     # Use GCS for caching builds running on MacService.
     # Use RBE for caching builds running on GCE.
     remote_cache_flags = []
-    if is_mac():
-        bucket_id = "trusted" if THIS_IS_TRUSTED else "untrusted"
-        remote_cache_flags = [
-            f"--remote_cache=https://storage.googleapis.com/bazel-{bucket_id}-build-cache"
-        ]
-    else:
-        remote_cache_flags = [
-            "--remote_cache=remotebuildexecution.googleapis.com",
-            "--remote_instance_name=projects/{}/instances/default_instance".format(CLOUD_PROJECT),
-        ]
+    # if is_mac():
+    #     bucket_id = "trusted" if THIS_IS_TRUSTED else "untrusted"
+    #     remote_cache_flags = [
+    #         f"--remote_cache=https://storage.googleapis.com/bazel-{bucket_id}-build-cache"
+    #     ]
+    # else:
+    remote_cache_flags = [
+        "--remote_cache=remotebuildexecution.googleapis.com",
+        "--remote_instance_name=projects/{}/instances/default_instance".format(CLOUD_PROJECT),
+    ]
 
     flags = (
         remote_cache_flags
