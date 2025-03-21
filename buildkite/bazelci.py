@@ -2738,6 +2738,7 @@ def create_step(
     # Automatically retry on macOS platforms to work around flaky failures.
     # https://github.com/bazelbuild/continuous-integration/issues/2195
     if platform == "macos" or platform == "macos_arm64":
+        step["retry"]["automatic"].append({"exit_status": 255, "limit": 1})
         step["retry"]["automatic"].append({"exit_status": 128, "limit": 1})
         step["retry"]["automatic"].append({"exit_status": 1, "limit": 1})
 
