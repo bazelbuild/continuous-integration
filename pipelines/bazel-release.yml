@@ -247,12 +247,13 @@ steps:
       mkdir output
       copy bazel-bin\src\bazel.exe output\bazel.exe
 
-      output\bazel build -c opt --copt=-w --host_copt=-w --stamp --embed_label %RELEASE_NAME% src/bazel src/bazel_nojdk scripts/packages/bazel.zip
+      output\bazel build -c opt --copt=-w --host_copt=-w --stamp --embed_label %RELEASE_NAME% src/bazel src/bazel_nojdk scripts/packages/bazel.zip scripts/packages/bazel_nojdk.zip
 
       mkdir artifacts
       move bazel-bin\src\bazel artifacts\bazel-%RELEASE_NAME%-windows-x86_64.exe
       move bazel-bin\src\bazel_nojdk artifacts\bazel_nojdk-%RELEASE_NAME%-windows-x86_64.exe
       move bazel-bin\scripts\packages\bazel.zip artifacts\bazel-%RELEASE_NAME%-windows-x86_64.zip
+      move bazel-bin\scripts\packages\bazel_nojdk.zip artifacts\bazel_nojdk-%RELEASE_NAME%-windows-x86_64.zip
 
       cd artifacts
       buildkite-agent artifact upload "*"
@@ -278,12 +279,13 @@ steps:
       mkdir output
       copy bazel-bin\src\bazel.exe output\bazel.exe
 
-      output\bazel build -c opt --config=windows_arm64 --copt=-w --host_copt=-w --stamp --embed_label %RELEASE_NAME% src/bazel src/bazel_nojdk scripts/packages/bazel.zip
+      output\bazel build -c opt --config=windows_arm64 --copt=-w --host_copt=-w --stamp --embed_label %RELEASE_NAME% src/bazel src/bazel_nojdk scripts/packages/bazel.zip scripts/packages/bazel_nojdk.zip
 
       mkdir artifacts
       move bazel-bin\src\bazel artifacts\bazel-%RELEASE_NAME%-windows-arm64.exe
       move bazel-bin\src\bazel_nojdk artifacts\bazel_nojdk-%RELEASE_NAME%-windows-arm64.exe
       move bazel-bin\scripts\packages\bazel.zip artifacts\bazel-%RELEASE_NAME%-windows-arm64.zip
+      move bazel-bin\scripts\packages\bazel_nojdk.zip artifacts\bazel_nojdk-%RELEASE_NAME%-windows-arm64.zip
 
       cd artifacts
       buildkite-agent artifact upload "*"
