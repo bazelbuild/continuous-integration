@@ -148,7 +148,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/clion.yml",
         "pipeline_slug": "clion-plugin",
-        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7232#issuecomment-2617127267",
     },
     "CLion Plugin Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
@@ -192,7 +191,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/aspect.yml",
         "pipeline_slug": "intellij-plugin-aspect",
-        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7232#issuecomment-2617127267",
     },
     "IntelliJ Plugin Aspect Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
