@@ -63,7 +63,6 @@ cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
 token="${BUILDKITE_TOKEN}"
 name="%hostname"
 tags="queue=default,kind=docker,os=linux"
-experiment="git-mirrors"
 build-path="/var/lib/buildkite-agent/builds"
 git-mirrors-path="/var/lib/gitmirrors"
 git-clone-mirror-flags="-v --bare"

@@ -72,7 +72,6 @@ find /var/folders -user buildkite -delete
 sudo -H -u buildkite env \
     PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin \
     BUILDKITE_AGENT_DISCONNECT_AFTER_JOB="true" \
-    BUILDKITE_AGENT_EXPERIMENT="git-mirrors" \
     BUILDKITE_AGENT_NAME="%hostname" \
     BUILDKITE_AGENT_TAGS="${BUILDKITE_AGENT_TAGS}" \
     BUILDKITE_BUILD_PATH="/Users/buildkite/builds" \
