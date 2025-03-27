@@ -1813,7 +1813,7 @@ def remote_caching_flags(platform, accept_cached=True):
         remote_cache_flags = [
             f"--remote_cache=https://storage.googleapis.com/bazel-{bucket_id}-build-cache",
             # TODO: remove after fixing https://github.com/bazelbuild/bazel/issues/25232
-            "--noremote_cache_async",
+            "--noexperimental_remote_cache_async",
         ]
     else:
         remote_cache_flags = [
