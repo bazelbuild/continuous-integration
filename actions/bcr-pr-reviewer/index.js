@@ -49,6 +49,15 @@ async function generateMaintainersMap(octokit, owner, repo, modifiedModules, toN
         if (maintainer.github && !(toNotifyOnly && maintainer["do_not_notify"])) {
           hasGithubMaintainer = true;
           if (!maintainersMap.has(maintainer.github)) {
+            // Verify maintainer.github matches maintainer.github_user_id via GitHub API
+            const { data: user } = octokit.rest.users.getByUsername({
+              username: maintainer.github,
+            });
+            if (user.id !== maintainer.github_user_id) {
+              console.error(`Maintainer ${maintainer.github} does not match the user ID ${maintainer.github_user_id}`);
+              setFailed(`Maintainer ${maintainer.github} does not match the user ID ${maintainer.github_user_id}`);
+              return;
+            }
             maintainersMap.set(maintainer.github, new Set());
           }
           maintainersMap.get(maintainer.github).add(moduleName);
