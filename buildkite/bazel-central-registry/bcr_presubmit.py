@@ -86,7 +86,7 @@ def get_modules_with_metadata_change():
         ["git", "diff", "main...HEAD", "--name-only", "--pretty=format:"]
     )
     modules = set()
-    # Matching modules/<name>/<version>/
+    # Matching modules/<name>/metadata.json
     for line in output.decode("utf-8").split():
         s = re.match(r"modules\/([^\/]+)\/metadata\.json", line)
         if s:
