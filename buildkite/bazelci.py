@@ -3454,7 +3454,7 @@ def fetch_incompatible_flags():
     ).decode("utf-8")
     issue_info = json.loads(output)
 
-    FLAG_PATTERN = re.compile(r"^--[a-z][a-z0-9_]*$")
+    FLAG_PATTERN = re.compile(r"^--\w+(=\S*)?$")
     incompatible_flags = {}
     for issue in issue_info["items"]:
         name = issue["title"].split(":")[0]
