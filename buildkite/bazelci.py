@@ -3457,7 +3457,8 @@ def fetch_incompatible_flags():
     FLAG_PATTERN = re.compile(r"^--[a-z][a-z0-9_]*$")
     incompatible_flags = {}
     for issue in issue_info["items"]:
-        name = "--" + issue["title"].split(":")[0]
+        name = issue["title"].split(":")[0]
+        name = name if name.startswith("--") else "--" + name
         url = issue["html_url"]
         if FLAG_PATTERN.match(name):
             incompatible_flags[name] = url
