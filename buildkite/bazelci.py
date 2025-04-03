@@ -1756,10 +1756,7 @@ def execute_shell_commands(
 
 def handle_bazel_failure(exception, action):
     msg = "bazel {0} failed with exit code {1}".format(action, exception.returncode)
-    if use_bazelisk_migrate():
-        print_collapsed_group(msg)
-    else:
-        raise BuildkiteException(msg)
+    raise BuildkiteException(msg)
 
 
 def execute_bazel_run(bazel_binary, platform, targets):

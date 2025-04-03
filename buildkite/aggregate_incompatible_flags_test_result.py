@@ -64,6 +64,9 @@ class LogFetcher(threading.Thread):
 
 
 def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
+    if job["state"] == "passed" and "Success: No migration needed." in log:
+        return
+
     if "Failure: Command failed, even without incompatible flags." in log:
         already_failing_jobs.append(job)
 
@@ -74,7 +77,9 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
 
     # bazelisk --migrate might run for multiple times for run / build / test,
     # so there could be several "+++ Result" sections.
+    found_result = False
     while "+++ Result" in log:
+        found_result = True
         index_success = log.rfind("Command was successful with the following flags:")
         index_failure = log.rfind("Migration is needed for the following flags:")
         if index_success == -1 or index_failure == -1:
@@ -87,8 +92,8 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
             handle_failing_flags(line)
         log = log[0 : log.rfind("+++ Result")]
 
-    # If the job failed for other reasons, we add it into already failing jobs.
-    if job["state"] == "failed":
+    # If no "+++ Result" was found, the job must have failed for other reasons
+    if not found_result:
         already_failing_jobs.append(job)
 
 
