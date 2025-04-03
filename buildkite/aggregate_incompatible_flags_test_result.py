@@ -69,6 +69,7 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
 
     if "Failure: Command failed, even without incompatible flags." in log:
         already_failing_jobs.append(job)
+        return
 
     def handle_failing_flags(line):
         flag = extract_flag(line)
@@ -93,7 +94,7 @@ def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
         log = log[0 : log.rfind("+++ Result")]
 
     # If no "+++ Result" was found, the job must have failed for other reasons
-    if not found_result:
+    if job["state"] == "failed" and not found_result:
         already_failing_jobs.append(job)
 
 
