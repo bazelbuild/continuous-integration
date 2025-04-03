@@ -652,8 +652,8 @@ gwD6RBL0qz1PFfg7Zw==
         output = self._open_url(url, params)
         return json.loads(output)
 
-    def get_build_log(self, job):
-        return self._open_url(job["raw_log_url"])
+    def get_build_log(self, job, retries = 5):
+        return self._open_url(job["raw_log_url"], retries = retries)
 
     @staticmethod
     def _check_response(response, expected_status_code):
