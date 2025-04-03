@@ -2914,7 +2914,7 @@ def print_project_pipeline(
         pipeline_steps.append(step)
 
     if skipped_downstream_tasks:
-        lines = ["\n- {}".format(s) for s in skipped_downstream_tasks]
+        lines = ["\n- {}".format(s.replace("'", "'\\''")) for s in skipped_downstream_tasks]
         commands = [
             "buildkite-agent meta-data exists 'has-skipped-annotation' || buildkite-agent annotate --style=info 'The following tasks were skipped:\n' --context 'ctx-skipped_downstream_tasks'",
             "buildkite-agent meta-data set 'has-skipped-annotation' 'true'",
