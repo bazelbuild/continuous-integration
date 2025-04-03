@@ -48,7 +48,7 @@ BAZEL_TEAM_OWNED_MODULES = frozenset([
 
 PROJECT = "module" if PIPELINE == "bcr-bazel-compatibility-test" else "project"
 
-MAX_LOG_FETCHER_THREADS = 30
+MAX_LOG_FETCHER_THREADS = 10
 LOG_FETCHER_SEMAPHORE = threading.Semaphore(MAX_LOG_FETCHER_THREADS)
 
 class LogFetcher(threading.Thread):
@@ -60,7 +60,7 @@ class LogFetcher(threading.Thread):
 
     def run(self):
         with LOG_FETCHER_SEMAPHORE:
-            self.log = self.client.get_build_log(self.job)
+            self.log = self.client.get_build_log(self.job, retries = 10)
 
 
 def process_build_log(failed_jobs_per_flag, already_failing_jobs, log, job):
