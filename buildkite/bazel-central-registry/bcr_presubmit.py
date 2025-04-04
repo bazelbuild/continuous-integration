@@ -378,6 +378,9 @@ def get_labels_from_pr():
 
 def should_bcr_validation_block_presubmit(modules, modules_with_metadata_change, pr_labels):
     bazelci.print_collapsed_group("Running BCR validations:")
+    if not modules and not modules_with_metadata_change:
+        bazelci.eprint("No modules to validate.")
+        return False
     skip_validation_flags = []
     if "skip-source-repo-check" in pr_labels:
         skip_validation_flags.append("--skip_validation=source_repo")
