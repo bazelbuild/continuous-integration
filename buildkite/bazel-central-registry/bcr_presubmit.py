@@ -72,7 +72,25 @@ def get_target_modules():
     for line in output.decode("utf-8").split():
         s = re.match(r"modules\/([^\/]+)\/([^\/]+)\/", line)
         if s:
-            modules.add(s.groups())
+            modules.add(s.group())
+
+    return sorted(modules)
+
+
+def get_modules_with_metadata_change():
+    """
+    Calculate modules with metadata change from the main branch.
+    """
+    # Get the list of changed files compared to the main branch
+    output = subprocess.check_output(
+        ["git", "diff", "main...HEAD", "--name-only", "--pretty=format:"]
+    )
+    modules = set()
+    # Matching modules/<name>/metadata.json
+    for line in output.decode("utf-8").split():
+        s = re.match(r"modules\/([^\/]+)\/metadata\.json", line)
+        if s:
+            modules.add(s.groups()[0])
 
     return sorted(modules)
 
@@ -358,7 +376,7 @@ def get_labels_from_pr():
         error(f"Error: {response.status_code}. Could not fetch labels for PR https://github.com/bazelbuild/bazel-central-registry/pull/{pr_number}")
 
 
-def should_bcr_validation_block_presubmit(modules, pr_labels):
+def should_bcr_validation_block_presubmit(modules, modules_with_metadata_change, pr_labels):
     bazelci.print_collapsed_group("Running BCR validations:")
     skip_validation_flags = []
     if "skip-source-repo-check" in pr_labels:
@@ -368,7 +386,9 @@ def should_bcr_validation_block_presubmit(modules, pr_labels):
     if "presubmit-auto-run" in pr_labels:
         skip_validation_flags.append("--skip_validation=presubmit_yml")
     returncode = subprocess.run(
-        ["python3", "./tools/bcr_validation.py", "--check_all_metadata"] + [f"--check={name}@{version}" for name, version in modules] + skip_validation_flags,
+        ["python3", "./tools/bcr_validation.py"]
+        + [f"--check_metadata={module}" for module in modules_with_metadata_change]
+        + [f"--check={name}@{version}" for name, version in modules] + skip_validation_flags,
     ).returncode
     # When a BCR maintainer view is required, the script should return 42.
     if returncode == 42:
@@ -387,20 +407,17 @@ def file_exists_in_main_branch(file_path):
     return result.stdout.strip() != ""
 
 
-def should_metadata_change_block_presubmit(modules, pr_labels):
+def should_metadata_change_block_presubmit(modules_with_metadata_change, pr_labels):
     # Skip the metadata.json check if the PR is labeled with "presubmit-auto-run".
     if "presubmit-auto-run" in pr_labels:
         return False
 
     bazelci.print_expanded_group("Checking metadata.json file changes:")
 
-    # Collect changed modules from module, version pairs.
-    changed_modules = set([module[0] for module in modules])
-
     # If information like, maintainers, homepage, repository is changed, the presubmit should wait for a BCR maintainer review.
     # For each changed module, check if anything other than the "versions" field is changed in the metadata.json file.
     needs_bcr_maintainer_review = False
-    for name in changed_modules:
+    for name in modules_with_metadata_change:
         metadata_json = get_metadata_json(name)
 
         if not file_exists_in_main_branch(metadata_json):
@@ -444,11 +461,14 @@ def should_wait_bcr_maintainer_review(modules):
     # If files outside of the modules/ directory are changed, fail the presubmit.
     validate_files_outside_of_modules_dir_are_not_modified(modules)
 
+    # Get modules with metadata.json changes.
+    modules_with_metadata_change = get_modules_with_metadata_change()
+
     # Check if any changes in the metadata.json file need a manual review.
-    needs_bcr_maintainer_review = should_metadata_change_block_presubmit(modules, pr_labels)
+    needs_bcr_maintainer_review = should_metadata_change_block_presubmit(modules_with_metadata_change, pr_labels)
 
     # Run BCR validations on target modules and decide if the presubmit jobs should be blocked.
-    if should_bcr_validation_block_presubmit(modules, pr_labels):
+    if should_bcr_validation_block_presubmit(modules, modules_with_metadata_change, pr_labels):
         needs_bcr_maintainer_review = True
 
     return needs_bcr_maintainer_review
