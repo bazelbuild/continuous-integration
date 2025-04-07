@@ -335,9 +335,7 @@ PLATFORMS = {
         "publish_binary": ["linux_arm64"],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004",
         "python": "python3.8",
-        "queue": "arm64",
-        # TODO: Re-enable always-pull if we also publish docker containers for Linux ARM64
-        "always-pull": False,
+        "queue": "arm64",  # TODO: rename to linux_arm64
     },
     "kythe_ubuntu2004": {
         "name": "Kythe (Ubuntu 20.04 LTS)",
@@ -1778,9 +1776,6 @@ def remote_caching_flags(platform, accept_cached=True):
     # Only enable caching for untrusted and testing builds, except for trusted MacOS VMs.
     if THIS_IS_TRUSTED and not is_mac():
         return []
-    # We don't enable remote caching on the Linux ARM64 machine since it doesn't have access to GCS.
-    if platform == "ubuntu2004_arm64":
-        return []
 
     platform_cache_key = [
         BUILDKITE_ORG.encode("utf-8"),
@@ -2696,7 +2691,6 @@ def create_step(
             image=PLATFORMS[platform]["docker-image"],
             commands=commands,
             queue=PLATFORMS[platform].get("queue", "default"),
-            always_pull=PLATFORMS[platform].get("always-pull", True),
         )
     else:
         step = {
@@ -2746,7 +2740,7 @@ def create_step(
 
 
 def create_docker_step(
-    label, image, commands=None, additional_env_vars=None, queue="default", always_pull=True
+    label, image, commands=None, additional_env_vars=None, queue="default"
 ):
     env = ["ANDROID_HOME", "ANDROID_NDK_HOME", "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"]
     if THIS_IS_TRUSTED:
@@ -2761,7 +2755,7 @@ def create_docker_step(
         "agents": {"queue": queue},
         "plugins": {
             "docker#v3.8.0": {
-                "always-pull": always_pull,
+                "always-pull": True,
                 "environment": env,
                 "image": image,
                 "network": "host",

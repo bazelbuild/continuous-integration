@@ -23,6 +23,7 @@ import gcloud
 import gcloud_utils
 
 DEBUG = False
+DEFAULT_MACHINE_TYPE = "c2-standard-8"
 
 IMAGE_CREATION_VMS = {
     "bk-testing-docker": {
@@ -30,6 +31,18 @@ IMAGE_CREATION_VMS = {
         "zone": "us-central1-f",
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-2004-lts",
+        "setup_script": "setup-docker.sh",
+        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
+        "licenses": [
+            "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
+        ],
+        "machine_type": "c4a-standard-8",
+    },
+    "bk-testing-docker-arm64": {
+        "project": "bazel-public",
+        "zone": "us-central1-f",
+        "source_image_project": "ubuntu-os-cloud",
+        "source_image_family": "ubuntu-2004-lts-arm64",
         "setup_script": "setup-docker.sh",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
         "licenses": [
@@ -92,7 +105,7 @@ def create_instance(instance_name, params):
             instance_name,
             project=params["project"],
             zone=params["zone"],
-            machine_type="c2-standard-8",
+            machine_type=params.get("machine_type", DEFAULT_MACHINE_TYPE),
             network=params.get("network", "default"),
             metadata_from_file=startup_script,
             boot_disk_type="pd-ssd",
