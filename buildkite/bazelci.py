@@ -1102,11 +1102,6 @@ def execute_commands(
     bazel_version=None,
 ):
     if use_bazelisk_migrate():
-        # If we are testing incompatible flags with Bazelisk,
-        # use Bazel@last_green if USE_BAZEL_VERSION env var is not set explicitly.
-        if "USE_BAZEL_VERSION" not in os.environ:
-            bazel_version = "last_green"
-
         # Override use_but in case we are in the downstream pipeline so that it doesn't try to
         # download Bazel built from previous jobs.
         use_but = False
