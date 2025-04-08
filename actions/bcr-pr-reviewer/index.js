@@ -90,8 +90,8 @@ async function generateMaintainersMap(octokit, owner, repo, modifiedModules, toN
               }
               maintainersMap.set(maintainer.github, new Set());
             } catch (error) {
-              console.error(`Failed to fetch user for GitHub username ${maintainer.github}: ${error.message}`);
-              setFailed(`Failed to fetch user for GitHub username ${maintainer.github}: ${error.message}`);
+              console.error(`Failed to fetch user ID for GitHub username ${maintainer.github}: ${error.message}`);
+              setFailed(`Failed to fetch user ID for GitHub username ${maintainer.github}: ${error.message}`);
               return;
             }
           }
