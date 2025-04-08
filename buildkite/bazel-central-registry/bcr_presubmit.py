@@ -521,7 +521,7 @@ def maybe_enable_bazelisk_migrate(module_name, module_version, bazel_version):
 
     incompatible_flags = fetch_incompatible_flags(module_name, module_version, bazel_version)
     if not incompatible_flags:
-        bazelci.eprint("No incompatible flags found.")
+        bazelci.eprint(f"No incompatible flags found for Bazel version {bazel_version}.")
         return
 
     os.environ["USE_BAZELISK_MIGRATE"] = "1"
