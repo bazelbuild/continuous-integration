@@ -490,7 +490,7 @@ def fetch_incompatible_flags(module_name, module_version):
 
 
 def maybe_enable_bazelisk_migrate(module_name, module_version):
-    bazelci.print_collapsed_group(":information_source: Set up env vars for incompatible flags test if enabled.")
+    bazelci.print_collapsed_group(":triangular_flag_on_post: Set up env vars for incompatible flags test if enabled.")
     pr_labels = get_labels_from_pr()
     if "skip-incompatible-flags-test" in pr_labels:
         bazelci.eprint("Skipping incompatible flags test as 'skip-incompatible-flags-test' label is attached to this PR.")
