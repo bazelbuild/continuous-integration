@@ -485,7 +485,8 @@ def get_bazel_version_for_task(config_file, task, overwrite_bazel_version=None):
         return overwrite_bazel_version
     configs = bazelci.fetch_configs(None, config_file)
     task_config = configs.get("tasks", {}).get(task, {})
-    bazelci.eprint(task_config)
+    bazelci.eprint(f"Task config for '{task}':")
+    bazelci.eprint(yaml.dump(task_config, default_flow_style=False))
     bazel_version = task_config.get("bazel", "latest")
     return bazel_version
 
