@@ -306,7 +306,7 @@ def prepare_test_module_repo(module_name, module_version, overwrite_bazel_versio
 
 def run_test(repo_location, task_config_file, task, overwrite_bazel_version=None):
     try:
-        return bazelci.main(
+        return_code = bazelci.main(
             [
                 "runner",
                 "--task=" + task,
@@ -314,6 +314,12 @@ def run_test(repo_location, task_config_file, task, overwrite_bazel_version=None
                 "--repo_location=%s" % repo_location,
             ] + (["--overwrite_bazel_version=%s" % overwrite_bazel_version] if overwrite_bazel_version else [])
         )
+        if return_code != 0 and os.environ.get("USE_BAZELISK_MIGRATE"):
+            bazelci.eprint(
+            "\x1b[31mERROR\x1b[0m: BCR presubmit failed with incompatible flags. "
+            "If this is expected, please leave a comment '@bazel-io skip_check incompatible_flags' in the PR to bypass the test."
+            )
+        return return_code
     except subprocess.CalledProcessError as e:
         bazelci.eprint(str(e))
         return 1
