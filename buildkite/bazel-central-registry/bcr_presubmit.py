@@ -501,7 +501,7 @@ def maybe_enable_bazelisk_migrate(module_name, module_version):
         bazelci.eprint("No incompatible flags found.")
         return
 
-    os.environ["USE_BAZELISK_MIGRATE"] = 1
+    os.environ["USE_BAZELISK_MIGRATE"] = "1"
     os.environ["INCOMPATIBLE_FLAGS"] = ",".join(incompatible_flags)
     bazelci.eprint(f"USE_BAZELISK_MIGRATE is set to {os.environ['USE_BAZELISK_MIGRATE']}")
     bazelci.eprint(f"INCOMPATIBLE_FLAGS are set to {os.environ['INCOMPATIBLE_FLAGS']}")
