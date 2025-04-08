@@ -72,25 +72,32 @@ async function generateMaintainersMap(octokit, owner, repo, modifiedModules, toN
 
       const metadata = JSON.parse(Buffer.from(metadataContent.content, 'base64').toString('utf-8'));
       let hasGithubMaintainer = false;
-      metadata.maintainers.forEach(maintainer => {
+      for (const maintainer of metadata.maintainers) {
         // Only add maintainers with a github handle set. When `toNotifyOnly`, also exclude those who have set "do_not_notify"
         if (maintainer.github && !(toNotifyOnly && maintainer["do_not_notify"])) {
           hasGithubMaintainer = true;
           if (!maintainersMap.has(maintainer.github)) {
-            // Verify maintainer.github matches maintainer.github_user_id via GitHub API
-            const { data: user } = octokit.rest.users.getByUsername({
-              username: maintainer.github,
-            });
-            if (user.id !== maintainer.github_user_id) {
-              console.error(`Maintainer ${maintainer.github} does not match the user ID ${maintainer.github_user_id}`);
-              setFailed(`Maintainer ${maintainer.github} does not match the user ID ${maintainer.github_user_id}`);
+            try {
+              // Verify maintainer.github matches maintainer.github_user_id via GitHub API
+              const { data: user } = await octokit.rest.users.getByUsername({
+                username: maintainer.github,
+              });
+
+              if (!user || user.id !== maintainer.github_user_id) {
+                console.error(`Maintainer ${maintainer.github} does not match the user ID ${maintainer.github_user_id} or user not found`);
+                setFailed(`Maintainer ${maintainer.github} does not match the user ID ${maintainer.github_user_id} or user not found`);
+                return;
+              }
+              maintainersMap.set(maintainer.github, new Set());
+            } catch (error) {
+              console.error(`Failed to fetch user ID for GitHub username ${maintainer.github}: ${error.message}`);
+              setFailed(`Failed to fetch user ID for GitHub username ${maintainer.github}: ${error.message}`);
               return;
             }
-            maintainersMap.set(maintainer.github, new Set());
           }
           maintainersMap.get(maintainer.github).add(moduleName);
         }
-      });
+      }
 
       if (!hasGithubMaintainer) {
         modulesWithoutGithubMaintainers.add(moduleName);
