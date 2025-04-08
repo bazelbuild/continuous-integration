@@ -511,7 +511,7 @@ def fetch_incompatible_flags(module_name, module_version, bazel_version):
 
 def maybe_enable_bazelisk_migrate(module_name, module_version, overwrite_bazel_version, task, config_file):
     # Only try to set up bazelisk --migrate when ENABLE_BAZELISK_MIGRATE is specified.
-    if os.environ.get("ENABLE_BAZELISK_MIGRATE"):
+    if not os.environ.get("ENABLE_BAZELISK_MIGRATE"):
         return
 
     bazelci.print_collapsed_group(":triangular_flag_on_post: Set up env vars for incompatible flags test if enabled")
