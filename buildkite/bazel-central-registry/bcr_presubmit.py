@@ -580,11 +580,11 @@ def main(argv=None):
     elif args.subparsers_name == "anonymous_module_runner":
         repo_location = create_anonymous_repo(args.module_name, args.module_version)
         config_file = get_presubmit_yml(args.module_name, args.module_version)
-        maybe_enable_bazelisk_migrate(module_name, module_version)
+        maybe_enable_bazelisk_migrate(args.module_name, args.module_version)
         return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
     elif args.subparsers_name == "test_module_runner":
         repo_location, config_file = prepare_test_module_repo(args.module_name, args.module_version, args.overwrite_bazel_version)
-        maybe_enable_bazelisk_migrate(module_name, module_version)
+        maybe_enable_bazelisk_migrate(args.module_name, args.module_version)
         return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
     else:
         parser.print_help()
