@@ -601,20 +601,30 @@ async function runDiffModule(octokit) {
       const previousVersion = metadata.versions[versionIndex - 1];
       console.log(`${groupStart}Generating diff for module ${moduleName}@${versionName} against version ${previousVersion}`);
 
-      const diffCommand = `diff --color=always -urN modules/${moduleName}/${previousVersion} modules/${moduleName}/${versionName}`;
+      const diffArgs = ['--color=always', '-urN', `modules/${moduleName}/${previousVersion}`, `modules/${moduleName}/${versionName}`];
       console.log(`Running command: ${diffCommand}`);
-      const { execSync } = require('child_process');
+      const { spawnSync } = require('child_process');
 
       try {
-        await execSync(diffCommand, { stdio: 'inherit' });
-        console.log(`No differences found!`);
-      } catch (error) {
-        if (error.status === 1) {
+        const result = spawnSync('diff', diffArgs, { 
+          encoding: 'utf8',
+          stdio: ['inherit', 'pipe', 'pipe']
+        });
+        
+        if (result.status === 0) {
+          console.log(`No differences found!`);
+        } else if (result.status === 1) {
           // diff command returns 1 when differences are found
+          console.log(result.stdout);
+          console.log(result.stderr);
         } else {
           setFailed(`Failed to generate diff for module ${moduleName}@${versionName}`);
-          throw error;
+          console.error(result.stderr);
+          throw new Error(`Diff command failed with status ${result.status}`);
         }
+      } catch (error) {
+        console.error(`Error executing diff: ${error.message}`);
+        throw error;
       }
 
       console.log(`${groupEnd}`);
