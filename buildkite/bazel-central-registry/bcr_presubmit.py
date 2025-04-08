@@ -477,6 +477,36 @@ def should_wait_bcr_maintainer_review(modules):
     return needs_bcr_maintainer_review
 
 
+def fetch_incompatible_flags(module_name, module_version):
+    bazelci.print_collapsed_group(":information_source: Fetching incompatible flags")
+    for file_path in [get_presubmit_yml(module_name, module_version), BCR_REPO_DIR.joinpath("incompatible_flags.yml")]:
+        if file_path.exists():
+            with open(file_path, "r") as file:
+                data = yaml.safe_load(file)
+            if isinstance(data.get("incompatible_flags"), list):
+                bazelci.eprint(f"Fetched incompatible flags from {file_path}: {data['incompatible_flags']}")
+                return data["incompatible_flags"]
+    return []
+
+
+def maybe_enable_bazelisk_migrate(module_name, module_version):
+    bazelci.print_collapsed_group(":information_source: Set up env vars for incompatible flags test if enabled.")
+    pr_labels = get_labels_from_pr()
+    if "skip-incompatible-flags-test" in pr_labels:
+        bazelci.eprint("Skipping incompatible flags test as 'skip-incompatible-flags-test' label is attached to this PR.")
+        return
+
+    incompatible_flags = fetch_incompatible_flags(module_name, module_version)
+    if not incompatible_flags:
+        bazelci.eprint("No incompatible flags found.")
+        return
+
+    os.environ["USE_BAZELISK_MIGRATE"] = 1
+    os.environ["INCOMPATIBLE_FLAGS"] = ",".join(incompatible_flags)
+    bazelci.eprint(f"USE_BAZELISK_MIGRATE is set to {os.environ['USE_BAZELISK_MIGRATE']}")
+    bazelci.eprint(f"INCOMPATIBLE_FLAGS are set to {os.environ['INCOMPATIBLE_FLAGS']}")
+
+
 def upload_jobs_to_pipeline(pipeline_steps):
     """Upload jobs to Buildkite in batches."""
     BATCH_SIZE = 2000
@@ -550,9 +580,11 @@ def main(argv=None):
     elif args.subparsers_name == "anonymous_module_runner":
         repo_location = create_anonymous_repo(args.module_name, args.module_version)
         config_file = get_presubmit_yml(args.module_name, args.module_version)
+        maybe_enable_bazelisk_migrate(module_name, module_version)
         return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
     elif args.subparsers_name == "test_module_runner":
         repo_location, config_file = prepare_test_module_repo(args.module_name, args.module_version, args.overwrite_bazel_version)
+        maybe_enable_bazelisk_migrate(module_name, module_version)
         return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
     else:
         parser.print_help()

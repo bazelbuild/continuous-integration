@@ -3442,6 +3442,13 @@ def fetch_incompatible_flags():
     """
     Return a list of incompatible flags to be tested. The key is the flag name and the value is its Github URL.
     """
+    # If INCOMPATIBLE_FLAGS is set manually, we test those flags, try to keep the URL info if possible.
+    if "INCOMPATIBLE_FLAGS" in os.environ:
+        given_incompatible_flags = {}
+        for flag in os.environ["INCOMPATIBLE_FLAGS"].split(","):
+            given_incompatible_flags[flag] = "Unknown"
+        return given_incompatible_flags
+
     output = subprocess.check_output(
         [
             # Query for open issues with "incompatible-change" and "migration-ready" label.
@@ -3464,13 +3471,6 @@ def fetch_incompatible_flags():
                 f"{name} is not recognized as an incompatible flag, please modify the issue title "
                 f'of {url} to "<incompatible flag name (without --)>:..."'
             )
-
-    # If INCOMPATIBLE_FLAGS is set manually, we test those flags, try to keep the URL info if possible.
-    if "INCOMPATIBLE_FLAGS" in os.environ:
-        given_incompatible_flags = {}
-        for flag in os.environ["INCOMPATIBLE_FLAGS"].split(","):
-            given_incompatible_flags[flag] = incompatible_flags.get(flag, "")
-        return given_incompatible_flags
 
     return incompatible_flags
 
