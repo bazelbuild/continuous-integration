@@ -485,6 +485,7 @@ def get_bazel_version_for_task(config_file, task, overwrite_bazel_version=None):
         return overwrite_bazel_version
     configs = bazelci.fetch_configs(None, config_file)
     task_config = configs.get("tasks", {}).get(task, {})
+    bazelci.eprint(task_config)
     bazel_version = task_config.get("bazel", "latest")
     return bazel_version
 
@@ -508,7 +509,7 @@ def fetch_incompatible_flags(module_name, module_version, bazel_version):
     return []
 
 
-def maybe_enable_bazelisk_migrate(module_name, module_version, bazel_version):
+def maybe_enable_bazelisk_migrate(module_name, module_version, overwrite_bazel_version, task, config_file):
     # Only try to set up bazelisk --migrate when ENABLE_BAZELISK_MIGRATE is specified.
     if os.environ.get("ENABLE_BAZELISK_MIGRATE"):
         return
@@ -519,6 +520,7 @@ def maybe_enable_bazelisk_migrate(module_name, module_version, bazel_version):
         bazelci.eprint("Skipping incompatible flags test as 'skip-incompatible-flags-test' label is attached to this PR.")
         return
 
+    bazel_version = get_bazel_version_for_task(config_file, task, overwrite_bazel_version)
     incompatible_flags = fetch_incompatible_flags(module_name, module_version, bazel_version)
     if not incompatible_flags:
         bazelci.eprint(f"No incompatible flags found for Bazel version {bazel_version}.")
@@ -603,13 +605,11 @@ def main(argv=None):
     elif args.subparsers_name == "anonymous_module_runner":
         repo_location = create_anonymous_repo(args.module_name, args.module_version)
         config_file = get_presubmit_yml(args.module_name, args.module_version)
-        bazel_version = get_bazel_version_for_task(config_file, args.task, args.overwrite_bazel_version)
-        maybe_enable_bazelisk_migrate(args.module_name, args.module_version, bazel_version)
+        maybe_enable_bazelisk_migrate(args.module_name, args.module_version, args.overwrite_bazel_version, args.task, config_file)
         return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
     elif args.subparsers_name == "test_module_runner":
         repo_location, config_file = prepare_test_module_repo(args.module_name, args.module_version, args.overwrite_bazel_version)
-        bazel_version = get_bazel_version_for_task(config_file, args.task, args.overwrite_bazel_version)
-        maybe_enable_bazelisk_migrate(args.module_name, args.module_version, bazel_version)
+        maybe_enable_bazelisk_migrate(args.module_name, args.module_version, args.overwrite_bazel_version, args.task, config_file)
         return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
     else:
         parser.print_help()
