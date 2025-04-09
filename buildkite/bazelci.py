@@ -3437,7 +3437,7 @@ def fetch_incompatible_flags():
     """
     Return a list of incompatible flags to be tested. The key is the flag name and the value is its Github URL.
     """
-    # If INCOMPATIBLE_FLAGS is set manually, we test those flags, try to keep the URL info if possible.
+    # If INCOMPATIBLE_FLAGS is set manually, we test those flags, leave the issue URL as "Unknown".
     if "INCOMPATIBLE_FLAGS" in os.environ:
         given_incompatible_flags = {}
         for flag in os.environ["INCOMPATIBLE_FLAGS"].split(","):
