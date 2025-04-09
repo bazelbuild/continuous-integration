@@ -602,15 +602,15 @@ async function runDiffModule(octokit) {
       console.log(`${groupStart}Generating diff for module ${moduleName}@${versionName} against version ${previousVersion}`);
 
       const diffArgs = ['--color=always', '-urN', `modules/${moduleName}/${previousVersion}`, `modules/${moduleName}/${versionName}`];
-      console.log(`Running command: ${diffCommand}`);
+      console.log(`Running command: diff ${diffArgs.join(' ')}`);
       const { spawnSync } = require('child_process');
 
       try {
-        const result = spawnSync('diff', diffArgs, { 
+        const result = spawnSync('diff', diffArgs, {
           encoding: 'utf8',
           stdio: ['inherit', 'pipe', 'pipe']
         });
-        
+
         if (result.status === 0) {
           console.log(`No differences found!`);
         } else if (result.status === 1) {
