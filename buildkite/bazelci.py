@@ -504,7 +504,9 @@ class BuildkiteException(Exception):
     Raised whenever something goes wrong and we should exit with an error.
     """
 
-    pass
+    def __init__(self, message, exit_code=1):
+        super().__init__(message)
+        self.exit_code = exit_code
 
 
 class BuildkiteInfraException(Exception):
@@ -1751,7 +1753,7 @@ def execute_shell_commands(
 
 def handle_bazel_failure(exception, action):
     msg = "bazel {0} failed with exit code {1}".format(action, exception.returncode)
-    raise BuildkiteException(msg)
+    raise BuildkiteException(msg, exit_code=exception.returncode)
 
 
 def execute_bazel_run(bazel_binary, platform, targets):
@@ -4513,7 +4515,7 @@ def main(argv=None):
             return 2
     except BuildkiteException as e:
         eprint(str(e))
-        return 1
+        return e.exit_code
     return 0
 
 
