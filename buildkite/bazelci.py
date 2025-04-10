@@ -504,7 +504,9 @@ class BuildkiteException(Exception):
     Raised whenever something goes wrong and we should exit with an error.
     """
 
-    pass
+    def __init__(self, message, exit_code=1):
+        super().__init__(message)
+        self.exit_code = exit_code
 
 
 class BuildkiteInfraException(Exception):
@@ -1102,11 +1104,6 @@ def execute_commands(
     bazel_version=None,
 ):
     if use_bazelisk_migrate():
-        # If we are testing incompatible flags with Bazelisk,
-        # use Bazel@last_green if USE_BAZEL_VERSION env var is not set explicitly.
-        if "USE_BAZEL_VERSION" not in os.environ:
-            bazel_version = "last_green"
-
         # Override use_but in case we are in the downstream pipeline so that it doesn't try to
         # download Bazel built from previous jobs.
         use_but = False
@@ -1756,7 +1753,7 @@ def execute_shell_commands(
 
 def handle_bazel_failure(exception, action):
     msg = "bazel {0} failed with exit code {1}".format(action, exception.returncode)
-    raise BuildkiteException(msg)
+    raise BuildkiteException(msg, exit_code=exception.returncode)
 
 
 def execute_bazel_run(bazel_binary, platform, targets):
@@ -3442,6 +3439,13 @@ def fetch_incompatible_flags():
     """
     Return a list of incompatible flags to be tested. The key is the flag name and the value is its Github URL.
     """
+    # If INCOMPATIBLE_FLAGS is set manually, we test those flags, leave the issue URL as "Unknown".
+    if "INCOMPATIBLE_FLAGS" in os.environ:
+        given_incompatible_flags = {}
+        for flag in os.environ["INCOMPATIBLE_FLAGS"].split(","):
+            given_incompatible_flags[flag] = "Unknown"
+        return given_incompatible_flags
+
     output = subprocess.check_output(
         [
             # Query for open issues with "incompatible-change" and "migration-ready" label.
@@ -3464,13 +3468,6 @@ def fetch_incompatible_flags():
                 f"{name} is not recognized as an incompatible flag, please modify the issue title "
                 f'of {url} to "<incompatible flag name (without --)>:..."'
             )
-
-    # If INCOMPATIBLE_FLAGS is set manually, we test those flags, try to keep the URL info if possible.
-    if "INCOMPATIBLE_FLAGS" in os.environ:
-        given_incompatible_flags = {}
-        for flag in os.environ["INCOMPATIBLE_FLAGS"].split(","):
-            given_incompatible_flags[flag] = incompatible_flags.get(flag, "")
-        return given_incompatible_flags
 
     return incompatible_flags
 
@@ -4518,7 +4515,7 @@ def main(argv=None):
             return 2
     except BuildkiteException as e:
         eprint(str(e))
-        return 1
+        return e.exit_code
     return 0
 
 

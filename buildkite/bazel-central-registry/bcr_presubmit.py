@@ -306,7 +306,7 @@ def prepare_test_module_repo(module_name, module_version, overwrite_bazel_versio
 
 def run_test(repo_location, task_config_file, task, overwrite_bazel_version=None):
     try:
-        return bazelci.main(
+        return_code = bazelci.main(
             [
                 "runner",
                 "--task=" + task,
@@ -314,6 +314,14 @@ def run_test(repo_location, task_config_file, task, overwrite_bazel_version=None
                 "--repo_location=%s" % repo_location,
             ] + (["--overwrite_bazel_version=%s" % overwrite_bazel_version] if overwrite_bazel_version else [])
         )
+        if return_code == 73 and os.environ.get("ENABLE_BAZELISK_MIGRATE"):
+            bazelci.eprint(
+            "\n\x1b[31mERROR\x1b[0m: BCR presubmit failed with incompatible flags.\n"
+            "Please consider migrating your project for the incompatible flags.\n"
+            "You can bypass this test by commenting '@bazel-io skip_check incompatible_flags' in the PR or override the list of flags in your presubmit.yml file.\n"
+            "See more details at https://github.com/bazelbuild/bazel-central-registry/blob/main/docs/README.md#testing-incompatible-flags"
+            )
+        return return_code
     except subprocess.CalledProcessError as e:
         bazelci.eprint(str(e))
         return 1
@@ -477,6 +485,63 @@ def should_wait_bcr_maintainer_review(modules):
     return needs_bcr_maintainer_review
 
 
+def get_bazel_version_for_task(config_file, task, overwrite_bazel_version=None):
+    """
+    Determine the Bazel version to use for a specific task.
+    """
+    if overwrite_bazel_version:
+        return overwrite_bazel_version
+    configs = bazelci.fetch_configs(None, config_file)
+    task_config = configs.get("tasks", {}).get(task, {})
+    bazelci.eprint(f"Task config for '{task}':")
+    bazelci.eprint(yaml.dump(task_config, default_flow_style=False))
+    bazel_version = task_config.get("bazel", "latest")
+    return bazel_version
+
+
+def fetch_incompatible_flags(module_name, module_version, bazel_version):
+    """
+    Fetch incompatible flags for a given module and version.
+    """
+    bazelci.print_collapsed_group(":information_source: Fetching incompatible flags")
+    incompatible_flags = []
+    for file_path in [get_presubmit_yml(module_name, module_version), BCR_REPO_DIR.joinpath("incompatible_flags.yml")]:
+        if file_path.exists():
+            with open(file_path, "r") as file:
+                data = yaml.safe_load(file)
+            if isinstance(data.get("incompatible_flags"), dict):
+                for flag, versions in data["incompatible_flags"].items():
+                    if bazel_version in versions:
+                        incompatible_flags.append(flag)
+                bazelci.eprint(f"Fetched incompatible flags from {file_path} for Bazel version {bazel_version}: {incompatible_flags}")
+                return incompatible_flags
+    return []
+
+
+def maybe_enable_bazelisk_migrate(module_name, module_version, overwrite_bazel_version, task, config_file):
+    # Only try to set up bazelisk --migrate when ENABLE_BAZELISK_MIGRATE is specified.
+    # ENABLE_BAZELISK_MIGRATE should be set for the BCR presubmit pipeline but not for the BCR compatibility test pipeline, which also depends on bcr_presubmit.py
+    if not os.environ.get("ENABLE_BAZELISK_MIGRATE"):
+        return
+
+    bazelci.print_collapsed_group(":triangular_flag_on_post: Set up env vars for incompatible flags test if enabled")
+    pr_labels = get_labels_from_pr()
+    if "skip-incompatible-flags-test" in pr_labels:
+        bazelci.eprint("Skipping incompatible flags test as 'skip-incompatible-flags-test' label is attached to this PR.")
+        return
+
+    bazel_version = get_bazel_version_for_task(config_file, task, overwrite_bazel_version)
+    incompatible_flags = fetch_incompatible_flags(module_name, module_version, bazel_version)
+    if not incompatible_flags:
+        bazelci.eprint(f"No incompatible flags found for Bazel version {bazel_version}.")
+        return
+
+    os.environ["USE_BAZELISK_MIGRATE"] = "1"
+    os.environ["INCOMPATIBLE_FLAGS"] = ",".join(incompatible_flags)
+    bazelci.eprint(f"USE_BAZELISK_MIGRATE is set to {os.environ['USE_BAZELISK_MIGRATE']}")
+    bazelci.eprint(f"INCOMPATIBLE_FLAGS are set to {os.environ['INCOMPATIBLE_FLAGS']}")
+
+
 def upload_jobs_to_pipeline(pipeline_steps):
     """Upload jobs to Buildkite in batches."""
     BATCH_SIZE = 2000
@@ -550,9 +615,11 @@ def main(argv=None):
     elif args.subparsers_name == "anonymous_module_runner":
         repo_location = create_anonymous_repo(args.module_name, args.module_version)
         config_file = get_presubmit_yml(args.module_name, args.module_version)
+        maybe_enable_bazelisk_migrate(args.module_name, args.module_version, args.overwrite_bazel_version, args.task, config_file)
         return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
     elif args.subparsers_name == "test_module_runner":
         repo_location, config_file = prepare_test_module_repo(args.module_name, args.module_version, args.overwrite_bazel_version)
+        maybe_enable_bazelisk_migrate(args.module_name, args.module_version, args.overwrite_bazel_version, args.task, config_file)
         return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
     else:
         parser.print_help()

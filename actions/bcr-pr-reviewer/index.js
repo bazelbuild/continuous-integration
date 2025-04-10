@@ -542,6 +542,19 @@ async function runSkipCheck(octokit) {
       comment_id: payload.comment.id,
       content: '+1',
     });
+  } else if (check.trim() == "incompatible_flags") {
+    await octokit.rest.issues.addLabels({
+      owner,
+      repo,
+      issue_number: payload.issue.number,
+      labels: ["skip-incompatible-flags-test"],
+    });
+    await octokit.rest.reactions.createForIssueComment({
+      owner,
+      repo,
+      comment_id: payload.comment.id,
+      content: '+1',
+    });
   } else {
     await octokit.rest.reactions.createForIssueComment({
       owner,
