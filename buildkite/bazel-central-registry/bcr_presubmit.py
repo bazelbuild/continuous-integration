@@ -314,7 +314,7 @@ def run_test(repo_location, task_config_file, task, overwrite_bazel_version=None
                 "--repo_location=%s" % repo_location,
             ] + (["--overwrite_bazel_version=%s" % overwrite_bazel_version] if overwrite_bazel_version else [])
         )
-        if return_code == 73 and os.environ.get("USE_BAZELISK_MIGRATE"):
+        if return_code == 73 and os.environ.get("ENABLE_BAZELISK_MIGRATE"):
             bazelci.eprint(
             "\n\x1b[31mERROR\x1b[0m: BCR presubmit failed with incompatible flags.\n"
             "Please consider migrate your project for the incompatible flags.\n"
