@@ -15,10 +15,10 @@ case $(git symbolic-ref --short HEAD) in
 esac
 
 # Containers used by Bazel CI
-# docker push "gcr.io/$PREFIX/centos7" &
-# docker push "gcr.io/$PREFIX/centos7-java11" &
-# docker push "gcr.io/$PREFIX/centos7-java11-devtoolset10" &
-# docker push "gcr.io/$PREFIX/centos7-releaser" &
+docker push "gcr.io/$PREFIX/centos7" &
+docker push "gcr.io/$PREFIX/centos7-java11" &
+docker push "gcr.io/$PREFIX/centos7-java11-devtoolset10" &
+docker push "gcr.io/$PREFIX/centos7-releaser" &
 docker push "gcr.io/$PREFIX/debian10-java11" &
 docker push "gcr.io/$PREFIX/debian11-java17" &
 docker push "gcr.io/$PREFIX/ubuntu1804-bazel-java11" &
