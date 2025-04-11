@@ -18,7 +18,7 @@ esac
 # See https://docs.docker.com/develop/develop-images/build_enhancements/ for details.
 export DOCKER_BUILDKIT=1
 
-docker buildx create --use desktop-linux
+docker buildx create --driver=docker-container --use
 
 # Containers used by Bazel CI
 docker build -f centos7/Dockerfile    --platform=linux/amd64,linux/arm64 --target centos7           -t "gcr.io/$PREFIX/centos7" centos7 &
