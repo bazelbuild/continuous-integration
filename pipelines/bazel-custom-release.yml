@@ -36,7 +36,7 @@ steps:
 
   - wait
 
-  - label: "CentOS 7"
+  - label: "Rocky Linux 8"
     agents:
       - "queue=default"
     plugins:
@@ -46,7 +46,7 @@ steps:
           - ANDROID_HOME
           - ANDROID_NDK_HOME
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/centos7-releaser
+        image: gcr.io/bazel-public/rockylinux8-releaser
         network: host
         privileged: true
         propagate-environment: true
@@ -166,7 +166,7 @@ steps:
 
   - wait
 
-  - label: "CentOS 7"
+  - label: "Rocky Linux 8"
     agents:
       - "queue=default"
     plugins:
@@ -176,7 +176,7 @@ steps:
           - ANDROID_HOME
           - ANDROID_NDK_HOME
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/centos7-java8
+        image: gcr.io/bazel-public/rockylinux8-java8
         network: host
         privileged: true
         propagate-environment: true
