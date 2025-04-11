@@ -166,11 +166,8 @@ def main(argv=None):
         )
         return 1
 
-    if len(argv) > 1:
-        print("Only one platform can be created at a time.")
-        return 1
-
-    workflow(argv[0], IMAGE_CREATION_VMS[argv[0]])
+    for platform in argv:
+        workflow(platform, IMAGE_CREATION_VMS[platform])
 
     return 0
 
