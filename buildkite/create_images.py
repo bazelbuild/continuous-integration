@@ -157,7 +157,10 @@ def main(argv=None):
         print("Usage: create_images.py {}".format(" ".join(IMAGE_CREATION_VMS.keys())))
         return 1
 
-    unknown_args = set(argv).difference(IMAGE_CREATION_VMS.keys())
+    # Handle multiple args as well as a single-arg comma-delimited list.
+    names = argv if len(argv) > 1 else argv[0].split(",")
+
+    unknown_args = set(names).difference(IMAGE_CREATION_VMS.keys())
     if unknown_args:
         print(
             "Unknown platforms: {}\nAvailable platforms: {}".format(
@@ -166,8 +169,8 @@ def main(argv=None):
         )
         return 1
 
-    for platform in argv:
-        workflow(platform, IMAGE_CREATION_VMS[platform])
+    for n in names:
+        workflow(n, IMAGE_CREATION_VMS[n])
 
     return 0
 
