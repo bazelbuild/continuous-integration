@@ -18,6 +18,8 @@ esac
 # See https://docs.docker.com/develop/develop-images/build_enhancements/ for details.
 export DOCKER_BUILDKIT=1
 
+docker buildx create --use desktop-linux
+
 # Containers used by Bazel CI
 docker build -f centos7/Dockerfile    --platform=linux/amd64,linux/arm64 --target centos7           -t "gcr.io/$PREFIX/centos7" centos7 &
 docker build -f debian10/Dockerfile   --platform=linux/amd64,linux/arm64 --target debian10-java11   -t "gcr.io/$PREFIX/debian10-java11" debian10 &
