@@ -335,7 +335,7 @@ PLATFORMS = {
         "publish_binary": ["linux_arm64"],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004",
         "python": "python3.8",
-        "queue": "arm64",  # TODO: rename to linux_arm64
+        "queue": "linux_arm64",
     },
     "kythe_ubuntu2004": {
         "name": "Kythe (Ubuntu 20.04 LTS)",
