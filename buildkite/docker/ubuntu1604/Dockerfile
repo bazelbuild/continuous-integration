@@ -1,4 +1,4 @@
-FROM ubuntu:16.04 as ubuntu1604-bazel-java8
+FROM ubuntu:16.04 AS ubuntu1604-bazel-java8
 ARG TARGETARCH
 
 ENV DEBIAN_FRONTEND="noninteractive"
