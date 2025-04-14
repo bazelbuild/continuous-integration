@@ -1,4 +1,4 @@
-FROM centos:7 as centos7-nojdk
+FROM centos:7 AS centos7-nojdk
 ARG TARGETARCH
 
 # Install required packages.

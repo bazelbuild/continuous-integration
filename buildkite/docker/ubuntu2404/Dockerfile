@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 as ubuntu2404-bazel-nojdk
+FROM ubuntu:24.04 AS ubuntu2404-bazel-nojdk
 ARG TARGETARCH
 
 ENV DEBIAN_FRONTEND="noninteractive"
