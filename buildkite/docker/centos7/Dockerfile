@@ -5,8 +5,9 @@ ARG TARGETARCH
 COPY google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
 
 # Disable "fastestmirror" plug-in, because it takes a long time.
+# TODO: https://archives.fedoraproject.org/pub/archive/epel/7/aarch64/Packages/e/epel-release-7-12.noarch.rpm
 RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf && \
-    yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
+    yum install -y https://archives.fedoraproject.org/pub/archive/epel/7/x86_64/Packages/e/epel-release-7-14.noarch.rpm && \
     yum install -y \
     bind-utils \
     dpkg-dev \
