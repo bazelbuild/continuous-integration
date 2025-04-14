@@ -6,7 +6,10 @@ COPY google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
 
 # Disable "fastestmirror" plug-in, because it takes a long time.
 # TODO: https://archives.fedoraproject.org/pub/archive/epel/7/aarch64/Packages/e/epel-release-7-12.noarch.rpm
-RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf && \
+RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf &&
+    # CentOS 7 has been deprecated, so rewrite URLs to point to vault
+    sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* &&
+    sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-* &&
     yum install -y https://archives.fedoraproject.org/pub/archive/epel/7/x86_64/Packages/e/epel-release-7-14.noarch.rpm && \
     yum install -y \
     bind-utils \
