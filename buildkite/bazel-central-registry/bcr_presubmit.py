@@ -394,6 +394,8 @@ def should_bcr_validation_block_presubmit(modules, modules_with_metadata_change,
         skip_validation_flags.append("--skip_validation=source_repo")
     if "skip-url-stability-check" in pr_labels:
         skip_validation_flags.append("--skip_validation=url_stability")
+    if "skip-compatibility-level-check" in pr_labels:
+        skip_validation_flags.append("--skip_validation=compatibility_level")
     if "presubmit-auto-run" in pr_labels:
         skip_validation_flags.append("--skip_validation=presubmit_yml")
     returncode = subprocess.run(
