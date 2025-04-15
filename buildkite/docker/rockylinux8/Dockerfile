@@ -4,9 +4,7 @@ ARG TARGETARCH
 # Install required packages.
 COPY google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
 
-# Disable "fastestmirror" plug-in, because it takes a long time.
-RUN sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/fastestmirror.conf && \
-    dnf config-manager --set-enabled powertools && \
+RUN dnf config-manager --set-enabled powertools && \
     dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm && \
     dnf -y install \
     bind-utils \
