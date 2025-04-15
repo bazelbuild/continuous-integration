@@ -21,8 +21,6 @@ RUN dnf -y install 'dnf-command(config-manager)' && \
     lcov \
     openssl-perl \
     patch \
-    python \
-    python-six \
     python36 \
     python36-PyYAML \
     python36-requests \
