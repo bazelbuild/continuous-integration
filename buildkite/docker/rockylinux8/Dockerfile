@@ -4,7 +4,8 @@ ARG TARGETARCH
 # Install required packages.
 COPY google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
 
-RUN dnf config-manager --set-enabled powertools && \
+RUN dnf install 'dnf-command(config-manager)' && \
+    dnf config-manager --set-enabled powertools && \
     dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm && \
     dnf -y install \
     bind-utils \
