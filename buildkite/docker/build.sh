@@ -21,7 +21,7 @@ export DOCKER_BUILDKIT=1
 docker buildx create --driver=docker-container --use --name mp-builder
 
 # Containers used by Bazel CI
-docker build -f centos7/Dockerfile    --builder mp-builder --platform=linux/amd64,linux/arm64 --target centos7           -t "gcr.io/$PREFIX/centos7" centos7 &
+docker build -f rockylinux8/Dockerfile    --builder mp-builder --platform=linux/amd64,linux/arm64 --target rockylinux8           -t "gcr.io/$PREFIX/rockylinux8" rockylinux8 &
 # docker build -f debian10/Dockerfile   --builder mp-builder --platform=linux/amd64,linux/arm64 --target debian10-java11   -t "gcr.io/$PREFIX/debian10-java11" debian10 &
 # docker build -f debian11/Dockerfile   --builder mp-builder --platform=linux/amd64,linux/arm64 --target debian11-java17   -t "gcr.io/$PREFIX/debian11-java17" debian11 &
 # docker build -f ubuntu1804/Dockerfile --builder mp-builder --platform=linux/amd64,linux/arm64 --target ubuntu1804-java11 -t "gcr.io/$PREFIX/ubuntu1804-java11" ubuntu1804 &
@@ -34,9 +34,9 @@ docker build -f centos7/Dockerfile    --builder mp-builder --platform=linux/amd6
 # docker build -f fedora40/Dockerfile   --builder mp-builder --platform=linux/amd64,linux/arm64 --target fedora40-java21   -t "gcr.io/$PREFIX/fedora40-java21" fedora40 &
 wait
 
-docker build -f centos7/Dockerfile    --builder mp-builder --platform=linux/amd64,linux/arm64 --target centos7-java11              -t "gcr.io/$PREFIX/centos7-java11" centos7
-docker build -f centos7/Dockerfile    --builder mp-builder --platform=linux/amd64,linux/arm64 --target centos7-java11-devtoolset10 -t "gcr.io/$PREFIX/centos7-java11-devtoolset10" centos7
-docker build -f centos7/Dockerfile    --builder mp-builder --platform=linux/amd64,linux/arm64 --target centos7-releaser            -t "gcr.io/$PREFIX/centos7-releaser" centos7
+docker build -f rockylinux8/Dockerfile    --builder mp-builder --platform=linux/amd64,linux/arm64 --target rockylinux8-java11              -t "gcr.io/$PREFIX/rockylinux8-java11" rockylinux8
+docker build -f rockylinux8/Dockerfile    --builder mp-builder --platform=linux/amd64,linux/arm64 --target rockylinux8-java11-devtoolset10 -t "gcr.io/$PREFIX/rockylinux8-java11-devtoolset10" rockylinux8
+docker build -f rockylinux8/Dockerfile    --builder mp-builder --platform=linux/amd64,linux/arm64 --target rockylinux8-releaser            -t "gcr.io/$PREFIX/rockylinux8-releaser" rockylinux8
 # docker build -f ubuntu1804/Dockerfile --builder mp-builder --platform=linux/amd64,linux/arm64 --target ubuntu1804-bazel-java11     -t "gcr.io/$PREFIX/ubuntu1804-bazel-java11" ubuntu1804
 # docker build -f ubuntu2004/Dockerfile --builder mp-builder --platform=linux/amd64,linux/arm64 --target ubuntu2004-bazel-java11     -t "gcr.io/$PREFIX/ubuntu2004-bazel-java11" ubuntu2004
 # docker build -f ubuntu2204/Dockerfile --builder mp-builder --platform=linux/amd64,linux/arm64 --target ubuntu2204-kythe            -t "gcr.io/$PREFIX/ubuntu2204-kythe" ubuntu2204
