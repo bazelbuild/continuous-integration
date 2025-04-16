@@ -15,6 +15,8 @@ RUN dnf -y install 'dnf-command(config-manager)' && \
     gcc \
     gcc-c++ \
     git \
+    glibc-langpack-en \
+    glibc-locale-source \
     gnupg2 \
     google-cloud-sdk \
     iproute \
@@ -58,8 +60,7 @@ RUN LATEST_BUILDIFIER=$(curl -sSI https://github.com/bazelbuild/buildtools/relea
 
 FROM rockylinux8-nojdk AS rockylinux8-nojdk-devtoolset10
 
-RUN dnf -y install scl-utils
-RUN yum install -y devtoolset-10 && yum clean all
+RUN dnf -y install gcc-toolset-10 scl-utils && dnf clean all
 
 # These are the variables set by /opt/rh/devtoolset-10/enable and necessary to activate devtoolset-10.
 ENV PATH=/opt/rh/devtoolset-10/root/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -71,22 +72,28 @@ ENV PKG_CONFIG_PATH=/opt/rh/devtoolset-10/root/usr/lib64/pkgconfig
 
 FROM rockylinux8-nojdk AS rockylinux8-java8
 
-RUN yum install -y java-1.8.0-openjdk-devel && yum clean all
+RUN dnf -y install java-1.8.0-openjdk-devel && dnf clean all
 
 FROM rockylinux8-nojdk AS rockylinux8-java11
 
-RUN yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm && \
-    yum install -y yum install zulu11-jdk && yum clean all
+RUN dnf -y install https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm && \
+    dnf -y install zulu11-jdk && \
+    dnf clean all
+
+#RUN yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm && \
+#    yum install -y zulu11-jdk && yum clean all
 
 FROM rockylinux8-nojdk-devtoolset10 AS rockylinux8-java11-devtoolset10
 
-RUN yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm && \
-    yum install -y yum install zulu11-jdk && yum clean all
+RUN dnf -y install https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm && \
+    dnf -y install zulu11-jdk && \
+    dnf clean all
 
 FROM rockylinux8-nojdk-devtoolset10 AS rockylinux8
 
-RUN yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm && \
-    yum install -y yum install zulu21-jdk && yum clean all
+RUN dnf -y install https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm && \
+    dnf -y install zulu11-jdk && \
+    dnf clean all
 
 FROM rockylinux8-java11-devtoolset10 AS rockylinux8-releaser
 # dpkg-source needs a newer GNU tar version that supports --sort=name.

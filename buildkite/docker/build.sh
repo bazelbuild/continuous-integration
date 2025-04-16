@@ -14,11 +14,13 @@ case $(git symbolic-ref --short HEAD) in
         exit 1
 esac
 
+# TODO docker builder prune -a -f
+
 # Enable use of buildkit for all builds. No extra support in the Dockerfile is required.
 # See https://docs.docker.com/develop/develop-images/build_enhancements/ for details.
 export DOCKER_BUILDKIT=1
 
-docker buildx create --driver=docker-container --use --name mp-builder
+# TODO docker buildx create --driver=docker-container --use --name mp-builder
 
 # Containers used by Bazel CI
 docker build -f rockylinux8/Dockerfile    --builder mp-builder --platform=linux/amd64,linux/arm64 --target rockylinux8           -t "gcr.io/$PREFIX/rockylinux8" rockylinux8 &
@@ -44,3 +46,5 @@ docker build -f rockylinux8/Dockerfile    --builder mp-builder --platform=linux/
 # docker build -f ubuntu2404/Dockerfile --builder mp-builder --platform=linux/amd64,linux/arm64 --target ubuntu2404-kythe            -t "gcr.io/$PREFIX/ubuntu2404-kythe" ubuntu2404
 # docker build -f fedora39/Dockerfile   --builder mp-builder --platform=linux/amd64,linux/arm64 --target fedora39-bazel-java17       -t "gcr.io/$PREFIX/fedora39-bazel-java17" fedora39
 # docker build -f fedora40/Dockerfile   --builder mp-builder --platform=linux/amd64,linux/arm64 --target fedora40-bazel-java21       -t "gcr.io/$PREFIX/fedora40-bazel-java21" fedora40
+
+docker buildx rm mp-builder
