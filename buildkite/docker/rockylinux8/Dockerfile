@@ -62,14 +62,6 @@ FROM rockylinux8-nojdk AS rockylinux8-nojdk-devtoolset10
 
 RUN dnf -y install gcc-toolset-10 scl-utils && dnf clean all
 
-# These are the variables set by /opt/rh/devtoolset-10/enable and necessary to activate devtoolset-10.
-ENV PATH=/opt/rh/devtoolset-10/root/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ENV MANPATH=/opt/rh/devtoolset-10/root/usr/share/man
-ENV INFOPATH=/opt/rh/devtoolset-10/root/usr/share/info
-ENV PCP_DIR=/opt/rh/devtoolset-10/root
-ENV LD_LIBRARY_PATH=/opt/rh/devtoolset-10/root/usr/lib64:/opt/rh/devtoolset-10/root/usr/lib:/opt/rh/devtoolset-10/root/usr/lib64/dyninst:/opt/rh/devtoolset-10/root/usr/lib/dyninst:/opt/rh/devtoolset-10/root/usr/lib64:/opt/rh/devtoolset-10/root/usr/lib
-ENV PKG_CONFIG_PATH=/opt/rh/devtoolset-10/root/usr/lib64/pkgconfig
-
 FROM rockylinux8-nojdk AS rockylinux8-java8
 
 RUN dnf -y install java-1.8.0-openjdk-devel && dnf clean all
