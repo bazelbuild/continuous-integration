@@ -21,10 +21,10 @@ RUN dnf -y install 'dnf-command(config-manager)' && \
     lcov \
     openssl-perl \
     patch \
-    python36 \
-    python36-PyYAML \
-    python36-requests \
-    python36-six \
+    python38 \
+    python38-PyYAML \
+    python38-requests \
+    python38-six \
     rpm-build \
     sudo \
     unzip \
