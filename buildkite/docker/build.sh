@@ -20,7 +20,7 @@ esac
 # See https://docs.docker.com/develop/develop-images/build_enhancements/ for details.
 export DOCKER_BUILDKIT=1
 
-# TODO docker buildx create --driver=docker-container --use --name mp-builder
+docker buildx create --driver=docker-container --use --name mp-builder
 
 # Containers used by Bazel CI
 docker build -f rockylinux8/Dockerfile    --builder mp-builder --platform=linux/amd64,linux/arm64 --target rockylinux8           -t "gcr.io/$PREFIX/rockylinux8" rockylinux8 &
