@@ -40,7 +40,7 @@ IMAGE_CREATION_VMS = {
     },
     "bk-testing-docker-arm64": {
         "project": "bazel-public",
-        "zone": "us-central1-f",
+        "zone": "us-central1-c",
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-2004-lts-arm64",
         "setup_script": "setup-docker.sh",
