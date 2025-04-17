@@ -49,7 +49,7 @@ IMAGE_CREATION_VMS = {
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
         "machine_type": "c4a-standard-8-lssd",
-        "boot_disk_type": "local-ssd",
+        "boot_disk_type": "hyperdisk-balanced",
     },
     "bk-testing-windows": {
         "project": "bazel-public",

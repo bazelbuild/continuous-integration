@@ -51,7 +51,7 @@ instance_groups:
     metadata_from_file: startup-script=startup-docker-pdssd.sh
     machine_type: c4a-standard-8-lssd
     zone: us-central1-c
-    boot_disk_type: local-ssd
+    boot_disk_type: hyperdisk-balanced
   - name: bk-testing-docker-arm64
     count: 2
     project: bazel-untrusted
@@ -60,7 +60,7 @@ instance_groups:
     metadata_from_file: startup-script=startup-docker-pdssd.sh
     machine_type: c4a-standard-8-lssd
     zone: us-central1-c
-    boot_disk_type: local-ssd
+    boot_disk_type: hyperdisk-balanced
   - name: bk-trusted-docker-arm64
     count: 2
     project: bazel-public
@@ -69,7 +69,7 @@ instance_groups:
     metadata_from_file: startup-script=startup-docker-pdssd.sh
     machine_type: c4a-standard-8-lssd
     zone: us-central1-c
-    boot_disk_type: local-ssd
+    boot_disk_type: hyperdisk-balanced
   - name: bk-windows
     count: 30
     project: bazel-untrusted
