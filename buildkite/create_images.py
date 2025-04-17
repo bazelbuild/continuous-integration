@@ -24,6 +24,7 @@ import gcloud_utils
 
 DEBUG = False
 DEFAULT_MACHINE_TYPE = "c2-standard-8"
+DEFAULT_BOOT_DISK_TYPE = "pd-ssd"
 
 IMAGE_CREATION_VMS = {
     "bk-testing-docker": {
@@ -48,6 +49,7 @@ IMAGE_CREATION_VMS = {
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
         "machine_type": "c4a-standard-8-lssd",
+        "boot_disk_type": "local-ssd",
     },
     "bk-testing-windows": {
         "project": "bazel-public",
@@ -108,7 +110,7 @@ def create_instance(instance_name, params):
             machine_type=params.get("machine_type", DEFAULT_MACHINE_TYPE),
             network=params.get("network", "default"),
             metadata_from_file=startup_script,
-            boot_disk_type="pd-ssd",
+            boot_disk_type=params.get("boot_disk_type", DEFAULT_BOOT_DISK_TYPE),
             boot_disk_size=params.get("boot_disk_size", "500GB"),
             **image,
         )
