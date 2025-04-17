@@ -36,7 +36,6 @@ IMAGE_CREATION_VMS = {
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
-        "machine_type": "c4a-standard-8",
     },
     "bk-testing-docker-arm64": {
         "project": "bazel-public",
@@ -48,6 +47,7 @@ IMAGE_CREATION_VMS = {
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
+        "machine_type": "c4a-standard-8",
     },
     "bk-testing-windows": {
         "project": "bazel-public",
