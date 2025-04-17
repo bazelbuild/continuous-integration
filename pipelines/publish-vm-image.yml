@@ -2,7 +2,7 @@
 steps:
   - command: |-
       cd buildkite
-      ./create_images.py "${BAZEL_TEST_VM_NAMES"
+      ./create_images.py "${BAZEL_TEST_VM_NAMES}"
     label: ":pipeline:"
     agents:
       - "queue=default"
@@ -34,7 +34,7 @@ steps:
 
   - command: |-
       cd buildkite
-      ./create_instances.py "${BAZEL_TEST_VM_NAMES"
+      ./create_instances.py "${BAZEL_TEST_VM_NAMES}"
     label: ":pipeline:"
     agents:
       - "queue=default"
