@@ -24,8 +24,11 @@ if [[ -z "$(docker buildx ls | grep mp-builder)" ]]; then
     docker buildx create --driver=docker-container --use --name mp-builder
 fi
 
+# Containers used by Bazel 
 
-# Containers used by Bazel CI
+# For Rocky Linux we build multi-platform images. However, because of the docker-container driver
+# we need to add --load in order to make images available outside of the Docker cache.
+# Unfortunately this only works when the containerd image store is enabled.
 docker build -f rockylinux8/Dockerfile  --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target rockylinux8 -t "gcr.io/$PREFIX/rockylinux8"  rockylinux8 &
 docker build -f debian10/Dockerfile   --target debian10-java11   -t "gcr.io/$PREFIX/debian10-java11" debian10 &
 docker build -f debian11/Dockerfile   --target debian11-java17   -t "gcr.io/$PREFIX/debian11-java17" debian11 &
