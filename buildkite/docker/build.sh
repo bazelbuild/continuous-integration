@@ -24,7 +24,7 @@ if [[ -z "$(docker buildx ls | grep mp-builder)" ]]; then
     docker buildx create --driver=docker-container --use --name mp-builder
 fi
 
-# Containers used by Bazel 
+# Containers used by Bazel
 
 # For Rocky Linux we build multi-platform images. However, because of the docker-container driver
 # we need to add --load in order to make images available outside of the Docker cache.
