@@ -23,13 +23,13 @@ export DOCKER_BUILDKIT=1
 # This seems to be the only way to make these images
 # available outside of the Docker cache other than
 # using a local registry.
-cat <<EOF >/etc/docker/daemon.json
+sudo bash -c 'cat <<EOF >/etc/docker/daemon.json
 {
   "features": {
     "containerd-snapshotter": true
   }
 }
-EOF
+EOF'
 sudo systemctl restart docker
 docker info -f '{{ .DriverStatus }}'
 
