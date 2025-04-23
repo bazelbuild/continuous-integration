@@ -18,21 +18,29 @@ esac
 # See https://docs.docker.com/develop/develop-images/build_enhancements/ for details.
 export DOCKER_BUILDKIT=1
 
+# Enable containerd image store, which is needed
+# to make --load work with multi-platform images.
+# This seems to be the only way to make these images
+# available outside of the Docker cache other than
+# using a local registry.
+cat <<EOF >/etc/docker/daemon.json
+{
+  "features": {
+    "containerd-snapshotter": true
+  }
+}
+EOF
+sudo systemctl restart docker
+docker info -f '{{ .DriverStatus }}'
+
 # We need a new builder using the docker-container driver in order
 # to build multi-platform images.
 if [[ -z "$(docker buildx ls | grep mp-builder)" ]]; then
     docker buildx create --driver=docker-container --use --name mp-builder
 fi
 
-# TODO: remove
-docker info -f '{{ .DriverStatus }}'
-cat /etc/docker/daemon.json
-
 # Containers used by Bazel
-
-# For Rocky Linux we build multi-platform images. However, because of the docker-container driver
-# we need to add --load in order to make images available outside of the Docker cache.
-# Unfortunately this only works when the containerd image store is enabled.
+# For Rocky Linux we build multi-platform images.
 docker build -f rockylinux8/Dockerfile  --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target rockylinux8 -t "gcr.io/$PREFIX/rockylinux8"  rockylinux8 &
 # docker build -f debian10/Dockerfile   --target debian10-java11   -t "gcr.io/$PREFIX/debian10-java11" debian10 &
 # docker build -f debian11/Dockerfile   --target debian11-java17   -t "gcr.io/$PREFIX/debian11-java17" debian11 &
