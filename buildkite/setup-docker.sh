@@ -119,14 +119,6 @@ EOF
 SocketMode=0666
 EOF
 
-  cat > /etc/docker/daemon.json <<'EOF'
-{
-  "features": {
-    "containerd-snapshotter": true
-  }
-}
-EOF
-
   # Disable the Docker service, as the startup script has to mount /var/lib/docker first.
   systemctl disable docker
   systemctl stop docker
@@ -215,6 +207,17 @@ EOF
   rm -rf /var/lib/apt/lists/*
   fstrim -v /
   sleep 3
+}
+
+### Enable containerd image store.
+{
+  cat > /etc/docker/daemon.json <<'EOF'
+{
+  "features": {
+    "containerd-snapshotter": true
+  }
+}
+EOF
 }
 
 ### Configure and start Docker.
