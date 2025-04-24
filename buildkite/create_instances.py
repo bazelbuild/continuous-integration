@@ -15,84 +15,80 @@
 # limitations under the License.
 
 import argparse
+from concurrent import futures
 from datetime import datetime
+import multiprocessing
 import os
-import queue
 import sys
-import threading
 import yaml
 
 import gcloud
 
-WORK_QUEUE = queue.Queue()
 
+def create_instance_group(config):
+    try:
+        # We take a few keys out of the config. The rest is passed
+        # as-is to create_instance_template() and thus to the gcloud
+        # command line tool.
+        count = config.pop("count")
+        instance_group_name = config.pop("name")
+        project = config.pop("project")
+        zone = config.pop("zone", None)
+        region = config.pop("region", None)
+        health_check = config.pop("health_check", None)
+        initial_delay = config.pop("initial_delay", None)
 
-def worker():
-    while True:
-        item = WORK_QUEUE.get()
-        if not item:
-            break
-        try:
-            # We take a few keys out of the config item. The rest is passed
-            # as-is to create_instance_template() and thus to the gcloud
-            # command line tool.
-            count = item.pop("count")
-            instance_group_name = item.pop("name")
-            project = item.pop("project")
-            zone = item.pop("zone", None)
-            region = item.pop("region", None)
-            health_check = item.pop("health_check", None)
-            initial_delay = item.pop("initial_delay", None)
+        if not project:
+            raise Exception("Invalid instance config, no project name set")
 
-            if not project:
-                raise Exception("Invalid instance config, no project name set")
+        if not zone and not region:
+            raise Exception("Invalid instance config, either zone or region must be specified")
 
-            if not zone and not region:
-                raise Exception("Invalid instance config, either zone or region must be specified")
+        timestamp = datetime.now().strftime("%Y%m%dt%H%M%S")
+        template_name = "{}-{}".format(instance_group_name, timestamp)
 
-            timestamp = datetime.now().strftime("%Y%m%dt%H%M%S")
-            template_name = "{}-{}".format(instance_group_name, timestamp)
+        if zone is not None:
+            if (
+                gcloud.delete_instance_group(
+                    instance_group_name, project=project, zone=zone
+                ).returncode
+                == 0
+            ):
+                print(f"Deleted existing instance group: {instance_group_name}")
+        elif region is not None:
+            if (
+                gcloud.delete_instance_group(
+                    instance_group_name, project=project, region=region
+                ).returncode
+                == 0
+            ):
+                print(f"Deleted existing instance group: {instance_group_name}")
 
-            if zone is not None:
-                if (
-                    gcloud.delete_instance_group(
-                        instance_group_name, project=project, zone=zone
-                    ).returncode
-                    == 0
-                ):
-                    print("Deleted existing instance group: {}".format(instance_group_name))
-            elif region is not None:
-                if (
-                    gcloud.delete_instance_group(
-                        instance_group_name, project=project, region=region
-                    ).returncode
-                    == 0
-                ):
-                    print("Deleted existing instance group: {}".format(instance_group_name))
+        # Create the new instance template.
+        gcloud.create_instance_template(template_name, project=project, **config)
+        print(f"Created instance template {template_name}")
 
-            # Create the new instance template.
-            gcloud.create_instance_template(template_name, project=project, **item)
-            print("Created instance template {}".format(template_name))
-
-            # Create instance groups with the new template.
-            kwargs = {
-                "project": project,
-                "base_instance_name": instance_group_name,
-                "size": count,
-                "template": template_name,
-            }
-            if zone:
-                kwargs["zone"] = zone
-            elif region:
-                kwargs["region"] = region
-            if health_check:
-                kwargs["health_check"] = health_check
-            if initial_delay:
-                kwargs["initial_delay"] = initial_delay
-            gcloud.create_instance_group(instance_group_name, **kwargs)
-            print("Created instance group {}".format(instance_group_name))
-        finally:
-            WORK_QUEUE.task_done()
+        # Create instance groups with the new template.
+        kwargs = {
+            "project": project,
+            "base_instance_name": instance_group_name,
+            "size": count,
+            "template": template_name,
+        }
+        if zone:
+            kwargs["zone"] = zone
+        elif region:
+            kwargs["region"] = region
+        if health_check:
+            kwargs["health_check"] = health_check
+        if initial_delay:
+            kwargs["initial_delay"] = initial_delay
+        gcloud.create_instance_group(instance_group_name, **kwargs)
+        print(f"Created instance group {instance_group_name}")
+        return 0
+    except Exception as ex:
+        print(f"Failed to create {instance_group_name}: {ex}", file=sys.stderr)
+        return 1
 
 
 def read_config_file():
@@ -131,31 +127,17 @@ def main(argv=None):
         print("\nValid instance names are: {}".format(" ".join(valid_names)))
         return 1
 
-    # Put VM creation instructions into the work queue.
-    for instance in config["instance_groups"]:
-        if instance["name"] not in args.names:
-            continue
-        WORK_QUEUE.put({**config["default_vm"], **instance})
+    selected_instances = [i for i in config["instance_groups"] if i in args.names]
 
-    # Spawn worker threads that will create the VMs.
-    threads = []
-    for _ in range(WORK_QUEUE.qsize()):
-        t = threading.Thread(target=worker)
-        t.start()
-        threads.append(t)
-
-    # Wait for all VMs to be created.
-    WORK_QUEUE.join()
-
-    # Signal worker threads to exit.
-    for _ in range(len(threads)):
-        WORK_QUEUE.put(None)
-
-    # Wait for worker threads to exit.
-    for t in threads:
-        t.join()
-
-    return 0
+    # Mimic v3.5 default of
+    # https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor
+    max_workers = multiprocessing.cpu_count() * 5
+    with futures.ThreadPoolExecutor(max_workers=max_workers) as pool:
+        tasks = [
+            pool.submit(create_instance_group, config={**config["default_vm"], **i})
+            for i in selected_instances
+        ]
+        return max(t.result() for t in futures.as_completed(tasks))
 
 
 if __name__ == "__main__":
