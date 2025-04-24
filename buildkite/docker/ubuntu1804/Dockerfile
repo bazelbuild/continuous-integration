@@ -1,4 +1,4 @@
-FROM ubuntu:18.04 as ubuntu1804-bazel-java11
+FROM ubuntu:18.04 AS ubuntu1804-bazel-java11
 ARG BUILDARCH
 
 ENV DEBIAN_FRONTEND="noninteractive"

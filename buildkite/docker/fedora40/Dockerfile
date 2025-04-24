@@ -1,4 +1,4 @@
-FROM fedora:40 as fedora40-bazel-java21
+FROM fedora:40 AS fedora40-bazel-java21
 ARG BUILDARCH
 
 RUN dnf update -y
