@@ -32,6 +32,15 @@ IMAGE_PROMOTIONS = {
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
     },
+    "bk-docker-arm64": {
+        "project": "bazel-public",
+        "source_image_project": "bazel-public",
+        "source_image_family": "bk-testing-docker-arm64",
+        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
+        "licenses": [
+            "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
+        ],
+    },
     "bk-windows": {
         "project": "bazel-public",
         "source_image_project": "bazel-public",
@@ -80,7 +89,10 @@ def main(argv=None):
         print("Usage: promote_images.py {}".format(" ".join(IMAGE_PROMOTIONS.keys())))
         return 1
 
-    unknown_args = set(argv).difference(IMAGE_PROMOTIONS.keys())
+    # Handle multiple args as well as a single-arg comma-delimited list.
+    names = argv if len(argv) > 1 else argv[0].split(",")
+
+    unknown_args = set(names).difference(IMAGE_PROMOTIONS.keys())
     if unknown_args:
         print(
             "Unknown platforms: {}\nAvailable platforms: {}".format(
@@ -90,7 +102,7 @@ def main(argv=None):
         return 1
 
     # Put VM creation instructions into the work queue.
-    for name in argv:
+    for name in names:
         WORK_QUEUE.put({"name": name, "params": IMAGE_PROMOTIONS[name]})
 
     # Spawn worker threads that will create the VMs.

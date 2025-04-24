@@ -23,6 +23,8 @@ import gcloud
 import gcloud_utils
 
 DEBUG = False
+DEFAULT_MACHINE_TYPE = "c2-standard-8"
+DEFAULT_BOOT_DISK_TYPE = "pd-ssd"
 
 IMAGE_CREATION_VMS = {
     "bk-testing-docker": {
@@ -35,6 +37,19 @@ IMAGE_CREATION_VMS = {
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
+    },
+    "bk-testing-docker-arm64": {
+        "project": "bazel-public",
+        "zone": "us-central1-c",
+        "source_image_project": "ubuntu-os-cloud",
+        "source_image_family": "ubuntu-2004-lts-arm64",
+        "setup_script": "setup-docker.sh",
+        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
+        "licenses": [
+            "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
+        ],
+        "machine_type": "c4a-standard-8-lssd",
+        "boot_disk_type": "hyperdisk-balanced",
     },
     "bk-testing-windows": {
         "project": "bazel-public",
@@ -92,10 +107,10 @@ def create_instance(instance_name, params):
             instance_name,
             project=params["project"],
             zone=params["zone"],
-            machine_type="c2-standard-8",
+            machine_type=params.get("machine_type", DEFAULT_MACHINE_TYPE),
             network=params.get("network", "default"),
             metadata_from_file=startup_script,
-            boot_disk_type="pd-ssd",
+            boot_disk_type=params.get("boot_disk_type", DEFAULT_BOOT_DISK_TYPE),
             boot_disk_size=params.get("boot_disk_size", "500GB"),
             **image,
         )
@@ -144,7 +159,10 @@ def main(argv=None):
         print("Usage: create_images.py {}".format(" ".join(IMAGE_CREATION_VMS.keys())))
         return 1
 
-    unknown_args = set(argv).difference(IMAGE_CREATION_VMS.keys())
+    # Handle multiple args as well as a single-arg comma-delimited list.
+    names = argv if len(argv) > 1 else argv[0].split(",")
+
+    unknown_args = set(names).difference(IMAGE_CREATION_VMS.keys())
     if unknown_args:
         print(
             "Unknown platforms: {}\nAvailable platforms: {}".format(
@@ -153,11 +171,8 @@ def main(argv=None):
         )
         return 1
 
-    if len(argv) > 1:
-        print("Only one platform can be created at a time.")
-        return 1
-
-    workflow(argv[0], IMAGE_CREATION_VMS[argv[0]])
+    for n in names:
+        workflow(n, IMAGE_CREATION_VMS[n])
 
     return 0
 

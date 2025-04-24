@@ -287,6 +287,27 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7-java11-devtoolset10",
         "python": "python3.6",
     },
+    "rockylinux8": {
+        "name": "Rocky Linux 8",
+        "emoji-name": ":rocky: Rocky Linux 8",
+        "publish_binary": ["ubuntu1404", "rockylinux8", "linux"],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8",
+        "python": "python3.8",
+    },
+    "rockylinux8_java11": {
+        "name": "Rocky Linux 8 (OpenJDK 11, gcc 4.8.5)",
+        "emoji-name": ":rocky: Rocky Linux 8 (OpenJDK 11, gcc 4.8.5)",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8-java11",
+        "python": "python3.8",
+    },
+    "rockylinux8_java11_devtoolset10": {
+        "name": "Rocky Linux 8 (OpenJDK 11, gcc 10.2.1)",
+        "emoji-name": ":rocky: Rocky Linux 8 (OpenJDK 11, gcc 10.2.1)",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8-java11-devtoolset10",
+        "python": "python3.8",
+    },
     "debian10": {
         "name": "Debian 10 Buster (OpenJDK 11, gcc 8.3.0)",
         "emoji-name": ":debian: Debian 10 Buster (OpenJDK 11, gcc 8.3.0)",
@@ -335,9 +356,7 @@ PLATFORMS = {
         "publish_binary": ["linux_arm64"],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004",
         "python": "python3.8",
-        "queue": "arm64",
-        # TODO: Re-enable always-pull if we also publish docker containers for Linux ARM64
-        "always-pull": False,
+        "queue": "linux_arm64",
     },
     "kythe_ubuntu2004": {
         "name": "Kythe (Ubuntu 20.04 LTS)",
@@ -444,7 +463,7 @@ DEFAULT_PLATFORM = "ubuntu1804"
 # In order to test that "the one Linux binary" that we build for our official releases actually
 # works on all Linux distributions that we test on, we use the Linux binary built on our official
 # release platform for all Linux downstream tests.
-LINUX_BINARY_PLATFORM = "centos7"
+LINUX_BINARY_PLATFORM = "rockylinux8"
 
 XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
 XCODE_VERSION_OVERRIDES = {"10.2.1": "10.3", "11.2": "11.2.1", "11.3": "11.3.1"}
@@ -1152,9 +1171,6 @@ def execute_commands(
     bazel_binary = "bazel"
     if use_bazel_at_commit:
         print_collapsed_group(":gcloud: Downloading Bazel built at " + use_bazel_at_commit)
-        # Linux binaries are published under platform name "centos7"
-        if binary_platform == LINUX_BINARY_PLATFORM:
-            binary_platform = "centos7"
         os.environ["USE_BAZEL_VERSION"] = download_bazel_binary_at_commit(
             tmpdir, binary_platform, use_bazel_at_commit
         )
@@ -1777,9 +1793,6 @@ def execute_bazel_run(bazel_binary, platform, targets):
 def remote_caching_flags(platform, accept_cached=True):
     # Only enable caching for untrusted and testing builds, except for trusted MacOS VMs.
     if THIS_IS_TRUSTED and not is_mac():
-        return []
-    # We don't enable remote caching on the Linux ARM64 machine since it doesn't have access to GCS.
-    if platform == "ubuntu2004_arm64":
         return []
 
     platform_cache_key = [
@@ -2694,7 +2707,6 @@ def create_step(
             image=PLATFORMS[platform]["docker-image"],
             commands=commands,
             queue=PLATFORMS[platform].get("queue", "default"),
-            always_pull=PLATFORMS[platform].get("always-pull", True),
         )
     else:
         step = {
@@ -2744,7 +2756,7 @@ def create_step(
 
 
 def create_docker_step(
-    label, image, commands=None, additional_env_vars=None, queue="default", always_pull=True
+    label, image, commands=None, additional_env_vars=None, queue="default"
 ):
     env = ["ANDROID_HOME", "ANDROID_NDK_HOME", "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"]
     if THIS_IS_TRUSTED:
@@ -2759,7 +2771,7 @@ def create_docker_step(
         "agents": {"queue": queue},
         "plugins": {
             "docker#v3.8.0": {
-                "always-pull": always_pull,
+                "always-pull": True,
                 "environment": env,
                 "image": image,
                 "network": "host",
@@ -4182,7 +4194,7 @@ def upload_bazel_binaries():
         try:
             bazel_binary_path = download_bazel_binary(tmpdir, platform_name)
             # One platform that we build on can generate binaries for multiple platforms, e.g.
-            # the centos7 platform generates binaries for the "centos7" platform, but also
+            # the rockylinux8 platform generates binaries for the "rockylinux8" platform, but also
             # for the generic "linux" platform.
             for target_platform_name in platform["publish_binary"]:
                 execute_command(
