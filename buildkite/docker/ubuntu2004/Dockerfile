@@ -1,5 +1,5 @@
 FROM ubuntu:20.04 AS ubuntu2004-bazel-nojdk
-ARG BUILDARCH
+ARG TARGETARCH
 
 ENV DEBIAN_FRONTEND="noninteractive"
 ENV LANG "C.UTF-8"
@@ -58,10 +58,11 @@ RUN apt-get -y update && \
 # Workaround https://bugs.launchpad.net/ubuntu/+source/gcc-9/+bug/2029910
 # TODO: remove when the latest ubuntu:20.04 image has the fix.
 WORKDIR /tempdir
-RUN apt-get -y update && apt-get download libgcc-10-dev
-RUN dpkg -x libgcc-10-dev_10.5.0-1ubuntu1~20.04_amd64.deb .
-RUN cp usr/lib/gcc/x86_64-linux-gnu/10/libtsan_preinit.o /usr/lib/gcc/x86_64-linux-gnu/9/
-RUN rm -rf /tempdir
+RUN ARCH="$(uname -m)" && \
+    apt-get -y update && apt-get download libgcc-10-dev && \
+    dpkg -x "libgcc-10-dev_10.5.0-1ubuntu1~20.04_${TARGETARCH}.deb" . && \
+    cp "usr/lib/gcc/${ARCH}-linux-gnu/10/libtsan_preinit.o" "/usr/lib/gcc/${ARCH}-linux-gnu/9/" && \
+    rm -rf /tempdir
 WORKDIR /
 
 # Allow using sudo inside the container.
@@ -83,20 +84,20 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
 RUN apt-get -y update && \
     apt-get -y install apt-transport-https ca-certificates && \
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
-    add-apt-repository "deb [arch=$BUILDARCH] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
+    add-apt-repository "deb [arch=$TARGETARCH] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
     apt-get -y update && \
     apt-get -y install docker-ce && \
     rm -rf /var/lib/apt/lists/*
 
 # Bazelisk
 RUN LATEST_BAZELISK=$(curl -sSI https://github.com/bazelbuild/bazelisk/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
-    curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/${LATEST_BAZELISK}/bazelisk-linux-${BUILDARCH} && \
+    curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/${LATEST_BAZELISK}/bazelisk-linux-${TARGETARCH} && \
     chown root:root /usr/local/bin/bazel && \
     chmod 0755 /usr/local/bin/bazel
 
 # Buildifier
 RUN LATEST_BUILDIFIER=$(curl -sSI https://github.com/bazelbuild/buildtools/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
-    curl -Lo /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/${LATEST_BUILDIFIER}/buildifier-linux-${BUILDARCH} && \
+    curl -Lo /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/${LATEST_BUILDIFIER}/buildifier-linux-${TARGETARCH} && \
     chown root:root /usr/local/bin/buildifier && \
     chmod 0755 /usr/local/bin/buildifier
 
@@ -106,7 +107,7 @@ RUN apt-get -y update && \
     apt-get -y install openjdk-11-jdk-headless && \
     rm -rf /var/lib/apt/lists/*
 
-ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-${BUILDARCH}
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-${TARGETARCH}
 
 FROM ubuntu2004-nojdk AS ubuntu2004-java11
 
@@ -114,7 +115,7 @@ RUN apt-get -y update && \
     apt-get -y install openjdk-11-jdk-headless && \
     rm -rf /var/lib/apt/lists/*
 
-ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-${BUILDARCH}
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-${TARGETARCH}
 
 FROM ubuntu2004-nojdk AS ubuntu2004
 
@@ -122,7 +123,7 @@ RUN apt-get -y update && \
     apt-get -y install openjdk-21-jdk-headless && \
     rm -rf /var/lib/apt/lists/*
 
-ENV JAVA_HOME /usr/lib/jvm/java-21-openjdk-${BUILDARCH}
+ENV JAVA_HOME /usr/lib/jvm/java-21-openjdk-${TARGETARCH}
 
 FROM ubuntu2004 AS ubuntu2004-kythe
 

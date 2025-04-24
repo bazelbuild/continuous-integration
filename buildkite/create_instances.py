@@ -113,16 +113,19 @@ def main(argv=None):
     )
 
     args = parser.parse_args(argv)
+    # Handle multiple args as well as a single-arg comma-delimited list.
+    names = args.names if len(args.names) > 1 else args.names[0].split(",")
+
     config = read_config_file()
 
     # Verify names passed on the command-line.
     valid_names = [item["name"] for item in config["instance_groups"]]
-    for name in args.names:
+    for name in names:
         if name not in valid_names:
             print("Unknown instance name: {}!".format(name))
             print("\nValid instance names are: {}".format(" ".join(valid_names)))
             return 1
-    if not args.names:
+    if not names:
         parser.print_help()
         print("\nValid instance names are: {}".format(" ".join(valid_names)))
         return 1
