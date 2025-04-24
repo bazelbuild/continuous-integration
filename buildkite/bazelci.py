@@ -1805,9 +1805,7 @@ def remote_caching_flags(platform, accept_cached=True):
     if is_mac():
         bucket_id = "trusted" if THIS_IS_TRUSTED else "untrusted"
         remote_cache_flags = [
-            f"--remote_cache=https://storage.googleapis.com/bazel-{bucket_id}-build-cache",
-            # TODO: remove after fixing https://github.com/bazelbuild/bazel/issues/25232
-            "--noexperimental_remote_cache_async",
+            f"--remote_cache=https://storage.googleapis.com/bazel-{bucket_id}-build-cache"
         ]
     else:
         remote_cache_flags = [
