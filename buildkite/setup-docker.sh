@@ -230,6 +230,8 @@ docker info -f '{{ .DriverStatus }}'
 gcloud auth configure-docker --quiet
 
 ### Pull the Docker images that we need in production.
+docker pull "gcr.io/bazel-public/rockylinux8-java11-devtoolset10" &
+docker pull "gcr.io/bazel-public/rockylinux8-releaser" &
 docker pull "gcr.io/bazel-public/debian10-java11" &
 docker pull "gcr.io/bazel-public/debian11-java17" &
 docker pull "gcr.io/bazel-public/ubuntu1804-java11" &

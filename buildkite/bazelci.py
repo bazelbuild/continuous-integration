@@ -287,6 +287,27 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7-java11-devtoolset10",
         "python": "python3.6",
     },
+    "rockylinux8": {
+        "name": "Rocky Linux 8",
+        "emoji-name": ":rocky: Rocky Linux 8",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8",
+        "python": "python3.8",
+    },
+    "rockylinux8_java11": {
+        "name": "Rocky Linux 8 (OpenJDK 11, gcc 8.5.0)",
+        "emoji-name": ":rocky: Rocky Linux 8 (OpenJDK 11, gcc 8.5.0)",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8-java11",
+        "python": "python3.8",
+    },
+    "rockylinux8_java11_devtoolset10": {
+        "name": "Rocky Linux 8 (OpenJDK 11, gcc 10.2.1)",
+        "emoji-name": ":rocky: Rocky Linux 8 (OpenJDK 11, gcc 10.2.1)",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8-java11-devtoolset10",
+        "python": "python3.8",
+    },
     "debian10": {
         "name": "Debian 10 Buster (OpenJDK 11, gcc 8.3.0)",
         "emoji-name": ":debian: Debian 10 Buster (OpenJDK 11, gcc 8.3.0)",
@@ -336,7 +357,7 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004",
         "python": "python3.8",
         "queue": "arm64",
-        # TODO: Re-enable always-pull if we also publish docker containers for Linux ARM64
+        # TODO(#2272): Re-enable always-pull if we also publish docker containers for Linux ARM64
         "always-pull": False,
     },
     "kythe_ubuntu2004": {
@@ -1152,9 +1173,6 @@ def execute_commands(
     bazel_binary = "bazel"
     if use_bazel_at_commit:
         print_collapsed_group(":gcloud: Downloading Bazel built at " + use_bazel_at_commit)
-        # Linux binaries are published under platform name "centos7"
-        if binary_platform == LINUX_BINARY_PLATFORM:
-            binary_platform = "centos7"
         os.environ["USE_BAZEL_VERSION"] = download_bazel_binary_at_commit(
             tmpdir, binary_platform, use_bazel_at_commit
         )
@@ -1779,6 +1797,7 @@ def remote_caching_flags(platform, accept_cached=True):
     if THIS_IS_TRUSTED and not is_mac():
         return []
     # We don't enable remote caching on the Linux ARM64 machine since it doesn't have access to GCS.
+    # TODO(#2272): Delete once GCE workers are running.
     if platform == "ubuntu2004_arm64":
         return []
 
