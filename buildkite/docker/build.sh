@@ -18,19 +18,11 @@ esac
 # See https://docs.docker.com/develop/develop-images/build_enhancements/ for details.
 export DOCKER_BUILDKIT=1
 
-# Enable containerd image store, which is needed
-# to make --load work with multi-platform images.
+# Check whether containerd image store is enabled.
+# We need it to make --load work with multi-platform images.
 # This seems to be the only way to make these images
 # available outside of the Docker cache other than
 # using a local registry.
-sudo bash -c 'cat <<EOF >/etc/docker/daemon.json
-{
-  "features": {
-    "containerd-snapshotter": true
-  }
-}
-EOF'
-sudo systemctl restart docker
 docker info -f '{{ .DriverStatus }}'
 
 # We need a new builder using the docker-container driver in order
