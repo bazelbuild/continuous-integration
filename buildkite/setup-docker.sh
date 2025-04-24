@@ -119,6 +119,14 @@ EOF
 SocketMode=0666
 EOF
 
+  cat > /etc/docker/daemon.json <<'EOF'
+{
+  "features": {
+    "containerd-snapshotter": true
+  }
+}
+EOF
+
   # Disable the Docker service, as the startup script has to mount /var/lib/docker first.
   systemctl disable docker
   systemctl stop docker
@@ -211,6 +219,7 @@ EOF
 
 ### Configure and start Docker.
 systemctl start docker
+docker info -f '{{ .DriverStatus }}'
 
 ### Ensure that Docker images can be downloaded from GCR.
 gcloud auth configure-docker --quiet
