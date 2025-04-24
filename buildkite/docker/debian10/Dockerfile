@@ -1,4 +1,4 @@
-FROM debian:10 as debian10-java11
+FROM debian:10 AS debian10-java11
 ARG BUILDARCH
 
 ENV DEBIAN_FRONTEND="noninteractive"

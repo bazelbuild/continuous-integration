@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 as ubuntu2204-bazel-nojdk
+FROM ubuntu:22.04 AS ubuntu2204-bazel-nojdk
 ARG BUILDARCH
 
 ENV DEBIAN_FRONTEND="noninteractive"
