@@ -137,7 +137,7 @@ def main(argv=None):
             pool.submit(create_instance_group, config={**config["default_vm"], **i})
             for i in selected_instances
         ]
-        return max(t.result() for t in futures.as_completed(tasks))
+        return max(list(t.result() for t in futures.as_completed(tasks)))
 
 
 if __name__ == "__main__":
