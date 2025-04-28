@@ -49,11 +49,13 @@ EOF
 
 ### Patch the filesystem options to increase I/O performance
 {
-  tune2fs -o ^acl,journal_data_writeback,nobarrier /dev/sda1
-  cat > /etc/fstab <<'EOF'
+  if [[ "$(uname -m)" != "aarch64" ]]; then
+    tune2fs -o ^acl,journal_data_writeback,nobarrier /dev/sda1
+    cat > /etc/fstab <<'EOF'
 LABEL=cloudimg-rootfs    /            ext4    defaults,noatime,commit=300,journal_async_commit    0 0
 LABEL=UEFI               /boot/efi    vfat    defaults,noatime                                    0 0
 EOF
+  fi
 }
 
 ### Install the Buildkite Agent on production images.
