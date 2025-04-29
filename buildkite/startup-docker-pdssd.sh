@@ -60,7 +60,7 @@ sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
 
 QUEUE="default"
 if [[ "$(uname -m)" == "aarch64" ]]; then
-  QUEUE="linux_arm64"
+  QUEUE="arm64"
 fi
 
 ### Write the Buildkite agent configuration.
