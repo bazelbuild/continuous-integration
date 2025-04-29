@@ -55,9 +55,6 @@ RUN apt-get -y update && \
     apt-get -y purge apport && \
     rm -rf /var/lib/apt/lists/*
 
-# TODO /usr/lib/gcc/aarch64-linux-gnu/9
-# libgcc-10-dev_10.5.0-1ubuntu1~20.04_arm64.deb
-
 # Workaround https://bugs.launchpad.net/ubuntu/+source/gcc-9/+bug/2029910
 # TODO: remove when the latest ubuntu:20.04 image has the fix.
 WORKDIR /tempdir
