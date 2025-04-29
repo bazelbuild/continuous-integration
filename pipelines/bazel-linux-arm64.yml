@@ -32,11 +32,7 @@ tasks:
       - "//tools/python/..."
       - "//tools/bash/..."
       # Disable Android tests on Linux ARM64
-      - "-//src/test/shell/bazel/android/..."
-      - "-//src/test/java/com/google/devtools/build/android/..."
-      - "-//src/test/java/com/google/devtools/build/lib/bazel/rules/android/..."
       - "-//src/test/java/com/google/devtools/build/lib/rules/android/..."
-      - "-//src/test/shell/bazel:bazel_android_tools_test"
     include_json_profile:
       - build
       - test
