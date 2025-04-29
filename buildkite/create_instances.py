@@ -118,7 +118,7 @@ def main(argv=None):
 
     args = parser.parse_args(argv)
     # Handle multiple args as well as a single-arg comma-delimited list.
-    names = args if len(args) > 1 else args[0].split(",")
+    names = args.names if len(args.names) > 1 else args.names[0].split(",")
 
     config = read_config_file()
 

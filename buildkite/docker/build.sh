@@ -32,13 +32,13 @@ if [[ -z "$(docker buildx ls | grep mp-builder)" ]]; then
 fi
 
 # Containers used by Bazel
-# For Rocky Linux we build multi-platform images.
+# For Rocky Linux & Ubuntu 20.04 we build multi-platform images.
 docker build -f rockylinux8/Dockerfile  --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target rockylinux8 -t "gcr.io/$PREFIX/rockylinux8"  rockylinux8 &
 # docker build -f debian10/Dockerfile   --target debian10-java11   -t "gcr.io/$PREFIX/debian10-java11" debian10 &
 # docker build -f debian11/Dockerfile   --target debian11-java17   -t "gcr.io/$PREFIX/debian11-java17" debian11 &
 # docker build -f ubuntu1804/Dockerfile --target ubuntu1804-java11 -t "gcr.io/$PREFIX/ubuntu1804-java11" ubuntu1804 &
 # docker build -f ubuntu2004/Dockerfile --target ubuntu2004-java11 -t "gcr.io/$PREFIX/ubuntu2004-java11" ubuntu2004 &
-# docker build -f ubuntu2004/Dockerfile --target ubuntu2004        -t "gcr.io/$PREFIX/ubuntu2004" ubuntu2004 &
+docker build -f ubuntu2004/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2004        -t "gcr.io/$PREFIX/ubuntu2004" ubuntu2004 &
 # docker build -f ubuntu2204/Dockerfile --target ubuntu2204-java17 -t "gcr.io/$PREFIX/ubuntu2204-java17" ubuntu2204 &
 # docker build -f ubuntu2204/Dockerfile --target ubuntu2204        -t "gcr.io/$PREFIX/ubuntu2204" ubuntu2204 &
 # docker build -f ubuntu2404/Dockerfile --target ubuntu2404        -t "gcr.io/$PREFIX/ubuntu2404" ubuntu2404 &
