@@ -49,11 +49,13 @@ EOF
 
 ### Patch the filesystem options to increase I/O performance
 {
-  tune2fs -o ^acl,journal_data_writeback,nobarrier /dev/sda1
-  cat > /etc/fstab <<'EOF'
+  if [[ "$(uname -m)" != "aarch64" ]]; then
+    tune2fs -o ^acl,journal_data_writeback,nobarrier /dev/sda1
+    cat > /etc/fstab <<'EOF'
 LABEL=cloudimg-rootfs    /            ext4    defaults,noatime,commit=300,journal_async_commit    0 0
 LABEL=UEFI               /boot/efi    vfat    defaults,noatime                                    0 0
 EOF
+  fi
 }
 
 ### Install the Buildkite Agent on production images.
@@ -105,7 +107,7 @@ EOF
 
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
   echo \
-      "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
       $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
   apt-get -y update
