@@ -55,13 +55,17 @@ RUN apt-get -y update && \
     apt-get -y purge apport && \
     rm -rf /var/lib/apt/lists/*
 
+# TODO /usr/lib/gcc/aarch64-linux-gnu/9
+# libgcc-10-dev_10.5.0-1ubuntu1~20.04_arm64.deb
+
 # Workaround https://bugs.launchpad.net/ubuntu/+source/gcc-9/+bug/2029910
 # TODO: remove when the latest ubuntu:20.04 image has the fix.
 WORKDIR /tempdir
-RUN apt-get -y update && apt-get download libgcc-10-dev
-RUN dpkg -x libgcc-10-dev_10.5.0-1ubuntu1~20.04_amd64.deb .
-RUN cp usr/lib/gcc/x86_64-linux-gnu/10/libtsan_preinit.o /usr/lib/gcc/x86_64-linux-gnu/9/
-RUN rm -rf /tempdir
+RUN ARCH="$(uname -m)" && \
+    apt-get -y update && apt-get download libgcc-10-dev && \
+    dpkg -x "libgcc-10-dev_10.5.0-1ubuntu1~20.04_${TARGETARCH}.deb" . && \
+    cp "usr/lib/gcc/${ARCH}-linux-gnu/10/libtsan_preinit.o" "/usr/lib/gcc/${ARCH}-linux-gnu/9/" && \
+    rm -rf /tempdir
 WORKDIR /
 
 # Allow using sudo inside the container.
