@@ -58,11 +58,16 @@ systemctl start docker
 gcloud auth configure-docker --quiet
 sudo -H -u buildkite-agent gcloud auth configure-docker --quiet
 
+QUEUE="default"
+if [[ "$(uname -m)" == "aarch64" ]]; then
+  QUEUE="arm64"
+fi
+
 ### Write the Buildkite agent configuration.
 cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
 token="${BUILDKITE_TOKEN}"
 name="%hostname"
-tags="queue=default,kind=docker,os=linux"
+tags="queue=${QUEUE},kind=docker,os=linux"
 build-path="/var/lib/buildkite-agent/builds"
 git-mirrors-path="/var/lib/gitmirrors"
 git-clone-mirror-flags="-v --bare"
