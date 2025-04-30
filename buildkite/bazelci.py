@@ -294,6 +294,14 @@ PLATFORMS = {
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8",
         "python": "python3.8",
     },
+    "rockylinux8_arm64": {
+        "name": "Rocky Linux 8 ARM64",
+        "emoji-name": ":rocky: Rocky Linux 8 ARM64",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8",
+        "python": "python3.8",
+        "queue": "arm64_v2",  # TODO(#2272): change to arm64
+    },
     "rockylinux8_java11": {
         "name": "Rocky Linux 8 (OpenJDK 11, gcc 8.5.0)",
         "emoji-name": ":rocky: Rocky Linux 8 (OpenJDK 11, gcc 8.5.0)",
