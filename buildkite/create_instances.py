@@ -130,7 +130,7 @@ def main(argv=None):
         print("\nValid instance names are: {}".format(" ".join(valid_names)))
         return 1
 
-    selected_instances = [i for i in config["instance_groups"] if i["name"] in args.names]
+    selected_instances = [i for i in config["instance_groups"] if i["name"] in names]
 
     # Mimic v3.5 default of
     # https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor
