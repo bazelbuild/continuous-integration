@@ -1,5 +1,5 @@
 steps:
-  - label: "CentOS 7"
+  - label: "Rocky Linux 8"
     agents:
       - "queue=arm64"
     plugins:
@@ -7,7 +7,7 @@ steps:
           environment:
             - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
             - GOOGLE_APPLICATION_CREDENTIALS
-          image: gcr.io/bazel-public/centos7-releaser
+          image: gcr.io/bazel-public/rockylinux8-releaser
           network: host
           privileged: true
           propagate-environment: true
@@ -39,7 +39,7 @@ steps:
 
   - wait
 
-  - label: "Test on CentOS 7"
+  - label: "Test on Rocky Linux 8"
     agents:
       - "queue=arm64"
     plugins:
@@ -47,7 +47,7 @@ steps:
           environment:
             - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
             - GOOGLE_APPLICATION_CREDENTIALS
-          image: gcr.io/bazel-public/centos7-java8
+          image: gcr.io/bazel-public/rockylinux8-java8
           network: host
           privileged: true
           propagate-environment: true

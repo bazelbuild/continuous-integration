@@ -45,7 +45,7 @@ steps:
 
   - wait
 
-  - label: "CentOS 7"
+  - label: "Rocky Linux 8"
     agents:
       - "queue=default"
     plugins:
@@ -55,7 +55,7 @@ steps:
           - ANDROID_HOME
           - ANDROID_NDK_HOME
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/centos7-releaser
+        image: gcr.io/bazel-public/rockylinux8-releaser
         network: host
         privileged: true
         propagate-environment: true
@@ -110,7 +110,7 @@ steps:
       cd artifacts
       buildkite-agent artifact upload "*"
 
-  - label: "CentOS 7 (arm64)"
+  - label: "Rocky Linux 8 (arm64)"
     agents:
       - "queue=arm64"
     plugins:
@@ -118,7 +118,7 @@ steps:
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
           - GOOGLE_APPLICATION_CREDENTIALS
-        image: gcr.io/bazel-public/centos7-releaser
+        image: gcr.io/bazel-public/rockylinux8-releaser
         network: host
         privileged: true
         propagate-environment: true
@@ -139,9 +139,6 @@ steps:
 
       release_name=$(buildkite-agent meta-data get "release_name")
       echo "release_name = \"\$release_name\""
-
-      # Our arm64 machine keeps state between runs, but we want to also do a clean build.
-      bazel clean --expunge
 
       bazel build --sandbox_tmpfs_path=/tmp //src:bazel
       mkdir output
@@ -292,7 +289,7 @@ steps:
 
   - wait
 
-  - label: "Test on CentOS 7"
+  - label: "Test on Rocky Linux 8"
     agents:
       - "queue=default"
     plugins:
@@ -302,7 +299,7 @@ steps:
           - ANDROID_HOME
           - ANDROID_NDK_HOME
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/centos7-java8
+        image: gcr.io/bazel-public/rockylinux8-java8
         network: host
         privileged: true
         propagate-environment: true
@@ -330,7 +327,7 @@ steps:
 
       "./bazel-\${release_name}-linux-x86_64" info
 
-  - label: "Test on CentOS 7 (arm64)"
+  - label: "Test on Rocky Linux 8 (arm64)"
     agents:
       - "queue=arm64"
     plugins:
@@ -338,7 +335,7 @@ steps:
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
           - GOOGLE_APPLICATION_CREDENTIALS
-        image: gcr.io/bazel-public/centos7-java8
+        image: gcr.io/bazel-public/rockylinux8-java8
         network: host
         privileged: true
         propagate-environment: true
