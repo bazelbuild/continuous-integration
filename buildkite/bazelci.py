@@ -269,7 +269,7 @@ PLATFORMS = {
     "centos7": {
         "name": "CentOS 7",
         "emoji-name": ":centos: CentOS 7",
-        "publish_binary": ["ubuntu1404", "centos7", "linux"],
+        "publish_binary": ["centos7"],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7",
         "python": "python3.6",
     },
@@ -290,14 +290,17 @@ PLATFORMS = {
     "rockylinux8": {
         "name": "Rocky Linux 8",
         "emoji-name": ":rocky: Rocky Linux 8",
-        "publish_binary": [],
+        # We publish to the ubuntu1404 bucket since all Python versions of
+        # Bazelisk <= v1.26.0 download from this bucket on Linux.
+        # We should delete it after a migration period.
+        "publish_binary": ["ubuntu1404", "linux"],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8",
         "python": "python3.8",
     },
     "rockylinux8_arm64": {
         "name": "Rocky Linux 8 ARM64",
         "emoji-name": ":rocky: Rocky Linux 8 ARM64",
-        "publish_binary": [],
+        "publish_binary": ["linux_arm64"],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8",
         "python": "python3.8",
         "queue": "arm64_v2",  # TODO(#2272): change to arm64
@@ -361,7 +364,7 @@ PLATFORMS = {
     "ubuntu2004_arm64": {
         "name": "Ubuntu 20.04 LTS ARM64",
         "emoji-name": ":ubuntu: Ubuntu 20.04 LTS ARM64",
-        "publish_binary": ["linux_arm64"],
+        "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004",
         "python": "python3.8",
         "queue": "arm64",
