@@ -269,7 +269,7 @@ PLATFORMS = {
     "centos7": {
         "name": "CentOS 7",
         "emoji-name": ":centos: CentOS 7",
-        "publish_binary": ["centos7"],
+        "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7",
         "python": "python3.6",
     },
