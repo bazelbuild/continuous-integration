@@ -99,8 +99,8 @@ case $(hostname -f) in
         ;;
 esac
 
-docker pull "gcr.io/$PREFIX/centos7-java11-devtoolset10" &
-docker pull "gcr.io/$PREFIX/centos7-releaser" &
+docker pull "gcr.io/$PREFIX/rockylinux8-java11-devtoolset10" &
+docker pull "gcr.io/$PREFIX/rockylinux8-releaser" &
 docker pull "gcr.io/$PREFIX/debian10-java11" &
 docker pull "gcr.io/$PREFIX/debian11-java17" &
 docker pull "gcr.io/$PREFIX/ubuntu1804-java11" &
