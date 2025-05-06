@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "@material-ui/core";
+import Link from "@mui/material/Link";
 import MUIDataTable, { MUIDataTableColumn } from "mui-datatables";
 import { useGithubTeamTable } from "./data/GithubTeamTable";
 
@@ -54,11 +54,11 @@ export default function GithubTeamTableContainer({
   owner,
   repo,
 }: GithubTeamTableContainerProps) {
-  const { data: table, error, loading } = useGithubTeamTable(
-    owner,
-    repo,
-    "open-issues"
-  );
+  const {
+    data: table,
+    error,
+    loading,
+  } = useGithubTeamTable(owner, repo, "open-issues");
 
   const data = React.useMemo(
     () =>
