@@ -312,15 +312,15 @@ export default function Page() {
         <div className="flex flex-row gap-4">
           {Object.entries(pipelines).map(([id, pipeline]) => {
             return (
-              <Link key={id} href={`/bazelci?id=${id}`}>
-                <a
-                  className={`text-black-600 ${
-                    id == pipelineId ? "font-bold" : ""
-                  }`}
-                  onClick={() => setBranch("master")}
-                >
-                  {pipeline.name}
-                </a>
+              <Link
+                key={id}
+                href={`/bazelci?id=${id}`}
+                className={`text-black-600 ${
+                  id == pipelineId ? "font-bold" : ""
+                }`}
+                onClick={() => setBranch("master")}
+              >
+                {pipeline.name}
               </Link>
             );
           })}

@@ -1,35 +1,27 @@
 import React, { useState } from "react";
-import { RepoIcon } from "@primer/octicons-react";
 import dynamic from "next/dynamic";
+import { ThemeProvider } from "@mui/material/styles";
+import { DateTime } from "luxon";
+import theme from "./theme";
+import { GithubRepo, useGithubRepo } from "./data/GithubRepo";
 import {
   Breadcrumbs,
   Card,
   CardContent,
   CardHeader,
   Container,
-  createStyles,
   Drawer,
+  FormControl,
   Grid,
-  Hidden,
   Link,
   List,
   ListItem,
-  ListItemIcon,
   ListItemText,
-  ThemeProvider,
-  makeStyles,
-  Theme,
-  Toolbar,
-  Typography,
-  FormControl,
   MenuItem,
   Select,
-} from "@material-ui/core";
-import NextLink from "next/link";
-import { DateTime } from "luxon";
-
-import theme from "./theme";
-import { GithubRepo, useGithubRepo } from "./data/GithubRepo";
+  Toolbar,
+  Typography,
+} from "@mui/material";
 
 const DynamicGithubTeamTable = dynamic(() => import("./GithubTeamTable"));
 
@@ -40,39 +32,13 @@ const DynamicGithubIssueQueryCountTaskResultChart = dynamic(
 const appBarHeight = 52;
 const drawerWidth = 256;
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    breadcrumbs: {
-      marginTop: 16,
-      marginBottom: 16,
-    },
-    drawer: {},
-    container: {},
-    toolbar: {
-      width: drawerWidth,
-      paddingTop: appBarHeight,
-    },
-    main: {
-      backgroundColor: 'rgb(250, 250, 250)',
-      [theme.breakpoints.up("md")]: {
-        paddingLeft: drawerWidth,
-      },
-    },
-  })
-);
-
 function RepoListItem(repo: GithubRepo) {
   const name = `${repo.owner}/${repo.repo}`;
   const link = `/${name}`;
   return (
     <ListItem key={name} dense={true}>
-      <ListItemIcon style={{ minWidth: 20 }}>
-        <RepoIcon />
-      </ListItemIcon>
       <ListItemText>
-        <NextLink href={link}>
-          <Link href={link}>{name}</Link>
-        </NextLink>
+        <Link href={link}>{name}</Link>
       </ListItemText>
     </ListItem>
   );
@@ -92,11 +58,19 @@ function RepoList() {
 }
 
 function maxDays() {
-  return Math.ceil(Math.abs(DateTime.fromISO("2020-12-17").diffNow("day").days));
+  return Math.ceil(
+    Math.abs(DateTime.fromISO("2020-12-17").diffNow("day").days)
+  );
 }
 
-function GithubIssueQueryResultCard({title, queryIds}: {title: string, queryIds: Array<string>}) {
-  const [days, setDays] = useState(30)
+function GithubIssueQueryResultCard({
+  title,
+  queryIds,
+}: {
+  title: string;
+  queryIds: Array<string>;
+}) {
+  const [days, setDays] = useState(30);
   return (
     <Card>
       <CardHeader
@@ -127,7 +101,7 @@ function GithubIssueQueryResultCard({title, queryIds}: {title: string, queryIds:
         />
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export interface RepoDashboardProps {
@@ -136,30 +110,23 @@ export interface RepoDashboardProps {
 }
 
 export default function RepoDashboard({ owner, repo }: RepoDashboardProps) {
-  const classes = useStyles();
-
-  React.useEffect(() => {
-    const jssStyles = document.querySelector("#jss-server-side");
-    if (jssStyles) {
-      jssStyles.parentElement!!.removeChild(jssStyles);
-    }
-  }, []);
-
   return (
     <ThemeProvider theme={theme}>
-      <Hidden smDown implementation="css">
-        <Drawer variant={"permanent"} className={classes.drawer}>
-          <Toolbar className={classes.toolbar}>
-            <RepoList />
-          </Toolbar>
-        </Drawer>
-      </Hidden>
+      <Drawer variant={"permanent"}>
+        <Toolbar style={{ width: drawerWidth, marginTop: appBarHeight }}>
+          <RepoList />
+        </Toolbar>
+      </Drawer>
 
-      <main className={classes.main}>
+      <main
+        style={{
+          backgroundColor: "rgb(250, 250, 250)",
+          paddingLeft: drawerWidth,
+        }}
+      >
         <Container maxWidth={false}>
-          <Breadcrumbs aria-label="breadcrumb" className={classes.breadcrumbs}>
+          <Breadcrumbs aria-label="breadcrumb" className="mt-4 mb-4">
             <Typography color="textPrimary">
-              <RepoIcon />
               <Link
                 style={{ marginLeft: 4 }}
                 href={`https://github.com/${owner}`}
@@ -171,17 +138,23 @@ export default function RepoDashboard({ owner, repo }: RepoDashboardProps) {
               <Link href={`https://github.com/${owner}/${repo}`}>{repo}</Link>
             </Typography>
           </Breadcrumbs>
-          <Grid container spacing={2} className={classes.container}>
+          <Grid container spacing={2}>
             <Grid item xs={12}>
               <DynamicGithubTeamTable owner={owner} repo={repo} />
             </Grid>
             {owner === "bazelbuild" && repo === "bazel" && (
               <>
                 <Grid item xs={12} md={6} xl={4}>
-                  <GithubIssueQueryResultCard title="Unreviewed Issues" queryIds={["unreviewed"]}/>
+                  <GithubIssueQueryResultCard
+                    title="Unreviewed Issues"
+                    queryIds={["unreviewed"]}
+                  />
                 </Grid>
                 <Grid item xs={12} md={6} xl={4}>
-                  <GithubIssueQueryResultCard title="Untriaged Issues" queryIds={["total-untriaged"]}/>
+                  <GithubIssueQueryResultCard
+                    title="Untriaged Issues"
+                    queryIds={["total-untriaged"]}
+                  />
                 </Grid>
               </>
             )}

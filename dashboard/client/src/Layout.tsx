@@ -24,8 +24,11 @@ export default function Layout({ children }: LayoutProps) {
               key={menu.name}
               className="flex hover:bg-green-bazel-light hover:text-gray-700"
             >
-              <Link href={menu.link}>
-                <a className="h-[50px] flex items-center px-4">{menu.name}</a>
+              <Link
+                className="h-[50px] flex items-center px-4"
+                href={menu.link}
+              >
+                {menu.name}
               </Link>
             </li>
           ))}
