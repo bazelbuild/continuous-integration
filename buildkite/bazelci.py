@@ -474,7 +474,7 @@ DEFAULT_PLATFORM = "ubuntu1804"
 # In order to test that "the one Linux binary" that we build for our official releases actually
 # works on all Linux distributions that we test on, we use the Linux binary built on our official
 # release platform for all Linux downstream tests.
-LINUX_BINARY_PLATFORM = "centos7"
+LINUX_BINARY_PLATFORM = "rockylinux8_arm64" if platform_module.machine() == "arm64" else "rockylinux8"
 
 XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
 XCODE_VERSION_OVERRIDES = {"10.2.1": "10.3", "11.2": "11.2.1", "11.3": "11.3.1"}
@@ -4205,8 +4205,7 @@ def upload_bazel_binaries():
         try:
             bazel_binary_path = download_bazel_binary(tmpdir, platform_name)
             # One platform that we build on can generate binaries for multiple platforms, e.g.
-            # the centos7 platform generates binaries for the "centos7" platform, but also
-            # for the generic "linux" platform.
+            # the rockylinux8 platform generates binaries for all the "linux" platform.
             for target_platform_name in platform["publish_binary"]:
                 execute_command(
                     [
