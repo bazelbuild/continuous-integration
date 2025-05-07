@@ -17,7 +17,7 @@
     "@types/react-table": "^7.0.25",
     "classnames": "^2.3.1",
     "date-fns": "^2.21.2",
-    "http-proxy-middleware": "^1.0.6",
+    "http-proxy-middleware": "^2.0.9",
     "lodash": "^4.17.21",
     "luxon": "^2.5.2",
     "mui-datatables": "^4.3.0",
