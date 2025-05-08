@@ -292,8 +292,9 @@ PLATFORMS = {
         "emoji-name": ":rocky: Rocky Linux 8",
         # We publish to the ubuntu1404 bucket since all Python versions of
         # Bazelisk <= v1.26.0 download from this bucket on Linux.
-        # We should delete it after a migration period.
-        "publish_binary": ["ubuntu1404", "linux"],
+        # Same problem for the centos7 bucket and Go-Bazelisk older than v1.21.0.
+        # We should stop doing this after a migration period.
+        "publish_binary": ["centos7", "ubuntu1404", "linux"],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8",
         "python": "python3.8",
     },
