@@ -81,7 +81,7 @@ RUN dnf -y install https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm &&
 FROM rockylinux8-nojdk-devtoolset10 AS rockylinux8
 
 RUN dnf -y install https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm && \
-    dnf -y install zulu11-jdk && \
+    dnf -y install zulu21-jdk && \
     dnf clean all
 
 FROM rockylinux8-java11-devtoolset10 AS rockylinux8-releaser
