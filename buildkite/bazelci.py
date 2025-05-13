@@ -2713,6 +2713,31 @@ def execute_command(
 def create_step(
     label, commands, platform, shards=1, soft_fail=None, concurrency=None, concurrency_group=None
 ):
+    # TODO: remove
+    if "centos" in platform:
+        tmpdir = tempfile.mkdtemp()
+        try:
+            basename = "{}_{}_{}_{}.txt".format(os.getenv("BUILDKITE_ORGANIZATION_SLUG"),
+                os.getenv("BUILDKITE_PIPELINE_SLUG"),
+                os.getenv("BUILDKITE_BUILD_NUMBER"),
+                os.getenv("BUILDKITE_JOB_ID"))
+            path = os.path.join(tmpdir, basename)
+            with open(path, "wt") as f:
+                f.write(platform)
+
+            execute_command(
+                [
+                    gsutil_command(),
+                    "cp",
+                    path,
+                    f"gs://bazel-centos-deprecation/{basename}",
+                ]
+            )
+        except Exception as ex:
+            eprint(ex)
+        finally:
+            shutil.rmtree(tmpdir)
+
     if "docker-image" in PLATFORMS[platform]:
         step = create_docker_step(
             label,
