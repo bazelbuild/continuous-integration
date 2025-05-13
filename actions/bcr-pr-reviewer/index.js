@@ -251,17 +251,24 @@ async function getPrApprovers(octokit, owner, repo, prNumber) {
   return approvers;
 }
 
-async function checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers) {
+async function checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers, prAuthor) {
   let allModulesApproved = true;
   const modulesNotApproved = [];
 
   for (const module of modifiedModules) {
     let moduleApproved = false;
     for (const [maintainer, maintainedModules] of maintainersMap.entries()) {
-      if (maintainedModules.has(module) && approvers.has(maintainer)) {
-        moduleApproved = true;
-        console.log(`Module '${module}' has maintainers' approval from '${maintainer}'.`);
-        break;
+      if (maintainedModules.has(module)) {
+        if (approvers.has(maintainer)) {
+          moduleApproved = true;
+          console.log(`Module '${module}' has maintainers' approval from '${maintainer}'.`);
+          break;
+        }
+        if (prAuthor === maintainer) {
+          moduleApproved = true;
+          console.log(`Module '${module}' has maintainers' approval from the PR author '${prAuthor}'.`);
+          break;
+        }
       }
     }
     if (!moduleApproved) {
@@ -323,7 +330,8 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   const approvers = await getPrApprovers(octokit, owner, repo, prNumber);
 
   // Verify if all modified modules have at least one maintainer's approval
-  const allModulesApproved = await checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers);
+  const prAuthor = prInfo.data.user.login;
+  const allModulesApproved = await checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers, prAuthor);
 
   const { data } = await octokit.rest.users.getAuthenticated();
   const myLogin = data.login;
