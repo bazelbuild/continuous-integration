@@ -2,11 +2,10 @@
 # Update this file by running ./update-bazel-postsubmit.sh under the same directory
 
 tasks:
-  centos7:
+  rockylinux8:
     shell_commands:
       - rm -rf $HOME/bazeltest
       - mkdir $HOME/bazeltest
-      - bazel mod deps --lockfile_mode=update
     build_flags:
       - "--config=ci-linux"
     build_targets:
@@ -21,8 +20,6 @@ tasks:
       - "//src/tools/execlog/..."
     test_flags:
       - "--config=ci-linux"
-      # Override REMOTE_NETWORK_ADDRESS since bazel_sandboxing_networking_test doesn't work on this platform
-      - "--test_env=REMOTE_NETWORK_ADDRESS="
     test_targets:
       - "//scripts/..."
       - "//src/java_tools/..."
@@ -37,7 +34,7 @@ tasks:
       - "//tools/compliance/..."
       - "//tools/python/..."
       - "//tools/bash/..."
-      # These tests are not compatible with the gcov version of CentOS 7.
+      # These tests are not compatible with the gcov version of Rocky Linux 8.
       - "-//src/test/shell/bazel:bazel_cc_code_coverage_test"
       - "-//src/test/shell/bazel:bazel_coverage_cc_released_test_gcc"
       - "-//src/test/shell/bazel:bazel_coverage_cc_head_test_gcc"
@@ -49,7 +46,6 @@ tasks:
     shell_commands:
       - rm -rf $HOME/bazeltest
       - mkdir $HOME/bazeltest
-      - bazel mod deps --lockfile_mode=update
     build_flags:
       - "--config=ci-linux"
     build_targets:
@@ -63,7 +59,6 @@ tasks:
     shell_commands:
       - rm -rf $HOME/bazeltest
       - mkdir $HOME/bazeltest
-      - bazel mod deps --lockfile_mode=update
     build_flags:
       - "--config=ci-linux"
     build_targets:
@@ -98,7 +93,6 @@ tasks:
     shell_commands:
       - rm -rf $HOME/bazeltest
       - mkdir $HOME/bazeltest
-      - bazel mod deps --lockfile_mode=update
     build_flags:
       - "--config=ci-linux"
     build_targets:
@@ -117,7 +111,6 @@ tasks:
     shell_commands:
       - rm -rf $HOME/bazeltest
       - mkdir $HOME/bazeltest
-      - bazel mod deps --lockfile_mode=update
     build_flags:
       - "--config=ci-linux"
     build_targets:
@@ -149,7 +142,6 @@ tasks:
       - rm -rf $HOME/bazeltest
       - mkdir $HOME/bazeltest
       - ln -sf $OUTPUT_BASE/external $HOME/bazeltest/external
-      - bazel mod deps --lockfile_mode=update
     build_flags:
       - "--config=ci-macos"
     build_targets:
@@ -193,7 +185,6 @@ tasks:
       - rm -rf $HOME/bazeltest
       - mkdir $HOME/bazeltest
       - ln -sf $OUTPUT_BASE/external $HOME/bazeltest/external
-      - bazel mod deps --lockfile_mode=update
     build_flags:
       - "--config=ci-macos"
     build_targets:
@@ -227,7 +218,6 @@ tasks:
     setup:
       - mkdir C:\b
       - mklink /J C:\b\bazeltest_external %OUTPUT_BASE:/=\%\external
-      - bazel mod deps --lockfile_mode=update
     build_flags:
       - "--config=ci-windows"
     build_targets:
@@ -277,7 +267,6 @@ tasks:
     setup:
       - mkdir C:\b
       - mklink /J C:\b\bazeltest_external %OUTPUT_BASE:/=\%\external
-      - bazel mod deps --lockfile_mode=update
     build_flags:
       - "--config=ci-windows"
       - "--config=windows_arm64"
@@ -289,8 +278,6 @@ tasks:
   rbe_ubuntu2004:
     platform: ubuntu2004
     name: "RBE"
-    shell_commands:
-      - bazel mod deps --lockfile_mode=update
     build_flags:
       - "--config=remote"
       - "--remote_executor=grpcs://remotebuildexecution.googleapis.com"
