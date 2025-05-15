@@ -266,27 +266,6 @@ DOCKER_REGISTRY_PREFIX = {
 # the platform name in a human readable format, and a the buildkite-agent's
 # working directory.
 PLATFORMS = {
-    "centos7": {
-        "name": "CentOS 7",
-        "emoji-name": ":centos: CentOS 7",
-        "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7",
-        "python": "python3.6",
-    },
-    "centos7_java11": {
-        "name": "CentOS 7 (OpenJDK 11, gcc 4.8.5)",
-        "emoji-name": ":centos: CentOS 7 (OpenJDK 11, gcc 4.8.5)",
-        "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7-java11",
-        "python": "python3.6",
-    },
-    "centos7_java11_devtoolset10": {
-        "name": "CentOS 7 (OpenJDK 11, gcc 10.2.1)",
-        "emoji-name": ":centos: CentOS 7 (OpenJDK 11, gcc 10.2.1)",
-        "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/centos7-java11-devtoolset10",
-        "python": "python3.6",
-    },
     "rockylinux8": {
         "name": "Rocky Linux 8",
         "emoji-name": ":rocky: Rocky Linux 8",
@@ -2713,30 +2692,13 @@ def execute_command(
 def create_step(
     label, commands, platform, shards=1, soft_fail=None, concurrency=None, concurrency_group=None
 ):
-    # TODO: remove
-    if "centos" in platform:
-        tmpdir = tempfile.mkdtemp()
-        try:
-            basename = "{}_{}_{}_{}.txt".format(os.getenv("BUILDKITE_ORGANIZATION_SLUG"),
-                os.getenv("BUILDKITE_PIPELINE_SLUG"),
-                os.getenv("BUILDKITE_BUILD_NUMBER"),
-                os.getenv("BUILDKITE_JOB_ID"))
-            path = os.path.join(tmpdir, basename)
-            with open(path, "wt") as f:
-                f.write(platform)
-
-            execute_command(
-                [
-                    gsutil_command(),
-                    "cp",
-                    path,
-                    f"gs://bazel-centos-deprecation/{basename}",
-                ]
-            )
-        except Exception as ex:
-            eprint(ex)
-        finally:
-            shutil.rmtree(tmpdir)
+    # TODO(#2272): remove after a migration period
+    if "centos7" in platform:
+        log_deprecated_platform_usage(platform)
+        # Move all CentOS workloads to Rocky Linux.
+        # A simple "replace" works since our Rocky Linux images
+        # follow the same naming convention as the CentOS ones.
+        platform = platform.replace("centos7", "rockylinux8")
 
     if "docker-image" in PLATFORMS[platform]:
         step = create_docker_step(
@@ -2832,6 +2794,31 @@ def create_docker_step(
     if not step["command"]:
         del step["command"]
     return step
+
+
+def log_deprecated_platform_usage(platform):
+    tmpdir = tempfile.mkdtemp()
+    try:
+        basename = "{}_{}_{}_{}.txt".format(os.getenv("BUILDKITE_ORGANIZATION_SLUG"),
+            os.getenv("BUILDKITE_PIPELINE_SLUG"),
+            os.getenv("BUILDKITE_BUILD_NUMBER"),
+            os.getenv("BUILDKITE_JOB_ID"))
+        path = os.path.join(tmpdir, basename)
+        with open(path, "wt") as f:
+            f.write(platform)
+
+        execute_command(
+            [
+                gsutil_command(),
+                "cp",
+                path,
+                f"gs://bazel-centos-deprecation/{basename}",
+            ]
+        )
+    except Exception as ex:
+        eprint(ex)
+    finally:
+        shutil.rmtree(tmpdir)
 
 
 def print_project_pipeline(
