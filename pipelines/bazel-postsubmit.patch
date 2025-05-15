@@ -5,7 +5,7 @@
 +# Update this file by running ./update-bazel-postsubmit.sh under the same directory
  
  tasks:
-   centos7:
+   rockylinux8:
      shell_commands:
        - rm -rf $HOME/bazeltest
        - mkdir $HOME/bazeltest
