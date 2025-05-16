@@ -492,7 +492,7 @@ Example usage:
 ---
 matrix:
   bazel_version: ["4.2.2", "5.0.0"]
-  unix_platform: ["centos7", "debian10", "macos", "ubuntu2004"]
+  unix_platform: ["rockylinux8", "debian10", "macos", "ubuntu2004"]
   python: ["python2", "python3"]
   unix_compiler: ["gcc", "clang"]
   win_compiler: ["msvc", "clang"]
