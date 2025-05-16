@@ -3177,6 +3177,9 @@ def runner_step(
     shards=1,
     soft_fail=None,
 ):
+    # TODO(#2272): remove after a migration period
+    platform = platform.replace("centos7", "rockylinux8")
+
     py = PLATFORMS[platform]["python"]
     command = f"{py} {RUNNER_CMD} --task={task}"
     if http_config:
