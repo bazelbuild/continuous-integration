@@ -1171,9 +1171,12 @@ def execute_commands(
         os.environ["USE_BAZEL_VERSION"] = download_bazel_binary(tmpdir, binary_platform)
         print_collapsed_group(":bazel: Using Bazel at " + os.environ["USE_BAZEL_VERSION"])
     else:
-        print_collapsed_group(":bazel: Using Bazel version " + bazel_version)
         if bazel_version:
+            print_collapsed_group(f":bazel: Using Bazel version {bazel_version}")
             os.environ["USE_BAZEL_VERSION"] = bazel_version
+        else:
+            print_collapsed_group(":bazel: Using latest Bazel release")
+
     if "USE_BAZEL_VERSION" in os.environ and not task_config.get(
         "skip_use_bazel_version_for_test", False
     ):
