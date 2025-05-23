@@ -333,6 +333,20 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   const prAuthor = prInfo.data.user.login;
   const allModulesApproved = await checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers, prAuthor);
 
+  // Re-fetch PR information to check if new commits were pushed since analysis started
+  const initialHeadSha = prInfo.data.head.sha;
+  const latestPrInfoForShaCheck = await octokit.rest.pulls.get({
+    owner,
+    repo,
+    pull_number: prNumber,
+  });
+  const currentHeadSha = latestPrInfoForShaCheck.data.head.sha;
+
+  if (initialHeadSha !== currentHeadSha) {
+    console.log(`PR #${prNumber} has been updated since the review process began. Initial SHA: ${initialHeadSha}, Current SHA: ${currentHeadSha}. Aborting approval/merge actions as the analysis may be stale.`);
+    return; // Exit reviewPR for this PR to prevent actions on stale data
+  }
+
   const { data } = await octokit.rest.users.getAuthenticated();
   const myLogin = data.login;
 
