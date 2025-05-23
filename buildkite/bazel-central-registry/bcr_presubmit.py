@@ -135,7 +135,7 @@ def get_test_module_task_config(module_name, module_version, bazel_version=None)
 
 def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False, overwrite_bazel_version=None, calc_concurrency=None):
     for task_id, task_config in task_configs.items():
-        platform_name = bazelci.get_platform_for_task(task_id, task_config)
+        platform_name = get_platform(task_id, task_config)
         platform_label = bazelci.PLATFORMS[platform_name]["emoji-name"]
         task_name = task_config.get("name", "")
         label = f"{module_name}@{module_version} - {platform_label} - {task_name}"
@@ -163,6 +163,13 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
             concurrency = calc_concurrency(queue)
             concurrency_group = f"bcr-presubmit-test-queue-{queue}"
         pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=concurrency, concurrency_group=concurrency_group))
+
+
+def get_platform(task_id, task_config):
+    original = bazelci.get_platform_for_task(task_id, task_config)
+    # TODO(#2272): delete once centos references have been deleted
+    # from BCR templates in all module repos.
+    return original.replace("centos7", "rockylinux8")
 
 
 def scratch_file(root, relative_path, lines=None, mode="w"):
