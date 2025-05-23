@@ -1656,7 +1656,7 @@ def download_bazelci_agent(dest_dir):
     name = "bazelci-agent-{}-{}".format(version, postfix)
     url = "https://github.com/{}/releases/download/agent-{}/{}".format(repo, version, name)
     path = os.path.join(dest_dir, "bazelci-agent.exe" if is_windows() else "bazelci-agent")
-    execute_command(["curl", "-sSL", url, "-o", path])
+    execute_command(["curl", "-q", "--noproxy", "*", "-sSL", url, "-o", path])
     st = os.stat(path)
     os.chmod(path, st.st_mode | stat.S_IEXEC)
     return path
