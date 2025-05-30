@@ -148,6 +148,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/clion.yml",
         "pipeline_slug": "clion-plugin",
+         "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7670",
     },
     "CLion Plugin Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
@@ -169,6 +170,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/intellij.yml",
         "pipeline_slug": "intellij-plugin",
+        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7670",
     },
     "IntelliJ Plugin Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
@@ -180,6 +182,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/intellij-ue.yml",
         "pipeline_slug": "intellij-ue-plugin",
+        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7670",
     },
     "IntelliJ UE Plugin Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
@@ -191,6 +194,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/aspect.yml",
         "pipeline_slug": "intellij-plugin-aspect",
+        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7671",
     },
     "IntelliJ Plugin Aspect Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
