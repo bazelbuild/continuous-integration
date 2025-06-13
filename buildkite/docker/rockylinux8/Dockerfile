@@ -9,6 +9,7 @@ RUN dnf -y install 'dnf-command(config-manager)' && \
     dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm && \
     dnf -y install \
     bind-utils \
+    clang \
     dpkg-dev \
     ed \
     file \
@@ -21,6 +22,7 @@ RUN dnf -y install 'dnf-command(config-manager)' && \
     google-cloud-sdk \
     iproute \
     lcov \
+    llvm \
     openssl-perl \
     patch \
     python38 \
