@@ -31,7 +31,7 @@ IMAGE_CREATION_VMS = {
         "project": "bazel-public",
         "zone": "us-central1-f",
         "source_image_project": "ubuntu-os-cloud",
-        "source_image_family": "ubuntu-2004-lts",
+        "source_image_family": "ubuntu-2204-lts",
         "setup_script": "setup-docker.sh",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
         "licenses": [
@@ -42,7 +42,7 @@ IMAGE_CREATION_VMS = {
         "project": "bazel-public",
         "zone": "us-central1-c",
         "source_image_project": "ubuntu-os-cloud",
-        "source_image_family": "ubuntu-2004-lts-arm64",
+        "source_image_family": "ubuntu-2204-lts-arm64",
         "setup_script": "setup-docker.sh",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
         "licenses": [
