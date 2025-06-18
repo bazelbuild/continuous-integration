@@ -3202,9 +3202,12 @@ def runner_step(
     if use_but:
         command += " --use_but"
     label = create_label(platform, project_name, task_name=task_name)
+    commands = [fetch_bazelcipy_command(), command]
+    if "macos" in platform:
+        commands = [f"which {py}", f"{py} -V"] + commands
     return create_step(
         label=label,
-        commands=[fetch_bazelcipy_command(), command],
+        commands=commands,
         platform=platform,
         shards=shards,
         soft_fail=soft_fail,
