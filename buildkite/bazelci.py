@@ -4394,6 +4394,7 @@ def log_retry():
         return
 
     tmpdir = tempfile.mkdtemp()
+    print_collapsed_group(f":retry: Logging retry attempt #{retry}")
     try:
         basename = "_".join((
             os.getenv("BUILDKITE_PIPELINE_SLUG"),
@@ -4407,8 +4408,13 @@ def log_retry():
                 f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
             )
 
-        dest = os.path.join(RETRY_LOGS_BUCKET, basename)
-        execute_command([gsutil_command(), "cp", path, dest])
+        # Use -n and avoid basename in dest so that we don't need
+        # storage.objects.list and storage.objects.delete permissions
+        # (https://cloud.google.com/storage/docs/access-control/iam-gsutil).
+        execute_command([gsutil_command(), "cp", "-n", path, RETRY_LOGS_BUCKET], capture_stderr=True)
+    except subprocess.CalledProcessError as ex:
+        eprint(f"Failed to log retry attempt: {ex.stderr}")
+        raise ex  # TODO: remove after testing
     finally:
         try:
             shutil.rmtree(tmpdir)
