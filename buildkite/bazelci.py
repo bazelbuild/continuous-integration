@@ -90,9 +90,9 @@ LOG_BUCKET = {
 }[BUILDKITE_ORG]
 
 RETRY_LOGS_BUCKET = {
-    "bazel-testing": "gs://bazel-testing-retry-logs",
-    "bazel-trusted": "gs://bazel-trusted-retry-logs",
-    "bazel": "gs://bazel-untrusted-retry-logs",
+    "bazel-testing": "gs://bazel-testing-retry-logs/",
+    "bazel-trusted": "gs://bazel-trusted-retry-logs/",
+    "bazel": "gs://bazel-untrusted-retry-logs/",
 }[BUILDKITE_ORG]
 
 # Projects can opt out of receiving GitHub issues from --notify by adding `"do_not_notify": True` to their respective downstream entry.
