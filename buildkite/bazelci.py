@@ -4399,7 +4399,7 @@ def log_retry():
         basename = "_".join((
             os.getenv("BUILDKITE_PIPELINE_SLUG"),
             os.getenv("BUILDKITE_BUILD_NUMBER"),
-            os.getenv("BUILDKITE_LABEL").replace(" ", "-"),
+            os.getenv("BUILDKITE_LABEL").replace(" ", "-").replace(":", "-"),
             os.getenv("BUILDKITE_RETRY_COUNT"),
         ))
         path = os.path.join(tmpdir, basename)
