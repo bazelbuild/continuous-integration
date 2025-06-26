@@ -89,6 +89,12 @@ LOG_BUCKET = {
     "bazel": "https://storage.googleapis.com/bazel-untrusted-buildkite-artifacts",
 }[BUILDKITE_ORG]
 
+RETRY_LOGS_BUCKET = {
+    "bazel-testing": "gs://bazel-testing-retry-logs/",
+    "bazel-trusted": "gs://bazel-trusted-retry-logs/",
+    "bazel": "gs://bazel-untrusted-retry-logs/",
+}[BUILDKITE_ORG]
+
 # Projects can opt out of receiving GitHub issues from --notify by adding `"do_not_notify": True` to their respective downstream entry.
 DOWNSTREAM_PROJECTS_PRODUCTION = {
     "Android Studio Plugin Google": {
@@ -4382,6 +4388,39 @@ def str_presenter(dumper, data):
     return dumper.represent_scalar("tag:yaml.org,2002:str", data)
 
 
+def log_retry():
+    retry = int(os.getenv("BUILDKITE_RETRY_COUNT", "0"))
+    if not retry:
+        return
+
+    tmpdir = tempfile.mkdtemp()
+    print_collapsed_group(f":retry: Logging retry attempt #{retry}")
+    try:
+        basename = "_".join((
+            os.getenv("BUILDKITE_PIPELINE_SLUG"),
+            os.getenv("BUILDKITE_BUILD_NUMBER"),
+            os.getenv("BUILDKITE_LABEL").replace(" ", "-"),
+            os.getenv("BUILDKITE_RETRY_COUNT"),
+        ))
+        path = os.path.join(tmpdir, basename)
+        with open(path, "wt") as f:
+            f.write(
+                f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
+            )
+
+        # Use -n and avoid basename in dest so that we don't need
+        # storage.objects.list and storage.objects.delete permissions
+        # (https://cloud.google.com/storage/docs/access-control/iam-gsutil).
+        execute_command([gsutil_command(), "cp", "-n", path, RETRY_LOGS_BUCKET], capture_stderr=True)
+    except subprocess.CalledProcessError as ex:
+        eprint(f"Failed to log retry attempt: {ex.stderr}")
+    finally:
+        try:
+            shutil.rmtree(tmpdir)
+        except:
+            pass
+
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
@@ -4498,6 +4537,7 @@ def main(argv=None):
                 print_shard_summary=args.print_shard_summary,
             )
         elif args.subparsers_name == "runner":
+            log_retry()
             # Fetch the repo in case we need to use file_config.
             if args.repo_location:
                 os.chdir(args.repo_location)
