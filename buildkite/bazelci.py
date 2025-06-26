@@ -4402,7 +4402,7 @@ def log_retry():
             os.getenv("BUILDKITE_LABEL").replace(" ", "-"),
             os.getenv("BUILDKITE_RETRY_COUNT"),
         ))
-        path = os.path.join(tmpdir, basename)
+        path = os.path.join(tmpdir, f"{basename}.txt")
         with open(path, "wt") as f:
             f.write(
                 f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
