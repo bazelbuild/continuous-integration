@@ -4399,7 +4399,7 @@ def log_retry():
         basename = "_".join((
             os.getenv("BUILDKITE_PIPELINE_SLUG"),
             os.getenv("BUILDKITE_BUILD_NUMBER"),
-            os.getenv("BUILDKITE_LABEL").replace(" ", "-").replace(":", "-"),
+            sanitize_label(os.getenv("BUILDKITE_LABEL")),
             os.getenv("BUILDKITE_RETRY_COUNT"),
         ))
         path = os.path.join(tmpdir, f"{basename}.txt")
@@ -4414,11 +4414,16 @@ def log_retry():
         execute_command([gsutil_command(), "cp", "-n", path, RETRY_LOGS_BUCKET], capture_stderr=True)
     except subprocess.CalledProcessError as ex:
         eprint(f"Failed to log retry attempt: {ex.stderr}")
+    except Exception as ex:
+        eprint(f"Failed to log retry attempt: {ex}")
     finally:
         try:
             shutil.rmtree(tmpdir)
         except:
             pass
+
+def sanitize_label(label):
+    return re.sub(r"[^A-Za-z0-9]+", "-", label).strip("-")
 
 
 def main(argv=None):
