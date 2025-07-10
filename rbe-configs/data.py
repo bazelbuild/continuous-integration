@@ -1,5 +1,18 @@
 configs = [
   {
+    "bazel_version": "8.0.1",
+    "containers": [
+      {
+          'toolchain_name': 'ubuntu2004',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2204',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      }
+    ]
+  },
+  {
     "bazel_version": "7.0.2",
     "containers": [
       {

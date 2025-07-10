@@ -47,12 +47,18 @@ def generate_configs(output_root: str, bazel_version: str, toolchain_name: str,
       '@platforms//os:linux', '@platforms//cpu:x86_64',
       '@bazel_tools//tools/cpp:gcc'
   ]
+
+  local_config_cc_from_rules_cc = bazel_version[0] > '7'
+  cpp_config_targets = '@@rules_cc++cc_configure_extension+local_config_cc//...' if local_config_cc_from_rules_cc else ''
+  cpp_config_repo ='rules_cc++cc_configure_extension+local_config_cc' if local_config_cc_from_rules_cc else ''
   subprocess.run(
       [
           'rbe_configs_gen',
           '--bazel_version={}'.format(bazel_version),
           '--toolchain_container={}'.format(toolchain_container),
           '--cpp_env_json={}'.format(cpp_env_json),
+          '--cpp_config_targets={}'.format(cpp_config_targets),
+          '--cpp_config_repo={}'.format(cpp_config_repo),
           '--exec_constraints={}'.format(','.join(exec_constraints)),
           '--output_tarball={}'.format(output_tarball),
           '--output_manifest={}'.format(output_manifest),
