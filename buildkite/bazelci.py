@@ -1110,6 +1110,46 @@ def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_v
 
     return flags, json_profile_out, capture_corrupted_outputs_dir
 
+def write_bazelci_repo(platform):
+    config = PLATFORMS[platform]
+
+    if "docker-image" not in config:
+        return
+
+    print_collapsed_group(":docker: Writing BazelCI Repo ...")
+
+    image = config["docker-image"]
+    result = subprocess.run(
+        [
+            "docker",
+            "image",
+            "inspect",
+            image,
+            "--format",
+            "{{.Id}}",
+        ],
+        stdout=subprocess.PIPE,
+    )
+    image_id = result.stdout.decode("utf-8").strip()
+
+    os.makedirs("/tmp/bazelci", exist_ok=True)
+
+    with open("/tmp/bazelci/MODULE.bazel", "w") as f:
+        pass
+
+    with open("/tmp/bazelci/BUILD", "w") as f:
+        content = """platform(
+    name = "platform",
+    parents = ["@platforms//host"],
+    exec_properties = {{
+        "container-image": "docker://{image}@{image_id}",
+        "OSFamily": "Linux",
+    }},
+)""".format(image=image, image_id=image_id)
+        f.write(content)
+
+        eprint("# /tmp/bazelci/BUILD")
+        eprint(content)
 
 def execute_commands(
     task_config,
@@ -1251,6 +1291,8 @@ def execute_commands(
     bazel_version = print_bazel_version_info(bazel_binary, platform)
 
     print_environment_variables_info()
+
+    write_bazelci_repo(platform)
 
     execute_bazel_run(bazel_binary, platform, task_config.get("run_targets", None))
 
