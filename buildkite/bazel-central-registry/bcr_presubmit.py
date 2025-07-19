@@ -240,6 +240,19 @@ def unpack_archive(archive_file, output_dir):
     else:
         shutil.unpack_archive(archive_file, output_dir)
 
+    # Windows has issues with relative symlinks (see
+    # https://github.com/bazelbuild/bazel-central-registry/pull/5205) so let's
+    # make all of the symlinks in the unpacked archive absolute
+    for root, dirs, files in os.walk(output_dir):
+        for name in files + dirs:
+            path = pathlib.Path(root) / name
+            if path.is_symlink():
+                target = path.readlink()
+                if not target.is_absolute():
+                    absolute_target = (path.parent / target).resolve()
+                    path.unlink()
+                    path.symlink_to(absolute_target)
+
 def prepare_test_module_repo(module_name, module_version, overwrite_bazel_version=None, root=None, suppress_log=False):
     """Prepare the test module repo and the presubmit yml file it should use"""
     suppress_log or bazelci.print_collapsed_group(":information_source: Prepare test module repo")
