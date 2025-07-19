@@ -24,6 +24,7 @@ import argparse
 import json
 import os
 import pathlib
+import platform
 import re
 import sys
 import subprocess
@@ -233,12 +234,47 @@ def extract_zip_with_permissions(zip_file_path, destination_dir):
             if entry.external_attr >  0xffff:
                 os.chmod(file_path, entry.external_attr >> 16)
 
+def make_symlinks_absolute(output_dir):
+    """
+    Walks a directory and converts all relative symlinks to absolute ones.
+    """
+    for root, dirs, files in os.walk(output_dir):
+        for name in files + dirs:
+            path = pathlib.Path(root) / name
+
+            if not path.is_symlink():
+                continue
+
+            target = path.readlink()
+
+            if target.is_absolute():
+                continue
+
+            # NOTE:
+            # On Windows, we must know if the target is a directory to recreate
+            # the symlink correctly. Check this *before* unlinking.
+            # path.is_dir() correctly follows the symlink to check the target.
+            is_dir = path.is_dir()
+
+            # Resolve the relative target path to an absolute one
+            absolute_target = (path.parent / target).resolve()
+
+            # Replace the old relative symlink with the new absolute one
+            path.unlink()
+            path.symlink_to(absolute_target, target_is_directory=is_dir)
+
 def unpack_archive(archive_file, output_dir):
     # Addressing https://github.com/bazelbuild/continuous-integration/issues/1536
     if archive_file.endswith(".zip"):
         extract_zip_with_permissions(archive_file, output_dir)
     else:
         shutil.unpack_archive(archive_file, output_dir)
+
+    if platform.system() == "Windows":
+        # https://github.com/bazelbuild/bazel-central-registry/pull/5205
+        # Windows has issues with relative symlinks so let's make all of the
+        # symlinks in the unpacked archive absolute.
+        make_symlinks_absolute(output_dir)
 
 def prepare_test_module_repo(module_name, module_version, overwrite_bazel_version=None, root=None, suppress_log=False):
     """Prepare the test module repo and the presubmit yml file it should use"""
