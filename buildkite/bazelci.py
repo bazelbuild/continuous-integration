@@ -854,19 +854,29 @@ def match_matrix_attr_pattern(s):
     return re.match(r"^\${{\s*(\w+)\s*}}$", s)
 
 
+def match_matrix_attr_in_dict(s):
+    # Dict values are expanded similar to python f-strings.
+    return re.search(r"{(\w+)}", s)
+
 def get_matrix_attributes(task):
     """Get unexpanded matrix attributes from the given task.
 
     If a value of field matches "${{<name>}}", then <name> is a wanted matrix attribute.
     eg. platform: ${{ platform }}
     """
-    attributes = []
+    attributes = set()
     for key, value in task.items():
         if type(value) is str:
             res = match_matrix_attr_pattern(value)
             if res:
-                attributes.append(res.groups()[0])
-    return list(set(attributes))
+                attributes.add(res.groups()[0])
+        elif type(value) is dict:
+            # Account for cases where the matrix attr is in a list.
+            for item in value.keys():
+                res = match_matrix_attr_in_dict(item)
+                if res:
+                    attributes.add(res.groups()[0])
+    return list(attributes)
 
 
 def get_combinations(matrix, attributes):
@@ -887,6 +897,31 @@ def get_combinations(matrix, attributes):
     return sorted(itertools.product(*pairs))
 
 
+def expand_dict(d, combination):
+    def _format_matrix_attr(s, combination):
+        if not s:
+            return None
+
+        res = match_matrix_attr_in_dict(s)
+        val = s
+        if res:
+            # Get the 'attr' from {attr}
+            matrix_attr = res.groups()[0]
+            # Replace '{attr}' with 'combination[attr]'
+            if matrix_attr in combination:
+                val = s.replace("{" + matrix_attr + "}", combination[matrix_attr])
+        return val
+
+    new_dict = dict()
+    for key in d.keys():
+        value = d[key]
+        new_key = _format_matrix_attr(key, combination)
+        new_value = _format_matrix_attr(value, combination)
+        new_dict[new_key] = new_value
+
+    return new_dict
+
+
 def get_expanded_task(task, combination):
     """Expand a task with the given combination of values of attributes."""
     combination = dict(combination)
@@ -897,6 +932,9 @@ def get_expanded_task(task, combination):
             if res:
                 attr = res.groups()[0]
                 expanded_task[key] = combination[attr]
+        elif type(value) is dict:
+            expanded_task[key] = expand_dict(value, combination)
+
     if "name" in expanded_task:
         expanded_task["name"] = expanded_task.get("name", "").format(**combination)
     return expanded_task
