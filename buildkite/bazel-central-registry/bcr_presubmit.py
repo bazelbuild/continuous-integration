@@ -200,7 +200,7 @@ def create_anonymous_repo(module_name, module_version, root=None):
 
 
 def download(url, file):
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    req = urllib.request.Request(url, headers={'User-Agent': 'curl/8.7.1'})
     with urllib.request.urlopen(req) as response:
         with open(file, "wb") as f:
             f.write(response.read())
