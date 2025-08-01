@@ -1121,7 +1121,7 @@ def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_v
     # However, for now we need to hack bazelci.py so that we can rebuild binaries
     # at older commits.
     if THIS_IS_TRUSTED and is_linux() and is_64_bit():
-        flags += ['--linkopt="-Wl,--no-fix-cortex-a53-843419"', '--host_linkopt="-Wl,--no-fix-cortex-a53-843419"']
+        flags += ["--linkopt=-Wl,--no-fix-cortex-a53-843419", "--host_linkopt=-Wl,--no-fix-cortex-a53-843419"]
     
     return flags, json_profile_out, capture_corrupted_outputs_dir
 
