@@ -189,7 +189,21 @@ tasks:
     name: "Formatted w/ Bazel v{bazel} on {platform}"
     bazel: ${{ bazel }}
     platform: ${{ platform }}
+    build_flags:
+      ? "--config={platform}"
+      ? "--foobar=asdf_{platform}"
     """
+    )
+    _CONFIGS_BUILD_FLAGS_EXPANSION_ONLY = yaml.safe_load(
+        """
+  matrix:
+    platform: ["pf1", "pf2"]
+  tasks:
+    formatted:
+      name: "Formatted for platform {platform}"
+      build_flags:
+        ? "--config={platform}"
+      """
     )
 
     def test_basic_functionality(self):
@@ -209,6 +223,34 @@ tasks:
             "Formatted w/ Bazel v1.2.3 on pf2",
             "Formatted w/ Bazel v2.3.4 on pf1",
             "Formatted w/ Bazel v2.3.4 on pf2",
+        ])
+    def test_basic_functionality(self):
+        config = self._CONFIGS
+        bazelci.expand_task_config(config)
+        expanded_tasks = config["tasks"]
+        self.assertEqual(len(expanded_tasks), 9)
+        expanded_build_flags = [task.get("build_flags", None) for id, task in expanded_tasks.items()]
+        self.assertEqual(expanded_build_flags, [
+            None,
+            None,
+            None,
+            None,
+            None,
+            {'--config=pf1': None, '--foobar=asdf_pf1': None},
+            {'--config=pf2': None, '--foobar=asdf_pf2': None},
+            {'--config=pf1': None, '--foobar=asdf_pf1': None},
+            {'--config=pf2': None, '--foobar=asdf_pf2': None},
+        ])
+    def test_matrix_just_in_build_flags(self):
+        # Assert that if a matrix variable _only_ exists in build_flags, then the matrix is still properly expanded.
+        config = self._CONFIGS_BUILD_FLAGS_EXPANSION_ONLY
+        bazelci.expand_task_config(config)
+        expanded_tasks = config["tasks"]
+        self.assertEqual(len(expanded_tasks), 2)
+        expanded_build_flags = [task.get("build_flags", None) for id, task in expanded_tasks.items()]
+        self.assertEqual(expanded_build_flags, [
+            {'--config=pf1': None},
+            {'--config=pf2': None},
         ])
 
 
