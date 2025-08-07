@@ -172,23 +172,11 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/flogger.yml",
         "pipeline_slug": "flogger",
     },
-    "IntelliJ Plugin": {
-        "git_repository": "https://github.com/bazelbuild/intellij.git",
-        "file_config": ".bazelci/intellij.yml",
-        "pipeline_slug": "intellij-plugin",
-        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7670",
-    },
     "IntelliJ Plugin Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/intellij.yml",
         "pipeline_slug": "intellij-plugin-google",
         "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7232#issuecomment-2617127267",
-    },
-    "IntelliJ UE Plugin": {
-        "git_repository": "https://github.com/bazelbuild/intellij.git",
-        "file_config": ".bazelci/intellij-ue.yml",
-        "pipeline_slug": "intellij-ue-plugin",
-        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7670",
     },
     "IntelliJ UE Plugin Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
