@@ -54,27 +54,6 @@ resource "buildkite_pipeline" "limdor-bazel-examples" {
   }
 }
 
-resource "buildkite_pipeline" "intellij-ue-plugin" {
-  name = "IntelliJ UE plugin"
-  repository = "https://github.com/bazelbuild/intellij.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/intellij-ue.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
-  description = "Tests the Bazel IntelliJ plugin with IntelliJ IDEA Ultimate"
-  default_branch = "master"
-  branch_configuration = "!google"
-  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
-  provider_settings {
-    trigger_mode = "code"
-    build_pull_requests = true
-    skip_pull_request_builds_for_existing_commits = true
-    build_pull_request_forks = true
-    prefix_pull_request_fork_branch_names = true
-    build_branches = true
-    publish_commit_status = true
-    filter_enabled = true
-    filter_condition = "build.pull_request.base_branch != \"google\""
-  }
-}
-
 resource "buildkite_pipeline" "intellij-ue-plugin-google" {
   name = "IntelliJ UE plugin Google"
   repository = "https://github.com/bazelbuild/intellij.git"
@@ -1564,27 +1543,6 @@ resource "buildkite_pipeline" "clion-plugin-google" {
     publish_commit_status = true
     filter_enabled = true
     filter_condition = "build.pull_request.base_branch == \"google\""
-  }
-}
-
-resource "buildkite_pipeline" "intellij-plugin" {
-  name = "IntelliJ plugin"
-  repository = "https://github.com/bazelbuild/intellij.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline --file_config=.bazelci/intellij.yml | tee /dev/tty | buildkite-agent pipeline upload"] } })
-  description = "Tests the Bazel IntelliJ plugin with IntelliJ IDEA Community Edition"
-  default_branch = "master"
-  branch_configuration = "!google"
-  team = [{ access_level = "BUILD_AND_READ", slug = "bazel" }]
-  provider_settings {
-    trigger_mode = "code"
-    build_pull_requests = true
-    skip_pull_request_builds_for_existing_commits = true
-    build_pull_request_forks = true
-    prefix_pull_request_fork_branch_names = true
-    build_branches = true
-    publish_commit_status = true
-    filter_enabled = true
-    filter_condition = "build.pull_request.base_branch != \"google\""
   }
 }
 
