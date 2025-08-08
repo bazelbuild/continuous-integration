@@ -1805,7 +1805,7 @@ def remote_caching_flags(platform, accept_cached=True):
     platform_cache_key = [
         BUILDKITE_ORG.encode("utf-8"),
         # Whenever the remote cache was known to have been poisoned increase the number below
-        "cache-poisoning-20250618".encode("utf-8"),
+        "cache-poisoning-20250808".encode("utf-8"),
         platform.encode("utf-8"),
     ]
 
