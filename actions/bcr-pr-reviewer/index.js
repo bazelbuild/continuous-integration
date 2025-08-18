@@ -57,7 +57,7 @@ async function _processAllPrFiles(octokit, owner, repo, prNumber, fileProcessor)
  */
 async function fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber) {
   const fileProcessor = (file, accumulate) => {
-    // Matches files like: modules/some-module/1.0.0/main.tf
+    // Matches files like: modules/some-module/1.0.0/...
     const match = file.filename.match(/^modules\/([^\/]+)\/([^\/]+)\//);
     if (match) {
       accumulate.add(`${match[1]}@${match[2]}`);
@@ -331,6 +331,12 @@ async function reviewPR(octokit, owner, repo, prNumber) {
 
   // Fetch modified modules
   const modifiedModuleVersions = await fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber);
+  if (modifiedModuleVersions === null) {
+    // This means the PR was updated while fetching files.
+    console.log(`Aborting review for PR #${prNumber} because it was updated during file fetching.`);
+    return;
+  }
+
   const modifiedModules = new Set(Array.from(modifiedModuleVersions).map(module => module.split('@')[0]));
   console.log(`Modified modules: ${Array.from(modifiedModules).join(', ')}`);
   if (modifiedModules.size === 0) {
@@ -437,6 +443,11 @@ async function runNotifier(octokit) {
 
   // Fetch modified modules
   const modifiedModuleVersions = await fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber);
+  if (modifiedModuleVersions === null) {
+    // This means the PR was updated while fetching files.
+    console.log(`Aborting notifier for PR #${prNumber} because it was updated during file fetching.`);
+    return;
+  }
   const modifiedModules = new Set(Array.from(modifiedModuleVersions).map(module => module.split('@')[0]));
   console.log(`Modified modules: ${Array.from(modifiedModules).join(', ')}`);
 
@@ -457,6 +468,12 @@ async function runNotifier(octokit) {
 
   // Notify BCR maintainers for modules with only metadata.json changes
   const allModulesWithMetadataChange = await fetchAllModulesWithMetadataChange(octokit, owner, repo, prNumber);
+  if (allModulesWithMetadataChange === null) {
+    // This means the PR was updated while fetching files.
+    console.log(`Aborting notifier for PR #${prNumber} because it was updated during file fetching.`);
+    return;
+  }
+
   const modulesWithOnlyMetadataChanges = new Set(
     [...allModulesWithMetadataChange].filter(module => !modifiedModules.has(module))
   );
@@ -639,6 +656,11 @@ async function runDiffModule(octokit) {
 
   // Fetch modified modules
   const modifiedModuleVersions = await fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber);
+  if (modifiedModuleVersions === null) {
+    // This means the PR was updated while fetching files.
+    console.log(`Aborting module diff for PR #${prNumber} because it was updated during file fetching.`);
+    return;
+  }
   console.log(`Modified modules: ${Array.from(modifiedModuleVersions).join(', ')}`);
 
   // Use group if more than one module are modified
