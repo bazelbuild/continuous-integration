@@ -10,7 +10,7 @@ RUN dnf -y install 'dnf-command(config-manager)' && \
     dnf -y install \
     bind-utils \
     clang \
-    clang-tools \
+    clang-tools-extra \
     dpkg-dev \
     ed \
     file \
