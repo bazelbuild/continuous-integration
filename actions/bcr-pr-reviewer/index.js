@@ -2,6 +2,14 @@ const { getInput, setFailed } = require('@actions/core');
 const { context, getOctokit } = require("@actions/github");
 
 async function fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber) {
+  // Fetch the PR information to get the head SHA
+  const prInfo = await octokit.rest.pulls.get({
+    owner,
+    repo,
+    pull_number: prNumber,
+  });
+  const initialHeadSha = prInfo.data.head.sha;
+
   let page = 1;
   const perPage = 100; // GitHub's max per_page value
   let accumulate = new Set();
@@ -15,6 +23,17 @@ async function fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber) {
       per_page: perPage,
       page,
     });
+
+    // Re-fetch PR information to check if new commits were pushed during pagination
+    const latestPrInfoForShaCheck = await octokit.rest.pulls.get({
+      owner,
+      repo,
+      pull_number: prNumber,
+    });
+    if (initialHeadSha !== latestPrInfoForShaCheck.data.head.sha) {
+      console.error(`PR #${prNumber} has been updated during file listing. Initial SHA: ${initialHeadSha}, Current SHA: ${latestPrInfoForShaCheck.data.head.sha}. Aborting as the file list may be stale.`);
+      return null;
+    }
 
     response.data.forEach(file => {
       const match = file.filename.match(/^modules\/([^\/]+)\/([^\/]+)\//);
@@ -30,6 +49,14 @@ async function fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber) {
 }
 
 async function fetchAllModulesWithMetadataChange(octokit, owner, repo, prNumber) {
+  // Fetch the PR information to get the head SHA
+  const prInfo = await octokit.rest.pulls.get({
+    owner,
+    repo,
+    pull_number: prNumber,
+  });
+  const initialHeadSha = prInfo.data.head.sha;
+
   let page = 1;
   const perPage = 100; // GitHub's max per_page value
   let accumulate = new Set();
@@ -43,6 +70,17 @@ async function fetchAllModulesWithMetadataChange(octokit, owner, repo, prNumber)
       per_page: perPage,
       page,
     });
+
+    // Re-fetch PR information to check if new commits were pushed during pagination
+    const latestPrInfoForShaCheck = await octokit.rest.pulls.get({
+      owner,
+      repo,
+      pull_number: prNumber,
+    });
+    if (initialHeadSha !== latestPrInfoForShaCheck.data.head.sha) {
+      console.error(`PR #${prNumber} has been updated during file listing. Initial SHA: ${initialHeadSha}, Current SHA: ${latestPrInfoForShaCheck.data.head.sha}. Aborting as the file list may be stale.`);
+      return null;
+    }
 
     response.data.forEach(file => {
       const match = file.filename.match(/^modules\/([^\/]+)\/metadata\.json/);
