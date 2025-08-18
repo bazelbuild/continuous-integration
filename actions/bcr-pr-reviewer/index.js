@@ -53,11 +53,11 @@ async function _processAllPrFiles(octokit, owner, repo, prNumber, fileProcessor)
 }
 
 /**
- * Fetches all unique module versions (e.g., "my-module@1.2.3") that were modified in a PR.
+ * Fetches all unique module versions (e.g., "rules_cc@1.2.3") that were modified in a PR.
  */
 async function fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber) {
   const fileProcessor = (file, accumulate) => {
-    // Matches files like: modules/some-module/1.0.0/...
+    // Matches files like: modules/rules_cc/1.0.0/...
     const match = file.filename.match(/^modules\/([^\/]+)\/([^\/]+)\//);
     if (match) {
       accumulate.add(`${match[1]}@${match[2]}`);
@@ -68,11 +68,11 @@ async function fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber) {
 }
 
 /**
- * Fetches all unique modules (e.g., "my-module") that had their metadata.json file modified.
+ * Fetches all unique modules (e.g., "rules_cc") that had their metadata.json file modified.
  */
 async function fetchAllModulesWithMetadataChange(octokit, owner, repo, prNumber) {
   const fileProcessor = (file, accumulate) => {
-    // Matches files like: modules/some-module/metadata.json
+    // Matches files like: modules/rules_cc/metadata.json
     const match = file.filename.match(/^modules\/([^\/]+)\/metadata\.json/);
     if (match) {
       accumulate.add(match[1]);
