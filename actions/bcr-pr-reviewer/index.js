@@ -1,22 +1,21 @@
 const { getInput, setFailed } = require('@actions/core');
 const { context, getOctokit } = require("@actions/github");
 
-async function fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber) {
-  // Fetch the PR information to get the head SHA
-  const prInfo = await octokit.rest.pulls.get({
+async function _processAllPrFiles(octokit, owner, repo, prNumber, fileProcessor) {
+  // Fetch the PR's initial head commit SHA to ensure consistency.
+  const { data: prInfo } = await octokit.rest.pulls.get({
     owner,
     repo,
     pull_number: prNumber,
   });
-  const initialHeadSha = prInfo.data.head.sha;
+  const initialHeadSha = prInfo.head.sha;
 
+  const accumulate = new Set();
+  const perPage = 100; // Max per_page value
   let page = 1;
-  const perPage = 100; // GitHub's max per_page value
-  let accumulate = new Set();
-  let response;
 
-  do {
-    response = await octokit.rest.pulls.listFiles({
+  while (true) {
+    const { data: files } = await octokit.rest.pulls.listFiles({
       owner,
       repo,
       pull_number: prNumber,
@@ -24,75 +23,63 @@ async function fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber) {
       page,
     });
 
-    // Re-fetch PR information to check if new commits were pushed during pagination
-    const latestPrInfoForShaCheck = await octokit.rest.pulls.get({
+    // Safety Check: Re-fetch the PR to see if new commits have been pushed.
+    const { data: latestPrInfo } = await octokit.rest.pulls.get({
       owner,
       repo,
       pull_number: prNumber,
     });
-    if (initialHeadSha !== latestPrInfoForShaCheck.data.head.sha) {
-      console.error(`PR #${prNumber} has been updated during file listing. Initial SHA: ${initialHeadSha}, Current SHA: ${latestPrInfoForShaCheck.data.head.sha}. Aborting as the file list may be stale.`);
+
+    if (initialHeadSha !== latestPrInfo.head.sha) {
+      console.error(
+        `PR #${prNumber} was updated while listing files. Aborting.`,
+        `Initial SHA: ${initialHeadSha}, Current SHA: ${latestPrInfo.head.sha}`
+      );
       return null;
     }
 
-    response.data.forEach(file => {
-      const match = file.filename.match(/^modules\/([^\/]+)\/([^\/]+)\//);
-      if (match) {
-        accumulate.add(`${match[1]}@${match[2]}`);
-      }
-    });
+    // Apply the specific processing logic for each file.
+    files.forEach(file => fileProcessor(file, accumulate));
+
+    // Break the loop if this was the last page of results.
+    if (files.length < perPage) {
+      break;
+    }
 
     page++;
-  } while (response.data.length === perPage);
+  }
 
   return accumulate;
 }
 
-async function fetchAllModulesWithMetadataChange(octokit, owner, repo, prNumber) {
-  // Fetch the PR information to get the head SHA
-  const prInfo = await octokit.rest.pulls.get({
-    owner,
-    repo,
-    pull_number: prNumber,
-  });
-  const initialHeadSha = prInfo.data.head.sha;
-
-  let page = 1;
-  const perPage = 100; // GitHub's max per_page value
-  let accumulate = new Set();
-  let response;
-
-  do {
-    response = await octokit.rest.pulls.listFiles({
-      owner,
-      repo,
-      pull_number: prNumber,
-      per_page: perPage,
-      page,
-    });
-
-    // Re-fetch PR information to check if new commits were pushed during pagination
-    const latestPrInfoForShaCheck = await octokit.rest.pulls.get({
-      owner,
-      repo,
-      pull_number: prNumber,
-    });
-    if (initialHeadSha !== latestPrInfoForShaCheck.data.head.sha) {
-      console.error(`PR #${prNumber} has been updated during file listing. Initial SHA: ${initialHeadSha}, Current SHA: ${latestPrInfoForShaCheck.data.head.sha}. Aborting as the file list may be stale.`);
-      return null;
+/**
+ * Fetches all unique module versions (e.g., "my-module@1.2.3") that were modified in a PR.
+ */
+async function fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber) {
+  const fileProcessor = (file, accumulate) => {
+    // Matches files like: modules/some-module/1.0.0/main.tf
+    const match = file.filename.match(/^modules\/([^\/]+)\/([^\/]+)\//);
+    if (match) {
+      accumulate.add(`${match[1]}@${match[2]}`);
     }
+  };
 
-    response.data.forEach(file => {
-      const match = file.filename.match(/^modules\/([^\/]+)\/metadata\.json/);
-      if (match) {
-        accumulate.add(match[1]);
-      }
-    });
+  return await _processAllPrFiles(octokit, owner, repo, prNumber, fileProcessor);
+}
 
-    page++;
-  } while (response.data.length === perPage);
+/**
+ * Fetches all unique modules (e.g., "my-module") that had their metadata.json file modified.
+ */
+async function fetchAllModulesWithMetadataChange(octokit, owner, repo, prNumber) {
+  const fileProcessor = (file, accumulate) => {
+    // Matches files like: modules/some-module/metadata.json
+    const match = file.filename.match(/^modules\/([^\/]+)\/metadata\.json/);
+    if (match) {
+      accumulate.add(match[1]);
+    }
+  };
 
-  return accumulate;
+  return await _processAllPrFiles(octokit, owner, repo, prNumber, fileProcessor);
 }
 
 async function generateMaintainersMap(octokit, owner, repo, modifiedModules, toNotifyOnly) {
