@@ -13,6 +13,7 @@ RUN apt-get -y update && \
     bind9-host \
     build-essential \
     clang \
+    clang-tools \
     coreutils \
     curl \
     dnsutils \
