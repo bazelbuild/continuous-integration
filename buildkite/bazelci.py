@@ -536,9 +536,9 @@ class BinaryUploadRaceException(Exception):
 
 class BuildkiteClient(object):
     _ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN = """
-CiQA4DEB9ldzC+E39KomywtqXfaQ86hhulgeDsicds2BuvbCYzsSUAAqwcvXZPh9IMWlwWh94J2F
-exosKKaWB0tSRJiPKnv2NPDfEqGul0ZwVjtWeASpugwxxKeLhFhPMcgHMPfndH6j2GEIY6nkKRbP
-uwoRMCwe
+CiQA4DEB9sMsj9Z9i9BZ7fbvjGZ+WJv1xWDdT1Sxmu7WOLsb+5ESVwAqwcvX2oZQ3WhqRZNS+n04
+bm/ko9kTosN2qJ/UVWf4gzYSnkK1KMAktinNV/o/ygZuf3GQlBfpfBSeMDOW43oLnQE0qcl3OtTM
+WorKXPI5cvfBNNxWIA==
 """.strip()
 
     _ENCRYPTED_BUILDKITE_TESTING_API_TOKEN = """
