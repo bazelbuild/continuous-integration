@@ -390,7 +390,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
         repo,
         pull_number: prNumber,
         event: 'APPROVE',
-        body: 'Hello @bazelbuild/bcr-maintainers, all modules in this PR have been approved by their maintainers. This PR will be merged if all presubmit checks pass.',
+        body: 'All modules in this PR have been approved by their maintainers. This PR will be merged if all presubmit checks pass.',
       });
     }
 
