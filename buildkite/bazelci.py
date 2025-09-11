@@ -1670,7 +1670,7 @@ def download_bazelci_agent(dest_dir):
     name = "bazelci-agent-{}-{}".format(version, postfix)
     url = "https://github.com/{}/releases/download/agent-{}/{}".format(repo, version, name)
     path = os.path.join(dest_dir, "bazelci-agent.exe" if is_windows() else "bazelci-agent")
-    execute_command(["curl", "-q", "--noproxy", "*", "-sSL", url, "-o", path])
+    execute_command(["curl", "-q", "--noproxy", "'*'", "-sSL", url, "-o", path])
     st = os.stat(path)
     os.chmod(path, st.st_mode | stat.S_IEXEC)
     return path
@@ -2477,7 +2477,7 @@ def extract_archive(archive_path, dest_dir, strip_top_level_dir):
 def download_file(url, dest_dir, dest_filename):
     local_path = os.path.join(dest_dir, dest_filename)
     try:
-        execute_command(["curl", "-q", "-sSL", "--noproxy", "*", url, "-o", local_path], capture_stderr=True)
+        execute_command(["curl", "-q", "-sSL", "--noproxy", "'*'", url, "-o", local_path], capture_stderr=True)
     except subprocess.CalledProcessError as ex:
         raise BuildkiteInfraException("Failed to download {}: {}\n{}".format(url, ex, ex.stderr))
     return local_path
@@ -3225,11 +3225,11 @@ def runner_step(
 
 
 def fetch_bazelcipy_command():
-    return "curl -q --noproxy * -sS {0}?{1} -o bazelci.py".format(SCRIPT_URL, int(time.time()))
+    return "curl -q --noproxy '*' -sS {0}?{1} -o bazelci.py".format(SCRIPT_URL, int(time.time()))
 
 
 def fetch_aggregate_incompatible_flags_test_result_command():
-    return "curl -q --noproxy * -sS {0} -o aggregate_incompatible_flags_test_result.py".format(
+    return "curl -q --noproxy '*' -sS {0} -o aggregate_incompatible_flags_test_result.py".format(
         AGGREGATE_INCOMPATIBLE_TEST_RESULT_URL
     )
 
@@ -3506,7 +3506,7 @@ def fetch_incompatible_flags():
     output = subprocess.check_output(
         [
             # Query for open issues with "incompatible-change" and "migration-ready" label.
-            "curl", "-q", "--noproxy", "*", "-sS",
+            "curl", "-q", "--noproxy", "'*'", "-sS",
             "https://api.github.com/search/issues?per_page=100&q=repo:bazelbuild/bazel+label:incompatible-change+label:migration-ready+state:open",
         ]
     ).decode("utf-8")
