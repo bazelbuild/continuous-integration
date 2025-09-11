@@ -2477,7 +2477,7 @@ def extract_archive(archive_path, dest_dir, strip_top_level_dir):
 def download_file(url, dest_dir, dest_filename):
     local_path = os.path.join(dest_dir, dest_filename)
     try:
-        execute_command(["curl", "-q", "--noproxy", "-sSL", url, "-o", local_path], capture_stderr=True)
+        execute_command(["curl", "-q", "-sSL", "--noproxy", "*", url, "-o", local_path], capture_stderr=True)
     except subprocess.CalledProcessError as ex:
         raise BuildkiteInfraException("Failed to download {}: {}\n{}".format(url, ex, ex.stderr))
     return local_path
