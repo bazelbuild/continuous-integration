@@ -119,7 +119,7 @@ tasks:
     - "..."
 ```
 
-The full list of supported platforms can be found in the PLATFORMS variable in [bazelci.py](./bazelci.py).
+The full list of supported platforms can be found in the PLATFORMS variable in [bazelci.py](https://github.com/bazelbuild/continuous-integration/blob/master/buildkite/bazelci.py).
 
 ### Setting Environment Variables
 
@@ -525,7 +525,7 @@ The `windows_test` task configuration will generate 8 tasks (2 * 2 * 2) for each
 
 ## Downstream testing
 
-For existing projects on Bazel CI, you can add your project to [Bazel's downstream testing pipeline](../docs/downstream-testing.md) to catch breakages from Bazel@HEAD as soon as possible.
+For existing projects on Bazel CI, you can add your project to [Bazel's downstream testing pipeline](https://github.com/bazelbuild/continuous-integration/blob/master/docs/downstream-testing.md) to catch breakages from Bazel@HEAD as soon as possible.
 
 ## FAQ
 
