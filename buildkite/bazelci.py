@@ -1369,7 +1369,7 @@ def execute_commands(
                 if capture_corrupted_outputs_dir_test:
                     upload_corrupted_outputs(capture_corrupted_outputs_dir_test, tmpdir)
                 output_base = get_output_base(bazel_binary)
-                upload_log_file(os.path.join(output_base, "java.log") tmpdir)
+                upload_log_file(os.path.join(output_base, "java.log"), tmpdir)
 
             _ = future.result()
             # TODO: print results
