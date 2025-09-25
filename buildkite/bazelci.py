@@ -1306,7 +1306,7 @@ def execute_commands(
                 upload_bazel_binary(platform)
         finally:
             if json_profile_out_build:
-                upload_json_profile(json_profile_out_build, tmpdir)
+                upload_log_file(json_profile_out_build, tmpdir)
             if capture_corrupted_outputs_dir_build:
                 upload_corrupted_outputs(capture_corrupted_outputs_dir_build, tmpdir)
 
@@ -1365,9 +1365,11 @@ def execute_commands(
                 )
             finally:
                 if json_profile_out_test:
-                    upload_json_profile(json_profile_out_test, tmpdir)
+                    upload_log_file(json_profile_out_test, tmpdir)
                 if capture_corrupted_outputs_dir_test:
                     upload_corrupted_outputs(capture_corrupted_outputs_dir_test, tmpdir)
+                output_base = get_output_base(bazel_binary)
+                upload_log_file(os.path.join(output_base, "java.log") tmpdir)
 
             _ = future.result()
             # TODO: print results
@@ -1388,7 +1390,7 @@ def execute_commands(
             )
         finally:
             if json_profile_out_coverage:
-                upload_json_profile(json_profile_out_coverage, tmpdir)
+                upload_log_file(json_profile_out_coverage, tmpdir)
             if capture_corrupted_outputs_dir_coverage:
                 upload_corrupted_outputs(capture_corrupted_outputs_dir_coverage, tmpdir)
 
@@ -1429,7 +1431,7 @@ def execute_commands(
                     raise BuildkiteException("Failed to upload kythe kzip")
         finally:
             if json_profile_out_index:
-                upload_json_profile(json_profile_out_index, tmpdir)
+                upload_log_file(json_profile_out_index, tmpdir)
             if capture_corrupted_outputs_dir_index:
                 upload_corrupted_outputs(capture_corrupted_outputs_dir_index, tmpdir)
 
@@ -2641,13 +2643,13 @@ def upload_test_logs_from_bep(bep_file, tmpdir, monitor_flaky_tests):
     )
 
 
-def upload_json_profile(json_profile_path, tmpdir):
+def upload_log_file(log_file_path, tmpdir):
     if local_run_only():
         return
-    if not os.path.exists(json_profile_path):
+    if not os.path.exists(log_file_path):
         return
-    print_collapsed_group(":gcloud: Uploading JSON Profile")
-    execute_command(["buildkite-agent", "artifact", "upload", json_profile_path], cwd=tmpdir)
+    print_collapsed_group(f":gcloud: Uploading log file: {log_file_path}")
+    execute_command(["buildkite-agent", "artifact", "upload", log_file_path], cwd=tmpdir)
 
 
 def upload_corrupted_outputs(capture_corrupted_outputs_dir, tmpdir):
