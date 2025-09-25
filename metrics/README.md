@@ -46,6 +46,15 @@ Make sure you have access to the `staging.bazel-untrusted.appspot.com` GCS bucke
 - `gcloud app deploy metrics/app.yaml --stop-previous-version`
 - `gcloud app logs tail -s default`
 
+If the first command failed with `ERROR: (gcloud.app.deploy) Required file is not uploaded: [app.yaml]. This file should not be added to an ignore list (https://cloud.google.com/sdk/gcloud/reference/topic/gcloudignore)`,
+run this command and then retry deployment:
+
+- `cp go.mod metrics/`
+
+Periodically you might need to update dependencies:
+
+- `cd metrics && go get -u && go mod tidy`
+
 ## Running the service locally
 
 The following steps allow you to run the service locally:
