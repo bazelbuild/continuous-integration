@@ -1,6 +1,10 @@
 runtime: go
 env: flex
 
+runtime_config:
+    operating_system: "ubuntu22"
+    runtime_version: "1.24"
+
 beta_settings:
   cloud_sql_instances: bazel-untrusted:europe-west1:metrics
 
