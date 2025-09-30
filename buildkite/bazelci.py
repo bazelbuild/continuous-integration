@@ -239,6 +239,11 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "pipeline_slug": "rules-testing",
         "owned_by_bazel": True,
     },
+    "tools_android": {
+        "git_repository": "https://github.com/bazelbuild/tools_android.git",
+        "pipeline_slug": "tools-android",
+        "owned_by_bazel": True,
+    },
 }
 
 DOWNSTREAM_PROJECTS_TESTING = {
