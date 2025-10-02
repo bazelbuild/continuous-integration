@@ -2701,7 +2701,6 @@ def execute_command(
         args,
         shell=shell,
         check=fail_if_nonzero,
-        env=os.environ,
         cwd=cwd,
         errors="replace",
         stdout=(
