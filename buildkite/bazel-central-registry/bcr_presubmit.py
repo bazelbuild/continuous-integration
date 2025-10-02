@@ -24,15 +24,11 @@ import argparse
 import json
 import os
 import pathlib
-import platform
 import re
 import sys
 import subprocess
 import shutil
-import stat
 import time
-import urllib.request
-import zipfile
 import requests
 import yaml
 
@@ -190,6 +186,7 @@ def create_anonymous_repo(module_name, module_version, root=None):
     """Create an anonymous Bazel module which depends on the target module."""
     if not root:
         root = pathlib.Path(bazelci.get_repositories_root())
+    root.mkdir(exist_ok=True, parents=True)
     scratch_file(root, "WORKSPACE")
     scratch_file(root, "BUILD")
     scratch_file(root, "MODULE.bazel", ["bazel_dep(name = '%s', version = '%s')" % (module_name, module_version)])
@@ -200,124 +197,27 @@ def create_anonymous_repo(module_name, module_version, root=None):
     return root
 
 
-def download(url, file):
-    req = urllib.request.Request(url, headers={'User-Agent': 'curl/8.7.1'})
-    with urllib.request.urlopen(req) as response:
-        with open(file, "wb") as f:
-            f.write(response.read())
-
-
 def read(path):
     with open(path, "r") as file:
         return file.read()
 
-
-def load_source_json(module_name, module_version):
-    source_json = get_source_json(module_name, module_version)
-    with open(source_json, "r") as json_file:
-        return json.load(json_file)
-
-
-def apply_patch(work_dir, patch_strip, patch_file):
-    # Requires `patch` to be installed, this is true for all Bazel CI VMs, including Windows VMs.
-    subprocess.run(
-        ["patch", "-f", "-p%d" % patch_strip, "-i", patch_file], shell=False, check=True, env=os.environ, cwd=work_dir
-    )
-
-def extract_zip_with_permissions(zip_file_path, destination_dir):
-    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-        for entry in zip_ref.infolist():
-            zip_ref.extract(entry, destination_dir)
-            file_path = os.path.join(destination_dir, entry.filename)
-
-            # Set file permissions according to https://stackoverflow.com/questions/39296101
-            if entry.external_attr >  0xffff:
-                os.chmod(file_path, entry.external_attr >> 16)
-
-def make_symlinks_absolute(output_dir):
-    """
-    Walks a directory and converts all relative symlinks to absolute ones.
-    """
-    for root, dirs, files in os.walk(output_dir):
-        for name in files + dirs:
-            path = pathlib.Path(root) / name
-
-            if not path.is_symlink():
-                continue
-
-            target = path.readlink()
-
-            if target.is_absolute():
-                continue
-
-            # NOTE:
-            # On Windows, we must know if the target is a directory to recreate
-            # the symlink correctly. Check this *before* unlinking.
-            # path.is_dir() correctly follows the symlink to check the target.
-            is_dir = path.is_dir()
-
-            # Resolve the relative target path to an absolute one
-            absolute_target = (path.parent / target).resolve()
-
-            # Replace the old relative symlink with the new absolute one
-            path.unlink()
-            path.symlink_to(absolute_target, target_is_directory=is_dir)
-
-def unpack_archive(archive_file, output_dir):
-    # Addressing https://github.com/bazelbuild/continuous-integration/issues/1536
-    if archive_file.endswith(".zip"):
-        extract_zip_with_permissions(archive_file, output_dir)
-    else:
-        shutil.unpack_archive(archive_file, output_dir)
-
-    if platform.system() == "Windows":
-        # https://github.com/bazelbuild/bazel-central-registry/pull/5205
-        # Windows has issues with relative symlinks so let's make all of the
-        # symlinks in the unpacked archive absolute.
-        make_symlinks_absolute(output_dir)
 
 def prepare_test_module_repo(module_name, module_version, overwrite_bazel_version=None, root=None, suppress_log=False):
     """Prepare the test module repo and the presubmit yml file it should use"""
     suppress_log or bazelci.print_collapsed_group(":information_source: Prepare test module repo")
     if not root:
         root = pathlib.Path(bazelci.get_repositories_root())
-    source = load_source_json(module_name, module_version)
 
-    # Download and unpack the source archive to ./output
-    archive_url = source["url"]
-    archive_file = root.joinpath(archive_url.split("/")[-1].split("?")[0])
-    output_dir = root.joinpath("output")
-    suppress_log or bazelci.eprint("* Download and unpack %s\n" % archive_url)
-    download(archive_url, archive_file)
-    unpack_archive(str(archive_file), output_dir)
-    suppress_log or bazelci.eprint("Source unpacked to %s\n" % output_dir)
-
-    # Apply overlay and patch files if there are any
-    source_root = output_dir.joinpath(source["strip_prefix"] if "strip_prefix" in source else "")
-    if "overlay" in source:
-        suppress_log or bazelci.eprint("* Applying overlay")
-        for overlay_path in source["overlay"]:
-            suppress_log or bazelci.eprint("\nOverlaying %s:" % overlay_path)
-            overlay_file = get_overlay_file(module_name, module_version, overlay_path)
-            destination_file = source_root.joinpath(overlay_path)
-            os.makedirs(destination_file.parent, exist_ok=True)
-            shutil.copy(overlay_file, destination_file)
-    if "patches" in source:
-        suppress_log or bazelci.eprint("* Applying patch files")
-        for patch_name in source["patches"]:
-            suppress_log or bazelci.eprint("\nApplying %s:" % patch_name)
-            patch_file = get_patch_file(module_name, module_version, patch_name)
-            apply_patch(source_root, source["patch_strip"], patch_file)
-
-    # Make sure the checked-in MODULE.bazel file is used.
-    checked_in_module_dot_bazel = get_module_dot_bazel(module_name, module_version)
-    suppress_log or bazelci.eprint("\n* Copy checked-in MODULE.bazel file to source root:\n%s\n" % read(checked_in_module_dot_bazel))
-    module_dot_bazel = source_root.joinpath("MODULE.bazel")
-    # In case the existing MODULE.bazel has no write permission.
-    if module_dot_bazel.exists():
-        os.chmod(module_dot_bazel, stat.S_IWRITE)
-        os.remove(module_dot_bazel)
-    shutil.copy(checked_in_module_dot_bazel, module_dot_bazel)
+    # Prepare the source tree by vendoring the module's repo so we get the exact source tree generated by Bazel.
+    suppress_log or bazelci.eprint("* Preparing test module source with Bazel")
+    anonymous_module_root = create_anonymous_repo(module_name, module_version, root = root.joinpath(".temp_anonymous_module"))
+    bazelci.execute_command(["bazel", "--batch"] + bazelci.common_startup_flags()
+                            + ["vendor", "--vendor_dir=./vendor_src", "--repository_cache=", "--lockfile_mode=off", "--repo", f"@{module_name}"],
+                            cwd=anonymous_module_root,
+                            env={**os.environ, "USE_BAZEL_VERSION": "latest"})
+    source_root = root.joinpath("module_src")
+    suppress_log or bazelci.eprint(f"* Moving vendored module source to {source_root}")
+    shutil.move(anonymous_module_root.joinpath(f"vendor_src/{module_name}+"), source_root)
 
     # Generate the presubmit.yml file for the test module, it should be the content under "bcr_test_module"
     orig_presubmit = yaml.safe_load(open(get_presubmit_yml(module_name, module_version), "r"))

@@ -2694,6 +2694,7 @@ def execute_command(
     print_output=True,
     capture_stderr=False,
     suppress_stdout=False,
+    env = os.environ,
 ):
     if print_output:
         eprint(" ".join(args))
@@ -2701,7 +2702,7 @@ def execute_command(
         args,
         shell=shell,
         check=fail_if_nonzero,
-        env=os.environ,
+        env=env,
         cwd=cwd,
         errors="replace",
         stdout=(
