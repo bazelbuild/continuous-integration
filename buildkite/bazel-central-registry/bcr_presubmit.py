@@ -509,10 +509,10 @@ def should_wait_bcr_maintainer_review(modules):
     Returns True if the changes should block follow up presubmit jobs until a BCR maintainer triggers them.
     Throws an error if the changes violate BCR policies or the BCR validations fail.
     """
-    # If existing modules are changed, fail the presubmit.
     pr_labels = get_labels_from_pr()
-    if "USE-WITH-CAUTION-skip-modification-check" not in pr_labels:
-        validate_existing_modules_are_not_modified()
+
+    # If existing modules are changed, fail the presubmit.
+    validate_existing_modules_are_not_modified()
 
     # If files outside of the modules/ directory are changed, fail the presubmit.
     validate_files_outside_of_modules_dir_are_not_modified(modules)
