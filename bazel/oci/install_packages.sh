@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Using Java version: $JAVA_VERSION"
+
 set -o errexit -o nounset -o pipefail
 
 apt-get update
@@ -11,7 +13,7 @@ apt-get install --yes \
     build-essential \
     curl \
     git \
-    openjdk-8-jdk \
+    "$JAVA_VERSION" \
     python3 \
     python3-pip \
     unzip \
