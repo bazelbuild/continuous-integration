@@ -157,7 +157,7 @@ def mirror_url(url: str):
         pass
     except Exception as e:
         logging.error(f"An unexpected error occurred while checking GCS for {gcs_url}: {e}")
-        return
+        raise e
 
     temp_filename = None
     try:
@@ -185,9 +185,11 @@ def mirror_url(url: str):
 
     except requests.exceptions.RequestException as e:
         logging.error(f"Failed to download {source_url}: {e}")
-    except subprocess.CalledProcessError:
+        raise e
+    except subprocess.CalledProcessError as e:
         # The _run_subprocess helper already logged the detailed error.
         logging.error(f"Failed to mirror {source_url} due to a gsutil error.")
+        raise e
     finally:
         if temp_filename and os.path.exists(temp_filename):
             os.remove(temp_filename)
