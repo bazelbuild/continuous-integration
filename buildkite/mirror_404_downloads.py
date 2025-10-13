@@ -198,6 +198,11 @@ def main():
 
     try:
         client = BuildkiteClient(org=BUILDKITE_ORG, pipeline=BUILDKITE_PIPELINE)
+
+        # Override client._token from env var BUILDKITE_API_TOKEN if set
+        if os.environ.get("BUILDKITE_API_TOKEN"):
+            client._token = os.environ.get("BUILDKITE_API_TOKEN")
+
         logging.info(
             f"Fetching latest build for pipeline '{BUILDKITE_ORG}/{BUILDKITE_PIPELINE}'..."
         )
