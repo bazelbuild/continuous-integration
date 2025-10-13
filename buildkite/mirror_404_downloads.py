@@ -24,17 +24,18 @@ import tempfile
 from typing import Dict, List, Set
 
 import requests
+from bazelci import BuildkiteClient, BuildkiteException
 
 # --- Configuration ---
 # Fetch configuration from environment variables with sensible defaults.
 GCS_BUCKET = os.environ.get("GCS_BUCKET", "bazel-mirror")
-BUILDKITE_API_TOKEN = os.environ.get("BUILDKITE_API_TOKEN")
 
 # --- Constants ---
 BUILDKITE_ORG = "bazel"
 BUILDKITE_PIPELINE = "bazel-bazel"
-URL_RE = re.compile(r"Download from (https?://mirror\.bazel\.build\S+)\s+failed: class java.io.FileNotFoundException GET returned 404 Not Found")
-BUILDKITE_API_BASE_URL = "https://api.buildkite.com/v2"
+URL_RE = re.compile(
+    r"Download from (https?://mirror\.bazel\.build\S+)\s+failed: class java.io.FileNotFoundException GET returned 404 Not Found"
+)
 
 
 def setup_logging():
@@ -72,85 +73,58 @@ def _run_subprocess(command: List[str]):
         raise
 
 
-def get_latest_build() -> Dict:
+def get_latest_build(client: BuildkiteClient) -> Dict:
     """
     Returns the latest finished build object for the master branch.
+
+    Args:
+        client: The BuildkiteClient object.
 
     Returns:
         A dictionary representing the Buildkite build object.
 
     Raises:
         RuntimeError: If no finished builds are found.
-        requests.exceptions.RequestException: If the API request fails.
     """
-    url = f"{BUILDKITE_API_BASE_URL}/organizations/{BUILDKITE_ORG}/pipelines/{BUILDKITE_PIPELINE}/builds"
-    headers = {"Authorization": f"Bearer {BUILDKITE_API_TOKEN}"}
-    params = {"per_page": 1, "branch": "master", "state": "finished"}
-
-    try:
-        response = requests.get(url, headers=headers, params=params)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        logging.error(
-            f"Failed to fetch builds from Buildkite API. Status: {e.response.status_code if e.response else 'N/A'}"
-        )
-        logging.error(f"Response body: {e.response.text if e.response else 'N/A'}")
-        raise
-
-    builds = response.json()
+    builds = client.get_build_info_list(
+        params=[("per_page", 1), ("branch", "master"), ("state", "finished")]
+    )
     if not builds:
         raise RuntimeError(
             f"No finished builds found for pipeline '{BUILDKITE_PIPELINE}' on branch 'master'"
         )
     return builds[0]
 
-
-def get_job_logs(build: Dict) -> Dict[str, str]:
+def get_job_logs(client: BuildkiteClient, build: Dict) -> Dict[str, str]:
     """
     Gets the logs for all jobs in a build.
 
     Args:
+        client: The BuildkiteClient object.
         build: The Buildkite build object.
 
     Returns:
         A dictionary mapping job IDs to their log content.
     """
     job_logs: Dict[str, str] = {}
-    headers = {"Authorization": f"Bearer {BUILDKITE_API_TOKEN}"}
 
     for job in build.get("jobs", []):
-        if job.get("log_url"):
-            log_url = job["log_url"]
-            job_id = job.get('id', 'N/A')
+        if job.get("raw_log_url"):
+            job_id = job.get("id", "N/A")
             try:
-                response = requests.get(log_url, headers=headers)
-                response.raise_for_status()
-
-                # The API returns a JSON object; the actual log text is in the 'content' field.
-                log_data = response.json()
-                log_content = log_data.get("content")
-
-                if log_content is not None:
+                log_content = client.get_build_log(job)
+                if log_content:
                     job_logs[job_id] = log_content
-                    logging.info(f"Successfully fetched and parsed logs for job ID: {job_id}")
+                    logging.info(f"Successfully fetched logs for job ID: {job_id}")
                 else:
-                    logging.warning(f"Log data for job {job_id} did not contain a 'content' field. Skipping.")
-
-            except requests.exceptions.JSONDecodeError:
-                logging.warning(f"Failed to decode JSON from log response for job ID {job_id}. Skipping.")
-                logging.warning(f"  Response text (first 200 chars): {response.text[:200]}")
-            except requests.exceptions.RequestException as e:
-                logging.warning(
-                    f"Failed to fetch log for job ID {job_id}. Status: {e.response.status_code if e.response else 'N/A'}. Skipping."
-                )
-                logging.warning(f"  Log URL: {log_url}")
+                    logging.warning(f"Log content for job {job_id} is empty. Skipping.")
+            except BuildkiteException as e:
+                logging.warning(f"Failed to fetch log for job ID {job_id}: {e}. Skipping.")
     return job_logs
-
 
 def parse_urls_from_logs(logs: str) -> Set[str]:
     """Parses failed download URLs from the given logs."""
     return set(URL_RE.findall(logs))
-
 
 def mirror_url(url: str):
     """
@@ -187,7 +161,6 @@ def mirror_url(url: str):
         logging.error(f"An unexpected error occurred while checking GCS for {gcs_url}: {e}")
         return
 
-
     temp_filename = None
     try:
         with tempfile.NamedTemporaryFile(delete=False) as temp_file:
@@ -222,29 +195,22 @@ def mirror_url(url: str):
             os.remove(temp_filename)
             logging.info(f"Cleaned up temporary file: {temp_filename}")
 
-
 def main():
     """Main execution function."""
     setup_logging()
 
-    if not BUILDKITE_API_TOKEN:
-        logging.error(
-            "CRITICAL: BUILDKITE_API_TOKEN environment variable is not set. "
-            "Please provide a valid Buildkite API token."
-        )
-        sys.exit(1)
-
     try:
+        client = BuildkiteClient(org=BUILDKITE_ORG, pipeline=BUILDKITE_PIPELINE)
         logging.info(
             f"Fetching latest build for pipeline '{BUILDKITE_ORG}/{BUILDKITE_PIPELINE}'..."
         )
-        latest_build = get_latest_build()
+        latest_build = get_latest_build(client)
         build_number = latest_build["number"]
         build_url = latest_build["web_url"]
         logging.info(f"Found latest build: #{build_number} ({build_url})")
 
         logging.info(f"Fetching logs for build #{build_number}...")
-        logs_by_job = get_job_logs(latest_build)
+        logs_by_job = get_job_logs(client, latest_build)
         logging.info("Finished fetching all job logs.")
 
         logging.info("Parsing logs for failed download URLs...")
@@ -260,17 +226,23 @@ def main():
             else:
                 logging.info(f"No failed download URLs found in job {job_id}.")
 
-
         if not all_urls_to_mirror:
             logging.info("No failed download URLs found across any jobs. Nothing to do.")
             return
 
-        logging.info(f"\nFound a total of {len(all_urls_to_mirror)} unique URLs to mirror across all jobs.")
+        logging.info(
+            f"\nFound a total of {len(all_urls_to_mirror)} unique URLs to mirror across all jobs."
+        )
         for url in sorted(list(all_urls_to_mirror)):
             mirror_url(url)
         logging.info("All URLs processed.")
 
-    except (RuntimeError, requests.exceptions.RequestException, subprocess.CalledProcessError) as e:
+    except (
+        RuntimeError,
+        requests.exceptions.RequestException,
+        subprocess.CalledProcessError,
+        BuildkiteException,
+    ) as e:
         logging.critical(f"A critical error occurred, aborting script: {e}")
         sys.exit(1)
 
