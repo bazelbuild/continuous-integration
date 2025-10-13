@@ -26,11 +26,8 @@ from typing import Dict, List, Set
 import requests
 from bazelci import BuildkiteClient, BuildkiteException
 
-# --- Configuration ---
-# Fetch configuration from environment variables with sensible defaults.
-GCS_BUCKET = os.environ.get("GCS_BUCKET", "bazel-mirror")
-
 # --- Constants ---
+GCS_BUCKET = "bazel-mirror"
 BUILDKITE_ORG = "bazel"
 BUILDKITE_PIPELINE = "bazel-bazel"
 URL_RE = re.compile(
