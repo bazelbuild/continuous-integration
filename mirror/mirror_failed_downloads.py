@@ -33,7 +33,7 @@ GCS_BUCKET = os.environ.get("GCS_BUCKET", "bazel-mirror")
 BUILDKITE_API_TOKEN = os.environ.get("BUILDKITE_API_TOKEN")
 
 # --- Constants ---
-URL_RE = re.compile(r"Download from (https?://\S+)\s+failed: class java.io.FileNotFoundException GET returned 404 Not Found")
+URL_RE = re.compile(r"Download from (https?://mirror\.bazel\.build\S+)\s+failed: class java.io.FileNotFoundException GET returned 404 Not Found")
 BUILDKITE_API_BASE_URL = "https://api.buildkite.com/v2"
 
 
