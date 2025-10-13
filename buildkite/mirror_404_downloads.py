@@ -116,7 +116,8 @@ def get_job_logs(client: BuildkiteClient, build: Dict) -> Dict[str, str]:
                 else:
                     logging.warning(f"Log content for job {job_id} is empty. Skipping.")
             except BuildkiteException as e:
-                logging.warning(f"Failed to fetch log for job ID {job_id}: {e}. Skipping.")
+                logging.error(f"Failed to fetch log for job ID {job_id}: {e}. Aborting.")
+                raise e
     return job_logs
 
 def parse_urls_from_logs(logs: str) -> Set[str]:
