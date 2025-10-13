@@ -27,12 +27,12 @@ import requests
 
 # --- Configuration ---
 # Fetch configuration from environment variables with sensible defaults.
-BUILDKITE_ORG = "bazel"
-BUILDKITE_PIPELINE = "bazel-bazel"
 GCS_BUCKET = os.environ.get("GCS_BUCKET", "bazel-mirror")
 BUILDKITE_API_TOKEN = os.environ.get("BUILDKITE_API_TOKEN")
 
 # --- Constants ---
+BUILDKITE_ORG = "bazel"
+BUILDKITE_PIPELINE = "bazel-bazel"
 URL_RE = re.compile(r"Download from (https?://mirror\.bazel\.build\S+)\s+failed: class java.io.FileNotFoundException GET returned 404 Not Found")
 BUILDKITE_API_BASE_URL = "https://api.buildkite.com/v2"
 
