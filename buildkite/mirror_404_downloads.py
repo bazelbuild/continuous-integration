@@ -40,7 +40,7 @@ class Colors:
 GCS_BUCKET = "bazel-mirror"
 BUILDKITE_ORG = "bazel"
 BUILDKITE_PIPELINE = "bazel-bazel"
-URL_RE = re.compile(
+URL_RE = re.compile(  # Matches URLs with optional URL-encoded characters
     r"Download from (https?://mirror\.bazel\.build\S+)\s+failed: class java.io.FileNotFoundException GET returned 404 Not Found"
 )
 
@@ -71,7 +71,10 @@ def get_latest_build(client: BuildkiteClient) -> Dict:
 
 def parse_urls_from_logs(logs: str) -> Set[str]:
     """Parses failed download URLs from the given logs."""
-    return set(URL_RE.findall(logs))
+    found_urls = URL_RE.findall(logs)
+    # URL-decode the found URLs to handle characters like %2B
+    decoded_urls = {requests.utils.unquote(url) for url in found_urls}
+    return decoded_urls
 
 
 def mirror_url(url: str, bucket: str) -> MirrorResult:
