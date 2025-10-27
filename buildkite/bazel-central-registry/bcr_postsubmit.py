@@ -153,10 +153,12 @@ def get_canonical_basename(url):
 def sync_bcr_content():
     print_expanded_group(":gcloud: Sync BCR content")
     subprocess.check_output(
-        ["gsutil", "-h", "Cache-Control:no-cache", "cp", "./bazel_registry.json", BCR_BUCKET]
+        ["gsutil", "-h", "Cache-Control:no-cache", "rsync", "-c", "./bazel_registry.json", BCR_BUCKET]
     )
     subprocess.check_output(
-        ["gsutil", "-h", "Cache-Control:no-cache", "-m", "rsync", "-r", "./modules", BCR_BUCKET + "modules"]
+        # -c Use checksum to compare files
+        # -d Delete files in destination that aren't in source
+        ["gsutil", "-h", "Cache-Control:no-cache", "-m", "rsync", "-c", "-d", "-r", "./modules", BCR_BUCKET + "modules"]
     )
 
 
