@@ -157,8 +157,7 @@ def sync_bcr_content():
     )
     subprocess.check_output(
         # -c Use checksum to compare files
-        # -d Delete files in destination that aren't in source
-        ["gsutil", "-h", "Cache-Control:no-cache", "-m", "rsync", "-c", "-d", "-r", "./modules", BCR_BUCKET + "modules"]
+        ["gsutil", "-h", "Cache-Control:no-cache", "-m", "rsync", "-c", "-r", "./modules", BCR_BUCKET + "modules"]
     )
 
 
