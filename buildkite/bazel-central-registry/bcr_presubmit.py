@@ -319,12 +319,17 @@ def get_labels_from_pr():
     if not pr_number or pr_number == "false":
         return []
 
-    response = requests.get(f"https://api.github.com/repos/bazelbuild/bazel-central-registry/pulls/{pr_number}")
-    if response.status_code == 200:
-        pr = response.json()
-        return [label["name"] for label in pr["labels"]]
-    else:
-        error(f"Error: {response.status_code}. Could not fetch labels for PR https://github.com/bazelbuild/bazel-central-registry/pull/{pr_number}")
+    tries = 5
+    for attempt in range(1, tries + 1):
+        response = requests.get(f"https://api.github.com/repos/bazelbuild/bazel-central-registry/pulls/{pr_number}")
+        if response.status_code == 200:
+            pr = response.json()
+            return [label["name"] for label in pr["labels"]]
+
+        if response.status_code not in [429, 403] or attempt >= tries:
+            error(f"Error: {response.status_code}. Could not fetch labels for PR https://github.com/bazelbuild/bazel-central-registry/pull/{pr_number}")
+
+        time.sleep(1.0 * attempt)
 
 
 def should_bcr_validation_block_presubmit(modules, modules_with_metadata_change, pr_labels):
