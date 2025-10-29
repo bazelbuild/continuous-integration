@@ -42,6 +42,26 @@ SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integratio
     bazelci.GITHUB_BRANCH, int(time.time())
 )
 
+CI_MACHINE_NUM = {
+    "bazel": {
+        "default": 140,
+        "windows": 30,
+        "macos_arm64": 95,
+        "macos": 138,
+        "arm64": 55,
+    },
+    "bazel-testing": {
+        "default": 10,
+        "windows": 10,
+        "macos_arm64": 2,
+        "macos": 10,
+        "arm64": 5,
+    },
+}[BUILDKITE_ORG]
+
+# The percentage of CI resource that can be used by bcr-presubmit and bcr-compatibility pipelines.
+CI_RESOURCE_PERCENTAGE = int(os.environ.get('CI_RESOURCE_PERCENTAGE', 30))
+
 
 def fetch_bcr_presubmit_py_command():
     return "curl -s {0} -o bcr_presubmit.py".format(SCRIPT_URL)
@@ -154,7 +174,7 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
         )
         commands = [bazelci.fetch_bazelcipy_command(), fetch_bcr_presubmit_py_command(), command]
         queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
-        concurrency = max(1, (bazelci.CI_RESOURCE_PERCENTAGE * bazelci.CI_MACHINE_NUM[queue]) // 100)
+        concurrency = max(1, (CI_RESOURCE_PERCENTAGE * CI_MACHINE_NUM[queue]) // 100)
         concurrency_group = f"bcr-presubmit-test-queue-{queue}"
         pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=concurrency, concurrency_group=concurrency_group))
 

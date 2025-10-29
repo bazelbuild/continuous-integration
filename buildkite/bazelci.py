@@ -95,26 +95,6 @@ RETRY_LOGS_BUCKET = {
     "bazel": "gs://bazel-untrusted-retry-logs/",
 }[BUILDKITE_ORG]
 
-CI_MACHINE_NUM = {
-    "bazel": {
-        "default": 100,
-        "windows": 30,
-        "macos_arm64": 95,
-        "macos": 110,
-        "arm64": 1,
-    },
-    "bazel-testing": {
-        "default": 30,
-        "windows": 4,
-        "macos_arm64": 1,
-        "macos": 10,
-        "arm64": 1,
-    },
-}[BUILDKITE_ORG]
-
-# The percentage of CI resource that can be used by bcr-presubmit and bcr-compatibility pipelines.
-CI_RESOURCE_PERCENTAGE = int(os.environ.get('CI_RESOURCE_PERCENTAGE', 30))
-
 # Projects can opt out of receiving GitHub issues from --notify by adding `"do_not_notify": True` to their respective downstream entry.
 DOWNSTREAM_PROJECTS_PRODUCTION = {
     "Android Studio Plugin Google": {
