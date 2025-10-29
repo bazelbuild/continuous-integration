@@ -130,7 +130,7 @@ def get_test_module_task_config(module_name, module_version, bazel_version=None)
     return {}
 
 
-def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False, overwrite_bazel_version=None, calc_concurrency=None):
+def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False, overwrite_bazel_version=None):
     for task_id, task_config in task_configs.items():
         platform_name = get_platform(task_id, task_config)
         platform_label = bazelci.PLATFORMS[platform_name]["emoji-name"]
@@ -153,12 +153,9 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
             )
         )
         commands = [bazelci.fetch_bazelcipy_command(), fetch_bcr_presubmit_py_command(), command]
-        if calc_concurrency is None:
-            concurrency = concurrency_group = None
-        else:
-            queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
-            concurrency = calc_concurrency(queue)
-            concurrency_group = f"bcr-presubmit-test-queue-{queue}"
+        queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
+        concurrency = max(1, (bazelci.CI_RESOURCE_PERCENTAGE * bazelci.CI_MACHINE_NUM[queue]) // 100)
+        concurrency_group = f"bcr-presubmit-test-queue-{queue}"
         pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=concurrency, concurrency_group=concurrency_group))
 
 

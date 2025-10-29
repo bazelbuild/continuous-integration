@@ -28,26 +28,6 @@ import time
 import bazelci
 import bcr_presubmit
 
-CI_MACHINE_NUM = {
-    "bazel": {
-        "default": 100,
-        "windows": 30,
-        "macos_arm64": 95,
-        "macos": 110,
-        "arm64": 1,
-    },
-    "bazel-testing": {
-        "default": 30,
-        "windows": 4,
-        "macos_arm64": 1,
-        "macos": 10,
-        "arm64": 1,
-    },
-}[bazelci.BUILDKITE_ORG]
-
-# Default to use only 30% of CI resources for each type of machines.
-CI_RESOURCE_PERCENTAGE = int(os.environ.get('CI_RESOURCE_PERCENTAGE', 30))
-
 SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/generate_report.py?{}".format(
     bazelci.GITHUB_BRANCH, int(time.time())
 )
@@ -151,15 +131,13 @@ def create_step_for_generate_report():
 def main():
     modules = get_target_modules()
     pipeline_steps = []
-    # A function to calculate concurrency number for each BuildKite queue
-    calc_concurrency = lambda queue : max(1, (CI_RESOURCE_PERCENTAGE * CI_MACHINE_NUM[queue]) // 100)
     # Respect USE_BAZEL_VERSION to override bazel version in presubmit.yml files.
     bazel_version = os.environ.get("USE_BAZEL_VERSION")
     for module_name, module_version in modules:
         configs = bcr_presubmit.get_anonymous_module_task_config(module_name, module_version, bazel_version)
-        bcr_presubmit.add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, overwrite_bazel_version=bazel_version, calc_concurrency=calc_concurrency)
+        bcr_presubmit.add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, overwrite_bazel_version=bazel_version)
         configs = bcr_presubmit.get_test_module_task_config(module_name, module_version, bazel_version)
-        bcr_presubmit.add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True, overwrite_bazel_version=bazel_version, calc_concurrency=calc_concurrency)
+        bcr_presubmit.add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True, overwrite_bazel_version=bazel_version)
 
     if pipeline_steps:
         if not "SKIP_WAIT_FOR_APPROVAL" in os.environ:

@@ -6,7 +6,9 @@
 
 `bcr_presubmit.py` is a script used for Bazel Central Registry (BCR) [presubmit operations](https://github.com/bazelbuild/bazel-central-registry/blob/main/docs/README.md#presubmit). This script primarily handles the preparation and execution of tests for new modules or updated versions of modules being added to the Bazel Central Registry.
 
-This script powers the [BCR Presubmit](https://buildkite.com/bazel/bcr-presubmit) pipeline.
+This script powers the [BCR Presubmit](https://buildkite.com/bazel/bcr-presubmit) pipeline, which respects:
+
+* `CI_RESOURCE_PERCENTAGE`: (Optional) Specifies the percentage of CI machine resources to use for running tests. Default is 30%. **ATTENTION**: please do NOT overwhelm CI during busy hours.
 
 ## BCR Bazel Compatibility Test
 
