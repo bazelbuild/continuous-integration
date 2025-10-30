@@ -510,8 +510,11 @@ _SLOWEST_N_TARGETS = 20
 
 # Pipelines with elevated priority. Values are project slugs,
 # i.e. "org_slug/pipeline_slug".
-_PRIORITY_PIPELINES = frozenset(["bazel/google-bazel-presubmit"])
+_ELEVATED_PRIORITY_PIPELINES = frozenset(["bazel/google-bazel-presubmit"])
 
+# Pipelines with lowered priority. Values are project slugs,
+# The following pipelines may spawn a large number of jobs, lower their priority to not block other presubmits.
+_LOWERED_PRIORITY_PIPELINES = frozenset(["bazel/bcr-presubmit", "bazel/bcr-bazel-compatibility-test", "bazel/bazel-at-head-plus-downstream"])
 
 class BuildkiteException(Exception):
     """
@@ -2742,8 +2745,10 @@ def create_step(
     project_slug = "{}/{}".format(
         os.getenv("BUILDKITE_ORGANIZATION_SLUG"), os.getenv("BUILDKITE_PIPELINE_SLUG")
     )
-    if project_slug in _PRIORITY_PIPELINES:
+    if project_slug in _ELEVATED_PRIORITY_PIPELINES:
         step["priority"] = 1
+    elif project_slug in _LOWERED_PRIORITY_PIPELINES:
+        step["priority"] = -1
 
     if shards > 1:
         # %N means shard counting starts at 1, not 0
