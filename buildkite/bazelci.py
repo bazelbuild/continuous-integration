@@ -2718,7 +2718,7 @@ def execute_command(
 
 
 def create_step(
-    label, commands, platform, shards=1, soft_fail=None, concurrency=None, concurrency_group=None
+    label, commands, platform, shards=1, soft_fail=None, concurrency=None, concurrency_group=None, priority=None
 ):
     # TODO(#2272): remove after a migration period
     if "centos7" in platform:
@@ -2745,7 +2745,9 @@ def create_step(
     project_slug = "{}/{}".format(
         os.getenv("BUILDKITE_ORGANIZATION_SLUG"), os.getenv("BUILDKITE_PIPELINE_SLUG")
     )
-    if project_slug in _ELEVATED_PRIORITY_PIPELINES:
+    if priority is not None:
+        step["priority"] = priority
+    elif project_slug in _ELEVATED_PRIORITY_PIPELINES:
         step["priority"] = 1
     elif project_slug in _LOWERED_PRIORITY_PIPELINES:
         step["priority"] = -1
