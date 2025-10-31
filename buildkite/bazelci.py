@@ -2782,6 +2782,8 @@ def create_step(
     if concurrency and concurrency_group:
         step["concurrency"] = concurrency
         step["concurrency_group"] = concurrency_group
+        # Set concurrency_method to eager to respect priority within the same concurrency_group
+        step["concurrency_method"] = "eager"
 
     return step
 
