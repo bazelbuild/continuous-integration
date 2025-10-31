@@ -174,10 +174,9 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
         )
         commands = [bazelci.fetch_bazelcipy_command(), fetch_bcr_presubmit_py_command(), command]
         queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
+        concurrency = max(1, (CI_RESOURCE_PERCENTAGE * CI_MACHINE_NUM[queue]) // 100)
         if low_priority:
-            concurrency = 5
-        else:
-            concurrency = max(1, (CI_RESOURCE_PERCENTAGE * CI_MACHINE_NUM[queue]) // 100)
+            concurrency = min(concurrency, 3)
         concurrency_group = f"bcr-presubmit-test-queue-{queue}"
         pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=concurrency, concurrency_group=concurrency_group, priority=-100 if low_priority else None))
 
