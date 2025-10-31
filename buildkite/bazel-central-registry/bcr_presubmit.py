@@ -179,9 +179,9 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
         else:
             concurrency = max(1, (CI_RESOURCE_PERCENTAGE * CI_MACHINE_NUM[queue]) // 100)
             concurrency_group = f"bcr-presubmit-test-queue-{queue}"
-            if low_priority:
-                concurrency = min(concurrency, 5)
-                concurrency_group = f"bcr-presubmit-test-queue-{queue}-low-priority"
+        if low_priority:
+            concurrency = 5 if concurrency is None else min(5, concurrency)
+            concurrency_group = f"bcr-presubmit-test-queue-{queue}-low-priority"
         pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=concurrency, concurrency_group=concurrency_group, priority=-100 if low_priority else None))
 
 
