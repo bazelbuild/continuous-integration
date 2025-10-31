@@ -150,7 +150,7 @@ def get_test_module_task_config(module_name, module_version, bazel_version=None)
     return {}
 
 
-def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False, overwrite_bazel_version=None):
+def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False, overwrite_bazel_version=None, low_priority=False):
     for task_id, task_config in task_configs.items():
         platform_name = get_platform(task_id, task_config)
         platform_label = bazelci.PLATFORMS[platform_name]["emoji-name"]
@@ -175,8 +175,10 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
         commands = [bazelci.fetch_bazelcipy_command(), fetch_bcr_presubmit_py_command(), command]
         queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
         concurrency = max(1, (CI_RESOURCE_PERCENTAGE * CI_MACHINE_NUM[queue]) // 100)
+        if low_priority:
+            concurrency = min(concurrency, 5)
         concurrency_group = f"bcr-presubmit-test-queue-{queue}"
-        pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=concurrency, concurrency_group=concurrency_group))
+        pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=concurrency, concurrency_group=concurrency_group, priority=-100 if low_priority else None))
 
 
 def get_platform(task_id, task_config):
@@ -425,14 +427,12 @@ def should_metadata_change_block_presubmit(modules_with_metadata_change, pr_labe
     return needs_bcr_maintainer_review
 
 
-def should_wait_bcr_maintainer_review(modules):
+def should_wait_bcr_maintainer_review(modules, pr_labels):
     """Validate the changes and decide whether the presubmit should wait for a BCR maintainer review.
     Returns False if all changes look good and the presubmit can proceed.
     Returns True if the changes should block follow up presubmit jobs until a BCR maintainer triggers them.
     Throws an error if the changes violate BCR policies or the BCR validations fail.
     """
-    pr_labels = get_labels_from_pr()
-
     # If existing modules are changed, fail the presubmit.
     validate_existing_modules_are_not_modified()
 
@@ -563,19 +563,21 @@ def main(argv=None):
         if not modules:
             bazelci.eprint("No target module versions detected in this branch!")
 
+        pr_labels = get_labels_from_pr()
+        low_priority = "low-ci-priority" in pr_labels
         pipeline_steps = []
         for module_name, module_version in modules:
             previous_size = len(pipeline_steps)
 
             configs = get_anonymous_module_task_config(module_name, module_version)
-            add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps)
+            add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, low_priority=low_priority)
             configs = get_test_module_task_config(module_name, module_version)
-            add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True)
+            add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True, low_priority=low_priority)
 
             if len(pipeline_steps) == previous_size:
                 error("No pipeline steps generated for %s@%s. Please check the configuration." % (module_name, module_version))
 
-        if should_wait_bcr_maintainer_review(modules):
+        if should_wait_bcr_maintainer_review(modules, pr_labels):
             pipeline_steps.insert(0, {"block": "Wait on BCR maintainer review", "blocked_state": "running"})
 
         upload_jobs_to_pipeline(pipeline_steps)
