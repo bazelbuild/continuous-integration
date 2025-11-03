@@ -335,24 +335,18 @@ def validate_files_outside_of_modules_dir_are_not_modified(modules):
 
 
 def get_labels_from_pr():
-    """Get the labels from the PR and return them as a list of strings."""
+    """Get the labels from the PR using Buildkite's environment variable."""
 
-    # https://buildkite.com/docs/pipelines/environment-variables#BUILDKITE_PULL_REQUEST
-    pr_number = os.environ.get("BUILDKITE_PULL_REQUEST")
-    if not pr_number or pr_number == "false":
+    # This variable is a comma-separated string of label names.
+    labels_str = os.environ.get("BUILDKITE_PULL_REQUEST_LABELS")
+
+    if not labels_str:
+        # Covers cases where the var is missing (e.g., not a PR build)
+        # or is an empty string (no labels).
         return []
 
-    tries = 5
-    for attempt in range(1, tries + 1):
-        response = requests.get(f"https://api.github.com/repos/bazelbuild/bazel-central-registry/pulls/{pr_number}")
-        if response.status_code == 200:
-            pr = response.json()
-            return [label["name"] for label in pr["labels"]]
-
-        if response.status_code not in [429, 403] or attempt >= tries:
-            error(f"Error: {response.status_code}. Could not fetch labels for PR https://github.com/bazelbuild/bazel-central-registry/pull/{pr_number}")
-
-        time.sleep(1.0 * attempt)
+    # Split the comma-separated string into a list
+    return labels_str.split(',')
 
 
 def should_bcr_validation_block_presubmit(modules, modules_with_metadata_change, pr_labels):
