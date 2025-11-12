@@ -1545,7 +1545,7 @@ def get_release_name_from_branch_name():
     if os.getenv("BUILDKITE_PIPELINE_SLUG") == "publish-bazel-binaries":
         return None
     res = re.match(r"release-(\d+\.\d+\.\d+(rc\d+)?).*", os.getenv("BUILDKITE_BRANCH"))
-    return res.group(1) if res else None
+    return res.group(1) if res else "dev version - " + os.getenv("BUILDKITE_COMMIT")
 
 
 def is_pull_request():
