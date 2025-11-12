@@ -584,6 +584,7 @@ async function runDismissApproval(octokit) {
 }
 
 const SKIP_CHECK_TRIGGER = "@bazel-io skip_check ";
+const ABANDON_PR_TRIGGER = "@bazel-io abandon";
 
 async function runSkipCheck(octokit) {
   const payload = context.payload;
@@ -641,6 +642,74 @@ async function runSkipCheck(octokit) {
     });
     console.error(`unknown check: ${check}`);
     setFailed(`unknown check: ${check}`);
+  }
+}
+
+async function runHandleComment(octokit) {
+  const payload = context.payload;
+  if (payload.comment.body.trim() !== ABANDON_PR_TRIGGER) {
+    return;
+  }
+
+  const commenter = payload.comment.user.login;
+  const prNumber = context.issue.number;
+  const { owner, repo } = context.repo;
+
+  // Fetch modified modules
+  const modifiedModuleVersions = await fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber);
+  const modifiedModules = new Set(Array.from(modifiedModuleVersions).map(module => module.split('@')[0]));
+  console.log(`Modified modules: ${Array.from(modifiedModules).join(', ')}`);
+  if (modifiedModules.size === 0) {
+    console.log('No modules are modified in this PR, cannot decide on maintainers.');
+    // React with confused, as this command should only be used on PRs that modify modules.
+    await octokit.rest.reactions.createForIssueComment({
+      owner,
+      repo,
+      comment_id: payload.comment.id,
+      content: 'confused',
+    });
+    return;
+  }
+
+  // Figure out maintainers for each modified module
+  const [ maintainersMap, _ ] = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ false);
+
+  const isMaintainer = maintainersMap.has(commenter);
+
+  if (isMaintainer) {
+    console.log(`Closing PR #${prNumber} as requested by maintainer @${commenter}.`);
+    await octokit.rest.issues.createComment({
+        owner,
+        repo,
+        issue_number: prNumber,
+        body: `This PR is being closed as requested by @${commenter}, who is a maintainer of the modified module(s).`,
+    });
+    await octokit.rest.pulls.update({
+        owner,
+        repo,
+        pull_number: prNumber,
+        state: 'closed',
+    });
+    await octokit.rest.reactions.createForIssueComment({
+        owner,
+        repo,
+        comment_id: payload.comment.id,
+        content: '+1',
+    });
+  } else {
+    console.log(`@${commenter} is not a maintainer of any modified modules, ignoring the abandon command.`);
+    await octokit.rest.issues.createComment({
+        owner,
+        repo,
+        issue_number: prNumber,
+        body: `@${commenter}, you don't have permissions to abandon this PR since you are not a maintainer of any of the modified modules.`,
+    });
+    await octokit.rest.reactions.createForIssueComment({
+        owner,
+        repo,
+        comment_id: payload.comment.id,
+        content: 'confused',
+    });
   }
 }
 
@@ -749,6 +818,8 @@ async function run() {
     await runSkipCheck(octokit);
   } else if (action_type === "diff_module") {
     await runDiffModule(octokit);
+  } else if (action_type === "handle_comment") {
+    await runHandleComment(octokit);
   } else {
     console.log(`Unknown action type: ${action_type}`);
   }
