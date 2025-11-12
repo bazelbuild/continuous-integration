@@ -7,7 +7,7 @@ inputs:
     default: ${{ github.token }}
 
   action-type:
-    description: 'The type of action this reviewer should perform, valid values are: notify_maintainers, review_prs, dismiss_approvals, skip_check'
+    description: 'The type of action this reviewer should perform, valid values are: notify_maintainers, review_prs, dismiss_approvals, skip_check, diff_module, handle_comment'
     required: true
 
 runs:
