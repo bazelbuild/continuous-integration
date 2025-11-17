@@ -368,11 +368,17 @@ Import-Module PSWindowsUpdate
 # -IgnoreReboot: Prevents the VM from rebooting mid-script
 # -MicrosoftUpdate: Checks against MS servers (useful if WSUS isn't configured)
 Write-Output "Checking for and installing Security Updates..."
-$Results = Install-WindowsUpdate -MicrosoftUpdate -Category "Security Updates" -AcceptAll -IgnoreReboot -Verbose
-
-# 4. Check if a reboot is actually required (so you can handle it)
-if ($Results.RebootRequired -contains $true) {
-    Write-Warning "A reboot is required to complete security updates."
+try {
+    $Results = Get-WindowsUpdate -Install -MicrosoftUpdate -Category "Security Updates" -AcceptAll -IgnoreReboot -Verbose -ErrorAction Stop
+    if ($Results) {
+        Write-Output "Updates successfully staged. A reboot is required."
+        $Results | Select-Object -Property KBArticleID, Title, Result
+    } else {
+        Write-Output "No Security Updates found."
+    }
+}
+catch {
+    Write-Error "Update failed: $_"
 }
 
 Write-Host "All done, rebooting..."
