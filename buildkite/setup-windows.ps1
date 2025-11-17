@@ -352,6 +352,29 @@ $pagefile.InitialSize = 4 * 1024;
 $pagefile.MaximumSize = 64 * 1024;
 $pagefile.Put();
 
+### Install security updates
+# 1. Install the module (if not already present in the base image)
+if (-not (Get-Module -ListAvailable -Name PSWindowsUpdate)) {
+    Write-Output "Installing PSWindowsUpdate module..."
+    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers
+    Install-Module -Name PSWindowsUpdate -Force -Scope AllUsers -SkipPublisherCheck
+}
+
+# 2. Import the module
+Import-Module PSWindowsUpdate
+
+# 3. Install only 'Security Updates'
+# -AcceptAll: Auto-accepts EULAs
+# -IgnoreReboot: Prevents the VM from rebooting mid-script
+# -MicrosoftUpdate: Checks against MS servers (useful if WSUS isn't configured)
+Write-Output "Checking for and installing Security Updates..."
+$Results = Install-WindowsUpdate -MicrosoftUpdate -Category "Security Updates" -AcceptAll -IgnoreReboot -Verbose
+
+# 4. Check if a reboot is actually required (so you can handle it)
+if ($Results.RebootRequired -contains $true) {
+    Write-Warning "A reboot is required to complete security updates."
+}
+
 Write-Host "All done, rebooting..."
 
 $port = New-Object System.IO.Ports.SerialPort COM1,9600,None,8,one
@@ -360,3 +383,5 @@ $port.WriteLine("[setup-windows.ps1]: Setup windows done, rebooting...")
 $port.Close()
 
 Restart-Computer
+
+
