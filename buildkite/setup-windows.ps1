@@ -356,8 +356,8 @@ $pagefile.Put();
 # 1. Install the module (if not already present in the base image)
 if (-not (Get-Module -ListAvailable -Name PSWindowsUpdate)) {
     Write-Output "Installing PSWindowsUpdate module..."
-    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope CurrentUser
-    Install-Module -Name PSWindowsUpdate -Force -Scope CurrentUser -SkipPublisherCheck
+    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers
+    Install-Module -Name PSWindowsUpdate -Force -Scope AllUsers -SkipPublisherCheck
 }
 
 # 2. Import the module
@@ -383,4 +383,5 @@ $port.WriteLine("[setup-windows.ps1]: Setup windows done, rebooting...")
 $port.Close()
 
 Restart-Computer
+
 
