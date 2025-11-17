@@ -82,7 +82,8 @@ def preprocess_setup_script(setup_script, is_windows):
             if is_windows:
                 f.write("'@\n")
                 f.write('[System.IO.File]::WriteAllLines("c:\\setup.ps1", $setup_script)\n')
-                f.write('Start-Process -FilePath "powershell.exe" -ArgumentList "-File c:\\setup.ps1" -RedirectStandardOutput "c:\\setup-stdout.log" -RedirectStandardError "c:\\setup-stderr.log" -NoNewWindow\n')
+                f.write("$ts = Get-Date -Format 'yyyyMMdd-HHmmss'\n")
+                f.write('Start-Process -FilePath "powershell.exe" -ArgumentList "-File c:\\setup.ps1" -RedirectStandardOutput "c:\\setup-stdout-$ts.log" -RedirectStandardError "c:\\setup-stderr-$ts.log" -NoNewWindow\n')
     return output_file
 
 
