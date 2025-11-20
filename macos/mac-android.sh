@@ -26,8 +26,7 @@ mv cmdline-tools latest
 yes | latest/bin/sdkmanager --licenses > /dev/null || true
 latest/bin/sdkmanager --update
 latest/bin/sdkmanager \
-    "build-tools;28.0.2" \
-    "build-tools;30.0.3" \
+    "build-tools;36.1.0" \
     "extras;android;m2repository" \
     "platform-tools" \
     "platforms;android-24" \
