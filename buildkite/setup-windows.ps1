@@ -262,8 +262,7 @@ Add-Content -Value "`nd975f751698a77b662f1254ddbeed3901e976f5a" -Path "${android
 
 ## Install all required Android SDK components.
 & "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platform-tools"
-& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "build-tools;28.0.2"
-& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "build-tools;30.0.3"
+& "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "build-tools;36.1.0"
 & "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platforms;android-24"
 & "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platforms;android-28"
 & "${android_sdk_tools_root}\latest\bin\sdkmanager.bat" "platforms;android-29"
