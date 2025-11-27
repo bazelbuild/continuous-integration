@@ -352,6 +352,22 @@ PLATFORMS = {
         "python": "python3.8",
         "queue": "arm64",
     },
+    "ubuntu2204_arm64": {
+        "name": "Ubuntu 22.04 LTS ARM64",
+        "emoji-name": ":ubuntu: Ubuntu 22.04 LTS ARM64",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2204",
+        "python": "python3",
+        "queue": "arm64",
+    },
+    "ubuntu2404_arm64": {
+        "name": "Ubuntu 24.04 LTS ARM64",
+        "emoji-name": ":ubuntu: Ubuntu 24.04 LTS ARM64",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2404",
+        "python": "python3",
+        "queue": "arm64",
+    },
     "kythe_ubuntu2004": {
         "name": "Kythe (Ubuntu 20.04 LTS)",
         "emoji-name": "Kythe (:ubuntu: Ubuntu 20.04 LTS)",
