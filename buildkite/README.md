@@ -1,3 +1,5 @@
+[![build-docker-images](https://github.com/bazelbuild/continuous-integration/actions/workflows/build-docker-images.yaml/badge.svg?branch=master&event=push)](https://github.com/bazelbuild/continuous-integration/actions/workflows/build-docker-images.yaml)
+
 # Bazel Continuous Integration
 
 tl;dr:
