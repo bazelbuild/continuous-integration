@@ -329,6 +329,19 @@ async function hasContributedBefore(octokit, owner, repo, prAuthor) {
   }
 }
 
+async function isModuleMaintainer(octokit, owner, repo, prAuthorId) {
+  try {
+    const { data: searchResult } = await octokit.rest.search.code({
+      q: `user:${owner} repo:${repo} filename:metadata.json ${prAuthorId}`,
+      per_page: 1,
+    });
+    return searchResult.total_count > 0;
+  } catch (error) {
+    console.error(`Failed to check if user ID ${prAuthorId} is a module maintainer: ${error.message}`);
+    return false;
+  }
+}
+
 async function reviewPR(octokit, owner, repo, prNumber) {
   console.log('\n');
   console.log(`Processing PR #${prNumber}`);
@@ -438,7 +451,8 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   const hasLabel = prInfo.data.labels.some(label => label.name === 'presubmit-auto-run');
   if (!hasLabel) {
     const contributedBefore = await hasContributedBefore(octokit, owner, repo, prAuthor);
-    if (contributedBefore && anyModuleApproved) {
+    const isMaintainer = await isModuleMaintainer(octokit, owner, repo, prInfo.data.user.id);
+    if (contributedBefore && (anyModuleApproved || isMaintainer)) {
       await octokit.rest.issues.addLabels({
         owner,
         repo,
