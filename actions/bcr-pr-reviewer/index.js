@@ -317,11 +317,16 @@ async function checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap
 }
 
 async function hasContributedBefore(octokit, owner, repo, prAuthor) {
-  const { data: searchResult } = await octokit.rest.search.issuesAndPullRequests({
-    q: `is:pr is:merged author:${prAuthor} repo:${owner}/${repo}`,
-    per_page: 1,
-  });
-  return searchResult.total_count > 0;
+  try {
+    const { data: searchResult } = await octokit.rest.search.issuesAndPullRequests({
+      q: `is:pr is:merged author:${prAuthor} repo:${owner}/${repo}`,
+      per_page: 1,
+    });
+    return searchResult.total_count > 0;
+  } catch (error) {
+    console.error(`Failed to check if ${prAuthor} has contributed before: ${error.message}`);
+    return false;
+  }
 }
 
 async function reviewPR(octokit, owner, repo, prNumber) {
