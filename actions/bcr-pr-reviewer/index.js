@@ -278,6 +278,7 @@ async function getPrApprovers(octokit, owner, repo, prNumber) {
 
 async function checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers, prAuthor) {
   let allModulesApproved = true;
+  let anyModuleApproved = false;
   const modulesNotApproved = [];
 
   for (const module of modifiedModules) {
@@ -296,7 +297,9 @@ async function checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap
         }
       }
     }
-    if (!moduleApproved) {
+    if (moduleApproved) {
+      anyModuleApproved = true;
+    } else {
       allModulesApproved = false;
       modulesNotApproved.push(module);
       console.log(`Module '${module}' does not have maintainers' approval.`);
@@ -310,7 +313,15 @@ async function checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap
     console.log('All modified modules have maintainers\' approval');
   }
 
-  return allModulesApproved;
+  return { allModulesApproved, anyModuleApproved };
+}
+
+async function hasContributedBefore(octokit, owner, repo, prAuthor) {
+  const { data: searchResult } = await octokit.rest.search.issuesAndPullRequests({
+    q: `is:pr is:merged author:${prAuthor} repo:${owner}/${repo}`,
+    per_page: 1,
+  });
+  return searchResult.total_count > 0;
 }
 
 async function reviewPR(octokit, owner, repo, prNumber) {
@@ -362,7 +373,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
 
   // Verify if all modified modules have at least one maintainer's approval
   const prAuthor = prInfo.data.user.login;
-  const allModulesApproved = await checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers, prAuthor);
+  const { allModulesApproved, anyModuleApproved } = await checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers, prAuthor);
 
   // Re-fetch PR information to check if new commits were pushed since analysis started
   const initialHeadSha = prInfo.data.head.sha;
@@ -415,6 +426,21 @@ async function reviewPR(octokit, owner, repo, prNumber) {
     } catch (error) {
       console.error('Failed to merge PR:', error.message);
       console.error('This PR is not mergeable probably due to failed presubmit checks.');
+    }
+  }
+
+  // Add presubmit-auto-run label if conditions are met
+  const hasLabel = prInfo.data.labels.some(label => label.name === 'presubmit-auto-run');
+  if (!hasLabel) {
+    const contributedBefore = await hasContributedBefore(octokit, owner, repo, prAuthor);
+    if (contributedBefore && anyModuleApproved) {
+      await octokit.rest.issues.addLabels({
+        owner,
+        repo,
+        issue_number: prNumber,
+        labels: ['presubmit-auto-run'],
+      });
+      console.log(`Added presubmit-auto-run label to PR #${prNumber}`);
     }
   }
 
