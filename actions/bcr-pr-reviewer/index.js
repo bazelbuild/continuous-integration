@@ -443,6 +443,17 @@ async function reviewPR(octokit, owner, repo, prNumber) {
       console.log(`Added presubmit-auto-run label to PR #${prNumber}`);
     }
   }
+  // Add low-ci-priority label if more than 10 modules are modified
+  const hasLowCiPriorityLabel = prInfo.data.labels.some(label => label.name === 'low-ci-priority');
+  if (!hasLowCiPriorityLabel && modifiedModules.size > 10) {
+    await octokit.rest.issues.addLabels({
+      owner,
+      repo,
+      issue_number: prNumber,
+      labels: ['low-ci-priority'],
+    });
+    console.log(`Added low-ci-priority label to PR #${prNumber} because it modifies ${modifiedModules.size} modules`);
+  }
 
   // Discard previous approvals if not all modules are approved
   if (!allModulesApproved && approvers.has(myLogin)) {
