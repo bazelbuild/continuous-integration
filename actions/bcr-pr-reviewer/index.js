@@ -428,6 +428,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
       });
 
       console.log(`PR ${prNumber} merged successfully`);
+      return;
     } catch (error) {
       console.error('Failed to merge PR:', error.message);
       console.error('This PR is not mergeable probably due to failed presubmit checks.');
