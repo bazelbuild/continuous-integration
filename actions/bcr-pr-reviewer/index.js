@@ -215,15 +215,15 @@ async function postComment(octokit, owner, repo, prNumber, body) {
 }
 
 async function getPrApprovers(octokit, owner, repo, prNumber) {
-  // Get the commits for the PR
-  const commits = await octokit.rest.pulls.listCommits({
+  // Get all commits for the PR
+  const commits = await octokit.paginate(octokit.rest.pulls.listCommits, {
     owner,
     repo,
     pull_number: prNumber,
   });
 
   // Filter out the merge commits whose parents length is larger than 1
-  const nonMergeCommits = commits.data.filter(commit => commit.parents.length === 1);
+  const nonMergeCommits = commits.filter(commit => commit.parents.length === 1);
 
   // Get the latest commit submitted time
   const latestCommit = nonMergeCommits[nonMergeCommits.length - 1];
@@ -231,8 +231,8 @@ async function getPrApprovers(octokit, owner, repo, prNumber) {
   console.log(`Latest commit: ${latestCommit.sha}`);
   console.log(`Latest commit time: ${latestCommitTime}`);
 
-  // Get review events for the PR
-  const reviewEvents = await octokit.rest.pulls.listReviews({
+  // Get all review events for the PR
+  const reviewEvents = await octokit.paginate(octokit.rest.pulls.listReviews, {
     owner,
     repo,
     pull_number: prNumber,
@@ -241,7 +241,7 @@ async function getPrApprovers(octokit, owner, repo, prNumber) {
   // For each reviewer, collect their latest review that are newer than the latest non-merge commit
   // Key: reviewer, Value: review
   const latestReviews = new Map();
-  reviewEvents.data.forEach(review => {
+  reviewEvents.forEach(review => {
     if (new Date(review.submitted_at) < latestCommitTime) {
       return;
     }
@@ -600,14 +600,14 @@ async function runPrReviewer(octokit) {
   }
 
   // Get all open PRs from the repo
-  const prs = await octokit.rest.pulls.list({
+  const prs = await octokit.paginate(octokit.rest.pulls.list, {
     owner,
     repo,
     state: 'open',
   });
 
   // Review each PR
-  for (const pr of prs.data) {
+  for (const pr of prs) {
     await reviewPR(octokit, owner, repo, pr.number);
   }
 }
@@ -620,13 +620,13 @@ async function runDismissApproval(octokit) {
   }
   console.log(`Processing PR #${prNumber}`);
 
-  const reviews = await octokit.rest.pulls.listReviews({
+  const reviews = await octokit.paginate(octokit.rest.pulls.listReviews, {
     owner: context.repo.owner,
     repo: context.repo.repo,
     pull_number: prNumber,
   });
 
-  for (const review of reviews.data) {
+  for (const review of reviews) {
     if (review.state === 'APPROVED') {
       console.log(`Dismiss approval from ${review.user.login}`);
       await octokit.rest.pulls.dismissReview({
