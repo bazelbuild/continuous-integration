@@ -2310,7 +2310,7 @@ def get_test_query(test_targets, test_flags):
         excluded_platforms = ["@platforms//os:macos", "@platforms//os:windows"]
 
     for p in excluded_platforms:
-        query += " except attr('target_compatible_with', '{}\\\\b', $t)".format(p.replace(".", "\\."))
+        query += " except attr('target_compatible_with', '{}\\b', $t)".format(p.replace(".", "\\."))
 
     if included_tags:
         parts = ["attr('tags', '\\b{}\\b', $tt)".format(t) for t in included_tags]
