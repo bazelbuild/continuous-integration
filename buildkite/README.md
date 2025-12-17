@@ -523,6 +523,32 @@ The `unix_test` task configuration will generate 16 tasks (4 * 2 * 2) for each `
 
 The `windows_test` task configuration will generate 8 tasks (2 * 2 * 2) for each `bazel_version`, `win_compiler` and `python` combination.
 
+#### Excluding specific combinations
+
+You can exclude specific matrix combinations using the `exclude` key inside the `matrix` section:
+
+```yaml
+---
+matrix:
+  platform: ["ubuntu2004", "macos", "windows"]
+  compiler: ["gcc", "clang"]
+  exclude:
+    - platform: "windows"
+      compiler: "gcc"   # GCC is not supported on Windows
+
+tasks:
+  build:
+    name: "Build on {platform} with {compiler}"
+    platform: ${{ platform }}
+    compiler: ${{ compiler }}
+    build_targets:
+    - "//..."
+```
+
+In this example, 5 tasks will be generated (3 platforms × 2 compilers = 6 combinations, minus 1 excluded).
+
+Each item in the `exclude` list is a dictionary that specifies attribute values. A combination is excluded if it matches **all** attributes in any exclusion rule. You can also specify partial exclusions (e.g., exclude all combinations with a specific platform) by only specifying a subset of attributes.
+
 ## Downstream testing
 
 For existing projects on Bazel CI, you can add your project to [Bazel's downstream testing pipeline](https://github.com/bazelbuild/continuous-integration/blob/master/docs/downstream-testing.md) to catch breakages from Bazel@HEAD as soon as possible.

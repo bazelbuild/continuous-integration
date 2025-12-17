@@ -889,7 +889,29 @@ def get_matrix_attributes(task):
     return list(set(attributes))
 
 
-def get_combinations(matrix, attributes):
+def should_exclude_combination(combination, excludes):
+    """Check if a combination should be excluded based on the exclude rules.
+
+    Args:
+        combination: A tuple of (attribute, value) pairs representing a matrix combination.
+        excludes: A list of dicts, each representing an exclusion rule.
+                  For example: [{"platform": "windows", "compiler": "gcc"}]
+
+    Returns:
+        True if the combination matches any exclusion rule, False otherwise.
+    """
+    if not excludes:
+        return False
+
+    combination_dict = dict(combination)
+    for exclude in excludes:
+        # An exclusion matches if ALL attributes in the exclude rule match
+        if all(combination_dict.get(key) == value for key, value in exclude.items()):
+            return True
+    return False
+
+
+def get_combinations(matrix, attributes, excludes=None):
     """Given a matrix and the wanted attributes, return all possible combinations.
 
     eg.
@@ -904,7 +926,13 @@ def get_combinations(matrix, attributes):
         if attr not in matrix:
             raise BuildkiteException("${{ %s }} is not defined in `matrix` section." % attr)
     pairs = [[(attr, value) for value in matrix[attr]] for attr in attributes]
-    return sorted(itertools.product(*pairs))
+    all_combinations = sorted(itertools.product(*pairs))
+
+    # Filter out excluded combinations
+    if excludes:
+        all_combinations = [c for c in all_combinations if not should_exclude_combination(c, excludes)]
+
+    return all_combinations
 
 
 def get_expanded_task(task, combination):
@@ -940,6 +968,12 @@ def expand_task_config(config):
     tasks_to_expand = []
     expanded_tasks = {}
     matrix = config.pop("matrix", {})
+    excludes = matrix.pop("exclude", [])
+    if excludes and not isinstance(excludes, list):
+        raise BuildkiteException("Expect `matrix.exclude` to be a list of dicts")
+    for exclude in excludes:
+        if not isinstance(exclude, dict):
+            raise BuildkiteException("Each item in `matrix.exclude` must be a dict")
     for key, value in matrix.items():
         if type(key) is not str or type(value) is not list:
             raise BuildkiteException("Expect `matrix` is a map of str -> list")
@@ -949,7 +983,7 @@ def expand_task_config(config):
         if attributes:
             tasks_to_expand.append(task)
             count = 1
-            for combination in get_combinations(matrix, attributes):
+            for combination in get_combinations(matrix, attributes, excludes):
                 expanded_task_name = "%s_config_%.2d" % (task, count)
                 count += 1
                 expanded_tasks[expanded_task_name] = get_expanded_task(
