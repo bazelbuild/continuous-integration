@@ -1,0 +1,20 @@
+name: bcr-diff-poc
+on:
+  pull_request:
+    branches: [ main, master, trunk, '*' ]
+
+jobs:
+  poc:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      # Run the repo's real action entrypoint
+      - name: Run bcr-pr-reviewer (diff_module)
+        uses: ./actions/bcr-pr-reviewer
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          action-type: diff_module
