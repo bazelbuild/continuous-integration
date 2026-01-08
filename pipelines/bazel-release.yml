@@ -32,14 +32,14 @@ steps:
       release_name=\$(source scripts/release/common.sh; get_full_release_name)
       echo "release_name = \"\$release_name\""
       buildkite-agent meta-data set "release_name" "\$release_name"
-      
+
       mode="release"
       if [[ \"\$release_name\" =~ .*rc.* ]]; then
         mode="rc"
       fi
       echo "mode = \"\$mode\""
       buildkite-agent meta-data set "mode" "\$mode"
-      
+
       choco_key=$(gsutil cat gs://bazel-trusted-encrypted-secrets/choco-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key choco-trusted-token --ciphertext-file - --plaintext-file -)
       buildkite-agent meta-data set "choco_key" "\$choco_key"
 
@@ -81,7 +81,7 @@ steps:
       mkdir output
       cp bazel-bin/src/bazel output/bazel
 
-      rm MODULE.bazel.lock
+      rm -f MODULE.bazel.lock
       output/bazel build --nobuild :bazel-srcs :bootstrap-jars :maven-srcs //src:derived_java_srcs
 
       output/bazel build \
@@ -494,28 +494,28 @@ steps:
 
   - block: ":e-mail: Generate release notes"
     if: build.branch =~ /rc/i
-    
+
   - label: "Generate release notes"
     if: build.branch =~ /rc/i
     agents:
       - "queue=default"
-    command: |     
+    command: |
       echo "+++ Checking out Git branch"
       git fetch origin ${BUILDKITE_BRANCH}
       git checkout ${BUILDKITE_BRANCH}
-      
+
       echo "+++ Generating release notes"
       cd scripts/release
       python3 relnotes.py
     soft_fail: true
 
   - wait
-  
+
   - block: "Build and publish"
-    if: build.branch !~ /pre/i  
+    if: build.branch !~ /pre/i
 
   - label: "Update Chocolatey"
-    if: build.branch !~ /pre/i  
+    if: build.branch !~ /pre/i
     agents:
       - queue=windows
     command: |
@@ -528,20 +528,20 @@ steps:
       SET /p RELEASE_NAME=<release_name.txt
       DEL /q release_name.txt
       echo Release: %RELEASE_NAME%
-      
+
       buildkite-agent meta-data get "mode" > mode.txt
       SET /p MODE=<mode.txt
       DEL /q mode.txt
       echo Mode: %MODE%
-      
+
       buildkite-agent meta-data get "choco_key" > choco_key.txt
       SET /p KEY=<choco_key.txt
       DEL /q choco_key.txt
 
       echo "+++ Authenticating"
-      cd "scripts/packages/chocolatey"    
+      cd "scripts/packages/chocolatey"
       choco apikey -k %KEY% -s https://push.chocolatey.org/
-      
+
       SET RC=0
       SET VERSION=%RELEASE_NAME%
       if "%MODE%"=="rc" (
