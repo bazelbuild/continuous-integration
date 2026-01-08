@@ -83,7 +83,7 @@ async function fetchAllModulesWithMetadataChange(octokit, owner, repo, prNumber)
 }
 
 async function generateMaintainersMap(octokit, owner, repo, modifiedModules, toNotifyOnly) {
-  const maintainersMap = new Map(); // Map: maintainer GitHub username -> Set of module they maintain
+  const maintainersMap = new Map(); // Map: maintainer GitHub username (lowercase) -> Set of module they maintain
   const modulesWithoutGithubMaintainers = new Set(); // Set of module names without module maintainers
   for (const moduleName of modifiedModules) {
     console.log(`Fetching metadata for module: ${moduleName}`);
@@ -101,7 +101,7 @@ async function generateMaintainersMap(octokit, owner, repo, modifiedModules, toN
         // Only add maintainers with a github handle set. When `toNotifyOnly`, also exclude those who have set "do_not_notify"
         if (maintainer.github && !(toNotifyOnly && maintainer["do_not_notify"])) {
           hasGithubMaintainer = true;
-          if (!maintainersMap.has(maintainer.github)) {
+          if (!maintainersMap.has(maintainer.github.toLowerCase())) {
             try {
               // Verify maintainer.github matches maintainer.github_user_id via GitHub API
               const { data: user } = await octokit.rest.users.getByUsername({
@@ -113,14 +113,14 @@ async function generateMaintainersMap(octokit, owner, repo, modifiedModules, toN
                 setFailed(`Maintainer ${maintainer.github} does not match the user ID ${maintainer.github_user_id} or user not found`);
                 return;
               }
-              maintainersMap.set(maintainer.github, new Set());
+              maintainersMap.set(maintainer.github.toLowerCase(), new Set());
             } catch (error) {
               console.error(`Failed to fetch user ID for GitHub username ${maintainer.github}: ${error.message}`);
               setFailed(`Failed to fetch user ID for GitHub username ${maintainer.github}: ${error.message}`);
               return;
             }
           }
-          maintainersMap.get(maintainer.github).add(moduleName);
+          maintainersMap.get(maintainer.github.toLowerCase()).add(moduleName);
         }
       }
 
@@ -154,7 +154,7 @@ async function notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap)
   }
 
   // Notify maintainers based on grouped module lists
-  const prAuthor = context.payload.pull_request.user.login;
+  const prAuthor = context.payload.pull_request.user.login.toLowerCase();
 
   // If there are too many maintainers, it's likely to be an accidental change that will spam too many people.
   if (moduleListToMaintainers.size > 10) {
@@ -246,7 +246,7 @@ async function getPrApprovers(octokit, owner, repo, prNumber) {
       return;
     }
 
-    const reviewer = review.user.login;
+    const reviewer = review.user.login.toLowerCase();
 
     if (!latestReviews.has(reviewer)) {
       latestReviews.set(reviewer, review);
@@ -266,7 +266,7 @@ async function getPrApprovers(octokit, owner, repo, prNumber) {
   latestReviews.forEach(review => {
     console.log(`- Reviewer: ${review.user.login}, State: ${review.state}, Submitted At: ${review.submitted_at}`);
     if (review.state === 'APPROVED') {
-      approvers.add(review.user.login);
+      approvers.add(review.user.login.toLowerCase());
     }
   });
 
@@ -390,7 +390,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   const approvers = await getPrApprovers(octokit, owner, repo, prNumber);
 
   // Verify if all modified modules have at least one maintainer's approval
-  const prAuthor = prInfo.data.user.login;
+  const prAuthor = prInfo.data.user.login.toLowerCase();
   const { allModulesApproved, anyModuleApproved } = await checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers, prAuthor);
 
   // Re-fetch PR information to check if new commits were pushed since analysis started
@@ -408,7 +408,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   }
 
   const { data } = await octokit.rest.users.getAuthenticated();
-  const myLogin = data.login;
+  const myLogin = data.login.toLowerCase();
 
   // Approve the PR if not previously approved and all modules are approved
   if (allModulesApproved) {
@@ -645,13 +645,14 @@ const ABANDON_PR_TRIGGER = "@bazel-io abandon";
 
 async function runSkipCheck(octokit) {
   const payload = context.payload;
-  if (!payload.comment.body.startsWith(SKIP_CHECK_TRIGGER)) {
+  const commentBody = payload.comment.body.trim();
+  if (!commentBody.startsWith(SKIP_CHECK_TRIGGER)) {
     return;
   }
-  const check = payload.comment.body.slice(SKIP_CHECK_TRIGGER.length);
+  const check = commentBody.slice(SKIP_CHECK_TRIGGER.length);
   const owner = payload.repository.owner.login;
   const repo = payload.repository.name;
-  if (check.trim() == "unstable_url") {
+  if (check == "unstable_url") {
     await octokit.rest.issues.addLabels({
       owner,
       repo,
@@ -664,7 +665,7 @@ async function runSkipCheck(octokit) {
       comment_id: payload.comment.id,
       content: '+1',
     });
-  } else if (check.trim() == "compatibility_level") {
+  } else if (check == "compatibility_level") {
     await octokit.rest.issues.addLabels({
       owner,
       repo,
@@ -677,7 +678,7 @@ async function runSkipCheck(octokit) {
       comment_id: payload.comment.id,
       content: '+1',
     });
-  } else if (check.trim() == "incompatible_flags") {
+  } else if (check == "incompatible_flags") {
     await octokit.rest.issues.addLabels({
       owner,
       repo,
@@ -708,7 +709,7 @@ async function runHandleComment(octokit) {
     return;
   }
 
-  const commenter = payload.comment.user.login;
+  const commenter = payload.comment.user.login.toLowerCase();
   const prNumber = context.issue.number;
   const { owner, repo } = context.repo;
 
