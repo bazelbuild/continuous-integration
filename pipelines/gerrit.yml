@@ -1,6 +1,6 @@
 ---
 platforms:
-  fedora40:
+  fedora43:
     build_targets:
       - "//:release"
       - "//:api"
