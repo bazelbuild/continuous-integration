@@ -44,6 +44,7 @@ docker build -f ubuntu2204/Dockerfile   --builder mp-builder --load --platform=l
 docker build -f ubuntu2404/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2404        -t "gcr.io/$PREFIX/ubuntu2404" ubuntu2404 &
 docker build -f fedora39/Dockerfile   --target fedora39-java17   -t "gcr.io/$PREFIX/fedora39-java17" fedora39 &
 docker build -f fedora40/Dockerfile   --target fedora40-java21   -t "gcr.io/$PREFIX/fedora40-java21" fedora40 &
+docker build -f fedora43/Dockerfile   --target fedora43-java25   -t "gcr.io/$PREFIX/fedora43-java25" fedora43 &
 wait
 
 docker build -f rockylinux8/Dockerfile  --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target rockylinux8-java8               -t "gcr.io/$PREFIX/rockylinux8-java8"                 rockylinux8
@@ -57,3 +58,4 @@ docker build -f ubuntu2204/Dockerfile   --builder mp-builder --load --platform=l
 docker build -f ubuntu2404/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2404-kythe            -t "gcr.io/$PREFIX/ubuntu2404-kythe" ubuntu2404
 docker build -f fedora39/Dockerfile   --target fedora39-bazel-java17       -t "gcr.io/$PREFIX/fedora39-bazel-java17" fedora39
 docker build -f fedora40/Dockerfile   --target fedora40-bazel-java21       -t "gcr.io/$PREFIX/fedora40-bazel-java21" fedora40
+docker build -f fedora43/Dockerfile   --target fedora43-bazel-java25       -t "gcr.io/$PREFIX/fedora44-bazel-java25" fedora43

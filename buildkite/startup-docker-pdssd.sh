@@ -112,6 +112,7 @@ docker pull "gcr.io/$PREFIX/ubuntu2404" &
 docker pull "gcr.io/$PREFIX/ubuntu2404-kythe" &
 docker pull "gcr.io/$PREFIX/fedora39-java17" &
 docker pull "gcr.io/$PREFIX/fedora40-java21" &
+docker pull "gcr.io/$PREFIX/fedora43-java25" &
 wait
 
 ### Start the Buildkite agent service.

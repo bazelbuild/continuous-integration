@@ -247,6 +247,7 @@ docker pull "gcr.io/bazel-public/ubuntu2204" &
 docker pull "gcr.io/bazel-public/ubuntu2404" &
 docker pull "gcr.io/bazel-public/fedora39-java17" &
 docker pull "gcr.io/bazel-public/fedora40-java21" &
+docker pull "gcr.io/bazel-public/fedora43-java25" &
 wait
 
 poweroff
