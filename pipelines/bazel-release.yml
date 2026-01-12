@@ -82,7 +82,7 @@ steps:
       cp bazel-bin/src/bazel output/bazel
 
       rm -f MODULE.bazel.lock
-      output/bazel build --nobuild :bazel-srcs :bootstrap-jars :maven-srcs //src:derived_java_srcs
+      output/bazel build --nobuild :bazel-srcs :bootstrap-jars //src:derived_java_srcs
 
       output/bazel build \
           -c opt \
