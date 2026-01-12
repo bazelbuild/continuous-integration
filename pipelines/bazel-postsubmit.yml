@@ -43,7 +43,7 @@ tasks:
     include_json_profile:
       - build
       - test
-  fedora43:
+  fedora39:
     shell_commands:
       - rm -rf $HOME/bazeltest
       - mkdir $HOME/bazeltest
