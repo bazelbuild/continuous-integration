@@ -102,9 +102,10 @@ def test_with_bazel_at_commit(
     return True
 
 
-def clone_git_repository(project_name, suppress_stdout=False):
+def clone_git_repository(project_name, git_commit=None, suppress_stdout=False):
     git_repository = bazelci.DOWNSTREAM_PROJECTS[project_name]["git_repository"]
-    git_commit = bazelci.get_last_green_commit(project_name)
+    if not git_commit:
+        git_commit = bazelci.get_last_green_commit(project_name)
     return bazelci.clone_git_repository(git_repository, git_commit, suppress_stdout=suppress_stdout)
 
 
@@ -180,7 +181,7 @@ def start_bisecting(
 
 
 def print_culprit_finder_pipeline(
-    project_name, tasks, good_bazel_commit, bad_bazel_commit, needs_clean, repeat_times
+    project_name, tasks, good_bazel_commit, bad_bazel_commit, needs_clean, repeat_times, project_commit=None
 ):
     pipeline_steps = []
     for task_name in tasks:
@@ -189,7 +190,7 @@ def print_culprit_finder_pipeline(
             project_name
         )
         command = (
-            '%s culprit_finder.py runner --project_name="%s" --task_name=%s --good_bazel_commit=%s --bad_bazel_commit=%s %s %s'
+            '%s culprit_finder.py runner --project_name="%s" --task_name=%s --good_bazel_commit=%s --bad_bazel_commit=%s %s %s %s'
             % (
                 bazelci.PLATFORMS[platform_name]["python"],
                 project_name,
@@ -198,6 +199,7 @@ def print_culprit_finder_pipeline(
                 bad_bazel_commit,
                 "--needs_clean" if needs_clean else "",
                 ("--repeat_times=" + str(repeat_times)) if repeat_times else "",
+                ("--project_commit=" + project_commit) if project_commit else "",
             )
         )
         commands = [bazelci.fetch_bazelcipy_command(), fetch_culprit_finder_py_command(), command]
@@ -222,11 +224,14 @@ def main(argv=None):
     runner.add_argument("--bad_bazel_commit", type=str)
     runner.add_argument("--needs_clean", type=bool, nargs="?", const=True)
     runner.add_argument("--repeat_times", type=int, default=1)
+    runner.add_argument("--project_commit", type=str)
 
     args = parser.parse_args(argv)
     if args.subparsers_name == "culprit_finder":
         try:
             project_name = os.environ["PROJECT_NAME"]
+
+            project_commit = os.environ.get("PROJECT_COMMIT")
 
             if project_name not in bazelci.DOWNSTREAM_PROJECTS:
                 raise Exception(
@@ -235,7 +240,7 @@ def main(argv=None):
                 )
 
             # Clone the project repo so that we can get its CI config file at the same last green commit.
-            clone_git_repository(project_name, suppress_stdout=True)
+            clone_git_repository(project_name, git_commit=project_commit, suppress_stdout=True)
 
             # For old config file, we can still set PLATFORM_NAME as task name.
             task = os.environ.get("PLATFORM_NAME") or os.environ.get("TASK_NAME")
@@ -276,9 +281,10 @@ def main(argv=None):
             bad_bazel_commit=bad_bazel_commit,
             needs_clean=needs_clean,
             repeat_times=repeat_times,
+            project_commit=project_commit,
         )
     elif args.subparsers_name == "runner":
-        repo_location = clone_git_repository(args.project_name)
+        repo_location = clone_git_repository(args.project_name, git_commit=args.project_commit)
         good_bazel_commit, bad_bazel_commit = identify_bisect_range(args, repo_location)
         start_bisecting(
             project_name=args.project_name,
