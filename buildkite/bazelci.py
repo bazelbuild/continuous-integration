@@ -54,7 +54,7 @@ THIS_IS_SPARTA = True
 
 CLOUD_PROJECT = "bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"
 
-GITHUB_BRANCH = {"bazel": "master", "bazel-trusted": "master", "bazel-testing": "testing"}[
+GITHUB_BRANCH = {"bazel": "bazel-9-bisect", "bazel-trusted": "bazel-9-bisect", "bazel-testing": "bazel-9-bisect"}[
     BUILDKITE_ORG
 ]
 
