@@ -88,7 +88,7 @@ def test_with_bazel_at_commit(
                     "runner",
                     "--task=" + task_name,
                     "--repo_location=" + repo_location,
-                    "--use_bazel_at_commit=" + bazel_commit,
+                    "--overwrite_bazel_version=" + bazel_commit,
                 ]
                 + (["--http_config=" + http_config] if http_config else [])
                 + (["--file_config=" + file_config,] if file_config else [])
