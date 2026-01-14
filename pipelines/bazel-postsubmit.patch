@@ -1,5 +1,5 @@
---- bazel-postsubmit-orig.yml	2025-01-29 14:04:50
-+++ bazel-postsubmit.yml	2025-01-29 14:07:11
+--- postsubmit.yml	2026-01-14 10:22:04.444867882 +0000
++++ bazel-postsubmit.yml	2026-01-14 10:21:46.445794736 +0000
 @@ -1,10 +1,12 @@
  ---
 +# Update this file by running ./update-bazel-postsubmit.sh under the same directory
@@ -29,7 +29,7 @@
      build_flags:
        - "--config=ci-linux"
      build_targets:
-@@ -94,6 +98,7 @@
+@@ -101,6 +105,7 @@
      shell_commands:
        - rm -rf $HOME/bazeltest
        - mkdir $HOME/bazeltest
@@ -37,15 +37,7 @@
      build_flags:
        - "--config=ci-linux"
      build_targets:
-@@ -112,6 +117,7 @@
-     shell_commands:
-       - rm -rf $HOME/bazeltest
-       - mkdir $HOME/bazeltest
-+      - bazel mod deps --lockfile_mode=update
-     build_flags:
-       - "--config=ci-linux"
-     build_targets:
-@@ -143,6 +149,7 @@
+@@ -155,6 +160,7 @@
        - rm -rf $HOME/bazeltest
        - mkdir $HOME/bazeltest
        - ln -sf $OUTPUT_BASE/external $HOME/bazeltest/external
@@ -53,15 +45,7 @@
      build_flags:
        - "--config=ci-macos"
      build_targets:
-@@ -186,6 +193,7 @@
-       - rm -rf $HOME/bazeltest
-       - mkdir $HOME/bazeltest
-       - ln -sf $OUTPUT_BASE/external $HOME/bazeltest/external
-+      - bazel mod deps --lockfile_mode=update
-     build_flags:
-       - "--config=ci-macos"
-     build_targets:
-@@ -219,6 +227,7 @@
+@@ -179,6 +185,7 @@
      setup:
        - mkdir C:\b
        - mklink /J C:\b\bazeltest_external %OUTPUT_BASE:/=\%\external
@@ -69,7 +53,7 @@
      build_flags:
        - "--config=ci-windows"
      build_targets:
-@@ -268,6 +277,7 @@
+@@ -222,6 +229,7 @@
      setup:
        - mkdir C:\b
        - mklink /J C:\b\bazeltest_external %OUTPUT_BASE:/=\%\external
@@ -77,7 +61,7 @@
      build_flags:
        - "--config=ci-windows"
        - "--config=windows_arm64"
-@@ -279,6 +289,8 @@
+@@ -233,6 +241,8 @@
    rbe_ubuntu2004:
      platform: ubuntu2004
      name: "RBE"
