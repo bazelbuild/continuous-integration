@@ -1994,14 +1994,7 @@ def common_build_flags(bep_file, platform):
         "--disk_cache=",
     ]
 
-    if is_windows():
-        pass
-    elif is_mac():
-        flags += [
-            "--sandbox_writable_path=/var/tmp/_bazel_buildkite/cache/repos/v1",
-            "--test_env=REPOSITORY_CACHE=/var/tmp/_bazel_buildkite/cache/repos/v1",
-        ]
-    else:
+    if is_linux():
         flags += ["--sandbox_tmpfs_path=/tmp"]
 
     if bep_file:
