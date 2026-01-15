@@ -251,18 +251,17 @@ def main(argv=None):
             else:
                 tasks = get_tasks(project_name)
 
-            good_bazel_commit = os.environ.get("GOOD_BAZEL_COMMIT")
-            if not good_bazel_commit:
-                # If GOOD_BAZEL_COMMIT is not set, use recorded last bazel green commit for downstream project
-                last_green_commit_url = bazelci.bazelci_last_green_downstream_commit_url()
-                good_bazel_commit = bazelci.get_last_green_commit_by_url(last_green_commit_url)
-
             bad_bazel_commit = os.environ.get("BAD_BAZEL_COMMIT")
             if not bad_bazel_commit:
                 # If BAD_BAZEL_COMMIT is not set, use HEAD commit.
                 bad_bazel_commit = (
                     subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=BAZEL_REPO_DIR).decode("utf-8").strip()
                 )
+
+            good_bazel_commit = os.environ.get("GOOD_BAZEL_COMMIT")
+            if not good_bazel_commit:
+                # If GOOD_BAZEL_COMMIT is not set, use 100 commits older than BAD_BAZEL_COMMIT
+                good_bazel_commit = get_previous_bazel_commit(bad_bazel_commit, 100)
         except KeyError as e:
             raise Exception("Environment variable %s must be set" % str(e))
 
