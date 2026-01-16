@@ -1929,7 +1929,6 @@ def remote_caching_flags(platform, accept_cached=True):
         "--remote_max_connections=200",
         '--remote_default_exec_properties=cache-silo-key=%s'
         % platform_cache_digest.hexdigest(),
-        "--remote_download_toplevel",
     ]
 
     if not accept_cached:
