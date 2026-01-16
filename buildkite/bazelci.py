@@ -3973,7 +3973,20 @@ def print_shard_summary():
                 ]
             )
     except Exception as ex:
-        eprint(f"Failed to print shard summary: {ex}")
+        msg = f"Failed to print shard summary: {ex}"
+        try:
+            execute_command(
+                [
+                    "buildkite-agent",
+                    "annotate",
+                    "--style=warning",
+                    msg,
+                    "--context",
+                    "shard_summary_failure",
+                ]
+            )
+        except:
+            eprint(msg)
     finally:
         shutil.rmtree(tmpdir)
 
