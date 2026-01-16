@@ -566,6 +566,7 @@ class BinaryUploadRaceException(Exception):
 
 
 class BuildkiteClient(object):
+    # This token is created by the bazel-ci-bot buildkite user (ci@bazel.build)
     _ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN = """
 CiQA4DEB9sMsj9Z9i9BZ7fbvjGZ+WJv1xWDdT1Sxmu7WOLsb+5ESVwAqwcvX2oZQ3WhqRZNS+n04
 bm/ko9kTosN2qJ/UVWf4gzYSnkK1KMAktinNV/o/ygZuf3GQlBfpfBSeMDOW43oLnQE0qcl3OtTM
