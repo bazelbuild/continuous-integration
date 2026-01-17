@@ -1183,7 +1183,6 @@ def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_v
 def execute_commands(
     task_config,
     platform,
-    use_bazel_at_commit,
     use_but,
     save_but,
     needs_clean,
@@ -1216,9 +1215,6 @@ def execute_commands(
         raise BuildkiteException("build_only and test_only cannot be true at the same time")
 
     if use_but:
-        if use_bazel_at_commit:
-            raise BuildkiteException("use_bazel_at_commit cannot be set when use_but is true")
-
         print_collapsed_group(":printer: Printing task config for downstream job...")
         eprint(json.dumps(task_config, indent=2))
 
@@ -1239,13 +1235,7 @@ def execute_commands(
     binary_platform = platform if is_mac() or is_windows() else LINUX_BINARY_PLATFORM
 
     bazel_binary = "bazel"
-    if use_bazel_at_commit:
-        print_collapsed_group(":gcloud: Downloading Bazel built at " + use_bazel_at_commit)
-        os.environ["USE_BAZEL_VERSION"] = download_bazel_binary_at_commit(
-            tmpdir, binary_platform, use_bazel_at_commit
-        )
-        print_collapsed_group(":bazel: Using Bazel at " + os.environ["USE_BAZEL_VERSION"])
-    elif use_but:
+    if use_but:
         print_collapsed_group(":gcloud: Downloading Bazel Under Test")
         os.environ["USE_BAZEL_VERSION"] = download_bazel_binary(tmpdir, binary_platform)
         print_collapsed_group(":bazel: Using Bazel at " + os.environ["USE_BAZEL_VERSION"])
@@ -1687,30 +1677,6 @@ def download_bazel_binary(dest_dir, platform):
 def download_bazel_nojdk_binary(dest_dir, platform):
     binary_name = "bazel_nojdk.exe" if platform == "windows" else "bazel_nojdk"
     return download_binary(dest_dir, platform, binary_name)
-
-
-def download_binary_at_commit(bazel_git_commit, bazel_binary_url, bazel_binary_path):
-    try:
-        execute_command([gsutil_command(), "cp", bazel_binary_url, bazel_binary_path])
-    except subprocess.CalledProcessError as e:
-        raise BuildkiteInfraException(
-            "Failed to download Bazel binary at %s, error message:\n%s" % (bazel_git_commit, str(e))
-        )
-    st = os.stat(bazel_binary_path)
-    os.chmod(bazel_binary_path, st.st_mode | stat.S_IEXEC)
-    return bazel_binary_path
-
-
-def download_bazel_binary_at_commit(dest_dir, platform, bazel_git_commit):
-    url = bazelci_builds_gs_url(platform, bazel_git_commit)
-    path = os.path.join(dest_dir, "bazel.exe" if platform == "windows" else "bazel")
-    return download_binary_at_commit(bazel_git_commit, url, path)
-
-
-def download_bazel_nojdk_binary_at_commit(dest_dir, platform, bazel_git_commit):
-    url = bazelci_builds_nojdk_gs_url(platform, bazel_git_commit)
-    path = os.path.join(dest_dir, "bazel_nojdk.exe" if platform == "windows" else "bazel_nojdk")
-    return download_binary_at_commit(bazel_git_commit, url, path)
 
 
 def download_bazelci_agent(dest_dir):
@@ -4573,9 +4539,6 @@ def main(argv=None):
         type=str,
         help="Use an existing repository instead of cloning from github",
     )
-    runner.add_argument(
-        "--use_bazel_at_commit", type=str, help="Use Bazel binary built at a specific commit"
-    )
     runner.add_argument("--use_but", type=bool, nargs="?", const=True)
     runner.add_argument("--save_but", type=bool, nargs="?", const=True)
     runner.add_argument("--needs_clean", type=bool, nargs="?", const=True)
@@ -4676,7 +4639,6 @@ def main(argv=None):
             execute_commands(
                 task_config=task_config,
                 platform=platform,
-                use_bazel_at_commit=args.use_bazel_at_commit,
                 use_but=args.use_but,
                 save_but=args.save_but,
                 needs_clean=args.needs_clean,
