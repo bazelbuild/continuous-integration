@@ -240,7 +240,7 @@ def main(argv=None):
                 )
 
             # Clone the project repo so that we can get its CI config file at the same last green commit.
-            clone_git_repository(project_name, git_commit=project_commit, suppress_stdout=True)
+            project_dir = clone_git_repository(project_name, git_commit=project_commit, suppress_stdout=True)
 
             # For old config file, we can still set PLATFORM_NAME as task name.
             task = os.environ.get("PLATFORM_NAME") or os.environ.get("TASK_NAME")
@@ -273,6 +273,8 @@ def main(argv=None):
         if "REPEAT_TIMES" in os.environ:
             repeat_times = int(os.environ["REPEAT_TIMES"])
 
+        # Change into the project directory so that we can read local config file like `.bazelci/presubmit.yml`
+        os.chdir(project_dir)
         print_culprit_finder_pipeline(
             project_name=project_name,
             tasks=tasks,
