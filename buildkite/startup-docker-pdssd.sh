@@ -99,17 +99,21 @@ case $(hostname -f) in
         ;;
 esac
 
+docker pull "gcr.io/$PREFIX/rockylinux8" &
+docker pull "gcr.io/$PREFIX/rockylinux8-java11" &
 docker pull "gcr.io/$PREFIX/rockylinux8-java11-devtoolset10" &
 docker pull "gcr.io/$PREFIX/rockylinux8-releaser" &
 docker pull "gcr.io/$PREFIX/debian10-java11" &
 docker pull "gcr.io/$PREFIX/debian11-java17" &
 docker pull "gcr.io/$PREFIX/ubuntu1804-java11" &
+docker pull "gcr.io/$PREFIX/ubuntu2004-java11" &
 docker pull "gcr.io/$PREFIX/ubuntu2004" &
-docker pull "gcr.io/$PREFIX/ubuntu2004-java11-kythe" &
-docker pull "gcr.io/$PREFIX/ubuntu2204" &
-docker pull "gcr.io/$PREFIX/ubuntu2204-java17" &
-docker pull "gcr.io/$PREFIX/ubuntu2404" &
+docker pull "gcr.io/$PREFIX/ubuntu2004-kythe" &
+docker pull "gcr.io/$PREFIX/ubuntu2204-kythe" &
 docker pull "gcr.io/$PREFIX/ubuntu2404-kythe" &
+docker pull "gcr.io/$PREFIX/ubuntu2204-java17" &
+docker pull "gcr.io/$PREFIX/ubuntu2204" &
+docker pull "gcr.io/$PREFIX/ubuntu2404" &
 docker pull "gcr.io/$PREFIX/fedora39-java17" &
 docker pull "gcr.io/$PREFIX/fedora40-java21" &
 docker pull "gcr.io/$PREFIX/fedora43-java25" &
