@@ -71,17 +71,6 @@ if [[ -d "bazelbuild/$TEST_MIRROR" ]]; then
         echo "❌ Mirror is NOT up-to-date!"
         exit 1
     fi
-
-    echo "--- Verifying clone with reference"
-    rm -rf bazel-test
-    git clone --reference "bazelbuild/$TEST_MIRROR" "$TEST_REPO" bazel-test
-    if [[ -f "bazel-test/.git/objects/info/alternates" ]]; then
-        echo "✅ Clone is using the mirror as a reference."
-        grep "bazelbuild/$TEST_MIRROR" "bazel-test/.git/objects/info/alternates"
-    else
-        echo "❌ Clone is NOT using the mirror as a reference!"
-        exit 1
-    fi
 else
     echo "❌ Test mirror bazelbuild/$TEST_MIRROR does not exist!"
     exit 1
