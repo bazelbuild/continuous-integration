@@ -19,14 +19,10 @@ function mirror() {
     remote_name="$(echo -n $repo | tr -C '[[:alnum:]]' '-')"
     if [[ -d $remote_name ]]; then
         echo "--- Updating $repo in $remote_name"
-        # Ensure existing repositories are configured as mirrors with the correct refspec
-        git -C "${remote_name}" config remote.origin.url "${repo}"
-        git -C "${remote_name}" config remote.origin.fetch "+refs/*:refs/*"
-        git -C "${remote_name}" config remote.origin.mirror true
         git -C "${remote_name}" fetch --prune
     else
         echo "+++ Cloning $repo into $remote_name"
-        git clone --mirror "${repo}" "${remote_name}"
+        git clone --bare "${repo}" "${remote_name}"
         git -C "${remote_name}" config pack.compression 9
     fi
     echo "--- Repacking $remote_name"
