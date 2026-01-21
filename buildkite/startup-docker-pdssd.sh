@@ -70,6 +70,7 @@ name="%hostname"
 tags="queue=${QUEUE},kind=docker,os=linux"
 build-path="/var/lib/buildkite-agent/builds"
 git-mirrors-path="/var/lib/gitmirrors"
+git-mirrors-skip-update=true
 git-clone-mirror-flags="-v --bare"
 hooks-path="/etc/buildkite-agent/hooks"
 plugins-path="/etc/buildkite-agent/plugins"
