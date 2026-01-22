@@ -159,7 +159,7 @@ Write-Host "Installing Visual C++ 2022 Build Tools..."
 & choco install visualstudio2022-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.Tools.ARM --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
 
 ## Install Visual C++ 2026 Build Tools.
-Write-Host "Installing Visual C++ 2022 Build Tools..."
+Write-Host "Installing Visual C++ 2026 Build Tools..."
 & choco install visualstudio2026buildtools
 & choco install visualstudio2026-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.Tools.ARM --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
 
@@ -380,6 +380,7 @@ $port.WriteLine("[setup-windows.ps1]: Setup windows done, rebooting...")
 $port.Close()
 
 Restart-Computer
+
 
 
 
