@@ -270,6 +270,14 @@ DOCKER_REGISTRY_PREFIX = {
 # the platform name in a human readable format, and a the buildkite-agent's
 # working directory.
 PLATFORMS = {
+    "metrics_test_platform": {
+        "name": "Metrics Test Platform",
+        "emoji-name": ":rocky: Rocky Linux 8 ARM64",
+        "publish_binary": ["linux_arm64"],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8",
+        "python": "python3.8",
+        "queue": "metrics-test",
+    },
     "rockylinux8": {
         "name": "Rocky Linux 8",
         "emoji-name": ":rocky: Rocky Linux 8",
