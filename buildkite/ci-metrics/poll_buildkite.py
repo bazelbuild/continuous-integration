@@ -12,9 +12,9 @@ ORG_TOKENS = {
     "bazel-trusted": os.environ.get('BUILDKITE_API_TOKEN_BAZEL_TRUSTED'),
     "bazel-testing": os.environ.get('BUILDKITE_API_TOKEN_BAZEL_TESTING'),
 }
-PROJECT_ID = os.environ.get('BAZEL_METRICS_PROJECT_ID')
-DATASET_ID = os.environ.get('BAZEL_METRICS_DATASET_ID')
-TABLE_ID = "ci_infra_stats"
+PROJECT_ID = "bazel-public"
+DATASET_ID = "bazel_ci_metrics"
+TABLE_ID = "infra_stats"
 
 # Polling Interval in Seconds (5 minutes)
 POLL_INTERVAL_S = 300
