@@ -102,7 +102,7 @@ def main():
       push_to_bigquery(all_metrics)
 
   except Exception as e:
-    logging.critical(f"CRITICAL ERROR in Poller: {e}")
+    logging.critical(f"ERROR in Poller: {e}")
     sys.exit(1)
 
 if __name__ == "__main__":
