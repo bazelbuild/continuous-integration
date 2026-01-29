@@ -667,7 +667,6 @@ gwD6RBL0qz1PFfg7Zw==
         params.append(("per_page", "100"))
         params_str = "&".join("{}={}".format(k, v) for k, v in params)
         next_url = f"{url}?access_token={self._token}&{params_str}"
-        eprint("Fetching paginated URL: ", next_url)
 
         all_items = []
         while next_url:
