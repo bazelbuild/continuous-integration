@@ -83,6 +83,7 @@ def push_to_bigquery(rows):
   errors = client.insert_rows_json(table_ref, rows)
   if errors:
     logging.error(f"Encountered errors while inserting rows: {errors}")
+    sys.exit(1)
   else:
     logging.info(f"Successfully inserted {len(rows)} metrics for timestamp {rows[0]['timestamp']}")
 
@@ -102,6 +103,7 @@ def main():
 
   except Exception as e:
     logging.critical(f"CRITICAL ERROR in Poller: {e}")
+    sys.exit(1)
 
 if __name__ == "__main__":
   main()
