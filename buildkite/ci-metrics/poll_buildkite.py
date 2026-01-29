@@ -1,10 +1,11 @@
 import os
+import logging
 import requests
 from google.cloud import bigquery
 from datetime import datetime, timezone
 
 # --- Configuration ---
-ORG_SLUGS = ["bazel", "bazel-trusted", "bazel-testing"]
+ORGS = ["bazel", "bazel-trusted", "bazel-testing"]
 ORG_TOKENS = {
     "bazel": os.environ.get('BUILDKITE_API_TOKEN_BAZEL'),
     "bazel-trusted": os.environ.get('BUILDKITE_API_TOKEN_BAZEL_TRUSTED'),
@@ -79,13 +80,22 @@ class BuildkiteClient:
   def get_scheduled_jobs(self):
     return self._fetch_all_pages("builds", params={'state': 'scheduled'})
 
+def setup_logging(level=logging.INFO):
+  """Configures basic logging for the script."""
+  logging.basicConfig(
+      level=level,
+      format="%(asctime)s - %(levelname)-8s - %(message)s",
+      stream=sys.stdout,
+  )
 
-def get_org_metrics(org_slug):
+def get_org_metrics(org):
   """Fetches metrics for a single org and calculates stats."""
+  logging.info(f"Pulling Data for Org: {org}")
+
   try:
-    bk_client = BuildkiteClient(org_slug)
+    bk_client = BuildkiteClient(org)
   except ValueError as e:
-    print(e)
+    logging.error(e)
     return None
 
   # 1. Agents
@@ -120,7 +130,7 @@ def get_org_metrics(org_slug):
 
   return {
       "timestamp": datetime.utcnow().isoformat(),
-      "org": org_slug,
+      "org": org,
       "scheduled_jobs": scheduled_jobs,
       "total_agents": total_agents,
       "busy_agents": busy_agents,
@@ -131,21 +141,22 @@ def get_org_metrics(org_slug):
 
 def push_to_bigquery(rows):
   if not rows:
+    logging.info(f"No data found to push to DB")
     return
 
   errors = client.insert_rows_json(table_ref, rows)
   if errors:
-    print(f"Encountered errors while inserting rows: {errors}")
+    logging.error(f"Encountered errors while inserting rows: {errors}")
   else:
-    print(f"Successfully inserted {len(rows)} metrics for timestamp {rows[0]['timestamp']}")
+    logging.info(f"Successfully inserted {len(rows)} metrics for timestamp {rows[0]['timestamp']}")
 
-if __name__ == "__main__":
-  print(f"Starting Buildkite Poller for Orgs: {ORG_SLUGS}")
-  print(f"Target Table: {table_ref}")
+def main():
+  setup_logging()
+  logging.info(f"Starting Buildkite Poller")
 
   try:
     all_metrics = []
-    for org in ORG_SLUGS:
+    for org in ORGS:
       metrics = get_org_metrics(org)
       if metrics:
         all_metrics.append(metrics)
@@ -154,4 +165,7 @@ if __name__ == "__main__":
       push_to_bigquery(all_metrics)
 
   except Exception as e:
-    print(f"CRITICAL ERROR in Poller Loop: {e}")
+    logging.critical(f"CRITICAL ERROR in Poller: {e}")
+
+if __name__ == "__main__":
+  main()
