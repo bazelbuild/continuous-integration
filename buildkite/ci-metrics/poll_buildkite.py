@@ -1,8 +1,9 @@
 import os
+import sys
 import logging
 import requests
 from google.cloud import bigquery
-from datetime import datetime, timezone
+from datetime import datetime
 
 # --- Configuration ---
 ORGS = ["bazel", "bazel-trusted", "bazel-testing"]
@@ -19,18 +20,26 @@ TABLE_ID = "infra_stats"
 client = bigquery.Client(project=PROJECT_ID)
 table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
 
+def setup_logging(level=logging.INFO):
+  """Configures basic logging for the script."""
+  logging.basicConfig(
+      level=level,
+      format="%(asctime)s - %(levelname)-8s - %(message)s",
+      stream=sys.stdout,
+  )
+
 # --- Buildkite Client ---
 class BuildkiteClient:
 
-  def __init__(self, org_slug):
-    self.org_slug = org_slug
-    self.token = ORG_TOKENS.get(org_slug)
+  def __init__(self, org):
+    self.org = org
+    self.token = ORG_TOKENS.get(org)
 
     if not self.token:
-      raise ValueError(f"No API Token found for org: {org_slug}")
+      raise ValueError(f"No API Token found for org: {org}")
 
     self.headers = {'Authorization': f'Bearer {self.token}'}
-    self.base_url = f"https://api.buildkite.com/v2/organizations/{org_slug}"
+    self.base_url = f"https://api.buildkite.com/v2/organizations/{org}"
 
   def _fetch_all_pages(self, endpoint, params=None):
     """
@@ -48,7 +57,7 @@ class BuildkiteClient:
       try:
         resp = requests.get(current_url, headers=self.headers, params=params)
         if resp.status_code != 200:
-          print(f"Error fetching {current_url}: {resp.status_code} - {resp.text}")
+          logging.error(f"Error fetching {current_url}: {resp.status_code} - {resp.text}")
           break
 
         data = resp.json()
@@ -69,7 +78,7 @@ class BuildkiteClient:
         # Params are usually part of the next_url, so clear them to avoid duplicating
         params = None
       except Exception as e:
-        print(f"Exception during pagination: {e}")
+        logging.error(f"Exception during pagination: {e}")
         break
 
     return all_items
@@ -80,13 +89,6 @@ class BuildkiteClient:
   def get_scheduled_jobs(self):
     return self._fetch_all_pages("builds", params={'state': 'scheduled'})
 
-def setup_logging(level=logging.INFO):
-  """Configures basic logging for the script."""
-  logging.basicConfig(
-      level=level,
-      format="%(asctime)s - %(levelname)-8s - %(message)s",
-      stream=sys.stdout,
-  )
 
 def get_org_metrics(org):
   """Fetches metrics for a single org and calculates stats."""
