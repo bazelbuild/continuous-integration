@@ -1,9 +1,9 @@
 import os
 import sys
 import logging
-import requests
 from google.cloud import bigquery
 from datetime import datetime
+from bazelci import BuildkiteClient
 
 # --- Configuration ---
 ORGS = ["bazel", "bazel-trusted", "bazel-testing"]
@@ -28,77 +28,11 @@ def setup_logging(level=logging.INFO):
       stream=sys.stdout,
   )
 
-# --- Buildkite Client ---
-class BuildkiteClient:
-
-  def __init__(self, org):
-    self.org = org
-    self.token = ORG_TOKENS.get(org)
-
-    if not self.token:
-      raise ValueError(f"No API Token found for org: {org}")
-
-    self.headers = {'Authorization': f'Bearer {self.token}'}
-    self.base_url = f"https://api.buildkite.com/v2/organizations/{org}"
-
-  def _fetch_all_pages(self, endpoint, params=None):
-    """
-    Fetches all pages from a specific endpoint (e.g. 'agents').
-    """
-    if params is None:
-      params = {}
-    # Always request the max page size to minimize requests
-    params['per_page'] = 100
-
-    all_items = []
-    current_url = f"{self.base_url}/{endpoint}"
-
-    while current_url:
-      try:
-        resp = requests.get(current_url, headers=self.headers, params=params)
-        if resp.status_code != 200:
-          logging.error(f"Error fetching {current_url}: {resp.status_code} - {resp.text}")
-          break
-
-        data = resp.json()
-        if isinstance(data, list):
-          all_items.extend(data)
-
-        # Check for next page link in header
-        link_header = resp.headers.get("Link", "")
-        next_url = None
-        if 'rel="next"' in link_header:
-          links = link_header.split(", ")
-          for link in links:
-            if 'rel="next"' in link:
-              next_url = link.split(";")[0].strip("<>")
-              break
-
-        current_url = next_url
-        # Params are usually part of the next_url, so clear them to avoid duplicating
-        params = None
-      except Exception as e:
-        logging.error(f"Exception during pagination: {e}")
-        break
-
-    return all_items
-
-  def get_agents(self):
-    return self._fetch_all_pages("agents")
-
-  def get_scheduled_jobs(self):
-    return self._fetch_all_pages("builds", params={'state': 'scheduled'})
-
-
 def get_org_metrics(org):
   """Fetches metrics for a single org and calculates stats."""
   logging.info(f"Pulling Data for Org: {org}")
-
-  try:
-    bk_client = BuildkiteClient(org)
-  except ValueError as e:
-    logging.error(e)
-    return None
+  bk_client = BuildkiteClient(org=org)
+  bk_client._token = ORG_TOKENS.get(org)
 
   # 1. Agents
   agents = bk_client.get_agents()
