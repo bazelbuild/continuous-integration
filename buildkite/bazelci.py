@@ -635,8 +635,8 @@ gwD6RBL0qz1PFfg7Zw==
         )
 
     def _open_url(self, url, params=[], retries=5):
-        params_str = "".join("&{}={}".format(k, v) for k, v in params)
-        full_url = "{}?access_token={}{}".format(url, self._token, params_str)
+        params_str = "&".join("&{}={}".format(k, v) for k, v in params)
+        full_url = f"{url}?access_token={self._token}&{params_str}"
 
         for attempt in range(retries):
             try:
@@ -666,7 +666,7 @@ gwD6RBL0qz1PFfg7Zw==
         # Always request max page size
         params.append(("per_page", "100"))
         params_str = "&".join("{}={}".format(k, v) for k, v in params)
-        next_url = "{}?access_token={}{}".format(url, self._token, params_str)
+        next_url = f"{url}?access_token={self._token}&{params_str}"
         eprint("Fetching paginated URL: ", next_url)
 
         all_items = []
