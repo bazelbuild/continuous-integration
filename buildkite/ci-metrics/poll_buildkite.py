@@ -1,12 +1,10 @@
 import os
-import time
 import requests
 from google.cloud import bigquery
 from datetime import datetime, timezone
 
 # --- Configuration ---
 ORG_SLUGS = ["bazel", "bazel-trusted", "bazel-testing"]
-#TODO: use encrypted tokens
 ORG_TOKENS = {
     "bazel": os.environ.get('BUILDKITE_API_TOKEN_BAZEL'),
     "bazel-trusted": os.environ.get('BUILDKITE_API_TOKEN_BAZEL_TRUSTED'),
@@ -15,9 +13,6 @@ ORG_TOKENS = {
 PROJECT_ID = "bazel-public"
 DATASET_ID = "bazel_ci_metrics"
 TABLE_ID = "infra_stats"
-
-# Polling Interval in Seconds (5 minutes)
-POLL_INTERVAL_S = 300
 
 # --- BigQuery Client ---
 client = bigquery.Client(project=PROJECT_ID)
@@ -144,26 +139,19 @@ def push_to_bigquery(rows):
   else:
     print(f"Successfully inserted {len(rows)} metrics for timestamp {rows[0]['timestamp']}")
 
-def run_loop():
+if __name__ == "__main__":
   print(f"Starting Buildkite Poller for Orgs: {ORG_SLUGS}")
   print(f"Target Table: {table_ref}")
 
-  while True:
-    try:
-      all_metrics = []
-      for org in ORG_SLUGS:
-        metrics = get_org_metrics(org)
-        if metrics:
-          all_metrics.append(metrics)
+  try:
+    all_metrics = []
+    for org in ORG_SLUGS:
+      metrics = get_org_metrics(org)
+      if metrics:
+        all_metrics.append(metrics)
 
-      if all_metrics:
-        push_to_bigquery(all_metrics)
+    if all_metrics:
+      push_to_bigquery(all_metrics)
 
-    except Exception as e:
-      print(f"CRITICAL ERROR in Poller Loop: {e}")
-
-    # Wait for next tick
-    time.sleep(POLL_INTERVAL_S)
-
-if __name__ == "__main__":
-  run_loop()
+  except Exception as e:
+    print(f"CRITICAL ERROR in Poller Loop: {e}")
