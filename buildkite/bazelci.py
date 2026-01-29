@@ -635,7 +635,7 @@ gwD6RBL0qz1PFfg7Zw==
         )
 
     def _open_url(self, url, params=[], retries=5):
-        params_str = "&".join("&{}={}".format(k, v) for k, v in params)
+        params_str = "&".join("{}={}".format(k, v) for k, v in params)
         full_url = f"{url}?access_token={self._token}&{params_str}"
 
         for attempt in range(retries):
