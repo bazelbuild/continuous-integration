@@ -77,17 +77,26 @@ def get_org_metrics(org):
         "avg_bootstrap_time_s": avg_bootstrap_time
     }
 
-def push_to_bigquery(rows):
+def push_to_bigquery(rows, retries):
     if not rows:
-        logging.info(f"No data found to push to DB")
+        logging.info("No data found to push to DB")
         return
 
-    errors = client.insert_rows_json(table_ref, rows)
-    if errors:
-        logging.error(f"Encountered errors while inserting rows: {errors}")
-        sys.exit(1)
-    else:
-        logging.info(f"Successfully inserted {len(rows)} metrics for timestamp {rows[0]['timestamp']}")
+    logging.info(f"Pushing {len(rows)} rows to BigQuery...")
+
+    for attempt in range(retries):
+        errors = client.insert_rows_json(table_ref, rows)
+        if not errors:
+            logging.info(f"Successfully inserted {len(rows)} metrics for timestamp {rows[0]['timestamp']}")
+            return
+
+        logging.warning(f"Attempt {attempt + 1}/{retries} failed with errors: {errors}")
+        if attempt < retries - 1:
+            time.sleep(2 ** attempt)
+
+    # If all retries failed
+    logging.error(f"Failed to insert rows after {retries} attempts.")
+    sys.exit(1)
 
 def main():
     setup_logging()
@@ -101,7 +110,7 @@ def main():
                 all_metrics.append(metrics)
 
         if all_metrics:
-            push_to_bigquery(all_metrics)
+            push_to_bigquery(all_metrics, 5)
 
     except Exception as e:
         logging.critical(f"ERROR in Poller: {e}")
