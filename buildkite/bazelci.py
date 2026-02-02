@@ -635,31 +635,6 @@ gwD6RBL0qz1PFfg7Zw==
         )
 
     def _open_url(self, url, params=[], retries=5):
-        params_str = "&".join("{}={}".format(k, v) for k, v in params)
-        full_url = f"{url}?access_token={self._token}&{params_str}"
-
-        for attempt in range(retries):
-            try:
-                response = urllib.request.urlopen(full_url)
-                return response.read().decode("utf-8", "ignore")
-            except urllib.error.HTTPError as ex:
-                # Handle specific error codes
-                if ex.code == 429:  # Too Many Requests
-                    retry_after = ex.headers.get("RateLimit-Reset")
-                    if retry_after:
-                        wait_time = int(retry_after)
-                    else:
-                        wait_time = 2**attempt  # Exponential backoff if no RateLimit-Reset header
-
-                    time.sleep(wait_time)
-                else:
-                    raise BuildkiteException(
-                        "Failed to open {}: {} - {}".format(url, ex.code, ex.reason)
-                    )
-
-        raise BuildkiteException(f"Failed to open {url} after {retries} retries.")
-
-    def _open_url_with_paganation(self, url, params=[], retries=5):
         """
         Returns a LIST of all items (following pagination).
         """
@@ -705,17 +680,20 @@ gwD6RBL0qz1PFfg7Zw==
                         break # Break retry loop on success
 
                 except urllib.error.HTTPError as ex:
-                    if ex.code == 429: # Rate Limit
+                    # Handle specific error codes
+                    if ex.code == 429:  # Too Many Requests
                         retry_after = ex.headers.get("RateLimit-Reset")
                         wait_time = int(retry_after) if retry_after else 2**attempt
                         time.sleep(wait_time)
                     elif attempt < retries - 1:
                         time.sleep(2**attempt)
                     else:
-                        raise BuildkiteException(f"Failed to open {url}: {ex.code} - {ex.reason}")
+                        raise BuildkiteException(
+                            "Failed to open {}: {} - {}".format(url, ex.code, ex.reason)
+                        )
 
             if not success:
-                raise BuildkiteException(f"Failed to fetch page after {retries} retries")
+                raise BuildkiteException(f"Failed to open {url} after {retries} retries.")
 
         return all_items
 
@@ -772,11 +750,11 @@ gwD6RBL0qz1PFfg7Zw==
 
     def get_agents(self, retries = 5):
         url = self._AGENTS_URL_TEMPLATE.format(self._org)
-        return self._open_url_with_paganation(url, retries = retries)
+        return self._open_url(url, retries = retries)
 
     def get_scheduled_jobs(self, retries = 5):
         url = self._BUILDS_URL_TEMPLATE.format(self._org)
-        return self._open_url_with_paganation(url, params=[("state", "scheduled")], retries = retries)
+        return self._open_url(url, params=[("state", "scheduled")], retries = retries)
 
     @staticmethod
     def _check_response(response, expected_status_code):
