@@ -606,7 +606,11 @@ gwD6RBL0qz1PFfg7Zw==
 
     _PIPELINE_INFO_URL_TEMPLATE = "https://api.buildkite.com/v2/organizations/{}/pipelines/{}"
 
-    def __init__(self, org, pipeline):
+    _AGENTS_URL_TEMPLATE = "https://api.buildkite.com/v2/organizations/{}/agents"
+
+    _BUILDS_URL_TEMPLATE = "https://api.buildkite.com/v2/organizations/{}/builds"
+
+    def __init__(self, org, pipeline=None):
         self._org = org
         self._pipeline = pipeline
         self._token = self._get_buildkite_token()
@@ -654,6 +658,66 @@ gwD6RBL0qz1PFfg7Zw==
                     )
 
         raise BuildkiteException(f"Failed to open {url} after {retries} retries.")
+
+    def _open_url_with_paganation(self, url, params=[], retries=5):
+        """
+        Returns a LIST of all items (following pagination).
+        """
+        # Always request max page size
+        params.append(("per_page", "100"))
+        params_str = "".join("&{}={}".format(k, v) for k, v in params)
+        next_url = "{}?access_token={}{}".format(url, self._token, params_str)
+
+        all_items = []
+        while next_url:
+            success = False
+            for attempt in range(retries):
+                try:
+                    with urllib.request.urlopen(next_url) as response:
+                        content = response.read().decode("utf-8", "ignore")
+                        data = json.loads(content)
+
+                        if isinstance(data, list):
+                            all_items.extend(data)
+                        else:
+                            # If not a list, pagination concept doesn't apply the same way.
+                            # Just return the single object.
+                            return data
+
+                        # Check for Link header
+                        link_header = response.getheader("Link")
+                        next_url = None
+
+                        if link_header:
+                            parts = link_header.split(",")
+                            for part in parts:
+                                if 'rel="next"' in part:
+                                    # Extract url: <url>; rel="next"
+                                    raw_url = part.split(";")[0].strip().strip("<>")
+                                    next_url = raw_url
+
+                                    # Fix missing auth token in Link header
+                                    if "access_token" not in next_url:
+                                        conn = "&" if "?" in next_url else "?"
+                                        next_url = "{}{}access_token={}".format(next_url, conn, self._token)
+                                    break
+                        success = True
+                        break # Break retry loop on success
+
+                except urllib.error.HTTPError as ex:
+                    if ex.code == 429: # Rate Limit
+                        retry_after = ex.headers.get("RateLimit-Reset")
+                        wait_time = int(retry_after) if retry_after else 2**attempt
+                        time.sleep(wait_time)
+                    elif attempt < retries - 1:
+                        time.sleep(2**attempt)
+                    else:
+                        raise BuildkiteException(f"Failed to open {url}: {ex.code} - {ex.reason}")
+
+            if not success:
+              raise BuildkiteException(f"Failed to fetch page after {retries} retries")
+
+        return all_items
 
     def get_pipeline_info(self):
         """Get details for a pipeline given its organization slug
@@ -705,6 +769,14 @@ gwD6RBL0qz1PFfg7Zw==
 
     def get_build_log(self, job, retries = 5):
         return self._open_url(job["raw_log_url"], retries = retries)
+
+    def get_agents(self, retries = 5):
+        url = self._AGENTS_URL_TEMPLATE.format(self._org)
+        return self._open_url_with_paganation(url, retries = retries)
+
+    def get_scheduled_jobs(self, retries = 5):
+        url = self._BUILDS_URL_TEMPLATE.format(self._org)
+        return self._open_url_with_paganation(url, params=[("state", "scheduled")], retries = retries)
 
     @staticmethod
     def _check_response(response, expected_status_code):
