@@ -697,6 +697,66 @@ gwD6RBL0qz1PFfg7Zw==
 
         return all_items
 
+    def _open_url_with_paganation(self, url, params=[], retries=5):
+        """
+        Returns a LIST of all items (following pagination).
+        """
+        # Always request max page size
+        params.append(("per_page", "100"))
+        params_str = "".join("&{}={}".format(k, v) for k, v in params)
+        next_url = "{}?access_token={}{}".format(url, self._token, params_str)
+
+        all_items = []
+        while next_url:
+            success = False
+            for attempt in range(retries):
+                try:
+                    with urllib.request.urlopen(next_url) as response:
+                        content = response.read().decode("utf-8", "ignore")
+                        data = json.loads(content)
+
+                        if isinstance(data, list):
+                            all_items.extend(data)
+                        else:
+                            # If not a list, pagination concept doesn't apply the same way.
+                            # Just return the single object.
+                            return data
+
+                        # Check for Link header
+                        link_header = response.getheader("Link")
+                        next_url = None
+
+                        if link_header:
+                            parts = link_header.split(",")
+                            for part in parts:
+                                if 'rel="next"' in part:
+                                    # Extract url: <url>; rel="next"
+                                    raw_url = part.split(";")[0].strip().strip("<>")
+                                    next_url = raw_url
+
+                                    # Fix missing auth token in Link header
+                                    if "access_token" not in next_url:
+                                        conn = "&" if "?" in next_url else "?"
+                                        next_url = "{}{}access_token={}".format(next_url, conn, self._token)
+                                    break
+                        success = True
+                        break # Break retry loop on success
+
+                except urllib.error.HTTPError as ex:
+                    if ex.code == 429: # Rate Limit
+                        retry_after = ex.headers.get("RateLimit-Reset")
+                        wait_time = int(retry_after) if retry_after else 2**attempt
+                        time.sleep(wait_time)
+                    elif attempt < retries - 1:
+                        time.sleep(2**attempt)
+                    else:
+                        raise BuildkiteException(f"Failed to open {url}: {ex.code} - {ex.reason}")
+
+            if not success:
+              raise BuildkiteException(f"Failed to fetch page after {retries} retries")
+
+        return all_items
+
     def get_pipeline_info(self):
         """Get details for a pipeline given its organization slug
         and pipeline slug.
