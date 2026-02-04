@@ -31,30 +31,31 @@ import requests
 import subprocess
 import sys
 import tempfile
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-BCR_BUCKET = "gs://bcr.bazel.build/"
-ATTESTATION_METADATA_FILE = "attestations.json"
-FILES_WITH_ATTESTATIONS = ("source.json", "MODULE.bazel")
+BCR_BUCKET: str = "gs://bcr.bazel.build/"
+ATTESTATION_METADATA_FILE: str = "attestations.json"
+FILES_WITH_ATTESTATIONS: Tuple[str, str] = ("source.json", "MODULE.bazel")
 
 # Basename of the file that contains the most recent commit
 # that passed through the post-submit pipeline successfully.
-LAST_GREEN_FILE = "last_green.txt"
+LAST_GREEN_FILE: str = "last_green.txt"
 
 
 class AttestationError(Exception):
     """Raised when there is a problem wrt attestations."""
 
-def print_expanded_group(name):
+def print_expanded_group(name: str) -> None:
     print("\n\n+++ {0}\n\n".format(name))
 
-def get_output(command):
+def get_output(command: List[str]) -> str:
     return subprocess.run(
           command,
           encoding='utf-8',
           stdout=subprocess.PIPE,
       ).stdout
 
-def check_and_write_new_attestations():
+def check_and_write_new_attestations() -> None:
     print_expanded_group(":cop::copybara: Check & write attestations")
     paths = get_new_attestations_json_paths()
     if not paths:
@@ -66,7 +67,7 @@ def check_and_write_new_attestations():
         check_and_write_module_attestations(p)
 
 
-def get_new_attestations_json_paths():
+def get_new_attestations_json_paths() -> List[str]:
     cwd = os.getcwd()
     cmd = ["git", "diff-tree", "--no-commit-id", "--name-only", "-r"]
 
@@ -77,11 +78,15 @@ def get_new_attestations_json_paths():
     if last_green:
         cmd.append(last_green)
 
-    paths = get_output(cmd + [get_commit()])
+    commit = get_commit()
+    if commit:
+        cmd.append(commit)
+
+    paths = get_output(cmd)
     return [os.path.join(cwd, p) for p in paths.split("\n") if p.endswith(f"/{ATTESTATION_METADATA_FILE}")]
 
 
-def get_last_green():
+def get_last_green() -> str:
     url = os.path.join(
         BCR_BUCKET.replace("gs://", "https://storage.googleapis.com/"), LAST_GREEN_FILE
     )
@@ -92,11 +97,11 @@ def get_last_green():
         return response.content.decode("utf-8")
 
 
-def get_commit():
+def get_commit() -> Optional[str]:
     return os.getenv("BUILDKITE_COMMIT")
 
 
-def check_and_write_module_attestations(attestations_json_path):
+def check_and_write_module_attestations(attestations_json_path: str) -> None:
     print(f"Checking {attestations_json_path}...")
     dest_dir = os.path.dirname(attestations_json_path)
     with open(attestations_json_path, "rb") as af:
@@ -111,7 +116,7 @@ def check_and_write_module_attestations(attestations_json_path):
 
     print("Done!")
 
-def check_and_write_single_attestation(url, integrity, dest_dir):
+def check_and_write_single_attestation(url: str, integrity: str, dest_dir: str) -> None:
     print(f"\tFound attestation @ {url}")
     with requests.get(url) as response:
         if response.status_code != 200:
@@ -127,12 +132,12 @@ def check_and_write_single_attestation(url, integrity, dest_dir):
     with open(dest, "wb") as f:
         f.write(raw_content)
 
-def check_integrity(data, expected):
+def check_integrity(data: bytes, expected: str) -> None:
     algorithm, _, _ = expected.partition("-")
     assert algorithm in {"sha224", "sha256", "sha384", "sha512"}, "Unsupported SRI algorithm"
 
-    hash = getattr(hashlib, algorithm)(data)
-    encoded = base64.b64encode(hash.digest()).decode()
+    hash_obj = getattr(hashlib, algorithm)(data)
+    encoded = base64.b64encode(hash_obj.digest()).decode()
     actual = f"{algorithm}-{encoded}"
     if actual != expected:
         raise AttestationError(f"Expected checksum {expected}, got {actual}.")
@@ -141,7 +146,7 @@ def check_integrity(data, expected):
 # to avoid conflicts when multiple modules are released together
 # (e.g. rules_python and rules_python_gazelle_plugin).
 # In this case we need to get the canonical basename.
-def get_canonical_basename(url):
+def get_canonical_basename(url: str) -> str:
     actual_basename = os.path.basename(url)
     for f in FILES_WITH_ATTESTATIONS:
         if f in actual_basename:
@@ -150,7 +155,7 @@ def get_canonical_basename(url):
     raise AttestationError(f"Invalid basename of {url}.")
 
 
-def sync_bcr_content():
+def sync_bcr_content() -> None:
     print_expanded_group(":gcloud: Sync BCR content")
     subprocess.check_output(
         ["gsutil", "-h", "Cache-Control:no-cache", "cp", "./bazel_registry.json", BCR_BUCKET]
@@ -161,16 +166,18 @@ def sync_bcr_content():
     )
 
 
-def update_last_green():
+def update_last_green() -> None:
     path = os.path.join(tempfile.mkdtemp(), LAST_GREEN_FILE)
+    commit = get_commit()
     with open(path, "wt") as f:
-        f.write(get_commit())
+        if commit:
+            f.write(commit)
 
     dest = os.path.join(BCR_BUCKET, LAST_GREEN_FILE)
     subprocess.check_output(["gsutil", "cp", path, dest])
 
 
-def main():
+def main() -> int:
     check_and_write_new_attestations()
     sync_bcr_content()
     update_last_green()

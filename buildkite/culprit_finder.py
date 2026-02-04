@@ -20,24 +20,25 @@ import sys
 import subprocess
 import time
 import yaml
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 import bazelci
 
-BAZEL_REPO_DIR = os.getcwd()
+BAZEL_REPO_DIR: str = os.getcwd()
 
-BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
+BUILDKITE_ORG: str = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
 
-SCRIPT_URL = {
+SCRIPT_URL: str = {
     "bazel-testing": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/culprit_finder.py",
     "bazel-trusted": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/culprit_finder.py",
     "bazel": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/culprit_finder.py",
 }[BUILDKITE_ORG] + "?{}".format(int(time.time()))
 
 
-def fetch_culprit_finder_py_command():
+def fetch_culprit_finder_py_command() -> str:
     return "curl -s {0} -o culprit_finder.py".format(SCRIPT_URL)
 
 
-def get_bazel_commits_between(first_commit, second_commit):
+def get_bazel_commits_between(first_commit: str, second_commit: str) -> List[str]:
     """
     Get bazel commits between first_commit and second_commit as a list.
     first_commit is not included in the list.
@@ -56,27 +57,27 @@ def get_bazel_commits_between(first_commit, second_commit):
         )
 
 
-def get_configs(project_name):
+def get_configs(project_name: str) -> Dict[str, Any]:
     http_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("http_config")
     file_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("file_config")
     configs = bazelci.fetch_configs(http_config, file_config)
     return configs
 
 
-def get_platform(project_name, task_name):
+def get_platform(project_name: str, task_name: str) -> str:
     configs = get_configs(project_name)
     task_config = configs["tasks"][task_name]
     return bazelci.get_platform_for_task(task_name, task_config)
 
 
-def get_tasks(project_name):
+def get_tasks(project_name: str) -> Sequence[str]:
     configs = get_configs(project_name)
-    return configs["tasks"].keys()
+    return list(configs["tasks"].keys())
 
 
 def test_with_bazel_at_commit(
-    project_name, task_name, repo_location, bazel_commit, needs_clean, repeat_times
-):
+    project_name: str, task_name: str, repo_location: str, bazel_commit: str, needs_clean: bool, repeat_times: int
+) -> bool:
     http_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("http_config")
     file_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("file_config")
     for i in range(1, repeat_times + 1):
@@ -102,14 +103,14 @@ def test_with_bazel_at_commit(
     return True
 
 
-def clone_git_repository(project_name, git_commit=None, suppress_stdout=False):
+def clone_git_repository(project_name: str, git_commit: Optional[str] = None, suppress_stdout: bool = False) -> str:
     git_repository = bazelci.DOWNSTREAM_PROJECTS[project_name]["git_repository"]
     if not git_commit:
         git_commit = bazelci.get_last_green_commit(project_name)
     return bazelci.clone_git_repository(git_repository, git_commit, suppress_stdout=suppress_stdout)
 
 
-def get_previous_bazel_commit(current_commit, count):
+def get_previous_bazel_commit(current_commit: str, count: int) -> str:
     """Get a previous bazel commit that is a given number of commits older than the current one."""
     try:
         os.chdir(BAZEL_REPO_DIR)
@@ -123,7 +124,7 @@ def get_previous_bazel_commit(current_commit, count):
         )
 
 
-def identify_bisect_range(args, repo_location):
+def identify_bisect_range(args: argparse.Namespace, repo_location: str) -> Tuple[str, str]:
     MAX_RETRY = 5
     retry = 0
     step = 100
@@ -150,8 +151,8 @@ def identify_bisect_range(args, repo_location):
 
 
 def start_bisecting(
-    project_name, task_name, repo_location, commits_list, needs_clean, repeat_times
-):
+    project_name: str, task_name: str, repo_location: str, commits_list: List[str], needs_clean: bool, repeat_times: int
+) -> None:
     left = 0
     right = len(commits_list)
     while left < right:
@@ -181,8 +182,8 @@ def start_bisecting(
 
 
 def print_culprit_finder_pipeline(
-    project_name, tasks, good_bazel_commit, bad_bazel_commit, needs_clean, repeat_times, project_commit=None
-):
+    project_name: str, tasks: Sequence[str], good_bazel_commit: str, bad_bazel_commit: str, needs_clean: bool, repeat_times: int, project_commit: Optional[str] = None
+) -> None:
     pipeline_steps = []
     for task_name in tasks:
         platform_name = get_platform(project_name, task_name)
@@ -207,7 +208,7 @@ def print_culprit_finder_pipeline(
     print(yaml.dump({"steps": pipeline_steps}))
 
 
-def main(argv=None):
+def main(argv: Optional[List[str]] = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
 
@@ -236,7 +237,7 @@ def main(argv=None):
             if project_name not in bazelci.DOWNSTREAM_PROJECTS:
                 raise Exception(
                     "Project name '%s' not recognized, available projects are %s"
-                    % (project_name, str((bazelci.DOWNSTREAM_PROJECTS.keys())))
+                    % (project_name, str(list(bazelci.DOWNSTREAM_PROJECTS.keys())))
                 )
 
             # Clone the project repo so that we can get its CI config file at the same last green commit.
@@ -245,7 +246,7 @@ def main(argv=None):
             # For old config file, we can still set PLATFORM_NAME as task name.
             task = os.environ.get("PLATFORM_NAME") or os.environ.get("TASK_NAME")
             if task:
-                tasks = [task]
+                tasks: Sequence[str] = [task]
             elif os.environ.get("TASK_NAME_LIST"):
                 tasks = os.environ.get("TASK_NAME_LIST").split(",")
             else:

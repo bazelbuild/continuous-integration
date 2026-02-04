@@ -29,20 +29,21 @@ import sys
 import subprocess
 import shutil
 import time
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import requests
 import yaml
 
 import bazelci
 
-BCR_REPO_DIR = pathlib.Path(os.getcwd())
+BCR_REPO_DIR: pathlib.Path = pathlib.Path(os.getcwd())
 
-BUILDKITE_ORG = os.environ.get("BUILDKITE_ORGANIZATION_SLUG", "bazel")
+BUILDKITE_ORG: str = os.environ.get("BUILDKITE_ORGANIZATION_SLUG", "bazel")
 
-SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/bcr_presubmit.py?{}".format(
+SCRIPT_URL: str = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/bcr_presubmit.py?{}".format(
     bazelci.GITHUB_BRANCH, int(time.time())
 )
 
-CI_MACHINE_NUM = {
+CI_MACHINE_NUM: Dict[str, int] = {
     "bazel": {
         "default": 140,
         "windows": 30,
@@ -60,10 +61,10 @@ CI_MACHINE_NUM = {
 }[BUILDKITE_ORG]
 
 # The percentage of CI resource that can be used by bcr-presubmit and bcr-compatibility pipelines.
-CI_RESOURCE_PERCENTAGE = int(os.environ.get('CI_RESOURCE_PERCENTAGE', -1))
+CI_RESOURCE_PERCENTAGE: int = int(os.environ.get('CI_RESOURCE_PERCENTAGE', -1))
 
 
-def fetch_bcr_presubmit_py_command():
+def fetch_bcr_presubmit_py_command() -> str:
     return "curl -s {0} -o bcr_presubmit.py".format(SCRIPT_URL)
 
 
@@ -71,12 +72,12 @@ class BcrPipelineException(Exception):
     """Raised whenever something goes wrong and we should exit with an error."""
 
 
-def error(msg):
+def error(msg: str) -> None:
     bazelci.eprint("\x1b[31mERROR\x1b[0m: {}\n".format(msg))
     raise BcrPipelineException("BCR Presubmit failed!")
 
 
-def get_target_modules():
+def get_target_modules() -> List[Tuple[str, str]]:
     """
     Calculate target modules based on changed files from the main branch.
     """
@@ -84,17 +85,17 @@ def get_target_modules():
     output = subprocess.check_output(
         ["git", "diff", "main...HEAD", "--name-only", "--pretty=format:"]
     )
-    modules = set()
+    modules: Set[Tuple[str, str]] = set()
     # Matching modules/<name>/<version>/
     for line in output.decode("utf-8").split():
         s = re.match(r"modules\/([^\/]+)\/([^\/]+)\/", line)
         if s:
-            modules.add(s.groups())
+            modules.add(s.groups()) # type: ignore
 
-    return sorted(modules)
+    return sorted(list(modules))
 
 
-def get_modules_with_metadata_change():
+def get_modules_with_metadata_change() -> List[str]:
     """
     Calculate modules with metadata change from the main branch.
     """
@@ -102,46 +103,47 @@ def get_modules_with_metadata_change():
     output = subprocess.check_output(
         ["git", "diff", "main...HEAD", "--name-only", "--pretty=format:"]
     )
-    modules = set()
+    modules: Set[str] = set()
     # Matching modules/<name>/metadata.json
     for line in output.decode("utf-8").split():
         s = re.match(r"modules\/([^\/]+)\/metadata\.json", line)
         if s:
             modules.add(s.groups()[0])
 
-    return sorted(modules)
+    return sorted(list(modules))
 
 
-def get_metadata_json(module_name):
+def get_metadata_json(module_name: str) -> pathlib.Path:
     return BCR_REPO_DIR.joinpath("modules/%s/metadata.json" % module_name)
 
 
-def get_presubmit_yml(module_name, module_version):
+def get_presubmit_yml(module_name: str, module_version: str) -> pathlib.Path:
     return BCR_REPO_DIR.joinpath("modules/%s/%s/presubmit.yml" % (module_name, module_version))
 
 
-def get_module_dot_bazel(module_name, module_version):
+def get_module_dot_bazel(module_name: str, module_version: str) -> pathlib.Path:
     return BCR_REPO_DIR.joinpath("modules/%s/%s/MODULE.bazel" % (module_name, module_version))
 
 
-def get_source_json(module_name, module_version):
+def get_source_json(module_name: str, module_version: str) -> pathlib.Path:
     return BCR_REPO_DIR.joinpath("modules/%s/%s/source.json" % (module_name, module_version))
 
 
-def get_patch_file(module_name, module_version, patch):
+def get_patch_file(module_name: str, module_version: str, patch: str) -> pathlib.Path:
     return BCR_REPO_DIR.joinpath("modules/%s/%s/patches/%s" % (module_name, module_version, patch))
 
-def get_overlay_file(module_name, module_version, filename):
+def get_overlay_file(module_name: str, module_version: str, filename: str) -> pathlib.Path:
     return BCR_REPO_DIR.joinpath("modules/%s/%s/overlay/%s" % (module_name, module_version, filename))
 
-def get_anonymous_module_task_config(module_name, module_version, bazel_version=None):
+def get_anonymous_module_task_config(module_name: str, module_version: str, bazel_version: Optional[str] = None) -> Any:
     return bazelci.load_config(http_url=None,
-                               file_config=get_presubmit_yml(module_name, module_version),
+                               file_config=str(get_presubmit_yml(module_name, module_version)),
                                allow_imports=False,
                                bazel_version=bazel_version)
 
-def get_test_module_task_config(module_name, module_version, bazel_version=None):
-    orig_presubmit = yaml.safe_load(open(get_presubmit_yml(module_name, module_version), "r"))
+def get_test_module_task_config(module_name: str, module_version: str, bazel_version: Optional[str] = None) -> Dict[str, Any]:
+    with open(get_presubmit_yml(module_name, module_version), "r") as f:
+        orig_presubmit = yaml.safe_load(f)
     if "bcr_test_module" in orig_presubmit:
         config = orig_presubmit["bcr_test_module"]
         bazelci.maybe_overwrite_bazel_version(bazel_version, config)
@@ -150,7 +152,7 @@ def get_test_module_task_config(module_name, module_version, bazel_version=None)
     return {}
 
 
-def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False, overwrite_bazel_version=None, low_priority=False):
+def add_presubmit_jobs(module_name: str, module_version: str, task_configs: Dict[str, Any], pipeline_steps: List[Any], is_test_module: bool = False, overwrite_bazel_version: Optional[str] = None, low_priority: bool = False) -> None:
     for task_id, task_config in task_configs.items():
         platform_name = get_platform(task_id, task_config)
         platform_label = bazelci.PLATFORMS[platform_name]["emoji-name"]
@@ -185,14 +187,14 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
         pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=concurrency, concurrency_group=concurrency_group, priority=-100 if low_priority else None))
 
 
-def get_platform(task_id, task_config):
+def get_platform(task_id: str, task_config: Dict[str, Any]) -> str:
     original = bazelci.get_platform_for_task(task_id, task_config)
     # TODO(#2272): delete once centos references have been deleted
     # from BCR templates in all module repos.
     return original.replace("centos7", "rockylinux8")
 
 
-def scratch_file(root, relative_path, lines=None, mode="w"):
+def scratch_file(root: Union[str, pathlib.Path], relative_path: str, lines: Optional[List[str]] = None, mode: str = "w") -> Optional[pathlib.Path]:
     """Creates a file under the root directory"""
     if not relative_path:
         return None
@@ -205,7 +207,7 @@ def scratch_file(root, relative_path, lines=None, mode="w"):
     return abspath
 
 
-def create_anonymous_repo(module_name, module_version, root=None):
+def create_anonymous_repo(module_name: str, module_version: str, root: Optional[pathlib.Path] = None) -> pathlib.Path:
     """Create an anonymous Bazel module which depends on the target module."""
     if not root:
         root = pathlib.Path(bazelci.get_repositories_root())
@@ -220,12 +222,12 @@ def create_anonymous_repo(module_name, module_version, root=None):
     return root
 
 
-def read(path):
+def read(path: Union[str, pathlib.Path]) -> str:
     with open(path, "r") as file:
         return file.read()
 
 
-def prepare_test_module_repo(module_name, module_version, overwrite_bazel_version=None, root=None, suppress_log=False):
+def prepare_test_module_repo(module_name: str, module_version: str, overwrite_bazel_version: Optional[str] = None, root: Optional[pathlib.Path] = None, suppress_log: bool = False) -> Tuple[pathlib.Path, pathlib.Path]:
     """Prepare the test module repo and the presubmit yml file it should use"""
     suppress_log or bazelci.print_collapsed_group(":information_source: Prepare test module repo")
     if not root:
@@ -236,14 +238,15 @@ def prepare_test_module_repo(module_name, module_version, overwrite_bazel_versio
     anonymous_module_root = create_anonymous_repo(module_name, module_version, root = root.joinpath(".temp_anonymous_module"))
     bazelci.execute_command(["bazel", "--batch"] + bazelci.common_startup_flags()
                             + ["vendor", "--vendor_dir=./vendor_src", "--repository_cache=", "--lockfile_mode=off", "--repo", f"@{module_name}"],
-                            cwd=anonymous_module_root,
+                            cwd=str(anonymous_module_root),
                             env={**os.environ, "USE_BAZEL_VERSION": "latest"})
     source_root = root.joinpath("module_src")
     suppress_log or bazelci.eprint(f"* Moving vendored module source to {source_root}")
-    shutil.move(anonymous_module_root.joinpath(f"vendor_src/{module_name}+"), source_root)
+    shutil.move(str(anonymous_module_root.joinpath(f"vendor_src/{module_name}+")), str(source_root))
 
     # Generate the presubmit.yml file for the test module, it should be the content under "bcr_test_module"
-    orig_presubmit = yaml.safe_load(open(get_presubmit_yml(module_name, module_version), "r"))
+    with open(get_presubmit_yml(module_name, module_version), "r") as f:
+        orig_presubmit = yaml.safe_load(f)
     test_module_presubmit = root.joinpath("presubmit.yml")
     with open(test_module_presubmit, "w") as f:
         yaml.dump(orig_presubmit["bcr_test_module"], f)
@@ -270,7 +273,7 @@ def prepare_test_module_repo(module_name, module_version, overwrite_bazel_versio
     return test_module_root, test_module_presubmit
 
 
-def run_test(repo_location, task_config_file, task, overwrite_bazel_version=None):
+def run_test(repo_location: pathlib.Path, task_config_file: pathlib.Path, task: str, overwrite_bazel_version: Optional[str] = None) -> int:
     try:
         return_code = bazelci.main(
             [
@@ -293,7 +296,7 @@ def run_test(repo_location, task_config_file, task, overwrite_bazel_version=None
         return 1
 
 
-def validate_existing_modules_are_not_modified():
+def validate_existing_modules_are_not_modified() -> None:
     # Get all files that are Modified, Renamed, or Deleted.
     bazelci.print_expanded_group("Checking if existing modules are not modified")
     output = subprocess.check_output(
@@ -301,26 +304,26 @@ def validate_existing_modules_are_not_modified():
     )
 
     # Check if any of the source.json, MODULE.bazel, or patch files are changed for an existing module.
-    NO_CHANGE_FILE_PATTERNS = [
+    NO_CHANGE_FILE_PATTERNS: List[re.Pattern[str]] = [
         re.compile(r"modules\/([^\/]+)\/([^\/]+)\/source.json"),
         re.compile(r"modules\/([^\/]+)\/([^\/]+)\/MODULE.bazel"),
         re.compile(r"modules\/([^\/]+)\/([^\/]+)\/patches"),
         re.compile(r"modules\/([^\/]+)\/([^\/]+)\/overlay"),
     ]
-    changed_modules = []
+    changed_modules: List[Tuple[str, str]] = []
     for line in output.decode("utf-8").split():
         for p in NO_CHANGE_FILE_PATTERNS:
             s = p.match(line)
             if s:
                 bazelci.eprint(line, "was changed")
-                changed_modules.append(s.groups())
+                changed_modules.append(s.groups()) # type: ignore
     if changed_modules:
         error("Existing modules should not be changed:\n" + "\n".join([f"{name}@{version}" for name,version in changed_modules]))
     else:
         bazelci.eprint("No existing module was changed.")
 
 
-def validate_files_outside_of_modules_dir_are_not_modified(modules):
+def validate_files_outside_of_modules_dir_are_not_modified(modules: List[Tuple[str, str]]) -> None:
     # If no modules are changed at the same time, then we don't need to perform this check.
     if not modules:
         return
@@ -334,7 +337,7 @@ def validate_files_outside_of_modules_dir_are_not_modified(modules):
         bazelci.eprint("Nothing changed outside of modules/")
 
 
-def get_labels_from_pr():
+def get_labels_from_pr() -> List[str]:
     """Get the labels from the PR using Buildkite's environment variable."""
 
     # This variable is a comma-separated string of label names.
@@ -349,7 +352,7 @@ def get_labels_from_pr():
     return labels_str.split(',')
 
 
-def should_bcr_validation_block_presubmit(modules, modules_with_metadata_change, pr_labels):
+def should_bcr_validation_block_presubmit(modules: List[Tuple[str, str]], modules_with_metadata_change: List[str], pr_labels: List[str]) -> bool:
     bazelci.print_collapsed_group("Running BCR validations:")
     if not modules and not modules_with_metadata_change:
         bazelci.eprint("No modules to validate.")
@@ -376,16 +379,16 @@ def should_bcr_validation_block_presubmit(modules, modules_with_metadata_change,
     return False
 
 
-def file_exists_in_main_branch(file_path):
+def file_exists_in_main_branch(file_path: Union[str, pathlib.Path]) -> bool:
     # Run the git ls-tree command to check for the file in the main branch
     result = subprocess.run(
-        ["git", "ls-tree", "-r", "main", "--name-only", file_path],
+        ["git", "ls-tree", "-r", "main", "--name-only", str(file_path)],
         capture_output=True, text=True, check=True
     )
     return result.stdout.strip() != ""
 
 
-def should_metadata_change_block_presubmit(modules_with_metadata_change, pr_labels):
+def should_metadata_change_block_presubmit(modules_with_metadata_change: List[str], pr_labels: List[str]) -> bool:
     # Skip the metadata.json check if the PR is labeled with "presubmit-auto-run".
     if "presubmit-auto-run" in pr_labels:
         return False
@@ -404,14 +407,16 @@ def should_metadata_change_block_presubmit(modules_with_metadata_change, pr_labe
             continue
 
         # Read the new metadata.json file.
-        metadata_new = json.load(open(metadata_json, "r"))
+        with open(metadata_json, "r") as f:
+            metadata_new = json.load(f)
 
         # Check out and read the original metadata.json file from the main branch.
-        subprocess.run(["git", "checkout", "main", "--", metadata_json], check=True)
-        metadata_old = json.load(open(metadata_json, "r"))
+        subprocess.run(["git", "checkout", "main", "--", str(metadata_json)], check=True)
+        with open(metadata_json, "r") as f:
+            metadata_old = json.load(f)
 
         # Revert the metadata.json file to the HEAD of current branch.
-        subprocess.run(["git", "checkout", "HEAD", "--", metadata_json], check=True)
+        subprocess.run(["git", "checkout", "HEAD", "--", str(metadata_json)], check=True)
 
         # Clear the "versions" field and compare the rest of the metadata.json file.
         metadata_old["versions"] = []
@@ -425,7 +430,7 @@ def should_metadata_change_block_presubmit(modules_with_metadata_change, pr_labe
     return needs_bcr_maintainer_review
 
 
-def should_wait_bcr_maintainer_review(modules, pr_labels):
+def should_wait_bcr_maintainer_review(modules: List[Tuple[str, str]], pr_labels: List[str]) -> bool:
     """Validate the changes and decide whether the presubmit should wait for a BCR maintainer review.
     Returns False if all changes look good and the presubmit can proceed.
     Returns True if the changes should block follow up presubmit jobs until a BCR maintainer triggers them.
@@ -450,21 +455,21 @@ def should_wait_bcr_maintainer_review(modules, pr_labels):
     return needs_bcr_maintainer_review
 
 
-def get_bazel_version_for_task(config_file, task, overwrite_bazel_version=None):
+def get_bazel_version_for_task(config_file: Union[str, pathlib.Path], task: str, overwrite_bazel_version: Optional[str] = None) -> str:
     """
     Determine the Bazel version to use for a specific task.
     """
     if overwrite_bazel_version:
         return overwrite_bazel_version
-    configs = bazelci.fetch_configs(None, config_file)
+    configs = bazelci.fetch_configs(None, str(config_file))
     task_config = configs.get("tasks", {}).get(task, {})
     bazelci.eprint(f"Task config for '{task}':")
     bazelci.eprint(yaml.dump(task_config, default_flow_style=False))
-    bazel_version = task_config.get("bazel", "latest")
+    bazel_version: str = task_config.get("bazel", "latest")
     return bazel_version
 
 
-def fetch_incompatible_flags(module_name, module_version, bazel_version):
+def fetch_incompatible_flags(module_name: str, module_version: str, bazel_version: str) -> List[str]:
     """
     Fetch incompatible flags for a given module and version.
     """
@@ -483,7 +488,7 @@ def fetch_incompatible_flags(module_name, module_version, bazel_version):
     return []
 
 
-def maybe_enable_bazelisk_migrate(module_name, module_version, overwrite_bazel_version, task, config_file):
+def maybe_enable_bazelisk_migrate(module_name: str, module_version: str, overwrite_bazel_version: Optional[str], task: str, config_file: Union[str, pathlib.Path]) -> None:
     # Only try to set up bazelisk --migrate when ENABLE_BAZELISK_MIGRATE is specified.
     # ENABLE_BAZELISK_MIGRATE should be set for the BCR presubmit pipeline but not for the BCR compatibility test pipeline, which also depends on bcr_presubmit.py
     if not os.environ.get("ENABLE_BAZELISK_MIGRATE"):
@@ -507,16 +512,17 @@ def maybe_enable_bazelisk_migrate(module_name, module_version, overwrite_bazel_v
     bazelci.eprint(f"INCOMPATIBLE_FLAGS are set to {os.environ['INCOMPATIBLE_FLAGS']}")
 
 
-def upload_jobs_to_pipeline(pipeline_steps):
+def upload_jobs_to_pipeline(pipeline_steps: List[Any]) -> None:
     """Upload jobs to Buildkite in batches."""
     BATCH_SIZE = 2000
 
     # Make sure all jobs depends on the block step explicitly
     # if we need multiple batches and the first step is a block step.
-    if len(pipeline_steps) > BATCH_SIZE and "block" in pipeline_steps[0]:
+    if len(pipeline_steps) > BATCH_SIZE and isinstance(pipeline_steps[0], dict) and "block" in pipeline_steps[0]:
         pipeline_steps[0]["key"] = "wait_for_approval"
         for step in pipeline_steps[1:]:
-            step["depends_on"] = "wait_for_approval"
+            if isinstance(step, dict):
+                step["depends_on"] = "wait_for_approval"
 
     for i in range(0, len(pipeline_steps), BATCH_SIZE):
         batch = pipeline_steps[i:i + BATCH_SIZE]
@@ -532,7 +538,7 @@ def upload_jobs_to_pipeline(pipeline_steps):
             error(f"Failed to upload batch {i // BATCH_SIZE + 1} to Buildkite: {e}")
 
 
-def main(argv=None):
+def main(argv: Optional[List[str]] = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
 

@@ -3,7 +3,13 @@ import yaml
 import requests
 import os
 
-def load_data():
+import json
+import yaml
+import requests
+import os
+from typing import Any, Dict, List, TextIO
+
+def load_data() -> Any:
     token = os.environ["BUILDKITE_API_TOKEN"]
     headers = { "Authorization": f"Bearer {token}" }
     org_slug = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
@@ -49,29 +55,29 @@ def load_data():
 '''
     return requests.post("https://graphql.buildkite.com/v1", json={'query': query, 'variables': {'org_slug': org_slug }}, headers=headers).json()
 
-def get_pipeline(org_slug, pipeline_slug):
+def get_pipeline(org_slug: str, pipeline_slug: str) -> Any:
     token = os.environ["BUILDKITE_API_TOKEN"]
     headers = { "Authorization": f"Bearer {token}" }
     return requests.get(f"https://api.buildkite.com/v2/organizations/{org_slug}/pipelines/{pipeline_slug}", headers=headers).json()
 
 
-def gen_steps(node):
+def gen_steps(node: Dict[str, Any]) -> str:
     template = 'templatefile("pipeline.yml.tpl", {'
 
     steps = yaml.safe_load(node['steps']['yaml'])
     if 'env' in steps:
         envs = steps['env']
-        envs = json.dumps(envs)
-        envs = envs.replace("\"", "\\\"")
-        template += f' envs = jsondecode("{envs}"),'
+        envs_json = json.dumps(envs)
+        envs_json = envs_json.replace("\"", "\\\"")
+        template += f' envs = jsondecode("{envs_json}"),'
     else:
         template += " envs = {},"
     
 
     template += " steps = {"
     commands = steps['steps'][0]['command'].split('\n')
-    commands = json.dumps(commands)
-    template += f' commands = {commands}'
+    commands_json = json.dumps(commands)
+    template += f' commands = {commands_json}'
 
     label = steps['steps'][0]['label']
     if label != ':pipeline:':
@@ -81,7 +87,7 @@ def gen_steps(node):
 
     return template
 
-def gen_teams(node):
+def gen_teams(node: Dict[str, Any]) -> str:
     teams = '['
     for team_edge in node['teams']['edges']:
         team_node = team_edge["node"]
@@ -95,7 +101,7 @@ def gen_teams(node):
     teams += ']'
     return teams
 
-def gen_provider_settings(org_slug, pipeline_slug):
+def gen_provider_settings(org_slug: str, pipeline_slug: str) -> str:
     pipeline = get_pipeline(org_slug, pipeline_slug)
     provider_settings = pipeline['provider']['settings']
     if "trigger_mode" not in provider_settings or provider_settings['trigger_mode'] == 'none':
@@ -106,7 +112,7 @@ def gen_provider_settings(org_slug, pipeline_slug):
     str_properties = {'trigger_mode', 'pull_request_branch_filter_configuration', 'filter_condition'}
     for key, value in provider_settings.items():
         if key in str_properties:
-            if len(value) > 0:
+            if value and len(value) > 0:
                 value = value.replace("\"", "\\\"")
                 result += f'    {key} = "{value}"\n'
         elif key not in skip_properties:
@@ -115,7 +121,7 @@ def gen_provider_settings(org_slug, pipeline_slug):
     result += "  }\n"
     return result
 
-def migrate(data, out_tf, out_sh):
+def migrate(data: Dict[str, Any], out_tf: TextIO, out_sh: TextIO) -> None:
     org = data["data"]["organization"]
     org_slug = org['slug']
     for edge in org["pipelines"]["edges"]:
@@ -170,7 +176,7 @@ terraform import buildkite_pipeline.{slug} {id}
         out_sh.write(imp)
 
 
-def main():
+def main() -> None:
     data = load_data()
     with open("out.tf", "w+") as out_tf:
         with open("out.sh", "w+") as out_sh:

@@ -24,20 +24,21 @@ import os
 import sys
 import subprocess
 import time
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import bazelci
 import bcr_presubmit
 
-SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/generate_report.py?{}".format(
+SCRIPT_URL: str = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/generate_report.py?{}".format(
     bazelci.GITHUB_BRANCH, int(time.time())
 )
 
 
-def fetch_generate_report_py_command():
+def fetch_generate_report_py_command() -> str:
     return "curl -s {0} -o generate_report.py".format(SCRIPT_URL)
 
 
-def select_modules_from_env_vars():
+def select_modules_from_env_vars() -> List[Tuple[str, str]]:
     """
     Parses MODULE_SELECTIONS and SMOKE_TEST_PERCENTAGE environment variables
     and returns a list of selected module versions.
@@ -67,14 +68,14 @@ def select_modules_from_env_vars():
     output = subprocess.check_output(
         ["python3", "./tools/module_selector.py"] + args,
     )
-    modules = []
+    modules: List[Tuple[str, str]] = []
     for line in output.decode("utf-8").split():
         name, version = line.strip().split("@")
         modules.append((name, version))
     return modules
 
 
-def get_target_modules():
+def get_target_modules() -> List[Tuple[str, str]]:
     """
     Returns a list of selected module versions.
     """
@@ -89,7 +90,7 @@ def get_target_modules():
         raise ValueError("No modules were selected, please set MODULE_SELECTIONS or SELECT_TOP_BCR_MODULES correctly!")
 
 
-def create_step_for_report_flags_results():
+def create_step_for_report_flags_results() -> List[Any]:
     parts = [
         bazelci.PLATFORMS[bazelci.DEFAULT_PLATFORM]["python"],
         "aggregate_incompatible_flags_test_result.py",
@@ -108,7 +109,7 @@ def create_step_for_report_flags_results():
         ),
     ]
 
-def create_step_for_generate_report():
+def create_step_for_generate_report() -> List[Any]:
     parts = [
         bazelci.PLATFORMS[bazelci.DEFAULT_PLATFORM]["python"],
         "generate_report.py",
@@ -128,9 +129,9 @@ def create_step_for_generate_report():
         ),
     ]
 
-def main():
+def main() -> int:
     modules = get_target_modules()
-    pipeline_steps = []
+    pipeline_steps: List[Any] = []
     # Respect USE_BAZEL_VERSION to override bazel version in presubmit.yml files.
     bazel_version = os.environ.get("USE_BAZEL_VERSION")
     for module_name, module_version in modules:
@@ -140,7 +141,7 @@ def main():
         bcr_presubmit.add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True, overwrite_bazel_version=bazel_version)
 
     if pipeline_steps:
-        if not "SKIP_WAIT_FOR_APPROVAL" in os.environ:
+        if "SKIP_WAIT_FOR_APPROVAL" not in os.environ:
             # Wait for approval to proceed
             pipeline_steps.insert(0, {"block": "Please review generated jobs before proceeding", "blocked_state": "running"})
         if bazelci.use_bazelisk_migrate():
@@ -149,6 +150,7 @@ def main():
             pipeline_steps += create_step_for_generate_report()
 
     bcr_presubmit.upload_jobs_to_pipeline(pipeline_steps)
+    return 0
 
 
 if __name__ == "__main__":

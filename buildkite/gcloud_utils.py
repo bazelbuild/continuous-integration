@@ -19,9 +19,10 @@ import json
 import subprocess
 import time
 import re
+from typing import Iterator, Optional
 
 
-def wait_for_instance(instance_name, project, zone, status):
+def wait_for_instance(instance_name: str, project: str, zone: str, status: str) -> None:
     while True:
         result = gcloud.describe_instance(instance_name, project=project, zone=zone, format="json")
         current_status = json.loads(result.stdout)["status"]
@@ -39,7 +40,7 @@ def wait_for_instance(instance_name, project, zone, status):
         time.sleep(5)
 
 
-def prettify_logs(instance_name, log, with_prefix=True):
+def prettify_logs(instance_name: str, log: str, with_prefix: bool = True) -> Iterator[str]:
     for line in log.splitlines():
         # Skip empty lines.
         if not line:
@@ -65,14 +66,14 @@ def prettify_logs(instance_name, log, with_prefix=True):
             yield line
 
 
-def print_pretty_logs(instance_name, log):
+def print_pretty_logs(instance_name: str, log: str) -> None:
     lines = ("\n".join(prettify_logs(instance_name, log))).strip()
     if lines:
         with gcloud.PRINT_LOCK:
             print(lines)
 
 
-def tail_serial_console(instance_name, project, zone, start=None, until=None):
+def tail_serial_console(instance_name: str, project: str, zone: str, start: Optional[str] = None, until: Optional[str] = None) -> str:
     next_start = start if start else "0"
     while True:
         try:

@@ -16,14 +16,15 @@
 
 import sys
 import threading
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
 import bazelci
 
-BUILDKITE_ORG = "bazel"
-DOWNSTREAM_PIPELINE = "bazel-at-head-plus-downstream"
-CULPRIT_FINDER_PIPELINE = "culprit-finder"
+BUILDKITE_ORG: str = "bazel"
+DOWNSTREAM_PIPELINE: str = "bazel-at-head-plus-downstream"
+CULPRIT_FINDER_PIPELINE: str = "culprit-finder"
 
-COLORS = {
+COLORS: Dict[str, str] = {
     "SERIOUS" : '\033[95m',
     "HEADER" : '\033[34m',
     "PASSED" : '\033[92m',
@@ -34,10 +35,10 @@ COLORS = {
     "BOLD" : '\033[1m',
 }
 
-DOWNSTREAM_PIPELINE_CLIENT = bazelci.BuildkiteClient(BUILDKITE_ORG, DOWNSTREAM_PIPELINE)
-CULPRIT_FINDER_PIPELINE_CLIENT = bazelci.BuildkiteClient(BUILDKITE_ORG, CULPRIT_FINDER_PIPELINE)
+DOWNSTREAM_PIPELINE_CLIENT: bazelci.BuildkiteClient = bazelci.BuildkiteClient(BUILDKITE_ORG, DOWNSTREAM_PIPELINE)
+CULPRIT_FINDER_PIPELINE_CLIENT: bazelci.BuildkiteClient = bazelci.BuildkiteClient(BUILDKITE_ORG, CULPRIT_FINDER_PIPELINE)
 
-def print_info(context, style, info, append=True):
+def print_info(context: str, style: str, info: List[str], append: bool = True) -> None:
     info_str = "\n".join(info)
     bazelci.execute_command(
         args = [
@@ -86,10 +87,18 @@ def print_info(context, style, info, append=True):
 # }
 class BuildInfoAnalyzer(threading.Thread):
 
-    success_log_lock = threading.Lock()
-    success_log = []
+    success_log_lock: threading.Lock = threading.Lock()
+    success_log: List[str] = []
 
-    def __init__(self, project, pipeline, downstream_result):
+    project: str
+    pipeline: str
+    downstream_result: Dict[str, Any]
+    main_result: Optional[Dict[str, Any]]
+    client: bazelci.BuildkiteClient
+    analyze_log: List[str]
+    broken_by_infra: bool
+
+    def __init__(self, project: str, pipeline: str, downstream_result: Dict[str, Any]) -> None:
         super().__init__()
         self.project = project
         self.pipeline = pipeline
@@ -100,7 +109,7 @@ class BuildInfoAnalyzer(threading.Thread):
         self.broken_by_infra = False
 
 
-    def _get_main_build_result(self):
+    def _get_main_build_result(self) -> None:
         pipeline_info = self.client.get_pipeline_info()
         if not pipeline_info:
             error = f"Cannot find pipeline info for pipeline {self.pipeline}."
@@ -123,14 +132,15 @@ class BuildInfoAnalyzer(threading.Thread):
         self.main_result = {}
         self.main_result["commit"] = main_build_info["commit"]
         self.main_result["build_number"] = main_build_info["number"]
-        job_infos = filter(lambda x: bool(x), (extract_job_info_by_key(job) for job in main_build_info["jobs"] if not ("soft_failed" in job and job["soft_failed"])))
+        job_infos = [extract_job_info_by_key(job) for job in main_build_info["jobs"] if not ("soft_failed" in job and job["soft_failed"])]
+        job_infos = [info for info in job_infos if info is not None]
         self.main_result["tasks"] = group_job_info_by_task(job_infos)
         self.main_result["state"] = get_project_state(self.main_result["tasks"])
         self.main_result["last_green_commit"] = bazelci.get_last_green_commit(self.project)
 
 
     # Log all succeeded projects in the same annotate block
-    def _log_success(self, text):
+    def _log_success(self, text: str) -> None:
         with BuildInfoAnalyzer.success_log_lock:
             BuildInfoAnalyzer.success_log.append(f"{COLORS['HEADER']}Analyzing {self.project}: {COLORS['PASSED']}{text}{COLORS['ENDC']}")
             info = [
@@ -145,7 +155,7 @@ class BuildInfoAnalyzer(threading.Thread):
             print_info("success-info", "success", info, append = False)
 
     # Log broken projects in their separate annotate block
-    def _log(self, c, text):
+    def _log(self, c: str, text: str) -> None:
         self.analyze_log.append(f"{COLORS[c]}{text}{COLORS['ENDC']}")
         info = [
             f"<details><summary><strong>:bk-status-failed: {self.project}</strong></summary><p>",
@@ -160,14 +170,14 @@ class BuildInfoAnalyzer(threading.Thread):
 
 
     # Implement the log function so that it can be called from BuildkiteClient
-    def log(self, text):
+    def log(self, text: str) -> None:
         # Be smart here to reduce log length.
         if self.analyze_log[-1].startswith(COLORS["INFO"] + "Waiting for "):
             self.analyze_log.pop(-1)
         self._log("INFO", text)
 
 
-    def _trigger_bisect(self, tasks):
+    def _trigger_bisect(self, tasks: List[str]) -> Dict[str, Any]:
         env = {
             "PROJECT_NAME": self.project,
             "TASK_NAME_LIST": ",".join(tasks) if tasks else "",
@@ -179,7 +189,7 @@ class BuildInfoAnalyzer(threading.Thread):
     # Return values are
     #   1. A bisect result message
     #   2. The commit of the culprit if found, otherwise None
-    def _determine_bisect_result(self, job):
+    def _determine_bisect_result(self, job: Dict[str, Any]) -> Tuple[str, Optional[str]]:
         bisect_log = CULPRIT_FINDER_PIPELINE_CLIENT.get_build_log(job)
         pos = bisect_log.rfind("first bad commit is ")
         if pos != -1:
@@ -210,8 +220,8 @@ class BuildInfoAnalyzer(threading.Thread):
         return "Bisect failed due to unknown reason, please check " + job["web_url"], None
 
 
-    def _retry_failed_jobs(self, build_result, buildkite_client):
-        retry_per_failed_task = {}
+    def _retry_failed_jobs(self, build_result: Dict[str, Any], buildkite_client: bazelci.BuildkiteClient) -> Dict[str, Any]:
+        retry_per_failed_task: Dict[str, Any] = {}
         for task, info in build_result["tasks"].items():
             if info["state"] != "passed":
                 retry_per_failed_task[task] = buildkite_client.trigger_job_retry(build_result["build_number"], info["id"])
@@ -220,13 +230,15 @@ class BuildInfoAnalyzer(threading.Thread):
         return retry_per_failed_task
 
 
-    def _print_job_list(self, jobs):
+    def _print_job_list(self, jobs: List[Dict[str, Any]]) -> None:
         for job in jobs:
             self._log("INFO", f"  {job['name']}: {job['web_url']}")
         self._log("INFO", "")
 
 
-    def _analyze_main_pipeline_result(self):
+    def _analyze_main_pipeline_result(self) -> None:
+        if not self.main_result:
+            return
         self._log("INFO", "")
         self._log("PASSED", "***Analyze failures in main pipeline***")
 
@@ -261,7 +273,7 @@ class BuildInfoAnalyzer(threading.Thread):
             self._print_job_list(still_failing_tasks)
 
 
-    def _analyze_for_downstream_pipeline_result(self):
+    def _analyze_for_downstream_pipeline_result(self) -> None:
         self._log("INFO", "")
         self._log("PASSED", "***Analyze failures in downstream pipeline***")
 
@@ -320,7 +332,9 @@ class BuildInfoAnalyzer(threading.Thread):
             self._log("INFO", result)
 
 
-    def _analyze(self):
+    def _analyze(self) -> None:
+        if not self.main_result:
+            return
         # Main build: PASSED; Downstream build: PASSED
         if self.main_result["state"] == "passed" and self.downstream_result["state"] == "passed":
             self._log_success("Main build: PASSED; Downstream build: PASSED")
@@ -374,22 +388,24 @@ class BuildInfoAnalyzer(threading.Thread):
             return
 
 
-    def run(self):
+    def run(self) -> None:
         self._get_main_build_result()
         self._analyze()
 
 
-def get_html_link_text(content, link):
+def get_html_link_text(content: str, link: str) -> str:
     return f'<a href="{link}" target="_blank">{content}</a>'
 
 
-def add_tasks_info_text(tasks_per_project, info_text):
+def add_tasks_info_text(tasks_per_project: Dict[str, List[Tuple[str, str]]], info_text: List[str]) -> None:
     for project, task_list in tasks_per_project.items():
         html_link_text = ", ".join([get_html_link_text(name, url) for name, url in task_list])
         info_text.append(f"* **{project}**: {html_link_text}")
 
 
-def collect_tasks_by_key(build_result, project_name, tasks_per_project, key):
+def collect_tasks_by_key(build_result: Optional[Dict[str, Any]], project_name: str, tasks_per_project: Dict[str, List[Tuple[str, str]]], key: str) -> None:
+    if not build_result:
+        return
     for task_info in build_result["tasks"].values():
         if task_info.get(key):
             if project_name not in tasks_per_project:
@@ -397,15 +413,15 @@ def collect_tasks_by_key(build_result, project_name, tasks_per_project, key):
             tasks_per_project[project_name].append((task_info["name"], task_info["web_url"]))
 
 
-def get_bazel_commit_url(commit):
+def get_bazel_commit_url(commit: str) -> str:
     return f"https://github.com/bazelbuild/bazel/commit/{commit}"
 
 
-def get_buildkite_pipeline_url(pipeline):
+def get_buildkite_pipeline_url(pipeline: str) -> str:
     return f"https://buildkite.com/bazel/{pipeline}"
 
 
-def report_infra_breakages(analyzers):
+def report_infra_breakages(analyzers: List[BuildInfoAnalyzer]) -> None:
     projects_broken_by_infra = [(analyzer.project, analyzer.pipeline) for analyzer in analyzers if analyzer.broken_by_infra]
 
     if not projects_broken_by_infra:
@@ -420,12 +436,12 @@ def report_infra_breakages(analyzers):
     print_info("broken_tasks_by_infra", "error", info_text)
 
 
-def report_downstream_breakages(analyzers):
-    broken_downstream_tasks_per_project = {}
-    culprits_per_project = {}
+def report_downstream_breakages(analyzers: List[BuildInfoAnalyzer]) -> None:
+    broken_downstream_tasks_per_project: Dict[str, List[Tuple[str, str]]] = {}
+    culprits_per_project: Dict[str, Set[str]] = {}
     for analyzer in analyzers:
         collect_tasks_by_key(analyzer.downstream_result, analyzer.project, broken_downstream_tasks_per_project, "broken")
-        culprits = set()
+        culprits: Set[str] = set()
         for task_info in analyzer.downstream_result["tasks"].values():
             if task_info.get("culprit"):
                 culprits.add(task_info["culprit"])
@@ -450,8 +466,8 @@ def report_downstream_breakages(analyzers):
     print_info("broken_downstream_tasks", "error", info_text)
 
 
-def report_main_breakages(analyzers):
-    broken_main_tasks_per_project = {}
+def report_main_breakages(analyzers: List[BuildInfoAnalyzer]) -> None:
+    broken_main_tasks_per_project: Dict[str, List[Tuple[str, str]]] = {}
     for analyzer in analyzers:
         collect_tasks_by_key(analyzer.main_result, analyzer.project, broken_main_tasks_per_project, "broken")
 
@@ -466,9 +482,9 @@ def report_main_breakages(analyzers):
     print_info("broken_main_tasks", "warning", info_text)
 
 
-def report_flaky_tasks(analyzers):
-    flaky_main_tasks_per_project = {}
-    flaky_downstream_tasks_per_project = {}
+def report_flaky_tasks(analyzers: List[BuildInfoAnalyzer]) -> None:
+    flaky_main_tasks_per_project: Dict[str, List[Tuple[str, str]]] = {}
+    flaky_downstream_tasks_per_project: Dict[str, List[Tuple[str, str]]] = {}
     for analyzer in analyzers:
         collect_tasks_by_key(analyzer.main_result, analyzer.project, flaky_main_tasks_per_project, "flaky")
         collect_tasks_by_key(analyzer.downstream_result, analyzer.project, flaky_downstream_tasks_per_project, "flaky")
@@ -489,7 +505,7 @@ def report_flaky_tasks(analyzers):
     print_info("flaky_tasks", "warning", info_text)
 
 
-def report(analyzers):
+def report(analyzers: List[BuildInfoAnalyzer]) -> None:
     print_info("analyze_log", "info", ["#### Analyze log"])
     report_flaky_tasks(analyzers)
     report_main_breakages(analyzers)
@@ -498,7 +514,7 @@ def report(analyzers):
 
 
 # Get the raw downstream build result from the lastest finished build
-def get_latest_downstream_build_info():
+def get_latest_downstream_build_info() -> Dict[str, Any]:
     downstream_build_list = DOWNSTREAM_PIPELINE_CLIENT.get_build_info_list([
         ("branch", "master"),
         ("page", "1"),
@@ -518,7 +534,12 @@ def get_latest_downstream_build_info():
 #         {"task": "A", "state": "passed", "web_url": "http://foo/bar/A"},
 #         {"task": "B", "state": "failed", "web_url": "http://foo/bar/B"},
 #     ]
-def extract_job_info_by_key(job, info_from_command = [], info_from_job = ["name", "state", "web_url", "id"]):
+def extract_job_info_by_key(job: Dict[str, Any], info_from_command: Optional[List[str]] = None, info_from_job: Optional[List[str]] = None) -> Optional[Dict[str, Any]]:
+    if info_from_command is None:
+        info_from_command = []
+    if info_from_job is None:
+        info_from_job = ["name", "state", "web_url", "id"]
+
     if "command" not in job or not job["command"] or "bazelci.py runner" not in job["command"]:
         return None
 
@@ -526,7 +547,7 @@ def extract_job_info_by_key(job, info_from_command = [], info_from_job = ["name"
     if "task" not in info_from_command:
         info_from_command.append("task")
 
-    job_info = {}
+    job_info: Dict[str, Any] = {}
 
     # Assume there is no space in each argument
     args = job["command"].split(" ")
@@ -557,8 +578,8 @@ def extract_job_info_by_key(job, info_from_command = [], info_from_job = ["name"
 #         "windows": {"state": "passed", "web_url": "http://foo/bar/A"},
 #         "macos": {"state": "failed", "web_url": "http://foo/bar/B"},
 #     }
-def group_job_info_by_task(job_infos):
-    job_info_by_task = {}
+def group_job_info_by_task(job_infos: List[Dict[str, Any]]) -> Dict[str, Any]:
+    job_info_by_task: Dict[str, Any] = {}
     for job_info in job_infos:
         if "task" not in job_info:
             raise bazelci.BuildkiteException(f"'task' must be a key of job_info: {job_info}")
@@ -571,7 +592,7 @@ def group_job_info_by_task(job_infos):
 
 
 # If any of the tasks didn't pass, we condsider the state of this project failed.
-def get_project_state(tasks):
+def get_project_state(tasks: Dict[str, Any]) -> str:
     for _, infos in tasks.items():
         if infos["state"] != "passed" and infos["state"] != "soft_failed":
             return "failed"
@@ -597,9 +618,9 @@ def get_project_state(tasks):
 #         }
 #     }
 # }
-def get_downstream_result_by_project(downstream_build_info):
-    downstream_result = {}
-    jobs_per_project = {}
+def get_downstream_result_by_project(downstream_build_info: Dict[str, Any]) -> Dict[str, Any]:
+    downstream_result: Dict[str, Any] = {}
+    jobs_per_project: Dict[str, List[Dict[str, Any]]] = {}
 
     for job in downstream_build_info["jobs"]:
         # Skip all soft failed jobs
@@ -625,17 +646,20 @@ def get_downstream_result_by_project(downstream_build_info):
     return downstream_result
 
 
-def get_project_name_from_job(job_info):
+def get_project_name_from_job(job_info: Dict[str, Any]) -> str:
     # This is a bit of a hack that depends on how bazelci.create_label()
     # formats job names in downstream pipelines.
-    return job_info.get("name").partition(" (")[0]
+    name = job_info.get("name")
+    if name:
+        return name.partition(" (")[0]
+    return ""
 
 
-def main(argv=None):
+def main(argv: Optional[List[str]] = None) -> int:
     downstream_build_info = get_latest_downstream_build_info()
     downstream_result = get_downstream_result_by_project(downstream_build_info)
 
-    analyzers = []
+    analyzers: List[BuildInfoAnalyzer] = []
     for project_name, project_info in bazelci.DOWNSTREAM_PROJECTS.items():
         if project_name in downstream_result:
             analyzer = BuildInfoAnalyzer(project_name, project_info["pipeline_slug"], downstream_result[project_name])
