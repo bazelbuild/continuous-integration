@@ -40,14 +40,11 @@ def get_org_metrics(org):
 
   # 1. Agents
   agents = bk_client.get_agents()
-  total_agents = len(agents)
-  logging.info(f"Agent data pulled sucessfully for {total_agents} agents")
+  logging.info(f"Agent data pulled sucessfully for {len(agents)} agents")
 
   busy_agents = 0
   idle_agents = 0
   disconnected_agents = 0
-
-  # Bootstrap calculation variables
   bootstrap_samples = []
 
   for a in agents:
@@ -64,18 +61,17 @@ def get_org_metrics(org):
     bootstrap_samples.append((created_dt.timestamp() - boot_ts))
 
   avg_bootstrap_time = sum(bootstrap_samples) / len(
-    bootstrap_samples) if bootstrap_samples else 0.0
+      bootstrap_samples) if bootstrap_samples else 0.0
 
   # 2. Get ALL Scheduled Jobs (Queue Depth)
   scheduled_jobs_list = bk_client.get_scheduled_jobs()
-  scheduled_jobs = len(scheduled_jobs_list)
   logging.info(f"Scheduled Jobs pulled sucessfully")
 
   return {
       "timestamp": datetime.utcnow().isoformat(),
       "org": org,
-      "scheduled_jobs": scheduled_jobs,
-      "total_agents": total_agents,
+      "scheduled_jobs": len(scheduled_jobs_list),
+      "total_agents": len(agents),
       "busy_agents": busy_agents,
       "idle_agents": idle_agents,
       "disconnected_agents": disconnected_agents,
@@ -94,11 +90,11 @@ def push_to_bigquery(rows, retries):
     errors = client.insert_rows_json(table_ref, rows)
     if not errors:
       logging.info(
-        f"Successfully inserted {len(rows)} metrics for timestamp {rows[0]['timestamp']}")
+          f"Successfully inserted {len(rows)} metrics for timestamp {rows[0]['timestamp']}")
       return
 
     logging.warning(
-      f"Attempt {attempt + 1}/{retries} failed with errors: {errors}")
+        f"Attempt {attempt + 1}/{retries} failed with errors: {errors}")
     if attempt < retries - 1:
       time.sleep(2 ** attempt)
 

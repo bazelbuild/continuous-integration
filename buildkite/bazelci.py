@@ -686,10 +686,12 @@ gwD6RBL0qz1PFfg7Zw==
 
         return all_items
 
-
-    def _GetNextPageUrl(self, headers: str) -> str:
-        match = self._NEXT_PAGE_PATTERN.search(headers)
-        return match.group('url') if match else ''
+    def _GetNextPageUrl(self, headers):
+        link_header = headers.get("Link")
+        if not link_header:
+            return None
+        match = self._NEXT_PAGE_PATTERN.search(link_header)
+        return match.group('url') if match else None
 
     def get_pipeline_info(self):
         """Get details for a pipeline given its organization slug
