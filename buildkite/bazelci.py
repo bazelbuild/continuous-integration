@@ -4711,9 +4711,6 @@ def main(argv=None):
     except BuildkiteException as e:
         eprint(str(e))
         return e.exit_code
-    except Exception as ex:
-        eprint(str(ex))
-        return 1
     return 0
 
 
