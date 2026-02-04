@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import time
 from datetime import datetime
 
 from google.cloud import bigquery
@@ -8,7 +9,6 @@ from google.cloud import bigquery
 from bazelci import BuildkiteClient
 
 # --- Configuration ---
-ORGS = ["bazel", "bazel-trusted", "bazel-testing"]
 ORG_TOKENS = {
     "bazel": os.environ.get('BUILDKITE_API_TOKEN_BAZEL'),
     "bazel-trusted": os.environ.get('BUILDKITE_API_TOKEN_BAZEL_TRUSTED'),
@@ -48,9 +48,9 @@ def get_org_metrics(org):
     bootstrap_samples = []
 
     for a in agents:
-        if a.get('job') is not None:
+        if a.get('job'):
             busy_agents += 1
-        if a.get('job') is None and a.get('connection_state') == 'connected':
+        if not a.get('job') and a.get('connection_state') == 'connected':
             idle_agents += 1
         if a.get('connection_state') in ['disconnected', 'lost']:
             disconnected_agents += 1
@@ -104,7 +104,7 @@ def main():
 
     try:
         all_metrics = []
-        for org in ORGS:
+        for org in ORG_TOKENS.keys():
             metrics = get_org_metrics(org)
             if metrics:
                 all_metrics.append(metrics)
