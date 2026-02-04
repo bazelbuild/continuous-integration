@@ -3277,8 +3277,8 @@ def runner_step(
 
 def fetch_bazelcipy_command():
     command = "curl -q --noproxy '*' -sS {0}?{1} -o bazelci.py".format(SCRIPT_URL, int(time.time()))
-    command += "&& curl -q --noproxy '*' -sS {0}?{1} -o collect_metrics.py".format(METRICS_SCRIPT_URL, int(time.time()))
-    command += "&& python3.6 -m pip install --upgrade pip setuptools wheel && python3.6 -m pip install google-cloud-bigquery requests"
+    command += " && curl -q --noproxy '*' -sS {0}?{1} -o collect_metrics.py".format(METRICS_SCRIPT_URL, int(time.time()))
+    command += " && python3 -m pip install --upgrade pip setuptools wheel && python3 -m pip install google-cloud-bigquery requests"
     return command
 
 
