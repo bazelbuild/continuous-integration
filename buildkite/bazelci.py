@@ -43,6 +43,8 @@ import urllib.error
 import urllib.request
 import yaml
 
+from collect_metrics import collect_metrics_and_push_to_bigquery
+
 # Initialize the random number generator.
 random.seed()
 
@@ -1429,6 +1431,7 @@ def execute_commands(
                 upload_log_file(os.path.join(output_base, "java.log"), tmpdir)
 
             _ = future.result()
+            collect_metrics_and_push_to_bigquery(test_bep_file)
             # TODO: print results
 
     if coverage_targets:
