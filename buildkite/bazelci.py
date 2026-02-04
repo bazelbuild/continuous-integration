@@ -4666,7 +4666,7 @@ def main(argv=None):
         eprint(str(e))
         return e.exit_code
     except Exception as ex:
-        eprint(str(e))
+        eprint(str(ex))
         return 1
     return 0
 
