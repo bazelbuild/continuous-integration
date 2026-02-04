@@ -21,9 +21,7 @@ print("Using Buildkite API Token: {}".format(os.environ["BUILDKITE_API_TOKEN"]))
 buildkite: Buildkite = Buildkite()
 buildkite.set_access_token(os.environ["BUILDKITE_API_TOKEN"])
 
-response = buildkite.agents().list_all(
-    organization=ORGANIZATION, page=1, with_pagination=True
-)
+response = buildkite.agents().list_all(organization=ORGANIZATION, page=1, with_pagination=True)
 agents: List[Dict[str, Any]] = response.body
 
 # Keep looping until next_page is not populated

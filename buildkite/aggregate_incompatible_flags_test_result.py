@@ -32,25 +32,30 @@ FAIL_IF_MIGRATION_REQUIRED: bool = os.environ.get("USE_BAZELISK_MIGRATE", "").up
 
 FLAG_LINE_PATTERN: re.Pattern[str] = re.compile(r"\s*(?P<flag>--\S+)\s*")
 
-MODULE_VERSION_PATTERN: re.Pattern[str] = re.compile(r'(?P<module_version>[a-z](?:[a-z0-9._-]*[a-z0-9])?@[^\s]+)')
+MODULE_VERSION_PATTERN: re.Pattern[str] = re.compile(
+    r"(?P<module_version>[a-z](?:[a-z0-9._-]*[a-z0-9])?@[^\s]+)"
+)
 
-BAZEL_TEAM_OWNED_MODULES: Set[str] = frozenset([
-    "bazel-skylib",
-    "rules_android",
-    "rules_android_ndk",
-    "rules_cc",
-    "rules_java",
-    "rules_license",
-    "rules_pkg",
-    "rules_platform",
-    "rules_shell",
-    "rules_testing",
-])
+BAZEL_TEAM_OWNED_MODULES: Set[str] = frozenset(
+    [
+        "bazel-skylib",
+        "rules_android",
+        "rules_android_ndk",
+        "rules_cc",
+        "rules_java",
+        "rules_license",
+        "rules_pkg",
+        "rules_platform",
+        "rules_shell",
+        "rules_testing",
+    ]
+)
 
 PROJECT: str = "module" if PIPELINE == "bcr-bazel-compatibility-test" else "project"
 
 MAX_LOG_FETCHER_THREADS: int = 10
 LOG_FETCHER_SEMAPHORE: threading.Semaphore = threading.Semaphore(MAX_LOG_FETCHER_THREADS)
+
 
 class LogFetcher(threading.Thread):
     job: Dict[str, Any]
@@ -65,10 +70,15 @@ class LogFetcher(threading.Thread):
 
     def run(self) -> None:
         with LOG_FETCHER_SEMAPHORE:
-            self.log = self.client.get_build_log(self.job, retries = 10)
+            self.log = self.client.get_build_log(self.job, retries=10)
 
 
-def process_build_log(failed_jobs_per_flag: Dict[str, Dict[str, Dict[str, Any]]], already_failing_jobs: List[Dict[str, Any]], log: str, job: Dict[str, Any]) -> None:
+def process_build_log(
+    failed_jobs_per_flag: Dict[str, Dict[str, Dict[str, Any]]],
+    already_failing_jobs: List[Dict[str, Any]],
+    log: str,
+    job: Dict[str, Any],
+) -> None:
     if job["state"] == "passed" and "Success: No migration needed." in log:
         return
 
@@ -92,7 +102,7 @@ def process_build_log(failed_jobs_per_flag: Dict[str, Dict[str, Dict[str, Any]]]
             raise bazelci.BuildkiteException("Cannot recognize log of " + job["web_url"])
         for line in log[index_failure:].split("\n"):
             # Strip out BuildKite timestamp prefix
-            line = re.sub(r'\x1b.*?\x07', '', line.strip())
+            line = re.sub(r"\x1b.*?\x07", "", line.strip())
             if not line:
                 break
             handle_failing_flags(line)
@@ -124,8 +134,10 @@ def get_html_link_text(content: str, link: str) -> str:
 def is_project_owned_by_bazel_team(project: Optional[str]) -> bool:
     if not project:
         return False
-    if bazelci.is_downstream_pipeline() and project in bazelci.DOWNSTREAM_PROJECTS and bazelci.DOWNSTREAM_PROJECTS[project].get(
-        "owned_by_bazel"
+    if (
+        bazelci.is_downstream_pipeline()
+        and project in bazelci.DOWNSTREAM_PROJECTS
+        and bazelci.DOWNSTREAM_PROJECTS[project].get("owned_by_bazel")
     ):
         # Check the downstream projects definition.
         return True
@@ -133,6 +145,7 @@ def is_project_owned_by_bazel_team(project: Optional[str]) -> bool:
         # Parse the module name and check if it's bazel team owned.
         return True
     return False
+
 
 # Check if any of the given jobs needs to be migrated by the Bazel team
 def needs_bazel_team_migrate(jobs: Any) -> bool:
@@ -143,7 +156,9 @@ def needs_bazel_team_migrate(jobs: Any) -> bool:
     return False
 
 
-def print_flags_ready_to_flip(failed_jobs_per_flag: Dict[str, Any], incompatible_flags: Dict[str, str]) -> None:
+def print_flags_ready_to_flip(
+    failed_jobs_per_flag: Dict[str, Any], incompatible_flags: Dict[str, str]
+) -> None:
     info_text1 = [f"#### The following flags didn't break any passing {PROJECT}s"]
     for flag in sorted(list(incompatible_flags.keys())):
         if flag not in failed_jobs_per_flag:
@@ -223,7 +238,9 @@ def print_projects_need_to_migrate(failed_jobs_per_flag: Dict[str, Dict[str, Any
     )
 
 
-def print_flags_need_to_migrate(failed_jobs_per_flag: Dict[str, Dict[str, Any]], incompatible_flags: Dict[str, str]) -> None:
+def print_flags_need_to_migrate(
+    failed_jobs_per_flag: Dict[str, Dict[str, Any]], incompatible_flags: Dict[str, str]
+) -> None:
     # The info box printed later is above info box printed before,
     # so reverse the flag list to maintain the same order.
     printed_flag_boxes = False
@@ -316,7 +333,9 @@ def print_info(context: str, style: str, info: List[str]) -> None:
         )
 
 
-def analyze_logs(build_number: str, client: bazelci.BuildkiteClient) -> Tuple[List[Dict[str, Any]], Dict[str, Dict[str, Any]]]:
+def analyze_logs(
+    build_number: str, client: bazelci.BuildkiteClient
+) -> Tuple[List[Dict[str, Any]], Dict[str, Dict[str, Any]]]:
     build_info = client.get_build_info(build_number)
 
     already_failing_jobs: List[Dict[str, Any]] = []
@@ -335,14 +354,14 @@ def analyze_logs(build_number: str, client: bazelci.BuildkiteClient) -> Tuple[Li
     for thread in threads:
         thread.join()
         if thread.log:
-            process_build_log(
-                failed_jobs_per_flag, already_failing_jobs, thread.log, thread.job
-            )
+            process_build_log(failed_jobs_per_flag, already_failing_jobs, thread.log, thread.job)
 
     return already_failing_jobs, failed_jobs_per_flag
 
 
-def print_result_info(already_failing_jobs: List[Dict[str, Any]], failed_jobs_per_flag: Dict[str, Dict[str, Any]]) -> bool:
+def print_result_info(
+    already_failing_jobs: List[Dict[str, Any]], failed_jobs_per_flag: Dict[str, Dict[str, Any]]
+) -> bool:
     # key: flag name, value: Github Issue URL
     incompatible_flags = bazelci.fetch_incompatible_flags()
 
@@ -371,12 +390,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     try:
         if args.build_number:
             client = bazelci.BuildkiteClient(org=BUILDKITE_ORG, pipeline=PIPELINE)
-            already_failing_jobs, failed_jobs_per_flag = analyze_logs(
-                args.build_number, client
-            )
-            migration_required = print_result_info(
-                already_failing_jobs, failed_jobs_per_flag
-            )
+            already_failing_jobs, failed_jobs_per_flag = analyze_logs(args.build_number, client)
+            migration_required = print_result_info(already_failing_jobs, failed_jobs_per_flag)
 
             if migration_required and FAIL_IF_MIGRATION_REQUIRED:
                 bazelci.eprint("Exiting with code 3 since a migration is required.")

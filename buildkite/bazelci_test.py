@@ -172,6 +172,7 @@ tasks:
         )
         self.assertEqual(build_targets, ["//...", "-//experimental/...", "//experimental/good/..."])
 
+
 class MatrixExpansion(unittest.TestCase):
     _CONFIGS: Dict[str, Any] = yaml.safe_load(
         """
@@ -200,17 +201,20 @@ tasks:
         expanded_tasks = config["tasks"]
         self.assertEqual(len(expanded_tasks), 9)
         expanded_task_names = [task.get("name", None) for id, task in expanded_tasks.items()]
-        self.assertEqual(expanded_task_names, [
-            "Basic", # no matrix expansion
-            "Unformatted", # bazel v1.2.3
-            "Unformatted",  # bazel v2.3.4
-            None, # no name, bazel v1.2.3
-            None, # no name, bazel v2.3.4
-            "Formatted w/ Bazel v1.2.3 on pf1",
-            "Formatted w/ Bazel v1.2.3 on pf2",
-            "Formatted w/ Bazel v2.3.4 on pf1",
-            "Formatted w/ Bazel v2.3.4 on pf2",
-        ])
+        self.assertEqual(
+            expanded_task_names,
+            [
+                "Basic",  # no matrix expansion
+                "Unformatted",  # bazel v1.2.3
+                "Unformatted",  # bazel v2.3.4
+                None,  # no name, bazel v1.2.3
+                None,  # no name, bazel v2.3.4
+                "Formatted w/ Bazel v1.2.3 on pf1",
+                "Formatted w/ Bazel v1.2.3 on pf2",
+                "Formatted w/ Bazel v2.3.4 on pf1",
+                "Formatted w/ Bazel v2.3.4 on pf2",
+            ],
+        )
 
 
 class MatrixExclude(unittest.TestCase):
@@ -265,6 +269,7 @@ tasks:
 
     def test_single_exclude(self) -> None:
         import copy
+
         config = copy.deepcopy(self._CONFIGS_SINGLE_EXCLUDE)
 
         bazelci.expand_task_config(config)
@@ -272,14 +277,18 @@ tasks:
         # Total combinations: 2 * 2 = 4, minus 1 excluded = 3
         self.assertEqual(len(expanded_tasks), 3)
         expanded_task_names = [task.get("name", None) for id, task in expanded_tasks.items()]
-        self.assertEqual(expanded_task_names, [
-            "Formatted w/ Bazel v1.2.3 on pf1",
-            "Formatted w/ Bazel v2.3.4 on pf1",
-            "Formatted w/ Bazel v2.3.4 on pf2",
-        ])
+        self.assertEqual(
+            expanded_task_names,
+            [
+                "Formatted w/ Bazel v1.2.3 on pf1",
+                "Formatted w/ Bazel v2.3.4 on pf1",
+                "Formatted w/ Bazel v2.3.4 on pf2",
+            ],
+        )
 
     def test_multiple_excludes(self) -> None:
         import copy
+
         config = copy.deepcopy(self._CONFIGS_MULTIPLE_EXCLUDES)
 
         bazelci.expand_task_config(config)
@@ -287,13 +296,17 @@ tasks:
         # Total combinations: 2 * 2 = 4, minus 2 excluded = 2
         self.assertEqual(len(expanded_tasks), 2)
         expanded_task_names = [task.get("name", None) for id, task in expanded_tasks.items()]
-        self.assertEqual(expanded_task_names, [
-            "Formatted w/ Bazel v1.2.3 on pf1",
-            "Formatted w/ Bazel v2.3.4 on pf2",
-        ])
+        self.assertEqual(
+            expanded_task_names,
+            [
+                "Formatted w/ Bazel v1.2.3 on pf1",
+                "Formatted w/ Bazel v2.3.4 on pf2",
+            ],
+        )
 
     def test_partial_attribute_exclude(self) -> None:
         import copy
+
         config = copy.deepcopy(self._CONFIGS_PARTIAL_EXCLUDE)
 
         bazelci.expand_task_config(config)
@@ -301,10 +314,13 @@ tasks:
         # Total combinations: 2 * 2 = 4, minus 2 excluded (all pf2) = 2
         self.assertEqual(len(expanded_tasks), 2)
         expanded_task_names = [task.get("name", None) for id, task in expanded_tasks.items()]
-        self.assertEqual(expanded_task_names, [
-            "Formatted w/ Bazel v1.2.3 on pf1",
-            "Formatted w/ Bazel v2.3.4 on pf1",
-        ])
+        self.assertEqual(
+            expanded_task_names,
+            [
+                "Formatted w/ Bazel v1.2.3 on pf1",
+                "Formatted w/ Bazel v2.3.4 on pf1",
+            ],
+        )
 
 
 if __name__ == "__main__":

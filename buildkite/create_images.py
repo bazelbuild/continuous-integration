@@ -56,7 +56,7 @@ IMAGE_CREATION_VMS: Dict[str, Dict[str, Any]] = {
         "project": "bazel-public",
         "zone": "us-central1-f",
         "source_image_project": "windows-cloud",
-        "source_image_family": "windows-2022", # vs build tools failed to install on windows-2022-core
+        "source_image_family": "windows-2022",  # vs build tools failed to install on windows-2022-core
         "setup_script": "setup-windows.ps1",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
     },
@@ -85,7 +85,9 @@ def preprocess_setup_script(setup_script: str, is_windows: bool) -> str:
                 f.write("'@\n")
                 f.write('[System.IO.File]::WriteAllLines("c:\\setup.ps1", $setup_script)\n')
                 f.write("$ts = Get-Date -Format 'yyyyMMdd-HHmmss'\n")
-                f.write('Start-Process -FilePath "powershell.exe" -ArgumentList "-File c:\\setup.ps1" -RedirectStandardOutput "c:\\setup-stdout-$ts.log" -RedirectStandardError "c:\\setup-stderr-$ts.log" -NoNewWindow\n')
+                f.write(
+                    'Start-Process -FilePath "powershell.exe" -ArgumentList "-File c:\\setup.ps1" -RedirectStandardOutput "c:\\setup-stdout-$ts.log" -RedirectStandardError "c:\\setup-stderr-$ts.log" -NoNewWindow\n'
+                )
     return output_file
 
 

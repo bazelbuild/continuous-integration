@@ -73,7 +73,13 @@ def print_pretty_logs(instance_name: str, log: str) -> None:
             print(lines)
 
 
-def tail_serial_console(instance_name: str, project: str, zone: str, start: Optional[str] = None, until: Optional[str] = None) -> str:
+def tail_serial_console(
+    instance_name: str,
+    project: str,
+    zone: str,
+    start: Optional[str] = None,
+    until: Optional[str] = None,
+) -> str:
     next_start = start if start else "0"
     while True:
         try:

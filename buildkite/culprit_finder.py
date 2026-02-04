@@ -76,7 +76,12 @@ def get_tasks(project_name: str) -> Sequence[str]:
 
 
 def test_with_bazel_at_commit(
-    project_name: str, task_name: str, repo_location: str, bazel_commit: str, needs_clean: bool, repeat_times: int
+    project_name: str,
+    task_name: str,
+    repo_location: str,
+    bazel_commit: str,
+    needs_clean: bool,
+    repeat_times: int,
 ) -> bool:
     http_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("http_config")
     file_config = bazelci.DOWNSTREAM_PROJECTS[project_name].get("file_config")
@@ -92,7 +97,13 @@ def test_with_bazel_at_commit(
                     "--overwrite_bazel_version=" + bazel_commit,
                 ]
                 + (["--http_config=" + http_config] if http_config else [])
-                + (["--file_config=" + file_config,] if file_config else [])
+                + (
+                    [
+                        "--file_config=" + file_config,
+                    ]
+                    if file_config
+                    else []
+                )
                 + (["--needs_clean"] if needs_clean else [])
             )
         except subprocess.CalledProcessError as e:
@@ -103,7 +114,9 @@ def test_with_bazel_at_commit(
     return True
 
 
-def clone_git_repository(project_name: str, git_commit: Optional[str] = None, suppress_stdout: bool = False) -> str:
+def clone_git_repository(
+    project_name: str, git_commit: Optional[str] = None, suppress_stdout: bool = False
+) -> str:
     git_repository = bazelci.DOWNSTREAM_PROJECTS[project_name]["git_repository"]
     if not git_commit:
         git_commit = bazelci.get_last_green_commit(project_name)
@@ -114,9 +127,7 @@ def get_previous_bazel_commit(current_commit: str, count: int) -> str:
     """Get a previous bazel commit that is a given number of commits older than the current one."""
     try:
         os.chdir(BAZEL_REPO_DIR)
-        output = subprocess.check_output(
-            ["git", "rev-parse", "%s~%s" % (current_commit, count)]
-        )
+        output = subprocess.check_output(["git", "rev-parse", "%s~%s" % (current_commit, count)])
         return output.decode("utf-8").strip()
     except subprocess.CalledProcessError as e:
         raise bazelci.BuildkiteException(
@@ -141,7 +152,10 @@ def identify_bisect_range(args: argparse.Namespace, repo_location: str) -> Tuple
             repeat_times=args.repeat_times,
         ):
             return good_bazel_commit, bad_bazel_commit
-        bazelci.print_collapsed_group("Given good bazel commit is not good, try to find a previous good commit (%s~%s)." % (good_bazel_commit, step))
+        bazelci.print_collapsed_group(
+            "Given good bazel commit is not good, try to find a previous good commit (%s~%s)."
+            % (good_bazel_commit, step)
+        )
         bad_bazel_commit = good_bazel_commit
         good_bazel_commit = get_previous_bazel_commit(good_bazel_commit, step)
         retry += 1
@@ -151,7 +165,12 @@ def identify_bisect_range(args: argparse.Namespace, repo_location: str) -> Tuple
 
 
 def start_bisecting(
-    project_name: str, task_name: str, repo_location: str, commits_list: List[str], needs_clean: bool, repeat_times: int
+    project_name: str,
+    task_name: str,
+    repo_location: str,
+    commits_list: List[str],
+    needs_clean: bool,
+    repeat_times: int,
 ) -> None:
     left = 0
     right = len(commits_list)
@@ -182,7 +201,13 @@ def start_bisecting(
 
 
 def print_culprit_finder_pipeline(
-    project_name: str, tasks: Sequence[str], good_bazel_commit: str, bad_bazel_commit: str, needs_clean: bool, repeat_times: int, project_commit: Optional[str] = None
+    project_name: str,
+    tasks: Sequence[str],
+    good_bazel_commit: str,
+    bad_bazel_commit: str,
+    needs_clean: bool,
+    repeat_times: int,
+    project_commit: Optional[str] = None,
 ) -> None:
     pipeline_steps = []
     for task_name in tasks:
@@ -241,7 +266,9 @@ def main(argv: Optional[List[str]] = None) -> int:
                 )
 
             # Clone the project repo so that we can get its CI config file at the same last green commit.
-            project_dir = clone_git_repository(project_name, git_commit=project_commit, suppress_stdout=True)
+            project_dir = clone_git_repository(
+                project_name, git_commit=project_commit, suppress_stdout=True
+            )
 
             # For old config file, we can still set PLATFORM_NAME as task name.
             task = os.environ.get("PLATFORM_NAME") or os.environ.get("TASK_NAME")
@@ -256,7 +283,9 @@ def main(argv: Optional[List[str]] = None) -> int:
             if not bad_bazel_commit:
                 # If BAD_BAZEL_COMMIT is not set, use HEAD commit.
                 bad_bazel_commit = (
-                    subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=BAZEL_REPO_DIR).decode("utf-8").strip()
+                    subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=BAZEL_REPO_DIR)
+                    .decode("utf-8")
+                    .strip()
                 )
 
             good_bazel_commit = os.environ.get("GOOD_BAZEL_COMMIT")

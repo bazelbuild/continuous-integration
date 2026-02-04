@@ -63,21 +63,23 @@ PROJECTS: List[Dict[str, Any]] = [
         "bazel_command": "build --output_filter=^\$ //tensorflow/core:core",
         "bazel_bench_extra_options": {
             "ubuntu1804": "--env_configure=\"unset PYTHONPATH && yes '' | python3 ./configure.py\"",
-            "macos": ("--env_configure=\"python3 --version && unset PYTHONPATH "
+            "macos": (
+                '--env_configure="python3 --version && unset PYTHONPATH '
                 "&& pip3 install -U --user pip six numpy wheel setuptools mock 'future>=0.17.1' "
                 "&& pip3 install -U --user keras_applications==1.0.6 --no-deps "
                 "&& pip3 install -U --user keras_preprocessing==1.0.5 --no-deps "
-                "&& yes '' | python3 ./configure.py\""),
+                "&& yes '' | python3 ./configure.py\""
+            ),
         },
         "active": True,
-    }
+    },
 ]
 BAZEL_REPOSITORY: str = "https://github.com/bazelbuild/bazel.git"
 DATA_DIRECTORY: str = os.path.join(TMP, ".bazel-bench", "out")
 BAZEL_BENCH_RESULT_FILENAME: str = "perf_data.csv"
 AGGR_JSON_PROFILES_FILENAME: str = "aggr_json_profiles.csv"
-PLATFORMS_WHITELIST: List[str] = ['macos', 'ubuntu1804']
-REPORT_GENERATION_PLATFORM: str = 'ubuntu1804'
+PLATFORMS_WHITELIST: List[str] = ["macos", "ubuntu1804"]
+REPORT_GENERATION_PLATFORM: str = "ubuntu1804"
 
 
 def _bazel_bench_env_setup_command(platform: str, bazel_commits: str) -> List[str]:
@@ -85,11 +87,11 @@ def _bazel_bench_env_setup_command(platform: str, bazel_commits: str) -> List[st
         "https://raw.githubusercontent.com/bazelbuild/continuous-integration"
         "/master/buildkite/bazel-bench/bazel_bench_env_setup.py?{}".format(int(time.time()))
     )
-    download_command = 'curl -sS "{}" -o bazel_bench_env_setup.py'.format(bazel_bench_env_setup_py_url)
+    download_command = 'curl -sS "{}" -o bazel_bench_env_setup.py'.format(
+        bazel_bench_env_setup_py_url
+    )
     exec_command = "{python} bazel_bench_env_setup.py --platform={platform} --bazel_commits={bazel_commits}".format(
-        python=bazelci.PLATFORMS[platform]["python"],
-        platform=platform,
-        bazel_commits=bazel_commits
+        python=bazelci.PLATFORMS[platform]["python"], platform=platform, bazel_commits=bazel_commits
     )
 
     return [download_command, exec_command]
@@ -137,7 +139,9 @@ def _get_commits_from_date(date: datetime.date, repo_path: str) -> List[str]:
     return [line.strip("'") for line in decoded if line]
 
 
-def _get_bazel_commits(date: datetime.date, bazel_repo_path: str, max_commits: Optional[int] = None) -> Tuple[List[str], List[str]]:
+def _get_bazel_commits(
+    date: datetime.date, bazel_repo_path: str, max_commits: Optional[int] = None
+) -> Tuple[List[str], List[str]]:
     """Get the Bazel commits to benchmark from a particular date.
 
     Also include the last commit from the previous day (to create some overlap).
@@ -157,7 +161,9 @@ def _get_bazel_commits(date: datetime.date, bazel_repo_path: str, max_commits: O
     from_prev_day = _get_commits_from_date(previous_day, bazel_repo_path)
 
     full_list = from_prev_day[-1:] + from_date
-    to_benchmark = from_prev_day[-1:] + _evenly_spaced_sample(from_date, max_commits if max_commits is not None else 0)
+    to_benchmark = from_prev_day[-1:] + _evenly_spaced_sample(
+        from_date, max_commits if max_commits is not None else 0
+    )
 
     return full_list, to_benchmark
 
@@ -176,8 +182,7 @@ def _get_platforms(project_name: str, whitelist: List[str]) -> Set[str]:
     http_config = bazelci.DOWNSTREAM_PROJECTS_PRODUCTION[project_name]["http_config"]
     configs = bazelci.fetch_configs(http_config, None)
     tasks = configs["tasks"]
-    ci_platforms_for_project = [
-        bazelci.get_platform_for_task(k, tasks[k]) for k in tasks]
+    ci_platforms_for_project = [bazelci.get_platform_for_task(k, tasks[k]) for k in tasks]
 
     return set([p for p in ci_platforms_for_project if p in whitelist])
 
@@ -205,7 +210,14 @@ def _get_clone_path(repository: str, platform: str) -> str:
 
 
 def _ci_step_for_platform_and_commits(
-    bazel_commits: List[str], platform: str, project: Dict[str, Any], extra_options: str, date: datetime.date, bucket: str, bigquery_table: str) -> Dict[str, Any]:
+    bazel_commits: List[str],
+    platform: str,
+    project: Dict[str, Any],
+    extra_options: str,
+    date: datetime.date,
+    bucket: str,
+    bigquery_table: str,
+) -> Dict[str, Any]:
     """Perform bazel-bench for the platform-project combination.
     Uploads results to BigQuery.
 
@@ -286,8 +298,15 @@ def _ci_step_for_platform_and_commits(
 
 
 def _metadata_file_content(
-    project_label: str, project_source: str, command: str, date: datetime.date, platforms: Set[str],
-    bucket: str, all_commits: List[str], benchmarked_commits: List[str]) -> Dict[str, Any]:
+    project_label: str,
+    project_source: str,
+    command: str,
+    date: datetime.date,
+    platforms: Set[str],
+    bucket: str,
+    all_commits: List[str],
+    benchmarked_commits: List[str],
+) -> Dict[str, Any]:
     """Generate the METADATA file for each project.
 
     Args:
@@ -325,8 +344,15 @@ def _metadata_file_content(
 
 
 def _create_and_upload_metadata(
-    project_label: str, project_source: str, command: str, date: datetime.date, platforms: Set[str],
-    bucket: str, all_commits: List[str], benchmarked_commits: List[str]) -> None:
+    project_label: str,
+    project_source: str,
+    command: str,
+    date: datetime.date,
+    platforms: Set[str],
+    bucket: str,
+    all_commits: List[str],
+    benchmarked_commits: List[str],
+) -> None:
     """Generate the METADATA file for each project & upload to Storage.
 
     METADATA provides information about the runs and where to get the
@@ -342,17 +368,23 @@ def _create_and_upload_metadata(
         bucket: the GCP Storage bucket to upload data to.
         all_commits: the full list of Bazel commits that day.
         benchmarked_commits: the commits picked for benchmarking.
-   """
+    """
     metadata_file_path = "{}/{}-metadata".format(TMP, project_label)
 
     with open(metadata_file_path, "w") as f:
         data = _metadata_file_content(
-            project_label, project_source, command, date, platforms,
-            bucket, all_commits, benchmarked_commits)
+            project_label,
+            project_source,
+            command,
+            date,
+            platforms,
+            bucket,
+            all_commits,
+            benchmarked_commits,
+        )
         json.dump(data, f)
 
-    destination = "gs://{}/{}/{}/METADATA".format(
-        bucket, project_label, date.strftime("%Y/%m/%d"))
+    destination = "gs://{}/{}/{}/METADATA".format(bucket, project_label, date.strftime("%Y/%m/%d"))
     args = ["gsutil", "cp", metadata_file_path, destination]
 
     try:
@@ -363,41 +395,47 @@ def _create_and_upload_metadata(
 
 
 def _report_generation_step(
-    date: datetime.date, project_label: str, bucket: str, bigquery_table: str, platform: str, report_name: str, update_latest: bool = False, upload_report: bool = False) -> Dict[str, Any]:
+    date: datetime.date,
+    project_label: str,
+    bucket: str,
+    bigquery_table: str,
+    platform: str,
+    report_name: str,
+    update_latest: bool = False,
+    upload_report: bool = False,
+) -> Dict[str, Any]:
     """Generate the daily report.
 
     Also update the path reserved for the latest report of each project.
     """
     commands = []
-    commands.append(" ".join([
-        "bazel",
-        "run",
-        "report:generate_report",
-        "--",
-        "--date={}".format(date),
-        "--project={}".format(project_label),
-        "--storage_bucket={}".format(bucket),
-        "--bigquery_table={}".format(bigquery_table),
-        "--report_name={}".format(report_name),
-        "--upload_report={}".format(upload_report)
-    ]))
+    commands.append(
+        " ".join(
+            [
+                "bazel",
+                "run",
+                "report:generate_report",
+                "--",
+                "--date={}".format(date),
+                "--project={}".format(project_label),
+                "--storage_bucket={}".format(bucket),
+                "--bigquery_table={}".format(bigquery_table),
+                "--report_name={}".format(report_name),
+                "--upload_report={}".format(upload_report),
+            ]
+        )
+    )
 
     # Copy the generated report to a special path on GCS that's reserved for
     # "latest" reports. GCS doesn't support symlink.
     if upload_report and update_latest:
         date_dir = date.strftime("%Y/%m/%d")
         report_dated_path_gcs = "gs://{}/{}/{}/{}.html".format(
-            bucket, project_label, date_dir, report_name)
-        report_latest_path_gcs = "gs://{}/{}/report_latest.html".format(
-            bucket, project_label)
-        commands.append(" ".join([
-            "gsutil",
-            "cp",
-            report_dated_path_gcs,
-            report_latest_path_gcs
-        ]))
-    label = "Generating report on {} for project: {}.".format(
-        date, project_label)
+            bucket, project_label, date_dir, report_name
+        )
+        report_latest_path_gcs = "gs://{}/{}/report_latest.html".format(bucket, project_label)
+        commands.append(" ".join(["gsutil", "cp", report_dated_path_gcs, report_latest_path_gcs]))
+    label = "Generating report on {} for project: {}.".format(date, project_label)
     return bazelci.create_step(label, commands, platform)
 
 
@@ -408,15 +446,16 @@ def main(args: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Bazel Bench CI Pipeline")
     parser.add_argument("--date", type=str)
     parser.add_argument("--bazel_bench_options", type=str, default="")
-    parser.add_argument("--projects", type=str, nargs='+', default=None)
+    parser.add_argument("--projects", type=str, nargs="+", default=None)
     parser.add_argument("--bucket", type=str, default="")
     parser.add_argument("--max_commits", type=int, default=0)
     parser.add_argument("--report_name", type=str, default="report")
     parser.add_argument("--update_latest", action="store_true", default=False)
     parser.add_argument("--upload_report", action="store_true", default=False)
     parser.add_argument(
-      "--bigquery_table",
-      help="The BigQuery table to fetch data from. In the format: project:table_identifier.")
+        "--bigquery_table",
+        help="The BigQuery table to fetch data from. In the format: project:table_identifier.",
+    )
     parsed_args = parser.parse_args(args)
 
     date = (
@@ -427,28 +466,40 @@ def main(args: Optional[List[str]] = None) -> int:
 
     bazel_clone_path = bazelci.clone_git_repository(BAZEL_REPOSITORY)
     bazel_commits_full_list, bazel_commits_to_benchmark = _get_bazel_commits(
-        date, bazel_clone_path, parsed_args.max_commits)
+        date, bazel_clone_path, parsed_args.max_commits
+    )
     bazel_bench_ci_steps: List[Union[str, Dict[str, Any]]] = []
 
     for project in PROJECTS:
-        if (not project["active"]
-            or (parsed_args.projects
-                and project['project_label'] not in parsed_args.projects)):
+        if not project["active"] or (
+            parsed_args.projects and project["project_label"] not in parsed_args.projects
+        ):
             continue
-        platforms = _get_platforms(
-            project["bazelci_name"], whitelist=PLATFORMS_WHITELIST)
+        platforms = _get_platforms(project["bazelci_name"], whitelist=PLATFORMS_WHITELIST)
 
         for platform in platforms:
-            if (project["bazel_bench_extra_options"] and platform in project["bazel_bench_extra_options"]):
-                project_specific_bazel_bench_options = " ".join([project["bazel_bench_extra_options"][platform], parsed_args.bazel_bench_options])
+            if (
+                project["bazel_bench_extra_options"]
+                and platform in project["bazel_bench_extra_options"]
+            ):
+                project_specific_bazel_bench_options = " ".join(
+                    [
+                        project["bazel_bench_extra_options"][platform],
+                        parsed_args.bazel_bench_options,
+                    ]
+                )
             else:
                 project_specific_bazel_bench_options = parsed_args.bazel_bench_options
 
             bazel_bench_ci_steps.append(
                 _ci_step_for_platform_and_commits(
-                    bazel_commits_to_benchmark, platform, project,
-                    project_specific_bazel_bench_options, date, parsed_args.bucket,
-                    parsed_args.bigquery_table
+                    bazel_commits_to_benchmark,
+                    platform,
+                    project,
+                    project_specific_bazel_bench_options,
+                    date,
+                    parsed_args.bucket,
+                    parsed_args.bigquery_table,
                 )
             )
         _create_and_upload_metadata(
@@ -459,7 +510,7 @@ def main(args: Optional[List[str]] = None) -> int:
             platforms=platforms,
             bucket=parsed_args.bucket,
             all_commits=bazel_commits_full_list,
-            benchmarked_commits=bazel_commits_to_benchmark
+            benchmarked_commits=bazel_commits_to_benchmark,
         )
 
     bazel_bench_ci_steps.append("wait")
@@ -469,14 +520,22 @@ def main(args: Optional[List[str]] = None) -> int:
         # If all the above steps succeed, generate the report.
         bazel_bench_ci_steps.append(
             _report_generation_step(
-                date, project["storage_subdir"],
-                parsed_args.bucket, parsed_args.bigquery_table, REPORT_GENERATION_PLATFORM,
-                parsed_args.report_name, parsed_args.update_latest, parsed_args.upload_report))
+                date,
+                project["storage_subdir"],
+                parsed_args.bucket,
+                parsed_args.bigquery_table,
+                REPORT_GENERATION_PLATFORM,
+                parsed_args.report_name,
+                parsed_args.update_latest,
+                parsed_args.upload_report,
+            )
+        )
 
     bazelci.eprint(yaml.dump({"steps": bazel_bench_ci_steps}))
     subprocess.run(
         ["buildkite-agent", "pipeline", "upload"],
-        input=yaml.dump({"steps": bazel_bench_ci_steps}, encoding="utf-8"))
+        input=yaml.dump({"steps": bazel_bench_ci_steps}, encoding="utf-8"),
+    )
 
     return 0
 

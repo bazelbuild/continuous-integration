@@ -35,7 +35,9 @@ def is_sequence(seq: Any) -> bool:
     return isinstance(seq, collections.abc.Sequence) and not isinstance(seq, str)
 
 
-def gcloud(*args: str, **kwargs: Union[str, bool, Sequence[str]]) -> subprocess.CompletedProcess[str]:
+def gcloud(
+    *args: str, **kwargs: Union[str, bool, Sequence[str]]
+) -> subprocess.CompletedProcess[str]:
     cmd = ["gcloud"]
     cmd += args
     for flag, value in kwargs.items():
@@ -63,14 +65,18 @@ def gcloud(*args: str, **kwargs: Union[str, bool, Sequence[str]]) -> subprocess.
     )
 
 
-def create_instance(name: str, **kwargs: Union[str, bool, Sequence[str]]) -> subprocess.CompletedProcess[str]:
+def create_instance(
+    name: str, **kwargs: Union[str, bool, Sequence[str]]
+) -> subprocess.CompletedProcess[str]:
     try:
         return gcloud("compute", "instances", "create", name, **kwargs)
     except subprocess.CalledProcessError as e:
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
-def delete_instance(name: str, **kwargs: Union[str, bool, Sequence[str]]) -> Union[subprocess.CompletedProcess[str], subprocess.CalledProcessError[str]]:
+def delete_instance(
+    name: str, **kwargs: Union[str, bool, Sequence[str]]
+) -> Union[subprocess.CompletedProcess[str], subprocess.CalledProcessError[str]]:
     try:
         return gcloud("compute", "instances", "delete", name, "--quiet", **kwargs)
     except subprocess.CalledProcessError as e:
@@ -81,21 +87,27 @@ def delete_instance(name: str, **kwargs: Union[str, bool, Sequence[str]]) -> Uni
         return e
 
 
-def describe_instance(name: str, **kwargs: Union[str, bool, Sequence[str]]) -> subprocess.CompletedProcess[str]:
+def describe_instance(
+    name: str, **kwargs: Union[str, bool, Sequence[str]]
+) -> subprocess.CompletedProcess[str]:
     try:
         return gcloud("compute", "instances", "describe", name, **kwargs)
     except subprocess.CalledProcessError as e:
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
-def create_instance_group(name: str, **kwargs: Union[str, bool, Sequence[str]]) -> subprocess.CompletedProcess[str]:
+def create_instance_group(
+    name: str, **kwargs: Union[str, bool, Sequence[str]]
+) -> subprocess.CompletedProcess[str]:
     try:
         return gcloud("compute", "instance-groups", "managed", "create", name, **kwargs)
     except subprocess.CalledProcessError as e:
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
-def delete_instance_group(name: str, **kwargs: Union[str, bool, Sequence[str]]) -> Union[subprocess.CompletedProcess[str], subprocess.CalledProcessError[str]]:
+def delete_instance_group(
+    name: str, **kwargs: Union[str, bool, Sequence[str]]
+) -> Union[subprocess.CompletedProcess[str], subprocess.CalledProcessError[str]]:
     try:
         return gcloud("compute", "instance-groups", "managed", "delete", name, "--quiet", **kwargs)
     except subprocess.CalledProcessError as e:
@@ -106,7 +118,9 @@ def delete_instance_group(name: str, **kwargs: Union[str, bool, Sequence[str]]) 
         return e
 
 
-def rolling_update_instance_group(name: str, **kwargs: Union[str, bool, Sequence[str]]) -> subprocess.CompletedProcess[str]:
+def rolling_update_instance_group(
+    name: str, **kwargs: Union[str, bool, Sequence[str]]
+) -> subprocess.CompletedProcess[str]:
     try:
         return gcloud(
             "compute",
@@ -121,21 +135,27 @@ def rolling_update_instance_group(name: str, **kwargs: Union[str, bool, Sequence
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
-def set_autoscaling_instance_groups(name: str, **kwargs: Union[str, bool, Sequence[str]]) -> subprocess.CompletedProcess[str]:
+def set_autoscaling_instance_groups(
+    name: str, **kwargs: Union[str, bool, Sequence[str]]
+) -> subprocess.CompletedProcess[str]:
     try:
         return gcloud("compute", "instance-groups", "managed", "set-autoscaling", name, **kwargs)
     except subprocess.CalledProcessError as e:
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
-def create_instance_template(name: str, **kwargs: Union[str, bool, Sequence[str]]) -> subprocess.CompletedProcess[str]:
+def create_instance_template(
+    name: str, **kwargs: Union[str, bool, Sequence[str]]
+) -> subprocess.CompletedProcess[str]:
     try:
         return gcloud("compute", "instance-templates", "create", name, **kwargs)
     except subprocess.CalledProcessError as e:
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
-def delete_instance_template(name: str, **kwargs: Union[str, bool, Sequence[str]]) -> Union[subprocess.CompletedProcess[str], subprocess.CalledProcessError[str]]:
+def delete_instance_template(
+    name: str, **kwargs: Union[str, bool, Sequence[str]]
+) -> Union[subprocess.CompletedProcess[str], subprocess.CalledProcessError[str]]:
     try:
         return gcloud("compute", "instance-templates", "delete", name, "--quiet", **kwargs)
     except subprocess.CalledProcessError as e:
@@ -146,7 +166,9 @@ def delete_instance_template(name: str, **kwargs: Union[str, bool, Sequence[str]
         return e
 
 
-def create_image(name: str, **kwargs: Union[str, bool, Sequence[str]]) -> subprocess.CompletedProcess[str]:
+def create_image(
+    name: str, **kwargs: Union[str, bool, Sequence[str]]
+) -> subprocess.CompletedProcess[str]:
     try:
         return gcloud("compute", "images", "create", name, **kwargs)
     except subprocess.CalledProcessError as e:
@@ -164,12 +186,16 @@ def describe_image_family(name: str, **kwargs: Union[str, bool, Sequence[str]]) 
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
-def reset_windows_password(name: str, **kwargs: Union[str, bool, Sequence[str]]) -> subprocess.CompletedProcess[str]:
+def reset_windows_password(
+    name: str, **kwargs: Union[str, bool, Sequence[str]]
+) -> subprocess.CompletedProcess[str]:
     try:
         return gcloud("compute", "reset-windows-password", name, "--quiet", **kwargs)
     except subprocess.CalledProcessError as e:
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
-def get_serial_port_output(name: str, **kwargs: Union[str, bool, Sequence[str]]) -> subprocess.CompletedProcess[str]:
+def get_serial_port_output(
+    name: str, **kwargs: Union[str, bool, Sequence[str]]
+) -> subprocess.CompletedProcess[str]:
     return gcloud("compute", "instances", "get-serial-port-output", name, **kwargs)

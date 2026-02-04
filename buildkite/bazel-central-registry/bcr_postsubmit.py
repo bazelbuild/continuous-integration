@@ -45,15 +45,18 @@ LAST_GREEN_FILE: str = "last_green.txt"
 class AttestationError(Exception):
     """Raised when there is a problem wrt attestations."""
 
+
 def print_expanded_group(name: str) -> None:
     print("\n\n+++ {0}\n\n".format(name))
 
+
 def get_output(command: List[str]) -> str:
     return subprocess.run(
-          command,
-          encoding='utf-8',
-          stdout=subprocess.PIPE,
-      ).stdout
+        command,
+        encoding="utf-8",
+        stdout=subprocess.PIPE,
+    ).stdout
+
 
 def check_and_write_new_attestations() -> None:
     print_expanded_group(":cop::copybara: Check & write attestations")
@@ -83,7 +86,11 @@ def get_new_attestations_json_paths() -> List[str]:
         cmd.append(commit)
 
     paths = get_output(cmd)
-    return [os.path.join(cwd, p) for p in paths.split("\n") if p.endswith(f"/{ATTESTATION_METADATA_FILE}")]
+    return [
+        os.path.join(cwd, p)
+        for p in paths.split("\n")
+        if p.endswith(f"/{ATTESTATION_METADATA_FILE}")
+    ]
 
 
 def get_last_green() -> str:
@@ -106,7 +113,7 @@ def check_and_write_module_attestations(attestations_json_path: str) -> None:
     dest_dir = os.path.dirname(attestations_json_path)
     with open(attestations_json_path, "rb") as af:
         metadata = json.loads(af.read())
-    
+
     for f in FILES_WITH_ATTESTATIONS:
         try:
             entry = metadata["attestations"][f]
@@ -115,6 +122,7 @@ def check_and_write_module_attestations(attestations_json_path: str) -> None:
             raise AttestationError(f"{attestations_json_path} - {f}: {ex}") from ex
 
     print("Done!")
+
 
 def check_and_write_single_attestation(url: str, integrity: str, dest_dir: str) -> None:
     print(f"\tFound attestation @ {url}")
@@ -132,6 +140,7 @@ def check_and_write_single_attestation(url: str, integrity: str, dest_dir: str) 
     with open(dest, "wb") as f:
         f.write(raw_content)
 
+
 def check_integrity(data: bytes, expected: str) -> None:
     algorithm, _, _ = expected.partition("-")
     assert algorithm in {"sha224", "sha256", "sha384", "sha512"}, "Unsupported SRI algorithm"
@@ -142,6 +151,7 @@ def check_integrity(data: bytes, expected: str) -> None:
     if actual != expected:
         raise AttestationError(f"Expected checksum {expected}, got {actual}.")
 
+
 # Attestation files in GitHub releases may have prefixes in their basename
 # to avoid conflicts when multiple modules are released together
 # (e.g. rules_python and rules_python_gazelle_plugin).
@@ -151,7 +161,7 @@ def get_canonical_basename(url: str) -> str:
     for f in FILES_WITH_ATTESTATIONS:
         if f in actual_basename:
             return f"{f}.intoto.jsonl"
-    
+
     raise AttestationError(f"Invalid basename of {url}.")
 
 
@@ -162,7 +172,17 @@ def sync_bcr_content() -> None:
     )
     subprocess.check_output(
         # -c Use checksum to compare files
-        ["gsutil", "-h", "Cache-Control:no-cache", "-m", "rsync", "-c", "-r", "./modules", BCR_BUCKET + "modules"]
+        [
+            "gsutil",
+            "-h",
+            "Cache-Control:no-cache",
+            "-m",
+            "rsync",
+            "-c",
+            "-r",
+            "./modules",
+            BCR_BUCKET + "modules",
+        ]
     )
 
 
@@ -182,6 +202,7 @@ def main() -> int:
     sync_bcr_content()
     update_last_green()
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

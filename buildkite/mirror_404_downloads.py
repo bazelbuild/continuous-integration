@@ -27,13 +27,14 @@ from typing import Any, Dict, List, Optional, Set, Union
 import requests
 from bazelci import BuildkiteClient, BuildkiteException, execute_command
 
+
 # --- Color Constants for Terminal Output ---
 # These work best in terminals that support ANSI escape codes.
 class Colors:
     SUCCESS: str = "\033[92m"  # Green
     SKIPPED: str = "\033[93m"  # Yellow
-    FAILED: str = "\033[91m"   # Red
-    RESET: str = "\033[0m"     # Reset color
+    FAILED: str = "\033[91m"  # Red
+    RESET: str = "\033[0m"  # Reset color
 
 
 # --- Constants ---
@@ -162,9 +163,7 @@ def mirror_artifacts(urls_to_mirror: Set[str], bucket: str) -> None:
         logging.info("No failed download URLs found. Nothing to do.")
         return
 
-    logging.info(
-        f"\nFound a total of {len(urls_to_mirror)} unique URLs to mirror."
-    )
+    logging.info(f"\nFound a total of {len(urls_to_mirror)} unique URLs to mirror.")
     results = [mirror_url(url, bucket) for url in sorted(list(urls_to_mirror))]
 
     successes = [r for r in results if r.status == "SUCCESS"]

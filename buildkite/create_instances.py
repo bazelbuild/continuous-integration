@@ -50,16 +50,12 @@ def create_instance_group(config: Dict[str, Any]) -> int:
         template_name = "{}-{}".format(instance_group_name, timestamp)
 
         if zone is not None:
-            res = gcloud.delete_instance_group(
-                    instance_group_name, project=project, zone=zone
-                )
-            if hasattr(res, 'returncode') and res.returncode == 0:
+            res = gcloud.delete_instance_group(instance_group_name, project=project, zone=zone)
+            if hasattr(res, "returncode") and res.returncode == 0:
                 print(f"Deleted existing instance group: {instance_group_name}")
         elif region is not None:
-            res = gcloud.delete_instance_group(
-                    instance_group_name, project=project, region=region
-                )
-            if hasattr(res, 'returncode') and res.returncode == 0:
+            res = gcloud.delete_instance_group(instance_group_name, project=project, region=region)
+            if hasattr(res, "returncode") and res.returncode == 0:
                 print(f"Deleted existing instance group: {instance_group_name}")
 
         # Create the new instance template.
