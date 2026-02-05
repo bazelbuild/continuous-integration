@@ -3,6 +3,7 @@ import json
 import base64
 import re
 import subprocess
+import urllib
 from datetime import datetime
 from collections import defaultdict
 from google.cloud import bigquery
@@ -178,6 +179,48 @@ def parse_bep(filepath):
 
 # --- Main Publishing Function ---
 
+def publish_to_bigquery(row):
+  """
+  Pushes a single row to BigQuery using the REST API directly.
+  Zero dependencies required.
+  """
+  PROJECT_ID = "bazel-public"
+  DATASET_ID = "bazel_ci_metrics"
+  TABLE_ID = "ci_builds"
+
+  try:
+    req = urllib.request.Request("http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token")
+    req.add_header("Metadata-Flavor", "Google")
+    with urllib.request.urlopen(req) as response:
+      token = json.loads(response.read().decode())['access_token']
+  except Exception:
+    print("Unable to get GCP token from metadata server. Pushing to BigQuery will fail.")
+    return
+
+  url = f"https://bigquery.googleapis.com/bigquery/v2/projects/{PROJECT_ID}/datasets/{DATASET_ID}/tables/{TABLE_ID}/insertAll"
+
+  payload = {
+      "kind": "bigquery#tableDataInsertAllRequest",
+      "rows": [{"json": row}]
+  }
+
+  try:
+    data = json.dumps(payload).encode('utf-8')
+    req = urllib.request.Request(url, data=data, method='POST')
+    req.add_header("Content-Type", "application/json")
+    req.add_header("Authorization", f"Bearer {token}")
+
+    with urllib.request.urlopen(req) as response:
+      result = json.loads(response.read().decode())
+      if "insertErrors" in result:
+        print(f"BQ Insert Errors: {result['insertErrors']}")
+      else:
+        print("Successfully pushed metrics to BigQuery via REST.")
+  except urllib.error.HTTPError as e:
+    print(f"BQ REST API Failed: {e.code} - {e.read().decode()}")
+  except Exception as e:
+    print(f"BQ REST API Error: {e}")
+
 def collect_metrics_and_push_to_bigquery(bep_file_path):
   """
   Reads the BEP file, collects environment variables, and pushes metrics to BigQuery.
@@ -215,16 +258,11 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
   # Calculate Changed Files
   CHANGED_FILES_COUNT = get_git_stats()
 
-  # BigQuery Config
-  PROJECT_ID = "bazel-public"
-  DATASET_ID = "bazel_ci_metrics"
-  TABLE_ID = "ci_builds"
 
   print(f"Starting Metrics Publisher for Build #{BUILDKITE_BUILD_NUMBER}...")
 
   # 1. Parse Data
   bep_metrics, targets = parse_bep(bep_file_path)
-
   if bep_metrics is None:
     print("Skipping BigQuery push due to BEP parsing failure.")
     return
@@ -272,15 +310,22 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
       "targets": targets
   }
 
+  # BigQuery Config
+  PROJECT_ID = "bazel-public"
+  DATASET_ID = "bazel_ci_metrics"
+  TABLE_ID = "ci_builds"
+
   # 4. Push to BigQuery
-  client = bigquery.Client(project=PROJECT_ID)
-  table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
-
-  print(f"Pushing row to {table_ref}...")
-  errors = client.insert_rows_json(table_ref, [row])
-
-  if errors:
-    print(f"BQ Insert Errors: {errors}")
-    print(json.dumps(row, indent=2))
-  else:
-    print("Success: Metrics pushed to BigQuery.")
+  #TODO use this for now to avoid extra dependencies
+  publish_to_bigquery(row)
+  # client = bigquery.Client(project=PROJECT_ID)
+  # table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
+  #
+  # print(f"Pushing row to {table_ref}...")
+  # errors = client.insert_rows_json(table_ref, [row])
+  #
+  # if errors:
+  #   print(f"BQ Insert Errors: {errors}")
+  #   print(json.dumps(row, indent=2))
+  # else:
+  #   print("Success: Metrics pushed to BigQuery.")
