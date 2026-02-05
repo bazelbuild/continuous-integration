@@ -50,6 +50,10 @@ RUN apt-get -y update && \
     zip \
     zlib1g-dev \
     && \
+    # 1. Upgrade pip so it can find pre-compiled wheels (avoiding Cython errors)
+    python3 -m pip install --upgrade pip setuptools wheel && \
+    # 2. Pre-install the Google Cloud libraries
+    python3 -m pip install google-cloud-bigquery && \
     apt-get -y purge apport && \
     rm -rf /var/lib/apt/lists/*
 
