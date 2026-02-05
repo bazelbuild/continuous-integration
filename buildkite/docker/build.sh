@@ -36,6 +36,8 @@ fi
 docker build -f rockylinux8/Dockerfile  --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target rockylinux8 -t "gcr.io/$PREFIX/rockylinux8"  rockylinux8 &
 docker build -f debian10/Dockerfile   --target debian10-java11   -t "gcr.io/$PREFIX/debian10-java11" debian10 &
 docker build -f debian11/Dockerfile   --target debian11-java17   -t "gcr.io/$PREFIX/debian11-java17" debian11 &
+docker build -f debian12/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target debian12-java17   -t "gcr.io/$PREFIX/debian12" debian12 &
+docker build -f debian13/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target debian13-java21   -t "gcr.io/$PREFIX/debian13" debian13 &
 docker build -f ubuntu1804/Dockerfile --target ubuntu1804-java11 -t "gcr.io/$PREFIX/ubuntu1804-java11" ubuntu1804 &
 docker build -f ubuntu2004/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2004-java11 -t "gcr.io/$PREFIX/ubuntu2004-java11" ubuntu2004 &
 docker build -f ubuntu2004/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2004        -t "gcr.io/$PREFIX/ubuntu2004" ubuntu2004 &

@@ -105,6 +105,8 @@ docker pull "gcr.io/$PREFIX/rockylinux8-java11-devtoolset10" &
 docker pull "gcr.io/$PREFIX/rockylinux8-releaser" &
 docker pull "gcr.io/$PREFIX/debian10-java11" &
 docker pull "gcr.io/$PREFIX/debian11-java17" &
+docker pull "gcr.io/$PREFIX/debian12" &
+docker pull "gcr.io/$PREFIX/debian13" &
 docker pull "gcr.io/$PREFIX/ubuntu1804-java11" &
 docker pull "gcr.io/$PREFIX/ubuntu2004-java11" &
 docker pull "gcr.io/$PREFIX/ubuntu2004" &
