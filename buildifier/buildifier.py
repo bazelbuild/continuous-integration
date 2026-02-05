@@ -109,11 +109,17 @@ def run_buildifier(binary, flags, version=None, what=None):
         label += ": " + what
 
     eprint(label)
+    command = [binary] + flags
+    eprint("Executing: " + " ".join(command))
 
-    return subprocess.run(
-        [binary] + flags, capture_output=True, universal_newlines=True
+    result = subprocess.run(
+        command, capture_output=True, universal_newlines=True
     )
 
+    if result.stderr:
+        eprint(result.stderr)
+
+    return result
 
 def create_heading(issue_type, issue_count):
     return "##### :bazel: buildifier: found {} {} issue{} in your WORKSPACE, BUILD and *.bzl files\n".format(
