@@ -41,55 +41,62 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
 import yaml
 
 # Initialize the random number generator.
 random.seed()
 
-BUILDKITE_ORG = os.environ.get("BUILDKITE_ORGANIZATION_SLUG", "bazel")
-THIS_IS_PRODUCTION = BUILDKITE_ORG == "bazel"
-THIS_IS_TESTING = BUILDKITE_ORG == "bazel-testing"
-THIS_IS_TRUSTED = BUILDKITE_ORG == "bazel-trusted"
-THIS_IS_SPARTA = True
+BUILDKITE_ORG: str = os.environ.get("BUILDKITE_ORGANIZATION_SLUG", "bazel")
+THIS_IS_PRODUCTION: bool = BUILDKITE_ORG == "bazel"
+THIS_IS_TESTING: bool = BUILDKITE_ORG == "bazel-testing"
+THIS_IS_TRUSTED: bool = BUILDKITE_ORG == "bazel-trusted"
+THIS_IS_SPARTA: bool = True
 
-CLOUD_PROJECT = "bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"
+CLOUD_PROJECT: str = "bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"
 
-GITHUB_BRANCH = {"bazel": "master", "bazel-trusted": "master", "bazel-testing": "testing"}[
+GITHUB_BRANCH: str = {"bazel": "master", "bazel-trusted": "master", "bazel-testing": "testing"}[
     BUILDKITE_ORG
 ]
 
-SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazelci.py".format(
-    GITHUB_BRANCH
+SCRIPT_URL: str = (
+    "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazelci.py".format(
+        GITHUB_BRANCH
+    )
 )
 
-AGGREGATE_INCOMPATIBLE_TEST_RESULT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/aggregate_incompatible_flags_test_result.py?{}".format(
-    GITHUB_BRANCH, int(time.time())
+AGGREGATE_INCOMPATIBLE_TEST_RESULT_URL: str = (
+    "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/aggregate_incompatible_flags_test_result.py?{}".format(
+        GITHUB_BRANCH, int(time.time())
+    )
 )
 
-EMERGENCY_FILE_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/emergency.yml?{}".format(
-    GITHUB_BRANCH, int(time.time())
+EMERGENCY_FILE_URL: str = (
+    "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/emergency.yml?{}".format(
+        GITHUB_BRANCH, int(time.time())
+    )
 )
 
-FLAKY_TESTS_BUCKET = {
+FLAKY_TESTS_BUCKET: str = {
     "bazel-testing": "gs://bazel-testing-buildkite-stats/flaky-tests-bep/",
     "bazel-trusted": "gs://bazel-buildkite-stats/flaky-tests-bep/",
     "bazel": "gs://bazel-buildkite-stats/flaky-tests-bep/",
 }[BUILDKITE_ORG]
 
-KZIPS_BUCKET = {
+KZIPS_BUCKET: str = {
     "bazel-testing": "gs://bazel-kzips-testing/",
     "bazel-trusted": "gs://bazel-kzips/",
     "bazel": "gs://bazel-kzips/",
 }[BUILDKITE_ORG]
 
 # We don't collect logs in the trusted org
-LOG_BUCKET = {
+LOG_BUCKET: str = {
     "bazel-testing": "https://storage.googleapis.com/bazel-testing-buildkite-artifacts",
     "bazel-trusted": "",
     "bazel": "https://storage.googleapis.com/bazel-untrusted-buildkite-artifacts",
 }[BUILDKITE_ORG]
 
-RETRY_LOGS_BUCKET = {
+RETRY_LOGS_BUCKET: str = {
     "bazel-testing": "gs://bazel-testing-retry-logs/",
     "bazel-trusted": "gs://bazel-trusted-retry-logs/",
     "bazel": "gs://bazel-untrusted-retry-logs/",
@@ -155,7 +162,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/clion.yml",
         "pipeline_slug": "clion-plugin",
-         "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7670",
+        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7670",
     },
     "CLion Plugin Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
@@ -212,7 +219,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_android.git",
         "pipeline_slug": "rules-android",
         "owned_by_bazel": True,
-        },
+    },
     "rules_android_ndk": {
         "git_repository": "https://github.com/bazelbuild/rules_android_ndk.git",
         "pipeline_slug": "rules-android-ndk",
@@ -519,7 +526,9 @@ DEFAULT_PLATFORM = "ubuntu1804"
 # In order to test that "the one Linux binary" that we build for our official releases actually
 # works on all Linux distributions that we test on, we use the Linux binary built on our official
 # release platform for all Linux downstream tests.
-LINUX_BINARY_PLATFORM = "rockylinux8_arm64" if platform_module.machine() in ["arm64", "aarch64"] else "rockylinux8"
+LINUX_BINARY_PLATFORM = (
+    "rockylinux8_arm64" if platform_module.machine() in ["arm64", "aarch64"] else "rockylinux8"
+)
 
 XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
 XCODE_VERSION_OVERRIDES = {"10.2.1": "10.3", "11.2": "11.2.1", "11.3": "11.3.1"}
@@ -575,7 +584,14 @@ _ELEVATED_PRIORITY_PIPELINES = frozenset(["bazel/google-bazel-presubmit"])
 
 # Pipelines with lowered priority. Values are project slugs,
 # The following pipelines may spawn a large number of jobs, lower their priority to not block other presubmits.
-_LOWERED_PRIORITY_PIPELINES = frozenset(["bazel/bcr-presubmit", "bazel/bcr-bazel-compatibility-test", "bazel/bazel-at-head-plus-downstream"])
+_LOWERED_PRIORITY_PIPELINES = frozenset(
+    [
+        "bazel/bcr-presubmit",
+        "bazel/bcr-bazel-compatibility-test",
+        "bazel/bazel-at-head-plus-downstream",
+    ]
+)
+
 
 class BuildkiteException(Exception):
     """
@@ -606,61 +622,77 @@ class BinaryUploadRaceException(Exception):
 
 class BuildkiteClient(object):
     # This token is created by the bazel-ci-bot buildkite user (ci@bazel.build)
-    _ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN = """
+    _ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN: str = (
+        """
 CiQA4DEB9sMsj9Z9i9BZ7fbvjGZ+WJv1xWDdT1Sxmu7WOLsb+5ESVwAqwcvX2oZQ3WhqRZNS+n04
 bm/ko9kTosN2qJ/UVWf4gzYSnkK1KMAktinNV/o/ygZuf3GQlBfpfBSeMDOW43oLnQE0qcl3OtTM
 WorKXPI5cvfBNNxWIA==
 """.strip()
+    )
 
-    _ENCRYPTED_BUILDKITE_TESTING_API_TOKEN = """
+    _ENCRYPTED_BUILDKITE_TESTING_API_TOKEN: str = (
+        """
 CiQAMTBkWjL1C+F5oon3+cC1vmum5+c1y5+96WQY44p0Lxd0PeASUQAy7iU0c6E3W5EOSFYfD5fA
 MWy/SHaMno1NQSUa4xDOl5yc2kizrtxPPVkX4x9pLNuGUY/xwAn2n1DdiUdWZNWlY1bX2C4ex65e
 P9w8kNhEbw==
 """.strip()
+    )
 
-    _ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN = """
+    _ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN: str = (
+        """
 CiQAeiOS8AkJ92+STSUmqW/jlR9DKDZdX5PZIWn30PtyKXWE/74SVwC7bbymSHneleAcgXtVJsMu
 2DEEVd/uEGIdiEJigmPAPTs4vtmX/7ZxTsMhJ+rxRYBGufw9LgT+G6Bjg0ETifavKWHGzw+NTgUa
 gwD6RBL0qz1PFfg7Zw==
 """.strip()
+    )
 
-    _BUILD_STATUS_URL_TEMPLATE = (
+    _BUILD_STATUS_URL_TEMPLATE: str = (
         "https://api.buildkite.com/v2/organizations/{}/pipelines/{}/builds/{}"
     )
 
-    _NEW_BUILD_URL_TEMPLATE = "https://api.buildkite.com/v2/organizations/{}/pipelines/{}/builds"
+    _NEW_BUILD_URL_TEMPLATE: str = (
+        "https://api.buildkite.com/v2/organizations/{}/pipelines/{}/builds"
+    )
 
-    _RETRY_JOB_URL_TEMPLATE = (
+    _RETRY_JOB_URL_TEMPLATE: str = (
         "https://api.buildkite.com/v2/organizations/{}/pipelines/{}/builds/{}/jobs/{}/retry"
     )
 
-    _PIPELINE_INFO_URL_TEMPLATE = "https://api.buildkite.com/v2/organizations/{}/pipelines/{}"
+    _PIPELINE_INFO_URL_TEMPLATE: str = "https://api.buildkite.com/v2/organizations/{}/pipelines/{}"
 
-    def __init__(self, org, pipeline):
+    _org: str
+    _pipeline: str
+    _token: str
+
+    def __init__(self, org: str, pipeline: str) -> None:
         self._org = org
         self._pipeline = pipeline
         self._token = self._get_buildkite_token()
 
-    def _get_buildkite_token(self):
+    def _get_buildkite_token(self) -> str:
         return decrypt_token(
             encrypted_token=(
                 self._ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN
                 if THIS_IS_TRUSTED
-                else self._ENCRYPTED_BUILDKITE_TESTING_API_TOKEN
-                if THIS_IS_TESTING
-                else self._ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN
+                else (
+                    self._ENCRYPTED_BUILDKITE_TESTING_API_TOKEN
+                    if THIS_IS_TESTING
+                    else self._ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN
+                )
             ),
             kms_key=(
                 "buildkite-trusted-api-token"
                 if THIS_IS_TRUSTED
-                else "buildkite-testing-api-token"
-                if THIS_IS_TESTING
-                else "buildkite-untrusted-api-token"
+                else (
+                    "buildkite-testing-api-token"
+                    if THIS_IS_TESTING
+                    else "buildkite-untrusted-api-token"
+                )
             ),
             project=("bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"),
         )
 
-    def _open_url(self, url, params=[], retries=5):
+    def _open_url(self, url: str, params: List[Tuple[str, Any]] = [], retries: int = 5) -> str:
         params_str = "".join("&{}={}".format(k, v) for k, v in params)
         full_url = "{}?access_token={}{}".format(url, self._token, params_str)
 
@@ -685,7 +717,7 @@ gwD6RBL0qz1PFfg7Zw==
 
         raise BuildkiteException(f"Failed to open {url} after {retries} retries.")
 
-    def get_pipeline_info(self):
+    def get_pipeline_info(self) -> Dict[str, Any]:
         """Get details for a pipeline given its organization slug
         and pipeline slug.
         See https://buildkite.com/docs/apis/rest-api/pipelines#get-a-pipeline
@@ -733,8 +765,8 @@ gwD6RBL0qz1PFfg7Zw==
         output = self._open_url(url, params)
         return json.loads(output)
 
-    def get_build_log(self, job, retries = 5):
-        return self._open_url(job["raw_log_url"], retries = retries)
+    def get_build_log(self, job, retries=5):
+        return self._open_url(job["raw_log_url"], retries=retries)
 
     @staticmethod
     def _check_response(response, expected_status_code):
@@ -977,7 +1009,9 @@ def get_combinations(matrix, attributes, excludes=None):
 
     # Filter out excluded combinations
     if excludes:
-        all_combinations = [c for c in all_combinations if not should_exclude_combination(c, excludes)]
+        all_combinations = [
+            c for c in all_combinations if not should_exclude_combination(c, excludes)
+        ]
 
     return all_combinations
 
@@ -997,7 +1031,9 @@ def get_expanded_task(task, combination):
     return expanded_task
 
 
-def fetch_configs(http_url, file_config, bazel_version=None):
+def fetch_configs(
+    http_url: Optional[str], file_config: Optional[str], bazel_version: Optional[str] = None
+) -> Dict[str, Any]:
     """
     If specified fetches the build configuration from file_config or http_url, else tries to
     read it from .bazelci/presubmit.yml.
@@ -1009,7 +1045,7 @@ def fetch_configs(http_url, file_config, bazel_version=None):
     return load_config(http_url, file_config, bazel_version=bazel_version)
 
 
-def expand_task_config(config):
+def expand_task_config(config: Dict[str, Any]) -> None:
     # Expand tasks that uses attributes defined in the matrix section.
     # The original task definition expands to multiple tasks for each possible combination.
     tasks_to_expand = []
@@ -1042,7 +1078,7 @@ def expand_task_config(config):
     config["tasks"].update(expanded_tasks)
 
 
-def maybe_overwrite_bazel_version(bazel_version, config):
+def maybe_overwrite_bazel_version(bazel_version: Optional[str], config: Dict[str, Any]) -> None:
     if not bazel_version:
         return
     for task in config.get("tasks", {}):
@@ -1054,7 +1090,12 @@ def maybe_overwrite_bazel_version(bazel_version, config):
         matrix["bazel"] = [", ".join(matrix["bazel"])]
 
 
-def load_config(http_url, file_config, allow_imports=True, bazel_version=None):
+def load_config(
+    http_url: Optional[str],
+    file_config: Optional[str],
+    allow_imports: bool = True,
+    bazel_version: Optional[str] = None,
+) -> Dict[str, Any]:
     if http_url:
         config = load_remote_yaml_file(http_url)
     else:
@@ -1140,15 +1181,15 @@ def fix_imported_task_working_directory(namespace, task_config):
     task_config["working_directory"] = os.path.join(namespace, old_dir) if old_dir else namespace
 
 
-def print_collapsed_group(name):
+def print_collapsed_group(name: str) -> None:
     eprint("\n\n--- {0}\n\n".format(name))
 
 
-def print_expanded_group(name):
+def print_expanded_group(name: str) -> None:
     eprint("\n\n+++ {0}\n\n".format(name))
 
 
-def is_trueish(s):
+def is_trueish(s: Any) -> bool:
     return str(s).lower() in ["true", "1", "t", "y", "yes"]
 
 
@@ -1179,7 +1220,13 @@ def bazelisk_flags():
     return ["--migrate"] if use_bazelisk_migrate() else []
 
 
-def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_vars):
+def calculate_flags(
+    task_config: Dict[str, Any],
+    task_config_key: str,
+    action_key: str,
+    tmpdir: str,
+    test_env_vars: List[str],
+) -> Tuple[List[str], Optional[str], Optional[str]]:
     include_json_profile = task_config.get("include_json_profile", [])
     capture_corrupted_outputs = task_config.get("capture_corrupted_outputs", [])
 
@@ -1926,8 +1973,7 @@ def remote_caching_flags(platform, accept_cached=True):
     flags += [
         f"--remote_timeout={remote_timeout}",
         "--remote_max_connections=200",
-        '--remote_default_exec_properties=cache-silo-key=%s'
-        % platform_cache_digest.hexdigest(),
+        "--remote_default_exec_properties=cache-silo-key=%s" % platform_cache_digest.hexdigest(),
     ]
 
     if not accept_cached:
@@ -2197,15 +2243,15 @@ def execute_bazel_build_with_kythe(bazel_version, bazel_binary, platform, flags,
 
 
 def calculate_targets(
-    task_config,
-    bazel_binary,
-    build_only,
-    test_only,
-    workspace_dir,
-    ws_setup_func,
-    git_commit,
-    test_flags,
-):
+    task_config: Dict[str, Any],
+    bazel_binary: str,
+    build_only: bool,
+    test_only: bool,
+    workspace_dir: str,
+    ws_setup_func: Optional[Callable[[], None]],
+    git_commit: str,
+    test_flags: List[str],
+) -> Tuple[List[str], List[str], List[str], List[str]]:
     print_collapsed_group(":dart: Calculating targets")
 
     build_targets = [] if test_only else list(task_config.get("build_targets", []))
@@ -2480,7 +2526,7 @@ def upload_shard_distribution(sorted_test_targets, shard_count):
     tmpdir = tempfile.mkdtemp()
     try:
         data = {
-            s+1: get_targets_for_shard(sorted_test_targets, s, shard_count)
+            s + 1: get_targets_for_shard(sorted_test_targets, s, shard_count)
             for s in range(shard_count)
         }
         base = f"{os.getenv('BUILDKITE_PIPELINE_SLUG')}_{os.getenv('BUILDKITE_BUILD_NUMBER')}_shards.json"
@@ -2545,7 +2591,9 @@ def extract_archive(archive_path, dest_dir, strip_top_level_dir):
 def download_file(url, dest_dir, dest_filename):
     local_path = os.path.join(dest_dir, dest_filename)
     try:
-        execute_command(["curl", "-q", "-sSL", "--noproxy", "'*'", url, "-o", local_path], capture_stderr=True)
+        execute_command(
+            ["curl", "-q", "-sSL", "--noproxy", "'*'", url, "-o", local_path], capture_stderr=True
+        )
     except subprocess.CalledProcessError as ex:
         raise BuildkiteInfraException("Failed to download {}: {}\n{}".format(url, ex, ex.stderr))
     return local_path
@@ -2748,15 +2796,15 @@ def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True, prin
 
 
 def execute_command(
-    args,
-    shell=False,
-    fail_if_nonzero=True,
-    cwd=None,
-    print_output=True,
-    capture_stderr=False,
-    suppress_stdout=False,
-    env = os.environ,
-):
+    args: List[str],
+    shell: bool = False,
+    fail_if_nonzero: bool = True,
+    cwd: Optional[str] = None,
+    print_output: bool = True,
+    capture_stderr: bool = False,
+    suppress_stdout: bool = False,
+    env: Dict[str, str] = os.environ,
+) -> int:
     if print_output:
         eprint(" ".join(args))
     return subprocess.run(
@@ -2776,8 +2824,15 @@ def execute_command(
 
 
 def create_step(
-    label, commands, platform, shards=1, soft_fail=None, concurrency=None, concurrency_group=None, priority=None
-):
+    label: str,
+    commands: List[str],
+    platform: str,
+    shards: int = 1,
+    soft_fail: Optional[bool] = None,
+    concurrency: Optional[int] = None,
+    concurrency_group: Optional[str] = None,
+    priority: Optional[int] = None,
+) -> Dict[str, Any]:
     # TODO(#2272): remove after a migration period
     if "centos7" in platform:
         log_deprecated_platform_usage(platform)
@@ -2846,9 +2901,7 @@ def create_step(
     return step
 
 
-def create_docker_step(
-    label, image, commands=None, additional_env_vars=None, queue="default"
-):
+def create_docker_step(label, image, commands=None, additional_env_vars=None, queue="default"):
     env = ["ANDROID_HOME", "ANDROID_NDK_HOME", "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"]
     if THIS_IS_TRUSTED:
         # For the trusted Linux arm64 machine to upload artifacts
@@ -2891,10 +2944,12 @@ def create_docker_step(
 def log_deprecated_platform_usage(platform):
     tmpdir = tempfile.mkdtemp()
     try:
-        basename = "{}_{}_{}_{}.txt".format(os.getenv("BUILDKITE_ORGANIZATION_SLUG"),
+        basename = "{}_{}_{}_{}.txt".format(
+            os.getenv("BUILDKITE_ORGANIZATION_SLUG"),
             os.getenv("BUILDKITE_PIPELINE_SLUG"),
             os.getenv("BUILDKITE_BUILD_NUMBER"),
-            os.getenv("BUILDKITE_JOB_ID"))
+            os.getenv("BUILDKITE_JOB_ID"),
+        )
         path = os.path.join(tmpdir, basename)
         with open(path, "wt") as f:
             f.write(platform)
@@ -3165,11 +3220,16 @@ def hash_task_config(task_name, task_config):
     return m.digest()
 
 
-def get_platform_for_task(task, task_config):
+def get_platform_for_task(task: str, task_config: Dict[str, Any]) -> str:
     # Most pipeline configurations have exactly one task per platform, which makes it
     # convenient to use the platform name as task ID. Consequently, we use the
     # task ID as platform if there is no explicit "platform" field.
-    return task_config.get("platform", task)
+    platform = task_config.get("platform", task)
+    if not isinstance(platform, str):
+        raise BuildkiteException(
+            f"Platform for task {task} must be a string, but is {type(platform)}"
+        )
+    return platform
 
 
 def create_config_validation_steps(git_commit):
@@ -3581,7 +3641,11 @@ def fetch_incompatible_flags():
     output = subprocess.check_output(
         [
             # Query for open issues with "incompatible-change" and "migration-ready" label.
-            "curl", "-q", "--noproxy", "'*'", "-sS",
+            "curl",
+            "-q",
+            "--noproxy",
+            "'*'",
+            "-sS",
             "https://api.github.com/search/issues?per_page=100&q=repo:bazelbuild/bazel+label:incompatible-change+label:migration-ready+state:open",
         ]
     ).decode("utf-8")
@@ -3752,9 +3816,7 @@ def bazelci_last_green_commit_url(git_repository, pipeline_slug):
     bucket_name = (
         "bazel-builds"
         if THIS_IS_TRUSTED
-        else "bazel-testing-builds"
-        if THIS_IS_TESTING
-        else "bazel-untrusted-last-green-commits"
+        else "bazel-testing-builds" if THIS_IS_TESTING else "bazel-untrusted-last-green-commits"
     )
     return "gs://{}/last_green_commit/{}/{}".format(
         bucket_name, git_repository[len("https://") :], pipeline_slug
@@ -4488,22 +4550,24 @@ def log_retry():
     tmpdir = tempfile.mkdtemp()
     print_collapsed_group(f":retry: Logging retry attempt #{retry}")
     try:
-        basename = "_".join((
-            os.getenv("BUILDKITE_PIPELINE_SLUG"),
-            os.getenv("BUILDKITE_BUILD_NUMBER"),
-            sanitize_label(os.getenv("BUILDKITE_LABEL")),
-            os.getenv("BUILDKITE_RETRY_COUNT"),
-        ))
+        basename = "_".join(
+            (
+                os.getenv("BUILDKITE_PIPELINE_SLUG"),
+                os.getenv("BUILDKITE_BUILD_NUMBER"),
+                sanitize_label(os.getenv("BUILDKITE_LABEL")),
+                os.getenv("BUILDKITE_RETRY_COUNT"),
+            )
+        )
         path = os.path.join(tmpdir, f"{basename}.txt")
         with open(path, "wt") as f:
-            f.write(
-                f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
-            )
+            f.write(f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}")
 
         # Use -n and avoid basename in dest so that we don't need
         # storage.objects.list and storage.objects.delete permissions
         # (https://cloud.google.com/storage/docs/access-control/iam-gsutil).
-        execute_command([gsutil_command(), "cp", "-n", path, RETRY_LOGS_BUCKET], capture_stderr=True)
+        execute_command(
+            [gsutil_command(), "cp", "-n", path, RETRY_LOGS_BUCKET], capture_stderr=True
+        )
     except subprocess.CalledProcessError as ex:
         eprint(f"Failed to log retry attempt: {ex.stderr}")
     except Exception as ex:
@@ -4513,6 +4577,7 @@ def log_retry():
             shutil.rmtree(tmpdir)
         except:
             pass
+
 
 def sanitize_label(label):
     return re.sub(r"[^A-Za-z0-9]+", "-", label).strip("-")

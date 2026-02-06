@@ -9,21 +9,20 @@
 
 import os
 import sys
+from typing import Any, Dict, List
 from pybuildkite.buildkite import Buildkite
 from requests.exceptions import HTTPError
 
-FILTER = sys.argv[1]
-ORGANIZATION = "bazel"
+FILTER: str = sys.argv[1]
+ORGANIZATION: str = "bazel"
 
 print("Using Buildkite API Token: {}".format(os.environ["BUILDKITE_API_TOKEN"]))
 
-buildkite = Buildkite()
+buildkite: Buildkite = Buildkite()
 buildkite.set_access_token(os.environ["BUILDKITE_API_TOKEN"])
 
-response = buildkite.agents().list_all(
-    organization=ORGANIZATION, page=1, with_pagination=True
-)
-agents = response.body
+response = buildkite.agents().list_all(organization=ORGANIZATION, page=1, with_pagination=True)
+agents: List[Dict[str, Any]] = response.body
 
 # Keep looping until next_page is not populated
 while response.next_page:
