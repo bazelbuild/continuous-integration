@@ -40,7 +40,6 @@ RUN apt-get -y update && \
     python3-six \
     python3-wheel \
     python3-yaml \
-    software-properties-common \
     sudo \
     unzip \
     wget \
