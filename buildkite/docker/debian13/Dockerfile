@@ -56,16 +56,17 @@ RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 ENV JAVA_HOME /usr/lib/jvm/java-21-openjdk-${TARGETARCH}
 
 ### Install Google Cloud SDK.
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
+RUN mkdir -p /usr/share/keyrings && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
     apt-get update -y && apt-get install google-cloud-sdk -y && \
     rm -rf /var/lib/apt/lists/*
 
 ### Docker (for legacy rbe_autoconfig)
 RUN apt-get -y update && \
     apt-get -y install apt-transport-https ca-certificates && \
-    curl -sSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
-    add-apt-repository "deb [arch=$TARGETARCH] https://download.docker.com/linux/debian $(lsb_release -cs) stable" && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+    echo "deb [arch=$TARGETARCH signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
     apt-get -y update && \
     apt-get -y install docker-ce && \
     rm -rf /var/lib/apt/lists/*
