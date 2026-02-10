@@ -1,7 +1,4 @@
 ---%{ if length(envs) > 0 }
-
-# Force quotes for boolean/numeric strings to prevent YAML type-coercion,
-# while keeping standard strings (like locales) unquoted.
 env:%{ for key, value in envs }
   ${key}: ${key == "LC_ALL" ? value : jsonencode(value)}%{ endfor ~}
 
