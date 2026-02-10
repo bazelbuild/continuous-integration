@@ -152,7 +152,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     "Buildfarm": {
         "git_repository": "https://github.com/buildfarm/buildfarm.git",
         "pipeline_slug": "buildfarm-farmer",
-        "disabled_reason": "https://github.com/buildfarm/buildfarm/issues/2396",
     },
     "Buildtools": {
         "git_repository": "https://github.com/bazelbuild/buildtools.git",
