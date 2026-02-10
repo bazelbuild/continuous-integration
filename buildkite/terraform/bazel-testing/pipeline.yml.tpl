@@ -1,6 +1,6 @@
 ---%{ if length(envs) > 0 }
 env:%{ for key, value in envs }
-  ${key}: "${value}"%{ endfor ~}
+  ${key}: ${can(tobool(value)) || can(tonumber(value)) ? jsonencode(value) : value}%{ endfor ~}
 
 %{ endif }
 steps:
@@ -20,7 +20,7 @@ steps:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-          image: "gcr.io/bazel-public/ubuntu1804-java11"
+          image: "gcr.io/bazel-public/ubuntu2204"
           network: "host"
           privileged: true
           propagate-environment: true
