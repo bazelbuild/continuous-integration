@@ -1,9 +1,6 @@
 ---%{ if length(envs) > 0 }
-
-# Force quotes for boolean/numeric strings to prevent YAML type-coercion,
-# while keeping standard strings (like locales) unquoted.
 env:%{ for key, value in envs }
-  ${key}: ${can(tobool(value)) || can(tonumber(value)) ? jsonencode(value) : value}%{ endfor ~}
+  ${key}: ${key == "LC_ALL" ? value : jsonencode(value)}%{ endfor ~}
 
 %{ endif }
 steps:
@@ -13,7 +10,7 @@ steps:
 %{ endfor ~}
     label: "${try(steps.label, ":pipeline:")}"
     agents:
-      - "queue=default"%{ if try(length(steps.artifact_paths), 0) > 0 }
+      - "queue=${try(steps.queue, "default")}"%{ if try(length(steps.artifact_paths), 0) > 0 }
     artifact_paths:%{ for artifact_path in steps.artifact_paths }
       - "${artifact_path}"%{ endfor }%{ endif }
     plugins:

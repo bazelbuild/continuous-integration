@@ -13,6 +13,8 @@ terraform {
 }
 
 provider "buildkite" {
+  # can also be set from env: BUILDKITE_API_TOKEN
+  # api_token    = ""
   organization = "bazel-testing"
 }
 
@@ -37,8 +39,9 @@ resource "buildkite_pipeline" "upb" {
 
 # 2. bcr-presubmit
 resource "buildkite_pipeline" "bcr-presubmit" {
-  name       = "BCR Presubmit"
-  repository = "https://github.com/meteorcloudy/bazel-central-registry.git"
+  name        = "BCR Presubmit"
+  repository  = "https://github.com/meteorcloudy/bazel-central-registry.git"
+  description = "The presubmit for adding new Bazel module into the Bazel Central Registry"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {
       ENABLE_BAZELISK_MIGRATE = "1"
@@ -57,7 +60,6 @@ resource "buildkite_pipeline" "bcr-presubmit" {
       ]
     }
   })
-  description                = "The presubmit for adding new Bazel module into the Bazel Central Registry"
   default_branch             = "main"
   allow_rebuilds             = true
   cancel_intermediate_builds = false
@@ -367,8 +369,9 @@ resource "buildkite_pipeline" "rules-nodejs-nodejs" {
 
 # 17. publish-bazel-binaries
 resource "buildkite_pipeline" "publish-bazel-binaries" {
-  name       = "Publish Bazel binaries"
-  repository = "https://github.com/bazelbuild/bazel.git"
+  name        = "Publish Bazel binaries"
+  repository  = "https://github.com/bazelbuild/bazel.git"
+  description = "Publish Bazel binaries to GCS (http://storage.googleapis.com/bazel-testing-builds/metadata/latest.json)"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {}
     steps = {
@@ -377,7 +380,6 @@ resource "buildkite_pipeline" "publish-bazel-binaries" {
       ]
     }
   })
-  description                = "Publish Bazel binaries to GCS (http://storage.googleapis.com/bazel-testing-builds/metadata/latest.json)"
   default_branch             = "master"
   allow_rebuilds             = true
   branch_configuration       = "master"
@@ -388,8 +390,9 @@ resource "buildkite_pipeline" "publish-bazel-binaries" {
 
 # 18. bazelisk-plus-incompatible-flags
 resource "buildkite_pipeline" "bazelisk-plus-incompatible-flags" {
-  name       = "Bazelisk + Incompatible flags"
-  repository = "https://github.com/bazelbuild/bazel.git"
+  name        = "Bazelisk + Incompatible flags"
+  repository  = "https://github.com/bazelbuild/bazel.git"
+  description = "Use bazelisk --migrate to test incompatible flags with downstream projects@last_green_commit"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {
       USE_BAZELISK_MIGRATE = "true"
@@ -401,7 +404,6 @@ resource "buildkite_pipeline" "bazelisk-plus-incompatible-flags" {
       ]
     }
   })
-  description                = "Use bazelisk --migrate to test incompatible flags with downstream projects@last_green_commit"
   default_branch             = "master"
   allow_rebuilds             = true
   cancel_intermediate_builds = false
@@ -411,8 +413,9 @@ resource "buildkite_pipeline" "bazelisk-plus-incompatible-flags" {
 
 # 19. bazel-at-head-plus-disabled
 resource "buildkite_pipeline" "bazel-at-head-plus-disabled" {
-  name       = "Bazel@HEAD + Disabled"
-  repository = "https://github.com/bazelbuild/bazel.git"
+  name        = "Bazel@HEAD + Disabled"
+  repository  = "https://github.com/bazelbuild/bazel.git"
+  description = "Test disabled downstream projects to see if they are already fixed."
   steps = templatefile("pipeline.yml.tpl", {
     envs = {}
     steps = {
@@ -422,7 +425,6 @@ resource "buildkite_pipeline" "bazel-at-head-plus-disabled" {
       ]
     }
   })
-  description                = "Test disabled downstream projects to see if they are already fixed."
   default_branch             = "master"
   allow_rebuilds             = true
   cancel_intermediate_builds = false
@@ -432,8 +434,9 @@ resource "buildkite_pipeline" "bazel-at-head-plus-disabled" {
 
 # 20. bazel-at-head-plus-downstream
 resource "buildkite_pipeline" "bazel-at-head-plus-downstream" {
-  name       = "Bazel@HEAD + Downstream"
-  repository = "https://github.com/bazelbuild/bazel.git"
+  name        = "Bazel@HEAD + Downstream"
+  repository  = "https://github.com/bazelbuild/bazel.git"
+  description = "Test Bazel@HEAD + downstream projects@last_green_commit"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {
       BAZELCI_DOWNSTREAM_PIPELINE = "true"
@@ -445,7 +448,6 @@ resource "buildkite_pipeline" "bazel-at-head-plus-downstream" {
       ]
     }
   })
-  description                = "Test Bazel@HEAD + downstream projects@last_green_commit"
   default_branch             = "master"
   allow_rebuilds             = true
   cancel_intermediate_builds = false
@@ -532,6 +534,178 @@ resource "buildkite_pipeline" "rules-docker-docker" {
       ]
     }
   })
+  default_branch             = "master"
+  allow_rebuilds             = true
+  cancel_intermediate_builds = false
+  skip_intermediate_builds   = false
+  tags                       = []
+}
+
+# 25. flogger
+resource "buildkite_pipeline" "flogger" {
+  name       = "Flogger"
+  repository = "https://github.com/google/flogger.git"
+  steps = templatefile("pipeline.yml.tpl", {
+    envs = {}
+    steps = {
+      commands = [
+        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
+        "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/flogger.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
+      ]
+    }
+  })
+  default_branch             = "master"
+  allow_rebuilds             = true
+  cancel_intermediate_builds = false
+  skip_intermediate_builds   = false
+  tags                       = []
+}
+
+# 26. test-macos
+# pipeline.yml is not used here as it doesn't apply to macos
+resource "buildkite_pipeline" "test-macos" {
+  name                       = "Test macOS"
+  repository                 = "https://github.com/bazelbuild/continuous-integration.git"
+  steps                      = "# This default command changes the pipeline of a running build by uploading a configuration file.\n# https://buildkite.com/docs/agent/v3/cli-pipeline\n# For information on different step types, check out the sidebar to the right.\n\nsteps:\n- agents: {queue: macos_arm64}\n  command: ['echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['echo \"hello\" | sha1sum']\n  label: ':macOS: Test'"
+  default_branch             = "master"
+  allow_rebuilds             = true
+  cancel_intermediate_builds = false
+  skip_intermediate_builds   = false
+  tags                       = []
+}
+
+# 27. bazel-auto-sheriff
+resource "buildkite_pipeline" "bazel-auto-sheriff" {
+  name        = "Bazel Auto Sheriff"
+  repository  = "https://github.com/bazelbuild/continuous-integration.git"
+  description = "Testing the auto sheriff pipeline"
+  steps = templatefile("pipeline.yml.tpl", {
+    envs = {}
+    steps = {
+      label = ":male-police-officer: :female-police-officer: :police_car:"
+      commands = [
+        "cd buildkite",
+        "python3.6 bazel_auto_sheriff.py"
+      ]
+    }
+  })
+  default_branch             = "testing"
+  allow_rebuilds             = true
+  cancel_intermediate_builds = false
+  skip_intermediate_builds   = false
+  tags                       = []
+}
+
+# 28. fwe-test
+resource "buildkite_pipeline" "fwe-test" {
+  name       = "fwe-test"
+  repository = "https://github.com/fweikert/bazel"
+  steps = templatefile("pipeline.yml.tpl", {
+    envs = {}
+    steps = {
+      commands = [
+        "curl -sS \"https://raw.githubusercontent.com/fweikert/continuous-integration/refs/heads/co2/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
+        "# Optional: Add --monitor_flaky_tests=true to disable receiving remote cache",
+        "python3.6 bazelci.py --script https://raw.githubusercontent.com/fweikert/continuous-integration/refs/heads/co2/buildkite/bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-postsubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+      ]
+    }
+  })
+  default_branch             = "master"
+  allow_rebuilds             = true
+  cancel_intermediate_builds = false
+  skip_intermediate_builds   = false
+  tags                       = []
+}
+
+# 29. bcr-compatibility-test
+resource "buildkite_pipeline" "bcr-compatibility-test" {
+  name        = "BCR Compatibility Test"
+  repository  = "https://github.com/meteorcloudy/bazel-central-registry.git"
+  description = "Test any given Bazel version with any given BCR modules and optionally with incompatible flags."
+  steps = templatefile("pipeline.yml.tpl", {
+    envs = {
+      USE_BAZEL_VERSION      = "8.0.0rc2"
+      CI_RESOURCE_PERCENTAGE = 100
+      MODULE_SELECTIONS      = "rules_android@latest,rules_cc@latest,rules_kotlin@latest"
+      SELECT_TOP_BCR_MODULES = 5
+    }
+    steps = {
+      commands = [
+        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/select_top_modules/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
+        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/select_top_modules/buildkite/bazel-central-registry/bcr_presubmit.py?$(date +%s)\" -o bcr_presubmit.py",
+        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/select_top_modules/buildkite/bazel-central-registry/bcr_compatibility.py?$(date +%s)\" -o bcr_compatibility.py",
+        "python3 bcr_compatibility.py"
+      ]
+    }
+  })
+  default_branch             = "fix_module_analyzer"
+  allow_rebuilds             = true
+  cancel_intermediate_builds = false
+  skip_intermediate_builds   = false
+  tags                       = []
+}
+
+# 30. bazel-bazel-arm64
+resource "buildkite_pipeline" "bazel-bazel-arm64" {
+  name       = ":bazel: Bazel (arm64)"
+  repository = "https://github.com/bazelbuild/bazel.git"
+  steps = templatefile("pipeline.yml.tpl", {
+    envs = {}
+    steps = {
+      commands = [
+        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
+        "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-linux-arm64.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
+      ]
+    }
+  })
+  default_branch             = "master"
+  allow_rebuilds             = true
+  cancel_intermediate_builds = false
+  skip_intermediate_builds   = false
+  tags                       = []
+}
+
+# 31. aswb-plugin
+resource "buildkite_pipeline" "aswb-plugin" {
+  name       = "ASwB plugin"
+  repository = "https://github.com/mai93/aswb-plugin.git"
+  steps = templatefile("pipeline.yml.tpl", {
+    envs = {}
+    steps = {
+      commands = [
+        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
+        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/android-studio.yml | tee /dev/tty | buildkite-agent pipeline upload"
+      ]
+    }
+  })
+  default_branch             = "main"
+  allow_rebuilds             = true
+  cancel_intermediate_builds = false
+  skip_intermediate_builds   = false
+  tags                       = []
+}
+
+# 32. test-bazel-for-ci-metrics
+resource "buildkite_pipeline" "test-bazel-for-ci-metrics" {
+  name        = "Test Bazel For CI-Metrics"
+  repository  = "https://github.com/bazelbuild/bazel.git"
+  description = "a fast, scalable, multi-language and extensible build system"
+  steps = templatefile("pipeline.yml.tpl", {
+    envs = {
+      LC_ALL = "en_US.UTF-8"
+    }
+    steps = {
+      queue = "metrics-test"
+      commands = [
+        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
+        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/collect_metrics.py?$(date +%s)\" -o collect_metrics.py",
+        "python3.6 -m pip install --upgrade pip setuptools wheel",
+        "python3.6 -m pip install google-cloud-bigquery requests",
+        "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/refs/heads/test-metrics/.bazelci/postsubmit.yml | tee /dev/tty | buildkite-agent pipeline upload",
+      ]
+    }
+  })
+  default_branch             = "master"
   allow_rebuilds             = true
   cancel_intermediate_builds = false
   skip_intermediate_builds   = false
