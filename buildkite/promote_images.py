@@ -17,13 +17,12 @@
 import queue
 import sys
 import threading
-from typing import Any, Dict, List, Optional
 
 import gcloud
 
-DEBUG: bool = False
+DEBUG = False
 
-IMAGE_PROMOTIONS: Dict[str, Dict[str, Any]] = {
+IMAGE_PROMOTIONS = {
     "bk-docker": {
         "project": "bazel-public",
         "source_image_project": "bazel-public",
@@ -50,10 +49,10 @@ IMAGE_PROMOTIONS: Dict[str, Dict[str, Any]] = {
     },
 }
 
-WORK_QUEUE: queue.Queue[Optional[Dict[str, Any]]] = queue.Queue()
+WORK_QUEUE = queue.Queue()
 
 
-def worker() -> None:
+def worker():
     while True:
         item = WORK_QUEUE.get()
         if not item:
@@ -64,7 +63,7 @@ def worker() -> None:
             WORK_QUEUE.task_done()
 
 
-def workflow(name: str, params: Dict[str, Any]) -> None:
+def workflow(name, params):
     # Get the name from the current image in the source family.
     source_image = gcloud.describe_image_family(
         params["source_image_family"], project=params["source_image_project"]
@@ -82,7 +81,7 @@ def workflow(name: str, params: Dict[str, Any]) -> None:
     )
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 

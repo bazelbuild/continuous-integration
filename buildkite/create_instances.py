@@ -20,14 +20,12 @@ from datetime import datetime
 import multiprocessing
 import os
 import sys
-from typing import Any, Dict, List, Optional, Sequence
 import yaml
 
 import gcloud
 
 
-def create_instance_group(config: Dict[str, Any]) -> int:
-    instance_group_name: str = ""
+def create_instance_group(config):
     try:
         # We take a few keys out of the config. The rest is passed
         # as-is to create_instance_template() and thus to the gcloud
@@ -50,12 +48,20 @@ def create_instance_group(config: Dict[str, Any]) -> int:
         template_name = "{}-{}".format(instance_group_name, timestamp)
 
         if zone is not None:
-            res = gcloud.delete_instance_group(instance_group_name, project=project, zone=zone)
-            if hasattr(res, "returncode") and res.returncode == 0:
+            if (
+                gcloud.delete_instance_group(
+                    instance_group_name, project=project, zone=zone
+                ).returncode
+                == 0
+            ):
                 print(f"Deleted existing instance group: {instance_group_name}")
         elif region is not None:
-            res = gcloud.delete_instance_group(instance_group_name, project=project, region=region)
-            if hasattr(res, "returncode") and res.returncode == 0:
+            if (
+                gcloud.delete_instance_group(
+                    instance_group_name, project=project, region=region
+                ).returncode
+                == 0
+            ):
                 print(f"Deleted existing instance group: {instance_group_name}")
 
         # Create the new instance template.
@@ -63,7 +69,7 @@ def create_instance_group(config: Dict[str, Any]) -> int:
         print(f"Created instance template {template_name}")
 
         # Create instance groups with the new template.
-        kwargs: Dict[str, Any] = {
+        kwargs = {
             "project": project,
             "base_instance_name": instance_group_name,
             "size": count,
@@ -85,14 +91,14 @@ def create_instance_group(config: Dict[str, Any]) -> int:
         return 1
 
 
-def read_config_file() -> Any:
+def read_config_file():
     path = os.path.join(os.getcwd(), "instances.yml")
     with open(path, "rb") as fd:
         content = fd.read().decode("utf-8")
     return yaml.safe_load(content)
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 

@@ -22,26 +22,25 @@ import subprocess
 import sys
 import tempfile
 from collections import namedtuple
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Dict, Set
 
 import requests
 from bazelci import BuildkiteClient, BuildkiteException, execute_command
 
-
 # --- Color Constants for Terminal Output ---
 # These work best in terminals that support ANSI escape codes.
 class Colors:
-    SUCCESS: str = "\033[92m"  # Green
-    SKIPPED: str = "\033[93m"  # Yellow
-    FAILED: str = "\033[91m"  # Red
-    RESET: str = "\033[0m"  # Reset color
+    SUCCESS = "\033[92m"  # Green
+    SKIPPED = "\033[93m"  # Yellow
+    FAILED = "\033[91m"   # Red
+    RESET = "\033[0m"     # Reset color
 
 
 # --- Constants ---
-GCS_BUCKET: str = "bazel-mirror"
-BUILDKITE_ORG: str = "bazel"
-BUILDKITE_PIPELINE: str = "bazel-bazel"
-URL_RE: re.Pattern[str] = re.compile(  # Matches URLs with optional URL-encoded characters
+GCS_BUCKET = "bazel-mirror"
+BUILDKITE_ORG = "bazel"
+BUILDKITE_PIPELINE = "bazel-bazel"
+URL_RE = re.compile(  # Matches URLs with optional URL-encoded characters
     r"Download from (https?://mirror\.bazel\.build\S+)\s+failed: class java.io.FileNotFoundException GET returned 404 Not Found"
 )
 
@@ -49,7 +48,7 @@ URL_RE: re.Pattern[str] = re.compile(  # Matches URLs with optional URL-encoded 
 MirrorResult = namedtuple("MirrorResult", ["status", "url", "reason"])
 
 
-def setup_logging(level: int = logging.INFO) -> None:
+def setup_logging(level=logging.INFO):
     """Configures basic logging for the script."""
     logging.basicConfig(
         level=level,
@@ -58,7 +57,7 @@ def setup_logging(level: int = logging.INFO) -> None:
     )
 
 
-def get_latest_build(client: BuildkiteClient) -> Dict[str, Any]:
+def get_latest_build(client: BuildkiteClient) -> Dict:
     """Returns the latest finished build object for the master branch."""
     builds = client.get_build_info_list(
         params=[("per_page", 1), ("branch", "master"), ("state", "finished")]
@@ -157,13 +156,15 @@ def get_urls_from_buildkite(client: BuildkiteClient) -> Set[str]:
     return all_urls_to_mirror
 
 
-def mirror_artifacts(urls_to_mirror: Set[str], bucket: str) -> None:
+def mirror_artifacts(urls_to_mirror: Set[str], bucket: str):
     """Mirrors a set of URLs and prints a final summary."""
     if not urls_to_mirror:
         logging.info("No failed download URLs found. Nothing to do.")
         return
 
-    logging.info(f"\nFound a total of {len(urls_to_mirror)} unique URLs to mirror.")
+    logging.info(
+        f"\nFound a total of {len(urls_to_mirror)} unique URLs to mirror."
+    )
     results = [mirror_url(url, bucket) for url in sorted(list(urls_to_mirror))]
 
     successes = [r for r in results if r.status == "SUCCESS"]
@@ -191,7 +192,7 @@ def mirror_artifacts(urls_to_mirror: Set[str], bucket: str) -> None:
         sys.exit(1)
 
 
-def main() -> None:
+def main():
     """Main execution function."""
     setup_logging()
 

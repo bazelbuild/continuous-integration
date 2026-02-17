@@ -26,30 +26,24 @@ import os
 import json
 import re
 import sys
-from typing import Any, Dict, List, Optional
 
 import bazelci
 import bcr_presubmit
 
-BUILDKITE_ORG: str = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
+BUILDKITE_ORG = os.environ["BUILDKITE_ORGANIZATION_SLUG"]
 
-PIPELINE: str = os.environ["BUILDKITE_PIPELINE_SLUG"]
+PIPELINE = os.environ["BUILDKITE_PIPELINE_SLUG"]
 
-MODULE_VERSION_PATTERN: re.Pattern[str] = re.compile(
-    r"(?P<module_version>[a-z](?:[a-z0-9._-]*[a-z0-9])?@[^\s]+)"
-)
+MODULE_VERSION_PATTERN = re.compile(r'(?P<module_version>[a-z](?:[a-z0-9._-]*[a-z0-9])?@[^\s]+)')
 
-
-def extract_module_version(line: str) -> Optional[str]:
+def extract_module_version(line):
     match = MODULE_VERSION_PATTERN.search(line)
     if match:
         return match.group("module_version")
-    return None
 
 
-def get_github_maintainer(module_name: str) -> List[str]:
-    with open(bcr_presubmit.get_metadata_json(module_name), "r") as f:
-        metadata = json.load(f)
+def get_github_maintainer(module_name):
+    metadata = json.load(open(bcr_presubmit.get_metadata_json(module_name), "r"))
     github_maintainers = []
     for maintainer in metadata["maintainers"]:
         if "github" in maintainer and not maintainer.get("do_not_notify"):
@@ -60,15 +54,10 @@ def get_github_maintainer(module_name: str) -> List[str]:
     return github_maintainers
 
 
-def print_report_in_markdown(
-    failed_jobs_per_module: Dict[str, List[Dict[str, Any]]], pipeline_url: str
-) -> None:
+def print_report_in_markdown(failed_jobs_per_module, pipeline_url):
     bazel_version = os.environ.get("USE_BAZEL_VERSION")
     print("\n")
-    print(
-        "## The following modules are broken%s:"
-        % (f" with Bazel@{bazel_version}" if bazel_version else "")
-    )
+    print("## The following modules are broken%s:" % (f" with Bazel@{bazel_version}" if bazel_version else ""))
     print("BCR Bazel Compatibility Test: ", pipeline_url)
     for module, jobs in failed_jobs_per_module.items():
         module_name = module.strip().split("@")[0]
@@ -80,13 +69,11 @@ def print_report_in_markdown(
     print("\n")
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
-    parser = argparse.ArgumentParser(
-        description="Script to report BCR Bazel Compatibility Test result."
-    )
+    parser = argparse.ArgumentParser(description="Script to report BCR Bazel Compatibility Test result.")
     parser.add_argument("--build_number", type=str)
 
     args = parser.parse_args(argv)
@@ -96,7 +83,7 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     client = bazelci.BuildkiteClient(org=BUILDKITE_ORG, pipeline=PIPELINE)
     build_info = client.get_build_info(args.build_number)
-    failed_jobs_per_module: Dict[str, List[Dict[str, Any]]] = collections.defaultdict(list)
+    failed_jobs_per_module = collections.defaultdict(list)
     for job in build_info["jobs"]:
         if job.get("state") == "failed" and "name" in job:
             module = extract_module_version(job["name"])
@@ -105,8 +92,6 @@ def main(argv: Optional[List[str]] = None) -> int:
             failed_jobs_per_module[module].append(job)
 
     print_report_in_markdown(failed_jobs_per_module, build_info["web_url"])
-    return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())
