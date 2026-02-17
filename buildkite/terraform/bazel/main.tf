@@ -1,13 +1,13 @@
 terraform {
   backend "gcs" {
-    bucket  = "bazel-buildkite-tf-state"
-    prefix  = "bazel"
+    bucket = "bazel-buildkite-tf-state"
+    prefix = "bazel"
   }
 
   required_providers {
     buildkite = {
-      source = "buildkite/buildkite"
-      version = "0.5.0"
+      source  = "buildkite/buildkite"
+      version = "~> 1.0"
     }
   }
 }
