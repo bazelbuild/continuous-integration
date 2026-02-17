@@ -3,14 +3,13 @@ import base64
 import os
 import subprocess
 import sys
-from typing import List, Optional
 
 
 os.environ["BUILDKITE_ORGANIZATION_SLUG"] = "bazel"
 import bazelci
 
 
-def encrypt(value: str, kms_key: str) -> bytes:
+def encrypt(value, kms_key):
     return subprocess.check_output(
         [
             "gcloud",
@@ -34,7 +33,7 @@ def encrypt(value: str, kms_key: str) -> bytes:
     )
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
@@ -46,17 +45,16 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     if not args.key_name or not args.value:
         print("Both --key_name and --value must be specified", file=sys.stderr)
-        return 1
+        exit(1)
 
     print("Original: %s" % args.value)
 
-    enc_bytes = encrypt(args.value, args.key_name)
-    enc_str = base64.b64encode(enc_bytes).decode("utf-8").strip()
-    print("Encoded:  %s" % enc_str)
+    enc = encrypt(args.value, args.key_name)
+    enc = base64.b64encode(enc).decode("utf-8").strip()
+    print("Encoded:  %s" % enc)
 
-    dec = bazelci.decrypt_token(enc_str, args.key_name)
+    dec = bazelci.decrypt_token(enc, args.key_name)
     print("Decoded:  %s" % dec)
-    return 0
 
 
 if __name__ == "__main__":

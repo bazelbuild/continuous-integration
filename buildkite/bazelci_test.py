@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import os
-from typing import Any, Dict, List, Optional, Tuple
 
 os.environ["BUILDKITE_ORGANIZATION_SLUG"] = "bazel"
 os.environ["BUILDKITE_PIPELINE_SLUG"] = "test"
@@ -26,7 +25,7 @@ import yaml
 
 
 class CalculateFlags(unittest.TestCase):
-    _CONFIGS: Dict[str, Any] = yaml.safe_load(
+    _CONFIGS = yaml.safe_load(
         """
 .base_flags: &base_flags
   ? "--enable_a"
@@ -68,8 +67,8 @@ tasks:
     """
     )
 
-    def test_basic_functionality(self) -> None:
-        tasks = self._CONFIGS.get("tasks", {})
+    def test_basic_functionality(self):
+        tasks = self._CONFIGS.get("tasks")
         flags, json_profile_out, capture_corrupted_outputs_dir = bazelci.calculate_flags(
             tasks.get("basic"), "build_flags", "build", "/tmp", ["HOME"]
         )
@@ -77,8 +76,8 @@ tasks:
         self.assertEqual(json_profile_out, None)
         self.assertEqual(capture_corrupted_outputs_dir, None)
 
-    def test_json_profile(self) -> None:
-        tasks = self._CONFIGS.get("tasks", {})
+    def test_json_profile(self):
+        tasks = self._CONFIGS.get("tasks")
         flags, json_profile_out, capture_corrupted_outputs_dir = bazelci.calculate_flags(
             tasks.get("json_profile"), "build_flags", "build", "/tmp", ["HOME"]
         )
@@ -88,8 +87,8 @@ tasks:
         )
         self.assertEqual(json_profile_out, "/tmp/build.profile.gz")
 
-    def test_capture_corrupted(self) -> None:
-        tasks = self._CONFIGS.get("tasks", {})
+    def test_capture_corrupted(self):
+        tasks = self._CONFIGS.get("tasks")
         flags, json_profile_out, capture_corrupted_outputs_dir = bazelci.calculate_flags(
             tasks.get("capture_corrupted"), "build_flags", "build", "/tmp", ["HOME"]
         )
@@ -104,15 +103,15 @@ tasks:
         )
         self.assertEqual(capture_corrupted_outputs_dir, "/tmp/build_corrupted_outputs")
 
-    def test_no_flags_in_config(self) -> None:
-        tasks = self._CONFIGS.get("tasks", {})
+    def test_no_flags_in_config(self):
+        tasks = self._CONFIGS.get("tasks")
         flags, json_profile_out, capture_corrupted_outputs_dir = bazelci.calculate_flags(
             tasks.get("no_flags"), "build_flags", "build", "/tmp", ["HOME"]
         )
         self.assertEqual(flags, ["--test_env=HOME"])
 
-    def test_merge_flags(self) -> None:
-        tasks = self._CONFIGS.get("tasks", {})
+    def test_merge_flags(self):
+        tasks = self._CONFIGS.get("tasks")
         flags, json_profile_out, capture_corrupted_outputs_dir = bazelci.calculate_flags(
             tasks.get("merge_flags"), "build_flags", "build", "/tmp", ["HOME"]
         )
@@ -123,7 +122,7 @@ tasks:
 
 
 class CalculateTargets(unittest.TestCase):
-    _CONFIGS: Dict[str, Any] = yaml.safe_load(
+    _CONFIGS = yaml.safe_load(
         """
 .base_targets: &base_targets
   ? "//..."
@@ -141,8 +140,8 @@ tasks:
     """
     )
 
-    def test_basic_functionality(self) -> None:
-        tasks = self._CONFIGS.get("tasks", {})
+    def test_basic_functionality(self):
+        tasks = self._CONFIGS.get("tasks")
         build_targets, test_targets, coverage_targets, index_targets = bazelci.calculate_targets(
             tasks.get("basic"),
             "bazel",
@@ -158,8 +157,8 @@ tasks:
         self.assertEqual(coverage_targets, [])
         self.assertEqual(index_targets, [])
 
-    def test_merge(self) -> None:
-        tasks = self._CONFIGS.get("tasks", {})
+    def test_merge(self):
+        tasks = self._CONFIGS.get("tasks")
         build_targets, test_targets, coverage_targets, index_targets = bazelci.calculate_targets(
             tasks.get("merge"),
             "bazel",
@@ -172,9 +171,8 @@ tasks:
         )
         self.assertEqual(build_targets, ["//...", "-//experimental/...", "//experimental/good/..."])
 
-
 class MatrixExpansion(unittest.TestCase):
-    _CONFIGS: Dict[str, Any] = yaml.safe_load(
+    _CONFIGS = yaml.safe_load(
         """
 matrix:
   bazel: ["1.2.3", "2.3.4"]
@@ -194,31 +192,28 @@ tasks:
     """
     )
 
-    def test_basic_functionality(self) -> None:
+    def test_basic_functionality(self):
         config = self._CONFIGS
 
         bazelci.expand_task_config(config)
         expanded_tasks = config["tasks"]
         self.assertEqual(len(expanded_tasks), 9)
         expanded_task_names = [task.get("name", None) for id, task in expanded_tasks.items()]
-        self.assertEqual(
-            expanded_task_names,
-            [
-                "Basic",  # no matrix expansion
-                "Unformatted",  # bazel v1.2.3
-                "Unformatted",  # bazel v2.3.4
-                None,  # no name, bazel v1.2.3
-                None,  # no name, bazel v2.3.4
-                "Formatted w/ Bazel v1.2.3 on pf1",
-                "Formatted w/ Bazel v1.2.3 on pf2",
-                "Formatted w/ Bazel v2.3.4 on pf1",
-                "Formatted w/ Bazel v2.3.4 on pf2",
-            ],
-        )
+        self.assertEqual(expanded_task_names, [
+            "Basic", # no matrix expansion
+            "Unformatted", # bazel v1.2.3
+            "Unformatted",  # bazel v2.3.4
+            None, # no name, bazel v1.2.3
+            None, # no name, bazel v2.3.4
+            "Formatted w/ Bazel v1.2.3 on pf1",
+            "Formatted w/ Bazel v1.2.3 on pf2",
+            "Formatted w/ Bazel v2.3.4 on pf1",
+            "Formatted w/ Bazel v2.3.4 on pf2",
+        ])
 
 
 class MatrixExclude(unittest.TestCase):
-    _CONFIGS_SINGLE_EXCLUDE: Dict[str, Any] = yaml.safe_load(
+    _CONFIGS_SINGLE_EXCLUDE = yaml.safe_load(
         """
 matrix:
   bazel: ["1.2.3", "2.3.4"]
@@ -234,7 +229,7 @@ tasks:
         """
     )
 
-    _CONFIGS_MULTIPLE_EXCLUDES: Dict[str, Any] = yaml.safe_load(
+    _CONFIGS_MULTIPLE_EXCLUDES = yaml.safe_load(
         """
 matrix:
   bazel: ["1.2.3", "2.3.4"]
@@ -252,7 +247,7 @@ tasks:
         """
     )
 
-    _CONFIGS_PARTIAL_EXCLUDE: Dict[str, Any] = yaml.safe_load(
+    _CONFIGS_PARTIAL_EXCLUDE = yaml.safe_load(
         """
 matrix:
   bazel: ["1.2.3", "2.3.4"]
@@ -267,9 +262,8 @@ tasks:
         """
     )
 
-    def test_single_exclude(self) -> None:
+    def test_single_exclude(self):
         import copy
-
         config = copy.deepcopy(self._CONFIGS_SINGLE_EXCLUDE)
 
         bazelci.expand_task_config(config)
@@ -277,18 +271,14 @@ tasks:
         # Total combinations: 2 * 2 = 4, minus 1 excluded = 3
         self.assertEqual(len(expanded_tasks), 3)
         expanded_task_names = [task.get("name", None) for id, task in expanded_tasks.items()]
-        self.assertEqual(
-            expanded_task_names,
-            [
-                "Formatted w/ Bazel v1.2.3 on pf1",
-                "Formatted w/ Bazel v2.3.4 on pf1",
-                "Formatted w/ Bazel v2.3.4 on pf2",
-            ],
-        )
+        self.assertEqual(expanded_task_names, [
+            "Formatted w/ Bazel v1.2.3 on pf1",
+            "Formatted w/ Bazel v2.3.4 on pf1",
+            "Formatted w/ Bazel v2.3.4 on pf2",
+        ])
 
-    def test_multiple_excludes(self) -> None:
+    def test_multiple_excludes(self):
         import copy
-
         config = copy.deepcopy(self._CONFIGS_MULTIPLE_EXCLUDES)
 
         bazelci.expand_task_config(config)
@@ -296,17 +286,13 @@ tasks:
         # Total combinations: 2 * 2 = 4, minus 2 excluded = 2
         self.assertEqual(len(expanded_tasks), 2)
         expanded_task_names = [task.get("name", None) for id, task in expanded_tasks.items()]
-        self.assertEqual(
-            expanded_task_names,
-            [
-                "Formatted w/ Bazel v1.2.3 on pf1",
-                "Formatted w/ Bazel v2.3.4 on pf2",
-            ],
-        )
+        self.assertEqual(expanded_task_names, [
+            "Formatted w/ Bazel v1.2.3 on pf1",
+            "Formatted w/ Bazel v2.3.4 on pf2",
+        ])
 
-    def test_partial_attribute_exclude(self) -> None:
+    def test_partial_attribute_exclude(self):
         import copy
-
         config = copy.deepcopy(self._CONFIGS_PARTIAL_EXCLUDE)
 
         bazelci.expand_task_config(config)
@@ -314,13 +300,10 @@ tasks:
         # Total combinations: 2 * 2 = 4, minus 2 excluded (all pf2) = 2
         self.assertEqual(len(expanded_tasks), 2)
         expanded_task_names = [task.get("name", None) for id, task in expanded_tasks.items()]
-        self.assertEqual(
-            expanded_task_names,
-            [
-                "Formatted w/ Bazel v1.2.3 on pf1",
-                "Formatted w/ Bazel v2.3.4 on pf1",
-            ],
-        )
+        self.assertEqual(expanded_task_names, [
+            "Formatted w/ Bazel v1.2.3 on pf1",
+            "Formatted w/ Bazel v2.3.4 on pf1",
+        ])
 
 
 if __name__ == "__main__":

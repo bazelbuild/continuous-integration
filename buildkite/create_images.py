@@ -18,16 +18,15 @@ from datetime import datetime
 import os
 import sys
 import tempfile
-from typing import Any, Dict, List, Optional
 
 import gcloud
 import gcloud_utils
 
-DEBUG: bool = False
-DEFAULT_MACHINE_TYPE: str = "c2-standard-8"
-DEFAULT_BOOT_DISK_TYPE: str = "pd-ssd"
+DEBUG = False
+DEFAULT_MACHINE_TYPE = "c2-standard-8"
+DEFAULT_BOOT_DISK_TYPE = "pd-ssd"
 
-IMAGE_CREATION_VMS: Dict[str, Dict[str, Any]] = {
+IMAGE_CREATION_VMS = {
     "bk-testing-docker": {
         "project": "bazel-public",
         "zone": "us-central1-f",
@@ -56,7 +55,7 @@ IMAGE_CREATION_VMS: Dict[str, Dict[str, Any]] = {
         "project": "bazel-public",
         "zone": "us-central1-f",
         "source_image_project": "windows-cloud",
-        "source_image_family": "windows-2022",  # vs build tools failed to install on windows-2022-core
+        "source_image_family": "windows-2022", # vs build tools failed to install on windows-2022-core
         "setup_script": "setup-windows.ps1",
         "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
     },
@@ -72,9 +71,8 @@ IMAGE_CREATION_VMS: Dict[str, Dict[str, Any]] = {
 }
 
 
-def preprocess_setup_script(setup_script: str, is_windows: bool) -> str:
-    fd, output_file = tempfile.mkstemp()
-    os.close(fd)
+def preprocess_setup_script(setup_script, is_windows):
+    output_file = tempfile.mkstemp()[1]
     newline = "\r\n" if is_windows else "\n"
     with open(output_file, "w", newline=newline) as f:
         with open(setup_script, "r") as setup_script_file:
@@ -85,13 +83,11 @@ def preprocess_setup_script(setup_script: str, is_windows: bool) -> str:
                 f.write("'@\n")
                 f.write('[System.IO.File]::WriteAllLines("c:\\setup.ps1", $setup_script)\n')
                 f.write("$ts = Get-Date -Format 'yyyyMMdd-HHmmss'\n")
-                f.write(
-                    'Start-Process -FilePath "powershell.exe" -ArgumentList "-File c:\\setup.ps1" -RedirectStandardOutput "c:\\setup-stdout-$ts.log" -RedirectStandardError "c:\\setup-stderr-$ts.log" -NoNewWindow\n'
-                )
+                f.write('Start-Process -FilePath "powershell.exe" -ArgumentList "-File c:\\setup.ps1" -RedirectStandardOutput "c:\\setup-stdout-$ts.log" -RedirectStandardError "c:\\setup-stderr-$ts.log" -NoNewWindow\n')
     return output_file
 
 
-def create_instance(instance_name: str, params: Dict[str, Any]) -> None:
+def create_instance(instance_name, params):
     is_windows = "windows" in instance_name
     setup_script = preprocess_setup_script(params["setup_script"], is_windows)
     try:
@@ -100,12 +96,13 @@ def create_instance(instance_name: str, params: Dict[str, Any]) -> None:
         else:
             startup_script = "startup-script=" + setup_script
 
-        image_kwargs: Dict[str, str] = {}
         if "source_image" in params:
-            image_kwargs["image"] = params["source_image"]
+            image = {"image": params["source_image"]}
         else:
-            image_kwargs["image-project"] = params["source_image_project"]
-            image_kwargs["image-family"] = params["source_image_family"]
+            image = {
+                "image-project": params["source_image_project"],
+                "image-family": params["source_image_family"],
+            }
 
         gcloud.create_instance(
             instance_name,
@@ -116,13 +113,13 @@ def create_instance(instance_name: str, params: Dict[str, Any]) -> None:
             metadata_from_file=startup_script,
             boot_disk_type=params.get("boot_disk_type", DEFAULT_BOOT_DISK_TYPE),
             boot_disk_size=params.get("boot_disk_size", "500GB"),
-            **image_kwargs,
+            **image,
         )
     finally:
         os.remove(setup_script)
 
 
-def workflow(name: str, params: Dict[str, Any]) -> None:
+def workflow(name, params):
     instance_name = "%s-image-%s" % (name, int(datetime.now().timestamp()))
     project = params["project"]
     zone = params["zone"]
@@ -155,7 +152,7 @@ def workflow(name: str, params: Dict[str, Any]) -> None:
         gcloud.delete_instance(instance_name, project=project, zone=zone)
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 

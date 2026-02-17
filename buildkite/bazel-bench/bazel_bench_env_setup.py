@@ -20,15 +20,14 @@ import argparse
 import bazelci
 import os
 import sys
-from typing import List, Optional
 
 
-BB_ROOT: str = os.path.join(os.path.expanduser("~"), ".bazel-bench")
+BB_ROOT = os.path.join(os.path.expanduser("~"), ".bazel-bench")
 # The path to the directory that stores the bazel binaries.
-BAZEL_BINARY_BASE_PATH: str = os.path.join(BB_ROOT, "bazel-bin")
+BAZEL_BINARY_BASE_PATH = os.path.join(BB_ROOT, "bazel-bin")
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
@@ -54,8 +53,6 @@ def main(argv: Optional[List[str]] = None) -> int:
         except bazelci.BuildkiteException:
             # Carry on.
             bazelci.eprint("Binary for Bazel commit %s not found." % bazel_commit)
-
-    return 0
 
 
 if __name__ == "__main__":

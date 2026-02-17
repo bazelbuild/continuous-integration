@@ -20,15 +20,14 @@ import os
 import queue
 import sys
 import threading
-from typing import Any, Dict, List, Optional
 import yaml
 
 import gcloud
 
-WORK_QUEUE: queue.Queue[Optional[Dict[str, Any]]] = queue.Queue()
+WORK_QUEUE = queue.Queue()
 
 
-def worker() -> None:
+def worker():
     while True:
         item = WORK_QUEUE.get()
         if not item:
@@ -37,16 +36,13 @@ def worker() -> None:
             # We take a few keys out of the config item. The rest is passed
             # as-is to create_instance_template() and thus to the gcloud
             # command line tool.
-            if "count" in item:
-                del item["count"]
+            del item["count"]
             instance_group_name = item.pop("name")
             project = item.pop("project")
             zone = item.pop("zone", None)
             region = item.pop("region", None)
-            if "health_check" in item:
-                del item["health_check"]
-            if "initial_delay" in item:
-                del item["initial_delay"]
+            del item["health_check"]
+            del item["initial_delay"]
 
             if not project:
                 raise Exception("Invalid instance config, no project name set")
@@ -64,14 +60,14 @@ def worker() -> None:
             WORK_QUEUE.task_done()
 
 
-def read_config_file() -> Any:
+def read_config_file():
     path = os.path.join(os.getcwd(), "instances.yml")
     with open(path, "rb") as fd:
         content = fd.read().decode("utf-8")
     return yaml.safe_load(content)
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
