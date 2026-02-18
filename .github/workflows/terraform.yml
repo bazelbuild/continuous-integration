@@ -1,0 +1,75 @@
+name: "Terraform Monorepo Governance"
+
+on:
+  pull_request:
+    paths: ["buildkite/terraform/**"]
+  push:
+    branches: ["main"]
+    paths: ["buildkite/terraform/**"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+jobs:
+  # STEP 1: Detect which specific org folder was changed
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      folders: ${{ steps.filter.outputs.changes }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          bazel: "buildkite/terraform/bazel/**"
+          bazel-testing: "buildkite/terraform/bazel-testing/**"
+          bazel-trusted: "buildkite/terraform/bazel-trusted/**"
+
+  # STEP 2: Run Terraform for the changed org(s)
+  terraform:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.folders != '[]' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # If one org fails, don't stop the others
+      matrix:
+        folder: ${{ fromJSON(needs.detect-changes.outputs.folders) }}
+    defaults:
+      run:
+        working-directory: ./buildkite/terraform/${{ matrix.folder }}
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+        service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_wrapper: true
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Plan/Apply
+      env:
+        # Logic: bazel-testing -> BUILDKITE_TOKEN_BAZEL_TESTING
+        BUILDKITE_API_TOKEN: ${{ secrets[format('BUILDKITE_TOKEN_{0}', replace(upper(matrix.folder), '-', '_'))] }}
+      run: |
+        if [ "${{ github.event_name }}" == "pull_request" ]; then
+          terraform plan -no-color -input=false
+        else
+          terraform apply -auto-approve -input=false
+        fi
