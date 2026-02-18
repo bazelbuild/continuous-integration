@@ -37,17 +37,12 @@ jobs:
     needs: detect-changes
     if: ${{ needs.detect-changes.outputs.folders != '[]' }}
     runs-on: ubuntu-latest
+
+    environment: ${{ matrix.folder }}
     strategy:
       fail-fast: false # If one org fails, don't stop the others
       matrix:
         folder: ${{ fromJSON(needs.detect-changes.outputs.folders) }}
-        include:
-        - folder: bazel
-          token_name: BUILDKITE_TOKEN_BAZEL
-        - folder: bazel-testing
-          token_name: BUILDKITE_TOKEN_BAZEL_TESTING
-        - folder: bazel-trusted
-          token_name: BUILDKITE_TOKEN_BAZEL_TRUSTED
 
     defaults:
       run:
@@ -73,8 +68,7 @@ jobs:
 
     - name: Terraform Plan/Apply
       env:
-        # Now GitHub knows exactly which single secret to provide to this specific job
-        BUILDKITE_API_TOKEN: ${{ secrets[matrix.token_name] }}
+        BUILDKITE_API_TOKEN: ${{ secrets.BUILDKITE_API_TOKEN }}
       run: |
         if [ "${{ github.event_name }}" == "pull_request" ]; then
           terraform plan -no-color -input=false
