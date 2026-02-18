@@ -15,9 +15,9 @@ resource "buildkite_pipeline" "upb" {
   skip_intermediate_builds   = false
   tags                       = []
   provider_settings = {
-      # GitHub activities are disabled for this pipeline
-      trigger_mode = "none"
-    }
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "protobuf" {
@@ -147,9 +147,9 @@ resource "buildkite_pipeline" "tulsi-bazel-darwin" {
   skip_intermediate_builds   = false
   tags                       = []
   provider_settings = {
-      # GitHub activities are disabled for this pipeline
-      trigger_mode = "none"
-    }
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "apple-support-darwin" {
@@ -170,9 +170,9 @@ resource "buildkite_pipeline" "apple-support-darwin" {
   skip_intermediate_builds   = false
   tags                       = []
   provider_settings = {
-      # GitHub activities are disabled for this pipeline
-      trigger_mode = "none"
-    }
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "android-testing" {
@@ -193,9 +193,9 @@ resource "buildkite_pipeline" "android-testing" {
   skip_intermediate_builds   = false
   tags                       = []
   provider_settings = {
-      # GitHub activities are disabled for this pipeline
-      trigger_mode = "none"
-    }
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "flogger" {

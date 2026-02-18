@@ -16,9 +16,9 @@ resource "buildkite_pipeline" "rules-apple-darwin" {
   skip_intermediate_builds   = false
   tags                       = []
   provider_settings = {
-      # GitHub activities are disabled for this pipeline
-      trigger_mode = "none"
-    }
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "rules-swift-swift" {
@@ -38,10 +38,10 @@ resource "buildkite_pipeline" "rules-swift-swift" {
   cancel_intermediate_builds = false
   skip_intermediate_builds   = false
   tags                       = []
- provider_settings = {
-     # GitHub activities are disabled for this pipeline
-     trigger_mode = "none"
-   }
+  provider_settings = {
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "rules-scala-scala" {
@@ -61,10 +61,10 @@ resource "buildkite_pipeline" "rules-scala-scala" {
   cancel_intermediate_builds = false
   skip_intermediate_builds   = false
   tags                       = []
- provider_settings = {
-     # GitHub activities are disabled for this pipeline
-     trigger_mode = "none"
-   }
+  provider_settings = {
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "rules-groovy" {
@@ -85,9 +85,9 @@ resource "buildkite_pipeline" "rules-groovy" {
   skip_intermediate_builds   = false
   tags                       = []
   provider_settings = {
-      # GitHub activities are disabled for this pipeline
-      trigger_mode = "none"
-    }
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "rules-rust-rustlang" {
@@ -108,9 +108,9 @@ resource "buildkite_pipeline" "rules-rust-rustlang" {
   skip_intermediate_builds   = false
   tags                       = []
   provider_settings = {
-      # GitHub activities are disabled for this pipeline
-      trigger_mode = "none"
-    }
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "rules-kotlin-kotlin" {
@@ -131,9 +131,9 @@ resource "buildkite_pipeline" "rules-kotlin-kotlin" {
   skip_intermediate_builds   = false
   tags                       = []
   provider_settings = {
-      # GitHub activities are disabled for this pipeline
-      trigger_mode = "none"
-    }
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "rules-go-golang" {
@@ -154,9 +154,9 @@ resource "buildkite_pipeline" "rules-go-golang" {
   skip_intermediate_builds   = false
   tags                       = []
   provider_settings = {
-      # GitHub activities are disabled for this pipeline
-      trigger_mode = "none"
-    }
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "rules-nodejs-nodejs" {
@@ -177,9 +177,9 @@ resource "buildkite_pipeline" "rules-nodejs-nodejs" {
   skip_intermediate_builds   = false
   tags                       = []
   provider_settings = {
-      # GitHub activities are disabled for this pipeline
-      trigger_mode = "none"
-    }
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "rules-docker-docker" {
@@ -200,7 +200,7 @@ resource "buildkite_pipeline" "rules-docker-docker" {
   skip_intermediate_builds   = false
   tags                       = []
   provider_settings = {
-      # GitHub activities are disabled for this pipeline
-      trigger_mode = "none"
-    }
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
