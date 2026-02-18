@@ -72,9 +72,9 @@ resource "buildkite_pipeline" "publish-bazel-binaries" {
   skip_intermediate_builds   = false
   tags                       = []
   provider_settings = {
-      # GitHub activities are disabled for this pipeline
-      trigger_mode = "none"
-    }
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "bazelisk-plus-incompatible-flags" {
@@ -97,10 +97,10 @@ resource "buildkite_pipeline" "bazelisk-plus-incompatible-flags" {
   cancel_intermediate_builds = false
   skip_intermediate_builds   = false
   tags                       = []
- provider_settings = {
-     # GitHub activities are disabled for this pipeline
-     trigger_mode = "none"
-   }
+  provider_settings = {
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "bazel-at-head-plus-disabled" {
@@ -122,9 +122,9 @@ resource "buildkite_pipeline" "bazel-at-head-plus-disabled" {
   skip_intermediate_builds   = false
   tags                       = []
   provider_settings = {
-      # GitHub activities are disabled for this pipeline
-      trigger_mode = "none"
-    }
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "bazel-at-head-plus-downstream" {
@@ -147,10 +147,10 @@ resource "buildkite_pipeline" "bazel-at-head-plus-downstream" {
   cancel_intermediate_builds = false
   skip_intermediate_builds   = false
   tags                       = []
- provider_settings = {
-     # GitHub activities are disabled for this pipeline
-     trigger_mode = "none"
-   }
+  provider_settings = {
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "bazelisk" {
@@ -171,10 +171,10 @@ resource "buildkite_pipeline" "bazelisk" {
   cancel_intermediate_builds = false
   skip_intermediate_builds   = false
   tags                       = []
- provider_settings = {
-     # GitHub activities are disabled for this pipeline
-     trigger_mode = "none"
-   }
+  provider_settings = {
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "bazel-bazel-github-presubmit" {
@@ -195,10 +195,10 @@ resource "buildkite_pipeline" "bazel-bazel-github-presubmit" {
   cancel_intermediate_builds = false
   skip_intermediate_builds   = false
   tags                       = []
- provider_settings = {
-     # GitHub activities are disabled for this pipeline
-     trigger_mode = "none"
-   }
+  provider_settings = {
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "bazel-bazel" {
@@ -223,9 +223,9 @@ resource "buildkite_pipeline" "bazel-bazel" {
   skip_intermediate_builds   = false
   tags                       = []
   provider_settings = {
-      # GitHub activities are disabled for this pipeline
-      trigger_mode = "none"
-    }
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "bazel-auto-sheriff" {
@@ -299,9 +299,9 @@ resource "buildkite_pipeline" "bcr-compatibility-test" {
   skip_intermediate_builds   = false
   tags                       = []
   provider_settings = {
-      # GitHub activities are disabled for this pipeline
-      trigger_mode = "none"
-    }
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
 }
 
 resource "buildkite_pipeline" "bazel-bazel-arm64" {
