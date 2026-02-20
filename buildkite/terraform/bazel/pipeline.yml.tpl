@@ -9,6 +9,9 @@ steps:
       ${command}
 %{ endfor ~}
     label: "${try(steps.label, ":pipeline:")}"
+    %{~ if try(steps.priority, null) != null ~}
+    priority: ${steps.priority}
+    %{~ endif ~}
     agents:
       - "queue=default"%{ if try(length(steps.artifact_paths), 0) > 0 }
     artifact_paths:%{ for artifact_path in steps.artifact_paths }
@@ -20,7 +23,7 @@ steps:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-          image: "gcr.io/bazel-public/ubuntu1804-java11"
+          image: "${try(steps.image, "gcr.io/bazel-public/ubuntu1804-java11")}"
           network: "host"
           privileged: true
           propagate-environment: true
