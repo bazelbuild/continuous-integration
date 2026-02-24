@@ -635,7 +635,13 @@ gwD6RBL0qz1PFfg7Zw==
 
     _PIPELINE_INFO_URL_TEMPLATE = "https://api.buildkite.com/v2/organizations/{}/pipelines/{}"
 
-    def __init__(self, org, pipeline):
+    _AGENTS_URL_TEMPLATE = "https://api.buildkite.com/v2/organizations/{}/agents"
+
+    _BUILDS_URL_TEMPLATE = "https://api.buildkite.com/v2/organizations/{}/builds"
+
+    _NEXT_PAGE_PATTERN = re.compile(r'<(?P<url>\S+)>; rel="next"', re.MULTILINE)
+
+    def __init__(self, org, pipeline=None):
         self._org = org
         self._pipeline = pipeline
         self._token = self._get_buildkite_token()
@@ -660,29 +666,61 @@ gwD6RBL0qz1PFfg7Zw==
         )
 
     def _open_url(self, url, params=[], retries=5):
+        """
+        Returns a LIST of all items (following pagination).
+        """
+        # Always request max page size
+        params.append(("per_page", "100"))
         params_str = "".join("&{}={}".format(k, v) for k, v in params)
-        full_url = "{}?access_token={}{}".format(url, self._token, params_str)
+        next_url = f"{url}?{params_str}"
 
-        for attempt in range(retries):
-            try:
-                response = urllib.request.urlopen(full_url)
-                return response.read().decode("utf-8", "ignore")
-            except urllib.error.HTTPError as ex:
-                # Handle specific error codes
-                if ex.code == 429:  # Too Many Requests
-                    retry_after = ex.headers.get("RateLimit-Reset")
-                    if retry_after:
-                        wait_time = int(retry_after)
+        all_items = []
+        while next_url:
+            success = False
+            for attempt in range(retries):
+                try:
+                    req = urllib.request.Request(next_url)
+                    req.add_header("Authorization", f"Bearer {self._token}")
+
+                    with urllib.request.urlopen(req) as response:
+                        content = response.read().decode("utf-8", "ignore")
+                        data = json.loads(content)
+
+                        if isinstance(data, list):
+                            all_items.extend(data)
+                        else:
+                            # If not a list, pagination concept doesn't apply.
+                            # Just return the single object.
+                            return data
+
+                        next_url = self._GetNextPageUrl(response.headers)
+                        success = True
+                        break  # Break retry loop on success
+
+                except urllib.error.HTTPError as ex:
+                    # Handle specific error codes
+                    if ex.code == 429:  # Too Many Requests
+                        retry_after = ex.headers.get("RateLimit-Reset")
+                        wait_time = int(retry_after) if retry_after else 2 ** attempt
+                        time.sleep(wait_time)
+                    elif attempt < retries - 1:
+                        time.sleep(2 ** attempt)
                     else:
-                        wait_time = 2**attempt  # Exponential backoff if no RateLimit-Reset header
+                        raise BuildkiteException(
+                            "Failed to open {}: {} - {}".format(url, ex.code, ex.reason)
+                        )
 
-                    time.sleep(wait_time)
-                else:
-                    raise BuildkiteException(
-                        "Failed to open {}: {} - {}".format(url, ex.code, ex.reason)
-                    )
+            if not success:
+              raise BuildkiteException(f"Failed to open {url} after {retries} retries.")
 
-        raise BuildkiteException(f"Failed to open {url} after {retries} retries.")
+        return all_items
+
+    def _GetNextPageUrl(self, headers):
+        link_header = headers.get("Link")
+        if not link_header:
+            return None
+        match = self._NEXT_PAGE_PATTERN.search(link_header)
+        return match.group('url') if match else None
 
     def get_pipeline_info(self):
         """Get details for a pipeline given its organization slug
@@ -734,6 +772,14 @@ gwD6RBL0qz1PFfg7Zw==
 
     def get_build_log(self, job, retries = 5):
         return self._open_url(job["raw_log_url"], retries = retries)
+
+    def get_agents(self, retries=5):
+        url = self._AGENTS_URL_TEMPLATE.format(self._org)
+        return self._open_url(url, retries=retries)
+
+    def get_scheduled_jobs(self, retries=5):
+        url = self._BUILDS_URL_TEMPLATE.format(self._org)
+        return self._open_url(url, params=[("state", "scheduled")], retries=retries)
 
     @staticmethod
     def _check_response(response, expected_status_code):
