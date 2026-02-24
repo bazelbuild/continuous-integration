@@ -688,15 +688,21 @@ kpuKoQ/EWg5Bhrkp
                     if retry_after:
                         wait_time = int(retry_after)
                     else:
-                        wait_time = 2**attempt  # Exponential backoff if no RateLimit-Reset header
+                        raise BuildkiteException(
+                            "Failed to open {}: {} - {}".format(url, ex.code, ex.reason)
+                        )
 
-                    time.sleep(wait_time)
-                else:
-                    raise BuildkiteException(
-                        "Failed to open {}: {} - {}".format(url, ex.code, ex.reason)
-                    )
+            if not success:
+              raise BuildkiteException(f"Failed to open {url} after {retries} retries.")
 
-        raise BuildkiteException(f"Failed to open {url} after {retries} retries.")
+        return all_items
+
+    def _GetNextPageUrl(self, headers):
+        link_header = headers.get("Link")
+        if not link_header:
+            return None
+        match = self._NEXT_PAGE_PATTERN.search(link_header)
+        return match.group('url') if match else None
 
     def _open_url(self, url, params=[], retries=5) -> str:
         """Returns the decode utf-8 representation of the _get_url_response."""
