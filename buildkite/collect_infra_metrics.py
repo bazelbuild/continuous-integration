@@ -9,7 +9,7 @@ from google.cloud import bigquery
 from bazelci import BuildkiteClient, decrypt_token
 
 # --- Configuration ---
-ORGs = ["bazel", "bazel-trusted", "bazel-testing"]
+ORGs = ["bazel-trusted", "bazel-testing", "bazel"]
 PROJECT_ID = "bazel-public"
 DATASET_ID = "bazel_ci_metrics"
 TABLE_ID = "infra_stats"
