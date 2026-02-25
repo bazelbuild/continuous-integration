@@ -709,11 +709,14 @@ kpuKoQ/EWg5Bhrkp
 
     def _fetch_data_as_text(self, url, params=[], retries=5) -> str:
         """Returns the decode utf-8 representation of the _get_url_response."""
+        return self._get_url_response(url, params, retries).read().decode("utf-8", "ignore")
         url = self._build_url_with_params(url, params)
         return self._get_url_response(url, retries)[0]
 
+    def _open_url_with_paganation(self, url, params=[], retries=5) -> List:
     def _fetch_all_pages_as_json(self, url, params=[], retries=5) -> List:
         """Fetch all items iteratively across all pages."""
+        params_str = "".join("&{}={}".format(k, v) for k, v in params)
         next_url = self._build_url_with_params(url, params + [("per_page", "100")])
 
         all_items = []
