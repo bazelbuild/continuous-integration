@@ -6,7 +6,7 @@ from datetime import datetime
 
 from google.cloud import bigquery
 
-from bazelci import BuildkiteClient
+from bazelci import BuildkiteClient, decrypt_token
 
 # --- Configuration ---
 ORGs = ["bazel-testing", "bazel", "bazel-trusted"]
