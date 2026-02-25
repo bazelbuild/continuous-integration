@@ -702,6 +702,7 @@ kpuKoQ/EWg5Bhrkp
         """Fetch all items iteratively across all pages."""
         params_str = "".join("&{}={}".format(k, v) for k, v in params)
         next_url = "{}?access_token={}{}".format(url, self._token, params_str)
+        eprint("url: {}".format(next_url))
 
         all_items = []
         while next_url:
