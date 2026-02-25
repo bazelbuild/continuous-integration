@@ -697,7 +697,8 @@ kpuKoQ/EWg5Bhrkp
 
         return all_items
 
-    def _GetNextPageUrl(self, headers):
+    def _get_next_page_url(self, headers):
+        """Parses the headers to determine if there are more pagination pages."""
         link_header = headers.get("Link")
         if not link_header:
             return None
