@@ -39,6 +39,7 @@ import sys
 import tarfile
 import tempfile
 import time
+from typing import List
 import urllib.error
 import urllib.request
 import yaml
@@ -666,57 +667,52 @@ kpuKoQ/EWg5Bhrkp
             project=("bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"),
         )
 
-    def _open_url(self, url, params=[], retries=5):
-        """
-        Returns a LIST of all items (following pagination).
-        """
-        # Always request max page size
-        params.append(("per_page", "100"))
+    def _get_url_response(self, url, params=[], retries=5, full_url=None):
+        """Returns the urllib response for the given URL and query parameters."""
         params_str = "".join("&{}={}".format(k, v) for k, v in params)
-        next_url = f"{url}?{params_str}"
+        if not full_url:
+            full_url = "{}?access_token={}{}".format(url, self._token, params_str)
+
+        for attempt in range(retries):
+            try:
+                response = urllib.request.urlopen(full_url)
+                return response
+            except urllib.error.HTTPError as ex:
+                # Handle specific error codes
+                if ex.code == 429:  # Too Many Requests
+                    retry_after = ex.headers.get("RateLimit-Reset")
+                    if retry_after:
+                        wait_time = int(retry_after)
+                    else:
+                        wait_time = 2**attempt  # Exponential backoff if no RateLimit-Reset header
+
+                    time.sleep(wait_time)
+                else:
+                    raise BuildkiteException(
+                        "Failed to open {}: {} - {}".format(url, ex.code, ex.reason)
+                    )
+
+        raise BuildkiteException(f"Failed to open {url} after {retries} retries.")
+
+    def _open_url(self, url, params=[], retries=5) -> str:
+        """Returns the decode utf-8 representation of the _get_url_response."""
+        return self._get_url_response(url, params, retries).read().decode("utf-8", "ignore")
+
+    def _open_url_with_paganation(self, url, params=[], retries=5) -> List:
+        """Fetch all items iteratively across all pages."""
+        params_str = "".join("&{}={}".format(k, v) for k, v in params)
+        next_url = "{}?access_token={}{}".format(url, self._token, params_str)
 
         all_items = []
         while next_url:
-            success = False
-            for attempt in range(retries):
-                try:
-                    req = urllib.request.Request(next_url)
-                    req.add_header("Authorization", f"Bearer {self._token}")
-
-                    with urllib.request.urlopen(req) as response:
-                        content = response.read().decode("utf-8", "ignore")
-                        data = json.loads(content)
-
-                        if isinstance(data, list):
-                            all_items.extend(data)
-                        else:
-                            # If not a list, pagination concept doesn't apply.
-                            # Just return the single object.
-                            return data
-
-                        next_url = self._GetNextPageUrl(response.headers)
-                        success = True
-                        break  # Break retry loop on success
-
-                except urllib.error.HTTPError as ex:
-                    # Handle specific error codes
-                    if ex.code == 429:  # Too Many Requests
-                        retry_after = ex.headers.get("RateLimit-Reset")
-                        wait_time = int(retry_after) if retry_after else 2 ** attempt
-                        time.sleep(wait_time)
-                    elif attempt < retries - 1:
-                        time.sleep(2 ** attempt)
-                    else:
-                        raise BuildkiteException(
-                            "Failed to open {}: {} - {}".format(url, ex.code, ex.reason)
-                        )
-
-            if not success:
-              raise BuildkiteException(f"Failed to open {url} after {retries} retries.")
-
+            response = self._get_url_response(url, params, retries, full_url=next_url)
+            data = json.loads(response.read().decode("utf-8", "ignore"))
+            all_items.extend(data)
+            next_url = self._get_next_page_url(response.headers)
         return all_items
 
-    def _GetNextPageUrl(self, headers):
+    def _get_next_page_url(self, headers):
+        """Parses the headers to determine if there are more pagination pages."""
         link_header = headers.get("Link")
         if not link_header:
             return None
@@ -776,11 +772,11 @@ kpuKoQ/EWg5Bhrkp
 
     def get_agents(self, retries=5):
         url = self._AGENTS_URL_TEMPLATE.format(self._org)
-        return self._open_url(url, retries=retries)
+        return self._open_url_with_paganation(url, retries=retries)
 
     def get_scheduled_jobs(self, retries=5):
         url = self._BUILDS_URL_TEMPLATE.format(self._org)
-        return self._open_url(url, params=[("state", "scheduled")], retries=retries)
+        return self._open_url_with_paganation(url, params=[("state", "scheduled")], retries=retries)
 
     @staticmethod
     def _check_response(response, expected_status_code):

@@ -6,21 +6,13 @@ from datetime import datetime
 
 from google.cloud import bigquery
 
-from bazelci import BuildkiteClient
+from bazelci import BuildkiteClient, decrypt_token
 
 # --- Configuration ---
-ORG_TOKENS = {
-    "bazel": os.environ.get('BUILDKITE_API_TOKEN_BAZEL'),
-    "bazel-trusted": os.environ.get('BUILDKITE_API_TOKEN_BAZEL_TRUSTED'),
-    "bazel-testing": os.environ.get('BUILDKITE_API_TOKEN_BAZEL_TESTING'),
-}
+ORGs = ["bazel", "bazel-trusted", "bazel-testing"]
 PROJECT_ID = "bazel-public"
 DATASET_ID = "bazel_ci_metrics"
 TABLE_ID = "infra_stats"
-
-# --- BigQuery Client ---
-client = bigquery.Client(project=PROJECT_ID)
-table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
 
 
 def setup_logging(level=logging.INFO):
@@ -36,7 +28,7 @@ def get_org_metrics(org):
   """Fetches metrics for a single org and calculates stats."""
   logging.info(f"Pulling Data for Org: {org}")
   bk_client = BuildkiteClient(org=org)
-  bk_client._token = ORG_TOKENS.get(org)
+  bk_client._token = _get_buildkite_token(org)
 
   # 1. Agents
   agents = bk_client.get_agents()
@@ -78,11 +70,32 @@ def get_org_metrics(org):
       "avg_bootstrap_time_s": avg_bootstrap_time
   }
 
+def _get_buildkite_token(org):
+  return decrypt_token(
+    encrypted_token=(
+      BuildkiteClient._ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN
+      if org == "bazel-trusted"
+      else BuildkiteClient._ENCRYPTED_BUILDKITE_TESTING_API_TOKEN
+      if org == "bazel-testing"
+      else BuildkiteClient._ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN
+    ),
+    kms_key=(
+      "buildkite-trusted-api-token"
+      if org == "bazel-trusted"
+      else "buildkite-testing-api-token"
+      if org == "bazel-testing"
+      else "buildkite-untrusted-api-token"
+    ),
+    project=("bazel-public" if org == "bazel-trusted" else "bazel-untrusted"),
+  )
 
 def push_to_bigquery(rows, retries):
   if not rows:
     logging.info("No data found to push to DB")
     return
+
+  client = bigquery.Client(project=PROJECT_ID)
+  table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
 
   logging.info(f"Pushing {len(rows)} rows to BigQuery...")
 
@@ -102,14 +115,13 @@ def push_to_bigquery(rows, retries):
   logging.error(f"Failed to insert rows after {retries} attempts.")
   sys.exit(1)
 
-
 def main():
   setup_logging()
   logging.info(f"Starting Buildkite Poller")
 
   try:
     all_metrics = []
-    for org in ORG_TOKENS.keys():
+    for org in ORGs:
       metrics = get_org_metrics(org)
       if metrics:
         all_metrics.append(metrics)
