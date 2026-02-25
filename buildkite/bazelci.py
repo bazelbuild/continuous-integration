@@ -700,6 +700,7 @@ kpuKoQ/EWg5Bhrkp
 
     def _open_url_with_paganation(self, url, params=[], retries=5) -> List:
         """Fetch all items iteratively across all pages."""
+        params = params + [("per_page", "100")]
         params_str = "".join("&{}={}".format(k, v) for k, v in params)
         next_url = "{}?access_token={}{}".format(url, self._token, params_str)
         eprint("url: {}".format(next_url))
