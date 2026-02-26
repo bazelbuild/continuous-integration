@@ -150,7 +150,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     "Buildfarm": {
         "git_repository": "https://github.com/buildfarm/buildfarm.git",
         "pipeline_slug": "buildfarm-farmer",
-        "disabled_reason": "https://github.com/buildfarm/buildfarm/issues/2396",
     },
     "Buildtools": {
         "git_repository": "https://github.com/bazelbuild/buildtools.git",
@@ -329,6 +328,36 @@ PLATFORMS = {
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian11-java17",
         "python": "python3.9",
+    },
+    "debian12": {
+        "name": "Debian 12",
+        "emoji-name": ":debian: Debian 12",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian12",
+        "python": "python3",
+    },
+    "debian12_arm64": {
+        "name": "Debian 12 ARM64",
+        "emoji-name": ":debian: Debian 12 ARM64",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian12",
+        "python": "python3",
+        "queue": "arm64",
+    },
+    "debian13": {
+        "name": "Debian 13",
+        "emoji-name": ":debian: Debian 13",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian13",
+        "python": "python3",
+    },
+    "debian13_arm64": {
+        "name": "Debian 13 ARM64",
+        "emoji-name": ":debian: Debian 13 ARM64",
+        "publish_binary": [],
+        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian13",
+        "python": "python3",
+        "queue": "arm64",
     },
     "ubuntu1604": {
         "name": "Ubuntu 16.04 LTS (OpenJDK 8, gcc 5.4.0)",
@@ -520,7 +549,7 @@ AUTO_DIFFBASE_VALUES = frozenset(["1", "true", "auto"])
 
 # Always run all test targets if any of the paths here are modified by the current commit.
 # Values can be directory paths (with a trailing slash) or file paths.
-DISABLE_BAZEL_DIFF_IF_MODIFIED = (".bazelci/", ".bazelversion", "MODULE.bazel", "repositories.bzl")
+DISABLE_BAZEL_DIFF_IF_MODIFIED = (".bazelci/", ".bazelrc", ".bazelversion", "MODULE.bazel", "repositories.bzl")
 
 COMMIT_RE = re.compile(r"[0-9a-z]{40}")
 

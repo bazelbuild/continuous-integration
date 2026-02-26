@@ -236,6 +236,8 @@ docker pull "gcr.io/bazel-public/rockylinux8-java11-devtoolset10" &
 docker pull "gcr.io/bazel-public/rockylinux8-releaser" &
 docker pull "gcr.io/bazel-public/debian10-java11" &
 docker pull "gcr.io/bazel-public/debian11-java17" &
+docker pull "gcr.io/bazel-public/debian12" &
+docker pull "gcr.io/bazel-public/debian13" &
 docker pull "gcr.io/bazel-public/ubuntu1804-java11" &
 docker pull "gcr.io/bazel-public/ubuntu2004-java11" &
 docker pull "gcr.io/bazel-public/ubuntu2004" &
