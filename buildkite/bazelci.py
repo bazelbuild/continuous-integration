@@ -3988,6 +3988,14 @@ def print_shard_summary():
         shutil.rmtree(tmpdir)
 
 
+class NoAliasDumper(yaml.Dumper):
+    def ignore_aliases(self, _data):
+        return True
+
+def print_configs(configs):
+    print(yaml.dump(configs, Dumper=NoAliasDumper))
+
+
 def get_log_path_for_label(label, shard, total_shards, attempt, total_attempts, is_windows):
     parts = [label.lstrip("/").replace(":", "/")]
     if total_shards > 1:
@@ -4582,6 +4590,9 @@ def main(argv=None):
     subparsers.add_parser("try_update_last_green_downstream_commit")
     subparsers.add_parser("print_shard_summary")
 
+    print_tasks = subparsers.add_parser("print_tasks")
+    print_tasks.add_argument("--file_config", type=str)
+
     args = parser.parse_args(argv)
 
     if args.script:
@@ -4688,6 +4699,8 @@ def main(argv=None):
             try_update_last_green_downstream_commit()
         elif args.subparsers_name == "print_shard_summary":
             print_shard_summary()
+        elif args.subparsers_name == "print_tasks":
+            print_configs(fetch_configs(None, args.file_config))
         else:
             parser.print_help()
             return 2
