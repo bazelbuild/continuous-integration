@@ -926,13 +926,19 @@ def get_matrix_attributes(task):
     If a value of field matches "${{<name>}}", then <name> is a wanted matrix attribute.
     eg. platform: ${{ platform }}
     """
-    attributes = []
-    for key, value in task.items():
+    attributes = set()
+    for value in task.values():
         if type(value) is str:
             res = match_matrix_attr_pattern(value)
             if res:
-                attributes.append(res.groups()[0])
-    return list(set(attributes))
+                attributes.add(res.groups()[0])
+        elif type(value) is list:
+            for subvalue in value:
+                res = match_matrix_attr_pattern(subvalue)
+                if res:
+                    attributes.add(res.groups()[0])
+
+    return sorted(attributes)
 
 
 def should_exclude_combination(combination, excludes):
@@ -950,11 +956,16 @@ def should_exclude_combination(combination, excludes):
         return False
 
     combination_dict = dict(combination)
+    none_attr = AttributeValue(value=None, alias=None)
+
     for exclude in excludes:
         # An exclusion matches if ALL attributes in the exclude rule match
-        if all(combination_dict.get(key) == value for key, value in exclude.items()):
+        if all(combination_dict.get(key, none_attr).alias == value for key, value in exclude.items()):
             return True
     return False
+
+
+AttributeValue = collections.namedtuple("AttributeValue", ["value", "alias"])
 
 
 def get_combinations(matrix, attributes, excludes=None):
@@ -971,7 +982,19 @@ def get_combinations(matrix, attributes, excludes=None):
     for attr in attributes:
         if attr not in matrix:
             raise BuildkiteException("${{ %s }} is not defined in `matrix` section." % attr)
-    pairs = [[(attr, value) for value in matrix[attr]] for attr in attributes]
+
+    pairs = []
+    for attr in attributes:
+        item = matrix[attr]
+        if type(item) == list:
+            pairs.append([
+                (attr, AttributeValue(value=value, alias=value))
+                for value in item])
+        elif type(item) == dict:
+            pairs.append([
+                (attr, AttributeValue(value=value, alias=alias))
+                for alias, value in item.items()])
+
     all_combinations = sorted(itertools.product(*pairs))
 
     # Filter out excluded combinations
@@ -990,9 +1013,17 @@ def get_expanded_task(task, combination):
             res = match_matrix_attr_pattern(value)
             if res:
                 attr = res.groups()[0]
-                expanded_task[key] = combination[attr]
+                expanded_task[key] = combination[attr].value
+        elif type(value) is list:
+            for i, subvalue in enumerate(value):
+                res = match_matrix_attr_pattern(subvalue)
+                if res:
+                    attr = res.groups()[0]
+                    expanded_task[key][i] = combination[attr].value
+
     if "name" in expanded_task:
-        expanded_task["name"] = expanded_task.get("name", "").format(**combination)
+        alias_combination = {k: a.alias for k, a in combination.items()}
+        expanded_task["name"] = expanded_task.get("name", "").format(**alias_combination)
     return expanded_task
 
 
@@ -1021,8 +1052,8 @@ def expand_task_config(config):
         if not isinstance(exclude, dict):
             raise BuildkiteException("Each item in `matrix.exclude` must be a dict")
     for key, value in matrix.items():
-        if type(key) is not str or type(value) is not list:
-            raise BuildkiteException("Expect `matrix` is a map of str -> list")
+        if type(key) is not str or type(value) not in (list, dict):
+            raise BuildkiteException("Expect `matrix` is a map of str -> list | dict")
 
     for task in config["tasks"]:
         attributes = get_matrix_attributes(config["tasks"][task])
@@ -1178,6 +1209,16 @@ def bazelisk_flags():
     return ["--migrate"] if use_bazelisk_migrate() else []
 
 
+def flatten(seq):
+    ret = []
+    for item in seq:
+        if type(item) == str:
+            ret.append(item)
+        elif type(item) == list:
+            ret.extend(item)
+    return ret
+
+
 def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_vars):
     include_json_profile = task_config.get("include_json_profile", [])
     capture_corrupted_outputs = task_config.get("capture_corrupted_outputs", [])
@@ -1200,7 +1241,7 @@ def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_v
             )
         ]
 
-    flags = list(task_config.get(task_config_key, []))
+    flags = flatten(task_config.get(task_config_key, []))
     flags += json_profile_flags
     flags += capture_corrupted_outputs_flags
     # We have to add --test_env flags to `build`, too, otherwise Bazel
@@ -2228,10 +2269,10 @@ def calculate_targets(
 
     # Remove the "--" argument splitter from the list that some configs explicitly
     # include. We'll add it back again later where needed.
-    build_targets = [x.strip() for x in build_targets if x.strip() != "--"]
-    test_targets = [x.strip() for x in test_targets if x.strip() != "--"]
-    coverage_targets = [x.strip() for x in coverage_targets if x.strip() != "--"]
-    index_targets = [x.strip() for x in index_targets if x.strip() != "--"]
+    build_targets = [x.strip() for x in flatten(build_targets) if x.strip() != "--"]
+    test_targets = [x.strip() for x in flatten(test_targets) if x.strip() != "--"]
+    coverage_targets = [x.strip() for x in flatten(coverage_targets) if x.strip() != "--"]
+    index_targets = [x.strip() for x in flatten(index_targets) if x.strip() != "--"]
 
     diffbase = os.getenv(USE_BAZEL_DIFF_ENV_VAR, "").lower()
     disable_bazel_diff = os.getenv(DISABLE_BAZEL_DIFF_ENV_VAR, "")

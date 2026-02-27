@@ -499,7 +499,7 @@ matrix:
 
 tasks:
   unix_test:
-    name: "Test my project on Unix systems"
+    name: "Test my project on Unix systems with {python}"
     platform: ${{ unix_platform }}
     compiler: ${{ unix_compiler }}
     python: ${{ python }}
@@ -508,7 +508,7 @@ tasks:
     test_targets:
     - "//..."
   windows_test:
-    name: "Test my project on Windows"
+    name: "Test my project on Windows with {python}"
     platform: "windows"
     bazel: ${{ bazel_version }}
     compiler: ${{ win_compiler }}
@@ -522,6 +522,46 @@ tasks:
 The `unix_test` task configuration will generate 16 tasks (4 * 2 * 2) for each `unix_platform`, `unix_compiler`, and `python` combination.
 
 The `windows_test` task configuration will generate 8 tasks (2 * 2 * 2) for each `bazel_version`, `win_compiler` and `python` combination.
+
+The names of the jobs will also have the python version in them; note that the name field uses `{key}` while other
+fields use `${{ key }}`.
+
+Matrix values can also use friendly aliases that hold more complex types, like
+
+```yaml
+---
+matrix:
+  bzlmod:
+    enabled: ["--enable_bzlmod", "--noenable_workspace"]
+    disabled: ["--noenable_bzlmod", "--enable_workspace"]
+
+tasks:
+  test:
+    name: "Test with bzlmod {bzlmod}"
+    build_flags: ${{ bzlmod }}
+```
+
+The names of these jobs will use the alias, as in `Test with bzlmod enabled` and `Test with bzlmod disabled`, but the
+build flags will use the list value.
+
+Matrix values can also be flattened into lists, like:
+```yaml
+---
+matrix:
+  bzlmod:
+    enabled: ["--enable_bzlmod", "--noenable_workspace"]
+    disabled: ["--noenable_bzlmod", "--enable_workspace"]
+
+tasks:
+  test:
+    name: "Test with bzlmod {bzlmod}"
+    build_flags:
+      - --fixed_flag
+      - ${{ bzlmod }}
+```
+
+The list inside `bzlmod.enabled` will be flattened into the build flags list, resulting in
+`["--fixed_flag", "--enable_bzlmod", "--noenable_workspace"]`.
 
 #### Excluding specific combinations
 
@@ -548,6 +588,19 @@ tasks:
 In this example, 5 tasks will be generated (3 platforms × 2 compilers = 6 combinations, minus 1 excluded).
 
 Each item in the `exclude` list is a dictionary that specifies attribute values. A combination is excluded if it matches **all** attributes in any exclusion rule. You can also specify partial exclusions (e.g., exclude all combinations with a specific platform) by only specifying a subset of attributes.
+
+For values that use aliases, the aliases are used for the exclude field, as in:
+
+```yaml
+matrix:
+  bzlmod:
+    enabled: --enable_bzlmod --noenable_workspace
+    disabled: --noenable_bzlmod --enable_workspace
+  bazel: ["9.x", "7.x"]
+  exclude:
+    - bazel: "9.x"
+      bzlmod: "disabled"
+```
 
 ## Downstream testing
 
