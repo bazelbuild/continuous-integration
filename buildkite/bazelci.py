@@ -950,11 +950,16 @@ def should_exclude_combination(combination, excludes):
         return False
 
     combination_dict = dict(combination)
+    none_attr = AttributeValue(value=None, alias=None)
+
     for exclude in excludes:
         # An exclusion matches if ALL attributes in the exclude rule match
-        if all(combination_dict.get(key) == value for key, value in exclude.items()):
+        if all(combination_dict.get(key, none_attr).alias == value for key, value in exclude.items()):
             return True
     return False
+
+
+AttributeValue = collections.namedtuple("AttributeValue", ["value", "alias"])
 
 
 def get_combinations(matrix, attributes, excludes=None):
@@ -971,7 +976,19 @@ def get_combinations(matrix, attributes, excludes=None):
     for attr in attributes:
         if attr not in matrix:
             raise BuildkiteException("${{ %s }} is not defined in `matrix` section." % attr)
-    pairs = [[(attr, value) for value in matrix[attr]] for attr in attributes]
+
+    pairs = []
+    for attr in attributes:
+        item = matrix[attr]
+        if type(item) == list:
+            pairs.append([
+                (attr, AttributeValue(value=value, alias=value))
+                for value in item])
+        elif type(item) == dict:
+            pairs.append([
+                (attr, AttributeValue(value=value, alias=alias))
+                for alias, value in item.items()])
+
     all_combinations = sorted(itertools.product(*pairs))
 
     # Filter out excluded combinations
@@ -990,9 +1007,10 @@ def get_expanded_task(task, combination):
             res = match_matrix_attr_pattern(value)
             if res:
                 attr = res.groups()[0]
-                expanded_task[key] = combination[attr]
+                expanded_task[key] = combination[attr].value
     if "name" in expanded_task:
-        expanded_task["name"] = expanded_task.get("name", "").format(**combination)
+        alias_combination = {k: a.alias for k, a in combination.items()}
+        expanded_task["name"] = expanded_task.get("name", "").format(**alias_combination)
     return expanded_task
 
 
@@ -1021,8 +1039,8 @@ def expand_task_config(config):
         if not isinstance(exclude, dict):
             raise BuildkiteException("Each item in `matrix.exclude` must be a dict")
     for key, value in matrix.items():
-        if type(key) is not str or type(value) is not list:
-            raise BuildkiteException("Expect `matrix` is a map of str -> list")
+        if type(key) is not str or type(value) not in (list, dict):
+            raise BuildkiteException("Expect `matrix` is a map of str -> list | dict")
 
     for task in config["tasks"]:
         attributes = get_matrix_attributes(config["tasks"][task])

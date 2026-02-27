@@ -262,6 +262,24 @@ tasks:
         """
     )
 
+    _CONFIGS_DICT_EXCLUDE = yaml.safe_load(
+        """
+matrix:
+  flags:
+    set-one: ["--one", "--two"]
+    set-two: ["--three", "--four"]
+  platform: ["pf1", "pf2"]
+  exclude:
+    - platform: "pf2"
+      flags: set-one
+tasks:
+  formatted:
+    name: "Formatted on {platform} with flags {flags}"
+    platform: ${{ platform }}
+    build_flags: ${{ flags }}
+        """
+    )
+
     def test_single_exclude(self):
         import copy
         config = copy.deepcopy(self._CONFIGS_SINGLE_EXCLUDE)
@@ -303,6 +321,29 @@ tasks:
         self.assertEqual(expanded_task_names, [
             "Formatted w/ Bazel v1.2.3 on pf1",
             "Formatted w/ Bazel v2.3.4 on pf1",
+        ])
+
+    def test_dict_attribute_exclude(self):
+        import copy
+        config = copy.deepcopy(self._CONFIGS_DICT_EXCLUDE)
+
+        bazelci.expand_task_config(config)
+        expanded_tasks = config["tasks"]
+        # Total combinations: 2 * 2 = 4, minus 1 excluded = 3
+        self.assertEqual(len(expanded_tasks), 3)
+        expanded_task_names = [task.get("name", None) for id, task in expanded_tasks.items()]
+        # the name receives the friendly alias
+        self.assertEqual(expanded_task_names, [
+            "Formatted on pf1 with flags set-one",
+            "Formatted on pf1 with flags set-two",
+            "Formatted on pf2 with flags set-two",
+        ])
+        expanded_task_flags = [task.get("build_flags", None) for id, task in expanded_tasks.items()]
+        # but the flags get the real value
+        self.assertEqual(expanded_task_flags, [
+            ["--one", "--two"],
+            ["--three", "--four"],
+            ["--three", "--four"],
         ])
 
 
