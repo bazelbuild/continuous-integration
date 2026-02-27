@@ -64,6 +64,11 @@ tasks:
       ? "--enable_w"
     build_targets:
       - "//..."
+  flatten_flags:
+    build_flags:
+      - "--enable_z"
+      - ["--enable_y", "--enable_x"]
+      - "--enable_w"
     """
     )
 
@@ -120,6 +125,21 @@ tasks:
             ["--enable_a", "--enable_b", "--enable_z", "--enable_w", "--test_env=HOME"],
         )
 
+    def test_flatten_flags(self):
+        tasks = self._CONFIGS.get("tasks")
+        flags, json_profile_out, capture_corrupted_outputs_dir = bazelci.calculate_flags(
+            tasks.get("flatten_flags"), "build_flags", "build", "/tmp", ["HOME"]
+        )
+        self.assertEqual(
+            flags,
+            [
+                "--enable_z",
+                "--enable_y",
+                "--enable_x",
+                "--enable_w",
+                "--test_env=HOME"],
+        )
+
 
 class CalculateTargets(unittest.TestCase):
     _CONFIGS = yaml.safe_load(
@@ -137,6 +157,12 @@ tasks:
     build_targets:
       <<: *base_targets
       ? "//experimental/good/..."
+
+  flatten:
+    build_targets:
+      - "//..."
+      - ["-//bad/one", "-//bad/two"]
+      - "-//bad/three"
     """
     )
 
@@ -170,6 +196,25 @@ tasks:
             test_flags=[],
         )
         self.assertEqual(build_targets, ["//...", "-//experimental/...", "//experimental/good/..."])
+
+    def test_flatten(self):
+        tasks = self._CONFIGS.get("tasks")
+        build_targets, test_targets, coverage_targets, index_targets = bazelci.calculate_targets(
+            tasks.get("flatten"),
+            "bazel",
+            build_only=False,
+            test_only=False,
+            workspace_dir="/tmp",
+            ws_setup_func=None,
+            git_commit="abcd",
+            test_flags=[],
+        )
+        self.assertEqual(build_targets, [
+            "//...",
+            "-//bad/one",
+            "-//bad/two",
+            "-//bad/three",
+        ])
 
 class MatrixExpansion(unittest.TestCase):
     _CONFIGS = yaml.safe_load(

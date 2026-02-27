@@ -926,13 +926,19 @@ def get_matrix_attributes(task):
     If a value of field matches "${{<name>}}", then <name> is a wanted matrix attribute.
     eg. platform: ${{ platform }}
     """
-    attributes = []
-    for key, value in task.items():
+    attributes = set()
+    for value in task.values():
         if type(value) is str:
             res = match_matrix_attr_pattern(value)
             if res:
-                attributes.append(res.groups()[0])
-    return list(set(attributes))
+                attributes.add(res.groups()[0])
+        elif type(value) is list:
+            for subvalue in value:
+                res = match_matrix_attr_pattern(subvalue)
+                if res:
+                    attributes.add(res.groups()[0])
+
+    return sorted(attributes)
 
 
 def should_exclude_combination(combination, excludes):
@@ -1008,6 +1014,13 @@ def get_expanded_task(task, combination):
             if res:
                 attr = res.groups()[0]
                 expanded_task[key] = combination[attr].value
+        elif type(value) is list:
+            for i, subvalue in enumerate(value):
+                res = match_matrix_attr_pattern(subvalue)
+                if res:
+                    attr = res.groups()[0]
+                    expanded_task[key][i] = combination[attr].value
+
     if "name" in expanded_task:
         alias_combination = {k: a.alias for k, a in combination.items()}
         expanded_task["name"] = expanded_task.get("name", "").format(**alias_combination)
@@ -1196,6 +1209,16 @@ def bazelisk_flags():
     return ["--migrate"] if use_bazelisk_migrate() else []
 
 
+def flatten(seq):
+    ret = []
+    for item in seq:
+        if type(item) == str:
+            ret.append(item)
+        elif type(item) == list:
+            ret.extend(item)
+    return ret
+
+
 def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_vars):
     include_json_profile = task_config.get("include_json_profile", [])
     capture_corrupted_outputs = task_config.get("capture_corrupted_outputs", [])
@@ -1218,7 +1241,7 @@ def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_v
             )
         ]
 
-    flags = list(task_config.get(task_config_key, []))
+    flags = flatten(task_config.get(task_config_key, []))
     flags += json_profile_flags
     flags += capture_corrupted_outputs_flags
     # We have to add --test_env flags to `build`, too, otherwise Bazel
@@ -2246,10 +2269,10 @@ def calculate_targets(
 
     # Remove the "--" argument splitter from the list that some configs explicitly
     # include. We'll add it back again later where needed.
-    build_targets = [x.strip() for x in build_targets if x.strip() != "--"]
-    test_targets = [x.strip() for x in test_targets if x.strip() != "--"]
-    coverage_targets = [x.strip() for x in coverage_targets if x.strip() != "--"]
-    index_targets = [x.strip() for x in index_targets if x.strip() != "--"]
+    build_targets = [x.strip() for x in flatten(build_targets) if x.strip() != "--"]
+    test_targets = [x.strip() for x in flatten(test_targets) if x.strip() != "--"]
+    coverage_targets = [x.strip() for x in flatten(coverage_targets) if x.strip() != "--"]
+    index_targets = [x.strip() for x in flatten(index_targets) if x.strip() != "--"]
 
     diffbase = os.getenv(USE_BAZEL_DIFF_ENV_VAR, "").lower()
     disable_bazel_diff = os.getenv(DISABLE_BAZEL_DIFF_ENV_VAR, "")

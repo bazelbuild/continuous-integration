@@ -544,6 +544,25 @@ tasks:
 The names of these jobs will use the alias, as in `Test with bzlmod enabled` and `Test with bzlmod disabled`, but the
 build flags will use the list value.
 
+Matrix values can also be flattened into lists, like:
+```yaml
+---
+matrix:
+  bzlmod:
+    enabled: ["--enable_bzlmod", "--noenable_workspace"]
+    disabled: ["--noenable_bzlmod", "--enable_workspace"]
+
+tasks:
+  test:
+    name: "Test with bzlmod {bzlmod}"
+    build_flags:
+      - --fixed_flag
+      - ${{ bzlmod }}
+```
+
+The list inside `bzlmod.enabled` will be flattened into the build flags list, resulting in
+`["--fixed_flag", "--enable_bzlmod", "--noenable_workspace"]`.
+
 #### Excluding specific combinations
 
 You can exclude specific matrix combinations using the `exclude` key inside the `matrix` section:
