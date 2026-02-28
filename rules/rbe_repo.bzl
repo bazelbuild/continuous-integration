@@ -17,12 +17,26 @@ def _available_toolchain_names(manifest):
         names.append("'{}'".format(toolchain["name"]))
     return ", ".join(names)
 
+def _major(version):
+    return bazel_version.split(".")[0]
+
 def _find_manifest(manifests, bazel_version):
+    # Exact match
     for manifest in manifests:
         if manifest["bazel_version"] == bazel_version:
             return manifest
 
-    return None
+    # Major version match
+    want_major = _major(bazel_version)
+    for manifest in manifests:
+        if _major(manifest["bazel_version"]) == want_major:
+            print("\nrbe_preconfig: Unsupported version '{}' (Values: {}), using major version match '{}'.\n".format(bazel_version, _available_bazel_versions(manifests), manifest["bazel_version"]))
+            return manifest
+
+    manifest = manifests[0]
+    print("\nrbe_preconfig: Unsupported version '{}' (Values: {}), using default '{}'.\n".format(bazel_version, _available_bazel_versions(manifests), manifest["bazel_version"]))
+
+    return manifest
 
 def _find_toolchain(manifest, toolchain_name):
     for toolchain in manifest["toolchains"]:
@@ -36,12 +50,7 @@ def _auto_detect_bazel_version(manifests):
     if "bazel_version" in dir(native) and native.bazel_version:
         bazel_version = native.bazel_version
 
-    manifest = _find_manifest(manifests, bazel_version)
-    if not manifest:
-        manifest = manifests[0]
-        print("\nrbe_preconfig: Unsupported version '{}' (Values: {}), using '{}'.\n".format(bazel_version, _available_bazel_versions(manifests), manifest["bazel_version"]))
-
-    return manifest
+    return _find_manifest(manifests, bazel_version)
 
 def _rbe_preconfig_impl(repository_ctx):
     """Download pre-generated RBE toolchain configs based on current Bazel version.
