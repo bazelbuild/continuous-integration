@@ -619,6 +619,7 @@ CiQAMTBkWrfpMz9obNz0mqosmtfVzJ5Ck3VIGps/dFdK18Khhh8SVgAy7iU0Zk4AIizIbA+E9Rlb
 7k9s44ZcI9p/wydi
 """.strip()
 
+    # This token is created by the bazel-ci-bot buildkite user (ci@bazel.build)
     _ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN = """
 CiQAeiOS8AkhF5clT7rnjtfHVTjNSuABkqZF4jfycXVWBmBls8ISVgC7bbymLfiLNsGeyX9i6QHw
 KZOh4utBd7cpVtzZfoGdu76vQUpIzqQ5XlxUpICUxxEgKNfYqJy0aF/jQB8uX9FZf/41sODizHH5
