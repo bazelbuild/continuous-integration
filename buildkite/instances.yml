@@ -83,6 +83,7 @@ instance_groups:
     service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-testing-windows
     metadata_from_file: windows-startup-script-ps1=startup-windows-pdssd.ps1
+    zone: us-central1-c
   - name: bk-trusted-windows
     count: 10
     project: bazel-public
