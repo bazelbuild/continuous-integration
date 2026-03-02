@@ -611,10 +611,11 @@ bm/ko9kTosN2qJ/UVWf4gzYSnkK1KMAktinNV/o/ygZuf3GQlBfpfBSeMDOW43oLnQE0qcl3OtTM
 WorKXPI5cvfBNNxWIA==
 """.strip()
 
+    # This token is created by the bazel-ci-bot buildkite user (ci@bazel.build)
     _ENCRYPTED_BUILDKITE_TESTING_API_TOKEN = """
-CiQAMTBkWjL1C+F5oon3+cC1vmum5+c1y5+96WQY44p0Lxd0PeASUQAy7iU0c6E3W5EOSFYfD5fA
-MWy/SHaMno1NQSUa4xDOl5yc2kizrtxPPVkX4x9pLNuGUY/xwAn2n1DdiUdWZNWlY1bX2C4ex65e
-P9w8kNhEbw==
+CiQAMTBkWrfpMz9obNz0mqosmtfVzJ5Ck3VIGps/dFdK18Khhh8SVgAy7iU0Zk4AIizIbA+E9Rlb
+3cxW4Qe2GMVsNyGVSHYbEyQkmnNEaUr+glyBHC9QVuwzS5/WjoGZlMsgWefwHvDuiexmEs7RjiyA
+7k9s44ZcI9p/wydi
 """.strip()
 
     _ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN = """
