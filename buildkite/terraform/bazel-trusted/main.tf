@@ -225,7 +225,7 @@ resource "buildkite_pipeline" "build-embedded-minimized-jdk" {
 resource "buildkite_pipeline" "bcr-postsubmit" {
   name = "BCR Postsubmit"
   repository = "https://github.com/bazelbuild/bazel-central-registry.git"
-  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_postsubmit.py\" -o bcr_postsubmit.py", "python3.6 bcr_postsubmit.py"] } })
+  steps = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_postsubmit.py?$(date +%s)\" -o bcr_postsubmit.py", "python3.6 bcr_postsubmit.py"] } })
   description = "Tasks to run after merging a change for the Bazel Central Registry"
   default_branch = "main"
   branch_configuration = "main"
