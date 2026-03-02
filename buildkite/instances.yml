@@ -71,13 +71,14 @@ instance_groups:
     zone: us-central1-c
     boot_disk_type: hyperdisk-balanced
   - name: bk-windows
-    count: 30
+    count: 40
     project: bazel-untrusted
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-windows
     metadata_from_file: windows-startup-script-ps1=startup-windows-pdssd.ps1
+    zone: us-central1-c
   - name: bk-testing-windows
-    count: 10
+    count: 5
     project: bazel-untrusted
     service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-testing-windows
