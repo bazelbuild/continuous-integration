@@ -39,6 +39,7 @@ import sys
 import tarfile
 import tempfile
 import time
+from typing import List
 import urllib.error
 import urllib.request
 import yaml
@@ -618,6 +619,7 @@ CiQAMTBkWrfpMz9obNz0mqosmtfVzJ5Ck3VIGps/dFdK18Khhh8SVgAy7iU0Zk4AIizIbA+E9Rlb
 7k9s44ZcI9p/wydi
 """.strip()
 
+    # This token is created by the bazel-ci-bot buildkite user (ci@bazel.build)
     _ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN = """
 CiQAeiOS8AkhF5clT7rnjtfHVTjNSuABkqZF4jfycXVWBmBls8ISVgC7bbymLfiLNsGeyX9i6QHw
 KZOh4utBd7cpVtzZfoGdu76vQUpIzqQ5XlxUpICUxxEgKNfYqJy0aF/jQB8uX9FZf/41sODizHH5
@@ -636,7 +638,13 @@ kpuKoQ/EWg5Bhrkp
 
     _PIPELINE_INFO_URL_TEMPLATE = "https://api.buildkite.com/v2/organizations/{}/pipelines/{}"
 
-    def __init__(self, org, pipeline):
+    _AGENTS_URL_TEMPLATE = "https://api.buildkite.com/v2/organizations/{}/agents"
+
+    _BUILDS_URL_TEMPLATE = "https://api.buildkite.com/v2/organizations/{}/builds"
+
+    _NEXT_PAGE_PATTERN = re.compile(r'<(?P<url>\S+)>; rel="next"', re.MULTILINE)
+
+    def __init__(self, org, pipeline=None):
         self._org = org
         self._pipeline = pipeline
         self._token = self._get_buildkite_token()
@@ -660,14 +668,16 @@ kpuKoQ/EWg5Bhrkp
             project=("bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"),
         )
 
-    def _open_url(self, url, params=[], retries=5):
+    def _get_url_response(self, url, params=[], retries=5, full_url=None):
+        """Returns the urllib response for the given URL and query parameters."""
         params_str = "".join("&{}={}".format(k, v) for k, v in params)
-        full_url = "{}?access_token={}{}".format(url, self._token, params_str)
+        if not full_url:
+            full_url = "{}?access_token={}{}".format(url, self._token, params_str)
 
         for attempt in range(retries):
             try:
                 response = urllib.request.urlopen(full_url)
-                return response.read().decode("utf-8", "ignore")
+                return response
             except urllib.error.HTTPError as ex:
                 # Handle specific error codes
                 if ex.code == 429:  # Too Many Requests
@@ -684,6 +694,32 @@ kpuKoQ/EWg5Bhrkp
                     )
 
         raise BuildkiteException(f"Failed to open {url} after {retries} retries.")
+
+    def _open_url(self, url, params=[], retries=5) -> str:
+        """Returns the decode utf-8 representation of the _get_url_response."""
+        return self._get_url_response(url, params, retries).read().decode("utf-8", "ignore")
+
+    def _open_url_with_paganation(self, url, params=[], retries=5) -> List:
+        """Fetch all items iteratively across all pages."""
+        params = params + [("per_page", "100")]
+        params_str = "".join("&{}={}".format(k, v) for k, v in params)
+        next_url = "{}?access_token={}{}".format(url, self._token, params_str)
+
+        all_items = []
+        while next_url:
+            response = self._get_url_response(url, params, retries, full_url=next_url)
+            data = json.loads(response.read().decode("utf-8", "ignore"))
+            all_items.extend(data)
+            next_url = self._get_next_page_url(response.headers)
+        return all_items
+
+    def _get_next_page_url(self, headers):
+        """Parses the headers to determine if there are more pagination pages."""
+        link_header = headers.get("Link")
+        if not link_header:
+            return None
+        match = self._NEXT_PAGE_PATTERN.search(link_header)
+        return match.group('url') if match else None
 
     def get_pipeline_info(self):
         """Get details for a pipeline given its organization slug
@@ -735,6 +771,14 @@ kpuKoQ/EWg5Bhrkp
 
     def get_build_log(self, job, retries = 5):
         return self._open_url(job["raw_log_url"], retries = retries)
+
+    def get_agents(self, retries=5):
+        url = self._AGENTS_URL_TEMPLATE.format(self._org)
+        return self._open_url_with_paganation(url, retries=retries)
+
+    def get_scheduled_jobs(self, retries=5):
+        url = self._BUILDS_URL_TEMPLATE.format(self._org)
+        return self._open_url_with_paganation(url, params=[("state", "scheduled")], retries=retries)
 
     @staticmethod
     def _check_response(response, expected_status_code):
