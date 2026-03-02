@@ -1,5 +1,16 @@
 name: "Terraform Monorepo Governance"
 
+terraform:
+  needs: detect-changes
+  # Only run if there are changes AND the user is a trusted maintainer
+  if: >
+    needs.detect-changes.outputs.folders != '[]' && 
+    (github.event.pull_request.author_association == 'MEMBER' || 
+     github.event.pull_request.author_association == 'OWNER' || 
+     github.event.pull_request.author_association == 'COLLABORATOR')
+  runs-on: ubuntu-latest
+  environment: ${{ matrix.folder }}
+
 on:
   pull_request:
     paths: ["buildkite/terraform/**"]
