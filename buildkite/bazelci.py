@@ -677,7 +677,7 @@ kpuKoQ/EWg5Bhrkp
         for attempt in range(retries):
             try:
                 response = urllib.request.urlopen(full_url)
-                return response.read().decode("utf-8", "ignore"), response.getheaders()
+                return response.read().decode("utf-8", "ignore"), response.headers
             except urllib.error.HTTPError as ex:
                 # Handle specific error codes
                 if ex.code == 429:  # Too Many Requests
