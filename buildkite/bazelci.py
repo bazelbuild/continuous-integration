@@ -672,16 +672,12 @@ kpuKoQ/EWg5Bhrkp
             raise BuildkiteException(f"Unknown organization: {self._org}")
 
 
-    def _get_url_response(self, url, params=[], retries=5, full_url=None):
+    def _get_url_response(self, full_url, retries=5):
         """Returns the urllib response for the given URL and query parameters."""
-        params_str = "".join("&{}={}".format(k, v) for k, v in params)
-        if not full_url:
-            full_url = "{}?access_token={}{}".format(url, self._token, params_str)
-
         for attempt in range(retries):
             try:
                 response = urllib.request.urlopen(full_url)
-                return response
+                return response.read().decode("utf-8", "ignore"), response.getheaders()
             except urllib.error.HTTPError as ex:
                 # Handle specific error codes
                 if ex.code == 429:  # Too Many Requests
@@ -706,22 +702,25 @@ kpuKoQ/EWg5Bhrkp
         match = self._NEXT_PAGE_PATTERN.search(link_header)
         return match.group('url') if match else None
 
-    def _open_url(self, url, params=[], retries=5) -> str:
-        """Returns the decode utf-8 representation of the _get_url_response."""
-        return self._get_url_response(url, params, retries).read().decode("utf-8", "ignore")
-
-    def _open_url_with_paganation(self, url, params=[], retries=5) -> List:
-        """Fetch all items iteratively across all pages."""
-        params = params + [("per_page", "100")]
+    def _build_url_with_params(self, url, params=[]):
+        """Builds a URL with the given query parameters."""
         params_str = "".join("&{}={}".format(k, v) for k, v in params)
-        next_url = "{}?access_token={}{}".format(url, self._token, params_str)
+        return "{}?access_token={}{}".format(url, self._token, params_str)
+
+    def _fetch_data_as_text(self, url, params=[], retries=5) -> str:
+        """Returns the decode utf-8 representation of the _get_url_response."""
+        url = self._build_url_with_params(self, url, params)
+        return self._get_url_response(url, retries)[0]
+
+    def _fetch_all_pages_as_json(self, url, params=[], retries=5) -> List:
+        """Fetch all items iteratively across all pages."""
+        next_url = self._build_url_with_params(self, url, params + [("per_page", "100")])
 
         all_items = []
         while next_url:
-            response = self._get_url_response(url, params, retries, full_url=next_url)
-            data = json.loads(response.read().decode("utf-8", "ignore"))
-            all_items.extend(data)
-            next_url = self._get_next_page_url(response.headers)
+            response, headers = self._get_url_response(next_url, retries)
+            all_items.extend(json.loads(response))
+            next_url = self._get_next_page_url(headers)
         return all_items
 
     def _get_next_page_url(self, headers):
@@ -743,7 +742,7 @@ kpuKoQ/EWg5Bhrkp
             the metadata for the pipeline
         """
         url = self._PIPELINE_INFO_URL_TEMPLATE.format(self._org, self._pipeline)
-        output = self._open_url(url)
+        output = self._fetch_data_as_text(url)
         return json.loads(output)
 
     def get_build_info(self, build_number):
@@ -760,7 +759,7 @@ kpuKoQ/EWg5Bhrkp
             the metadata for the build
         """
         url = self._BUILD_STATUS_URL_TEMPLATE.format(self._org, self._pipeline, build_number)
-        output = self._open_url(url)
+        output = self._fetch_data_as_text(url)
         return json.loads(output)
 
     def get_build_info_list(self, params):
@@ -777,19 +776,19 @@ kpuKoQ/EWg5Bhrkp
             the metadata for a list of builds
         """
         url = self._BUILD_STATUS_URL_TEMPLATE.format(self._org, self._pipeline, "")
-        output = self._open_url(url, params)
+        output = self._fetch_data_as_text(url, params)
         return json.loads(output)
 
     def get_build_log(self, job, retries = 5):
-        return self._open_url(job["raw_log_url"], retries = retries)
+        return self._fetch_data_as_text(job["raw_log_url"], retries = retries)
 
     def get_agents(self, retries=5):
         url = self._AGENTS_URL_TEMPLATE.format(self._org)
-        return self._open_url_with_paganation(url, retries=retries)
+        return self._fetch_all_pages_as_json(url, retries=retries)
 
     def get_scheduled_jobs(self, retries=5):
         url = self._BUILDS_URL_TEMPLATE.format(self._org)
-        return self._open_url_with_paganation(url, params=[("state", "scheduled")], retries=retries)
+        return self._fetch_all_pages_as_json(url, params=[("state", "scheduled")], retries=retries)
 
     @staticmethod
     def _check_response(response, expected_status_code):
