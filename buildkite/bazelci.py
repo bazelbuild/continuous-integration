@@ -702,11 +702,17 @@ kpuKoQ/EWg5Bhrkp
         match = self._NEXT_PAGE_PATTERN.search(link_header)
         return match.group('url') if match else None
 
+                    time.sleep(wait_time)
+                else:
+                    raise BuildkiteException(
+                        "Failed to open {}: {} - {}".format(url, ex.code, ex.reason)
+                    )
     def _build_url_with_params(self, url, params=[]):
         """Builds a URL with the given query parameters."""
         params_str = "".join("&{}={}".format(k, v) for k, v in params)
         return "{}?access_token={}{}".format(url, self._token, params_str)
 
+        raise BuildkiteException(f"Failed to open {url} after {retries} retries.")
     def _fetch_data_as_text(self, url, params=[], retries=5) -> str:
         """Returns the decode utf-8 representation of the _get_url_response."""
         return self._get_url_response(url, params, retries).read().decode("utf-8", "ignore")
@@ -804,11 +810,11 @@ kpuKoQ/EWg5Bhrkp
 
     def get_agents(self, retries=5):
         url = self._AGENTS_URL_TEMPLATE.format(self._org)
-        return self._open_url_with_paganation(url, retries=retries)
+        return self._fetch_all_pages_as_json(url, retries=retries)
 
     def get_scheduled_jobs(self, retries=5):
         url = self._BUILDS_URL_TEMPLATE.format(self._org)
-        return self._open_url_with_paganation(url, params=[("state", "scheduled")], retries=retries)
+        return self._fetch_all_pages_as_json(url, params=[("state", "scheduled")], retries=retries)
 
     @staticmethod
     def _check_response(response, expected_status_code):
