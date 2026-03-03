@@ -705,7 +705,7 @@ kpuKoQ/EWg5Bhrkp
                     time.sleep(wait_time)
                 else:
                     raise BuildkiteException(
-                        "Failed to open {}: {} - {}".format(url, ex.code, ex.reason)
+                        "Failed to open {}: {} - {}".format(full_url, ex.code, ex.reason)
                     )
     def _build_url_with_params(self, url, params=[]):
         """Builds a URL with the given query parameters."""
