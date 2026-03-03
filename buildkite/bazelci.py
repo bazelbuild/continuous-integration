@@ -925,6 +925,23 @@ def match_matrix_attr_pattern(s):
     return re.match(r"^\${{\s*(\w+)\s*}}$", s)
 
 
+def get_matrix_attributes_for_value(value):
+    if isinstance(value, str):
+        res = match_matrix_attr_pattern(value)
+        if res:
+            yield res.groups()[0]
+    elif isinstance(value, list):
+        for subvalue in value:
+            yield from get_matrix_attributes_for_value(subvalue)
+    elif isinstance(value, dict):
+        for subkey, subvalue in value.items():
+            ignored = list(get_matrix_attributes_for_value(subkey))
+            if ignored:
+                eprint("warning: matrix expansion is not supported in subdict keys; saw", ignored)
+
+            yield from get_matrix_attributes_for_value(subvalue)
+
+
 def get_matrix_attributes(task):
     """Get unexpanded matrix attributes from the given task.
 
@@ -933,16 +950,7 @@ def get_matrix_attributes(task):
     """
     attributes = set()
     for value in task.values():
-        if type(value) is str:
-            res = match_matrix_attr_pattern(value)
-            if res:
-                attributes.add(res.groups()[0])
-        elif type(value) is list:
-            for subvalue in value:
-                res = match_matrix_attr_pattern(subvalue)
-                if res:
-                    attributes.add(res.groups()[0])
-
+        attributes.update(get_matrix_attributes_for_value(value))
     return sorted(attributes)
 
 
@@ -1009,22 +1017,26 @@ def get_combinations(matrix, attributes, excludes=None):
     return all_combinations
 
 
+def expand_task_for_value(value, parent, parent_item, lookup):
+    if isinstance(value, str):
+        res = match_matrix_attr_pattern(value)
+        if res:
+            attr = res.groups()[0]
+            parent[parent_item] = lookup[attr].value
+    elif isinstance(value, list):
+        for i, subvalue in enumerate(value):
+            expand_task_for_value(subvalue, parent[parent_item], i, lookup)
+    elif isinstance(value, dict):
+        for subkey, subvalue in value.items():
+            expand_task_for_value(subvalue, parent[parent_item], subkey, lookup)
+
+
 def get_expanded_task(task, combination):
     """Expand a task with the given combination of values of attributes."""
     combination = dict(combination)
     expanded_task = copy.deepcopy(task)
     for key, value in task.items():
-        if type(value) is str:
-            res = match_matrix_attr_pattern(value)
-            if res:
-                attr = res.groups()[0]
-                expanded_task[key] = combination[attr].value
-        elif type(value) is list:
-            for i, subvalue in enumerate(value):
-                res = match_matrix_attr_pattern(subvalue)
-                if res:
-                    attr = res.groups()[0]
-                    expanded_task[key][i] = combination[attr].value
+        expand_task_for_value(value, expanded_task, key, combination)
 
     if "name" in expanded_task:
         alias_combination = {k: a.alias for k, a in combination.items()}
