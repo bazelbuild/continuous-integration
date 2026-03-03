@@ -802,11 +802,11 @@ kpuKoQ/EWg5Bhrkp
 
     def get_agents(self, retries=5):
         url = self._AGENTS_URL_TEMPLATE.format(self._org)
-        return self._open_url_with_paganation(url, retries=retries)
+        return self._fetch_all_pages_as_json(url, retries=retries)
 
     def get_scheduled_jobs(self, retries=5):
         url = self._BUILDS_URL_TEMPLATE.format(self._org)
-        return self._open_url_with_paganation(url, params=[("state", "scheduled")], retries=retries)
+        return self._fetch_all_pages_as_json(url, params=[("state", "scheduled")], retries=retries)
 
     def get_agents(self, retries=5):
         url = self._AGENTS_URL_TEMPLATE.format(self._org)
