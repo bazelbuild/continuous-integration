@@ -1,30 +1,46 @@
 name: "Terraform Monorepo Governance"
 
+terraform:
+  needs: detect-changes
+  # Only run if there are changes AND the user is a trusted maintainer
+  if: >
+    needs.detect-changes.outputs.folders != '[]' && 
+    (github.event.pull_request.author_association == 'MEMBER' || 
+     github.event.pull_request.author_association == 'OWNER' || 
+     github.event.pull_request.author_association == 'COLLABORATOR')
+  runs-on: ubuntu-latest
+  environment: ${{ matrix.folder }}
+
 on:
   pull_request:
     paths: ["buildkite/terraform/**"]
   push:
-    branches: ["main"]
+    branches: ["master"]
     paths: ["buildkite/terraform/**"]
 
+# Ensure only one terraform run happens at a time per org/branch
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
+# go/github-security: Explicitly set minimum permissions
 permissions:
-  contents: read
-  id-token: write
-  pull-requests: write
+  contents: read      # Required to check out the code
+  id-token: write      # Required for Workload Identity Federation (WIF)
+  pull-requests: write # Required to post plan output as a comment
 
 jobs:
-  # STEP 1: Detect which specific org folder was changed
+  # Job 1: Detect which organization folders changed
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
       folders: ${{ steps.filter.outputs.changes }}
     steps:
-    - uses: actions/checkout@v4
-    - uses: dorny/paths-filter@v3
+    - name: Checkout Code
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+    - name: Path Filter
+      uses: dorny/paths-filter@de90cc6fb38fc0963ad727459f9a1755dc9ad150 # v3.0.2
       id: filter
       with:
         filters: |
@@ -32,13 +48,21 @@ jobs:
           bazel-testing: "buildkite/terraform/bazel-testing/**"
           bazel-trusted: "buildkite/terraform/bazel-trusted/**"
 
-  # STEP 2: Run Terraform for the changed org(s)
+  # Job 2: Terraform Execution
   terraform:
     needs: detect-changes
-    if: ${{ needs.detect-changes.outputs.folders != '[]' }}
+    if: |
+      needs.detect-changes.outputs.folders != '[]' && 
+      (github.event_name == 'push' || 
+       github.event.pull_request.author_association == 'MEMBER' || 
+       github.event.pull_request.author_association == 'OWNER' || 
+       github.event.pull_request.author_association == 'COLLABORATOR')
+
     runs-on: ubuntu-latest
 
+    # Use environment for secret isolation and manual approvals
     environment: ${{ matrix.folder }}
+
     strategy:
       fail-fast: false # If one org fails, don't stop the others
       matrix:
@@ -50,28 +74,54 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
     - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
+      uses: google-github-actions/auth@62ee50e18b458fcf27c1765166696735847add86 # v2.1.7
       with:
         workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
         service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
     - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
+      uses: hashicorp/setup-terraform@b9cd54a3c349d3f6272e0339e9588eb6b84a6efc # v3.1.2
       with:
         terraform_wrapper: true
 
     - name: Terraform Init
       run: terraform init
 
-    - name: Terraform Plan/Apply
+    - name: Terraform Plan
+      if: github.event_name == 'pull_request'
+      id: plan
       env:
-        BUILDKITE_API_TOKEN: ${{ secrets.BUILDKITE_API_TOKEN }}
-      run: |
-        if [ "${{ github.event_name }}" == "pull_request" ]; then
-          terraform plan -no-color -input=false
-        else
-          terraform apply -auto-approve -input=false
-        fi
+        TF_VAR_buildkite_api_token: ${{ secrets.BUILDKITE_API_TOKEN }}
+      run: terraform plan -no-color -input=false
+
+    - name: Post Plan to PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      env:
+        PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+      with:
+        script: |
+          const output = `#### Terraform Plan for \`${{ matrix.folder }}\` 📖
+          <details><summary>Show Plan</summary>
+          
+          \`\`\`${process.env.PLAN}\`\`\`
+          
+          </details>
+          
+          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+      env:
+        TF_VAR_buildkite_api_token: ${{ secrets.BUILDKITE_API_TOKEN }}
+      run: terraform apply -auto-approve -input=false
