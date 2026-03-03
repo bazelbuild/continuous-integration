@@ -19,7 +19,7 @@ default_vm:
   region: us-central1
   restart-on-failure: False
   scopes: cloud-platform
-  zone: us-central1-f
+  zone: us-central1-c
   image_project: bazel-public
   tags: health-check
   health_check: buildkite-check
