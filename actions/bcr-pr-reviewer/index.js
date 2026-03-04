@@ -175,8 +175,14 @@ async function notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap)
     if (maintainersCopy.size === 0) {
       // If all maintainers are skipped, we should notify the BCR maintainers
       await postComment(octokit, owner, repo, prNumber,
-        `Hello @bazelbuild/bcr-maintainers, modules (${modulesList}) have been updated in this PR.
+        `Hello BCR maintainers, modules (${modulesList}) have been updated in this PR.
         Please review the changes. You can view a diff against the previous version in the "Generate module diff" check.`);
+      await octokit.rest.pulls.requestReviewers({
+        owner,
+        repo,
+        pull_number: prNumber,
+        team_reviewers: ['bcr-maintainers'],
+      });
       continue;
     }
     const maintainersList = Array.from(maintainersCopy).join(', ');
@@ -517,10 +523,16 @@ async function runNotifier(octokit) {
   // Notify BCR maintainers for modules without module maintainers
   if (modulesWithoutGithubMaintainers.size > 0) {
     const modulesList = Array.from(modulesWithoutGithubMaintainers).join(', ');
-    console.log(`Notifying @bazelbuild/bcr-maintainers for modules: ${modulesList}`);
+    console.log(`Requesting review from BCR maintainers for modules: ${modulesList}`);
     await postComment(octokit, owner, repo, prNumber,
-      `Hello @bazelbuild/bcr-maintainers, modules without existing maintainers (${modulesList}) have been updated in this PR.
+      `Hello BCR maintainers, modules without existing maintainers (${modulesList}) have been updated in this PR.
       Please review the changes. You can view a diff against the previous version in the "Generate module diff" check.`);
+    await octokit.rest.pulls.requestReviewers({
+      owner,
+      repo,
+      pull_number: prNumber,
+      team_reviewers: ['bcr-maintainers'],
+    });
   }
 
   // Notify BCR maintainers for modules with only metadata.json changes
@@ -537,10 +549,16 @@ async function runNotifier(octokit) {
 
   if (modulesWithOnlyMetadataChanges.size > 0) {
     const modulesList = Array.from(modulesWithOnlyMetadataChanges).join(', ');
-    console.log(`Notifying @bazelbuild/bcr-maintainers for modules with only metadata.json changes: ${modulesList}`);
+    console.log(`Requesting review from BCR maintainers for modules with only metadata.json changes: ${modulesList}`);
     await postComment(octokit, owner, repo, prNumber,
-      `Hello @bazelbuild/bcr-maintainers, modules with only metadata.json changes (${modulesList}) have been updated in this PR.
+      `Hello BCR maintainers, modules with only metadata.json changes (${modulesList}) have been updated in this PR.
       Please review the changes.`);
+    await octokit.rest.pulls.requestReviewers({
+      owner,
+      repo,
+      pull_number: prNumber,
+      team_reviewers: ['bcr-maintainers'],
+    });
   }
 }
 
@@ -626,6 +644,7 @@ async function runDismissApproval(octokit) {
     pull_number: prNumber,
   });
 
+  const reviewersToReRequest = new Set();
   for (const review of reviews) {
     if (review.state === 'APPROVED') {
       console.log(`Dismiss approval from ${review.user.login}`);
@@ -636,6 +655,26 @@ async function runDismissApproval(octokit) {
         review_id: review.id,
         message: 'Require module maintainers\' approval for newly pushed changes.',
       });
+      reviewersToReRequest.add(review.user.login);
+    }
+  }
+
+  if (reviewersToReRequest.size > 0) {
+    const { data: authenticatedUser } = await octokit.rest.users.getAuthenticated();
+    reviewersToReRequest.delete(authenticatedUser.login);
+  }
+
+  for (const reviewer of reviewersToReRequest) {
+    try {
+      console.log(`Re-requesting review from: ${reviewer}`);
+      await octokit.rest.pulls.requestReviewers({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        pull_number: prNumber,
+        reviewers: [reviewer],
+      });
+    } catch (error) {
+      console.warn(`Could not re-request review from ${reviewer}: ${error.message}. They might not be a collaborator.`);
     }
   }
 }
