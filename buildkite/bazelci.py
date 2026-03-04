@@ -660,6 +660,29 @@ kpuKoQ/EWg5Bhrkp
             project=("bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"),
         )
 
+    def use_specific_org_token(self, org):
+        if org == "bazel-testing":
+            return decrypt_token(
+                encrypted_token=self._ENCRYPTED_BUILDKITE_TESTING_API_TOKEN,
+                kms_key="buildkite-testing-api-token",
+                project="bazel-untrusted",
+            )
+        elif org == "bazel-trusted":
+            return decrypt_token(
+                encrypted_token=self._ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN,
+                kms_key="buildkite-trusted-api-token",
+                project="bazel-public",
+            )
+        elif org == "bazel":
+            return decrypt_token(
+                encrypted_token=self._ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN,
+                kms_key="buildkite-untrusted-api-token",
+                project="bazel-untrusted",
+            )
+        else:
+            raise BuildkiteException(f"Unknown organization: {org}")
+
+
     def _open_url(self, url, params=[], retries=5):
         params_str = "".join("&{}={}".format(k, v) for k, v in params)
         full_url = "{}?access_token={}{}".format(url, self._token, params_str)
