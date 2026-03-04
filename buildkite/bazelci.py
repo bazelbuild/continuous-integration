@@ -2983,7 +2983,7 @@ def print_project_pipeline(
 
     task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
-    # Skip Buildifier when we test downstream projects.
+    # Skip Buildifier & Mintlify when we test downstream projects.
     if not is_downstream_pipeline():
         buildifier_config = configs.get("buildifier")
         if buildifier_config:
