@@ -2981,38 +2981,19 @@ def print_project_pipeline(
 
     task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
-    buildifier_config = configs.get("buildifier")
     # Skip Buildifier when we test downstream projects.
-    if buildifier_config and not is_downstream_pipeline():
-        buildifier_env_vars = {}
-        if isinstance(buildifier_config, str):
-            # Simple format:
-            # ---
-            # buildifier: latest
-            buildifier_env_vars["BUILDIFIER_VERSION"] = buildifier_config
-        else:
-            # Advanced format:
-            # ---
-            # buildifier:
-            #   version: latest
-            #   warnings: all
-            if "version" in buildifier_config:
-                buildifier_env_vars["BUILDIFIER_VERSION"] = buildifier_config["version"]
-            if "warnings" in buildifier_config:
-                buildifier_env_vars["BUILDIFIER_WARNINGS"] = buildifier_config["warnings"]
-
-        if not buildifier_env_vars:
-            raise BuildkiteException(
-                'Invalid buildifier configuration entry "{}"'.format(buildifier_config)
+    if not is_downstream_pipeline():
+        buildifier_config = configs.get("buildifier")
+        if buildifier_config:
+            pipeline_steps.append(
+                create_buildifier_step(buildifier_config)
             )
 
-        pipeline_steps.append(
-            create_docker_step(
-                "Buildifier",
-                image=BUILDIFIER_DOCKER_IMAGE,
-                additional_env_vars=buildifier_env_vars,
+        check_docs_dir = configs.get("check_docs")
+        if check_docs_dir:
+            pipeline_steps.append(
+                create_check_docs_step(check_docs_dir)
             )
-        )
 
     # In Bazel Downstream Project pipelines, we should test the project at the last green commit.
     git_commit = get_last_green_commit(project_name) if is_downstream_pipeline() else None
@@ -3162,6 +3143,47 @@ def print_project_pipeline(
         )
 
     print_pipeline_steps(pipeline_steps, handle_emergencies=not is_downstream_pipeline())
+
+
+def create_buildifier_step(buildifier_config):
+    buildifier_env_vars = {}
+    if isinstance(buildifier_config, str):
+        # Simple format:
+        # ---
+        # buildifier: latest
+        buildifier_env_vars["BUILDIFIER_VERSION"] = buildifier_config
+    else:
+        # Advanced format:
+        # ---
+        # buildifier:
+        #   version: latest
+        #   warnings: all
+        if "version" in buildifier_config:
+            buildifier_env_vars["BUILDIFIER_VERSION"] = buildifier_config["version"]
+        if "warnings" in buildifier_config:
+            buildifier_env_vars["BUILDIFIER_WARNINGS"] = buildifier_config["warnings"]
+
+    if not buildifier_env_vars:
+        raise BuildkiteException(
+            'Invalid buildifier configuration entry "{}"'.format(buildifier_config)
+        )
+
+    return create_docker_step(
+        "Buildifier",
+        image=BUILDIFIER_DOCKER_IMAGE,
+        additional_env_vars=buildifier_env_vars,
+    )
+
+
+def create_check_docs_step(docs_dir):
+    return create_step(
+        label=":passport_control: Check Docs",
+        commands=[
+            fetch_bazelcipy_command(),
+            f"{PLATFORMS[DEFAULT_PLATFORM]['python']} bazelci.py check_docs",
+        ],
+        platform=DEFAULT_PLATFORM,
+    )
 
 
 def show_gerrit_review_link(git_repository, pipeline_steps):
@@ -4042,6 +4064,10 @@ def print_configs(configs):
     print(yaml.dump(configs, Dumper=NoAliasDumper))
 
 
+def check_docs(docs_dir):
+    raise Exception(docs_dir)
+
+
 def get_log_path_for_label(label, shard, total_shards, attempt, total_attempts, is_windows):
     parts = [label.lstrip("/").replace(":", "/")]
     if total_shards > 1:
@@ -4639,6 +4665,9 @@ def main(argv=None):
     print_tasks = subparsers.add_parser("print_tasks")
     print_tasks.add_argument("--file_config", type=str)
 
+    check_docs_pipeline = subparsers.add_parser("check_docs")
+    check_docs_pipeline.add_argument("--docs_dir", type=str)
+
     args = parser.parse_args(argv)
 
     if args.script:
@@ -4747,6 +4776,8 @@ def main(argv=None):
             print_shard_summary()
         elif args.subparsers_name == "print_tasks":
             print_configs(fetch_configs(None, args.file_config))
+        elif args.subparsers_name == "check_docs":
+            check_docs(args.docs_dir)
         else:
             parser.print_help()
             return 2
