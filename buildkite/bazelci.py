@@ -798,22 +798,6 @@ kpuKoQ/EWg5Bhrkp
         url = self._BUILDS_URL_TEMPLATE.format(self._org)
         return self._fetch_all_pages_as_json(url, params=[("state", "scheduled")], retries=retries)
 
-    def get_agents(self, retries=5):
-        url = self._AGENTS_URL_TEMPLATE.format(self._org)
-        return self._fetch_all_pages_as_json(url, retries=retries)
-
-    def get_scheduled_jobs(self, retries=5):
-        url = self._BUILDS_URL_TEMPLATE.format(self._org)
-        return self._fetch_all_pages_as_json(url, params=[("state", "scheduled")], retries=retries)
-
-    def get_agents(self, retries=5):
-        url = self._AGENTS_URL_TEMPLATE.format(self._org)
-        return self._open_url(url, retries=retries)
-
-    def get_scheduled_jobs(self, retries=5):
-        url = self._BUILDS_URL_TEMPLATE.format(self._org)
-        return self._open_url(url, params=[("state", "scheduled")], retries=retries)
-
     @staticmethod
     def _check_response(response, expected_status_code):
         if response.status_code != expected_status_code:
