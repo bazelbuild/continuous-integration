@@ -684,20 +684,17 @@ kpuKoQ/EWg5Bhrkp
                     retry_after = ex.headers.get("RateLimit-Reset")
                     if retry_after:
                         wait_time = int(retry_after)
-                        time.sleep(wait_time + 1)
-                        continue  # Retry after waiting
+                    else:
+                        wait_time = 2**attempt  # Exponential backoff if no RateLimit-Reset header
+
+                    time.sleep(wait_time)
                 else:
                     raise BuildkiteException(
                         "Failed to open {}: {} - {}".format(full_url, ex.code, ex.reason)
                     )
-            except Exception as ex:
-                # Retry on other exceptions
-                pass
-
-            if attempt < retries - 1:
-                time.sleep(2 ** attempt)  # Exponential backoff
 
         raise BuildkiteException(f"Failed to open {full_url} after {retries} retries.")
+
 
     def _get_next_page_url(self, headers):
         """Parses the headers to determine if there are more pagination pages."""
@@ -781,14 +778,6 @@ kpuKoQ/EWg5Bhrkp
 
     def get_build_log(self, job, retries = 5):
         return self._fetch_data_as_text(job["raw_log_url"], retries = retries)
-
-    def get_agents(self, retries=5):
-        url = self._AGENTS_URL_TEMPLATE.format(self._org)
-        return self._fetch_all_pages_as_json(url, retries=retries)
-
-    def get_scheduled_jobs(self, retries=5):
-        url = self._BUILDS_URL_TEMPLATE.format(self._org)
-        return self._fetch_all_pages_as_json(url, params=[("state", "scheduled")], retries=retries)
 
     def get_agents(self, retries=5):
         url = self._AGENTS_URL_TEMPLATE.format(self._org)
