@@ -684,15 +684,20 @@ kpuKoQ/EWg5Bhrkp
                     retry_after = ex.headers.get("RateLimit-Reset")
                     if retry_after:
                         wait_time = int(retry_after)
-                    else:
-                        raise BuildkiteException(
-                            "Failed to open {}: {} - {}".format(url, ex.code, ex.reason)
-                        )
+                        time.sleep(wait_time + 1)
+                        continue  # Retry after waiting
+                else:
+                    raise BuildkiteException(
+                        "Failed to open {}: {} - {}".format(full_url, ex.code, ex.reason)
+                    )
+            except Exception as ex:
+                # Retry on other exceptions
+                pass
 
-            if not success:
-              raise BuildkiteException(f"Failed to open {url} after {retries} retries.")
+            if attempt < retries - 1:
+                time.sleep(2 ** attempt)  # Exponential backoff
 
-        return all_items
+        raise BuildkiteException(f"Failed to open {full_url} after {retries} retries.")
 
     def _get_next_page_url(self, headers):
         """Parses the headers to determine if there are more pagination pages."""
@@ -702,28 +707,18 @@ kpuKoQ/EWg5Bhrkp
         match = self._NEXT_PAGE_PATTERN.search(link_header)
         return match.group('url') if match else None
 
-                    time.sleep(wait_time)
-                else:
-                    raise BuildkiteException(
-                        "Failed to open {}: {} - {}".format(full_url, ex.code, ex.reason)
-                    )
     def _build_url_with_params(self, url, params=[]):
         """Builds a URL with the given query parameters."""
         params_str = "".join("&{}={}".format(k, v) for k, v in params)
         return "{}?access_token={}{}".format(url, self._token, params_str)
 
-        raise BuildkiteException(f"Failed to open {url} after {retries} retries.")
     def _fetch_data_as_text(self, url, params=[], retries=5) -> str:
         """Returns the decode utf-8 representation of the _get_url_response."""
-        return self._get_url_response(url, params, retries).read().decode("utf-8", "ignore")
         url = self._build_url_with_params(url, params)
         return self._get_url_response(url, retries)[0]
 
-    def _open_url_with_paganation(self, url, params=[], retries=5) -> List:
     def _fetch_all_pages_as_json(self, url, params=[], retries=5) -> List:
         """Fetch all items iteratively across all pages."""
-        params = params + [("per_page", "100")]
-        params_str = "".join("&{}={}".format(k, v) for k, v in params)
         next_url = self._build_url_with_params(url, params + [("per_page", "100")])
 
         all_items = []
