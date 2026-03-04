@@ -1,4 +1,4 @@
-name: "Terraform Monorepo Governance"
+name: "Terraform CI/CD"
 
 on:
   pull_request:
