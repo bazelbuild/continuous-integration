@@ -7,11 +7,6 @@ on:
     branches: ["master"]
     paths: ["buildkite/terraform/**"]
 
-# Ensure only one terraform run happens at a time per org/branch
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
-
 # go/github-security: Explicitly set minimum permissions
 permissions:
   contents: read      # Required to check out the code
@@ -54,9 +49,13 @@ jobs:
       needs.detect-changes.outputs.folders != '[]' && 
       (github.event_name == 'push' || 
        github.event.pull_request.author_association == 'MEMBER' || 
-       github.event.pull_request.author_association == 'OWNER' || 
-       github.event.pull_request.author_association == 'COLLABORATOR')
+       github.event.pull_request.author_association == 'OWNER')
     runs-on: ubuntu-latest
+
+    # Ensure only one terraform run happens at a time per org
+    concurrency:
+      group: ${{ github.workflow }}-${{ matrix.org }}-${{ github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
     # Use environment for secret isolation and manual approvals
     environment: ${{ matrix.org }}
@@ -83,7 +82,8 @@ jobs:
       uses: hashicorp/setup-terraform@b9cd54a3c349d3f6272e0339e9588eb6b84a6efc # v3.1.2
       with:
         terraform_wrapper: true
-
+        terraform_version: "1.9.5"
+    
     - name: Terraform Init
       run: terraform init
 
