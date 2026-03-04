@@ -512,6 +512,8 @@ for platform, platform_dict in PLATFORMS.copy().items():
 
 BUILDIFIER_DOCKER_IMAGE = "gcr.io/bazel-public/buildifier"
 
+MINTLIFY_DOCKER_IMAGE = "gcr.io/bazel-public/mintlify"
+
 # The platform used for various steps (e.g. stuff that formerly ran on the "pipeline" workers).
 DEFAULT_PLATFORM = "ubuntu1804"
 
@@ -2981,38 +2983,18 @@ def print_project_pipeline(
 
     task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
-    buildifier_config = configs.get("buildifier")
     # Skip Buildifier when we test downstream projects.
-    if buildifier_config and not is_downstream_pipeline():
-        buildifier_env_vars = {}
-        if isinstance(buildifier_config, str):
-            # Simple format:
-            # ---
-            # buildifier: latest
-            buildifier_env_vars["BUILDIFIER_VERSION"] = buildifier_config
-        else:
-            # Advanced format:
-            # ---
-            # buildifier:
-            #   version: latest
-            #   warnings: all
-            if "version" in buildifier_config:
-                buildifier_env_vars["BUILDIFIER_VERSION"] = buildifier_config["version"]
-            if "warnings" in buildifier_config:
-                buildifier_env_vars["BUILDIFIER_WARNINGS"] = buildifier_config["warnings"]
-
-        if not buildifier_env_vars:
-            raise BuildkiteException(
-                'Invalid buildifier configuration entry "{}"'.format(buildifier_config)
+    if not is_downstream_pipeline():
+        buildifier_config = configs.get("buildifier")
+        if buildifier_config:
+            pipeline_steps.append(
+                create_buildifier_step(buildifier_config)
             )
 
-        pipeline_steps.append(
-            create_docker_step(
-                "Buildifier",
-                image=BUILDIFIER_DOCKER_IMAGE,
-                additional_env_vars=buildifier_env_vars,
+        if configs.get("check_docs"):
+            pipeline_steps.append(
+                create_check_docs_step()
             )
-        )
 
     # In Bazel Downstream Project pipelines, we should test the project at the last green commit.
     git_commit = get_last_green_commit(project_name) if is_downstream_pipeline() else None
@@ -3162,6 +3144,48 @@ def print_project_pipeline(
         )
 
     print_pipeline_steps(pipeline_steps, handle_emergencies=not is_downstream_pipeline())
+
+
+def create_buildifier_step(buildifier_config):
+    buildifier_env_vars = {}
+    if isinstance(buildifier_config, str):
+        # Simple format:
+        # ---
+        # buildifier: latest
+        buildifier_env_vars["BUILDIFIER_VERSION"] = buildifier_config
+    else:
+        # Advanced format:
+        # ---
+        # buildifier:
+        #   version: latest
+        #   warnings: all
+        if "version" in buildifier_config:
+            buildifier_env_vars["BUILDIFIER_VERSION"] = buildifier_config["version"]
+        if "warnings" in buildifier_config:
+            buildifier_env_vars["BUILDIFIER_WARNINGS"] = buildifier_config["warnings"]
+
+    if not buildifier_env_vars:
+        raise BuildkiteException(
+            'Invalid buildifier configuration entry "{}"'.format(buildifier_config)
+        )
+
+    return create_docker_step(
+        "Buildifier",
+        image=BUILDIFIER_DOCKER_IMAGE,
+        additional_env_vars=buildifier_env_vars,
+    )
+
+
+def create_check_docs_step():
+    return create_docker_step(
+        ":passport_control: Check Docs",
+        image=MINTLIFY_DOCKER_IMAGE,
+        # TODO: make env variables configurable via yaml.
+        additional_env_vars={
+            "DOCS_DIR": "docs",
+            "DOCS_JSON_URL": "https://raw.githubusercontent.com/bazel-contrib/bazel-docs/refs/heads/main/docs.json",
+        },
+    )
 
 
 def show_gerrit_review_link(git_repository, pipeline_steps):

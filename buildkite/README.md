@@ -421,6 +421,20 @@ buildifier:
 [...]
 ```
 
+### Check .mdx documentation files with Mintlify
+
+If your pipeline clones the Bazel repository, you can enable the documentation
+validation check by setting the global `check_docs` field.
+
+As a result, all your builds will contain an additional step that validates the
+.mdx files via [Mintlify](https://www.mintlify.com/docs/installation#validate-documentation-build):
+
+```yaml
+---
+check_docs: 1
+[...]
+```
+
 ### Using multiple Workspaces in a single Pipeline
 
 Some projects may contain one or more `WORKSPACE` files in subdirectories, in addition to their top-level `WORKSPACE` file.
