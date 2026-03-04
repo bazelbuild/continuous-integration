@@ -731,14 +731,6 @@ kpuKoQ/EWg5Bhrkp
             all_items.extend(json.loads(response))
         return all_items
 
-    def _get_next_page_url(self, headers):
-        """Parses the headers to determine if there are more pagination pages."""
-        link_header = headers.get("Link")
-        if not link_header:
-            return None
-        match = self._NEXT_PAGE_PATTERN.search(link_header)
-        return match.group('url') if match else None
-
     def get_pipeline_info(self):
         """Get details for a pipeline given its organization slug
         and pipeline slug.
