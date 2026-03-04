@@ -512,6 +512,8 @@ for platform, platform_dict in PLATFORMS.copy().items():
 
 BUILDIFIER_DOCKER_IMAGE = "gcr.io/bazel-public/buildifier"
 
+MINTLIFY_DOCKER_IMAGE = "gcr.io/bazel-public/mintlify"
+
 # The platform used for various steps (e.g. stuff that formerly ran on the "pipeline" workers).
 DEFAULT_PLATFORM = "ubuntu1804"
 
@@ -3176,13 +3178,10 @@ def create_buildifier_step(buildifier_config):
 
 
 def create_check_docs_step(docs_dir):
-    return create_step(
-        label=":passport_control: Check Docs",
-        commands=[
-            fetch_bazelcipy_command(),
-            f"{PLATFORMS[DEFAULT_PLATFORM]['python']} bazelci.py check_docs",
-        ],
-        platform=DEFAULT_PLATFORM,
+    return create_docker_step(
+        ":passport_control: Check Docs",
+        image=MINTLIFY_DOCKER_IMAGE,
+        additional_env_vars={"DOCS_DIR": docs_dir},
     )
 
 
@@ -4064,10 +4063,6 @@ def print_configs(configs):
     print(yaml.dump(configs, Dumper=NoAliasDumper))
 
 
-def check_docs(docs_dir):
-    raise Exception(docs_dir)
-
-
 def get_log_path_for_label(label, shard, total_shards, attempt, total_attempts, is_windows):
     parts = [label.lstrip("/").replace(":", "/")]
     if total_shards > 1:
@@ -4665,9 +4660,6 @@ def main(argv=None):
     print_tasks = subparsers.add_parser("print_tasks")
     print_tasks.add_argument("--file_config", type=str)
 
-    check_docs_pipeline = subparsers.add_parser("check_docs")
-    check_docs_pipeline.add_argument("--docs_dir", type=str)
-
     args = parser.parse_args(argv)
 
     if args.script:
@@ -4776,8 +4768,6 @@ def main(argv=None):
             print_shard_summary()
         elif args.subparsers_name == "print_tasks":
             print_configs(fetch_configs(None, args.file_config))
-        elif args.subparsers_name == "check_docs":
-            check_docs(args.docs_dir)
         else:
             parser.print_help()
             return 2
