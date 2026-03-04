@@ -677,7 +677,7 @@ kpuKoQ/EWg5Bhrkp
         for attempt in range(retries):
             try:
                 response = urllib.request.urlopen(full_url)
-                return response.read().decode("utf-8", "ignore"), response.headers
+                return response.read().decode("utf-8", "ignore"), self._get_next_page_url(response.headers)
             except urllib.error.HTTPError as ex:
                 # Handle specific error codes
                 if ex.code == 429:  # Too Many Requests
@@ -707,25 +707,28 @@ kpuKoQ/EWg5Bhrkp
         match = self._NEXT_PAGE_PATTERN.search(link_header)
         return match.group('url') if match else None
 
-    def _build_url_with_params(self, url, params=[]):
+    def _build_url_with_params(self, url, params=None):
         """Builds a URL with the given query parameters."""
+        if params is None:
+            params = []
         params_str = "".join("&{}={}".format(k, v) for k, v in params)
         return "{}?access_token={}{}".format(url, self._token, params_str)
 
-    def _fetch_data_as_text(self, url, params=[], retries=5) -> str:
+    def _fetch_data_as_text(self, url, params=None, retries=5) -> str:
         """Returns the decode utf-8 representation of the _get_url_response."""
         url = self._build_url_with_params(url, params)
         return self._get_url_response(url, retries)[0]
 
-    def _fetch_all_pages_as_json(self, url, params=[], retries=5) -> List:
+    def _fetch_all_pages_as_json(self, url, params=None, retries=5) -> List:
         """Fetch all items iteratively across all pages."""
+        if params is None:
+            params = []
         next_url = self._build_url_with_params(url, params + [("per_page", "100")])
 
         all_items = []
         while next_url:
-            response, headers = self._get_url_response(next_url, retries)
+            response, next_url = self._get_url_response(next_url, retries)
             all_items.extend(json.loads(response))
-            next_url = self._get_next_page_url(headers)
         return all_items
 
     def _get_next_page_url(self, headers):
