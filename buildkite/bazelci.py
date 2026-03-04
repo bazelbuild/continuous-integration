@@ -2991,10 +2991,9 @@ def print_project_pipeline(
                 create_buildifier_step(buildifier_config)
             )
 
-        check_docs_dir = configs.get("check_docs")
-        if check_docs_dir:
+        if configs.get("check_docs"):
             pipeline_steps.append(
-                create_check_docs_step(check_docs_dir)
+                create_check_docs_step()
             )
 
     # In Bazel Downstream Project pipelines, we should test the project at the last green commit.
@@ -3177,11 +3176,15 @@ def create_buildifier_step(buildifier_config):
     )
 
 
-def create_check_docs_step(docs_dir):
+def create_check_docs_step():
     return create_docker_step(
         ":passport_control: Check Docs",
         image=MINTLIFY_DOCKER_IMAGE,
-        additional_env_vars={"DOCS_DIR": docs_dir},
+        # TODO: make env variables configurable via yaml.
+        additional_env_vars={
+            "DOCS_DIR": "docs",
+            "DOCS_JSON_URL": "https://raw.githubusercontent.com/bazel-contrib/bazel-docs/refs/heads/main/docs.json",
+        },
     )
 
 
