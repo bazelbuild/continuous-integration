@@ -198,7 +198,6 @@ def main():
 
     try:
         client = BuildkiteClient(org=BUILDKITE_ORG, pipeline=BUILDKITE_PIPELINE)
-        client._token = client.use_specific_org_token(BUILDKITE_ORG)
         urls = get_urls_from_buildkite(client)
         mirror_artifacts(urls, GCS_BUCKET)
 
