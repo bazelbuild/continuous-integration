@@ -6,7 +6,7 @@ from datetime import datetime
 
 from google.cloud import bigquery
 
-from bazelci import BuildkiteClient, decrypt_token
+from bazelci import BuildkiteClient
 
 # --- Configuration ---
 ORGs = ["bazel-testing", "bazel", "bazel-trusted"]
@@ -28,7 +28,6 @@ def get_org_metrics(org):
   """Fetches metrics for a single org and calculates stats."""
   logging.info(f"Pulling Data for Org: {org}")
   bk_client = BuildkiteClient(org=org)
-  bk_client._token = _get_buildkite_token(org)
 
   # 1. Agents
   agents = bk_client.get_agents()
@@ -69,25 +68,6 @@ def get_org_metrics(org):
       "disconnected_agents": disconnected_agents,
       "avg_bootstrap_time_s": avg_bootstrap_time
   }
-
-def _get_buildkite_token(org):
-  return decrypt_token(
-    encrypted_token=(
-      BuildkiteClient._ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN
-      if org == "bazel-trusted"
-      else BuildkiteClient._ENCRYPTED_BUILDKITE_TESTING_API_TOKEN
-      if org == "bazel-testing"
-      else BuildkiteClient._ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN
-    ),
-    kms_key=(
-      "buildkite-trusted-api-token"
-      if org == "bazel-trusted"
-      else "buildkite-testing-api-token"
-      if org == "bazel-testing"
-      else "buildkite-untrusted-api-token"
-    ),
-    project=("bazel-public" if org == "bazel-trusted" else "bazel-untrusted"),
-  )
 
 def push_to_bigquery(rows, retries):
   if not rows:
