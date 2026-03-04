@@ -642,45 +642,26 @@ kpuKoQ/EWg5Bhrkp
         self._token = self._get_buildkite_token()
 
     def _get_buildkite_token(self):
-        return decrypt_token(
-            encrypted_token=(
-                self._ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN
-                if THIS_IS_TRUSTED
-                else self._ENCRYPTED_BUILDKITE_TESTING_API_TOKEN
-                if THIS_IS_TESTING
-                else self._ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN
-            ),
-            kms_key=(
-                "buildkite-trusted-api-token"
-                if THIS_IS_TRUSTED
-                else "buildkite-testing-api-token"
-                if THIS_IS_TESTING
-                else "buildkite-untrusted-api-token"
-            ),
-            project=("bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"),
-        )
-
-    def use_specific_org_token(self, org):
-        if org == "bazel-testing":
+        if self._org == "bazel-testing":
             return decrypt_token(
                 encrypted_token=self._ENCRYPTED_BUILDKITE_TESTING_API_TOKEN,
                 kms_key="buildkite-testing-api-token",
                 project="bazel-untrusted",
             )
-        elif org == "bazel-trusted":
+        elif self._org == "bazel-trusted":
             return decrypt_token(
                 encrypted_token=self._ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN,
                 kms_key="buildkite-trusted-api-token",
                 project="bazel-public",
             )
-        elif org == "bazel":
+        elif self._org == "bazel":
             return decrypt_token(
                 encrypted_token=self._ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN,
                 kms_key="buildkite-untrusted-api-token",
                 project="bazel-untrusted",
             )
         else:
-            raise BuildkiteException(f"Unknown organization: {org}")
+            raise BuildkiteException(f"Unknown organization: {self._org}")
 
 
     def _open_url(self, url, params=[], retries=5):
