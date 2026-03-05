@@ -380,16 +380,10 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   }
 
   // Figure out maintainers for each modified module
-  const [ maintainersMap, modulesWithoutGithubMaintainers ] = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ false);
+  const [maintainersMap, _] = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ false);
   console.log('Maintainers Map:');
   for (const [maintainer, maintainedModules] of maintainersMap.entries()) {
     console.log(`- Maintainer: ${maintainer}, Modules: ${Array.from(maintainedModules).join(', ')}`);
-  }
-
-  // If modulesWithoutGithubMaintainers is not empty, then return
-  if (modulesWithoutGithubMaintainers.size > 0) {
-    console.log(`Cannot auto-merge this PR with maintainers approval because the following modules do not have maintainers with GitHub usernames: ${Array.from(modulesWithoutGithubMaintainers).join(', ')}`);
-    return;
   }
 
   // Get the approvers for the PR
