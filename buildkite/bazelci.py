@@ -43,6 +43,8 @@ import urllib.error
 import urllib.request
 import yaml
 
+from collect_metrics import collect_metrics_and_push_to_bigquery
+
 # Initialize the random number generator.
 random.seed()
 
@@ -59,6 +61,10 @@ GITHUB_BRANCH = {"bazel": "master", "bazel-trusted": "master", "bazel-testing": 
 ]
 
 SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazelci.py".format(
+    GITHUB_BRANCH
+)
+
+METRICS_SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/collect_metrics.py".format(
     GITHUB_BRANCH
 )
 
@@ -1441,6 +1447,7 @@ def execute_commands(
         finally:
             if json_profile_out_build:
                 upload_log_file(json_profile_out_build, tmpdir)
+                collect_metrics_and_push_to_bigquery(json_profile_out_build)
             if capture_corrupted_outputs_dir_build:
                 upload_corrupted_outputs(capture_corrupted_outputs_dir_build, tmpdir)
 
@@ -3369,7 +3376,9 @@ def runner_step(
 
 
 def fetch_bazelcipy_command():
-    return "curl -q --noproxy '*' -sS {0}?{1} -o bazelci.py".format(SCRIPT_URL, int(time.time()))
+    command = "curl -q --noproxy '*' -sS {0}?{1} -o bazelci.py".format(SCRIPT_URL, int(time.time()))
+    command += " && curl -q --noproxy '*' -sS {0}?{1} -o collect_metrics.py".format(METRICS_SCRIPT_URL, int(time.time()))
+    return command
 
 
 def fetch_aggregate_incompatible_flags_test_result_command():
