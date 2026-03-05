@@ -22,25 +22,27 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-    - name: Get changed files
-      id: changed-files
-      uses: tj-actions/changed-files@dcc7a0cba800f454d79fff4b9972b6252438612f # v45.0.0
       with:
-        dir_names: true
-        dir_names_max_depth: 3
-        json: true
-        files: "buildkite/terraform/**"
-        quotepath: false
+        fetch-depth: 0
 
-    - name: Process Changed Orgs
+    - name: Detect Changed Orgs
       id: process-orgs
-      env:
-        ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+      shell: bash
       run: |
-        # Strip 'buildkite/terraform/' prefix from each path in the JSON array
-        ORGS=$(echo "$ALL_CHANGED_FILES" | jq -c 'map(sub("buildkite/terraform/"; ""))')
-        echo "orgs=$ORGS" >> "$GITHUB_OUTPUT"
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          # For PRs, diff against the base branch
+          BASE_SHA="origin/${{ github.base_ref }}"
+        else
+          # For pushes to master, diff against head
+          BASE_SHA="HEAD^"
+        fi
+        
+        # Scoped diff -> Get Specific Orgs -> Cut Org Name -> Sort Unique -> JSON Array
+        ORGS=$(git diff --name-only "$BASE_SHA" HEAD -- buildkite/terraform/ | \
+          grep -o "^buildkite/terraform/\(bazel\|bazel-trusted\|bazel-testing\)/" | cut -d/ -f3 | sort -u | \
+          jq -R -s -c 'split("\n") | map(select(length > 0))')
+          
+        echo "orgs=${ORGS:-[]}" >> "$GITHUB_OUTPUT"
 
   # Job 2: Terraform Execution
   terraform:
