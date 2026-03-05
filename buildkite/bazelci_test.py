@@ -222,6 +222,7 @@ class MatrixExpansion(unittest.TestCase):
 matrix:
   bazel: ["1.2.3", "2.3.4"]
   platform: ["pf1", "pf2"]
+  exit_status: [1, 2]
 tasks:
   basic:
     name: "Basic"
@@ -234,27 +235,39 @@ tasks:
     name: "Formatted w/ Bazel v{bazel} on {platform}"
     bazel: ${{ bazel }}
     platform: ${{ platform }}
+  exit_status:
+    name: "Exit Status: {exit_status}"
+    soft_fail:
+      - exit_status: ${{exit_status}}
     """
     )
 
     def test_basic_functionality(self):
-        config = self._CONFIGS
+        import copy
+
+        config = copy.deepcopy(self._CONFIGS)
 
         bazelci.expand_task_config(config)
         expanded_tasks = config["tasks"]
-        self.assertEqual(len(expanded_tasks), 9)
-        expanded_task_names = [task.get("name", None) for id, task in expanded_tasks.items()]
-        self.assertEqual(expanded_task_names, [
-            "Basic", # no matrix expansion
-            "Unformatted", # bazel v1.2.3
-            "Unformatted",  # bazel v2.3.4
-            None, # no name, bazel v1.2.3
-            None, # no name, bazel v2.3.4
-            "Formatted w/ Bazel v1.2.3 on pf1",
-            "Formatted w/ Bazel v1.2.3 on pf2",
-            "Formatted w/ Bazel v2.3.4 on pf1",
-            "Formatted w/ Bazel v2.3.4 on pf2",
-        ])
+
+        self.assertEqual(
+            list(expanded_tasks.values()),
+            [
+                # no matrix expansion
+                dict(name="Basic"),
+                dict(name="Unformatted", bazel="1.2.3"),
+                dict(name="Unformatted", bazel="2.3.4"),
+                # no name
+                dict(bazel="1.2.3"),
+                dict(bazel="2.3.4"),
+                dict(name="Formatted w/ Bazel v1.2.3 on pf1", bazel="1.2.3", platform="pf1"),
+                dict(name="Formatted w/ Bazel v1.2.3 on pf2", bazel="1.2.3", platform="pf2"),
+                dict(name="Formatted w/ Bazel v2.3.4 on pf1", bazel="2.3.4", platform="pf1"),
+                dict(name="Formatted w/ Bazel v2.3.4 on pf2", bazel="2.3.4", platform="pf2"),
+                dict(name="Exit Status: 1", soft_fail=[dict(exit_status=1)]),
+                dict(name="Exit Status: 2", soft_fail=[dict(exit_status=2)]),
+            ],
+        )
 
 
 class MatrixExclude(unittest.TestCase):
