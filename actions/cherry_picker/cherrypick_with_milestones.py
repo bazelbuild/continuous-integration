@@ -1,4 +1,4 @@
-import os, requests
+import datetime, os, requests
 from functions import get_commit_id, get_reviewers, extract_release_numbers_data, cherry_pick, create_pr, get_labels, get_pr_title_body, issue_comment, push_to_branch
 from vars import headers, upstream_repo, input_data
 
@@ -37,7 +37,7 @@ requires_clone = True
 for k in release_numbers_data.keys():
     release_number = k
     release_branch_name = f"{input_data['release_branch_name_initials']}{release_number}"
-    target_branch_name = f"cp{pr_number}-{release_number}"
+    target_branch_name = f"cp{pr_number}-{release_number}-{datetime.datetime.now().strftime('%H%M%S')}"
     issue_number = release_numbers_data[k]
     pr_title = pr_title_body["title"]
     pr_body = pr_title_body["body"]
