@@ -1447,7 +1447,6 @@ def execute_commands(
         finally:
             if json_profile_out_build:
                 upload_log_file(json_profile_out_build, tmpdir)
-                collect_metrics_and_push_to_bigquery(json_profile_out_build)
             if capture_corrupted_outputs_dir_build:
                 upload_corrupted_outputs(capture_corrupted_outputs_dir_build, tmpdir)
 
@@ -1511,6 +1510,7 @@ def execute_commands(
                     upload_corrupted_outputs(capture_corrupted_outputs_dir_test, tmpdir)
                 output_base = get_output_base(bazel_binary)
                 upload_log_file(os.path.join(output_base, "java.log"), tmpdir)
+                collect_metrics_and_push_to_bigquery(test_bep_file)
 
             _ = future.result()
             # TODO: print results
