@@ -140,6 +140,34 @@ async function generateMaintainersMap(octokit, owner, repo, modifiedModules, toN
   return [maintainersMap, modulesWithoutGithubMaintainers];
 }
 
+async function requestBcrMaintainers(octokit, owner, repo, prNumber) {
+  const reviews = await octokit.rest.pulls.listReviews({
+    owner,
+    repo,
+    pull_number: prNumber,
+    per_page: 1,
+  });
+  const { data: prInfo } = await octokit.rest.pulls.get({
+    owner,
+    repo,
+    pull_number: prNumber,
+  });
+  const alreadyHasReviewer = prInfo.requested_reviewers.length > 0 || prInfo.requested_teams.length > 0 || reviews.data.length > 0;
+
+  if (alreadyHasReviewer) {
+    console.log('Skipping requesting BCR maintainers as there is already a reviewer assigned.');
+    return;
+  }
+
+  console.log('Requesting review from BCR maintainers');
+  await octokit.rest.pulls.requestReviewers({
+    owner,
+    repo,
+    pull_number: prNumber,
+    team_reviewers: ['bcr-maintainers'],
+  });
+}
+
 async function notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap) {
   // For the list of maintainers who maintain the same set of modules, we want to group them together
   const moduleListToMaintainers = new Map(); // Map: Serialized Module List -> Maintainers
@@ -177,12 +205,7 @@ async function notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap)
       await postComment(octokit, owner, repo, prNumber,
         `Hello BCR maintainers, modules (${modulesList}) have been updated in this PR.
         Please review the changes. You can view a diff against the previous version in the "Generate module diff" check.`);
-      await octokit.rest.pulls.requestReviewers({
-        owner,
-        repo,
-        pull_number: prNumber,
-        team_reviewers: ['bcr-maintainers'],
-      });
+      await requestBcrMaintainers(octokit, owner, repo, prNumber);
       continue;
     }
     const maintainersList = Array.from(maintainersCopy).join(', ');
@@ -532,12 +555,7 @@ async function runNotifier(octokit) {
     await postComment(octokit, owner, repo, prNumber,
       `Hello BCR maintainers, modules without existing maintainers (${modulesList}) have been updated in this PR.
       Please review the changes. You can view a diff against the previous version in the "Generate module diff" check.`);
-    await octokit.rest.pulls.requestReviewers({
-      owner,
-      repo,
-      pull_number: prNumber,
-      team_reviewers: ['bcr-maintainers'],
-    });
+    await requestBcrMaintainers(octokit, owner, repo, prNumber);
   }
 
   // Notify BCR maintainers for modules with only metadata.json changes
@@ -558,12 +576,7 @@ async function runNotifier(octokit) {
     await postComment(octokit, owner, repo, prNumber,
       `Hello BCR maintainers, modules with only metadata.json changes (${modulesList}) have been updated in this PR.
       Please review the changes.`);
-    await octokit.rest.pulls.requestReviewers({
-      owner,
-      repo,
-      pull_number: prNumber,
-      team_reviewers: ['bcr-maintainers'],
-    });
+    await requestBcrMaintainers(octokit, owner, repo, prNumber);
   }
 }
 
