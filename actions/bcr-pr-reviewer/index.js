@@ -496,6 +496,8 @@ async function runNotifier(octokit) {
   }
   console.log(`Processing PR #${prNumber}`);
 
+  const { owner, repo } = context.repo;
+
   const prInfo = await octokit.rest.pulls.get({
     owner,
     repo,
@@ -506,8 +508,6 @@ async function runNotifier(octokit) {
     console.log('Skipping draft PR');
     return;
   }
-
-  const { owner, repo } = context.repo;
 
   // Fetch modified modules
   const modifiedModuleVersions = await fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber);
