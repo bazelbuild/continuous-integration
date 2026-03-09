@@ -9,17 +9,19 @@ from collections import defaultdict
 
 # --- Helpers ---
 
-def fetch_job_timestamps(org_slug, pipeline_slug, build_number):
+def fetch_job_timestamps(org_slug, pipeline_slug, build_number, job_id):
   """
   Fetches real timestamps from Buildkite API for the current job.
   Returns (created_at, started_at, finished_at) strings.
   """
   try:
     from bazelci import BuildkiteClient
-    client = BuildkiteClient(org_slug)
-    build_data = client.get_build(pipeline_slug, build_number)
-    return build_data.get("created_at"), build_data.get(
-        "started_at"), build_data.get("finished_at")
+    client = BuildkiteClient(org_slug, pipeline_slug)
+    build_data = client.get_build_info(build_number)
+    for job in build_data.get("jobs", []):
+      if job.get("id") == job_id:
+        return job.get("created_at"), job.get("started_at"), job.get("finished_at")
+    return None, None, None
 
   except Exception as e:
     print(f"Warning: Failed to fetch API timestamps: {e}")
@@ -182,6 +184,9 @@ def publish_to_bigquery(row):
   Pushes a single row to BigQuery using the REST API directly.
   Zero dependencies required.
   """
+
+  print(f"Publishing Metrics to BigQuery ...")
+
   PROJECT_ID = "bazel-public"
   DATASET_ID = "bazel_ci_metrics"
   TABLE_ID = "ci_builds"
@@ -211,15 +216,18 @@ def publish_to_bigquery(row):
     with urllib.request.urlopen(req) as response:
       result = json.loads(response.read().decode())
       if "insertErrors" in result:
-        print(f"BQ Insert Errors: {result['insertErrors']}")
+        print(f"BigQuery Insert Errors: {result['insertErrors']}")
       else:
         print("Successfully pushed metrics to BigQuery via REST.")
   except urllib.error.HTTPError as e:
-    print(f"BQ REST API Failed: {e.code} - {e.read().decode()}")
+    print(f"BigQuery REST API Failed: {e.code} - {e.read().decode()}")
   except Exception as e:
-    print(f"BQ REST API Error: {e}")
+    print(f"BigQuery REST API Error: {e}")
 
 def collect_metrics_and_push_to_bigquery(bep_file_path):
+
+  print(f"Collecting CI Metrics ...")
+
   """
   Reads the BEP file, collects environment variables, and pushes metrics to BigQuery.
   Call this function from bazelci.py after the build finishes.
@@ -256,9 +264,6 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
   # Calculate Changed Files
   CHANGED_FILES_COUNT = get_git_stats()
 
-
-  print(f"Starting Metrics Publisher for Build #{BUILDKITE_BUILD_NUMBER}...")
-
   # 1. Parse Data
   bep_metrics, targets = parse_bep(bep_file_path)
   if bep_metrics is None:
@@ -268,14 +273,16 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
   # 2. Get Timestamps & calculate Queue time
   build_created, build_started, build_finished = fetch_job_timestamps(ORG,
                                                                       PIPELINE,
-                                                                      BUILDKITE_BUILD_NUMBER)
+                                                                      BUILDKITE_BUILD_NUMBER,
+                                                                      BUILDKITE_JOB_ID)
   queue_duration = 0.0
-  try:
-    created_dt = datetime.fromisoformat(build_created.replace("Z", "+00:00"))
-    started_dt = datetime.fromisoformat(build_started.replace("Z", "+00:00"))
-    queue_duration = (started_dt - created_dt).total_seconds()
-  except Exception as e:
-    print(f"Warning: Could not parse timestamps: {e}")
+  if build_created and build_started:
+    try:
+      created_dt = datetime.fromisoformat(build_created.replace("Z", "+00:00"))
+      started_dt = datetime.fromisoformat(build_started.replace("Z", "+00:00"))
+      queue_duration = (started_dt - created_dt).total_seconds()
+    except Exception as e:
+      print(f"Warning: Could not parse timestamps: {e}")
 
   # 3. Construct BigQuery Row
   row = {
@@ -323,7 +330,7 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
   # errors = client.insert_rows_json(table_ref, [row])
   #
   # if errors:
-  #   print(f"BQ Insert Errors: {errors}")
+  #   print(f"BigQuery Insert Errors: {errors}")
   #   print(json.dumps(row, indent=2))
   # else:
   #   print("Success: Metrics pushed to BigQuery.")
