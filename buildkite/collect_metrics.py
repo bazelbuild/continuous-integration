@@ -20,7 +20,12 @@ def fetch_job_timestamps(org_slug, pipeline_slug, build_number, job_id):
     build_data = client.get_build_info(build_number)
     for job in build_data.get("jobs", []):
       if job.get("id") == job_id:
-        return job.get("created_at"), job.get("started_at"), job.get("finished_at")
+        # If the job is still running when this script executes, finished_at is None
+        finished_at = job.get("finished_at")
+        if not finished_at:
+          # Format as UTC ISO string to match Buildkite's format (e.g. 2023-10-25T10:00:00.000Z)
+          finished_at = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        return job.get("created_at"), job.get("started_at"), finished_at
     return None, None, None
 
   except Exception as e:
@@ -32,9 +37,9 @@ def fetch_job_timestamps(org_slug, pipeline_slug, build_number, job_id):
 def get_git_stats(target_dir="."):
   """Gets the number of files changed between HEAD and HEAD~1."""
   try:
-    # Runs git diff in the target directory
+    # Use git show instead of diff HEAD~1 because PRs might be squashed or shallow cloned
     output = subprocess.check_output(
-        ["git", "diff", "--shortstat", "HEAD~1", "HEAD"],
+        ["git", "show", "--shortstat", "--format="],
         cwd=target_dir,
         text=True,
         stderr=subprocess.STDOUT
