@@ -56,6 +56,9 @@ RUN apt-get -y update && \
     apt-get -y purge apport && \
     rm -rf /var/lib/apt/lists/*
 
+# Install Python dependencies for collect_metrics.py
+RUN pip3 install --no-cache-dir google-cloud-bigquery
+
 # Workaround https://bugs.launchpad.net/ubuntu/+source/gcc-9/+bug/2029910
 # TODO: remove when the latest ubuntu:20.04 image has the fix.
 WORKDIR /tempdir
