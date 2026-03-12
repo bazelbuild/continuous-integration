@@ -4,10 +4,34 @@ import base64
 import re
 import subprocess
 import urllib
+import urllib.request
 from datetime import datetime
 from collections import defaultdict
 
 # --- Helpers ---
+
+
+def print_and_annotate_warning(message):
+    """
+    Prints a warning to the logs and annotates the Buildkite UI so it's visible on the build page.
+    """
+    print(message)
+    try:
+        from bazelci import execute_command
+        job_url = f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
+        execute_command(
+            [
+                "buildkite-agent",
+                "annotate",
+                "--style=warning",
+                f"{message} (for [this job]({job_url}))",
+                "--context",
+                "ctx-metrics_upload_failed",
+            ],
+            fail_if_nonzero=False,
+        )
+    except Exception as e:
+        print(f"Failed to annotate Buildkite: {e}")
 
 
 def fetch_job_timestamps(org_slug, pipeline_slug, build_number, job_id):
@@ -31,7 +55,7 @@ def fetch_job_timestamps(org_slug, pipeline_slug, build_number, job_id):
         return None, None, None
 
     except Exception as e:
-        print(f"Warning: Failed to fetch API timestamps: {e}")
+        print(f"Warning: Failed to fetch job timestamps: {e}")
 
     return None, None, None
 
@@ -211,14 +235,14 @@ def publish_to_bigquery(row):
         with urllib.request.urlopen(req) as response:
             token = json.loads(response.read().decode())["access_token"]
     except Exception:
-        print("Unable to get GCP token from metadata server. Pushing to BigQuery will fail.")
+        print_and_annotate_warning("Unable to get GCP token from metadata server. Pushing to BigQuery will fail.")
         return
 
     url = f"https://bigquery.googleapis.com/bigquery/v2/projects/{PROJECT_ID}/datasets/{DATASET_ID}/tables/{TABLE_ID}/insertAll"
-
     payload = {"kind": "bigquery#tableDataInsertAllRequest", "rows": [{"json": row}]}
 
     try:
+        from bazelci import execute_command
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(url, data=data, method="POST")
         req.add_header("Content-Type", "application/json")
@@ -227,13 +251,13 @@ def publish_to_bigquery(row):
         with urllib.request.urlopen(req) as response:
             result = json.loads(response.read().decode())
             if "insertErrors" in result:
-                print(f"BigQuery Insert Errors: {result['insertErrors']}")
+                print_and_annotate_warning(f"BigQuery Insert Errors: {result['insertErrors']}")
             else:
                 print("Successfully pushed metrics to BigQuery via REST.")
     except urllib.error.HTTPError as e:
-        print(f"BigQuery REST API Failed: {e.code} - {e.read().decode()}")
+        print_and_annotate_warning(f"BigQuery REST API Failed: {e.code} - {e.read().decode()}")
     except Exception as e:
-        print(f"BigQuery REST API Error: {e}")
+        print_and_annotate_warning(f"BigQuery REST API Error: {e}")
 
 
 def collect_metrics_and_push_to_bigquery(bep_file_path):
@@ -279,7 +303,7 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
     # 1. Parse Data
     bep_metrics, targets = parse_bep(bep_file_path)
     if bep_metrics is None:
-        print("Skipping BigQuery push due to BEP parsing failure.")
+        print_and_annotate_warning("Skipping BigQuery push due to BEP parsing failure.")
         return
 
     # 2. Get Timestamps & calculate Queue time
