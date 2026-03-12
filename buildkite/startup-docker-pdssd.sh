@@ -84,19 +84,29 @@ set -euo pipefail
 export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://${ARTIFACT_BUCKET}/\${BUILDKITE_JOB_ID}"
 EOF
 
-export JOB_START_TIME=$(date +%s)
+### Capture Job Start Time
+cat > /etc/buildkite-agent/hooks/pre-checkout <<'EOF'
+#!/bin/bash
+buildkite-agent env set "JOB_START_TIME=$(date +%s)"
 EOF
 
+### Calculate checkout duration
 cat > /etc/buildkite-agent/hooks/post-checkout <<'EOF'
 #!/bin/bash
-export CHECKOUT_END_TIME=$(date +%s)
+CHECKOUT_END_TIME=$(date +%s)
 export CHECKOUT_DURATION_S=$((CHECKOUT_END_TIME - JOB_START_TIME))
+buildkite-agent env set "CHECKOUT_END_TIME=${CHECKOUT_END_TIME}"
+buildkite-agent env set "CHECKOUT_DURATION_S=${CHECKOUT_DURATION_S}"
 EOF
 
+### Calculate prep duration
 cat > /etc/buildkite-agent/hooks/pre-command <<'EOF'
 #!/bin/bash
-export PREP_END_TIME=$(date +%s)
+PREP_END_TIME=$(date +%s)
 export PREP_DURATION_S=$((PREP_END_TIME - CHECKOUT_END_TIME))
+buildkite-agent env set "PREP_DURATION_S=${PREP_DURATION_S}"
+EOF
+
 
 ### Fix permissions of the Buildkite agent configuration files and hooks.
 chmod 0400 /etc/buildkite-agent/buildkite-agent.cfg
