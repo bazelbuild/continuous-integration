@@ -266,12 +266,10 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
     # Injected via webhooks
     try:
         CHECKOUT_DURATION_S = float(os.getenv("CHECKOUT_DURATION_S", "0.0"))
-        print(f"CHECKOUT_DURATION_S: {CHECKOUT_DURATION_S}")
     except ValueError:
         CHECKOUT_DURATION_S = 0.0
     try:
         PREP_DURATION_S = float(os.getenv("PREP_DURATION_S", "0.0"))
-        print(f"PREP_DURATION_S: {PREP_DURATION_S}")
     except ValueError:
         PREP_DURATION_S = 0.0
 
