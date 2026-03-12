@@ -1586,7 +1586,22 @@ def execute_commands(
                 if capture_corrupted_outputs_dir_test:
                     upload_corrupted_outputs(capture_corrupted_outputs_dir_test, tmpdir)
                 output_base = get_output_base(bazel_binary)
-                upload_log_file(os.path.join(output_base, "java.log"), tmpdir)
+                try:
+                    upload_log_file(os.path.join(output_base, "java.log"), tmpdir)
+                except Exception as ex:
+                    eprint(f"Failed to upload java.log: {ex}")
+                    job_url = f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
+                    execute_command(
+                        [
+                            "buildkite-agent",
+                            "annotate",
+                            "--style=warning",
+                            f"Failed to upload java.log from [this job]({job_url})",
+                            "--context",
+                            "ctx-java_log_upload_failed",
+                        ],
+                        fail_if_nonzero=False,
+                    )
 
             _ = future.result()
             # TODO: print results
