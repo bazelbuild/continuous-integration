@@ -57,8 +57,6 @@ RUN apt-get -y update && \
     apt-get -y purge apport && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies for collect_metrics.py
-RUN pip3 install --no-cache-dir google-cloud-bigquery
 
 # Allow using sudo inside the container.
 RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers

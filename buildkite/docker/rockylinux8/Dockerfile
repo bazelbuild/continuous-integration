@@ -38,6 +38,7 @@ RUN dnf -y install 'dnf-command(config-manager)' && \
     && \
     dnf clean all
 
+
 # Allow using sudo inside the container.
 RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
