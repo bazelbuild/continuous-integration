@@ -212,53 +212,48 @@ def parse_bep(filepath):
     return metrics, formatted_targets
 
 
-# --- Main Publishing Function ---
-
-
 def publish_to_bigquery(row):
     """
-    Pushes a single row to BigQuery using the REST API directly.
-    Zero dependencies required.
+    Pushes a single row to BigQuery using the 'bq' CLI tool via subprocess.
     """
 
     print(f"Publishing Metrics to BigQuery ...")
 
+    # BigQuery Config
     PROJECT_ID = "bazel-public"
     DATASET_ID = "bazel_ci_metrics"
     TABLE_ID = "ci_builds"
 
+    import tempfile
+    from bazelci import is_windows
     try:
-        req = urllib.request.Request(
-            "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tf:
+            # bq insert requires newline delimited JSON (JSONL), even for a single row
+            json.dump(row, tf)
+            tf.write("\n")
+            temp_path = tf.name
+
+        table_ref = f"{PROJECT_ID}:{DATASET_ID}.{TABLE_ID}"
+        print(f"Pushing row to {table_ref} via bq CLI...")
+        
+        bq_cmd = "bq.cmd" if is_windows() else "bq"
+        result = subprocess.run(
+            [bq_cmd, "insert", table_ref, temp_path],
+            capture_output=True,
+            text=True,
+            check=False
         )
-        req.add_header("Metadata-Flavor", "Google")
-        with urllib.request.urlopen(req) as response:
-            token = json.loads(response.read().decode())["access_token"]
-    except Exception:
-        print_and_annotate_warning("Unable to get GCP token from metadata server. Pushing to BigQuery will fail.")
-        return
-
-    url = f"https://bigquery.googleapis.com/bigquery/v2/projects/{PROJECT_ID}/datasets/{DATASET_ID}/tables/{TABLE_ID}/insertAll"
-    payload = {"kind": "bigquery#tableDataInsertAllRequest", "rows": [{"json": row}]}
-
-    try:
-        from bazelci import execute_command
-        data = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(url, data=data, method="POST")
-        req.add_header("Content-Type", "application/json")
-        req.add_header("Authorization", f"Bearer {token}")
-
-        with urllib.request.urlopen(req) as response:
-            result = json.loads(response.read().decode())
-            if "insertErrors" in result:
-                print_and_annotate_warning(f"BigQuery Insert Errors: {result['insertErrors']}")
-            else:
-                print("Successfully pushed metrics to BigQuery via REST.")
-    except urllib.error.HTTPError as e:
-        print_and_annotate_warning(f"BigQuery REST API Failed: {e.code} - {e.read().decode()}")
+        
+        if result.returncode != 0:
+            print_and_annotate_warning(f"BigQuery CLI Insert Error:\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}")
+        else:
+            print("Success: Metrics pushed to BigQuery via CLI.")
+            
     except Exception as e:
-        print_and_annotate_warning(f"BigQuery REST API Error: {e}")
-
+        print_and_annotate_warning(f"Failed to execute bq CLI: {e}")
+    finally:
+        if 'temp_path' in locals() and os.path.exists(temp_path):
+            os.remove(temp_path)
 
 def collect_metrics_and_push_to_bigquery(bep_file_path):
 
@@ -350,39 +345,4 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
         "targets": targets,
     }
 
-    # BigQuery Config
-    PROJECT_ID = "bazel-public"
-    DATASET_ID = "bazel_ci_metrics"
-    TABLE_ID = "ci_builds"
-
-    # 4. Push to BigQuery using 'bq' CLI
-    import tempfile
-    from bazelci import is_windows
-    try:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tf:
-            # bq insert requires newline delimited JSON (JSONL), even for a single row
-            json.dump(row, tf)
-            tf.write("\n")
-            temp_path = tf.name
-
-        table_ref = f"{PROJECT_ID}:{DATASET_ID}.{TABLE_ID}"
-        print(f"Pushing row to {table_ref} via bq CLI...")
-        
-        bq_cmd = "bq.cmd" if is_windows() else "bq"
-        result = subprocess.run(
-            [bq_cmd, "insert", table_ref, temp_path],
-            capture_output=True,
-            text=True,
-            check=False
-        )
-        
-        if result.returncode != 0:
-            print_and_annotate_warning(f"BigQuery CLI Insert Error:\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}")
-        else:
-            print("Success: Metrics pushed to BigQuery via CLI.")
-            
-    except Exception as e:
-        print_and_annotate_warning(f"Failed to execute bq CLI: {e}")
-    finally:
-        if 'temp_path' in locals() and os.path.exists(temp_path):
-            os.remove(temp_path)
+    publish_to_bigquery(row)
