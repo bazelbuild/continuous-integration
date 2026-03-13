@@ -92,14 +92,7 @@ ENV JAVA_HOME /usr/lib/jvm/java-21-openjdk-${TARGETARCH}
 
 FROM ubuntu2404 AS ubuntu2404-kythe
 
-# kythe 0.0.67 requires GLIBCXX_3.4.32 which isn't available on ubuntu 24.04 by default.
-# Using a test toolchain
-RUN add-apt-repository ppa:ubuntu-toolchain-r/test && \
-    apt-get -y update && \
-    apt-get -y install --only-upgrade libstdc++6 && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN LATEST_KYTHE=v0.0.68 && \
+RUN LATEST_KYTHE=v0.0.75 && \
     mkdir /usr/local/kythe && \
     curl -fsSL https://github.com/kythe/kythe/releases/download/${LATEST_KYTHE}/kythe-{$LATEST_KYTHE}.tar.gz | \
     tar xvz --no-same-owner --strip-components 1 --directory /usr/local/kythe && \
