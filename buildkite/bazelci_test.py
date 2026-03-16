@@ -405,5 +405,41 @@ tasks:
         ])
 
 
+class AppendTagTest(unittest.TestCase):
+    _CONFIGS = yaml.load(
+        """
+base_config: &base_config
+  build_flags:
+    - a
+    - b
+
+dict_config: &dict_config
+  build_flags:
+    ? a
+    ? b
+
+tasks:
+  linux:
+    <<: *base_config
+    build_flags: !append
+      - c
+      - a
+  linux_dict:
+    <<: *dict_config
+    build_flags: !append
+      - c
+      - a
+        """, Loader=bazelci.BazelCILoader
+    )
+
+    def test_append_tag(self):
+        tasks = self._CONFIGS.get("tasks")
+        self.assertEqual(tasks["linux"]["build_flags"], ["a", "b", "c", "a"])
+
+    def test_append_tag_with_dict(self):
+        tasks = self._CONFIGS.get("tasks")
+        self.assertEqual(tasks["linux_dict"]["build_flags"], ["a", "b", "c", "a"])
+
+
 if __name__ == "__main__":
     unittest.main()
