@@ -16,8 +16,49 @@ async function withRetry(fn, retries = 5, delay = 3000) {
       if (i === retries - 1 || !isRetryable) {
         throw error;
       }
-      console.warn(`Retry ${i + 1}/${retries} after error: ${error.message}. Waiting ${delay * (i + 1)}ms...`);
-      await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+
+      // Default to linear backoff.
+      let waitMs = delay * (i + 1);
+
+      // For 403 rate limit responses, honor standard rate-limit headers when available.
+      if (error.status === 403 && error.response && error.response.headers) {
+        const headers = error.response.headers || {};
+        let headerWaitMs = null;
+
+        // "retry-after" can be a number of seconds or an HTTP-date.
+        const retryAfter = headers['retry-after'];
+        if (retryAfter) {
+          const retryAfterSeconds = parseInt(retryAfter, 10);
+          if (!Number.isNaN(retryAfterSeconds)) {
+            headerWaitMs = retryAfterSeconds * 1000;
+          } else {
+            const retryAfterDate = Date.parse(retryAfter);
+            if (!Number.isNaN(retryAfterDate)) {
+              headerWaitMs = retryAfterDate - Date.now();
+            }
+          }
+        }
+
+        // "x-ratelimit-reset" is typically a Unix timestamp in seconds.
+        const rateLimitReset = headers['x-ratelimit-reset'];
+        if (rateLimitReset) {
+          const resetSeconds = parseInt(rateLimitReset, 10);
+          if (!Number.isNaN(resetSeconds)) {
+            const resetMs = resetSeconds * 1000 - Date.now();
+            if (resetMs > 0 && (headerWaitMs === null || resetMs > headerWaitMs)) {
+              headerWaitMs = resetMs;
+            }
+          }
+        }
+
+        if (headerWaitMs !== null && headerWaitMs > 0) {
+          const bufferMs = 1000; // Small buffer to ensure the limit has reset.
+          waitMs = headerWaitMs + bufferMs;
+        }
+      }
+
+      console.warn(`Retry ${i + 1}/${retries} after error: ${error.message}. Waiting ${waitMs}ms...`);
+      await new Promise(resolve => setTimeout(resolve, waitMs));
     }
   }
 }
@@ -30,7 +71,16 @@ function wrapWithRetry(obj) {
     get(target, prop) {
       const value = target[prop];
       if (typeof value === 'function') {
-        return (...args) => withRetry(() => value.apply(target, args));
+        // Only retry GET methods to avoid side effects of retrying non-idempotent writes.
+        const isGetMethod = value.endpoint && value.endpoint.method === 'GET';
+        if (isGetMethod) {
+          return new Proxy(value, {
+            apply(fnTarget, thisArg, args) {
+              return withRetry(() => fnTarget.apply(thisArg, args));
+            },
+          });
+        }
+        return value;
       }
       if (value !== null && typeof value === 'object' && prop !== 'hook') {
         return wrapWithRetry(value);
