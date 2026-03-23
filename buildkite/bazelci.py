@@ -2812,6 +2812,9 @@ def execute_bazel_coverage(bazel_version, bazel_binary, platform, flags, targets
     aggregated_flags = [
         "--build_tests_only",
         "--local_test_jobs=" + concurrent_test_jobs(platform),
+        # TODO: Logs for failed tests should be collected in the
+        # same way they are for `test` invocations.
+        "--test_output=errors"
     ]
     print_collapsed_group(":bazel: Computing flags for coverage step")
     aggregated_flags += compute_flags(
