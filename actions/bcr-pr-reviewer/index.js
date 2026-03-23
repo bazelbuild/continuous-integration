@@ -1,6 +1,45 @@
 const { getInput, setFailed } = require('@actions/core');
 const { context, getOctokit } = require("@actions/github");
 
+/**
+ * A simple retry wrapper for async functions.
+ */
+async function withRetry(fn, retries = 5, delay = 3000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      // 502 Bad Gateway, 503 Service Unavailable, 504 Gateway Timeout are retryable.
+      // 403 Forbidden can be a rate limit error.
+      const isRetryable = error.status === 504 || error.status === 502 || error.status === 503 ||
+        (error.status === 403 && error.message.toLowerCase().includes('rate limit'));
+      if (i === retries - 1 || !isRetryable) {
+        throw error;
+      }
+      console.warn(`Retry ${i + 1}/${retries} after error: ${error.message}. Waiting ${delay * (i + 1)}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+    }
+  }
+}
+
+/**
+ * Wraps an object (and its nested objects) with a proxy that retries all method calls.
+ */
+function wrapWithRetry(obj) {
+  return new Proxy(obj, {
+    get(target, prop) {
+      const value = target[prop];
+      if (typeof value === 'function') {
+        return (...args) => withRetry(() => value.apply(target, args));
+      }
+      if (value !== null && typeof value === 'object' && prop !== 'hook') {
+        return wrapWithRetry(value);
+      }
+      return value;
+    }
+  });
+}
+
 async function _processAllPrFiles(octokit, owner, repo, prNumber, fileProcessor) {
   // Fetch the PR's initial head commit SHA to ensure consistency.
   const { data: prInfo } = await octokit.rest.pulls.get({
@@ -11,43 +50,30 @@ async function _processAllPrFiles(octokit, owner, repo, prNumber, fileProcessor)
   const initialHeadSha = prInfo.head.sha;
 
   const accumulate = new Set();
-  const perPage = 100; // Max per_page value
-  let page = 1;
+  const files = await octokit.paginate(octokit.rest.pulls.listFiles, {
+    owner,
+    repo,
+    pull_number: prNumber,
+    per_page: 100,
+  });
 
-  while (true) {
-    const { data: files } = await octokit.rest.pulls.listFiles({
-      owner,
-      repo,
-      pull_number: prNumber,
-      per_page: perPage,
-      page,
-    });
+  // Safety Check: Re-fetch the PR at the end to see if new commits have been pushed.
+  const { data: latestPrInfo } = await octokit.rest.pulls.get({
+    owner,
+    repo,
+    pull_number: prNumber,
+  });
 
-    // Safety Check: Re-fetch the PR to see if new commits have been pushed.
-    const { data: latestPrInfo } = await octokit.rest.pulls.get({
-      owner,
-      repo,
-      pull_number: prNumber,
-    });
-
-    if (initialHeadSha !== latestPrInfo.head.sha) {
-      console.error(
-        `PR #${prNumber} was updated while listing files. Aborting.`,
-        `Initial SHA: ${initialHeadSha}, Current SHA: ${latestPrInfo.head.sha}`
-      );
-      return null;
-    }
-
-    // Apply the specific processing logic for each file.
-    files.forEach(file => fileProcessor(file, accumulate));
-
-    // Break the loop if this was the last page of results.
-    if (files.length < perPage) {
-      break;
-    }
-
-    page++;
+  if (initialHeadSha !== latestPrInfo.head.sha) {
+    console.error(
+      `PR #${prNumber} was updated while listing files. Aborting.`,
+      `Initial SHA: ${initialHeadSha}, Current SHA: ${latestPrInfo.head.sha}`
+    );
+    return null;
   }
+
+  // Apply the specific processing logic for each file.
+  files.forEach(file => fileProcessor(file, accumulate));
 
   return accumulate;
 }
@@ -371,7 +397,7 @@ async function isModuleMaintainer(octokit, owner, repo, prAuthorId) {
   }
 }
 
-async function reviewPR(octokit, owner, repo, prNumber) {
+async function reviewPR(octokit, owner, repo, prNumber, myLogin) {
   console.log('\n');
   console.log(`Processing PR #${prNumber}`);
 
@@ -429,9 +455,6 @@ async function reviewPR(octokit, owner, repo, prNumber) {
     console.log(`PR #${prNumber} has been updated since the review process began. Initial SHA: ${initialHeadSha}, Current SHA: ${currentHeadSha}. Aborting approval/merge actions as the analysis may be stale.`);
     return; // Exit reviewPR for this PR to prevent actions on stale data
   }
-
-  const { data } = await octokit.rest.users.getAuthenticated();
-  const myLogin = data.login.toLowerCase();
 
   // Approve the PR if not previously approved and all modules are approved
   if (allModulesApproved) {
@@ -635,6 +658,10 @@ async function runPrReviewer(octokit) {
     return;
   }
 
+  // Get authenticated user login
+  const { data: authenticatedUser } = await octokit.rest.users.getAuthenticated();
+  const myLogin = authenticatedUser.login.toLowerCase();
+
   // Get all open PRs from the repo
   const prs = await octokit.paginate(octokit.rest.pulls.list, {
     owner,
@@ -644,7 +671,7 @@ async function runPrReviewer(octokit) {
 
   // Review each PR
   for (const pr of prs) {
-    await reviewPR(octokit, owner, repo, pr.number);
+    await reviewPR(octokit, owner, repo, pr.number, myLogin);
   }
 }
 
@@ -921,7 +948,13 @@ async function runDiffModule(octokit) {
 async function run() {
   const action_type = getInput("action-type");
   const token = getInput("token");
-  const octokit = getOctokit(token);
+  const baseOctokit = getOctokit(token);
+
+  // Wrap octokit.rest and octokit.paginate with retry logic
+  const octokit = {
+    rest: wrapWithRetry(baseOctokit.rest),
+    paginate: (...args) => withRetry(() => baseOctokit.paginate(...args)),
+  };
 
   if (action_type === "notify_maintainers") {
     await runNotifier(octokit);
