@@ -9,10 +9,16 @@ async function withRetry(fn, retries = 5, delay = 3000) {
     try {
       return await fn();
     } catch (error) {
+      const status = error.status;
+      const headers = (error.response && error.response.headers) || {};
+      
       // 502 Bad Gateway, 503 Service Unavailable, 504 Gateway Timeout are retryable.
-      // 403 Forbidden can be a rate limit error.
-      const isRetryable = error.status === 504 || error.status === 502 || error.status === 503 ||
-        (error.status === 403 && String((error && error.message) || '').toLowerCase().includes('rate limit'));
+      // 403 Forbidden can be a rate limit error (honor retry headers if present).
+      // 429 Too Many Requests is retryable.
+      const hasRetryHeaders = !!(headers['retry-after'] || headers['x-ratelimit-reset']);
+      const isRateLimitError = (status === 403 && (hasRetryHeaders || String((error && error.message) || '').toLowerCase().includes('rate limit'))) || status === 429;
+      const isRetryable = status === 504 || status === 502 || status === 503 || isRateLimitError;
+      
       if (i === retries - 1 || !isRetryable) {
         throw error;
       }
@@ -20,9 +26,8 @@ async function withRetry(fn, retries = 5, delay = 3000) {
       // Default to linear backoff.
       let waitMs = delay * (i + 1);
 
-      // For 403 rate limit responses, honor standard rate-limit headers when available.
-      if (error.status === 403 && error.response && error.response.headers) {
-        const headers = error.response.headers || {};
+      // Honor standard rate-limit headers when available for 403 and 429.
+      if (isRateLimitError && hasRetryHeaders) {
         let headerWaitMs = null;
 
         // "retry-after" can be a number of seconds or an HTTP-date.
