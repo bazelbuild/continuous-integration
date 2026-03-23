@@ -18,6 +18,7 @@ def print_and_annotate_warning(message):
     print(message)
     try:
         from bazelci import execute_command
+
         job_url = f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
         execute_command(
             [
@@ -226,6 +227,7 @@ def publish_to_bigquery(row):
 
     import tempfile
     from bazelci import is_windows
+
     try:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tf:
             # bq insert requires newline delimited JSON (JSONL), even for a single row
@@ -235,25 +237,25 @@ def publish_to_bigquery(row):
 
         table_ref = f"{PROJECT_ID}:{DATASET_ID}.{TABLE_ID}"
         print(f"Pushing row to {table_ref} via bq CLI...")
-        
+
         bq_cmd = "bq.cmd" if is_windows() else "bq"
         result = subprocess.run(
-            [bq_cmd, "insert", table_ref, temp_path],
-            capture_output=True,
-            text=True,
-            check=False
+            [bq_cmd, "insert", table_ref, temp_path], capture_output=True, text=True, check=False
         )
-        
+
         if result.returncode != 0:
-            print_and_annotate_warning(f"BigQuery CLI Insert Error:\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}")
+            print_and_annotate_warning(
+                f"BigQuery CLI Insert Error:\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}"
+            )
         else:
             print("Success: Metrics pushed to BigQuery via CLI.")
-            
+
     except Exception as e:
         print_and_annotate_warning(f"Failed to execute bq CLI: {e}")
     finally:
-        if 'temp_path' in locals() and os.path.exists(temp_path):
+        if "temp_path" in locals() and os.path.exists(temp_path):
             os.remove(temp_path)
+
 
 def collect_metrics_and_push_to_bigquery(bep_file_path):
 
