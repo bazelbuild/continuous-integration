@@ -13,11 +13,10 @@ async function withRetry(fn, retries = 5, delay = 3000) {
       const headers = (error.response && error.response.headers) || {};
       
       // 502 Bad Gateway, 503 Service Unavailable, 504 Gateway Timeout are retryable.
-      // 403 Forbidden can be a rate limit error (honor retry headers if present).
+      // 403 Forbidden is retryable only if it's a rate limit error (indicated by headers).
       // 429 Too Many Requests is retryable.
-      const hasRetryHeaders = !!(headers['retry-after'] || headers['x-ratelimit-reset']);
-      const isRateLimitError = (status === 403 && (hasRetryHeaders || String((error && error.message) || '').toLowerCase().includes('rate limit'))) || status === 429;
-      const isRetryable = status === 504 || status === 502 || status === 503 || isRateLimitError;
+      const isRateLimit403 = status === 403 && (!!headers['retry-after'] || headers['x-ratelimit-remaining'] === '0');
+      const isRetryable = status === 504 || status === 502 || status === 503 || status === 429 || isRateLimit403;
       
       if (i === retries - 1 || !isRetryable) {
         throw error;
@@ -26,40 +25,38 @@ async function withRetry(fn, retries = 5, delay = 3000) {
       // Default to linear backoff.
       let waitMs = delay * (i + 1);
 
-      // Honor standard rate-limit headers when available for 403 and 429.
-      if (isRateLimitError && hasRetryHeaders) {
-        let headerWaitMs = null;
+      // Honor standard rate-limit headers when available.
+      let headerWaitMs = null;
 
-        // "retry-after" can be a number of seconds or an HTTP-date.
-        const retryAfter = headers['retry-after'];
-        if (retryAfter) {
-          const retryAfterSeconds = parseInt(retryAfter, 10);
-          if (!Number.isNaN(retryAfterSeconds)) {
-            headerWaitMs = retryAfterSeconds * 1000;
-          } else {
-            const retryAfterDate = Date.parse(retryAfter);
-            if (!Number.isNaN(retryAfterDate)) {
-              headerWaitMs = retryAfterDate - Date.now();
-            }
+      // "retry-after" can be a number of seconds or an HTTP-date.
+      const retryAfter = headers['retry-after'];
+      if (retryAfter) {
+        const retryAfterSeconds = parseInt(retryAfter, 10);
+        if (!Number.isNaN(retryAfterSeconds)) {
+          headerWaitMs = retryAfterSeconds * 1000;
+        } else {
+          const retryAfterDate = Date.parse(retryAfter);
+          if (!Number.isNaN(retryAfterDate)) {
+            headerWaitMs = retryAfterDate - Date.now();
           }
         }
+      }
 
-        // "x-ratelimit-reset" is typically a Unix timestamp in seconds.
-        const rateLimitReset = headers['x-ratelimit-reset'];
-        if (rateLimitReset) {
-          const resetSeconds = parseInt(rateLimitReset, 10);
-          if (!Number.isNaN(resetSeconds)) {
-            const resetMs = resetSeconds * 1000 - Date.now();
-            if (resetMs > 0 && (headerWaitMs === null || resetMs > headerWaitMs)) {
-              headerWaitMs = resetMs;
-            }
+      // "x-ratelimit-reset" is typically a Unix timestamp in seconds.
+      const rateLimitReset = headers['x-ratelimit-reset'];
+      if (rateLimitReset && (status === 429 || isRateLimit403)) {
+        const resetSeconds = parseInt(rateLimitReset, 10);
+        if (!Number.isNaN(resetSeconds)) {
+          const resetMs = resetSeconds * 1000 - Date.now();
+          if (resetMs > 0 && (headerWaitMs === null || resetMs > headerWaitMs)) {
+            headerWaitMs = resetMs;
           }
         }
+      }
 
-        if (headerWaitMs !== null && headerWaitMs > 0) {
-          const bufferMs = 1000; // Small buffer to ensure the limit has reset.
-          waitMs = headerWaitMs + bufferMs;
-        }
+      if (headerWaitMs !== null && headerWaitMs > 0) {
+        const bufferMs = 1000; // Small buffer to ensure the limit has reset.
+        waitMs = headerWaitMs + bufferMs;
       }
 
       console.warn(`Retry ${i + 1}/${retries} after error: ${error.message}. Waiting ${waitMs}ms...`);
