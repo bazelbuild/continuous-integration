@@ -12,7 +12,7 @@ async function withRetry(fn, retries = 5, delay = 3000) {
       // 502 Bad Gateway, 503 Service Unavailable, 504 Gateway Timeout are retryable.
       // 403 Forbidden can be a rate limit error.
       const isRetryable = error.status === 504 || error.status === 502 || error.status === 503 ||
-        (error.status === 403 && error.message.toLowerCase().includes('rate limit'));
+        (error.status === 403 && String((error && error.message) || '').toLowerCase().includes('rate limit'));
       if (i === retries - 1 || !isRetryable) {
         throw error;
       }
@@ -72,7 +72,14 @@ function wrapWithRetry(obj) {
       const value = target[prop];
       if (typeof value === 'function') {
         // Only retry GET methods to avoid side effects of retrying non-idempotent writes.
-        const isGetMethod = value.endpoint && value.endpoint.method === 'GET';
+        const endpoint = value.endpoint;
+        const method =
+          endpoint && endpoint.DEFAULTS && endpoint.DEFAULTS.method
+            ? endpoint.DEFAULTS.method
+            : endpoint && endpoint.method;
+        const isGetMethod =
+          typeof method === 'string' && method.toUpperCase() === 'GET';
+
         if (isGetMethod) {
           return new Proxy(value, {
             apply(fnTarget, thisArg, args) {
@@ -100,12 +107,14 @@ async function _processAllPrFiles(octokit, owner, repo, prNumber, fileProcessor)
   const initialHeadSha = prInfo.head.sha;
 
   const accumulate = new Set();
-  const files = await octokit.paginate(octokit.rest.pulls.listFiles, {
+  for await (const { data: files } of octokit.paginate.iterator(octokit.rest.pulls.listFiles, {
     owner,
     repo,
     pull_number: prNumber,
     per_page: 100,
-  });
+  })) {
+    files.forEach(file => fileProcessor(file, accumulate));
+  }
 
   // Safety Check: Re-fetch the PR at the end to see if new commits have been pushed.
   const { data: latestPrInfo } = await octokit.rest.pulls.get({
@@ -1005,6 +1014,7 @@ async function run() {
     rest: wrapWithRetry(baseOctokit.rest),
     paginate: (...args) => withRetry(() => baseOctokit.paginate(...args)),
   };
+  octokit.paginate.iterator = (...args) => baseOctokit.paginate.iterator(...args);
 
   if (action_type === "notify_maintainers") {
     await runNotifier(octokit);
