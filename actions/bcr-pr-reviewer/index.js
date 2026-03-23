@@ -64,37 +64,50 @@ async function withRetry(fn, retries = 5, delay = 3000) {
 }
 
 /**
- * Wraps an object (and its nested objects) with a proxy that retries all method calls.
+ * Wraps an object (and its nested objects) with a proxy that adds retry behavior
+ * to detected GET and HEAD (idempotent) method calls, while leaving other methods unchanged.
  */
-function wrapWithRetry(obj) {
-  return new Proxy(obj, {
+function wrapWithRetry(obj, cache = new WeakMap()) {
+  if (cache.has(obj)) {
+    return cache.get(obj);
+  }
+
+  const proxy = new Proxy(obj, {
     get(target, prop) {
       const value = target[prop];
       if (typeof value === 'function') {
-        // Only retry GET methods to avoid side effects of retrying non-idempotent writes.
+        // Only retry idempotent methods to avoid side effects of retrying non-idempotent writes.
         const endpoint = value.endpoint;
         const method =
           endpoint && endpoint.DEFAULTS && endpoint.DEFAULTS.method
             ? endpoint.DEFAULTS.method
             : endpoint && endpoint.method;
-        const isGetMethod =
-          typeof method === 'string' && method.toUpperCase() === 'GET';
+        const isIdempotent =
+          typeof method === 'string' && ['GET', 'HEAD'].includes(method.toUpperCase());
 
-        if (isGetMethod) {
-          return new Proxy(value, {
+        if (isIdempotent) {
+          if (cache.has(value)) {
+            return cache.get(value);
+          }
+          const fnProxy = new Proxy(value, {
             apply(fnTarget, thisArg, args) {
               return withRetry(() => fnTarget.apply(thisArg, args));
             },
           });
+          cache.set(value, fnProxy);
+          return fnProxy;
         }
         return value;
       }
       if (value !== null && typeof value === 'object' && prop !== 'hook') {
-        return wrapWithRetry(value);
+        return wrapWithRetry(value, cache);
       }
       return value;
     }
   });
+
+  cache.set(obj, proxy);
+  return proxy;
 }
 
 async function _processAllPrFiles(octokit, owner, repo, prNumber, fileProcessor) {
