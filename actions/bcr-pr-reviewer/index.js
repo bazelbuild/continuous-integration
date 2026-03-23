@@ -131,9 +131,6 @@ async function _processAllPrFiles(octokit, owner, repo, prNumber, fileProcessor)
     return null;
   }
 
-  // Apply the specific processing logic for each file.
-  files.forEach(file => fileProcessor(file, accumulate));
-
   return accumulate;
 }
 
