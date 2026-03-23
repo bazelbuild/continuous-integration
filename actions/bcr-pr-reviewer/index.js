@@ -1006,10 +1006,10 @@ async function run() {
   const token = getInput("token");
   const baseOctokit = getOctokit(token);
 
-  // Wrap octokit.rest and octokit.paginate with retry logic
+  // Wrap octokit.rest with retry logic; use base paginate to avoid nested retries
   const octokit = {
     rest: wrapWithRetry(baseOctokit.rest),
-    paginate: (...args) => withRetry(() => baseOctokit.paginate(...args)),
+    paginate: (...args) => baseOctokit.paginate(...args),
   };
   octokit.paginate.iterator = (...args) => baseOctokit.paginate.iterator(...args);
 
