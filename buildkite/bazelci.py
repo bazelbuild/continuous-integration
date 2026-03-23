@@ -1602,6 +1602,8 @@ def execute_commands(
                         ],
                         fail_if_nonzero=False,
                     )
+                from collect_metrics import collect_metrics_and_push_to_bigquery
+                collect_metrics_and_push_to_bigquery(test_bep_file)
 
             _ = future.result()
             # TODO: print results
