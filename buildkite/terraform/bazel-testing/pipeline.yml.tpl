@@ -20,6 +20,8 @@ steps:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
+            - "CHECKOUT_DURATION_S"
+            - "PREP_DURATION_S"
           image: "gcr.io/bazel-public/ubuntu1804-java11"
           network: "host"
           privileged: true
