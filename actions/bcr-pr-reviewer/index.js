@@ -140,6 +140,34 @@ async function generateMaintainersMap(octokit, owner, repo, modifiedModules, toN
   return [maintainersMap, modulesWithoutGithubMaintainers];
 }
 
+async function requestBcrMaintainers(octokit, owner, repo, prNumber) {
+  const reviews = await octokit.rest.pulls.listReviews({
+    owner,
+    repo,
+    pull_number: prNumber,
+    per_page: 1,
+  });
+  const { data: prInfo } = await octokit.rest.pulls.get({
+    owner,
+    repo,
+    pull_number: prNumber,
+  });
+  const alreadyHasReviewer = prInfo.requested_reviewers.length > 0 || prInfo.requested_teams.length > 0 || reviews.data.length > 0;
+
+  if (alreadyHasReviewer) {
+    console.log('Skipping requesting BCR maintainers as there is already a reviewer assigned.');
+    return;
+  }
+
+  console.log('Requesting review from BCR maintainers');
+  await octokit.rest.pulls.requestReviewers({
+    owner,
+    repo,
+    pull_number: prNumber,
+    team_reviewers: ['bcr-maintainers'],
+  });
+}
+
 async function notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap) {
   // For the list of maintainers who maintain the same set of modules, we want to group them together
   const moduleListToMaintainers = new Map(); // Map: Serialized Module List -> Maintainers
@@ -175,8 +203,9 @@ async function notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap)
     if (maintainersCopy.size === 0) {
       // If all maintainers are skipped, we should notify the BCR maintainers
       await postComment(octokit, owner, repo, prNumber,
-        `Hello @bazelbuild/bcr-maintainers, modules (${modulesList}) have been updated in this PR.
+        `Hello BCR maintainers, modules (${modulesList}) have been updated in this PR.
         Please review the changes. You can view a diff against the previous version in the "Generate module diff" check.`);
+      await requestBcrMaintainers(octokit, owner, repo, prNumber);
       continue;
     }
     const maintainersList = Array.from(maintainersCopy).join(', ');
@@ -374,16 +403,10 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   }
 
   // Figure out maintainers for each modified module
-  const [ maintainersMap, modulesWithoutGithubMaintainers ] = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ false);
+  const [maintainersMap, _] = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ false);
   console.log('Maintainers Map:');
   for (const [maintainer, maintainedModules] of maintainersMap.entries()) {
     console.log(`- Maintainer: ${maintainer}, Modules: ${Array.from(maintainedModules).join(', ')}`);
-  }
-
-  // If modulesWithoutGithubMaintainers is not empty, then return
-  if (modulesWithoutGithubMaintainers.size > 0) {
-    console.log(`Cannot auto-merge this PR with maintainers approval because the following modules do not have maintainers with GitHub usernames: ${Array.from(modulesWithoutGithubMaintainers).join(', ')}`);
-    return;
   }
 
   // Get the approvers for the PR
@@ -498,6 +521,17 @@ async function runNotifier(octokit) {
 
   const { owner, repo } = context.repo;
 
+  const prInfo = await octokit.rest.pulls.get({
+    owner,
+    repo,
+    pull_number: prNumber,
+  });
+
+  if (prInfo.data.draft) {
+    console.log('Skipping draft PR');
+    return;
+  }
+
   // Fetch modified modules
   const modifiedModuleVersions = await fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber);
   if (modifiedModuleVersions === null) {
@@ -517,10 +551,11 @@ async function runNotifier(octokit) {
   // Notify BCR maintainers for modules without module maintainers
   if (modulesWithoutGithubMaintainers.size > 0) {
     const modulesList = Array.from(modulesWithoutGithubMaintainers).join(', ');
-    console.log(`Notifying @bazelbuild/bcr-maintainers for modules: ${modulesList}`);
+    console.log(`Requesting review from BCR maintainers for modules: ${modulesList}`);
     await postComment(octokit, owner, repo, prNumber,
-      `Hello @bazelbuild/bcr-maintainers, modules without existing maintainers (${modulesList}) have been updated in this PR.
+      `Hello BCR maintainers, modules without existing maintainers (${modulesList}) have been updated in this PR.
       Please review the changes. You can view a diff against the previous version in the "Generate module diff" check.`);
+    await requestBcrMaintainers(octokit, owner, repo, prNumber);
   }
 
   // Notify BCR maintainers for modules with only metadata.json changes
@@ -537,10 +572,11 @@ async function runNotifier(octokit) {
 
   if (modulesWithOnlyMetadataChanges.size > 0) {
     const modulesList = Array.from(modulesWithOnlyMetadataChanges).join(', ');
-    console.log(`Notifying @bazelbuild/bcr-maintainers for modules with only metadata.json changes: ${modulesList}`);
+    console.log(`Requesting review from BCR maintainers for modules with only metadata.json changes: ${modulesList}`);
     await postComment(octokit, owner, repo, prNumber,
-      `Hello @bazelbuild/bcr-maintainers, modules with only metadata.json changes (${modulesList}) have been updated in this PR.
+      `Hello BCR maintainers, modules with only metadata.json changes (${modulesList}) have been updated in this PR.
       Please review the changes.`);
+    await requestBcrMaintainers(octokit, owner, repo, prNumber);
   }
 }
 
@@ -626,6 +662,7 @@ async function runDismissApproval(octokit) {
     pull_number: prNumber,
   });
 
+  const reviewersToReRequest = new Set();
   for (const review of reviews) {
     if (review.state === 'APPROVED') {
       console.log(`Dismiss approval from ${review.user.login}`);
@@ -636,6 +673,26 @@ async function runDismissApproval(octokit) {
         review_id: review.id,
         message: 'Require module maintainers\' approval for newly pushed changes.',
       });
+      reviewersToReRequest.add(review.user.login);
+    }
+  }
+
+  if (reviewersToReRequest.size > 0) {
+    const { data: authenticatedUser } = await octokit.rest.users.getAuthenticated();
+    reviewersToReRequest.delete(authenticatedUser.login);
+  }
+
+  for (const reviewer of reviewersToReRequest) {
+    try {
+      console.log(`Re-requesting review from: ${reviewer}`);
+      await octokit.rest.pulls.requestReviewers({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        pull_number: prNumber,
+        reviewers: [reviewer],
+      });
+    } catch (error) {
+      console.warn(`Could not re-request review from ${reviewer}: ${error.message}. They might not be a collaborator.`);
     }
   }
 }

@@ -51,12 +51,12 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
-
+    
+    #TODO: change this back to WIP once the provider request is approved 
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v2
       with:
-        workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-        service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3

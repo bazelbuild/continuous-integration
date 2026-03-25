@@ -1,4 +1,4 @@
-import os, re
+import datetime, os, re
 from vars import input_data, upstream_repo, cherrypick_with_commits_infos
 from functions import cherry_pick, create_pr, issue_comment, get_pr_title_body, PushCpException, push_to_branch, get_middle_text
 
@@ -20,7 +20,7 @@ issue_body_dict["reviewers"] = get_middle_text(issue_body, reviewers_text["left"
 
 release_number = milestone_title.split(" release blockers")[0]
 release_branch_name = f"{input_data['release_branch_name_initials']}{release_number}"
-target_branch_name = f"cp_ondemand_{milestoned_issue_number}-{release_number}"
+target_branch_name = f"cp_ondemand_{milestoned_issue_number}-{release_number}-{datetime.datetime.now().strftime('%H%M%S')}"
 head_branch_name = f"{input_data['user_name']}:{target_branch_name}"
 reviewers = issue_body_dict["reviewers"]
 labels = issue_body_dict["labels"]
