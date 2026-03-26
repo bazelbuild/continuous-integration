@@ -47,10 +47,9 @@ jobs:
   # Job 2: Terraform Execution
   terraform:
     needs: detect-changes
+    # Run only if we have changed orgs AND (it's a push to master OR PR from trusted users)
     if: |
-      # 1. Only run if we actually detected changed organizations
       needs.detect-changes.outputs.orgs != '[]' && 
-      # 2. Security: Only run on direct pushes to master OR PRs from trusted members/owners
       (github.event_name == 'push' || 
        github.event.pull_request.author_association == 'MEMBER' || 
        github.event.pull_request.author_association == 'OWNER')
