@@ -12,8 +12,13 @@ terraform {
   }
 }
 
+variable "buildkite_api_token" {
+  description = "The API token used to authenticate with Buildkite"
+  type        = string
+  sensitive   = true
+}
+
 provider "buildkite" {
-  # can also be set from env: BUILDKITE_API_TOKEN
-  #api_token    = ""
+  api_token = var.buildkite_api_token
   organization = "bazel-testing"
 }
