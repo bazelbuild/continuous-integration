@@ -1,4 +1,4 @@
-name: "Terraform CI/CD"
+name: "Terraform: CI Pipelines Infrastructure"
 
 on:
   pull_request:
@@ -48,13 +48,15 @@ jobs:
   terraform:
     needs: detect-changes
     if: |
+      # 1. Only run if we actually detected changed organizations
       needs.detect-changes.outputs.orgs != '[]' && 
+      # 2. Security: Only run on direct pushes to master OR PRs from trusted members/owners
       (github.event_name == 'push' || 
        github.event.pull_request.author_association == 'MEMBER' || 
        github.event.pull_request.author_association == 'OWNER')
     runs-on: ubuntu-latest
 
-    # Ensure only one terraform run happens at a time per org
+    # Lock per organization. Cancels old runs on PRs (saves time), but queues pushes (safe apply).
     concurrency:
       group: ${{ github.workflow }}-${{ matrix.org }}-${{ github.ref }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' }}
