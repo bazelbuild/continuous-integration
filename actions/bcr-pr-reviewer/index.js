@@ -707,8 +707,46 @@ async function runSkipCheck(octokit) {
     return;
   }
   const check = commentBody.slice(SKIP_CHECK_TRIGGER.length);
+  const commenter = payload.comment.user.login.toLowerCase();
   const owner = payload.repository.owner.login;
   const repo = payload.repository.name;
+  const prNumber = context.issue.number;
+
+  // Verify that the commenter is a maintainer of the modified modules.
+  const modifiedModuleVersions = await fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber);
+  const modifiedModules = new Set(Array.from(modifiedModuleVersions).map(module => module.split('@')[0]));
+
+  if (modifiedModules.size === 0) {
+    console.log('No modules are modified in this PR, cannot decide on maintainers.');
+    await octokit.rest.reactions.createForIssueComment({
+      owner,
+      repo,
+      comment_id: payload.comment.id,
+      content: 'confused',
+    });
+    return;
+  }
+
+  const [ maintainersMap, _ ] = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ false);
+  const isMaintainer = maintainersMap.has(commenter);
+
+  if (!isMaintainer) {
+    console.log(`@${commenter} is not a maintainer of any modified modules, ignoring the skip_check command.`);
+    await octokit.rest.issues.createComment({
+      owner,
+      repo,
+      issue_number: prNumber,
+      body: `@${commenter}, you don't have permissions to skip checks on this PR since you are not a maintainer of any of the modified modules.`,
+    });
+    await octokit.rest.reactions.createForIssueComment({
+      owner,
+      repo,
+      comment_id: payload.comment.id,
+      content: 'confused',
+    });
+    return;
+  }
+
   if (check == "unstable_url") {
     await octokit.rest.issues.addLabels({
       owner,
