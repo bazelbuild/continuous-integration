@@ -39,6 +39,7 @@ import sys
 import tarfile
 import tempfile
 import time
+from typing import List
 import urllib.error
 import urllib.request
 import yaml
@@ -154,7 +155,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
         "file_config": ".bazelci/clion.yml",
         "pipeline_slug": "clion-plugin",
-         "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7670",
+        "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7670",
     },
     "CLion Plugin Google": {
         "git_repository": "https://github.com/bazelbuild/intellij.git",
@@ -211,7 +212,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_android.git",
         "pipeline_slug": "rules-android",
         "owned_by_bazel": True,
-        },
+    },
     "rules_android_ndk": {
         "git_repository": "https://github.com/bazelbuild/rules_android_ndk.git",
         "pipeline_slug": "rules-android-ndk",
@@ -512,13 +513,17 @@ for platform, platform_dict in PLATFORMS.copy().items():
 
 BUILDIFIER_DOCKER_IMAGE = "gcr.io/bazel-public/buildifier"
 
+MINTLIFY_DOCKER_IMAGE = "gcr.io/bazel-public/mintlify"
+
 # The platform used for various steps (e.g. stuff that formerly ran on the "pipeline" workers).
 DEFAULT_PLATFORM = "ubuntu1804"
 
 # In order to test that "the one Linux binary" that we build for our official releases actually
 # works on all Linux distributions that we test on, we use the Linux binary built on our official
 # release platform for all Linux downstream tests.
-LINUX_BINARY_PLATFORM = "rockylinux8_arm64" if platform_module.machine() in ["arm64", "aarch64"] else "rockylinux8"
+LINUX_BINARY_PLATFORM = (
+    "rockylinux8_arm64" if platform_module.machine() in ["arm64", "aarch64"] else "rockylinux8"
+)
 
 XCODE_VERSION_REGEX = re.compile(r"^\d+\.\d+(\.\d+)?$")
 XCODE_VERSION_OVERRIDES = {"10.2.1": "10.3", "11.2": "11.2.1", "11.3": "11.3.1"}
@@ -544,7 +549,13 @@ AUTO_DIFFBASE_VALUES = frozenset(["1", "true", "auto"])
 
 # Always run all test targets if any of the paths here are modified by the current commit.
 # Values can be directory paths (with a trailing slash) or file paths.
-DISABLE_BAZEL_DIFF_IF_MODIFIED = (".bazelci/", ".bazelrc", ".bazelversion", "MODULE.bazel", "repositories.bzl")
+DISABLE_BAZEL_DIFF_IF_MODIFIED = (
+    ".bazelci/",
+    ".bazelrc",
+    ".bazelversion",
+    "MODULE.bazel",
+    "repositories.bzl",
+)
 
 COMMIT_RE = re.compile(r"[0-9a-z]{40}")
 
@@ -574,7 +585,14 @@ _ELEVATED_PRIORITY_PIPELINES = frozenset(["bazel/google-bazel-presubmit"])
 
 # Pipelines with lowered priority. Values are project slugs,
 # The following pipelines may spawn a large number of jobs, lower their priority to not block other presubmits.
-_LOWERED_PRIORITY_PIPELINES = frozenset(["bazel/bcr-presubmit", "bazel/bcr-bazel-compatibility-test", "bazel/bazel-at-head-plus-downstream"])
+_LOWERED_PRIORITY_PIPELINES = frozenset(
+    [
+        "bazel/bcr-presubmit",
+        "bazel/bcr-bazel-compatibility-test",
+        "bazel/bazel-at-head-plus-downstream",
+    ]
+)
+
 
 class BuildkiteException(Exception):
     """
@@ -611,16 +629,18 @@ bm/ko9kTosN2qJ/UVWf4gzYSnkK1KMAktinNV/o/ygZuf3GQlBfpfBSeMDOW43oLnQE0qcl3OtTM
 WorKXPI5cvfBNNxWIA==
 """.strip()
 
+    # This token is created by the bazel-ci-bot buildkite user (ci@bazel.build)
     _ENCRYPTED_BUILDKITE_TESTING_API_TOKEN = """
-CiQAMTBkWjL1C+F5oon3+cC1vmum5+c1y5+96WQY44p0Lxd0PeASUQAy7iU0c6E3W5EOSFYfD5fA
-MWy/SHaMno1NQSUa4xDOl5yc2kizrtxPPVkX4x9pLNuGUY/xwAn2n1DdiUdWZNWlY1bX2C4ex65e
-P9w8kNhEbw==
+CiQAMTBkWrfpMz9obNz0mqosmtfVzJ5Ck3VIGps/dFdK18Khhh8SVgAy7iU0Zk4AIizIbA+E9Rlb
+3cxW4Qe2GMVsNyGVSHYbEyQkmnNEaUr+glyBHC9QVuwzS5/WjoGZlMsgWefwHvDuiexmEs7RjiyA
+7k9s44ZcI9p/wydi
 """.strip()
 
+    # This token is created by the bazel-ci-bot buildkite user (ci@bazel.build)
     _ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN = """
-CiQAeiOS8AkJ92+STSUmqW/jlR9DKDZdX5PZIWn30PtyKXWE/74SVwC7bbymSHneleAcgXtVJsMu
-2DEEVd/uEGIdiEJigmPAPTs4vtmX/7ZxTsMhJ+rxRYBGufw9LgT+G6Bjg0ETifavKWHGzw+NTgUa
-gwD6RBL0qz1PFfg7Zw==
+CiQAeiOS8AkhF5clT7rnjtfHVTjNSuABkqZF4jfycXVWBmBls8ISVgC7bbymLfiLNsGeyX9i6QHw
+KZOh4utBd7cpVtzZfoGdu76vQUpIzqQ5XlxUpICUxxEgKNfYqJy0aF/jQB8uX9FZf/41sODizHH5
+kpuKoQ/EWg5Bhrkp
 """.strip()
 
     _BUILD_STATUS_URL_TEMPLATE = (
@@ -635,38 +655,53 @@ gwD6RBL0qz1PFfg7Zw==
 
     _PIPELINE_INFO_URL_TEMPLATE = "https://api.buildkite.com/v2/organizations/{}/pipelines/{}"
 
-    def __init__(self, org, pipeline):
+    _AGENTS_URL_TEMPLATE = "https://api.buildkite.com/v2/organizations/{}/agents"
+
+    _BUILDS_URL_TEMPLATE = "https://api.buildkite.com/v2/organizations/{}/builds"
+
+    _NEXT_PAGE_PATTERN = re.compile(r'<(?P<url>\S+)>; rel="next"', re.MULTILINE)
+
+    def __init__(self, org, pipeline=None):
         self._org = org
         self._pipeline = pipeline
         self._token = self._get_buildkite_token()
 
     def _get_buildkite_token(self):
+        encrypted_token, kms_key, project = self._get_org_settings()
         return decrypt_token(
-            encrypted_token=(
-                self._ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN
-                if THIS_IS_TRUSTED
-                else self._ENCRYPTED_BUILDKITE_TESTING_API_TOKEN
-                if THIS_IS_TESTING
-                else self._ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN
-            ),
-            kms_key=(
-                "buildkite-trusted-api-token"
-                if THIS_IS_TRUSTED
-                else "buildkite-testing-api-token"
-                if THIS_IS_TESTING
-                else "buildkite-untrusted-api-token"
-            ),
-            project=("bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"),
+            encrypted_token=encrypted_token,
+            kms_key=kms_key,
+            project=project,
         )
 
-    def _open_url(self, url, params=[], retries=5):
-        params_str = "".join("&{}={}".format(k, v) for k, v in params)
-        full_url = "{}?access_token={}{}".format(url, self._token, params_str)
+    def _get_org_settings(self):
+        if self._org == "bazel-testing":
+            return (
+                self._ENCRYPTED_BUILDKITE_TESTING_API_TOKEN,
+                "buildkite-testing-api-token",
+                "bazel-untrusted",
+            )
+        elif self._org == "bazel-trusted":
+            return (
+                self._ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN,
+                "buildkite-trusted-api-token",
+                "bazel-public",
+            )
+        elif self._org == "bazel":
+            return (
+                self._ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN,
+                "buildkite-untrusted-api-token",
+                "bazel-untrusted",
+            )
 
+        raise BuildkiteException(f"Unknown organization: {self._org}")
+
+    def _get_url_response(self, full_url, retries=5):
+        """Returns the urllib response for the given URL and query parameters."""
         for attempt in range(retries):
             try:
                 response = urllib.request.urlopen(full_url)
-                return response.read().decode("utf-8", "ignore")
+                return response.read().decode("utf-8", "ignore"), self._get_next_page_url(response.headers)
             except urllib.error.HTTPError as ex:
                 # Handle specific error codes
                 if ex.code == 429:  # Too Many Requests
@@ -679,10 +714,43 @@ gwD6RBL0qz1PFfg7Zw==
                     time.sleep(wait_time)
                 else:
                     raise BuildkiteException(
-                        "Failed to open {}: {} - {}".format(url, ex.code, ex.reason)
+                        "Failed to open {}: {} - {}".format(full_url, ex.code, ex.reason)
                     )
 
-        raise BuildkiteException(f"Failed to open {url} after {retries} retries.")
+        raise BuildkiteException(f"Failed to open {full_url} after {retries} retries.")
+
+
+    def _get_next_page_url(self, headers):
+        """Parses the headers to determine if there are more pagination pages."""
+        link_header = headers.get("Link")
+        if not link_header:
+            return None
+        match = self._NEXT_PAGE_PATTERN.search(link_header)
+        return match.group('url') if match else None
+
+    def _build_url_with_params(self, url, params=None):
+        """Builds a URL with the given query parameters."""
+        if params is None:
+            params = []
+        params_str = "".join("&{}={}".format(k, v) for k, v in params)
+        return "{}?access_token={}{}".format(url, self._token, params_str)
+
+    def _fetch_data_as_text(self, url, params=None, retries=5) -> str:
+        """Returns the decode utf-8 representation of the _get_url_response."""
+        url = self._build_url_with_params(url, params)
+        return self._get_url_response(url, retries)[0]
+
+    def _fetch_all_pages_as_json(self, url, params=None, retries=5) -> List:
+        """Fetch all items iteratively across all pages."""
+        if params is None:
+            params = []
+        next_url = self._build_url_with_params(url, params + [("per_page", "100")])
+
+        all_items = []
+        while next_url:
+            response, next_url = self._get_url_response(next_url, retries)
+            all_items.extend(json.loads(response))
+        return all_items
 
     def get_pipeline_info(self):
         """Get details for a pipeline given its organization slug
@@ -695,7 +763,7 @@ gwD6RBL0qz1PFfg7Zw==
             the metadata for the pipeline
         """
         url = self._PIPELINE_INFO_URL_TEMPLATE.format(self._org, self._pipeline)
-        output = self._open_url(url)
+        output = self._fetch_data_as_text(url)
         return json.loads(output)
 
     def get_build_info(self, build_number):
@@ -712,7 +780,7 @@ gwD6RBL0qz1PFfg7Zw==
             the metadata for the build
         """
         url = self._BUILD_STATUS_URL_TEMPLATE.format(self._org, self._pipeline, build_number)
-        output = self._open_url(url)
+        output = self._fetch_data_as_text(url)
         return json.loads(output)
 
     def get_build_info_list(self, params):
@@ -729,11 +797,19 @@ gwD6RBL0qz1PFfg7Zw==
             the metadata for a list of builds
         """
         url = self._BUILD_STATUS_URL_TEMPLATE.format(self._org, self._pipeline, "")
-        output = self._open_url(url, params)
+        output = self._fetch_data_as_text(url, params)
         return json.loads(output)
 
     def get_build_log(self, job, retries = 5):
-        return self._open_url(job["raw_log_url"], retries = retries)
+        return self._fetch_data_as_text(job["raw_log_url"], retries = retries)
+
+    def get_agents(self, retries=5):
+        url = self._AGENTS_URL_TEMPLATE.format(self._org)
+        return self._fetch_all_pages_as_json(url, retries=retries)
+
+    def get_scheduled_jobs(self, retries=5):
+        url = self._BUILDS_URL_TEMPLATE.format(self._org)
+        return self._fetch_all_pages_as_json(url, params=[("state", "scheduled")], retries=retries)
 
     @staticmethod
     def _check_response(response, expected_status_code):
@@ -920,19 +996,33 @@ def match_matrix_attr_pattern(s):
     return re.match(r"^\${{\s*(\w+)\s*}}$", s)
 
 
+def get_matrix_attributes_for_value(value):
+    if isinstance(value, str):
+        res = match_matrix_attr_pattern(value)
+        if res:
+            yield res.groups()[0]
+    elif isinstance(value, list):
+        for subvalue in value:
+            yield from get_matrix_attributes_for_value(subvalue)
+    elif isinstance(value, dict):
+        for subkey, subvalue in value.items():
+            ignored = list(get_matrix_attributes_for_value(subkey))
+            if ignored:
+                eprint("warning: matrix expansion is not supported in subdict keys; saw", ignored)
+
+            yield from get_matrix_attributes_for_value(subvalue)
+
+
 def get_matrix_attributes(task):
     """Get unexpanded matrix attributes from the given task.
 
     If a value of field matches "${{<name>}}", then <name> is a wanted matrix attribute.
     eg. platform: ${{ platform }}
     """
-    attributes = []
-    for key, value in task.items():
-        if type(value) is str:
-            res = match_matrix_attr_pattern(value)
-            if res:
-                attributes.append(res.groups()[0])
-    return list(set(attributes))
+    attributes = set()
+    for value in task.values():
+        attributes.update(get_matrix_attributes_for_value(value))
+    return sorted(attributes)
 
 
 def should_exclude_combination(combination, excludes):
@@ -950,11 +1040,18 @@ def should_exclude_combination(combination, excludes):
         return False
 
     combination_dict = dict(combination)
+    none_attr = AttributeValue(value=None, alias=None)
+
     for exclude in excludes:
         # An exclusion matches if ALL attributes in the exclude rule match
-        if all(combination_dict.get(key) == value for key, value in exclude.items()):
+        if all(
+            combination_dict.get(key, none_attr).alias == value for key, value in exclude.items()
+        ):
             return True
     return False
+
+
+AttributeValue = collections.namedtuple("AttributeValue", ["value", "alias"])
 
 
 def get_combinations(matrix, attributes, excludes=None):
@@ -971,14 +1068,40 @@ def get_combinations(matrix, attributes, excludes=None):
     for attr in attributes:
         if attr not in matrix:
             raise BuildkiteException("${{ %s }} is not defined in `matrix` section." % attr)
-    pairs = [[(attr, value) for value in matrix[attr]] for attr in attributes]
+
+    pairs = []
+    for attr in attributes:
+        item = matrix[attr]
+        if type(item) == list:
+            pairs.append([(attr, AttributeValue(value=value, alias=value)) for value in item])
+        elif type(item) == dict:
+            pairs.append(
+                [(attr, AttributeValue(value=value, alias=alias)) for alias, value in item.items()]
+            )
+
     all_combinations = sorted(itertools.product(*pairs))
 
     # Filter out excluded combinations
     if excludes:
-        all_combinations = [c for c in all_combinations if not should_exclude_combination(c, excludes)]
+        all_combinations = [
+            c for c in all_combinations if not should_exclude_combination(c, excludes)
+        ]
 
     return all_combinations
+
+
+def expand_task_for_value(value, parent, parent_item, lookup):
+    if isinstance(value, str):
+        res = match_matrix_attr_pattern(value)
+        if res:
+            attr = res.groups()[0]
+            parent[parent_item] = lookup[attr].value
+    elif isinstance(value, list):
+        for i, subvalue in enumerate(value):
+            expand_task_for_value(subvalue, parent[parent_item], i, lookup)
+    elif isinstance(value, dict):
+        for subkey, subvalue in value.items():
+            expand_task_for_value(subvalue, parent[parent_item], subkey, lookup)
 
 
 def get_expanded_task(task, combination):
@@ -986,13 +1109,11 @@ def get_expanded_task(task, combination):
     combination = dict(combination)
     expanded_task = copy.deepcopy(task)
     for key, value in task.items():
-        if type(value) is str:
-            res = match_matrix_attr_pattern(value)
-            if res:
-                attr = res.groups()[0]
-                expanded_task[key] = combination[attr]
+        expand_task_for_value(value, expanded_task, key, combination)
+
     if "name" in expanded_task:
-        expanded_task["name"] = expanded_task.get("name", "").format(**combination)
+        alias_combination = {k: a.alias for k, a in combination.items()}
+        expanded_task["name"] = expanded_task.get("name", "").format(**alias_combination)
     return expanded_task
 
 
@@ -1021,8 +1142,8 @@ def expand_task_config(config):
         if not isinstance(exclude, dict):
             raise BuildkiteException("Each item in `matrix.exclude` must be a dict")
     for key, value in matrix.items():
-        if type(key) is not str or type(value) is not list:
-            raise BuildkiteException("Expect `matrix` is a map of str -> list")
+        if type(key) is not str or type(value) not in (list, dict):
+            raise BuildkiteException("Expect `matrix` is a map of str -> list | dict")
 
     for task in config["tasks"]:
         attributes = get_matrix_attributes(config["tasks"][task])
@@ -1178,6 +1299,16 @@ def bazelisk_flags():
     return ["--migrate"] if use_bazelisk_migrate() else []
 
 
+def flatten(seq):
+    ret = []
+    for item in seq:
+        if type(item) == str:
+            ret.append(item)
+        elif type(item) == list:
+            ret.extend(item)
+    return ret
+
+
 def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_vars):
     include_json_profile = task_config.get("include_json_profile", [])
     capture_corrupted_outputs = task_config.get("capture_corrupted_outputs", [])
@@ -1200,7 +1331,7 @@ def calculate_flags(task_config, task_config_key, action_key, tmpdir, test_env_v
             )
         ]
 
-    flags = list(task_config.get(task_config_key, []))
+    flags = flatten(task_config.get(task_config_key, []))
     flags += json_profile_flags
     flags += capture_corrupted_outputs_flags
     # We have to add --test_env flags to `build`, too, otherwise Bazel
@@ -1455,7 +1586,22 @@ def execute_commands(
                 if capture_corrupted_outputs_dir_test:
                     upload_corrupted_outputs(capture_corrupted_outputs_dir_test, tmpdir)
                 output_base = get_output_base(bazel_binary)
-                upload_log_file(os.path.join(output_base, "java.log"), tmpdir)
+                try:
+                    upload_log_file(os.path.join(output_base, "java.log"), tmpdir)
+                except Exception as ex:
+                    eprint(f"Failed to upload java.log: {ex}")
+                    job_url = f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
+                    execute_command(
+                        [
+                            "buildkite-agent",
+                            "annotate",
+                            "--style=warning",
+                            f"Failed to upload java.log from [this job]({job_url})",
+                            "--context",
+                            "ctx-java_log_upload_failed",
+                        ],
+                        fail_if_nonzero=False,
+                    )
 
             _ = future.result()
             # TODO: print results
@@ -1925,8 +2071,7 @@ def remote_caching_flags(platform, accept_cached=True):
     flags += [
         f"--remote_timeout={remote_timeout}",
         "--remote_max_connections=200",
-        '--remote_default_exec_properties=cache-silo-key=%s'
-        % platform_cache_digest.hexdigest(),
+        "--remote_default_exec_properties=cache-silo-key=%s" % platform_cache_digest.hexdigest(),
     ]
 
     if not accept_cached:
@@ -2228,10 +2373,10 @@ def calculate_targets(
 
     # Remove the "--" argument splitter from the list that some configs explicitly
     # include. We'll add it back again later where needed.
-    build_targets = [x.strip() for x in build_targets if x.strip() != "--"]
-    test_targets = [x.strip() for x in test_targets if x.strip() != "--"]
-    coverage_targets = [x.strip() for x in coverage_targets if x.strip() != "--"]
-    index_targets = [x.strip() for x in index_targets if x.strip() != "--"]
+    build_targets = [x.strip() for x in flatten(build_targets) if x.strip() != "--"]
+    test_targets = [x.strip() for x in flatten(test_targets) if x.strip() != "--"]
+    coverage_targets = [x.strip() for x in flatten(coverage_targets) if x.strip() != "--"]
+    index_targets = [x.strip() for x in flatten(index_targets) if x.strip() != "--"]
 
     diffbase = os.getenv(USE_BAZEL_DIFF_ENV_VAR, "").lower()
     disable_bazel_diff = os.getenv(DISABLE_BAZEL_DIFF_ENV_VAR, "")
@@ -2479,7 +2624,7 @@ def upload_shard_distribution(sorted_test_targets, shard_count):
     tmpdir = tempfile.mkdtemp()
     try:
         data = {
-            s+1: get_targets_for_shard(sorted_test_targets, s, shard_count)
+            s + 1: get_targets_for_shard(sorted_test_targets, s, shard_count)
             for s in range(shard_count)
         }
         base = f"{os.getenv('BUILDKITE_PIPELINE_SLUG')}_{os.getenv('BUILDKITE_BUILD_NUMBER')}_shards.json"
@@ -2544,7 +2689,9 @@ def extract_archive(archive_path, dest_dir, strip_top_level_dir):
 def download_file(url, dest_dir, dest_filename):
     local_path = os.path.join(dest_dir, dest_filename)
     try:
-        execute_command(["curl", "-q", "-sSL", "--noproxy", "'*'", url, "-o", local_path], capture_stderr=True)
+        execute_command(
+            ["curl", "-q", "-sSL", "--noproxy", "'*'", url, "-o", local_path], capture_stderr=True
+        )
     except subprocess.CalledProcessError as ex:
         raise BuildkiteInfraException("Failed to download {}: {}\n{}".format(url, ex, ex.stderr))
     return local_path
@@ -2665,6 +2812,9 @@ def execute_bazel_coverage(bazel_version, bazel_binary, platform, flags, targets
     aggregated_flags = [
         "--build_tests_only",
         "--local_test_jobs=" + concurrent_test_jobs(platform),
+        # TODO: Logs for failed tests should be collected in the
+        # same way they are for `test` invocations.
+        "--test_output=errors"
     ]
     print_collapsed_group(":bazel: Computing flags for coverage step")
     aggregated_flags += compute_flags(
@@ -2754,7 +2904,7 @@ def execute_command(
     print_output=True,
     capture_stderr=False,
     suppress_stdout=False,
-    env = os.environ,
+    env=os.environ,
 ):
     if print_output:
         eprint(" ".join(args))
@@ -2775,7 +2925,14 @@ def execute_command(
 
 
 def create_step(
-    label, commands, platform, shards=1, soft_fail=None, concurrency=None, concurrency_group=None, priority=None
+    label,
+    commands,
+    platform,
+    shards=1,
+    soft_fail=None,
+    concurrency=None,
+    concurrency_group=None,
+    priority=None,
 ):
     # TODO(#2272): remove after a migration period
     if "centos7" in platform:
@@ -2845,9 +3002,7 @@ def create_step(
     return step
 
 
-def create_docker_step(
-    label, image, commands=None, additional_env_vars=None, queue="default"
-):
+def create_docker_step(label, image, commands=None, additional_env_vars=None, queue="default"):
     env = ["ANDROID_HOME", "ANDROID_NDK_HOME", "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"]
     if THIS_IS_TRUSTED:
         # For the trusted Linux arm64 machine to upload artifacts
@@ -2890,10 +3045,12 @@ def create_docker_step(
 def log_deprecated_platform_usage(platform):
     tmpdir = tempfile.mkdtemp()
     try:
-        basename = "{}_{}_{}_{}.txt".format(os.getenv("BUILDKITE_ORGANIZATION_SLUG"),
+        basename = "{}_{}_{}_{}.txt".format(
+            os.getenv("BUILDKITE_ORGANIZATION_SLUG"),
             os.getenv("BUILDKITE_PIPELINE_SLUG"),
             os.getenv("BUILDKITE_BUILD_NUMBER"),
-            os.getenv("BUILDKITE_JOB_ID"))
+            os.getenv("BUILDKITE_JOB_ID"),
+        )
         path = os.path.join(tmpdir, basename)
         with open(path, "wt") as f:
             f.write(platform)
@@ -2935,38 +3092,18 @@ def print_project_pipeline(
 
     task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
-    buildifier_config = configs.get("buildifier")
-    # Skip Buildifier when we test downstream projects.
-    if buildifier_config and not is_downstream_pipeline():
-        buildifier_env_vars = {}
-        if isinstance(buildifier_config, str):
-            # Simple format:
-            # ---
-            # buildifier: latest
-            buildifier_env_vars["BUILDIFIER_VERSION"] = buildifier_config
-        else:
-            # Advanced format:
-            # ---
-            # buildifier:
-            #   version: latest
-            #   warnings: all
-            if "version" in buildifier_config:
-                buildifier_env_vars["BUILDIFIER_VERSION"] = buildifier_config["version"]
-            if "warnings" in buildifier_config:
-                buildifier_env_vars["BUILDIFIER_WARNINGS"] = buildifier_config["warnings"]
-
-        if not buildifier_env_vars:
-            raise BuildkiteException(
-                'Invalid buildifier configuration entry "{}"'.format(buildifier_config)
+    # Skip Buildifier & Mintlify when we test downstream projects.
+    if not is_downstream_pipeline():
+        buildifier_config = configs.get("buildifier")
+        if buildifier_config:
+            pipeline_steps.append(
+                create_buildifier_step(buildifier_config)
             )
 
-        pipeline_steps.append(
-            create_docker_step(
-                "Buildifier",
-                image=BUILDIFIER_DOCKER_IMAGE,
-                additional_env_vars=buildifier_env_vars,
+        if configs.get("check_docs"):
+            pipeline_steps.append(
+                create_check_docs_step()
             )
-        )
 
     # In Bazel Downstream Project pipelines, we should test the project at the last green commit.
     git_commit = get_last_green_commit(project_name) if is_downstream_pipeline() else None
@@ -3116,6 +3253,48 @@ def print_project_pipeline(
         )
 
     print_pipeline_steps(pipeline_steps, handle_emergencies=not is_downstream_pipeline())
+
+
+def create_buildifier_step(buildifier_config):
+    buildifier_env_vars = {}
+    if isinstance(buildifier_config, str):
+        # Simple format:
+        # ---
+        # buildifier: latest
+        buildifier_env_vars["BUILDIFIER_VERSION"] = buildifier_config
+    else:
+        # Advanced format:
+        # ---
+        # buildifier:
+        #   version: latest
+        #   warnings: all
+        if "version" in buildifier_config:
+            buildifier_env_vars["BUILDIFIER_VERSION"] = buildifier_config["version"]
+        if "warnings" in buildifier_config:
+            buildifier_env_vars["BUILDIFIER_WARNINGS"] = buildifier_config["warnings"]
+
+    if not buildifier_env_vars:
+        raise BuildkiteException(
+            'Invalid buildifier configuration entry "{}"'.format(buildifier_config)
+        )
+
+    return create_docker_step(
+        "Buildifier",
+        image=BUILDIFIER_DOCKER_IMAGE,
+        additional_env_vars=buildifier_env_vars,
+    )
+
+
+def create_check_docs_step():
+    return create_docker_step(
+        ":passport_control: Check Docs",
+        image=MINTLIFY_DOCKER_IMAGE,
+        # TODO: make env variables configurable via yaml.
+        additional_env_vars={
+            "DOCS_DIR": "docs",
+            "DOCS_JSON_URL": "https://raw.githubusercontent.com/bazel-contrib/bazel-docs/refs/heads/main/docs.json",
+        },
+    )
 
 
 def show_gerrit_review_link(git_repository, pipeline_steps):
@@ -3580,7 +3759,11 @@ def fetch_incompatible_flags():
     output = subprocess.check_output(
         [
             # Query for open issues with "incompatible-change" and "migration-ready" label.
-            "curl", "-q", "--noproxy", "'*'", "-sS",
+            "curl",
+            "-q",
+            "--noproxy",
+            "'*'",
+            "-sS",
             "https://api.github.com/search/issues?per_page=100&q=repo:bazelbuild/bazel+label:incompatible-change+label:migration-ready+state:open",
         ]
     ).decode("utf-8")
@@ -3751,9 +3934,7 @@ def bazelci_last_green_commit_url(git_repository, pipeline_slug):
     bucket_name = (
         "bazel-builds"
         if THIS_IS_TRUSTED
-        else "bazel-testing-builds"
-        if THIS_IS_TESTING
-        else "bazel-untrusted-last-green-commits"
+        else "bazel-testing-builds" if THIS_IS_TESTING else "bazel-untrusted-last-green-commits"
     )
     return "gs://{}/last_green_commit/{}/{}".format(
         bucket_name, git_repository[len("https://") :], pipeline_slug
@@ -3986,6 +4167,15 @@ def print_shard_summary():
             eprint(msg)
     finally:
         shutil.rmtree(tmpdir)
+
+
+class NoAliasDumper(yaml.Dumper):
+    def ignore_aliases(self, _data):
+        return True
+
+
+def print_configs(configs):
+    print(yaml.dump(configs, Dumper=NoAliasDumper))
 
 
 def get_log_path_for_label(label, shard, total_shards, attempt, total_attempts, is_windows):
@@ -4487,22 +4677,24 @@ def log_retry():
     tmpdir = tempfile.mkdtemp()
     print_collapsed_group(f":retry: Logging retry attempt #{retry}")
     try:
-        basename = "_".join((
-            os.getenv("BUILDKITE_PIPELINE_SLUG"),
-            os.getenv("BUILDKITE_BUILD_NUMBER"),
-            sanitize_label(os.getenv("BUILDKITE_LABEL")),
-            os.getenv("BUILDKITE_RETRY_COUNT"),
-        ))
+        basename = "_".join(
+            (
+                os.getenv("BUILDKITE_PIPELINE_SLUG"),
+                os.getenv("BUILDKITE_BUILD_NUMBER"),
+                sanitize_label(os.getenv("BUILDKITE_LABEL")),
+                os.getenv("BUILDKITE_RETRY_COUNT"),
+            )
+        )
         path = os.path.join(tmpdir, f"{basename}.txt")
         with open(path, "wt") as f:
-            f.write(
-                f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
-            )
+            f.write(f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}")
 
         # Use -n and avoid basename in dest so that we don't need
         # storage.objects.list and storage.objects.delete permissions
         # (https://cloud.google.com/storage/docs/access-control/iam-gsutil).
-        execute_command([gsutil_command(), "cp", "-n", path, RETRY_LOGS_BUCKET], capture_stderr=True)
+        execute_command(
+            [gsutil_command(), "cp", "-n", path, RETRY_LOGS_BUCKET], capture_stderr=True
+        )
     except subprocess.CalledProcessError as ex:
         eprint(f"Failed to log retry attempt: {ex.stderr}")
     except Exception as ex:
@@ -4512,6 +4704,7 @@ def log_retry():
             shutil.rmtree(tmpdir)
         except:
             pass
+
 
 def sanitize_label(label):
     return re.sub(r"[^A-Za-z0-9]+", "-", label).strip("-")
@@ -4581,6 +4774,9 @@ def main(argv=None):
     subparsers.add_parser("try_update_last_green_commit")
     subparsers.add_parser("try_update_last_green_downstream_commit")
     subparsers.add_parser("print_shard_summary")
+
+    print_tasks = subparsers.add_parser("print_tasks")
+    print_tasks.add_argument("--file_config", type=str)
 
     args = parser.parse_args(argv)
 
@@ -4688,6 +4884,8 @@ def main(argv=None):
             try_update_last_green_downstream_commit()
         elif args.subparsers_name == "print_shard_summary":
             print_shard_summary()
+        elif args.subparsers_name == "print_tasks":
+            print_configs(fetch_configs(None, args.file_config))
         else:
             parser.print_help()
             return 2
