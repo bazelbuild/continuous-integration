@@ -25,35 +25,33 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Detect Changed Orgs
+    - name: Get Changed Files
+      id: changed-files
+      uses: tj-actions/changed-files@48d8f15b2aaa3d255ca5af3eba4870f807ce6b3c # v45
+      with:
+        files: buildkite/terraform/**
+
+    - name: Extract Orgs
       id: process-orgs
       shell: bash
       run: |
-        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-          # For PRs, diff against the base branch
-          BASE_SHA="origin/${{ github.base_ref }}"
-        else
-          # For pushes to master, diff against the state before the push
-          BASE_SHA="${{ github.event.before }}"
-        fi
+        CHANGED_FILES="${{ steps.changed-files.outputs.all_changed_files }}"
         
-        # Scoped diff -> Get Specific Orgs -> Cut Org Name -> Sort Unique -> JSON Array
-        ORGS=$(git diff --name-only "$BASE_SHA" HEAD -- buildkite/terraform/ | \
-          grep -o "^buildkite/terraform/\(bazel\|bazel-trusted\|bazel-testing\)/" | cut -d/ -f3 | sort -u | \
+        # Pull Specific Orgs -> Cut Org Name -> Sort Unique -> JSON Array
+        ORGS=$(echo "$CHANGED_FILES" | tr ' ' '\n' | \
+          grep -E -o "^buildkite/terraform/(bazel|bazel-trusted|bazel-testing)/" | cut -d/ -f3 | sort -u | \
           jq -R -s -c 'split("\n") | map(select(length > 0))')
-          
+        
+        echo "DEBUG:ORGS changed are: $ORGS"
+        echo "DEBUG:Event Name is: ${{ github.event_name }}"
+        echo "DEBUG:Author is: ${{ github.event.pull_request.author_association }}"
         echo "orgs=${ORGS:-[]}" >> "$GITHUB_OUTPUT"
 
   # Job 2: Terraform Execution
   terraform:
     needs: detect-changes
-    if: |
-      # 1. Only run if we actually detected changed organizations
-      needs.detect-changes.outputs.orgs != '[]' && 
-      # 2. Security: Only run on direct pushes to master OR PRs from trusted members/owners
-      (github.event_name == 'push' || 
-       github.event.pull_request.author_association == 'MEMBER' || 
-       github.event.pull_request.author_association == 'OWNER')
+    # Run only if we have changed orgs AND (it's a push to master OR PR from trusted users)
+    if: needs.detect-changes.outputs.orgs != '[]'
     runs-on: ubuntu-latest
 
     # Lock per organization. Cancels old runs on PRs (saves time), but queues pushes (safe apply).
@@ -78,12 +76,12 @@ jobs:
     
     #TODO: change this back to WIP once the provider request is approved 
     - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@62ee50e18b458fcf27c1765166696735847add86 # v2.1.7
+      uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
       with:
         credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
     - name: Setup Terraform
-      uses: hashicorp/setup-terraform@b9cd54a3c349d3f6272e0339e9588eb6b84a6efc # v3.1.2
+      uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
       with:
         terraform_wrapper: true
         terraform_version: "1.9.5"
