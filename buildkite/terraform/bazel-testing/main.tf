@@ -13,7 +13,7 @@ terraform {
 }
 
 # This variable name must remain 'buildkite_api_token' for Terraform to
-# be able to recognize it (e.g. from TF_VAR_buildkite_api_token)
+# be able to recognize it --> (e.g. from TF_VAR_buildkite_api_token)
 variable "buildkite_api_token" {
   description = "The API token used to authenticate with Buildkite"
   type        = string
