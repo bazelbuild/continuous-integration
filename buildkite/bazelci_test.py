@@ -64,6 +64,11 @@ tasks:
       ? "--enable_w"
     build_targets:
       - "//..."
+  flatten_flags:
+    build_flags:
+      - "--enable_z"
+      - ["--enable_y", "--enable_x"]
+      - "--enable_w"
     """
     )
 
@@ -120,6 +125,21 @@ tasks:
             ["--enable_a", "--enable_b", "--enable_z", "--enable_w", "--test_env=HOME"],
         )
 
+    def test_flatten_flags(self):
+        tasks = self._CONFIGS.get("tasks")
+        flags, json_profile_out, capture_corrupted_outputs_dir = bazelci.calculate_flags(
+            tasks.get("flatten_flags"), "build_flags", "build", "/tmp", ["HOME"]
+        )
+        self.assertEqual(
+            flags,
+            [
+                "--enable_z",
+                "--enable_y",
+                "--enable_x",
+                "--enable_w",
+                "--test_env=HOME"],
+        )
+
 
 class CalculateTargets(unittest.TestCase):
     _CONFIGS = yaml.safe_load(
@@ -137,6 +157,12 @@ tasks:
     build_targets:
       <<: *base_targets
       ? "//experimental/good/..."
+
+  flatten:
+    build_targets:
+      - "//..."
+      - ["-//bad/one", "-//bad/two"]
+      - "-//bad/three"
     """
     )
 
@@ -171,12 +197,32 @@ tasks:
         )
         self.assertEqual(build_targets, ["//...", "-//experimental/...", "//experimental/good/..."])
 
+    def test_flatten(self):
+        tasks = self._CONFIGS.get("tasks")
+        build_targets, test_targets, coverage_targets, index_targets = bazelci.calculate_targets(
+            tasks.get("flatten"),
+            "bazel",
+            build_only=False,
+            test_only=False,
+            workspace_dir="/tmp",
+            ws_setup_func=None,
+            git_commit="abcd",
+            test_flags=[],
+        )
+        self.assertEqual(build_targets, [
+            "//...",
+            "-//bad/one",
+            "-//bad/two",
+            "-//bad/three",
+        ])
+
 class MatrixExpansion(unittest.TestCase):
     _CONFIGS = yaml.safe_load(
         """
 matrix:
   bazel: ["1.2.3", "2.3.4"]
   platform: ["pf1", "pf2"]
+  exit_status: [1, 2]
 tasks:
   basic:
     name: "Basic"
@@ -189,27 +235,39 @@ tasks:
     name: "Formatted w/ Bazel v{bazel} on {platform}"
     bazel: ${{ bazel }}
     platform: ${{ platform }}
+  exit_status:
+    name: "Exit Status: {exit_status}"
+    soft_fail:
+      - exit_status: ${{exit_status}}
     """
     )
 
     def test_basic_functionality(self):
-        config = self._CONFIGS
+        import copy
+
+        config = copy.deepcopy(self._CONFIGS)
 
         bazelci.expand_task_config(config)
         expanded_tasks = config["tasks"]
-        self.assertEqual(len(expanded_tasks), 9)
-        expanded_task_names = [task.get("name", None) for id, task in expanded_tasks.items()]
-        self.assertEqual(expanded_task_names, [
-            "Basic", # no matrix expansion
-            "Unformatted", # bazel v1.2.3
-            "Unformatted",  # bazel v2.3.4
-            None, # no name, bazel v1.2.3
-            None, # no name, bazel v2.3.4
-            "Formatted w/ Bazel v1.2.3 on pf1",
-            "Formatted w/ Bazel v1.2.3 on pf2",
-            "Formatted w/ Bazel v2.3.4 on pf1",
-            "Formatted w/ Bazel v2.3.4 on pf2",
-        ])
+
+        self.assertEqual(
+            list(expanded_tasks.values()),
+            [
+                # no matrix expansion
+                dict(name="Basic"),
+                dict(name="Unformatted", bazel="1.2.3"),
+                dict(name="Unformatted", bazel="2.3.4"),
+                # no name
+                dict(bazel="1.2.3"),
+                dict(bazel="2.3.4"),
+                dict(name="Formatted w/ Bazel v1.2.3 on pf1", bazel="1.2.3", platform="pf1"),
+                dict(name="Formatted w/ Bazel v1.2.3 on pf2", bazel="1.2.3", platform="pf2"),
+                dict(name="Formatted w/ Bazel v2.3.4 on pf1", bazel="2.3.4", platform="pf1"),
+                dict(name="Formatted w/ Bazel v2.3.4 on pf2", bazel="2.3.4", platform="pf2"),
+                dict(name="Exit Status: 1", soft_fail=[dict(exit_status=1)]),
+                dict(name="Exit Status: 2", soft_fail=[dict(exit_status=2)]),
+            ],
+        )
 
 
 class MatrixExclude(unittest.TestCase):
@@ -262,6 +320,24 @@ tasks:
         """
     )
 
+    _CONFIGS_DICT_EXCLUDE = yaml.safe_load(
+        """
+matrix:
+  flags:
+    set-one: ["--one", "--two"]
+    set-two: ["--three", "--four"]
+  platform: ["pf1", "pf2"]
+  exclude:
+    - platform: "pf2"
+      flags: set-one
+tasks:
+  formatted:
+    name: "Formatted on {platform} with flags {flags}"
+    platform: ${{ platform }}
+    build_flags: ${{ flags }}
+        """
+    )
+
     def test_single_exclude(self):
         import copy
         config = copy.deepcopy(self._CONFIGS_SINGLE_EXCLUDE)
@@ -303,6 +379,29 @@ tasks:
         self.assertEqual(expanded_task_names, [
             "Formatted w/ Bazel v1.2.3 on pf1",
             "Formatted w/ Bazel v2.3.4 on pf1",
+        ])
+
+    def test_dict_attribute_exclude(self):
+        import copy
+        config = copy.deepcopy(self._CONFIGS_DICT_EXCLUDE)
+
+        bazelci.expand_task_config(config)
+        expanded_tasks = config["tasks"]
+        # Total combinations: 2 * 2 = 4, minus 1 excluded = 3
+        self.assertEqual(len(expanded_tasks), 3)
+        expanded_task_names = [task.get("name", None) for id, task in expanded_tasks.items()]
+        # the name receives the friendly alias
+        self.assertEqual(expanded_task_names, [
+            "Formatted on pf1 with flags set-one",
+            "Formatted on pf1 with flags set-two",
+            "Formatted on pf2 with flags set-two",
+        ])
+        expanded_task_flags = [task.get("build_flags", None) for id, task in expanded_tasks.items()]
+        # but the flags get the real value
+        self.assertEqual(expanded_task_flags, [
+            ["--one", "--two"],
+            ["--three", "--four"],
+            ["--three", "--four"],
         ])
 
 

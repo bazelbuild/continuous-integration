@@ -1,0 +1,51 @@
+#!/bin/bash
+# Install this hook via
+#   cp .githooks/pre-commit .git/hooks && chmod +x .git/hooks/pre-commit
+
+# Regex patterns for sensitive tokens
+# Matches GitHub PATs (classic & fine-grained), OAuth, User-to-Server, Server-to-Server, and Refresh tokens
+GITHUB_TOKEN_REGEX="(gh[pousr]_[A-Za-z0-9_]{36}|github_pat_[A-Za-z0-9_]{22}_[A-Za-z0-9_]{59})"
+
+# Matches Buildkite User Access Tokens
+BUILDKITE_TOKEN_REGEX="bkua_[A-Za-z0-9_]{32,}"
+
+# Combine into a single regex for searching
+COMBINED_REGEX="($GITHUB_TOKEN_REGEX|$BUILDKITE_TOKEN_REGEX)"
+
+SECRETS_FOUND=0
+
+# Get a list of all files that are staged for commit (Added, Copied, or Modified)
+# We ignore deleted files because you can't add a token by deleting a file.
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$STAGED_FILES" ]; then
+    exit 0
+fi
+
+# Inspect each staged file
+for file in $STAGED_FILES; do
+    # 1. git diff --cached: Outputs the diff of the staged changes
+    # 2. grep '^+': Only look at newly added lines
+    # 3. grep -v '^+++': Ignore the diff file headers
+    # 4. grep -q -E: Check quietly against the regex
+    if git diff --cached "$file" | grep '^+' | grep -v '^+++' | grep -E -q "$COMBINED_REGEX"; then
+        echo "  ❌ $file" >&2
+        SECRETS_FOUND=1
+    fi
+done
+
+if [ $SECRETS_FOUND -eq 1 ]; then
+    echo "" >&2
+    echo "========================================================================" >&2
+    echo "🚨 ERROR: Commit rejected! Sensitive token(s) detected in the files above." >&2
+    echo "" >&2
+    echo "A GitHub or Buildkite token was found in your staged changes." >&2
+    echo "Please remove the token from your code, stage the changes (git add), and commit again." >&2
+    echo "" >&2
+    echo "If this is a false positive, you can bypass this hook using:" >&2
+    echo "  git commit --no-verify" >&2
+    echo "========================================================================" >&2
+    exit 1
+fi
+
+exit 0

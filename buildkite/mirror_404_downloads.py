@@ -198,9 +198,6 @@ def main():
 
     try:
         client = BuildkiteClient(org=BUILDKITE_ORG, pipeline=BUILDKITE_PIPELINE)
-        if "BUILDKITE_API_TOKEN" in os.environ:
-            client._token = os.environ["BUILDKITE_API_TOKEN"]
-
         urls = get_urls_from_buildkite(client)
         mirror_artifacts(urls, GCS_BUCKET)
 
