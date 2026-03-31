@@ -103,14 +103,22 @@ jobs:
         PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
       with:
         script: |
-          const output = `#### Terraform Plan for \`${{ matrix.org }}\` 📖
-          <details><summary>Show Plan</summary>
+          const planOutput = process.env.PLAN;
           
-          \`\`\`${process.env.PLAN}\`\`\`
+          // Regex to match "Plan: X to add, Y to change, Z to destroy."
+          const planRegex = /Plan:\s+(\d+)\s+to add,\s+(\d+)\s+to change,\s+(\d+)\s+to destroy\./;
+          const match = planOutput.match(planRegex);
           
-          </details>
+          let summary = `#### Terraform Plan for \`${{ matrix.org }}\` 📖`;
           
-          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+          if (match) {
+            const [_, toAdd, toChange, toDestroy] = match;
+            summary += `\nPlan: ${toAdd} to add, ${toChange} to change, ${toDestroy} to destroy.`;
+          } else if (planOutput.includes("No changes.")) {
+            summary += `\nNo changes. Your infrastructure matches the configuration.`;
+          }
+          
+          const output = `${summary}\n<details><summary>Show Plan</summary>\n\n\`\`\`${planOutput}\n\`\`\`\n\n</details>`;
           
           github.rest.issues.createComment({
             issue_number: context.issue.number,
