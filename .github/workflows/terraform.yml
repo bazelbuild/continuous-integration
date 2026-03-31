@@ -97,12 +97,11 @@ jobs:
       run: terraform plan -no-color -input=false -out=tfplan
 
     # Persist the plan file so we can restore it on merge (prevents race conditions)
-    - name: Upload Plan Artifact
+    - name: Upload Plan to GCS
       if: github.event_name == 'pull_request'
-      uses: actions/upload-artifact@53a0b0f498c462706e0c6aee8e49b80b7c02b3ac # v4.3.1
-      with:
-        name: tfplan-${{ matrix.org }}
-        path: ./buildkite/terraform/${{ matrix.org }}/tfplan
+      env:
+        ORG_NAME: ${{ matrix.org }}
+      run: gsutil cp tfplan "gs://bazel-buildkite-tf-state/$ORG_NAME/tfplan"
 
     - name: Post Plan to PR
       if: github.event_name == 'pull_request'
@@ -129,15 +128,20 @@ jobs:
 
     # Retrieve the saved plan from the PR to apply exactly what was reviewed
     # Terraform should fail if the saved plan doesn't match the current state anymore
-    - name: Download Plan Artifact
+    - name: Download Plan from GCS
       if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-      uses: actions/download-artifact@v4
-      with:
-        name: tfplan-${{ matrix.org }}
-        path: ./buildkite/terraform/${{ matrix.org }}
+      env:
+        ORG_NAME: ${{ matrix.org }}
+      run: gsutil cp "gs://bazel-buildkite-tf-state/$ORG_NAME/tfplan" tfplan
 
     - name: Terraform Apply
       if: github.ref == 'refs/heads/master' && github.event_name == 'push'
       env:
         TF_VAR_buildkite_api_token: ${{ secrets.BUILDKITE_API_TOKEN }}
       run: terraform apply -auto-approve -input=false tfplan
+
+    - name: Cleanup Plan from GCS
+      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+      env:
+        ORG_NAME: ${{ matrix.org }}
+      run: gsutil rm "gs://bazel-buildkite-tf-state/$ORG_NAME/tfplan"
