@@ -101,7 +101,7 @@ jobs:
       if: github.event_name == 'pull_request'
       env:
         ORG_NAME: ${{ matrix.org }}
-      run: gsutil cp tfplan "gs://bazel-buildkite-tf-state/$ORG_NAME/tfplan"
+      run: gsutil cp tfplan "gs://bazel-buildkite-tf-state/$ORG_NAME/pr-${{ github.event.pull_request.number }}-tfplan"
 
     - name: Post Plan to PR
       if: github.event_name == 'pull_request'
@@ -134,13 +134,31 @@ jobs:
             body: output
           })
 
+    - name: Get PR Number from Commit via GitHub API
+      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+      id: get-pr
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      with:
+        script: |
+          const pulls = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            commit_sha: context.sha,
+          });
+          if (pulls.data.length > 0) {
+            core.setOutput('pr_number', pulls.data[0].number);
+          } else {
+            core.setFailed('No pull request found for this commit SHA!');
+          }
+
     # Retrieve the saved plan from the PR to apply exactly what was reviewed
     # Terraform should fail if the saved plan doesn't match the current state anymore
     - name: Download Plan from GCS
       if: github.ref == 'refs/heads/master' && github.event_name == 'push'
       env:
         ORG_NAME: ${{ matrix.org }}
-      run: gsutil cp "gs://bazel-buildkite-tf-state/$ORG_NAME/tfplan" tfplan
+        PR_NUMBER: ${{ steps.get-pr.outputs.pr_number }}
+      run: gsutil cp "gs://bazel-buildkite-tf-state/$ORG_NAME/pr-$PR_NUMBER-tfplan" tfplan
 
     - name: Terraform Apply
       if: github.ref == 'refs/heads/master' && github.event_name == 'push'
@@ -152,4 +170,5 @@ jobs:
       if: github.ref == 'refs/heads/master' && github.event_name == 'push'
       env:
         ORG_NAME: ${{ matrix.org }}
-      run: gsutil rm "gs://bazel-buildkite-tf-state/$ORG_NAME/tfplan"
+        PR_NUMBER: ${{ steps.get-pr.outputs.pr_number }}
+      run: gsutil rm "gs://bazel-buildkite-tf-state/$ORG_NAME/pr-$PR_NUMBER-tfplan"
