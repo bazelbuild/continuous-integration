@@ -43,8 +43,6 @@ import urllib.error
 import urllib.request
 import yaml
 
-from collect_metrics import collect_metrics_and_push_to_bigquery
-
 # Initialize the random number generator.
 random.seed()
 
@@ -1510,7 +1508,10 @@ def execute_commands(
                     upload_corrupted_outputs(capture_corrupted_outputs_dir_test, tmpdir)
                 output_base = get_output_base(bazel_binary)
                 upload_log_file(os.path.join(output_base, "java.log"), tmpdir)
-                collect_metrics_and_push_to_bigquery(test_bep_file)
+
+                if is_trueish(os.environ.get("ENABLE_METRICS_COLLECTION", "false")):
+                    from collect_metrics import collect_metrics_and_push_to_bigquery
+                    collect_metrics_and_push_to_bigquery(test_bep_file)
 
             _ = future.result()
             # TODO: print results
