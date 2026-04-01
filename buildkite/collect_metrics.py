@@ -38,7 +38,7 @@ TABLE_ID = "ci_builds"
 class BuildMetrics:
     wall_time_ms: int = 0
     critical_path_s: float = 0.0
-    remote_cache_hits: int = 0
+    remote_and_disk_cache_hits: int = 0
     total_actions: int = 0
     output_size_bytes: int = 0
     bytes_downloaded: int = 0
@@ -197,7 +197,7 @@ def parse_bep(filepath):
                 for runner in action_summary.get("runnerCount", []):
                     name = runner.get("name", "").lower()
                     if "remote cache hit" in name or "disk cache hit" in name:
-                        build_metrics.remote_cache_hits += int(runner.get("count", 0))
+                        build_metrics.remote_and_disk_cache_hits += int(runner.get("count", 0))
 
                 artifacts = buildMetrics.get("artifactMetrics", {})
                 build_metrics.output_size_bytes = int(
@@ -349,7 +349,7 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
         "queue_duration_s": queue_duration,
         "checkout_duration_s": CHECKOUT_DURATION_S,
         "prep_duration_s": PREP_DURATION_S,
-        "remote_cache_hits": build_metrics.remote_cache_hits,
+        "remote_and_disk_cache_hits": build_metrics.remote_and_disk_cache_hits,
         "total_actions": build_metrics.total_actions,
         "output_size_bytes": build_metrics.output_size_bytes,
         "bytes_downloaded": build_metrics.bytes_downloaded,
