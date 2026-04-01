@@ -76,24 +76,44 @@ class TestPublishMetrics(unittest.TestCase):
                     },
                 }
             ),
+            # Build Tool Logs
+            json.dumps(
+                {
+                    "id": {"buildToolLogs": {}},
+                    "buildToolLogs": {
+                        "log": [
+                            {
+                                "name": "critical path",
+                                "contents": base64.b64encode(b"Critical Path: 15.0s\n").decode("utf-8"),
+                            }
+                        ]
+                    },
+                }
+            ),
+            # Build Finished
+            json.dumps(
+                {"id": {"buildFinished": {}}, "finished": {"exitCode": {"code": 0}}}
+            ),
         ]
 
         # Mock file reading
-        # Mock file reading
-        with patch("builtins.open", mock_open(read_data="\n".join(mock_bep_content))):
-            metrics, targets = collect_metrics.parse_bep("dummy.json")
+        with patch("builtins.open", mock_open(read_data="\n".join(mock_bep_content))), \
+             patch("os.path.exists", return_value=True):
+            bep_metrics = collect_metrics.parse_bep("dummy.json")
 
             # Verify Metrics
-            self.assertEqual(metrics["wall_time_ms"], 10000)
-            self.assertEqual(metrics["total_actions"], 100)
-            self.assertEqual(metrics["remote_cache_hits"], 50)
-            self.assertEqual(metrics["failed_test_count"], 1)  # test2 failed
+            self.assertEqual(bep_metrics.wall_time_ms, 10000)
+            self.assertEqual(bep_metrics.total_actions, 100)
+            self.assertEqual(bep_metrics.remote_cache_hits, 50)
+            self.assertEqual(bep_metrics.failed_test_count, 1)
+            self.assertEqual(bep_metrics.critical_path_s, 15.0)
+            self.assertEqual(bep_metrics.exit_code, 0)
 
             # Verify Targets
-            self.assertEqual(len(targets), 2)
-            target1 = next(t for t in targets if t["label"] == "//pkg:test1")
-            self.assertEqual(target1["status"], "PASSED")
-            self.assertEqual(target1["duration_s"], 1.5)
+            self.assertEqual(len(bep_metrics.targets), 2)
+            target1 = next(t for t in bep_metrics.targets if t.label == "//pkg:test1")
+            self.assertEqual(target1.status, "PASSED")
+            self.assertEqual(target1.duration_s, 1.5)
 
     def test_extract_critical_path(self):
         # Mock a Base64 encoded critical path log
@@ -134,18 +154,17 @@ class TestPublishMetrics(unittest.TestCase):
         mock_git.return_value = 5  # 5 changed files
 
         # Mock BEP Return
-        mock_metrics = {
-            "wall_time_ms": 5000,
-            "critical_path_s": 4.0,
-            "remote_cache_hits": 10,
-            "total_actions": 20,
-            "output_size_bytes": 100,
-            "bytes_downloaded": 50,
-            "failed_test_count": 0,
-            "exit_code": 0,
-        }
-        mock_targets = []
-        mock_parse.return_value = (mock_metrics, mock_targets)
+        mock_bep_metrics = collect_metrics.BuildMetrics(
+            wall_time_ms=5000,
+            critical_path_s=4.0,
+            remote_cache_hits=10,
+            total_actions=20,
+            output_size_bytes=100,
+            bytes_downloaded=50,
+            failed_test_count=0,
+            exit_code=0,
+        )
+        mock_parse.return_value = mock_bep_metrics
 
         # Run Function
         collect_metrics.collect_metrics_and_push_to_bigquery("dummy_path.json")

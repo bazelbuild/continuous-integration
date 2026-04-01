@@ -5,8 +5,46 @@ import re
 import subprocess
 import urllib
 import urllib.request
+import tempfile
+
 from datetime import datetime
 from collections import defaultdict
+
+from bazelci import execute_command, BuildkiteClient, is_windows
+
+from dataclasses import dataclass, field, asdict
+from typing import List
+
+@dataclass
+class JobTimestamps:
+    created_at: str = None
+    started_at: str = None
+    finished_at: str = None
+
+@dataclass
+class TestTarget:
+    label: str
+    status: str
+    duration_s: float
+    shard_count: int = 1
+    shard_durations: List[float] = field(default_factory=list)
+
+# --- BigQuery Configuration constants ---
+PROJECT_ID = "bazel-public"
+DATASET_ID = "bazel_ci_metrics"
+TABLE_ID = "ci_builds"
+
+@dataclass
+class BuildMetrics:
+    wall_time_ms: int = 0
+    critical_path_s: float = 0.0
+    remote_cache_hits: int = 0
+    total_actions: int = 0
+    output_size_bytes: int = 0
+    bytes_downloaded: int = 0
+    failed_test_count: int = 0
+    exit_code: int = 0
+    targets: List[TestTarget] = field(default_factory=list)
 
 def print_and_annotate_warning(message):
     """
@@ -14,7 +52,6 @@ def print_and_annotate_warning(message):
     """
     print(message)
     try:
-        from bazelci import execute_command
         job_url = f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
         execute_command(
             [
@@ -34,11 +71,10 @@ def print_and_annotate_warning(message):
 def fetch_job_timestamps(org_slug, pipeline_slug, build_number, job_id):
     """
     Fetches real timestamps from Buildkite API for the current job.
-    Returns (created_at, started_at, finished_at) strings.
+    Returns:
+        JobTimestamps: An object containing created_at, started_at, and finished_at strings.
     """
     try:
-        from bazelci import BuildkiteClient
-
         client = BuildkiteClient(org_slug, pipeline_slug)
         build_data = client.get_build_info(build_number)
         for job in build_data.get("jobs", []):
@@ -48,36 +84,38 @@ def fetch_job_timestamps(org_slug, pipeline_slug, build_number, job_id):
                 if not finished_at:
                     # Format as UTC ISO string to match Buildkite's format (e.g. 2023-10-25T10:00:00.000Z)
                     finished_at = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-                return job.get("created_at"), job.get("started_at"), finished_at
-        return None, None, None
-
+                return JobTimestamps(
+                    created_at=job.get("created_at"),
+                    started_at=job.get("started_at"),
+                    finished_at=finished_at,
+                )
     except Exception as e:
         print(f"Warning: Failed to fetch job timestamps: {e}")
 
-    return None, None, None
+    return JobTimestamps()
 
 
 def get_git_stats(target_dir="."):
     """Gets the number of files changed between HEAD and HEAD~1."""
     try:
         # Use git show instead of diff HEAD~1 because PRs might be squashed or shallow cloned
+        # --shortstat gives a summary of "X files changed" includes NEW and DELETED files too
         output = subprocess.check_output(
             ["git", "show", "--shortstat", "--format="],
             cwd=target_dir,
             text=True,
             stderr=subprocess.STDOUT,
         ).strip()
-
         # Output format: " 1 file changed, 1 insertion(+)"
-        if "changed" in output:
-            # Standard split() handles multiple spaces and leading whitespace automatically
-            return int(output.split()[0])
-
+        match = re.search(r"(\d+)\s+file[s]?\s+changed", output)
+        if match:
+            return int(match.group(1))
     except Exception as e:
         print(f"Warning: Git diff failed ({e}). Defaulting changed_files to large value (9999).")
-        # This will be passed by the cache hit metric, as it only considers small changes.
-        # but we can also return -1 and update Grafana to skip these values.
-        return 9999
+    
+    # This will be passed by the cache hit metric, as it only considers small changes.
+    # but we can also return -1 and update Grafana to skip these values.
+    return 9999
 
 
 def extract_critical_path(build_tool_logs):
@@ -100,113 +138,103 @@ def extract_critical_path(build_tool_logs):
 
 
 def parse_bep(filepath):
-    """Stream parses the BEP JSON Lines file."""
-    metrics = {
-        "wall_time_ms": 0,
-        "critical_path_s": 0.0,
-        "remote_cache_hits": 0,
-        "total_actions": 0,
-        "output_size_bytes": 0,
-        "bytes_downloaded": 0,
-        "failed_test_count": 0,
-        "exit_code": 0,
-    }
+    """
+    Parses the Build Event Protocol (BEP) JSON file to extract build metrics and targets.
 
+    Returns:
+        BuildMetrics: An object containing aggregated build metrics and test targets.
+        None: If the file does not exist.
+    """
+
+    if not os.path.exists(filepath):
+        print(f"Error: BEP file not found at {filepath}")
+        return None
+
+    build_metrics = BuildMetrics()
     target_map = defaultdict(list)
     target_status = {}
 
-    try:
-        with open(filepath, "r") as f:
-            for line in f:
-                if not line.strip():
-                    continue
-                try:
-                    event = json.loads(line)
-                except json.JSONDecodeError:
-                    print(f"Skipping invalid JSON line")
-                    continue
+    with open(filepath, "r") as f:
+        for line_num, line in enumerate(f, 1):
+            if not line.strip():
+                continue
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                print(f"Skipping invalid JSON line at line {line_num}")
+                continue
 
-                event_id = event.get("id", {})
+            event_id = event.get("id", {})
 
-                # --- 1. Test Results ---
-                if "testResult" in event:
-                    data = event["testResult"]
-                    label = event_id.get("testResult", {}).get("label")
+            # --- 1. Test Results ---
+            if "testResult" in event:
+                data = event["testResult"]
+                label = event_id.get("testResult", {}).get("label")
 
-                    if label:
-                        duration_ms = int(data.get("testAttemptDurationMillis", 0))
-                        duration_s = duration_ms / 1000.0
-                        target_map[label].append(duration_s)
+                if label:
+                    duration_ms = int(data.get("testAttemptDurationMillis", 0))
+                    duration_s = duration_ms / 1000.0
+                    target_map[label].append(duration_s)
 
-                        # Status (PASSED, FAILED, FLAKY)
-                        # If multiple shards, we take the worst status (e.g. if one shard fails, test fails)
-                        current_status = data.get("status", "UNKNOWN")
-                        if label not in target_status or current_status != "PASSED":
-                            target_status[label] = current_status
+                    # Status (PASSED, FAILED, FLAKY)
+                    current_status = data.get("status", "UNKNOWN")
+                    if label not in target_status or current_status != "PASSED":
+                        target_status[label] = current_status
 
-                        # Check for failure to increment counter
-                        if current_status != "PASSED":
-                            metrics["failed_test_count"] += 1
+                    if current_status != "PASSED":
+                        build_metrics.failed_test_count += 1
 
-                # --- 2. Build Metrics ---
-                if "buildMetrics" in event:
-                    buildMetrics = event["buildMetrics"]
-                    metrics["wall_time_ms"] = int(
-                        buildMetrics.get("timingMetrics", {}).get("wallTimeInMs", 0)
+            # --- 2. Build Metrics ---
+            elif "buildMetrics" in event:
+                buildMetrics = event["buildMetrics"]
+                build_metrics.wall_time_ms = int(
+                    buildMetrics.get("timingMetrics", {}).get("wallTimeInMs", 0)
+                )
+
+                action_summary = buildMetrics.get("actionSummary", {})
+                build_metrics.total_actions = int(action_summary.get("actionsExecuted", 0))
+
+                for runner in action_summary.get("runnerCount", []):
+                    name = runner.get("name", "").lower()
+                    if "remote cache hit" in name or "disk cache hit" in name:
+                        build_metrics.remote_cache_hits += int(runner.get("count", 0))
+
+                artifacts = buildMetrics.get("artifactMetrics", {})
+                build_metrics.output_size_bytes = int(
+                    artifacts.get("topLevelArtifacts", {}).get("sizeInBytes", 0)
+                )
+                if build_metrics.output_size_bytes == 0:
+                    build_metrics.output_size_bytes = int(
+                        artifacts.get("outputArtifactsSeen", {}).get("sizeInBytes", 0)
                     )
 
-                    action_summary = buildMetrics.get("actionSummary", {})
-                    metrics["total_actions"] = int(action_summary.get("actionsExecuted", 0))
+                # Network
+                net = buildMetrics.get("networkMetrics", {}).get("systemNetworkStats", {})
+                build_metrics.bytes_downloaded = int(net.get("bytesRecv", 0))
 
-                    # Sum up cache hits from runnerCount
-                    # We count both remote & disk hists because in both cases, Bazel successfully avoided doing the work again.
-                    for runner in action_summary.get("runnerCount", []):
-                        name = runner.get("name", "").lower()
-                        if "remote cache hit" in name or "disk cache hit" in name:
-                            metrics["remote_cache_hits"] += int(runner.get("count", 0))
+            # --- 3. Build Tool Logs ---
+            elif "buildToolLogs" in event:
+                logs = event["buildToolLogs"].get("log", [])
+                build_metrics.critical_path_s = extract_critical_path(logs)
 
-                    # Artifacts: Try topLevelArtifacts first, fall back to outputArtifactsSeen
-                    artifacts = buildMetrics.get("artifactMetrics", {})
-                    metrics["output_size_bytes"] = int(
-                        artifacts.get("topLevelArtifacts", {}).get("sizeInBytes", 0)
-                    )
-                    if metrics["output_size_bytes"] == 0:
-                        metrics["output_size_bytes"] = int(
-                            artifacts.get("outputArtifactsSeen", {}).get("sizeInBytes", 0)
-                        )
-
-                    # Network
-                    net = buildMetrics.get("networkMetrics", {}).get("systemNetworkStats", {})
-                    metrics["bytes_downloaded"] = int(net.get("bytesRecv", 0))
-
-                # --- 3. Build Tool Logs ---
-                if "buildToolLogs" in event:
-                    logs = event["buildToolLogs"].get("log", [])
-                    metrics["critical_path_s"] = extract_critical_path(logs)
-
-                # --- Build Finished (Exit Code) ---
-                if "buildFinished" in event_id:
-                    exit_data = event.get("finished").get("exitCode", {})
-                    metrics["exit_code"] = int(exit_data.get("code", 0))
-
-    except FileNotFoundError:
-        print(f"Error: BEP file not found at {filepath}")
-        return None, None
+            # --- Build Finished (Exit Code) ---
+            if "buildFinished" in event_id:
+                exit_data = event.get("finished").get("exitCode", {})
+                build_metrics.exit_code = int(exit_data.get("code", 0))
 
     # --- 4. Post-Process Nested Targets ---
-    formatted_targets = []
     for label, shards in target_map.items():
-        formatted_targets.append(
-            {
-                "label": label,
-                "status": target_status.get(label, "UNKNOWN"),
-                "duration_s": max(shards) if shards else 0.0,
-                "shard_count": len(shards),
-                "shard_durations": shards,
-            }
+        build_metrics.targets.append(
+            TestTarget(
+                label=label,
+                status=target_status.get(label, "UNKNOWN"),
+                duration_s=max(shards) if shards else 0.0,
+                shard_count=len(shards),
+                shard_durations=shards,
+            )
         )
 
-    return metrics, formatted_targets
+    return build_metrics
 
 
 def publish_to_bigquery(row):
@@ -215,23 +243,15 @@ def publish_to_bigquery(row):
     """
 
     print(f"Publishing Metrics to BigQuery ...")
+    table_ref = f"{PROJECT_ID}:{DATASET_ID}.{TABLE_ID}"        
+    bq_cmd = "bq.cmd" if is_windows() else "bq"
 
-    # BigQuery Configs
-    PROJECT_ID = "bazel-public"
-    DATASET_ID = "bazel_ci_metrics"
-    TABLE_ID = "ci_builds"
-
-    import tempfile
-    from bazelci import is_windows
     try:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tf:
-            # bq insert requires newline delimited JSON (JSONL), even for a single row
             json.dump(row, tf)
             tf.write("\n")
             temp_path = tf.name
 
-        table_ref = f"{PROJECT_ID}:{DATASET_ID}.{TABLE_ID}"        
-        bq_cmd = "bq.cmd" if is_windows() else "bq"
         result = subprocess.run(
             [bq_cmd, "insert", table_ref, temp_path],
             capture_output=True,
@@ -241,8 +261,9 @@ def publish_to_bigquery(row):
         
         if result.returncode != 0:
             print_and_annotate_warning(f"BigQuery CLI Insert Error:\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}")
-        else:
-            print("Success: Metrics pushed to BigQuery via CLI.")
+            return
+            
+        print("Success: Metrics pushed to BigQuery via CLI.")
             
     except Exception as e:
         print_and_annotate_warning(f"Failed to execute bq CLI: {e}")
@@ -261,11 +282,7 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
 
     # --- Configuration (Read Env Vars inside function) ---
     BUILDKITE_BUILD_ID = os.getenv("BUILDKITE_BUILD_ID")
-    try:
-        BUILDKITE_BUILD_NUMBER = int(os.getenv("BUILDKITE_BUILD_NUMBER"))
-    except (ValueError, TypeError):
-        BUILDKITE_BUILD_NUMBER = 0
-
+    BUILDKITE_BUILD_NUMBER = int(os.getenv("BUILDKITE_BUILD_NUMBER"))
     BUILDKITE_JOB_ID = os.getenv("BUILDKITE_JOB_ID")
     BUILDKITE_LABEL = os.getenv("BUILDKITE_LABEL")
     PIPELINE = os.getenv("BUILDKITE_PIPELINE_SLUG")
@@ -291,20 +308,20 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
     CHANGED_FILES_COUNT = get_git_stats()
 
     # Parse BEP Data
-    bep_metrics, targets = parse_bep(bep_file_path)
-    if bep_metrics is None:
+    build_metrics = parse_bep(bep_file_path)
+    if build_metrics is None:
         print_and_annotate_warning("Skipping BigQuery push due to BEP parsing failure.")
         return
 
     # Get Timestamps & calculate Queue time
-    build_created, build_started, build_finished = fetch_job_timestamps(
+    timestamps = fetch_job_timestamps(
         ORG, PIPELINE, BUILDKITE_BUILD_NUMBER, BUILDKITE_JOB_ID
     )
     queue_duration = 0.0
-    if build_created and build_started:
+    if timestamps.created_at and timestamps.started_at:
         try:
-            created_dt = datetime.fromisoformat(build_created.replace("Z", "+00:00"))
-            started_dt = datetime.fromisoformat(build_started.replace("Z", "+00:00"))
+            created_dt = datetime.fromisoformat(timestamps.created_at.replace("Z", "+00:00"))
+            started_dt = datetime.fromisoformat(timestamps.started_at.replace("Z", "+00:00"))
             queue_duration = (started_dt - created_dt).total_seconds()
         except Exception as e:
             print(f"Warning: Could not parse timestamps: {e}")
@@ -315,29 +332,29 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
         "build_number": BUILDKITE_BUILD_NUMBER,
         "job_id": BUILDKITE_JOB_ID,
         "job_label": BUILDKITE_LABEL,
-        "finished_at": build_finished,
-        "created_at": build_created,
-        "started_at": build_started,
+        "finished_at": timestamps.finished_at,
+        "created_at": timestamps.created_at,
+        "started_at": timestamps.started_at,
         "pipeline": PIPELINE,
         "platform": PLATFORM,
         "agent_id": AGENT_ID,
         "branch": BRANCH,
         "repo": REPO,
         "commit_sha": COMMIT_SHA,
-        "exit_code": bep_metrics["exit_code"],
-        "failed_test_count": bep_metrics["failed_test_count"],
+        "exit_code": build_metrics.exit_code,
+        "failed_test_count": build_metrics.failed_test_count,
         "retry_count": RETRY_COUNT,
-        "wall_time_s": bep_metrics["wall_time_ms"] / 1000.0,
-        "critical_path_s": bep_metrics["critical_path_s"],
+        "wall_time_s": build_metrics.wall_time_ms / 1000.0,
+        "critical_path_s": build_metrics.critical_path_s,
         "queue_duration_s": queue_duration,
         "checkout_duration_s": CHECKOUT_DURATION_S,
         "prep_duration_s": PREP_DURATION_S,
-        "remote_cache_hits": bep_metrics["remote_cache_hits"],
-        "total_actions": bep_metrics["total_actions"],
-        "output_size_bytes": bep_metrics["output_size_bytes"],
-        "bytes_downloaded": bep_metrics["bytes_downloaded"],
+        "remote_cache_hits": build_metrics.remote_cache_hits,
+        "total_actions": build_metrics.total_actions,
+        "output_size_bytes": build_metrics.output_size_bytes,
+        "bytes_downloaded": build_metrics.bytes_downloaded,
         "changed_files_count": CHANGED_FILES_COUNT,
-        "targets": targets,
+        "targets": [asdict(t) for t in build_metrics.targets],
     }
 
     publish_to_bigquery(row)
