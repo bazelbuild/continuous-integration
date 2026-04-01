@@ -3201,7 +3201,7 @@ def create_buildifier_step(buildifier_config):
 
 def create_check_docs_step():
     return create_docker_step(
-        ":passport_control: Check Docs",
+        ":passport_control: Check Docs [md link](http://google.com) / <a href='http://google.com'>html link</a>",
         image=MINTLIFY_DOCKER_IMAGE,
         # TODO: make env variables configurable via yaml.
         additional_env_vars={
