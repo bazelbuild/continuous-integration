@@ -57,9 +57,7 @@ resource "buildkite_pipeline" "mirror-404-artifacts-for-bazel" {
   description    = "See https://github.com/bazelbuild/continuous-integration/pull/2386"
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
-    envs = {
-      BUILDKITE_API_TOKEN = "bkua_133f21c87527e7e20bae543f9d950c0c455fe1fa"
-    },
+    envs = {},
     steps = {
       commands = [
         "cd buildkite",
@@ -158,10 +156,12 @@ resource "buildkite_pipeline" "collect-infra-ci-metrics" {
     steps = {
       commands = [
         "cd buildkite",
-        "pip install pyyaml requests google-cloud-kms google-cloud-bigquery",
+        "python3 -m pip install --upgrade pip setuptools wheel",
+        "python3 -m pip install pyyaml requests google-cloud-kms google-cloud-bigquery",
         "python3 collect_infra_metrics.py"
       ],
-      label = ":chart_with_upwards_trend: Collect Infra CI-Metrics"
+      label = ":chart_with_upwards_trend: Collect Infra CI-Metrics",
+      image = "gcr.io/bazel-public/ubuntu2204"
     }
   })
   allow_rebuilds             = true
