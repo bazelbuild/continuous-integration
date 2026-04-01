@@ -1236,3 +1236,19 @@ resource "buildkite_pipeline" "bazel-lib" {
     use_merge_group_base_commit_for_git_diff_base = false
   }
 }
+
+resource "buildkite_pipeline" "fwe-test2" {
+  name           = "fwe-test2"
+  repository     = "https://github.com/bazelbuild/bazel"
+  allow_rebuilds = true
+  steps = templatefile("pipeline.yml.tpl", {
+    envs = {},
+    steps = {
+      commands = [
+        "curl -sS \"https://raw.githubusercontent.com/fweikert/continuous-integration/pr2/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
+        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+      ]
+    }
+  })
+}
+

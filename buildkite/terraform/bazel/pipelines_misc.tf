@@ -1296,7 +1296,7 @@ resource "buildkite_pipeline" "culprit-finder" {
   description    = "Find out which commit broke a project on specific platform"
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
-    envs = jsondecode("{\"NEEDS_CLEAN\": \"1\"}"),
+    envs = jsondecode("{\"NEEDS_CLEAN\": \"1\", \"UPDATE_BAZEL_LOCK_FILE\": \"true\"}"),
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
