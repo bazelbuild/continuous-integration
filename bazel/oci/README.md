@@ -21,3 +21,4 @@ $ docker image list gcr.io/bazel-public/bazel:<bazel version>   # To check the <
 $ docker tag <IMAGE ID> gcr.io/bazel-public/bazel:latest
 $ docker push gcr.io/bazel-public/bazel:latest
 ```
+
