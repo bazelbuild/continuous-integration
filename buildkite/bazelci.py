@@ -996,11 +996,18 @@ def match_matrix_attr_pattern(s):
     return re.match(r"^\${{\s*(\w+)\s*}}$", s)
 
 
+def substitute_matrix_attr_patterns(s, lookup):
+    return re.sub(
+        r"\${{\s*(\w+)\s*}}",
+        lambda match: str(lookup[match.group(1)].value),
+        s,
+    )
+
+
 def get_matrix_attributes_for_value(value):
     if isinstance(value, str):
-        res = match_matrix_attr_pattern(value)
-        if res:
-            yield res.groups()[0]
+        for attr in re.findall(r"\${{\s*(\w+)\s*}}", value):
+            yield attr
     elif isinstance(value, list):
         for subvalue in value:
             yield from get_matrix_attributes_for_value(subvalue)
@@ -1096,6 +1103,8 @@ def expand_task_for_value(value, parent, parent_item, lookup):
         if res:
             attr = res.groups()[0]
             parent[parent_item] = lookup[attr].value
+        elif re.search(r"\${{\s*(\w+)\s*}}", value):
+            parent[parent_item] = substitute_matrix_attr_patterns(value, lookup)
     elif isinstance(value, list):
         for i, subvalue in enumerate(value):
             expand_task_for_value(subvalue, parent[parent_item], i, lookup)

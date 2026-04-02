@@ -269,6 +269,48 @@ tasks:
             ],
         )
 
+    def test_embedded_matrix_expansion(self):
+        config = yaml.safe_load(
+            """
+matrix:
+  bazel_version:
+    7.x: 7.7.1
+    8.x: 8.6.0
+tasks:
+  embedded:
+    name: "Embedded {bazel_version}"
+    build_flags:
+      - --config=bazel-${{ bazel_version }}
+      - --bazel_version=${{ bazel_version }}
+      - prefix-${{ bazel_version }}-suffix
+            """
+        )
+
+        bazelci.expand_task_config(config)
+        expanded_tasks = list(config["tasks"].values())
+
+        self.assertEqual(
+            expanded_tasks,
+            [
+                dict(
+                    name="Embedded 7.x",
+                    build_flags=[
+                        "--config=bazel-7.7.1",
+                        "--bazel_version=7.7.1",
+                        "prefix-7.7.1-suffix",
+                    ],
+                ),
+                dict(
+                    name="Embedded 8.x",
+                    build_flags=[
+                        "--config=bazel-8.6.0",
+                        "--bazel_version=8.6.0",
+                        "prefix-8.6.0-suffix",
+                    ],
+                ),
+            ],
+        )
+
 
 class MatrixExclude(unittest.TestCase):
     _CONFIGS_SINGLE_EXCLUDE = yaml.safe_load(
