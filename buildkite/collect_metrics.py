@@ -296,13 +296,13 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
 
     # Injected via webhooks
     try:
-        CHECKOUT_DURATION_S = float(os.getenv("CHECKOUT_DURATION_S", "0.0"))
-    except ValueError:
-        CHECKOUT_DURATION_S = 0.0
+        CHECKOUT_DURATION_S = float(os.getenv("CHECKOUT_DURATION_S"))
+    except (ValueError, TypeError):
+        CHECKOUT_DURATION_S = None
     try:
-        PREP_DURATION_S = float(os.getenv("PREP_DURATION_S", "0.0"))
-    except ValueError:
-        PREP_DURATION_S = 0.0
+        PREP_DURATION_S = float(os.getenv("PREP_DURATION_S"))
+    except (ValueError, TypeError):
+        PREP_DURATION_S = None
 
     # Calculate Changed Files
     CHANGED_FILES_COUNT = get_git_stats()
