@@ -140,11 +140,27 @@ jobs:
 
           const output = `${summary}\n<details><summary>Show Plan</summary>\n\n\`\`\`terraform\n${truncatedPlan}\n\`\`\`\n\n</details>`;
           
-          github.rest.issues.createComment({
+          github.rest.issues.listComments({
             issue_number: context.issue.number,
             owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
+            repo: context.repo.repo
+          }).then(({ data: comments }) => {
+            const botComment = comments.find(comment => comment.body.includes(`#### Terraform Plan for \`${{ matrix.org }}\``));
+            if (botComment) {
+              return github.rest.issues.updateComment({
+                comment_id: botComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              });
+            } else {
+              return github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              });
+            }
           });
 
     - name: Get PR Number from Commit via GitHub API
