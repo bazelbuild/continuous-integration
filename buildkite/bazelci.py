@@ -513,7 +513,7 @@ for platform, platform_dict in PLATFORMS.copy().items():
 
 BUILDIFIER_DOCKER_IMAGE = "gcr.io/bazel-public/buildifier"
 
-MINTLIFY_DOCKER_IMAGE = "gcr.io/bazel-public/mintlify"
+MINTLIFY_DOCKER_IMAGE = "gcr.io/bazel-public/{}mintlify".format("testing/" if THIS_IS_TESTING else "")
 
 # The platform used for various steps (e.g. stuff that formerly ran on the "pipeline" workers).
 DEFAULT_PLATFORM = "ubuntu1804"
