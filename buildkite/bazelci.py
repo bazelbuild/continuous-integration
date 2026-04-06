@@ -2482,11 +2482,11 @@ def get_test_query(test_targets, test_flags):
 
     excluded_platforms = []
     if is_windows():
-        excluded_platforms = ["@platforms//os:linux", "@platforms//os:macos"]
+        excluded_platforms = ["@platforms//os:linux", "@platforms//os:macos", "@platforms//:incompatible"]
     elif is_mac():
-        excluded_platforms = ["@platforms//os:linux", "@platforms//os:windows"]
+        excluded_platforms = ["@platforms//os:linux", "@platforms//os:windows", "@platforms//:incompatible"]
     elif is_linux():
-        excluded_platforms = ["@platforms//os:macos", "@platforms//os:windows"]
+        excluded_platforms = ["@platforms//os:macos", "@platforms//os:windows", "@platforms//:incompatible"]
 
     for p in excluded_platforms:
         query += " except attr('target_compatible_with', '{}\\b', $t)".format(p.replace(".", "\\."))
