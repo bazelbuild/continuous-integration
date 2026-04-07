@@ -1,10 +1,15 @@
-# Use the official Node.js LTS image as the base, which includes npm
-FROM node:lts-alpine
+# Use the Bazel public image as the base
+FROM gcr.io/bazel-public/ubuntu2404
+
+# Install dependencies: jq and Node.js for npm
+RUN apt-get update && apt-get install -y \
+    jq \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install the mint package globally
 RUN npm i -g mint
-
-RUN apk --no-cache add curl jq bash
 
 # Set default environment variables (optional, can be overridden at runtime)
 ENV DOCS_DIR="docs"
