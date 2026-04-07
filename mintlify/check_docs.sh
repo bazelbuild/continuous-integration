@@ -5,7 +5,8 @@ source "$(dirname "$0")/download_json.sh"
 
 echo "--- :bazel::books: Building reference docs"
 
-bazel build //src/main/java/com/google/devtools/build/lib:gen_mdx_reference_docs
+bazel --quiet build \
+  //src/main/java/com/google/devtools/build/lib:gen_mdx_reference_docs
 
 unzip -q bazel-bin/src/main/java/com/google/devtools/build/lib/mdx-reference-docs.zip -d "$DOCS_DIR"
 
