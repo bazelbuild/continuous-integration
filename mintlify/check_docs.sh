@@ -1,10 +1,16 @@
-#!/bin/sh
-set -euxo pipefail
+#!/bin/bash
+set -euo pipefail
+
+source "$(dirname "$0")/download_json.sh"
 
 cd "$DOCS_DIR"
 
-# Fetch the docs.json file at HEAD, otherwise mintlify fails.
-curl -sS "$DOCS_JSON_URL" -o docs.json
+echo "--- :json: Downloading docs.json & included files"
+
+# Fetch docs.json and all included files at HEAD, otherwise mintlify fails.
+download_json "$DOCS_JSON_URL"
+
+echo "+++ :male-detective::books: Checking documentation with Mintlify"
 
 # https://www.mintlify.com/docs/installation#validate-documentation-build
 # If validation fails, we annotate the build and exit.
@@ -13,4 +19,4 @@ if ! mint validate; then
   exit 1
 fi
 
-# TODO: call `mint broken-links``
+# TODO: call `mint broken-links`
