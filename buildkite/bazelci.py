@@ -1766,11 +1766,14 @@ def current_branch_is_main_branch():
 
 
 def get_release_name_from_branch_name():
-    # TODO(pcloudy): Find a better way to do this
-    if os.getenv("BUILDKITE_PIPELINE_SLUG") == "publish-bazel-binaries":
-        return None
-    res = re.match(r"release-(\d+\.\d+\.\d+(rc\d+)?).*", os.getenv("BUILDKITE_BRANCH"))
-    return res.group(1) if res else None
+    version = "unknown"
+    if os.path.exists("MODULE.bazel"):
+        with open("MODULE.bazel", "r") as f:
+            match = re.search(r'module\s*\([^)]*?version\s*=\s*"(\d+\.\d+\.\d+)', f.read())
+            if match:
+                version = match.group(1)
+    commit = os.getenv("BUILDKITE_COMMIT", "")
+    return f"{version}-pre-{commit}"
 
 
 def is_pull_request():
