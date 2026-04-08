@@ -2480,13 +2480,13 @@ def get_test_query(test_targets, test_flags):
     for t in excluded_tags:
         query += " except attr('tags', '\\b{}\\b', $t)".format(t)
 
-    excluded_platforms = []
-    if is_windows():
-        excluded_platforms = ["@platforms//os:linux", "@platforms//os:macos", "@platforms//:incompatible"]
-    elif is_mac():
-        excluded_platforms = ["@platforms//os:linux", "@platforms//os:windows", "@platforms//:incompatible"]
-    elif is_linux():
-        excluded_platforms = ["@platforms//os:macos", "@platforms//os:windows", "@platforms//:incompatible"]
+    excluded_platforms = ["@platforms//:incompatible"]
+    if not is_windows():
+        excluded_platforms.append("@platforms//os:windows")
+    if not is_mac():
+        excluded_platforms.append("@platforms//os:macos")
+    if not is_linux():
+        excluded_platforms.append("@platforms//os:linux")
 
     for p in excluded_platforms:
         query += " except attr('target_compatible_with', '{}\\b', $t)".format(p.replace(".", "\\."))
