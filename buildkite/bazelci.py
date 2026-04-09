@@ -3023,7 +3023,7 @@ def create_step(
     return step
 
 
-def create_docker_step(label, image, commands=None, additional_env_vars=None, queue="default"):
+def create_docker_step(label, image, commands=None, additional_env_vars=None, queue="default", enable_soft_fail=False):
     env = ["ANDROID_HOME", "ANDROID_NDK_HOME", "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "CHECKOUT_DURATION_S", "PREP_DURATION_S"]
     if THIS_IS_TRUSTED:
         # For the trusted Linux arm64 machine to upload artifacts
@@ -3058,6 +3058,10 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None, qu
             }
         },
     }
+    if enable_soft_fail:
+        # Enable soft_fail for all non-zero exit codes as per
+        # https://buildkite.com/docs/pipelines/configure/step-types/command-step
+        step["soft_fail"] = "true"
     if not step["command"]:
         del step["command"]
     return step
@@ -3315,6 +3319,9 @@ def create_check_docs_step():
             "DOCS_DIR": "docs",
             "DOCS_JSON_URL": "https://raw.githubusercontent.com/bazel-contrib/bazel-docs/refs/heads/main/docs.json",
         },
+        # Docs should not fail the post-submit pipeline.
+        # TODO: come up with a better detection mechanism.
+        enable_soft_fail=os.getenv("BUILDKITE_PIPELINE_SLUG")=="bazel-bazel",
     )
 
 
