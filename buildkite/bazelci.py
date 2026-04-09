@@ -513,7 +513,7 @@ for platform, platform_dict in PLATFORMS.copy().items():
 
 BUILDIFIER_DOCKER_IMAGE = "gcr.io/bazel-public/buildifier"
 
-MINTLIFY_DOCKER_IMAGE = "gcr.io/bazel-public/mintlify"
+MINTLIFY_DOCKER_IMAGE = "gcr.io/bazel-public/{}mintlify".format("testing/" if THIS_IS_TESTING else "")
 
 # The platform used for various steps (e.g. stuff that formerly ran on the "pipeline" workers).
 DEFAULT_PLATFORM = "ubuntu1804"
@@ -1784,11 +1784,14 @@ def current_branch_is_main_branch():
 
 
 def get_release_name_from_branch_name():
-    # TODO(pcloudy): Find a better way to do this
-    if os.getenv("BUILDKITE_PIPELINE_SLUG") == "publish-bazel-binaries":
-        return None
-    res = re.match(r"release-(\d+\.\d+\.\d+(rc\d+)?).*", os.getenv("BUILDKITE_BRANCH"))
-    return res.group(1) if res else None
+    version = "unknown"
+    if os.path.exists("MODULE.bazel"):
+        with open("MODULE.bazel", "r") as f:
+            match = re.search(r'module\s*\([^)]*?version\s*=\s*"(\d+\.\d+\.\d+)', f.read())
+            if match:
+                version = match.group(1)
+    commit = os.getenv("BUILDKITE_COMMIT", "")
+    return f"{version}-pre-{commit}"
 
 
 def is_pull_request():
@@ -2495,13 +2498,13 @@ def get_test_query(test_targets, test_flags):
     for t in excluded_tags:
         query += " except attr('tags', '\\b{}\\b', $t)".format(t)
 
-    excluded_platforms = []
-    if is_windows():
-        excluded_platforms = ["@platforms//os:linux", "@platforms//os:macos"]
-    elif is_mac():
-        excluded_platforms = ["@platforms//os:linux", "@platforms//os:windows"]
-    elif is_linux():
-        excluded_platforms = ["@platforms//os:macos", "@platforms//os:windows"]
+    excluded_platforms = ["@platforms//:incompatible"]
+    if not is_windows():
+        excluded_platforms.append("@platforms//os:windows")
+    if not is_mac():
+        excluded_platforms.append("@platforms//os:macos")
+    if not is_linux():
+        excluded_platforms.append("@platforms//os:linux")
 
     for p in excluded_platforms:
         query += " except attr('target_compatible_with', '{}\\b', $t)".format(p.replace(".", "\\."))
