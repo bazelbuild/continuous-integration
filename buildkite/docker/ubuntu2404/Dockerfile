@@ -85,10 +85,20 @@ RUN LATEST_BUILDIFIER=$(curl -sSI https://github.com/bazelbuild/buildtools/relea
 FROM ubuntu2404-nojdk AS ubuntu2404
 
 RUN apt-get -y update && \
-    apt-get -y install openjdk-21-jdk-headless && \
+    apt-get -y install --no-install-recommends \
+    openjdk-21-jdk-headless && \
     rm -rf /var/lib/apt/lists/*
 
-ENV JAVA_HOME /usr/lib/jvm/java-21-openjdk-${TARGETARCH}
+ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-${TARGETARCH}
+
+FROM ubuntu2404-nojdk AS ubuntu2404-java25
+
+RUN apt-get -y update && \
+    apt-get -y install --no-install-recommends \
+    openjdk-25-jdk-headless && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME=/usr/lib/jvm/java-25-openjdk-${TARGETARCH}
 
 FROM ubuntu2404 AS ubuntu2404-kythe
 
