@@ -58,3 +58,8 @@ jobs:
     - name: Cargo Format Check
       working-directory: agent
       run: cargo fmt --all -- --check
+
+    - name: BazelCI wrapper test
+      working-directory: buildkite
+      run: bash bazelci_wrapper_test.sh
+
