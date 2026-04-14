@@ -207,12 +207,13 @@ resource "buildkite_pipeline" "bazel-bazel" {
   steps = templatefile("pipeline.yml.tpl", {
     envs = {
       LC_ALL = "en_US.UTF-8"
+      ENABLE_METRICS_COLLECTION = "true"
     }
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/collect_metrics.py?$(date +%s)\" -o collect_metrics.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/postsubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/postsubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
