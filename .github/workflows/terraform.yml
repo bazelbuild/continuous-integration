@@ -107,7 +107,7 @@ jobs:
           const fs = require('fs');
           let planOutput = "Plan file not found";
           try {
-            planOutput = fs.readFileSync('plan.txt', 'utf8');
+            planOutput = fs.readFileSync(`buildkite/terraform/${{ matrix.org }}/plan.txt`, 'utf8');
           } catch (e) {
             planOutput = "Error reading plan file: " + e.message;
           }
