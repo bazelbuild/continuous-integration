@@ -125,7 +125,7 @@ jobs:
             summary += `\nNo changes. Your infrastructure matches the configuration.`;
           }
 
-          const maxLength = 60000;
+          const maxLength = 64000;
           let truncatedPlan = planOutput;
           if (planOutput.length > maxLength) {
             const msg = "\n... (truncated due to length. Read full plan in 'Terraform Plan' step of GitHub Actions run) ...";
