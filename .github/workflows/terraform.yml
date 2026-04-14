@@ -83,7 +83,7 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
       with:
-        terraform_wrapper: true
+        terraform_wrapper: false
         terraform_version: "1.9.5"
     
     - name: Terraform Init
@@ -94,30 +94,68 @@ jobs:
       id: plan
       env:
         TF_VAR_buildkite_api_token: ${{ secrets.BUILDKITE_API_TOKEN }}
-      run: terraform plan -no-color -input=false
+      run: |
+        terraform plan -no-color -input=false -out=tfplan
+        terraform show -no-color tfplan > plan.txt
+
 
     - name: Post Plan to PR
       if: github.event_name == 'pull_request'
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-      env:
-        PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
       with:
         script: |
-          const output = `#### Terraform Plan for \`${{ matrix.org }}\` 📖
-          <details><summary>Show Plan</summary>
+          const fs = require('fs');
+          let planOutput = "Plan file not found";
+          try {
+            planOutput = fs.readFileSync(`buildkite/terraform/${{ matrix.org }}/plan.txt`, 'utf8');
+          } catch (e) {
+            planOutput = "Error reading plan file: " + e.message;
+          }
           
-          \`\`\`${process.env.PLAN}\`\`\`
+          // Regex to match "Plan: X to add, Y to change, Z to destroy."
+          const planRegex = /Plan:\s+(\d+)\s+to add,\s+(\d+)\s+to change,\s+(\d+)\s+to destroy\./;
+          const match = planOutput.match(planRegex);
           
-          </details>
+          let summary = `#### Terraform Plan for \`${{ matrix.org }}\` 📖`;
           
-          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+          if (match) {
+            const [_, toAdd, toChange, toDestroy] = match;
+            summary += `\nPlan: ${toAdd} to add, ${toChange} to change, ${toDestroy} to destroy.`;
+          } else if (planOutput.includes("No changes.")) {
+            summary += `\nNo changes. Your infrastructure matches the configuration.`;
+          }
+
+          const maxLength = 64000;
+          let truncatedPlan = planOutput;
+          if (planOutput.length > maxLength) {
+            const msg = "\n... (truncated due to length. Read full plan in 'Terraform Plan' step of GitHub Actions run) ...";
+            truncatedPlan = planOutput.substring(0, maxLength) + msg;
+          }
+
+          const output = `${summary}\n<details><summary>Show Plan</summary>\n\n\`\`\`terraform\n${truncatedPlan}\n\`\`\`\n\n</details>`;
           
-          github.rest.issues.createComment({
+          github.rest.issues.listComments({
             issue_number: context.issue.number,
             owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
-          })
+            repo: context.repo.repo
+          }).then(({ data: comments }) => {
+            const botComment = comments.find(comment => comment.body.includes(`#### Terraform Plan for \`${{ matrix.org }}\``));
+            if (botComment) {
+              return github.rest.issues.updateComment({
+                comment_id: botComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              });
+            } else {
+              return github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              });
+            }
+          });
 
     - name: Terraform Apply
       if: github.ref == 'refs/heads/master' && github.event_name == 'push'
