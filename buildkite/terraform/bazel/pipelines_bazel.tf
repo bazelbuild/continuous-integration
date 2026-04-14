@@ -970,6 +970,7 @@ resource "buildkite_pipeline" "bazel-bazel" {
   steps = templatefile("pipeline.yml.tpl", {
     envs = {
       DOCS_DIR = "."
+      ENABLE_METRICS_COLLECTION = "true"
     },
     steps = {
       commands = [
@@ -1140,6 +1141,7 @@ resource "buildkite_pipeline" "bazel-bazel-github-presubmit" {
   steps = templatefile("pipeline.yml.tpl", {
     envs = {
       USE_BAZEL_DIFF = "true"
+      ENABLE_METRICS_COLLECTION = "true"
     },
     steps = {
       commands = [
