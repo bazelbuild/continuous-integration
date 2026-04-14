@@ -68,6 +68,7 @@ if ([string]::IsNullOrWhiteSpace($START_TIME_STR)) {
   Write-Warning "JOB_START_TIME is missing; skipping checkout duration calculation."
   return
 }
+$START_TIME = 0
 if (-not [long]::TryParse($START_TIME_STR.Trim(), [ref]$START_TIME)) {
   Write-Warning "JOB_START_TIME '$START_TIME_STR' is not a valid Unix-ms timestamp; skipping checkout duration calculation."
   return
@@ -86,14 +87,17 @@ $PREP_END_TIME = [long]([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds())
 $START_TIME_STR = buildkite-agent env get CHECKOUT_END_TIME
 if ([string]::IsNullOrWhiteSpace($START_TIME_STR)) {
     Write-Host "CHECKOUT_END_TIME is not set or empty; skipping PREP_DURATION_S calculation."
-} elseif (-not [long]::TryParse($START_TIME_STR.Trim(), [ref]$START_TIME)) {
-    Write-Host "CHECKOUT_END_TIME ('$START_TIME_STR') is not a valid integer; skipping PREP_DURATION_S calculation."
-} else {
-    $DIFF = $PREP_END_TIME - $START_TIME
-    $PREP_DURATION_S = [math]::Round($DIFF / 1000.0, 3).ToString([cultureinfo]::InvariantCulture)
-    Write-Host "PREP_DURATION_S: $PREP_DURATION_S"
-    buildkite-agent env set "PREP_DURATION_S=$PREP_DURATION_S"
+    return
 }
+$START_TIME = 0
+if (-not [long]::TryParse($START_TIME_STR.Trim(), [ref]$START_TIME)) {
+    Write-Host "CHECKOUT_END_TIME ('$START_TIME_STR') is not a valid integer; skipping PREP_DURATION_S calculation."
+    return
+}
+$DIFF = $PREP_END_TIME - $START_TIME
+$PREP_DURATION_S = [math]::Round($DIFF / 1000.0, 3).ToString([cultureinfo]::InvariantCulture)
+Write-Host "PREP_DURATION_S: $PREP_DURATION_S"
+buildkite-agent env set "PREP_DURATION_S=$PREP_DURATION_S"
 '@
 [System.IO.File]::WriteAllLines("c:\buildkite\hooks\pre-command.ps1", $buildkite_precommand_hook)
 
