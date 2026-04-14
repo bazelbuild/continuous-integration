@@ -1190,7 +1190,7 @@ resource "buildkite_pipeline" "bcr-presubmit" {
       ENABLE_BAZELISK_MIGRATE = "1"
     },
     steps = {
-      image = "gcr.io/bazel-public/ubuntu2204",
+      image = "gcr.io/bazel-public/ubuntu2404",
       commands = [
         "curl -q --noproxy '*' -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py\" -o bazelci.py",
         "curl -q --noproxy '*' -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py\" -o bcr_presubmit.py",

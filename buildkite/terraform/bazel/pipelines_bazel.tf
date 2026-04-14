@@ -938,7 +938,7 @@ resource "buildkite_pipeline" "bcr-bazel-compatibility-test" {
       # SKIP_WAIT_FOR_APPROVAL: 1
     },
     steps = {
-      image = "gcr.io/bazel-public/ubuntu2204",
+      image = "gcr.io/bazel-public/ubuntu2404",
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py?$(date +%s)\" -o bcr_presubmit.py",
@@ -969,7 +969,7 @@ resource "buildkite_pipeline" "bazel-bazel" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {
-      ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN = "CiQA4DEB9rzbux2bc8Cn1JvZIggsEeEq0GCnh1xykjNdwcgN/YESQgAqwcvXqhZ5FkGlrfoeE5/7JLEqQ0vYCfVIKPI9JR0cuo8s3oYZTyxBjbHEhsnh31+LnK2K3GiLyc+vDP7EyNx0ww=="
+      DOCS_DIR = "."
     },
     steps = {
       commands = [
