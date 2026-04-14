@@ -281,7 +281,10 @@ resource "buildkite_pipeline" "fwe-test" {
   name       = "fwe-test"
   repository = "https://github.com/fweikert/bazel"
   steps = templatefile("pipeline.yml.tpl", {
-    envs = {}
+    envs = {
+      LC_ALL = "en_US.UTF-8"
+      ENABLE_METRICS_COLLECTION = "true"
+    }
     steps = {
       commands = [
          "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
