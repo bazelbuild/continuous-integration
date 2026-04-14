@@ -20,6 +20,9 @@ if [[ "$(git config --get remote.origin.url)" == */bazel.git ]]; then
 
   # Fetch docs.json and all included files at HEAD, otherwise mintlify fails.
   download_json "$DOCS_JSON_URL"
+else
+  echo "--- Writing .mintignore"
+  echo "upstream/" > .mintignore
 fi
 
 echo "+++ :male-detective::books: Checking documentation with Mintlify"
