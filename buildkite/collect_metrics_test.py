@@ -239,7 +239,7 @@ class TestPublishMetrics(unittest.TestCase):
             self.assertIsNone(bep_metrics)
 
 
-    @patch("collect_metrics.BuildkiteClient")
+    @patch("collect_metrics.bazelci.BuildkiteClient")
     def test_fetch_job_timestamps_success(self, mock_client_cls):
         mock_client = MagicMock()
         mock_client_cls.return_value = mock_client
