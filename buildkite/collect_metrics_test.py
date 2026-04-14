@@ -104,7 +104,7 @@ class TestPublishMetrics(unittest.TestCase):
             # Verify Metrics
             self.assertEqual(bep_metrics.wall_time_ms, 10000)
             self.assertEqual(bep_metrics.total_actions, 100)
-            self.assertEqual(bep_metrics.remote_cache_hits, 50)
+            self.assertEqual(bep_metrics.remote_and_disk_cache_hits, 50)
             self.assertEqual(bep_metrics.failed_test_count, 1)
             self.assertEqual(bep_metrics.critical_path_s, 15.0)
             self.assertEqual(bep_metrics.exit_code, 0)
@@ -114,6 +114,25 @@ class TestPublishMetrics(unittest.TestCase):
             target1 = next(t for t in bep_metrics.targets if t.label == "//pkg:test1")
             self.assertEqual(target1.status, "PASSED")
             self.assertEqual(target1.duration_s, 1.5)
+
+            # --- Second Run to fall back to outputArtifactsSeen ---
+            mock_bep_content_2 = [
+                json.dumps(
+                    {
+                        "id": {"buildMetrics": {}},
+                        "buildMetrics": {
+                            "artifactMetrics": {
+                                "topLevelArtifacts": {"sizeInBytes": "0"},
+                                "outputArtifactsSeen": {"sizeInBytes": "4096"}
+                            },
+                        },
+                    }
+                ),
+            ]
+            
+            with patch("builtins.open", mock_open(read_data="\n".join(mock_bep_content_2))):
+                bep_metrics_2 = collect_metrics.parse_bep("dummy2.json")
+                self.assertEqual(bep_metrics_2.output_size_bytes, 4096)
 
     def test_extract_critical_path(self):
         # Mock a Base64 encoded critical path log
@@ -157,7 +176,7 @@ class TestPublishMetrics(unittest.TestCase):
         mock_bep_metrics = collect_metrics.BuildMetrics(
             wall_time_ms=5000,
             critical_path_s=4.0,
-            remote_cache_hits=10,
+            remote_and_disk_cache_hits=10,
             total_actions=20,
             output_size_bytes=100,
             bytes_downloaded=50,
@@ -166,8 +185,13 @@ class TestPublishMetrics(unittest.TestCase):
         )
         mock_parse.return_value = mock_bep_metrics
 
-        # Run Function
-        collect_metrics.collect_metrics_and_push_to_bigquery("dummy_path.json")
+        # Run Function (with mocked timestamps)
+        with patch("collect_metrics.fetch_job_timestamps") as mock_fetch:
+            mock_fetch.return_value = collect_metrics.JobTimestamps(
+                created_at="2023-10-25T10:00:00Z",
+                started_at="2023-10-25T10:05:00Z"
+            )
+            collect_metrics.collect_metrics_and_push_to_bigquery("dummy_path.json")
 
         # Verify publish_to_bigquery was called
         mock_publish.assert_called_once()
@@ -179,6 +203,53 @@ class TestPublishMetrics(unittest.TestCase):
         self.assertEqual(row["pipeline"], "test-pipeline")
         self.assertEqual(row["changed_files_count"], 5)
         self.assertEqual(row["failed_test_count"], 0)
+        self.assertEqual(row.get("queue_duration_s"), 300.0)
+
+    @patch("collect_metrics.subprocess.run")
+    def test_publish_to_bigquery_failure(self, mock_run):
+        mock_result = MagicMock()
+        mock_result.returncode = 1
+        mock_result.stdout = "out"
+        mock_result.stderr = "err"
+        mock_run.return_value = mock_result
+        
+        with patch("collect_metrics.print_and_annotate_warning") as mock_annotate:
+            collect_metrics.publish_to_bigquery({"test": 1})
+            mock_annotate.assert_called_once()
+
+    def test_duration_parsing_error(self):
+        with patch.dict(os.environ, {"CHECKOUT_DURATION_S": "invalid", "PREP_DURATION_S": "invalid", "BUILDKITE_BUILD_NUMBER": "500"}):
+            with patch("collect_metrics.parse_bep") as mock_parse, \
+                 patch("collect_metrics.publish_to_bigquery"):
+                mock_parse.return_value = MagicMock()
+                collect_metrics.collect_metrics_and_push_to_bigquery("dummy")
+
+    @patch("collect_metrics.parse_bep")
+    def test_collect_metrics_bep_failure(self, mock_parse):
+        mock_parse.return_value = None
+        with patch.dict(os.environ, {"BUILDKITE_BUILD_NUMBER": "500"}):
+            with patch("collect_metrics.print_and_annotate_warning") as mock_annotate:
+                collect_metrics.collect_metrics_and_push_to_bigquery("dummy")
+                mock_annotate.assert_called_once_with("Skipping BigQuery push due to BEP parsing failure.")
+
+
+    def test_parse_bep_file_not_found(self):
+        with patch("os.path.exists", return_value=False):
+            bep_metrics = collect_metrics.parse_bep("non_existent_file.json")
+            self.assertIsNone(bep_metrics)
+
+
+    @patch("collect_metrics.bazelci.BuildkiteClient")
+    def test_fetch_job_timestamps_success(self, mock_client_cls):
+        mock_client = MagicMock()
+        mock_client_cls.return_value = mock_client
+        mock_client.get_build_info.return_value = {
+            "jobs": [{"id": "123", "created_at": "C", "started_at": "S", "finished_at": "F"}]
+        }
+        
+        ts = collect_metrics.fetch_job_timestamps("org", "pipe", 1, "123")
+        self.assertEqual(ts.created_at, "C")
+        self.assertEqual(ts.finished_at, "F")
 
 
 if __name__ == "__main__":

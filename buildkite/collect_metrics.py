@@ -7,34 +7,33 @@ import urllib
 import urllib.request
 import tempfile
 
-from datetime import datetime
-from collections import defaultdict
-
-from bazelci import execute_command, BuildkiteClient, is_windows
-
-from dataclasses import dataclass, field, asdict
+import collections
+import dataclasses
+import datetime
 from typing import List
 
-@dataclass
+import bazelci
+
+@dataclasses.dataclass
 class JobTimestamps:
     created_at: str = None
     started_at: str = None
     finished_at: str = None
 
-@dataclass
+@dataclasses.dataclass
 class TestTarget:
     label: str
     status: str
     duration_s: float
     shard_count: int = 1
-    shard_durations: List[float] = field(default_factory=list)
+    shard_durations: List[float] = dataclasses.field(default_factory=list)
 
 # --- BigQuery Configuration constants ---
 PROJECT_ID = "bazel-public"
 DATASET_ID = "bazel_ci_metrics"
 TABLE_ID = "ci_builds"
 
-@dataclass
+@dataclasses.dataclass
 class BuildMetrics:
     wall_time_ms: int = 0
     critical_path_s: float = 0.0
@@ -44,16 +43,16 @@ class BuildMetrics:
     bytes_downloaded: int = 0
     failed_test_count: int = 0
     exit_code: int = 0
-    targets: List[TestTarget] = field(default_factory=list)
+    targets: List[TestTarget] = dataclasses.field(default_factory=list)
 
 def print_and_annotate_warning(message):
     """
     Prints a warning to the logs and annotates the Buildkite UI so it's visible on the build page.
     """
-    print(message)
+    bazelci.eprint(message)
     try:
         job_url = f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
-        execute_command(
+        bazelci.execute_command(
             [
                 "buildkite-agent",
                 "annotate",
@@ -65,7 +64,7 @@ def print_and_annotate_warning(message):
             fail_if_nonzero=False,
         )
     except Exception as e:
-        print(f"Failed to annotate Buildkite: {e}")
+        bazelci.eprint(f"Failed to annotate Buildkite: {e}")
 
 
 def fetch_job_timestamps(org_slug, pipeline_slug, build_number, job_id):
@@ -75,22 +74,23 @@ def fetch_job_timestamps(org_slug, pipeline_slug, build_number, job_id):
         JobTimestamps: An object containing created_at, started_at, and finished_at strings.
     """
     try:
-        client = BuildkiteClient(org_slug, pipeline_slug)
+        client = bazelci.BuildkiteClient(org_slug, pipeline_slug)
         build_data = client.get_build_info(build_number)
         for job in build_data.get("jobs", []):
             if job.get("id") == job_id:
-                # If the job is still running when this script executes, finished_at is None
+                # If the job is still running when this script executes (which is typical
+                # when called from bazelci.py), finished_at is None. We fallback to the
+                # current time so Grafana queries have a valid timestamp for metrics.
                 finished_at = job.get("finished_at")
                 if not finished_at:
-                    # Format as UTC ISO string to match Buildkite's format (e.g. 2023-10-25T10:00:00.000Z)
-                    finished_at = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+                    finished_at = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
                 return JobTimestamps(
                     created_at=job.get("created_at"),
                     started_at=job.get("started_at"),
                     finished_at=finished_at,
                 )
     except Exception as e:
-        print(f"Warning: Failed to fetch job timestamps: {e}")
+        bazelci.eprint(f"Warning: Failed to fetch job timestamps: {e}")
 
     return JobTimestamps()
 
@@ -111,7 +111,7 @@ def get_git_stats(target_dir="."):
         if match:
             return int(match.group(1))
     except Exception as e:
-        print(f"Warning: Git diff failed ({e}). Defaulting changed_files to large value (9999).")
+        bazelci.eprint(f"Warning: Git diff failed ({e}). Defaulting changed_files to large value (9999).")
     
     # This will be passed by the cache hit metric, as it only considers small changes.
     # but we can also return -1 and update Grafana to skip these values.
@@ -133,7 +133,7 @@ def extract_critical_path(build_tool_logs):
                 if match:
                     return float(match.group(1))
             except Exception as e:
-                print(f"Error parsing critical path log: {e}")
+                bazelci.eprint(f"Error parsing critical path log: {e}")
     return 0.0
 
 
@@ -147,11 +147,11 @@ def parse_bep(filepath):
     """
 
     if not os.path.exists(filepath):
-        print(f"Error: BEP file not found at {filepath}")
+        bazelci.eprint(f"Error: BEP file not found at {filepath}")
         return None
 
     build_metrics = BuildMetrics()
-    target_map = defaultdict(list)
+    target_map = collections.defaultdict(list)
     target_status = {}
 
     with open(filepath, "r") as f:
@@ -161,7 +161,7 @@ def parse_bep(filepath):
             try:
                 event = json.loads(line)
             except json.JSONDecodeError:
-                print(f"Skipping invalid JSON line at line {line_num}")
+                bazelci.eprint(f"Skipping invalid JSON line at line {line_num}")
                 continue
 
             event_id = event.get("id", {})
@@ -242,9 +242,9 @@ def publish_to_bigquery(row):
     Pushes a single row to BigQuery using the 'bq' CLI tool via subprocess.
     """
 
-    print(f"Publishing Metrics to BigQuery ...")
+    bazelci.eprint(f"Publishing Metrics to BigQuery ...")
     table_ref = f"{PROJECT_ID}:{DATASET_ID}.{TABLE_ID}"        
-    bq_cmd = "bq.cmd" if is_windows() else "bq"
+    bq_cmd = "bq.cmd" if bazelci.is_windows() else "bq"
 
     try:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tf:
@@ -263,22 +263,21 @@ def publish_to_bigquery(row):
             print_and_annotate_warning(f"BigQuery CLI Insert Error:\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}")
             return
             
-        print("Success: Metrics pushed to BigQuery via CLI.")
+        bazelci.eprint("Success: Metrics pushed to BigQuery via CLI.")
             
     except Exception as e:
-        print_and_annotate_warning(f"Failed to execute bq CLI: {e}")
+        eprint_and_annotate_warning(f"Failed to execute bq CLI: {e}")
     finally:
         if 'temp_path' in locals() and os.path.exists(temp_path):
             os.remove(temp_path)
 
 def collect_metrics_and_push_to_bigquery(bep_file_path):
-
-    print(f"Collecting CI Metrics ...")
-
     """
     Reads the BEP file, collects environment variables, and pushes metrics to BigQuery.
     Called from bazelci.py after the build finishes.
     """
+
+    bazelci.eprint(f"Collecting CI Metrics ...")
 
     # --- Configuration (Read Env Vars inside function) ---
     BUILDKITE_BUILD_ID = os.getenv("BUILDKITE_BUILD_ID")
@@ -296,13 +295,13 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
 
     # Injected via webhooks
     try:
-        CHECKOUT_DURATION_S = float(os.getenv("CHECKOUT_DURATION_S", "0.0"))
-    except ValueError:
-        CHECKOUT_DURATION_S = 0.0
+        CHECKOUT_DURATION_S = float(os.getenv("CHECKOUT_DURATION_S"))
+    except (ValueError, TypeError):
+        CHECKOUT_DURATION_S = None
     try:
-        PREP_DURATION_S = float(os.getenv("PREP_DURATION_S", "0.0"))
-    except ValueError:
-        PREP_DURATION_S = 0.0
+        PREP_DURATION_S = float(os.getenv("PREP_DURATION_S"))
+    except (ValueError, TypeError):
+        PREP_DURATION_S = None
 
     # Calculate Changed Files
     CHANGED_FILES_COUNT = get_git_stats()
@@ -320,11 +319,11 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
     queue_duration = 0.0
     if timestamps.created_at and timestamps.started_at:
         try:
-            created_dt = datetime.fromisoformat(timestamps.created_at.replace("Z", "+00:00"))
-            started_dt = datetime.fromisoformat(timestamps.started_at.replace("Z", "+00:00"))
+            created_dt = datetime.datetime.fromisoformat(timestamps.created_at.replace("Z", "+00:00"))
+            started_dt = datetime.datetime.fromisoformat(timestamps.started_at.replace("Z", "+00:00"))
             queue_duration = (started_dt - created_dt).total_seconds()
         except Exception as e:
-            print(f"Warning: Could not parse timestamps: {e}")
+            bazelci.eprint(f"Warning: Could not parse timestamps: {e}")
 
     # Construct BigQuery Row
     row = {
@@ -354,7 +353,7 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
         "output_size_bytes": build_metrics.output_size_bytes,
         "bytes_downloaded": build_metrics.bytes_downloaded,
         "changed_files_count": CHANGED_FILES_COUNT,
-        "targets": [asdict(t) for t in build_metrics.targets],
+        "targets": [dataclasses.asdict(t) for t in build_metrics.targets],
     }
 
     publish_to_bigquery(row)
