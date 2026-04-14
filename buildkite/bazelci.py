@@ -1602,6 +1602,24 @@ def execute_commands(
                         ],
                         fail_if_nonzero=False,
                     )
+                if is_trueish(os.environ.get("ENABLE_METRICS_COLLECTION", "false")):
+                    try:
+                        from collect_metrics import collect_metrics_and_push_to_bigquery
+                        collect_metrics_and_push_to_bigquery(test_bep_file)
+                    except Exception as e:
+                        eprint(f"Failed to upload metrics: {e}")
+                        job_url = f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
+                        execute_command(
+                        [
+                            "buildkite-agent",
+                            "annotate",
+                            "--style=warning",
+                            f"Failed to upload metrics from [this job]({job_url})",
+                            "--context",
+                            "ctx-metrics_upload_failed",
+                        ],
+                        fail_if_nonzero=False,
+                    )
 
             _ = future.result()
             # TODO: print results
@@ -3006,7 +3024,7 @@ def create_step(
 
 
 def create_docker_step(label, image, commands=None, additional_env_vars=None, queue="default"):
-    env = ["ANDROID_HOME", "ANDROID_NDK_HOME", "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"]
+    env = ["ANDROID_HOME", "ANDROID_NDK_HOME", "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "CHECKOUT_DURATION_S", "PREP_DURATION_S"]
     if THIS_IS_TRUSTED:
         # For the trusted Linux arm64 machine to upload artifacts
         env += ["GOOGLE_APPLICATION_CREDENTIALS"]
