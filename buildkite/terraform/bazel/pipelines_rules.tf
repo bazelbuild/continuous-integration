@@ -1,6 +1,6 @@
 resource "buildkite_pipeline" "rules-kotlin-green-publish" {
   name                       = "rules_kotlin green publish"
-  repository                 = "git@github.com:bazelbuild/rules_kotlin.git"
+  repository                 = "git@github.com:bazel-contrib/rules_kotlin.git"
   description                = "A pipeline to build rules_kotlin post-merge, and if green, publish a tag and attach the executables"
   default_branch             = "master"
   steps                      = "steps:\n  - command: \"echo 'Hello world!'\"\n"
@@ -436,7 +436,7 @@ resource "buildkite_pipeline" "github-dot-com-jmillikin-rules-m4" {
 
 resource "buildkite_pipeline" "rules-kotlin-kotlin" {
   name           = "rules_kotlin :kotlin:"
-  repository     = "https://github.com/bazelbuild/rules_kotlin.git"
+  repository     = "https://github.com/bazel-contrib/rules_kotlin.git"
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {}
