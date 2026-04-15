@@ -115,7 +115,7 @@ resource "buildkite_pipeline" "rules-rust-rustlang" {
 
 resource "buildkite_pipeline" "rules-kotlin-kotlin" {
   name       = "rules_kotlin :kotlin:"
-  repository = "https://github.com/bazelbuild/rules_kotlin.git"
+  repository = "https://github.com/bazel-contrib/rules_kotlin.git"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {}
     steps = {
