@@ -8,7 +8,7 @@ resource "buildkite_pipeline" "intellij-plugin-aspect" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/aspect.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/aspect.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -60,7 +60,7 @@ resource "buildkite_pipeline" "intellij-plugin-google" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/intellij.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/intellij.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -111,7 +111,7 @@ resource "buildkite_pipeline" "intellij-plugin-aspect-google" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/aspect.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/aspect.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -163,7 +163,7 @@ resource "buildkite_pipeline" "intellij-ue-plugin-google" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/intellij-ue.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/intellij-ue.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
