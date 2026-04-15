@@ -3336,11 +3336,12 @@ def create_check_docs_step():
 
 def show_gerrit_review_link(git_repository, pipeline_steps):
     host = re.search(r"https://(.+?)\.googlesource", git_repository).group(1)
+    repo_name = re.search(r"googlesource.com/(.+?).git", git_repository).group(1)
     if not host:
         raise BuildkiteException("Couldn't get host name from %s" % git_repository)
     commit = os.getenv("BUILDKITE_COMMIT")
     line1 = f"The transformed code used in this pipeline can be found under https://{host}-review.googlesource.com/q/{commit}"
-    line2 = f"\n\nFetch the source with `git fetch https://{host}.googlesource.com/bazel {commit}  && git checkout FETCH_HEAD`"
+    line2 = f"\n\nFetch the source with `git fetch https://{host}.googlesource.com/{repo_name} {commit}  && git checkout FETCH_HEAD`"
     commands = [
         "buildkite-agent annotate --style=info '{}' --context 'gerrit'".format(line1),
         "buildkite-agent annotate --style=info '{}' --append --context 'gerrit'".format(line2),
