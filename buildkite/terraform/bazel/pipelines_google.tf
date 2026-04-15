@@ -7,7 +7,7 @@ resource "buildkite_pipeline" "clion-plugin-google" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/clion.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/clion.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -58,7 +58,7 @@ resource "buildkite_pipeline" "android-studio-plugin-google" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/android-studio.yml --monitor_flaky_tests=true | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/android-studio.yml --monitor_flaky_tests=true | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -109,7 +109,7 @@ resource "buildkite_pipeline" "google-logging" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -160,7 +160,7 @@ resource "buildkite_pipeline" "github-dot-com-googleapis-google-cloud-cpp" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -211,7 +211,7 @@ resource "buildkite_pipeline" "google-bazel-platforms-presubmit" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
