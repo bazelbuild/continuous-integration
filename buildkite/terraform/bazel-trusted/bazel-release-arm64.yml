@@ -7,7 +7,7 @@ steps:
           environment:
             - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
             - GOOGLE_APPLICATION_CREDENTIALS
-          image: gcr.io/bazel-public/ubuntu1804-java11
+          image: gcr.io/bazel-public/ubuntu2404
           network: host
           privileged: true
           propagate-environment: true
@@ -135,7 +135,7 @@ steps:
           environment:
             - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
             - GOOGLE_APPLICATION_CREDENTIALS
-          image: gcr.io/bazel-public/ubuntu1804-java11
+          image: gcr.io/bazel-public/ubuntu2404
           network: host
           privileged: true
           propagate-environment: true
