@@ -30,6 +30,7 @@ few:
 platforms.
 * The *bazel presubmit* pipeline is triggered on every pull request to Bazel.
 * The *rules_go postsubmit* pipeline is triggered on every commit to the [rules_go] repository.
+* The *rules_python* pipeline is currently disabled due to ongoing issues. See: https://github.com/bazel-contrib/rules_python/issues/3566, https://github.com/bazel-contrib/rules_python/issues/3581
 * The *TensorFlow* pipeline builds and tests TensorFlow at `HEAD` every four hours.
 
 ### Builds
