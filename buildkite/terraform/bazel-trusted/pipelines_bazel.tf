@@ -383,7 +383,7 @@ resource "buildkite_pipeline" "publish-bazel-binaries" {
     filter_condition                              = ""
     pull_request_branch_filter_enabled            = false
     pull_request_branch_filter_configuration      = ""
-    publish_commit_status                         = false
+    publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
     publish_blocked_as_pending                    = false
