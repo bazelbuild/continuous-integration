@@ -344,7 +344,7 @@ resource "buildkite_pipeline" "bcr-postsubmit" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_postsubmit.py\" -o bcr_postsubmit.py",
-        "python3.6 bcr_postsubmit.py"
+        "python3 bcr_postsubmit.py"
       ],
       label = ":pipeline:"
     }

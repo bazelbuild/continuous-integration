@@ -8,7 +8,7 @@ resource "buildkite_pipeline" "publish-bazel-binaries-platform" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/publish_bin_platform/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py bazel_publish_binaries_pipeline --http_config=https://raw.githubusercontent.com/meteorcloudy/bazel/publish_bin_platform/.bazelci/build_bazel_binaries.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py bazel_publish_binaries_pipeline --http_config=https://raw.githubusercontent.com/meteorcloudy/bazel/publish_bin_platform/.bazelci/build_bazel_binaries.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ],
       label = ":pipeline:"
     }
@@ -239,7 +239,7 @@ resource "buildkite_pipeline" "bazel-bench-binaries" {
       commands = [
         # "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
         # "curl -sS \"https://raw.githubusercontent.com/joeleba/continuous-integration/turbine-bm/buildkite/bazel-bench/bazel_bench_binaries.py?$(date +%s)\" -o bazel_bench.py",
-        # "python3.6 bazel_bench.py --date=\"$(date --date yesterday +%Y-%m-%d)\" --bucket=perf.bazel.build --bazel_bench_options=\"--runs=10\" --max_commits=7 --bazel_binaries=\"4ad8acd,cc0581c,a1a8651,ace1a32,5e62af9,0db7a28,6610b80,8c646de\" --report_name=\"turbine-bm\"",
+        # "python3 bazel_bench.py --date=\"$(date --date yesterday +%Y-%m-%d)\" --bucket=perf.bazel.build --bazel_bench_options=\"--runs=10\" --max_commits=7 --bazel_binaries=\"4ad8acd,cc0581c,a1a8651,ace1a32,5e62af9,0db7a28,6610b80,8c646de\" --report_name=\"turbine-bm\"",
         "which bq",
         "bq load --skip_leading_rows=1 --source_format=CSV bazel-public:bazel_bench.bazel_bench_daily gs://perf.bazel.build/bazel/2020/01/16/macos/perf_data.csv"
       ],
@@ -499,7 +499,7 @@ resource "buildkite_pipeline" "bazel-bench-culprit-finder" {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
         "curl -sS \"https://raw.githubusercontent.com/tjgq/continuous-integration/test/buildkite/bazel-bench/bazel_bench.py?$(date +%s)\" -o bazel_bench.py",
-        "python3.6 bazel_bench.py --date=\"$DATE\" --projects=\"bazel\" --bucket=perf.bazel.build --bigquery_table='bazel-public:bazel_bench.bazel_bench_daily_test' --bazel_bench_options=\"--runs=5 --bazel_commits=$BAZEL_COMMITS --project_commits=$PROJECT_COMMITS --aggregate_json_profiles=False\" --max_commits=7 --report_name=$REPORT_NAME --upload_report"
+        "python3 bazel_bench.py --date=\"$DATE\" --projects=\"bazel\" --bucket=perf.bazel.build --bigquery_table='bazel-public:bazel_bench.bazel_bench_daily_test' --bazel_bench_options=\"--runs=5 --bazel_commits=$BAZEL_COMMITS --project_commits=$PROJECT_COMMITS --aggregate_json_profiles=False\" --max_commits=7 --report_name=$REPORT_NAME --upload_report"
       ],
       label = ":pipeline:",
       retry = true
@@ -534,8 +534,8 @@ resource "buildkite_pipeline" "bazel-bench-nightly-test" {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
         "curl -sS \"https://raw.githubusercontent.com/joeleba/continuous-integration/last-commit-prev-day/buildkite/bazel-bench/bazel_bench.py?$(date +%s)\" -o bazel_bench.py",
-        "# python3.6 bazel_bench.py --date=\"$(date --date yesterday +%Y-%m-%d)\" --bucket=perf.bazel.build --bigquery_table='bazel-public:bazel_bench.bazel_bench_daily' --bazel_bench_options=\"--runs=7\" --max_commits=7 --update_latest --upload_report",
-        "python3.6 bazel_bench.py --date=\"2020-02-15\" --bucket=perf.bazel.build --bigquery_table='bazel-public:bazel_bench.bazel_bench_daily_test' --bazel_bench_options=\"--runs=5\" --max_commits=7 --report_name=\"report\""
+        "# python3 bazel_bench.py --date=\"$(date --date yesterday +%Y-%m-%d)\" --bucket=perf.bazel.build --bigquery_table='bazel-public:bazel_bench.bazel_bench_daily' --bazel_bench_options=\"--runs=7\" --max_commits=7 --update_latest --upload_report",
+        "python3 bazel_bench.py --date=\"2020-02-15\" --bucket=perf.bazel.build --bigquery_table='bazel-public:bazel_bench.bazel_bench_daily_test' --bazel_bench_options=\"--runs=5\" --max_commits=7 --report_name=\"report\""
       ],
       label = ":pipeline:",
       retry = true
