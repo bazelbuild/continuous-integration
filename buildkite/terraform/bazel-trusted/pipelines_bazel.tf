@@ -360,7 +360,7 @@ resource "buildkite_pipeline" "publish-bazel-binaries" {
     }
   })
   allow_rebuilds             = true
-  branch_configuration       = "master release-* 4.* 5.* 6.* 7.* 8.* 9.*"
+  branch_configuration       = "master release-* 7.* 8.* 9.* 10.* 11.* 12.*"
   cancel_intermediate_builds = false
   skip_intermediate_builds   = false
   tags                       = []
