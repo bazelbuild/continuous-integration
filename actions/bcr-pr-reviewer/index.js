@@ -371,6 +371,42 @@ async function isModuleMaintainer(octokit, owner, repo, prAuthorId) {
   }
 }
 
+async function hasSensitiveMetadataChanges(octokit, owner, repo, prNumber, allModulesWithMetadataChange) {
+  for (const moduleName of allModulesWithMetadataChange) {
+    try {
+      const { data: metadataContentMain } = await octokit.rest.repos.getContent({
+        owner,
+        repo,
+        path: `modules/${moduleName}/metadata.json`,
+        ref: 'main',
+      });
+      const metadataMain = JSON.parse(Buffer.from(metadataContentMain.content, 'base64').toString('utf-8'));
+
+      const { data: metadataContentHead } = await octokit.rest.repos.getContent({
+        owner,
+        repo,
+        path: `modules/${moduleName}/metadata.json`,
+        ref: `refs/pull/${prNumber}/head`,
+      });
+      const metadataHead = JSON.parse(Buffer.from(metadataContentHead.content, 'base64').toString('utf-8'));
+
+      metadataMain.versions = [];
+      metadataHead.versions = [];
+
+      if (JSON.stringify(metadataMain) !== JSON.stringify(metadataHead)) {
+        return { isSensitive: true, isNewModule: false };
+      }
+    } catch (error) {
+      if (error.status === 404) {
+        return { isSensitive: true, isNewModule: true };
+      } else {
+        throw error;
+      }
+    }
+  }
+  return { isSensitive: false, isNewModule: false };
+}
+
 async function reviewPR(octokit, owner, repo, prNumber) {
   console.log('\n');
   console.log(`Processing PR #${prNumber}`);
@@ -424,41 +460,14 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   }
 
   let hasSensitiveMetadataChange = false;
-  for (const moduleName of allModulesWithMetadataChange) {
-    try {
-      const { data: metadataContentMain } = await octokit.rest.repos.getContent({
-        owner,
-        repo,
-        path: `modules/${moduleName}/metadata.json`,
-        ref: 'main',
-      });
-      const metadataMain = JSON.parse(Buffer.from(metadataContentMain.content, 'base64').toString('utf-8'));
-
-      const { data: metadataContentHead } = await octokit.rest.repos.getContent({
-        owner,
-        repo,
-        path: `modules/${moduleName}/metadata.json`,
-        ref: `refs/pull/${prNumber}/head`,
-      });
-      const metadataHead = JSON.parse(Buffer.from(metadataContentHead.content, 'base64').toString('utf-8'));
-
-      metadataMain.versions = [];
-      metadataHead.versions = [];
-
-      if (JSON.stringify(metadataMain) !== JSON.stringify(metadataHead)) {
-        hasSensitiveMetadataChange = true;
-        break;
-      }
-    } catch (error) {
-      if (error.status === 404) {
-        // The metadata.json file is newly created! This is a sensitive change.
-        hasSensitiveMetadataChange = true;
-        break;
-      } else {
-        console.error(`Error checking metadata.json sensitive revisions for module ${moduleName}: ${error}`);
-        return;
-      }
-    }
+  let isNewModule = false;
+  try {
+    const result = await hasSensitiveMetadataChanges(octokit, owner, repo, prNumber, allModulesWithMetadataChange);
+    hasSensitiveMetadataChange = result.isSensitive;
+    isNewModule = result.isNewModule;
+  } catch (error) {
+    console.error(`Error checking metadata.json sensitive revisions: ${error}`);
+    return;
   }
 
   // Re-fetch PR information to check if new commits were pushed since analysis started
@@ -475,7 +484,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
     return; // Exit reviewPR for this PR to prevent actions on stale data
   }
 
-  if (hasSensitiveMetadataChange) {
+  if (hasSensitiveMetadataChange && !isNewModule) {
     await postComment(octokit, owner, repo, prNumber,
       `Hello BCR maintainers, modules with sensitive metadata modifications (outside versions array) have been updated in this PR. Manual reviews are strictly necessary.`);
     await requestBcrMaintainers(octokit, owner, repo, prNumber);
@@ -609,26 +618,7 @@ async function runNotifier(octokit) {
     await requestBcrMaintainers(octokit, owner, repo, prNumber);
   }
 
-  // Notify BCR maintainers for modules with only metadata.json changes
-  const allModulesWithMetadataChange = await fetchAllModulesWithMetadataChange(octokit, owner, repo, prNumber);
-  if (allModulesWithMetadataChange === null) {
-    // This means the PR was updated while fetching files.
-    console.log(`Aborting notifier for PR #${prNumber} because it was updated during file fetching.`);
-    return;
-  }
 
-  const modulesWithOnlyMetadataChanges = new Set(
-    [...allModulesWithMetadataChange].filter(module => !modifiedModules.has(module))
-  );
-
-  if (modulesWithOnlyMetadataChanges.size > 0) {
-    const modulesList = Array.from(modulesWithOnlyMetadataChanges).join(', ');
-    console.log(`Requesting review from BCR maintainers for modules with only metadata.json changes: ${modulesList}`);
-    await postComment(octokit, owner, repo, prNumber,
-      `Hello BCR maintainers, modules with only metadata.json changes (${modulesList}) have been updated in this PR.
-      Please review the changes.`);
-    await requestBcrMaintainers(octokit, owner, repo, prNumber);
-  }
 }
 
 async function waitForDismissApprovalsWorkflow(octokit, owner, repo) {
