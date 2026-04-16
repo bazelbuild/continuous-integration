@@ -24,7 +24,7 @@ steps:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-          image: "gcr.io/bazel-public/ubuntu1804-java11"
+          image: "${try(steps.image, "gcr.io/bazel-public/ubuntu1804-java11")}"
           network: "host"
           privileged: true
           propagate-environment: true
@@ -34,7 +34,6 @@ steps:
             - "/etc/passwd:/etc/passwd:ro"
             - "/etc/shadow:/etc/shadow:ro"
             - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
-            - "/opt/android-ndk-r25b:/opt/android-ndk-r25b:ro"
             - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
             - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
             - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
