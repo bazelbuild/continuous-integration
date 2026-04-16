@@ -432,13 +432,8 @@ def should_wait_bcr_maintainer_review(modules, pr_labels):
     # Get modules with metadata.json changes.
     modules_with_metadata_change = get_modules_with_metadata_change()
 
-    needs_bcr_maintainer_review = False
-
     # Run BCR validations on target modules and decide if the presubmit jobs should be blocked.
-    if should_bcr_validation_block_presubmit(modules, modules_with_metadata_change, pr_labels):
-        needs_bcr_maintainer_review = True
-
-    return needs_bcr_maintainer_review
+    return should_bcr_validation_block_presubmit(modules, modules_with_metadata_change, pr_labels)
 
 
 def get_bazel_version_for_task(config_file, task, overwrite_bazel_version=None):
