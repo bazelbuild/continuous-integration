@@ -20,7 +20,7 @@ steps:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-          image: "gcr.io/bazel-public/ubuntu2404"
+          image: "gcr.io/bazel-public/ubuntu2204"
           network: "host"
           privileged: true
           propagate-environment: true
