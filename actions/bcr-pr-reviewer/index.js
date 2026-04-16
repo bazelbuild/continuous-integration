@@ -486,7 +486,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
 
   if (hasSensitiveMetadataChange && !isNewModule) {
     await postComment(octokit, owner, repo, prNumber,
-      `Hello BCR maintainers, modules with sensitive metadata modifications (outside versions array) have been updated in this PR. Manual reviews are strictly necessary.`);
+      `Hello BCR maintainers, modules with sensitive metadata modifications (outside versions array) have been updated in this PR. Manual reviews are necessary.`);
     await requestBcrMaintainers(octokit, owner, repo, prNumber);
   }
 
