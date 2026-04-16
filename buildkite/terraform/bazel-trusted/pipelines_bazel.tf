@@ -360,7 +360,7 @@ resource "buildkite_pipeline" "publish-bazel-binaries" {
     }
   })
   allow_rebuilds             = true
-  branch_configuration       = "master release-* 4.* 5.* 6.* 7.* 8.* 9.*"
+  branch_configuration       = "master release-* 7.* 8.* 9.* 10.* 11.* 12.*"
   cancel_intermediate_builds = false
   skip_intermediate_builds   = false
   tags                       = []
@@ -383,7 +383,7 @@ resource "buildkite_pipeline" "publish-bazel-binaries" {
     filter_condition                              = ""
     pull_request_branch_filter_enabled            = false
     pull_request_branch_filter_configuration      = ""
-    publish_commit_status                         = false
+    publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
     publish_blocked_as_pending                    = false
