@@ -8,7 +8,7 @@ resource "buildkite_pipeline" "flatbuffers" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -59,7 +59,7 @@ resource "buildkite_pipeline" "gerrit" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/gerrit.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/gerrit.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -85,7 +85,7 @@ resource "buildkite_pipeline" "abseil-python" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/abseil-py.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/abseil-py.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -114,7 +114,7 @@ resource "buildkite_pipeline" "envoy" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -143,7 +143,7 @@ resource "buildkite_pipeline" "cartographer" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -195,7 +195,7 @@ resource "buildkite_pipeline" "mobile-devx-tools" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/google/devx-tools/master/.continuous_integration/postsubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/google/devx-tools/master/.continuous_integration/postsubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -288,7 +288,7 @@ resource "buildkite_pipeline" "re2" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/re2.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/re2.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -339,7 +339,7 @@ resource "buildkite_pipeline" "buildfarm-farmer" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -390,7 +390,7 @@ resource "buildkite_pipeline" "grpc-ecosystem-grpc-gateway" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -432,56 +432,6 @@ resource "buildkite_pipeline" "grpc-ecosystem-grpc-gateway" {
   }
 }
 
-resource "buildkite_pipeline" "android-studio-plugin" {
-  name           = "Android Studio Plugin"
-  repository     = "https://github.com/bazelbuild/intellij.git"
-  default_branch = "master"
-  steps = templatefile("pipeline.yml.tpl", {
-    envs = {},
-    steps = {
-      commands = [
-        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/android-studio.yml --monitor_flaky_tests=true | tee /dev/tty | buildkite-agent pipeline upload"
-      ]
-    }
-  })
-  allow_rebuilds             = true
-  branch_configuration       = "!google"
-  cancel_intermediate_builds = false
-  skip_intermediate_builds   = false
-  tags                       = []
-  cluster_id                 = null
-  color                      = null
-  default_team_id            = null
-  emoji                      = null
-  pipeline_template_id       = null
-  provider_settings = {
-    trigger_mode                                  = "code"
-    build_branches                                = true
-    build_pull_requests                           = true
-    build_tags                                    = false
-    build_pull_request_forks                      = true
-    build_pull_request_ready_for_review           = false
-    build_pull_request_labels_changed             = false
-    build_pull_request_base_branch_changed        = false
-    prefix_pull_request_fork_branch_names         = true
-    filter_enabled                                = true
-    filter_condition                              = "build.pull_request.base_branch != \"google\""
-    pull_request_branch_filter_enabled            = false
-    pull_request_branch_filter_configuration      = ""
-    publish_commit_status                         = true
-    publish_commit_status_per_step                = false
-    separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
-    cancel_deleted_branch_builds                  = false
-    skip_builds_for_existing_commits              = false
-    skip_pull_request_builds_for_existing_commits = true
-    ignore_default_branch_pull_requests           = false
-    build_merge_group_checks_requested            = false
-    cancel_when_merge_group_destroyed             = false
-    use_merge_group_base_commit_for_git_diff_base = false
-  }
-}
 
 resource "buildkite_pipeline" "distributed-point-functions" {
   name           = "Distributed Point Functions"
@@ -492,7 +442,7 @@ resource "buildkite_pipeline" "distributed-point-functions" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -543,7 +493,7 @@ resource "buildkite_pipeline" "macos-infra-update" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/fweikert/continuous-integration/macos-infra/pipelines/macos_infra_update.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/fweikert/continuous-integration/macos-infra/pipelines/macos_infra_update.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -592,7 +542,7 @@ resource "buildkite_pipeline" "grpc-grpc-web" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -621,7 +571,7 @@ resource "buildkite_pipeline" "abseil-c-plus-plus" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/abseil-cpp.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/abseil-cpp.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -651,7 +601,7 @@ resource "buildkite_pipeline" "dagger-query" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -702,7 +652,7 @@ resource "buildkite_pipeline" "cloud-robotics-core" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/cloud-robotics.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/cloud-robotics.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -731,7 +681,7 @@ resource "buildkite_pipeline" "kythe" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -832,7 +782,7 @@ resource "buildkite_pipeline" "starlark" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -884,7 +834,7 @@ resource "buildkite_pipeline" "android-testing" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=bazelci/buildkite-pipeline.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=bazelci/buildkite-pipeline.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -935,7 +885,7 @@ resource "buildkite_pipeline" "btwiuse-k0s" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -986,7 +936,7 @@ resource "buildkite_pipeline" "remote-apis-sdks" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -1037,7 +987,7 @@ resource "buildkite_pipeline" "fwe-shard-test" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/fweikert/continuous-integration/bep/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py --script https://raw.githubusercontent.com/fweikert/continuous-integration/bep/buildkite/bazelci.py project_pipeline --print_shard_summary  | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py --script https://raw.githubusercontent.com/fweikert/continuous-integration/bep/buildkite/bazelci.py project_pipeline --print_shard_summary  | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -1086,7 +1036,7 @@ resource "buildkite_pipeline" "grpc-grpc" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -1138,7 +1088,7 @@ resource "buildkite_pipeline" "tools-android" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -1190,7 +1140,6 @@ resource "buildkite_pipeline" "bcr-presubmit" {
       ENABLE_BAZELISK_MIGRATE = "1"
     },
     steps = {
-      image = "gcr.io/bazel-public/ubuntu2404",
       commands = [
         "curl -q --noproxy '*' -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py\" -o bazelci.py",
         "curl -q --noproxy '*' -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py\" -o bcr_presubmit.py",
@@ -1246,7 +1195,7 @@ resource "buildkite_pipeline" "apple-support-darwin" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -1301,7 +1250,7 @@ resource "buildkite_pipeline" "culprit-finder" {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/culprit_finder.py?$(date +%s)\" -o culprit_finder.py",
-        "python3.6 culprit_finder.py culprit_finder | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 culprit_finder.py culprit_finder | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -1330,7 +1279,7 @@ resource "buildkite_pipeline" "flogger" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/flogger.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/flogger.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -1359,7 +1308,7 @@ resource "buildkite_pipeline" "stardoc" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -1405,7 +1354,7 @@ resource "buildkite_pipeline" "buildtools" {
   name                       = "Buildtools"
   repository                 = "https://github.com/bazelbuild/buildtools.git"
   default_branch             = "main"
-  steps                      = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
+  steps                      = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"] } })
   allow_rebuilds             = true
   cancel_intermediate_builds = false
   skip_intermediate_builds   = false
@@ -1453,7 +1402,7 @@ resource "buildkite_pipeline" "upb" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -1482,7 +1431,7 @@ resource "buildkite_pipeline" "cargo-raze" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -1512,7 +1461,7 @@ resource "buildkite_pipeline" "bzlmod-migration-tool" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/migration_tool_presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/migration_tool_presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -1563,7 +1512,7 @@ resource "buildkite_pipeline" "protobuf" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-      "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"]
+      "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"]
     }
   })
   allow_rebuilds             = true
@@ -1614,7 +1563,7 @@ resource "buildkite_pipeline" "subpar" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/subpar.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/subpar.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -1665,7 +1614,7 @@ resource "buildkite_pipeline" "clion-plugin" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/clion.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/clion.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -1716,7 +1665,7 @@ resource "buildkite_pipeline" "sandboxed-api" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -1767,7 +1716,7 @@ resource "buildkite_pipeline" "crubit-presubmit" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -1812,7 +1761,7 @@ resource "buildkite_pipeline" "fwe-test" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/fweikert/continuous-integration/pr2/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -1864,7 +1813,7 @@ resource "buildkite_pipeline" "tensorflow" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/tensorflow.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/tensorflow.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -1893,7 +1842,7 @@ resource "buildkite_pipeline" "crubit" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })

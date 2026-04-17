@@ -6,7 +6,7 @@ resource "buildkite_pipeline" "rules-apple-darwin" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -29,7 +29,7 @@ resource "buildkite_pipeline" "rules-swift-swift" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -52,7 +52,7 @@ resource "buildkite_pipeline" "rules-scala-scala" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -75,7 +75,7 @@ resource "buildkite_pipeline" "rules-groovy" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -98,7 +98,7 @@ resource "buildkite_pipeline" "rules-rust-rustlang" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -115,13 +115,13 @@ resource "buildkite_pipeline" "rules-rust-rustlang" {
 
 resource "buildkite_pipeline" "rules-kotlin-kotlin" {
   name       = "rules_kotlin :kotlin:"
-  repository = "https://github.com/bazelbuild/rules_kotlin.git"
+  repository = "https://github.com/bazel-contrib/rules_kotlin.git"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {}
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -144,7 +144,7 @@ resource "buildkite_pipeline" "rules-go-golang" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -167,7 +167,7 @@ resource "buildkite_pipeline" "rules-nodejs-nodejs" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline --monitor_flaky_tests=true | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline --monitor_flaky_tests=true | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
@@ -190,7 +190,7 @@ resource "buildkite_pipeline" "rules-docker-docker" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3.6 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
       ]
     }
   })
