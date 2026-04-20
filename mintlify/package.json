@@ -1,0 +1,11 @@
+{
+  "name": "mintlify-ci",
+  "version": "1.0.0",
+  "description": "CI for Mintlify documentation",
+  "dependencies": {
+    "mint": "^4.2.521"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
