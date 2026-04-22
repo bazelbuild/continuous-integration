@@ -361,14 +361,14 @@ PLATFORMS = {
         "emoji-name": ":ubuntu: Ubuntu 16.04 LTS (OpenJDK 8, gcc 5.4.0)",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1604-java8",
-        "python": "python3.6",
+        "python": "python3",
     },
     "ubuntu1804": {
         "name": "Ubuntu 18.04 LTS (OpenJDK 11, gcc 7.5.0)",
         "emoji-name": ":ubuntu: Ubuntu 18.04 LTS (OpenJDK 11, gcc 7.5.0)",
         "publish_binary": [],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1804-java11",
-        "python": "python3.6",
+        "python": "python3",
     },
     "ubuntu2004_java11": {
         "name": "Ubuntu 20.04 LTS (OpenJDK 11, gcc 9.4.0)",

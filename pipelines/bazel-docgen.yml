@@ -4,7 +4,7 @@ steps:
     command:
       - curl -sS https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s) -o bazelci.py
       - curl -sS https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/docgen/docgen.py?$(date +%s) -o docgen.py
-      - python3.6 docgen.py
+      - python3 docgen.py
     agents:
       queue: default
     plugins:

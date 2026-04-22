@@ -1,7 +1,7 @@
 steps:
   - label: "Project pipeline :ubuntu: 18.04 (JDK 8)"
     command:
-      - python3.6 buildkite/bazelci.py project_pipeline --file_config=pipelines/tensorflow.yml
+      - python3 buildkite/bazelci.py project_pipeline --file_config=pipelines/tensorflow.yml
     agents: &linux_agents { queue: default }
     plugins: &plugins
       - docker#v3.8.0:
@@ -26,13 +26,13 @@ steps:
             - "/var/run/docker.sock:/var/run/docker.sock"
   - label: "Downstream pipeline :ubuntu: 18.04 (JDK 8)"
     command:
-      - python3.6 buildkite/bazelci.py bazel_downstream_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
-      - python3.6 buildkite/bazelci.py bazel_downstream_pipeline --test_disabled_projects --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
+      - python3 buildkite/bazelci.py bazel_downstream_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
+      - python3 buildkite/bazelci.py bazel_downstream_pipeline --test_disabled_projects --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
     agents: *linux_agents
     plugins: *plugins
   - label: "Publish binaries pipeline :ubuntu: 18.04 (JDK 8)"
     command:
-      - python3.6 buildkite/bazelci.py bazel_publish_binaries_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/build_bazel_binaries.yml
+      - python3 buildkite/bazelci.py bazel_publish_binaries_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/build_bazel_binaries.yml
     agents: *linux_agents
     plugins: *plugins
 
