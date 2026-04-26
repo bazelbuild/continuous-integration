@@ -750,6 +750,34 @@ async function runSkipCheck(octokit) {
   const check = commentBody.slice(SKIP_CHECK_TRIGGER.length);
   const owner = payload.repository.owner.login;
   const repo = payload.repository.name;
+  const commenter = payload.comment.user.login;
+
+  // Only collaborators with write or admin access may skip checks.
+  // Without this guard any GitHub user can comment "@bazel-io skip_check <name>"
+  // and bypass BCR validation checks on any PR.
+  let isAuthorized = false;
+  try {
+    const { data: { permission } } = await octokit.rest.repos.getCollaboratorPermissionLevel({
+      owner,
+      repo,
+      username: commenter,
+    });
+    isAuthorized = ['admin', 'write'].includes(permission);
+  } catch (error) {
+    console.warn(`Could not verify permission level for ${commenter}: ${error.message}`);
+  }
+
+  if (!isAuthorized) {
+    console.log(`@${commenter} does not have write access and cannot skip checks.`);
+    await octokit.rest.reactions.createForIssueComment({
+      owner,
+      repo,
+      comment_id: payload.comment.id,
+      content: 'confused',
+    });
+    return;
+  }
+
   if (check == "unstable_url") {
     await octokit.rest.issues.addLabels({
       owner,
