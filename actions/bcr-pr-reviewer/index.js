@@ -750,6 +750,31 @@ async function runSkipCheck(octokit) {
   const check = commentBody.slice(SKIP_CHECK_TRIGGER.length);
   const owner = payload.repository.owner.login;
   const repo = payload.repository.name;
+  const prNumber = context.issue.number;
+
+  // Authorization check: only maintainers of the modified modules may use
+  // @bazel-io skip_check.  This mirrors the same guard in runHandleComment.
+  const commenter = payload.comment.user.login.toLowerCase();
+  const modifiedModuleVersions = await fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber);
+  const modifiedModules = new Set(Array.from(modifiedModuleVersions || []).map(module => module.split('@')[0]));
+  const [ maintainersMap ] = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ false);
+  if (!maintainersMap.has(commenter)) {
+    console.log(`@${commenter} is not a maintainer of any modified modules, ignoring skip_check command.`);
+    await octokit.rest.reactions.createForIssueComment({
+      owner,
+      repo,
+      comment_id: payload.comment.id,
+      content: '-1',
+    });
+    await octokit.rest.issues.createComment({
+      owner,
+      repo,
+      issue_number: prNumber,
+      body: `@${commenter}, you don't have permissions to use \`@bazel-io skip_check\` since you are not a maintainer of any of the modified modules.`,
+    });
+    return;
+  }
+
   if (check == "unstable_url") {
     await octokit.rest.issues.addLabels({
       owner,
