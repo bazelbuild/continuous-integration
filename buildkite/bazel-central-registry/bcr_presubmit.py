@@ -172,7 +172,7 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
                 "--overwrite_bazel_version=%s" % overwrite_bazel_version if overwrite_bazel_version else ""
             )
         )
-        commands = [bazelci.fetch_bazelcipy_command(), fetch_bcr_presubmit_py_command(), command]
+        commands = [bazelci.fetch_ci_scripts_command(), fetch_bcr_presubmit_py_command(), command]
         queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
         if CI_RESOURCE_PERCENTAGE == -1:
             concurrency = concurrency_group = None
