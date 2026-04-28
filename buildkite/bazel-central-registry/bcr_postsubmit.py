@@ -101,7 +101,7 @@ def check_and_write_module_attestations(attestations_json_path):
     dest_dir = os.path.dirname(attestations_json_path)
     with open(attestations_json_path, "rb") as af:
         metadata = json.loads(af.read())
-
+    
     for f in FILES_WITH_ATTESTATIONS:
         try:
             entry = metadata["attestations"][f]
@@ -146,18 +146,18 @@ def get_canonical_basename(url):
     for f in FILES_WITH_ATTESTATIONS:
         if f in actual_basename:
             return f"{f}.intoto.jsonl"
-
+    
     raise AttestationError(f"Invalid basename of {url}.")
 
 
 def sync_bcr_content():
     print_expanded_group(":gcloud: Sync BCR content")
     subprocess.check_output(
-        ["gcloud", "storage", "cp", "--cache-control=no-cache", "./bazel_registry.json", BCR_BUCKET]
+        ["gsutil", "-h", "Cache-Control:no-cache", "cp", "./bazel_registry.json", BCR_BUCKET]
     )
     subprocess.check_output(
-        # --checksums-only to compare files with checksum instead of timestamp
-        ["gcloud", "storage", "rsync", "--recursive", "--checksums-only", "--cache-control=no-cache", "./modules", BCR_BUCKET + "modules"]
+        # -c Use checksum to compare files
+        ["gsutil", "-h", "Cache-Control:no-cache", "-m", "rsync", "-c", "-r", "./modules", BCR_BUCKET + "modules"]
     )
 
 
@@ -167,7 +167,7 @@ def update_last_green():
         f.write(get_commit())
 
     dest = os.path.join(BCR_BUCKET, LAST_GREEN_FILE)
-    subprocess.check_output(["gcloud", "storage", "cp", path, dest])
+    subprocess.check_output(["gsutil", "cp", path, dest])
 
 
 def main():
