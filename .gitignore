@@ -15,3 +15,6 @@ MODULE.bazel.lock
 
 # Intermediate files created by the gitbundle tool.
 /gitbundle/bazelbuild/
+
+# Vim swap files.
+*.swp
