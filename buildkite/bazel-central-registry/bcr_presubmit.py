@@ -25,6 +25,7 @@ import json
 import os
 import pathlib
 import re
+import shlex
 import sys
 import subprocess
 import shutil
@@ -150,8 +151,19 @@ def get_test_module_task_config(module_name, module_version, bazel_version=None)
     return {}
 
 
+# task_id is the YAML key under tasks: in a module's presubmit.yml, which is
+# attacker-controllable on every PR. Restrict the chars we accept and the chars
+# we'll embed into a Buildkite command line.
+VALID_TASK_ID_RE = re.compile(r"\A[A-Za-z0-9_.\-]+\Z")
+
+
 def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False, overwrite_bazel_version=None, low_priority=False):
     for task_id, task_config in task_configs.items():
+        if not VALID_TASK_ID_RE.match(task_id):
+            raise bazelci.BuildkiteException(
+                "Invalid task id %r in %s@%s presubmit.yml: task ids must match %s"
+                % (task_id, module_name, module_version, VALID_TASK_ID_RE.pattern)
+            )
         platform_name = get_platform(task_id, task_config)
         platform_label = bazelci.PLATFORMS[platform_name]["emoji-name"]
         task_name = task_config.get("name", "")
@@ -162,13 +174,13 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
         if bazel_version and not overwrite_bazel_version:
             label = f":bazel:{bazel_version} - {label}"
         command = (
-            '%s bcr_presubmit.py %s --module_name="%s" --module_version="%s" --task=%s %s'
+            '%s bcr_presubmit.py %s --module_name=%s --module_version=%s --task=%s %s'
             % (
                 bazelci.PLATFORMS[platform_name]["python"],
                 "test_module_runner" if is_test_module else "anonymous_module_runner",
-                module_name,
-                module_version,
-                task_id,
+                shlex.quote(module_name),
+                shlex.quote(module_version),
+                shlex.quote(task_id),
                 "--overwrite_bazel_version=%s" % overwrite_bazel_version if overwrite_bazel_version else ""
             )
         )
