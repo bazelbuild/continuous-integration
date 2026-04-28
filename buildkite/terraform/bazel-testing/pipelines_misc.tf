@@ -6,7 +6,7 @@ resource "buildkite_pipeline" "upb" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "set -euo pipefail; python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -28,7 +28,7 @@ resource "buildkite_pipeline" "protobuf" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "set -euo pipefail; python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/protobuf-postsubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/pipelines/protobuf-postsubmit.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -73,7 +73,7 @@ resource "buildkite_pipeline" "intellij-plugin" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "set -euo pipefail; python3 bazelci.py project_pipeline --file_config=.bazelci/aspect.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --file_config=.bazelci/aspect.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -118,7 +118,7 @@ resource "buildkite_pipeline" "google-bazel-presubmit" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "set -euo pipefail; python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -137,7 +137,7 @@ resource "buildkite_pipeline" "tulsi-bazel-darwin" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "set -euo pipefail; python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -160,7 +160,7 @@ resource "buildkite_pipeline" "apple-support-darwin" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "set -euo pipefail; python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -183,7 +183,7 @@ resource "buildkite_pipeline" "android-testing" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "set -euo pipefail; python3 bazelci.py project_pipeline --file_config=bazelci/buildkite-pipeline.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --file_config=bazelci/buildkite-pipeline.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -206,7 +206,7 @@ resource "buildkite_pipeline" "flogger" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "set -euo pipefail; python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/flogger.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/flogger.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -245,7 +245,7 @@ resource "buildkite_pipeline" "flogger" {
 resource "buildkite_pipeline" "test-macos" {
   name                       = "Test macOS"
   repository                 = "https://github.com/bazelbuild/continuous-integration.git"
-  steps                      = "# This default command changes the pipeline of a running build by uploading a configuration file.\n# https://buildkite.com/docs/agent/v3/cli-pipeline\n# For information on different step types, check out the sidebar to the right.\n\nsteps:\n- agents: {queue: macos_arm64}\n  command: ['set -euo pipefail; echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['set -euo pipefail; echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['set -euo pipefail; echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['set -euo pipefail; echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['set -euo pipefail; echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['set -euo pipefail; echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['set -euo pipefail; echo \"hello\" | sha1sum']\n  label: ':macOS: Test'"
+  steps                      = "# This default command changes the pipeline of a running build by uploading a configuration file.\n# https://buildkite.com/docs/agent/v3/cli-pipeline\n# For information on different step types, check out the sidebar to the right.\n\nsteps:\n- agents: {queue: macos_arm64}\n  command: ['/bin/bash', '-c', 'set -euo pipefail; echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['/bin/bash', '-c', 'set -euo pipefail; echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['/bin/bash', '-c', 'set -euo pipefail; echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['/bin/bash', '-c', 'set -euo pipefail; echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['/bin/bash', '-c', 'set -euo pipefail; echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['/bin/bash', '-c', 'set -euo pipefail; echo \"hello\" | sha1sum']\n  label: ':macOS: Test'\n- agents: {queue: macos_arm64}\n  command: ['/bin/bash', '-c', 'set -euo pipefail; echo \"hello\" | sha1sum']\n  label: ':macOS: Test'"
   default_branch             = "master"
   allow_rebuilds             = true
   cancel_intermediate_builds = false
@@ -289,7 +289,7 @@ resource "buildkite_pipeline" "fwe-test" {
       commands = [
          "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
          "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/collect_metrics.py?$(date +%s)\" -o collect_metrics.py",
-         "set -euo pipefail; python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/fweikert/bazel/refs/heads/qa/.bazelci/postsubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+         "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/fweikert/bazel/refs/heads/qa/.bazelci/postsubmit.yml | tee /dev/tty | buildkite-agent pipeline upload'"
        ]
     }
   })
@@ -332,7 +332,7 @@ resource "buildkite_pipeline" "aswb-plugin" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "set -euo pipefail; python3 bazelci.py project_pipeline --file_config=.bazelci/android-studio.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --file_config=.bazelci/android-studio.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
