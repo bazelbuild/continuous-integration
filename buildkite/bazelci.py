@@ -47,6 +47,38 @@ import yaml
 # Initialize the random number generator.
 random.seed()
 
+class AppendList(list):
+    pass
+
+class BazelCILoader(yaml.SafeLoader):
+    def construct_mapping(self, node, deep=False):
+        self.flatten_mapping(node)
+        mapping = {}
+        for key_node, value_node in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            try:
+                hash(key)
+            except TypeError as exc:
+                raise yaml.constructor.ConstructorError('while constructing a mapping', node.start_mark,
+                        'found unacceptable key (%s)' % exc, key_node.start_mark)
+            value = self.construct_object(value_node, deep=deep)
+            
+            if key in mapping and isinstance(value, AppendList):
+                if isinstance(mapping[key], list):
+                    mapping[key] = mapping[key] + value
+                elif isinstance(mapping[key], dict):
+                    mapping[key] = list(mapping[key].keys()) + value
+                else:
+                    mapping[key] = value
+            else:
+                mapping[key] = value
+        return mapping
+
+def append_constructor(loader, node):
+    return AppendList(loader.construct_sequence(node))
+
+BazelCILoader.add_constructor('!append', append_constructor)
+
 BUILDKITE_ORG = os.environ.get("BUILDKITE_ORGANIZATION_SLUG", "bazel")
 THIS_IS_PRODUCTION = BUILDKITE_ORG == "bazel"
 THIS_IS_TESTING = BUILDKITE_ORG == "bazel-testing"
@@ -1194,7 +1226,7 @@ def load_config(http_url, file_config, allow_imports=True, bazel_version=None):
     else:
         file_config = file_config or ".bazelci/presubmit.yml"
         with open(file_config, "r") as fd:
-            config = yaml.safe_load(fd)
+            config = yaml.load(fd, Loader=BazelCILoader)
 
     # Legacy mode means that there is exactly one task per platform (e.g. ubuntu1604_nojdk),
     # which means that we can get away with using the platform name as task ID.
@@ -1230,7 +1262,7 @@ def load_config(http_url, file_config, allow_imports=True, bazel_version=None):
 def load_remote_yaml_file(http_url):
     with urllib.request.urlopen(http_url) as resp:
         reader = codecs.getreader("utf-8")
-        return yaml.safe_load(reader(resp))
+        return yaml.load(reader(resp), Loader=BazelCILoader)
 
 
 def load_imported_tasks(import_name, http_url, file_config, bazel_version):
