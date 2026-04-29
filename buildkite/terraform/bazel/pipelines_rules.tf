@@ -622,7 +622,7 @@ resource "buildkite_pipeline" "rules-android" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
