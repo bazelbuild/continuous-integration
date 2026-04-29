@@ -1193,8 +1193,28 @@ def load_config(http_url, file_config, allow_imports=True, bazel_version=None):
         config = load_remote_yaml_file(http_url)
     else:
         file_config = file_config or ".bazelci/presubmit.yml"
-        with open(file_config, "r") as fd:
-            config = yaml.safe_load(fd)
+        if is_pull_request() and file_config == ".bazelci/presubmit.yml":
+            # For fork PRs, read the config from the base branch instead of the
+            # PR branch to prevent shell_commands injection from untrusted forks.
+            base_branch = os.getenv("BUILDKITE_PULL_REQUEST_BASE_BRANCH", "")
+            if base_branch:
+                execute_command(
+                    ["git", "fetch", "origin", base_branch],
+                    print_output=False,
+                    suppress_stdout=True,
+                )
+                config = yaml.safe_load(
+                    execute_command_and_get_output(
+                        ["git", "show", f"origin/{base_branch}:{file_config}"],
+                        print_output=False,
+                    )
+                )
+            else:
+                with open(file_config, "r") as fd:
+                    config = yaml.safe_load(fd)
+        else:
+            with open(file_config, "r") as fd:
+                config = yaml.safe_load(fd)
 
     # Legacy mode means that there is exactly one task per platform (e.g. ubuntu1604_nojdk),
     # which means that we can get away with using the platform name as task ID.
