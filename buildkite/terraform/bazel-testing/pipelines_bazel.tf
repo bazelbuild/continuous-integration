@@ -61,7 +61,7 @@ resource "buildkite_pipeline" "publish-bazel-binaries" {
     envs = {}
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/pipelines/publish-bazel-binaries.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "/bin/bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/pipelines/publish-bazel-binaries.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ]
     }
   })
@@ -88,7 +88,7 @@ resource "buildkite_pipeline" "bazelisk-plus-incompatible-flags" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3 bazelci.py bazel_downstream_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py bazel_downstream_pipeline | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -112,7 +112,7 @@ resource "buildkite_pipeline" "bazel-at-head-plus-disabled" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3 bazelci.py bazel_downstream_pipeline --file_config=.bazelci/build_bazel_binaries.yml --test_disabled_projects | tee /dev/tty | buildkite-agent pipeline upload"
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py bazel_downstream_pipeline --file_config=.bazelci/build_bazel_binaries.yml --test_disabled_projects | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -138,7 +138,7 @@ resource "buildkite_pipeline" "bazel-at-head-plus-downstream" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3 bazelci.py bazel_downstream_pipeline --file_config=.bazelci/build_bazel_binaries.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py bazel_downstream_pipeline --file_config=.bazelci/build_bazel_binaries.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -161,7 +161,7 @@ resource "buildkite_pipeline" "bazelisk" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3 bazelci.py project_pipeline --file_config=.bazelci/config.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --file_config=.bazelci/config.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -185,7 +185,7 @@ resource "buildkite_pipeline" "bazel-bazel-github-presubmit" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -213,7 +213,7 @@ resource "buildkite_pipeline" "bazel-bazel" {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/collect_metrics.py?$(date +%s)\" -o collect_metrics.py",
-        "python3 bazelci.py project_pipeline --file_config=.bazelci/postsubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --file_config=.bazelci/postsubmit.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -313,7 +313,7 @@ resource "buildkite_pipeline" "bazel-bazel-arm64" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-linux-arm64.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload"
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-linux-arm64.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -363,7 +363,7 @@ resource "buildkite_pipeline" "test-bazel-for-ci-metrics" {
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/collect_metrics.py?$(date +%s)\" -o collect_metrics.py",
         "python3 -m pip install --upgrade pip setuptools wheel",
         "python3 -m pip install google-cloud-bigquery requests",
-        "python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/refs/heads/test-metrics/.bazelci/postsubmit.yml | tee /dev/tty | buildkite-agent pipeline upload",
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/refs/heads/test-metrics/.bazelci/postsubmit.yml | tee /dev/tty | buildkite-agent pipeline upload'",
       ]
     }
   })

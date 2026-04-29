@@ -152,7 +152,7 @@ async function requestBcrMaintainers(octokit, owner, repo, prNumber) {
     repo,
     pull_number: prNumber,
   });
-  const alreadyHasReviewer = prInfo.requested_reviewers.length > 0 || prInfo.requested_teams.length > 0 || reviews.data.length > 0;
+  const alreadyHasReviewer = prInfo.requested_reviewers.length > 0 || prInfo.requested_teams.length > 0;
 
   if (alreadyHasReviewer) {
     console.log('Skipping requesting BCR maintainers as there is already a reviewer assigned.');

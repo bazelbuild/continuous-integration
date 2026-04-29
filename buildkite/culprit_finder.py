@@ -202,7 +202,7 @@ def print_culprit_finder_pipeline(
                 ("--project_commit=" + project_commit) if project_commit else "",
             )
         )
-        commands = [bazelci.fetch_bazelcipy_command(), fetch_culprit_finder_py_command(), command]
+        commands = [bazelci.fetch_ci_scripts_command(), fetch_culprit_finder_py_command(), command]
         pipeline_steps.append(bazelci.create_step(label, commands, platform_name))
     print(yaml.dump({"steps": pipeline_steps}))
 

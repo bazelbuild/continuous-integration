@@ -63,6 +63,10 @@ SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integratio
     GITHUB_BRANCH
 )
 
+METRICS_SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/collect_metrics.py".format(
+    GITHUB_BRANCH
+)
+
 AGGREGATE_INCOMPATIBLE_TEST_RESULT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/aggregate_incompatible_flags_test_result.py?{}".format(
     GITHUB_BRANCH, int(time.time())
 )
@@ -3275,7 +3279,7 @@ def print_project_pipeline(
             create_step(
                 label="Try Update Last Green Commit",
                 commands=[
-                    fetch_bazelcipy_command(),
+                    fetch_ci_scripts_command(),
                     PLATFORMS[DEFAULT_PLATFORM]["python"]
                     + " bazelci.py try_update_last_green_commit",
                 ],
@@ -3300,7 +3304,7 @@ def print_project_pipeline(
             create_step(
                 label="Print Test Summary for Shards",
                 commands=[
-                    fetch_bazelcipy_command(),
+                    fetch_ci_scripts_command(),
                     PLATFORMS[DEFAULT_PLATFORM]["python"] + " bazelci.py print_shard_summary",
                 ],
                 platform=DEFAULT_PLATFORM,
@@ -3419,7 +3423,7 @@ def create_config_validation_steps(git_commit):
         create_step(
             label=":cop: Validate {}".format(f),
             commands=[
-                fetch_bazelcipy_command(),
+                fetch_ci_scripts_command(),
                 "{} bazelci.py project_pipeline --file_config={}".format(
                     PLATFORMS[DEFAULT_PLATFORM]["python"], f
                 ),
@@ -3524,7 +3528,7 @@ def runner_step(
     if use_but:
         command += " --use_but"
     label = create_label(platform, project_name, task_name=task_name)
-    commands = [fetch_bazelcipy_command(), command]
+    commands = [fetch_ci_scripts_command(), command]
     if "macos" in platform:
         commands = [f"which {py}", f"{py} -V"] + commands
     return create_step(
@@ -3536,8 +3540,10 @@ def runner_step(
     )
 
 
-def fetch_bazelcipy_command():
-    return "curl -q --noproxy '*' -sS {0}?{1} -o bazelci.py".format(SCRIPT_URL, int(time.time()))
+def fetch_ci_scripts_command():
+    command = "curl -q --noproxy '*' -sS {0}?{1} -o bazelci.py".format(SCRIPT_URL, int(time.time()))
+    command += " && curl -q --noproxy '*' -sS {0}?{1} -o collect_metrics.py".format(METRICS_SCRIPT_URL, int(time.time()))
+    return command
 
 
 def fetch_aggregate_incompatible_flags_test_result_command():
@@ -3559,7 +3565,7 @@ def upload_project_pipeline_step(project_name, git_repository, http_config, file
 
     return create_step(
         label="Setup {0}".format(project_name),
-        commands=[fetch_bazelcipy_command(), pipeline_command],
+        commands=[fetch_ci_scripts_command(), pipeline_command],
         platform=DEFAULT_PLATFORM,
     )
 
@@ -3615,7 +3621,7 @@ def bazel_build_step(
 
     step = create_step(
         label=create_label(platform, project_name, build_only, test_only),
-        commands=[fetch_bazelcipy_command(), pipeline_command],
+        commands=[fetch_ci_scripts_command(), pipeline_command],
         platform=platform,
     )
     # Always try to automatically retry the bazel build step, this will make
@@ -3737,7 +3743,7 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
         create_step(
             label="Publish Bazel Binaries",
             commands=[
-                fetch_bazelcipy_command(),
+                fetch_ci_scripts_command(),
                 PLATFORMS[DEFAULT_PLATFORM]["python"] + " bazelci.py publish_binaries",
             ],
             platform=DEFAULT_PLATFORM,
@@ -3751,7 +3757,7 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
             create_step(
                 label="Update last green commit for Bazel",
                 commands=[
-                    fetch_bazelcipy_command(),
+                    fetch_ci_scripts_command(),
                     PLATFORMS[DEFAULT_PLATFORM]["python"]
                     + " bazelci.py try_update_last_green_commit",
                 ],
@@ -3922,7 +3928,7 @@ def print_bazel_downstream_pipeline(
             create_step(
                 label="Try Update Last Green Downstream Commit",
                 commands=[
-                    fetch_bazelcipy_command(),
+                    fetch_ci_scripts_command(),
                     PLATFORMS[DEFAULT_PLATFORM]["python"]
                     + " bazelci.py try_update_last_green_downstream_commit",
                 ],
@@ -3946,7 +3952,7 @@ def get_steps_for_aggregating_migration_results(current_build_number, notify):
         create_step(
             label="Aggregate incompatible flags test result",
             commands=[
-                fetch_bazelcipy_command(),
+                fetch_ci_scripts_command(),
                 fetch_aggregate_incompatible_flags_test_result_command(),
                 " ".join(parts),
             ],
