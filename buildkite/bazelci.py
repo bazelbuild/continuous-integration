@@ -32,6 +32,7 @@ import platform as platform_module
 import random
 import re
 import requests
+import shlex
 import shutil
 import stat
 import subprocess
@@ -3393,11 +3394,14 @@ def get_platform_for_task(task, task_config):
     return task_config.get("platform", task)
 
 
+_SAFE_CONFIG_PATH = re.compile(r"^\.bazelci/[A-Za-z0-9_./-]+\.(yml|yaml)$")
+
+
 def create_config_validation_steps(git_commit):
     config_files = [
         path
         for path in get_modified_files(git_commit)
-        if path.startswith(".bazelci/") and os.path.splitext(path)[1] in CONFIG_FILE_EXTENSIONS
+        if _SAFE_CONFIG_PATH.fullmatch(path)
     ]
     return [
         create_step(
@@ -3405,7 +3409,7 @@ def create_config_validation_steps(git_commit):
             commands=[
                 fetch_ci_scripts_command(),
                 "{} bazelci.py project_pipeline --file_config={}".format(
-                    PLATFORMS[DEFAULT_PLATFORM]["python"], f
+                    PLATFORMS[DEFAULT_PLATFORM]["python"], shlex.quote(f)
                 ),
             ],
             platform=DEFAULT_PLATFORM,
