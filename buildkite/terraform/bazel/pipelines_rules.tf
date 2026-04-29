@@ -277,32 +277,6 @@ resource "buildkite_pipeline" "rules-scala-scala" {
   }
 }
 
-resource "buildkite_pipeline" "google-rules-android-presubmit" {
-  name           = "Google rules_android presubmit"
-  repository     = "https://team.git.corp.google.com/mobile-ninjas-releaser/rules_android"
-  default_branch = "main"
-  steps = templatefile("pipeline.yml.tpl", {
-    envs = {}
-    steps = {
-      commands = [
-        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
-      ]
-    }
-  })
-  allow_rebuilds             = true
-  cancel_intermediate_builds = false
-  skip_intermediate_builds   = false
-  tags                       = []
-  provider_settings          = null
-  branch_configuration       = null
-  cluster_id                 = null
-  color                      = null
-  default_team_id            = null
-  emoji                      = null
-  pipeline_template_id       = null
-}
-
 resource "buildkite_pipeline" "rules-cc" {
   name           = "rules_cc"
   repository     = "https://github.com/bazelbuild/rules_cc.git"
@@ -648,7 +622,7 @@ resource "buildkite_pipeline" "rules-android" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload"
+        "bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
