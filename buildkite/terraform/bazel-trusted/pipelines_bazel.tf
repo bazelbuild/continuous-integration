@@ -8,7 +8,7 @@ resource "buildkite_pipeline" "publish-bazel-binaries-platform" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/publish_bin_platform/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3 bazelci.py bazel_publish_binaries_pipeline --http_config=https://raw.githubusercontent.com/meteorcloudy/bazel/publish_bin_platform/.bazelci/build_bazel_binaries.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "bash -c 'set -euo pipefail; python3 bazelci.py bazel_publish_binaries_pipeline --http_config=https://raw.githubusercontent.com/meteorcloudy/bazel/publish_bin_platform/.bazelci/build_bazel_binaries.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ],
       label = ":pipeline:"
     }
@@ -87,7 +87,7 @@ resource "buildkite_pipeline" "bazel-custom-release" {
     envs = {},
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-custom-release.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-custom-release.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:"
     }
@@ -116,7 +116,7 @@ resource "buildkite_pipeline" "build-embedded-minimized-jdk" {
     envs = {},
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/build-embedded-minimized-jdk.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/build-embedded-minimized-jdk.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:"
     }
@@ -143,7 +143,7 @@ resource "buildkite_pipeline" "java-tools-binaries-java" {
     envs = {},
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/java_tools-binaries.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/java_tools-binaries.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:"
     }
@@ -294,7 +294,7 @@ resource "buildkite_pipeline" "bazel-java-tools-updates" {
     envs = {},
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/java-tools-testing/pipelines/bazel-java_tools-updates.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/java-tools-testing/pipelines/bazel-java_tools-updates.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:"
     }
@@ -324,7 +324,7 @@ resource "buildkite_pipeline" "java-tools-release" {
     envs = {},
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/java_tools-release.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/java_tools-release.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:"
     }
@@ -354,7 +354,7 @@ resource "buildkite_pipeline" "publish-bazel-binaries" {
     envs = {},
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-bazel-binaries.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-bazel-binaries.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:"
     }
@@ -409,7 +409,7 @@ resource "buildkite_pipeline" "bazel-release" {
     envs = {},
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-release.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-release.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:"
     }
@@ -461,7 +461,7 @@ resource "buildkite_pipeline" "java-tools-rc" {
     envs = {},
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/java_tools-rc.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/java_tools-rc.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:",
       image = "gcr.io/bazel-public/ubuntu2004-java11"
