@@ -400,7 +400,6 @@ resource "buildkite_pipeline" "bcr-pr-reviewer" {
         "npm install",
         "export INPUT_TOKEN=$(gcloud secrets versions access latest --secret=\"bcr-pr-review-helper-token\")",
         "export \"INPUT_ACTION-TYPE\"=review_prs",
-        "export INPUT_ACTION_TYPE=review_prs",
         "export GITHUB_REPOSITORY=bazelbuild/bazel-central-registry",
         "node index.js"
       ],
