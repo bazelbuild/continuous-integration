@@ -389,24 +389,26 @@ resource "buildkite_pipeline" "bcr-postsubmit" {
 
 resource "buildkite_pipeline" "bcr-pr-reviewer" {
   name           = "BCR PR Reviewer"
-  repository     = "https://github.com/bazelbuild/bazel-central-registry.git"
+  repository     = "https://github.com/bazelbuild/continuous-integration.git"
   description    = "Periodically review PRs for the Bazel Central Registry"
-  default_branch = "main"
+  default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
     steps = {
       commands = [
-        "git clone https://github.com/bazelbuild/continuous-integration.git",
-        "cd continuous-integration/actions/bcr-pr-reviewer",
+        "cd actions/bcr-pr-reviewer",
         "npm install",
         "export INPUT_TOKEN=$(gcloud secrets versions access latest --secret=\"bcr-pr-review-helper-token\")",
+        "export \"INPUT_ACTION-TYPE\"=review_prs",
+        "export INPUT_ACTION_TYPE=review_prs",
+        "export GITHUB_REPOSITORY=bazelbuild/bazel-central-registry",
         "node index.js"
       ],
       label = ":pipeline:"
     }
   })
   allow_rebuilds             = true
-  branch_configuration       = "main"
+  branch_configuration       = "master"
   cancel_intermediate_builds = false
   skip_intermediate_builds   = false
   tags                       = []
