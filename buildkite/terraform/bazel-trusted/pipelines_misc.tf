@@ -387,6 +387,38 @@ resource "buildkite_pipeline" "bcr-postsubmit" {
   }
 }
 
+resource "buildkite_pipeline" "bcr-pr-reviewer" {
+  name           = "BCR PR Reviewer"
+  repository     = "https://github.com/bazelbuild/bazel-central-registry.git"
+  description    = "Periodically review PRs for the Bazel Central Registry"
+  default_branch = "main"
+  steps = templatefile("pipeline.yml.tpl", {
+    envs = {},
+    steps = {
+      commands = [
+        "git clone https://github.com/bazelbuild/continuous-integration.git",
+        "cd continuous-integration/actions/bcr-pr-reviewer",
+        "npm install",
+        "node index.js"
+      ],
+      label = ":pipeline:"
+    }
+  })
+  allow_rebuilds             = true
+  branch_configuration       = "main"
+  cancel_intermediate_builds = false
+  skip_intermediate_builds   = false
+  tags                       = []
+  cluster_id                 = null
+  color                      = null
+  default_team_id            = null
+  emoji                      = null
+  pipeline_template_id       = null
+  provider_settings = {
+    trigger_mode = "none"
+  }
+}
+
 resource "buildkite_pipeline" "docker-update" {
   name           = "Docker update"
   repository     = "https://github.com/bazelbuild/continuous-integration.git"
