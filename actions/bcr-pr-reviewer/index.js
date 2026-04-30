@@ -683,9 +683,15 @@ async function runPrReviewer(octokit) {
     state: 'open',
   });
 
-  // Review each PR
+  const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000);
+
+  // Review each PR that has activity in the past 6 hours
   for (const pr of prs) {
-    await reviewPR(octokit, owner, repo, pr.number);
+    if (new Date(pr.updated_at) >= sixHoursAgo) {
+      await reviewPR(octokit, owner, repo, pr.number);
+    } else {
+      console.log(`Skipping PR #${pr.number} as it has no activity in the past 6 hours.`);
+    }
   }
 }
 
