@@ -399,6 +399,7 @@ resource "buildkite_pipeline" "bcr-pr-reviewer" {
         "git clone https://github.com/bazelbuild/continuous-integration.git",
         "cd continuous-integration/actions/bcr-pr-reviewer",
         "npm install",
+        "export INPUT_TOKEN=$(gcloud secrets versions access latest --secret=\"bcr-pr-review-helper-token\")",
         "node index.js"
       ],
       label = ":pipeline:"
