@@ -335,6 +335,7 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
         "created_at": timestamps.created_at,
         "started_at": timestamps.started_at,
         "pipeline": PIPELINE,
+        "org": ORG,
         "platform": PLATFORM,
         "agent_id": AGENT_ID,
         "branch": BRANCH,
