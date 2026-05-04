@@ -168,6 +168,7 @@ class TestPublishMetrics(unittest.TestCase):
         # Setup Environment
         os.environ["BUILDKITE_BUILD_NUMBER"] = "500"
         os.environ["BUILDKITE_PIPELINE_SLUG"] = "test-pipeline"
+        os.environ["BUILDKITE_ORGANIZATION_SLUG"] = "test-org"
 
         # Setup Mocks
         mock_git.return_value = 5  # 5 changed files
@@ -201,6 +202,7 @@ class TestPublishMetrics(unittest.TestCase):
 
         self.assertEqual(row["build_number"], 500)
         self.assertEqual(row["pipeline"], "test-pipeline")
+        self.assertEqual(row["org"], "test-org")
         self.assertEqual(row["changed_files_count"], 5)
         self.assertEqual(row["failed_test_count"], 0)
         self.assertEqual(row.get("queue_duration_s"), 300.0)
