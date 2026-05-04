@@ -40,15 +40,23 @@ steps:
       echo "+++ Pushing the docker container to gcr.io/bazel-public/bazel"     
       docker push gcr.io/bazel-public/bazel:\${version}
       
-      echo "+++ Checking if latest release"
+      echo "+++ Determining if this is the highest semantic version"
+      # Fetch the current "latest" tag name from GitHub
+
       latest_release_url=$(curl -Ls -o /dev/null -w %{url_effective} https://github.com/bazelbuild/bazel/releases/latest)
       latest_release_tag=$(basename \${latest_release_url})
       echo "latest_release_tag = \"\$latest_release_tag\""
       
-      if [[ \"\$version\" == \"\$latest_release_tag\" ]]; then
-        echo "+++ Updating the latest tag"
+      # Using version-sort to find the highest version between current and GitHub-latest
+      highest_version=$(printf '%s\n%s' "\$version" "\$latest_release_tag" | sort -V | tail -n 1)
+      echo "highest_version = \"\$highest_version\""
+
+      if [[ \"\$version\" == \"\$highest_version\" ]]; then
+        echo "+++ Updating the latest tag to \${version}"
         image_id=$(docker image list gcr.io/bazel-public/bazel:\${version} --format \"{{.ID}}\")        
         image_id=$(echo \${image_id} | tr -d '"')
         docker tag \${image_id} gcr.io/bazel-public/bazel:latest
         docker push gcr.io/bazel-public/bazel:latest
+      else
+        echo "--- Skipping latest tag update (Version \${version} is older than \${latest_release_tag})"
       fi
