@@ -92,7 +92,7 @@ resource "buildkite_pipeline" "bcr-integrity" {
     envs = {},
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/java-tools-testing/pipelines/bcr-integrity.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/java-tools-testing/pipelines/bcr-integrity.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:"
     }
@@ -124,7 +124,7 @@ resource "buildkite_pipeline" "create-linux-vm-image" {
     },
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-vm-image.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-vm-image.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:",
       image = "gcr.io/bazel-public/ubuntu2204"
@@ -229,7 +229,7 @@ resource "buildkite_pipeline" "docgen-bazel-website" {
     envs = {},
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-docgen.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-docgen.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:"
     }
@@ -261,7 +261,7 @@ resource "buildkite_pipeline" "create-windows-vm-image" {
     },
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-vm-image.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-vm-image.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:",
       image = "gcr.io/bazel-public/ubuntu2204"
@@ -291,7 +291,7 @@ resource "buildkite_pipeline" "docgen-bazel-blog" {
     envs = {},
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-docgen.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-docgen.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:"
     }
@@ -396,7 +396,7 @@ resource "buildkite_pipeline" "docker-update" {
     envs = {},
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/docker-update.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/docker-update.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:",
       image = "gcr.io/bazel-public/ubuntu2404"
@@ -467,7 +467,7 @@ resource "buildkite_pipeline" "docgen-bazel" {
     envs = {},
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-docgen.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-docgen.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:"
     }

@@ -7,7 +7,7 @@ resource "buildkite_pipeline" "rules-java-updates" {
     envs = {},
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/java-tools-testing/pipelines/rules_java-updates.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/java-tools-testing/pipelines/rules_java-updates.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ]
     }
   })
@@ -36,7 +36,7 @@ resource "buildkite_pipeline" "rules-java-release" {
     envs = {},
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/refs/heads/master/pipelines/rules_java-release.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/refs/heads/master/pipelines/rules_java-release.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ]
     }
   })
@@ -65,7 +65,7 @@ resource "buildkite_pipeline" "rules-platform-release" {
     envs = {},
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/rules_platform-release.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/rules_platform-release.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:"
     }
@@ -95,7 +95,7 @@ resource "buildkite_pipeline" "rules-platform-release-testing" {
     envs = {},
     steps = {
       commands = [
-        "curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/rules_platform-release-testing/pipelines/rules_platform-release-testing.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace"
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/rules_platform-release-testing/pipelines/rules_platform-release-testing.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:"
     }
