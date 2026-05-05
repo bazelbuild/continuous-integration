@@ -1,31 +1,3 @@
-resource "buildkite_pipeline" "rules-java-updates" {
-  name           = "rules_java updates"
-  repository     = "https://github.com/bazelbuild/rules_java.git"
-  description    = "Update rules_java"
-  default_branch = "master"
-  steps = templatefile("pipeline.yml.tpl", {
-    envs = {},
-    steps = {
-      commands = [
-        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/java-tools-testing/pipelines/rules_java-updates.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
-      ]
-    }
-  })
-  allow_rebuilds             = true
-  cancel_intermediate_builds = false
-  skip_intermediate_builds   = false
-  tags                       = []
-  branch_configuration       = null
-  cluster_id                 = null
-  color                      = null
-  default_team_id            = null
-  emoji                      = null
-  pipeline_template_id       = null
-  provider_settings = {
-    # GitHub activities are disabled for this pipeline
-    trigger_mode = "none"
-  }
-}
 
 resource "buildkite_pipeline" "rules-java-release" {
   name           = "rules_java release"

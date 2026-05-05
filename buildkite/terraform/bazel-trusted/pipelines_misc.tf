@@ -418,46 +418,6 @@ resource "buildkite_pipeline" "docker-update" {
   }
 }
 
-resource "buildkite_pipeline" "pcloudy-test" {
-  name                       = "pcloudy test"
-  repository                 = "https://github.com/bazelbuild/bazel.git"
-  default_branch             = "master"
-  steps                      = "# Enter your pipeline's YAML step configuration:\n\n# This default command changes the pipeline of a running build by uploading a configuration file.\n# https://buildkite.com/docs/agent/v3/cli-pipeline\n# For more information on different step types, toggle open the step guides\n\nsteps:\n  - agents: {queue: arm64}\n    command: ['touch foo', 'buildkite-agent artifact upload foo']\n    label: 'Debug ubuntu arm64'\n    plugins:\n      docker#v3.8.0:\n        always-pull: false\n        environment: [ANDROID_HOME, ANDROID_NDK_HOME, BUILDKITE_ARTIFACT_UPLOAD_DESTINATION, GOOGLE_APPLICATION_CREDENTIALS]\n        image: gcr.io/bazel-public/ubuntu2004\n        network: host\n        privileged: true\n        propagate-environment: false\n        propagate-uid-gid: true\n        volumes: ['/etc/group:/etc/group:ro', '/etc/passwd:/etc/passwd:ro', '/etc/shadow:/etc/shadow:ro',\n          '/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro', '/opt/android-ndk-r25b:/opt/android-ndk-r25b:ro',\n          '/opt/android-sdk-linux:/opt/android-sdk-linux:ro', '/var/lib/buildkite-agent:/var/lib/buildkite-agent',\n          '/var/lib/gitmirrors:/var/lib/gitmirrors:ro', '/var/run/docker.sock:/var/run/docker.sock']"
-  allow_rebuilds             = true
-  cancel_intermediate_builds = false
-  skip_intermediate_builds   = false
-  tags                       = []
-  branch_configuration       = null
-  cluster_id                 = null
-  color                      = null
-  default_team_id            = null
-  emoji                      = null
-  pipeline_template_id       = null
-  provider_settings = {
-    trigger_mode                                  = "code"
-    build_branches                                = true
-    build_pull_requests                           = true
-    build_tags                                    = false
-    build_pull_request_forks                      = false
-    build_pull_request_ready_for_review           = false
-    build_pull_request_labels_changed             = false
-    build_pull_request_base_branch_changed        = false
-    prefix_pull_request_fork_branch_names         = true
-    filter_enabled                                = false
-    pull_request_branch_filter_enabled            = false
-    publish_commit_status                         = true
-    publish_commit_status_per_step                = false
-    separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
-    cancel_deleted_branch_builds                  = false
-    skip_builds_for_existing_commits              = false
-    skip_pull_request_builds_for_existing_commits = true
-    ignore_default_branch_pull_requests           = false
-    build_merge_group_checks_requested            = false
-    cancel_when_merge_group_destroyed             = false
-    use_merge_group_base_commit_for_git_diff_base = false
-  }
-}
 
 resource "buildkite_pipeline" "docgen-bazel" {
   name           = "DocGen: Bazel"
