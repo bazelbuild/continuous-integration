@@ -153,29 +153,7 @@ resource "buildkite_pipeline" "bazel-at-head-plus-downstream" {
   }
 }
 
-resource "buildkite_pipeline" "bazelisk" {
-  name       = "Bazelisk"
-  repository = "https://github.com/bazelbuild/bazelisk.git"
-  steps = templatefile("pipeline.yml.tpl", {
-    envs = {}
-    steps = {
-      commands = [
-        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --file_config=.bazelci/config.yml | tee /dev/tty | buildkite-agent pipeline upload'"
-      ]
-    }
-  })
-  default_branch             = "master"
-  allow_rebuilds             = true
-  branch_configuration       = "master"
-  cancel_intermediate_builds = false
-  skip_intermediate_builds   = false
-  tags                       = []
-  provider_settings = {
-    # GitHub activities are disabled for this pipeline
-    trigger_mode = "none"
-  }
-}
+
 
 resource "buildkite_pipeline" "bazel-bazel-github-presubmit" {
   name       = "Bazel :bazel: Github Presubmit"
@@ -226,51 +204,6 @@ resource "buildkite_pipeline" "bazel-bazel" {
   provider_settings = {
     # GitHub activities are disabled for this pipeline
     trigger_mode = "none"
-  }
-}
-
-resource "buildkite_pipeline" "bazel-auto-sheriff" {
-  name        = "Bazel Auto Sheriff"
-  repository  = "https://github.com/bazelbuild/continuous-integration.git"
-  description = "Testing the auto sheriff pipeline"
-  steps = templatefile("pipeline.yml.tpl", {
-    envs = {}
-    steps = {
-      label = ":male-police-officer: :female-police-officer: :police_car:"
-      commands = [
-        "cd buildkite",
-        "python3 bazel_auto_sheriff.py"
-      ]
-    }
-  })
-  default_branch             = "testing"
-  allow_rebuilds             = true
-  cancel_intermediate_builds = false
-  skip_intermediate_builds   = false
-  tags                       = []
-  provider_settings = {
-    trigger_mode                                  = "code"
-    build_branches                                = true
-    build_pull_requests                           = true
-    build_tags                                    = false
-    build_pull_request_forks                      = false
-    build_pull_request_ready_for_review           = false
-    build_pull_request_labels_changed             = false
-    build_pull_request_base_branch_changed        = false
-    prefix_pull_request_fork_branch_names         = true
-    filter_enabled                                = false
-    pull_request_branch_filter_enabled            = false
-    publish_commit_status                         = true
-    publish_commit_status_per_step                = false
-    separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
-    cancel_deleted_branch_builds                  = false
-    skip_builds_for_existing_commits              = false
-    skip_pull_request_builds_for_existing_commits = true
-    ignore_default_branch_pull_requests           = false
-    build_merge_group_checks_requested            = false
-    cancel_when_merge_group_destroyed             = false
-    use_merge_group_base_commit_for_git_diff_base = false
   }
 }
 

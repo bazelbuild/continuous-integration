@@ -1,24 +1,4 @@
-resource "buildkite_pipeline" "rules-kotlin-green-publish" {
-  name                       = "rules_kotlin green publish"
-  repository                 = "git@github.com:bazel-contrib/rules_kotlin.git"
-  description                = "A pipeline to build rules_kotlin post-merge, and if green, publish a tag and attach the executables"
-  default_branch             = "master"
-  steps                      = "steps:\n  - command: \"echo 'Hello world!'\"\n"
-  allow_rebuilds             = true
-  branch_configuration       = "master"
-  cancel_intermediate_builds = false
-  skip_intermediate_builds   = false
-  tags                       = []
-  cluster_id                 = null
-  color                      = null
-  default_team_id            = null
-  emoji                      = null
-  pipeline_template_id       = null
-  provider_settings = {
-    # GitHub activities are disabled for this pipeline
-    trigger_mode = "none"
-  }
-}
+
 
 resource "buildkite_pipeline" "rules-proto-grpc-rules-proto-grpc" {
   name           = "rules-proto-grpc/rules_proto_grpc"
@@ -328,34 +308,7 @@ resource "buildkite_pipeline" "rules-cc" {
   }
 }
 
-resource "buildkite_pipeline" "rules-groovy" {
-  name           = "rules_groovy"
-  repository     = "https://github.com/bazelbuild/rules_groovy.git"
-  default_branch = "master"
-  steps = templatefile("pipeline.yml.tpl", {
-    envs = {}
-    steps = {
-      commands = [
-        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload'"
-      ]
-    }
-  })
-  allow_rebuilds             = true
-  cancel_intermediate_builds = false
-  skip_intermediate_builds   = false
-  tags                       = []
-  branch_configuration       = null
-  cluster_id                 = null
-  color                      = null
-  default_team_id            = null
-  emoji                      = null
-  pipeline_template_id       = null
-  provider_settings = {
-    # GitHub activities are disabled for this pipeline
-    trigger_mode = "none"
-  }
-}
+
 
 resource "buildkite_pipeline" "github-dot-com-jmillikin-rules-m4" {
   name           = "github.com/jmillikin/rules_m4"
@@ -1178,34 +1131,7 @@ resource "buildkite_pipeline" "rules-license" {
   }
 }
 
-resource "buildkite_pipeline" "rules-sass" {
-  name           = "rules_sass"
-  repository     = "https://github.com/bazelbuild/rules_sass.git"
-  default_branch = "main"
-  steps = templatefile("pipeline.yml.tpl", {
-    envs = {}
-    steps = {
-      commands = [
-        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload'"
-      ]
-    }
-  })
-  allow_rebuilds             = true
-  cancel_intermediate_builds = false
-  skip_intermediate_builds   = false
-  tags                       = []
-  branch_configuration       = null
-  cluster_id                 = null
-  color                      = null
-  default_team_id            = null
-  emoji                      = null
-  pipeline_template_id       = null
-  provider_settings = {
-    # GitHub activities are disabled for this pipeline
-    trigger_mode = "none"
-  }
-}
+
 
 resource "buildkite_pipeline" "github-dot-com-jmillikin-rules-flex" {
   name           = "github.com/jmillikin/rules_flex"
@@ -1617,34 +1543,7 @@ resource "buildkite_pipeline" "rules-proto" {
   }
 }
 
-resource "buildkite_pipeline" "rules-gwt" {
-  name           = "rules_gwt"
-  repository     = "https://github.com/bazelbuild/rules_gwt.git"
-  default_branch = "master"
-  steps = templatefile("pipeline.yml.tpl", {
-    envs = {}
-    steps = {
-      commands = [
-        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload'"
-      ]
-    }
-  })
-  allow_rebuilds             = true
-  cancel_intermediate_builds = false
-  skip_intermediate_builds   = false
-  tags                       = []
-  branch_configuration       = null
-  cluster_id                 = null
-  color                      = null
-  default_team_id            = null
-  emoji                      = null
-  pipeline_template_id       = null
-  provider_settings = {
-    # GitHub activities are disabled for this pipeline
-    trigger_mode = "none"
-  }
-}
+
 
 resource "buildkite_pipeline" "rules-rust-rustlang" {
   name           = "rules_rust :rustlang:"
