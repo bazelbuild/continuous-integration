@@ -55,7 +55,9 @@ resource "buildkite_pipeline" "google-bazel-presubmit" {
   repository     = "https://bazel.googlesource.com/bazel.git"
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
-    envs = {},
+    envs = {
+      ENABLE_METRICS_COLLECTION = "true"
+    },
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
