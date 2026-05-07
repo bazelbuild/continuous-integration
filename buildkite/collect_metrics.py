@@ -266,7 +266,7 @@ def publish_to_bigquery(row):
         bazelci.eprint("Success: Metrics pushed to BigQuery via CLI.")
             
     except Exception as e:
-        eprint_and_annotate_warning(f"Failed to execute bq CLI: {e}")
+        print_and_annotate_warning(f"Failed to execute bq CLI: {e}")
     finally:
         if 'temp_path' in locals() and os.path.exists(temp_path):
             os.remove(temp_path)
