@@ -922,7 +922,7 @@ resource "buildkite_pipeline" "bazel-bazel" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {
-      DOCS_DIR = "."
+      DOCS_DIR = "docs"
       ENABLE_METRICS_COLLECTION = "true"
     },
     steps = {
