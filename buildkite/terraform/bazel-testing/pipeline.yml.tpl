@@ -1,8 +1,9 @@
 env:
   GIT_HTTP_LOW_SPEED_LIMIT: "102400"
   GIT_HTTP_LOW_SPEED_TIME: "180"
-%{ for key, value in envs }
-  ${key}: ${key == "LC_ALL" ? value : jsonencode(value)}%{ endfor ~}
+%{ for key, value in envs ~}
+  ${key}: ${key == "LC_ALL" ? value : jsonencode(value)}
+%{ endfor ~}
 
 steps:
   - command: |-
