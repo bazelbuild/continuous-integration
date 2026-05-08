@@ -8,6 +8,7 @@ source "$(dirname "$0")/download_json.sh"
 if [[ "$(git config --get remote.origin.url)" == */bazel.git ]]; then
   # Bazel repo -> need to build reference docs and download .json navigation
   echo "--- :bazel::books: Building reference docs"
+  echo "Work dir: $(pwd)"
 
   bazel --quiet build \
     //src/main/java/com/google/devtools/build/lib:gen_mdx_reference_docs
@@ -17,6 +18,7 @@ if [[ "$(git config --get remote.origin.url)" == */bazel.git ]]; then
   cd "$DOCS_DIR"
 
   echo "--- :json: Downloading docs.json & included files"
+  echo "Work dir: $(pwd)"
 
   # Fetch docs.json and all included files at HEAD, otherwise mintlify fails.
   download_json "$DOCS_JSON_URL"
