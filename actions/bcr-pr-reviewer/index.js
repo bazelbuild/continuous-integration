@@ -780,9 +780,41 @@ async function runSkipCheck(octokit) {
   if (!commentBody.startsWith(SKIP_CHECK_TRIGGER)) {
     return;
   }
+
+  // Reject commands on plain issues; skip_check only applies to pull requests
+  if (!payload.issue.pull_request) {
+    return;
+  }
+
   const check = commentBody.slice(SKIP_CHECK_TRIGGER.length);
   const owner = payload.repository.owner.login;
   const repo = payload.repository.name;
+  const prNumber = payload.issue.number;
+  const commenter = payload.comment.user.login.toLowerCase();
+  const prAuthor = payload.issue.user.login.toLowerCase();
+
+  // Only the PR author or a module maintainer may request a check skip
+  let authorized = commenter === prAuthor;
+  if (!authorized) {
+    const modifiedModuleVersions = await fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber);
+    const modifiedModules = new Set(Array.from(modifiedModuleVersions).map(m => m.split('@')[0]));
+    if (modifiedModules.size > 0) {
+      const [maintainersMap] = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ false);
+      authorized = maintainersMap.has(commenter);
+    }
+  }
+
+  if (!authorized) {
+    await octokit.rest.reactions.createForIssueComment({
+      owner,
+      repo,
+      comment_id: payload.comment.id,
+      content: 'confused',
+    });
+    console.log(`@${commenter} is not authorized to request check skips on PR #${prNumber}.`);
+    return;
+  }
+
   if (check == "unstable_url") {
     await octokit.rest.issues.addLabels({
       owner,
