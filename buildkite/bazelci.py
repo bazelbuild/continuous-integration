@@ -1287,6 +1287,27 @@ def is_trueish(s):
     return str(s).lower() in ["true", "1", "t", "y", "yes"]
 
 
+def collect_metrics_if_enabled(build_bep_path=None, test_bep_path=None):
+    if is_trueish(os.environ.get("ENABLE_METRICS_COLLECTION", "false")):
+        try:
+            from collect_metrics import collect_metrics_and_push_to_bigquery
+            collect_metrics_and_push_to_bigquery(build_bep_path=build_bep_path, test_bep_path=test_bep_path)
+        except Exception as e:
+            eprint(f"Failed to upload metrics: {e}")
+            job_url = f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
+            execute_command(
+                [
+                    "buildkite-agent",
+                    "annotate",
+                    "--style=warning",
+                    f"Failed to upload metrics from [this job]({job_url})",
+                    "--context",
+                    "ctx-metrics_upload_failed",
+                ],
+                fail_if_nonzero=False,
+            )
+
+
 def use_bazelisk_migrate():
     """
     If USE_BAZELISK_MIGRATE is set, we use `bazelisk --migrate` to test incompatible flags.
@@ -1547,26 +1568,8 @@ def execute_commands(
                 upload_log_file(json_profile_out_build, tmpdir)
             if capture_corrupted_outputs_dir_build:
                 upload_corrupted_outputs(capture_corrupted_outputs_dir_build, tmpdir)
-            
-            if is_trueish(os.environ.get("ENABLE_METRICS_COLLECTION", "false")):
-                if not test_targets or not build_succeeded:
-                    try:
-                        from collect_metrics import collect_metrics_and_push_to_bigquery
-                        collect_metrics_and_push_to_bigquery(build_bep_path=build_bep_file)
-                    except Exception as e:
-                        bazelci.eprint(f"Failed to upload build metrics: {e}")
-                        job_url = f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
-                        execute_command(
-                            [
-                                "buildkite-agent",
-                                "annotate",
-                                "--style=warning",
-                                f"Failed to upload metrics from [this job]({job_url})",
-                                "--context",
-                                "ctx-metrics_upload_failed",
-                            ],
-                            fail_if_nonzero=False,
-                        )
+            if not test_targets or not build_succeeded:
+                collect_metrics_if_enabled(build_bep_file, None)
 
     if test_targets:
         if not is_windows():
@@ -1643,24 +1646,7 @@ def execute_commands(
                         ],
                         fail_if_nonzero=False,
                     )
-                if is_trueish(os.environ.get("ENABLE_METRICS_COLLECTION", "false")):
-                    try:
-                        from collect_metrics import collect_metrics_and_push_to_bigquery
-                        collect_metrics_and_push_to_bigquery(build_bep_path=build_bep_file, test_bep_path=test_bep_file)
-                    except Exception as e:
-                        eprint(f"Failed to upload test metrics: {e}")
-                        job_url = f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
-                        execute_command(
-                        [
-                            "buildkite-agent",
-                            "annotate",
-                            "--style=warning",
-                            f"Failed to upload metrics from [this job]({job_url})",
-                            "--context",
-                            "ctx-metrics_upload_failed",
-                        ],
-                        fail_if_nonzero=False,
-                    )
+                collect_metrics_if_enabled(build_bep_file, test_bep_file)
 
             _ = future.result()
             # TODO: print results
