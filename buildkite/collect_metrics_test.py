@@ -174,7 +174,7 @@ class TestPublishMetrics(unittest.TestCase):
         mock_git.return_value = 5  # 5 changed files
 
         # Mock BEP Return
-        mock_bep_metrics = collect_metrics.BuildMetrics(
+        mock_bep_metrics = collect_metrics.BazelMetrics(
             wall_time_ms=5000,
             critical_path_s=4.0,
             remote_and_disk_cache_hits=10,

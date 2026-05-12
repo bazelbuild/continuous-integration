@@ -34,7 +34,7 @@ DATASET_ID = "bazel_ci_metrics"
 TABLE_ID = "ci_builds"
 
 @dataclasses.dataclass
-class BuildMetrics:
+class BazelMetrics:
     wall_time_ms: int = 0
     critical_path_s: float = 0.0
     remote_and_disk_cache_hits: int = 0
@@ -142,7 +142,7 @@ def parse_bep(filepath):
     Parses the Build Event Protocol (BEP) JSON file to extract build metrics and targets.
 
     Returns:
-        BuildMetrics: An object containing aggregated build metrics and test targets.
+        BazelMetrics: An object containing aggregated build metrics and test targets.
         None: If the file does not exist.
     """
 
@@ -150,7 +150,7 @@ def parse_bep(filepath):
         bazelci.eprint(f"Error: BEP file not found at {filepath}")
         return None
 
-    build_metrics = BuildMetrics()
+    bazel_metrics = BazelMetrics()
     target_map = collections.defaultdict(list)
     target_status = {}
 
@@ -182,49 +182,49 @@ def parse_bep(filepath):
                         target_status[label] = current_status
 
                     if current_status != "PASSED":
-                        build_metrics.failed_test_count += 1
+                        bazel_metrics.failed_test_count += 1
 
             # --- 2. Build Metrics ---
             elif "buildMetrics" in event:
                 buildMetrics = event["buildMetrics"]
-                build_metrics.wall_time_ms = int(
+                bazel_metrics.wall_time_ms = int(
                     buildMetrics.get("timingMetrics", {}).get("wallTimeInMs", 0)
                 )
 
                 action_summary = buildMetrics.get("actionSummary", {})
-                build_metrics.total_actions = int(action_summary.get("actionsExecuted", 0))
+                bazel_metrics.total_actions = int(action_summary.get("actionsExecuted", 0))
 
                 for runner in action_summary.get("runnerCount", []):
                     name = runner.get("name", "").lower()
                     if "remote cache hit" in name or "disk cache hit" in name:
-                        build_metrics.remote_and_disk_cache_hits += int(runner.get("count", 0))
+                        bazel_metrics.remote_and_disk_cache_hits += int(runner.get("count", 0))
 
                 artifacts = buildMetrics.get("artifactMetrics", {})
-                build_metrics.output_size_bytes = int(
+                bazel_metrics.output_size_bytes = int(
                     artifacts.get("topLevelArtifacts", {}).get("sizeInBytes", 0)
                 )
-                if build_metrics.output_size_bytes == 0:
-                    build_metrics.output_size_bytes = int(
+                if bazel_metrics.output_size_bytes == 0:
+                    bazel_metrics.output_size_bytes = int(
                         artifacts.get("outputArtifactsSeen", {}).get("sizeInBytes", 0)
                     )
 
                 # Network
                 net = buildMetrics.get("networkMetrics", {}).get("systemNetworkStats", {})
-                build_metrics.bytes_downloaded = int(net.get("bytesRecv", 0))
+                bazel_metrics.bytes_downloaded = int(net.get("bytesRecv", 0))
 
             # --- 3. Build Tool Logs ---
             elif "buildToolLogs" in event:
                 logs = event["buildToolLogs"].get("log", [])
-                build_metrics.critical_path_s = extract_critical_path(logs)
+                bazel_metrics.critical_path_s = extract_critical_path(logs)
 
             # --- Build Finished (Exit Code) ---
             if "buildFinished" in event_id:
                 exit_data = event.get("finished").get("exitCode", {})
-                build_metrics.exit_code = int(exit_data.get("code", 0))
+                bazel_metrics.exit_code = int(exit_data.get("code", 0))
 
     # --- 4. Post-Process Nested Targets ---
     for label, shards in target_map.items():
-        build_metrics.targets.append(
+        bazel_metrics.targets.append(
             TestTarget(
                 label=label,
                 status=target_status.get(label, "UNKNOWN"),
@@ -234,7 +234,7 @@ def parse_bep(filepath):
             )
         )
 
-    return build_metrics
+    return bazel_metrics
 
 
 def publish_to_bigquery(row):
