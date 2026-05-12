@@ -1,8 +1,10 @@
----%{ if length(envs) > 0 }
-env:%{ for key, value in envs }
-  ${key}: "${value}"%{ endfor ~}
+env:
+  GIT_HTTP_LOW_SPEED_LIMIT: "102400"
+  GIT_HTTP_LOW_SPEED_TIME: "180"
+%{ for key, value in envs ~}
+  ${key}: ${key == "LC_ALL" ? value : jsonencode(value)}
+%{ endfor ~}
 
-%{ endif }
 steps:
   - command: |-
 %{ for command in steps.commands ~}
@@ -10,7 +12,7 @@ steps:
 %{ endfor ~}
     label: "${try(steps.label, ":pipeline:")}"
     agents:
-      - "queue=default"%{ if try(length(steps.artifact_paths), 0) > 0 }
+      - "queue=${try(steps.queue, "default")}"%{ if try(length(steps.artifact_paths), 0) > 0 }
     artifact_paths:%{ for artifact_path in steps.artifact_paths }
       - "${artifact_path}"%{ endfor }%{ endif }
     plugins:
@@ -20,7 +22,7 @@ steps:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-          image: "gcr.io/bazel-public/ubuntu1804-java11"
+          image: "gcr.io/bazel-public/ubuntu2404"
           network: "host"
           privileged: true
           propagate-environment: true

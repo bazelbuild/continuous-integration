@@ -100,7 +100,7 @@ def create_step_for_report_flags_results():
         bazelci.create_step(
             label="Aggregate incompatible flags test result",
             commands=[
-                bazelci.fetch_bazelcipy_command(),
+                bazelci.fetch_ci_scripts_command(),
                 bazelci.fetch_aggregate_incompatible_flags_test_result_command(),
                 " ".join(parts),
             ],
@@ -119,7 +119,7 @@ def create_step_for_generate_report():
         bazelci.create_step(
             label="Generate report in markdown",
             commands=[
-                bazelci.fetch_bazelcipy_command(),
+                bazelci.fetch_ci_scripts_command(),
                 bcr_presubmit.fetch_bcr_presubmit_py_command(),
                 fetch_generate_report_py_command(),
                 " ".join(parts),

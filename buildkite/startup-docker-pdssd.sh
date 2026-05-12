@@ -88,6 +88,7 @@ EOF
 cat > /etc/buildkite-agent/hooks/pre-checkout <<'EOF'
 #!/bin/bash
 NOW=$(date +%s%3N)
+echo "JOB_START_TIME: ${NOW}"
 buildkite-agent env set "JOB_START_TIME=$NOW"
 EOF
 
@@ -96,9 +97,14 @@ cat > /etc/buildkite-agent/hooks/post-checkout <<'EOF'
 #!/bin/bash
 CHECKOUT_END_TIME=$(date +%s%3N)
 START_TIME=$(buildkite-agent env get JOB_START_TIME)
-START_TIME=${START_TIME:-0}
+if [[ -z "${START_TIME}" || ! "${START_TIME}" =~ ^[0-9]+$ ]]; then
+  echo "JOB_START_TIME is missing or non-numeric; skipping checkout duration metrics."
+  exit 0
+fi
 DIFF=$((CHECKOUT_END_TIME - START_TIME))
 CHECKOUT_DURATION_S=$(printf "%d.%03d" $((DIFF / 1000)) $((DIFF % 1000)))
+echo "CHECKOUT_END_TIME: ${CHECKOUT_END_TIME}"
+echo "CHECKOUT_DURATION_S: ${CHECKOUT_DURATION_S}"
 buildkite-agent env set "CHECKOUT_END_TIME=${CHECKOUT_END_TIME}"
 buildkite-agent env set "CHECKOUT_DURATION_S=${CHECKOUT_DURATION_S}"
 EOF
@@ -108,9 +114,13 @@ cat > /etc/buildkite-agent/hooks/pre-command <<'EOF'
 #!/bin/bash
 PREP_END_TIME=$(date +%s%3N)
 CHECKOUT_END=$(buildkite-agent env get CHECKOUT_END_TIME)
-CHECKOUT_END=${CHECKOUT_END:-0}
-DIFF=$((PREP_END_TIME - CHECKOUT_END))
-PREP_DURATION_S=$(printf "%d.%03d" $((DIFF / 1000)) $((DIFF % 1000)))
+if [[ -n "$CHECKOUT_END" && "$CHECKOUT_END" =~ ^[0-9]+$ ]]; then
+  DIFF=$((PREP_END_TIME - CHECKOUT_END))
+  PREP_DURATION_S=$(printf "%d.%03d" $((DIFF / 1000)) $((DIFF % 1000)))
+else
+  PREP_DURATION_S="unknown"
+fi
+echo "PREP_DURATION_S: ${PREP_DURATION_S}"
 buildkite-agent env set "PREP_DURATION_S=${PREP_DURATION_S}"
 EOF
 

@@ -404,6 +404,10 @@ impl Uploader {
                 Some(cwd) => cwd.join(artifact),
                 None => PathBuf::from(artifact),
             };
+            // Reject symlinks to prevent exfiltration of host files via test artifacts
+            if file.is_symlink() {
+                anyhow::bail!("artifact {} is a symlink, skipping upload", file.display());
+            }
             let buf = match std::fs::read(&file) {
                 Ok(buf) => buf,
                 Err(err) => match err.kind() {

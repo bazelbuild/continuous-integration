@@ -140,6 +140,34 @@ async function generateMaintainersMap(octokit, owner, repo, modifiedModules, toN
   return [maintainersMap, modulesWithoutGithubMaintainers];
 }
 
+async function requestBcrMaintainers(octokit, owner, repo, prNumber) {
+  const reviews = await octokit.rest.pulls.listReviews({
+    owner,
+    repo,
+    pull_number: prNumber,
+    per_page: 1,
+  });
+  const { data: prInfo } = await octokit.rest.pulls.get({
+    owner,
+    repo,
+    pull_number: prNumber,
+  });
+  const alreadyHasReviewer = prInfo.requested_reviewers.length > 0 || prInfo.requested_teams.length > 0;
+
+  if (alreadyHasReviewer) {
+    console.log('Skipping requesting BCR maintainers as there is already a reviewer assigned.');
+    return;
+  }
+
+  console.log('Requesting review from BCR maintainers');
+  await octokit.rest.pulls.requestReviewers({
+    owner,
+    repo,
+    pull_number: prNumber,
+    team_reviewers: ['bcr-maintainers'],
+  });
+}
+
 async function notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap) {
   // For the list of maintainers who maintain the same set of modules, we want to group them together
   const moduleListToMaintainers = new Map(); // Map: Serialized Module List -> Maintainers
@@ -177,12 +205,7 @@ async function notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap)
       await postComment(octokit, owner, repo, prNumber,
         `Hello BCR maintainers, modules (${modulesList}) have been updated in this PR.
         Please review the changes. You can view a diff against the previous version in the "Generate module diff" check.`);
-      await octokit.rest.pulls.requestReviewers({
-        owner,
-        repo,
-        pull_number: prNumber,
-        team_reviewers: ['bcr-maintainers'],
-      });
+      await requestBcrMaintainers(octokit, owner, repo, prNumber);
       continue;
     }
     const maintainersList = Array.from(maintainersCopy).join(', ');
@@ -348,6 +371,42 @@ async function isModuleMaintainer(octokit, owner, repo, prAuthorId) {
   }
 }
 
+async function hasSensitiveMetadataChanges(octokit, owner, repo, prNumber, allModulesWithMetadataChange) {
+  for (const moduleName of allModulesWithMetadataChange) {
+    try {
+      const { data: metadataContentMain } = await octokit.rest.repos.getContent({
+        owner,
+        repo,
+        path: `modules/${moduleName}/metadata.json`,
+        ref: 'main',
+      });
+      const metadataMain = JSON.parse(Buffer.from(metadataContentMain.content, 'base64').toString('utf-8'));
+
+      const { data: metadataContentHead } = await octokit.rest.repos.getContent({
+        owner,
+        repo,
+        path: `modules/${moduleName}/metadata.json`,
+        ref: `refs/pull/${prNumber}/head`,
+      });
+      const metadataHead = JSON.parse(Buffer.from(metadataContentHead.content, 'base64').toString('utf-8'));
+
+      metadataMain.versions = [];
+      metadataHead.versions = [];
+
+      if (JSON.stringify(metadataMain) !== JSON.stringify(metadataHead)) {
+        return { isSensitive: true, isNewModule: false };
+      }
+    } catch (error) {
+      if (error.status === 404) {
+        return { isSensitive: true, isNewModule: true };
+      } else {
+        throw error;
+      }
+    }
+  }
+  return { isSensitive: false, isNewModule: false };
+}
+
 async function reviewPR(octokit, owner, repo, prNumber) {
   console.log('\n');
   console.log(`Processing PR #${prNumber}`);
@@ -380,16 +439,10 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   }
 
   // Figure out maintainers for each modified module
-  const [ maintainersMap, modulesWithoutGithubMaintainers ] = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ false);
+  const [maintainersMap, _] = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ false);
   console.log('Maintainers Map:');
   for (const [maintainer, maintainedModules] of maintainersMap.entries()) {
     console.log(`- Maintainer: ${maintainer}, Modules: ${Array.from(maintainedModules).join(', ')}`);
-  }
-
-  // If modulesWithoutGithubMaintainers is not empty, then return
-  if (modulesWithoutGithubMaintainers.size > 0) {
-    console.log(`Cannot auto-merge this PR with maintainers approval because the following modules do not have maintainers with GitHub usernames: ${Array.from(modulesWithoutGithubMaintainers).join(', ')}`);
-    return;
   }
 
   // Get the approvers for the PR
@@ -398,6 +451,24 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   // Verify if all modified modules have at least one maintainer's approval
   const prAuthor = prInfo.data.user.login.toLowerCase();
   const { allModulesApproved, anyModuleApproved } = await checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers, prAuthor);
+
+  // Fetch modules with metadata changes
+  const allModulesWithMetadataChange = await fetchAllModulesWithMetadataChange(octokit, owner, repo, prNumber);
+  if (allModulesWithMetadataChange === null) {
+    console.log(`Aborting review for PR #${prNumber} because it was updated during file fetching.`);
+    return;
+  }
+
+  let hasSensitiveMetadataChange = false;
+  let isNewModule = false;
+  try {
+    const result = await hasSensitiveMetadataChanges(octokit, owner, repo, prNumber, allModulesWithMetadataChange);
+    hasSensitiveMetadataChange = result.isSensitive;
+    isNewModule = result.isNewModule;
+  } catch (error) {
+    console.error(`Error checking metadata.json sensitive revisions: ${error}`);
+    return;
+  }
 
   // Re-fetch PR information to check if new commits were pushed since analysis started
   const initialHeadSha = prInfo.data.head.sha;
@@ -413,11 +484,17 @@ async function reviewPR(octokit, owner, repo, prNumber) {
     return; // Exit reviewPR for this PR to prevent actions on stale data
   }
 
+  if (hasSensitiveMetadataChange && !isNewModule) {
+    await postComment(octokit, owner, repo, prNumber,
+      `Hello BCR maintainers, modules with sensitive metadata modifications (outside versions array) have been updated in this PR. Manual reviews are necessary.`);
+    await requestBcrMaintainers(octokit, owner, repo, prNumber);
+  }
+
   const { data } = await octokit.rest.users.getAuthenticated();
   const myLogin = data.login.toLowerCase();
 
   // Approve the PR if not previously approved and all modules are approved
-  if (allModulesApproved) {
+  if (allModulesApproved && !hasSensitiveMetadataChange) {
     if (!approvers.has(myLogin)) {
       console.log('Approving the PR');
       await octokit.rest.pulls.createReview({
@@ -504,6 +581,17 @@ async function runNotifier(octokit) {
 
   const { owner, repo } = context.repo;
 
+  const prInfo = await octokit.rest.pulls.get({
+    owner,
+    repo,
+    pull_number: prNumber,
+  });
+
+  if (prInfo.data.draft) {
+    console.log('Skipping draft PR');
+    return;
+  }
+
   // Fetch modified modules
   const modifiedModuleVersions = await fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber);
   if (modifiedModuleVersions === null) {
@@ -527,39 +615,10 @@ async function runNotifier(octokit) {
     await postComment(octokit, owner, repo, prNumber,
       `Hello BCR maintainers, modules without existing maintainers (${modulesList}) have been updated in this PR.
       Please review the changes. You can view a diff against the previous version in the "Generate module diff" check.`);
-    await octokit.rest.pulls.requestReviewers({
-      owner,
-      repo,
-      pull_number: prNumber,
-      team_reviewers: ['bcr-maintainers'],
-    });
+    await requestBcrMaintainers(octokit, owner, repo, prNumber);
   }
 
-  // Notify BCR maintainers for modules with only metadata.json changes
-  const allModulesWithMetadataChange = await fetchAllModulesWithMetadataChange(octokit, owner, repo, prNumber);
-  if (allModulesWithMetadataChange === null) {
-    // This means the PR was updated while fetching files.
-    console.log(`Aborting notifier for PR #${prNumber} because it was updated during file fetching.`);
-    return;
-  }
 
-  const modulesWithOnlyMetadataChanges = new Set(
-    [...allModulesWithMetadataChange].filter(module => !modifiedModules.has(module))
-  );
-
-  if (modulesWithOnlyMetadataChanges.size > 0) {
-    const modulesList = Array.from(modulesWithOnlyMetadataChanges).join(', ');
-    console.log(`Requesting review from BCR maintainers for modules with only metadata.json changes: ${modulesList}`);
-    await postComment(octokit, owner, repo, prNumber,
-      `Hello BCR maintainers, modules with only metadata.json changes (${modulesList}) have been updated in this PR.
-      Please review the changes.`);
-    await octokit.rest.pulls.requestReviewers({
-      owner,
-      repo,
-      pull_number: prNumber,
-      team_reviewers: ['bcr-maintainers'],
-    });
-  }
 }
 
 async function waitForDismissApprovalsWorkflow(octokit, owner, repo) {
@@ -624,9 +683,42 @@ async function runPrReviewer(octokit) {
     state: 'open',
   });
 
+  const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000);
+
   // Review each PR
   for (const pr of prs) {
-    await reviewPR(octokit, owner, repo, pr.number);
+    let isOughtToBeReviewed = new Date(pr.updated_at) >= sixHoursAgo;
+
+    // If not active by PR timestamp, check CI activity
+    if (!isOughtToBeReviewed) {
+      try {
+        console.log(`PR #${pr.number} is inactive by timestamp. Checking CI status...`);
+        const { data: checkRunsData } = await octokit.rest.checks.listForRef({
+          owner,
+          repo,
+          ref: pr.head.sha,
+        });
+
+        // Check if any check run completed or started in the last 6 hours
+        const hasRecentCiActivity = checkRunsData.check_runs.some(run => {
+          const timeToCompare = run.completed_at ? new Date(run.completed_at) : new Date(run.started_at);
+          return timeToCompare >= sixHoursAgo;
+        });
+
+        if (hasRecentCiActivity) {
+          console.log(`PR #${pr.number} has recent CI activity. Proceeding with review.`);
+          isOughtToBeReviewed = true;
+        }
+      } catch (error) {
+        console.error(`Failed to fetch check runs for PR #${pr.number}: ${error.message}`);
+      }
+    }
+
+    if (isOughtToBeReviewed) {
+      await reviewPR(octokit, owner, repo, pr.number);
+    } else {
+      console.log(`Skipping PR #${pr.number} as it has no activity in the past 6 hours.`);
+    }
   }
 }
 

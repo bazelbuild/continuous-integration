@@ -113,12 +113,12 @@ EOF
   apt-get -y update
   apt-get -y install docker-ce docker-ce-cli containerd.io
 
-  # Allow everyone access to the Docker socket. Usually this would be insane from a security point
-  # of view, but these are untrusted throw-away machines anyway, so the risk is acceptable.
+  # Restrict Docker socket to the docker group. Containers that need Docker access
+  # should use Docker-in-Docker rather than mounting the host socket.
   mkdir /etc/systemd/system/docker.socket.d
   cat > /etc/systemd/system/docker.socket.d/override.conf <<'EOF'
 [Socket]
-SocketMode=0666
+SocketMode=0660
 EOF
 
   # Disable the Docker service, as the startup script has to mount /var/lib/docker first.
