@@ -7,6 +7,51 @@ import base64
 import collect_metrics
 
 
+def create_mock_bep_content(test_results=None, exit_code=0):
+    content = []
+    
+    # 1. Optional Test Results
+    if test_results:
+        for tr in test_results:
+            content.append(json.dumps({
+                "id": {"testResult": {"label": tr["label"]}},
+                "testResult": {"status": tr["status"], "testAttemptDurationMillis": str(tr["duration_ms"])},
+            }))
+            
+    # 2. Common Build Metrics
+    content.append(json.dumps({
+        "id": {"buildMetrics": {}},
+        "buildMetrics": {
+            "timingMetrics": {"wallTimeInMs": "10000"},
+            "actionSummary": {
+                "actionsExecuted": "100",
+                "runnerCount": [{"name": "remote cache hit", "count": "50"}],
+            },
+            "artifactMetrics": {"topLevelArtifacts": {"sizeInBytes": "1024"}},
+            "networkMetrics": {"systemNetworkStats": {"bytesRecv": "512"}},
+        },
+    }))
+    
+    # 3. Common Build Tool Logs (Critical Path)
+    content.append(json.dumps({
+        "id": {"buildToolLogs": {}},
+        "buildToolLogs": {
+            "log": [{
+                "name": "critical path",
+                "contents": base64.b64encode(b"Critical Path: 15.0s\n").decode("utf-8"),
+            }]
+        },
+    }))
+    
+    # 4. Common Build Finished
+    content.append(json.dumps({
+        "id": {"buildFinished": {}},
+        "finished": {"exitCode": {"code": exit_code}}
+    }))
+    
+    return content
+
+
 class TestPublishMetrics(unittest.TestCase):
 
     def setUp(self):
@@ -46,55 +91,11 @@ class TestPublishMetrics(unittest.TestCase):
     # --- Test 2: BEP Parsing ---
     def test_parse_bep_valid(self):
         # Create a mock BEP file content
-        mock_bep_content = [
-            # Test Result Event
-            json.dumps(
-                {
-                    "id": {"testResult": {"label": "//pkg:test1"}},
-                    "testResult": {"status": "PASSED", "testAttemptDurationMillis": "1500"},
-                }
-            ),
-            # Another Test Result (Failed)
-            json.dumps(
-                {
-                    "id": {"testResult": {"label": "//pkg:test2"}},
-                    "testResult": {"status": "FAILED", "testAttemptDurationMillis": "5000"},
-                }
-            ),
-            # Build Metrics
-            json.dumps(
-                {
-                    "id": {"buildMetrics": {}},
-                    "buildMetrics": {
-                        "timingMetrics": {"wallTimeInMs": "10000"},
-                        "actionSummary": {
-                            "actionsExecuted": "100",
-                            "runnerCount": [{"name": "remote cache hit", "count": "50"}],
-                        },
-                        "artifactMetrics": {"topLevelArtifacts": {"sizeInBytes": "2048"}},
-                        "networkMetrics": {"systemNetworkStats": {"bytesRecv": "1024"}},
-                    },
-                }
-            ),
-            # Build Tool Logs
-            json.dumps(
-                {
-                    "id": {"buildToolLogs": {}},
-                    "buildToolLogs": {
-                        "log": [
-                            {
-                                "name": "critical path",
-                                "contents": base64.b64encode(b"Critical Path: 15.0s\n").decode("utf-8"),
-                            }
-                        ]
-                    },
-                }
-            ),
-            # Build Finished
-            json.dumps(
-                {"id": {"buildFinished": {}}, "finished": {"exitCode": {"code": 0}}}
-            ),
+        test_results = [
+            {"label": "//pkg:test1", "status": "PASSED", "duration_ms": 1500},
+            {"label": "//pkg:test2", "status": "FAILED", "duration_ms": 5000},
         ]
+        mock_bep_content = create_mock_bep_content(test_results=test_results)
 
         # Mock file reading
         with patch("builtins.open", mock_open(read_data="\n".join(mock_bep_content))), \
@@ -136,41 +137,7 @@ class TestPublishMetrics(unittest.TestCase):
 
     def test_parse_bep_build_only(self):
         # Create a mock BEP file content with only build metrics
-        mock_bep_content = [
-            # Build Metrics
-            json.dumps(
-                {
-                    "id": {"buildMetrics": {}},
-                    "buildMetrics": {
-                        "timingMetrics": {"wallTimeInMs": "5000"},
-                        "actionSummary": {
-                            "actionsExecuted": "20",
-                            "runnerCount": [{"name": "remote cache hit", "count": "10"}],
-                        },
-                        "artifactMetrics": {"topLevelArtifacts": {"sizeInBytes": "1024"}},
-                        "networkMetrics": {"systemNetworkStats": {"bytesRecv": "512"}},
-                    },
-                }
-            ),
-            # Build Tool Logs
-            json.dumps(
-                {
-                    "id": {"buildToolLogs": {}},
-                    "buildToolLogs": {
-                        "log": [
-                            {
-                                "name": "critical path",
-                                "contents": base64.b64encode(b"Critical Path: 5.0s\n").decode("utf-8"),
-                            }
-                        ]
-                    },
-                }
-            ),
-            # Build Finished
-            json.dumps(
-                {"id": {"buildFinished": {}}, "finished": {"exitCode": {"code": 0}}}
-            ),
-        ]
+        mock_bep_content = create_mock_bep_content()
 
         # Mock file reading
         with patch("builtins.open", mock_open(read_data="\n".join(mock_bep_content))), \
@@ -178,11 +145,11 @@ class TestPublishMetrics(unittest.TestCase):
             bep_metrics = collect_metrics.parse_bep("dummy.json")
 
             # Verify Metrics
-            self.assertEqual(bep_metrics.wall_time_ms, 5000)
-            self.assertEqual(bep_metrics.total_actions, 20)
-            self.assertEqual(bep_metrics.remote_and_disk_cache_hits, 10)
+            self.assertEqual(bep_metrics.wall_time_ms, 10000)
+            self.assertEqual(bep_metrics.total_actions, 100)
+            self.assertEqual(bep_metrics.remote_and_disk_cache_hits, 50)
             self.assertEqual(bep_metrics.failed_test_count, 0)
-            self.assertEqual(bep_metrics.critical_path_s, 5.0)
+            self.assertEqual(bep_metrics.critical_path_s, 15.0)
             self.assertEqual(bep_metrics.exit_code, 0)
 
             # Verify Targets are empty

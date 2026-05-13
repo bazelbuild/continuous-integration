@@ -1543,6 +1543,8 @@ def execute_commands(
             capture_corrupted_outputs_dir_build,
         ) = calculate_flags(task_config, "build_flags", "build", tmpdir, test_env_vars)
         build_bep_file = os.path.join(tmpdir, _BUILD_BEP_FILE)
+        # Create an empty build_bep_file so that the bazelci-agent can start to follow the file right away. Otherwise,
+        # there is a race between when bazelci-agent starts to read the file and when Bazel creates the file.
         open(build_bep_file, "w").close()
         build_succeeded = False
         try:
