@@ -244,7 +244,7 @@ def publish_to_bigquery(row):
 
     bazelci.eprint(f"Publishing Metrics to BigQuery ...")
     table_ref = f"{PROJECT_ID}:{DATASET_ID}.{TABLE_ID}"        
-    bq_cmd = "bq.cmd" if bazelci.is_windows() else "bq"
+    bq_cmd = "bq.cmd" if bazelci.is_windows() else "/usr/local/bin/google-cloud-sdk/bin/bq"
 
     try:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tf:
