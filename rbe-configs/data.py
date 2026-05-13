@@ -1,5 +1,14 @@
 configs = [
   {
+    "bazel_version": "9.1.0",
+    "containers": [
+      {
+          'toolchain_name': 'ubuntu2404',
+          'cpp_env_json': 'cpp_env/ubuntu2404.json'
+      }
+    ]
+  },
+  {
     "bazel_version": "9.0.0",
     "containers": [
       {
