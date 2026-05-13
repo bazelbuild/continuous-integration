@@ -2091,7 +2091,7 @@ def remote_caching_flags(platform, accept_cached=True):
                 # Enable BES / Build Results reporting.
                 "--bes_backend=buildeventservice.googleapis.com",
                 "--bes_timeout=360s",
-                "--project_id=bazel-untrusted",
+                "--bes_instance_name=bazel-untrusted",
             ]
         )
     )
@@ -2202,7 +2202,7 @@ def rbe_flags(original_flags, accept_cached):
     flags += [
         "--bes_backend=buildeventservice.googleapis.com",
         "--bes_timeout=360s",
-        "--project_id=bazel-untrusted",
+        "--bes_instance_name=bazel-untrusted",
     ]
 
     if not accept_cached:
