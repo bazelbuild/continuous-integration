@@ -5,6 +5,10 @@ configs = [
       {
           'toolchain_name': 'ubuntu2404',
           'cpp_env_json': 'cpp_env/ubuntu2404.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2204',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
       }
     ]
   },
