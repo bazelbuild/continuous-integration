@@ -45,6 +45,21 @@ class BazelMetrics:
     exit_code: int = 0
     targets: List[TestTarget] = dataclasses.field(default_factory=list)
 
+    def to_dict(self, is_test=False):
+        res = {
+            "wall_time_s": self.wall_time_ms / 1000.0,
+            "critical_path_s": self.critical_path_s,
+            "remote_and_disk_cache_hits": self.remote_and_disk_cache_hits,
+            "total_actions": self.total_actions,
+            "output_size_bytes": self.output_size_bytes,
+            "bytes_downloaded": self.bytes_downloaded,
+            "exit_code": self.exit_code,
+        }
+        if is_test:
+            res["failed_test_count"] = self.failed_test_count
+            res["targets"] = [dataclasses.asdict(t) for t in self.targets]
+        return res
+
 def print_and_annotate_warning(message):
     """
     Prints a warning to the logs and annotates the Buildkite UI so it's visible on the build page.
@@ -139,7 +154,7 @@ def extract_critical_path(build_tool_logs):
 
 def parse_bep(filepath):
     """
-    Parses the Build Event Protocol (BEP) JSON file to extract build metrics and targets.
+    Parses the Build Event Protocol (BEP) JSON file to extract build/test metrics.
 
     Returns:
         BazelMetrics: An object containing aggregated build metrics and test targets.
@@ -271,9 +286,9 @@ def publish_to_bigquery(row):
         if 'temp_path' in locals() and os.path.exists(temp_path):
             os.remove(temp_path)
 
-def collect_metrics_and_push_to_bigquery(bep_file_path):
+def collect_metrics_and_push_to_bigquery(build_bep_path=None, test_bep_path=None):
     """
-    Reads the BEP file, collects environment variables, and pushes metrics to BigQuery.
+    Reads the BEP files, collects environment variables, and pushes metrics to BigQuery.
     Called from bazelci.py after the build finishes.
     """
 
@@ -307,9 +322,16 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
     CHANGED_FILES_COUNT = get_git_stats()
 
     # Parse BEP Data
-    build_metrics = parse_bep(bep_file_path)
-    if build_metrics is None:
-        print_and_annotate_warning("Skipping BigQuery push due to BEP parsing failure.")
+    build_metrics = None
+    if build_bep_path:
+        build_metrics = parse_bep(build_bep_path)
+    
+    test_metrics = None
+    if test_bep_path:
+        test_metrics = parse_bep(test_bep_path)
+
+    if not build_metrics and not test_metrics:
+        print_and_annotate_warning("Skipping BigQuery push due to missing or failed BEP parsing.")
         return
 
     # Get Timestamps & calculate Queue time
@@ -341,20 +363,17 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
         "branch": BRANCH,
         "repo": REPO,
         "commit_sha": COMMIT_SHA,
-        "exit_code": build_metrics.exit_code,
-        "failed_test_count": build_metrics.failed_test_count,
         "retry_count": RETRY_COUNT,
-        "wall_time_s": build_metrics.wall_time_ms / 1000.0,
-        "critical_path_s": build_metrics.critical_path_s,
         "queue_duration_s": queue_duration,
         "checkout_duration_s": CHECKOUT_DURATION_S,
         "prep_duration_s": PREP_DURATION_S,
-        "remote_and_disk_cache_hits": build_metrics.remote_and_disk_cache_hits,
-        "total_actions": build_metrics.total_actions,
-        "output_size_bytes": build_metrics.output_size_bytes,
-        "bytes_downloaded": build_metrics.bytes_downloaded,
         "changed_files_count": CHANGED_FILES_COUNT,
-        "targets": [dataclasses.asdict(t) for t in build_metrics.targets],
     }
+
+    if build_metrics:
+        row["build"] = build_metrics.to_dict(is_test=False)
+
+    if test_metrics:
+        row["test"] = test_metrics.to_dict(is_test=True)
 
     publish_to_bigquery(row)

@@ -581,6 +581,7 @@ ESCAPED_BACKSLASH = "%5C"
 MAX_TASK_NUMBER = 128
 
 _TEST_BEP_FILE = "test_bep.json"
+_BUILD_BEP_FILE = "build_bep.json"
 _SHARD_RE = re.compile(r"(.+) \(shard (\d+)\)")
 _SLOWEST_N_TARGETS = 20
 
@@ -1286,6 +1287,27 @@ def is_trueish(s):
     return str(s).lower() in ["true", "1", "t", "y", "yes"]
 
 
+def collect_metrics_if_enabled(build_bep_path=None, test_bep_path=None):
+    if is_trueish(os.environ.get("ENABLE_METRICS_COLLECTION", "false")):
+        try:
+            from collect_metrics import collect_metrics_and_push_to_bigquery
+            collect_metrics_and_push_to_bigquery(build_bep_path=build_bep_path, test_bep_path=test_bep_path)
+        except Exception as e:
+            eprint(f"Failed to upload metrics: {e}")
+            job_url = f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
+            execute_command(
+                [
+                    "buildkite-agent",
+                    "annotate",
+                    "--style=warning",
+                    f"Failed to upload metrics from [this job]({job_url})",
+                    "--context",
+                    "ctx-metrics_upload_failed",
+                ],
+                fail_if_nonzero=False,
+            )
+
+
 def use_bazelisk_migrate():
     """
     If USE_BAZELISK_MIGRATE is set, we use `bazelisk --migrate` to test incompatible flags.
@@ -1395,6 +1417,8 @@ def execute_commands(
         eprint(json.dumps(task_config, indent=2))
 
     tmpdir = tempfile.mkdtemp()
+    build_bep_file = None
+    test_bep_file = None
     if is_mac():
         activate_xcode(task_config)
 
@@ -1518,6 +1542,11 @@ def execute_commands(
             json_profile_out_build,
             capture_corrupted_outputs_dir_build,
         ) = calculate_flags(task_config, "build_flags", "build", tmpdir, test_env_vars)
+        build_bep_file = os.path.join(tmpdir, _BUILD_BEP_FILE)
+        # Create an empty build_bep_file so that the bazelci-agent can start to follow the file right away. Otherwise,
+        # there is a race between when bazelci-agent starts to read the file and when Bazel creates the file.
+        open(build_bep_file, "w").close()
+        build_succeeded = False
         try:
             release_name = get_release_name_from_branch_name()
             execute_bazel_build(
@@ -1531,15 +1560,18 @@ def execute_commands(
                     else []
                 ),
                 build_targets,
-                None,
+                build_bep_file,
             )
             if save_but:
                 upload_bazel_binary(platform)
+            build_succeeded = True
         finally:
             if json_profile_out_build:
                 upload_log_file(json_profile_out_build, tmpdir)
             if capture_corrupted_outputs_dir_build:
                 upload_corrupted_outputs(capture_corrupted_outputs_dir_build, tmpdir)
+            if not test_targets or not build_succeeded:
+                collect_metrics_if_enabled(build_bep_file, None)
 
     if test_targets:
         if not is_windows():
@@ -1616,24 +1648,7 @@ def execute_commands(
                         ],
                         fail_if_nonzero=False,
                     )
-                if is_trueish(os.environ.get("ENABLE_METRICS_COLLECTION", "false")):
-                    try:
-                        from collect_metrics import collect_metrics_and_push_to_bigquery
-                        collect_metrics_and_push_to_bigquery(test_bep_file)
-                    except Exception as e:
-                        eprint(f"Failed to upload metrics: {e}")
-                        job_url = f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
-                        execute_command(
-                        [
-                            "buildkite-agent",
-                            "annotate",
-                            "--style=warning",
-                            f"Failed to upload metrics from [this job]({job_url})",
-                            "--context",
-                            "ctx-metrics_upload_failed",
-                        ],
-                        fail_if_nonzero=False,
-                    )
+                collect_metrics_if_enabled(build_bep_file, test_bep_file)
 
             _ = future.result()
             # TODO: print results
