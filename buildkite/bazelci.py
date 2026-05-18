@@ -2105,8 +2105,9 @@ def remote_caching_flags(platform, accept_cached=True):
             else [  # Re-enable on macOS once b/346751326 is resolved.
                 # Enable BES / Build Results reporting.
                 "--bes_backend=buildeventservice.googleapis.com",
+                "--bes_results_url=https://btx.cloud.google.com/invocations/",
                 "--bes_timeout=360s",
-                "--project_id=bazel-untrusted",
+                "--bes_instance_name=bazel-untrusted",
             ]
         )
     )
@@ -2216,8 +2217,9 @@ def rbe_flags(original_flags, accept_cached):
     # Enable BES / Build Results reporting.
     flags += [
         "--bes_backend=buildeventservice.googleapis.com",
+        "--bes_results_url=https://btx.cloud.google.com/invocations/",
         "--bes_timeout=360s",
-        "--project_id=bazel-untrusted",
+        "--bes_instance_name=bazel-untrusted",
     ]
 
     if not accept_cached:
@@ -4957,3 +4959,4 @@ def main(argv=None):
 
 if __name__ == "__main__":
     sys.exit(main())
+
