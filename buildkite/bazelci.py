@@ -2498,6 +2498,7 @@ def expand_test_target_patterns(bazel_binary, test_targets, test_flags):
     output = execute_command_and_get_output(
         [bazel_binary]
         + common_startup_flags()
+        + get_query_flags(test_flags)
         + [
             "--nosystem_rc",
             "--nohome_rc",
@@ -2546,6 +2547,13 @@ def get_test_query(test_targets, test_flags):
 
     return query
 
+def get_query_flags(test_flags):
+    wanted_prefixes = ("--deleted_packages")
+    query_flags = []
+    for f in test_flags:
+        if f.startswith(wanted_prefixes):
+            query_flags.append(f)
+    return query_flags
 
 def get_test_tags(test_flags):
     wanted_prefix = "--test_tag_filters="
