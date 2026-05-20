@@ -43,7 +43,7 @@ jobs:
           echo "version is: ${{ env.AGENT_VERSION }}"
       - name: Create GitHub release
         id: release
-        uses: actions/create-release@v1 → actions/create-release@0cb9c9b65d5d1901c1f53e5e66eaf4afd303e70e # v1
+        uses: actions/create-release@0cb9c9b65d5d1901c1f53e5e66eaf4afd303e70e # v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -117,7 +117,7 @@ jobs:
     - name: Build release binary (linux-aarch64)
       if: matrix.build == 'linux-aarch64'
       working-directory: agent
-      run: CC=/opt/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc cargo build --verbose --release --target ${{ matrix.target }} --config target.${{ matrix.target }}.linker=\"/opt/aarch64-linux-musl-cross/bin/aarch64-linux-musl-ld\"
+      run: CC=/opt/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc cargo build --verbose --release --target ${{ matrix.target }} --config target.${{ matrix.target }}.linker="/opt/aarch64-linux-musl-cross/bin/aarch64-linux-musl-ld"
 
     - name: Strip release binary (linux and macos)
       if: matrix.build == 'linux' || matrix.build == 'macos-intel' || matrix.build == 'macos-m1'
