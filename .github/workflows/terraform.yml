@@ -44,8 +44,6 @@ jobs:
           jq -R -s -c 'split("\n") | map(select(length > 0))')
         
         echo "DEBUG:ORGS changed are: $ORGS"
-        echo "DEBUG:Event Name is: ${{ github.event_name }}"
-        echo "DEBUG:Author is: ${{ github.event.pull_request.author_association }}"
         echo "orgs=${ORGS:-[]}" >> "$GITHUB_OUTPUT"
 
   # Job 2: Terraform Execution
