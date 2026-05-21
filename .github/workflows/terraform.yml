@@ -38,7 +38,7 @@ jobs:
         CHANGED="${{ steps.changed-files.outputs.all_changed_files }}"
         DELETED="${{ steps.changed-files.outputs.deleted_files }}"
         
-        if [ -z "$ALL_CHANGED" ] && [ -z "$DELETED" ]; then
+        if [ -z "$CHANGED" ] && [ -z "$DELETED" ]; then
           ORGS="[]"
         else
           CHANGED_FILES="$CHANGED $DELETED"
