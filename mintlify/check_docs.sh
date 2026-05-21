@@ -29,6 +29,8 @@ fi
 
 echo "+++ :male-detective::books: Checking documentation with Mintlify"
 
+mint --version
+
 # https://www.mintlify.com/docs/installation#validate-documentation-build
 # If validation fails, we annotate the build and exit.
 if ! mint validate; then
