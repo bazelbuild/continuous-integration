@@ -79,7 +79,8 @@ def generate_manifest(output_root: str, manifest: list[dict]):
 def upload_manifest(output_root: str, upload_root: str):
   subprocess.run(
       [
-          'gsutil',
+          'gcloud',
+          'storage',
           'cp',
           '{}/manifest.json'.format(output_root),
           '{}/manifest.json'.format(upload_root),
@@ -96,7 +97,8 @@ def upload_configs(output_root: str, upload_root: str, bazel_version: str,
 
   subprocess.run(
       [
-          'gsutil',
+          'gcloud',
+          'storage',
           'cp',
           get_output_tarball(output_dir),
           get_output_tarball(upload_dir),
@@ -106,7 +108,8 @@ def upload_configs(output_root: str, upload_root: str, bazel_version: str,
 
   subprocess.run(
       [
-          'gsutil',
+          'gcloud',
+          'storage',
           'cp',
           get_output_manifest(output_dir),
           get_output_manifest(upload_dir),

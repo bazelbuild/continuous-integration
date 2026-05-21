@@ -34,7 +34,7 @@ DATASET_ID = "bazel_ci_metrics"
 TABLE_ID = "ci_builds"
 
 @dataclasses.dataclass
-class BuildMetrics:
+class BazelMetrics:
     wall_time_ms: int = 0
     critical_path_s: float = 0.0
     remote_and_disk_cache_hits: int = 0
@@ -44,6 +44,21 @@ class BuildMetrics:
     failed_test_count: int = 0
     exit_code: int = 0
     targets: List[TestTarget] = dataclasses.field(default_factory=list)
+
+    def to_dict(self, is_test=False):
+        res = {
+            "wall_time_s": self.wall_time_ms / 1000.0,
+            "critical_path_s": self.critical_path_s,
+            "remote_and_disk_cache_hits": self.remote_and_disk_cache_hits,
+            "total_actions": self.total_actions,
+            "output_size_bytes": self.output_size_bytes,
+            "bytes_downloaded": self.bytes_downloaded,
+            "exit_code": self.exit_code,
+        }
+        if is_test:
+            res["failed_test_count"] = self.failed_test_count
+            res["targets"] = [dataclasses.asdict(t) for t in self.targets]
+        return res
 
 def print_and_annotate_warning(message):
     """
@@ -139,10 +154,10 @@ def extract_critical_path(build_tool_logs):
 
 def parse_bep(filepath):
     """
-    Parses the Build Event Protocol (BEP) JSON file to extract build metrics and targets.
+    Parses the Build Event Protocol (BEP) JSON file to extract build/test metrics.
 
     Returns:
-        BuildMetrics: An object containing aggregated build metrics and test targets.
+        BazelMetrics: An object containing aggregated build metrics and test targets.
         None: If the file does not exist.
     """
 
@@ -150,7 +165,7 @@ def parse_bep(filepath):
         bazelci.eprint(f"Error: BEP file not found at {filepath}")
         return None
 
-    build_metrics = BuildMetrics()
+    bazel_metrics = BazelMetrics()
     target_map = collections.defaultdict(list)
     target_status = {}
 
@@ -182,49 +197,49 @@ def parse_bep(filepath):
                         target_status[label] = current_status
 
                     if current_status != "PASSED":
-                        build_metrics.failed_test_count += 1
+                        bazel_metrics.failed_test_count += 1
 
             # --- 2. Build Metrics ---
             elif "buildMetrics" in event:
                 buildMetrics = event["buildMetrics"]
-                build_metrics.wall_time_ms = int(
+                bazel_metrics.wall_time_ms = int(
                     buildMetrics.get("timingMetrics", {}).get("wallTimeInMs", 0)
                 )
 
                 action_summary = buildMetrics.get("actionSummary", {})
-                build_metrics.total_actions = int(action_summary.get("actionsExecuted", 0))
+                bazel_metrics.total_actions = int(action_summary.get("actionsExecuted", 0))
 
                 for runner in action_summary.get("runnerCount", []):
                     name = runner.get("name", "").lower()
                     if "remote cache hit" in name or "disk cache hit" in name:
-                        build_metrics.remote_and_disk_cache_hits += int(runner.get("count", 0))
+                        bazel_metrics.remote_and_disk_cache_hits += int(runner.get("count", 0))
 
                 artifacts = buildMetrics.get("artifactMetrics", {})
-                build_metrics.output_size_bytes = int(
+                bazel_metrics.output_size_bytes = int(
                     artifacts.get("topLevelArtifacts", {}).get("sizeInBytes", 0)
                 )
-                if build_metrics.output_size_bytes == 0:
-                    build_metrics.output_size_bytes = int(
+                if bazel_metrics.output_size_bytes == 0:
+                    bazel_metrics.output_size_bytes = int(
                         artifacts.get("outputArtifactsSeen", {}).get("sizeInBytes", 0)
                     )
 
                 # Network
                 net = buildMetrics.get("networkMetrics", {}).get("systemNetworkStats", {})
-                build_metrics.bytes_downloaded = int(net.get("bytesRecv", 0))
+                bazel_metrics.bytes_downloaded = int(net.get("bytesRecv", 0))
 
             # --- 3. Build Tool Logs ---
             elif "buildToolLogs" in event:
                 logs = event["buildToolLogs"].get("log", [])
-                build_metrics.critical_path_s = extract_critical_path(logs)
+                bazel_metrics.critical_path_s = extract_critical_path(logs)
 
             # --- Build Finished (Exit Code) ---
             if "buildFinished" in event_id:
                 exit_data = event.get("finished").get("exitCode", {})
-                build_metrics.exit_code = int(exit_data.get("code", 0))
+                bazel_metrics.exit_code = int(exit_data.get("code", 0))
 
     # --- 4. Post-Process Nested Targets ---
     for label, shards in target_map.items():
-        build_metrics.targets.append(
+        bazel_metrics.targets.append(
             TestTarget(
                 label=label,
                 status=target_status.get(label, "UNKNOWN"),
@@ -234,7 +249,7 @@ def parse_bep(filepath):
             )
         )
 
-    return build_metrics
+    return bazel_metrics
 
 
 def publish_to_bigquery(row):
@@ -266,14 +281,14 @@ def publish_to_bigquery(row):
         bazelci.eprint("Success: Metrics pushed to BigQuery via CLI.")
             
     except Exception as e:
-        eprint_and_annotate_warning(f"Failed to execute bq CLI: {e}")
+        print_and_annotate_warning(f"Failed to execute bq CLI: {e}")
     finally:
         if 'temp_path' in locals() and os.path.exists(temp_path):
             os.remove(temp_path)
 
-def collect_metrics_and_push_to_bigquery(bep_file_path):
+def collect_metrics_and_push_to_bigquery(build_bep_path=None, test_bep_path=None):
     """
-    Reads the BEP file, collects environment variables, and pushes metrics to BigQuery.
+    Reads the BEP files, collects environment variables, and pushes metrics to BigQuery.
     Called from bazelci.py after the build finishes.
     """
 
@@ -307,9 +322,16 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
     CHANGED_FILES_COUNT = get_git_stats()
 
     # Parse BEP Data
-    build_metrics = parse_bep(bep_file_path)
-    if build_metrics is None:
-        print_and_annotate_warning("Skipping BigQuery push due to BEP parsing failure.")
+    build_metrics = None
+    if build_bep_path:
+        build_metrics = parse_bep(build_bep_path)
+    
+    test_metrics = None
+    if test_bep_path:
+        test_metrics = parse_bep(test_bep_path)
+
+    if not build_metrics and not test_metrics:
+        print_and_annotate_warning("Skipping BigQuery push due to missing or failed BEP parsing.")
         return
 
     # Get Timestamps & calculate Queue time
@@ -335,25 +357,23 @@ def collect_metrics_and_push_to_bigquery(bep_file_path):
         "created_at": timestamps.created_at,
         "started_at": timestamps.started_at,
         "pipeline": PIPELINE,
+        "org": ORG,
         "platform": PLATFORM,
         "agent_id": AGENT_ID,
         "branch": BRANCH,
         "repo": REPO,
         "commit_sha": COMMIT_SHA,
-        "exit_code": build_metrics.exit_code,
-        "failed_test_count": build_metrics.failed_test_count,
         "retry_count": RETRY_COUNT,
-        "wall_time_s": build_metrics.wall_time_ms / 1000.0,
-        "critical_path_s": build_metrics.critical_path_s,
         "queue_duration_s": queue_duration,
         "checkout_duration_s": CHECKOUT_DURATION_S,
         "prep_duration_s": PREP_DURATION_S,
-        "remote_and_disk_cache_hits": build_metrics.remote_and_disk_cache_hits,
-        "total_actions": build_metrics.total_actions,
-        "output_size_bytes": build_metrics.output_size_bytes,
-        "bytes_downloaded": build_metrics.bytes_downloaded,
         "changed_files_count": CHANGED_FILES_COUNT,
-        "targets": [dataclasses.asdict(t) for t in build_metrics.targets],
     }
+
+    if build_metrics:
+        row["build"] = build_metrics.to_dict(is_test=False)
+
+    if test_metrics:
+        row["test"] = test_metrics.to_dict(is_test=True)
 
     publish_to_bigquery(row)

@@ -423,6 +423,14 @@ async function reviewPR(octokit, owner, repo, prNumber) {
     return;
   }
 
+  if (prInfo.data.changed_files > 500) {
+    console.log(`Skipping PR #${prNumber} as it has more than 500 file changes (${prInfo.data.changed_files}).`);
+    await postComment(octokit, owner, repo, prNumber,
+      `Hello BCR maintainers, this PR has more than 500 file changes. Manual review is required.`);
+    await requestBcrMaintainers(octokit, owner, repo, prNumber);
+    return;
+  }
+
   // Fetch modified modules
   const modifiedModuleVersions = await fetchAllModifiedModuleVersions(octokit, owner, repo, prNumber);
   if (modifiedModuleVersions === null) {
@@ -683,9 +691,42 @@ async function runPrReviewer(octokit) {
     state: 'open',
   });
 
+  const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000);
+
   // Review each PR
   for (const pr of prs) {
-    await reviewPR(octokit, owner, repo, pr.number);
+    let isOughtToBeReviewed = new Date(pr.updated_at) >= sixHoursAgo;
+
+    // If not active by PR timestamp, check CI activity
+    if (!isOughtToBeReviewed) {
+      try {
+        console.log(`PR #${pr.number} is inactive by timestamp. Checking CI status...`);
+        const { data: checkRunsData } = await octokit.rest.checks.listForRef({
+          owner,
+          repo,
+          ref: pr.head.sha,
+        });
+
+        // Check if any check run completed or started in the last 6 hours
+        const hasRecentCiActivity = checkRunsData.check_runs.some(run => {
+          const timeToCompare = run.completed_at ? new Date(run.completed_at) : new Date(run.started_at);
+          return timeToCompare >= sixHoursAgo;
+        });
+
+        if (hasRecentCiActivity) {
+          console.log(`PR #${pr.number} has recent CI activity. Proceeding with review.`);
+          isOughtToBeReviewed = true;
+        }
+      } catch (error) {
+        console.error(`Failed to fetch check runs for PR #${pr.number}: ${error.message}`);
+      }
+    }
+
+    if (isOughtToBeReviewed) {
+      await reviewPR(octokit, owner, repo, pr.number);
+    } else {
+      console.log(`Skipping PR #${pr.number} as it has no activity in the past 6 hours.`);
+    }
   }
 }
 

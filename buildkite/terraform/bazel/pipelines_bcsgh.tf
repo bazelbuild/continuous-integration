@@ -1,42 +1,5 @@
 
-resource "buildkite_pipeline" "bcsgh-bash-history-db" {
-  name           = "bcsgh/bash_history_db"
-  repository     = "https://github.com/bcsgh/bash_history_db"
-  default_branch = "master"
-  steps = templatefile("pipeline.yml.tpl", {
-    envs = {},
-    steps = {
-      commands = [
-        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
-      ]
-    }
-  })
-  allow_rebuilds             = true
-  cancel_intermediate_builds = false
-  skip_intermediate_builds   = false
-  tags                       = []
-  provider_settings = {
-    trigger_mode                                  = "code"
-    build_branches                                = true
-    build_pull_requests                           = true
-    build_tags                                    = false
-    publish_commit_status                         = true
-    publish_commit_status_per_step                = false
-    pull_request_branch_filter_enabled            = false
-    skip_pull_request_builds_for_existing_commits = true
-    build_pull_request_forks                      = false
-    prefix_pull_request_fork_branch_names         = true
-    separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
-  }
-  branch_configuration = null
-  cluster_id           = null
-  color                = null
-  default_team_id      = null
-  emoji                = null
-  pipeline_template_id = null
-}
+
 
 resource "buildkite_pipeline" "bcsgh-utilities" {
   name           = "bcsgh/utilities"
@@ -47,7 +10,7 @@ resource "buildkite_pipeline" "bcsgh-utilities" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -98,7 +61,7 @@ resource "buildkite_pipeline" "bcsgh-tbd" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -149,7 +112,7 @@ resource "buildkite_pipeline" "bcsgh-stl-to-ps" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -200,7 +163,7 @@ resource "buildkite_pipeline" "bcsgh-tbd-http" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
@@ -251,7 +214,7 @@ resource "buildkite_pipeline" "bcsgh-bazel-rules" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload"
+        "bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })

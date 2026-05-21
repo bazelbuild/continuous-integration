@@ -1,8 +1,10 @@
----%{ if length(envs) > 0 }
-env:%{ for key, value in envs }
-  ${key}: ${key == "LC_ALL" ? value : jsonencode(value)}%{ endfor ~}
+env:
+  GIT_HTTP_LOW_SPEED_LIMIT: "102400"
+  GIT_HTTP_LOW_SPEED_TIME: "180"
+%{ for key, value in envs ~}
+  ${key}: ${key == "LC_ALL" ? value : jsonencode(value)}
+%{ endfor ~}
 
-%{ endif }
 steps:
   - command: |-
 %{ for command in steps.commands ~}
