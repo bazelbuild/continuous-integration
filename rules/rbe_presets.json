@@ -1,0 +1,44 @@
+{
+  "ubuntu2204": {
+    "container": "gcr.io/bazel-public/ubuntu2204:latest",
+    "cpp_env": {
+      "ABI_LIBC_VERSION": "glibc_2.19",
+      "ABI_VERSION": "gcc",
+      "BAZEL_COMPILER": "gcc",
+      "BAZEL_HOST_SYSTEM": "i686-unknown-linux-gnu",
+      "BAZEL_TARGET_CPU": "k8",
+      "BAZEL_TARGET_LIBC": "glibc_2.19",
+      "BAZEL_TARGET_SYSTEM": "x86_64-unknown-linux-gnu",
+      "CC": "gcc",
+      "CC_TOOLCHAIN_NAME": "linux_gnu_x86"
+    }
+  },
+  "ubuntu2404": {
+    "container": "gcr.io/bazel-public/ubuntu2404:latest",
+    "cpp_env": {
+      "ABI_LIBC_VERSION": "glibc_2.39",
+      "ABI_VERSION": "gcc",
+      "BAZEL_COMPILER": "gcc",
+      "BAZEL_HOST_SYSTEM": "i686-unknown-linux-gnu",
+      "BAZEL_TARGET_CPU": "k8",
+      "BAZEL_TARGET_LIBC": "glibc_2.39",
+      "BAZEL_TARGET_SYSTEM": "x86_64-unknown-linux-gnu",
+      "CC": "gcc",
+      "CC_TOOLCHAIN_NAME": "linux_gnu_x86"
+    }
+  },
+  "ubuntu": {
+    "container": "gcr.io/bazel-public/ubuntu2404:latest",
+    "cpp_env": {
+      "ABI_LIBC_VERSION": "glibc_2.39",
+      "ABI_VERSION": "gcc",
+      "BAZEL_COMPILER": "gcc",
+      "BAZEL_HOST_SYSTEM": "i686-unknown-linux-gnu",
+      "BAZEL_TARGET_CPU": "k8",
+      "BAZEL_TARGET_LIBC": "glibc_2.39",
+      "BAZEL_TARGET_SYSTEM": "x86_64-unknown-linux-gnu",
+      "CC": "gcc",
+      "CC_TOOLCHAIN_NAME": "linux_gnu_x86"
+    }
+  }
+}
