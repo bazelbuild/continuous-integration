@@ -34,9 +34,14 @@ fi
 
 echo "+++ :male-detective::books: Checking documentation with Mintlify"
 
+LOG_FILE="log.txt"
 # https://www.mintlify.com/docs/installation#validate-documentation-build
 # If validation fails, we annotate the build and exit.
-if ! mint validate; then
+# "mint validate" sometimes returns 0 even though parsing errors exist
+# (this usually happens if the file is not yet referenced by docs.json).
+# That's why we use `script` to print to stdout and a file while preserving
+# colored output, then check the file for parsing errors.
+if ! script2 -eq "$LOG_FILE" -- "mint validate" || grep -q "parsing error" "$LOG_FILE"; then
   cat /usr/local/annotation.html | buildkite-agent annotate --style "error" --context "mdx_parser"
   exit 1
 fi
