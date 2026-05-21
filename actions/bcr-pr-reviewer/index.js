@@ -82,9 +82,10 @@ async function fetchAllModulesWithMetadataChange(octokit, owner, repo, prNumber)
   return await _processAllPrFiles(octokit, owner, repo, prNumber, fileProcessor);
 }
 
-async function generateMaintainersMap(octokit, owner, repo, modifiedModules, toNotifyOnly) {
+async function generateMaintainersMap(octokit, owner, repo, modifiedModules, toNotifyOnly, prNumber) {
   const maintainersMap = new Map(); // Map: maintainer GitHub username (lowercase) -> Set of module they maintain
   const modulesWithoutGithubMaintainers = new Set(); // Set of module names without module maintainers
+  const userIdToName = new Map(); // Map: github_user_id -> username; serves as a cache
   for (const moduleName of modifiedModules) {
     console.log(`Fetching metadata for module: ${moduleName}`);
     try {
@@ -99,28 +100,37 @@ async function generateMaintainersMap(octokit, owner, repo, modifiedModules, toN
       let hasGithubMaintainer = false;
       for (const maintainer of metadata.maintainers) {
         // Only add maintainers with a github handle set. When `toNotifyOnly`, also exclude those who have set "do_not_notify"
-        if (maintainer.github && !(toNotifyOnly && maintainer["do_not_notify"])) {
-          hasGithubMaintainer = true;
-          if (!maintainersMap.has(maintainer.github.toLowerCase())) {
-            try {
-              // Verify maintainer.github matches maintainer.github_user_id via GitHub API
-              const { data: user } = await octokit.rest.users.getByUsername({
-                username: maintainer.github,
-              });
+        if (!maintainer.github || (toNotifyOnly && maintainer["do_not_notify"])) {
+          continue;
+        }
 
-              if (!user || user.id !== maintainer.github_user_id) {
-                console.error(`Maintainer ${maintainer.github} does not match the user ID ${maintainer.github_user_id} or user not found`);
-                setFailed(`Maintainer ${maintainer.github} does not match the user ID ${maintainer.github_user_id} or user not found`);
-                return;
-              }
-              maintainersMap.set(maintainer.github.toLowerCase(), new Set());
-            } catch (error) {
-              console.error(`Failed to fetch user ID for GitHub username ${maintainer.github}: ${error.message}`);
-              setFailed(`Failed to fetch user ID for GitHub username ${maintainer.github}: ${error.message}`);
-              return;
-            }
+        hasGithubMaintainer = true;
+
+        if (!userIdToName.has(maintainer.github_user_id)) {
+          try {
+            const { data: user } = await octokit.request('GET /user/{account_id}', {
+              account_id: maintainer.github_user_id,
+            });
+
+            userIdToName.set(maintainer.github_user_id, user.login);
+            maintainersMap.set(user.login.toLowerCase(), new Set());
+          } catch (error) {
+            console.error(`Error fetching maintainer with GitHub ID ${maintainer.github_user_id}: ${error}`);
+            setFailed(`Error fetching maintainer with GitHub ID ${maintainer.github_user_id}: ${error}`);
+            return;
           }
-          maintainersMap.get(maintainer.github.toLowerCase()).add(moduleName);
+        }
+
+        const actualName = userIdToName.get(maintainer.github_user_id);
+        maintainersMap.get(actualName.toLowerCase()).add(moduleName);
+
+        // Detect if there's a mismatch between the github username in metadata.json and what GitHub reports
+        if (actualName.toLowerCase() !== maintainer.github.toLowerCase() && prNumber) {
+          console.log(`Detected GitHub username mismatch for user ID ${maintainer.github_user_id}: metadata.json has '${maintainer.github}', but GitHub has '${actualName}'.`);
+          const commentBody = `⚠️ **GitHub Username Mismatch Detected**\n\n` +
+            `The BCR registry entry for module **${moduleName}** contains an outdated GitHub username (\`@${maintainer.github}\`) that does not match their current active GitHub username (\`@${actualName}\`).\n\n` +
+            `Please update the \`metadata.json\` file of **${moduleName}** to use the up-to-date username \`"${actualName}"\` to ensure proper review routing and notifications.`;
+          await postComment(octokit, owner, repo, prNumber, commentBody);
         }
       }
 
@@ -447,7 +457,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   }
 
   // Figure out maintainers for each modified module
-  const [maintainersMap, _] = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ false);
+  const [maintainersMap, _] = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ false, prNumber);
   console.log('Maintainers Map:');
   for (const [maintainer, maintainedModules] of maintainersMap.entries()) {
     console.log(`- Maintainer: ${maintainer}, Modules: ${Array.from(maintainedModules).join(', ')}`);
@@ -611,7 +621,7 @@ async function runNotifier(octokit) {
   console.log(`Modified modules: ${Array.from(modifiedModules).join(', ')}`);
 
   // Figure out maintainers for each modified module
-  const [ maintainersMap, modulesWithoutGithubMaintainers ] = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ true);
+  const [maintainersMap, modulesWithoutGithubMaintainers] = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ true, prNumber);
 
   // Notify maintainers for modules with module maintainers
   await notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap);
