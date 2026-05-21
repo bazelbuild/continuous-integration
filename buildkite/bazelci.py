@@ -2994,14 +2994,6 @@ def create_step(
     concurrency_group=None,
     priority=None,
 ):
-    # TODO(#2272): remove after a migration period
-    if "centos7" in platform:
-        log_deprecated_platform_usage(platform)
-        # Move all CentOS workloads to Rocky Linux.
-        # A simple "replace" works since our Rocky Linux images
-        # follow the same naming convention as the CentOS ones.
-        platform = platform.replace("centos7", "rockylinux8")
-
     if "docker-image" in PLATFORMS[platform]:
         step = create_docker_step(
             label,
@@ -3104,33 +3096,6 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None, qu
     if not step["command"]:
         del step["command"]
     return step
-
-
-def log_deprecated_platform_usage(platform):
-    tmpdir = tempfile.mkdtemp()
-    try:
-        basename = "{}_{}_{}_{}.txt".format(
-            os.getenv("BUILDKITE_ORGANIZATION_SLUG"),
-            os.getenv("BUILDKITE_PIPELINE_SLUG"),
-            os.getenv("BUILDKITE_BUILD_NUMBER"),
-            os.getenv("BUILDKITE_JOB_ID"),
-        )
-        path = os.path.join(tmpdir, basename)
-        with open(path, "wt") as f:
-            f.write(platform)
-
-        execute_command(
-            [
-                gsutil_command(),
-                "cp",
-                path,
-                f"gs://bazel-centos-deprecation/{basename}",
-            ]
-        )
-    except Exception as ex:
-        eprint(ex)
-    finally:
-        shutil.rmtree(tmpdir)
 
 
 def print_project_pipeline(
@@ -3515,9 +3480,6 @@ def runner_step(
     shards=1,
     soft_fail=None,
 ):
-    # TODO(#2272): remove after a migration period
-    platform = platform.replace("centos7", "rockylinux8")
-
     py = PLATFORMS[platform]["python"]
     command = f"{py} {RUNNER_CMD} --task={task}"
     if http_config:
