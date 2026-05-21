@@ -30,18 +30,23 @@ jobs:
       uses: tj-actions/changed-files@48d8f15b2aaa3d255ca5af3eba4870f807ce6b3c # v45
       with:
         files: buildkite/terraform/**
-        include_all_old_new_renamed_files: true
 
     - name: Extract Orgs
       id: process-orgs
       shell: bash
       run: |
-        CHANGED_FILES="${{ steps.changed-files.outputs.all_changed_files }}"
+        CHANGED="${{ steps.changed-files.outputs.all_changed_files }}"
+        DELETED="${{ steps.changed-files.outputs.deleted_files }}"
         
-        # Pull Specific Orgs -> Cut Org Name -> Sort Unique -> JSON Array
-        ORGS=$(echo "$CHANGED_FILES" | tr ' ' '\n' | \
-          grep -E -o "^buildkite/terraform/(bazel|bazel-trusted|bazel-testing)/" | cut -d/ -f3 | sort -u | \
-          jq -R -s -c 'split("\n") | map(select(length > 0))')
+        if [ -z "$CHANGED" ] && [ -z "$DELETED" ]; then
+          ORGS="[]"
+        else
+          CHANGED_FILES="$CHANGED $DELETED"
+          # Pull Specific Orgs -> Cut Org Name -> Sort Unique -> JSON Array
+          ORGS=$(echo "$CHANGED_FILES" | tr ' ' '\n' | \
+            grep -E -o "^buildkite/terraform/(bazel|bazel-trusted|bazel-testing)/" | cut -d/ -f3 | sort -u | \
+            jq -R -s -c 'split("\n") | map(select(length > 0))')
+        fi
         
         echo "DEBUG:ORGS changed are: $ORGS"
         echo "orgs=${ORGS:-[]}" >> "$GITHUB_OUTPUT"
