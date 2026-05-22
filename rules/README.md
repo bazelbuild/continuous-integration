@@ -131,31 +131,31 @@ bazel build \
 
 ---
 
-## 5. Advanced: Custom & Non-Standard Bazel Layouts
+## 5. Advanced: Bazel Version & Binary Resolution Strategy
 
-To run compiler auto-detection, the repository rule must mount the running Bazel executable inside the container. It resolves this path using a **two-tier lookup strategy**:
+To generate toolchain configurations, `rbe_config` must determine which Bazel version to target and potentially mount a host Bazel binary inside the compiler container. It resolves this using the following **four-tier precedence lookup strategy**:
 
-1. **`RBE_CONFIG_BAZEL_PATH` Environment Variable**: Checks for a custom environment variable first.
-2. **System `PATH` scan**: Checks for a `bazel` executable on the host `PATH` second.
+1. **`RBE_CONFIG_BAZEL_PATH` Environment Variable**: *(Highest Precedence)* Explicitly forces the generator to use this host Bazel binary (passes `--host_bazel_path` to the generator).
+2. **`BAZEL_REAL` Environment Variable**: Forces the generator to use this real host Bazel binary (usually set by wrappers like Bazelisk) and passes it as `--host_bazel_path`.
+3. **`native.bazel_version` Detection**: Automatically detects the version string of the running Bazel (e.g., `"9.1.0"` or `"8.4.2"`). If found, it passes `--bazel_version` to `rbe_configs_gen`, which allows the generator to fetch the matching Bazel release inside the container cleanly without copying host binaries.
+4. **System `PATH` scan**: *(Fallback)* If no explicit path is set and version detection fails (e.g., on untagged development builds), it scans the host `PATH` for `bazel` and copies it into the container.
 
-If you have a custom-named Bazel binary (e.g., `my_bazel`), or run custom development layouts where Bazel is not on the system `PATH`, choose one of the following methods:
+If you run custom development layouts or want to force a specific Bazel binary override, choose one of the following methods:
 
-### Method 1: Shell Export
-Explicitly export the path to your executable in your active terminal session before running the build:
+### Method 1: Shell Export (Explicit Override)
+Export the path to your executable in your active terminal session before running the build:
 ```bash
 export RBE_CONFIG_BAZEL_PATH=/path/to/your/custom_bazel
 bazel build //...
 ```
 
 ### Method 2: Using a `tools/bazel` Wrapper (Recommended)
-Creating a wrapper script at **`tools/bazel`** at the root of your workspace is the cleanest, zero-configuration way. Bazel and Bazelisk automatically execute this wrapper, which can capture the real running binary path and propagate it cleanly:
+Creating a wrapper script at **`tools/bazel`** at the root of your workspace is the cleanest, zero-configuration way. Bazel and Bazelisk automatically execute this wrapper, which can capture the real running binary path (`BAZEL_REAL`). Our rule will automatically pick up `BAZEL_REAL` and prioritize it over `native.bazel_version`:
 ```bash
 #!/bin/bash
 # tools/bazel
 # This wrapper script is executed automatically by Bazelisk
 
-# Propagate Bazel's real path to the repository rule
-export RBE_CONFIG_BAZEL_PATH="${BAZEL_REAL}"
-
+# BAZEL_REAL will be automatically detected and prioritized by rbe_config
 exec "${BAZEL_REAL}" "$@"
 ```
