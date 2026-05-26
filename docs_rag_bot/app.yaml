@@ -1,0 +1,21 @@
+runtime: custom
+env: flex
+service: docs-adk-rag-bot
+
+# Flex requires at least 1 instance by default unless using manual scaling
+automatic_scaling:
+  min_num_instances: 1
+  max_num_instances: 2
+
+resources:
+  cpu: 1
+  memory_gb: 2
+  disk_size_gb: 10
+
+# Note: App Engine Flex with 'runtime: custom' uses the Dockerfile's CMD/ENTRYPOINT.
+# This entrypoint is a fallback or for GAE-specific overrides.
+entrypoint: /bin/bash -c "python3 cli.py gunicorn -b :$PORT server_rag:app -k uvicorn.workers.UvicornWorker --timeout 120"
+
+env_variables:
+  GITHUB_TOKEN: "Replace with secret"
+  GITHUB_WEBHOOK_SECRET: "Replace with secret"
