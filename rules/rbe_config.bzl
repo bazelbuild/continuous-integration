@@ -2,7 +2,7 @@
 
 def _resolve_preset(repository_ctx, preset_name, container_image, cpp_env):
     """Downloads and resolves standard RBE presets.
-    
+
     Returns:
         Tuple of (container_image, cpp_env_dict).
     """
@@ -19,7 +19,7 @@ def _resolve_preset(repository_ctx, preset_name, container_image, cpp_env):
     resolved_preset = presets.get(preset_name)
     if not resolved_preset:
         fail("rbe_config: Preset configuration not found for '{}'.".format(preset_name))
-        
+
     return resolved_preset["container"], resolved_preset["cpp_env"]
 
 
@@ -40,7 +40,7 @@ def _download_bazel_toolchains(repository_ctx):
 
 def _compile_generator(repository_ctx, src_dir):
     """Compiles rbe_configs_gen inside a sibling Go container.
-    
+
     Returns:
         Path to the compiled generator executable.
     """
@@ -59,24 +59,7 @@ def _compile_generator(repository_ctx, src_dir):
     return rbe_gen_path
 
 
-def _locate_bazel(repository_ctx):
-    """Resolves the running host Bazel executable path.
-    
-    Returns:
-        Absolute path to the Bazel executable.
-    """
-    bazel_path = repository_ctx.os.environ.get("RBE_CONFIG_BAZEL_PATH")
-    if not bazel_path:
-        bazel_path = repository_ctx.which("bazel")
-                
-    if not bazel_path:
-        fail("rbe_config: Bazel executable not found in PATH. If you are using a custom-named binary or non-standard layout, please export RBE_CONFIG_BAZEL_PATH=/path/to/your/binary or use a tools/bazel wrapper script.")
-        
-    print("rbe_config: Using Bazel binary at {} for toolchain generation".format(bazel_path))
-    return bazel_path
-
-
-def _generate_toolchains(repository_ctx, rbe_gen_path, bazel_path, container_image, cpp_env):
+def _generate_toolchains(repository_ctx, rbe_gen_path, bazel_version, bazel_path, container_image, cpp_env):
     """Runs the generator inside the sandboxed container and extracts RBE files."""
     # Serialize C++ environment dict to JSON inside sandbox
     cpp_env_json = "cpp_env.json"
@@ -85,17 +68,25 @@ def _generate_toolchains(repository_ctx, rbe_gen_path, bazel_path, container_ima
     output_tarball = "rbe_default.tar"
     output_manifest = "manifest.json"
 
-    print("rbe_config: Executing generator to detect toolchains inside {}...".format(container_image))
-    exec_res = repository_ctx.execute([
+    args = [
         rbe_gen_path,
-        "--host_bazel_path=" + str(bazel_path),
         "--toolchain_container=" + container_image,
         "--cpp_env_json=" + str(repository_ctx.path(cpp_env_json)),
         "--output_tarball=" + str(repository_ctx.path(output_tarball)),
         "--output_manifest=" + str(repository_ctx.path(output_manifest)),
         "--exec_os=linux",
         "--target_os=linux",
-    ])
+    ]
+
+    if bazel_version:
+        args.append("--bazel_version=" + bazel_version)
+    elif bazel_path:
+        args.append("--host_bazel_path=" + str(bazel_path))
+    else:
+        fail("rbe_config: Neither bazel_version nor bazel_path is available.")
+
+    print("rbe_config: Executing generator to detect toolchains inside {}...".format(container_image))
+    exec_res = repository_ctx.execute(args)
 
     if exec_res.return_code != 0:
         fail("rbe_config: Dynamic generation failed:\nStdout: {}\nStderr: {}".format(exec_res.stdout, exec_res.stderr))
@@ -120,11 +111,30 @@ def _rbe_config_impl(repository_ctx):
     # 3. Compile rbe_configs_gen
     rbe_gen_path = _compile_generator(repository_ctx, src_dir)
 
-    # 4. Locate running Bazel binary on host
-    bazel_path = _locate_bazel(repository_ctx)
+    # 4. Resolve Bazel version or locate host Bazel
+    bazel_version = None
+    bazel_path = repository_ctx.os.environ.get("RBE_CONFIG_BAZEL_PATH")
+
+    if bazel_path:
+        print("rbe_config: RBE_CONFIG_BAZEL_PATH env var is set, using host bazel path: {}".format(bazel_path))
+    else:
+        bazel_path = repository_ctx.os.environ.get("BAZEL_REAL")
+        if bazel_path:
+            print("rbe_config: BAZEL_REAL env var is set, using host bazel path: {}".format(bazel_path))
+        else:
+            bazel_version = getattr(native, "bazel_version", None)
+            if bazel_version:
+                print("rbe_config: Using detected bazel_version: {}".format(bazel_version))
+            else:
+                print("rbe_config: native.bazel_version not available, falling back to host bazel from PATH")
+                bazel_path = repository_ctx.which("bazel")
+                if bazel_path:
+                    print("rbe_config: Using Bazel binary at {} for toolchain generation".format(bazel_path))
+                else:
+                    fail("rbe_config: Bazel executable not found in PATH. If you are using a custom-named binary or non-standard layout, please export RBE_CONFIG_BAZEL_PATH=/path/to/your/binary or use a tools/bazel wrapper script.")
 
     # 5. Run the generator and extract configurations
-    _generate_toolchains(repository_ctx, rbe_gen_path, bazel_path, container_image, cpp_env)
+    _generate_toolchains(repository_ctx, rbe_gen_path, bazel_version, bazel_path, container_image, cpp_env)
 
 
 # Private repository rule
@@ -136,13 +146,16 @@ _rbe_config = repository_rule(
         "cpp_env": attr.string_dict(mandatory = False),
         "bazel_toolchains_url": attr.string(mandatory = False),
     },
-    environ = ["RBE_CONFIG_BAZEL_PATH"], # Propagate custom Bazel path environment variable
+    environ = [
+        "RBE_CONFIG_BAZEL_PATH",
+        "BAZEL_REAL",
+    ], # Propagate custom Bazel path environment variables
 )
 
 # --- Public WORKSPACE wrapper macro ---
 def rbe_config(name, preset = None, spec = None, bazel_toolchains_url = None):
     """Unified RBE toolchain generator rule (for WORKSPACE).
-    
+
     Args:
         name: The name of the repository (usually 'rbe_ubuntu').
         preset: The string name of a standard preset (e.g. "ubuntu").
@@ -178,7 +191,7 @@ def _rbe_config_extension_impl(module_ctx):
                 fail("rbe_config extension: 'preset' and custom specifications are mutually exclusive.")
             if not tag.preset and not tag.container:
                 fail("rbe_config extension: Either 'preset' or custom specifications must be provided.")
-                
+
             if tag.preset:
                 _rbe_config(
                     name = tag.name,
