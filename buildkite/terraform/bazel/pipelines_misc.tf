@@ -1645,7 +1645,7 @@ resource "buildkite_pipeline" "crubit" {
 
 resource "buildkite_pipeline" "llvm-project-redist" {
   name           = "llvm-project-redist"
-  repository     = "https://github.com/UebelAndre/llvm-project-redist"
+  repository     = "https://github.com/bazel-contrib/llvm-project-redist"
   default_branch = "main"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},

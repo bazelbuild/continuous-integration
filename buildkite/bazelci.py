@@ -286,11 +286,7 @@ PLATFORMS = {
     "rockylinux8": {
         "name": "Rocky Linux 8",
         "emoji-name": ":rocky: Rocky Linux 8",
-        # We publish to the ubuntu1404 bucket since all Python versions of
-        # Bazelisk <= v1.26.0 download from this bucket on Linux.
-        # Same problem for the centos7 bucket and Go-Bazelisk older than v1.21.0.
-        # We should stop doing this after a migration period.
-        "publish_binary": ["centos7", "ubuntu1404", "linux"],
+        "publish_binary": ["linux"],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8",
         "python": "python3.8",
     },
@@ -2994,14 +2990,6 @@ def create_step(
     concurrency_group=None,
     priority=None,
 ):
-    # TODO(#2272): remove after a migration period
-    if "centos7" in platform:
-        log_deprecated_platform_usage(platform)
-        # Move all CentOS workloads to Rocky Linux.
-        # A simple "replace" works since our Rocky Linux images
-        # follow the same naming convention as the CentOS ones.
-        platform = platform.replace("centos7", "rockylinux8")
-
     if "docker-image" in PLATFORMS[platform]:
         step = create_docker_step(
             label,
@@ -3104,33 +3092,6 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None, qu
     if not step["command"]:
         del step["command"]
     return step
-
-
-def log_deprecated_platform_usage(platform):
-    tmpdir = tempfile.mkdtemp()
-    try:
-        basename = "{}_{}_{}_{}.txt".format(
-            os.getenv("BUILDKITE_ORGANIZATION_SLUG"),
-            os.getenv("BUILDKITE_PIPELINE_SLUG"),
-            os.getenv("BUILDKITE_BUILD_NUMBER"),
-            os.getenv("BUILDKITE_JOB_ID"),
-        )
-        path = os.path.join(tmpdir, basename)
-        with open(path, "wt") as f:
-            f.write(platform)
-
-        execute_command(
-            [
-                gsutil_command(),
-                "cp",
-                path,
-                f"gs://bazel-centos-deprecation/{basename}",
-            ]
-        )
-    except Exception as ex:
-        eprint(ex)
-    finally:
-        shutil.rmtree(tmpdir)
 
 
 def print_project_pipeline(
@@ -3515,9 +3476,6 @@ def runner_step(
     shards=1,
     soft_fail=None,
 ):
-    # TODO(#2272): remove after a migration period
-    platform = platform.replace("centos7", "rockylinux8")
-
     py = PLATFORMS[platform]["python"]
     command = f"{py} {RUNNER_CMD} --task={task}"
     if http_config:

@@ -5,6 +5,11 @@ set -euo pipefail
 
 source "$(dirname "$0")/download_json.sh"
 
+echo "--- Updating Mintlify CLI"
+mint version
+mint update
+mint version
+
 if [[ "$(git config --get remote.origin.url)" == */bazel.git ]]; then
   # Bazel repo -> need to build reference docs and download .json navigation
   echo "--- :bazel::books: Building reference docs"
