@@ -24,13 +24,14 @@ py_test(
     ],
 )
 
-# py_binary(
-#     name = "bazelci_bin",
-#     main = "bazelci.py",
-#     deps = [
-#         ":bazelci",
-#     ],
-# )
+py_binary(
+    name = "bazelci_bin",
+    srcs = ["bazelci.py"],
+    main = "bazelci.py",
+    deps = [
+        ":bazelci",
+    ],
+)
 
 # py_zipapp_binary(
 #     name = "bazelci_zipapp",
