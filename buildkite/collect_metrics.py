@@ -12,7 +12,7 @@ import dataclasses
 import datetime
 from typing import List
 
-import bazelci
+from buildkite import bazelci
 
 @dataclasses.dataclass
 class JobTimestamps:

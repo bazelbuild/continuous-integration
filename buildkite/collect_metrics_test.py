@@ -5,7 +5,7 @@ import json
 import tempfile
 import base64
 
-import buildkite.collect_metrics
+from buildkite import collect_metrics
 
 
 def create_mock_bep_content(test_results=None, exit_code=0):
