@@ -2,7 +2,7 @@ load("@pip//:requirements.bzl", "requirement")
 load("@rules_python//python:py_binary.bzl", "py_binary")
 load("@rules_python//python:py_library.bzl", "py_library")
 load("@rules_python//python:py_test.bzl", "py_test")
-load("@rules_python//python/zipapp:py_zipapp_binary.bzl", "py_zipapp_binary")
+load(":lightweight_py_zipapp_binary.bzl", "lightweight_py_binary_zipapp")
 
 
 py_library(
@@ -33,7 +33,10 @@ py_binary(
     ],
 )
 
-# py_zipapp_binary(
-#     name = "bazelci_zipapp",
-#     binary = ":bazelci_bin",
-# )
+
+lightweight_py_binary_zipapp(
+    name = "bazelci_zipapp_custom",
+    binary = ":bazelci_bin",
+    main = "buildkite.bazelci:main",
+)
+
