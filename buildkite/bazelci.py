@@ -684,10 +684,14 @@ class BuildkiteClient(object):
                     time.sleep(wait_time)
                 else:
                     raise BuildkiteException(
-                        "Failed to open {}: {} - {}".format(full_url, ex.code, ex.reason)
+                        "Failed to open {}: {} - {}".format(
+                            self._strip_token(full_url), ex.code, ex.reason
+                        )
                     )
 
-        raise BuildkiteException(f"Failed to open {full_url} after {retries} retries.")
+        raise BuildkiteException(
+            f"Failed to open {self._strip_token(full_url)} after {retries} retries."
+        )
 
     def _get_next_page_url(self, headers):
         """Parses the headers to determine if there are more pagination pages."""
@@ -696,6 +700,10 @@ class BuildkiteClient(object):
             return None
         match = self._NEXT_PAGE_PATTERN.search(link_header)
         return match.group('url') if match else None
+
+    def _strip_token(self, old_url):
+        """Removes parameter values from the given URL."""
+        return old_url.replace(self._token, "[...]")
 
     def _build_url_with_params(self, url, params=None):
         """Builds a URL with the given query parameters."""
