@@ -628,26 +628,6 @@ class BinaryUploadRaceException(Exception):
 
 
 class BuildkiteClient(object):
-    # This token is created by the bazel-ci-bot buildkite user (ci@bazel.build)
-    _ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN = """
-CiQA4DEB9sMsj9Z9i9BZ7fbvjGZ+WJv1xWDdT1Sxmu7WOLsb+5ESVwAqwcvX2oZQ3WhqRZNS+n04
-bm/ko9kTosN2qJ/UVWf4gzYSnkK1KMAktinNV/o/ygZuf3GQlBfpfBSeMDOW43oLnQE0qcl3OtTM
-WorKXPI5cvfBNNxWIA==
-""".strip()
-
-    # This token is created by the bazel-ci-bot buildkite user (ci@bazel.build)
-    _ENCRYPTED_BUILDKITE_TESTING_API_TOKEN = """
-CiQAMTBkWrfpMz9obNz0mqosmtfVzJ5Ck3VIGps/dFdK18Khhh8SVgAy7iU0Zk4AIizIbA+E9Rlb
-3cxW4Qe2GMVsNyGVSHYbEyQkmnNEaUr+glyBHC9QVuwzS5/WjoGZlMsgWefwHvDuiexmEs7RjiyA
-7k9s44ZcI9p/wydi
-""".strip()
-
-    # This token is created by the bazel-ci-bot buildkite user (ci@bazel.build)
-    _ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN = """
-CiQAeiOS8AkhF5clT7rnjtfHVTjNSuABkqZF4jfycXVWBmBls8ISVgC7bbymLfiLNsGeyX9i6QHw
-KZOh4utBd7cpVtzZfoGdu76vQUpIzqQ5XlxUpICUxxEgKNfYqJy0aF/jQB8uX9FZf/41sODizHH5
-kpuKoQ/EWg5Bhrkp
-""".strip()
 
     _BUILD_STATUS_URL_TEMPLATE = (
         "https://api.buildkite.com/v2/organizations/{}/pipelines/{}/builds/{}"
@@ -668,39 +648,26 @@ kpuKoQ/EWg5Bhrkp
     _NEXT_PAGE_PATTERN = re.compile(r'<(?P<url>\S+)>; rel="next"', re.MULTILINE)
 
     def __init__(self, org, pipeline=None):
+        if org not in GITHUB_BRANCH:
+            raise BuildkiteException(f"Unknown organization: {org}")
+
         self._org = org
         self._pipeline = pipeline
         self._token = self._get_buildkite_token()
 
     def _get_buildkite_token(self):
-        encrypted_token, kms_key, project = self._get_org_settings()
-        return decrypt_token(
-            encrypted_token=encrypted_token,
-            kms_key=kms_key,
-            project=project,
+        secret_id = f"{BUILDKITE_ORG}-bazelcipy-BuildkiteClient-token"
+        return execute_command_and_get_output(
+            [
+                gcloud_command(),
+                "secrets",
+                "versions",
+                "access",
+                "latest",
+                f'--secret="{secret_id}"',
+                f'--project="{CLOUD_PROJECT}"',
+            ]
         )
-
-    def _get_org_settings(self):
-        if self._org == "bazel-testing":
-            return (
-                self._ENCRYPTED_BUILDKITE_TESTING_API_TOKEN,
-                "buildkite-testing-api-token",
-                "bazel-untrusted",
-            )
-        elif self._org == "bazel-trusted":
-            return (
-                self._ENCRYPTED_BUILDKITE_TRUSTED_API_TOKEN,
-                "buildkite-trusted-api-token",
-                "bazel-public",
-            )
-        elif self._org == "bazel":
-            return (
-                self._ENCRYPTED_BUILDKITE_UNTRUSTED_API_TOKEN,
-                "buildkite-untrusted-api-token",
-                "bazel-untrusted",
-            )
-
-        raise BuildkiteException(f"Unknown organization: {self._org}")
 
     def _get_url_response(self, full_url, retries=5):
         """Returns the urllib response for the given URL and query parameters."""
@@ -724,7 +691,6 @@ kpuKoQ/EWg5Bhrkp
                     )
 
         raise BuildkiteException(f"Failed to open {full_url} after {retries} retries.")
-
 
     def _get_next_page_url(self, headers):
         """Parses the headers to determine if there are more pagination pages."""
