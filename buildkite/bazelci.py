@@ -53,6 +53,7 @@ THIS_IS_TESTING = BUILDKITE_ORG == "bazel-testing"
 THIS_IS_TRUSTED = BUILDKITE_ORG == "bazel-trusted"
 THIS_IS_SPARTA = True
 
+ORGS = frozenset(["bazel", "bazel-trusted", "bazel-testing"])
 CLOUD_PROJECT = "bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"
 
 GITHUB_BRANCH = {"bazel": "master", "bazel-trusted": "master", "bazel-testing": "testing"}[
@@ -648,7 +649,7 @@ class BuildkiteClient(object):
     _NEXT_PAGE_PATTERN = re.compile(r'<(?P<url>\S+)>; rel="next"', re.MULTILINE)
 
     def __init__(self, org, pipeline=None):
-        if org not in GITHUB_BRANCH:
+        if org not in ORGS:
             raise BuildkiteException(f"Unknown organization: {org}")
 
         self._org = org
@@ -1513,7 +1514,7 @@ def execute_commands(
                 upload_log_file(json_profile_out_build, tmpdir)
             if capture_corrupted_outputs_dir_build:
                 upload_corrupted_outputs(capture_corrupted_outputs_dir_build, tmpdir)
-            
+
             if is_trueish(os.environ.get("ENABLE_METRICS_COLLECTION", "false")):
                 if not test_targets or not build_succeeded:
                     try:
