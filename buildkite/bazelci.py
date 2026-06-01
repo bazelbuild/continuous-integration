@@ -702,7 +702,7 @@ class BuildkiteClient(object):
         return match.group('url') if match else None
 
     def _strip_token(self, old_url):
-        """Removes parameter values from the given URL."""
+        """Anonymizes the token in the given URL."""
         return old_url.replace(self._token, f"{self._token[:9]}[...]")
 
     def _build_url_with_params(self, url, params=None):
