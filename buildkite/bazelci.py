@@ -653,7 +653,7 @@ class BuildkiteClient(object):
         self._token = self._get_buildkite_token()
 
     def _get_buildkite_token(self):
-        secret_id = f"{BUILDKITE_ORG}-bazelcipy-BuildkiteClient-token"
+        secret_id = f"{self._org}-bazelcipy-BuildkiteClient-token"
         return execute_command_and_get_output(
             [
                 gcloud_command(),
