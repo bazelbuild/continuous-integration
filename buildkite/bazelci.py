@@ -703,7 +703,7 @@ class BuildkiteClient(object):
 
     def _strip_token(self, old_url):
         """Removes parameter values from the given URL."""
-        return old_url.replace(self._token, "[...]")
+        return old_url.replace(self._token, f"{self._token[:9]}[...]")
 
     def _build_url_with_params(self, url, params=None):
         """Builds a URL with the given query parameters."""
