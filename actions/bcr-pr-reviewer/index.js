@@ -801,6 +801,32 @@ async function runSkipCheck(octokit) {
   const check = commentBody.slice(SKIP_CHECK_TRIGGER.length);
   const owner = payload.repository.owner.login;
   const repo = payload.repository.name;
+
+  // Only the PR author or a maintainer of a modified module may skip presubmit
+  // checks, so that a third party cannot disable checks on someone else's PR.
+  const commenter = payload.comment.user.login.toLowerCase();
+  const prAuthor = ((payload.issue.user && payload.issue.user.login) || '').toLowerCase();
+  let authorized = commenter === prAuthor;
+  if (!authorized) {
+    const modifiedModuleVersions = await fetchAllModifiedModuleVersions(octokit, owner, repo, payload.issue.number);
+    const modifiedModules = new Set(Array.from(modifiedModuleVersions || []).map(module => module.split('@')[0]));
+    if (modifiedModules.size > 0) {
+      const result = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ false);
+      const maintainersMap = result ? result[0] : new Map();
+      authorized = maintainersMap.has(commenter);
+    }
+  }
+  if (!authorized) {
+    console.log(`@${commenter} is not the PR author or a maintainer of a modified module; ignoring skip_check.`);
+    await octokit.rest.reactions.createForIssueComment({
+      owner,
+      repo,
+      comment_id: payload.comment.id,
+      content: 'confused',
+    });
+    return;
+  }
+
   if (check == "unstable_url") {
     await octokit.rest.issues.addLabels({
       owner,
