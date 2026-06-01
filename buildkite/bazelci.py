@@ -53,8 +53,8 @@ THIS_IS_TESTING = BUILDKITE_ORG == "bazel-testing"
 THIS_IS_TRUSTED = BUILDKITE_ORG == "bazel-trusted"
 THIS_IS_SPARTA = True
 
-CLOUD_PROJECTS_PER_ORG = {"bazel": "bazel-untrusted", "bazel-trusted": "bazel-public", "bazel-testing": "bazel-untrusted"}
-CLOUD_PROJECT = CLOUD_PROJECTS_PER_ORG[BUILDKITE_ORG]
+ORGS = frozenset(["bazel", "bazel-trusted", "bazel-testing"])
+CLOUD_PROJECT = "bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"
 
 GITHUB_BRANCH = {"bazel": "master", "bazel-trusted": "master", "bazel-testing": "testing"}[
     BUILDKITE_ORG
@@ -645,7 +645,7 @@ class BuildkiteClient(object):
     _NEXT_PAGE_PATTERN = re.compile(r'<(?P<url>\S+)>; rel="next"', re.MULTILINE)
 
     def __init__(self, org, pipeline=None):
-        if org not in CLOUD_PROJECTS_PER_ORG:
+        if org not in ORGS:
             raise BuildkiteException(f"Unknown organization: {org}")
 
         self._org = org
@@ -653,23 +653,16 @@ class BuildkiteClient(object):
         self._token = self._get_buildkite_token()
 
     def _get_buildkite_token(self):
-        args = [
-            gcloud_command(),
-            "secrets",
-            "versions",
-            "access",
-            "latest",
-            f"--secret={self._org}-bazelcipy-BuildkiteClient-token",
-        ]
-
-        project = CLOUD_PROJECTS_PER_ORG[self._org]
-        if project != CLOUD_PROJECT:
-            # Needed for cross-project access, e.g. in
-            # trusted metrics collection pipeline.
-            args.append(f"--project={project}")
-
+        secret_id = f"{self._org}-bazelcipy-BuildkiteClient-token"
         return execute_command_and_get_output(
-            args,
+            [
+                gcloud_command(),
+                "secrets",
+                "versions",
+                "access",
+                "latest",
+                f"--secret={secret_id}",
+            ],
             print_output=False,
         )
 
