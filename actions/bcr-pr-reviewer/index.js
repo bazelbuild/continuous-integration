@@ -82,6 +82,85 @@ async function fetchAllModulesWithMetadataChange(octokit, owner, repo, prNumber)
   return await _processAllPrFiles(octokit, owner, repo, prNumber, fileProcessor);
 }
 
+function getModifiedModules(modifiedModuleVersions) {
+  return new Set(Array.from(modifiedModuleVersions).map(module => module.split('@')[0]));
+}
+
+function isMaintainerForAllModifiedModules(commenter, modifiedModules, maintainersMap) {
+  const maintainedModules = maintainersMap.get(commenter.toLowerCase());
+  if (!maintainedModules) {
+    return false;
+  }
+
+  for (const module of modifiedModules) {
+    if (!maintainedModules.has(module)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+async function isRepoCollaborator(octokit, owner, repo, username) {
+  try {
+    await octokit.rest.repos.checkCollaborator({
+      owner,
+      repo,
+      username,
+    });
+    return true;
+  } catch (error) {
+    if (error.status === 404) {
+      return false;
+    }
+    throw error;
+  }
+}
+
+async function canUserUseSkipCheck(
+    octokit,
+    owner,
+    repo,
+    prNumber,
+    commenter,
+    prAuthor,
+    helpers = {}) {
+  commenter = commenter.toLowerCase();
+  prAuthor = prAuthor.toLowerCase();
+
+  if (commenter === prAuthor) {
+    return true;
+  }
+
+  const collaboratorCheck = helpers.isRepoCollaboratorFn || isRepoCollaborator;
+  if (await collaboratorCheck(octokit, owner, repo, commenter)) {
+    return true;
+  }
+
+  const fetchModifiedModuleVersionsFn = helpers.fetchAllModifiedModuleVersionsFn || fetchAllModifiedModuleVersions;
+  const modifiedModuleVersions = await fetchModifiedModuleVersionsFn(octokit, owner, repo, prNumber);
+  if (!modifiedModuleVersions || modifiedModuleVersions.size === 0) {
+    return false;
+  }
+
+  const modifiedModules = getModifiedModules(modifiedModuleVersions);
+  const generateMaintainersMapFn = helpers.generateMaintainersMapFn || generateMaintainersMap;
+  const maintainersResult = await generateMaintainersMapFn(
+      octokit,
+      owner,
+      repo,
+      modifiedModules,
+      /* toNotifyOnly= */ false,
+      undefined);
+
+  if (!maintainersResult) {
+    return false;
+  }
+
+  const [maintainersMap] = maintainersResult;
+  return isMaintainerForAllModifiedModules(commenter, modifiedModules, maintainersMap);
+}
+
 async function generateMaintainersMap(octokit, owner, repo, modifiedModules, toNotifyOnly, prNumber) {
   const maintainersMap = new Map(); // Map: maintainer GitHub username (lowercase) -> Set of module they maintain
   const modulesWithoutGithubMaintainers = new Set(); // Set of module names without module maintainers
@@ -315,7 +394,7 @@ async function getPrApprovers(octokit, owner, repo, prNumber) {
   return approvers;
 }
 
-async function checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers, prAuthor) {
+async function checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers) {
   let allModulesApproved = true;
   let anyModuleApproved = false;
   const modulesNotApproved = [];
@@ -327,11 +406,6 @@ async function checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap
         if (approvers.has(maintainer)) {
           moduleApproved = true;
           console.log(`Module '${module}' has maintainers' approval from '${maintainer}'.`);
-          break;
-        }
-        if (prAuthor === maintainer) {
-          moduleApproved = true;
-          console.log(`Module '${module}' has maintainers' approval from the PR author '${prAuthor}'.`);
           break;
         }
       }
@@ -352,7 +426,7 @@ async function checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap
     console.log('All modified modules have maintainers\' approval');
   }
 
-  return { allModulesApproved, anyModuleApproved };
+  return { allModulesApproved, anyModuleApproved, modulesNotApproved };
 }
 
 async function hasContributedBefore(octokit, owner, repo, prAuthor) {
@@ -449,7 +523,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
     return;
   }
 
-  const modifiedModules = new Set(Array.from(modifiedModuleVersions).map(module => module.split('@')[0]));
+  const modifiedModules = getModifiedModules(modifiedModuleVersions);
   console.log(`Modified modules: ${Array.from(modifiedModules).join(', ')}`);
   if (modifiedModules.size === 0) {
     console.log('No modules are modified in this PR');
@@ -468,7 +542,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
 
   // Verify if all modified modules have at least one maintainer's approval
   const prAuthor = prInfo.data.user.login.toLowerCase();
-  const { allModulesApproved, anyModuleApproved } = await checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers, prAuthor);
+  const { allModulesApproved, anyModuleApproved } = await checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers);
 
   // Fetch modules with metadata changes
   const allModulesWithMetadataChange = await fetchAllModulesWithMetadataChange(octokit, owner, repo, prNumber);
@@ -798,9 +872,33 @@ async function runSkipCheck(octokit) {
   if (!commentBody.startsWith(SKIP_CHECK_TRIGGER)) {
     return;
   }
+  if (!payload.issue.pull_request) {
+    return;
+  }
+
   const check = commentBody.slice(SKIP_CHECK_TRIGGER.length);
   const owner = payload.repository.owner.login;
   const repo = payload.repository.name;
+  const commenter = payload.comment.user.login.toLowerCase();
+  const prNumber = context.issue.number;
+  const { data: prInfo } = await octokit.rest.pulls.get({
+    owner,
+    repo,
+    pull_number: prNumber,
+  });
+  const prAuthor = prInfo.user.login.toLowerCase();
+
+  if (!await canUserUseSkipCheck(octokit, owner, repo, prNumber, commenter, prAuthor)) {
+    console.log(`@${commenter} is not allowed to use skip_check on PR #${prNumber}.`);
+    await octokit.rest.reactions.createForIssueComment({
+      owner,
+      repo,
+      comment_id: payload.comment.id,
+      content: 'confused',
+    });
+    return;
+  }
+
   if (check == "unstable_url") {
     await octokit.rest.issues.addLabels({
       owner,
@@ -1032,7 +1130,17 @@ async function run() {
   }
 }
 
-run().catch(err => {
-  console.error(err);
-  setFailed(err.message);
-});
+if (require.main === module) {
+  run().catch(err => {
+    console.error(err);
+    setFailed(err.message);
+  });
+}
+
+module.exports = {
+  canUserUseSkipCheck,
+  checkIfAllModifiedModulesApproved,
+  getModifiedModules,
+  isMaintainerForAllModifiedModules,
+  isRepoCollaborator,
+};
