@@ -793,9 +793,11 @@ class BuildkiteClient(object):
 
     def get_active_builds(self, retries=5):
         url = self._BUILDS_URL_TEMPLATE.format(self._org)
-        builds = self._fetch_all_pages_as_json(url, params=[("state", "scheduled")], retries=retries)
-        builds.extend(self._fetch_all_pages_as_json(url, params=[("state", "running")], retries=retries))
-        return builds
+        return self._fetch_all_pages_as_json(
+            url,
+            params=[("state[]", "scheduled"), ("state[]", "running")],
+            retries=retries
+        )
 
     @staticmethod
     def _check_response(response, expected_status_code):
