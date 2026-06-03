@@ -55,13 +55,18 @@ def get_org_metrics(org):
       bootstrap_samples) if bootstrap_samples else 0.0
 
   # 2. Get ALL Scheduled Jobs (Queue Depth)
-  scheduled_jobs_list = bk_client.get_scheduled_jobs()
-  logging.info(f"Scheduled Jobs pulled sucessfully")
+  builds = bk_client.get_active_builds()
+  logging.info(f"Builds data pulled sucessfully")
+  scheduled_jobs = 0
+  for build in builds:
+    for job in build.get("jobs", []):
+      if job.get("state") == "scheduled":
+        scheduled_jobs += 1
 
   return {
       "timestamp": datetime.utcnow().isoformat(),
       "org": org,
-      "scheduled_jobs": len(scheduled_jobs_list),
+      "scheduled_jobs": scheduled_jobs,
       "total_agents": len(agents),
       "busy_agents": busy_agents,
       "idle_agents": idle_agents,
