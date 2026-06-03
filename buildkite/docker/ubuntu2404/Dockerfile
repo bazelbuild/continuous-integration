@@ -45,6 +45,7 @@ RUN apt-get -y update && \
     python3-six \
     python3-wheel \
     python3-yaml \
+    python3-zstandard \
     software-properties-common \
     sudo \
     unzip \
