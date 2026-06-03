@@ -56,7 +56,7 @@ def get_org_metrics(org):
 
   # 2. Get ALL Scheduled Jobs (Queue Depth)
   builds = bk_client.get_active_builds()
-  logging.info(f"Builds pulled sucessfully")
+  logging.info(f"Builds data pulled sucessfully")
   scheduled_jobs = 0
   for build in builds:
     for job in build.get("jobs", []):
