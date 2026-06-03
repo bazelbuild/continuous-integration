@@ -23,16 +23,8 @@ def setup_logging(level=logging.INFO):
       stream=sys.stdout,
   )
 
-
-def get_org_metrics(org):
-  """Fetches metrics for a single org and calculates stats."""
-  logging.info(f"Pulling Data for Org: {org}")
-  bk_client = BuildkiteClient(org=org)
-
-  # 1. Agents
-  agents = bk_client.get_agents()
-  logging.info(f"Agent data pulled sucessfully for {len(agents)} agents")
-
+def calculate_agent_stats(agents):
+  """Computes busy, idle, disconnected counts, and average bootstrap time."""
   busy_agents = 0
   idle_agents = 0
   disconnected_agents = 0
@@ -47,31 +39,50 @@ def get_org_metrics(org):
       disconnected_agents += 1
 
     created_at_str = a.get('created_at')
-    created_dt = datetime.fromisoformat(created_at_str.replace('Z', '+00:00'))
-    boot_ts = 0  # TODO: update after including it in the agent data
-    bootstrap_samples.append((created_dt.timestamp() - boot_ts))
+    if created_at_str:
+      created_dt = datetime.fromisoformat(created_at_str.replace('Z', '+00:00'))
+      boot_ts = 0  # TODO: update after including it in the agent data
+      bootstrap_samples.append((created_dt.timestamp() - boot_ts))
 
   avg_bootstrap_time = sum(bootstrap_samples) / len(
       bootstrap_samples) if bootstrap_samples else 0.0
 
-  # 2. Get ALL Scheduled Jobs (Queue Depth)
-  builds = bk_client.get_active_builds()
-  logging.info(f"Builds data pulled sucessfully")
-  scheduled_jobs = 0
-  for build in builds:
-    for job in build.get("jobs", []):
-      if job.get("state") == "scheduled":
-        scheduled_jobs += 1
-
   return {
-      "timestamp": datetime.utcnow().isoformat(),
-      "org": org,
-      "scheduled_jobs": scheduled_jobs,
       "total_agents": len(agents),
       "busy_agents": busy_agents,
       "idle_agents": idle_agents,
       "disconnected_agents": disconnected_agents,
       "avg_bootstrap_time_s": avg_bootstrap_time
+  }
+
+def count_scheduled_jobs(builds):
+  """Counts total scheduled jobs across all builds."""
+  count = 0
+  for build in builds:
+    for job in build.get("jobs", []):
+      if job.get("state") == "scheduled":
+        count += 1
+  return count
+
+def get_org_metrics(org):
+  logging.info(f"Pulling Data for Org: {org}")
+  bk_client = BuildkiteClient(org=org)
+
+  # 1. Fetch & Calculate Agent Stats
+  agents = bk_client.get_agents()
+  logging.info(f"Agent data pulled successfully")
+  agent_stats = calculate_agent_stats(agents)
+
+  # 2. Fetch & Count Scheduled Jobs (Queue Depth)
+  builds = bk_client.get_active_builds()
+  logging.info(f"Active builds data pulled successfully")
+  scheduled_jobs = count_scheduled_jobs(builds)
+
+  return {
+      "timestamp": datetime.utcnow().isoformat(),
+      "org": org,
+      "scheduled_jobs": scheduled_jobs,
+      **agent_stats
   }
 
 def push_to_bigquery(rows, retries):
