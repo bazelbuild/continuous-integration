@@ -32,6 +32,7 @@ import platform as platform_module
 import random
 import re
 import requests
+import shlex
 import shutil
 import stat
 import subprocess
@@ -3463,15 +3464,15 @@ def runner_step(
     soft_fail=None,
 ):
     py = PLATFORMS[platform]["python"]
-    command = f"{py} {RUNNER_CMD} --task={task}"
+    command = f"{py} {RUNNER_CMD} --task={shlex.quote(task)}"
     if http_config:
-        command += " --http_config=" + http_config
+        command += " --http_config=" + shlex.quote(http_config)
     if file_config:
-        command += " --file_config=" + file_config
+        command += " --file_config=" + shlex.quote(file_config)
     if git_repository:
-        command += " --git_repository=" + git_repository
+        command += " --git_repository=" + shlex.quote(git_repository)
     if git_commit:
-        command += " --git_commit=" + git_commit
+        command += " --git_commit=" + shlex.quote(git_commit)
     if monitor_flaky_tests:
         command += " --monitor_flaky_tests"
     if use_but:
@@ -3563,10 +3564,10 @@ def bazel_build_step(
     if test_only:
         pipeline_command += " --test_only"
     if http_config:
-        pipeline_command += " --http_config=" + http_config
+        pipeline_command += " --http_config=" + shlex.quote(http_config)
     if file_config:
-        pipeline_command += " --file_config=" + file_config
-    pipeline_command += " --task=" + task
+        pipeline_command += " --file_config=" + shlex.quote(file_config)
+    pipeline_command += " --task=" + shlex.quote(task)
 
     step = create_step(
         label=create_label(platform, project_name, build_only, test_only),
