@@ -20,6 +20,8 @@ os.environ["BUILDKITE_ORGANIZATION_SLUG"] = "bazel"
 os.environ["BUILDKITE_PIPELINE_SLUG"] = "test"
 
 import bazelci
+import shlex
+import tempfile
 import unittest
 import yaml
 
@@ -453,11 +455,6 @@ class ShellQuoting(unittest.TestCase):
     user-controlled `.bazelci/presubmit.yml` dict keys) cannot break out of the
     --task argument and inject extra shell commands."""
 
-    # A task name containing shell metacharacters. If interpolated unquoted into
-    # a command that the Buildkite agent runs via `bash -c`, the `;` would
-    # terminate the runner invocation and `touch` would run as a new command.
-    _MALICIOUS_TASK = "x; touch /tmp/pwned; #"
-
     def _runner_command(self, step):
         # create_step stores the list of shell commands under "command".
         commands = step["command"]
@@ -466,50 +463,66 @@ class ShellQuoting(unittest.TestCase):
                 return cmd
         self.fail("no command containing --task= was generated")
 
+    def _sentinel_path(self):
+        # A uniquely-named path that an unquoted injection would create as its
+        # side effect. We never create it ourselves, so it must not exist after
+        # the command is generated.
+        path = tempfile.mktemp(prefix="pwned.")
+        self.addCleanup(lambda: os.remove(path) if os.path.exists(path) else None)
+        return path
+
     def test_runner_step_quotes_task_name(self):
-        import shlex
+        sentinel = self._sentinel_path()
+        # If interpolated unquoted, the `;` would end the runner invocation and
+        # `touch <sentinel>` would run as a separate command.
+        task = "x; touch %s; #" % sentinel
 
         step = bazelci.runner_step(
             platform=bazelci.DEFAULT_PLATFORM,
-            task=self._MALICIOUS_TASK,
+            task=task,
             project_name="test",
         )
         cmd = self._runner_command(step)
         # Parse the command exactly as a shell would.
         tokens = shlex.split(cmd)
         # The whole task name must survive as a single --task= argument...
-        self.assertIn("--task=" + self._MALICIOUS_TASK, tokens)
-        # ...and the injected `touch` must NOT appear as its own token.
+        self.assertIn("--task=" + task, tokens)
+        # ...the injected `touch` must NOT appear as its own token...
         self.assertNotIn("touch", tokens)
+        # ...and the injection's side-effect file must never be created.
+        self.assertFalse(os.path.exists(sentinel))
 
     def test_bazel_build_step_quotes_task_name(self):
-        import shlex
+        sentinel = self._sentinel_path()
+        task = "x; touch %s; #" % sentinel
 
         step = bazelci.bazel_build_step(
-            task=self._MALICIOUS_TASK,
+            task=task,
             platform=bazelci.DEFAULT_PLATFORM,
             project_name="test",
         )
         cmd = self._runner_command(step)
         tokens = shlex.split(cmd)
-        self.assertIn("--task=" + self._MALICIOUS_TASK, tokens)
+        self.assertIn("--task=" + task, tokens)
         self.assertNotIn("touch", tokens)
+        self.assertFalse(os.path.exists(sentinel))
 
     def test_runner_step_quotes_config_arguments(self):
-        import shlex
+        sentinel = self._sentinel_path()
 
         step = bazelci.runner_step(
             platform=bazelci.DEFAULT_PLATFORM,
             task="ok",
             project_name="test",
-            file_config="x; touch /tmp/pwned2; #",
-            git_commit="$(touch /tmp/pwned3)",
+            file_config="x; touch %s; #" % sentinel,
+            git_commit="$(touch %s)" % sentinel,
         )
         cmd = self._runner_command(step)
         tokens = shlex.split(cmd)
-        self.assertIn("--file_config=x; touch /tmp/pwned2; #", tokens)
-        self.assertIn("--git_commit=$(touch /tmp/pwned3)", tokens)
+        self.assertIn("--file_config=x; touch %s; #" % sentinel, tokens)
+        self.assertIn("--git_commit=$(touch %s)" % sentinel, tokens)
         self.assertNotIn("touch", tokens)
+        self.assertFalse(os.path.exists(sentinel))
 
 
 if __name__ == "__main__":
