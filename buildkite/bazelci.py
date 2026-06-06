@@ -1172,12 +1172,27 @@ def maybe_overwrite_bazel_version(bazel_version, config):
 
 
 def load_config(http_url, file_config, allow_imports=True, bazel_version=None):
+    global _CI_CONFIG_TRUSTED
     if http_url:
+        # Remote config URLs come from the pipeline definition (Terraform), not
+        # from the fork, so they are trusted even for fork pull requests.
         config = load_remote_yaml_file(http_url)
     else:
         file_config = file_config or ".bazelci/presubmit.yml"
-        with open(file_config, "r") as fd:
-            config = yaml.safe_load(fd)
+        if is_fork_pull_request():
+            # SECURITY: never execute CI configuration authored by an untrusted
+            # fork. Load it from the trusted base branch of the pipeline's own
+            # repository so that an external contributor cannot inject task
+            # definitions -- and therefore arbitrary `setup` / `shell_commands` /
+            # `batch_commands` -- through their fork. The fork's source tree is
+            # still checked out, built, and tested; only the *instructions* that
+            # drive the build come from the trusted base branch.
+            config = yaml.safe_load(read_file_from_base_branch(file_config))
+        else:
+            with open(file_config, "r") as fd:
+                config = yaml.safe_load(fd)
+    # Reaching this point means the configuration came from a trusted source.
+    _CI_CONFIG_TRUSTED = True
 
     # Legacy mode means that there is exactly one task per platform (e.g. ubuntu1604_nojdk),
     # which means that we can get away with using the platform name as task ID.
@@ -1810,6 +1825,75 @@ def is_pull_request():
     return len(third_party_repo) > 0
 
 
+def _normalize_git_url(url):
+    """Normalize a git remote URL so that two URLs for the same repo compare equal.
+
+    Buildkite reports the head repo of a pull request as e.g.
+    "git://github.com/<owner>/<repo>.git" while BUILDKITE_REPO is
+    "https://github.com/<owner>/<repo>.git". We strip the scheme, an optional
+    trailing ".git", and normalize case so that a same-repo branch PR is not
+    misclassified as a fork.
+    """
+    url = url.strip().lower()
+    for prefix in ("git+ssh://", "ssh://", "git://", "https://", "http://", "git@"):
+        if url.startswith(prefix):
+            url = url[len(prefix) :]
+            break
+    # Convert scp-like syntax "host:owner/repo" into "host/owner/repo".
+    url = url.replace(":", "/", 1)
+    if url.endswith(".git"):
+        url = url[: -len(".git")]
+    return url.rstrip("/")
+
+
+def is_fork_pull_request():
+    """True iff the current build is a pull request whose head lives in a fork.
+
+    Fork pull requests carry code and CI configuration authored by an untrusted
+    external contributor. Such builds must never be granted access to
+    trusted-code execution sinks defined by the fork, to the host Docker daemon,
+    or to any other trusted-tenant resource. See is_ci_config_trusted() and
+    create_docker_step() for the enforcement points.
+    """
+    pr_repo = os.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
+    if not pr_repo:
+        return False
+    pipeline_repo = os.getenv("BUILDKITE_REPO", "")
+    if not pipeline_repo:
+        # Fail closed: if we cannot identify the pipeline's own repo, treat any
+        # pull request that advertises a head repo as a fork.
+        return True
+    return _normalize_git_url(pr_repo) != _normalize_git_url(pipeline_repo)
+
+
+# Set to True by load_config() once the build configuration has been loaded from
+# a source we trust (the local checkout of a non-fork build, a pipeline-defined
+# remote URL, or the trusted base branch of a fork PR). It stays False until then
+# so that the trusted-code execution sinks (setup / shell_commands /
+# batch_commands / post_* commands) refuse to run fork-authored instructions that
+# slipped in through an untrusted path.
+_CI_CONFIG_TRUSTED = False
+
+
+def is_ci_config_trusted():
+    return _CI_CONFIG_TRUSTED
+
+
+def read_file_from_base_branch(file_path):
+    """Return the contents of `file_path` as it exists on the PR's trusted base branch.
+
+    Used to load CI configuration for a fork pull request from the trusted base
+    of the pipeline's own repository, instead of from the fork's checkout, so
+    that an external contributor cannot inject CI task definitions (and thereby
+    arbitrary shell commands) through their fork.
+    """
+    # fetch_base_branch() fetches the base branch and points FETCH_HEAD at its tip.
+    fetch_base_branch()
+    return execute_command_and_get_output(
+        ["git", "show", "FETCH_HEAD:{}".format(file_path)], print_output=False
+    )
+
+
 def print_bazel_version_info(bazel_binary, platform):
     print_collapsed_group(":information_source: Bazel Info")
     version_output = execute_command_and_get_output(
@@ -1991,11 +2075,28 @@ def clone_git_repository(git_repository, git_commit=None, suppress_stdout=False)
     return clone_path
 
 
+def assert_commands_are_trusted(kind):
+    """Refuse to run config-defined commands that may have been authored by a fork.
+
+    For a fork pull request, the only acceptable source of CI commands is the
+    trusted base branch (see load_config()). If we reach a command sink for a
+    fork PR without having loaded the configuration from a trusted source, fail
+    closed instead of executing potentially attacker-controlled shell.
+    """
+    if is_fork_pull_request() and not is_ci_config_trusted():
+        raise BuildkiteException(
+            "Refusing to execute fork-provided %s: the CI configuration for this "
+            "fork pull request was not loaded from a trusted source." % kind
+        )
+
+
 def execute_batch_commands(
     commands, print_group=True, group_message=":batch: Setup (Batch Commands)"
 ):
     if not commands:
         return
+
+    assert_commands_are_trusted("batch_commands")
 
     if print_group:
         print_collapsed_group(group_message)
@@ -2009,6 +2110,8 @@ def execute_shell_commands(
 ):
     if not commands:
         return
+
+    assert_commands_are_trusted("shell_commands")
 
     if print_group:
         print_collapsed_group(group_message)
@@ -3044,6 +3147,24 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None, qu
     if additional_env_vars:
         env += ["{}={}".format(k, v) for k, v in additional_env_vars.items()]
 
+    volumes = [
+        "/etc/group:/etc/group:ro",
+        "/etc/passwd:/etc/passwd:ro",
+        "/etc/shadow:/etc/shadow:ro",
+        "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro",
+        "/opt/android-ndk-r25b:/opt/android-ndk-r25b:ro",
+        "/opt/android-sdk-linux:/opt/android-sdk-linux:ro",
+        "/var/lib/buildkite-agent:/var/lib/buildkite-agent",
+        "/var/lib/gitmirrors:/var/lib/gitmirrors:ro",
+    ]
+    # SECURITY: never expose the host Docker daemon to an untrusted fork PR build.
+    # A bind-mounted /var/run/docker.sock grants root-equivalent control of the
+    # host: the job could create a privileged container that mounts the host
+    # filesystem and breaks out of its own container entirely. Trusted (non-fork)
+    # builds keep the socket so that Docker-in-Docker tests continue to work.
+    if not is_fork_pull_request():
+        volumes.append("/var/run/docker.sock:/var/run/docker.sock")
+
     step = {
         "label": label,
         "command": commands,
@@ -3057,17 +3178,7 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None, qu
                 "privileged": True,
                 "propagate-environment": True,
                 "propagate-uid-gid": True,
-                "volumes": [
-                    "/etc/group:/etc/group:ro",
-                    "/etc/passwd:/etc/passwd:ro",
-                    "/etc/shadow:/etc/shadow:ro",
-                    "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro",
-                    "/opt/android-ndk-r25b:/opt/android-ndk-r25b:ro",
-                    "/opt/android-sdk-linux:/opt/android-sdk-linux:ro",
-                    "/var/lib/buildkite-agent:/var/lib/buildkite-agent",
-                    "/var/lib/gitmirrors:/var/lib/gitmirrors:ro",
-                    "/var/run/docker.sock:/var/run/docker.sock",
-                ],
+                "volumes": volumes,
             }
         },
     }

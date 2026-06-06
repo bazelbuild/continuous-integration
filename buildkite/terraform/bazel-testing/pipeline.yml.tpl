@@ -36,4 +36,8 @@ steps:
             - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
             - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
             - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
-            - "/var/run/docker.sock:/var/run/docker.sock"
+            # The pipeline-upload bootstrap step only parses .bazelci/presubmit.yml
+            # and uploads the generated steps; it never talks to Docker. Do not
+            # bind-mount the host Docker socket here -- on the untrusted org this
+            # step runs in the checkout of an external fork PR, and the socket is
+            # equivalent to root on the host.
