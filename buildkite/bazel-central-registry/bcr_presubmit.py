@@ -21,7 +21,6 @@
 
 
 import argparse
-import json
 import os
 import pathlib
 import re
@@ -29,7 +28,6 @@ import sys
 import subprocess
 import shutil
 import time
-import requests
 import yaml
 
 import bazelci
@@ -152,7 +150,7 @@ def get_test_module_task_config(module_name, module_version, bazel_version=None)
 
 def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False, overwrite_bazel_version=None, low_priority=False):
     for task_id, task_config in task_configs.items():
-        platform_name = bazelci.get_platform_for_task(task_id, task_config)
+        platform_name = get_platform(task_id, task_config)
         platform_label = bazelci.PLATFORMS[platform_name]["emoji-name"]
         task_name = task_config.get("name", "")
         label = f"{module_name}@{module_version} - {platform_label} - {task_name}"
@@ -183,6 +181,13 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
             concurrency = 5 if concurrency is None else min(5, concurrency)
             concurrency_group = f"bcr-presubmit-test-queue-{queue}-low-priority"
         pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=concurrency, concurrency_group=concurrency_group, priority=-100 if low_priority else None))
+
+
+def get_platform(task_id, task_config):
+    original = bazelci.get_platform_for_task(task_id, task_config)
+    # TODO(#2272): delete once centos references have been removed
+    # from all module configs.
+    return original.replace("centos7", "rockylinux8")
 
 
 def scratch_file(root, relative_path, lines=None, mode="w"):
@@ -389,7 +394,7 @@ def should_bcr_validation_block_presubmit(modules, modules_with_metadata_change,
     if "presubmit-auto-run" in pr_labels:
         skip_validation_flags.append("--skip_validation=presubmit_yml")
     returncode = subprocess.run(
-        ["python3", "./tools/bcr_validation.py"]
+        ["bazel", "run", "//tools:bcr_validation", "--"]
         + [f"--check_metadata={module}" for module in modules_with_metadata_change]
         + [f"--check={name}@{version}" for name, version in modules] + skip_validation_flags,
     ).returncode
