@@ -1420,8 +1420,12 @@ def execute_commands(
     bazel_binary = "bazel"
     if use_but:
         print_collapsed_group(":gcloud: Downloading Bazel Under Test")
-        os.environ["USE_BAZEL_VERSION"] = download_bazel_binary(tmpdir, binary_platform)
-        print_collapsed_group(":bazel: Using Bazel at " + os.environ["USE_BAZEL_VERSION"])
+        bazel_path = download_bazel_binary(tmpdir, binary_platform)
+        os.environ["USE_BAZEL_VERSION"] = bazel_path
+        # The following is for downstream jobs that use RBE; see
+        # https://github.com/bazelbuild/continuous-integration/blob/master/rules/README.md#5-advanced-bazel-version--binary-resolution-strategy
+        os.environ["RBE_CONFIG_BAZEL_PATH"] = bazel_path
+        print_collapsed_group(":bazel: Using Bazel at " + bazel_path)
     else:
         if bazel_version:
             print_collapsed_group(f":bazel: Using Bazel version {bazel_version}")
