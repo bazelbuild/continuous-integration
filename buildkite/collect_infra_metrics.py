@@ -23,67 +23,100 @@ def setup_logging(level=logging.INFO):
       stream=sys.stdout,
   )
 
+def extract_platform(tags):
+  """Extracts the platform from agent meta_data tags."""
+  for tag in tags:
+    if tag.startswith("queue="):
+      q = tag.split("=", 1)[1].strip()
+      return {"default": "linux", "arm64": "linux_arm64"}.get(q, q)
+  return "linux"
+
 def calculate_agent_stats(agents):
-  """Computes busy, idle, disconnected counts, and average bootstrap time."""
-  busy_agents = 0
-  idle_agents = 0
-  disconnected_agents = 0
-  bootstrap_samples = []
+  """Computes agent stats grouped by platform."""
+  agents_by_platform = {
+      "linux": {"total": 0, "busy": 0, "idle": 0, "disconnected": 0, "bootstrap_samples": []},
+      "linux_arm64": {"total": 0, "busy": 0, "idle": 0, "disconnected": 0, "bootstrap_samples": []},
+      "macos": {"total": 0, "busy": 0, "idle": 0, "disconnected": 0, "bootstrap_samples": []},
+      "macos_arm64": {"total": 0, "busy": 0, "idle": 0, "disconnected": 0, "bootstrap_samples": []},
+      "windows": {"total": 0, "busy": 0, "idle": 0, "disconnected": 0, "bootstrap_samples": []},
+  }
 
   for a in agents:
+    platform = extract_platform(a.get("meta_data", []))
+    if platform not in agents_by_platform:
+      agents_by_platform[platform] = {
+          "total": 0, "busy": 0, "idle": 0, "disconnected": 0, "bootstrap_samples": []
+      }
+    platform_stats = agents_by_platform[platform]
+    platform_stats["total"] += 1
     if a.get('job'):
-      busy_agents += 1
+      platform_stats["busy"] += 1
     if not a.get('job') and a.get('connection_state') == 'connected':
-      idle_agents += 1
+      platform_stats["idle"] += 1
     if a.get('connection_state') in ['disconnected', 'lost']:
-      disconnected_agents += 1
+      platform_stats["disconnected"] += 1
 
     created_at_str = a.get('created_at')
     if created_at_str:
       created_dt = datetime.fromisoformat(created_at_str.replace('Z', '+00:00'))
       boot_ts = 0  # TODO: update after including it in the agent data
-      bootstrap_samples.append((created_dt.timestamp() - boot_ts))
+      platform_stats["bootstrap_samples"].append((created_dt.timestamp() - boot_ts))
 
-  avg_bootstrap_time = sum(bootstrap_samples) / len(
-      bootstrap_samples) if bootstrap_samples else 0.0
+  return agents_by_platform
 
-  return {
-      "total_agents": len(agents),
-      "busy_agents": busy_agents,
-      "idle_agents": idle_agents,
-      "disconnected_agents": disconnected_agents,
-      "avg_bootstrap_time_s": avg_bootstrap_time
-  }
 
 def count_scheduled_jobs(builds):
-  """Counts total scheduled jobs across all builds."""
-  count = 0
+  """Counts scheduled jobs grouped by platform."""
+  scheduled_by_platform = {"linux": 0, "linux_arm64": 0, "macos": 0, "macos_arm64": 0, "windows": 0}
   for build in builds:
     for job in build.get("jobs", []):
       if job.get("state") == "scheduled":
-        count += 1
-  return count
+        platform = extract_platform(job.get("agent_query_rules", []))
+        scheduled_by_platform[platform] = scheduled_by_platform.get(platform, 0) + 1
+  return scheduled_by_platform
+
 
 def get_org_metrics(org):
+  """Fetches metrics for a single org and calculates stats per platform."""
   logging.info(f"Pulling Data for Org: {org}")
   bk_client = BuildkiteClient(org=org)
 
   # 1. Fetch & Calculate Agent Stats
   agents = bk_client.get_agents()
   logging.info(f"Agent data pulled successfully")
-  agent_stats = calculate_agent_stats(agents)
+  agents_by_platform = calculate_agent_stats(agents)
 
   # 2. Fetch & Count Scheduled Jobs (Queue Depth)
   builds = bk_client.get_active_builds()
   logging.info(f"Active builds data pulled successfully")
-  scheduled_jobs = count_scheduled_jobs(builds)
+  scheduled_by_platform = count_scheduled_jobs(builds)
 
-  return {
-      "timestamp": datetime.utcnow().isoformat(),
-      "org": org,
-      "scheduled_jobs": scheduled_jobs,
-      **agent_stats
-  }
+  timestamp = datetime.utcnow().isoformat()
+  rows = []
+
+  for platform, stats in agents_by_platform.items():
+    scheduled_jobs = scheduled_by_platform.get(platform, 0)
+
+    #Skip platforms with no info (didn't run any jobs)
+    if stats["total"] == 0 and scheduled_jobs == 0:
+      continue
+
+    avg_bootstrap_time = sum(stats["bootstrap_samples"]) / len(
+        stats["bootstrap_samples"]) if stats["bootstrap_samples"] else 0.0
+
+    rows.append({
+        "timestamp": timestamp,
+        "org": org,
+        "platform": platform,
+        "scheduled_jobs": scheduled_jobs,
+        "total_agents": stats["total"],
+        "busy_agents": stats["busy"],
+        "idle_agents": stats["idle"],
+        "disconnected_agents": stats["disconnected"],
+        "avg_bootstrap_time_s": avg_bootstrap_time
+    })
+
+  return rows
 
 def push_to_bigquery(rows, retries):
   if not rows:
@@ -120,7 +153,7 @@ def main():
     for org in ORGs:
       metrics = get_org_metrics(org)
       if metrics:
-        all_metrics.append(metrics)
+        all_metrics.extend(metrics)
 
     if all_metrics:
       push_to_bigquery(all_metrics, 5)
