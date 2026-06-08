@@ -23,39 +23,26 @@ def setup_logging(level=logging.INFO):
       stream=sys.stdout,
   )
 
-def get_agent_platform(agent):
+def extract_platform(tags):
   """Extracts the platform from agent meta_data tags."""
-  tags = {}
-  for tag in agent.get("meta_data", []):
-    if "=" in tag:
-      key, value = tag.split("=", 1)
-      tags[key.strip()] = value.strip()
-  return tags.get("os") or "linux"
-
-
-def get_job_platform(job):
-  """Maps a job's targeted queue to a platform (linux, macos, windows)."""
-  rules = job.get("agent_query_rules", [])
-  for rule in rules:
-    if rule.startswith("queue="):
-      queue = rule.split("=", 1)[1].lower()
-      if "windows" in queue:
-        return "windows"
-      elif "macos" in queue:
-        return "macos"
+  for tag in tags:
+    if tag.startswith("queue="):
+      q = tag.split("=", 1)[1].strip()
+      return {"default": "linux", "arm64": "linux_arm64"}.get(q, q)
   return "linux"
-
 
 def calculate_agent_stats(agents):
   """Computes agent stats grouped by platform."""
   agents_by_platform = {
       "linux": {"total": 0, "busy": 0, "idle": 0, "disconnected": 0, "bootstrap_samples": []},
+      "linux_arm64": {"total": 0, "busy": 0, "idle": 0, "disconnected": 0, "bootstrap_samples": []},
       "macos": {"total": 0, "busy": 0, "idle": 0, "disconnected": 0, "bootstrap_samples": []},
+      "macos_arm64": {"total": 0, "busy": 0, "idle": 0, "disconnected": 0, "bootstrap_samples": []},
       "windows": {"total": 0, "busy": 0, "idle": 0, "disconnected": 0, "bootstrap_samples": []},
   }
 
   for a in agents:
-    platform = get_agent_platform(a)
+    platform = extract_platform(a.get("meta_data", []))
     platform_stats = agents_by_platform[platform]
     platform_stats["total"] += 1
     if a.get('job'):
@@ -76,11 +63,11 @@ def calculate_agent_stats(agents):
 
 def count_scheduled_jobs(builds):
   """Counts scheduled jobs grouped by platform."""
-  scheduled_by_platform = {"linux": 0, "macos": 0, "windows": 0}
+  scheduled_by_platform = {"linux": 0, "linux_arm64": 0, "macos": 0, "macos_arm64": 0, "windows": 0}
   for build in builds:
     for job in build.get("jobs", []):
       if job.get("state") == "scheduled":
-        platform = get_job_platform(job)
+        platform = extract_platform(job.get("agent_query_rules", []))
         scheduled_by_platform[platform] += 1
   return scheduled_by_platform
 
@@ -104,6 +91,12 @@ def get_org_metrics(org):
   rows = []
 
   for platform, stats in agents_by_platform.items():
+    scheduled_jobs = scheduled_by_platform.get(platform, 0)
+
+    #Skip platforms with no info (didn't run any jobs)
+    if stats["total"] == 0 and scheduled_jobs == 0:
+      continue
+
     avg_bootstrap_time = sum(stats["bootstrap_samples"]) / len(
         stats["bootstrap_samples"]) if stats["bootstrap_samples"] else 0.0
 
@@ -111,7 +104,7 @@ def get_org_metrics(org):
         "timestamp": timestamp,
         "org": org,
         "platform": platform,
-        "scheduled_jobs": scheduled_by_platform.get(platform, 0),
+        "scheduled_jobs": scheduled_jobs,
         "total_agents": stats["total"],
         "busy_agents": stats["busy"],
         "idle_agents": stats["idle"],
