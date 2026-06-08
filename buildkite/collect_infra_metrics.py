@@ -43,6 +43,10 @@ def calculate_agent_stats(agents):
 
   for a in agents:
     platform = extract_platform(a.get("meta_data", []))
+    if platform not in agents_by_platform:
+      agents_by_platform[platform] = {
+          "total": 0, "busy": 0, "idle": 0, "disconnected": 0, "bootstrap_samples": []
+      }
     platform_stats = agents_by_platform[platform]
     platform_stats["total"] += 1
     if a.get('job'):
@@ -68,7 +72,7 @@ def count_scheduled_jobs(builds):
     for job in build.get("jobs", []):
       if job.get("state") == "scheduled":
         platform = extract_platform(job.get("agent_query_rules", []))
-        scheduled_by_platform[platform] += 1
+        scheduled_by_platform[platform] = scheduled_by_platform.get(platform, 0) + 1
   return scheduled_by_platform
 
 
