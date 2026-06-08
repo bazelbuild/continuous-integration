@@ -394,7 +394,7 @@ def should_bcr_validation_block_presubmit(modules, modules_with_metadata_change,
     if "presubmit-auto-run" in pr_labels:
         skip_validation_flags.append("--skip_validation=presubmit_yml")
     returncode = subprocess.run(
-        ["python3", "./tools/bcr_validation.py"]
+        ["bazel", "run", "//tools:bcr_validation", "--"]
         + [f"--check_metadata={module}" for module in modules_with_metadata_change]
         + [f"--check={name}@{version}" for name, version in modules] + skip_validation_flags,
     ).returncode
