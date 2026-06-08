@@ -447,5 +447,102 @@ tasks:
         ])
 
 
+class ForkPullRequestSecurity(unittest.TestCase):
+    def setUp(self):
+        self._saved = {
+            k: os.environ.get(k) for k in ("BUILDKITE_PULL_REQUEST_REPO", "BUILDKITE_REPO")
+        }
+        self._saved_trusted = bazelci._CI_CONFIG_TRUSTED
+
+    def tearDown(self):
+        for k, v in self._saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        bazelci._CI_CONFIG_TRUSTED = self._saved_trusted
+
+    def _set_repos(self, pr_repo=None, pipeline_repo=None):
+        for k, v in (
+            ("BUILDKITE_PULL_REQUEST_REPO", pr_repo),
+            ("BUILDKITE_REPO", pipeline_repo),
+        ):
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+
+    def test_not_a_pull_request_is_not_a_fork(self):
+        self._set_repos()
+        self.assertFalse(bazelci.is_fork_pull_request())
+
+    def test_same_repo_pull_request_is_not_a_fork(self):
+        # Buildkite reports the head repo with a git:// scheme and a .git suffix.
+        self._set_repos(
+            pr_repo="git://github.com/bazelbuild/bazel-toolchains.git",
+            pipeline_repo="https://github.com/bazelbuild/bazel-toolchains.git",
+        )
+        self.assertFalse(bazelci.is_fork_pull_request())
+
+    def test_scp_style_and_case_and_trailing_slash_same_repo(self):
+        self._set_repos(
+            pr_repo="git@github.com:bazelbuild/Bazel-Toolchains.git",
+            pipeline_repo="https://github.com/bazelbuild/bazel-toolchains/",
+        )
+        self.assertFalse(bazelci.is_fork_pull_request())
+
+    def test_fork_pull_request_is_detected(self):
+        self._set_repos(
+            pr_repo="git://github.com/attacker/bazel-toolchains.git",
+            pipeline_repo="https://github.com/bazelbuild/bazel-toolchains.git",
+        )
+        self.assertTrue(bazelci.is_fork_pull_request())
+
+    def test_unknown_pipeline_repo_fails_closed(self):
+        self._set_repos(pr_repo="git://github.com/attacker/x.git", pipeline_repo=None)
+        self.assertTrue(bazelci.is_fork_pull_request())
+
+    def test_shell_commands_refused_for_untrusted_fork_config(self):
+        self._set_repos(
+            pr_repo="git://github.com/attacker/x.git",
+            pipeline_repo="https://github.com/bazelbuild/x.git",
+        )
+        bazelci._CI_CONFIG_TRUSTED = False
+        with self.assertRaises(bazelci.BuildkiteException):
+            bazelci.execute_shell_commands(["echo pwned"])
+        with self.assertRaises(bazelci.BuildkiteException):
+            bazelci.execute_batch_commands(["echo pwned"])
+
+    def test_no_commands_is_a_noop_even_for_untrusted_fork(self):
+        self._set_repos(
+            pr_repo="git://github.com/attacker/x.git",
+            pipeline_repo="https://github.com/bazelbuild/x.git",
+        )
+        bazelci._CI_CONFIG_TRUSTED = False
+        # Empty command lists must not trip the guard.
+        self.assertIsNone(bazelci.execute_shell_commands(None))
+        self.assertIsNone(bazelci.execute_batch_commands([]))
+
+    def test_non_fork_build_is_never_blocked(self):
+        self._set_repos()
+        bazelci._CI_CONFIG_TRUSTED = False
+        self.assertIsNone(bazelci.execute_shell_commands(None))
+
+    def test_docker_step_omits_host_socket_for_fork_pr(self):
+        self._set_repos(
+            pr_repo="git://github.com/attacker/bazel-toolchains.git",
+            pipeline_repo="https://github.com/bazelbuild/bazel-toolchains.git",
+        )
+        step = bazelci.create_docker_step("label", "gcr.io/bazel-public/ubuntu2204")
+        volumes = step["plugins"]["docker#v3.8.0"]["volumes"]
+        self.assertNotIn("/var/run/docker.sock:/var/run/docker.sock", volumes)
+
+    def test_docker_step_keeps_host_socket_for_trusted_build(self):
+        self._set_repos()  # not a fork PR
+        step = bazelci.create_docker_step("label", "gcr.io/bazel-public/ubuntu2204")
+        volumes = step["plugins"]["docker#v3.8.0"]["volumes"]
+        self.assertIn("/var/run/docker.sock:/var/run/docker.sock", volumes)
+
+
 if __name__ == "__main__":
     unittest.main()
