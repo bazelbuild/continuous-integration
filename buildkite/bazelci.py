@@ -653,23 +653,17 @@ class BuildkiteClient(object):
         self._token = self._get_buildkite_token()
 
     def _get_buildkite_token(self):
-        args = [
-            gcloud_command(),
-            "secrets",
-            "versions",
-            "access",
-            "latest",
-            f"--secret={self._org}-bazelcipy-BuildkiteClient-token",
-        ]
-
         project = CLOUD_PROJECTS_PER_ORG[self._org]
-        if project != CLOUD_PROJECT:
-            # Needed for cross-project access, e.g. in
-            # trusted metrics collection pipeline.
-            args.append(f"--project={project}")
-
         return execute_command_and_get_output(
-            args,
+            [
+                gcloud_command(),
+                "secrets",
+                "versions",
+                "access",
+                "latest",
+                f"--secret={self._org}-bazelcipy-BuildkiteClient-token",
+                f"--project={project}",
+            ],
             print_output=False,
         )
 
