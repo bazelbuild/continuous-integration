@@ -752,7 +752,9 @@ resource "buildkite_pipeline" "google-rules-cc-presubmit" {
   repository     = "https://bazel.googlesource.com/rules_cc.git"
   default_branch = "main"
   steps = templatefile("pipeline.yml.tpl", {
-    envs = {}
+    envs = {
+      DISABLE_BAZEL_DIFF = "1"
+    }
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
