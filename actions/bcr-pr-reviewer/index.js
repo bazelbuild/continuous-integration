@@ -798,9 +798,41 @@ async function runSkipCheck(octokit) {
   if (!commentBody.startsWith(SKIP_CHECK_TRIGGER)) {
     return;
   }
-  const check = commentBody.slice(SKIP_CHECK_TRIGGER.length);
+
+  const commenter = payload.comment.user.login;
   const owner = payload.repository.owner.login;
   const repo = payload.repository.name;
+
+  // Verify the commenter has write access to the repository.
+  try {
+    const { data: permissionData } = await octokit.rest.repos.getCollaboratorPermissionLevel({
+      owner,
+      repo,
+      username: commenter,
+    });
+    const permission = permissionData.permission;
+    if (permission !== 'admin' && permission !== 'write') {
+      console.log(`@${commenter} does not have write access (permission: ${permission}), ignoring skip_check command.`);
+      await octokit.rest.reactions.createForIssueComment({
+        owner,
+        repo,
+        comment_id: payload.comment.id,
+        content: 'confused',
+      });
+      return;
+    }
+  } catch (error) {
+    console.error(`Failed to check permissions for @${commenter}: ${error.message}`);
+    await octokit.rest.reactions.createForIssueComment({
+      owner,
+      repo,
+      comment_id: payload.comment.id,
+      content: 'confused',
+    });
+    return;
+  }
+
+  const check = commentBody.slice(SKIP_CHECK_TRIGGER.length);
   if (check == "unstable_url") {
     await octokit.rest.issues.addLabels({
       owner,
