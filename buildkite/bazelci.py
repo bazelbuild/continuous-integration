@@ -32,6 +32,7 @@ import platform as platform_module
 import random
 import re
 import requests
+import shlex
 import shutil
 import stat
 import subprocess
@@ -53,8 +54,8 @@ THIS_IS_TESTING = BUILDKITE_ORG == "bazel-testing"
 THIS_IS_TRUSTED = BUILDKITE_ORG == "bazel-trusted"
 THIS_IS_SPARTA = True
 
-ORGS = frozenset(["bazel", "bazel-trusted", "bazel-testing"])
-CLOUD_PROJECT = "bazel-public" if THIS_IS_TRUSTED else "bazel-untrusted"
+CLOUD_PROJECTS_PER_ORG = {"bazel": "bazel-untrusted", "bazel-trusted": "bazel-public", "bazel-testing": "bazel-untrusted"}
+CLOUD_PROJECT = CLOUD_PROJECTS_PER_ORG[BUILDKITE_ORG]
 
 GITHUB_BRANCH = {"bazel": "master", "bazel-trusted": "master", "bazel-testing": "testing"}[
     BUILDKITE_ORG
@@ -222,7 +223,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_android_ndk.git",
         "pipeline_slug": "rules-android-ndk",
         "owned_by_bazel": True,
-        "disabled_reason": "https://github.com/bazelbuild/rules_android_ndk/issues/83, https://github.com/bazelbuild/rules_android_ndk/issues/86, https://github.com/bazelbuild/rules_android_ndk/issues/88",
     },
     "rules_cc": {
         "git_repository": "https://github.com/bazelbuild/rules_cc.git",
@@ -287,11 +287,7 @@ PLATFORMS = {
     "rockylinux8": {
         "name": "Rocky Linux 8",
         "emoji-name": ":rocky: Rocky Linux 8",
-        # We publish to the ubuntu1404 bucket since all Python versions of
-        # Bazelisk <= v1.26.0 download from this bucket on Linux.
-        # Same problem for the centos7 bucket and Go-Bazelisk older than v1.21.0.
-        # We should stop doing this after a migration period.
-        "publish_binary": ["centos7", "ubuntu1404", "linux"],
+        "publish_binary": ["linux"],
         "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8",
         "python": "python3.8",
     },
@@ -649,7 +645,7 @@ class BuildkiteClient(object):
     _NEXT_PAGE_PATTERN = re.compile(r'<(?P<url>\S+)>; rel="next"', re.MULTILINE)
 
     def __init__(self, org, pipeline=None):
-        if org not in ORGS:
+        if org not in CLOUD_PROJECTS_PER_ORG:
             raise BuildkiteException(f"Unknown organization: {org}")
 
         self._org = org
@@ -657,7 +653,7 @@ class BuildkiteClient(object):
         self._token = self._get_buildkite_token()
 
     def _get_buildkite_token(self):
-        secret_id = f"{BUILDKITE_ORG}-bazelcipy-BuildkiteClient-token"
+        project = CLOUD_PROJECTS_PER_ORG[self._org]
         return execute_command_and_get_output(
             [
                 gcloud_command(),
@@ -665,7 +661,8 @@ class BuildkiteClient(object):
                 "versions",
                 "access",
                 "latest",
-                f"--secret={secret_id}",
+                f"--secret={self._org}-bazelcipy-BuildkiteClient-token",
+                f"--project={project}",
             ],
             print_output=False,
         )
@@ -688,10 +685,14 @@ class BuildkiteClient(object):
                     time.sleep(wait_time)
                 else:
                     raise BuildkiteException(
-                        "Failed to open {}: {} - {}".format(full_url, ex.code, ex.reason)
+                        "Failed to open {}: {} - {}".format(
+                            self._strip_token(full_url), ex.code, ex.reason
+                        )
                     )
 
-        raise BuildkiteException(f"Failed to open {full_url} after {retries} retries.")
+        raise BuildkiteException(
+            f"Failed to open {self._strip_token(full_url)} after {retries} retries."
+        )
 
     def _get_next_page_url(self, headers):
         """Parses the headers to determine if there are more pagination pages."""
@@ -700,6 +701,10 @@ class BuildkiteClient(object):
             return None
         match = self._NEXT_PAGE_PATTERN.search(link_header)
         return match.group('url') if match else None
+
+    def _strip_token(self, old_url):
+        """Anonymizes the token in the given URL."""
+        return old_url.replace(self._token, f"{self._token[:9]}[...]")
 
     def _build_url_with_params(self, url, params=None):
         """Builds a URL with the given query parameters."""
@@ -780,9 +785,13 @@ class BuildkiteClient(object):
         url = self._AGENTS_URL_TEMPLATE.format(self._org)
         return self._fetch_all_pages_as_json(url, retries=retries)
 
-    def get_scheduled_jobs(self, retries=5):
+    def get_active_builds(self, retries=5):
         url = self._BUILDS_URL_TEMPLATE.format(self._org)
-        return self._fetch_all_pages_as_json(url, params=[("state", "scheduled")], retries=retries)
+        return self._fetch_all_pages_as_json(
+            url,
+            params=[("state[]", "scheduled"), ("state[]", "running")],
+            retries=retries
+        )
 
     @staticmethod
     def _check_response(response, expected_status_code):
@@ -1254,6 +1263,27 @@ def is_trueish(s):
     return str(s).lower() in ["true", "1", "t", "y", "yes"]
 
 
+def collect_metrics_if_enabled(build_bep_path=None, test_bep_path=None):
+    if is_trueish(os.environ.get("ENABLE_METRICS_COLLECTION", "false")):
+        try:
+            from collect_metrics import collect_metrics_and_push_to_bigquery
+            collect_metrics_and_push_to_bigquery(build_bep_path=build_bep_path, test_bep_path=test_bep_path)
+        except Exception as e:
+            eprint(f"Failed to upload metrics: {e}")
+            job_url = f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
+            execute_command(
+                [
+                    "buildkite-agent",
+                    "annotate",
+                    "--style=warning",
+                    f"Failed to upload metrics from [this job]({job_url})",
+                    "--context",
+                    "ctx-metrics_upload_failed",
+                ],
+                fail_if_nonzero=False,
+            )
+
+
 def use_bazelisk_migrate():
     """
     If USE_BAZELISK_MIGRATE is set, we use `bazelisk --migrate` to test incompatible flags.
@@ -1383,8 +1413,12 @@ def execute_commands(
     bazel_binary = "bazel"
     if use_but:
         print_collapsed_group(":gcloud: Downloading Bazel Under Test")
-        os.environ["USE_BAZEL_VERSION"] = download_bazel_binary(tmpdir, binary_platform)
-        print_collapsed_group(":bazel: Using Bazel at " + os.environ["USE_BAZEL_VERSION"])
+        bazel_path = download_bazel_binary(tmpdir, binary_platform)
+        os.environ["USE_BAZEL_VERSION"] = bazel_path
+        # The following is for downstream jobs that use RBE; see
+        # https://github.com/bazelbuild/continuous-integration/blob/master/rules/README.md#5-advanced-bazel-version--binary-resolution-strategy
+        os.environ["RBE_CONFIG_BAZEL_PATH"] = bazel_path
+        print_collapsed_group(":bazel: Using Bazel at " + bazel_path)
     else:
         if bazel_version:
             print_collapsed_group(f":bazel: Using Bazel version {bazel_version}")
@@ -1489,6 +1523,8 @@ def execute_commands(
             capture_corrupted_outputs_dir_build,
         ) = calculate_flags(task_config, "build_flags", "build", tmpdir, test_env_vars)
         build_bep_file = os.path.join(tmpdir, _BUILD_BEP_FILE)
+        # Create an empty build_bep_file so that the bazelci-agent can start to follow the file right away. Otherwise,
+        # there is a race between when bazelci-agent starts to read the file and when Bazel creates the file.
         open(build_bep_file, "w").close()
         build_succeeded = False
         try:
@@ -1514,6 +1550,8 @@ def execute_commands(
                 upload_log_file(json_profile_out_build, tmpdir)
             if capture_corrupted_outputs_dir_build:
                 upload_corrupted_outputs(capture_corrupted_outputs_dir_build, tmpdir)
+            if not test_targets or not build_succeeded:
+                collect_metrics_if_enabled(build_bep_file, None)
 
             if is_trueish(os.environ.get("ENABLE_METRICS_COLLECTION", "false")):
                 if not test_targets or not build_succeeded:
@@ -1610,24 +1648,7 @@ def execute_commands(
                         ],
                         fail_if_nonzero=False,
                     )
-                if is_trueish(os.environ.get("ENABLE_METRICS_COLLECTION", "false")):
-                    try:
-                        from collect_metrics import collect_metrics_and_push_to_bigquery
-                        collect_metrics_and_push_to_bigquery(build_bep_path=build_bep_file, test_bep_path=test_bep_file)
-                    except Exception as e:
-                        eprint(f"Failed to upload test metrics: {e}")
-                        job_url = f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
-                        execute_command(
-                        [
-                            "buildkite-agent",
-                            "annotate",
-                            "--style=warning",
-                            f"Failed to upload metrics from [this job]({job_url})",
-                            "--context",
-                            "ctx-metrics_upload_failed",
-                        ],
-                        fail_if_nonzero=False,
-                    )
+                collect_metrics_if_enabled(build_bep_file, test_bep_file)
 
             _ = future.result()
             # TODO: print results
@@ -2084,8 +2105,9 @@ def remote_caching_flags(platform, accept_cached=True):
             else [  # Re-enable on macOS once b/346751326 is resolved.
                 # Enable BES / Build Results reporting.
                 "--bes_backend=buildeventservice.googleapis.com",
+                "--bes_results_url=https://btx.cloud.google.com/invocations/",
                 "--bes_timeout=360s",
-                "--project_id=bazel-untrusted",
+                "--bes_instance_name=bazel-untrusted",
             ]
         )
     )
@@ -2195,8 +2217,9 @@ def rbe_flags(original_flags, accept_cached):
     # Enable BES / Build Results reporting.
     flags += [
         "--bes_backend=buildeventservice.googleapis.com",
+        "--bes_results_url=https://btx.cloud.google.com/invocations/",
         "--bes_timeout=360s",
-        "--project_id=bazel-untrusted",
+        "--bes_instance_name=bazel-untrusted",
     ]
 
     if not accept_cached:
@@ -2484,6 +2507,7 @@ def expand_test_target_patterns(bazel_binary, test_targets, test_flags):
     output = execute_command_and_get_output(
         [bazel_binary]
         + common_startup_flags()
+        + get_query_flags(test_flags)
         + [
             "--nosystem_rc",
             "--nohome_rc",
@@ -2532,6 +2556,13 @@ def get_test_query(test_targets, test_flags):
 
     return query
 
+def get_query_flags(test_flags):
+    wanted_prefixes = ("--deleted_packages")
+    query_flags = []
+    for f in test_flags:
+        if f.startswith(wanted_prefixes):
+            query_flags.append(f)
+    return query_flags
 
 def get_test_tags(test_flags):
     wanted_prefix = "--test_tag_filters="
@@ -2972,14 +3003,6 @@ def create_step(
     concurrency_group=None,
     priority=None,
 ):
-    # TODO(#2272): remove after a migration period
-    if "centos7" in platform:
-        log_deprecated_platform_usage(platform)
-        # Move all CentOS workloads to Rocky Linux.
-        # A simple "replace" works since our Rocky Linux images
-        # follow the same naming convention as the CentOS ones.
-        platform = platform.replace("centos7", "rockylinux8")
-
     if "docker-image" in PLATFORMS[platform]:
         step = create_docker_step(
             label,
@@ -3082,33 +3105,6 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None, qu
     if not step["command"]:
         del step["command"]
     return step
-
-
-def log_deprecated_platform_usage(platform):
-    tmpdir = tempfile.mkdtemp()
-    try:
-        basename = "{}_{}_{}_{}.txt".format(
-            os.getenv("BUILDKITE_ORGANIZATION_SLUG"),
-            os.getenv("BUILDKITE_PIPELINE_SLUG"),
-            os.getenv("BUILDKITE_BUILD_NUMBER"),
-            os.getenv("BUILDKITE_JOB_ID"),
-        )
-        path = os.path.join(tmpdir, basename)
-        with open(path, "wt") as f:
-            f.write(platform)
-
-        execute_command(
-            [
-                gsutil_command(),
-                "cp",
-                path,
-                f"gs://bazel-centos-deprecation/{basename}",
-            ]
-        )
-    except Exception as ex:
-        eprint(ex)
-    finally:
-        shutil.rmtree(tmpdir)
 
 
 def print_project_pipeline(
@@ -3493,19 +3489,16 @@ def runner_step(
     shards=1,
     soft_fail=None,
 ):
-    # TODO(#2272): remove after a migration period
-    platform = platform.replace("centos7", "rockylinux8")
-
     py = PLATFORMS[platform]["python"]
-    command = f"{py} {RUNNER_CMD} --task={task}"
+    command = f"{py} {RUNNER_CMD} --task={shlex.quote(task)}"
     if http_config:
-        command += " --http_config=" + http_config
+        command += " --http_config=" + shlex.quote(http_config)
     if file_config:
-        command += " --file_config=" + file_config
+        command += " --file_config=" + shlex.quote(file_config)
     if git_repository:
-        command += " --git_repository=" + git_repository
+        command += " --git_repository=" + shlex.quote(git_repository)
     if git_commit:
-        command += " --git_commit=" + git_commit
+        command += " --git_commit=" + shlex.quote(git_commit)
     if monitor_flaky_tests:
         command += " --monitor_flaky_tests"
     if use_but:
@@ -3597,10 +3590,10 @@ def bazel_build_step(
     if test_only:
         pipeline_command += " --test_only"
     if http_config:
-        pipeline_command += " --http_config=" + http_config
+        pipeline_command += " --http_config=" + shlex.quote(http_config)
     if file_config:
-        pipeline_command += " --file_config=" + file_config
-    pipeline_command += " --task=" + task
+        pipeline_command += " --file_config=" + shlex.quote(file_config)
+    pipeline_command += " --task=" + shlex.quote(task)
 
     step = create_step(
         label=create_label(platform, project_name, build_only, test_only),

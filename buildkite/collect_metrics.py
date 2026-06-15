@@ -45,6 +45,21 @@ class BazelMetrics:
     exit_code: int = 0
     targets: List[TestTarget] = dataclasses.field(default_factory=list)
 
+    def to_dict(self, is_test=False):
+        res = {
+            "wall_time_s": self.wall_time_ms / 1000.0,
+            "critical_path_s": self.critical_path_s,
+            "remote_and_disk_cache_hits": self.remote_and_disk_cache_hits,
+            "total_actions": self.total_actions,
+            "output_size_bytes": self.output_size_bytes,
+            "bytes_downloaded": self.bytes_downloaded,
+            "exit_code": self.exit_code,
+        }
+        if is_test:
+            res["failed_test_count"] = self.failed_test_count
+            res["targets"] = [dataclasses.asdict(t) for t in self.targets]
+        return res
+
 def print_and_annotate_warning(message):
     """
     Prints a warning to the logs and annotates the Buildkite UI so it's visible on the build page.
@@ -142,7 +157,7 @@ def parse_bep(filepath):
     Parses the Build Event Protocol (BEP) JSON file to extract build/test metrics.
 
     Returns:
-        BazelMetrics: An object containing aggregated build/test metrics.
+        BazelMetrics: An object containing aggregated build metrics and test targets.
         None: If the file does not exist.
     """
 
@@ -292,7 +307,8 @@ def collect_metrics_and_push_to_bigquery(build_bep_path=None, test_bep_path=None
     PIPELINE = os.getenv("BUILDKITE_PIPELINE_SLUG")
     ORG = os.getenv("BUILDKITE_ORGANIZATION_SLUG")
     REPO = os.getenv("BUILDKITE_REPO")
-    PLATFORM = os.getenv("BUILDKITE_AGENT_META_DATA_OS")
+    queue = os.getenv("BUILDKITE_AGENT_META_DATA_QUEUE", "default")
+    PLATFORM = {"default": "linux", "arm64": "linux_arm64"}.get(queue, queue)
     AGENT_ID = os.getenv("BUILDKITE_AGENT_ID")
     BRANCH = os.getenv("BUILDKITE_BRANCH", "main")
     COMMIT_SHA = os.getenv("BUILDKITE_COMMIT")
@@ -361,27 +377,9 @@ def collect_metrics_and_push_to_bigquery(build_bep_path=None, test_bep_path=None
     }
 
     if build_metrics:
-        row["build"] = {
-            "wall_time_s": build_metrics.wall_time_ms / 1000.0,
-            "critical_path_s": build_metrics.critical_path_s,
-            "remote_and_disk_cache_hits": build_metrics.remote_and_disk_cache_hits,
-            "total_actions": build_metrics.total_actions,
-            "output_size_bytes": build_metrics.output_size_bytes,
-            "bytes_downloaded": build_metrics.bytes_downloaded,
-            "exit_code": build_metrics.exit_code,
-        }
+        row["build"] = build_metrics.to_dict(is_test=False)
 
     if test_metrics:
-        row["test"] = {
-            "wall_time_s": test_metrics.wall_time_ms / 1000.0,
-            "critical_path_s": test_metrics.critical_path_s,
-            "remote_and_disk_cache_hits": test_metrics.remote_and_disk_cache_hits,
-            "total_actions": test_metrics.total_actions,
-            "output_size_bytes": test_metrics.output_size_bytes,
-            "bytes_downloaded": test_metrics.bytes_downloaded,
-            "exit_code": test_metrics.exit_code,
-            "failed_test_count": test_metrics.failed_test_count,
-            "targets": [dataclasses.asdict(t) for t in test_metrics.targets],
-        }
+        row["test"] = test_metrics.to_dict(is_test=True)
 
     publish_to_bigquery(row)

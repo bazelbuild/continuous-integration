@@ -1645,7 +1645,7 @@ resource "buildkite_pipeline" "crubit" {
 
 resource "buildkite_pipeline" "llvm-project-redist" {
   name           = "llvm-project-redist"
-  repository     = "https://github.com/UebelAndre/llvm-project-redist"
+  repository     = "https://github.com/bazel-contrib/llvm-project-redist"
   default_branch = "main"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
@@ -1680,8 +1680,8 @@ resource "buildkite_pipeline" "llvm-project-redist" {
     filter_condition                              = ""
     pull_request_branch_filter_enabled            = false
     pull_request_branch_filter_configuration      = ""
-    publish_commit_status                         = false
-    publish_commit_status_per_step                = false
+    publish_commit_status                         = true
+    publish_commit_status_per_step                = true
     separate_pull_request_statuses                = false
     publish_blocked_as_pending                    = false
     cancel_deleted_branch_builds                  = false

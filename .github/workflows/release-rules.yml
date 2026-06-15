@@ -38,7 +38,7 @@ jobs:
     - name: Build release asset
       shell: bash
       run: |
-        staging="bazelci_${{ needs.create-release.outputs.rules_version }}"
+        staging="bazel_ci_${{ needs.create-release.outputs.rules_version }}"
         cp -r rules "$staging"
         tar czf "$staging.tar.gz" "$staging"
         echo "ASSET=$staging.tar.gz" >> $GITHUB_ENV

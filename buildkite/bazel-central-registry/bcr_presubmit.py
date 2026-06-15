@@ -21,7 +21,6 @@
 
 
 import argparse
-import json
 import os
 import pathlib
 import re
@@ -29,7 +28,6 @@ import sys
 import subprocess
 import shutil
 import time
-import requests
 import yaml
 
 import bazelci
@@ -187,8 +185,8 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
 
 def get_platform(task_id, task_config):
     original = bazelci.get_platform_for_task(task_id, task_config)
-    # TODO(#2272): delete once centos references have been deleted
-    # from BCR templates in all module repos.
+    # TODO(#2272): delete once centos references have been removed
+    # from all module configs.
     return original.replace("centos7", "rockylinux8")
 
 
@@ -396,7 +394,7 @@ def should_bcr_validation_block_presubmit(modules, modules_with_metadata_change,
     if "presubmit-auto-run" in pr_labels:
         skip_validation_flags.append("--skip_validation=presubmit_yml")
     returncode = subprocess.run(
-        ["python3", "./tools/bcr_validation.py"]
+        ["bazel", "run", "//tools:bcr_validation", "--"]
         + [f"--check_metadata={module}" for module in modules_with_metadata_change]
         + [f"--check={name}@{version}" for name, version in modules] + skip_validation_flags,
     ).returncode
