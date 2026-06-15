@@ -109,20 +109,6 @@ buildkite-agent env set "CHECKOUT_END_TIME=${CHECKOUT_END_TIME}"
 buildkite-agent env set "CHECKOUT_DURATION_S=${CHECKOUT_DURATION_S}"
 EOF
 
-### 3. Calculate Prep Duration
-cat > /etc/buildkite-agent/hooks/pre-command <<'EOF'
-#!/bin/bash
-PREP_END_TIME=$(date +%s%3N)
-CHECKOUT_END=$(buildkite-agent env get CHECKOUT_END_TIME)
-if [[ -n "$CHECKOUT_END" && "$CHECKOUT_END" =~ ^[0-9]+$ ]]; then
-  DIFF=$((PREP_END_TIME - CHECKOUT_END))
-  PREP_DURATION_S=$(printf "%d.%03d" $((DIFF / 1000)) $((DIFF % 1000)))
-else
-  PREP_DURATION_S="unknown"
-fi
-echo "PREP_DURATION_S: ${PREP_DURATION_S}"
-buildkite-agent env set "PREP_DURATION_S=${PREP_DURATION_S}"
-EOF
 
 ### Fix permissions of the Buildkite agent configuration files and hooks.
 chmod 0400 /etc/buildkite-agent/buildkite-agent.cfg
