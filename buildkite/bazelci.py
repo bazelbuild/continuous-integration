@@ -2339,9 +2339,9 @@ def kythe_build_flags():
 
 def calculate_prep_duration():
     try:
-        CHECKOUT_END_TIME = float(os.getenv("CHECKOUT_END_TIME"))
-        os.environ["PREP_DURATION"] = str(time.now() - CHECKOUT_END_TIME)
-        eprint(f"Prep duration: {os.environ["PREP_DURATION"]}")
+        CHECKOUT_END_TIME = float(os.getenv("CHECKOUT_END_TIME")) / 1000.0
+        os.environ["PREP_DURATION_S"] = str(time.time() - CHECKOUT_END_TIME)
+        eprint(f"Prep duration: {os.getenv('PREP_DURATION_S')}")
     except (ValueError, TypeError):
         pass
 
