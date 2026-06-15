@@ -2327,7 +2327,7 @@ def calculate_prep_duration():
         os.environ["PREP_DURATION_S"] = str(time.time() - CHECKOUT_END_TIME_S)
         eprint(f"Prep duration: {os.getenv('PREP_DURATION_S')}")
     except (ValueError, TypeError):
-        pass
+        eprint("Warning: CHECKOUT_END_TIME is missing or invalid; skipping prep duration calculation.")
 
 def execute_bazel_build(bazel_version, bazel_binary, platform, flags, targets, bep_file):
     # The start of the build stage marks the end of the preparation stage; calculate prep duration here.
