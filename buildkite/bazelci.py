@@ -2337,9 +2337,17 @@ def kythe_build_flags():
         f"--override_repository=kythe_release={KYTHE_DIR}",
     ]
 
+def calculate_prep_duration():
+    try:
+        CHECKOUT_END_TIME = float(os.getenv("CHECKOUT_END_TIME"))
+        os.environ["PREP_DURATION"] = str(time.now() - CHECKOUT_END_TIME)
+        eprint(f"Prep duration: {os.environ["PREP_DURATION"]}")
+    except (ValueError, TypeError):
+        pass
 
 def execute_bazel_build(bazel_version, bazel_binary, platform, flags, targets, bep_file):
     print_collapsed_group(":bazel: Computing flags for build step")
+    calculate_prep_duration()
     aggregated_flags = compute_flags(
         platform,
         flags,
@@ -2365,6 +2373,7 @@ def execute_bazel_build(bazel_version, bazel_binary, platform, flags, targets, b
 
 def execute_bazel_build_with_kythe(bazel_version, bazel_binary, platform, flags, targets, bep_file):
     print_collapsed_group(":bazel: Computing flags for build step")
+    calculate_prep_duration()
     aggregated_flags = compute_flags(
         platform,
         flags,
@@ -3051,7 +3060,7 @@ def create_step(
 
 
 def create_docker_step(label, image, commands=None, additional_env_vars=None, queue="default", enable_soft_fail=False):
-    env = ["ANDROID_HOME", "ANDROID_NDK_HOME", "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "CHECKOUT_DURATION_S", "PREP_DURATION_S"]
+    env = ["ANDROID_HOME", "ANDROID_NDK_HOME", "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "CHECKOUT_DURATION_S", "CHECKOUT_END_TIME"]
     if THIS_IS_TRUSTED:
         # For the trusted Linux arm64 machine to upload artifacts
         env += ["GOOGLE_APPLICATION_CREDENTIALS"]
