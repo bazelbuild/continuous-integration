@@ -248,6 +248,9 @@ class TestPublishMetrics(unittest.TestCase):
         self.assertEqual(row["changed_files_count"], 5)
         self.assertEqual(row["test"]["failed_test_count"], 0)
         self.assertEqual(row.get("queue_duration_s"), 300.0)
+        self.assertIsNone(row["task_id"])
+        self.assertEqual(row["build_shard_id"], -1)
+        self.assertEqual(row["build_shard_count"], -1)
 
     @patch("collect_metrics.publish_to_bigquery")
     @patch("collect_metrics.parse_bep")
@@ -309,6 +312,27 @@ class TestPublishMetrics(unittest.TestCase):
         self.assertEqual(row["test"]["failed_test_count"], 1)
         self.assertEqual(len(row["test"]["targets"]), 1)
         self.assertEqual(row["test"]["targets"][0]["label"], "//pkg:test1")
+
+    @patch("collect_metrics.publish_to_bigquery")
+    @patch("collect_metrics.parse_bep")
+    @patch("collect_metrics.get_git_stats")
+    def test_collect_metrics_sharded_task(self, mock_git, mock_parse, mock_publish):
+        os.environ["BUILDKITE_BUILD_NUMBER"] = "500"
+        os.environ["BUILDKITE_PARALLEL_JOB"] = "2"
+        os.environ["BUILDKITE_PARALLEL_JOB_COUNT"] = "5"
+        os.environ["BAZELCI_TASK"] = "ubuntu2204_clang"
+
+        mock_parse.return_value = collect_metrics.BazelMetrics(wall_time_ms=5000)
+
+        with patch("collect_metrics.fetch_job_timestamps"):
+            collect_metrics.collect_metrics_and_push_to_bigquery(test_bep_path="dummy.json")
+
+        mock_publish.assert_called_once()
+        row = mock_publish.call_args[0][0]
+
+        self.assertEqual(row["task_id"], "ubuntu2204_clang")
+        self.assertEqual(row["build_shard_id"], 2)
+        self.assertEqual(row["build_shard_count"], 5)
 
     @patch("collect_metrics.subprocess.run")
     def test_publish_to_bigquery_failure(self, mock_run):
