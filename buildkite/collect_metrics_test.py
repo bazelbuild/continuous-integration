@@ -248,7 +248,7 @@ class TestPublishMetrics(unittest.TestCase):
         self.assertEqual(row["changed_files_count"], 5)
         self.assertEqual(row["test"]["failed_test_count"], 0)
         self.assertEqual(row.get("queue_duration_s"), 300.0)
-        self.assertIsNone(row["task_id"])
+        self.assertIsNone(row["task_label"])
         self.assertEqual(row["build_shard_id"], -1)
         self.assertEqual(row["build_shard_count"], -1)
 
@@ -318,9 +318,9 @@ class TestPublishMetrics(unittest.TestCase):
     @patch("collect_metrics.get_git_stats")
     def test_collect_metrics_sharded_task(self, mock_git, mock_parse, mock_publish):
         os.environ["BUILDKITE_BUILD_NUMBER"] = "500"
-        os.environ["BUILDKITE_PARALLEL_JOB"] = "2"
-        os.environ["BUILDKITE_PARALLEL_JOB_COUNT"] = "5"
-        os.environ["BAZELCI_TASK"] = "ubuntu2204_clang"
+        os.environ["BUILDKITE_LABEL"] = "Clang on :ubuntu: Ubuntu 20.04 LTS (shard 1)"
+        os.environ["BUILDKITE_PARALLEL_JOB"] = "1"
+        os.environ["BUILDKITE_PARALLEL_JOB_COUNT"] = "3"
 
         mock_parse.return_value = collect_metrics.BazelMetrics(wall_time_ms=5000)
 
@@ -330,9 +330,10 @@ class TestPublishMetrics(unittest.TestCase):
         mock_publish.assert_called_once()
         row = mock_publish.call_args[0][0]
 
-        self.assertEqual(row["task_id"], "ubuntu2204_clang")
-        self.assertEqual(row["build_shard_id"], 2)
-        self.assertEqual(row["build_shard_count"], 5)
+        # Verify that task_label got correctly stripped of the shard suffix and emoji
+        self.assertEqual(row["task_label"], "Clang on Ubuntu 20.04 LTS")
+        self.assertEqual(row["build_shard_id"], 1)
+        self.assertEqual(row["build_shard_count"], 3)
 
     @patch("collect_metrics.subprocess.run")
     def test_publish_to_bigquery_failure(self, mock_run):
