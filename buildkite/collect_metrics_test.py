@@ -5,7 +5,7 @@ import json
 import tempfile
 import base64
 
-import collect_metrics
+from buildkite import collect_metrics
 
 
 def create_mock_bep_content(test_results=None, exit_code=0):
@@ -187,7 +187,7 @@ class TestPublishMetrics(unittest.TestCase):
         self.assertEqual(duration, 12.5)
 
     # --- Test 3: Main Logic & BigQuery Push ---
-    @patch("collect_metrics.subprocess.run")
+    @patch("buildkite.collect_metrics.subprocess.run")
     def test_publish_to_bigquery(self, mock_run):
         # Mock the subprocess run to succeed (return code 0)
         mock_result = MagicMock()
@@ -203,9 +203,9 @@ class TestPublishMetrics(unittest.TestCase):
         self.assertTrue(any("bq" in arg for arg in call_args))
         self.assertIn("insert", call_args)
 
-    @patch("collect_metrics.publish_to_bigquery")
-    @patch("collect_metrics.parse_bep")
-    @patch("collect_metrics.get_git_stats")
+    @patch("buildkite.collect_metrics.publish_to_bigquery")
+    @patch("buildkite.collect_metrics.parse_bep")
+    @patch("buildkite.collect_metrics.get_git_stats")
     def test_collect_metrics_end_to_end(self, mock_git, mock_parse, mock_publish):
         # Setup Environment
         os.environ["BUILDKITE_BUILD_NUMBER"] = "500"
@@ -229,7 +229,7 @@ class TestPublishMetrics(unittest.TestCase):
         mock_parse.return_value = mock_bep_metrics
 
         # Run Function (with mocked timestamps)
-        with patch("collect_metrics.fetch_job_timestamps") as mock_fetch:
+        with patch("buildkite.collect_metrics.fetch_job_timestamps") as mock_fetch:
             mock_fetch.return_value = collect_metrics.JobTimestamps(
                 created_at="2023-10-25T10:00:00Z",
                 started_at="2023-10-25T10:05:00Z"
@@ -249,9 +249,9 @@ class TestPublishMetrics(unittest.TestCase):
         self.assertEqual(row["test"]["failed_test_count"], 0)
         self.assertEqual(row.get("queue_duration_s"), 300.0)
 
-    @patch("collect_metrics.publish_to_bigquery")
-    @patch("collect_metrics.parse_bep")
-    @patch("collect_metrics.get_git_stats")
+    @patch("buildkite.collect_metrics.publish_to_bigquery")
+    @patch("buildkite.collect_metrics.parse_bep")
+    @patch("buildkite.collect_metrics.get_git_stats")
     def test_collect_metrics_combined(self, mock_git, mock_parse, mock_publish):
         # Setup Environment
         os.environ["BUILDKITE_BUILD_NUMBER"] = "500"
@@ -284,7 +284,7 @@ class TestPublishMetrics(unittest.TestCase):
         mock_parse.side_effect = parse_bep_side_effect
 
         # Run Function
-        with patch("collect_metrics.fetch_job_timestamps") as mock_fetch:
+        with patch("buildkite.collect_metrics.fetch_job_timestamps") as mock_fetch:
             mock_fetch.return_value = collect_metrics.JobTimestamps(
                 created_at="2023-10-25T10:00:00Z",
                 started_at="2023-10-25T10:05:00Z",
@@ -310,7 +310,7 @@ class TestPublishMetrics(unittest.TestCase):
         self.assertEqual(len(row["test"]["targets"]), 1)
         self.assertEqual(row["test"]["targets"][0]["label"], "//pkg:test1")
 
-    @patch("collect_metrics.subprocess.run")
+    @patch("buildkite.collect_metrics.subprocess.run")
     def test_publish_to_bigquery_failure(self, mock_run):
         mock_result = MagicMock()
         mock_result.returncode = 1
@@ -318,22 +318,22 @@ class TestPublishMetrics(unittest.TestCase):
         mock_result.stderr = "err"
         mock_run.return_value = mock_result
         
-        with patch("collect_metrics.print_and_annotate_warning") as mock_annotate:
+        with patch("buildkite.collect_metrics.print_and_annotate_warning") as mock_annotate:
             collect_metrics.publish_to_bigquery({"test": 1})
             mock_annotate.assert_called_once()
 
     def test_duration_parsing_error(self):
         with patch.dict(os.environ, {"CHECKOUT_DURATION_S": "invalid", "PREP_DURATION_S": "invalid", "BUILDKITE_BUILD_NUMBER": "500"}):
-            with patch("collect_metrics.parse_bep") as mock_parse, \
-                 patch("collect_metrics.publish_to_bigquery"):
+            with patch("buildkite.collect_metrics.parse_bep") as mock_parse, \
+                 patch("buildkite.collect_metrics.publish_to_bigquery"):
                 mock_parse.return_value = MagicMock()
                 collect_metrics.collect_metrics_and_push_to_bigquery("dummy")
 
-    @patch("collect_metrics.parse_bep")
+    @patch("buildkite.collect_metrics.parse_bep")
     def test_collect_metrics_bep_failure(self, mock_parse):
         mock_parse.return_value = None
         with patch.dict(os.environ, {"BUILDKITE_BUILD_NUMBER": "500"}):
-            with patch("collect_metrics.print_and_annotate_warning") as mock_annotate:
+            with patch("buildkite.collect_metrics.print_and_annotate_warning") as mock_annotate:
                 collect_metrics.collect_metrics_and_push_to_bigquery("dummy")
                 mock_annotate.assert_called_once_with("Skipping BigQuery push due to missing or failed BEP parsing.")
 
@@ -344,7 +344,7 @@ class TestPublishMetrics(unittest.TestCase):
             self.assertIsNone(bep_metrics)
 
 
-    @patch("collect_metrics.bazelci.BuildkiteClient")
+    @patch("buildkite.collect_metrics.bazelci.BuildkiteClient")
     def test_fetch_job_timestamps_success(self, mock_client_cls):
         mock_client = MagicMock()
         mock_client_cls.return_value = mock_client

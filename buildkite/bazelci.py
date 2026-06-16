@@ -1266,7 +1266,7 @@ def is_trueish(s):
 def collect_metrics_if_enabled(build_bep_path=None, test_bep_path=None):
     if is_trueish(os.environ.get("ENABLE_METRICS_COLLECTION", "false")):
         try:
-            from collect_metrics import collect_metrics_and_push_to_bigquery
+            from buildkite.collect_metrics import collect_metrics_and_push_to_bigquery
             collect_metrics_and_push_to_bigquery(build_bep_path=build_bep_path, test_bep_path=test_bep_path)
         except Exception as e:
             eprint(f"Failed to upload metrics: {e}")
