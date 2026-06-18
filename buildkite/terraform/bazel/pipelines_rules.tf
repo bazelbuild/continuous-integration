@@ -2115,7 +2115,7 @@ resource "buildkite_pipeline" "rules-jvm-external" {
 
 resource "buildkite_pipeline" "rules-shell" {
   name           = "rules_shell"
-  repository     = "https://github.com/bazelbuild/rules_shell.git"
+  repository     = "https://github.com/bazel-contrib/rules_shell.git"
   description    = "Shell rules for Bazel"
   default_branch = "main"
   steps = templatefile("pipeline.yml.tpl", {
