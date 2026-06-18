@@ -3122,7 +3122,7 @@ def print_project_pipeline(
     if not task_configs:
         raise BuildkiteException("{0} pipeline configuration is empty.".format(project_name))
 
-    pipeline_steps = []
+    pipeline_steps = create_initial_steps()
     # If the repository is hosted on Git-on-borg, we show the link to the commit Gerrit review
     buildkite_repo = os.getenv("BUILDKITE_REPO")
     if is_git_on_borg_repo(buildkite_repo):
@@ -3291,6 +3291,25 @@ def print_project_pipeline(
         )
 
     print_pipeline_steps(pipeline_steps, handle_emergencies=not is_downstream_pipeline())
+
+
+def create_initial_steps():
+    steps = []
+    default_branch = os.getenv("BUILDKITE_PIPELINE_DEFAULT_BRANCH")
+    if THIS_IS_TRUSTED or os.getenv("BUILDKITE_BRANCH") == default_branch:
+        return steps
+
+    modified_files = get_modified_files(os.getenv("BUILDKITE_COMMIT"))
+    modified_config_files = [f for f in modified_files if ".bazelci" in f]
+    if modified_config_files:
+        steps.append(
+            {
+                "block": "Please check the changes to the following "
+                f"file(s) before unblocking the build: {' ,'.join(modified_config_files)}"
+            }
+        )
+
+    return steps
 
 
 def create_buildifier_step(buildifier_config):
@@ -3674,7 +3693,7 @@ def print_bazel_publish_binaries_pipeline(task_configs, http_config, file_config
     if not task_configs:
         raise BuildkiteException("Bazel publish binaries pipeline configuration is empty.")
 
-    pipeline_steps = []
+    pipeline_steps = create_initial_steps()
     task_configs = filter_tasks_that_should_be_skipped(task_configs, pipeline_steps)
 
     platforms = [get_platform_for_task(t, tc) for t, tc in task_configs.items()]
@@ -3830,7 +3849,7 @@ def fetch_incompatible_flags():
 def print_bazel_downstream_pipeline(
     task_configs, http_config, file_config, test_disabled_projects, notify
 ):
-    pipeline_steps = []
+    pipeline_steps = create_initial_steps()
 
     info_box_step = print_disabled_projects_info_box_step()
     if info_box_step is not None:
