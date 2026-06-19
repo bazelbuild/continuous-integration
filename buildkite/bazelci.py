@@ -3284,7 +3284,7 @@ def create_initial_steps():
         return steps
 
     modified_files = get_modified_files(os.getenv("BUILDKITE_COMMIT"))
-    modified_config_files = [f for f in modified_files if ".bazelci" in f]
+    modified_config_files = [f for f in modified_files if is_config_file(f)]
     if modified_config_files:
         steps.append(
             {
@@ -3294,6 +3294,10 @@ def create_initial_steps():
         )
 
     return steps
+
+
+def is_config_file(path):
+    return ".bazelci" in path or path.endswith(".yml")
 
 
 def create_buildifier_step(buildifier_config):
