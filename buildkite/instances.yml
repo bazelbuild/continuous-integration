@@ -26,7 +26,7 @@ default_vm:
   initial_delay: 60
 instance_groups:
   - name: bk-docker
-    count: 140
+    count: 200
     project: bazel-untrusted
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-docker
@@ -71,7 +71,7 @@ instance_groups:
     zone: us-central1-c
     boot_disk_type: hyperdisk-balanced
   - name: bk-windows
-    count: 40
+    count: 60
     project: bazel-untrusted
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-windows
