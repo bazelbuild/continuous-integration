@@ -125,6 +125,9 @@ EOF
   # Disable the Docker service, as the startup script has to mount /var/lib/docker first.
   systemctl disable docker
   systemctl stop docker
+
+  # Add buildkite-agent to the docker group to grant it permissions to the Docker socket
+  usermod -aG docker buildkite-agent
 }
 
 ## Add our minimum uptime enforcer.
