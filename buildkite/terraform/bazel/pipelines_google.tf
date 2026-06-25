@@ -38,7 +38,7 @@ resource "buildkite_pipeline" "clion-plugin-google" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -91,7 +91,7 @@ resource "buildkite_pipeline" "google-logging" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -142,7 +142,7 @@ resource "buildkite_pipeline" "github-dot-com-googleapis-google-cloud-cpp" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true

@@ -40,7 +40,7 @@ resource "buildkite_pipeline" "rules-proto-grpc-rules-proto-grpc" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -91,7 +91,7 @@ resource "buildkite_pipeline" "github-dot-com-brightspace-rules-csharp" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -246,7 +246,7 @@ resource "buildkite_pipeline" "rules-scala-scala" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -297,7 +297,7 @@ resource "buildkite_pipeline" "rules-cc" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -401,7 +401,7 @@ resource "buildkite_pipeline" "rules-kotlin-kotlin" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -452,7 +452,7 @@ resource "buildkite_pipeline" "rules-python-python" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -503,7 +503,7 @@ resource "buildkite_pipeline" "rules-k8s-k8s" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -554,7 +554,7 @@ resource "buildkite_pipeline" "rules-webtesting-saucelabs" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -606,7 +606,7 @@ resource "buildkite_pipeline" "rules-android" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -657,7 +657,7 @@ resource "buildkite_pipeline" "rules-platform" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -736,7 +736,7 @@ resource "buildkite_pipeline" "rules-docker-docker" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -816,7 +816,7 @@ resource "buildkite_pipeline" "rules-testing" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -867,7 +867,7 @@ resource "buildkite_pipeline" "rules-nodejs-nodejs" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -918,7 +918,7 @@ resource "buildkite_pipeline" "stackb-rules-proto" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -969,7 +969,7 @@ resource "buildkite_pipeline" "rules-closure-closure-compiler" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1020,7 +1020,7 @@ resource "buildkite_pipeline" "rules-appengine-appengine" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1071,7 +1071,7 @@ resource "buildkite_pipeline" "rules-go-golang" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1122,7 +1122,7 @@ resource "buildkite_pipeline" "rules-license" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1175,7 +1175,7 @@ resource "buildkite_pipeline" "github-dot-com-jmillikin-rules-flex" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1226,7 +1226,7 @@ resource "buildkite_pipeline" "rules-java-java" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1277,7 +1277,7 @@ resource "buildkite_pipeline" "rules-boost" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1381,7 +1381,7 @@ resource "buildkite_pipeline" "github-dot-com-jmillikin-rules-bison" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1432,7 +1432,7 @@ resource "buildkite_pipeline" "rules-jsonnet" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1483,7 +1483,7 @@ resource "buildkite_pipeline" "rules-graalvm" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1534,7 +1534,7 @@ resource "buildkite_pipeline" "rules-proto" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1587,7 +1587,7 @@ resource "buildkite_pipeline" "rules-rust-rustlang" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1689,7 +1689,7 @@ resource "buildkite_pipeline" "rules-perl" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1740,7 +1740,7 @@ resource "buildkite_pipeline" "github-dot-com-jmillikin-rules-ragel" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1793,7 +1793,7 @@ resource "buildkite_pipeline" "rules-pkg" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1844,7 +1844,7 @@ resource "buildkite_pipeline" "rules-haskell-haskell" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1896,7 +1896,7 @@ resource "buildkite_pipeline" "rules-jvm-external-examples" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1998,7 +1998,7 @@ resource "buildkite_pipeline" "rules-postcss" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -2050,7 +2050,7 @@ resource "buildkite_pipeline" "rules-android-ndk" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -2102,7 +2102,7 @@ resource "buildkite_pipeline" "rules-jvm-external" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -2154,7 +2154,7 @@ resource "buildkite_pipeline" "rules-shell" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = true
     skip_builds_for_existing_commits              = true
     skip_pull_request_builds_for_existing_commits = true
