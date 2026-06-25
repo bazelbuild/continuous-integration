@@ -53,7 +53,7 @@ resource "buildkite_pipeline" "fwe-test" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
