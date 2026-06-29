@@ -13,8 +13,10 @@
 ---
 default_vm:
   boot_disk_size: 500GB
-  boot_disk_type: pd-ssd
-  machine_type: c3d-standard-30
+  boot_disk_type: hyperdisk-balanced
+  boot_disk_provisioned_iops: 15000
+  boot_disk_provisioned_throughput: 240
+  machine_type: c4d-standard-32
   network: default
   region: us-central1
   restart-on-failure: False

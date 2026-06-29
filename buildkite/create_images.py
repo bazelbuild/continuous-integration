@@ -23,8 +23,8 @@ import gcloud
 import gcloud_utils
 
 DEBUG = False
-DEFAULT_MACHINE_TYPE = "c3d-standard-8"
-DEFAULT_BOOT_DISK_TYPE = "pd-ssd"
+DEFAULT_MACHINE_TYPE = "c4d-standard-8"
+DEFAULT_BOOT_DISK_TYPE = "hyperdisk-balanced"
 
 IMAGE_CREATION_VMS = {
     "bk-testing-docker": {
