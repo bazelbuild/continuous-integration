@@ -17,6 +17,6 @@
 # Please do not clear or delete this file when an incident is over.
 # Instead, simply replace all values with empty strings ("").
 ---
-message: "BazelCI invocations may fail on GCS-affecting API calls due to an ongoing outage."
-issue_url: "https://github.com/bazelbuild/continuous-integration/issues/2697"
+message: "Jobs on RBE Ubuntu & MacOS arm64 are failing due to an ongoing outage."
+issue_url: "https://github.com/bazelbuild/continuous-integration/issues/2700"
 last_good_bazel: ""
