@@ -259,8 +259,13 @@ def publish_to_bigquery(row):
 
     bazelci.eprint(f"Publishing Metrics to BigQuery ...")
     table_ref = f"{PROJECT_ID}:{DATASET_ID}.{TABLE_ID}"        
-    bq_cmd = "bq.cmd" if bazelci.is_windows() else "bq"
-
+    if bazelci.is_windows():
+        bq_cmd = "bq.cmd"
+    elif bazelci.is_mac() and not bazelci.is_64_bit():
+        bq_cmd = "/usr/local/bin/google-cloud-sdk/bin/bq"
+    else:
+        bq_cmd = "bq"
+        
     try:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tf:
             json.dump(row, tf)
@@ -286,7 +291,21 @@ def publish_to_bigquery(row):
         if 'temp_path' in locals() and os.path.exists(temp_path):
             os.remove(temp_path)
 
-def collect_metrics_and_push_to_bigquery(build_bep_path=None, test_bep_path=None):
+def normalize_job_label(label):
+    """
+    Normalizes a Buildkite job label by stripping the sharding suffix and emoji shortcodes.
+    Example: "Clang on :ubuntu: Ubuntu 20.04 LTS (shard 1)" -> "Clang on Ubuntu 20.04 LTS"
+    """
+    if not label:
+        return None
+    # 1. Strip " (shard \d+)" at the end of the string
+    label = re.sub(r'\s*\(shard \d+\)$', '', label)
+    # 2. Strip emoji shortcodes like :ubuntu: or :rocky:
+    label = re.sub(r':[a-zA-Z0-9_+-]+:', '', label)
+    # 3. Collapse multiple spaces into a single space and strip
+    return re.sub(r'\s+', ' ', label).strip()
+
+def collect_metrics_and_push_to_bigquery(build_bep_path=None, test_bep_path=None, task_id=None):
     """
     Reads the BEP files, collects environment variables, and pushes metrics to BigQuery.
     Called from bazelci.py after the build finishes.
@@ -304,6 +323,9 @@ def collect_metrics_and_push_to_bigquery(build_bep_path=None, test_bep_path=None
     REPO = os.getenv("BUILDKITE_REPO")
     queue = os.getenv("BUILDKITE_AGENT_META_DATA_QUEUE", "default")
     PLATFORM = {"default": "linux", "arm64": "linux_arm64"}.get(queue, queue)
+    TASK_LABEL = normalize_job_label(BUILDKITE_LABEL)
+    BUILD_SHARD_ID = int(os.getenv("BUILDKITE_PARALLEL_JOB", "0"))
+    BUILD_SHARD_COUNT = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "1"))
     AGENT_ID = os.getenv("BUILDKITE_AGENT_ID")
     BRANCH = os.getenv("BUILDKITE_BRANCH", "main")
     COMMIT_SHA = os.getenv("BUILDKITE_COMMIT")
@@ -360,6 +382,9 @@ def collect_metrics_and_push_to_bigquery(build_bep_path=None, test_bep_path=None
         "pipeline": PIPELINE,
         "org": ORG,
         "platform": PLATFORM,
+        "task_label": TASK_LABEL,
+        "build_shard_id": BUILD_SHARD_ID,
+        "build_shard_count": BUILD_SHARD_COUNT,
         "agent_id": AGENT_ID,
         "branch": BRANCH,
         "repo": REPO,

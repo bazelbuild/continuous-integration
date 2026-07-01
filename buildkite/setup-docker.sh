@@ -50,7 +50,8 @@ EOF
 ### Patch the filesystem options to increase I/O performance
 {
   if [[ "$(uname -m)" != "aarch64" ]]; then
-    tune2fs -o ^acl,journal_data_writeback,nobarrier /dev/sda1
+    ROOT_DEV=$(findmnt -n -o SOURCE /)
+    tune2fs -o ^acl,journal_data_writeback,nobarrier "${ROOT_DEV}"
     cat > /etc/fstab <<'EOF'
 LABEL=cloudimg-rootfs    /            ext4    defaults,noatime,commit=300,journal_async_commit    0 0
 LABEL=UEFI               /boot/efi    vfat    defaults,noatime                                    0 0
@@ -124,6 +125,9 @@ EOF
   # Disable the Docker service, as the startup script has to mount /var/lib/docker first.
   systemctl disable docker
   systemctl stop docker
+
+  # Add buildkite-agent to the docker group to grant it permissions to the Docker socket
+  usermod -aG docker buildkite-agent
 }
 
 ## Add our minimum uptime enforcer.

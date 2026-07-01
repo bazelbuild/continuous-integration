@@ -548,8 +548,15 @@ def main(argv=None):
         pr_labels = get_labels_from_pr()
         low_priority = "low-ci-priority" in pr_labels
         pipeline_steps = []
+        risky_presubmit_yml_files = set()
         for module_name, module_version in modules:
             previous_size = len(pipeline_steps)
+
+            with open(get_presubmit_yml(module_name, module_version), "rt") as f:
+                presubmit_content = f.read()
+
+            if "shell_commands" in presubmit_content:
+                risky_presubmit_yml_files.add(f"modules/{module_name}/{module_version}/presubmit.yml")
 
             configs = get_anonymous_module_task_config(module_name, module_version)
             add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, low_priority=low_priority)
@@ -559,8 +566,15 @@ def main(argv=None):
             if len(pipeline_steps) == previous_size:
                 error("No pipeline steps generated for %s@%s. Please check the configuration." % (module_name, module_version))
 
-        if should_wait_bcr_maintainer_review(modules, pr_labels):
-            pipeline_steps.insert(0, {"block": "Wait on BCR maintainer review", "blocked_state": "running"})
+        if should_wait_bcr_maintainer_review(modules, pr_labels) or risky_presubmit_yml_files:
+            suffix = (
+                f" - also check shell_commands in {', '.join(risky_presubmit_yml_files)}!"
+                if risky_presubmit_yml_files
+                else ""
+            )
+            pipeline_steps.insert(
+                0, {"block": f"Wait on BCR maintainer review{suffix}", "blocked_state": "running"}
+            )
 
         upload_jobs_to_pipeline(pipeline_steps)
     elif args.subparsers_name == "anonymous_module_runner":
