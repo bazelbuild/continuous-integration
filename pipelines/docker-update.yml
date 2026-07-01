@@ -6,6 +6,8 @@ steps:
     plugins:
       docker#v3.8.0:
         always-pull: true
+        additional-groups:
+          - "999"
         environment:
           - ANDROID_HOME
           - ANDROID_NDK_HOME
