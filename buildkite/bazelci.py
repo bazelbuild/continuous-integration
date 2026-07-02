@@ -3062,7 +3062,6 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None, qu
         "plugins": {
             "docker#v3.8.0": {
                 "always-pull": True,
-                "additional-groups": ["docker"],
                 "environment": env,
                 "image": image,
                 "network": "host",
