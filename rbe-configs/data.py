@@ -34,6 +34,23 @@ configs = [
     ]
   },
   {
+    "bazel_version": "8.7.0",
+    "containers": [
+      {
+          'toolchain_name': 'ubuntu2404',
+          'cpp_env_json': 'cpp_env/ubuntu2404.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2004',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2204',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      }
+    ]
+  },
+  {
     "bazel_version": "8.0.1",
     "containers": [
       {
@@ -47,6 +64,19 @@ configs = [
       {
         'toolchain_name': 'ubuntu2004-bazel-java11',
         'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      },
+      {
+          'toolchain_name': 'ubuntu2204',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
+      }
+    ]
+  },
+  {
+    "bazel_version": "7.7.0",
+    "containers": [
+      {
+          'toolchain_name': 'ubuntu2004',
+          'cpp_env_json': 'cpp_env/ubuntu2004.json'
       },
       {
           'toolchain_name': 'ubuntu2204',
