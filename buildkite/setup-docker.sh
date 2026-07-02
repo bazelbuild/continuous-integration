@@ -111,11 +111,11 @@ EOF
       "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
       $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-  # Pre-create the docker group with GID 5995 to ensure a stable GID across all runner images.
-  # We fail the image build if GID 5995 is already taken to avoid silent runtime mismatches.
-  groupadd -g 5995 docker || true
-  if [[ "$(getent group docker | cut -d: -f3)" != "5995" ]]; then
-    echo "ERROR: Failed to allocate GID 5995 to docker group."
+  # Pre-create the docker group with GID 999 to ensure a stable GID across all runner images.
+  # We fail the image build if GID 999 is already taken to avoid silent runtime mismatches.
+  groupadd -g 999 docker || true
+  if [[ "$(getent group docker | cut -d: -f3)" != "999" ]]; then
+    echo "ERROR: Failed to allocate GID 999 to docker group."
     exit 1
   fi
 
