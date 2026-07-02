@@ -54,8 +54,14 @@ jobs:
   # Job 2: Terraform Execution
   terraform:
     needs: detect-changes
-    # Run only if we have changed orgs AND (it's a push to master OR PR from trusted users)
-    if: needs.detect-changes.outputs.orgs != '[]'
+    # Run only if we have changed orgs AND (it's a push to master OR a PR from this
+    # repository, not a fork). Fork pull requests must not reach this job: it loads
+    # GCP credentials and runs `terraform plan` over the PR's .tf files, which executes
+    # attacker-controlled HCL (module sources, `external` data sources).
+    if: >-
+      needs.detect-changes.outputs.orgs != '[]'
+      && (github.event_name == 'push'
+          || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
 
     # Lock per organization. Cancels old runs on PRs (saves time), but queues pushes (safe apply).
