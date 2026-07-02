@@ -50,7 +50,8 @@ EOF
 ### Patch the filesystem options to increase I/O performance
 {
   if [[ "$(uname -m)" != "aarch64" ]]; then
-    tune2fs -o ^acl,journal_data_writeback,nobarrier /dev/sda1
+    ROOT_DEV=$(findmnt -n -o SOURCE /)
+    tune2fs -o ^acl,journal_data_writeback,nobarrier "${ROOT_DEV}"
     cat > /etc/fstab <<'EOF'
 LABEL=cloudimg-rootfs    /            ext4    defaults,noatime,commit=300,journal_async_commit    0 0
 LABEL=UEFI               /boot/efi    vfat    defaults,noatime                                    0 0
@@ -110,6 +111,14 @@ EOF
       "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
       $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
+  # Pre-create the docker group with GID 5995 to ensure a stable GID across all runner images.
+  # We fail the image build if GID 5995 is already taken to avoid silent runtime mismatches.
+  groupadd -g 5995 docker || true
+  if [[ "$(getent group docker | cut -d: -f3)" != "5995" ]]; then
+    echo "ERROR: Failed to allocate GID 5995 to docker group."
+    exit 1
+  fi
+
   apt-get -y update
   apt-get -y install docker-ce docker-ce-cli containerd.io
 
@@ -124,6 +133,9 @@ EOF
   # Disable the Docker service, as the startup script has to mount /var/lib/docker first.
   systemctl disable docker
   systemctl stop docker
+
+  # Add buildkite-agent to the docker group to grant it permissions to the Docker socket
+  usermod -aG docker buildkite-agent
 }
 
 ## Add our minimum uptime enforcer.

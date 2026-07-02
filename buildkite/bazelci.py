@@ -2343,13 +2343,16 @@ def kythe_build_flags():
 
 def calculate_prep_duration():
     try:
-        CHECKOUT_END_TIME = float(os.getenv("CHECKOUT_END_TIME")) / 1000.0
-        os.environ["PREP_DURATION_S"] = str(time.time() - CHECKOUT_END_TIME)
+        CHECKOUT_END_TIME_S = float(os.getenv("CHECKOUT_END_TIME")) / 1000.0
+        os.environ["PREP_DURATION_S"] = str(time.time() - CHECKOUT_END_TIME_S)
         eprint(f"Prep duration: {os.getenv('PREP_DURATION_S')}")
     except (ValueError, TypeError):
-        pass
+        eprint("Warning: CHECKOUT_END_TIME is missing or invalid; skipping prep duration calculation.")
 
 def execute_bazel_build(bazel_version, bazel_binary, platform, flags, targets, bep_file):
+    # The start of the build stage marks the end of the preparation stage; calculate prep duration here.
+    calculate_prep_duration()
+
     print_collapsed_group(":bazel: Computing flags for build step")
     calculate_prep_duration()
     aggregated_flags = compute_flags(
@@ -2376,6 +2379,9 @@ def execute_bazel_build(bazel_version, bazel_binary, platform, flags, targets, b
 
 
 def execute_bazel_build_with_kythe(bazel_version, bazel_binary, platform, flags, targets, bep_file):
+    # The start of the build stage marks the end of the preparation stage; calculate prep duration here.
+    calculate_prep_duration()
+
     print_collapsed_group(":bazel: Computing flags for build step")
     calculate_prep_duration()
     aggregated_flags = compute_flags(
@@ -3078,6 +3084,7 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None, qu
         "plugins": {
             "docker#v3.8.0": {
                 "always-pull": True,
+                "additional-groups": ["5995"],
                 "environment": env,
                 "image": image,
                 "network": "host",
@@ -3300,16 +3307,20 @@ def create_initial_steps():
         return steps
 
     modified_files = get_modified_files(os.getenv("BUILDKITE_COMMIT"))
-    modified_config_files = [f for f in modified_files if ".bazelci" in f]
+    modified_config_files = [f for f in modified_files if is_config_file(f)]
     if modified_config_files:
         steps.append(
             {
-                "block": "Please check the changes to the following "
-                f"file(s) before unblocking the build: {' ,'.join(modified_config_files)}"
+                "block": "Please review changes to the following file(s) "
+                f"before unblocking the build: {' ,'.join(modified_config_files)}"
             }
         )
 
     return steps
+
+
+def is_config_file(path):
+    return ".bazelci" in path or path.endswith(".yml")
 
 
 def create_buildifier_step(buildifier_config):

@@ -39,7 +39,7 @@ resource "buildkite_pipeline" "bazel-remote-cache" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -120,7 +120,7 @@ resource "buildkite_pipeline" "bazel-bazel-examples" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -224,7 +224,7 @@ resource "buildkite_pipeline" "tulsi-bazel-darwin" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -275,7 +275,7 @@ resource "buildkite_pipeline" "bazel-watcher" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -328,7 +328,7 @@ resource "buildkite_pipeline" "bazel-codelabs" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -379,7 +379,7 @@ resource "buildkite_pipeline" "bazel-gazelle" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -463,7 +463,7 @@ resource "buildkite_pipeline" "bazel-bench" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -515,7 +515,7 @@ resource "buildkite_pipeline" "bazel-central-registry" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = true
     skip_builds_for_existing_commits              = true
     skip_pull_request_builds_for_existing_commits = true
@@ -597,7 +597,7 @@ resource "buildkite_pipeline" "bazel-platforms-bazel" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -648,7 +648,7 @@ resource "buildkite_pipeline" "bazel-worker-api" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = true
     skip_builds_for_existing_commits              = true
     skip_pull_request_builds_for_existing_commits = true
@@ -728,7 +728,7 @@ resource "buildkite_pipeline" "bazel-skylib" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -812,7 +812,7 @@ resource "buildkite_pipeline" "bazel-arm64" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -960,7 +960,7 @@ resource "buildkite_pipeline" "bazel-bazel" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1011,7 +1011,7 @@ resource "buildkite_pipeline" "bazelisk" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1130,7 +1130,7 @@ resource "buildkite_pipeline" "bazel-bazel-github-presubmit" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = true
     skip_builds_for_existing_commits              = true
     skip_pull_request_builds_for_existing_commits = true

@@ -41,7 +41,7 @@ resource "buildkite_pipeline" "bcsgh-utilities" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -92,7 +92,7 @@ resource "buildkite_pipeline" "bcsgh-tbd" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -143,7 +143,7 @@ resource "buildkite_pipeline" "bcsgh-stl-to-ps" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -194,7 +194,7 @@ resource "buildkite_pipeline" "bcsgh-tbd-http" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -234,7 +234,7 @@ resource "buildkite_pipeline" "bcsgh-bazel-rules" {
     build_pull_request_forks                      = false
     prefix_pull_request_fork_branch_names         = true
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
   }
   branch_configuration = null
   cluster_id           = null

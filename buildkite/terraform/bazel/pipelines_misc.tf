@@ -174,7 +174,7 @@ resource "buildkite_pipeline" "cartographer" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -226,7 +226,7 @@ resource "buildkite_pipeline" "mobile-devx-tools" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -267,7 +267,7 @@ resource "buildkite_pipeline" "buildfarm-admin-farmer" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -319,7 +319,7 @@ resource "buildkite_pipeline" "re2" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -370,7 +370,7 @@ resource "buildkite_pipeline" "buildfarm-farmer" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = true
     skip_pull_request_builds_for_existing_commits = true
@@ -421,7 +421,7 @@ resource "buildkite_pipeline" "grpc-ecosystem-grpc-gateway" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -473,7 +473,7 @@ resource "buildkite_pipeline" "distributed-point-functions" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -638,7 +638,7 @@ resource "buildkite_pipeline" "kythe" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -688,7 +688,7 @@ resource "buildkite_pipeline" "continuous-integration" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -739,7 +739,7 @@ resource "buildkite_pipeline" "starlark" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -842,7 +842,7 @@ resource "buildkite_pipeline" "btwiuse-k0s" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -946,7 +946,7 @@ resource "buildkite_pipeline" "grpc-grpc" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -996,7 +996,7 @@ resource "buildkite_pipeline" "tools-android" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1053,7 +1053,7 @@ resource "buildkite_pipeline" "bcr-presubmit" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = true
     skip_builds_for_existing_commits              = true
     skip_pull_request_builds_for_existing_commits = false
@@ -1218,7 +1218,7 @@ resource "buildkite_pipeline" "stardoc" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1317,7 +1317,7 @@ resource "buildkite_pipeline" "bzlmod-migration-tool" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1367,7 +1367,7 @@ resource "buildkite_pipeline" "protobuf" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1419,7 +1419,7 @@ resource "buildkite_pipeline" "subpar" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1470,7 +1470,7 @@ resource "buildkite_pipeline" "clion-plugin" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1521,7 +1521,7 @@ resource "buildkite_pipeline" "sandboxed-api" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1632,7 +1632,7 @@ resource "buildkite_pipeline" "crubit" {
     publish_commit_status                         = false
     publish_commit_status_per_step                = false
     separate_pull_request_statuses                = true
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
@@ -1683,7 +1683,7 @@ resource "buildkite_pipeline" "llvm-project-redist" {
     publish_commit_status                         = true
     publish_commit_status_per_step                = true
     separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = false
+    publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = false
     skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = true
