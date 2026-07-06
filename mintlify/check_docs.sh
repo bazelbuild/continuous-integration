@@ -5,9 +5,7 @@ set -euo pipefail
 
 source "$(dirname "$0")/download_json.sh"
 
-echo "--- Updating Mintlify CLI"
-mint version
-mint update
+echo "--- Checking Mintlify CLI"
 mint version
 
 if [[ "$(git config --get remote.origin.url)" == */bazel.git ]]; then

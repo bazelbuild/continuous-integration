@@ -51,6 +51,7 @@ WORKDIR /usr/local/lib/mintlify
 COPY package.json package-lock.json ./
 RUN npm ci && npm cache clean --force
 ENV PATH="/usr/local/lib/mintlify/node_modules/.bin:${PATH}"
+RUN mint update
 
 WORKDIR /
 
