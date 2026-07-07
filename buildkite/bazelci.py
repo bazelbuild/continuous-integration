@@ -3038,6 +3038,11 @@ def create_step(
         step["retry"]["automatic"].append({"exit_status": 128, "limit": 1})
         step["retry"]["automatic"].append({"exit_status": 1, "limit": 1})
 
+    # Automatically retry on Windows platforms to work around flaky failures.
+    # https://github.com/bazelbuild/continuous-integration/issues/2711
+    if platform == "windows" or platform == "windows_arm64":
+        step["retry"]["automatic"].append({"exit_status": 1, "limit": 1})
+
     if concurrency and concurrency_group:
         step["concurrency"] = concurrency
         step["concurrency_group"] = concurrency_group
@@ -3062,7 +3067,6 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None, qu
         "plugins": {
             "docker#v3.8.0": {
                 "always-pull": True,
-                "additional-groups": ["5995"],
                 "environment": env,
                 "image": image,
                 "network": "host",
