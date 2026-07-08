@@ -29,7 +29,7 @@ class TestTarget:
     shard_durations: List[float] = dataclasses.field(default_factory=list)
 
 # --- BigQuery Configuration constants ---
-PROJECT_ID = "bazel-public"
+PROJECT_ID = "bazel-untrusted"
 DATASET_ID = "bazel_ci_metrics"
 TABLE_ID = "ci_builds"
 

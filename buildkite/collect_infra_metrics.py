@@ -10,7 +10,7 @@ from bazelci import BuildkiteClient
 
 # --- Configuration ---
 ORGs = ["bazel-testing", "bazel", "bazel-trusted"]
-PROJECT_ID = "bazel-public"
+PROJECT_ID = "bazel-untrusted"
 DATASET_ID = "bazel_ci_metrics"
 TABLE_ID = "infra_stats"
 

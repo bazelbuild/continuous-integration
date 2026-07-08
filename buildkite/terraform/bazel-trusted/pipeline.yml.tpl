@@ -1,8 +1,11 @@
----%{ if length(envs) > 0 }
-env:%{ for key, value in envs }
-  ${key}: "${value}"%{ endfor ~}
+---
+env:
+  GIT_HTTP_LOW_SPEED_LIMIT: "102400"
+  GIT_HTTP_LOW_SPEED_TIME: "180"
+%{ for key, value in envs ~}
+  ${key}: "${value}"
+%{ endfor ~}
 
-%{ endif }
 steps:
   - command: |-%{ for command in steps.commands }
       ${command}%{ endfor }%{ if try(steps.retry, false) }
