@@ -16,7 +16,7 @@ jobs:
         if: env.RULES_VERSION == ''
         run: |
           echo "RULES_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-          echo "version is: ${{ env.RULES_VERSION }}"
+          echo "version is: ${GITHUB_REF#refs/tags/}"
       - name: Create GitHub release
         id: release
         uses: actions/create-release@v1
@@ -37,8 +37,12 @@ jobs:
         fetch-depth: 1
     - name: Build release asset
       shell: bash
+      env:
+        # go/github-security: Pass job outputs via env vars, not inline ${{ }},
+        # to prevent shell metacharacter evaluation (script injection).
+        RULES_VER: ${{ needs.create-release.outputs.rules_version }}
       run: |
-        staging="bazel_ci_${{ needs.create-release.outputs.rules_version }}"
+        staging="bazel_ci_${RULES_VER}"
         cp -r rules "$staging"
         tar czf "$staging.tar.gz" "$staging"
         echo "ASSET=$staging.tar.gz" >> $GITHUB_ENV

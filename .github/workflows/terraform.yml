@@ -10,7 +10,6 @@ on:
 # go/github-security: Explicitly set minimum permissions
 permissions:
   contents: read      # Required to check out the code
-  id-token: write      # Required for Workload Identity Federation (WIF)
   pull-requests: write # Required to post plan output as a comment
 
 jobs:
@@ -34,9 +33,14 @@ jobs:
     - name: Extract Orgs
       id: process-orgs
       shell: bash
+      env:
+        # go/github-security: Pass action outputs via env vars, not inline ${{ }},
+        # to prevent shell metacharacter evaluation (script injection).
+        ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+        ALL_DELETED_FILES: ${{ steps.changed-files.outputs.deleted_files }}
       run: |
-        CHANGED="${{ steps.changed-files.outputs.all_changed_files }}"
-        DELETED="${{ steps.changed-files.outputs.deleted_files }}"
+        CHANGED="$ALL_CHANGED_FILES"
+        DELETED="$ALL_DELETED_FILES"
         
         if [ -z "$CHANGED" ] && [ -z "$DELETED" ]; then
           ORGS="[]"
@@ -54,9 +58,14 @@ jobs:
   # Job 2: Terraform Execution
   terraform:
     needs: detect-changes
-    # Run only if we have changed orgs AND (it's a push to master OR PR from trusted users)
     if: needs.detect-changes.outputs.orgs != '[]'
     runs-on: ubuntu-latest
+    # go/github-security: Scope id-token to this job only. The detect-changes job
+    # processes untrusted PR filenames; confining OIDC token access here prevents
+    # credential exfiltration via script injection in that job.
+    permissions:
+      contents: read
+      id-token: write
 
     # Lock per organization. Cancels old runs on PRs (saves time), but queues pushes (safe apply).
     concurrency:
