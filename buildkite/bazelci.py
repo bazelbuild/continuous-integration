@@ -2172,7 +2172,7 @@ def common_build_flags(bep_file, platform):
 
     if bep_file:
         flags += [
-            "--experimental_build_event_json_file_path_conversion=false",
+            "--build_event_json_file_path_conversion=false",
             "--build_event_json_file=" + bep_file,
         ]
 
