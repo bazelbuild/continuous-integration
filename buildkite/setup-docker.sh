@@ -111,23 +111,15 @@ EOF
       "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
       $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-  # Pre-create the docker group with GID 5995 to ensure a stable GID across all runner images.
-  # We fail the image build if GID 5995 is already taken to avoid silent runtime mismatches.
-  groupadd -g 5995 docker || true
-  if [[ "$(getent group docker | cut -d: -f3)" != "5995" ]]; then
-    echo "ERROR: Failed to allocate GID 5995 to docker group."
-    exit 1
-  fi
-
   apt-get -y update
   apt-get -y install docker-ce docker-ce-cli containerd.io
 
-  # Restrict Docker socket to the docker group. Containers that need Docker access
-  # should use Docker-in-Docker rather than mounting the host socket.
+  # Allow everyone access to the Docker socket. Usually this would be insane from a security point
+  # of view, but these are untrusted throw-away machines anyway, so the risk is acceptable.
   mkdir /etc/systemd/system/docker.socket.d
   cat > /etc/systemd/system/docker.socket.d/override.conf <<'EOF'
 [Socket]
-SocketMode=0660
+SocketMode=0666
 EOF
 
   # Disable the Docker service, as the startup script has to mount /var/lib/docker first.

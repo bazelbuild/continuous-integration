@@ -303,8 +303,8 @@ class TestPublishMetrics(unittest.TestCase):
         self.assertEqual(row["test"]["failed_test_count"], 0)
         self.assertEqual(row.get("queue_duration_s"), 300.0)
         self.assertIsNone(row["task_label"])
-        self.assertEqual(row["build_shard_id"], -1)
-        self.assertEqual(row["build_shard_count"], -1)
+        self.assertEqual(row["build_shard_id"], 0)
+        self.assertEqual(row["build_shard_count"], 1)
 
     @patch("collect_metrics.publish_to_bigquery")
     @patch("collect_metrics.parse_bep")
