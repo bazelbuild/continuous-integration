@@ -555,7 +555,7 @@ def main(argv=None):
             with open(get_presubmit_yml(module_name, module_version), "rt") as f:
                 presubmit_content = f.read()
 
-            if "shell_commands" in presubmit_content:
+            if bazelci.contains_user_commands(presubmit_content):
                 risky_presubmit_yml_files.add(f"modules/{module_name}/{module_version}/presubmit.yml")
 
             configs = get_anonymous_module_task_config(module_name, module_version)
