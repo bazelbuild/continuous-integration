@@ -185,7 +185,7 @@ resource "buildkite_pipeline" "rules-apple-darwin" {
     build_tags                                    = false
     build_pull_request_forks                      = true
     build_pull_request_ready_for_review           = false
-    build_pull_request_labels_changed             = false
+    build_pull_request_labels_changed             = true
     build_pull_request_base_branch_changed        = false
     prefix_pull_request_fork_branch_names         = true
     filter_enabled                                = false
@@ -1320,7 +1320,7 @@ resource "buildkite_pipeline" "rules-swift-swift" {
     build_tags                                    = false
     build_pull_request_forks                      = true
     build_pull_request_ready_for_review           = false
-    build_pull_request_labels_changed             = false
+    build_pull_request_labels_changed             = true
     build_pull_request_base_branch_changed        = false
     prefix_pull_request_fork_branch_names         = true
     filter_enabled                                = false
