@@ -560,6 +560,7 @@ DISABLE_BAZEL_DIFF_IF_MODIFIED = (
 )
 
 COMMIT_RE = re.compile(r"[0-9a-z]{40}")
+RELEASE_BRANCH_RE = re.compile(r"\brelease-(\d+\.\d+\.\d+(rc\d+)?)\b")
 
 CONFIG_FILE_EXTENSIONS = {".yml", ".yaml"}
 
@@ -2692,11 +2693,25 @@ def upload_shard_distribution(sorted_test_targets, shard_count):
 
 def fetch_base_branch():
     """Fetch the base branch for the current build, set FETCH_HEAD for git."""
+    execute_command(["git", "fetch", "origin", get_base_branch()])
+
+
+def get_base_branch():
     base_branch = os.getenv("BUILDKITE_PULL_REQUEST_BASE_BRANCH", "")
+    if base_branch:
+        return base_branch
+
+    # Check BUILDKITE_BRANCH to see whether this is a cherrypick into a release branch.
+    # Thanks to the merge queue the name might be more complex, e.g.
+    # gh-readonly-queue/release-9.2.0/pr-30167-32f2fbec67b11bcd5a247b6e9a4e80f553e9ed4d
+    # Ignore values with colons since they refer to branches in third party forks.
+    branch = os.getenv("BUILDKITE_BRANCH", "")
+    m = RELEASE_BRANCH_RE.search(branch)
+    if m and ":" not in branch:
+        return m.group(1)
+
     # Fallback to the default branch for this repository if BUILDKITE_PULL_REQUEST_BASE_BRANCH is not set.
-    if not base_branch:
-        base_branch = os.getenv("BUILDKITE_PIPELINE_DEFAULT_BRANCH", "")
-    execute_command(["git", "fetch", "origin", base_branch])
+    return os.getenv("BUILDKITE_PIPELINE_DEFAULT_BRANCH", "")
 
 
 def resolve_diffbase(diffbase):
