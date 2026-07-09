@@ -564,6 +564,8 @@ RELEASE_BRANCH_RE = re.compile(r"\brelease-(\d+\.\d+\.\d+(rc\d+)?)\b")
 
 CONFIG_FILE_EXTENSIONS = {".yml", ".yaml"}
 
+DEFAULT_PRESUBMIT_CONFIG_PATH = ".bazelci/presubmit.yml"
+
 KYTHE_DIR = "/usr/local/kythe"
 
 INDEX_UPLOAD_POLICY_ALWAYS = "Always"
@@ -1170,7 +1172,7 @@ def load_config(http_url, file_config, allow_imports=True, bazel_version=None):
     if http_url:
         config = load_remote_yaml_file(http_url)
     else:
-        file_config = file_config or ".bazelci/presubmit.yml"
+        file_config = file_config or DEFAULT_PRESUBMIT_CONFIG_PATH
         with open(file_config, "r") as fd:
             config = yaml.safe_load(fd)
 
@@ -3307,10 +3309,11 @@ def create_initial_steps():
     modified_config_files = [f for f in modified_files if is_config_file(f)]
 
     if os.getenv("BUILDKITE_PIPELINE_SLUG", "") == "bazel-central-registry":
-        # Blocking all yml changes in BCR PRs would be too annoying,
-        # so we only block those with shell/batch commands.
-        # This is the same behavior as in bcr_presubmit.py.
-        modified_config_files = [p for p in modified_config_files if is_risky_bcr_config(p)]
+        # BCR: Only block changes to BCR's own presubmit.yml file.
+        # yml files in modules are checked by bcr_presubmit.py.
+        modified_config_files = set([DEFAULT_PRESUBMIT_CONFIG_PATH]).intersection(
+            modified_config_files
+        )
 
     if modified_config_files:
         steps.append(
@@ -3325,15 +3328,6 @@ def create_initial_steps():
 
 def is_config_file(path):
     return ".bazelci" in path or path.endswith(".yml")
-
-
-def is_risky_bcr_config(path):
-    with open(path, "rt") as f:
-        return contains_user_commands(f.read())
-
-
-def contains_user_commands(yml_content):
-    return  "shell_commands" in yml_content or "batch_commands" in yml_content
 
 
 def create_buildifier_step(buildifier_config):
