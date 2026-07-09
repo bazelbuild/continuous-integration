@@ -23,6 +23,7 @@ import bazelci
 import shlex
 import tempfile
 import unittest
+from unittest import mock
 import yaml
 
 
@@ -523,6 +524,38 @@ class ShellQuoting(unittest.TestCase):
         self.assertIn("--git_commit=$(touch %s)" % sentinel, tokens)
         self.assertNotIn("touch", tokens)
         self.assertFalse(os.path.exists(sentinel))
+
+
+class InitialSteps(unittest.TestCase):
+    def test_blocks_config_changes_without_presubmit_auto_run_label(self):
+        with mock.patch.dict(
+            os.environ,
+            {
+                "BUILDKITE_BRANCH": "feature",
+                "BUILDKITE_PIPELINE_DEFAULT_BRANCH": "main",
+                "BUILDKITE_PULL_REQUEST_LABELS": "",
+            },
+        ), mock.patch.object(
+            bazelci, "get_modified_files", return_value=[".bazelci/presubmit.yml"]
+        ):
+            steps = bazelci.create_initial_steps()
+
+        self.assertEqual(len(steps), 1)
+        self.assertIn("block", steps[0])
+
+    def test_presubmit_auto_run_label_skips_config_change_block(self):
+        with mock.patch.dict(
+            os.environ,
+            {
+                "BUILDKITE_BRANCH": "feature",
+                "BUILDKITE_PIPELINE_DEFAULT_BRANCH": "main",
+                "BUILDKITE_PULL_REQUEST_LABELS": "foo,presubmit-auto-run,bar",
+            },
+        ), mock.patch.object(bazelci, "get_modified_files") as get_modified_files:
+            steps = bazelci.create_initial_steps()
+
+        self.assertEqual(steps, [])
+        get_modified_files.assert_not_called()
 
 
 if __name__ == "__main__":
