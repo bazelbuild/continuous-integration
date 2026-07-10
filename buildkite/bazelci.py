@@ -560,7 +560,7 @@ DISABLE_BAZEL_DIFF_IF_MODIFIED = (
 )
 
 COMMIT_RE = re.compile(r"[0-9a-z]{40}")
-RELEASE_BRANCH_RE = re.compile(r"\brelease-(\d+\.\d+\.\d+(rc\d+)?)\b")
+RELEASE_BRANCH_RE = re.compile(r"\b(release-\d+\.\d+\.\d+(rc\d+)?)\b")
 
 CONFIG_FILE_EXTENSIONS = {".yml", ".yaml"}
 
