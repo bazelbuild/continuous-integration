@@ -48,6 +48,7 @@ Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
 ## Disable Windows Defender.
 Write-Host "Disabling Windows Defender..."
 Set-MpPreference -DisableRealtimeMonitoring $true
+Set-MpPreference -DisableBehaviorMonitoring $true
 Uninstall-WindowsFeature -Name "Windows-Defender"
 
 ## Set system timezone.
