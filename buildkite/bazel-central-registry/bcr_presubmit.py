@@ -26,7 +26,6 @@ import pathlib
 import re
 import sys
 import subprocess
-import shlex
 import shutil
 import time
 import yaml
@@ -173,14 +172,14 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
         if bazel_version and not overwrite_bazel_version:
             label = f":bazel:{bazel_version} - {label}"
         command = (
-            "%s bcr_presubmit.py %s --module_name=%s --module_version=%s --task=%s %s"
+            '%s bcr_presubmit.py %s --module_name="%s" --module_version="%s" --task=%s %s'
             % (
                 bazelci.PLATFORMS[platform_name]["python"],
                 "test_module_runner" if is_test_module else "anonymous_module_runner",
-                shlex.quote(module_name),
-                shlex.quote(module_version),
-                shlex.quote(task_id),
-                ("--overwrite_bazel_version=%s" % shlex.quote(overwrite_bazel_version)) if overwrite_bazel_version else ""
+                module_name,
+                module_version,
+                task_id,
+                "--overwrite_bazel_version=%s" % overwrite_bazel_version if overwrite_bazel_version else ""
             )
         )
         commands = [bazelci.fetch_ci_scripts_command(), fetch_bcr_presubmit_py_command(), command]
