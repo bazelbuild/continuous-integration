@@ -560,7 +560,7 @@ DISABLE_BAZEL_DIFF_IF_MODIFIED = (
 )
 
 COMMIT_RE = re.compile(r"[0-9a-z]{40}")
-MERGE_QUEUE_BRANCH_RE = re.compile(r"\bgh-readonly-queue\/(release-\d+\.\d+\.\d+(rc\d+)?)\/")
+MERGE_QUEUE_BRANCH_RE = re.compile(r"gh-readonly-queue\/(release-\d+\.\d+\.\d+(rc\d+)?)\/")
 
 CONFIG_FILE_EXTENSIONS = {".yml", ".yaml"}
 
