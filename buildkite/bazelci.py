@@ -560,7 +560,7 @@ DISABLE_BAZEL_DIFF_IF_MODIFIED = (
 )
 
 COMMIT_RE = re.compile(r"[0-9a-z]{40}")
-RELEASE_BRANCH_RE = re.compile(r"\b(release-\d+\.\d+\.\d+(-pre\.\d+\.\d+)?(rc\d+)?)\b")
+MERGE_QUEUE_BRANCH_RE = re.compile(r"gh-readonly-queue\/(release-\d+\.\d+\.\d+(rc\d+)?)\/")
 
 CONFIG_FILE_EXTENSIONS = {".yml", ".yaml"}
 
@@ -2703,12 +2703,13 @@ def get_base_branch():
     if base_branch:
         return base_branch
 
-    # Check BUILDKITE_BRANCH to see whether this is a cherrypick into a release branch.
-    # Thanks to the merge queue the name might be more complex, e.g.
+    # Check BUILDKITE_BRANCH to see whether this is a merge queue branch. For example,
+    # for the merge queue branch
     # gh-readonly-queue/release-9.2.0/pr-30167-32f2fbec67b11bcd5a247b6e9a4e80f553e9ed4d
+    # the base branch should be release-9.2.0
     # Ignore values with colons since they refer to branches in third party forks.
     branch = os.getenv("BUILDKITE_BRANCH", "")
-    m = RELEASE_BRANCH_RE.search(branch)
+    m = MERGE_QUEUE_BRANCH_RE.search(branch)
     if m and ":" not in branch:
         return m.group(1)
 
