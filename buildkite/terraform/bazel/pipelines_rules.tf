@@ -378,7 +378,7 @@ resource "buildkite_pipeline" "rules-kotlin-kotlin" {
   cancel_intermediate_builds = false
   skip_intermediate_builds   = false
   tags                       = []
-  branch_configuration       = null
+  branch_configuration       = "master"
   cluster_id                 = null
   color                      = null
   default_team_id            = null
@@ -386,7 +386,7 @@ resource "buildkite_pipeline" "rules-kotlin-kotlin" {
   pipeline_template_id       = null
   provider_settings = {
     trigger_mode                                  = "code"
-    build_branches                                = false
+    build_branches                                = true
     build_pull_requests                           = true
     build_tags                                    = false
     build_pull_request_forks                      = true
