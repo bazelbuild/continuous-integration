@@ -566,6 +566,8 @@ CONFIG_FILE_EXTENSIONS = {".yml", ".yaml"}
 
 DEFAULT_PRESUBMIT_CONFIG_PATH = ".bazelci/presubmit.yml"
 
+PRESUBMIT_AUTO_RUN_LABEL = "presubmit-auto-run"
+
 KYTHE_DIR = "/usr/local/kythe"
 
 INDEX_UPLOAD_POLICY_ALWAYS = "Always"
@@ -3303,7 +3305,11 @@ def print_project_pipeline(
 def create_initial_steps():
     steps = []
     default_branch = os.getenv("BUILDKITE_PIPELINE_DEFAULT_BRANCH")
-    if THIS_IS_TRUSTED or os.getenv("BUILDKITE_BRANCH") == default_branch:
+    if (
+        THIS_IS_TRUSTED
+        or os.getenv("BUILDKITE_BRANCH") == default_branch
+        or has_presubmit_auto_run_label()
+    ):
         return steps
 
     modified_files = get_modified_files(os.getenv("BUILDKITE_COMMIT"))
@@ -3325,6 +3331,10 @@ def create_initial_steps():
         )
 
     return steps
+
+
+def has_presubmit_auto_run_label():
+    return PRESUBMIT_AUTO_RUN_LABEL in os.getenv("BUILDKITE_PULL_REQUEST_LABELS", "").split(",")
 
 
 def is_config_file(path):
