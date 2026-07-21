@@ -6,6 +6,12 @@ ENV LANG "C.UTF-8"
 ENV LANGUAGE "C.UTF-8"
 ENV LC_ALL "C.UTF-8"
 
+# Update repository URLs to archive.debian.org for EOL Debian 10 buster and disable expiration checks
+RUN sed -i 's|http://deb.debian.org/debian|http://archive.debian.org/debian|g' /etc/apt/sources.list && \
+    sed -i 's|http://security.debian.org/debian-security|http://archive.debian.org/debian-security|g' /etc/apt/sources.list && \
+    sed -i '/buster-updates/d' /etc/apt/sources.list && \
+    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
+
 ### Install packages required by Bazel and its tests
 RUN apt-get -y update && \
     apt-get -y install --no-install-recommends \
