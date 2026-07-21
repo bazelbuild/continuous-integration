@@ -560,8 +560,13 @@ DISABLE_BAZEL_DIFF_IF_MODIFIED = (
 )
 
 COMMIT_RE = re.compile(r"[0-9a-z]{40}")
+MERGE_QUEUE_BRANCH_RE = re.compile(r"gh-readonly-queue\/(release-\d+\.\d+\.\d+(rc\d+)?)\/")
 
 CONFIG_FILE_EXTENSIONS = {".yml", ".yaml"}
+
+DEFAULT_PRESUBMIT_CONFIG_PATH = ".bazelci/presubmit.yml"
+
+PRESUBMIT_AUTO_RUN_LABEL = "presubmit-auto-run"
 
 KYTHE_DIR = "/usr/local/kythe"
 
@@ -1169,7 +1174,7 @@ def load_config(http_url, file_config, allow_imports=True, bazel_version=None):
     if http_url:
         config = load_remote_yaml_file(http_url)
     else:
-        file_config = file_config or ".bazelci/presubmit.yml"
+        file_config = file_config or DEFAULT_PRESUBMIT_CONFIG_PATH
         with open(file_config, "r") as fd:
             config = yaml.safe_load(fd)
 
@@ -2714,11 +2719,26 @@ def upload_shard_distribution(sorted_test_targets, shard_count):
 
 def fetch_base_branch():
     """Fetch the base branch for the current build, set FETCH_HEAD for git."""
+    execute_command(["git", "fetch", "origin", get_base_branch()])
+
+
+def get_base_branch():
     base_branch = os.getenv("BUILDKITE_PULL_REQUEST_BASE_BRANCH", "")
+    if base_branch:
+        return base_branch
+
+    # Check BUILDKITE_BRANCH to see whether this is a merge queue branch. For example,
+    # for the merge queue branch
+    # gh-readonly-queue/release-9.2.0/pr-30167-32f2fbec67b11bcd5a247b6e9a4e80f553e9ed4d
+    # the base branch should be release-9.2.0
+    # Ignore values with colons since they refer to branches in third party forks.
+    branch = os.getenv("BUILDKITE_BRANCH", "")
+    m = MERGE_QUEUE_BRANCH_RE.search(branch)
+    if m and ":" not in branch:
+        return m.group(1)
+
     # Fallback to the default branch for this repository if BUILDKITE_PULL_REQUEST_BASE_BRANCH is not set.
-    if not base_branch:
-        base_branch = os.getenv("BUILDKITE_PIPELINE_DEFAULT_BRANCH", "")
-    execute_command(["git", "fetch", "origin", base_branch])
+    return os.getenv("BUILDKITE_PIPELINE_DEFAULT_BRANCH", "")
 
 
 def resolve_diffbase(diffbase):
@@ -3307,11 +3327,23 @@ def print_project_pipeline(
 def create_initial_steps():
     steps = []
     default_branch = os.getenv("BUILDKITE_PIPELINE_DEFAULT_BRANCH")
-    if THIS_IS_TRUSTED or os.getenv("BUILDKITE_BRANCH") == default_branch:
+    if (
+        THIS_IS_TRUSTED
+        or os.getenv("BUILDKITE_BRANCH") == default_branch
+        or has_presubmit_auto_run_label()
+    ):
         return steps
 
     modified_files = get_modified_files(os.getenv("BUILDKITE_COMMIT"))
     modified_config_files = [f for f in modified_files if is_config_file(f)]
+
+    if os.getenv("BUILDKITE_PIPELINE_SLUG", "") == "bazel-central-registry":
+        # BCR: Only block changes to BCR's own presubmit.yml file.
+        # yml files in modules are checked by bcr_presubmit.py.
+        modified_config_files = set([DEFAULT_PRESUBMIT_CONFIG_PATH]).intersection(
+            modified_config_files
+        )
+
     if modified_config_files:
         steps.append(
             {
@@ -3321,6 +3353,10 @@ def create_initial_steps():
         )
 
     return steps
+
+
+def has_presubmit_auto_run_label():
+    return PRESUBMIT_AUTO_RUN_LABEL in os.getenv("BUILDKITE_PULL_REQUEST_LABELS", "").split(",")
 
 
 def is_config_file(path):
