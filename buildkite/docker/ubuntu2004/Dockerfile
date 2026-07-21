@@ -79,7 +79,7 @@ FROM ubuntu2004-bazel-nojdk AS ubuntu2004-nojdk
 ### https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
-    apt-get update -y && apt-get install google-cloud-sdk -y && \
+    apt-get update -y && apt-get install google-cloud-sdk=466.0.0-0 google-cloud-cli=466.0.0-0 -y && \
     rm -rf /var/lib/apt/lists/*
 
 ### Docker (for legacy rbe_autoconfig)
@@ -122,10 +122,10 @@ ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-${TARGETARCH}
 FROM ubuntu2004-nojdk AS ubuntu2004
 
 RUN apt-get -y update && \
-    apt-get -y install openjdk-21-jdk-headless && \
+    apt-get -y install openjdk-17-jdk-headless && \
     rm -rf /var/lib/apt/lists/*
 
-ENV JAVA_HOME /usr/lib/jvm/java-21-openjdk-${TARGETARCH}
+ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-${TARGETARCH}
 
 FROM ubuntu2004 AS ubuntu2004-kythe
 
