@@ -78,7 +78,7 @@ FROM ubuntu2004-bazel-nojdk AS ubuntu2004-nojdk
 ### https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
-    apt-get update -y && apt-get install google-cloud-sdk=466.0.0-0 google-cloud-cli=466.0.0-0 -y && \
+    apt-get update -y && apt-get install google-cloud-sdk=466.0.0-0 -y && \
     rm -rf /var/lib/apt/lists/*
 
 ### Docker (for legacy rbe_autoconfig)
