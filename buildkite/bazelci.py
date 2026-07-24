@@ -561,6 +561,7 @@ DISABLE_BAZEL_DIFF_IF_MODIFIED = (
 
 COMMIT_RE = re.compile(r"[0-9a-z]{40}")
 MERGE_QUEUE_BRANCH_RE = re.compile(r"gh-readonly-queue\/(release-\d+\.\d+\.\d+(rc\d+)?)\/")
+RELEASE_BRANCH_RE = re.compile(r"release-\d+\.\d+\.\d+(rc\d+)?")
 
 CONFIG_FILE_EXTENSIONS = {".yml", ".yaml"}
 
@@ -3308,6 +3309,7 @@ def create_initial_steps():
     if (
         THIS_IS_TRUSTED
         or os.getenv("BUILDKITE_BRANCH") == default_branch
+        or RELEASE_BRANCH_RE.fullmatch(os.getenv("BUILDKITE_BRANCH"))
         or has_presubmit_auto_run_label()
     ):
         return steps
