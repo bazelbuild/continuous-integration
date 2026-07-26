@@ -24,6 +24,7 @@ import argparse
 import os
 import pathlib
 import re
+import shlex
 import sys
 import subprocess
 import shutil
@@ -159,17 +160,27 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
         bazel_version = task_config.get("bazel", "")
         if bazel_version and not overwrite_bazel_version:
             label = f":bazel:{bazel_version} - {label}"
-        command = (
-            '%s bcr_presubmit.py %s --module_name="%s" --module_version="%s" --task=%s %s'
-            % (
-                bazelci.PLATFORMS[platform_name]["python"],
-                "test_module_runner" if is_test_module else "anonymous_module_runner",
-                module_name,
-                module_version,
-                task_id,
-                "--overwrite_bazel_version=%s" % overwrite_bazel_version if overwrite_bazel_version else ""
+        # module_name and module_version originate from attacker-controlled
+        # directory paths in the PR (modules/<name>/<version>/) and are only
+        # constrained by the "no slash" regex in get_target_modules(), so they
+        # may contain shell metacharacters such as ", $, `, ; and spaces. This
+        # command string is executed by the Buildkite step shell, so every
+        # interpolated value is quoted with shlex.quote to keep it a single
+        # literal argument and prevent command injection (CWE-78).
+        runner = "test_module_runner" if is_test_module else "anonymous_module_runner"
+        command_parts = [
+            bazelci.PLATFORMS[platform_name]["python"],
+            "bcr_presubmit.py",
+            runner,
+            "--module_name=%s" % shlex.quote(module_name),
+            "--module_version=%s" % shlex.quote(module_version),
+            "--task=%s" % shlex.quote(str(task_id)),
+        ]
+        if overwrite_bazel_version:
+            command_parts.append(
+                "--overwrite_bazel_version=%s" % shlex.quote(str(overwrite_bazel_version))
             )
-        )
+        command = " ".join(command_parts)
         commands = [bazelci.fetch_ci_scripts_command(), fetch_bcr_presubmit_py_command(), command]
         queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
         if CI_RESOURCE_PERCENTAGE == -1:
