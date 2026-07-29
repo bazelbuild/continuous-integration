@@ -78,7 +78,7 @@ steps:
       cp bazel-bin/src/bazel output/bazel
 
       rm -f MODULE.bazel.lock
-      output/bazel build --nobuild :bazel-srcs :bootstrap-jars :maven-srcs //src:derived_java_srcs
+      output/bazel mod deps --lockfile_mode=update
 
       output/bazel build \
           -c opt \
