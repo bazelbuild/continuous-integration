@@ -7,8 +7,6 @@ steps:
       docker#v3.8.0:
         always-pull: true
         environment:
-          - ANDROID_HOME
-          - ANDROID_NDK_HOME
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
         image: gcr.io/bazel-public/ubuntu2004-java11
         network: host
@@ -52,8 +50,6 @@ steps:
       docker#v3.8.0:
         always-pull: true
         environment:
-          - ANDROID_HOME
-          - ANDROID_NDK_HOME
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
         image: gcr.io/bazel-public/rockylinux8-releaser
         network: host
@@ -296,8 +292,6 @@ steps:
       docker#v3.8.0:
         always-pull: true
         environment:
-          - ANDROID_HOME
-          - ANDROID_NDK_HOME
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
         image: gcr.io/bazel-public/rockylinux8-java8
         network: host
@@ -446,8 +440,6 @@ steps:
       docker#v3.8.0:
         always-pull: true
         environment:
-          - ANDROID_HOME
-          - ANDROID_NDK_HOME
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
         image: gcr.io/bazel-public/ubuntu2004-java11
         network: host
