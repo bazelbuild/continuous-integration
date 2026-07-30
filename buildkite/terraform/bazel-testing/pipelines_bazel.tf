@@ -155,6 +155,30 @@ resource "buildkite_pipeline" "bazel-at-head-plus-downstream" {
 
 
 
+resource "buildkite_pipeline" "bazel-bazel-github-presubmit-tedx" {
+  name       = "Bazel :bazel: Github Presubmit"
+  repository = "https://github.com/bazelbuild/bazel.git"
+  steps = templatefile("pipeline.yml.tpl", {
+    envs = {}
+    steps = {
+      commands = [
+        "curl -sS \"https://raw.githubusercontent.com/ted-xie/continuous-integration/tedx-dev/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
+        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload'"
+      ]
+    }
+  })
+  default_branch             = "master"
+  allow_rebuilds             = true
+  branch_configuration       = "!*"
+  cancel_intermediate_builds = false
+  skip_intermediate_builds   = false
+  tags                       = []
+  provider_settings = {
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
+}
+
 resource "buildkite_pipeline" "bazel-bazel-github-presubmit" {
   name       = "Bazel :bazel: Github Presubmit"
   repository = "https://github.com/bazelbuild/bazel.git"
