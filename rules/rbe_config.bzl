@@ -103,6 +103,47 @@ def _generate_toolchains(repository_ctx, rbe_gen_path, bazel_version, bazel_path
     repository_ctx.extract(archive = output_tarball)
 
 
+def _resolve_container_digest(repository_ctx, container_image):
+    """Resolves a container image tag (e.g. :latest) to an immutable @sha256 digest via OCI manifest API."""
+    if "@sha256:" in container_image:
+        return container_image
+
+    parts = container_image.split(":")
+    if len(parts) != 2:
+        fail("rbe_config: Host mode requires container image '{}' to be a valid tag or @sha256 digest, but could not parse tag.".format(container_image))
+
+    image_name = parts[0]
+    tag = parts[1]
+    slash_idx = image_name.find("/")
+    if slash_idx == -1:
+        fail("rbe_config: Host mode requires container image '{}' to include registry and repository (e.g. gcr.io/repo/image:tag).".format(container_image))
+
+    registry = image_name[:slash_idx]
+    repo = image_name[slash_idx + 1:]
+    url = "https://{}/v2/{}/manifests/{}".format(registry, repo, tag)
+
+    res = repository_ctx.execute([
+        "curl", "-sI",
+        "-H", "Accept: application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json",
+        url,
+    ])
+    if res.return_code == 0:
+        for line in res.stdout.splitlines():
+            if line.lower().startswith("docker-content-digest:"):
+                digest = line.split(":", 1)[1].strip()
+                if digest.startswith("sha256:"):
+                    resolved = "{}@{}".format(image_name, digest)
+                    print("rbe_config: Resolved host container '{}' to digest '{}' via OCI API.".format(container_image, resolved))
+                    return resolved
+
+    fail("rbe_config: Failed to resolve '@sha256' digest for container image '{}' via OCI Manifest API ({}):\nStdout: {}\nStderr: {}".format(
+        container_image,
+        url,
+        res.stdout,
+        res.stderr,
+    ))
+
+
 # --- Private Repository Rule Entrypoint ---
 def _rbe_config_impl(repository_ctx):
     # 1. Resolve presets/custom image container and environment
@@ -117,7 +158,7 @@ def _rbe_config_impl(repository_ctx):
     host_container = repository_ctx.os.environ.get("RBE_CONFIG_CONTAINER")
     if host_container:
         exec_mode = "host"
-        container_image = host_container
+        container_image = _resolve_container_digest(repository_ctx, host_container)
         if preset_container and preset_container != host_container:
             print("rbe_config: RBE_CONFIG_CONTAINER ('{}') overrides requested preset container ('{}') in host mode.".format(host_container, preset_container))
     else:
