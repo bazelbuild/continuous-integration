@@ -601,6 +601,7 @@ _LOWERED_PRIORITY_PIPELINES = frozenset(
         "bazel/bazel-at-head-plus-downstream",
     ]
 )
+_SENSITIVE_ENV_VAR_SUBSTRINGS = ["SUDO", "PAT", "TOKEN", "CREDENTIAL", "PASSWORD", "SECRET", "KEY", "CONNECTION_STRING"]
 
 
 class BuildkiteException(Exception):
@@ -1830,7 +1831,15 @@ def print_bazel_version_info(bazel_binary, platform):
 def print_environment_variables_info():
     print_collapsed_group(":information_source: Environment Variables")
     for key, value in os.environ.items():
-        eprint("%s=(%s)" % (key, value))
+        eprint("%s=%s" % (key, maybe_redact_env_var(key, value)))
+
+
+def maybe_redact_env_var(name, actual_value):
+    for s in _SENSITIVE_ENV_VAR_SUBSTRINGS:
+        if s in name:
+            return "[redacted]"
+
+    return actual_value
 
 
 def upload_bazel_binary(platform):

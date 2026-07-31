@@ -1079,11 +1079,11 @@ resource "buildkite_pipeline" "apple-support-darwin" {
     }
   })
   allow_rebuilds                           = true
-  branch_configuration                     = "master bazel/*"
+  branch_configuration                     = "main bazel/*"
   cancel_intermediate_builds               = true
-  cancel_intermediate_builds_branch_filter = "!master !bazel/*"
+  cancel_intermediate_builds_branch_filter = "!main !bazel/*"
   skip_intermediate_builds                 = true
-  skip_intermediate_builds_branch_filter   = "!master !bazel/*"
+  skip_intermediate_builds_branch_filter   = "!main !bazel/*"
   tags                                     = []
   cluster_id                               = null
   color                                    = null
