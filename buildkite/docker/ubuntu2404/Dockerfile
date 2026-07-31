@@ -16,6 +16,7 @@ RUN apt-get -y update && \
     clang-tools \
     coreutils \
     curl \
+    docker.io \
     dnsutils \
     ed \
     expect \
