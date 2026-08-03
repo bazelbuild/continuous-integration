@@ -18,12 +18,15 @@ esac
 # See https://docs.docker.com/develop/develop-images/build_enhancements/ for details.
 export DOCKER_BUILDKIT=1
 
-# Check whether containerd image store is enabled.
-# We need it to make --load work with multi-platform images.
-# This seems to be the only way to make these images
-# available outside of the Docker cache other than
-# using a local registry.
-docker info -f '{{ .DriverStatus }}'
+# --load only keeps all platforms of a multi-platform build when Docker uses
+# the containerd image store. With the classic store it silently keeps just
+# the host arch, and the push then wipes the other platforms from the tag.
+# Refuse to build in that case.
+if ! docker info -f '{{ .DriverStatus }}' | grep -q 'io.containerd.snapshotter'; then
+    echo "ERROR: containerd image store not enabled, multi-platform builds would" >&2
+    echo "drop non-native platforms. See https://docs.docker.com/engine/storage/containerd/" >&2
+    exit 1
+fi
 
 # We need a new builder using the docker-container driver in order
 # to build multi-platform images.
