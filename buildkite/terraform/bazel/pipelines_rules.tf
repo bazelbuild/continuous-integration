@@ -167,11 +167,11 @@ resource "buildkite_pipeline" "rules-apple-darwin" {
     }
   })
   allow_rebuilds                           = true
-  branch_configuration                     = "master bazel/*"
+  branch_configuration                     = "main bazel/*"
   cancel_intermediate_builds               = true
-  cancel_intermediate_builds_branch_filter = "!master !bazel/*"
+  cancel_intermediate_builds_branch_filter = "!main !bazel/*"
   skip_intermediate_builds                 = true
-  skip_intermediate_builds_branch_filter   = "!master !bazel/*"
+  skip_intermediate_builds_branch_filter   = "!main !bazel/*"
   tags                                     = []
   cluster_id                               = null
   color                                    = null
@@ -1302,11 +1302,11 @@ resource "buildkite_pipeline" "rules-swift-swift" {
     }
   })
   allow_rebuilds                           = true
-  branch_configuration                     = "master bazel/*"
+  branch_configuration                     = "main bazel/*"
   cancel_intermediate_builds               = true
-  cancel_intermediate_builds_branch_filter = "!master !bazel/*"
+  cancel_intermediate_builds_branch_filter = "!main !bazel/*"
   skip_intermediate_builds                 = true
-  skip_intermediate_builds_branch_filter   = "!master !bazel/*"
+  skip_intermediate_builds_branch_filter   = "!main !bazel/*"
   tags                                     = []
   cluster_id                               = null
   color                                    = null

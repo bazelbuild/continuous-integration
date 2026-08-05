@@ -23,6 +23,7 @@ RUN apt-get -y update && \
     file \
     git \
     gnupg2 \
+    golang \
     iproute2 \
     iputils-ping \
     lcov \
@@ -90,6 +91,9 @@ RUN apt-get -y update && \
     rm -rf /var/lib/apt/lists/*
 
 ENV JAVA_HOME /usr/lib/jvm/java-21-openjdk-${TARGETARCH}
+# Authoritative target container image used by rules/rbe_config.bzl to automatically activate
+# --exec_mode=host and prevent toolchain/ABI discrepancies in CI.
+ENV RBE_CONFIG_CONTAINER="gcr.io/bazel-public/ubuntu2404:latest"
 
 FROM ubuntu2404 AS ubuntu2404-kythe
 

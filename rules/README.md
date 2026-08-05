@@ -8,8 +8,8 @@ It automates the generation of RBE toolchain configurations dynamically on-the-f
 
 ## 1. Design & Architectural Highlights
 
-- **Self-Compiling Go (DooD)**: The repository rule downloads the upstream `bazel-toolchains` source repository and dynamically compiles `rbe_configs_gen` inside a sibling `golang:1.21` Docker container via the host's Docker socket (Docker-out-of-Docker). This eliminates any local Go compiler installation requirements.
-- **On-Demand Auto-Detection**: The compiled Go binary launches your target toolchain container, mounts your running host Bazel binary, auto-detects the compiler and JDK runtimes inside the container sandbox, and extracts the generated C++ and Java toolchain configurations directly into Bazel's `output_base`.
+- **Dual Execution Modes (`docker` vs `host`)**: Supports both standard Docker-out-of-Docker generation (default when `RBE_CONFIG_CONTAINER` is unset) and direct host environment generation (automatically enabled when `RBE_CONFIG_CONTAINER` is set).
+- **Direct Host Toolchain Detection**: When `RBE_CONFIG_CONTAINER` is exported, `rbe_configs_gen` compiles natively on the host using `go build` and runs with `--exec_mode=host`, executing C++ and Java auto-detection (`@@rules_cc...`, `java -version`) against the host filesystem without Docker. The target container image is authoritative from the `RBE_CONFIG_CONTAINER` environment variable.
 - **Decoupled Presets Rollout**: Standard environment configurations are stored in a public JSON file (`rules/rbe_presets.json`) on the `master` branch of this repository. At runtime, the repository rule dynamically downloads this file. If the CI maintainers update a container image tag or environment parameter on `master`, **all projects immediately receive the update without modifying their pinned ruleset commit hashes!**
 
 ---
@@ -131,7 +131,25 @@ bazel build \
 
 ---
 
-## 5. Advanced: Bazel Version & Binary Resolution Strategy
+## 5. Execution Modes (`docker` vs `host`)
+
+`rbe_config` supports two execution modes for toolchain auto-detection, automatically selected based on your environment:
+
+### 5.1 Docker Mode (`--exec_mode=docker`, Default)
+When `RBE_CONFIG_CONTAINER` is **unset** (e.g., on developer workstations running macOS or Linux):
+- **Go Compilation**: `rbe_configs_gen` is compiled inside a sibling `golang:1.21` Docker container using Docker-out-of-Docker (`/var/run/docker.sock`). No local Go compiler is required.
+- **Toolchain Detection**: `rbe_configs_gen` pulls and runs the target toolchain container image (from `preset` or `spec["container"]`), mounts host Bazel, and runs C++ and Java auto-detection inside the sandboxed container.
+
+### 5.2 Host Mode (`--exec_mode=host`, Automatic in Container CI)
+When the **`RBE_CONFIG_CONTAINER`** environment variable is exported (e.g., in containerized CI workers or Buildkite pipelines):
+- **Automatic Activation**: `rbe_config` automatically switches to `host` mode.
+- **Go Compilation**: `rbe_configs_gen` is compiled natively on the host using `go build` (requires Go installed in `PATH`; no Docker required).
+- **Direct Host Detection**: `rbe_configs_gen` runs with `--exec_mode=host`, discovering C++ compilers (`gcc`/`clang`) and JDK runtimes directly from the host filesystem without invoking Docker.
+- **Host Container Authority**: In `host` mode, because detection happens against the host filesystem, the RBE execution platform image in `@rbe_ubuntu//config:platform` is **authoritatively determined by `RBE_CONFIG_CONTAINER`** (overriding any requested preset container image to prevent ABI or toolchain discrepancies).
+
+---
+
+## 6. Advanced: Bazel Version & Binary Resolution Strategy
 
 To generate toolchain configurations, `rbe_config` must determine which Bazel version to target and potentially mount a host Bazel binary inside the compiler container. It resolves this using the following **four-tier precedence lookup strategy**:
 
