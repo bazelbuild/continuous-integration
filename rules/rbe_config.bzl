@@ -124,7 +124,7 @@ def _resolve_container_digest(repository_ctx, container_image):
 
     res = repository_ctx.execute([
         "curl", "-sI",
-        "-H", "Accept: application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json",
+        "-H", "Accept: application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.oci.image.index.v1+json",
         url,
     ])
     if res.return_code == 0:
