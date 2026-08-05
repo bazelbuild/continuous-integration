@@ -272,6 +272,24 @@ DOCKER_REGISTRY_PREFIX = {
     "bazel": "bazel-public",
 }[BUILDKITE_ORG]
 
+IMAGE_HASHES = {
+    "rockylinux8": "sha256:798b7244d5338e77bb1cdc67ef966d5c6868f21906c0e8637f5e07f551bcf4ce",
+    "rockylinux8-java11": "sha256:d765535c6a1c0d0b2e2eb99aa5b4536b61548a060f3f7b8f512124ac3e9b125c",
+    "rockylinux8-java11-devtoolset10": "sha256:e08740595d28c0638fa837f12b1bf2227bb8ccd57b0111fb121127e782389e83",
+    "debian10-java11": "sha256:49bdc43bd5a8f9afa8fee4245dfa02491b11bb4526288556e6e7b9176580fa73",
+    "debian11-java17": "sha256:54d454bb70f6adf820bdd848f2a0cdf7cf484e4e1f50550507189e2faae6604b",
+    "debian12": "sha256:eb08f90b82484accacfd3724b987cb814b28b871588df19bdb910625f70ff980",
+    "debian13": "sha256:e77f3daacbd48bddcd695b1edde610f488d8f8c06c404b4f6d0039a817c673b6",
+}
+
+
+def get_docker_image(image_name):
+    digest = IMAGE_HASHES.get(image_name)
+    if not digest:
+        raise ValueError(f"No digest found for docker image: {image_name}")
+    return f"gcr.io/{DOCKER_REGISTRY_PREFIX}/{image_name}@{digest}"
+
+
 # A map containing all supported platform names as keys, with the values being
 # the platform name in a human readable format, and a the buildkite-agent's
 # working directory.
@@ -280,7 +298,7 @@ PLATFORMS = {
         "name": "Metrics Test Platform",
         "emoji-name": "metrics test platform",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8",
+        "docker-image": get_docker_image("rockylinux8"),
         "python": "python3.8",
         "queue": "metrics-test",
     },
@@ -288,14 +306,14 @@ PLATFORMS = {
         "name": "Rocky Linux 8",
         "emoji-name": ":rocky: Rocky Linux 8",
         "publish_binary": ["linux"],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8",
+        "docker-image": get_docker_image("rockylinux8"),
         "python": "python3.8",
     },
     "rockylinux8_arm64": {
         "name": "Rocky Linux 8 ARM64",
         "emoji-name": ":rocky: Rocky Linux 8 ARM64",
         "publish_binary": ["linux_arm64"],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8",
+        "docker-image": get_docker_image("rockylinux8"),
         "python": "python3.8",
         "queue": "arm64",
     },
@@ -303,42 +321,42 @@ PLATFORMS = {
         "name": "Rocky Linux 8 (OpenJDK 11, gcc 8.5.0)",
         "emoji-name": ":rocky: Rocky Linux 8 (OpenJDK 11, gcc 8.5.0)",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8-java11",
+        "docker-image": get_docker_image("rockylinux8-java11"),
         "python": "python3.8",
     },
     "rockylinux8_java11_devtoolset10": {
         "name": "Rocky Linux 8 (OpenJDK 11, gcc 10.2.1)",
         "emoji-name": ":rocky: Rocky Linux 8 (OpenJDK 11, gcc 10.2.1)",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8-java11-devtoolset10",
+        "docker-image": get_docker_image("rockylinux8-java11-devtoolset10"),
         "python": "python3.8",
     },
     "debian10": {
         "name": "Debian 10 Buster (OpenJDK 11, gcc 8.3.0)",
         "emoji-name": ":debian: Debian 10 Buster (OpenJDK 11, gcc 8.3.0)",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian10-java11",
+        "docker-image": get_docker_image("debian10-java11"),
         "python": "python3.7",
     },
     "debian11": {
         "name": "Debian 11 Bullseye (OpenJDK 17, gcc 10.2.1)",
         "emoji-name": ":debian: Debian 11 Bullseye (OpenJDK 17, gcc 10.2.1)",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian11-java17",
+        "docker-image": get_docker_image("debian11-java17"),
         "python": "python3.9",
     },
     "debian12": {
         "name": "Debian 12",
         "emoji-name": ":debian: Debian 12",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian12",
+        "docker-image": get_docker_image("debian12"),
         "python": "python3",
     },
     "debian12_arm64": {
         "name": "Debian 12 ARM64",
         "emoji-name": ":debian: Debian 12 ARM64",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian12",
+        "docker-image": get_docker_image("debian12"),
         "python": "python3",
         "queue": "arm64",
     },
@@ -346,14 +364,14 @@ PLATFORMS = {
         "name": "Debian 13",
         "emoji-name": ":debian: Debian 13",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian13",
+        "docker-image": get_docker_image("debian13"),
         "python": "python3",
     },
     "debian13_arm64": {
         "name": "Debian 13 ARM64",
         "emoji-name": ":debian: Debian 13 ARM64",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/debian13",
+        "docker-image": get_docker_image("debian13"),
         "python": "python3",
         "queue": "arm64",
     },
