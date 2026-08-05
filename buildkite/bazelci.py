@@ -272,6 +272,18 @@ DOCKER_REGISTRY_PREFIX = {
     "bazel": "bazel-public",
 }[BUILDKITE_ORG]
 
+IMAGE_HASHES = {
+    "rockylinux8": "sha256:798b7244d5338e77bb1cdc67ef966d5c6868f21906c0e8637f5e07f551bcf4ce",
+}
+
+
+def get_docker_image(image_name):
+    digest = IMAGE_HASHES.get(image_name)
+    if not digest:
+        raise ValueError(f"No digest found for docker image: {image_name}")
+    return f"gcr.io/{DOCKER_REGISTRY_PREFIX}/{image_name}@{digest}"
+
+
 # A map containing all supported platform names as keys, with the values being
 # the platform name in a human readable format, and a the buildkite-agent's
 # working directory.
@@ -280,7 +292,7 @@ PLATFORMS = {
         "name": "Metrics Test Platform",
         "emoji-name": "metrics test platform",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8",
+        "docker-image": get_docker_image("rockylinux8"),
         "python": "python3.8",
         "queue": "metrics-test",
     },
@@ -288,14 +300,14 @@ PLATFORMS = {
         "name": "Rocky Linux 8",
         "emoji-name": ":rocky: Rocky Linux 8",
         "publish_binary": ["linux"],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8",
+        "docker-image": get_docker_image("rockylinux8"),
         "python": "python3.8",
     },
     "rockylinux8_arm64": {
         "name": "Rocky Linux 8 ARM64",
         "emoji-name": ":rocky: Rocky Linux 8 ARM64",
         "publish_binary": ["linux_arm64"],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/rockylinux8",
+        "docker-image": get_docker_image("rockylinux8"),
         "python": "python3.8",
         "queue": "arm64",
     },
