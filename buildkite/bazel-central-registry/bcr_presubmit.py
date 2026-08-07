@@ -73,6 +73,11 @@ def error(msg):
     bazelci.eprint("\x1b[31mERROR\x1b[0m: {}\n".format(msg))
     raise BcrPipelineException("BCR Presubmit failed!")
 
+# Bazel module names and versions are restricted to these characters. Validating the
+# captured path components ensures a pull request's directory layout cannot smuggle
+# shell metacharacters into the command string built by add_presubmit_jobs().
+MODULE_NAME_PATTERN = re.compile(r"^[a-z0-9._-]+$")
+MODULE_VERSION_PATTERN = re.compile(r"^[a-zA-Z0-9._+-]+$")
 
 def get_target_modules():
     """
@@ -87,7 +92,14 @@ def get_target_modules():
     for line in output.decode("utf-8").split():
         s = re.match(r"modules\/([^\/]+)\/([^\/]+)\/", line)
         if s:
-            modules.add(s.groups())
+            name, version = s.groups()
+            if not MODULE_NAME_PATTERN.match(name) or not MODULE_VERSION_PATTERN.match(version):
+                raise BcrPipelineException(
+                    "Invalid characters in module path %r: module names must match %s and "
+                    "versions must match %s."
+                    % (line, MODULE_NAME_PATTERN.pattern, MODULE_VERSION_PATTERN.pattern)
+                )
+            modules.add((name, version))
 
     return sorted(modules)
 
