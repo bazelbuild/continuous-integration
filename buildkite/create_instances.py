@@ -134,6 +134,13 @@ def main(argv=None):
 
     selected_instances = [i for i in config["instance_groups"] if i["name"] in names]
 
+    # Warm up gcloud sequentially to initialize ~/.config/gcloud and run SQLite migrations
+    # before launching concurrent threads.
+    try:
+        gcloud.gcloud("version")
+    except Exception as e:
+        gcloud.debug(f"gcloud warm-up failed: {e}")
+
     # Mimic v3.5 default of
     # https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor
     max_workers = multiprocessing.cpu_count() * 5
