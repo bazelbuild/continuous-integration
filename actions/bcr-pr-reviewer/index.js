@@ -530,6 +530,11 @@ async function reviewPR(octokit, owner, repo, prNumber) {
         owner,
         repo,
         pull_number: prNumber,
+        // Pin the merge to the exact commit that was analyzed and approved. If
+        // new commits were pushed in the window between the staleness check
+        // above and this merge, GitHub rejects the merge (409) instead of
+        // merging unreviewed content.
+        sha: currentHeadSha,
         merge_method: 'squash',
       });
 
