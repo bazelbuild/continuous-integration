@@ -121,46 +121,14 @@ Remove-Item -Path "$tmp"
 ## Write encrypted buildkite agent token into a file.
 $myhostname = [System.Net.Dns]::GetHostName()
 if ($myhostname -like "*trusted*") {
-  $buildkite_agent_token_url = "https://storage.googleapis.com/bazel-trusted-encrypted-secrets/buildkite-trusted-agent-token.enc"
   $project = "bazel-public"
-  $key = "buildkite-trusted-agent-token"
+  $secret = "bazel-trusted-buildkite-agent-token"
 } elseif ($myhostname -like "*testing*") {
-  $buildkite_agent_token_url = "https://storage.googleapis.com/bazel-testing-encrypted-secrets/buildkite-testing-agent-token.enc"
   $project = "bazel-untrusted"
-  $key = "buildkite-testing-agent-token"
+  $secret = "bazel-testing-buildkite-agent-token"
 } else {
-  $buildkite_agent_token_url = "https://storage.googleapis.com/bazel-untrusted-encrypted-secrets/buildkite-untrusted-agent-token.enc"
   $project = "bazel-untrusted"
-  $key = "buildkite-untrusted-agent-token"
-}
-$buildkite_agent_token_file = "c:\buildkite\buildkite_agent_token.enc"
-
-Write-Host "Getting Buildkite Agent token from GCS..."
-
-# Try at most 30 times to download file, if not succeeding, shutdown the VM.
-$maxAttempts = 30
-$attemptCount = 0
-
-while ($attemptCount -lt $maxAttempts) {
-  try {
-    (New-Object Net.WebClient).DownloadFile($buildkite_agent_token_url, $buildkite_agent_token_file)
-    Write-Host "Token downloaded successfully."
-    break
-  } catch {
-    $msg = $_.Exception.Message
-    Write-Host "Failed to download token: $msg"
-
-    $attemptCount++
-    Write-Host "Attempt $attemptCount of $maxAttempts"
-
-    Start-Sleep -Seconds 10
-  }
-}
-
-# Check if maximum attempts were reached and shut down if necessary
-if ($attemptCount -eq $maxAttempts) {
-  Write-Host "Maximum attempts reached. Shutting down the machine..."
-  Stop-Computer
+  $secret = "bazel-buildkite-agent-token"
 }
 
 # Fix ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1129)
@@ -172,10 +140,9 @@ $secure_pw = ConvertTo-SecureString $plaintext_pw -AsPlainText -Force;
 & openssl.exe pkcs12 -export -nokeys -out certs.pfx -in cacert.pem -passout pass:$plaintext_pw;
 Import-PfxCertificate -Password $secure_pw  -CertStoreLocation Cert:\LocalMachine\Root -FilePath certs.pfx;
 
-## Decrypt the Buildkite agent token.
-Write-Host "Decrypting Buildkite Agent token using KMS..."
-$buildkite_agent_token = & gcloud kms decrypt --project $project --location global --keyring buildkite --key $key --ciphertext-file $buildkite_agent_token_file --plaintext-file -
-Remove-Item $buildkite_agent_token_file
+## Get the Buildkite agent token.
+Write-Host "Retrieving Buildkite Agent token from Secret Manager..."
+$buildkite_agent_token = & gcloud secrets versions access latest --secret=$secret --project $project
 
 ## Configure the Buildkite agent.
 Write-Host "Configuring Buildkite Agent..."

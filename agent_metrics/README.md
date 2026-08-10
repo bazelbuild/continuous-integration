@@ -24,6 +24,6 @@ gcloud compute instances create \
 
 The service account used for the VM must have at least the following permissions:
 
-- `Cloud KMS Decryption` for the Buildkite agent tokens.
+- `Secret Manager Secret Accessor` for the secrets that store the Buildkite agent tokens.
 - `Logging > Logs Writer` to write logs to Stackdriver Logging.
 - `Monitoring > Monitoring Metric Writer` to write to the Stackdriver Metrics.
