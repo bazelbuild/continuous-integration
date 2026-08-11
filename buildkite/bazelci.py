@@ -3607,8 +3607,8 @@ def runner_step(
 
 
 def fetch_ci_scripts_command():
-    command = "curl -q --noproxy '*' -sS {0}?{1} -o bazelci.py".format(SCRIPT_URL, int(time.time()))
-    command += " && curl -q --noproxy '*' -sS {0}?{1} -o collect_metrics.py".format(METRICS_SCRIPT_URL, int(time.time()))
+    command = "curl -q --noproxy '*' -sS {0}?{1} -o bazelci.py;".format(SCRIPT_URL, int(time.time()))
+    command += " curl -q --noproxy '*' -sS {0}?{1} -o collect_metrics.py".format(METRICS_SCRIPT_URL, int(time.time()))
     return command
 
 
