@@ -13,7 +13,7 @@ gcloud compute instances create \
     --machine-type n1-standard-1 \
     --zone us-central1-a \
     --image-project=ubuntu-os-cloud \
-    --image-family=ubuntu-1804-lts \
+    --image-family=ubuntu-2404-lts-amd64 \
     --scopes cloud-platform \
     --service-account buildkite-agent-metrics@bazel-public.iam.gserviceaccount.com \
     --metadata-from-file=startup-script=start.sh \
