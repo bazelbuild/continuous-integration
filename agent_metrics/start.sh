@@ -5,18 +5,15 @@ set -euxo pipefail
 # Get all the Buildkite agent tokens.
 mkdir -p /etc/buildkite-agent-metrics
 cat > /etc/buildkite-agent-metrics/trusted <<EOF
-BUILDKITE_AGENT_TOKEN=$(gsutil cat "gs://bazel-trusted-encrypted-secrets/buildkite-trusted-agent-token.enc" | \
-    gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key buildkite-trusted-agent-token --ciphertext-file - --plaintext-file -)
+BUILDKITE_AGENT_TOKEN=$(gcloud secrets versions access latest --secret="bazel-trusted-buildkite-agent-token" --project bazel-public)
 GCP_PROJECT=bazel-public
 EOF
 cat > /etc/buildkite-agent-metrics/testing <<EOF
-BUILDKITE_AGENT_TOKEN=$(gsutil cat "gs://bazel-testing-encrypted-secrets/buildkite-testing-agent-token.enc" | \
-    gcloud kms decrypt --project bazel-untrusted --location global --keyring buildkite --key buildkite-testing-agent-token --ciphertext-file - --plaintext-file -)
+BUILDKITE_AGENT_TOKEN=$(gcloud secrets versions access latest --secret="bazel-testing-buildkite-agent-token" --project bazel-untrusted)
 GCP_PROJECT=bazel-untrusted
 EOF
 cat > /etc/buildkite-agent-metrics/untrusted <<EOF
-BUILDKITE_AGENT_TOKEN=$(gsutil cat "gs://bazel-untrusted-encrypted-secrets/buildkite-untrusted-agent-token.enc" | \
-    gcloud kms decrypt --project bazel-untrusted --location global --keyring buildkite --key buildkite-untrusted-agent-token --ciphertext-file - --plaintext-file -)
+BUILDKITE_AGENT_TOKEN=$(gcloud secrets versions access latest --secret="bazel-buildkite-agent-token" --project bazel-untrusted)
 GCP_PROJECT=bazel-untrusted
 EOF
 
