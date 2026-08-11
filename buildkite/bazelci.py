@@ -3607,9 +3607,11 @@ def runner_step(
 
 
 def fetch_ci_scripts_command():
-    command = "curl -q --noproxy '*' -sS {0}?{1} -o bazelci.py;".format(SCRIPT_URL, int(time.time()))
-    command += " curl -q --noproxy '*' -sS {0}?{1} -o collect_metrics.py".format(METRICS_SCRIPT_URL, int(time.time()))
-    return command
+    commands = [
+        "curl -q --noproxy '*' -sS {0}?{1} -o bazelci.py || exit 1".format(SCRIPT_URL, int(time.time())),
+        "curl -q --noproxy '*' -sS {0}?{1} -o collect_metrics.py || exit 1".format(METRICS_SCRIPT_URL, int(time.time())),
+    ]
+    return "\n".join(commands)
 
 
 def fetch_aggregate_incompatible_flags_test_result_command():
