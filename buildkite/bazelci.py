@@ -272,6 +272,7 @@ DOCKER_REGISTRY_PREFIX = {
     "bazel": "bazel-public",
 }[BUILDKITE_ORG]
 
+# Keep keys sorted.
 IMAGE_HASHES = {
     "debian10-java11": "sha256:6bc057911f6270e101387f74b9fdcdea6b74f9b1a51fd94d2747729fb2ee8211",
     "debian11-java17": "sha256:11bef169cc8fe5f70a39d18680f44ca4d674663f751dc707043cd0006fe7c426",
