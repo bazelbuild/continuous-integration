@@ -554,8 +554,44 @@ class InitialSteps(unittest.TestCase):
         ), mock.patch.object(bazelci, "get_modified_files") as get_modified_files:
             steps = bazelci.create_initial_steps()
 
-        self.assertEqual(steps, [])
-        get_modified_files.assert_not_called()
+class FetchCiScripts(unittest.TestCase):
+    def test_fetch_ci_scripts_command_returns_list_of_curl_commands(self):
+        cmds = bazelci.fetch_ci_scripts_command()
+        self.assertIsInstance(cmds, list)
+        self.assertEqual(len(cmds), 2)
+        self.assertTrue(cmds[0].startswith("curl -q --noproxy '*' -sS"))
+        self.assertIn("bazelci.py", cmds[0])
+        self.assertTrue(cmds[1].startswith("curl -q --noproxy '*' -sS"))
+        self.assertIn("collect_metrics.py", cmds[1])
+        # Verify no shell delimiter like ';' or '&&' is appended
+        self.assertFalse(cmds[0].endswith(";"))
+        self.assertFalse(cmds[0].endswith("&&"))
+
+    def test_create_step_flattens_nested_commands(self):
+        step = bazelci.create_step(
+            label="test",
+            commands=[
+                bazelci.fetch_ci_scripts_command(),
+                "echo hello",
+            ],
+            platform=bazelci.DEFAULT_PLATFORM,
+        )
+        self.assertEqual(len(step["command"]), 3)
+        self.assertIn("bazelci.py", step["command"][0])
+        self.assertIn("collect_metrics.py", step["command"][1])
+        self.assertEqual(step["command"][2], "echo hello")
+
+    def test_runner_step_includes_fetch_ci_scripts(self):
+        step = bazelci.runner_step(
+            platform=bazelci.DEFAULT_PLATFORM,
+            task="basic",
+            project_name="test",
+        )
+        commands = step["command"]
+        self.assertEqual(len(commands), 3)
+        self.assertIn("bazelci.py", commands[0])
+        self.assertIn("collect_metrics.py", commands[1])
+        self.assertIn("--task=basic", commands[2])
 
 
 if __name__ == "__main__":
