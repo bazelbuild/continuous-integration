@@ -289,9 +289,9 @@ IMAGE_HASHES = {
     "rockylinux8-java11-devtoolset10-amd64": "sha256:62a95406804ace623cf4341528989d620e7815b769f0e7f24db7cb446d122584",
     "rockylinux8-java11-devtoolset10-arm64": "sha256:2b617a419c3c06be932258978f254643be6d1da2badb3838995f75bdcaf70000",
     # 30303ed516f79
-    "debian10-java11": "sha256:30303ed516f79517c9cead891149f620a28dac444f6c7e52a6c43e184d167522",
+    "debian10-java11-amd64": "sha256:30303ed516f79517c9cead891149f620a28dac444f6c7e52a6c43e184d167522",
     # 67883db1a7b15
-    "debian11-java17": "sha256:67883db1a7b159578b2617ed1db5e858bc80ab2605b0ab1df1015ec13839f2d0",
+    "debian11-java17-amd64": "sha256:67883db1a7b159578b2617ed1db5e858bc80ab2605b0ab1df1015ec13839f2d0",
     # c71c7db59d8fb
     "debian12-amd64": "sha256:17db206ae864f70c63c813788885b87fcb8252e678197a3a0e41fc137c32f1d2",
     "debian12-arm64": "sha256:d30f9da2bc0140689ad42f663cbbe00387f500ef732b00020001d15dbf485826",
@@ -299,9 +299,9 @@ IMAGE_HASHES = {
     "debian13-amd64": "sha256:079e610e4fc69ba165932b41cb00aee9778ccb1cfbb9c2d8509c69186628c946",
     "debian13-arm64": "sha256:9c0017ffab863e3a57262dd89b0edfe1c3cc8dfd92b0adf1f7bf0a84335b3033",
     # Unused? TODO(tedx): Consider deleting this.
-    "ubuntu1604-java8": "sha256:9e5e7c5383c4a8e919d02fd81d7197bd76e912b465511dab7b45336ca3b193d0",
+    "ubuntu1604-java8-amd64": "sha256:9e5e7c5383c4a8e919d02fd81d7197bd76e912b465511dab7b45336ca3b193d0",
     # 76f52db198a95
-    "ubuntu1804-java11": "sha256:76f52db198a95c6785e2ce773e479ab4db5cfe9b8c548fb1fed67261420e2783",
+    "ubuntu1804-java11-amd64": "sha256:76f52db198a95c6785e2ce773e479ab4db5cfe9b8c548fb1fed67261420e2783",
     # 015638f589d43
     "ubuntu2004-java11-amd64": "sha256:e0304b7aa25c4a93955b1d8bcab6262786d6abc80082a738c54a2d826607300e",
     "ubuntu2004-java11-arm64": "sha256:ef3667b5c6fad6843d40093517809d8343ce81ba17f5f1e254683e7112557f5b",
@@ -315,7 +315,7 @@ IMAGE_HASHES = {
     "ubuntu2404-amd64": "sha256:d45adb2666a9ac260c1c714595146d6807283a6eb4dc1428d5d7280a3622a40f",
     "ubuntu2404-arm64": "sha256:c78cbcd7a094a7f8e793d65f2f2da1a707d1a4f13f473b99db52becdc133073c",
     # 3862183a76740
-    "ubuntu2004-kythe": "sha256:3862183a7674064e7e36ab851166e5a20eaccb47c8dd7205354fc8de6a6be0e9",
+    "ubuntu2004-kythe-amd64": "sha256:3862183a7674064e7e36ab851166e5a20eaccb47c8dd7205354fc8de6a6be0e9",
     # cb15a0c1edea5
     "ubuntu2204-kythe-amd64": "sha256:b0eed8833869d7ceaf3c7cbeedc34fc41392bf19d3308fdf01a66eddca7c040d",
     "ubuntu2204-kythe-arm64": "sha256:75217aadf2dd731cd46c4d2b7422874f5bd3473f8081f614c8b7f79cf28fd693",
@@ -326,18 +326,20 @@ IMAGE_HASHES = {
     "ubuntu2204-java17-amd64": "sha256:e8e7985ccffcfa821eae4d7dd405af8e0567b464b75b19aa82f8b87221913e1d",
     "ubuntu2204-java17-arm64": "sha256:4723f5096d4a9a7c50a610a4330e23f4ae60017aba44d48788e26c55ce7d957d",
     # 7d008645ba9df
-    "fedora39-java17": "sha256:7d008645ba9df074db60bc380dccd08dc18af3dd4fddb23a5211fbc2ff087399",
+    "fedora39-java17-amd64": "sha256:7d008645ba9df074db60bc380dccd08dc18af3dd4fddb23a5211fbc2ff087399",
     # e4fdaf9771959
-    "fedora40-java21": "sha256:e4fdaf97719598be7a14d030ef8b7662739fab917ce6ff3ca0c06302e007109c",
+    "fedora40-java21-amd64": "sha256:e4fdaf97719598be7a14d030ef8b7662739fab917ce6ff3ca0c06302e007109c",
     # d7d428a06e2d2
-    "fedora43-java25": "sha256:d7d428a06e2d21566d3e5f656121a4a17c87f19dc39d421a6b8ef883f0c7dbaa",
+    "fedora43-java25-amd64": "sha256:d7d428a06e2d21566d3e5f656121a4a17c87f19dc39d421a6b8ef883f0c7dbaa",
 }
 
 
-def get_docker_image(image_name):
-    digest = IMAGE_HASHES.get(image_name)
+def get_docker_image(image_name, is_arm64=False):
+    suffix = "-arm64" if is_arm64 else "-amd64"
+    key = f"{image_name}{suffix}"
+    digest = IMAGE_HASHES.get(key)
     if not digest:
-        raise ValueError(f"No digest found for docker image: {image_name}")
+        raise ValueError(f"No digest found for docker image: {key}")
     return f"gcr.io/{DOCKER_REGISTRY_PREFIX}/{image_name}@{digest}"
 
 
@@ -349,7 +351,7 @@ PLATFORMS = {
         "name": "Metrics Test Platform",
         "emoji-name": "metrics test platform",
         "publish_binary": [],
-        "docker-image": get_docker_image("rockylinux8-amd64"),
+        "docker-image": get_docker_image("rockylinux8"),
         "python": "python3.8",
         "queue": "metrics-test",
     },
@@ -357,14 +359,14 @@ PLATFORMS = {
         "name": "Rocky Linux 8",
         "emoji-name": ":rocky: Rocky Linux 8",
         "publish_binary": ["linux"],
-        "docker-image": get_docker_image("rockylinux8-amd64"),
+        "docker-image": get_docker_image("rockylinux8"),
         "python": "python3.8",
     },
     "rockylinux8_arm64": {
         "name": "Rocky Linux 8 ARM64",
         "emoji-name": ":rocky: Rocky Linux 8 ARM64",
         "publish_binary": ["linux_arm64"],
-        "docker-image": get_docker_image("rockylinux8-arm64"),
+        "docker-image": get_docker_image("rockylinux8", is_arm64=True),
         "python": "python3.8",
         "queue": "arm64",
     },
@@ -372,14 +374,14 @@ PLATFORMS = {
         "name": "Rocky Linux 8 (OpenJDK 11, gcc 8.5.0)",
         "emoji-name": ":rocky: Rocky Linux 8 (OpenJDK 11, gcc 8.5.0)",
         "publish_binary": [],
-        "docker-image": get_docker_image("rockylinux8-java11-amd64"),
+        "docker-image": get_docker_image("rockylinux8-java11"),
         "python": "python3.8",
     },
     "rockylinux8_java11_devtoolset10": {
         "name": "Rocky Linux 8 (OpenJDK 11, gcc 10.2.1)",
         "emoji-name": ":rocky: Rocky Linux 8 (OpenJDK 11, gcc 10.2.1)",
         "publish_binary": [],
-        "docker-image": get_docker_image("rockylinux8-java11-devtoolset10-amd64"),
+        "docker-image": get_docker_image("rockylinux8-java11-devtoolset10"),
         "python": "python3.8",
     },
     "debian10": {
@@ -400,14 +402,14 @@ PLATFORMS = {
         "name": "Debian 12",
         "emoji-name": ":debian: Debian 12",
         "publish_binary": [],
-        "docker-image": get_docker_image("debian12-amd64"),
+        "docker-image": get_docker_image("debian12"),
         "python": "python3",
     },
     "debian12_arm64": {
         "name": "Debian 12 ARM64",
         "emoji-name": ":debian: Debian 12 ARM64",
         "publish_binary": [],
-        "docker-image": get_docker_image("debian12-arm64"),
+        "docker-image": get_docker_image("debian12", is_arm64=True),
         "python": "python3",
         "queue": "arm64",
     },
@@ -415,14 +417,14 @@ PLATFORMS = {
         "name": "Debian 13",
         "emoji-name": ":debian: Debian 13",
         "publish_binary": [],
-        "docker-image": get_docker_image("debian13-amd64"),
+        "docker-image": get_docker_image("debian13"),
         "python": "python3",
     },
     "debian13_arm64": {
         "name": "Debian 13 ARM64",
         "emoji-name": ":debian: Debian 13 ARM64",
         "publish_binary": [],
-        "docker-image": get_docker_image("debian13-arm64"),
+        "docker-image": get_docker_image("debian13", is_arm64=True),
         "python": "python3",
         "queue": "arm64",
     },
@@ -444,21 +446,21 @@ PLATFORMS = {
         "name": "Ubuntu 20.04 LTS (OpenJDK 11, gcc 9.4.0)",
         "emoji-name": ":ubuntu: Ubuntu 20.04 LTS (OpenJDK 11, gcc 9.4.0)",
         "publish_binary": [],
-        "docker-image": get_docker_image("ubuntu2004-java11-amd64"),
+        "docker-image": get_docker_image("ubuntu2004-java11"),
         "python": "python3.8",
     },
     "ubuntu2004": {
         "name": "Ubuntu 20.04 LTS",
         "emoji-name": ":ubuntu: Ubuntu 20.04 LTS",
         "publish_binary": [],
-        "docker-image": get_docker_image("ubuntu2004-amd64"),
+        "docker-image": get_docker_image("ubuntu2004"),
         "python": "python3.8",
     },
     "ubuntu2004_arm64": {
         "name": "Ubuntu 20.04 LTS ARM64",
         "emoji-name": ":ubuntu: Ubuntu 20.04 LTS ARM64",
         "publish_binary": [],
-        "docker-image": get_docker_image("ubuntu2004-arm64"),
+        "docker-image": get_docker_image("ubuntu2004", is_arm64=True),
         "python": "python3.8",
         "queue": "arm64",
     },
@@ -466,7 +468,7 @@ PLATFORMS = {
         "name": "Ubuntu 22.04 LTS ARM64",
         "emoji-name": ":ubuntu: Ubuntu 22.04 LTS ARM64",
         "publish_binary": [],
-        "docker-image": get_docker_image("ubuntu2204-arm64"),
+        "docker-image": get_docker_image("ubuntu2204", is_arm64=True),
         "python": "python3",
         "queue": "arm64",
     },
@@ -474,7 +476,7 @@ PLATFORMS = {
         "name": "Ubuntu 24.04 LTS ARM64",
         "emoji-name": ":ubuntu: Ubuntu 24.04 LTS ARM64",
         "publish_binary": [],
-        "docker-image": get_docker_image("ubuntu2404-arm64"),
+        "docker-image": get_docker_image("ubuntu2404", is_arm64=True),
         "python": "python3",
         "queue": "arm64",
     },
@@ -489,35 +491,35 @@ PLATFORMS = {
         "name": "Kythe (Ubuntu 22.04 LTS)",
         "emoji-name": "Kythe (:ubuntu: Ubuntu 22.04 LTS)",
         "publish_binary": [],
-        "docker-image": get_docker_image("ubuntu2204-kythe-amd64"),
+        "docker-image": get_docker_image("ubuntu2204-kythe"),
         "python": "python3",
     },
     "kythe_ubuntu2404": {
         "name": "Kythe (Ubuntu 24.04 LTS)",
         "emoji-name": "Kythe (:ubuntu: Ubuntu 24.04 LTS)",
         "publish_binary": [],
-        "docker-image": get_docker_image("ubuntu2404-kythe-amd64"),
+        "docker-image": get_docker_image("ubuntu2404-kythe"),
         "python": "python3",
     },
     "ubuntu2204_java17": {
         "name": "Ubuntu 22.04 (OpenJDK 17, gcc 11.2.0)",
         "emoji-name": ":ubuntu: Ubuntu 22.04 (OpenJDK 17, gcc 11.2.0)",
         "publish_binary": [],
-        "docker-image": get_docker_image("ubuntu2204-java17-amd64"),
+        "docker-image": get_docker_image("ubuntu2204-java17"),
         "python": "python3",
     },
     "ubuntu2204": {
         "name": "Ubuntu 22.04",
         "emoji-name": ":ubuntu: Ubuntu 22.04 LTS",
         "publish_binary": [],
-        "docker-image": get_docker_image("ubuntu2204-amd64"),
+        "docker-image": get_docker_image("ubuntu2204"),
         "python": "python3",
     },
     "ubuntu2404": {
         "name": "Ubuntu 24.04",
         "emoji-name": ":ubuntu: Ubuntu 24.04 LTS",
         "publish_binary": [],
-        "docker-image": get_docker_image("ubuntu2404-amd64"),
+        "docker-image": get_docker_image("ubuntu2404"),
         "python": "python3",
     },
     "fedora39": {
