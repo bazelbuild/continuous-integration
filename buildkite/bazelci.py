@@ -3048,6 +3048,15 @@ def create_step(
     concurrency_group=None,
     priority=None,
 ):
+    if commands is not None:
+        flat_commands = []
+        for cmd in commands:
+            if isinstance(cmd, list):
+                flat_commands.extend(cmd)
+            else:
+                flat_commands.append(cmd)
+        commands = flat_commands
+
     if "docker-image" in PLATFORMS[platform]:
         step = create_docker_step(
             label,
@@ -3607,9 +3616,12 @@ def runner_step(
 
 
 def fetch_ci_scripts_command():
-    command = "curl -q --noproxy '*' -sS {0}?{1} -o bazelci.py;".format(SCRIPT_URL, int(time.time()))
-    command += " curl -q --noproxy '*' -sS {0}?{1} -o collect_metrics.py".format(METRICS_SCRIPT_URL, int(time.time()))
-    return command
+    return [
+        "curl -q --noproxy '*' -sS {0}?{1} -o bazelci.py".format(SCRIPT_URL, int(time.time())),
+        "curl -q --noproxy '*' -sS {0}?{1} -o collect_metrics.py".format(
+            METRICS_SCRIPT_URL, int(time.time())
+        ),
+    ]
 
 
 def fetch_aggregate_incompatible_flags_test_result_command():
