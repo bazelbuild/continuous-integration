@@ -34,7 +34,7 @@ SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integratio
 
 
 def fetch_generate_report_py_command():
-    return "curl -s {0} -o generate_report.py".format(SCRIPT_URL)
+    return bazelci.curl_download_command(SCRIPT_URL, "generate_report.py")
 
 
 def select_modules_from_env_vars():

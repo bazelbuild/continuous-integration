@@ -555,13 +555,20 @@ class InitialSteps(unittest.TestCase):
             steps = bazelci.create_initial_steps()
 
 class FetchCiScripts(unittest.TestCase):
+    def test_curl_download_command(self):
+        cmd = bazelci.curl_download_command("https://example.com/foo.py", "foo.py")
+        self.assertEqual(
+            cmd,
+            f"curl {bazelci.CURL_FLAGS_STR} https://example.com/foo.py -o foo.py",
+        )
+
     def test_fetch_ci_scripts_command_returns_list_of_curl_commands(self):
         cmds = bazelci.fetch_ci_scripts_command()
         self.assertIsInstance(cmds, list)
         self.assertEqual(len(cmds), 2)
-        self.assertTrue(cmds[0].startswith("curl -q --noproxy '*' -sS"))
+        self.assertTrue(cmds[0].startswith(f"curl {bazelci.CURL_FLAGS_STR}"))
         self.assertIn("bazelci.py", cmds[0])
-        self.assertTrue(cmds[1].startswith("curl -q --noproxy '*' -sS"))
+        self.assertTrue(cmds[1].startswith(f"curl {bazelci.CURL_FLAGS_STR}"))
         self.assertIn("collect_metrics.py", cmds[1])
         # Verify no shell delimiter like ';' or '&&' is appended
         self.assertFalse(cmds[0].endswith(";"))
