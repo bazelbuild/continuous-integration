@@ -318,7 +318,7 @@ IMAGE_HASHES = {
 
 
 def get_docker_image(image_name):
-    if BUILDKITE_ORG == "bazel-testing":
+    if THIS_IS_TESTING:
         return f"gcr.io/{DOCKER_REGISTRY_PREFIX}/{image_name}"
     digest = IMAGE_HASHES.get(image_name)
     if not digest:
