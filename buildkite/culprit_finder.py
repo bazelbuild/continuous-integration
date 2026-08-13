@@ -34,7 +34,7 @@ SCRIPT_URL = {
 
 
 def fetch_culprit_finder_py_command():
-    return "curl -s {0} -o culprit_finder.py".format(SCRIPT_URL)
+    return bazelci.curl_download_command(SCRIPT_URL, "culprit_finder.py")
 
 
 def get_bazel_commits_between(first_commit, second_commit):
