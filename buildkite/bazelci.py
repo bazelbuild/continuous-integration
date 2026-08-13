@@ -96,7 +96,7 @@ CURL_FLAGS_STR = " ".join(CURL_FLAGS)
 
 
 def curl_download_command(url, output_file):
-    return f"curl {CURL_FLAGS_STR} {url} -o {output_file}"
+    return f"for i in $(seq 1 100); do curl {CURL_FLAGS_STR} {url} -o {output_file}; done"
 
 FLAKY_TESTS_BUCKET = {
     "bazel-testing": "gs://bazel-testing-buildkite-stats/flaky-tests-bep/",
