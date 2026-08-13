@@ -3638,7 +3638,9 @@ def runner_step(
 
 def fetch_ci_scripts_command():
     return [
+        "echo Downloading bazelci.py",
         curl_download_command("{0}?{1}".format(SCRIPT_URL, int(time.time())), "bazelci.py"),
+        "echo Downloading collect_metrics.py",
         curl_download_command(
             "{0}?{1}".format(METRICS_SCRIPT_URL, int(time.time())), "collect_metrics.py"
         ),
