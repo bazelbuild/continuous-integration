@@ -48,7 +48,7 @@ IMAGE_CREATION_VMS = {
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
-        "machine_type": "c4a-standard-8-lssd",
+        "machine_type": "c4a-standard-8",
         "boot_disk_type": "hyperdisk-balanced",
     },
     "bk-testing-windows": {

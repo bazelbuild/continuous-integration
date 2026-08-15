@@ -77,6 +77,27 @@ EMERGENCY_FILE_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-in
     GITHUB_BRANCH, int(time.time())
 )
 
+CURL_FLAGS = [
+    "-q",
+    "--noproxy",
+    "'*'",
+    "-fsSL",
+    "--retry",
+    "5",
+    "--retry-delay",
+    "2",
+    "--retry-max-time",
+    "60",
+    "--retry-connrefused",
+    "--connect-timeout",
+    "10",
+]
+CURL_FLAGS_STR = " ".join(CURL_FLAGS)
+
+
+def curl_download_command(url, output_file):
+    return f"curl {CURL_FLAGS_STR} {url} -o {output_file}"
+
 FLAKY_TESTS_BUCKET = {
     "bazel-testing": "gs://bazel-testing-buildkite-stats/flaky-tests-bep/",
     "bazel-trusted": "gs://bazel-buildkite-stats/flaky-tests-bep/",
@@ -280,10 +301,25 @@ IMAGE_HASHES = {
     "debian11-java17": "sha256:54d454bb70f6adf820bdd848f2a0cdf7cf484e4e1f50550507189e2faae6604b",
     "debian12": "sha256:eb08f90b82484accacfd3724b987cb814b28b871588df19bdb910625f70ff980",
     "debian13": "sha256:e77f3daacbd48bddcd695b1edde610f488d8f8c06c404b4f6d0039a817c673b6",
+    "ubuntu1604-java8": "sha256:9e5e7c5383c4a8e919d02fd81d7197bd76e912b465511dab7b45336ca3b193d0",
+    "ubuntu1804-java11": "sha256:613a16d8f8de3fa846d3ae563cbc9e8a7950765f6f484e9ed29deb26218eb594",
+    "ubuntu2004-java11": "sha256:8719817e16ed70b61e8cc004ad884ddf7e0db2f994182eafbb4819bc6a52ff20",
+    "ubuntu2004": "sha256:501a6302b6f518c68ec12afd1f4e30fe4b48c46eea3b1f3fbcc35f922e0f2802",
+    "ubuntu2204": "sha256:7ff0dc93cbb73e159747149b7e51f6d9ea0133bff1e72aa05588d84241f68370",
+    "ubuntu2404": "sha256:73f654103b960bb0fffe63f2a01b07e76f04c31e2e0ae0d9b45500f09f458d27",
+    "ubuntu2004-kythe": "sha256:3862183a7674064e7e36ab851166e5a20eaccb47c8dd7205354fc8de6a6be0e9",
+    "ubuntu2204-kythe": "sha256:4efd27dc071a031fd0550cd59931f4a26d4531c80356e540ab9e9969b4bf1bbc",
+    "ubuntu2404-kythe": "sha256:2958a2329d7bbb01edde128a0036829f0c64074ffd1e304a2b4692666a5e0f66",
+    "ubuntu2204-java17": "sha256:3f5eeb409d9c2f3da4e162b6e64527a158a02443d2bb77a41890ddcdf7a7293a",
+    "fedora39-java17": "sha256:2886ccd5adb6b8941bfe18cbba1acbb34c833fac635aab3b80493bfc5ba2dbcd",
+    "fedora40-java21": "sha256:857e3d7cda608fd2fd9a2d1455b9b09db6979aff4250061e61b9929a10690e90",
+    "fedora43-java25": "sha256:30cf2aa0a491a208efde941b42504785f957f0c2f904aa5ef7f33438c822713b",
 }
 
 
 def get_docker_image(image_name):
+    if THIS_IS_TESTING:
+        return f"gcr.io/{DOCKER_REGISTRY_PREFIX}/{image_name}"
     digest = IMAGE_HASHES.get(image_name)
     if not digest:
         raise ValueError(f"No digest found for docker image: {image_name}")
@@ -379,35 +415,35 @@ PLATFORMS = {
         "name": "Ubuntu 16.04 LTS (OpenJDK 8, gcc 5.4.0)",
         "emoji-name": ":ubuntu: Ubuntu 16.04 LTS (OpenJDK 8, gcc 5.4.0)",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1604-java8",
+        "docker-image": get_docker_image("ubuntu1604-java8"),
         "python": "python3",
     },
     "ubuntu1804": {
         "name": "Ubuntu 18.04 LTS (OpenJDK 11, gcc 7.5.0)",
         "emoji-name": ":ubuntu: Ubuntu 18.04 LTS (OpenJDK 11, gcc 7.5.0)",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu1804-java11",
+        "docker-image": get_docker_image("ubuntu1804-java11"),
         "python": "python3",
     },
     "ubuntu2004_java11": {
         "name": "Ubuntu 20.04 LTS (OpenJDK 11, gcc 9.4.0)",
         "emoji-name": ":ubuntu: Ubuntu 20.04 LTS (OpenJDK 11, gcc 9.4.0)",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-java11",
+        "docker-image": get_docker_image("ubuntu2004-java11"),
         "python": "python3.8",
     },
     "ubuntu2004": {
         "name": "Ubuntu 20.04 LTS",
         "emoji-name": ":ubuntu: Ubuntu 20.04 LTS",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004",
+        "docker-image": get_docker_image("ubuntu2004"),
         "python": "python3.8",
     },
     "ubuntu2004_arm64": {
         "name": "Ubuntu 20.04 LTS ARM64",
         "emoji-name": ":ubuntu: Ubuntu 20.04 LTS ARM64",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004",
+        "docker-image": get_docker_image("ubuntu2004"),
         "python": "python3.8",
         "queue": "arm64",
     },
@@ -415,7 +451,7 @@ PLATFORMS = {
         "name": "Ubuntu 22.04 LTS ARM64",
         "emoji-name": ":ubuntu: Ubuntu 22.04 LTS ARM64",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2204",
+        "docker-image": get_docker_image("ubuntu2204"),
         "python": "python3",
         "queue": "arm64",
     },
@@ -423,7 +459,7 @@ PLATFORMS = {
         "name": "Ubuntu 24.04 LTS ARM64",
         "emoji-name": ":ubuntu: Ubuntu 24.04 LTS ARM64",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2404",
+        "docker-image": get_docker_image("ubuntu2404"),
         "python": "python3",
         "queue": "arm64",
     },
@@ -431,63 +467,63 @@ PLATFORMS = {
         "name": "Kythe (Ubuntu 20.04 LTS)",
         "emoji-name": "Kythe (:ubuntu: Ubuntu 20.04 LTS)",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2004-kythe",
+        "docker-image": get_docker_image("ubuntu2004-kythe"),
         "python": "python3.8",
     },
     "kythe_ubuntu2204": {
         "name": "Kythe (Ubuntu 22.04 LTS)",
         "emoji-name": "Kythe (:ubuntu: Ubuntu 22.04 LTS)",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2204-kythe",
+        "docker-image": get_docker_image("ubuntu2204-kythe"),
         "python": "python3",
     },
     "kythe_ubuntu2404": {
         "name": "Kythe (Ubuntu 24.04 LTS)",
         "emoji-name": "Kythe (:ubuntu: Ubuntu 24.04 LTS)",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2404-kythe",
+        "docker-image": get_docker_image("ubuntu2404-kythe"),
         "python": "python3",
     },
     "ubuntu2204_java17": {
         "name": "Ubuntu 22.04 (OpenJDK 17, gcc 11.2.0)",
         "emoji-name": ":ubuntu: Ubuntu 22.04 (OpenJDK 17, gcc 11.2.0)",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2204-java17",
+        "docker-image": get_docker_image("ubuntu2204-java17"),
         "python": "python3",
     },
     "ubuntu2204": {
         "name": "Ubuntu 22.04",
         "emoji-name": ":ubuntu: Ubuntu 22.04 LTS",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2204",
+        "docker-image": get_docker_image("ubuntu2204"),
         "python": "python3",
     },
     "ubuntu2404": {
         "name": "Ubuntu 24.04",
         "emoji-name": ":ubuntu: Ubuntu 24.04 LTS",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/ubuntu2404",
+        "docker-image": get_docker_image("ubuntu2404"),
         "python": "python3",
     },
     "fedora39": {
         "name": "Fedora 39 (OpenJDK 17, gcc 13.1.1)",
         "emoji-name": ":fedora: Fedora 39 (OpenJDK 17, gcc 13.1.1)",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/fedora39-java17",
+        "docker-image": get_docker_image("fedora39-java17"),
         "python": "python3",
     },
     "fedora40": {
         "name": "Fedora 40 (OpenJDK 21, gcc 14.1.1)",
         "emoji-name": ":fedora: Fedora 40 (OpenJDK 21, gcc 14.1.1)",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/fedora40-java21",
+        "docker-image": get_docker_image("fedora40-java21"),
         "python": "python3",
     },
     "fedora43": {
         "name": "Fedora 43 (OpenJDK 25, gcc 15.2.1)",
         "emoji-name": ":fedora: Fedora 43 (OpenJDK 25, gcc 15.2.1)",
         "publish_binary": [],
-        "docker-image": f"gcr.io/{DOCKER_REGISTRY_PREFIX}/fedora43-java25",
+        "docker-image": get_docker_image("fedora43-java25"),
         "python": "python3",
     },
     "macos": {
@@ -1943,7 +1979,7 @@ def download_bazelci_agent(dest_dir):
     name = "bazelci-agent-{}-{}".format(version, postfix)
     url = "https://github.com/{}/releases/download/agent-{}/{}".format(repo, version, name)
     path = os.path.join(dest_dir, "bazelci-agent.exe" if is_windows() else "bazelci-agent")
-    execute_command(["curl", "-q", "--noproxy", "'*'", "-sSL", url, "-o", path])
+    execute_command(["curl", *CURL_FLAGS, url, "-o", path])
     st = os.stat(path)
     os.chmod(path, st.st_mode | stat.S_IEXEC)
     return path
@@ -2790,9 +2826,7 @@ def extract_archive(archive_path, dest_dir, strip_top_level_dir):
 def download_file(url, dest_dir, dest_filename):
     local_path = os.path.join(dest_dir, dest_filename)
     try:
-        execute_command(
-            ["curl", "-q", "-sSL", "--noproxy", "'*'", url, "-o", local_path], capture_stderr=True
-        )
+        execute_command(["curl", *CURL_FLAGS, url, "-o", local_path], capture_stderr=True)
     except subprocess.CalledProcessError as ex:
         raise BuildkiteInfraException("Failed to download {}: {}\n{}".format(url, ex, ex.stderr))
     return local_path
@@ -3035,6 +3069,15 @@ def create_step(
     concurrency_group=None,
     priority=None,
 ):
+    if commands is not None:
+        flat_commands = []
+        for cmd in commands:
+            if isinstance(cmd, list):
+                flat_commands.extend(cmd)
+            else:
+                flat_commands.append(cmd)
+        commands = flat_commands
+
     if "docker-image" in PLATFORMS[platform]:
         step = create_docker_step(
             label,
@@ -3594,14 +3637,17 @@ def runner_step(
 
 
 def fetch_ci_scripts_command():
-    command = "curl -q --noproxy '*' -sS {0}?{1} -o bazelci.py".format(SCRIPT_URL, int(time.time()))
-    command += " && curl -q --noproxy '*' -sS {0}?{1} -o collect_metrics.py".format(METRICS_SCRIPT_URL, int(time.time()))
-    return command
+    return [
+        curl_download_command("{0}?{1}".format(SCRIPT_URL, int(time.time())), "bazelci.py"),
+        curl_download_command(
+            "{0}?{1}".format(METRICS_SCRIPT_URL, int(time.time())), "collect_metrics.py"
+        ),
+    ]
 
 
 def fetch_aggregate_incompatible_flags_test_result_command():
-    return "curl -q --noproxy '*' -sS {0} -o aggregate_incompatible_flags_test_result.py".format(
-        AGGREGATE_INCOMPATIBLE_TEST_RESULT_URL
+    return curl_download_command(
+        AGGREGATE_INCOMPATIBLE_TEST_RESULT_URL, "aggregate_incompatible_flags_test_result.py"
     )
 
 
@@ -3878,10 +3924,7 @@ def fetch_incompatible_flags():
         [
             # Query for open issues with "incompatible-change" and "migration-ready" label.
             "curl",
-            "-q",
-            "--noproxy",
-            "'*'",
-            "-sS",
+            *CURL_FLAGS,
             "https://api.github.com/search/issues?per_page=100&q=repo:bazelbuild/bazel+label:incompatible-change+label:migration-ready+state:open",
         ]
     ).decode("utf-8")

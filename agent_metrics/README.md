@@ -13,7 +13,7 @@ gcloud compute instances create \
     --machine-type n1-standard-1 \
     --zone us-central1-a \
     --image-project=ubuntu-os-cloud \
-    --image-family=ubuntu-1804-lts \
+    --image-family=ubuntu-2404-lts-amd64 \
     --scopes cloud-platform \
     --service-account buildkite-agent-metrics@bazel-public.iam.gserviceaccount.com \
     --metadata-from-file=startup-script=start.sh \
@@ -24,6 +24,6 @@ gcloud compute instances create \
 
 The service account used for the VM must have at least the following permissions:
 
-- `Cloud KMS Decryption` for the Buildkite agent tokens.
+- `Secret Manager Secret Accessor` for the secrets that store the Buildkite agent tokens.
 - `Logging > Logs Writer` to write logs to Stackdriver Logging.
 - `Monitoring > Monitoring Metric Writer` to write to the Stackdriver Metrics.

@@ -62,7 +62,7 @@ CI_RESOURCE_PERCENTAGE = int(os.environ.get('CI_RESOURCE_PERCENTAGE', -1))
 
 
 def fetch_bcr_presubmit_py_command():
-    return "curl -s {0} -o bcr_presubmit.py".format(SCRIPT_URL)
+    return bazelci.curl_download_command(SCRIPT_URL, "bcr_presubmit.py")
 
 
 class BcrPipelineException(Exception):

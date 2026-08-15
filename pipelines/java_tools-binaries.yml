@@ -68,6 +68,9 @@ steps:
     label: ":darwin:"
     agents:
       - "queue=macos"
+    env:
+      ANDROID_HOME: ""
+      ANDROID_NDK_HOME: ""
 
   - command: |-
       bazel --ignore_all_rc_files version

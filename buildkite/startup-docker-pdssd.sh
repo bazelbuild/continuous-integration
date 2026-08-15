@@ -33,20 +33,17 @@ chmod 0755 "${AGENT_HOME}"
 case $(hostname -f) in
   *.bazel-public.*)
     ARTIFACT_BUCKET="bazel-trusted-buildkite-artifacts"
-    BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-trusted-encrypted-secrets/buildkite-trusted-agent-token.enc" | \
-        gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key buildkite-trusted-agent-token --ciphertext-file - --plaintext-file -)
+    BUILDKITE_TOKEN=$(gcloud secrets versions access latest --secret="bazel-trusted-buildkite-agent-token" --project bazel-public)
     ;;
   *.bazel-untrusted.*)
     case $(hostname -f) in
       *-testing-*)
         ARTIFACT_BUCKET="bazel-testing-buildkite-artifacts"
-        BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-testing-encrypted-secrets/buildkite-testing-agent-token.enc" | \
-            gcloud kms decrypt --project bazel-untrusted --location global --keyring buildkite --key buildkite-testing-agent-token --ciphertext-file - --plaintext-file -)
+        BUILDKITE_TOKEN=$(gcloud secrets versions access latest --secret="bazel-testing-buildkite-agent-token" --project bazel-untrusted)
         ;;
       *)
         ARTIFACT_BUCKET="bazel-untrusted-buildkite-artifacts"
-        BUILDKITE_TOKEN=$(gsutil cat "gs://bazel-untrusted-encrypted-secrets/buildkite-untrusted-agent-token.enc" | \
-            gcloud kms decrypt --project bazel-untrusted --location global --keyring buildkite --key buildkite-untrusted-agent-token --ciphertext-file - --plaintext-file -)
+        BUILDKITE_TOKEN=$(gcloud secrets versions access latest --secret="bazel-buildkite-agent-token" --project bazel-untrusted)
         ;;
     esac
 esac

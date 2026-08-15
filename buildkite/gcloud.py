@@ -19,6 +19,7 @@ import json
 import re
 import subprocess
 import threading
+import time
 
 DEBUG = True
 PRINT_LOCK = threading.Lock()
@@ -57,9 +58,24 @@ def gcloud(*args, **kwargs):
     if not "get-serial-port-output" in cmd:
         debug("Running: " + " ".join(cmd))
 
-    return subprocess.run(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, check=True
-    )
+    max_attempts = 3
+    for attempt in range(max_attempts):
+        try:
+            return subprocess.run(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, check=True
+            )
+        except subprocess.CalledProcessError as e:
+            # When multiple threads invoke gcloud concurrently in a fresh environment,
+            # multiple processes race to initialize and migrate gcloud's local SQLite
+            # database (~/.config/gcloud/), causing transient collisions such as:
+            # "ERROR: gcloud crashed (OperationalError): duplicate column name: regional_access_boundary".
+            # Example failure: https://buildkite.com/bazel-trusted/create-linux-vm-image/builds/43#019ff552-6791-4b7a-95c4-2c7c882bcfd5
+            # Retrying allows subsequent attempts to succeed once the initial migration completes.
+            if attempt < max_attempts - 1 and "OperationalError" in e.stderr:
+                debug(f"gcloud crashed with OperationalError on attempt {attempt + 1}, retrying...")
+                time.sleep(1)
+                continue
+            raise
 
 
 def create_instance(name, **kwargs):
