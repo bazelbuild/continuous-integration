@@ -294,36 +294,92 @@ DOCKER_REGISTRY_PREFIX = {
 }[BUILDKITE_ORG]
 
 IMAGE_HASHES = {
-    "rockylinux8": "sha256:c84c6cfcfccd9cf4f3e51e3da153cbb566faf8093e055bd74fd2c1dd4d90e00a",
-    "rockylinux8-java11": "sha256:d92d6954423633acaec617c6c2b2141249e6619a53c678720df31269f126995c",
-    "rockylinux8-java11-devtoolset10": "sha256:060341a8ebd20de07d262e021160037952047c397b4154cad5bfe8a47e68fbc2",
-    "debian10-java11": "sha256:fe61c5586504831d72f97afea30a1fbd2edf9cd4ed2aa3f7b8df4ddce9fe3316",
-    "debian11-java17": "sha256:1bf4a3335ea25959df8c16ebe7c1ad2e0e142f33cc921f13c87ff8c553b87fe4",
-    "debian12": "sha256:ebb15e85f49265372b2fb82f060ee7c211e4bc1f31a57afd1bad588671ff7b40",
-    "debian13": "sha256:f6d7a343a64e12c11604878518cd690296d767a84faca504a4154307eafd9cd7",
-    "ubuntu1604-java8": "sha256:59230d80e329bc67d9367269fdead37d2b120b1fad042f33b38b3bf8ecc107ef",
-    "ubuntu1804-java11": "sha256:d542de5cd3bd40f9f9531f70e2c0114fec9affaaee071875bd1d2b47bfb9f942",
-    "ubuntu2004-java11": "sha256:ed81fb22e69891cf90dcb113ae31fbccba54ab24e721c3efa62ad24274867389",
-    "ubuntu2004": "sha256:e950e704b6945a1e6e85ae222765ba3ca0b882e992d12bfc8f59d16d0b8d52e5",
-    "ubuntu2204": "sha256:3dd6ffbd8755c3622871d77ee6e4fec49eb0dba0017f72d424adc143d5ce7e2c",
-    "ubuntu2404": "sha256:a51f308a2cd8c24e4a920333b7af67595762d304ea656bfcb43e6d48738be319",
-    "ubuntu2004-kythe": "sha256:3862183a7674064e7e36ab851166e5a20eaccb47c8dd7205354fc8de6a6be0e9",
-    "ubuntu2204-kythe": "sha256:b5e83494b66ebac31733738cab0ae330f447fe38127c6fa33f22e8f1e4712a9a",
-    "ubuntu2404-kythe": "sha256:a549caebfaeef85ec141def86398ec651a71185c8aec885e0d95bddc1144a00f",
-    "ubuntu2204-java17": "sha256:b278d1275ede59d8e22c7e960270f8929e40fbfe69f75dace3d3a00fb56a1bad",
-    "fedora39-java17": "sha256:06c860cb2fe1f799947c3ad0f0cf52f19b124aa64ecf1370dda82d8185777579",
-    "fedora40-java21": "sha256:7841b69721114dc8b20d825ec6e6575816dec0a1ae9c94073fff52c17149d244",
-    "fedora43-java25": "sha256:0a6f5fd48d3ffc387da42646d0dbf025b18bdc70ef81a2534550af7feaca0ccd",
+    "rockylinux8": {
+        "amd64": "sha256:6a03ef8c6bbaf1f5fbea74890cc074951076adcf6347d1a7904357ad5e27297b",
+        "arm64": "sha256:c84c6cfcfccd9cf4f3e51e3da153cbb566faf8093e055bd74fd2c1dd4d90e00a",
+    },
+    "rockylinux8-java11": {
+        "amd64": "sha256:f219f0b6b8cdd5e2c986c82b22176354eb737ec7003598fe999e806afa328c31",
+        "arm64": "sha256:d92d6954423633acaec617c6c2b2141249e6619a53c678720df31269f126995c",
+    },
+    "rockylinux8-java11-devtoolset10": {
+        "amd64": "sha256:d3d1e037c983e01c8de3a1c6e4cc30ce967eb41736a163284d5c2a44ce4375fb",
+        "arm64": "sha256:060341a8ebd20de07d262e021160037952047c397b4154cad5bfe8a47e68fbc2",
+    },
+    "debian10-java11": {
+        "amd64": "sha256:fe61c5586504831d72f97afea30a1fbd2edf9cd4ed2aa3f7b8df4ddce9fe3316",
+    },
+    "debian11-java17": {
+        "amd64": "sha256:1bf4a3335ea25959df8c16ebe7c1ad2e0e142f33cc921f13c87ff8c553b87fe4",
+    },
+    "debian12": {
+        "amd64": "sha256:d839bcbd399d5bbb12eec5d4ea5474927340237ced942038a4bc6d9ec44f9b0b",
+        "arm64": "sha256:ebb15e85f49265372b2fb82f060ee7c211e4bc1f31a57afd1bad588671ff7b40",
+    },
+    "debian13": {
+        "amd64": "sha256:f7a2dc5f22f908b02b6d135ca5d0ce29a4f33837f4a1f11739a2efeb24429e58",
+        "arm64": "sha256:f6d7a343a64e12c11604878518cd690296d767a84faca504a4154307eafd9cd7",
+    },
+    "ubuntu1604-java8": {
+        "amd64": "sha256:59230d80e329bc67d9367269fdead37d2b120b1fad042f33b38b3bf8ecc107ef",
+    },
+    "ubuntu1804-java11": {
+        "amd64": "sha256:d542de5cd3bd40f9f9531f70e2c0114fec9affaaee071875bd1d2b47bfb9f942",
+    },
+    "ubuntu2004-java11": {
+        "amd64": "sha256:e28256ad8c9edf38c64eff79949a75ee7d46b171e276efb780cc76b7fb8666a8",
+        "arm64": "sha256:ed81fb22e69891cf90dcb113ae31fbccba54ab24e721c3efa62ad24274867389",
+    },
+    "ubuntu2004": {
+        "amd64": "sha256:275c8fb564b5c5e3b842fd776b3044334de8b32ea28368f8b71db6ac466c1471",
+        "arm64": "sha256:e950e704b6945a1e6e85ae222765ba3ca0b882e992d12bfc8f59d16d0b8d52e5",
+    },
+    "ubuntu2204": {
+        "amd64": "sha256:0910bd665b9893f096591e5c55598d759546a7556f9e3999711ad4129e0dc4b3",
+        "arm64": "sha256:3dd6ffbd8755c3622871d77ee6e4fec49eb0dba0017f72d424adc143d5ce7e2c",
+    },
+    "ubuntu2404": {
+        "amd64": "sha256:e5a281780c73f99c5e5d947ff58fbf22b0d6deb12c9f4548080647b67f35049d",
+        "arm64": "sha256:a51f308a2cd8c24e4a920333b7af67595762d304ea656bfcb43e6d48738be319",
+    },
+    "ubuntu2004-kythe": {
+        "amd64": "sha256:3862183a7674064e7e36ab851166e5a20eaccb47c8dd7205354fc8de6a6be0e9",
+    },
+    "ubuntu2204-kythe": {
+        "amd64": "sha256:11f2fdc76e05af95375e7bd142c0715f60e65da77d43678b83f2b91307fc7d26",
+        "arm64": "sha256:b5e83494b66ebac31733738cab0ae330f447fe38127c6fa33f22e8f1e4712a9a",
+    },
+    "ubuntu2404-kythe": {
+        "amd64": "sha256:1128a022f4bd894f21d6d7405fe60871a9fe023bb2d2e67f0c9d9da05829bcdf",
+        "arm64": "sha256:a549caebfaeef85ec141def86398ec651a71185c8aec885e0d95bddc1144a00f",
+    },
+    "ubuntu2204-java17": {
+        "amd64": "sha256:30a297efcd87e89df7751e779ce5fe49e187e64eb771029aaf4464a1f532626c",
+        "arm64": "sha256:b278d1275ede59d8e22c7e960270f8929e40fbfe69f75dace3d3a00fb56a1bad",
+    },
+    "fedora39-java17": {
+        "amd64": "sha256:06c860cb2fe1f799947c3ad0f0cf52f19b124aa64ecf1370dda82d8185777579",
+    },
+    "fedora40-java21": {
+        "amd64": "sha256:7841b69721114dc8b20d825ec6e6575816dec0a1ae9c94073fff52c17149d244",
+    },
+    "fedora43-java25": {
+        "amd64": "sha256:0a6f5fd48d3ffc387da42646d0dbf025b18bdc70ef81a2534550af7feaca0ccd",
+    },
 }
 
 
-def get_docker_image(image_name):
+def get_docker_image(image_name, is_arm64=False):
     # Temporarily disable this check to enable testing hash pinning in the testing cluster.
     ##if BUILDKITE_ORG == "bazel-testing":
     ##    return f"gcr.io/{DOCKER_REGISTRY_PREFIX}/{image_name}"
-    digest = IMAGE_HASHES.get(image_name)
-    if not digest:
+    digests = IMAGE_HASHES.get(image_name)
+    if not digests:
         raise ValueError(f"No digest found for docker image: {image_name}")
+    arch = "arm64" if is_arm64 else "amd64"
+    digest = digests.get(arch)
+    if not digest:
+        raise ValueError(f"No {arch} digest found for docker image: {image_name}")
     return f"gcr.io/{DOCKER_REGISTRY_PREFIX}/{image_name}@{digest}"
 
 
@@ -350,7 +406,7 @@ PLATFORMS = {
         "name": "Rocky Linux 8 ARM64",
         "emoji-name": ":rocky: Rocky Linux 8 ARM64",
         "publish_binary": ["linux_arm64"],
-        "docker-image": get_docker_image("rockylinux8"),
+        "docker-image": get_docker_image("rockylinux8", is_arm64=True),
         "python": "python3.8",
         "queue": "arm64",
     },
@@ -393,7 +449,7 @@ PLATFORMS = {
         "name": "Debian 12 ARM64",
         "emoji-name": ":debian: Debian 12 ARM64",
         "publish_binary": [],
-        "docker-image": get_docker_image("debian12"),
+        "docker-image": get_docker_image("debian12", is_arm64=True),
         "python": "python3",
         "queue": "arm64",
     },
@@ -408,7 +464,7 @@ PLATFORMS = {
         "name": "Debian 13 ARM64",
         "emoji-name": ":debian: Debian 13 ARM64",
         "publish_binary": [],
-        "docker-image": get_docker_image("debian13"),
+        "docker-image": get_docker_image("debian13", is_arm64=True),
         "python": "python3",
         "queue": "arm64",
     },
@@ -444,7 +500,7 @@ PLATFORMS = {
         "name": "Ubuntu 20.04 LTS ARM64",
         "emoji-name": ":ubuntu: Ubuntu 20.04 LTS ARM64",
         "publish_binary": [],
-        "docker-image": get_docker_image("ubuntu2004"),
+        "docker-image": get_docker_image("ubuntu2004", is_arm64=True),
         "python": "python3.8",
         "queue": "arm64",
     },
@@ -452,7 +508,7 @@ PLATFORMS = {
         "name": "Ubuntu 22.04 LTS ARM64",
         "emoji-name": ":ubuntu: Ubuntu 22.04 LTS ARM64",
         "publish_binary": [],
-        "docker-image": get_docker_image("ubuntu2204"),
+        "docker-image": get_docker_image("ubuntu2204", is_arm64=True),
         "python": "python3",
         "queue": "arm64",
     },
@@ -460,7 +516,7 @@ PLATFORMS = {
         "name": "Ubuntu 24.04 LTS ARM64",
         "emoji-name": ":ubuntu: Ubuntu 24.04 LTS ARM64",
         "publish_binary": [],
-        "docker-image": get_docker_image("ubuntu2404"),
+        "docker-image": get_docker_image("ubuntu2404", is_arm64=True),
         "python": "python3",
         "queue": "arm64",
     },
