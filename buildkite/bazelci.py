@@ -318,8 +318,9 @@ IMAGE_HASHES = {
 
 
 def get_docker_image(image_name):
-    if BUILDKITE_ORG == "bazel-testing":
-        return f"gcr.io/{DOCKER_REGISTRY_PREFIX}/{image_name}"
+    # Temporarily disable this check to enable testing hash pinning in the testing cluster.
+    ##if BUILDKITE_ORG == "bazel-testing":
+    ##    return f"gcr.io/{DOCKER_REGISTRY_PREFIX}/{image_name}"
     digest = IMAGE_HASHES.get(image_name)
     if not digest:
         raise ValueError(f"No digest found for docker image: {image_name}")
