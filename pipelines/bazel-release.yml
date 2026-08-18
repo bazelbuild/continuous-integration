@@ -1,4 +1,5 @@
 ---
+priority: 50
 steps:
   - label: "Set up"
     agents:

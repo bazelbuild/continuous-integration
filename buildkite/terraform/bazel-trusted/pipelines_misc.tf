@@ -122,6 +122,7 @@ resource "buildkite_pipeline" "create-linux-vm-image" {
       BAZEL_TEST_VM_NAMES = "bk-testing-docker,bk-testing-docker-arm64"
       BAZEL_VM_NAMES      = "bk-docker,bk-docker-arm64"
     },
+    priority = 100,
     steps = {
       commands = [
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-vm-image.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
@@ -184,7 +185,7 @@ resource "buildkite_pipeline" "create-linux-docker-images" {
   name                       = "Create Linux Docker Images"
   repository                 = "https://github.com/bazelbuild/continuous-integration.git"
   default_branch             = "master"
-  steps                      = "---\nsteps:\n  - command: |-\n      docker builder prune -a -f\n      cd buildkite/docker\n      [ \"$BUILDKITE_BRANCH\" = \"master\" ] || [ \"$BUILDKITE_BRANCH\" = \"testing\" ] && git checkout $BUILDKITE_BRANCH\n      echo \"--- Building docker images...\"\n      ./build.sh\n      echo \"--- Pushing docker images...\"\n      ./push.sh\n    label: \":pipeline: Create images\"\n    agents:\n      - \"queue=default\""
+  steps                      = "---\npriority: 100\nsteps:\n  - command: |-\n      docker builder prune -a -f\n      cd buildkite/docker\n      [ \"$BUILDKITE_BRANCH\" = \"master\" ] || [ \"$BUILDKITE_BRANCH\" = \"testing\" ] && git checkout $BUILDKITE_BRANCH\n      echo \"--- Building docker images...\"\n      ./build.sh\n      echo \"--- Pushing docker images...\"\n      ./push.sh\n    label: \":pipeline: Create images\"\n    agents:\n      - \"queue=default\""
   allow_rebuilds             = true
   cancel_intermediate_builds = false
   skip_intermediate_builds   = false
@@ -259,6 +260,7 @@ resource "buildkite_pipeline" "create-windows-vm-image" {
       BAZEL_TEST_VM_NAMES = "bk-testing-windows"
       BAZEL_VM_NAMES      = "bk-windows"
     },
+    priority = 100,
     steps = {
       commands = [
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-vm-image.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
