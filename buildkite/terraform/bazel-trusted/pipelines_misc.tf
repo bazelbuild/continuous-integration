@@ -119,8 +119,9 @@ resource "buildkite_pipeline" "create-linux-vm-image" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {
-      BAZEL_TEST_VM_NAMES = "bk-testing-docker,bk-testing-docker-arm64"
-      BAZEL_VM_NAMES      = "bk-docker,bk-docker-arm64"
+      BAZEL_TEST_VM_NAMES        = "bk-testing-docker,bk-testing-docker-arm64"
+      BAZEL_VM_NAMES             = "bk-docker,bk-docker-arm64"
+      BAZEL_PROD_INSTANCE_GROUPS = "bk-docker,bk-docker-arm64,bk-trusted-docker,bk-trusted-docker-arm64"
     },
     steps = {
       commands = [
@@ -256,8 +257,9 @@ resource "buildkite_pipeline" "create-windows-vm-image" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {
-      BAZEL_TEST_VM_NAMES = "bk-testing-windows"
-      BAZEL_VM_NAMES      = "bk-windows"
+      BAZEL_TEST_VM_NAMES        = "bk-testing-windows"
+      BAZEL_VM_NAMES             = "bk-windows"
+      BAZEL_PROD_INSTANCE_GROUPS = "bk-windows,bk-trusted-windows"
     },
     steps = {
       commands = [
