@@ -607,16 +607,6 @@ class GetCiScriptRefTest(unittest.TestCase):
         with mock.patch.object(bazelci, "THIS_IS_TESTING", False):
             self.assertEqual(bazelci.get_ci_script_ref(), "master")
 
-    def test_bazelci_commit_override(self):
-        with mock.patch.object(bazelci, "THIS_IS_TESTING", True):
-            with mock.patch.dict(os.environ, {"BAZELCI_COMMIT": "custom_commit_sha"}):
-                self.assertEqual(bazelci.get_ci_script_ref(), "custom_commit_sha")
-
-    def test_bazelci_branch_override(self):
-        with mock.patch.object(bazelci, "THIS_IS_TESTING", True):
-            with mock.patch.dict(os.environ, {"BAZELCI_BRANCH": "custom_branch"}, clear=True):
-                self.assertEqual(bazelci.get_ci_script_ref(), "custom_branch")
-
     def test_ci_repo_with_commit(self):
         with mock.patch.object(bazelci, "THIS_IS_TESTING", True):
             with mock.patch.dict(

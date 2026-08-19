@@ -61,12 +61,6 @@ def get_ci_script_ref():
     if not THIS_IS_TESTING:
         return "master"
 
-    # Allow explicit override via environment variable
-    if "BAZELCI_COMMIT" in os.environ:
-        return os.environ["BAZELCI_COMMIT"]
-    if "BAZELCI_BRANCH" in os.environ:
-        return os.environ["BAZELCI_BRANCH"]
-
     # If the pipeline itself is for the official bazelbuild/continuous-integration repo, use the build's commit or branch
     if os.environ.get("BUILDKITE_REPO") in (
         "https://github.com/bazelbuild/continuous-integration",
