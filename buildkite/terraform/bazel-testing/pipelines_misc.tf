@@ -64,8 +64,8 @@ resource "buildkite_pipeline" "fwe-test" {
   }
 }
 
-resource "buildkite_pipeline" "smoke-test" {
-  name        = "Smoke Test"
+resource "buildkite_pipeline" "ci-smoke-test" {
+  name        = "CI Smoke Test"
   repository  = "https://github.com/bazelbuild/continuous-integration.git"
   description = "Cross-platform smoke tests on smoke_test/ workspace for validating Bazel CI script changes"
   steps = templatefile("pipeline.yml.tpl", {
