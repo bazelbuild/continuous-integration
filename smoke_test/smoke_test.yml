@@ -32,6 +32,10 @@ matrix:
     # Windows (x86_64 & arm64)
     - windows
     - windows_arm64
+    # RBE platforms
+    - rbe_ubuntu2004
+    - rbe_ubuntu2204
+    - rbe_ubuntu2404
 
 tasks:
   smoke_test:
