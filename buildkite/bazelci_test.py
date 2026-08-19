@@ -89,29 +89,27 @@ tasks:
         flags, json_profile_out, capture_corrupted_outputs_dir = bazelci.calculate_flags(
             tasks.get("json_profile"), "build_flags", "build", "/tmp", ["HOME"]
         )
-        expected_profile = os.path.join("/tmp", "build.profile.gz")
         self.assertEqual(
             flags,
-            ["--enable_x", "--enable_y", "--profile={}".format(expected_profile), "--test_env=HOME"],
+            ["--enable_x", "--enable_y", "--profile=/tmp/build.profile.gz", "--test_env=HOME"],
         )
-        self.assertEqual(json_profile_out, expected_profile)
+        self.assertEqual(json_profile_out, "/tmp/build.profile.gz")
 
     def test_capture_corrupted(self):
         tasks = self._CONFIGS.get("tasks")
         flags, json_profile_out, capture_corrupted_outputs_dir = bazelci.calculate_flags(
             tasks.get("capture_corrupted"), "build_flags", "build", "/tmp", ["HOME"]
         )
-        expected_corrupted_dir = os.path.join("/tmp", "build_corrupted_outputs")
         self.assertEqual(
             flags,
             [
                 "--enable_x",
                 "--enable_y",
-                "--experimental_remote_capture_corrupted_outputs={}".format(expected_corrupted_dir),
+                "--experimental_remote_capture_corrupted_outputs=/tmp/build_corrupted_outputs",
                 "--test_env=HOME",
             ],
         )
-        self.assertEqual(capture_corrupted_outputs_dir, expected_corrupted_dir)
+        self.assertEqual(capture_corrupted_outputs_dir, "/tmp/build_corrupted_outputs")
 
     def test_no_flags_in_config(self):
         tasks = self._CONFIGS.get("tasks")
