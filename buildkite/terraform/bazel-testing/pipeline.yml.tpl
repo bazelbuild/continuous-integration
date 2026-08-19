@@ -36,4 +36,3 @@ steps:
             - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
             - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
             - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
-            - "/var/run/docker.sock:/var/run/docker.sock"
