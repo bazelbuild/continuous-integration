@@ -1231,7 +1231,7 @@ resource "buildkite_pipeline" "stardoc" {
 
 resource "buildkite_pipeline" "buildtools" {
   name                       = "Buildtools"
-  repository                 = "https://github.com/bazelbuild/buildtools.git"
+  repository                 = "https://github.com/bazel-contrib/buildtools.git"
   default_branch             = "main"
   steps                      = templatefile("pipeline.yml.tpl", { envs = {}, steps = { commands = ["curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py", "bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload'"] } })
   allow_rebuilds             = true
