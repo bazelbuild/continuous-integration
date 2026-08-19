@@ -37,7 +37,7 @@ BCR_REPO_DIR = pathlib.Path(os.getcwd())
 BUILDKITE_ORG = os.environ.get("BUILDKITE_ORGANIZATION_SLUG", "bazel")
 
 SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/bcr_presubmit.py?{}".format(
-    bazelci.GITHUB_BRANCH, int(time.time())
+    bazelci.GITHUB_REF, int(time.time())
 )
 
 CI_MACHINE_NUM = {

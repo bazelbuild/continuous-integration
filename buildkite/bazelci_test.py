@@ -601,5 +601,72 @@ class FetchCiScripts(unittest.TestCase):
         self.assertIn("--task=basic", commands[2])
 
 
+class GetCiScriptRefTest(unittest.TestCase):
+
+    def test_production_returns_master(self):
+        with mock.patch.object(bazelci, "THIS_IS_TESTING", False):
+            self.assertEqual(bazelci.get_ci_script_ref(), "master")
+
+    def test_bazelci_commit_override(self):
+        with mock.patch.object(bazelci, "THIS_IS_TESTING", True):
+            with mock.patch.dict(os.environ, {"BAZELCI_COMMIT": "custom_commit_sha"}):
+                self.assertEqual(bazelci.get_ci_script_ref(), "custom_commit_sha")
+
+    def test_bazelci_branch_override(self):
+        with mock.patch.object(bazelci, "THIS_IS_TESTING", True):
+            with mock.patch.dict(os.environ, {"BAZELCI_BRANCH": "custom_branch"}, clear=True):
+                self.assertEqual(bazelci.get_ci_script_ref(), "custom_branch")
+
+    def test_ci_repo_with_commit(self):
+        with mock.patch.object(bazelci, "THIS_IS_TESTING", True):
+            with mock.patch.dict(
+                os.environ,
+                {
+                    "BUILDKITE_REPO": "https://github.com/bazelbuild/continuous-integration.git",
+                    "BUILDKITE_COMMIT": "deadbeef1234",
+                },
+                clear=True,
+            ):
+                self.assertEqual(bazelci.get_ci_script_ref(), "deadbeef1234")
+
+    def test_ci_repo_with_head_commit_uses_branch(self):
+        with mock.patch.object(bazelci, "THIS_IS_TESTING", True):
+            with mock.patch.dict(
+                os.environ,
+                {
+                    "BUILDKITE_REPO": "https://github.com/bazelbuild/continuous-integration.git",
+                    "BUILDKITE_COMMIT": "HEAD",
+                    "BUILDKITE_BRANCH": "pr-branch-name",
+                },
+                clear=True,
+            ):
+                self.assertEqual(bazelci.get_ci_script_ref(), "pr-branch-name")
+
+    def test_other_repo_defaults_to_testing(self):
+        with mock.patch.object(bazelci, "THIS_IS_TESTING", True):
+            with mock.patch.dict(
+                os.environ,
+                {
+                    "BUILDKITE_REPO": "https://github.com/bazelbuild/bazel.git",
+                    "BUILDKITE_COMMIT": "some_bazel_commit",
+                },
+                clear=True,
+            ):
+                self.assertEqual(bazelci.get_ci_script_ref(), "testing")
+
+    def test_fork_repo_defaults_to_testing(self):
+        with mock.patch.object(bazelci, "THIS_IS_TESTING", True):
+            with mock.patch.dict(
+                os.environ,
+                {
+                    "BUILDKITE_REPO": "https://github.com/forkuser/continuous-integration.git",
+                    "BUILDKITE_COMMIT": "fork_commit",
+                },
+                clear=True,
+            ):
+                self.assertEqual(bazelci.get_ci_script_ref(), "testing")
+
+
 if __name__ == "__main__":
     unittest.main()
+

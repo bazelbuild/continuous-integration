@@ -57,24 +57,45 @@ THIS_IS_SPARTA = True
 CLOUD_PROJECTS_PER_ORG = {"bazel": "bazel-untrusted", "bazel-trusted": "bazel-public", "bazel-testing": "bazel-untrusted"}
 CLOUD_PROJECT = CLOUD_PROJECTS_PER_ORG[BUILDKITE_ORG]
 
-GITHUB_BRANCH = {"bazel": "master", "bazel-trusted": "master", "bazel-testing": "testing"}[
-    BUILDKITE_ORG
-]
+def get_ci_script_ref():
+    if not THIS_IS_TESTING:
+        return "master"
+
+    # Allow explicit override via environment variable
+    if "BAZELCI_COMMIT" in os.environ:
+        return os.environ["BAZELCI_COMMIT"]
+    if "BAZELCI_BRANCH" in os.environ:
+        return os.environ["BAZELCI_BRANCH"]
+
+    # If the pipeline itself is for the official bazelbuild/continuous-integration repo, use the build's commit or branch
+    repo = os.environ.get("BUILDKITE_REPO", "")
+    if "bazelbuild/continuous-integration" in repo:
+        commit = os.environ.get("BUILDKITE_COMMIT")
+        if commit and commit != "HEAD":
+            return commit
+        branch = os.environ.get("BUILDKITE_BRANCH")
+        if branch:
+            return branch
+
+    return "testing"
+
+
+GITHUB_REF = get_ci_script_ref()
 
 SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazelci.py".format(
-    GITHUB_BRANCH
+    GITHUB_REF
 )
 
 METRICS_SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/collect_metrics.py".format(
-    GITHUB_BRANCH
+    GITHUB_REF
 )
 
 AGGREGATE_INCOMPATIBLE_TEST_RESULT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/aggregate_incompatible_flags_test_result.py?{}".format(
-    GITHUB_BRANCH, int(time.time())
+    GITHUB_REF, int(time.time())
 )
 
 EMERGENCY_FILE_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/emergency.yml?{}".format(
-    GITHUB_BRANCH, int(time.time())
+    GITHUB_REF, int(time.time())
 )
 
 CURL_FLAGS = [
