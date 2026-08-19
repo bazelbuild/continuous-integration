@@ -68,7 +68,11 @@ def get_ci_script_ref():
         return os.environ["BAZELCI_BRANCH"]
 
     # If the pipeline itself is for the official bazelbuild/continuous-integration repo, use the build's commit or branch
-    if "bazelbuild/continuous-integration" in os.environ.get("BUILDKITE_REPO", ""):
+    if os.environ.get("BUILDKITE_REPO") in (
+        "https://github.com/bazelbuild/continuous-integration",
+        "https://github.com/bazelbuild/continuous-integration.git",
+        "git@github.com:bazelbuild/continuous-integration.git",
+    ):
         commit = os.environ.get("BUILDKITE_COMMIT")
         if commit and commit != "HEAD":
             return commit
