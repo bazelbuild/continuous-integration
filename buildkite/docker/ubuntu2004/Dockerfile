@@ -81,14 +81,6 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
     apt-get update -y && apt-get install google-cloud-sdk=466.0.0-0 -y && \
     rm -rf /var/lib/apt/lists/*
 
-### Docker (for legacy rbe_autoconfig)
-RUN apt-get -y update && \
-    apt-get -y install apt-transport-https ca-certificates && \
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
-    add-apt-repository "deb [arch=$TARGETARCH] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
-    apt-get -y update && \
-    apt-get -y install docker-ce && \
-    rm -rf /var/lib/apt/lists/*
 
 # Bazelisk
 RUN LATEST_BAZELISK=$(curl -sSI https://github.com/bazelbuild/bazelisk/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
