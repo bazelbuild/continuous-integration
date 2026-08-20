@@ -49,7 +49,7 @@ instance_groups:
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-docker-arm64
     metadata_from_file: startup-script=startup-docker-pdssd.sh
-    machine_type: c4a-standard-8-lssd
+    machine_type: c4a-standard-8
     zone: us-central1-c
     boot_disk_type: hyperdisk-balanced
   - name: bk-testing-docker-arm64
@@ -58,7 +58,7 @@ instance_groups:
     service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-testing-docker-arm64
     metadata_from_file: startup-script=startup-docker-pdssd.sh
-    machine_type: c4a-standard-8-lssd
+    machine_type: c4a-standard-8
     zone: us-central1-c
     boot_disk_type: hyperdisk-balanced
   - name: bk-trusted-docker-arm64
@@ -67,7 +67,7 @@ instance_groups:
     service_account: buildkite-trusted@bazel-public.iam.gserviceaccount.com
     image_family: bk-docker-arm64
     metadata_from_file: startup-script=startup-docker-pdssd.sh
-    machine_type: c4a-standard-8-lssd
+    machine_type: c4a-standard-8
     zone: us-central1-c
     boot_disk_type: hyperdisk-balanced
   - name: bk-windows
