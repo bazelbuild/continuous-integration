@@ -156,7 +156,7 @@ resource "buildkite_pipeline" "bazel-at-head-plus-downstream" {
 
 
 resource "buildkite_pipeline" "bazel-bazel-github-presubmit-tedx" {
-  name       = "Bazel :bazel: Github Presubmit"
+  name       = "Bazel :bazel: Github Presubmit (tedx-dev)"
   repository = "https://github.com/bazelbuild/bazel.git"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {}
