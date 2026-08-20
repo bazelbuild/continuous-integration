@@ -227,17 +227,17 @@ async function notifyMaintainers(octokit, owner, repo, prNumber, maintainersMap)
 }
 
 async function postComment(octokit, owner, repo, prNumber, body) {
-  // Check if the same comment already exists for the PR in the past two weeks
-  const existingComments = await octokit.rest.issues.listComments({
+  // Check if the same comment already exists for the PR
+  const existingComments = await octokit.paginate(octokit.rest.issues.listComments, {
     owner,
     repo,
     issue_number: prNumber,
-    since: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(), // Two weeks ago
+    per_page: 100,
   });
 
-  const commentExists = existingComments.data.some(comment => comment.body === body);
+  const commentExists = existingComments.some(comment => comment.body === body);
   if (commentExists) {
-    console.log('Skipping comment as it\'s already posted for the PR within the past two weeks.');
+    console.log('Skipping comment as it\'s already posted for the PR.');
     return;
   }
 
