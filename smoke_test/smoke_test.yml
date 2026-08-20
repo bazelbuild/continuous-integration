@@ -28,7 +28,7 @@ matrix:
 
 tasks:
   smoke_test:
-    name: "Smoke Test on {platform}"
+    name: "Smoke Test"
     platform: ${{ platform }}
     working_directory: smoke_test
     build_targets:
