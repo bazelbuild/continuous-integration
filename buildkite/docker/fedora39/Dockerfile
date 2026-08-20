@@ -60,8 +60,8 @@ RUN LATEST_BAZELISK=$(curl -sSI https://github.com/bazelbuild/bazelisk/releases/
     chmod 0755 /usr/local/bin/bazel
 
 # Buildifier
-RUN LATEST_BUILDIFIER=$(curl -sSI https://github.com/bazelbuild/buildtools/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
-    curl -Lo /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/${LATEST_BUILDIFIER}/buildifier-linux-${BUILDARCH} && \
+RUN LATEST_BUILDIFIER=$(curl -sSI https://github.com/bazel-contrib/buildtools/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
+    curl -Lo /usr/local/bin/buildifier https://github.com/bazel-contrib/buildtools/releases/download/${LATEST_BUILDIFIER}/buildifier-linux-${BUILDARCH} && \
     chown root:root /usr/local/bin/buildifier && \
     chmod 0755 /usr/local/bin/buildifier
 
