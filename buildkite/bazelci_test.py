@@ -546,15 +546,29 @@ class InitialSteps(unittest.TestCase):
         self.assertIn("block", steps[0])
 
     def test_presubmit_auto_run_label_skips_config_change_block(self):
-        with mock.patch.dict(
-            os.environ,
-            {
-                "BUILDKITE_BRANCH": "feature",
-                "BUILDKITE_PIPELINE_DEFAULT_BRANCH": "main",
-                "BUILDKITE_PULL_REQUEST_LABELS": "foo,presubmit-auto-run,bar",
-            },
-        ), mock.patch.object(bazelci, "get_modified_files") as get_modified_files:
-            steps = bazelci.create_initial_steps()
+        for label in ("presubmit-auto-run", "CI:run"):
+            with self.subTest(label=label):
+                with mock.patch.dict(
+                    os.environ,
+                    {
+                        "BUILDKITE_BRANCH": "feature",
+                        "BUILDKITE_PIPELINE_DEFAULT_BRANCH": "main",
+                        "BUILDKITE_PULL_REQUEST_LABELS": f"foo,{label},bar",
+                    },
+                ), mock.patch.object(bazelci, "get_modified_files") as get_modified_files:
+                    steps = bazelci.create_initial_steps()
+                self.assertEqual(steps, [])
+                get_modified_files.assert_not_called()
+
+    def test_has_presubmit_auto_run_label(self):
+        with mock.patch.dict(os.environ, {"BUILDKITE_PULL_REQUEST_LABELS": ""}):
+            self.assertFalse(bazelci.has_presubmit_auto_run_label())
+        with mock.patch.dict(os.environ, {"BUILDKITE_PULL_REQUEST_LABELS": "foo,bar"}):
+            self.assertFalse(bazelci.has_presubmit_auto_run_label())
+        with mock.patch.dict(os.environ, {"BUILDKITE_PULL_REQUEST_LABELS": "presubmit-auto-run"}):
+            self.assertTrue(bazelci.has_presubmit_auto_run_label())
+        with mock.patch.dict(os.environ, {"BUILDKITE_PULL_REQUEST_LABELS": "foo,CI:run,bar"}):
+            self.assertTrue(bazelci.has_presubmit_auto_run_label())
 
 class FetchCiScripts(unittest.TestCase):
     def test_curl_download_command(self):
@@ -657,6 +671,83 @@ class GetCiScriptRefTest(unittest.TestCase):
                 clear=True,
             ):
                 self.assertEqual(bazelci.get_ci_script_ref(), "testing")
+
+
+class GitBranchHandlingTest(unittest.TestCase):
+
+    def test_upload_project_pipeline_step_with_git_commit(self):
+        step = bazelci.upload_project_pipeline_step(
+            project_name="Protobuf 35.x",
+            git_repository="https://github.com/protocolbuffers/protobuf.git",
+            http_config=None,
+            file_config=".bazelci/presubmit.yml",
+            git_commit="origin/35.x",
+        )
+        commands = step["command"]
+        project_pipeline_cmd = [c for c in commands if "project_pipeline" in c][0]
+        self.assertIn("--git_commit=origin/35.x", project_pipeline_cmd)
+        self.assertIn('--project_name="Protobuf 35.x"', project_pipeline_cmd)
+        self.assertIn('--file_config=.bazelci/presubmit.yml', project_pipeline_cmd)
+
+    def test_print_bazel_downstream_pipeline_passes_origin_branch_as_git_commit(self):
+        test_projects = {
+            "Protobuf 35.x": {
+                "git_repository": "https://github.com/protocolbuffers/protobuf.git",
+                "git_branch": "35.x",
+                "file_config": ".bazelci/presubmit.yml",
+                "pipeline_slug": "protobuf",
+            }
+        }
+        with mock.patch.dict(bazelci.DOWNSTREAM_PROJECTS, test_projects, clear=True), \
+             mock.patch.object(bazelci, "upload_project_pipeline_step") as mock_upload, \
+             mock.patch.object(bazelci, "print_pipeline_steps"), \
+             mock.patch.object(bazelci, "bazel_build_step", return_value={"label": "Bazel"}), \
+             mock.patch.object(bazelci, "get_platform_for_task", return_value="ubuntu2004"):
+            bazelci.print_bazel_downstream_pipeline(
+                task_configs={"basic": {}},
+                http_config=None,
+                file_config=None,
+                test_disabled_projects=False,
+                notify=False,
+            )
+            mock_upload.assert_called_once_with(
+                project_name="Protobuf 35.x",
+                git_repository="https://github.com/protocolbuffers/protobuf.git",
+                http_config=None,
+                file_config=".bazelci/presubmit.yml",
+                git_commit="origin/35.x",
+            )
+
+    def test_get_last_green_commit_ignores_projects_with_git_branch(self):
+        with mock.patch.dict(
+            bazelci.DOWNSTREAM_PROJECTS,
+            {
+                "TestProject": {
+                    "git_repository": "https://github.com/foo/bar.git",
+                    "pipeline_slug": "bar",
+                    "git_branch": "35.x",
+                }
+            },
+            clear=True,
+        ):
+            self.assertIsNone(bazelci.get_last_green_commit("TestProject"))
+
+    def test_clone_git_repository_resets_to_git_commit(self):
+        executed_commands = []
+
+        def fake_execute(args, print_output=True, suppress_stdout=False):
+            executed_commands.append(args)
+
+        with mock.patch.object(bazelci, "execute_command", side_effect=fake_execute), \
+             mock.patch("os.path.exists", return_value=True), \
+             mock.patch("os.chdir"):
+            bazelci.clone_git_repository(
+                "https://github.com/protocolbuffers/protobuf.git",
+                git_commit="origin/35.x",
+                suppress_stdout=True,
+            )
+
+        self.assertIn(["git", "reset", "origin/35.x", "--hard"], executed_commands)
 
 
 if __name__ == "__main__":
