@@ -546,15 +546,29 @@ class InitialSteps(unittest.TestCase):
         self.assertIn("block", steps[0])
 
     def test_presubmit_auto_run_label_skips_config_change_block(self):
-        with mock.patch.dict(
-            os.environ,
-            {
-                "BUILDKITE_BRANCH": "feature",
-                "BUILDKITE_PIPELINE_DEFAULT_BRANCH": "main",
-                "BUILDKITE_PULL_REQUEST_LABELS": "foo,presubmit-auto-run,bar",
-            },
-        ), mock.patch.object(bazelci, "get_modified_files") as get_modified_files:
-            steps = bazelci.create_initial_steps()
+        for label in ("presubmit-auto-run", "CI:run"):
+            with self.subTest(label=label):
+                with mock.patch.dict(
+                    os.environ,
+                    {
+                        "BUILDKITE_BRANCH": "feature",
+                        "BUILDKITE_PIPELINE_DEFAULT_BRANCH": "main",
+                        "BUILDKITE_PULL_REQUEST_LABELS": f"foo,{label},bar",
+                    },
+                ), mock.patch.object(bazelci, "get_modified_files") as get_modified_files:
+                    steps = bazelci.create_initial_steps()
+                self.assertEqual(steps, [])
+                get_modified_files.assert_not_called()
+
+    def test_has_presubmit_auto_run_label(self):
+        with mock.patch.dict(os.environ, {"BUILDKITE_PULL_REQUEST_LABELS": ""}):
+            self.assertFalse(bazelci.has_presubmit_auto_run_label())
+        with mock.patch.dict(os.environ, {"BUILDKITE_PULL_REQUEST_LABELS": "foo,bar"}):
+            self.assertFalse(bazelci.has_presubmit_auto_run_label())
+        with mock.patch.dict(os.environ, {"BUILDKITE_PULL_REQUEST_LABELS": "presubmit-auto-run"}):
+            self.assertTrue(bazelci.has_presubmit_auto_run_label())
+        with mock.patch.dict(os.environ, {"BUILDKITE_PULL_REQUEST_LABELS": "foo,CI:run,bar"}):
+            self.assertTrue(bazelci.has_presubmit_auto_run_label())
 
 class FetchCiScripts(unittest.TestCase):
     def test_curl_download_command(self):

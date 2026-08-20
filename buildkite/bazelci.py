@@ -695,7 +695,8 @@ CONFIG_FILE_EXTENSIONS = {".yml", ".yaml"}
 
 DEFAULT_PRESUBMIT_CONFIG_PATH = ".bazelci/presubmit.yml"
 
-PRESUBMIT_AUTO_RUN_LABEL = "presubmit-auto-run"
+PRESUBMIT_AUTO_RUN_LABELS = {"presubmit-auto-run", "CI:run"}
+PRESUBMIT_AUTO_RUN_LABEL = PRESUBMIT_AUTO_RUN_LABELS
 
 KYTHE_DIR = "/usr/local/kythe"
 
@@ -3480,7 +3481,10 @@ def create_initial_steps():
 
 
 def has_presubmit_auto_run_label():
-    return PRESUBMIT_AUTO_RUN_LABEL in os.getenv("BUILDKITE_PULL_REQUEST_LABELS", "").split(",")
+    return any(
+        label in PRESUBMIT_AUTO_RUN_LABELS
+        for label in os.getenv("BUILDKITE_PULL_REQUEST_LABELS", "").split(",")
+    )
 
 
 def is_config_file(path):
