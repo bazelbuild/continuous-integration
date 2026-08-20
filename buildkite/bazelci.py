@@ -242,6 +242,23 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "pipeline_slug": "intellij-plugin-aspect-google",
         "disabled_reason": "https://github.com/bazelbuild/intellij/issues/7232#issuecomment-2617127267",
     },
+    "Protobuf": {
+        "git_repository": "https://github.com/protocolbuffers/protobuf.git",
+        "file_config": ".bazelci/presubmit.yml",
+        "pipeline_slug": "protobuf",
+    },
+    "Protobuf 33.x": {
+        "git_repository": "https://github.com/protocolbuffers/protobuf.git",
+        "git_branch": "33.x",
+        "file_config": ".bazelci/presubmit.yml",
+        "pipeline_slug": "protobuf",
+    },
+    "Protobuf 35.x": {
+        "git_repository": "https://github.com/protocolbuffers/protobuf.git",
+        "git_branch": "35.x",
+        "file_config": ".bazelci/presubmit.yml",
+        "pipeline_slug": "protobuf",
+    },
     "Stardoc": {
         "git_repository": "https://github.com/bazelbuild/stardoc.git",
         "pipeline_slug": "stardoc",
@@ -3268,10 +3285,11 @@ def print_project_pipeline(
     http_config,
     file_config,
     git_repository,
-    monitor_flaky_tests,
-    use_but,
-    notify,
-    print_shard_summary,
+    git_commit=None,
+    monitor_flaky_tests=False,
+    use_but=False,
+    notify=False,
+    print_shard_summary=False,
 ):
     task_configs = configs.get("tasks", None)
     if not task_configs:
@@ -3299,7 +3317,8 @@ def print_project_pipeline(
             )
 
     # In Bazel Downstream Project pipelines, we should test the project at the last green commit.
-    git_commit = get_last_green_commit(project_name) if is_downstream_pipeline() else None
+    if is_downstream_pipeline() and not git_commit:
+        git_commit = get_last_green_commit(project_name)
 
     config_hashes = set()
     skipped_downstream_tasks = []
@@ -3729,7 +3748,9 @@ def fetch_aggregate_incompatible_flags_test_result_command():
     )
 
 
-def upload_project_pipeline_step(project_name, git_repository, http_config, file_config):
+def upload_project_pipeline_step(
+    project_name, git_repository, http_config, file_config, git_commit=None
+):
     pipeline_command = (
         '{0} bazelci.py project_pipeline --project_name="{1}" ' + "--git_repository={2}"
     ).format(PLATFORMS[DEFAULT_PLATFORM]["python"], project_name, git_repository)
@@ -3738,6 +3759,8 @@ def upload_project_pipeline_step(project_name, git_repository, http_config, file
         pipeline_command += " --http_config=" + http_config
     if file_config:
         pipeline_command += " --file_config=" + file_config
+    if git_commit:
+        pipeline_command += " --git_commit=" + git_commit
     pipeline_command += " | tee /dev/tty | buildkite-agent pipeline upload"
 
     return create_step(
@@ -4075,12 +4098,16 @@ def print_bazel_downstream_pipeline(
         if (test_disabled_projects and disabled_reason) or (
             not test_disabled_projects and not disabled_reason
         ):
+            git_commit = (
+                "origin/" + config["git_branch"] if "git_branch" in config else None
+            )
             pipeline_steps.append(
                 upload_project_pipeline_step(
                     project_name=project,
                     git_repository=config["git_repository"],
                     http_config=config.get("http_config", None),
                     file_config=config.get("file_config", None),
+                    git_commit=git_commit,
                 )
             )
 
@@ -4201,6 +4228,9 @@ def get_last_green_commit_by_url(last_green_commit_url):
 
 
 def get_last_green_commit(project_name):
+    # If a specific branch is configured for downstream testing, don't use the main branch's last green commit
+    if DOWNSTREAM_PROJECTS.get(project_name, {}).get("git_branch"):
+        return None
     last_green_commit_url = bazelci_last_green_commit_url(
         DOWNSTREAM_PROJECTS[project_name]["git_repository"],
         DOWNSTREAM_PROJECTS[project_name]["pipeline_slug"],
@@ -4979,6 +5009,9 @@ def main(argv=None):
     project_pipeline.add_argument("--file_config", type=str)
     project_pipeline.add_argument("--http_config", type=str)
     project_pipeline.add_argument("--git_repository", type=str)
+    project_pipeline.add_argument(
+        "--git_commit", type=str, help="Reset the git repository to this commit after cloning it"
+    )
     project_pipeline.add_argument("--monitor_flaky_tests", type=bool, nargs="?", const=True)
     project_pipeline.add_argument("--use_but", type=bool, nargs="?", const=True)
     project_pipeline.add_argument("--notify", type=bool, nargs="?", const=True)
@@ -5048,7 +5081,13 @@ def main(argv=None):
             # Fetch the repo in case we need to use file_config.
             if args.git_repository:
                 git_commit = (
-                    get_last_green_commit(args.project_name) if is_downstream_pipeline() else None
+                    args.git_commit
+                    if args.git_commit
+                    else (
+                        get_last_green_commit(args.project_name)
+                        if is_downstream_pipeline()
+                        else None
+                    )
                 )
                 clone_git_repository(args.git_repository, git_commit, suppress_stdout=True)
 
@@ -5059,6 +5098,7 @@ def main(argv=None):
                 http_config=args.http_config,
                 file_config=args.file_config,
                 git_repository=args.git_repository,
+                git_commit=args.git_commit,
                 monitor_flaky_tests=args.monitor_flaky_tests,
                 use_but=args.use_but,
                 notify=args.notify,
