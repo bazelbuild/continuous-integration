@@ -5,8 +5,6 @@ matrix:
     - debian11
     - debian12
     - debian13
-    - fedora39
-    - fedora40
     - fedora43
     - rockylinux8
     - ubuntu2004
