@@ -350,9 +350,13 @@ def validate_existing_modules_are_not_modified():
         bazelci.eprint("No existing module was changed.")
 
 
-def validate_files_outside_of_modules_dir_are_not_modified(modules):
-    # If no modules are changed at the same time, then we don't need to perform this check.
-    if not modules:
+def validate_files_outside_of_modules_dir_are_not_modified(modules, modules_with_metadata_change):
+    # If nothing under modules/ is changed at the same time, then we don't need to perform this
+    # check. Both kinds of change have to be considered: a pull request that touches only
+    # modules/<name>/metadata.json produces no entries in `modules`, because that list is built from
+    # the modules/<name>/<version>/ pattern, and the check would otherwise be skipped even though the
+    # pull request goes on to run //tools:bcr_validation from its own checkout.
+    if not modules and not modules_with_metadata_change:
         return
     bazelci.print_expanded_group("Checking if any file changes outside of modules/")
     output = subprocess.check_output(
@@ -424,11 +428,11 @@ def should_wait_bcr_maintainer_review(modules, pr_labels):
     # If existing modules are changed, fail the presubmit.
     validate_existing_modules_are_not_modified()
 
-    # If files outside of the modules/ directory are changed, fail the presubmit.
-    validate_files_outside_of_modules_dir_are_not_modified(modules)
-
     # Get modules with metadata.json changes.
     modules_with_metadata_change = get_modules_with_metadata_change()
+
+    # If files outside of the modules/ directory are changed, fail the presubmit.
+    validate_files_outside_of_modules_dir_are_not_modified(modules, modules_with_metadata_change)
 
     # Run BCR validations on target modules and decide if the presubmit jobs should be blocked.
     return should_bcr_validation_block_presubmit(modules, modules_with_metadata_change, pr_labels)
