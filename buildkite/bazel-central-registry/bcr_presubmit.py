@@ -34,6 +34,22 @@ import bazelci
 
 BCR_REPO_DIR = pathlib.Path(os.getcwd())
 
+# Bazel module name / version character sets, per
+# https://bazel.build/external/module#module_name and #version. Anything
+# outside these sets is not a name/version Bzlmod itself would ever accept,
+# so rejecting it here is safe for legitimate modules and closes every sink
+# in this file (shell command construction, generated MODULE.bazel content,
+# and the modules/<name>/<version>/ path getters below) to a single choke
+# point instead of escaping/quoting at each call site individually.
+MODULE_NAME_RE = re.compile(r"^[a-z]([a-z0-9._-]*[a-z0-9])?$")
+MODULE_VERSION_RE = re.compile(r"^[A-Za-z0-9]+(?:[._+-][A-Za-z0-9]+)*$")
+
+
+def is_valid_module_identifier(module_name, module_version):
+    return bool(MODULE_NAME_RE.match(module_name)) and bool(
+        MODULE_VERSION_RE.match(module_version)
+    )
+
 BUILDKITE_ORG = os.environ.get("BUILDKITE_ORGANIZATION_SLUG", "bazel")
 
 SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/bcr_presubmit.py?{}".format(
@@ -87,7 +103,20 @@ def get_target_modules():
     for line in output.decode("utf-8").split():
         s = re.match(r"modules\/([^\/]+)\/([^\/]+)\/", line)
         if s:
-            modules.add(s.groups())
+            module_name, module_version = s.groups()
+            # [^\/]+ only excludes "/", so a crafted PR path can smuggle
+            # shell/Starlark metacharacters into module_name/module_version
+            # (e.g. quotes, backticks, semicolons) that later get interpolated
+            # into generated commands and MODULE.bazel content elsewhere in
+            # this file. Reject anything that isn't a name/version Bzlmod
+            # itself would accept, rather than trusting the path shape alone.
+            if not is_valid_module_identifier(module_name, module_version):
+                raise BcrPipelineException(
+                    "Invalid module name or version derived from changed path %r: "
+                    "module_name=%r module_version=%r"
+                    % (line, module_name, module_version)
+                )
+            modules.add((module_name, module_version))
 
     return sorted(modules)
 
@@ -105,7 +134,13 @@ def get_modules_with_metadata_change():
     for line in output.decode("utf-8").split():
         s = re.match(r"modules\/([^\/]+)\/metadata\.json", line)
         if s:
-            modules.add(s.groups()[0])
+            module_name = s.groups()[0]
+            if not MODULE_NAME_RE.match(module_name):
+                raise BcrPipelineException(
+                    "Invalid module name derived from changed path %r: module_name=%r"
+                    % (line, module_name)
+                )
+            modules.add(module_name)
 
     return sorted(modules)
 
