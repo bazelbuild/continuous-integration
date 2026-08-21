@@ -24,6 +24,7 @@ import argparse
 import os
 import pathlib
 import re
+import shlex
 import sys
 import subprocess
 import shutil
@@ -159,17 +160,17 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
         bazel_version = task_config.get("bazel", "")
         if bazel_version and not overwrite_bazel_version:
             label = f":bazel:{bazel_version} - {label}"
-        command = (
-            '%s bcr_presubmit.py %s --module_name="%s" --module_version="%s" --task=%s %s'
-            % (
-                bazelci.PLATFORMS[platform_name]["python"],
-                "test_module_runner" if is_test_module else "anonymous_module_runner",
-                module_name,
-                module_version,
-                task_id,
-                "--overwrite_bazel_version=%s" % overwrite_bazel_version if overwrite_bazel_version else ""
-            )
-        )
+        command_parts = [
+            bazelci.PLATFORMS[platform_name]["python"],
+            "bcr_presubmit.py",
+            "test_module_runner" if is_test_module else "anonymous_module_runner",
+            "--module_name=%s" % module_name,
+            "--module_version=%s" % module_version,
+            "--task=%s" % task_id,
+        ]
+        if overwrite_bazel_version:
+            command_parts.append("--overwrite_bazel_version=%s" % overwrite_bazel_version)
+        command = " ".join(shlex.quote(part) for part in command_parts)
         commands = [bazelci.fetch_ci_scripts_command(), fetch_bcr_presubmit_py_command(), command]
         queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
         if CI_RESOURCE_PERCENTAGE == -1:
