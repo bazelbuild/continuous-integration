@@ -1590,6 +1590,10 @@ def execute_commands(
         # We have to explicitly convert the value to a string, because sometimes YAML tries to
         # be smart and converts strings like "true" and "false" to booleans.
         os.environ[key] = os.path.expandvars(str(value))
+    # Disable Android environment for Intel Macs
+    if is_mac() and platform_module.machine() == "x86_64":
+        os.environ.pop("ANDROID_HOME", None)
+        os.environ.pop("ANDROID_NDK_HOME", None)
 
     # Avoid "Network is unreachable" errors in IPv6-only environments
     for e in ("COURSIER_OPTS", "JAVA_TOOL_OPTIONS", "SSL_CERT_FILE"):
