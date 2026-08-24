@@ -24,13 +24,13 @@ curl --progress-bar --remote-time --fail --location -o "$tmpfile" "$source"
 digest="$(shasum -a256 "$tmpfile" | cut -d' ' -f1)"
 echo "Digest: $digest"
 
-if gsutil ls "gs://bazel-mirror/${target}" &>/dev/null; then
+if gcloud storage ls "gs://bazel-mirror/${target}" &>/dev/null; then
   echo "File already exists on mirror, skipping upload."
 else
-  gsutil cp "$tmpfile" "gs://bazel-mirror/$target"
+  gcloud storage cp "$tmpfile" "gs://bazel-mirror/$target"
 fi
 
-gsutil setmeta -h "Cache-Control: public, max-age=31536000" "gs://bazel-mirror/$target"
+gcloud storage objects update -h "Cache-Control: public, max-age=31536000" "gs://bazel-mirror/$target"
 
 cat <<EOF
 Here's your snippet for the WORKSPACE file:
