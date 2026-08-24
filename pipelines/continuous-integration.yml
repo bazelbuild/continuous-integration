@@ -23,7 +23,6 @@ steps:
             - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
             - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
             - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
-            - "/var/run/docker.sock:/var/run/docker.sock"
   - label: "Project pipeline :ubuntu: 18.04 (JDK 8)"
     command:
       - python3 buildkite/bazelci.py project_pipeline --file_config=pipelines/tensorflow.yml
