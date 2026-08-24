@@ -61,15 +61,6 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
     apt-get update -y && apt-get install google-cloud-cli -y && \
     rm -rf /var/lib/apt/lists/*
 
-### Docker (for legacy rbe_autoconfig)
-RUN apt-get -y update && \
-    apt-get -y install apt-transport-https ca-certificates && \
-    curl -sSL https://download.docker.com/linux/debian/gpg | apt-key add - && \
-    add-apt-repository "deb [arch=$TARGETARCH] https://download.docker.com/linux/debian $(lsb_release -cs) stable" && \
-    apt-get -y update && \
-    apt-get -y install docker-ce && \
-    rm -rf /var/lib/apt/lists/*
-
 # Bazelisk
 COPY --from=tools --chmod=0755 bazelisk-linux-${TARGETARCH} /usr/local/bin/bazel
 
