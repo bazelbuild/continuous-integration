@@ -26,7 +26,6 @@ steps:
           - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
           - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
-          - "/var/run/docker.sock:/var/run/docker.sock"
 
   - command: |-
       bazel --ignore_all_rc_files version
@@ -55,7 +54,6 @@ steps:
           - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
           - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
           - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
-          - "/var/run/docker.sock:/var/run/docker.sock"
 
   - command: "powershell -Command \"bazel --ignore_all_rc_files version ; if (\\$LastExitCode -ne 0) { exit 1 } ; sh ./src/upload_all_java_tools.sh ; if (\\$LastExitCode -ne 0) { exit 1 } ;\""
     label: ":windows:"
