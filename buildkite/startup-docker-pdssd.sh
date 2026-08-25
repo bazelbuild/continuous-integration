@@ -112,38 +112,6 @@ chmod 0400 /etc/buildkite-agent/buildkite-agent.cfg
 chmod 0500 /etc/buildkite-agent/hooks/*
 chown -R buildkite-agent:buildkite-agent /etc/buildkite-agent
 
-### Pull a few popular Docker images in advance.
-case $(hostname -f) in
-    *-testing-*)
-        PREFIX="bazel-public/testing"
-        ;;
-    *)
-        PREFIX="bazel-public"
-        ;;
-esac
-
-docker pull "gcr.io/$PREFIX/rockylinux8" &
-docker pull "gcr.io/$PREFIX/rockylinux8-java11" &
-docker pull "gcr.io/$PREFIX/rockylinux8-java11-devtoolset10" &
-docker pull "gcr.io/$PREFIX/rockylinux8-releaser" &
-docker pull "gcr.io/$PREFIX/debian10-java11" &
-docker pull "gcr.io/$PREFIX/debian11-java17" &
-docker pull "gcr.io/$PREFIX/debian12" &
-docker pull "gcr.io/$PREFIX/debian13" &
-docker pull "gcr.io/$PREFIX/ubuntu1804-java11" &
-docker pull "gcr.io/$PREFIX/ubuntu2004-java11" &
-docker pull "gcr.io/$PREFIX/ubuntu2004" &
-docker pull "gcr.io/$PREFIX/ubuntu2004-kythe" &
-docker pull "gcr.io/$PREFIX/ubuntu2204-kythe" &
-docker pull "gcr.io/$PREFIX/ubuntu2404-kythe" &
-docker pull "gcr.io/$PREFIX/ubuntu2204-java17" &
-docker pull "gcr.io/$PREFIX/ubuntu2204" &
-docker pull "gcr.io/$PREFIX/ubuntu2404" &
-docker pull "gcr.io/$PREFIX/fedora39-java17" &
-docker pull "gcr.io/$PREFIX/fedora40-java21" &
-docker pull "gcr.io/$PREFIX/fedora43-java25" &
-wait
-
 ### Start the Buildkite agent service.
 systemctl start buildkite-agent
 

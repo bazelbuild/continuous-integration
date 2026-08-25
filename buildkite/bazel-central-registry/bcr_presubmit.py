@@ -37,7 +37,7 @@ BCR_REPO_DIR = pathlib.Path(os.getcwd())
 BUILDKITE_ORG = os.environ.get("BUILDKITE_ORGANIZATION_SLUG", "bazel")
 
 SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/bcr_presubmit.py?{}".format(
-    bazelci.GITHUB_BRANCH, int(time.time())
+    bazelci.GITHUB_REF, int(time.time())
 )
 
 CI_MACHINE_NUM = {
@@ -391,7 +391,7 @@ def should_bcr_validation_block_presubmit(modules, modules_with_metadata_change,
         skip_validation_flags.append("--skip_validation=url_stability")
     if "skip-compatibility-level-check" in pr_labels:
         skip_validation_flags.append("--skip_validation=compatibility_level")
-    if bazelci.PRESUBMIT_AUTO_RUN_LABEL in pr_labels:
+    if any(label in bazelci.PRESUBMIT_AUTO_RUN_LABELS for label in pr_labels):
         skip_validation_flags.append("--skip_validation=presubmit_yml")
     returncode = subprocess.run(
         ["bazel", "run", "//tools:bcr_validation", "--"]
