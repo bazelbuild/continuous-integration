@@ -1,4 +1,5 @@
 ---
+priority: 100
 steps:
   - command: |-
       cd buildkite
