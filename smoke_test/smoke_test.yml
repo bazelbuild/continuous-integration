@@ -1,0 +1,37 @@
+---
+matrix:
+  platform:
+    # Linux (x86_64) Docker platforms
+    - debian11
+    - debian12
+    - debian13
+    - fedora43
+    - rockylinux8
+    - ubuntu2004
+    - ubuntu2204
+    - ubuntu2404
+    # Linux (arm64) Docker platforms
+    - debian12_arm64
+    - debian13_arm64
+    - rockylinux8_arm64
+    - ubuntu2004_arm64
+    - ubuntu2204_arm64
+    - ubuntu2404_arm64
+    # macOS (Intel & Apple Silicon)
+    - macos
+    - macos_arm64
+    # Windows (x86_64 & arm64)
+    - windows
+    - windows_arm64
+    # RBE platforms
+    - rbe_ubuntu2404
+
+tasks:
+  smoke_test:
+    name: "Smoke Test"
+    platform: ${{ platform }}
+    working_directory: smoke_test
+    build_targets:
+      - "//:hello"
+    test_targets:
+      - "//:hello_test"

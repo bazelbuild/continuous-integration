@@ -29,7 +29,7 @@ import bazelci
 import bcr_presubmit
 
 SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/generate_report.py?{}".format(
-    bazelci.GITHUB_BRANCH, int(time.time())
+    bazelci.GITHUB_REF, int(time.time())
 )
 
 
