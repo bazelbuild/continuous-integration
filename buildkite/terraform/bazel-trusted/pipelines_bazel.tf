@@ -198,7 +198,6 @@ resource "buildkite_pipeline" "bazel-release" {
   default_branch = "release-8.1.0"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
-    priority = 50,
     steps = {
       commands = [
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-release.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
