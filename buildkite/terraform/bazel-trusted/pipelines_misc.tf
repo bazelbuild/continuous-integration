@@ -5,6 +5,7 @@ resource "buildkite_pipeline" "update-git-mirror-tar-ball" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
+    priority = 0,
     steps = {
       commands = [
         "cd ./gitbundle",
@@ -58,6 +59,7 @@ resource "buildkite_pipeline" "mirror-404-artifacts-for-bazel" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
+    priority = 0,
     steps = {
       commands = [
         "cd buildkite",
@@ -90,6 +92,7 @@ resource "buildkite_pipeline" "bcr-integrity" {
   default_branch = "main"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
+    priority = 0,
     steps = {
       commands = [
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/java-tools-testing/pipelines/bcr-integrity.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
@@ -155,6 +158,7 @@ resource "buildkite_pipeline" "collect-infra-ci-metrics" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
+    priority = 0,
     steps = {
       commands = [
         "cd buildkite",
@@ -229,6 +233,7 @@ resource "buildkite_pipeline" "docgen-bazel-website" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
+    priority = 0,
     steps = {
       commands = [
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-docgen.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
@@ -293,6 +298,7 @@ resource "buildkite_pipeline" "docgen-bazel-blog" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
+    priority = 0,
     steps = {
       commands = [
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-docgen.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
@@ -399,6 +405,7 @@ resource "buildkite_pipeline" "docker-update" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
+    priority = 0,
     steps = {
       commands = [
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/docker-update.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
@@ -430,6 +437,7 @@ resource "buildkite_pipeline" "docgen-bazel" {
   default_branch = "5.1-docs-fixes"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
+    priority = 0,
     steps = {
       commands = [
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-docgen.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
@@ -458,7 +466,7 @@ resource "buildkite_pipeline" "bazel-ssl-certificate-checker" {
   repository                 = "https://github.com/bazelbuild/bazel.git"
   description                = "a fast, scalable, multi-language and extensible build system"
   default_branch             = "master"
-  steps                      = "---\nsteps:\n  - command: |-\n      python3 .github/scripts/check_ssl.py\n    label: \":lock: SSL Certificate Checker\"\n    agents:\n      - \"queue=default\""
+  steps                      = "---\npriority: 0\nsteps:\n  - command: |-\n      python3 .github/scripts/check_ssl.py\n    label: \":lock: SSL Certificate Checker\"\n    agents:\n      - \"queue=default\""
   allow_rebuilds             = true
   cancel_intermediate_builds = false
   skip_intermediate_builds   = false

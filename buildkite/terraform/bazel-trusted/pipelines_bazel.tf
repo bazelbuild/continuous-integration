@@ -4,6 +4,7 @@ resource "buildkite_pipeline" "mirror-last-green-commit-for-bazel" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
+    priority = 0,
     steps = {
       commands = [
         "gsutil cp gs://bazel-builds/last_green_commit/github.com/bazelbuild/bazel.git/publish-bazel-binaries gs://bazel-untrusted-builds/last_green_commit/github.com/bazelbuild/bazel.git/bazel-bazel"
@@ -35,6 +36,7 @@ resource "buildkite_pipeline" "java-tools-binaries-java" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
+    priority = 0,
     steps = {
       commands = [
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/java_tools-binaries.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
@@ -87,6 +89,7 @@ resource "buildkite_pipeline" "bazel-java-tools-updates" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
+    priority = 0,
     steps = {
       commands = [
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/java-tools-testing/pipelines/bazel-java_tools-updates.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
@@ -117,6 +120,7 @@ resource "buildkite_pipeline" "java-tools-release" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
+    priority = 0,
     steps = {
       commands = [
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/java_tools-release.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
@@ -147,6 +151,7 @@ resource "buildkite_pipeline" "publish-bazel-binaries" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
+    priority = 0,
     steps = {
       commands = [
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-bazel-binaries.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
@@ -251,6 +256,7 @@ resource "buildkite_pipeline" "java-tools-rc" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
+    priority = 0,
     steps = {
       commands = [
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/java_tools-rc.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
