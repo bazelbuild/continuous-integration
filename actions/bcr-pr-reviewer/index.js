@@ -261,11 +261,14 @@ async function getPrApprovers(octokit, owner, repo, prNumber) {
     pull_number: prNumber,
   });
 
-  // Filter out the merge commits whose parents length is larger than 1
-  const nonMergeCommits = commits.filter(commit => commit.parents.length === 1);
-
-  // Get the latest commit submitted time
-  const latestCommit = nonMergeCommits[nonMergeCommits.length - 1];
+  // Use the PR's actual current head commit as the review-freshness cutoff. This must
+  // NOT exclude merge commits: a merge commit can itself introduce diff content (e.g.
+  // conflict resolution, or content brought in from the merged branch), so treating it
+  // as if it doesn't exist lets a stale approval of an earlier commit keep counting as
+  // approving a HEAD the reviewer never actually saw -- a pusher could get an innocuous
+  // early commit approved, then push a merge commit that changes the content, and the
+  // stale approval would still be considered valid for the new HEAD.
+  const latestCommit = commits[commits.length - 1];
   const latestCommitTime = new Date(latestCommit.commit.author.date);
   console.log(`Latest commit: ${latestCommit.sha}`);
   console.log(`Latest commit time: ${latestCommitTime}`);
@@ -277,7 +280,7 @@ async function getPrApprovers(octokit, owner, repo, prNumber) {
     pull_number: prNumber,
   });
 
-  // For each reviewer, collect their latest review that are newer than the latest non-merge commit
+  // For each reviewer, collect their latest review that are newer than the latest commit
   // Key: reviewer, Value: review
   const latestReviews = new Map();
   reviewEvents.forEach(review => {
@@ -292,8 +295,8 @@ async function getPrApprovers(octokit, owner, repo, prNumber) {
       return;
     }
 
-    existingSubmittedAt = new Date(latestReviews.get(reviewer).submitted_at);
-    submittedAt = new Date(review.submitted_at);
+    const existingSubmittedAt = new Date(latestReviews.get(reviewer).submitted_at);
+    const submittedAt = new Date(review.submitted_at);
     if (submittedAt > existingSubmittedAt) {
       latestReviews.set(reviewer, review);
     }
@@ -1032,7 +1035,11 @@ async function run() {
   }
 }
 
-run().catch(err => {
-  console.error(err);
-  setFailed(err.message);
-});
+if (require.main === module) {
+  run().catch(err => {
+    console.error(err);
+    setFailed(err.message);
+  });
+}
+
+module.exports = { getPrApprovers };
