@@ -26,7 +26,7 @@ steps:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-          image: "${try(steps.image, "gcr.io/bazel-public/ubuntu2404")}"
+          image: "${try(steps.image, "gcr.io/bazel-public/ubuntu2404@sha256:e0a4a1fe658b4fe75f0a6914e7a7891a4976f6fcf12ff143a478a0912ead801c")}"
           network: "host"
           privileged: true
           propagate-environment: true
