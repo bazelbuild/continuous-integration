@@ -16,7 +16,11 @@ if [[ "$(git config --get remote.origin.url)" == */bazel.git ]]; then
   bazel --quiet build \
     //src/main/java/com/google/devtools/build/lib:gen_mdx_reference_docs
 
-  unzip -q bazel-bin/src/main/java/com/google/devtools/build/lib/mdx-reference-docs.zip -d "$DOCS_DIR"
+  ARCHIVE=bazel-bin/src/main/java/com/google/devtools/build/lib/mdx-reference-docs.zip
+
+  buildkite-agent artifact upload "$ARCHIVE" || echo "--- [nonblocker] FYI: Docs upload failed"
+
+  unzip -q "$ARCHIVE" -d "$DOCS_DIR"
 
   cd "$DOCS_DIR"
 
