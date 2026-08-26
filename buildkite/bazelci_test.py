@@ -686,7 +686,7 @@ class GitBranchHandlingTest(unittest.TestCase):
         commands = step["command"]
         project_pipeline_cmd = [c for c in commands if "project_pipeline" in c][0]
         self.assertIn("--git_commit=origin/35.x", project_pipeline_cmd)
-        self.assertIn('--project_name="Protobuf 35.x"', project_pipeline_cmd)
+        self.assertIn("--project_name='Protobuf 35.x'", project_pipeline_cmd)
         self.assertIn('--file_config=.bazelci/presubmit.yml', project_pipeline_cmd)
 
     def test_print_bazel_downstream_pipeline_passes_origin_branch_as_git_commit(self):
