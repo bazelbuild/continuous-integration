@@ -6,6 +6,7 @@ resource "buildkite_pipeline" "rules-java-release" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
+    priority = 0,
     steps = {
       commands = [
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/refs/heads/master/pipelines/rules_java-release.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
@@ -35,6 +36,7 @@ resource "buildkite_pipeline" "rules-platform-release" {
   default_branch = "main"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
+    priority = 0,
     steps = {
       commands = [
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/rules_platform-release.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
@@ -65,6 +67,7 @@ resource "buildkite_pipeline" "rules-platform-release-testing" {
   default_branch = "main"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
+    priority = 0,
     steps = {
       commands = [
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/rules_platform-release-testing/pipelines/rules_platform-release-testing.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
