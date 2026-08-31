@@ -227,6 +227,13 @@ resource "buildkite_pipeline" "create-linux-docker-images" {
   }
 }
 
+resource "buildkite_pipeline_schedule" "create-linux-docker-images" {
+  pipeline_id    = buildkite_pipeline.create-linux-docker-images.id
+  label          = "Create Linux Docker images nightly"
+  branch         = "master"
+  cronline       = "0 4 * * *" # 4 AM UTC
+}
+
 resource "buildkite_pipeline" "docgen-bazel-website" {
   name           = "DocGen: Bazel-website"
   repository     = "https://github.com/bazelbuild/bazel-website.git"
