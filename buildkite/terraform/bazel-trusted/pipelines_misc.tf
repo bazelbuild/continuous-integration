@@ -151,13 +151,6 @@ resource "buildkite_pipeline" "create-linux-vm-image" {
   }
 }
 
-resource "buildkite_pipeline_schedule" "create-linux-vm-image-nightly" {
-  pipeline_id    = buildkite_pipeline.create-linux-vm-image.id
-  label          = "Create Linux VM image nightly"
-  branch         = "master"
-  cronline       = "0 4 * * *" # 4 AM UTC
-}
-
 resource "buildkite_pipeline" "collect-infra-ci-metrics" {
   name           = "Collect Infra CI-Metrics"
   repository     = "https://github.com/bazelbuild/continuous-integration.git"
@@ -232,6 +225,13 @@ resource "buildkite_pipeline" "create-linux-docker-images" {
     cancel_when_merge_group_destroyed             = false
     use_merge_group_base_commit_for_git_diff_base = false
   }
+}
+
+resource "buildkite_pipeline_schedule" "create-linux-docker-images" {
+  pipeline_id    = buildkite_pipeline.create-linux-docker-images.id
+  label          = "Create Linux Docker images nightly"
+  branch         = "master"
+  cronline       = "0 4 * * *" # 4 AM UTC
 }
 
 resource "buildkite_pipeline" "docgen-bazel-website" {
