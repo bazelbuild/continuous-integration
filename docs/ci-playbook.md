@@ -29,17 +29,24 @@ You will need to be a member of the `bazel-trusted` BuildKite org.
 
 Note: if anything goes wrong in the new image, you can always revert to the previous image by deleting the new image in the GCP console and re-create the VMs.
 
-### Deploy new Docker images for Linux
+### Manually deploy new Docker images for Linux
+
+These instructions pertain to _manually_ building and deplying Docker images.
+For simplicity, you can manually trigger an identical workflow at
+https://buildkite.com/bazel-trusted/create-linux-docker-images. Prod images
+are built on the `master` branch; QA/experimental images are built on the
+`testing` branch.
 
 Most changes can be rolled out by creating and deploying new Docker images. This step requires that
 
-- You are on a Linux machine (images built on macOS may cause problem).
+- You are on a Linux machine (images built on macOS may cause problems).
 - Docker is installed and set up.
-- You need permissions to access the container registry in our GCP project.
+- You have permissions to access the container registry in our GCP project.
 
 Follow these steps to build and deploy a new Docker image:
 
 1. Clear your local Docker cache via `docker builder prune -a -f`.
+   - This should only be necessary if your drive is full or close to full.
 1. Clone the continuous-integration repository.
 1. `cd` into the `continuous-integration/buildkite/docker` directory.
 1. Run `build.sh`.
