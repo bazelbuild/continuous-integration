@@ -96,11 +96,11 @@ steps:
 
   - wait
 
-  - block: ":arrows_counterclockwise: Re-create instance group in the bazel org"
+  - block: ":arrows_counterclockwise: Re-create instance groups in bazel & bazel-trusted orgs"
 
   - command: |-
       cd buildkite
-      ./create_instances.py "${BAZEL_VM_NAMES}"
+      ./create_instances.py "${BAZEL_PROD_INSTANCE_GROUPS}"
     label: ":pipeline:"
     agents:
       - "queue=default"
