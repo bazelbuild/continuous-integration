@@ -18,9 +18,18 @@
 set -eux
 
 ## Install Bazel and its dependencies.
+##
+## bash and unzip are not in the base system and compile.sh needs both; the
+## JDK is needed to build Bazel at all, and python3 by the bootstrap and by
+## several of the tools it builds.
 pkg install -y \
+  bash \
   bazel \
   git \
+  gmake \
+  openjdk21 \
+  python3 \
+  unzip \
   wget \
   zip
 
@@ -30,4 +39,13 @@ mount -t procfs proc /proc
 cat >> /etc/fstab <<EOF
 fdesc   /dev/fd         fdescfs         rw      0       0
 proc    /proc           procfs          rw      0       0
+EOF
+
+## The JDK does not put itself on the path, and the bootstrap reads JAVA_HOME
+## rather than searching for one.
+cat >> /etc/profile <<EOF
+JAVA_HOME=/usr/local/openjdk21
+export JAVA_HOME
+PATH=\$JAVA_HOME/bin:\$PATH
+export PATH
 EOF
