@@ -617,6 +617,13 @@ PLATFORMS = {
         "docker-image": get_docker_image("fedora43-java25"),
         "python": "python3",
     },
+    "freebsd": {
+        "name": "FreeBSD",
+        "emoji-name": ":freebsd: FreeBSD",
+        "publish_binary": [],
+        "queue": "freebsd",
+        "python": "python3",
+    },
     "macos": {
         "name": "macOS",
         "emoji-name": ":darwin: macOS",
