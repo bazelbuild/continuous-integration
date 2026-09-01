@@ -3620,7 +3620,7 @@ def create_config_validation_steps(git_commit):
             commands=[
                 fetch_ci_scripts_command(),
                 "{} bazelci.py project_pipeline --file_config={}".format(
-                    PLATFORMS[DEFAULT_PLATFORM]["python"], f
+                    PLATFORMS[DEFAULT_PLATFORM]["python"], shlex.quote(f)
                 ),
             ],
             platform=DEFAULT_PLATFORM,
@@ -3750,16 +3750,18 @@ def fetch_aggregate_incompatible_flags_test_result_command():
 def upload_project_pipeline_step(
     project_name, git_repository, http_config, file_config, git_commit=None
 ):
-    pipeline_command = (
-        '{0} bazelci.py project_pipeline --project_name="{1}" ' + "--git_repository={2}"
-    ).format(PLATFORMS[DEFAULT_PLATFORM]["python"], project_name, git_repository)
+    pipeline_command = "{0} bazelci.py project_pipeline --project_name={1} --git_repository={2}".format(
+        PLATFORMS[DEFAULT_PLATFORM]["python"],
+        shlex.quote(project_name),
+        shlex.quote(git_repository),
+    )
     pipeline_command += " --use_but"
     if http_config:
-        pipeline_command += " --http_config=" + http_config
+        pipeline_command += " --http_config=" + shlex.quote(http_config)
     if file_config:
-        pipeline_command += " --file_config=" + file_config
+        pipeline_command += " --file_config=" + shlex.quote(file_config)
     if git_commit:
-        pipeline_command += " --git_commit=" + git_commit
+        pipeline_command += " --git_commit=" + shlex.quote(git_commit)
     pipeline_command += " | tee /dev/tty | buildkite-agent pipeline upload"
 
     return create_step(
