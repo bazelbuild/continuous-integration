@@ -6,6 +6,7 @@ env:
   ${key}: "${value}"
 %{ endfor ~}
 
+priority: ${try(priority, 0)}
 steps:
   - command: |-%{ for command in steps.commands }
       ${command}%{ endfor }%{ if try(steps.retry, false) }
