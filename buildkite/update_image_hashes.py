@@ -13,6 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Updates hard-coded Docker image hashes in bazelci.py and Terraform configs.
+"""
 
 import concurrent.futures
 import json
@@ -177,7 +180,9 @@ def update_bazelci_file(bazelci_path, new_image_hashes_str):
 
 def update_terraform_configs(terraform_dir, prefix, image_hashes):
     tf_files = list(terraform_dir.glob("**/*.tf")) + list(terraform_dir.glob("**/*.tpl"))
-    pattern = re.compile(r"gcr\.io/(?:bazel-public(?:/testing)?)/([a-zA-Z0-9_\-]+)(?:@sha256:[a-f0-9]+)?")
+    pattern = re.compile(
+        r"gcr\.io/(?:bazel-public(?:/testing)?)/([a-zA-Z0-9_\-]+)(?:@sha256:[a-f0-9]+)?"
+    )
 
     updated_files = []
     for fpath in sorted(tf_files):
