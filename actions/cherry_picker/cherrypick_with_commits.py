@@ -19,16 +19,26 @@ for commit_index in range(len(issue_body_dict["commits"])):
 # author or edit. Accept only values that look like git object names, so that a
 # value such as "--output=..." is rejected here instead of reaching git, which
 # would otherwise interpret it as a command-line option rather than a revision.
-COMMIT_ID_PATTERN = re.compile(r"^[0-9a-fA-F]{7,40}$")
+COMMIT_ID_PATTERN = re.compile(r"^[0-9a-fA-F]{6,40}$")
 
-issue_body_dict["commits"] = [commit for commit in issue_body_dict["commits"] if commit]
+issue_body_dict["commits"] = [commit.strip() for commit in issue_body_dict["commits"] if commit.strip()]
+
+if not issue_body_dict["commits"]:
+    issue_comment(
+        milestoned_issue_number,
+        "No commit ID(s) provided in the issue body. Please provide commit hashes to cherry-pick.\ncc: @bazelbuild/triage",
+        input_data["api_repo_name"],
+        input_data["is_prod"],
+    )
+    raise SystemExit(0)
+
 invalid_commits = [commit for commit in issue_body_dict["commits"] if not COMMIT_ID_PATTERN.match(commit)]
 if invalid_commits:
     invalid_commits_str = ", ".join(f"`{commit}`" for commit in invalid_commits)
     issue_comment(
         milestoned_issue_number,
         f"The following commit ID(s) are not valid git commit hashes: {invalid_commits_str}\n"
-        "Please provide 7-40 character hexadecimal commit hashes.\ncc: @bazelbuild/triage",
+        "Please provide 6-40 character hexadecimal commit hashes.\ncc: @bazelbuild/triage",
         input_data["api_repo_name"],
         input_data["is_prod"],
     )
