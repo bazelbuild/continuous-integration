@@ -15,6 +15,35 @@ issue_body_dict["commits"] = get_middle_text(issue_body, commits_text["left"], c
 for commit_index in range(len(issue_body_dict["commits"])):
     issue_body_dict["commits"][commit_index] = re.sub(r'https://.*/commit/', "", issue_body_dict["commits"][commit_index])
 
+# The commit IDs are parsed out of the issue body, which any GitHub user can
+# author or edit. Accept only values that look like git object names, so that a
+# value such as "--output=..." is rejected here instead of reaching git, which
+# would otherwise interpret it as a command-line option rather than a revision.
+COMMIT_ID_PATTERN = re.compile(r"^[0-9a-fA-F]{6,40}$")
+
+issue_body_dict["commits"] = [commit.strip() for commit in issue_body_dict["commits"] if commit.strip()]
+
+if not issue_body_dict["commits"]:
+    issue_comment(
+        milestoned_issue_number,
+        "No commit ID(s) provided in the issue body. Please provide commit hashes to cherry-pick.\ncc: @bazelbuild/triage",
+        input_data["api_repo_name"],
+        input_data["is_prod"],
+    )
+    raise SystemExit(0)
+
+invalid_commits = [commit for commit in issue_body_dict["commits"] if not COMMIT_ID_PATTERN.match(commit)]
+if invalid_commits:
+    invalid_commits_str = ", ".join(f"`{commit}`" for commit in invalid_commits)
+    issue_comment(
+        milestoned_issue_number,
+        f"The following commit ID(s) are not valid git commit hashes: {invalid_commits_str}\n"
+        "Please provide 6-40 character hexadecimal commit hashes.\ncc: @bazelbuild/triage",
+        input_data["api_repo_name"],
+        input_data["is_prod"],
+    )
+    raise SystemExit(0)
+
 issue_body_dict["labels"] = get_middle_text(issue_body, team_labels_text["left"], team_labels_text["right"]).replace(" ", "").replace("@", "").split(",")
 issue_body_dict["reviewers"] = get_middle_text(issue_body, reviewers_text["left"], reviewers_text["right"]).replace(" ", "").replace("@", "").split(",")
 
