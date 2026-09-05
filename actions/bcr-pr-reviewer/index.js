@@ -261,17 +261,19 @@ async function getPrApprovers(octokit, owner, repo, prNumber) {
     pull_number: prNumber,
   });
 
-  // Use the PR's actual current head commit as the review-freshness cutoff. This must
-  // NOT exclude merge commits: a merge commit can itself introduce diff content (e.g.
-  // conflict resolution, or content brought in from the merged branch), so treating it
-  // as if it doesn't exist lets a stale approval of an earlier commit keep counting as
-  // approving a HEAD the reviewer never actually saw -- a pusher could get an innocuous
-  // early commit approved, then push a merge commit that changes the content, and the
-  // stale approval would still be considered valid for the new HEAD.
+  // Determine review freshness by the commit a review was actually submitted
+  // against (its `commit_id`), not by comparing timestamps against the head
+  // commit's date. A commit's author date is fully attacker-controlled
+  // (GIT_AUTHOR_DATE / `git commit --date`) and GitHub preserves it on push,
+  // so a timestamp cutoff can be defeated by backdating a newly pushed head
+  // commit to before an earlier approval: the stale approval then looks "fresh"
+  // for a HEAD the reviewer never saw. A review only vouches for the exact
+  // commit it was submitted against, so it counts iff its `commit_id` equals the
+  // PR's current head SHA. This is timestamp-free and also covers the
+  // merge-commit case (the head is the head regardless of parent count).
   const latestCommit = commits[commits.length - 1];
-  const latestCommitTime = new Date(latestCommit.commit.author.date);
-  console.log(`Latest commit: ${latestCommit.sha}`);
-  console.log(`Latest commit time: ${latestCommitTime}`);
+  const headSha = latestCommit.sha;
+  console.log(`Latest commit (PR head): ${headSha}`);
 
   // Get all review events for the PR
   const reviewEvents = await octokit.paginate(octokit.rest.pulls.listReviews, {
@@ -280,11 +282,12 @@ async function getPrApprovers(octokit, owner, repo, prNumber) {
     pull_number: prNumber,
   });
 
-  // For each reviewer, collect their latest review that are newer than the latest commit
+  // For each reviewer, collect their latest review that was submitted against the
+  // current PR head commit.
   // Key: reviewer, Value: review
   const latestReviews = new Map();
   reviewEvents.forEach(review => {
-    if (new Date(review.submitted_at) < latestCommitTime) {
+    if (review.commit_id !== headSha) {
       return;
     }
 
