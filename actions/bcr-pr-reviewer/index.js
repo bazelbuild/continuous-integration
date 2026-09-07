@@ -1,5 +1,6 @@
 const { getInput, setFailed } = require('@actions/core');
 const { context, getOctokit } = require("@actions/github");
+const path = require('path');
 
 async function _processAllPrFiles(octokit, owner, repo, prNumber, fileProcessor) {
   // Fetch the PR's initial head commit SHA to ensure consistency.
@@ -928,6 +929,24 @@ async function runHandleComment(octokit) {
   }
 }
 
+/**
+ * Returns the directory to diff for `version` of `moduleName`, or null if `version`
+ * does not name a directory directly inside `modules/<moduleName>/`.
+ *
+ * Version strings reaching this function are read from the metadata.json of the PR
+ * under review, so they are controlled by whoever opened the PR. Without this check
+ * a value such as "../../.." makes the caller run `diff` against a directory outside
+ * the module, and `diff`'s output is printed to the workflow log.
+ */
+function moduleVersionDir(moduleName, version) {
+  const moduleDir = path.resolve('modules', moduleName);
+  const versionDir = path.resolve(moduleDir, version);
+  if (path.dirname(versionDir) !== moduleDir) {
+    return null;
+  }
+  return `modules/${moduleName}/${version}`;
+}
+
 async function runDiffModule(octokit) {
   const prNumber = context.issue.number;
   if (!prNumber) {
@@ -978,9 +997,18 @@ async function runDiffModule(octokit) {
       }
 
       const previousVersion = metadata.versions[versionIndex - 1];
+
+      const previousVersionDir = moduleVersionDir(moduleName, previousVersion);
+      const currentVersionDir = moduleVersionDir(moduleName, versionName);
+      if (previousVersionDir === null || currentVersionDir === null) {
+        console.error(`Refusing to diff module ${moduleName}: a version does not name a directory inside modules/${moduleName}/ (previous: '${previousVersion}', current: '${versionName}')`);
+        setFailed(`Failed to generate diff for module ${moduleName}@${versionName}`);
+        continue;
+      }
+
       console.log(`${groupStart}Generating diff for module ${moduleName}@${versionName} against version ${previousVersion}`);
 
-      const diffArgs = ['--color=always', '-urN', `modules/${moduleName}/${previousVersion}`, `modules/${moduleName}/${versionName}`];
+      const diffArgs = ['--color=always', '-urN', previousVersionDir, currentVersionDir];
       console.log(`Running command: diff ${diffArgs.join(' ')}`);
       const { spawnSync } = require('child_process');
 
@@ -1047,4 +1075,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { getPrApprovers };
+module.exports = { getPrApprovers, moduleVersionDir };

@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { getPrApprovers } = require('./index.js');
+const { getPrApprovers, moduleVersionDir } = require('./index.js');
 
 function fakeOctokit({ commits, reviews }) {
   return {
@@ -62,4 +62,29 @@ test('getPrApprovers: works normally when the PR has no merge commits at all', a
   const approvers = await getPrApprovers(fakeOctokit({ commits, reviews }), 'owner', 'repo', 1);
 
   assert.equal(approvers.has('maintainer'), true);
+});
+
+test('moduleVersionDir: a normal version resolves to its directory under the module', () => {
+  assert.equal(moduleVersionDir('rules_cc', '1.2.3'), 'modules/rules_cc/1.2.3');
+});
+
+test('moduleVersionDir: versions with dots and dashes are not treated as traversal', () => {
+  // Only a "../" path segment escapes; dots inside a version are ordinary characters.
+  assert.equal(moduleVersionDir('rules_cc', '0.9.0-rc.1..2'), 'modules/rules_cc/0.9.0-rc.1..2');
+  assert.equal(moduleVersionDir('rules_cc', '1.0.0+build.5'), 'modules/rules_cc/1.0.0+build.5');
+});
+
+test('moduleVersionDir: a version escaping the module directory is rejected', () => {
+  // metadata.json is read from the PR head, so these are attacker-supplied values.
+  assert.equal(moduleVersionDir('rules_cc', '../../..'), null);
+  assert.equal(moduleVersionDir('rules_cc', '..'), null);
+  assert.equal(moduleVersionDir('rules_cc', '../other_module/1.0.0'), null);
+  assert.equal(moduleVersionDir('rules_cc', 'nested/1.0.0'), null);
+  assert.equal(moduleVersionDir('rules_cc', '/etc'), null);
+  assert.equal(moduleVersionDir('rules_cc', '/etc/passwd'), null);
+});
+
+test('moduleVersionDir: a version naming the module directory itself is rejected', () => {
+  assert.equal(moduleVersionDir('rules_cc', '.'), null);
+  assert.equal(moduleVersionDir('rules_cc', ''), null);
 });
