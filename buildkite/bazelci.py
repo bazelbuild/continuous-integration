@@ -731,6 +731,7 @@ MAX_TASK_NUMBER = 128
 
 _TEST_BEP_FILE = "test_bep.json"
 _BUILD_BEP_FILE = "build_bep.json"
+_BEP_UPLOAD_TIMEOUT_SECONDS = 2 * 60 * 60
 _SHARD_RE = re.compile(r"(.+) \(shard (\d+)\)")
 _SLOWEST_N_TARGETS = 20
 
@@ -1766,7 +1767,11 @@ def execute_commands(
                     upload_corrupted_outputs(capture_corrupted_outputs_dir_test, tmpdir)
                 output_base = get_output_base(bazel_binary)
                 try:
-                    upload_log_file(os.path.join(output_base, "java.log"), tmpdir)
+                    upload_log_file(
+                        os.path.join(output_base, "java.log"),
+                        tmpdir,
+                        timeout=_BEP_UPLOAD_TIMEOUT_SECONDS,
+                    )
                 except Exception as ex:
                     eprint(f"Failed to upload java.log: {ex}")
                     job_url = f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}"
@@ -3072,26 +3077,32 @@ def upload_test_logs_from_bep(bep_file, tmpdir, monitor_flaky_tests):
         return
 
     bazelci_agent_binary = download_bazelci_agent(tmpdir)
-    execute_command(
-        [
-            bazelci_agent_binary,
-            "artifact",
-            "upload",
-            "--debug",  # Force BEP upload for non-flaky failures
-            "--mode=buildkite",
-            "--build_event_json_file={}".format(bep_file),
-        ]
-        + (["--monitor_flaky_tests"] if monitor_flaky_tests else [])
-    )
+    try:
+        execute_command(
+            [
+                bazelci_agent_binary,
+                "artifact",
+                "upload",
+                "--debug",  # Force BEP upload for non-flaky failures
+                "--mode=buildkite",
+                "--build_event_json_file={}".format(bep_file),
+            ]
+            + (["--monitor_flaky_tests"] if monitor_flaky_tests else []),
+            timeout=_BEP_UPLOAD_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as e:
+        eprint("Uploading test logs from BEP timed out: {}".format(e))
 
 
-def upload_log_file(log_file_path, tmpdir):
+def upload_log_file(log_file_path, tmpdir, timeout=None):
     if local_run_only():
         return
     if not os.path.exists(log_file_path):
         return
     print_collapsed_group(f":gcloud: Uploading log file: {log_file_path}")
-    execute_command(["buildkite-agent", "artifact", "upload", log_file_path], cwd=tmpdir)
+    execute_command(
+        ["buildkite-agent", "artifact", "upload", log_file_path], cwd=tmpdir, timeout=timeout
+    )
 
 
 def upload_corrupted_outputs(capture_corrupted_outputs_dir, tmpdir):
@@ -3132,6 +3143,7 @@ def execute_command(
     capture_stderr=False,
     suppress_stdout=False,
     env=os.environ,
+    timeout=None,
 ):
     if print_output:
         eprint(" ".join(args))
@@ -3148,6 +3160,7 @@ def execute_command(
         stderr=(
             subprocess.PIPE if capture_stderr else None
         ),  # capture_stderr=True when we want exceptions to contain stderr
+        timeout=timeout,
     ).returncode
 
 

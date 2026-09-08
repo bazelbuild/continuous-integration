@@ -750,6 +750,22 @@ class GitBranchHandlingTest(unittest.TestCase):
         self.assertIn(["git", "reset", "origin/35.x", "--hard"], executed_commands)
 
 
+class ExecuteCommandTimeout(unittest.TestCase):
+    def test_execute_command_raises_on_timeout(self):
+        with self.assertRaises(bazelci.subprocess.TimeoutExpired):
+            bazelci.execute_command(["sleep", "5"], timeout=0.2)
+
+    def test_upload_test_logs_from_bep_does_not_raise_on_timeout(self):
+        with mock.patch.object(
+            bazelci, "download_bazelci_agent", return_value="bazelci-agent"
+        ), mock.patch.object(
+            bazelci,
+            "execute_command",
+            side_effect=bazelci.subprocess.TimeoutExpired(cmd="bazelci-agent", timeout=7200),
+        ):
+            bazelci.upload_test_logs_from_bep("bep.json", "/tmp", monitor_flaky_tests=False)
+
+
 if __name__ == "__main__":
     unittest.main()
 
