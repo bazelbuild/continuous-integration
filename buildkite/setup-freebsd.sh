@@ -18,9 +18,17 @@
 set -eux
 
 ## Install Bazel and its dependencies.
+##
+## Building Bazel from source also needs bash, which is not in the base
+## system and which every bootstrap script names in its shebang; a JDK;
+## and python3, since rules_python ships no CPython for FreeBSD and the
+## build falls back to the system interpreter.
 pkg install -y \
+  bash \
   bazel \
   git \
+  openjdk21 \
+  python3 \
   wget \
   zip
 
