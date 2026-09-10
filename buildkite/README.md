@@ -36,7 +36,7 @@ platforms.
 
 When you click on a pipeline you can see the last few builds of this pipeline. Clicking on a build
 then gives you access to the details of the build. For example, the below image shows a failed build
-step on Ubuntu 16.04.
+step on Ubuntu.
 
 ![failed build step]
 
@@ -93,7 +93,7 @@ The most important piece of the configuration file is the `tasks` dictionary. Ea
 ---
 tasks:
   ubuntu_build_only:
-    platform: ubuntu2004
+    platform: ubuntu2404
     build_targets:
     - "..."
   windows:
@@ -109,7 +109,7 @@ If there is exactly one task per platform, you can omit the `platform` field and
 ```yaml
 ---
 tasks:
-  ubuntu2004:
+  ubuntu2404:
     build_targets:
     - "..."
   windows:
@@ -128,7 +128,7 @@ You can set environment variables for each individual task via the `environment`
 ```yaml
 ---
 tasks:
-  ubuntu1804:
+  ubuntu2404:
     environment:
       CC: clang
     build_targets:
@@ -146,7 +146,7 @@ The following example demonstrates all of these features:
 ```yaml
 ---
 tasks:
-  ubuntu1804:
+  ubuntu2404:
     shell_commands:
     - rm -f obsolete_file
     run_targets:
@@ -167,7 +167,7 @@ The `coverage_targets` field allows you to specify a list of targets that will b
 ```yaml
 ---
 tasks:
-  ubuntu2004:
+  ubuntu2404:
     coverage_targets:
     - "..."
 ```
@@ -179,7 +179,7 @@ The `build_flags` and `test_flags` fields contain lists of flags that should be 
 ```yaml
 ---
 tasks:
-  ubuntu1804:
+  ubuntu2404:
     build_flags:
     - "--define=ij_product=clion-latest"
     build_targets:
@@ -209,9 +209,9 @@ You can define common configurations and share them between tasks using `*aliase
     - "//tests/..."
 
 tasks:
-  ubuntu1804:
+  ubuntu2404:
     <<: *common_task_config
-  ubuntu2004:
+  ubuntu2204:
     <<: *common_task_config
   windows:
     <<: *common_task_config
@@ -242,7 +242,7 @@ tasks:
 
 ### Generating semantic information with Kythe
 
-You can use `kythe_ubuntu2004` platform along with some `index_*` fields to create a task that generate semantic information of your code with [Kythe](https://kythe.io/).
+You can use `kythe_ubuntu2404` platform along with some `index_*` fields to create a task that generate semantic information of your code with [Kythe](https://kythe.io/).
 
 The `index_targets` field contains list of targets that should be indexed.
 
@@ -260,7 +260,7 @@ If `index_upload_gcs` is `True`, the generated files will be uploaded to Google 
 ```yaml
 ---
 tasks:
-  kythe_ubuntu2004:
+  kythe_ubuntu2404:
     index_targets:
     - "..."
     index_targets_query: "kind(\"java_(binary|import|library|plugin|test|proto_library) rule\", ...)"
@@ -277,7 +277,7 @@ Most existing configuration use the legacy format with a "platforms" dictionary:
 ```yaml
 ---
 platforms:
-  ubuntu1804:
+  ubuntu2404:
     build_targets:
     - "..."
     test_targets:
@@ -290,7 +290,7 @@ The new format expects a "tasks" dictionary instead:
 ---
 tasks:
   arbitrary_id:
-    platform: ubuntu1804
+    platform: ubuntu2404
     build_targets:
     - "..."
     test_targets:
@@ -302,7 +302,7 @@ In this case we can omit the `platform` field since there is a 1:1 mapping betwe
 ```yaml
 ---
 tasks:
-  ubuntu1804:
+  ubuntu2404:
     build_targets:
     - "..."
     test_targets:
@@ -325,7 +325,7 @@ tasks:
   macos:
     build_targets:
     - "..."
-  ubuntu1804:
+  ubuntu2404:
     bazel: 0.18.0
     build_targets:
     - "..."
@@ -446,12 +446,12 @@ Consider the configuration for a project that contains a second `WORKSPACE` file
 tasks:
   production_code:
     name: "My Project"
-    platform: ubuntu1804
+    platform: ubuntu2404
     test_targets:
     - //...
   examples:
     name: Examples
-    platform: ubuntu1804
+    platform: ubuntu2404
     working_directory: examples_dir
     test_targets:
     - //...
@@ -482,7 +482,7 @@ Example usage:
 ```yaml
 ---
 tasks:
-  ubuntu2004:
+  ubuntu2404:
     include_json_profile:
     - build
     - test
@@ -506,7 +506,7 @@ Example usage:
 ---
 matrix:
   bazel_version: ["4.2.2", "5.0.0"]
-  unix_platform: ["rockylinux8", "debian10", "macos", "ubuntu2004"]
+  unix_platform: ["rockylinux8", "debian10", "macos", "ubuntu2404"]
   python: ["python2", "python3"]
   unix_compiler: ["gcc", "clang"]
   win_compiler: ["msvc", "clang"]
@@ -584,7 +584,7 @@ You can exclude specific matrix combinations using the `exclude` key inside the 
 ```yaml
 ---
 matrix:
-  platform: ["ubuntu2004", "macos", "windows"]
+  platform: ["ubuntu2404", "macos", "windows"]
   compiler: ["gcc", "clang"]
   exclude:
     - platform: "windows"
