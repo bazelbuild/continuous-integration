@@ -25,7 +25,7 @@ import bazelci
 
 DEFAULT_FLAGS = ["--action_env=PATH=/usr/local/bin:/usr/bin:/bin", "--sandbox_tmpfs_path=/tmp"]
 
-PLATFORM = "ubuntu1804"
+PLATFORM = "ubuntu2404"
 
 Settings = collections.namedtuple(
     "Settings",

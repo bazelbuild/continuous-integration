@@ -1,7 +1,7 @@
 ---
 tasks:
-  ubuntu1804_latest_bazel:
-    platform: ubuntu1804
+  ubuntu2404_latest_bazel:
+    platform: ubuntu2404
     bazel: latest
     shell_commands:
     - |-

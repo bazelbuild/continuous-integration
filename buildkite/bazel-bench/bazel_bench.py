@@ -61,7 +61,7 @@ PROJECTS = [
         "git_repository": "https://github.com/tensorflow/tensorflow.git",
         "bazel_command": "build --output_filter=^\$ //tensorflow/core:core",
         "bazel_bench_extra_options": {
-            "ubuntu1804": "--env_configure=\"unset PYTHONPATH && yes '' | python3 ./configure.py\"",
+            "ubuntu2404": "--env_configure=\"unset PYTHONPATH && yes '' | python3 ./configure.py\"",
             "macos": ("--env_configure=\"python3 --version && unset PYTHONPATH "
                 "&& pip3 install -U --user pip six numpy wheel setuptools mock 'future>=0.17.1' "
                 "&& pip3 install -U --user keras_applications==1.0.6 --no-deps "
@@ -75,8 +75,8 @@ BAZEL_REPOSITORY = "https://github.com/bazelbuild/bazel.git"
 DATA_DIRECTORY = os.path.join(TMP, ".bazel-bench", "out")
 BAZEL_BENCH_RESULT_FILENAME = "perf_data.csv"
 AGGR_JSON_PROFILES_FILENAME = "aggr_json_profiles.csv"
-PLATFORMS_WHITELIST = ['macos', 'ubuntu1804']
-REPORT_GENERATION_PLATFORM = 'ubuntu1804'
+PLATFORMS_WHITELIST = ['macos', 'ubuntu2404']
+REPORT_GENERATION_PLATFORM = 'ubuntu2404'
 
 
 def _bazel_bench_env_setup_command(platform, bazel_commits):

@@ -1,9 +1,9 @@
 # Based on:
 # bazelbuild/bazel/scripts/docs/Dockerfile
 # bazel-blog/scripts/Dockerfile
-# bazelbuild/continuous-integration/buildkite/docker/ubuntu1804/Dockerfile
+# bazelbuild/continuous-integration/buildkite/docker/ubuntu2404/Dockerfile
 
-FROM ubuntu:18.04
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND="noninteractive"
 RUN apt-get -qqy update && \

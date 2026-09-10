@@ -83,7 +83,7 @@ Create "New Build" in the [Culprit Finder](https://buildkite.com/bazel/culprit-f
 eg.
 ```
 PROJECT_NAME=rules_go
-PLATFORM_NAME=ubuntu2004
+PLATFORM_NAME=ubuntu2404
 GOOD_BAZEL_COMMIT=b6ea3b6caa7f379778e74da33d1bd0ff6477f963
 BAD_BAZEL_COMMIT=91eb3d207714af0ab1e5812252a0f10f40d6e4a8
 ```
