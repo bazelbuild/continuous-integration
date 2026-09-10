@@ -50,7 +50,7 @@ FROM fedora43-bazel-java25 AS fedora43-java25
 COPY google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
 
 RUN dnf install -y \
-  google-cloud-sdk \
+  google-cloud-cli \
   && dnf clean all \
   && rm -rf /var/cache/yum
 
