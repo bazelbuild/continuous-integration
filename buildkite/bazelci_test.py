@@ -766,6 +766,38 @@ class ExecuteCommandTimeout(unittest.TestCase):
             bazelci.upload_test_logs_from_bep("bep.json", "/tmp", monitor_flaky_tests=False)
 
 
+class EolPlatforms(unittest.TestCase):
+    _PLATFORM_FOR_TEST = list(bazelci.EOL_PLATFORMS)[0]
+    _CONFIG = yaml.safe_load(
+        f"""
+tasks:
+    foobar:
+        platform: {_PLATFORM_FOR_TEST}
+"""
+    )
+    def test_eol_platform_has_warning(self):
+        with mock.patch("bazelci.runner_step", return_value=dict({"label": "dummystep"})):
+            steps = bazelci.print_project_pipeline(
+                configs=self._CONFIG,
+                project_name="foobar_project",
+                http_config=None,
+                file_config=None,
+                git_repository=None,
+                git_commit=None,
+                monitor_flaky_tests=None,
+                notify=False,
+                print_shard_summary=False,
+            )
+            # Find all steps that contain the EOL warning
+            warning_steps = list(filter(lambda s: "WARNING: EOL platform detected" in s["label"], steps))
+            # There should only be 1 warning step.
+            self.assertEqual(1, len(warning_steps))
+            # The step should only have 1 command.
+            self.assertEqual(1, len(warning_steps[0]["command"]))
+            # The warning message should be specific to the EOL platform.
+            self.assertTrue(self._PLATFORM_FOR_TEST in warning_steps[0]["command"][0])
+
+
 if __name__ == "__main__":
     unittest.main()
 

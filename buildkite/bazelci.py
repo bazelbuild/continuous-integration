@@ -328,6 +328,22 @@ DOCKER_REGISTRY_PREFIX = {
     "bazel": "bazel-public",
 }[BUILDKITE_ORG]
 
+
+# Platforms we no longer support, but still exist in the artifact registry.
+# NOTE: These names are the ones use din the PLATFORMS dict, not the
+# IMAGE_HASHES dict.
+EOL_PLATFORMS = frozenset(
+    [
+        "ubuntu1604",
+        "ubuntu1804",
+        "ubuntu1804_java11",
+        "ubuntu2004",
+        "ubuntu2004_arm64",
+        "ubuntu2004_java11",
+        "kythe_ubuntu2004",
+    ]
+)
+
 IMAGE_HASHES = {
     "rockylinux8": {
         "amd64": "sha256:1302e131f7db6d98fffc75f08b900b261d3bc122abeb875b294d43117e2a2466",
@@ -3476,7 +3492,28 @@ def print_project_pipeline(
             )
         )
 
+    # Inform user of EOL platforms
+    eol_platforms_used = sorted(
+        [
+            get_platform_for_task(t, tc)
+            for t, tc in task_configs.items()
+            if get_platform_for_task(t, tc) in EOL_PLATFORMS
+        ]
+    )
+    eol_platforms_fmt = ", ".join(eol_platforms_used)
+    if eol_platforms_used:
+        pipeline_steps.append(
+            create_step(
+                label=":warning: WARNING: EOL platform detected!",
+                commands=[
+                    f"buildkite-agent annotate --style=warning --context 'eol-platform' 'WARNING!! You are using end-of-life platforms: {eol_platforms_fmt}'. We will stop supporting the platform(s) soon. If the platform(s) is/are business-critical, please file an issue at github.com/bazelbuild/continuous-integration.",
+                ],
+                platform=DEFAULT_PLATFORM,
+            )
+        )
+
     print_pipeline_steps(pipeline_steps, handle_emergencies=not is_downstream_pipeline())
+    return pipeline_steps
 
 
 def create_initial_steps():
