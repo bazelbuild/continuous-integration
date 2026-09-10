@@ -1,6 +1,6 @@
 ---
 platforms:
-  ubuntu2004:
+  ubuntu2404:
     environment:
       TF_IGNORE_MAX_BAZEL_VERSION: 1
     shell_commands:

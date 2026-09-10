@@ -9,7 +9,7 @@ steps:
         always-pull: true
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/ubuntu2004-java11
+        image: gcr.io/bazel-public/ubuntu2404
         network: host
         privileged: true
         propagate-environment: true
@@ -439,7 +439,7 @@ steps:
         always-pull: true
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/ubuntu2004-java11
+        image: gcr.io/bazel-public/ubuntu2404
         network: host
         privileged: true
         propagate-environment: true

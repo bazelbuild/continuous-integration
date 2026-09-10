@@ -1,6 +1,6 @@
 ---
 tasks:
-  ubuntu2004_arm64:
+  ubuntu2404_arm64:
     shell_commands:
       # Android SDK NDK not available on Linux ARM64
       # - sed -i.bak -e 's/^# android_sdk_repository/android_sdk_repository/' -e 's/^#

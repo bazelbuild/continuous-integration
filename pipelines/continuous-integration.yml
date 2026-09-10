@@ -1,5 +1,5 @@
 steps:
-  - label: "Unit tests :ubuntu: 18.04"
+  - label: "Unit tests :ubuntu: 24.04"
     command:
       - python3 buildkite/bazelci_test.py
     agents: &linux_agents { queue: default }
@@ -10,7 +10,7 @@ steps:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-          image: "gcr.io/bazel-public/ubuntu1804-java11"
+          image: "gcr.io/bazel-public/ubuntu2404"
           network: "host"
           privileged: true
           propagate-environment: true
@@ -23,18 +23,18 @@ steps:
             - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
             - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
             - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
-  - label: "Project pipeline :ubuntu: 18.04 (JDK 8)"
+  - label: "Project pipeline :ubuntu: 24.04"
     command:
       - python3 buildkite/bazelci.py project_pipeline --file_config=pipelines/tensorflow.yml
     agents: *linux_agents
     plugins: *plugins
-  - label: "Downstream pipeline :ubuntu: 18.04 (JDK 8)"
+  - label: "Downstream pipeline :ubuntu: 24.04"
     command:
       - python3 buildkite/bazelci.py bazel_downstream_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
       - python3 buildkite/bazelci.py bazel_downstream_pipeline --test_disabled_projects --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/presubmit.yml
     agents: *linux_agents
     plugins: *plugins
-  - label: "Publish binaries pipeline :ubuntu: 18.04 (JDK 8)"
+  - label: "Publish binaries pipeline :ubuntu: 24.04"
     command:
       - python3 buildkite/bazelci.py bazel_publish_binaries_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/bazel/master/.bazelci/build_bazel_binaries.yml
     agents: *linux_agents

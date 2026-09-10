@@ -52,53 +52,8 @@ tasks:
     include_json_profile:
       - build
       - test
-  ubuntu1804:
-    shell_commands:
-      - sed -i.bak -e 's/^# android_sdk_repository/android_sdk_repository/' -e 's/^#
-        android_ndk_repository/android_ndk_repository/' WORKSPACE
-      - rm -f WORKSPACE.bak
-      - rm -rf $HOME/bazeltest
-      - mkdir $HOME/bazeltest
-    build_flags:
-      - "--test_env=TEST_INSTALL_BASE=$HOME/bazeltest/install_base"
-      - "--test_env=TEST_REPOSITORY_HOME=$OUTPUT_BASE/external"
-      - "--test_env=REMOTE_NETWORK_ADDRESS=bazel.build:80"
-      - "--noremote_accept_cached"
-      - "--experimental_merged_skyframe_analysis_execution"
-      - "--experimental_skymeld_ui"
-      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPUS*0.5"
-    build_targets:
-      - "//src:bazel"
-      - "//src:bazel_jdk_minimal"
-      - "//src:test_repos"
-    test_flags:
-      - "--sandbox_default_allow_network=false"
-      - "--sandbox_writable_path=$HOME/bazeltest"
-      - "--test_env=TEST_INSTALL_BASE=$HOME/bazeltest/install_base"
-      - "--test_env=TEST_REPOSITORY_HOME=$OUTPUT_BASE/external"
-      # Configure and enable tests that require access to the network.
-      - "--test_env=REMOTE_NETWORK_ADDRESS=bazel.build:80"
-      - "--experimental_merged_skyframe_analysis_execution"
-      - "--experimental_skymeld_ui"
-      - "--experimental_skyframe_cpu_heavy_skykeys_thread_pool_size=HOST_CPUS*0.5"
-    test_targets:
-      - "//scripts/..."
-      - "//src/java_tools/..."
-      - "//src/test/..."
-      - "//src/tools/execlog/..."
-      - "//src/tools/singlejar/..."
-      - "//src/tools/workspacelog/..."
-      - "//third_party/ijar/..."
-      - "//tools/android/..."
-      - "//tools/aquery_differ/..."
-      - "//tools/python/..."
-      # Re-enable once fixed: https://github.com/bazelbuild/bazel/issues/8162
-      - "-//src/java_tools/import_deps_checker/..."
-    include_json_profile:
-      - build
-      - test
-  ubuntu1804_clang:
-    platform: ubuntu1804
+  ubuntu2404_clang:
+    platform: ubuntu2404
     environment:
       CC: clang
       CC_CONFIGURE_DEBUG: 1
@@ -134,7 +89,7 @@ tasks:
     include_json_profile:
       - build
       - test
-  ubuntu2004:
+  ubuntu2404:
     shell_commands:
       - sed -i.bak -e 's/^# android_sdk_repository/android_sdk_repository/' -e 's/^#
         android_ndk_repository/android_ndk_repository/' WORKSPACE
@@ -180,15 +135,15 @@ tasks:
     include_json_profile:
       - build
       - test
-  rbe_ubuntu1804:
-    platform: ubuntu1804
+  rbe_ubuntu2404:
+    platform: ubuntu2404
     shell_commands:
       - sed -i.bak
         -e 's/^# android_sdk_repository/android_sdk_repository/'
         -e 's/^# android_ndk_repository/android_ndk_repository/' WORKSPACE
       - rm -f WORKSPACE.bak
     build_flags:
-      - "--config=ubuntu1804_java11"
+      - "--config=remote"
       - "--remote_executor=grpcs://remotebuildexecution.googleapis.com"
       - "--jobs=200"
       - "--experimental_remote_download_outputs=minimal"
@@ -202,7 +157,7 @@ tasks:
       - "//src:bazel_jdk_minimal"
       - "//src/main/java/..."
     test_flags:
-      - "--config=ubuntu1804_java11"
+      - "--config=remote"
       - "--remote_executor=grpcs://remotebuildexecution.googleapis.com"
       - "--jobs=200"
       - "--experimental_remote_download_outputs=minimal"
@@ -365,7 +320,7 @@ tasks:
   #   include_json_profile:
   #     # - build
   #     - test
-  # kythe_ubuntu2004:
+  # kythe_ubuntu2404:
   #   shell_commands:
   #   - sed -i.bak -e 's/^# android_sdk_repository/android_sdk_repository/'
   #     -e 's/^# android_ndk_repository/android_ndk_repository/' WORKSPACE

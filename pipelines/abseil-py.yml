@@ -1,6 +1,6 @@
 ---
 tasks:
-  ubuntu1804:
+  ubuntu2404:
     build_targets:
       - "//absl/..."
     test_targets:
