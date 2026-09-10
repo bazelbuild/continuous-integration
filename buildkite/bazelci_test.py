@@ -767,18 +767,28 @@ class ExecuteCommandTimeout(unittest.TestCase):
 
 
 class EolPlatforms(unittest.TestCase):
-    _PLATFORM_FOR_TEST = list(bazelci.EOL_PLATFORMS)[0]
-    _CONFIG = yaml.safe_load(
+    _EOL_PLATFORM_FOR_TEST = sorted(bazelci.EOL_PLATFORMS)[0]
+    _SUPPORTED_PLATFORM_FOR_TEST = sorted(set(bazelci.PLATFORMS.keys()) - bazelci.EOL_PLATFORMS)[0]
+    _CONFIG_WITH_EOL_PLATFORM = yaml.safe_load(
         f"""
 tasks:
-    foobar:
-        platform: {_PLATFORM_FOR_TEST}
+    foobar_eol:
+        platform: {_EOL_PLATFORM_FOR_TEST}
 """
     )
-    def test_eol_platform_has_warning(self):
-        with mock.patch("bazelci.runner_step", return_value=dict({"label": "dummystep"})):
+    _CONFIG_WITH_SUPPORTED_PLATFORM = yaml.safe_load(
+        f"""
+tasks:
+    foobar_supported:
+        platform: {_SUPPORTED_PLATFORM_FOR_TEST}
+"""
+    )
+
+    def get_steps_no_stdout(self, config):
+        # Silence stdout to avoid polluting console when running unit test
+        with mock.patch("sys.stdout") as _:
             steps = bazelci.print_project_pipeline(
-                configs=self._CONFIG,
+                configs=config,
                 project_name="foobar_project",
                 http_config=None,
                 file_config=None,
@@ -788,14 +798,26 @@ tasks:
                 notify=False,
                 print_shard_summary=False,
             )
-            # Find all steps that contain the EOL warning
-            warning_steps = list(filter(lambda s: "WARNING: EOL platform detected" in s["label"], steps))
-            # There should only be 1 warning step.
-            self.assertEqual(1, len(warning_steps))
-            # The step should only have 1 command.
-            self.assertEqual(1, len(warning_steps[0]["command"]))
-            # The warning message should be specific to the EOL platform.
-            self.assertTrue(self._PLATFORM_FOR_TEST in warning_steps[0]["command"][0])
+            return steps
+
+    def test_eol_platform_has_warning(self):
+        steps = self.get_steps_no_stdout(self._CONFIG_WITH_EOL_PLATFORM)
+        # Find all steps that contain the EOL warning
+        warning_steps = list(filter(lambda s: "WARNING: EOL platform detected" in s["label"], steps))
+        # There should only be 1 warning step.
+        self.assertEqual(1, len(warning_steps))
+        # The step should only have 1 command.
+        self.assertEqual(1, len(warning_steps[0]["command"]))
+        # The warning message should be specific to the EOL platform.
+        self.assertTrue(self._EOL_PLATFORM_FOR_TEST in warning_steps[0]["command"][0])
+
+    def test_supported_platform_has_no_warning(self):
+        steps = self.get_steps_no_stdout(self._CONFIG_WITH_SUPPORTED_PLATFORM)
+        # Find all steps that contain the EOL warning (there should be none)
+        warning_steps = list(filter(lambda s: "WARNING: EOL platform detected" in s["label"], steps))
+        # There should be no warning steps.
+        self.assertEqual(0, len(warning_steps))
+
 
 
 if __name__ == "__main__":

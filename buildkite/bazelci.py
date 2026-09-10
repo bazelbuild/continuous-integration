@@ -336,7 +336,6 @@ EOL_PLATFORMS = frozenset(
     [
         "ubuntu1604",
         "ubuntu1804",
-        "ubuntu1804_java11",
         "ubuntu2004",
         "ubuntu2004_arm64",
         "ubuntu2004_java11",
@@ -679,7 +678,7 @@ BUILDIFIER_DOCKER_IMAGE = "gcr.io/bazel-public/buildifier"
 MINTLIFY_DOCKER_IMAGE = "gcr.io/bazel-public/{}mintlify".format("testing/" if THIS_IS_TESTING else "")
 
 # The platform used for various steps (e.g. stuff that formerly ran on the "pipeline" workers).
-DEFAULT_PLATFORM = "ubuntu1804"
+DEFAULT_PLATFORM = "ubuntu2404"
 
 # In order to test that "the one Linux binary" that we build for our official releases actually
 # works on all Linux distributions that we test on, we use the Linux binary built on our official
