@@ -54,11 +54,11 @@ RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 ENV JAVA_HOME /usr/lib/jvm/java-21-openjdk-${TARGETARCH}
 
-### Install Google Cloud SDK.
+### Install Google Cloud CLI.
 RUN mkdir -p /usr/share/keyrings && \
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    apt-get update -y && apt-get install google-cloud-sdk -y && \
+    apt-get update -y && apt-get install google-cloud-cli -y && \
     rm -rf /var/lib/apt/lists/*
 
 ### Docker (for legacy rbe_autoconfig)
