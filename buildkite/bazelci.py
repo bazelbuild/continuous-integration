@@ -328,6 +328,7 @@ DOCKER_REGISTRY_PREFIX = {
     "bazel": "bazel-public",
 }[BUILDKITE_ORG]
 
+# DO_NOT_MODIFY_IMAGE_HASHES_SENTINEL_START
 IMAGE_HASHES = {
     "rockylinux8": {
         "amd64": "sha256:1302e131f7db6d98fffc75f08b900b261d3bc122abeb875b294d43117e2a2466",
@@ -402,6 +403,7 @@ IMAGE_HASHES = {
         "amd64": "sha256:d5f9962cf3d21b316930d81b614dffa197c86a473262d3e5825dbde445710952",
     },
 }
+# DO_NOT_MODIFY_IMAGE_HASHES_SENTINEL_END
 
 
 def get_docker_image(image_name, is_arm64=False):
