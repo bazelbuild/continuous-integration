@@ -766,6 +766,58 @@ class ExecuteCommandTimeout(unittest.TestCase):
             bazelci.upload_test_logs_from_bep("bep.json", "/tmp", monitor_flaky_tests=False)
 
 
+class EolPlatforms(unittest.TestCase):
+    _EOL_PLATFORM_FOR_TEST = sorted(bazelci.EOL_PLATFORMS)[0]
+    _SUPPORTED_PLATFORM_FOR_TEST = sorted(set(bazelci.PLATFORMS.keys()) - bazelci.EOL_PLATFORMS)[0]
+    _CONFIG_WITH_EOL_PLATFORM = yaml.safe_load(f"""
+tasks:
+    foobar_eol:
+        platform: {_EOL_PLATFORM_FOR_TEST}
+""")
+    _CONFIG_WITH_SUPPORTED_PLATFORM = yaml.safe_load(f"""
+tasks:
+    foobar_supported:
+        platform: {_SUPPORTED_PLATFORM_FOR_TEST}
+""")
+
+    def get_steps_no_stdout(self, config):
+        # Silence stdout to avoid polluting console when running unit test
+        with mock.patch("sys.stdout") as _:
+            steps = bazelci.print_project_pipeline(
+                configs=config,
+                project_name="foobar_project",
+                http_config=None,
+                file_config=None,
+                git_repository=None,
+                git_commit=None,
+                monitor_flaky_tests=None,
+                notify=False,
+                print_shard_summary=False,
+            )
+            return steps
+
+    def test_eol_platform_has_warning(self):
+        steps = self.get_steps_no_stdout(self._CONFIG_WITH_EOL_PLATFORM)
+        # Find all steps that contain the EOL warning
+        warning_steps = list(
+            filter(lambda s: "WARNING: EOL platform detected" in s["label"], steps)
+        )
+        # There should only be 1 warning step.
+        self.assertEqual(1, len(warning_steps))
+        # The step should only have 1 command.
+        self.assertEqual(1, len(warning_steps[0]["command"]))
+        # The warning message should be specific to the EOL platform.
+        self.assertTrue(self._EOL_PLATFORM_FOR_TEST in warning_steps[0]["command"][0])
+
+    def test_supported_platform_has_no_warning(self):
+        steps = self.get_steps_no_stdout(self._CONFIG_WITH_SUPPORTED_PLATFORM)
+        # Find all steps that contain the EOL warning (there should be none)
+        warning_steps = list(
+            filter(lambda s: "WARNING: EOL platform detected" in s["label"], steps)
+        )
+        # There should be no warning steps.
+        self.assertEqual(0, len(warning_steps))
+
+
 if __name__ == "__main__":
     unittest.main()
-
