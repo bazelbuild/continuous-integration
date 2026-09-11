@@ -102,34 +102,6 @@ EOF
   sed -i 's/^::1 .*/::1 localhost ip6-localhost ip6-loopback/' /etc/hosts
 }
 
-### Install Docker.
-{
-  apt-get -y install apt-transport-https ca-certificates
-
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-  echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-      $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-  apt-get -y update
-  apt-get -y install docker-ce docker-ce-cli containerd.io
-
-  # Allow everyone access to the Docker socket. Usually this would be insane from a security point
-  # of view, but these are untrusted throw-away machines anyway, so the risk is acceptable.
-  mkdir /etc/systemd/system/docker.socket.d
-  cat > /etc/systemd/system/docker.socket.d/override.conf <<'EOF'
-[Socket]
-SocketMode=0666
-EOF
-
-  # Disable the Docker service, as the startup script has to mount /var/lib/docker first.
-  systemctl disable docker
-  systemctl stop docker
-
-  # Add buildkite-agent to the docker group to grant it permissions to the Docker socket
-  usermod -aG docker buildkite-agent
-}
-
 ## Add our minimum uptime enforcer.
 {
   cat > /etc/systemd/system/minimum-uptime.service <<'EOF'

@@ -61,15 +61,6 @@ RUN mkdir -p /usr/share/keyrings && \
     apt-get update -y && apt-get install google-cloud-sdk -y && \
     rm -rf /var/lib/apt/lists/*
 
-### Docker (for legacy rbe_autoconfig)
-RUN apt-get -y update && \
-    apt-get -y install apt-transport-https ca-certificates && \
-    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
-    echo "deb [arch=$TARGETARCH signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
-    apt-get -y update && \
-    apt-get -y install docker-ce && \
-    rm -rf /var/lib/apt/lists/*
-
 # Bazelisk
 RUN LATEST_BAZELISK=$(curl -sSI https://github.com/bazelbuild/bazelisk/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
     curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/${LATEST_BAZELISK}/bazelisk-linux-${TARGETARCH} && \

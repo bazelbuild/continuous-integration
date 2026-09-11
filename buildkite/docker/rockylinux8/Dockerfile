@@ -41,11 +41,6 @@ RUN dnf -y install 'dnf-command(config-manager)' && \
 # Allow using sudo inside the container.
 RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-RUN dnf -y install dnf-utils && \
-    dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo && \
-    dnf -y install docker-ce docker-ce-cli containerd.io && \
-    dnf clean all
-
 # Ensure that Bazel can use its beloved ISO-8859-1 locale.
 RUN localedef -i en_US -f ISO-8859-1 en_US.ISO-8859-1
 
