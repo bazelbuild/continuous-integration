@@ -55,7 +55,9 @@ resource "buildkite_pipeline" "gerrit" {
   repository     = "https://gerrit.googlesource.com/gerrit.git"
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
-    envs = {},
+    envs = {
+      BUILDKITE_GIT_SUBMODULES = "false"
+    },
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
