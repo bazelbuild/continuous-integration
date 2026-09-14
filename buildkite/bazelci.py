@@ -3508,9 +3508,7 @@ def print_project_pipeline(
                     (
                         "buildkite-agent annotate --style=warning --context 'eol-platform' "
                         f"'WARNING!! You are using end-of-life platforms: {eol_platforms_fmt}. "
-                        "We will stop supporting the platforms soon. "
-                        "If the platforms are business-critical, please file an issue at "
-                        "https://github.com/bazelbuild/continuous-integration.'"
+                        "We will stop supporting the platforms soon."
                     ),
                 ],
                 platform=DEFAULT_PLATFORM,
