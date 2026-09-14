@@ -51,7 +51,7 @@ FROM fedora39-bazel-java17 AS fedora39-java17
 COPY google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
 
 RUN dnf install -y \
-  google-cloud-sdk
+  google-cloud-cli
 
 # Bazelisk
 RUN LATEST_BAZELISK=$(curl -sSI https://github.com/bazelbuild/bazelisk/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \

@@ -20,7 +20,7 @@ RUN dnf -y install 'dnf-command(config-manager)' && \
     glibc-langpack-en \
     glibc-locale-source \
     gnupg2 \
-    google-cloud-sdk \
+    google-cloud-cli \
     iproute \
     lcov \
     llvm \
