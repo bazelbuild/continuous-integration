@@ -796,12 +796,19 @@ tasks:
             )
             return steps
 
+    def get_eol_warning_steps(self, steps):
+        # Not every step has a label, e.g. "wait" steps or the "block" step that
+        # is added to presubmit builds that modify config files.
+        return [
+            s
+            for s in steps
+            if isinstance(s, dict) and "WARNING: EOL platform detected" in s.get("label", "")
+        ]
+
     def test_eol_platform_has_warning(self):
         steps = self.get_steps_no_stdout(self._CONFIG_WITH_EOL_PLATFORM)
         # Find all steps that contain the EOL warning
-        warning_steps = list(
-            filter(lambda s: "WARNING: EOL platform detected" in s["label"], steps)
-        )
+        warning_steps = self.get_eol_warning_steps(steps)
         # There should only be 1 warning step.
         self.assertEqual(1, len(warning_steps))
         # The step should only have 1 command.
@@ -812,9 +819,7 @@ tasks:
     def test_supported_platform_has_no_warning(self):
         steps = self.get_steps_no_stdout(self._CONFIG_WITH_SUPPORTED_PLATFORM)
         # Find all steps that contain the EOL warning (there should be none)
-        warning_steps = list(
-            filter(lambda s: "WARNING: EOL platform detected" in s["label"], steps)
-        )
+        warning_steps = self.get_eol_warning_steps(steps)
         # There should be no warning steps.
         self.assertEqual(0, len(warning_steps))
 
