@@ -191,6 +191,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     "Buildfarm": {
         "git_repository": "https://github.com/buildfarm/buildfarm.git",
         "pipeline_slug": "buildfarm-farmer",
+        "disabled_reason": "Disabled due to persistent integration test failures.",
     },
     "Buildtools": {
         "git_repository": "https://github.com/bazelbuild/buildtools.git",
