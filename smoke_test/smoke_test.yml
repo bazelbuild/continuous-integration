@@ -7,14 +7,12 @@ matrix:
     - debian13
     - fedora43
     - rockylinux8
-    - ubuntu2004
     - ubuntu2204
     - ubuntu2404
     # Linux (arm64) Docker platforms
     - debian12_arm64
     - debian13_arm64
     - rockylinux8_arm64
-    - ubuntu2004_arm64
     - ubuntu2204_arm64
     - ubuntu2404_arm64
     # macOS (Intel & Apple Silicon)
