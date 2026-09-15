@@ -38,7 +38,7 @@ steps:
       echo "mode = \"\$mode\""
       buildkite-agent meta-data set "mode" "\$mode"
 
-      choco_key=$(gsutil cat gs://bazel-trusted-encrypted-secrets/choco-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key choco-trusted-token --ciphertext-file - --plaintext-file -)
+      choco_key=$(gcloud secrets versions access latest --secret="choco-trusted-token" --project="bazel-public")
       buildkite-agent meta-data set "choco_key" "\$choco_key"
 
   - wait
@@ -475,7 +475,7 @@ steps:
       echo "+++ Importing GPG release key"
       keyfile="$(mktemp --tmpdir)"
       chmod 0600 "\${keyfile}"
-      gsutil cat "gs://bazel-trusted-encrypted-secrets/release-key.gpg.enc" | gcloud kms decrypt --project "bazel-public" --location "global" --keyring "buildkite" --key "bazel-release-key" --ciphertext-file "-" --plaintext-file "\${keyfile}"
+      gcloud secrets versions access latest --secret="bazel-release-key" --project="bazel-public" --out-file="\${keyfile}"
       gpg --allow-secret-key-import --import "\${keyfile}"
       rm -f "\${keyfile}"
 
