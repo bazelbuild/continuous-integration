@@ -139,7 +139,7 @@ def get_buildifier_info(version):
     if resolved_version not in all_releases:
         raise Exception("Unknown Buildifier version '{}'".format(version))
 
-    display_url, download_url = all_releases.get(resolved_version)
+    display_url, download_url = get_release_urls(all_releases[resolved_version])
     return resolved_version, display_url, download_url
 
 
@@ -149,7 +149,7 @@ def get_releases():
         content = body.decode(res.info().get_content_charset("iso-8859-1"))
 
     return {
-        r["tag_name"].lstrip("v"): get_release_urls(r)
+        r["tag_name"].lstrip("v"): r
         for r in json.loads(content)
         if not r["prerelease"]
     }
