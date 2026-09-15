@@ -15,6 +15,10 @@ steps:
     %{~ if try(steps.priority, null) != null ~}
     priority: ${steps.priority}
     %{~ endif ~}
+    %{~ if try(steps.skip_checkout, false) ~}
+    checkout:
+      skip: true
+    %{~ endif ~}
     agents:
       - "queue=default"%{ if try(length(steps.artifact_paths), 0) > 0 }
     artifact_paths:%{ for artifact_path in steps.artifact_paths }
