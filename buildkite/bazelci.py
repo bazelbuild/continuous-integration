@@ -3494,11 +3494,13 @@ def print_project_pipeline(
 
     # Inform user of EOL platforms
     eol_platforms_used = sorted(
-        [
-            get_platform_for_task(t, tc)
-            for t, tc in task_configs.items()
-            if get_platform_for_task(t, tc) in EOL_PLATFORMS
-        ]
+        set(
+            [
+                get_platform_for_task(t, tc)
+                for t, tc in task_configs.items()
+                if get_platform_for_task(t, tc) in EOL_PLATFORMS
+            ]
+        )
     )
     eol_platforms_fmt = ", ".join(eol_platforms_used)
     if eol_platforms_used:
