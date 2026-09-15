@@ -299,8 +299,11 @@ def prepare_test_module_repo(module_name, module_version, overwrite_bazel_versio
             vendor_bazel_version = "latest"
     suppress_log or bazelci.eprint(f"* Preparing test module source with Bazel {vendor_bazel_version}")
     anonymous_module_root = create_anonymous_repo(module_name, module_version, root = root.joinpath(".temp_anonymous_module"))
+
+    # vendoring requires plus in repo names, which is off by default in Bazel 7.x, so
+    # always pass the --incompatible_use_plus_in_repo_names explicitly
     bazelci.execute_command(["bazel", "--batch"] + bazelci.common_startup_flags()
-                            + ["vendor", "--vendor_dir=./vendor_src", "--repository_cache=", "--lockfile_mode=off", "--repo", f"@{module_name}"],
+                            + ["vendor", "--incompatible_use_plus_in_repo_names", "--vendor_dir=./vendor_src", "--repository_cache=", "--lockfile_mode=off", "--repo", f"@{module_name}"],
                             cwd=anonymous_module_root,
                             env={**os.environ, "USE_BAZEL_VERSION": vendor_bazel_version})
     source_root = root.joinpath("module_src")
