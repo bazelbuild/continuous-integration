@@ -213,6 +213,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/googlecloudrobotics/core.git",
         "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/cloud-robotics.yml",
         "pipeline_slug": "cloud-robotics-core",
+        "disabled_reason": "Disabled due to incompatibility with Bazel@HEAD.",
     },
     "Flogger": {
         "git_repository": "https://github.com/google/flogger.git",
