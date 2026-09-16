@@ -2,8 +2,7 @@
 
 set -euo pipefail
 
-BUILDKITE_API_TOKEN=$(gsutil cat "gs://bazel-encrypted-secrets/buildkite-api-token.enc" | \
-    gcloud kms decrypt --project "bazel-public" --location "global" --keyring "buildkite" --key "buildkite-api-token" --plaintext-file "-" --ciphertext-file "-")
+BUILDKITE_API_TOKEN=$(gcloud secrets versions access latest --secret="bazel-bazelcipy-BuildkiteClient-token" --project="bazel-untrusted")
 
 git config --global safe.bareRepository all
 
