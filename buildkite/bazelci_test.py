@@ -769,9 +769,11 @@ class ExecuteCommandTimeout(unittest.TestCase):
 class EolPlatforms(unittest.TestCase):
     _EOL_PLATFORM_FOR_TEST = sorted(bazelci.EOL_PLATFORMS)[0]
     _SUPPORTED_PLATFORM_FOR_TEST = sorted(set(bazelci.PLATFORMS.keys()) - bazelci.EOL_PLATFORMS)[0]
-    _CONFIG_WITH_EOL_PLATFORM = yaml.safe_load(f"""
+    _CONFIG_WITH_MULTIPLE_EOL_PLATFORMS = yaml.safe_load(f"""
 tasks:
     foobar_eol:
+        platform: {_EOL_PLATFORM_FOR_TEST}
+    foobar_eol2:
         platform: {_EOL_PLATFORM_FOR_TEST}
 """)
     _CONFIG_WITH_SUPPORTED_PLATFORM = yaml.safe_load(f"""
@@ -805,8 +807,8 @@ tasks:
             if isinstance(s, dict) and "WARNING: EOL platform detected" in s.get("label", "")
         ]
 
-    def test_eol_platform_has_warning(self):
-        steps = self.get_steps_no_stdout(self._CONFIG_WITH_EOL_PLATFORM)
+    def test_multiple_eol_platform_has_warning(self):
+        steps = self.get_steps_no_stdout(self._CONFIG_WITH_MULTIPLE_EOL_PLATFORMS)
         # Find all steps that contain the EOL warning
         warning_steps = self.get_eol_warning_steps(steps)
         # There should only be 1 warning step.
@@ -814,7 +816,13 @@ tasks:
         # The step should only have 1 command.
         self.assertEqual(1, len(warning_steps[0]["command"]))
         # The warning message should be specific to the EOL platform.
-        self.assertTrue(self._EOL_PLATFORM_FOR_TEST in warning_steps[0]["command"][0])
+        warning_message = warning_steps[0]["command"][0]
+        self.assertTrue(self._EOL_PLATFORM_FOR_TEST in warning_message)
+        # The platform should only be listed once in the warning message.
+        # The list of EOL platforms exists from the first ":" to the subsequent ".".
+        platform_list = warning_message.split(":", 1)[1].split(".", 1)[0]
+        platforms = [p.strip() for p in platform_list.split(",")]
+        self.assertEqual([self._EOL_PLATFORM_FOR_TEST], platforms)
 
     def test_supported_platform_has_no_warning(self):
         steps = self.get_steps_no_stdout(self._CONFIG_WITH_SUPPORTED_PLATFORM)
