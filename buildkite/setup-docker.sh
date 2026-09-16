@@ -157,7 +157,7 @@ EOF
   curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
       apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
   apt-get -y update
-  apt-get -y install google-cloud-sdk
+  apt-get -y install google-cloud-cli
 }
 
 ### Preseed our Git mirrors.
