@@ -59,7 +59,7 @@ steps:
       sudo chmod 0755 /usr/local/bin/github-release
 
       echo "+++ Importing GitHub token"
-      github_token=$(gsutil cat gs://bazel-trusted-encrypted-secrets/github-trusted-token.enc | gcloud kms decrypt --project bazel-public --location global --keyring buildkite --key github-trusted-token --ciphertext-file - --plaintext-file -)
+      github_token=$(gcloud secrets versions access latest --secret="github-trusted-token" --project="bazel-public")
 
       echo "+++ Creating a release on GitHub"
       relnotes=$(cat relnotes.txt)
