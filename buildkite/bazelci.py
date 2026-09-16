@@ -336,6 +336,7 @@ DOCKER_REGISTRY_PREFIX = {
 # IMAGE_HASHES dict.
 EOL_PLATFORMS = frozenset(
     [
+        "debian11",
         "ubuntu1604",
         "ubuntu1804",
         "ubuntu2004",

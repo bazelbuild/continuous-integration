@@ -62,7 +62,6 @@ function docker_build() {
 pids=()
 docker_build -f rockylinux8/Dockerfile  --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target rockylinux8 -t "gcr.io/$PREFIX/rockylinux8"  rockylinux8 & pids+=($!)
 docker_build -f debian10/Dockerfile   --target debian10-java11   -t "gcr.io/$PREFIX/debian10-java11" debian10 & pids+=($!)
-docker_build -f debian11/Dockerfile   --target debian11-java17   -t "gcr.io/$PREFIX/debian11-java17" debian11 & pids+=($!)
 docker_build -f debian12/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target debian12-java17   -t "gcr.io/$PREFIX/debian12" debian12 & pids+=($!)
 docker_build -f debian13/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target debian13-java21   -t "gcr.io/$PREFIX/debian13" debian13 & pids+=($!)
 docker_build -f ubuntu2204/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2204-java17 -t "gcr.io/$PREFIX/ubuntu2204-java17" ubuntu2204 & pids+=($!)
