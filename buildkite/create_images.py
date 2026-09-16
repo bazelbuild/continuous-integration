@@ -23,7 +23,7 @@ import gcloud
 import gcloud_utils
 
 DEBUG = False
-DEFAULT_MACHINE_TYPE = "c2-standard-8"
+DEFAULT_MACHINE_TYPE = "c3d-standard-8"
 DEFAULT_BOOT_DISK_TYPE = "pd-ssd"
 
 IMAGE_CREATION_VMS = {
@@ -33,7 +33,7 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-2204-lts",
         "setup_script": "setup-docker.sh",
-        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
+        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE", "GVNIC"],
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
@@ -44,7 +44,7 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-2204-lts-arm64",
         "setup_script": "setup-docker.sh",
-        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
+        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE", "GVNIC"],
         "licenses": [
             "https://www.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx"
         ],
@@ -57,7 +57,7 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-2022", # vs build tools failed to install on windows-2022-core
         "setup_script": "setup-windows.ps1",
-        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
+        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE", "GVNIC"],
     },
     "windows-playground": {
         "project": "di-cloud-exp",
@@ -66,7 +66,7 @@ IMAGE_CREATION_VMS = {
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-2022",
         "setup_script": "setup-windows.ps1",
-        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE"],
+        "guest_os_features": ["VIRTIO_SCSI_MULTIQUEUE", "GVNIC"],
     },
 }
 
