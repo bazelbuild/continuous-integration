@@ -2309,19 +2309,6 @@ def concurrent_jobs(platform):
     return "75" if platform.startswith("rbe_") else str(multiprocessing.cpu_count())
 
 
-def concurrent_test_jobs(platform):
-    if platform.startswith("rbe_"):
-        return "75"
-    elif is_windows():
-        return "8"
-    elif is_mac() and THIS_IS_TESTING:
-        return "4"
-    elif is_mac():
-        # TODO(twerth): This is an experiment, remove.
-        return str(int(multiprocessing.cpu_count() / 2))
-    return "12"
-
-
 def common_startup_flags():
     if is_windows():
         if os.path.exists("D:/b"):
@@ -3028,7 +3015,6 @@ def execute_bazel_test(
     aggregated_flags = [
         "--flaky_test_attempts=3",
         "--build_tests_only",
-        "--local_test_jobs=" + concurrent_test_jobs(platform),
     ]
 
     # Don't enable remote caching if the user enabled remote execution / caching themselves
@@ -3061,7 +3047,6 @@ def execute_bazel_test(
 def execute_bazel_coverage(bazel_version, bazel_binary, platform, flags, targets):
     aggregated_flags = [
         "--build_tests_only",
-        "--local_test_jobs=" + concurrent_test_jobs(platform),
         # TODO: Logs for failed tests should be collected in the
         # same way they are for `test` invocations.
         "--test_output=errors"
