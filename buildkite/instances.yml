@@ -17,6 +17,7 @@ default_vm:
   machine_type: c2-standard-30
   network: default
   region: us-central1
+  target_distribution_shape: ANY
   restart-on-failure: False
   scopes: cloud-platform
   image_project: bazel-public
