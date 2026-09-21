@@ -916,6 +916,46 @@ resource "buildkite_pipeline" "bcr-bazel-compatibility-test" {
   }
 }
 
+resource "buildkite_pipeline" "bcr-downstream-test" {
+  name           = "BCR Downstream Test"
+  repository     = "https://github.com/bazelbuild/bazel-central-registry.git"
+  description    = "Test whether new BCR module versions break direct downstream modules ranked by PageRank. See https://github.com/bazelbuild/continuous-integration/tree/master/buildkite/bazel-central-registry#bcr-downstream-test"
+  default_branch = "main"
+  steps = templatefile("pipeline.yml.tpl", {
+    envs = {
+      CI_RESOURCE_PERCENTAGE : 10
+      MAX_DOWNSTREAM_MODULES : 10
+      USE_BAZEL_VERSION : "latest"
+      # TARGET_MODULES: "rules_cc@latest"
+      # EXCLUDE_DEV_DEPS: "1"
+      # SKIP_WAIT_FOR_APPROVAL: "1"
+    },
+    steps = {
+      image = "gcr.io/bazel-public/ubuntu2404@sha256:e0a4a1fe658b4fe75f0a6914e7a7891a4976f6fcf12ff143a478a0912ead801c",
+      commands = [
+        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
+        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py?$(date +%s)\" -o bcr_presubmit.py",
+        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_downstream.py?$(date +%s)\" -o bcr_downstream.py",
+        "python3 bcr_downstream.py bcr_downstream"
+      ]
+    }
+  })
+  allow_rebuilds             = true
+  cancel_intermediate_builds = false
+  emoji                      = ":bazel:"
+  skip_intermediate_builds   = false
+  tags                       = []
+  branch_configuration       = null
+  cluster_id                 = null
+  color                      = null
+  default_team_id            = null
+  pipeline_template_id       = null
+  provider_settings = {
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
+}
+
 resource "buildkite_pipeline" "bazel-bazel" {
   name           = "Bazel :bazel:"
   repository     = "https://github.com/bazelbuild/bazel.git"
