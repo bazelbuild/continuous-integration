@@ -924,9 +924,11 @@ resource "buildkite_pipeline" "bcr-downstream-test" {
   steps = templatefile("pipeline.yml.tpl", {
     envs = {
       CI_RESOURCE_PERCENTAGE : 10
-      MAX_DOWNSTREAM_MODULES : 10
+      SELECT_TOP_BCR_MODULES : 10
       USE_BAZEL_VERSION : "latest"
       # TARGET_MODULES: "rules_cc@latest"
+      # MODULE_SELECTIONS: "grpc@latest"
+      # SMOKE_TEST_PERCENTAGE: 10
       # EXCLUDE_DEV_DEPS: "1"
       # SKIP_WAIT_FOR_APPROVAL: "1"
     },

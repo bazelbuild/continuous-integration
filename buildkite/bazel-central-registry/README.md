@@ -49,7 +49,9 @@ A new build can be triggered via the [BCR Bazel Compatibility Test](https://buil
 A build can be triggered via the `BCR Downstream Test` pipeline (or on a BCR PR branch) with the following environment variables:
 
 * `TARGET_MODULES`: (Optional) A comma-separated list of target module patterns in `<module_pattern>@<version_pattern>` format (e.g. `rules_cc@0.1.1`, `protobuf@latest`). If omitted, target modules are auto-detected from `git diff main...HEAD`.
-* `MAX_DOWNSTREAM_MODULES`: (Optional) Maximum number of direct downstream modules to select based on descending global BCR PageRank score. Default is `10`.
+* `SELECT_TOP_BCR_MODULES`: (Optional) Maximum number of direct downstream modules to select based on descending global BCR PageRank score (via `//tools:module_analyzer`). Default is `10`.
+* `MODULE_SELECTIONS`: (Optional) A comma-separated list of downstream module patterns to test explicitly (e.g. `grpc@latest,rules_go@latest`). Overrides `SELECT_TOP_BCR_MODULES` when set.
+* `SMOKE_TEST_PERCENTAGE`: (Optional) Percentage of selected downstream modules to randomly sample for smoke testing.
 * `EXCLUDE_DEV_DEPS`: (Optional) Set to `1` or `true` to exclude `dev_dependency = True` dependencies when discovering direct downstream modules and computing PageRank. Default is `false`.
 * `USE_BAZEL_VERSION`: (Optional) Overrides the Bazel version used to test downstream modules (collapsing the `bazel` matrix dimension to reduce CI load). Default is `latest`. Set to empty string `""` to test all Bazel versions configured in each downstream module's `presubmit.yml`.
 * `CI_RESOURCE_PERCENTAGE`: (Optional) Percentage of CI machine resources per queue allocated to the `bcr-downstream-test-queue-*` concurrency group. Default is `10` (10%).
