@@ -48,21 +48,7 @@ IMAGE_KEYS = [
 ]
 
 
-def get_current_git_branch():
-    res = subprocess.run(
-        ["git", "rev-parse", "--abbrev-ref", "HEAD"],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return res.stdout.strip()
-
-
-def get_image_url(image_name, branch):
-    # Only active images built on testing branch use the testing prefix;
-    # legacy or un-built images use production bazel-public.
-    if branch == "testing" and image_name not in ("ubuntu1604-java8", "ubuntu2004-kythe"):
-        return f"gcr.io/bazel-public/testing/{image_name}"
+def get_image_url(image_name):
     return f"gcr.io/bazel-public/{image_name}"
 
 
@@ -111,15 +97,14 @@ def fetch_image_digests(image_name, image_url):
     return image_name, arch_digests
 
 
-def fetch_all_image_digests(branch, image_keys=None):
+def fetch_all_image_digests(image_keys=None):
     if image_keys is None:
         image_keys = IMAGE_KEYS
 
     results = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
         future_to_key = {
-            executor.submit(fetch_image_digests, key, get_image_url(key, branch)): key
-            for key in image_keys
+            executor.submit(fetch_image_digests, key, get_image_url(key)): key for key in image_keys
         }
         for future in concurrent.futures.as_completed(future_to_key):
             key = future_to_key[future]
@@ -178,11 +163,9 @@ def update_bazelci_file(bazelci_path, new_image_hashes_str):
         f.writelines(output_lines)
 
 
-def update_terraform_configs(terraform_dir, prefix, image_hashes):
+def update_terraform_configs(terraform_dir, image_hashes):
     tf_files = list(terraform_dir.glob("**/*.tf")) + list(terraform_dir.glob("**/*.tpl"))
-    pattern = re.compile(
-        r"gcr\.io/(?:bazel-public(?:/testing)?)/([a-zA-Z0-9_\-]+)(?:@sha256:[a-f0-9]+)?"
-    )
+    pattern = re.compile(r"gcr\.io/bazel-public/([a-zA-Z0-9_\-]+)(?:@sha256:[a-f0-9]+)?")
 
     updated_files = []
     for fpath in sorted(tf_files):
@@ -193,7 +176,7 @@ def update_terraform_configs(terraform_dir, prefix, image_hashes):
             img_name = match.group(1)
             if img_name in image_hashes and "amd64" in image_hashes[img_name]:
                 digest = image_hashes[img_name]["amd64"]
-                return f"gcr.io/{prefix}/{img_name}@{digest}"
+                return f"gcr.io/bazel-public/{img_name}@{digest}"
             return match.group(0)
 
         updated_content = pattern.sub(replacer, content)
@@ -214,21 +197,16 @@ def main():
         print(f"Error: {bazelci_path} not found.", file=sys.stderr)
         sys.exit(1)
 
-    branch = get_current_git_branch()
-    prefix = "bazel-public/testing" if branch == "testing" else "bazel-public"
-
-    print(f"Detected branch: {branch}")
-    print(f"Default Docker registry prefix: gcr.io/{prefix}")
     print("Fetching latest image manifests...")
 
-    digests = fetch_all_image_digests(branch, IMAGE_KEYS)
+    digests = fetch_all_image_digests(IMAGE_KEYS)
 
     new_dict_str = format_image_hashes_dict(digests)
     update_bazelci_file(bazelci_path, new_dict_str)
     print(f"Successfully updated IMAGE_HASHES in {bazelci_path}!")
 
     if terraform_dir.exists():
-        updated_tf = update_terraform_configs(terraform_dir, prefix, digests)
+        updated_tf = update_terraform_configs(terraform_dir, digests)
         print(f"Successfully updated {len(updated_tf)} terraform configuration files:")
         for tf_path in updated_tf:
             print(f"  - {tf_path}")
