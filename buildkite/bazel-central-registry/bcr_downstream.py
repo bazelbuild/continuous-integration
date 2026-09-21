@@ -20,11 +20,8 @@
 """The CI script for Bazel Central Registry Downstream Test pipeline."""
 
 import argparse
-import ast
-import json
 import os
 import pathlib
-import re
 import shutil
 import subprocess
 import sys
@@ -49,11 +46,7 @@ CI_RESOURCE_PERCENTAGE = int(
 )
 
 # Default maximum number of direct downstream modules to select by PageRank.
-DEFAULT_MAX_DOWNSTREAM_MODULES = 10
-
-BAZEL_DEP_NAME_RE = re.compile(
-    r"""bazel_dep\s*\([^)]*?\bname\s*=\s*["']([^"']+)["']""", re.DOTALL
-)
+DEFAULT_TOP_BCR_MODULES = 10
 
 
 def fetch_bcr_downstream_py_command():
@@ -114,151 +107,60 @@ def get_target_modules():
     return bcr_presubmit.get_target_modules()
 
 
-def extract_direct_deps_from_module_bazel(module_bazel_path, exclude_dev_deps=False):
-    """Extract direct bazel_dep module names from a MODULE.bazel file."""
-    content = module_bazel_path.read_text(encoding="utf-8")
-    try:
-        tree = ast.parse(content, filename=str(module_bazel_path))
-        deps = []
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "bazel_dep":
-                dep_name = None
-                is_dev_dep = False
-                for kw in node.keywords:
-                    if kw.arg == "name" and isinstance(kw.value, ast.Constant) and isinstance(kw.value.value, str):
-                        dep_name = kw.value.value
-                    elif kw.arg == "dev_dependency" and isinstance(kw.value, ast.Constant):
-                        is_dev_dep = bool(kw.value.value)
-                if dep_name and not (exclude_dev_deps and is_dev_dep):
-                    deps.append(dep_name)
-        return deps
-    except SyntaxError:
-        # Fallback to regex if MODULE.bazel contains constructs rejected by Python's ast.
-        return BAZEL_DEP_NAME_RE.findall(content)
-
-
-def get_latest_non_yanked_version(module_name):
-    """Return the latest non-yanked version of a module from its metadata.json."""
-    metadata_path = bcr_presubmit.get_metadata_json(module_name)
-    if not metadata_path.exists():
-        return None
-    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-    versions = metadata.get("versions", [])
-    yanked = metadata.get("yanked_versions", {})
-    non_yanked = [v for v in versions if v not in yanked]
-    if non_yanked:
-        return non_yanked[-1]
-    return versions[-1] if versions else None
-
-
-def build_bcr_dependency_graph(exclude_dev_deps=False):
-    """Build the latest-version dependency graph across all BCR modules.
-
-    Returns:
-        latest_versions: dict mapping module_name -> latest_non_yanked_version
-        edges: dict mapping module_name -> list of direct dependency module_names in BCR
+def select_downstream_modules(target_modules):
     """
-    modules_dir = bcr_presubmit.BCR_REPO_DIR.joinpath("modules")
-    latest_versions = {}
+    Parses MODULE_SELECTIONS, SELECT_TOP_BCR_MODULES, and SMOKE_TEST_PERCENTAGE
+    environment variables and returns a list of selected downstream module versions.
+    """
+    MODULE_SELECTIONS = os.environ.get("MODULE_SELECTIONS", "")
+    SMOKE_TEST_PERCENTAGE = os.environ.get("SMOKE_TEST_PERCENTAGE", None)
 
-    for module_dir in sorted(modules_dir.iterdir()):
-        if not module_dir.is_dir():
-            continue
-        module_name = module_dir.name
-        if not bcr_presubmit.MODULE_NAME_RE.match(module_name):
-            continue
-        latest_version = get_latest_non_yanked_version(module_name)
-        if not latest_version or not bcr_presubmit.is_valid_module_identifier(
-            module_name, latest_version
-        ):
-            continue
-        latest_versions[module_name] = latest_version
-
-    edges = {name: [] for name in latest_versions}
-    for module_name, latest_version in latest_versions.items():
-        module_bazel_path = bcr_presubmit.get_module_dot_bazel(module_name, latest_version)
-        if not module_bazel_path.exists():
-            continue
-        direct_deps = extract_direct_deps_from_module_bazel(
-            module_bazel_path, exclude_dev_deps=exclude_dev_deps
+    top_n = os.environ.get("SELECT_TOP_BCR_MODULES", DEFAULT_TOP_BCR_MODULES)
+    if top_n and not MODULE_SELECTIONS:
+        # Remove USE_BAZEL_VERSION to make this step more stable.
+        env = os.environ.copy()
+        env.pop("USE_BAZEL_VERSION", None)
+        cmd = [
+            "bazel",
+            "run",
+            "//tools:module_analyzer",
+            "--",
+            "--name-only",
+            f"--top_n={top_n}",
+        ]
+        if os.environ.get("EXCLUDE_DEV_DEPS", "").lower() in ("1", "true", "yes"):
+            cmd.append("--exclude-dev-deps")
+        for module_name, _ in target_modules:
+            cmd.append(f"--dependents_of={module_name}")
+        output = subprocess.check_output(
+            cmd,
+            cwd=bcr_presubmit.BCR_REPO_DIR,
+            env=env,
         )
-        # Preserve unique edges to modules present in the registry (matching nx.DiGraph in module_analyzer.py)
-        edges[module_name] = sorted(
-            {dep for dep in direct_deps if dep in latest_versions and dep != module_name}
-        )
+        top_modules = output.decode("utf-8").split()
+        MODULE_SELECTIONS = ",".join([f"{module}@latest" for module in top_modules])
 
-    return latest_versions, edges
-
-
-def compute_pagerank(edges, alpha=0.85, max_iter=100, tol=1.0e-6):
-    """Compute PageRank scores over the directed graph `edges` (matching networkx.pagerank)."""
-    nodes = sorted(edges.keys())
-    n = len(nodes)
-    if n == 0:
-        return {}
-
-    pr = {node: 1.0 / n for node in nodes}
-    dangling_nodes = [node for node in nodes if not edges[node]]
-
-    for _ in range(max_iter):
-        next_pr = {node: (1.0 - alpha) / n for node in nodes}
-        dangling_sum = sum(pr[node] for node in dangling_nodes)
-        dangling_contrib = alpha * dangling_sum / n
-
-        for node in nodes:
-            next_pr[node] += dangling_contrib
-            out_neighbors = edges[node]
-            if out_neighbors:
-                share = alpha * pr[node] / len(out_neighbors)
-                for dst in out_neighbors:
-                    next_pr[dst] += share
-
-        err = sum(abs(next_pr[node] - pr[node]) for node in nodes)
-        pr = next_pr
-        if err < n * tol:
-            break
-
-    return pr
-
-
-def select_downstream_modules(target_modules, max_downstream_modules=None, exclude_dev_deps=False):
-    """Discover direct downstream modules and select the top N by PageRank."""
-    if max_downstream_modules is None:
-        max_downstream_modules = int(
-            os.environ.get("MAX_DOWNSTREAM_MODULES", DEFAULT_MAX_DOWNSTREAM_MODULES)
-        )
-
-    latest_versions, edges = build_bcr_dependency_graph(exclude_dev_deps=exclude_dev_deps)
-    target_names_set = {name for name, _ in target_modules}
-
-    direct_dependents = {
-        module_name: latest_versions[module_name]
-        for module_name, deps in edges.items()
-        if module_name not in target_names_set and target_names_set.intersection(deps)
-    }
-    if not direct_dependents:
+    if not MODULE_SELECTIONS:
         return []
 
-    pagerank = compute_pagerank(edges)
-    pagerank_order = sorted(pagerank.keys(), key=lambda m: (-pagerank[m], m))
-    rank_index = {name: idx for idx, name in enumerate(pagerank_order)}
-
-    sorted_dependent_names = sorted(
-        direct_dependents.keys(),
-        key=lambda name: (-pagerank.get(name, 0.0), name),
+    selections = [s.strip() for s in MODULE_SELECTIONS.split(",") if s.strip()]
+    args = [f"--select={s}" for s in selections]
+    if SMOKE_TEST_PERCENTAGE:
+        args += [f"--random-percentage={SMOKE_TEST_PERCENTAGE}"]
+    output = subprocess.check_output(
+        ["python3", "./tools/module_selector.py"] + args,
+        cwd=bcr_presubmit.BCR_REPO_DIR,
     )
-
-    selected_names = sorted_dependent_names[:max_downstream_modules]
-    selected = [(name, direct_dependents[name]) for name in selected_names]
-
-    bazelci.print_expanded_group(
-        f"Selected {len(selected)} of {len(direct_dependents)} direct downstream modules (top {max_downstream_modules} by PageRank):\n\n"
-        + "\n".join(
-            f"{idx + 1}. {name}@{version} (PageRank: {pagerank.get(name, 0.0):.6f}, global rank #{rank_index.get(name, -1) + 1})"
-            for idx, (name, version) in enumerate(selected)
+    modules = []
+    for line in output.decode("utf-8").split():
+        name, version = line.strip().split("@")
+        modules.append((name, version))
+    if modules:
+        bazelci.print_expanded_group(
+            "The following downstream modules are selected:\n\n%s"
+            % "\n".join([f"{name}@{version}" for name, version in modules])
         )
-    )
-    return selected
+    return sorted(list(set(modules)))
 
 
 def vendor_target_modules(override_modules, overwrite_bazel_version=None, root=None):
@@ -476,10 +378,7 @@ def main(argv=None):
             + "\n".join(f"- {name}@{version}" for name, version in target_modules)
         )
 
-        exclude_dev_deps = os.environ.get("EXCLUDE_DEV_DEPS", "").lower() in ("1", "true", "yes")
-        downstream_modules = select_downstream_modules(
-            target_modules, exclude_dev_deps=exclude_dev_deps
-        )
+        downstream_modules = select_downstream_modules(target_modules)
         if not downstream_modules:
             bazelci.eprint("No direct downstream modules found in BCR for the target module(s).")
             return 0
