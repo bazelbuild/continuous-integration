@@ -26,6 +26,7 @@ RUN apt-get -y update && \
     golang \
     iproute2 \
     iputils-ping \
+    jq \
     lcov \
     less \
     libclang-rt-dev \

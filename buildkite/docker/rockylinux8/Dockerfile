@@ -22,6 +22,7 @@ RUN dnf -y install 'dnf-command(config-manager)' && \
     gnupg2 \
     google-cloud-cli \
     iproute \
+    jq \
     lcov \
     llvm \
     openssl-perl \
