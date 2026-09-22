@@ -4,8 +4,22 @@ set -euxo pipefail
 PREFIX=bazel-public
 GIT_ROOT="$(git rev-parse --show-toplevel)"
 source "$GIT_ROOT/buildkite/docker/utils.sh"
-DEFAULT_IMAGE_TAG="$(calculate_image_tag)"
-export IMAGE_TAG="${IMAGE_TAG:-$DEFAULT_IMAGE_TAG}"
+
+TAG_FILE="$GIT_ROOT/buildkite/docker/.image_tag"
+
+# Priority for setting the image tag (in decreasing order):
+# 1) .image_tag file
+# 2) IMAGE_TAG environment variable
+# 3) Image tag calculated from utils.sh
+if [[ -f "$TAG_FILE" ]]; then
+    IMAGE_TAG="$(cat "$TAG_FILE")"
+elif [[ -n "${IMAGE_TAG:-}" ]]; then
+    IMAGE_TAG="${IMAGE_TAG}"
+else
+    DEFAULT_IMAGE_TAG="$(calculate_image_tag)"
+    IMAGE_TAG="$DEFAULT_IMAGE_TAG"
+fi
+export IMAGE_TAG
 
 # Containers used by Bazel CI
 docker push "gcr.io/$PREFIX/rockylinux8" &
