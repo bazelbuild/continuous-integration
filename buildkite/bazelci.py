@@ -330,7 +330,6 @@ DOCKER_REGISTRY_PREFIX = {
     "bazel": "bazel-public",
 }[BUILDKITE_ORG]
 
-
 # Platforms we no longer support, but still exist in the artifact registry.
 # NOTE: These names are the ones use din the PLATFORMS dict, not the
 # IMAGE_HASHES dict.
@@ -346,6 +345,7 @@ EOL_PLATFORMS = frozenset(
     ]
 )
 
+# DO_NOT_MODIFY_IMAGE_HASHES_SENTINEL_START
 IMAGE_HASHES = {
     "rockylinux8": {
         "amd64": "sha256:1302e131f7db6d98fffc75f08b900b261d3bc122abeb875b294d43117e2a2466",
@@ -420,6 +420,7 @@ IMAGE_HASHES = {
         "amd64": "sha256:d5f9962cf3d21b316930d81b614dffa197c86a473262d3e5825dbde445710952",
     },
 }
+# DO_NOT_MODIFY_IMAGE_HASHES_SENTINEL_END
 
 
 def get_docker_image(image_name, is_arm64=False):
