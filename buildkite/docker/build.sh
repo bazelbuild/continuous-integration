@@ -5,6 +5,10 @@ set -euxo pipefail
 PREFIX=bazel-public
 GIT_ROOT="$(git rev-parse --show-toplevel)"
 source "$GIT_ROOT/buildkite/docker/utils.sh"
+TAG_FILE="$GIT_ROOT/buildkite/docker/.image_tag"
+# Remove any stale tag file from a previous run so that .image_tag is only
+# present if all builds in this run succeed.
+rm -f "$TAG_FILE"
 DEFAULT_IMAGE_TAG="$(calculate_image_tag)"
 export IMAGE_TAG="${IMAGE_TAG:-$DEFAULT_IMAGE_TAG}"
 
@@ -116,3 +120,7 @@ docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2404/Dockerfile   --builder mp-build
 docker_build "${TOOLS_CONTEXT[@]}" -f fedora39/Dockerfile   --target fedora39-bazel-java17       -t "gcr.io/$PREFIX/fedora39-bazel-java17:$IMAGE_TAG" -t "gcr.io/$PREFIX/fedora39-bazel-java17:latest" fedora39
 docker_build "${TOOLS_CONTEXT[@]}" -f fedora40/Dockerfile   --target fedora40-bazel-java21       -t "gcr.io/$PREFIX/fedora40-bazel-java21:$IMAGE_TAG" -t "gcr.io/$PREFIX/fedora40-bazel-java21:latest" fedora40
 docker_build "${TOOLS_CONTEXT[@]}" -f fedora43/Dockerfile   --target fedora43-bazel-java25       -t "gcr.io/$PREFIX/fedora43-bazel-java25:$IMAGE_TAG" -t "gcr.io/$PREFIX/fedora43-bazel-java25:latest" fedora43
+
+# Save IMAGE_TAG to .image_tag now that all builds have succeeded
+echo "$IMAGE_TAG" > "$TAG_FILE"
+
