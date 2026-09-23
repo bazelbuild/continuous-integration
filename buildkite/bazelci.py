@@ -327,11 +327,6 @@ DOWNSTREAM_PROJECTS = {
     "bazel": DOWNSTREAM_PROJECTS_PRODUCTION,
 }[BUILDKITE_ORG]
 
-DOCKER_REGISTRY_PREFIX = {
-    "bazel-testing": "bazel-public/testing",
-    "bazel-trusted": "bazel-public",
-    "bazel": "bazel-public",
-}[BUILDKITE_ORG]
 
 # Platforms we no longer support, but still exist in the artifact registry.
 # NOTE: These names are the ones use din the PLATFORMS dict, not the
@@ -427,8 +422,6 @@ IMAGE_HASHES = {
 
 
 def get_docker_image(image_name, is_arm64=False):
-    if THIS_IS_TESTING:
-        return f"gcr.io/{DOCKER_REGISTRY_PREFIX}/{image_name}"
     digests = IMAGE_HASHES.get(image_name)
     if not digests:
         raise ValueError(f"No digest found for docker image: {image_name}")
@@ -436,7 +429,7 @@ def get_docker_image(image_name, is_arm64=False):
     digest = digests.get(arch)
     if not digest:
         raise ValueError(f"No {arch} digest found for docker image: {image_name}")
-    return f"gcr.io/{DOCKER_REGISTRY_PREFIX}/{image_name}@{digest}"
+    return f"gcr.io/bazel-public/{image_name}@{digest}"
 
 
 # A map containing all supported platform names as keys, with the values being

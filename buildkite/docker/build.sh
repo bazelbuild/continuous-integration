@@ -2,17 +2,7 @@
 
 set -euxo pipefail
 
-case $(git symbolic-ref --short HEAD) in
-    master)
-        PREFIX="bazel-public"
-        ;;
-    testing)
-        PREFIX="bazel-public/testing"
-        ;;
-    *)
-        echo "You must build Docker images either from the master or the testing branch!"
-        exit 1
-esac
+PREFIX=bazel-public
 
 # Enable use of buildkit for all builds. No extra support in the Dockerfile is required.
 # See https://docs.docker.com/develop/develop-images/build_enhancements/ for details.

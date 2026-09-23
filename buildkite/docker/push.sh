@@ -1,18 +1,7 @@
 #!/bin/bash
 
 set -euxo pipefail
-
-case $(git symbolic-ref --short HEAD) in
-    master)
-        PREFIX="bazel-public"
-        ;;
-    testing)
-        PREFIX="bazel-public/testing"
-        ;;
-    *)
-        echo "You must build Docker images either from the master or the testing branch!"
-        exit 1
-esac
+PREFIX=bazel-public
 
 # Containers used by Bazel CI
 docker push "gcr.io/$PREFIX/rockylinux8" &
