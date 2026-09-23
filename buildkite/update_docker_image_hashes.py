@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Updates hard-coded Docker image hashes in bazelci.py and Terraform configs.
+Updates hard-coded Docker image hashes in bazelci.py, Terraform configs, and RBE presets.
 """
 
 import concurrent.futures
@@ -163,12 +163,11 @@ def update_bazelci_file(bazelci_path, new_image_hashes_str):
         f.writelines(output_lines)
 
 
-def update_terraform_configs(terraform_dir, image_hashes):
-    tf_files = list(terraform_dir.glob("**/*.tf")) + list(terraform_dir.glob("**/*.tpl"))
-    pattern = re.compile(r"gcr\.io/bazel-public/([a-zA-Z0-9_\-]+)(?:@sha256:[a-f0-9]+)?")
+def update_pinned_hashes(files, image_hashes):
+    pattern = re.compile(r"gcr\.io/bazel-public/([a-zA-Z0-9_\-]+)@sha256:[a-f0-9]+")
 
     updated_files = []
-    for fpath in sorted(tf_files):
+    for fpath in sorted(files):
         with open(fpath, "r", encoding="utf-8") as f:
             content = f.read()
 
@@ -188,13 +187,31 @@ def update_terraform_configs(terraform_dir, image_hashes):
     return updated_files
 
 
+def update_terraform_configs(terraform_dir, image_hashes):
+    tf_files = list(terraform_dir.glob("**/*.tf")) + list(terraform_dir.glob("**/*.tpl"))
+    return update_pinned_hashes(tf_files, image_hashes)
+
+
+def update_rbe_presets(rbe_file, image_hashes):
+    return update_pinned_hashes([rbe_file], image_hashes)
+
+
 def main():
     repo_root = Path(__file__).resolve().parent.parent
     bazelci_path = repo_root / "buildkite" / "bazelci.py"
-    terraform_dir = repo_root / "buildkite" / "terraform" / "bazel"
+    terraform_dir = repo_root / "buildkite" / "terraform"
+    rbe_presets_file = repo_root / "rules" / "rbe_presets.json"
 
     if not bazelci_path.exists():
         print(f"Error: {bazelci_path} not found.", file=sys.stderr)
+        sys.exit(1)
+
+    if not terraform_dir.exists():
+        print(f"Error: {terraform_dir} not found.", file=sys.stderr)
+        sys.exit(1)
+
+    if not rbe_presets_file.exists():
+        print(f"Error: {rbe_presets_file} not found.", file=sys.stderr)
         sys.exit(1)
 
     print("Fetching latest image manifests...")
@@ -205,11 +222,14 @@ def main():
     update_bazelci_file(bazelci_path, new_dict_str)
     print(f"Successfully updated IMAGE_HASHES in {bazelci_path}!")
 
-    if terraform_dir.exists():
-        updated_tf = update_terraform_configs(terraform_dir, digests)
-        print(f"Successfully updated {len(updated_tf)} terraform configuration files:")
-        for tf_path in updated_tf:
-            print(f"  - {tf_path}")
+    updated_tf = update_terraform_configs(terraform_dir, digests)
+    print(f"Successfully updated {len(updated_tf)} terraform configuration files:")
+    for tf_path in updated_tf:
+        print(f"  - {tf_path}")
+
+    updated_rbe = update_rbe_presets(rbe_presets_file, digests)
+    if updated_rbe:
+        print(f"Successfully updated RBE presets in {rbe_presets_file}!")
 
 
 if __name__ == "__main__":
