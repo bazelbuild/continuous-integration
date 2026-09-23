@@ -46,7 +46,7 @@ CI_RESOURCE_PERCENTAGE = int(
 )
 
 # Default maximum number of direct downstream modules to select by PageRank.
-DEFAULT_TOP_BCR_MODULES = 10
+DEFAULT_TOP_BCR_MODULES = 50
 
 
 def fetch_bcr_downstream_py_command():
@@ -269,8 +269,8 @@ def add_downstream_jobs(
             f"{module_name}@{module_version} (with {override_label_str}) - "
             f"{platform_label} - {task_name}"
         )
-        bazel_version = overwrite_bazel_version or task_config.get("bazel", "")
-        if bazel_version:
+        bazel_version = task_config.get("bazel", "")
+        if bazel_version and not overwrite_bazel_version:
             label = f":bazel:{bazel_version} - {label}"
 
         command = (
@@ -385,8 +385,8 @@ def main(argv=None):
 
         pr_labels = bcr_presubmit.get_labels_from_pr()
         low_priority = "low-ci-priority" in pr_labels
-        # Default to "latest" Bazel unless USE_BAZEL_VERSION is explicitly set (or set to "" to test all matrix versions).
-        bazel_version = os.environ.get("USE_BAZEL_VERSION", "latest") or None
+        # Respect USE_BAZEL_VERSION to override bazel version in presubmit.yml files if specified.
+        bazel_version = os.environ.get("USE_BAZEL_VERSION")
 
         pipeline_steps = []
         for downstream_name, downstream_version in downstream_modules:
@@ -419,6 +419,7 @@ def main(argv=None):
         if pipeline_steps:
             if (
                 "SKIP_WAIT_FOR_APPROVAL" not in os.environ
+                and "run-downstream-test" not in pr_labels
                 and bcr_presubmit.should_wait_bcr_maintainer_review(target_modules, pr_labels)
             ):
                 pipeline_steps.insert(
