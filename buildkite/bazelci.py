@@ -2652,8 +2652,7 @@ def calculate_targets(
         sorted_test_targets = sorted(actual_test_targets)
 
         test_durations = None
-        use_smart_sharding = os.getenv(USE_SMART_SHARDING_ENV_VAR, "").lower() in ("true", "1")
-        if use_smart_sharding:
+        if is_trueish(os.getenv(USE_SMART_SHARDING_ENV_VAR, "")):
             resolved_platform = platform or task_config.get("platform")
             tmpdir = tempfile.mkdtemp()
             try:
