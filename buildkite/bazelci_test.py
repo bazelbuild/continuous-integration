@@ -672,6 +672,30 @@ class GetCiScriptRefTest(unittest.TestCase):
             ):
                 self.assertEqual(bazelci.get_ci_script_ref(), "testing")
 
+    def test_env_var_overrides_ref_in_testing(self):
+        with mock.patch.object(bazelci, "THIS_IS_TESTING", True):
+            with mock.patch.dict(
+                os.environ,
+                {
+                    "BAZELCI_GITHUB_REF": "custom-test-branch",
+                    "BUILDKITE_REPO": "https://github.com/bazelbuild/bazel.git",
+                    "BUILDKITE_COMMIT": "some_bazel_commit",
+                },
+                clear=True,
+            ):
+                self.assertEqual(bazelci.get_ci_script_ref(), "custom-test-branch")
+
+    def test_env_var_ignored_in_production(self):
+        with mock.patch.object(bazelci, "THIS_IS_TESTING", False):
+            with mock.patch.dict(
+                os.environ,
+                {
+                    "BAZELCI_GITHUB_REF": "custom-test-branch",
+                },
+                clear=True,
+            ):
+                self.assertEqual(bazelci.get_ci_script_ref(), "master")
+
 
 class GitBranchHandlingTest(unittest.TestCase):
 

@@ -61,6 +61,9 @@ def get_ci_script_ref():
     if not THIS_IS_TESTING:
         return "master"
 
+    if os.environ.get("BAZELCI_GITHUB_REF"):
+        return os.environ["BAZELCI_GITHUB_REF"]
+
     # If the pipeline itself is for the official bazelbuild/continuous-integration repo, use the build's commit or branch
     if os.environ.get("BUILDKITE_REPO") in (
         "https://github.com/bazelbuild/continuous-integration",
