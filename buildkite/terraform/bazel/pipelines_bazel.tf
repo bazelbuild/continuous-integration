@@ -924,8 +924,8 @@ resource "buildkite_pipeline" "bcr-downstream-test" {
   steps = templatefile("pipeline.yml.tpl", {
     envs = {
       CI_RESOURCE_PERCENTAGE : 10
-      SELECT_TOP_BCR_MODULES : 10
-      USE_BAZEL_VERSION : "latest"
+      SELECT_TOP_BCR_MODULES : 50
+      # USE_BAZEL_VERSION: "latest"
       # TARGET_MODULES: "rules_cc@latest"
       # MODULE_SELECTIONS: "grpc@latest"
       # SMOKE_TEST_PERCENTAGE: 10
@@ -943,9 +943,9 @@ resource "buildkite_pipeline" "bcr-downstream-test" {
     }
   })
   allow_rebuilds             = true
-  cancel_intermediate_builds = false
+  cancel_intermediate_builds = true
   emoji                      = ":bazel:"
-  skip_intermediate_builds   = false
+  skip_intermediate_builds   = true
   tags                       = []
   branch_configuration       = null
   cluster_id                 = null
@@ -953,8 +953,30 @@ resource "buildkite_pipeline" "bcr-downstream-test" {
   default_team_id            = null
   pipeline_template_id       = null
   provider_settings = {
-    # GitHub activities are disabled for this pipeline
-    trigger_mode = "none"
+    trigger_mode                                  = "code"
+    build_branches                                = false
+    build_pull_requests                           = true
+    build_tags                                    = false
+    build_pull_request_forks                      = true
+    build_pull_request_ready_for_review           = true
+    build_pull_request_labels_changed             = true
+    build_pull_request_base_branch_changed        = false
+    prefix_pull_request_fork_branch_names         = true
+    filter_enabled                                = true
+    filter_condition                              = "build.pull_request.labels includes \"run-downstream-test\""
+    pull_request_branch_filter_enabled            = false
+    pull_request_branch_filter_configuration      = ""
+    publish_commit_status                         = true
+    publish_commit_status_per_step                = true
+    separate_pull_request_statuses                = false
+    publish_blocked_as_pending                    = true
+    cancel_deleted_branch_builds                  = true
+    skip_builds_for_existing_commits              = true
+    skip_pull_request_builds_for_existing_commits = false
+    ignore_default_branch_pull_requests           = false
+    build_merge_group_checks_requested            = false
+    cancel_when_merge_group_destroyed             = false
+    use_merge_group_base_commit_for_git_diff_base = false
   }
 }
 

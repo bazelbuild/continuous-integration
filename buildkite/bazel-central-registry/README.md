@@ -46,14 +46,14 @@ A new build can be triggered via the [BCR Bazel Compatibility Test](https://buil
 
 `bcr_downstream.py` is a script used for testing whether new or updated BCR module versions break downstream modules that directly depend on them. It vendors the target module(s) via `bazel vendor`, overrides them in each direct downstream module's workspace via `--override_module`, and selects the top direct dependents ranked by BCR PageRank.
 
-A build can be triggered via the `BCR Downstream Test` pipeline (or on a BCR PR branch) with the following environment variables:
+A build can be triggered on a BCR PR by attaching the `run-downstream-test` label, or manually via the `BCR Downstream Test` pipeline with the following environment variables:
 
 * `TARGET_MODULES`: (Optional) A comma-separated list of target module patterns in `<module_pattern>@<version_pattern>` format (e.g. `rules_cc@0.1.1`, `protobuf@latest`). If omitted, target modules are auto-detected from `git diff main...HEAD`.
-* `SELECT_TOP_BCR_MODULES`: (Optional) Maximum number of direct downstream modules to select based on descending global BCR PageRank score (via `//tools:module_analyzer`). Default is `10`.
+* `SELECT_TOP_BCR_MODULES`: (Optional) Maximum number of direct downstream modules to select based on descending global BCR PageRank score (via `//tools:module_analyzer`). Default is `50`.
 * `MODULE_SELECTIONS`: (Optional) A comma-separated list of downstream module patterns to test explicitly (e.g. `grpc@latest,rules_go@latest`). Overrides `SELECT_TOP_BCR_MODULES` when set.
 * `SMOKE_TEST_PERCENTAGE`: (Optional) Percentage of selected downstream modules to randomly sample for smoke testing.
 * `EXCLUDE_DEV_DEPS`: (Optional) Set to `1` or `true` to exclude `dev_dependency = True` dependencies when discovering direct downstream modules and computing PageRank. Default is `false`.
-* `USE_BAZEL_VERSION`: (Optional) Overrides the Bazel version used to test downstream modules (collapsing the `bazel` matrix dimension to reduce CI load). Default is `latest`. Set to empty string `""` to test all Bazel versions configured in each downstream module's `presubmit.yml`.
+* `USE_BAZEL_VERSION`: (Optional) Specifies the Bazel version to be used. If set, the script overrides the Bazel version for all downstream task configs; otherwise, the Bazel versions specified in each downstream module's `presubmit.yml` are respected.
 * `CI_RESOURCE_PERCENTAGE`: (Optional) Percentage of CI machine resources per queue allocated to the `bcr-downstream-test-queue-*` concurrency group. Default is `10` (10%).
 * `SKIP_WAIT_FOR_APPROVAL`: (Optional) Set to `1` to bypass the approval block step when needed.
 
