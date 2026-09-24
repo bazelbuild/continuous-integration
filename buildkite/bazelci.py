@@ -1602,6 +1602,13 @@ def execute_commands(
         # (https://github.com/bazelbuild/bazelisk).
         test_env_vars.append("USE_BAZEL_VERSION")
 
+    # The Intel Mac machines have an outdated Android SDK that doesn't work with the latest
+    # rules_android, so we unset the Android env vars there. Pipelines can still set them
+    # explicitly via the "environment" field below.
+    if platform == "macos":
+        for e in ("ANDROID_HOME", "ANDROID_NDK_HOME"):
+            os.environ.pop(e, None)
+
     for key, value in task_config.get("environment", {}).items():
         # We have to explicitly convert the value to a string, because sometimes YAML tries to
         # be smart and converts strings like "true" and "false" to booleans.
