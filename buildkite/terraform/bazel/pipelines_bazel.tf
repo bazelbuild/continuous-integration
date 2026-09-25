@@ -916,6 +916,70 @@ resource "buildkite_pipeline" "bcr-bazel-compatibility-test" {
   }
 }
 
+resource "buildkite_pipeline" "bcr-downstream-test" {
+  name           = "BCR Downstream Test"
+  repository     = "https://github.com/bazelbuild/bazel-central-registry.git"
+  description    = "Test whether new BCR module versions break direct downstream modules ranked by PageRank. See https://github.com/bazelbuild/continuous-integration/tree/master/buildkite/bazel-central-registry#bcr-downstream-test"
+  default_branch = "main"
+  steps = templatefile("pipeline.yml.tpl", {
+    envs = {
+      CI_RESOURCE_PERCENTAGE : 10
+      SELECT_TOP_BCR_MODULES : 50
+      # USE_BAZEL_VERSION: "latest"
+      # TARGET_MODULES: "rules_cc@latest"
+      # MODULE_SELECTIONS: "grpc@latest"
+      # SMOKE_TEST_PERCENTAGE: 10
+      # EXCLUDE_DEV_DEPS: "1"
+      # SKIP_WAIT_FOR_APPROVAL: "1"
+    },
+    steps = {
+      image = "gcr.io/bazel-public/ubuntu2404@sha256:e0a4a1fe658b4fe75f0a6914e7a7891a4976f6fcf12ff143a478a0912ead801c",
+      commands = [
+        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
+        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py?$(date +%s)\" -o bcr_presubmit.py",
+        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_downstream.py?$(date +%s)\" -o bcr_downstream.py",
+        "python3 bcr_downstream.py bcr_downstream"
+      ]
+    }
+  })
+  allow_rebuilds             = true
+  cancel_intermediate_builds = true
+  emoji                      = ":bazel:"
+  skip_intermediate_builds   = true
+  tags                       = []
+  branch_configuration       = null
+  cluster_id                 = null
+  color                      = null
+  default_team_id            = null
+  pipeline_template_id       = null
+  provider_settings = {
+    trigger_mode                                  = "code"
+    build_branches                                = false
+    build_pull_requests                           = true
+    build_tags                                    = false
+    build_pull_request_forks                      = true
+    build_pull_request_ready_for_review           = true
+    build_pull_request_labels_changed             = true
+    build_pull_request_base_branch_changed        = false
+    prefix_pull_request_fork_branch_names         = true
+    filter_enabled                                = true
+    filter_condition                              = "build.pull_request.labels includes \"run-downstream-test\""
+    pull_request_branch_filter_enabled            = false
+    pull_request_branch_filter_configuration      = ""
+    publish_commit_status                         = true
+    publish_commit_status_per_step                = true
+    separate_pull_request_statuses                = false
+    publish_blocked_as_pending                    = true
+    cancel_deleted_branch_builds                  = true
+    skip_builds_for_existing_commits              = true
+    skip_pull_request_builds_for_existing_commits = false
+    ignore_default_branch_pull_requests           = false
+    build_merge_group_checks_requested            = false
+    cancel_when_merge_group_destroyed             = false
+    use_merge_group_base_commit_for_git_diff_base = false
+  }
+}
+
 resource "buildkite_pipeline" "bazel-bazel" {
   name           = "Bazel :bazel:"
   repository     = "https://github.com/bazelbuild/bazel.git"
