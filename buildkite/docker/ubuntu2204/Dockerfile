@@ -24,6 +24,7 @@ RUN apt-get -y update && \
     gnupg2 \
     iproute2 \
     iputils-ping \
+    jq \
     lcov \
     less \
     libc++-dev \

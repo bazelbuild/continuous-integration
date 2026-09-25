@@ -17,6 +17,7 @@ RUN dnf install -y \
   glibc-locale-source \
   iproute \
   iputils \
+  jq \
   lcov \
   java-25-openjdk \
   java-25-openjdk-devel \

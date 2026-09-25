@@ -17,6 +17,7 @@ RUN dnf install -y \
   glibc-locale-source \
   iproute \
   iputils \
+  jq \
   lcov \
   java-17-openjdk \
   java-17-openjdk-devel \
