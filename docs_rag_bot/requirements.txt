@@ -1,0 +1,9 @@
+google-genai
+google-cloud-secret-manager
+python-dotenv
+requests
+gunicorn
+uvicorn
+fastapi
+numpy
+google-cloud-storage
