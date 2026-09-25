@@ -73,6 +73,11 @@ def get_bazel_major_version(bazel_version):
     return int(m.group(1)) if m else None
 
 
+def load_presubmit_yml(module_name, module_version):
+    with open(bcr_presubmit.get_presubmit_yml(module_name, module_version), "r") as f:
+        return yaml.safe_load(f) or {}
+
+
 def collect_presubmit_bazel_versions(presubmit):
     """Collect all Bazel versions referenced in a presubmit.yml (including bcr_test_module)."""
     versions = set()
@@ -107,8 +112,7 @@ def get_target_bazel_major_versions(target_modules):
     requirements = {}
     for module_name, module_version in target_modules:
         target = f"{module_name}@{module_version}"
-        with open(bcr_presubmit.get_presubmit_yml(module_name, module_version), "r") as f:
-            versions = collect_presubmit_bazel_versions(yaml.safe_load(f) or {})
+        versions = collect_presubmit_bazel_versions(load_presubmit_yml(module_name, module_version))
         majors = {get_bazel_major_version(v) for v in versions} - {None}
         symbolic_versions = sorted(v for v in versions if get_bazel_major_version(v) is None)
         if not majors:
@@ -175,14 +179,11 @@ def parse_override_modules(override_modules_str):
     return modules
 
 
-def select_target_modules_from_env():
-    """Resolve TARGET_MODULES env var using ./tools/module_selector.py."""
-    target_modules_env = os.environ.get("TARGET_MODULES", "").strip()
-    if not target_modules_env:
-        return []
-
-    selections = [s.strip() for s in target_modules_env.split(",") if s.strip()]
+def select_module_versions(selections, random_percentage=None):
+    """Resolve module selection patterns (e.g. "grpc@latest") using ./tools/module_selector.py."""
     args = [f"--select={s}" for s in selections]
+    if random_percentage:
+        args.append(f"--random-percentage={random_percentage}")
     output = subprocess.check_output(
         ["python3", "./tools/module_selector.py"] + args,
         cwd=bcr_presubmit.BCR_REPO_DIR,
@@ -198,6 +199,14 @@ def select_target_modules_from_env():
     return sorted(set(modules))
 
 
+def select_target_modules_from_env():
+    """Resolve TARGET_MODULES env var using ./tools/module_selector.py."""
+    target_modules_env = os.environ.get("TARGET_MODULES", "").strip()
+    if not target_modules_env:
+        return []
+    return select_module_versions([s.strip() for s in target_modules_env.split(",") if s.strip()])
+
+
 def get_target_modules():
     """Return target (module_name, module_version) pairs to test downstream dependents for."""
     if os.environ.get("TARGET_MODULES", "").strip():
@@ -205,60 +214,152 @@ def get_target_modules():
     return bcr_presubmit.get_target_modules()
 
 
-def select_downstream_modules(target_modules):
-    """
-    Parses MODULE_SELECTIONS, SELECT_TOP_BCR_MODULES, and SMOKE_TEST_PERCENTAGE
-    environment variables and returns a list of selected downstream module versions.
-    """
-    MODULE_SELECTIONS = os.environ.get("MODULE_SELECTIONS", "")
-    SMOKE_TEST_PERCENTAGE = os.environ.get("SMOKE_TEST_PERCENTAGE", None)
+# Characters allowed in a Bazel version (e.g. "8.x", "9.0.0rc1", "last_green" or "<fork>/latest"),
+# which also makes sure the version can be safely used in step commands.
+BAZEL_VERSION_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._*/+-]*$")
 
-    top_n = os.environ.get("SELECT_TOP_BCR_MODULES", DEFAULT_TOP_BCR_MODULES)
-    if top_n and not MODULE_SELECTIONS:
-        # Remove USE_BAZEL_VERSION to make this step more stable.
-        env = os.environ.copy()
-        env.pop("USE_BAZEL_VERSION", None)
-        cmd = [
-            "bazel",
-            "run",
-            "//tools:module_analyzer",
-            "--",
-            "--name-only",
-            f"--top_n={top_n}",
-        ]
-        if os.environ.get("EXCLUDE_DEV_DEPS", "").lower() in ("1", "true", "yes"):
-            cmd.append("--exclude-dev-deps")
-        for module_name, _ in target_modules:
-            cmd.append(f"--dependents_of={module_name}")
-        output = subprocess.check_output(
-            cmd,
-            cwd=bcr_presubmit.BCR_REPO_DIR,
-            env=env,
+
+def parse_int_option(name, value, min_value, max_value=None):
+    try:
+        number = int(str(value).strip())
+    except ValueError:
+        number = None
+    if number is None or number < min_value or (max_value is not None and number > max_value):
+        expected = f">= {min_value}" if max_value is None else f"from {min_value} to {max_value}"
+        bcr_presubmit.error(f"Invalid {name}: {value!r}, expected an integer {expected}.")
+    return number
+
+
+def parse_bool_option(name, value):
+    normalized = str(value).strip().lower()
+    if normalized not in ("1", "true", "yes", "0", "false", "no"):
+        bcr_presubmit.error(f"Invalid {name}: {value!r}, expected true or false.")
+    return normalized in ("1", "true", "yes")
+
+
+def parse_list_option(name, value):
+    if isinstance(value, str):
+        value = value.split(",")
+    if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
+        bcr_presubmit.error(f"Invalid {name}: {value!r}, expected a list of strings.")
+    return tuple(v.strip() for v in value if v.strip())
+
+
+def parse_bazel_version_option(name, value):
+    version = str(value).strip()
+    if not BAZEL_VERSION_RE.match(version):
+        bcr_presubmit.error(f"Invalid {name}: {value!r}, expected a Bazel version such as 8.x.")
+    return version
+
+
+# Options of the downstream test as {name: (default, parser)}. A target module can set them in its
+# presubmit.yml under `bcr_downstream_test`, the environment variables with the same names in upper
+# case (e.g. SELECT_TOP_BCR_MODULES) take precedence when set.
+DOWNSTREAM_TEST_CONFIG_KEY = "bcr_downstream_test"
+DOWNSTREAM_TEST_OPTIONS = {
+    "select_top_bcr_modules": (DEFAULT_TOP_BCR_MODULES, lambda n, v: parse_int_option(n, v, 0)),
+    "module_selections": ((), parse_list_option),
+    "smoke_test_percentage": (None, lambda n, v: parse_int_option(n, v, 1, 100)),
+    "exclude_dev_deps": (False, parse_bool_option),
+    "use_bazel_version": (None, parse_bazel_version_option),
+}
+
+
+def get_downstream_test_options(module_name, module_version):
+    """Return the downstream test options for a target module."""
+    target = f"{module_name}@{module_version}"
+    config = load_presubmit_yml(module_name, module_version).get(DOWNSTREAM_TEST_CONFIG_KEY) or {}
+    if not isinstance(config, dict):
+        bcr_presubmit.error(
+            f"`{DOWNSTREAM_TEST_CONFIG_KEY}` in the presubmit.yml of {target} must be a map."
         )
-        top_modules = output.decode("utf-8").split()
-        MODULE_SELECTIONS = ",".join([f"{module}@latest" for module in top_modules])
+    unknown_keys = sorted(str(k) for k in config if k not in DOWNSTREAM_TEST_OPTIONS)
+    if unknown_keys:
+        bcr_presubmit.error(
+            f"Unknown option(s) {unknown_keys} under `{DOWNSTREAM_TEST_CONFIG_KEY}` in the "
+            f"presubmit.yml of {target}, supported options are {list(DOWNSTREAM_TEST_OPTIONS)}."
+        )
+    options = {}
+    for key, (default, parse) in DOWNSTREAM_TEST_OPTIONS.items():
+        env_value = os.environ.get(key.upper(), "").strip()
+        if env_value:
+            options[key] = parse(key.upper(), env_value)
+        elif config.get(key) is not None:
+            options[key] = parse(f"{DOWNSTREAM_TEST_CONFIG_KEY}.{key} of {target}", config[key])
+        else:
+            options[key] = default
+    customized = {k: v for k, v in options.items() if v != DOWNSTREAM_TEST_OPTIONS[k][0]}
+    bazelci.eprint(f"* Downstream test options for {target}: {customized or 'defaults'}")
+    return options
 
-    if not MODULE_SELECTIONS:
-        return []
 
-    selections = [s.strip() for s in MODULE_SELECTIONS.split(",") if s.strip()]
-    args = [f"--select={s}" for s in selections]
-    if SMOKE_TEST_PERCENTAGE:
-        args += [f"--random-percentage={SMOKE_TEST_PERCENTAGE}"]
-    output = subprocess.check_output(
-        ["python3", "./tools/module_selector.py"] + args,
-        cwd=bcr_presubmit.BCR_REPO_DIR,
-    )
-    modules = []
-    for line in output.decode("utf-8").split():
-        name, version = line.strip().split("@")
-        modules.append((name, version))
+def get_downstream_bazel_version(target_options):
+    """Return the Bazel version to override all downstream tasks with, if any."""
+    targets_by_version = {}
+    for (module_name, module_version), options in target_options.items():
+        if options["use_bazel_version"]:
+            targets_by_version.setdefault(options["use_bazel_version"], []).append(
+                f"{module_name}@{module_version}"
+            )
+    if len(targets_by_version) > 1:
+        bcr_presubmit.error(
+            "Target modules set conflicting `use_bazel_version` values: "
+            + "; ".join(f"{v} ({', '.join(t)})" for v, t in sorted(targets_by_version.items()))
+            + ". Please set the USE_BAZEL_VERSION environment variable to choose one."
+        )
+    return next(iter(targets_by_version), None)
+
+
+def get_top_dependents(module_names, top_n, exclude_dev_deps):
+    """Return the top N direct dependents of the given modules ranked by BCR PageRank."""
+    # Remove USE_BAZEL_VERSION to make this step more stable.
+    env = os.environ.copy()
+    env.pop("USE_BAZEL_VERSION", None)
+    cmd = ["bazel", "run", "//tools:module_analyzer", "--", "--name-only", f"--top_n={top_n}"]
+    if exclude_dev_deps:
+        cmd.append("--exclude-dev-deps")
+    cmd += [f"--dependents_of={name}" for name in module_names]
+    output = subprocess.check_output(cmd, cwd=bcr_presubmit.BCR_REPO_DIR, env=env)
+    return output.decode("utf-8").split()
+
+
+def select_downstream_modules(target_modules, target_options):
+    """Return the downstream module versions to test against the target modules.
+
+    Downstream modules are selected for each target module according to its options (target
+    modules with the same selection options are handled together), and are then tested against
+    all target modules.
+    """
+    groups = {}
+    for module_name, module_version in target_modules:
+        options = target_options[(module_name, module_version)]
+        selections = options["module_selections"]
+        # select_top_bcr_modules and exclude_dev_deps are not used if module_selections is set.
+        group = (
+            selections,
+            None if selections else options["select_top_bcr_modules"],
+            None if selections else options["exclude_dev_deps"],
+            options["smoke_test_percentage"],
+        )
+        groups.setdefault(group, []).append(module_name)
+
+    target_names = {name for name, _ in target_modules}
+    modules = set()
+    for (selections, top_n, exclude_dev_deps, smoke_test_percentage), names in groups.items():
+        if not selections and top_n:
+            dependents = get_top_dependents(names, top_n, exclude_dev_deps)
+            # Skip target modules in other groups, they're tested by their own presubmit.
+            selections = [f"{m}@latest" for m in dependents if m not in target_names]
+        if selections:
+            modules.update(select_module_versions(selections, smoke_test_percentage))
+
+    modules = sorted(modules)
     if modules:
         bazelci.print_expanded_group(
             "The following downstream modules are selected:\n\n%s"
             % "\n".join([f"{name}@{version}" for name, version in modules])
         )
-    return sorted(list(set(modules)))
+    return modules
 
 
 def get_vendor_bazel_version(bazel_version):
@@ -402,7 +503,7 @@ def add_downstream_jobs(
                 module_version,
                 override_modules_arg,
                 task_id,
-                "--overwrite_bazel_version=%s" % overwrite_bazel_version
+                '--overwrite_bazel_version="%s"' % overwrite_bazel_version
                 if overwrite_bazel_version
                 else "",
             )
@@ -497,15 +598,18 @@ def main(argv=None):
             + "\n".join(f"- {name}@{version}" for name, version in target_modules)
         )
 
-        downstream_modules = select_downstream_modules(target_modules)
+        target_options = {target: get_downstream_test_options(*target) for target in target_modules}
+        # Override the Bazel versions in the downstream presubmit.yml files if USE_BAZEL_VERSION
+        # (or `use_bazel_version` in the target modules' presubmit.yml) is specified.
+        bazel_version = get_downstream_bazel_version(target_options)
+
+        downstream_modules = select_downstream_modules(target_modules, target_options)
         if not downstream_modules:
-            bazelci.eprint("No direct downstream modules found in BCR for the target module(s).")
+            bazelci.eprint("No downstream modules selected for the target module(s).")
             return 0
 
         pr_labels = bcr_presubmit.get_labels_from_pr()
         low_priority = "low-ci-priority" in pr_labels
-        # Respect USE_BAZEL_VERSION to override bazel version in presubmit.yml files if specified.
-        bazel_version = os.environ.get("USE_BAZEL_VERSION")
         # Skip downstream tasks with Bazel major versions not tested by the target module(s).
         target_bazel_major_versions = get_target_bazel_major_versions(target_modules)
 

@@ -59,3 +59,17 @@ A build can be triggered on a BCR PR by attaching the `run-downstream-test` labe
 * `CI_RESOURCE_PERCENTAGE`: (Optional) Percentage of CI machine resources per queue allocated to the `bcr-downstream-test-queue-*` concurrency group. Default is `10` (10%).
 * `SKIP_WAIT_FOR_APPROVAL`: (Optional) Set to `1` to bypass the approval block step when needed.
 
+A target module can also configure `SELECT_TOP_BCR_MODULES`, `MODULE_SELECTIONS`, `SMOKE_TEST_PERCENTAGE`, `EXCLUDE_DEV_DEPS` and `USE_BAZEL_VERSION` in its `presubmit.yml` file under the top-level `bcr_downstream_test` field, using the lowercase option names. The environment variables take precedence when set. For example:
+
+```yaml
+bcr_downstream_test:
+  # Test the top 20 direct dependents, ignoring dev dependencies.
+  select_top_bcr_modules: 20
+  exclude_dev_deps: true
+  # Or test the given downstream modules instead.
+  # module_selections: ["grpc@latest", "rules_go@latest"]
+  use_bazel_version: 8.x
+```
+
+When there are multiple target modules, downstream modules are selected for each target module according to its own options, and are then tested with all target modules overridden. Since `use_bazel_version` applies to all downstream jobs, target modules must not set conflicting values.
+

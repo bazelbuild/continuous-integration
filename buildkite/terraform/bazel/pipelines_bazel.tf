@@ -924,13 +924,14 @@ resource "buildkite_pipeline" "bcr-downstream-test" {
   steps = templatefile("pipeline.yml.tpl", {
     envs = {
       CI_RESOURCE_PERCENTAGE : 10
-      SELECT_TOP_BCR_MODULES : 50
-      # USE_BAZEL_VERSION: "latest"
       # TARGET_MODULES: "rules_cc@latest"
+      # SKIP_WAIT_FOR_APPROVAL: "1"
+      # The following override the `bcr_downstream_test` options in the target module's presubmit.yml.
+      # SELECT_TOP_BCR_MODULES: 50
       # MODULE_SELECTIONS: "grpc@latest"
       # SMOKE_TEST_PERCENTAGE: 10
       # EXCLUDE_DEV_DEPS: "1"
-      # SKIP_WAIT_FOR_APPROVAL: "1"
+      # USE_BAZEL_VERSION: "latest"
     },
     steps = {
       image = "gcr.io/bazel-public/ubuntu2404@sha256:e0a4a1fe658b4fe75f0a6914e7a7891a4976f6fcf12ff143a478a0912ead801c",
