@@ -50,6 +50,9 @@ CI_RESOURCE_PERCENTAGE = int(
 # Default maximum number of direct downstream modules to select by PageRank.
 DEFAULT_TOP_BCR_MODULES = 50
 
+# `bazel vendor` is only available since Bazel 7.
+MIN_VENDOR_BAZEL_MAJOR_VERSION = 7
+
 
 def fetch_bcr_downstream_py_command():
     return bazelci.curl_download_command(SCRIPT_URL, "bcr_downstream.py")
@@ -59,12 +62,13 @@ def fetch_generate_report_py_command():
     return bazelci.curl_download_command(GENERATE_REPORT_URL, "generate_report.py")
 
 
-# Matches a Bazel version whose major version is known statically, e.g. "8.x", "8.4.2" or "9.0.0rc1".
-BAZEL_MAJOR_VERSION_RE = re.compile(r"^(\d+)\.(x|\d+\.\d+(rc\d+)?)$")
+# Matches the major version of a pinned or wildcard Bazel version, e.g. "8.x", "8.*", "8.4.2",
+# "9.0.0rc1" or "10.0.0-pre.20260911.2".
+BAZEL_MAJOR_VERSION_RE = re.compile(r"^(\d+)(?:\.|$)")
 
 
 def get_bazel_major_version(bazel_version):
-    """Return the major version of a Bazel version string, or None if it's symbolic (e.g. "latest")."""
+    """Return the major version of a Bazel version, or None for symbolic ones like "rolling"."""
     m = BAZEL_MAJOR_VERSION_RE.match(str(bazel_version).strip())
     return int(m.group(1)) if m else None
 
@@ -72,58 +76,79 @@ def get_bazel_major_version(bazel_version):
 def collect_presubmit_bazel_versions(presubmit):
     """Collect all Bazel versions referenced in a presubmit.yml (including bcr_test_module)."""
     versions = set()
-    for config in (presubmit, presubmit.get("bcr_test_module", {})):
+    for config in (presubmit, presubmit.get("bcr_test_module")):
         if not isinstance(config, dict):
             continue
-        versions.update(str(v) for v in config.get("matrix", {}).get("bazel", []))
-        for task_config in config.get("tasks", {}).values():
-            if isinstance(task_config, dict) and "bazel" in task_config:
+        matrix_versions = (config.get("matrix") or {}).get("bazel") or []
+        if isinstance(matrix_versions, dict):
+            # Matrix values can also be specified as a map from alias to value.
+            matrix_versions = matrix_versions.values()
+        elif not isinstance(matrix_versions, list):
+            matrix_versions = [matrix_versions]
+        versions.update(str(v) for v in matrix_versions)
+        # "platforms" is the legacy name of "tasks".
+        for task_config in (config.get("tasks") or config.get("platforms") or {}).values():
+            if isinstance(task_config, dict) and task_config.get("bazel"):
                 versions.add(str(task_config["bazel"]))
     # Drop matrix placeholders such as "${{ bazel }}".
     return {v for v in versions if not v.startswith("$")}
 
 
 def get_target_bazel_major_versions(target_modules):
-    """Return the Bazel major versions tested by all target modules' presubmit.yml files.
+    """Return the Bazel major versions tested by each target module's presubmit.yml.
 
-    Returns None if no filtering should be applied, i.e. when a target module doesn't pin its
-    Bazel versions or uses a symbolic version (e.g. "latest", "rolling") whose major version
-    cannot be determined statically.
+    Returns a dict mapping "<name>@<version>" to (majors, tests_newest), where `majors` are the
+    major versions of the pinned Bazel versions (e.g. {8, 9} for "8.x" and "9.*"), and
+    `tests_newest` tells whether the target is also tested with a symbolic version (e.g. "rolling",
+    "last_green") tracking the newest Bazel, in which case any major version newer than the
+    highest pinned one is considered tested too. Target modules without any pinned Bazel version
+    don't restrict downstream tasks and are omitted.
     """
-    allowed = None
+    requirements = {}
     for module_name, module_version in target_modules:
-        presubmit = yaml.safe_load(
-            open(bcr_presubmit.get_presubmit_yml(module_name, module_version), "r")
-        )
-        versions = collect_presubmit_bazel_versions(presubmit or {})
-        majors = {get_bazel_major_version(v) for v in versions}
-        if not versions or None in majors:
+        target = f"{module_name}@{module_version}"
+        with open(bcr_presubmit.get_presubmit_yml(module_name, module_version), "r") as f:
+            versions = collect_presubmit_bazel_versions(yaml.safe_load(f) or {})
+        majors = {get_bazel_major_version(v) for v in versions} - {None}
+        symbolic_versions = sorted(v for v in versions if get_bazel_major_version(v) is None)
+        if not majors:
             bazelci.eprint(
-                f"* Not filtering downstream tasks by Bazel version: {module_name}@{module_version} "
-                f"tests with Bazel versions {sorted(versions)}"
+                f"* Not filtering downstream tasks by Bazel version for {target}: no pinned Bazel "
+                f"version in its presubmit.yml (found {symbolic_versions})"
             )
-            return None
-        bazelci.eprint(
-            f"* {module_name}@{module_version} is tested with Bazel major versions {sorted(majors)}"
-        )
-        # With multiple target modules, only keep the major versions supported by all of them.
-        allowed = majors if allowed is None else allowed & majors
-    return allowed
+            continue
+        message = f"* {target} is tested with Bazel major versions {sorted(majors)}"
+        if symbolic_versions:
+            message += f" and {', '.join(symbolic_versions)}, newer major versions are also allowed"
+        bazelci.eprint(message)
+        requirements[target] = (majors, bool(symbolic_versions))
+    return requirements
 
 
-def filter_tasks_by_bazel_major_versions(module_name, module_version, task_configs, allowed_majors):
-    """Drop tasks whose Bazel major version is not tested by the target module(s)."""
-    if allowed_majors is None:
+def is_bazel_major_version_tested(major, tested_majors, tests_newest):
+    return major in tested_majors or (tests_newest and major > max(tested_majors))
+
+
+def filter_tasks_by_bazel_major_versions(
+    module_name, module_version, task_configs, target_bazel_major_versions
+):
+    """Drop tasks whose Bazel major version is not tested by all target modules."""
+    if not target_bazel_major_versions:
         return task_configs
     filtered = {}
     for task_id, task_config in task_configs.items():
         bazel_version = task_config.get("bazel")
         major = get_bazel_major_version(bazel_version) if bazel_version else None
-        # Keep tasks whose major version can't be determined statically (e.g. "latest").
-        if major is not None and major not in allowed_majors:
+        # Keep tasks whose major version can't be determined statically (e.g. "latest", "rolling").
+        untested_by = [
+            target
+            for target, (majors, tests_newest) in target_bazel_major_versions.items()
+            if major is not None and not is_bazel_major_version_tested(major, majors, tests_newest)
+        ]
+        if untested_by:
             bazelci.eprint(
                 f"* Skipping {module_name}@{module_version} task {task_id!r}: Bazel {bazel_version} "
-                f"is not in the target module(s)' tested major versions {sorted(allowed_majors)}"
+                f"is not tested by {', '.join(untested_by)}"
             )
             continue
         filtered[task_id] = task_config
@@ -236,7 +261,20 @@ def select_downstream_modules(target_modules):
     return sorted(list(set(modules)))
 
 
-def vendor_target_modules(override_modules, overwrite_bazel_version=None, root=None):
+def get_vendor_bazel_version(bazel_version):
+    """Return the Bazel version used to vendor the target module(s) for a task.
+
+    Use the task's own Bazel version so that the module graph is resolved the same way as in the
+    downstream build, but at least Bazel 7 since `bazel vendor` doesn't exist in older versions.
+    """
+    bazel_version = bazel_version or "latest"
+    major = get_bazel_major_version(bazel_version)
+    if major is not None and major < MIN_VENDOR_BAZEL_MAJOR_VERSION:
+        return f"{MIN_VENDOR_BAZEL_MAJOR_VERSION}.x"
+    return bazel_version
+
+
+def vendor_target_modules(override_modules, bazel_version=None, root=None):
     """Vendor the sources of the target module(s) using `bazel vendor` and return {module_name: vendored_path}."""
     bazelci.print_collapsed_group(":package: Vendoring target modules for override")
     if not root:
@@ -264,7 +302,7 @@ def vendor_target_modules(override_modules, overwrite_bazel_version=None, root=N
         ],
     )
 
-    vendor_bazel_version = overwrite_bazel_version or "latest"
+    vendor_bazel_version = get_vendor_bazel_version(bazel_version)
     bazelci.eprint(
         "* Vendoring target modules (%s) with Bazel %s"
         % (", ".join(f"{n}@{v}" for n, v in override_modules), vendor_bazel_version)
@@ -279,6 +317,9 @@ def vendor_target_modules(override_modules, overwrite_bazel_version=None, root=N
             "--vendor_dir=./vendor_src",
             "--repository_cache=",
             "--lockfile_mode=off",
+            # Only the source tree is needed here, the downstream build still enforces
+            # bazel_compatibility (e.g. when vendoring with Bazel 7 for a Bazel 6 task).
+            "--check_bazel_compatibility=warning",
         ]
         + [f"--repo=@{name}" for name, _ in override_modules],
         cwd=temp_anonymous_root,
@@ -290,8 +331,13 @@ def vendor_target_modules(override_modules, overwrite_bazel_version=None, root=N
     vendored_targets_dir.mkdir(exist_ok=True, parents=True)
 
     vendored_paths = {}
+    vendor_src_dir = temp_anonymous_root.joinpath("vendor_src")
     for name, _ in override_modules:
-        src_dir = temp_anonymous_root.joinpath(f"vendor_src/{name}+")
+        # The canonical repo name is "<name>+", except for well-known modules such as "platforms".
+        candidates = [vendor_src_dir.joinpath(d) for d in (f"{name}+", name)]
+        src_dir = next((d for d in candidates if d.is_dir()), None)
+        if not src_dir:
+            bcr_presubmit.error(f"Cannot find the vendored source of {name} in {vendor_src_dir}")
         dest_dir = vendored_targets_dir.joinpath(name)
         shutil.move(src_dir, dest_dir)
         vendored_paths[name] = dest_dir.resolve()
@@ -461,7 +507,7 @@ def main(argv=None):
         # Respect USE_BAZEL_VERSION to override bazel version in presubmit.yml files if specified.
         bazel_version = os.environ.get("USE_BAZEL_VERSION")
         # Skip downstream tasks with Bazel major versions not tested by the target module(s).
-        allowed_bazel_majors = get_target_bazel_major_versions(target_modules)
+        target_bazel_major_versions = get_target_bazel_major_versions(target_modules)
 
         pipeline_steps = []
         for downstream_name, downstream_version in downstream_modules:
@@ -476,7 +522,7 @@ def main(argv=None):
                     downstream_name,
                     downstream_version,
                     configs.get("tasks", {}),
-                    allowed_bazel_majors,
+                    target_bazel_major_versions,
                 ),
                 pipeline_steps,
                 overwrite_bazel_version=bazel_version,
@@ -493,7 +539,7 @@ def main(argv=None):
                     downstream_name,
                     downstream_version,
                     configs.get("tasks", {}),
-                    allowed_bazel_majors,
+                    target_bazel_major_versions,
                 ),
                 pipeline_steps,
                 is_test_module=True,
@@ -526,9 +572,7 @@ def main(argv=None):
         task_bazel_version = bcr_presubmit.get_bazel_version_for_task(
             config_file, args.task, args.overwrite_bazel_version
         )
-        vendored_paths = vendor_target_modules(
-            override_modules, overwrite_bazel_version=task_bazel_version
-        )
+        vendored_paths = vendor_target_modules(override_modules, bazel_version=task_bazel_version)
         repo_location = bcr_presubmit.create_anonymous_repo(args.module_name, args.module_version)
         configure_downstream_override(repo_location, vendored_paths)
         return bcr_presubmit.run_test(
@@ -546,9 +590,7 @@ def main(argv=None):
         task_bazel_version = bcr_presubmit.get_bazel_version_for_task(
             config_file, args.task, args.overwrite_bazel_version
         )
-        vendored_paths = vendor_target_modules(
-            override_modules, overwrite_bazel_version=task_bazel_version
-        )
+        vendored_paths = vendor_target_modules(override_modules, bazel_version=task_bazel_version)
         configure_downstream_override(repo_location, vendored_paths)
         return bcr_presubmit.run_test(
             repo_location, config_file, args.task, args.overwrite_bazel_version
