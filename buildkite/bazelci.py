@@ -3540,7 +3540,7 @@ def create_initial_steps():
         return steps
 
     modified_files = get_modified_files(os.getenv("BUILDKITE_COMMIT"))
-    modified_config_files = [f for f in modified_files if is_config_file(f)]
+    modified_config_files = [f for f in modified_files if is_ci_config_file(f)]
 
     if os.getenv("BUILDKITE_PIPELINE_SLUG", "") == "bazel-central-registry":
         # BCR: Only block changes to BCR's own presubmit.yml file.
@@ -3567,7 +3567,9 @@ def has_presubmit_auto_run_label():
     )
 
 
-def is_config_file(path):
+def is_ci_config_file(path):
+    if path.startswith((".github")):
+        return False
     return ".bazelci" in path or path.endswith(".yml")
 
 
