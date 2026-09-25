@@ -46,6 +46,8 @@ A new build can be triggered via the [BCR Bazel Compatibility Test](https://buil
 
 `bcr_downstream.py` is a script used for testing whether new or updated BCR module versions break downstream modules that directly depend on them. It vendors the target module(s) via `bazel vendor`, overrides them in each direct downstream module's workspace via `--override_module`, and selects the top direct dependents ranked by BCR PageRank.
 
+Downstream tasks are skipped if their Bazel major version is not among the major versions tested in the target module's `presubmit.yml` (e.g. a target tested with `8.x` and `9.x` skips downstream `7.x` tasks). No filtering is applied if the target module uses a Bazel version whose major version cannot be determined statically (e.g. `latest`, `rolling`); downstream tasks using such versions are always kept.
+
 A build can be triggered on a BCR PR by attaching the `run-downstream-test` label, or manually via the `BCR Downstream Test` pipeline with the following environment variables:
 
 * `TARGET_MODULES`: (Optional) A comma-separated list of target module patterns in `<module_pattern>@<version_pattern>` format (e.g. `rules_cc@0.1.1`, `protobuf@latest`). If omitted, target modules are auto-detected from `git diff main...HEAD`.
