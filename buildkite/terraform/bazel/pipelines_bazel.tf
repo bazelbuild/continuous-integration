@@ -925,7 +925,6 @@ resource "buildkite_pipeline" "bcr-downstream-test" {
     envs = {
       CI_RESOURCE_PERCENTAGE : 10
       # TARGET_MODULES: "rules_cc@latest"
-      # SKIP_WAIT_FOR_APPROVAL: "1"
       # The following override the `bcr_downstream_test` options in the target module's presubmit.yml.
       # SELECT_TOP_BCR_MODULES: 50
       # MODULE_SELECTIONS: "grpc@latest"

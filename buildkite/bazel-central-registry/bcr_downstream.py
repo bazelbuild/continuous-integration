@@ -36,10 +36,6 @@ SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integratio
     bazelci.GITHUB_REF, int(time.time())
 )
 
-GENERATE_REPORT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/generate_report.py?{}".format(
-    bazelci.GITHUB_REF, int(time.time())
-)
-
 # Limit CI resource consumption by default (10% of machines per queue) so
 # downstream test builds do not starve bcr-presubmit.
 DEFAULT_CI_RESOURCE_PERCENTAGE = 10
@@ -56,10 +52,6 @@ MIN_VENDOR_BAZEL_MAJOR_VERSION = 7
 
 def fetch_bcr_downstream_py_command():
     return bazelci.curl_download_command(SCRIPT_URL, "bcr_downstream.py")
-
-
-def fetch_generate_report_py_command():
-    return bazelci.curl_download_command(GENERATE_REPORT_URL, "generate_report.py")
 
 
 def parse_module(value):
@@ -109,8 +101,18 @@ def get_target_modules():
     """
     selections = [s.strip() for s in os.environ.get("TARGET_MODULES", "").split(",") if s.strip()]
     if selections:
-        return select_module_versions(selections)
-    return bcr_presubmit.get_target_modules()
+        target_modules = select_module_versions(selections)
+    else:
+        target_modules = bcr_presubmit.get_target_modules()
+    # All target modules are overridden together, so only one version of each module can be tested.
+    names = [name for name, _ in target_modules]
+    duplicates = [f"{name}@{version}" for name, version in target_modules if names.count(name) > 1]
+    if duplicates:
+        bcr_presubmit.error(
+            f"Cannot test multiple versions of the same module: {', '.join(duplicates)}. "
+            "Please set TARGET_MODULES to choose one version of each module."
+        )
+    return target_modules
 
 
 # Characters allowed in a Bazel version (e.g. "8.x", "9.0.0rc1", "last_green" or "<fork>/latest"),
@@ -151,9 +153,9 @@ def parse_bazel_version_option(name, value):
     return version
 
 
-# Options of the downstream test as {name: (default, parser)}. A target module can set them in its
-# presubmit.yml under `bcr_downstream_test`, the environment variables with the same names in upper
-# case (e.g. SELECT_TOP_BCR_MODULES) take precedence when set.
+# Options of the downstream test as {name: (default, parser)}. They apply to the whole build: the
+# environment variable with the same name in upper case (e.g. SELECT_TOP_BCR_MODULES) wins if it's
+# set, otherwise the target modules can set them in their presubmit.yml under `bcr_downstream_test`.
 DOWNSTREAM_TEST_CONFIG_KEY = "bcr_downstream_test"
 DOWNSTREAM_TEST_OPTIONS = {
     "select_top_bcr_modules": (DEFAULT_TOP_BCR_MODULES, lambda n, v: parse_int_option(n, v, 0)),
@@ -164,8 +166,8 @@ DOWNSTREAM_TEST_OPTIONS = {
 }
 
 
-def get_downstream_test_options(module_name, module_version):
-    """Return the downstream test options for a target module."""
+def load_downstream_test_config(module_name, module_version):
+    """Return the `bcr_downstream_test` config in the presubmit.yml of a target module."""
     target = f"{module_name}@{module_version}"
     with open(bcr_presubmit.get_presubmit_yml(module_name, module_version), "r") as f:
         config = (yaml.safe_load(f) or {}).get(DOWNSTREAM_TEST_CONFIG_KEY) or {}
@@ -179,29 +181,39 @@ def get_downstream_test_options(module_name, module_version):
             f"Unknown option(s) {unknown_keys} under `{DOWNSTREAM_TEST_CONFIG_KEY}` in the "
             f"presubmit.yml of {target}, supported options are {list(DOWNSTREAM_TEST_OPTIONS)}."
         )
+    return config
+
+
+def get_downstream_test_options(target_modules):
+    """Return the downstream test options of the build.
+
+    Each option comes from its environment variable if it's set, otherwise from the presubmit.yml
+    files of the target modules (the ones setting it must agree), otherwise its default value.
+    """
+    configs = {
+        f"{name}@{version}": load_downstream_test_config(name, version)
+        for name, version in target_modules
+    }
     options = {}
     for key, (default, parse) in DOWNSTREAM_TEST_OPTIONS.items():
         env_value = os.environ.get(key.upper(), "").strip()
         if env_value:
             options[key] = parse(key.upper(), env_value)
-        elif config.get(key) is not None:
-            options[key] = parse(f"{DOWNSTREAM_TEST_CONFIG_KEY}.{key} of {target}", config[key])
-        else:
-            options[key] = default
+            continue
+        values = {
+            target: parse(f"{DOWNSTREAM_TEST_CONFIG_KEY}.{key} of {target}", config[key])
+            for target, config in configs.items()
+            if config.get(key) is not None
+        }
+        if len(set(values.values())) > 1:
+            bcr_presubmit.error(
+                f"Target modules set conflicting `{DOWNSTREAM_TEST_CONFIG_KEY}.{key}` values "
+                f"{values}. Please set the {key.upper()} environment variable to choose one."
+            )
+        options[key] = next(iter(values.values()), default)
     customized = {k: v for k, v in options.items() if v != DOWNSTREAM_TEST_OPTIONS[k][0]}
-    bazelci.eprint(f"* Downstream test options for {target}: {customized or 'defaults'}")
+    bazelci.eprint(f"* Downstream test options: {customized or 'defaults'}")
     return options
-
-
-def get_downstream_bazel_version(target_options):
-    """Return the Bazel version to override all downstream tasks with, if any."""
-    versions = {options["use_bazel_version"] for options in target_options.values()} - {None}
-    if len(versions) > 1:
-        bcr_presubmit.error(
-            f"Target modules set conflicting `use_bazel_version` values {sorted(versions)}. "
-            "Please set the USE_BAZEL_VERSION environment variable to choose one."
-        )
-    return next(iter(versions), None)
 
 
 def get_top_dependents(module_names, top_n, exclude_dev_deps):
@@ -217,37 +229,20 @@ def get_top_dependents(module_names, top_n, exclude_dev_deps):
     return output.decode("utf-8").split()
 
 
-def select_downstream_modules(target_modules, target_options):
-    """Return the downstream module versions to test against the target modules.
-
-    Downstream modules are selected for each target module according to its options (target
-    modules with the same selection options are handled together), and are then tested against
-    all target modules.
-    """
-    groups = {}
-    for module_name, module_version in target_modules:
-        options = target_options[(module_name, module_version)]
-        selections = options["module_selections"]
-        # select_top_bcr_modules and exclude_dev_deps are not used if module_selections is set.
-        group = (
-            selections,
-            None if selections else options["select_top_bcr_modules"],
-            None if selections else options["exclude_dev_deps"],
-            options["smoke_test_percentage"],
+def select_downstream_modules(target_modules, options):
+    """Return the downstream module versions to test against the target modules."""
+    selections = options["module_selections"]
+    if not selections and options["select_top_bcr_modules"]:
+        target_names = sorted({name for name, _ in target_modules})
+        dependents = get_top_dependents(
+            target_names, options["select_top_bcr_modules"], options["exclude_dev_deps"]
         )
-        groups.setdefault(group, []).append(module_name)
+        # Don't select any target module, they're tested by their own presubmit.
+        selections = [f"{m}@latest" for m in dependents if m not in target_names]
+    if not selections:
+        return []
 
-    target_names = {name for name, _ in target_modules}
-    modules = set()
-    for (selections, top_n, exclude_dev_deps, smoke_test_percentage), names in groups.items():
-        if not selections and top_n:
-            dependents = get_top_dependents(names, top_n, exclude_dev_deps)
-            # Don't select any target module, they're tested by their own presubmit.
-            selections = [f"{m}@latest" for m in dependents if m not in target_names]
-        if selections:
-            modules.update(select_module_versions(selections, smoke_test_percentage))
-
-    modules = sorted(modules)
+    modules = select_module_versions(selections, options["smoke_test_percentage"])
     if modules:
         bazelci.print_expanded_group(
             "The following downstream modules are selected:\n\n%s"
@@ -346,8 +341,6 @@ def create_downstream_steps(
         platform_name = bcr_presubmit.get_platform(task_id, task_config)
         platform_label = bazelci.PLATFORMS[platform_name]["emoji-name"]
         task_name = task_config.get("name", "")
-        # Keep `{module_name}@{module_version}` as the first `name@version` token so
-        # generate_report.py attributes failures to the downstream module.
         label = (
             f"{module_name}@{module_version} (with {', '.join(targets)}) - "
             f"{platform_label} - {task_name}"
@@ -397,27 +390,6 @@ def create_downstream_steps(
     return steps
 
 
-def create_step_for_generate_report():
-    parts = [
-        bazelci.PLATFORMS[bazelci.DEFAULT_PLATFORM]["python"],
-        "generate_report.py",
-        "--build_number=%s" % os.getenv("BUILDKITE_BUILD_NUMBER"),
-    ]
-    return [
-        {"wait": "~", "continue_on_failure": "true"},
-        bazelci.create_step(
-            label="Generate report in markdown",
-            commands=[
-                bazelci.fetch_ci_scripts_command(),
-                bcr_presubmit.fetch_bcr_presubmit_py_command(),
-                fetch_generate_report_py_command(),
-                " ".join(parts),
-            ],
-            platform=bazelci.DEFAULT_PLATFORM,
-        ),
-    ]
-
-
 def generate_pipeline():
     """Upload the downstream test jobs for the target module(s) to the pipeline."""
     target_modules = get_target_modules()
@@ -430,20 +402,22 @@ def generate_pipeline():
         + "\n".join(f"- {name}@{version}" for name, version in target_modules)
     )
 
-    target_options = {target: get_downstream_test_options(*target) for target in target_modules}
-    # Override the Bazel versions in the downstream presubmit.yml files if USE_BAZEL_VERSION
-    # (or `use_bazel_version` in the target modules' presubmit.yml) is specified.
-    bazel_version = get_downstream_bazel_version(target_options)
-
-    downstream_modules = select_downstream_modules(target_modules, target_options)
+    options = get_downstream_test_options(target_modules)
+    downstream_modules = select_downstream_modules(target_modules, options)
     if not downstream_modules:
         bazelci.eprint("No downstream modules selected for the target module(s).")
         return
 
-    pr_labels = bcr_presubmit.get_labels_from_pr()
-    low_priority = "low-ci-priority" in pr_labels
-    # Skip downstream tasks with Bazel major versions not tested by the target module(s).
-    target_bazel_major_versions = get_target_bazel_major_versions(target_modules)
+    # An explicit Bazel version (USE_BAZEL_VERSION or `use_bazel_version`) overrides the Bazel
+    # versions of all downstream tasks. Otherwise, downstream tasks with Bazel major versions not
+    # tested by the target module(s) are skipped.
+    bazel_version = options["use_bazel_version"]
+    if bazel_version:
+        bazelci.eprint(f"* Running all downstream tasks with Bazel {bazel_version}")
+        target_bazel_major_versions = {}
+    else:
+        target_bazel_major_versions = get_target_bazel_major_versions(target_modules)
+    low_priority = "low-ci-priority" in bcr_presubmit.get_labels_from_pr()
 
     pipeline_steps = []
     for module_name, module_version in downstream_modules:
@@ -467,18 +441,6 @@ def generate_pipeline():
                 bazel_version,
                 low_priority,
             )
-
-    if pipeline_steps:
-        if (
-            "SKIP_WAIT_FOR_APPROVAL" not in os.environ
-            and "run-downstream-test" not in pr_labels
-            and bcr_presubmit.should_wait_bcr_maintainer_review(target_modules, pr_labels)
-        ):
-            pipeline_steps.insert(
-                0,
-                {"block": "Wait on BCR maintainer review", "blocked_state": "running"},
-            )
-        pipeline_steps += create_step_for_generate_report()
 
     bcr_presubmit.upload_jobs_to_pipeline(pipeline_steps)
 
