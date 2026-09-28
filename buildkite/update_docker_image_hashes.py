@@ -26,6 +26,8 @@ import sys
 
 IMAGE_KEYS = [
     "rockylinux8",
+    "rockylinux8-releaser",
+    "rockylinux8-java8",
     "rockylinux8-java11",
     "rockylinux8-java11-devtoolset10",
     "debian10-java11",
@@ -45,6 +47,7 @@ IMAGE_KEYS = [
     "fedora39-java17",
     "fedora40-java21",
     "fedora43-java25",
+    "docgen",
 ]
 
 
@@ -164,7 +167,7 @@ def update_bazelci_file(bazelci_path, new_image_hashes_str):
 
 
 def update_pinned_hashes(files, image_hashes):
-    pattern = re.compile(r"gcr\.io/bazel-public/([a-zA-Z0-9_\-]+)@sha256:[a-f0-9]+")
+    pattern = re.compile(r"gcr\.io/bazel-public/([a-zA-Z0-9_\-]+)(?:@sha256:[a-f0-9]+)?")
 
     updated_files = []
     for fpath in sorted(files):
@@ -192,15 +195,26 @@ def update_terraform_configs(terraform_dir, image_hashes):
     return update_pinned_hashes(tf_files, image_hashes)
 
 
+def update_pipeline_ymls(pipelines_dir, image_hashes):
+    pipeline_yml_files = list(pipelines_dir.glob("**/*.yml"))
+    return update_pinned_hashes(pipeline_yml_files, image_hashes)
+
+
 def update_rbe_presets(rbe_file, image_hashes):
     return update_pinned_hashes([rbe_file], image_hashes)
+
+
+def update_setup_docker(setup_docker_file, image_hashes):
+    return update_pinned_hashes([setup_docker_file], image_hashes)
 
 
 def main():
     repo_root = Path(__file__).resolve().parent.parent
     bazelci_path = repo_root / "buildkite" / "bazelci.py"
     terraform_dir = repo_root / "buildkite" / "terraform"
+    pipelines_dir = repo_root / "pipelines"
     rbe_presets_file = repo_root / "rules" / "rbe_presets.json"
+    setup_docker_file = repo_root / "buildkite" / "setup-docker.sh"
 
     if not bazelci_path.exists():
         print(f"Error: {bazelci_path} not found.", file=sys.stderr)
@@ -212,6 +226,14 @@ def main():
 
     if not rbe_presets_file.exists():
         print(f"Error: {rbe_presets_file} not found.", file=sys.stderr)
+        sys.exit(1)
+
+    if not pipelines_dir.exists():
+        print(f"Error: {pipelines_dir} not found.", file=sys.stderr)
+        sys.exit(1)
+
+    if not setup_docker_file.exists():
+        print(f"Error: {setup_docker_file} not found.", file=sys.stderr)
         sys.exit(1)
 
     print("Fetching latest image manifests...")
@@ -230,6 +252,15 @@ def main():
     updated_rbe = update_rbe_presets(rbe_presets_file, digests)
     if updated_rbe:
         print(f"Successfully updated RBE presets in {rbe_presets_file}!")
+
+    updated_pipelines = update_pipeline_ymls(pipelines_dir, digests)
+    print(f"Successfully updated {len(updated_pipelines)} pipeline ymls:")
+    for p in updated_pipelines:
+        print(f"  - {p}")
+
+    updated_setup_docker = update_setup_docker(setup_docker_file, digests)
+    if updated_setup_docker:
+        print(f"Successfully updated setup-docker.sh in {setup_docker_file}!")
 
 
 if __name__ == "__main__":
