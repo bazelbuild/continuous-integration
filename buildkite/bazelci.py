@@ -390,8 +390,8 @@ IMAGE_HASHES = {
         "arm64": "sha256:31691d9421d79f048080553755e2d47e9197b60b89e72000a8be0e6ca668c423",
     },
     "ubuntu2404": {
-        "amd64": "sha256:e0a4a1fe658b4fe75f0a6914e7a7891a4976f6fcf12ff143a478a0912ead801c",
-        "arm64": "sha256:819c76308341b7276f83f898c8f738a995f75662d68fee59a7319e9d1462e2e8",
+        "amd64": "sha256:53dd4ae8e1a2b4c070bc15fb3b60e0d30b81ccc85c6c44e18b20de992be8e9a3",
+        "arm64": "sha256:9d4c2fb2962bd49cccb2929e9bd84a9104952caadedbe80e1a7717fb139f9970",
     },
     "ubuntu2004-kythe": {
         "amd64": "sha256:3862183a7674064e7e36ab851166e5a20eaccb47c8dd7205354fc8de6a6be0e9",
