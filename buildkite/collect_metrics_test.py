@@ -381,6 +381,37 @@ class TestPublishMetrics(unittest.TestCase):
         self.assertEqual(ts.created_at, "C")
         self.assertEqual(ts.finished_at, "F")
 
+    # --- Test 4: ensure_gcloud_auth ---
+    def test_ensure_gcloud_auth_already_set(self):
+        os.environ["CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE"] = "/already/set.json"
+        collect_metrics.ensure_gcloud_auth()
+        self.assertEqual(os.environ["CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE"], "/already/set.json")
+
+    @patch("os.path.exists")
+    def test_ensure_gcloud_auth_from_buildkite_gs_credentials(self, mock_exists):
+        mock_exists.side_effect = lambda p: p == "/path/to/bk_gs.json"
+        os.environ["BUILDKITE_GS_APPLICATION_CREDENTIALS"] = "/path/to/bk_gs.json"
+        collect_metrics.ensure_gcloud_auth()
+        self.assertEqual(os.environ.get("CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE"), "/path/to/bk_gs.json")
+
+    @patch("os.path.exists")
+    def test_ensure_gcloud_auth_from_google_app_credentials(self, mock_exists):
+        mock_exists.side_effect = lambda p: p == "/path/to/gac.json"
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/path/to/gac.json"
+        collect_metrics.ensure_gcloud_auth()
+        self.assertEqual(os.environ.get("CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE"), "/path/to/gac.json")
+
+    @patch("os.path.exists")
+    def test_ensure_gcloud_auth_from_macos_default_path(self, mock_exists):
+        mock_exists.side_effect = lambda p: p == "/usr/local/etc/buildkite-agent/bazel.json"
+        collect_metrics.ensure_gcloud_auth()
+        self.assertEqual(os.environ.get("CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE"), "/usr/local/etc/buildkite-agent/bazel.json")
+
+    @patch("os.path.exists", return_value=False)
+    def test_ensure_gcloud_auth_none_exist(self, mock_exists):
+        collect_metrics.ensure_gcloud_auth()
+        self.assertNotIn("CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE", os.environ)
+
 
 if __name__ == "__main__":
     unittest.main()

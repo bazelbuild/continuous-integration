@@ -82,12 +82,34 @@ def print_and_annotate_warning(message):
         bazelci.eprint(f"Failed to annotate Buildkite: {e}")
 
 
+def ensure_gcloud_auth():
+    """
+    Ensures gcloud and bq CLI commands use service account credentials if available.
+    On macOS agents, gcloud and bq may lack an active account in ~/.config/gcloud,
+    causing 'No active account selected' errors. Setting CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE
+    forces both gcloud and bq to authenticate directly with the service account key file.
+    """
+    if "CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE" in os.environ:
+        return
+
+    for path in (
+        os.getenv("BUILDKITE_GS_APPLICATION_CREDENTIALS"),
+        os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
+        "/usr/local/etc/buildkite-agent/bazel.json",
+        "/opt/homebrew/etc/buildkite-agent/bazel.json",
+    ):
+        if path and os.path.exists(path):
+            os.environ["CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE"] = path
+            break
+
+
 def fetch_job_timestamps(org_slug, pipeline_slug, build_number, job_id):
     """
     Fetches real timestamps from Buildkite API for the current job.
     Returns:
         JobTimestamps: An object containing created_at, started_at, and finished_at strings.
     """
+    ensure_gcloud_auth()
     try:
         client = bazelci.BuildkiteClient(org_slug, pipeline_slug)
         build_data = client.get_build_info(build_number)
@@ -256,7 +278,7 @@ def publish_to_bigquery(row):
     """
     Pushes a single row to BigQuery using the 'bq' CLI tool via subprocess.
     """
-
+    ensure_gcloud_auth()
     bazelci.eprint(f"Publishing Metrics to BigQuery ...")
     table_ref = f"{PROJECT_ID}:{DATASET_ID}.{TABLE_ID}"        
     if bazelci.is_windows():
@@ -310,7 +332,7 @@ def collect_metrics_and_push_to_bigquery(build_bep_path=None, test_bep_path=None
     Reads the BEP files, collects environment variables, and pushes metrics to BigQuery.
     Called from bazelci.py after the build finishes.
     """
-
+    ensure_gcloud_auth()
     bazelci.eprint(f"Collecting CI Metrics ...")
 
     # --- Configuration (Read Env Vars inside function) ---
