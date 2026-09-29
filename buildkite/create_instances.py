@@ -64,6 +64,20 @@ def create_instance_group(config):
                 == 0
             ):
                 print(f"Deleted existing instance group: {instance_group_name}")
+            else:
+                # If migrating from zonal to regional, delete any legacy zonal instance group
+                # with the same name in the region's zones to avoid conflicts.
+                for legacy_zone in [f"{region}-c", f"{region}-a", f"{region}-b", f"{region}-f"]:
+                    if (
+                        gcloud.delete_instance_group(
+                            instance_group_name, project=project, zone=legacy_zone
+                        ).returncode
+                        == 0
+                    ):
+                        print(
+                            f"Deleted legacy zonal instance group in {legacy_zone}: {instance_group_name}"
+                        )
+                        break
 
         # Create the new instance template.
         gcloud.create_instance_template(template_name, project=project, **config)
