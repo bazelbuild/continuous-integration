@@ -924,7 +924,7 @@ resource "buildkite_pipeline" "bcr-downstream-test" {
   steps = templatefile("pipeline.yml.tpl", {
     envs = {
       CI_RESOURCE_PERCENTAGE : 10
-      # TARGET_MODULES: "rules_cc@latest"
+      # TARGET_MODULE: "rules_cc@latest"
       # The following override the `bcr_downstream_test` options in the target module's presubmit.yml.
       # SELECT_TOP_BCR_MODULES: 50
       # MODULE_SELECTIONS: "grpc@latest"
