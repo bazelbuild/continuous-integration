@@ -44,9 +44,12 @@ SET JAVA_HOME=${env:JAVA_HOME}
 SET PATH=${env:PATH}
 SET TEMP=${env:TEMP}
 SET TMP=${env:TEMP}
-REM google-bazel-presubmit builds unsubmitted Gerrit changes with branch=master, which never
-REM pass Buildkite agent v4's strict commit verification. Pipeline env cannot override it.
+REM google-bazel-presubmit, google-rules-cc-presubmit, and google-rules-java-presubmit build unsubmitted
+REM Gerrit changes with branch=master/main, which never pass Buildkite agent v4's strict commit
+REM verification. Pipeline env cannot override it.
 IF "%BUILDKITE_PIPELINE_SLUG%"=="google-bazel-presubmit" SET BUILDKITE_GIT_COMMIT_VERIFICATION=off
+IF "%BUILDKITE_PIPELINE_SLUG%"=="google-rules-cc-presubmit" SET BUILDKITE_GIT_COMMIT_VERIFICATION=off
+IF "%BUILDKITE_PIPELINE_SLUG%"=="google-rules-java-presubmit" SET BUILDKITE_GIT_COMMIT_VERIFICATION=off
 "@
 [System.IO.File]::WriteAllLines("c:\buildkite\hooks\environment.bat", $buildkite_environment_hook)
 

@@ -79,13 +79,16 @@ cat > /etc/buildkite-agent/hooks/environment <<EOF
 #!/bin/bash
 set -euo pipefail
 export BUILDKITE_ARTIFACT_UPLOAD_DESTINATION="gs://${ARTIFACT_BUCKET}/\${BUILDKITE_JOB_ID}"
-# google-bazel-presubmit builds unsubmitted Gerrit changes with branch=master,
-# which never pass Buildkite agent v4's strict commit verification. This has to
-# be set from a hook: under the default checkout-override-mode (from-job), the
-# agent ignores BUILDKITE_GIT_COMMIT_VERIFICATION from pipeline/step env.
-if [[ "\${BUILDKITE_PIPELINE_SLUG:-}" == "google-bazel-presubmit" ]]; then
-  export BUILDKITE_GIT_COMMIT_VERIFICATION=off
-fi
+# google-bazel-presubmit, google-rules-cc-presubmit, and google-rules-java-presubmit
+# build unsubmitted Gerrit changes with branch=master/main, which never pass
+# Buildkite agent v4's strict commit verification. This has to be set from a
+# hook: under the default checkout-override-mode (from-job), the agent ignores
+# BUILDKITE_GIT_COMMIT_VERIFICATION from pipeline/step env.
+case "\${BUILDKITE_PIPELINE_SLUG:-}" in
+  google-bazel-presubmit|google-rules-cc-presubmit|google-rules-java-presubmit)
+    export BUILDKITE_GIT_COMMIT_VERIFICATION=off
+    ;;
+esac
 EOF
 
 ### 1. Capture Job Start Time
