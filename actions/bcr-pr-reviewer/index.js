@@ -803,9 +803,27 @@ async function runDismissApproval(octokit) {
 
 const SKIP_CHECK_TRIGGER = "@bazel-io skip_check ";
 const ABANDON_PR_TRIGGER = "@bazel-io abandon";
+const SKIP_CHECK_LABELS = {
+  unstable_url: "skip-url-stability-check",
+  compatibility_level: "skip-compatibility-level-check",
+  incompatible_flags: "skip-incompatible-flags-test",
+};
+const SKIP_CHECK_ALLOWED_PERMISSIONS = new Set(["write", "maintain", "admin"]);
 
-async function runSkipCheck(octokit) {
-  const payload = context.payload;
+async function isSkipCheckCommenterAuthorized(octokit, owner, repo, prAuthor, commenter) {
+  if (commenter.toLowerCase() === prAuthor.toLowerCase()) {
+    return true;
+  }
+
+  const { data } = await octokit.rest.repos.getCollaboratorPermissionLevel({
+    owner,
+    repo,
+    username: commenter,
+  });
+  return SKIP_CHECK_ALLOWED_PERMISSIONS.has(data.permission);
+}
+
+async function runSkipCheck(octokit, payload = context.payload) {
   const commentBody = payload.comment.body.trim();
   if (!commentBody.startsWith(SKIP_CHECK_TRIGGER)) {
     return;
@@ -813,46 +831,8 @@ async function runSkipCheck(octokit) {
   const check = commentBody.slice(SKIP_CHECK_TRIGGER.length);
   const owner = payload.repository.owner.login;
   const repo = payload.repository.name;
-  if (check == "unstable_url") {
-    await octokit.rest.issues.addLabels({
-      owner,
-      repo,
-      issue_number: payload.issue.number,
-      labels: ["skip-url-stability-check"],
-    });
-    await octokit.rest.reactions.createForIssueComment({
-      owner,
-      repo,
-      comment_id: payload.comment.id,
-      content: '+1',
-    });
-  } else if (check == "compatibility_level") {
-    await octokit.rest.issues.addLabels({
-      owner,
-      repo,
-      issue_number: payload.issue.number,
-      labels: ["skip-compatibility-level-check"],
-    });
-    await octokit.rest.reactions.createForIssueComment({
-      owner,
-      repo,
-      comment_id: payload.comment.id,
-      content: '+1',
-    });
-  } else if (check == "incompatible_flags") {
-    await octokit.rest.issues.addLabels({
-      owner,
-      repo,
-      issue_number: payload.issue.number,
-      labels: ["skip-incompatible-flags-test"],
-    });
-    await octokit.rest.reactions.createForIssueComment({
-      owner,
-      repo,
-      comment_id: payload.comment.id,
-      content: '+1',
-    });
-  } else {
+  const label = SKIP_CHECK_LABELS[check];
+  if (!label) {
     await octokit.rest.reactions.createForIssueComment({
       owner,
       repo,
@@ -861,7 +841,39 @@ async function runSkipCheck(octokit) {
     });
     console.error(`unknown check: ${check}`);
     setFailed(`unknown check: ${check}`);
+    return;
   }
+
+  if (!payload.issue.pull_request) {
+    console.log(`Ignoring skip_check command on issue #${payload.issue.number}.`);
+    return;
+  }
+
+  const commenter = payload.comment.user.login;
+  const prAuthor = payload.issue.user.login;
+  if (!await isSkipCheckCommenterAuthorized(octokit, owner, repo, prAuthor, commenter)) {
+    console.log(`Ignoring skip_check command from unauthorized user @${commenter}.`);
+    await octokit.rest.reactions.createForIssueComment({
+      owner,
+      repo,
+      comment_id: payload.comment.id,
+      content: 'confused',
+    });
+    return;
+  }
+
+  await octokit.rest.issues.addLabels({
+    owner,
+    repo,
+    issue_number: payload.issue.number,
+    labels: [label],
+  });
+  await octokit.rest.reactions.createForIssueComment({
+    owner,
+    repo,
+    comment_id: payload.comment.id,
+    content: '+1',
+  });
 }
 
 async function runHandleComment(octokit) {
@@ -1078,4 +1090,9 @@ if (require.main === module) {
   });
 }
 
-module.exports = { getPrApprovers, moduleVersionDir };
+module.exports = {
+  getPrApprovers,
+  isSkipCheckCommenterAuthorized,
+  moduleVersionDir,
+  runSkipCheck,
+};

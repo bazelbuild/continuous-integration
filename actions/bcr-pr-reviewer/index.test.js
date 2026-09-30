@@ -1,6 +1,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { getPrApprovers, moduleVersionDir } = require('./index.js');
+const {
+  getPrApprovers,
+  isSkipCheckCommenterAuthorized,
+  moduleVersionDir,
+  runSkipCheck,
+} = require('./index.js');
 
 function fakeOctokit({ commits, reviews }) {
   return {
@@ -121,4 +126,120 @@ test('moduleVersionDir: a version escaping the module directory is rejected', ()
 test('moduleVersionDir: a version naming the module directory itself is rejected', () => {
   assert.equal(moduleVersionDir('rules_cc', '.'), null);
   assert.equal(moduleVersionDir('rules_cc', ''), null);
+});
+
+function skipCheckPayload({
+  commenter = 'contributor',
+  prAuthor = 'contributor',
+  body = '@bazel-io skip_check unstable_url',
+  isPullRequest = true,
+} = {}) {
+  return {
+    comment: {
+      id: 123,
+      body,
+      user: { login: commenter },
+    },
+    issue: {
+      number: 456,
+      user: { login: prAuthor },
+      ...(isPullRequest ? { pull_request: { url: 'https://api.github.test/pulls/456' } } : {}),
+    },
+    repository: {
+      name: 'bazel-central-registry',
+      owner: { login: 'bazelbuild' },
+    },
+  };
+}
+
+function fakeSkipCheckOctokit({ permission = 'none', permissionError } = {}) {
+  const calls = {
+    addLabels: [],
+    getCollaboratorPermissionLevel: [],
+    reactions: [],
+  };
+  return {
+    calls,
+    rest: {
+      issues: {
+        addLabels: async params => calls.addLabels.push(params),
+      },
+      reactions: {
+        createForIssueComment: async params => calls.reactions.push(params),
+      },
+      repos: {
+        getCollaboratorPermissionLevel: async params => {
+          calls.getCollaboratorPermissionLevel.push(params);
+          if (permissionError) throw permissionError;
+          return { data: { permission } };
+        },
+      },
+    },
+  };
+}
+
+test('runSkipCheck: the PR author can skip a check without repository permissions', async () => {
+  const octokit = fakeSkipCheckOctokit();
+
+  await runSkipCheck(octokit, skipCheckPayload());
+
+  assert.equal(octokit.calls.getCollaboratorPermissionLevel.length, 0);
+  assert.deepEqual(octokit.calls.addLabels[0].labels, ['skip-url-stability-check']);
+  assert.equal(octokit.calls.reactions[0].content, '+1');
+});
+
+test('runSkipCheck: a repository collaborator with write permission can skip a check', async () => {
+  const octokit = fakeSkipCheckOctokit({ permission: 'write' });
+
+  await runSkipCheck(octokit, skipCheckPayload({ commenter: 'repo-maintainer' }));
+
+  assert.equal(octokit.calls.getCollaboratorPermissionLevel.length, 1);
+  assert.deepEqual(octokit.calls.addLabels[0].labels, ['skip-url-stability-check']);
+  assert.equal(octokit.calls.reactions[0].content, '+1');
+});
+
+test('runSkipCheck: an unrelated commenter cannot add a skip label', async () => {
+  const octokit = fakeSkipCheckOctokit({ permission: 'read' });
+
+  await runSkipCheck(octokit, skipCheckPayload({ commenter: 'unrelated-user' }));
+
+  assert.equal(octokit.calls.addLabels.length, 0);
+  assert.equal(octokit.calls.reactions[0].content, 'confused');
+});
+
+test('runSkipCheck: permission lookup failures do not add a skip label', async () => {
+  const octokit = fakeSkipCheckOctokit({ permissionError: new Error('GitHub API unavailable') });
+
+  await assert.rejects(
+    runSkipCheck(octokit, skipCheckPayload({ commenter: 'unknown-user' })),
+    /GitHub API unavailable/
+  );
+
+  assert.equal(octokit.calls.addLabels.length, 0);
+  assert.equal(octokit.calls.reactions.length, 0);
+});
+
+test('runSkipCheck: skip commands on issues do not add labels', async () => {
+  const octokit = fakeSkipCheckOctokit();
+
+  await runSkipCheck(octokit, skipCheckPayload({ isPullRequest: false }));
+
+  assert.equal(octokit.calls.addLabels.length, 0);
+  assert.equal(octokit.calls.getCollaboratorPermissionLevel.length, 0);
+});
+
+test('isSkipCheckCommenterAuthorized: maintain and admin permissions are accepted', async () => {
+  for (const permission of ['maintain', 'admin']) {
+    const octokit = fakeSkipCheckOctokit({ permission });
+    assert.equal(
+      await isSkipCheckCommenterAuthorized(
+        octokit,
+        'bazelbuild',
+        'bazel-central-registry',
+        'pr-author',
+        'repo-maintainer'
+      ),
+      true
+    );
+  }
 });
