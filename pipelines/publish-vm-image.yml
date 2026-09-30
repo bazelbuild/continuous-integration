@@ -63,7 +63,7 @@ steps:
 
   - command: |-
       cd buildkite
-      ./validate_image.py --org=bazel-testing
+      ./validate_image.py --stage=testing
     label: ":white_check_mark: Validate new VM image in the bazel-testing org"
     agents:
       - "queue=default"
@@ -127,6 +127,35 @@ steps:
       cd buildkite
       ./create_instances.py "${BAZEL_PROD_INSTANCE_GROUPS}"
     label: ":pipeline:"
+    agents:
+      - "queue=default"
+    plugins:
+      - docker#v3.8.0:
+          always-pull: true
+          environment:
+            - "ANDROID_HOME"
+            - "ANDROID_NDK_HOME"
+            - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
+          image: "gcr.io/bazel-public/ubuntu2204@sha256:68494a4921c83f02bb230ce7c24889fb14978f6e492c548a0eaaf13e5fa4f538"
+          network: "host"
+          privileged: true
+          propagate-environment: true
+          propagate-uid-gid: true
+          volumes:
+            - "/etc/group:/etc/group:ro"
+            - "/etc/passwd:/etc/passwd:ro"
+            - "/etc/shadow:/etc/shadow:ro"
+            - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+            - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
+            - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+            - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+
+  - wait
+
+  - command: |-
+      cd buildkite
+      ./validate_image.py --stage=prod
+    label: ":white_check_mark: Validate new VM image in prod"
     agents:
       - "queue=default"
     plugins:
