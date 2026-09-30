@@ -95,6 +95,18 @@ jobs:
       with:
         credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
+    - name: Get Buildkite API Token
+      id: buildkite-token
+      uses: google-github-actions/get-secretmanager-secrets@bc9c54b29fdffb8a47776820a7d26e77b379d262 # v3.0.0
+      with:
+        secrets: >-
+          token:bazel-public/${{
+          matrix.org == 'bazel' && 'bazel-terraform-buildkite-token' ||
+          matrix.org == 'bazel-testing' && 'bazel-testing-terraform-buildkite-token' ||
+          matrix.org == 'bazel-trusted' && 'bazel-trusted-terraform-buildkite-token' ||
+          ''
+          }}
+
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
       with:
@@ -108,7 +120,7 @@ jobs:
       if: github.event_name == 'pull_request'
       id: plan
       env:
-        TF_VAR_buildkite_api_token: ${{ secrets.BUILDKITE_API_TOKEN }}
+        TF_VAR_buildkite_api_token: ${{ steps.buildkite-token.outputs.token }}
       run: |
         terraform plan -no-color -input=false -out=tfplan
         terraform show -no-color tfplan > plan.txt
@@ -175,5 +187,5 @@ jobs:
     - name: Terraform Apply
       if: github.ref == 'refs/heads/master' && github.event_name == 'push'
       env:
-        TF_VAR_buildkite_api_token: ${{ secrets.BUILDKITE_API_TOKEN }}
+        TF_VAR_buildkite_api_token: ${{ steps.buildkite-token.outputs.token }}
       run: terraform apply -auto-approve -input=false
