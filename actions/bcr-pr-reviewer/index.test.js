@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { getPrApprovers, moduleVersionDir, reviewPR, runPrReviewer } = require('./index.js');
+const { getPrApprovers, moduleVersionDir, reviewPR, runPrReviewer, runHandleComment } = require('./index.js');
 
 function fakeOctokit({ commits, reviews }) {
   return {
@@ -135,6 +135,7 @@ function fakeReviewOctokit({ prAuthor, prs = [], failingPrs = new Set() }) {
   const listPulls = Symbol('listPulls');
   const prData = (pull_number) => ({
     number: pull_number,
+    state: 'open',
     draft: false,
     changed_files: 1,
     user: { login: prAuthor, id: 42 },
@@ -241,4 +242,205 @@ test('runPrReviewer: a failure on one PR does not stop reviewing the remaining P
   assert.deepEqual(octokit.calls.merge.map(m => m.pull_number), [2]);
   assert.equal(process.exitCode, 1, 'the run should still be marked as failed');
   process.exitCode = 0;
+});
+
+// Tests for the `@bazel-io review` comment command.
+
+const github = require('@actions/github');
+
+const HEAD_SHA = 'head-sha';
+
+function reviewCommandOctokit({
+  state = 'open',
+  merged = false,
+  draft = false,
+  approved = true,
+  mergeError = null,
+  sensitiveMetadata = false,
+  newModule = false,
+} = {}) {
+  const calls = [];
+  const metadata = {
+    maintainers: [{ github: 'Maintainer', github_user_id: 7 }],
+    versions: ['1.0.0', '1.1.0'],
+  };
+  const files = [{ filename: 'modules/foo/1.1.0/source.json' }];
+  if (sensitiveMetadata || newModule) {
+    files.push({ filename: 'modules/foo/metadata.json' });
+  }
+  const octokit = {
+    paginate: async (fn, params) => (await fn(params)).data,
+    request: async (route) => {
+      assert.equal(route, 'GET /user/{account_id}');
+      return { data: { login: 'Maintainer' } };
+    },
+    rest: {
+      pulls: {
+        get: async () => ({
+          data: {
+            state,
+            merged,
+            draft,
+            changed_files: files.length,
+            head: { sha: HEAD_SHA },
+            user: { login: 'author', id: 1 },
+            labels: [],
+            requested_reviewers: [],
+            requested_teams: [],
+          },
+        }),
+        listFiles: async () => ({ data: files }),
+        listCommits: async () => ({ data: [{ sha: HEAD_SHA, parents: [{ sha: 'base' }] }] }),
+        listReviews: async () => ({
+          data: approved
+            ? [{ user: { login: 'Maintainer' }, state: 'APPROVED', commit_id: HEAD_SHA, submitted_at: '2026-09-30T00:00:00Z' }]
+            : [],
+        }),
+        createReview: async ({ event }) => calls.push(['createReview', event]),
+        merge: async ({ sha }) => {
+          if (mergeError) {
+            throw new Error(mergeError);
+          }
+          calls.push(['merge', sha]);
+        },
+        requestReviewers: async () => calls.push(['requestReviewers']),
+      },
+      repos: {
+        getContent: async ({ ref }) => {
+          // A new module doesn't have a metadata.json on the main branch yet.
+          if (newModule && ref === 'main') {
+            throw Object.assign(new Error('Not Found'), { status: 404 });
+          }
+          // The PR head changes a non-versions field of metadata.json when `sensitiveMetadata` is set.
+          const content = sensitiveMetadata && ref !== 'main' ? { ...metadata, homepage: 'https://example.com' } : metadata;
+          return { data: { content: Buffer.from(JSON.stringify(content)).toString('base64') } };
+        },
+      },
+      users: {
+        getByUsername: async () => ({ data: { id: 7 } }),
+        getAuthenticated: async () => ({ data: { login: 'bazel-io' } }),
+      },
+      issues: {
+        addLabels: async ({ labels }) => calls.push(['addLabels', labels]),
+        createComment: async ({ body }) => calls.push(['createComment', body]),
+        listComments: async () => ({ data: [] }),
+      },
+      reactions: {
+        createForIssueComment: async ({ content }) => calls.push(['reaction', content]),
+      },
+      actions: {
+        listRepoWorkflows: async () => ({ data: { workflows: [{ id: 5, path: '.github/workflows/dismiss_approvals.yml' }] } }),
+        listWorkflowRuns: async () => ({ data: { total_count: 0, workflow_runs: [] } }),
+      },
+      search: {
+        issuesAndPullRequests: async () => ({ data: { total_count: 1 } }),
+        code: async () => ({ data: { total_count: 1 } }),
+      },
+    },
+  };
+  return { octokit, calls };
+}
+
+async function runComment(body, options) {
+  github.context.payload = {
+    repository: { name: 'bazel-central-registry', owner: { login: 'bazelbuild' } },
+    issue: { number: 42, pull_request: {} },
+    comment: { id: 1001, body, user: { login: 'Commenter' } },
+  };
+  const { octokit, calls } = reviewCommandOctokit(options);
+  const originalLog = console.log;
+  const originalError = console.error;
+  console.log = () => {};
+  console.error = () => {};
+  try {
+    await runHandleComment(octokit);
+  } finally {
+    console.log = originalLog;
+    console.error = originalError;
+  }
+  return calls;
+}
+
+test('@bazel-io review: merges a PR whose modules are all approved', async () => {
+  const calls = await runComment('@bazel-io review\n');
+
+  assert.deepEqual(calls, [
+    ['reaction', 'eyes'],
+    ['createReview', 'APPROVE'],
+    ['merge', HEAD_SHA],
+    ['addLabels', ['auto-merged']],
+    ['reaction', 'rocket'],
+  ]);
+});
+
+test('@bazel-io review: reports modules that still need maintainer approval', async () => {
+  const calls = await runComment('@bazel-io review', { approved: false });
+
+  assert.equal(calls.some(([name]) => name === 'merge'), false);
+  assert.deepEqual(calls.at(-1), [
+    'createComment',
+    '@Commenter, this PR could not be merged yet. The following modules still need approval from one of their maintainers: foo.',
+  ]);
+});
+
+test('@bazel-io review: reports why an approved PR could not be merged', async () => {
+  const calls = await runComment('@bazel-io review', { mergeError: 'Required status check "presubmit" is expected.' });
+
+  const [name, body] = calls.at(-1);
+  assert.equal(name, 'createComment');
+  assert.match(body, /^@Commenter, this PR could not be merged yet\. All modules in this PR have been approved/);
+  assert.match(body, /Required status check "presubmit" is expected\./);
+});
+
+test('@bazel-io review: does not merge a PR with sensitive metadata.json changes', async () => {
+  const calls = await runComment('@bazel-io review', { sensitiveMetadata: true });
+
+  assert.equal(calls.some(([name]) => name === 'merge'), false);
+  assert.deepEqual(calls.at(-1), [
+    'createComment',
+    '@Commenter, this PR could not be merged yet. This PR has sensitive metadata.json changes, it needs to be reviewed by a BCR maintainer.',
+  ]);
+});
+
+test('@bazel-io review: asks for a BCR maintainer review when a new module is added', async () => {
+  const calls = await runComment('@bazel-io review', { newModule: true });
+
+  assert.equal(calls.some(([name]) => name === 'merge'), false);
+  assert.deepEqual(calls.at(-1), [
+    'createComment',
+    '@Commenter, this PR could not be merged yet. This PR adds a new module, it needs to be reviewed by a BCR maintainer.',
+  ]);
+});
+
+test('@bazel-io review: does not review a closed PR', async () => {
+  const calls = await runComment('@bazel-io review', { state: 'closed' });
+
+  assert.deepEqual(calls, [
+    ['reaction', 'eyes'],
+    ['createComment', '@Commenter, this PR could not be merged yet. This PR is already closed.'],
+  ]);
+});
+
+test('@bazel-io review: does not review a merged PR', async () => {
+  const calls = await runComment('@bazel-io review', { state: 'closed', merged: true });
+
+  assert.deepEqual(calls, [
+    ['reaction', 'eyes'],
+    ['createComment', '@Commenter, this PR could not be merged yet. This PR is already merged.'],
+  ]);
+});
+
+test('@bazel-io review: does not review a draft PR', async () => {
+  const calls = await runComment('@bazel-io review', { draft: true });
+
+  assert.deepEqual(calls, [
+    ['reaction', 'eyes'],
+    ['createComment', '@Commenter, this PR could not be merged yet. This PR is a draft, mark it as ready for review first.'],
+  ]);
+});
+
+test('@bazel-io review: ignores comments that are not exactly the command', async () => {
+  const calls = await runComment('@bazel-io review this please');
+
+  assert.deepEqual(calls, []);
 });

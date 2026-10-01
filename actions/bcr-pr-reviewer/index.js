@@ -359,7 +359,7 @@ async function checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap
     console.log('All modified modules have maintainers\' approval');
   }
 
-  return { allModulesApproved, anyModuleApproved };
+  return { allModulesApproved, anyModuleApproved, modulesNotApproved };
 }
 
 async function hasContributedBefore(octokit, owner, repo, prAuthor) {
@@ -424,20 +424,32 @@ async function hasSensitiveMetadataChanges(octokit, owner, repo, prNumber, allMo
   return { isSensitive: false, isNewModule: false };
 }
 
+/**
+ * Reviews a PR: approves it and tries to merge it if all modified modules are approved by their
+ * maintainers, and otherwise updates the PR labels and approval state.
+ *
+ * Returns `{ merged, message }`, where `message` describes the outcome for the PR author.
+ */
 async function reviewPR(octokit, owner, repo, prNumber) {
   console.log('\n');
   console.log(`Processing PR #${prNumber}`);
 
-  // Skip if the PR is a draft
   const prInfo = await octokit.rest.pulls.get({
     owner,
     repo,
     pull_number: prNumber,
   });
 
+  // Skip if the PR is already closed, e.g. when the review is requested via a comment.
+  if (prInfo.data.state !== 'open') {
+    console.log('Skipping closed PR');
+    return { merged: false, message: `This PR is already ${prInfo.data.merged ? 'merged' : 'closed'}.` };
+  }
+
+  // Skip if the PR is a draft
   if (prInfo.data.draft) {
     console.log('Skipping draft PR');
-    return;
+    return { merged: false, message: 'This PR is a draft, mark it as ready for review first.' };
   }
 
   if (prInfo.data.changed_files > 500) {
@@ -445,7 +457,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
     await postComment(octokit, owner, repo, prNumber,
       `Hello BCR maintainers, this PR has more than 500 file changes. Manual review is required.`);
     await requestBcrMaintainers(octokit, owner, repo, prNumber);
-    return;
+    return { merged: false, message: 'This PR has more than 500 file changes, it needs a manual review by a BCR maintainer.' };
   }
 
   // Fetch modified modules
@@ -453,14 +465,14 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   if (modifiedModuleVersions === null) {
     // This means the PR was updated while fetching files.
     console.log(`Aborting review for PR #${prNumber} because it was updated during file fetching.`);
-    return;
+    return { merged: false, message: 'This PR was updated during the review, please try again.' };
   }
 
   const modifiedModules = new Set(Array.from(modifiedModuleVersions).map(module => module.split('@')[0]));
   console.log(`Modified modules: ${Array.from(modifiedModules).join(', ')}`);
   if (modifiedModules.size === 0) {
     console.log('No modules are modified in this PR');
-    return;
+    return { merged: false, message: 'No module versions are modified in this PR, it needs to be merged by a BCR maintainer.' };
   }
 
   // Figure out maintainers for each modified module
@@ -475,13 +487,13 @@ async function reviewPR(octokit, owner, repo, prNumber) {
 
   // Verify if all modified modules have at least one maintainer's approval
   const prAuthor = prInfo.data.user.login.toLowerCase();
-  const { allModulesApproved, anyModuleApproved } = await checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers, prAuthor);
+  const { allModulesApproved, anyModuleApproved, modulesNotApproved } = await checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers, prAuthor);
 
   // Fetch modules with metadata changes
   const allModulesWithMetadataChange = await fetchAllModulesWithMetadataChange(octokit, owner, repo, prNumber);
   if (allModulesWithMetadataChange === null) {
     console.log(`Aborting review for PR #${prNumber} because it was updated during file fetching.`);
-    return;
+    return { merged: false, message: 'This PR was updated during the review, please try again.' };
   }
 
   let hasSensitiveMetadataChange = false;
@@ -492,7 +504,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
     isNewModule = result.isNewModule;
   } catch (error) {
     console.error(`Error checking metadata.json sensitive revisions: ${error}`);
-    return;
+    return { merged: false, message: `Failed to check the metadata.json changes (${error.message}).` };
   }
 
   // Re-fetch PR information to check if new commits were pushed since analysis started
@@ -506,7 +518,8 @@ async function reviewPR(octokit, owner, repo, prNumber) {
 
   if (initialHeadSha !== currentHeadSha) {
     console.log(`PR #${prNumber} has been updated since the review process began. Initial SHA: ${initialHeadSha}, Current SHA: ${currentHeadSha}. Aborting approval/merge actions as the analysis may be stale.`);
-    return; // Exit reviewPR for this PR to prevent actions on stale data
+    // Exit reviewPR for this PR to prevent actions on stale data
+    return { merged: false, message: 'This PR was updated during the review, please try again.' };
   }
 
   if (hasSensitiveMetadataChange && !isNewModule) {
@@ -521,6 +534,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   // (e.g. @bazel-io) must be approved by a BCR maintainer instead.
   const isSelfAuthored = prAuthor === myLogin;
 
+  let result;
   // Approve the PR if not previously approved and all modules are approved
   if (allModulesApproved && !hasSensitiveMetadataChange) {
     if (isSelfAuthored) {
@@ -562,11 +576,26 @@ async function reviewPR(octokit, owner, repo, prNumber) {
       });
 
       console.log(`PR ${prNumber} merged successfully`);
-      return;
+      return { merged: true, message: 'This PR has been merged.' };
     } catch (error) {
       console.error('Failed to merge PR:', error.message);
       console.error('This PR is not mergeable probably due to failed presubmit checks.');
+      result = {
+        merged: false,
+        message: `All modules in this PR have been approved by their maintainers, but the PR could not be merged (${error.message}). This is probably due to pending or failed presubmit checks.`,
+      };
     }
+  } else if (isNewModule) {
+    // Checked first because a new module has no maintainers on the main branch yet, so it can never
+    // be approved by its maintainers.
+    result = { merged: false, message: 'This PR adds a new module, it needs to be reviewed by a BCR maintainer.' };
+  } else if (!allModulesApproved) {
+    result = {
+      merged: false,
+      message: `The following modules still need approval from one of their maintainers: ${modulesNotApproved.join(', ')}.`,
+    };
+  } else {
+    result = { merged: false, message: 'This PR has sensitive metadata.json changes, it needs to be reviewed by a BCR maintainer.' };
   }
 
   // Add presubmit-auto-run label if conditions are met
@@ -607,6 +636,8 @@ async function reviewPR(octokit, owner, repo, prNumber) {
       body: 'Require module maintainers\' approval.',
     });
   }
+
+  return result;
 }
 
 async function runNotifier(octokit) {
@@ -822,6 +853,7 @@ async function runDismissApproval(octokit) {
 
 const SKIP_CHECK_TRIGGER = "@bazel-io skip_check ";
 const ABANDON_PR_TRIGGER = "@bazel-io abandon";
+const REVIEW_PR_TRIGGER = "@bazel-io review";
 
 async function runSkipCheck(octokit) {
   const payload = context.payload;
@@ -885,10 +917,81 @@ async function runSkipCheck(octokit) {
 
 async function runHandleComment(octokit) {
   const payload = context.payload;
-  if (payload.comment.body.trim() !== ABANDON_PR_TRIGGER) {
+  if (!payload.issue.pull_request) {
+    console.log('Comment is not on a pull request, ignoring.');
     return;
   }
 
+  const commentBody = payload.comment.body.trim();
+  if (commentBody === ABANDON_PR_TRIGGER) {
+    await handleAbandonCommand(octokit);
+  } else if (commentBody === REVIEW_PR_TRIGGER) {
+    await handleReviewCommand(octokit);
+  }
+}
+
+/**
+ * Handles `@bazel-io review`: runs the same review as the scheduled `review_prs` job, but only for
+ * this PR, so that a PR approved by its module maintainers can be merged without waiting for the
+ * next scheduled run.
+ *
+ * Anyone can trigger this command, since the review only approves and merges the PR when all
+ * modified modules are approved by their maintainers and all required checks pass.
+ */
+async function handleReviewCommand(octokit) {
+  const payload = context.payload;
+  const commenter = payload.comment.user.login;
+  const prNumber = context.issue.number;
+  const { owner, repo } = context.repo;
+
+  // Acknowledge the command, reviewing may take a while.
+  await octokit.rest.reactions.createForIssueComment({
+    owner,
+    repo,
+    comment_id: payload.comment.id,
+    content: 'eyes',
+  });
+
+  // Wait for pending dismiss_approvals runs so that stale approvals are not taken into account.
+  if (!await waitForDismissApprovalsWorkflow(octokit, owner, repo)) {
+    return;
+  }
+
+  console.log(`Reviewing PR #${prNumber} as requested by @${commenter}.`);
+  let result;
+  try {
+    result = await reviewPR(octokit, owner, repo, prNumber);
+  } catch (error) {
+    await octokit.rest.reactions.createForIssueComment({
+      owner,
+      repo,
+      comment_id: payload.comment.id,
+      content: 'confused',
+    });
+    throw error;
+  }
+
+  const { merged, message } = result;
+  if (merged) {
+    await octokit.rest.reactions.createForIssueComment({
+      owner,
+      repo,
+      comment_id: payload.comment.id,
+      content: 'rocket',
+    });
+    return;
+  }
+
+  await octokit.rest.issues.createComment({
+    owner,
+    repo,
+    issue_number: prNumber,
+    body: `@${commenter}, this PR could not be merged yet. ${message}`,
+  });
+}
+
+async function handleAbandonCommand(octokit) {
+  const payload = context.payload;
   const commenter = payload.comment.user.login.toLowerCase();
   const prNumber = context.issue.number;
   const { owner, repo } = context.repo;
@@ -1097,4 +1200,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { getPrApprovers, moduleVersionDir, reviewPR, runPrReviewer };
+module.exports = { getPrApprovers, moduleVersionDir, reviewPR, runPrReviewer, runHandleComment };
