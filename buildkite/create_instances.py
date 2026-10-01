@@ -38,12 +38,16 @@ def create_instance_group(config):
         target_distribution_shape = config.pop("target_distribution_shape", None)
         health_check = config.pop("health_check", None)
         initial_delay = config.pop("initial_delay", None)
+        instance_selections = config.pop("instance_selections", None)
 
         if not project:
             raise Exception("Invalid instance config, no project name set")
 
         if not zone and not region:
             raise Exception("Invalid instance config, either zone or region must be specified")
+
+        if instance_selections and not region:
+            raise Exception("Invalid instance config, instance_selections requires a region")
 
         timestamp = datetime.now().strftime("%Y%m%dt%H%M%S")
         template_name = "{}-{}".format(instance_group_name, timestamp)
@@ -86,12 +90,32 @@ def create_instance_group(config):
             kwargs["health_check"] = health_check
         if initial_delay:
             kwargs["initial_delay"] = initial_delay
+        if instance_selections:
+            kwargs["instance_selection"] = format_instance_selections(instance_selections)
         gcloud.create_instance_group(instance_group_name, **kwargs)
         print(f"Created instance group {instance_group_name}")
         return 0
     except Exception as ex:
         print(f"Failed to create {instance_group_name}: {ex}", file=sys.stderr)
         return 1
+
+
+def format_instance_selections(instance_selections):
+    """Converts instance_selections from instances.yml into --instance-selection flag values.
+
+    Each selection lets the MIG pick from a list of machine types. A lower rank means a higher
+    preference, so the MIG falls back to the next rank when the preferred machine types are
+    unavailable. See
+    https://cloud.google.com/compute/docs/instance-groups/about-instance-flexibility
+    """
+    flags = []
+    for selection in instance_selections:
+        parts = ["name={}".format(selection["name"])]
+        parts += ["machine-type={}".format(t) for t in selection["machine_types"]]
+        if "rank" in selection:
+            parts.append("rank={}".format(selection["rank"]))
+        flags.append(",".join(parts))
+    return flags
 
 
 def read_config_file():

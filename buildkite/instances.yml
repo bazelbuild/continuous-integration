@@ -51,6 +51,15 @@ instance_groups:
     metadata_from_file: startup-script=startup-docker-pdssd.sh
     machine_type: c4a-standard-8
     boot_disk_type: hyperdisk-balanced
+    # Prefer C4A, but fall back to N4A when C4A is out of capacity or quota.
+    # Both are Axion (arm64) machines that support hyperdisk-balanced boot disks.
+    instance_selections: &arm64_instance_selections
+      - name: c4a
+        machine_types: [c4a-standard-8]
+        rank: 1
+      - name: n4a
+        machine_types: [n4a-standard-8]
+        rank: 2
   - name: bk-testing-docker-arm64
     count: 10
     project: bazel-untrusted
@@ -59,6 +68,7 @@ instance_groups:
     metadata_from_file: startup-script=startup-docker-pdssd.sh
     machine_type: c4a-standard-8
     boot_disk_type: hyperdisk-balanced
+    instance_selections: *arm64_instance_selections
   - name: bk-trusted-docker-arm64
     count: 20
     project: bazel-public
@@ -67,6 +77,7 @@ instance_groups:
     metadata_from_file: startup-script=startup-docker-pdssd.sh
     machine_type: c4a-standard-8
     boot_disk_type: hyperdisk-balanced
+    instance_selections: *arm64_instance_selections
   - name: bk-windows
     count: 60
     project: bazel-untrusted
