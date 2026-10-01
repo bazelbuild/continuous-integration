@@ -517,10 +517,18 @@ async function reviewPR(octokit, owner, repo, prNumber) {
 
   const { data } = await octokit.rest.users.getAuthenticated();
   const myLogin = data.login.toLowerCase();
+  // GitHub doesn't allow reviewing your own PR, so PRs opened by the bot itself
+  // (e.g. @bazel-io) must be approved by a BCR maintainer instead.
+  const isSelfAuthored = prAuthor === myLogin;
 
   // Approve the PR if not previously approved and all modules are approved
   if (allModulesApproved && !hasSensitiveMetadataChange) {
-    if (!approvers.has(myLogin)) {
+    if (isSelfAuthored) {
+      console.log(`Skipping approval: PR #${prNumber} was opened by ${myLogin}, which cannot approve its own PR.`);
+      await postComment(octokit, owner, repo, prNumber,
+        `Hello BCR maintainers, all modules in this PR have been approved by their maintainers, but this PR was opened by @${myLogin} and cannot be approved by itself. Please approve this PR so it can be merged.`);
+      await requestBcrMaintainers(octokit, owner, repo, prNumber);
+    } else if (!approvers.has(myLogin)) {
       console.log('Approving the PR');
       await octokit.rest.pulls.createReview({
         owner,
@@ -589,7 +597,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   }
 
   // Discard previous approvals if not all modules are approved
-  if (!allModulesApproved && approvers.has(myLogin)) {
+  if (!allModulesApproved && !isSelfAuthored && approvers.has(myLogin)) {
     console.log('Discarding previous approval');
     await octokit.rest.pulls.createReview({
       owner,
@@ -714,6 +722,7 @@ async function runPrReviewer(octokit) {
   });
 
   const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000);
+  const failedPrs = [];
 
   // Review each PR
   for (const pr of prs) {
@@ -745,10 +754,20 @@ async function runPrReviewer(octokit) {
     }
 
     if (isOughtToBeReviewed) {
-      await reviewPR(octokit, owner, repo, pr.number);
+      try {
+        await reviewPR(octokit, owner, repo, pr.number);
+      } catch (error) {
+        // Don't let a single PR stop the review of all other PRs.
+        console.error(`Failed to review PR #${pr.number}: ${error.message}`);
+        failedPrs.push(pr.number);
+      }
     } else {
       console.log(`Skipping PR #${pr.number} as it has no activity in the past 6 hours.`);
     }
+  }
+
+  if (failedPrs.length > 0) {
+    setFailed(`Failed to review PRs: ${failedPrs.map(n => `#${n}`).join(', ')}`);
   }
 }
 
@@ -1078,4 +1097,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { getPrApprovers, moduleVersionDir };
+module.exports = { getPrApprovers, moduleVersionDir, reviewPR, runPrReviewer };
