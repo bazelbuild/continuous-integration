@@ -9,7 +9,7 @@ steps:
       queue: default
     plugins:
       docker#v3.8.0:
-        image: gcr.io/bazel-public/docgen@sha256:e6ac038ad949be3e18573735e8a46f5ac74f2e59af2196ed50da0187ea87c259
+        image: gcr.io/bazel-public/docgen
         network: host
         volumes:
           - "/etc/group:/etc/group:ro"
