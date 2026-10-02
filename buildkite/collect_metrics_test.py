@@ -8,15 +8,21 @@ import base64
 import collect_metrics
 
 
-def create_mock_bep_content(test_results=None, exit_code=0):
+def create_mock_bep_content(test_results=None, test_summaries=None, exit_code=0):
     content = []
     
-    # 1. Optional Test Results
+    # 1. Optional Test Results & Summaries
     if test_results:
         for tr in test_results:
             content.append(json.dumps({
                 "id": {"testResult": {"label": tr["label"]}},
                 "testResult": {"status": tr["status"], "testAttemptDurationMillis": str(tr["duration_ms"])},
+            }))
+    if test_summaries:
+        for ts in test_summaries:
+            content.append(json.dumps({
+                "id": {"testSummary": {"label": ts["label"]}},
+                "testSummary": {"totalRunDurationMillis": str(ts["total_ms"]), "shardCount": ts["shards"]},
             }))
             
     # 2. Common Build Metrics
@@ -94,9 +100,15 @@ class TestPublishMetrics(unittest.TestCase):
         # Create a mock BEP file content
         test_results = [
             {"label": "//pkg:test1", "status": "PASSED", "duration_ms": 1500},
-            {"label": "//pkg:test2", "status": "FAILED", "duration_ms": 5000},
+            {"label": "//pkg:test2", "status": "FAILED", "duration_ms": 2000},
+            {"label": "//pkg:test2", "status": "PASSED", "duration_ms": 3000},
         ]
-        mock_bep_content = create_mock_bep_content(test_results=test_results)
+        test_summaries = [
+            {"label": "//pkg:test2", "total_ms": 5000, "shards": 1},
+        ]
+        mock_bep_content = create_mock_bep_content(
+            test_results=test_results, test_summaries=test_summaries
+        )
 
         # Create a temp file to hold the data
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as tf:
@@ -119,6 +131,11 @@ class TestPublishMetrics(unittest.TestCase):
             target1 = next(t for t in bep_metrics.targets if t.label == "//pkg:test1")
             self.assertEqual(target1.status, "PASSED")
             self.assertEqual(target1.duration_s, 1.5)
+            self.assertEqual(target1.shard_count, 1)
+
+            target2 = next(t for t in bep_metrics.targets if t.label == "//pkg:test2")
+            self.assertEqual(target2.duration_s, 5.0)
+            self.assertEqual(target2.shard_count, 1)
         finally:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
