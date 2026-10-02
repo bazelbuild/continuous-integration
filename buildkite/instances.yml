@@ -18,6 +18,8 @@ default_vm:
   network: default
   region: us-central1
   target_distribution_shape: ANY
+  # Let the MIG recreate a VM in a different zone when its zone runs out of capacity.
+  on_repair_allow_changing_zone: true
   restart-on-failure: False
   scopes: cloud-platform
   image_project: bazel-public

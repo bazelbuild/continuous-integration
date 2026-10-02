@@ -38,6 +38,7 @@ def create_instance_group(config):
         target_distribution_shape = config.pop("target_distribution_shape", None)
         health_check = config.pop("health_check", None)
         initial_delay = config.pop("initial_delay", None)
+        on_repair_allow_changing_zone = config.pop("on_repair_allow_changing_zone", False)
 
         if not project:
             raise Exception("Invalid instance config, no project name set")
@@ -82,6 +83,12 @@ def create_instance_group(config):
             kwargs["region"] = region
             if target_distribution_shape:
                 kwargs["target_distribution_shape"] = target_distribution_shape
+            if on_repair_allow_changing_zone:
+                # VMs power off after each job and the MIG repairs them by recreating them.
+                # Let the MIG recreate them in another zone if their zone ran out of capacity.
+                # GCE requires force_update_on_repair for this.
+                kwargs["force_update_on_repair"] = True
+                kwargs["on_repair_allow_changing_zone"] = "yes"
         if health_check:
             kwargs["health_check"] = health_check
         if initial_delay:
