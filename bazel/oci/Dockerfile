@@ -3,6 +3,8 @@
 
 FROM ubuntu:22.04 AS base_image
 
+ARG JAVA_VERSION
+
 RUN --mount=source=bazel/oci/install_packages.sh,target=/mnt/install_packages.sh,type=bind \
     /mnt/install_packages.sh
 
