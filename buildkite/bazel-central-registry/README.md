@@ -41,3 +41,32 @@ A new build can be triggered via the [BCR Bazel Compatibility Test](https://buil
 * `INCOMPATIBLE_FLAGS`: (Optional) Specifies the list of incompatible flags to be tested with Bazelisk. By default incompatible flags are fetched by parsing titles of [open Bazel Github issues](https://github.com/bazelbuild/bazel/issues?q=is%3Aopen+is%3Aissue+label%3Aincompatible-change+label%3Amigration-ready) with `incompatible-change` and `migration-ready` labels. Make sure the Bazel version you select support those flags.
 
 * `CI_RESOURCE_PERCENTAGE`: (Optional) Specifies the percentage of CI machine resources to use for running tests. Default is 30%. **ATTENTION**: please do NOT overwhelm CI during busy hours.
+
+## BCR Downstream Test
+
+`bcr_downstream.py` is a script used for testing whether a new or updated BCR module version breaks downstream modules that directly depend on it. It vendors the target module via `bazel vendor`, overrides it in each direct downstream module's workspace via `--override_module`, and selects the top direct dependents ranked by BCR PageRank.
+
+Downstream tasks are skipped if their Bazel major version is not among the major versions tested in the target module's `presubmit.yml` (e.g. a target tested with `8.x` and `9.*` skips downstream `6.x` and `7.*` tasks). If the target module is also tested with a symbolic version tracking the newest Bazel (e.g. `rolling`), major versions newer than its highest pinned one are kept as well. No filtering is applied if the target module doesn't pin any Bazel version, and downstream tasks using symbolic versions (e.g. `latest`, `rolling`) are always kept. If a Bazel version is set explicitly (`USE_BAZEL_VERSION` or `use_bazel_version`, see below), all downstream tasks run with that version and none of them are skipped. The target module is vendored with the same Bazel version as each downstream task (or `7.x` for tasks using Bazel 6, which doesn't support `bazel vendor`).
+
+A build can be triggered on a BCR PR by attaching the `run-downstream-test` label, or manually via the `BCR Downstream Test` pipeline with the following environment variables:
+
+* `TARGET_MODULE`: (Optional) The target module in `<module_pattern>@<version_pattern>` format (e.g. `rules_cc@0.1.1`, `protobuf@latest`), which must match a single module version. If omitted, the target module is auto-detected from `git diff main...HEAD`. A build can only test one module version, so set this to choose one if a PR changes several module versions.
+* `SELECT_TOP_BCR_MODULES`: (Optional) Maximum number of direct downstream modules to select based on descending global BCR PageRank score (via `//tools:module_analyzer`). Default is `50`.
+* `MODULE_SELECTIONS`: (Optional) A comma-separated list of downstream module patterns to test explicitly (e.g. `grpc@latest,rules_go@latest`). Overrides `SELECT_TOP_BCR_MODULES` when set.
+* `SMOKE_TEST_PERCENTAGE`: (Optional) Percentage of selected downstream modules to randomly sample for smoke testing.
+* `EXCLUDE_DEV_DEPS`: (Optional) Set to `1` or `true` to exclude `dev_dependency = True` dependencies when discovering direct downstream modules and computing PageRank. Default is `false`.
+* `USE_BAZEL_VERSION`: (Optional) Specifies the Bazel version to be used. If set, the script overrides the Bazel version for all downstream task configs; otherwise, the Bazel versions specified in each downstream module's `presubmit.yml` are respected.
+* `CI_RESOURCE_PERCENTAGE`: (Optional) Percentage of CI machine resources per queue allocated to the `bcr-downstream-test-queue-*` concurrency group. Default is `10` (10%).
+
+A target module can also configure `SELECT_TOP_BCR_MODULES`, `MODULE_SELECTIONS`, `SMOKE_TEST_PERCENTAGE`, `EXCLUDE_DEV_DEPS` and `USE_BAZEL_VERSION` in its `presubmit.yml` file under the top-level `bcr_downstream_test` field, using the lowercase option names. The environment variables take precedence when set. For example:
+
+```yaml
+bcr_downstream_test:
+  # Test the top 20 direct dependents, ignoring dev dependencies.
+  select_top_bcr_modules: 20
+  exclude_dev_deps: true
+  # Or test the given downstream modules instead.
+  # module_selections: ["grpc@latest", "rules_go@latest"]
+  use_bazel_version: 8.x
+```
+
