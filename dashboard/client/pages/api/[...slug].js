@@ -1,10 +1,7 @@
-import getConfig from "next/config";
 import { createProxyMiddleware } from "http-proxy-middleware";
 
-const { serverRuntimeConfig } = getConfig();
-
 const apiProxy = createProxyMiddleware({
-  target: serverRuntimeConfig.SERVER_URL,
+  target: process.env.SERVER_URL || "http://localhost:8080",
   changeOrigin: true,
   pathRewrite: { [`^/api`]: "" },
 });
