@@ -3,6 +3,14 @@
 set -euxo pipefail
 
 PREFIX=bazel-public
+GIT_ROOT="$(git rev-parse --show-toplevel)"
+source "$GIT_ROOT/buildkite/docker/utils.sh"
+TAG_FILE="$GIT_ROOT/buildkite/docker/.image_tag"
+# Remove any stale tag file from a previous run so that .image_tag is only
+# present if all builds in this run succeed.
+rm -f "$TAG_FILE"
+DEFAULT_IMAGE_TAG="$(calculate_image_tag)"
+export IMAGE_TAG="${IMAGE_TAG:-$DEFAULT_IMAGE_TAG}"
 
 # Enable use of buildkit for all builds. No extra support in the Dockerfile is required.
 # See https://docs.docker.com/develop/develop-images/build_enhancements/ for details.
@@ -87,28 +95,32 @@ function docker_build() {
 # Containers used by Bazel
 # For Rocky Linux & Ubuntu we build multi-platform images.
 pids=()
-docker_build "${TOOLS_CONTEXT[@]}" -f rockylinux8/Dockerfile  --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target rockylinux8 -t "gcr.io/$PREFIX/rockylinux8"  rockylinux8 & pids+=($!)
-docker_build -f debian10/Dockerfile   --target debian10-java11   -t "gcr.io/$PREFIX/debian10-java11" debian10 & pids+=($!)
-docker_build "${TOOLS_CONTEXT[@]}" -f debian12/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target debian12-java17   -t "gcr.io/$PREFIX/debian12" debian12 & pids+=($!)
-docker_build "${TOOLS_CONTEXT[@]}" -f debian13/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target debian13-java21   -t "gcr.io/$PREFIX/debian13" debian13 & pids+=($!)
-docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2204/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2204-java17 -t "gcr.io/$PREFIX/ubuntu2204-java17" ubuntu2204 & pids+=($!)
-docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2204/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2204        -t "gcr.io/$PREFIX/ubuntu2204" ubuntu2204 & pids+=($!)
-docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2404/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2404        -t "gcr.io/$PREFIX/ubuntu2404" ubuntu2404 & pids+=($!)
-docker_build "${TOOLS_CONTEXT[@]}" -f fedora39/Dockerfile   --target fedora39-java17   -t "gcr.io/$PREFIX/fedora39-java17" fedora39 & pids+=($!)
-docker_build "${TOOLS_CONTEXT[@]}" -f fedora40/Dockerfile   --target fedora40-java21   -t "gcr.io/$PREFIX/fedora40-java21" fedora40 & pids+=($!)
-docker_build "${TOOLS_CONTEXT[@]}" -f fedora43/Dockerfile   --target fedora43-java25   -t "gcr.io/$PREFIX/fedora43-java25" fedora43 & pids+=($!)
+docker_build "${TOOLS_CONTEXT[@]}" -f rockylinux8/Dockerfile  --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target rockylinux8 -t "gcr.io/$PREFIX/rockylinux8:$IMAGE_TAG" -t "gcr.io/$PREFIX/rockylinux8:latest"  rockylinux8 & pids+=($!)
+docker_build -f debian10/Dockerfile   --target debian10-java11   -t "gcr.io/$PREFIX/debian10-java11:$IMAGE_TAG" -t "gcr.io/$PREFIX/debian10-java11:latest" debian10 & pids+=($!)
+docker_build "${TOOLS_CONTEXT[@]}" -f debian12/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target debian12-java17   -t "gcr.io/$PREFIX/debian12:$IMAGE_TAG" -t "gcr.io/$PREFIX/debian12:latest" debian12 & pids+=($!)
+docker_build "${TOOLS_CONTEXT[@]}" -f debian13/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target debian13-java21   -t "gcr.io/$PREFIX/debian13:$IMAGE_TAG" -t "gcr.io/$PREFIX/debian13:latest" debian13 & pids+=($!)
+docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2204/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2204-java17 -t "gcr.io/$PREFIX/ubuntu2204-java17:$IMAGE_TAG" -t "gcr.io/$PREFIX/ubuntu2204-java17:latest" ubuntu2204 & pids+=($!)
+docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2204/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2204        -t "gcr.io/$PREFIX/ubuntu2204:$IMAGE_TAG" -t "gcr.io/$PREFIX/ubuntu2204:latest" ubuntu2204 & pids+=($!)
+docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2404/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2404        -t "gcr.io/$PREFIX/ubuntu2404:$IMAGE_TAG" -t "gcr.io/$PREFIX/ubuntu2404:latest" ubuntu2404 & pids+=($!)
+docker_build "${TOOLS_CONTEXT[@]}" -f fedora39/Dockerfile   --target fedora39-java17   -t "gcr.io/$PREFIX/fedora39-java17:$IMAGE_TAG" -t "gcr.io/$PREFIX/fedora39-java17:latest" fedora39 & pids+=($!)
+docker_build "${TOOLS_CONTEXT[@]}" -f fedora40/Dockerfile   --target fedora40-java21   -t "gcr.io/$PREFIX/fedora40-java21:$IMAGE_TAG" -t "gcr.io/$PREFIX/fedora40-java21:latest" fedora40 & pids+=($!)
+docker_build "${TOOLS_CONTEXT[@]}" -f fedora43/Dockerfile   --target fedora43-java25   -t "gcr.io/$PREFIX/fedora43-java25:$IMAGE_TAG" -t "gcr.io/$PREFIX/fedora43-java25:latest" fedora43 & pids+=($!)
 
 for pid in "${pids[@]}"; do
     wait "$pid"
 done
 
-docker_build "${TOOLS_CONTEXT[@]}" -f rockylinux8/Dockerfile  --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target rockylinux8-java8               -t "gcr.io/$PREFIX/rockylinux8-java8"                 rockylinux8
-docker_build "${TOOLS_CONTEXT[@]}" -f rockylinux8/Dockerfile  --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target rockylinux8-java11              -t "gcr.io/$PREFIX/rockylinux8-java11"                rockylinux8
-docker_build "${TOOLS_CONTEXT[@]}" -f rockylinux8/Dockerfile  --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target rockylinux8-java11-devtoolset10 -t "gcr.io/$PREFIX/rockylinux8-java11-devtoolset10"   rockylinux8
-docker_build "${TOOLS_CONTEXT[@]}" -f rockylinux8/Dockerfile  --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target rockylinux8-releaser            -t "gcr.io/$PREFIX/rockylinux8-releaser"              rockylinux8
-docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2204/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2204-kythe            -t "gcr.io/$PREFIX/ubuntu2204-kythe" ubuntu2204
-docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2204/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2204-bazel-java17     -t "gcr.io/$PREFIX/ubuntu2204-bazel-java17" ubuntu2204
-docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2404/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2404-kythe            -t "gcr.io/$PREFIX/ubuntu2404-kythe" ubuntu2404
-docker_build "${TOOLS_CONTEXT[@]}" -f fedora39/Dockerfile   --target fedora39-bazel-java17       -t "gcr.io/$PREFIX/fedora39-bazel-java17" fedora39
-docker_build "${TOOLS_CONTEXT[@]}" -f fedora40/Dockerfile   --target fedora40-bazel-java21       -t "gcr.io/$PREFIX/fedora40-bazel-java21" fedora40
-docker_build "${TOOLS_CONTEXT[@]}" -f fedora43/Dockerfile   --target fedora43-bazel-java25       -t "gcr.io/$PREFIX/fedora43-bazel-java25" fedora43
+docker_build "${TOOLS_CONTEXT[@]}" -f rockylinux8/Dockerfile  --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target rockylinux8-java8               -t "gcr.io/$PREFIX/rockylinux8-java8:$IMAGE_TAG" -t "gcr.io/$PREFIX/rockylinux8-java8:latest"                 rockylinux8
+docker_build "${TOOLS_CONTEXT[@]}" -f rockylinux8/Dockerfile  --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target rockylinux8-java11              -t "gcr.io/$PREFIX/rockylinux8-java11:$IMAGE_TAG" -t "gcr.io/$PREFIX/rockylinux8-java11:latest"                rockylinux8
+docker_build "${TOOLS_CONTEXT[@]}" -f rockylinux8/Dockerfile  --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target rockylinux8-java11-devtoolset10 -t "gcr.io/$PREFIX/rockylinux8-java11-devtoolset10:$IMAGE_TAG" -t "gcr.io/$PREFIX/rockylinux8-java11-devtoolset10:latest"   rockylinux8
+docker_build "${TOOLS_CONTEXT[@]}" -f rockylinux8/Dockerfile  --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target rockylinux8-releaser            -t "gcr.io/$PREFIX/rockylinux8-releaser:$IMAGE_TAG" -t "gcr.io/$PREFIX/rockylinux8-releaser:latest"              rockylinux8
+docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2204/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2204-kythe            -t "gcr.io/$PREFIX/ubuntu2204-kythe:$IMAGE_TAG" -t "gcr.io/$PREFIX/ubuntu2204-kythe:latest" ubuntu2204
+docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2204/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2204-bazel-java17     -t "gcr.io/$PREFIX/ubuntu2204-bazel-java17:$IMAGE_TAG" -t "gcr.io/$PREFIX/ubuntu2204-bazel-java17:latest" ubuntu2204
+docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2404/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2404-kythe            -t "gcr.io/$PREFIX/ubuntu2404-kythe:$IMAGE_TAG" -t "gcr.io/$PREFIX/ubuntu2404-kythe:latest" ubuntu2404
+docker_build "${TOOLS_CONTEXT[@]}" -f fedora39/Dockerfile   --target fedora39-bazel-java17       -t "gcr.io/$PREFIX/fedora39-bazel-java17:$IMAGE_TAG" -t "gcr.io/$PREFIX/fedora39-bazel-java17:latest" fedora39
+docker_build "${TOOLS_CONTEXT[@]}" -f fedora40/Dockerfile   --target fedora40-bazel-java21       -t "gcr.io/$PREFIX/fedora40-bazel-java21:$IMAGE_TAG" -t "gcr.io/$PREFIX/fedora40-bazel-java21:latest" fedora40
+docker_build "${TOOLS_CONTEXT[@]}" -f fedora43/Dockerfile   --target fedora43-bazel-java25       -t "gcr.io/$PREFIX/fedora43-bazel-java25:$IMAGE_TAG" -t "gcr.io/$PREFIX/fedora43-bazel-java25:latest" fedora43
+
+# Save IMAGE_TAG to .image_tag now that all builds have succeeded
+echo "$IMAGE_TAG" > "$TAG_FILE"
+
