@@ -7,7 +7,6 @@ __pycache__/
 .idea/workspace.xml
 
 # VS.Code project files.
-.vscode/
 
 # Bazel output files.
 /bazel-*
@@ -19,3 +18,5 @@ MODULE.bazel.lock
 
 # Vim files
 *.swp
+config.bat
+node_modules
