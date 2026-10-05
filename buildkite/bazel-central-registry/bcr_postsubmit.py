@@ -27,6 +27,7 @@ import base64
 import hashlib
 import json
 import os
+import pathlib
 import requests
 import subprocess
 import sys
@@ -123,6 +124,14 @@ def check_and_write_single_attestation(url, integrity, dest_dir):
     print("\t\tIntegrity: OK")
 
     dest = os.path.join(dest_dir, get_canonical_basename(url))
+
+    dest_path = pathlib.Path(dest).resolve()
+    dest_dir_path = pathlib.Path(dest_dir).resolve()
+    if not dest_path.is_relative_to(dest_dir_path):
+        raise AttestationError(
+            f"Resolved path {dest_path} is outside of expected directory {dest_dir_path}"
+        )
+
     print(f"\t\tWriting attestation to {dest}...")
     with open(dest, "wb") as f:
         f.write(raw_content)
