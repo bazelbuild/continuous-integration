@@ -967,11 +967,11 @@ resource "buildkite_pipeline" "bcr-downstream-test" {
     pull_request_branch_filter_enabled            = false
     pull_request_branch_filter_configuration      = ""
     publish_commit_status                         = true
-    publish_commit_status_per_step                = true
+    publish_commit_status_per_step                = false
     separate_pull_request_statuses                = false
     publish_blocked_as_pending                    = true
     cancel_deleted_branch_builds                  = true
-    skip_builds_for_existing_commits              = true
+    skip_builds_for_existing_commits              = false
     skip_pull_request_builds_for_existing_commits = false
     ignore_default_branch_pull_requests           = false
     build_merge_group_checks_requested            = false
