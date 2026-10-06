@@ -208,6 +208,18 @@ def update_setup_docker(setup_docker_file, image_hashes):
     return update_pinned_hashes([setup_docker_file], image_hashes)
 
 
+def find_replace_hashes(curr_hashes, next_hashes, files):
+    for ff in files:
+        for k in IMAGE_KEYS:
+            for arch in ["amd64", "arm64"]:
+                if arch not in curr_hashes[k] or arch not in next_hashes[k]:
+                    continue
+                with open(ff, "r") as f:
+                    content = f.read()
+                with open(ff, "w") as f:
+                    f.write(content.replace(curr_hashes[k][arch], next_hashes[k][arch]))
+
+
 def get_git_root() -> str:
     p = subprocess.run(["git", "rev-parse", "--show-toplevel"],
                        capture_output=True, text=True)
@@ -251,7 +263,8 @@ def main():
     digests_json_file = repo_root / "buildkite" / "digests.json"
     with open(digests_json_file, "r") as f:
         curr_digests = json.loads(f.read())
-    print(curr_digest)
+
+    find_replace_hashes(curr_digests, digests, [Path(repo_root / "buildkite" / "bazelci.py")])
 
     #new_dict_str = format_image_hashes_dict(digests)
     #update_bazelci_file(bazelci_path, new_dict_str)
