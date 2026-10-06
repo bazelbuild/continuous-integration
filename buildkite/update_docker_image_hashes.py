@@ -259,6 +259,7 @@ def main():
     print("Fetching latest image manifests...")
 
     digests = fetch_all_image_digests(IMAGE_KEYS)
+
     # Load the current digests
     digests_json_file = repo_root / "buildkite" / "digests.json"
     with open(digests_json_file, "r") as f:
@@ -267,28 +268,11 @@ def main():
     files_to_update = [
         Path(repo_root / "buildkite" / "bazelci.py"),
         rbe_presets_file,
+        setup_docker_file,
     ] + list(terraform_dir.glob("**/*.tf")) + list(pipelines_dir.glob("**/*.yml"))
 
+    print("Updating image digests...")
     find_replace_hashes(curr_digests, digests, files_to_update)
-
-
-    #updated_tf = update_terraform_configs(terraform_dir, digests)
-    #print(f"Successfully updated {len(updated_tf)} terraform configuration files:")
-    #for tf_path in updated_tf:
-    #    print(f"  - {tf_path}")
-
-    #updated_rbe = update_rbe_presets(rbe_presets_file, digests)
-    #if updated_rbe:
-    #    print(f"Successfully updated RBE presets in {rbe_presets_file}!")
-
-    #updated_pipelines = update_pipeline_ymls(pipelines_dir, digests)
-    #print(f"Successfully updated {len(updated_pipelines)} pipeline ymls:")
-    #for p in updated_pipelines:
-    #    print(f"  - {p}")
-
-    #updated_setup_docker = update_setup_docker(setup_docker_file, digests)
-    #if updated_setup_docker:
-    #    print(f"Successfully updated setup-docker.sh in {setup_docker_file}!")
 
 
 if __name__ == "__main__":
