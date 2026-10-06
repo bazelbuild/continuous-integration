@@ -196,7 +196,7 @@ def main():
         setup_docker_file,
     ] + list(terraform_dir.glob("**/*.tf")) + \
             list(pipelines_dir.glob("**/*.yml")) + \
-            list(pipelines_dir.glob("**/*.yml.tpl")
+            list(pipelines_dir.glob("**/*.yml.tpl"))
 
     print("Updating image digests...")
     find_replace_hashes(curr_digests, digests, files_to_update)
