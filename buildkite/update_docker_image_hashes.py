@@ -194,7 +194,9 @@ def main():
         Path(repo_root / "buildkite" / "bazelci.py"),
         rbe_presets_file,
         setup_docker_file,
-    ] + list(terraform_dir.glob("**/*.tf")) + list(pipelines_dir.glob("**/*.yml"))
+    ] + list(terraform_dir.glob("**/*.tf")) + \
+            list(pipelines_dir.glob("**/*.yml")) + \
+            list(pipelines_dir.glob("**/*.yml.tpl")
 
     print("Updating image digests...")
     find_replace_hashes(curr_digests, digests, files_to_update)
