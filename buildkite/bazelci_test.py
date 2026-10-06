@@ -856,5 +856,146 @@ tasks:
         self.assertEqual(0, len(warning_steps))
 
 
+class TokenLeakagePreventionTest(unittest.TestCase):
+
+    def test_filtered_bazel_env_strips_secret_tokens(self):
+        with mock.patch.dict(
+            os.environ,
+            {
+                "SOME_SAFE_VAR": "hello",
+                "BUILDKITE_ANALYTICS_TOKEN": "secret_analytics_token",
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN": "secret_encrypted_token",
+            },
+            clear=True,
+        ):
+            env = bazelci.filtered_bazel_env()
+            self.assertEqual(env.get("SOME_SAFE_VAR"), "hello")
+            self.assertNotIn("BUILDKITE_ANALYTICS_TOKEN", env)
+            self.assertNotIn("ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN", env)
+
+    def test_upload_test_logs_from_bep_passes_token_in_env_without_mutating_os_environ(self):
+        with mock.patch.dict(os.environ, {}, clear=True), mock.patch.object(
+            bazelci, "download_bazelci_agent", return_value="bazelci-agent"
+        ), mock.patch.object(bazelci, "execute_command") as mock_execute:
+            bazelci.upload_test_logs_from_bep(
+                "bep.json",
+                "/tmp",
+                monitor_flaky_tests=False,
+                buildkite_analytics_token="my_token_123",
+            )
+            # os.environ must NOT be mutated
+            self.assertNotIn("BUILDKITE_ANALYTICS_TOKEN", os.environ)
+            # execute_command must have received env containing the token
+            mock_execute.assert_called_once()
+            called_env = mock_execute.call_args.kwargs.get("env")
+            self.assertIsNotNone(called_env)
+            self.assertEqual(called_env.get("BUILDKITE_ANALYTICS_TOKEN"), "my_token_123")
+
+    def test_execute_bazel_commands_pass_filtered_env(self):
+        with mock.patch.dict(
+            os.environ,
+            {
+                "BUILDKITE_ANALYTICS_TOKEN": "secret_token",
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN": "encrypted_token",
+            },
+        ), mock.patch.object(bazelci, "execute_command") as mock_execute, mock.patch.object(
+            bazelci, "compute_flags", return_value=[]
+        ):
+            # Test execute_bazel_clean
+            bazelci.execute_bazel_clean("bazel", "ubuntu2004")
+            self.assertNotIn(
+                "BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+
+            # Test execute_bazel_build
+            mock_execute.reset_mock()
+            bazelci.execute_bazel_build(
+                "6.0.0", "bazel", "ubuntu2004", [], ["//..."], "bep.json"
+            )
+            self.assertNotIn(
+                "BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+
+            # Test execute_bazel_test
+            mock_execute.reset_mock()
+            bazelci.execute_bazel_test(
+                "6.0.0", "bazel", "ubuntu2004", [], ["//..."], "bep.json", False
+            )
+            self.assertNotIn(
+                "BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+
+            # Test execute_bazel_coverage
+            mock_execute.reset_mock()
+            bazelci.execute_bazel_coverage(
+                "6.0.0", "bazel", "ubuntu2004", [], ["//..."]
+            )
+            self.assertNotIn(
+                "BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+
+            # Test execute_bazel_run
+            mock_execute.reset_mock()
+            bazelci.execute_bazel_run("bazel", "ubuntu2004", ["//:target"])
+            self.assertNotIn(
+                "BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+
+    def test_execute_commands_does_not_leak_decrypted_token_to_environ(self):
+        with mock.patch.dict(
+            os.environ,
+            {
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN": "enc_token_val",
+                "BUILDKITE_COMMIT": "abc1234",
+            },
+            clear=True,
+        ), mock.patch.object(
+            bazelci, "decrypt_token", return_value="decrypted_secret_token"
+        ) as mock_decrypt, mock.patch.object(
+            bazelci, "upload_test_logs_from_bep"
+        ) as mock_upload, mock.patch.object(
+            bazelci, "execute_bazel_test"
+        ), mock.patch.object(
+            bazelci, "calculate_targets", return_value=([], ["//:test"], [], [])
+        ), mock.patch.object(
+            bazelci, "calculate_flags", return_value=([], None, None)
+        ), mock.patch.object(
+            bazelci, "print_bazel_version_info", return_value="6.0.0"
+        ), mock.patch.object(
+            bazelci, "print_environment_variables_info"
+        ), mock.patch.object(
+            bazelci, "execute_bazel_run"
+        ), mock.patch.object(
+            bazelci, "collect_metrics_if_enabled"
+        ), mock.patch.object(
+            bazelci, "upload_log_file"
+        ), mock.patch.object(
+            bazelci, "get_output_base", return_value="/tmp/output_base"
+        ), mock.patch.object(
+            bazelci, "is_windows", return_value=False
+        ), mock.patch.object(
+            bazelci, "get_bazelisk_cache_directory", return_value="/tmp/bazelisk_cache"
+        ):
+            bazelci.execute_commands(
+                task_config={"test_targets": ["//:test"]},
+                platform="ubuntu2004",
+                use_but=False,
+                save_but=False,
+                needs_clean=False,
+                build_only=False,
+                test_only=True,
+                monitor_flaky_tests=False,
+            )
+            mock_decrypt.assert_called_once()
+            self.assertNotIn("BUILDKITE_ANALYTICS_TOKEN", os.environ)
+            mock_upload.assert_called_once()
+            self.assertEqual(mock_upload.call_args[0][3], "decrypted_secret_token")
+
+
 if __name__ == "__main__":
     unittest.main()
