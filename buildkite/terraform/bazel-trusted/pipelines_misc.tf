@@ -52,18 +52,17 @@ resource "buildkite_pipeline" "update-git-mirror-tar-ball" {
   }
 }
 
-resource "buildkite_pipeline" "mirror-404-artifacts-for-bazel" {
-  name           = "Mirror 404 artifacts for Bazel"
-  repository     = "https://github.com/bazelbuild/continuous-integration.git"
-  description    = "See https://github.com/bazelbuild/continuous-integration/pull/2386"
+resource "buildkite_pipeline" "mirror-bazel-external-deps" {
+  name           = "Mirror Bazel External Deps"
+  repository     = "https://github.com/bazelbuild/bazel.git"
+  description    = "Mirror missing external repository artifacts for Bazel to gs://bazel-mirror"
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {},
     priority = 0,
     steps = {
       commands = [
-        "cd buildkite",
-        "python3 mirror_404_downloads.py"
+        "./tools/mirror_external_deps.py --upload"
       ],
       label = ":mirror: Mirror missing artifacts",
       image = "gcr.io/bazel-public/ubuntu2204@sha256:2a482c928ff7527594f2e528ac3724486f9cf0fd682394b8aa2f5fed4eb9676f"
