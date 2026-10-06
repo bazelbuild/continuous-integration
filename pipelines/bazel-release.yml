@@ -328,7 +328,7 @@ steps:
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
           - GOOGLE_APPLICATION_CREDENTIALS
-        image: gcr.io/bazel-public/rockylinux8-java8@sha256:79b0528e2ce5d3212dbd4f6b8bc6e331038e92288d379043fd941c45dab5be44
+        image: gcr.io/bazel-public/rockylinux8-java8@sha256:75d11e32035ba1b4a9709431bcb5140d14de4ff455f2d2aec9d659d075d7e75c
         network: host
         privileged: true
         propagate-environment: true
