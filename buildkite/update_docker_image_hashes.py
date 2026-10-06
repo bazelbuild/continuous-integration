@@ -208,8 +208,16 @@ def update_setup_docker(setup_docker_file, image_hashes):
     return update_pinned_hashes([setup_docker_file], image_hashes)
 
 
+def get_git_root() -> str:
+    p = subprocess.run(["git", "rev-parse", "--show-toplevel"],
+                       capture_output=True, text=True)
+    if p.returncode != 0:
+        raise RuntimeError("Could not determine the git root: " + p.stderr)
+    return p.stdout.strip()
+
+
 def main():
-    repo_root = Path(__file__).resolve().parent.parent
+    repo_root = Path(get_git_root())
     bazelci_path = repo_root / "buildkite" / "bazelci.py"
     terraform_dir = repo_root / "buildkite" / "terraform"
     pipelines_dir = repo_root / "pipelines"
@@ -239,28 +247,33 @@ def main():
     print("Fetching latest image manifests...")
 
     digests = fetch_all_image_digests(IMAGE_KEYS)
+    # Load the current digests
+    digests_json_file = repo_root / "buildkite" / "digests.json"
+    with open(digests_json_file, "r") as f:
+        curr_digests = json.loads(f.read())
+    print(curr_digest)
 
-    new_dict_str = format_image_hashes_dict(digests)
-    update_bazelci_file(bazelci_path, new_dict_str)
-    print(f"Successfully updated IMAGE_HASHES in {bazelci_path}!")
+    #new_dict_str = format_image_hashes_dict(digests)
+    #update_bazelci_file(bazelci_path, new_dict_str)
+    #print(f"Successfully updated IMAGE_HASHES in {bazelci_path}!")
 
-    updated_tf = update_terraform_configs(terraform_dir, digests)
-    print(f"Successfully updated {len(updated_tf)} terraform configuration files:")
-    for tf_path in updated_tf:
-        print(f"  - {tf_path}")
+    #updated_tf = update_terraform_configs(terraform_dir, digests)
+    #print(f"Successfully updated {len(updated_tf)} terraform configuration files:")
+    #for tf_path in updated_tf:
+    #    print(f"  - {tf_path}")
 
-    updated_rbe = update_rbe_presets(rbe_presets_file, digests)
-    if updated_rbe:
-        print(f"Successfully updated RBE presets in {rbe_presets_file}!")
+    #updated_rbe = update_rbe_presets(rbe_presets_file, digests)
+    #if updated_rbe:
+    #    print(f"Successfully updated RBE presets in {rbe_presets_file}!")
 
-    updated_pipelines = update_pipeline_ymls(pipelines_dir, digests)
-    print(f"Successfully updated {len(updated_pipelines)} pipeline ymls:")
-    for p in updated_pipelines:
-        print(f"  - {p}")
+    #updated_pipelines = update_pipeline_ymls(pipelines_dir, digests)
+    #print(f"Successfully updated {len(updated_pipelines)} pipeline ymls:")
+    #for p in updated_pipelines:
+    #    print(f"  - {p}")
 
-    updated_setup_docker = update_setup_docker(setup_docker_file, digests)
-    if updated_setup_docker:
-        print(f"Successfully updated setup-docker.sh in {setup_docker_file}!")
+    #updated_setup_docker = update_setup_docker(setup_docker_file, digests)
+    #if updated_setup_docker:
+    #    print(f"Successfully updated setup-docker.sh in {setup_docker_file}!")
 
 
 if __name__ == "__main__":
