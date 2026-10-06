@@ -70,13 +70,13 @@ instance_groups:
     machine_type: c4a-standard-8
     boot_disk_type: hyperdisk-balanced
   - name: bk-windows
-    count: 60
+    count: 100
     project: bazel-untrusted
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-windows
     metadata_from_file: windows-startup-script-ps1=startup-windows-pdssd.ps1
   - name: bk-testing-windows
-    count: 5
+    count: 10
     project: bazel-untrusted
     service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-testing-windows
