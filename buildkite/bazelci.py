@@ -346,38 +346,38 @@ EOL_PLATFORMS = frozenset(
 # DO_NOT_MODIFY_IMAGE_HASHES_SENTINEL_START
 IMAGE_HASHES = {
     "rockylinux8": {
-        "amd64": "sha256:bf148717fe5349e498345dbf3efc1f7690b89e310a2ae970c3bec1ab4e9cd61e",
-        "arm64": "sha256:1b7ac73ca16e71e148bc4bb68858d0a0e44129e7f4949b8aa90be2d169ef01b9",
+        "amd64": "sha256:496d7d917210c4b92fb92a9244c7b2cdd93ccdf538fbfb843a0702c656680fba",
+        "arm64": "sha256:23f79d20ec026444fa3e47b67644f206fac6b7f7ff4fd9a055f358e481a8f751",
     },
     "rockylinux8-releaser": {
-        "amd64": "sha256:164d20f7df3c44789799a6cd956c535adf4a3f15b8b5a0348fd781578b4808e3",
-        "arm64": "sha256:4635e2b5f0a265c45b462c318e81928f3c2b5e02c580eddd8f5ae0dc44254005",
+        "amd64": "sha256:3f71441ba319525db2e484b1403905970cb486261ab79fcac02ab221b099be98",
+        "arm64": "sha256:5b9fb256f457bc7638900a1abb6b8b2a5e4407c9f16b7b26600900fd286a12e6",
     },
     "rockylinux8-java8": {
-        "amd64": "sha256:79b0528e2ce5d3212dbd4f6b8bc6e331038e92288d379043fd941c45dab5be44",
-        "arm64": "sha256:75d11e32035ba1b4a9709431bcb5140d14de4ff455f2d2aec9d659d075d7e75c",
+        "amd64": "sha256:223a119e22129d51698cecc6d1ff5dead2880e5e46bfd0feee6159210f6feb42",
+        "arm64": "sha256:659628542b7a1b93dd5707681c28d2ae80e4fb7123f309825bdddae286fcf0ba",
     },
     "rockylinux8-java11": {
-        "amd64": "sha256:042605c8ea1ce7bc243cb5b363d3581876c849cc8d99104e3c20ab0b80d6dd87",
-        "arm64": "sha256:ba8450e5285baf2a148b6f5647b02d0781484aa44665b68ce18c3f39dca2830e",
+        "amd64": "sha256:4fc19039fe72219b44ea3a746996eedd88506f3f78b220543cbb3158710b64e0",
+        "arm64": "sha256:3e9874d8587b89fafe37ce1f21968277efc217f223ab04e1a6dbef0bd4ba5592",
     },
     "rockylinux8-java11-devtoolset10": {
-        "amd64": "sha256:9d271aed202917c7769844eb2e2737b109541457fe387ceffc72035483f1ba44",
-        "arm64": "sha256:52002e0cc6a66c96131b10898cd67d85bab3e320261d6e73637830bab0f51fdf",
+        "amd64": "sha256:a5bbe0c4f76e375978b8ce181bb7c07fdff89e9589fb47b6022e0da0f8275b2f",
+        "arm64": "sha256:4bc7432e3b06078168610e8961c486165567c77ce93383baef6866dbd61e2d45",
     },
     "debian10-java11": {
-        "amd64": "sha256:4c54ce7c02f61b8cb24a7447eb14b00e4a62f34c8afd3bd27d0c1a760bdf2a10",
+        "amd64": "sha256:c384d06b3ace544866da99daf757023f5d8e6ea6e581df143bc4a465a95b02ec",
     },
     "debian11-java17": {
         "amd64": "sha256:42da27bb2aa6101b3e03728c0f18e20772e70f708e84d708e4f3a28ea40560d8",
     },
     "debian12": {
-        "amd64": "sha256:22d6fb6518a579f2fd32f07c7641df663e3d9306d68417c6623aafd9f7813963",
-        "arm64": "sha256:46b1909a9e51f6784d07df101f182b62cb9281b1009ba67276307ab15be69bd7",
+        "amd64": "sha256:a11f658c6e4adc953848df22a8f370cb2c12e0b7a6efb41e8b0957c89ddf20c1",
+        "arm64": "sha256:eb64ae85f66301b04ad3a9912129ce369269580c23b5683e583ecc8a43de0a57",
     },
     "debian13": {
-        "amd64": "sha256:23ea24eb7c394883a7e069918896d36e9090373f27634d9cfdd30b0c6f58796d",
-        "arm64": "sha256:8143489bf8a6f7c890838ce209c0ec940f5b69cbf78aa9158d5a45ce3cf16f4c",
+        "amd64": "sha256:6321847b42d082a97cfee70b08cb12d87c668a1656073a8c86f85b13b8d60a08",
+        "arm64": "sha256:d5972bc12ea6779c65b01be895badb02911c106c078613682e2eec28537becdf",
     },
     "ubuntu1604-java8": {
         "amd64": "sha256:9e5e7c5383c4a8e919d02fd81d7197bd76e912b465511dab7b45336ca3b193d0",
@@ -394,36 +394,36 @@ IMAGE_HASHES = {
         "arm64": "sha256:91b7cac1ac7ccc22a7c814a37bb7e6c4c1cb8ccf6080d6a9136afd19f31d9a85",
     },
     "ubuntu2204": {
-        "amd64": "sha256:2a482c928ff7527594f2e528ac3724486f9cf0fd682394b8aa2f5fed4eb9676f",
-        "arm64": "sha256:5ca61bdbd4b0f3aea8947ed9816f29b9da41a8cef9b1b2217f63724edb8a256a",
+        "amd64": "sha256:13234d9d36d9311b58db3fd7d0b17398cc3503d5a74e382535ccd8e79c47a13b",
+        "arm64": "sha256:21f326909b43247ae444a4f322b4512ba4d0ccf92a5475df9703e3f1ee8a4868",
     },
     "ubuntu2404": {
-        "amd64": "sha256:53dd4ae8e1a2b4c070bc15fb3b60e0d30b81ccc85c6c44e18b20de992be8e9a3",
-        "arm64": "sha256:9d4c2fb2962bd49cccb2929e9bd84a9104952caadedbe80e1a7717fb139f9970",
+        "amd64": "sha256:7dbc0e6f72427aa5c2817eee702c4e12e6db8286e6064e87620b12089ba4715b",
+        "arm64": "sha256:4d971f2be82c65d60aafa4855b5511a01ac9fe131d6e81a18f39bb975b709726",
     },
     "ubuntu2004-kythe": {
         "amd64": "sha256:3862183a7674064e7e36ab851166e5a20eaccb47c8dd7205354fc8de6a6be0e9",
     },
     "ubuntu2204-kythe": {
-        "amd64": "sha256:3b0fe8e438faacec522eb3cfbfce116fbcddf1c4cd9a32f847217cac154e5782",
-        "arm64": "sha256:bbbf6342d9eaf7846ccf4ea9557c94dcb1c6428eafa46526370d476d907801ef",
+        "amd64": "sha256:53959be8e1111045cc6caa5c239f140d283d32847b9ca3b93cff4df4585119d5",
+        "arm64": "sha256:b7fa146ade04fd9ad17059aa78aed493866a77d6a4a9cd01647fe8ea26ad82f3",
     },
     "ubuntu2404-kythe": {
-        "amd64": "sha256:e64cd16e729a251538c0776ef68cf2f88eb590a05b88ff4e66fe35e8495babdf",
-        "arm64": "sha256:a3b0bc5627c3480f2529fce16403c74a245a4e5ea60986317cf31abcc1a6b98d",
+        "amd64": "sha256:826647a42a26f1ef73d39528f32f565a8a79a5c730cff2e85b193b2b588ac5b8",
+        "arm64": "sha256:a67f4204ef172a9f531281d2b196a4dc55d13a38f485233d6fb239abfc62f0cc",
     },
     "ubuntu2204-java17": {
-        "amd64": "sha256:793035b3e53a0fcf341c5ca541886178b04838008b8ed2e67a4c6aa17325fd8c",
-        "arm64": "sha256:ed4059cb3493cbae25cf4c82d50e0f96486e267a0b960a9c1a168e741e5c21ae",
+        "amd64": "sha256:9e6fada4e8bfeadf9510c66154b7d3baf851f412661d8ec4e80f1ccfef624f36",
+        "arm64": "sha256:af2806d4774e01150c1fd2becd6bcc2e2de6ff8709bdb8cffbdf85636a3f036d",
     },
     "fedora39-java17": {
-        "amd64": "sha256:ea39c59f30fe9892c58f12664aa12c6d67be7b01268416cb9e7a47167ab8631d",
+        "amd64": "sha256:f03c7f0080588c9006570dfc5bbb62332fd3443a9f776c555c4705beced0057d",
     },
     "fedora40-java21": {
-        "amd64": "sha256:0ab39f88defa6427cbfc033a3480854fcb6ac3e9de78dc1dc6918b4547d46bd0",
+        "amd64": "sha256:d0c56992dfc0f44368681e0a41005b3a851a47c75afc05810e7178e700be5927",
     },
     "fedora43-java25": {
-        "amd64": "sha256:04ed68b97d884184fbcc89d09e48b5acc09d18b1e10c15021e0210223d1305ae",
+        "amd64": "sha256:7ef30da1c9f2504e044ca1f4eecc2a77e5555547343641de78480cbda662cc3f",
     },
     "docgen": {
         "amd64": "sha256:e6ac038ad949be3e18573735e8a46f5ac74f2e59af2196ed50da0187ea87c259",
