@@ -37,7 +37,6 @@ import shutil
 import stat
 import subprocess
 import sys
-import tarfile
 import tempfile
 import time
 from typing import List
@@ -2636,6 +2635,18 @@ def calculate_targets(
 
     expanded_test_targets = expand_test_target_patterns(bazel_binary, test_targets, test_flags)
 
+    if sharding_enabled:
+        print_collapsed_group(
+            ":female-detective: Calculating targets for shard {}/{}".format(
+                shard_id + 1, shard_count
+            )
+        )
+        sorted_test_targets = sorted(expanded_test_targets)
+        expanded_test_targets = get_targets_for_shard(sorted_test_targets, shard_id, shard_count)
+
+        if shard_id == 0:
+            upload_shard_distribution(sorted_test_targets, shard_count)
+
     actual_test_targets = (
         filter_unchanged_targets(
             expanded_test_targets,
@@ -2645,21 +2656,9 @@ def calculate_targets(
             diffbase,
             git_commit,
         )
-        if use_bazel_diff
+        if use_bazel_diff and expanded_test_targets
         else expanded_test_targets
     )
-
-    if sharding_enabled:
-        print_collapsed_group(
-            ":female-detective: Calculating targets for shard {}/{}".format(
-                shard_id + 1, shard_count
-            )
-        )
-        sorted_test_targets = sorted(actual_test_targets)
-        actual_test_targets = get_targets_for_shard(sorted_test_targets, shard_id, shard_count)
-
-        if shard_id == 0:
-            upload_shard_distribution(sorted_test_targets, shard_count)
 
     return build_targets, actual_test_targets, coverage_targets, index_targets
 
@@ -2797,14 +2796,8 @@ def filter_unchanged_targets(
         eprint(f"Resolved diffbase to {resolved_diffbase}")
 
         eprint("Cloning comparison repository...")
-        diffbase_archive_url = get_commit_archive_url(resolved_diffbase)
-        local_archive_path = download_file(diffbase_archive_url, tmpdir, "repo.tar.gz")
         diffbase_repo_dir = os.path.join(tmpdir, resolved_diffbase)
-        extract_archive(
-            local_archive_path,
-            diffbase_repo_dir,
-            strip_top_level_dir=not is_googlesource_repo(diffbase_archive_url),
-        )
+        checkout_diffbase(resolved_diffbase, diffbase_repo_dir)
 
         eprint("Setting up comparison repository...")
         os.chdir(diffbase_repo_dir)
@@ -2838,15 +2831,14 @@ def filter_unchanged_targets(
         finally:
             return expanded_test_targets
     finally:
+        os.chdir(workspace_dir)
         try:
             shutil.rmtree(tmpdir)
         except:
             pass
 
-        os.chdir(workspace_dir)
-
     config_target_set = set(expanded_test_targets)
-    remaining_targets = list(config_target_set.intersection(affected_targets))
+    remaining_targets = sorted(config_target_set.intersection(affected_targets))
     if len(remaining_targets) < len(expanded_test_targets):
         print_collapsed_group(
             ":scissors: Successfully reduced test targets from {} to {}".format(
@@ -2927,30 +2919,37 @@ def resolve_diffbase(diffbase):
     )
 
 
-def is_googlesource_repo(repo_url):
-    return "googlesource" in repo_url
-
-
-def get_commit_archive_url(resolved_diffbase):
-    repo_url = os.getenv("BUILDKITE_REPO", "")
-    prefix = "+" if is_googlesource_repo(repo_url) else ""
-    return repo_url.replace(".git", "/{}archive/{}.tar.gz".format(prefix, resolved_diffbase))
-
-
-def extract_archive(archive_path, dest_dir, strip_top_level_dir):
-    if not os.path.isdir(dest_dir):
-        os.mkdir(dest_dir)
-
+def checkout_diffbase(resolved_diffbase, dest_dir):
     try:
-        with tarfile.open(archive_path, mode="r:gz") as archive:
-            if strip_top_level_dir:
-                for member in archive.getmembers():
-                    member.name = "/".join(member.name.split("/")[1:])
-                    archive.extract(member, dest_dir)
-            else:
-                archive.extractall(dest_dir)
-    except tarfile.TarError as ex:
-        raise BuildkiteInfraException("Failed to extract repository archive: {}".format(ex)) from ex
+        if (
+            execute_command(
+                ["git", "cat-file", "-e", f"{resolved_diffbase}^{{commit}}"],
+                fail_if_nonzero=False,
+            )
+            != 0
+        ):
+            execute_command(
+                ["git", "fetch", "origin", resolved_diffbase],
+                capture_stderr=True,
+            )
+        git_root = execute_command_and_get_output(
+            ["git", "rev-parse", "--show-toplevel"],
+            print_output=False,
+        ).strip()
+        execute_command(
+            ["git", "clone", "--shared", "--no-checkout", git_root, dest_dir],
+            capture_stderr=True,
+        )
+        execute_command(
+            ["git", "-C", dest_dir, "checkout", "--detach", "--quiet", resolved_diffbase],
+            capture_stderr=True,
+        )
+    except subprocess.CalledProcessError as ex:
+        raise BuildkiteInfraException(
+            "Failed to check out {} to {}: {}\n{}".format(
+                resolved_diffbase, dest_dir, ex, ex.stderr
+            )
+        ) from ex
 
 
 def download_file(url, dest_dir, dest_filename):
