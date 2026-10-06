@@ -264,11 +264,13 @@ def main():
     with open(digests_json_file, "r") as f:
         curr_digests = json.loads(f.read())
 
-    find_replace_hashes(curr_digests, digests, [Path(repo_root / "buildkite" / "bazelci.py")])
+    files_to_update = [
+        Path(repo_root / "buildkite" / "bazelci.py"),
+        rbe_presets_file,
+    ] + list(terraform_dir.glob("**/*.tf")) + list(pipelines_dir.glob("**/*/yml"))
 
-    #new_dict_str = format_image_hashes_dict(digests)
-    #update_bazelci_file(bazelci_path, new_dict_str)
-    #print(f"Successfully updated IMAGE_HASHES in {bazelci_path}!")
+    find_replace_hashes(curr_digests, digests, files_to_update)
+
 
     #updated_tf = update_terraform_configs(terraform_dir, digests)
     #print(f"Successfully updated {len(updated_tf)} terraform configuration files:")
