@@ -1557,6 +1557,11 @@ def execute_commands(
     monitor_flaky_tests,
     bazel_version=None,
 ):
+    # Pop tokens from os.environ immediately so that untrusted task_config["environment"]
+    # cannot expand them via os.path.expandvars, and child processes/hooks do not inherit them.
+    encrypted_analytics_token = os.environ.pop("ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN", None)
+    os.environ.pop("BUILDKITE_ANALYTICS_TOKEN", None)
+
     if use_bazelisk_migrate():
         # Override use_but in case we are in the downstream pipeline so that it doesn't try to
         # download Bazel built from previous jobs.
@@ -1633,6 +1638,8 @@ def execute_commands(
             os.environ.pop(e, None)
 
     for key, value in task_config.get("environment", {}).items():
+        if key in _SECRET_ENV_VARS:
+            continue
         # We have to explicitly convert the value to a string, because sometimes YAML tries to
         # be smart and converts strings like "true" and "false" to booleans.
         os.environ[key] = os.path.expandvars(str(value))
@@ -1766,7 +1773,7 @@ def execute_commands(
         # Decrypt BUILDKITE_ANALYTICS_TOKEN so that bazelci-agent can upload test results to Test Analytics.
         # Do not write it into os.environ to avoid leaking it to child processes and tests (b/534354348).
         buildkite_analytics_token = None
-        if "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN" in os.environ:
+        if encrypted_analytics_token:
             if THIS_IS_TESTING:
                 kms_key = "buildkite-testing-api-token"
                 project = "bazel-untrusted"
@@ -1779,7 +1786,7 @@ def execute_commands(
 
             try:
                 buildkite_analytics_token = decrypt_token(
-                    encrypted_token=os.environ["ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN"],
+                    encrypted_token=encrypted_analytics_token,
                     kms_key=kms_key,
                     project=project,
                 )
@@ -3028,6 +3035,7 @@ def run_bazel_diff(bazel_diff_path, old_workspace_dir, new_workspace_dir, bazel_
                 targets_file,
             ],
             capture_stderr=True,
+            env=filtered_bazel_env(),
         )
     except subprocess.CalledProcessError as ex:
         raise BuildkiteInfraException("Failed to run bazel-diff: {}\n{}".format(ex, ex.stderr))
@@ -3183,13 +3191,15 @@ def upload_corrupted_outputs(capture_corrupted_outputs_dir, tmpdir):
     )
 
 
-def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True, print_output=True):
+def execute_command_and_get_output(
+    args, shell=False, fail_if_nonzero=True, print_output=True, env=None
+):
     eprint(" ".join(args))
     process = subprocess.run(
         args,
         shell=shell,
         check=fail_if_nonzero,
-        env=os.environ,
+        env=env if env is not None else filtered_bazel_env(),
         stdout=subprocess.PIPE,  # We cannot use capture_output since some workers run Python <3.7
         errors="replace",
         universal_newlines=True,
