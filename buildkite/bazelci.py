@@ -1135,6 +1135,44 @@ def decrypt_token(encrypted_token, kms_key, project="bazel-untrusted"):
         raise BuildkiteException(f"Failed to decrypt token:\n{cause}")
 
 
+def decrypt_analytics_token(encrypted_token):
+    if not encrypted_token:
+        return None
+
+    if THIS_IS_TESTING:
+        kms_key = "buildkite-testing-api-token"
+        project = "bazel-untrusted"
+    elif THIS_IS_TRUSTED:
+        kms_key = "buildkite-trusted-api-token"
+        project = "bazel-public"
+    else:
+        kms_key = "buildkite-untrusted-api-token"
+        project = "bazel-untrusted"
+
+    try:
+        return decrypt_token(
+            encrypted_token=encrypted_token,
+            kms_key=kms_key,
+            project=project,
+        )
+    except Exception as ex:
+        print_collapsed_group(
+            ":rotating_light: Test analytics disabled due to an error :warning:"
+        )
+        eprint(ex)
+        return None
+
+
+def setup_task_environment(task_config):
+    """Sets up environment variables from task_config while protecting secret tokens."""
+    for key, value in task_config.get("environment", {}).items():
+        if key in _SECRET_ENV_VARS:
+            continue
+        # We have to explicitly convert the value to a string, because sometimes YAML tries to
+        # be smart and converts strings like "true" and "false" to booleans.
+        os.environ[key] = os.path.expandvars(str(value))
+
+
 def eprint(*args, **kwargs):
     """
     Print to stderr and flush (just in case).
@@ -1637,12 +1675,7 @@ def execute_commands(
         for e in ("ANDROID_HOME", "ANDROID_NDK_HOME"):
             os.environ.pop(e, None)
 
-    for key, value in task_config.get("environment", {}).items():
-        if key in _SECRET_ENV_VARS:
-            continue
-        # We have to explicitly convert the value to a string, because sometimes YAML tries to
-        # be smart and converts strings like "true" and "false" to booleans.
-        os.environ[key] = os.path.expandvars(str(value))
+    setup_task_environment(task_config)
 
     # Avoid "Network is unreachable" errors in IPv6-only environments
     for e in ("COURSIER_OPTS", "JAVA_TOOL_OPTIONS", "SSL_CERT_FILE"):
@@ -1772,29 +1805,7 @@ def execute_commands(
 
         # Decrypt BUILDKITE_ANALYTICS_TOKEN so that bazelci-agent can upload test results to Test Analytics.
         # Do not write it into os.environ to avoid leaking it to child processes and tests (b/534354348).
-        buildkite_analytics_token = None
-        if encrypted_analytics_token:
-            if THIS_IS_TESTING:
-                kms_key = "buildkite-testing-api-token"
-                project = "bazel-untrusted"
-            elif THIS_IS_TRUSTED:
-                kms_key = "buildkite-trusted-api-token"
-                project = "bazel-public"
-            else:
-                kms_key = "buildkite-untrusted-api-token"
-                project = "bazel-untrusted"
-
-            try:
-                buildkite_analytics_token = decrypt_token(
-                    encrypted_token=encrypted_analytics_token,
-                    kms_key=kms_key,
-                    project=project,
-                )
-            except Exception as ex:
-                print_collapsed_group(
-                    ":rotating_light: Test analytics disabled due to an error :warning:"
-                )
-                eprint(ex)
+        buildkite_analytics_token = decrypt_analytics_token(encrypted_analytics_token)
 
         test_bep_file = os.path.join(tmpdir, _TEST_BEP_FILE)
         # Create an empty test_bep_file so that the bazelci-agent can start to follow the file right away. Otherwise,
