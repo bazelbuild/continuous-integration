@@ -286,33 +286,11 @@ steps:
 
       echo Release: %RELEASE_NAME%
 
-      bazel build ^
-          --remote_cache=remotebuildexecution.googleapis.com ^
-          --remote_instance_name=projects/bazel-public/instances/default_instance ^
-          --google_default_credentials ^
-          --remote_timeout=60 ^
-          --remote_max_connections=200 ^
-          --remote_default_exec_properties=cache-silo-key=bazel-release ^
-          //src:bazel.exe
+      bazel build --remote_cache=remotebuildexecution.googleapis.com --remote_instance_name=projects/bazel-public/instances/default_instance --google_default_credentials --remote_timeout=60 --remote_max_connections=200 --remote_default_exec_properties=cache-silo-key=bazel-release //src:bazel.exe
       mkdir output
       copy bazel-bin\src\bazel.exe output\bazel.exe
 
-      output\bazel build ^
-          --remote_cache=remotebuildexecution.googleapis.com ^
-          --remote_instance_name=projects/bazel-public/instances/default_instance ^
-          --google_default_credentials ^
-          --remote_timeout=60 ^
-          --remote_max_connections=200 ^
-          --remote_default_exec_properties=cache-silo-key=bazel-release ^
-          -c opt ^
-          --copt=-w ^
-          --host_copt=-w ^
-          --stamp ^
-          --embed_label %RELEASE_NAME% ^
-          src/bazel ^
-          src/bazel_nojdk ^
-          scripts/packages/bazel.zip ^
-          scripts/packages/bazel_nojdk.zip
+      output\bazel build --remote_cache=remotebuildexecution.googleapis.com --remote_instance_name=projects/bazel-public/instances/default_instance --google_default_credentials --remote_timeout=60 --remote_max_connections=200 --remote_default_exec_properties=cache-silo-key=bazel-release -c opt --copt=-w --host_copt=-w --stamp --embed_label %RELEASE_NAME% src/bazel src/bazel_nojdk scripts/packages/bazel.zip scripts/packages/bazel_nojdk.zip
 
       mkdir artifacts
       move bazel-bin\src\bazel artifacts\bazel-%RELEASE_NAME%-windows-x86_64.exe
@@ -340,34 +318,11 @@ steps:
 
       echo Release: %RELEASE_NAME%
 
-      bazel build ^
-          --remote_cache=remotebuildexecution.googleapis.com ^
-          --remote_instance_name=projects/bazel-public/instances/default_instance ^
-          --google_default_credentials ^
-          --remote_timeout=60 ^
-          --remote_max_connections=200 ^
-          --remote_default_exec_properties=cache-silo-key=bazel-release ^
-          //src:bazel.exe
+      bazel build --remote_cache=remotebuildexecution.googleapis.com --remote_instance_name=projects/bazel-public/instances/default_instance --google_default_credentials --remote_timeout=60 --remote_max_connections=200 --remote_default_exec_properties=cache-silo-key=bazel-release //src:bazel.exe
       mkdir output
       copy bazel-bin\src\bazel.exe output\bazel.exe
 
-      output\bazel build ^
-          --remote_cache=remotebuildexecution.googleapis.com ^
-          --remote_instance_name=projects/bazel-public/instances/default_instance ^
-          --google_default_credentials ^
-          --remote_timeout=60 ^
-          --remote_max_connections=200 ^
-          --remote_default_exec_properties=cache-silo-key=bazel-release ^
-          -c opt ^
-          --config=windows_arm64 ^
-          --copt=-w ^
-          --host_copt=-w ^
-          --stamp ^
-          --embed_label %RELEASE_NAME% ^
-          src/bazel ^
-          src/bazel_nojdk ^
-          scripts/packages/bazel.zip ^
-          scripts/packages/bazel_nojdk.zip
+      output\bazel build --remote_cache=remotebuildexecution.googleapis.com --remote_instance_name=projects/bazel-public/instances/default_instance --google_default_credentials --remote_timeout=60 --remote_max_connections=200 --remote_default_exec_properties=cache-silo-key=bazel-release -c opt --config=windows_arm64 --copt=-w --host_copt=-w --stamp --embed_label %RELEASE_NAME% src/bazel src/bazel_nojdk scripts/packages/bazel.zip scripts/packages/bazel_nojdk.zip
 
       mkdir artifacts
       move bazel-bin\src\bazel artifacts\bazel-%RELEASE_NAME%-windows-arm64.exe
