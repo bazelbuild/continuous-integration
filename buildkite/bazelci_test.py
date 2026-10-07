@@ -907,6 +907,10 @@ class TokenLeakagePreventionTest(unittest.TestCase):
                 "BUILDKITE_ANALYTICS_TOKEN",
                 mock_execute.call_args.kwargs["env"],
             )
+            self.assertNotIn(
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
 
             # Test execute_bazel_build
             mock_execute.reset_mock()
@@ -915,6 +919,24 @@ class TokenLeakagePreventionTest(unittest.TestCase):
             )
             self.assertNotIn(
                 "BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+            self.assertNotIn(
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+
+            # Test execute_bazel_build_with_kythe
+            mock_execute.reset_mock()
+            bazelci.execute_bazel_build_with_kythe(
+                "6.0.0", "bazel", "ubuntu2004", [], ["//..."], "bep.json"
+            )
+            self.assertNotIn(
+                "BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+            self.assertNotIn(
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN",
                 mock_execute.call_args.kwargs["env"],
             )
 
@@ -927,6 +949,10 @@ class TokenLeakagePreventionTest(unittest.TestCase):
                 "BUILDKITE_ANALYTICS_TOKEN",
                 mock_execute.call_args.kwargs["env"],
             )
+            self.assertNotIn(
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
 
             # Test execute_bazel_coverage
             mock_execute.reset_mock()
@@ -937,6 +963,10 @@ class TokenLeakagePreventionTest(unittest.TestCase):
                 "BUILDKITE_ANALYTICS_TOKEN",
                 mock_execute.call_args.kwargs["env"],
             )
+            self.assertNotIn(
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
 
             # Test execute_bazel_run
             mock_execute.reset_mock()
@@ -945,6 +975,41 @@ class TokenLeakagePreventionTest(unittest.TestCase):
                 "BUILDKITE_ANALYTICS_TOKEN",
                 mock_execute.call_args.kwargs["env"],
             )
+            self.assertNotIn(
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+
+            # Test run_bazel_diff
+            mock_execute.reset_mock()
+            with mock.patch("os.path.join", return_value="/tmp/test.json"), mock.patch(
+                "builtins.open", mock.mock_open(read_data="//:target\n")
+            ):
+                bazelci.run_bazel_diff(
+                    "bazel-diff.jar", "/tmp/old", "/tmp/new", "bazel", "/tmp/data"
+                )
+            self.assertNotIn(
+                "BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+            self.assertNotIn(
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+
+    def test_execute_command_and_get_output_defaults_to_filtered_env(self):
+        with mock.patch.dict(
+            os.environ,
+            {
+                "BUILDKITE_ANALYTICS_TOKEN": "secret_token",
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN": "encrypted_token",
+            },
+        ), mock.patch("subprocess.run") as mock_run:
+            mock_run.return_value.stdout = "output"
+            bazelci.execute_command_and_get_output(["echo", "hello"], print_output=False)
+            called_env = mock_run.call_args.kwargs["env"]
+            self.assertNotIn("BUILDKITE_ANALYTICS_TOKEN", called_env)
+            self.assertNotIn("ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN", called_env)
 
     def test_execute_commands_does_not_leak_decrypted_token_to_environ(self):
         with mock.patch.dict(
@@ -979,10 +1044,22 @@ class TokenLeakagePreventionTest(unittest.TestCase):
         ), mock.patch.object(
             bazelci, "is_windows", return_value=False
         ), mock.patch.object(
+            bazelci, "is_mac", return_value=False
+        ), mock.patch.object(
+            bazelci, "run_bazel_version"
+        ), mock.patch.object(
             bazelci, "get_bazelisk_cache_directory", return_value="/tmp/bazelisk_cache"
+        ), mock.patch(
+            "os.makedirs"
         ):
             bazelci.execute_commands(
-                task_config={"test_targets": ["//:test"]},
+                task_config={
+                    "test_targets": ["//:test"],
+                    "environment": {
+                        "LEAKED_EXPANSION": "$ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN",
+                        "BUILDKITE_ANALYTICS_TOKEN": "attacker_attempt",
+                    },
+                },
                 platform="ubuntu2004",
                 use_but=False,
                 save_but=False,
@@ -992,7 +1069,11 @@ class TokenLeakagePreventionTest(unittest.TestCase):
                 monitor_flaky_tests=False,
             )
             mock_decrypt.assert_called_once()
+            # Neither the decrypted token nor the attacker's attempted override should be in os.environ
             self.assertNotIn("BUILDKITE_ANALYTICS_TOKEN", os.environ)
+            # The popped token must not have been expanded into LEAKED_EXPANSION
+            self.assertEqual(os.environ.get("LEAKED_EXPANSION"), "$ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN")
+            self.assertNotEqual(os.environ.get("LEAKED_EXPANSION"), "enc_token_val")
             mock_upload.assert_called_once()
             self.assertEqual(mock_upload.call_args[0][3], "decrypted_secret_token")
 
