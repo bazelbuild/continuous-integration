@@ -56,15 +56,12 @@ resource "buildkite_pipeline" "google-bazel-presubmit" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {
-      DISABLE_MODIFIED_FILES_DETECTION = "true"
-      ENABLE_METRICS_COLLECTION        = "true"
+      ENABLE_METRICS_COLLECTION = "true"
     },
     steps = {
-      skip_checkout = true,
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "curl -sS \"https://bazel.googlesource.com/bazel/+/$BUILDKITE_COMMIT/.bazelci/presubmit.yml?format=TEXT\" | base64 -d > presubmit.yml",
-        "bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --print_shard_summary --file_config=presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload'"
+        "bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --print_shard_summary --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ],
       priority = 99
     }
