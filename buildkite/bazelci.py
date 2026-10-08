@@ -3705,6 +3705,8 @@ def create_config_validation_steps(git_commit):
 
 
 def get_modified_files(git_commit):
+    if is_trueish(os.environ.get("DISABLE_MODIFIED_FILES_DETECTION", "false")):
+        return []
     fetch_base_branch()
     merge_base_commit = execute_command_and_get_output(
         ["git", "merge-base", git_commit, "FETCH_HEAD"]
