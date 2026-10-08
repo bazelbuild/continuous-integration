@@ -343,7 +343,6 @@ EOL_PLATFORMS = frozenset(
     ]
 )
 
-# DO_NOT_MODIFY_IMAGE_HASHES_SENTINEL_START
 IMAGE_HASHES = {
     "rockylinux8": {
         "amd64": "sha256:bf148717fe5349e498345dbf3efc1f7690b89e310a2ae970c3bec1ab4e9cd61e",
@@ -429,7 +428,6 @@ IMAGE_HASHES = {
         "amd64": "sha256:e6ac038ad949be3e18573735e8a46f5ac74f2e59af2196ed50da0187ea87c259",
     },
 }
-# DO_NOT_MODIFY_IMAGE_HASHES_SENTINEL_END
 
 
 def get_docker_image(image_name, is_arm64=False):
