@@ -12,8 +12,6 @@ steps:
       ${command}
 %{ endfor ~}
     label: "${try(steps.label, ":pipeline:")}"
-    checkout:
-      skip: ${try(steps.skip_checkout, false)}
     %{~ if try(steps.priority, null) != null ~}
     priority: ${steps.priority}
     %{~ endif ~}
