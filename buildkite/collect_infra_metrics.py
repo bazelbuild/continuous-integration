@@ -1,12 +1,11 @@
-import json
 import logging
 import os
-import subprocess
 import sys
 import time
 from datetime import datetime
 
 from google.cloud import bigquery
+import yaml
 
 from bazelci import BuildkiteClient
 
@@ -30,24 +29,22 @@ def get_expected_agents():
   """Fetches expected agent counts per (org, platform) for GCE and Mac pools."""
   expected = {}
   try:
-    for project in ("bazel-untrusted", "bazel-public"):
-      out = subprocess.check_output([
-          "gcloud", "compute", "instance-groups", "managed", "list",
-          f"--project={project}", "--format=json(name,targetSize)",
-      ])
-      for g in json.loads(out):
-        name = g.get("name", "")
-        if not name.startswith("bk-"):
-          continue
-        org = (
-            "bazel-testing" if "-testing-" in name
-            else "bazel-trusted" if "-trusted-" in name else "bazel"
-        )
-        platform = (
-            "linux_arm64" if name.endswith("-arm64")
-            else "windows" if name.endswith("windows") else "linux"
-        )
-        expected[(org, platform)] = expected.get((org, platform), 0) + int(g.get("targetSize", 0))
+    instances_path = os.path.join(os.path.dirname(__file__), "instances.yml")
+    with open(instances_path, "r", encoding="utf-8") as f:
+      config = yaml.safe_load(f)
+    for g in config.get("instance_groups", []):
+      name = g.get("name", "")
+      if not name.startswith("bk-"):
+        continue
+      org = (
+          "bazel-testing" if "-testing-" in name
+          else "bazel-trusted" if "-trusted-" in name else "bazel"
+      )
+      platform = (
+          "linux_arm64" if name.endswith("-arm64")
+          else "windows" if name.endswith("windows") else "linux"
+      )
+      expected[(org, platform)] = expected.get((org, platform), 0) + int(g.get("count", 0))
 
     # Mac pools live in MacService config (not GCP), so use the 7-day observed max.
     query = (
@@ -116,7 +113,7 @@ def count_scheduled_jobs(builds):
   return scheduled_by_platform
 
 
-def get_org_metrics(org, expected_by_pool=None):
+def get_org_metrics(org, expected_by_pool):
   """Fetches metrics for a single org and calculates stats per platform."""
   logging.info(f"Pulling Data for Org: {org}")
   bk_client = BuildkiteClient(org=org)
@@ -136,10 +133,10 @@ def get_org_metrics(org, expected_by_pool=None):
 
   for platform, stats in agents_by_platform.items():
     scheduled_jobs = scheduled_by_platform.get(platform, 0)
-    expected_agents = (expected_by_pool or {}).get((org, platform))
+    expected_agents = expected_by_pool.get((org, platform))
 
-    #Skip platforms with no info (didn't run any jobs)
-    if stats["total"] == 0 and scheduled_jobs == 0 and (expected_agents or 0) <= 0:
+    # Skip platforms we don't run (no agents, no jobs, no expected pool).
+    if stats["total"] == 0 and scheduled_jobs == 0 and not expected_agents:
       continue
 
     avg_bootstrap_time = sum(stats["bootstrap_samples"]) / len(
