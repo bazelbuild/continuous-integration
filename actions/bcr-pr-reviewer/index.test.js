@@ -1,6 +1,9 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { getPrApprovers, moduleVersionDir, reviewPR, runPrReviewer, runHandleComment } = require('./index.js');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { getPrApprovers, moduleVersionDir, escapingPathForDiff, reviewPR, runPrReviewer, runHandleComment } = require('./index.js');
 
 function fakeOctokit({ commits, reviews }) {
   return {
@@ -443,4 +446,98 @@ test('@bazel-io review: ignores comments that are not exactly the command', asyn
   const calls = await runComment('@bazel-io review this please');
 
   assert.deepEqual(calls, []);
+});
+
+// moduleVersionDir() only rewrites strings, so its results are cwd-relative: run the
+// filesystem-touching assertions from a scratch tree laid out like the runner's.
+function withModuleTree(fn) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bcr-symlink-test-'));
+  const cwd = process.cwd();
+  const outside = path.join(dir, 'host');
+  try {
+    fs.mkdirSync(path.join(dir, 'modules', 'rules_cc', '1.2.3'), { recursive: true });
+    fs.mkdirSync(path.join(dir, 'modules', 'rules_cc', '1.3.0'), { recursive: true });
+    fs.mkdirSync(outside, { recursive: true });
+    fs.writeFileSync(path.join(outside, 'runner-secret.txt'), 'SECRET\n');
+    process.chdir(dir);
+    return fn({ dir, outside });
+  } finally {
+    process.chdir(cwd);
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test('moduleVersionDir: a module name that escapes modules/ is rejected', () => {
+  // The PR file list feeds moduleName, and "modules/../1.0.0/f" matches the caller's
+  // regex with moduleName "..", which used to anchor the check at the workspace root.
+  assert.equal(moduleVersionDir('..', '0.9.0'), null);
+  assert.equal(moduleVersionDir('.', '1.0.0'), null);
+});
+
+test('escapingPathForDiff: real version directories inside the module are allowed', () => {
+  withModuleTree(() => {
+    assert.equal(escapingPathForDiff('rules_cc', ['modules/rules_cc/1.2.3', 'modules/rules_cc/1.3.0']), null);
+  });
+});
+
+test('escapingPathForDiff: a version directory that is a symlink out of the module is rejected', () => {
+  withModuleTree(({ outside }) => {
+    fs.rmSync('modules/rules_cc/1.2.3', { recursive: true, force: true });
+    fs.symlinkSync(outside, 'modules/rules_cc/1.2.3');
+    assert.equal(escapingPathForDiff('rules_cc', ['modules/rules_cc/1.2.3']), 'modules/rules_cc/1.2.3');
+  });
+});
+
+test('escapingPathForDiff: a symlink nested in a version directory is rejected', () => {
+  withModuleTree(({ outside }) => {
+    fs.symlinkSync(path.join(outside, 'runner-secret.txt'), 'modules/rules_cc/1.3.0/leak.txt');
+    assert.equal(
+      escapingPathForDiff('rules_cc', ['modules/rules_cc/1.3.0']),
+      'modules/rules_cc/1.3.0/leak.txt',
+    );
+  });
+});
+
+test('escapingPathForDiff: a symlink to a directory of secrets is rejected', () => {
+  withModuleTree(({ outside }) => {
+    fs.symlinkSync(outside, 'modules/rules_cc/1.3.0/dirlink');
+    assert.equal(escapingPathForDiff('rules_cc', ['modules/rules_cc/1.3.0']), 'modules/rules_cc/1.3.0/dirlink');
+  });
+});
+
+test('escapingPathForDiff: a symlink that stays inside the module is allowed', () => {
+  withModuleTree(() => {
+    fs.symlinkSync(path.resolve('modules/rules_cc/1.2.3/BUILD.bazel'), path.resolve('modules/rules_cc/1.3.0/BUILD.bazel'));
+    assert.equal(escapingPathForDiff('rules_cc', ['modules/rules_cc/1.3.0']), null);
+  });
+});
+
+test('escapingPathForDiff: a symlink reached through an escaping intermediate dir is rejected', () => {
+  withModuleTree(({ outside }) => {
+    fs.mkdirSync(path.resolve('modules/rules_cc/1.3.0/nested'), { recursive: true });
+    fs.symlinkSync(path.join(outside, 'runner-secret.txt'), 'modules/rules_cc/1.3.0/nested/leak.txt');
+    assert.equal(
+      escapingPathForDiff('rules_cc', ['modules/rules_cc/1.3.0']),
+      'modules/rules_cc/1.3.0/nested/leak.txt',
+    );
+  });
+});
+
+test('escapingPathForDiff: the previous-version side is checked as well as the current one', () => {
+  withModuleTree(({ outside }) => {
+    fs.symlinkSync(path.join(outside, 'runner-secret.txt'), 'modules/rules_cc/1.2.3/leak.txt');
+    assert.equal(
+      escapingPathForDiff('rules_cc', ['modules/rules_cc/1.2.3', 'modules/rules_cc/1.3.0']),
+      'modules/rules_cc/1.2.3/leak.txt',
+    );
+  });
+});
+
+test('escapingPathForDiff: a module directory that is itself a symlink out of modules/ is rejected', () => {
+  withModuleTree(({ outside }) => {
+    fs.mkdirSync(path.join(outside, 'elsewhere'), { recursive: true });
+    fs.rmSync(path.resolve('modules/rules_cc'), { recursive: true, force: true });
+    fs.symlinkSync(path.join(outside, 'elsewhere'), path.resolve('modules/rules_cc'));
+    assert.equal(escapingPathForDiff('rules_cc', ['modules/rules_cc/1.3.0']), path.join('modules', 'rules_cc'));
+  });
 });

@@ -1,6 +1,7 @@
 const { getInput, setFailed } = require('@actions/core');
 const { context, getOctokit } = require("@actions/github");
 const path = require('path');
+const fs = require('fs');
 
 async function _processAllPrFiles(octokit, owner, repo, prNumber, fileProcessor) {
   // Fetch the PR's initial head commit SHA to ensure consistency.
@@ -1055,21 +1056,118 @@ async function handleAbandonCommand(octokit) {
 }
 
 /**
- * Returns the directory to diff for `version` of `moduleName`, or null if `version`
- * does not name a directory directly inside `modules/<moduleName>/`.
+ * Returns the directory to diff for `version` of `moduleName`, or null if `moduleName`
+ * or `version` does not name a single directory directly inside `modules/<moduleName>/`.
  *
  * Version strings reaching this function are read from the metadata.json of the PR
  * under review, so they are controlled by whoever opened the PR. Without this check
  * a value such as "../../.." makes the caller run `diff` against a directory outside
  * the module, and `diff`'s output is printed to the workflow log.
+ *
+ * `path.resolve` only rewrites the string: it never asks the filesystem anything, so
+ * this test says nothing about where the path actually points. Callers must additionally
+ * run escapingPathForDiff() before handing the result to `diff`.
  */
 function moduleVersionDir(moduleName, version) {
-  const moduleDir = path.resolve('modules', moduleName);
+  const modulesDir = path.resolve('modules');
+  const moduleDir = path.resolve(modulesDir, moduleName);
+  // moduleName comes from the PR's file list too: "modules/../1.0.0/f" matches the
+  // caller's /^modules\/([^\/]+)\/([^\/]+)\// regex with moduleName "..", which would
+  // otherwise anchor the containment check outside modules/ entirely.
+  if (path.dirname(moduleDir) !== modulesDir) {
+    return null;
+  }
   const versionDir = path.resolve(moduleDir, version);
   if (path.dirname(versionDir) !== moduleDir) {
     return null;
   }
   return `modules/${moduleName}/${version}`;
+}
+
+/**
+ * True if `candidate` exists, and once the filesystem has resolved every symlink on the
+ * way down still names something strictly inside `root`. A path that does not exist is
+ * reported as contained: there is nothing to dereference, and `diff` reports the missing
+ * operand itself.
+ */
+function isResolvedInside(root, candidate) {
+  let realRoot;
+  let realCandidate;
+  try {
+    realRoot = fs.realpathSync(root);
+    realCandidate = fs.realpathSync(candidate);
+  } catch (error) {
+    if (error.code === 'ENOENT' || error.code === 'ENOTDIR') {
+      return true;
+    }
+    return false;
+  }
+  if (realCandidate === realRoot) {
+    return false;
+  }
+  return realCandidate.startsWith(realRoot + path.sep);
+}
+
+/**
+ * Returns the first entry under `dir` that is a symlink resolving outside `root`, or null.
+ *
+ * `diff -r` dereferences symlinks, so a symlink committed by the PR that stands in for a
+ * version directory, or that sits inside one, makes `diff` follow it and print the
+ * contents of its target to the workflow log. Entries are listed with lstat semantics
+ * (readdir withFileTypes), so a symlink is never followed while looking for it.
+ */
+function escapingSymlinkIn(dir, root) {
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch (error) {
+    // Nothing to walk. `diff` will hit the same error and report it.
+    return null;
+  }
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (entry.isSymbolicLink()) {
+      if (!isResolvedInside(root, full)) {
+        return full;
+      }
+      continue;
+    }
+    if (entry.isDirectory()) {
+      const escaping = escapingSymlinkIn(full, root);
+      if (escaping !== null) {
+        return escaping;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Returns the first path among `relativeDirs` that would let `diff -urN` read a file
+ * outside `modules/<moduleName>/`, or null if the diff is contained.
+ *
+ * This is the check moduleVersionDir() cannot make: it runs after the filesystem has
+ * resolved the paths, so it sees a symlink standing in for a version directory as well as
+ * a symlink inside one. Must run before `diff` is invoked.
+ */
+function escapingPathForDiff(moduleName, relativeDirs) {
+  const modulesDir = path.resolve('modules');
+  const root = path.resolve(modulesDir, moduleName);
+  // The module directory itself has to resolve inside modules/ too: if it does not, being
+  // contained inside it says nothing about where diff would end up reading.
+  if (!isResolvedInside(modulesDir, root)) {
+    return path.join('modules', moduleName);
+  }
+  for (const relativeDir of relativeDirs) {
+    if (!isResolvedInside(root, relativeDir)) {
+      return relativeDir;
+    }
+    const escaping = escapingSymlinkIn(relativeDir, root);
+    if (escaping !== null) {
+      return escaping;
+    }
+  }
+  return null;
 }
 
 async function runDiffModule(octokit) {
@@ -1131,9 +1229,16 @@ async function runDiffModule(octokit) {
         continue;
       }
 
+      const escapingPath = escapingPathForDiff(moduleName, [previousVersionDir, currentVersionDir]);
+      if (escapingPath !== null) {
+        console.error(`Refusing to diff module ${moduleName}: ${escapingPath} resolves outside modules/${moduleName}/`);
+        setFailed(`Failed to generate diff for module ${moduleName}@${versionName}`);
+        continue;
+      }
+
       console.log(`${groupStart}Generating diff for module ${moduleName}@${versionName} against version ${previousVersion}`);
 
-      const diffArgs = ['--color=always', '-urN', previousVersionDir, currentVersionDir];
+      const diffArgs = ['--color=always', '--no-dereference', '-urN', previousVersionDir, currentVersionDir];
       console.log(`Running command: diff ${diffArgs.join(' ')}`);
       const { spawnSync } = require('child_process');
 
@@ -1200,4 +1305,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { getPrApprovers, moduleVersionDir, reviewPR, runPrReviewer, runHandleComment };
+module.exports = { getPrApprovers, moduleVersionDir, isResolvedInside, escapingSymlinkIn, escapingPathForDiff, reviewPR, runPrReviewer, runHandleComment };
