@@ -570,6 +570,13 @@ class InitialSteps(unittest.TestCase):
         with mock.patch.dict(os.environ, {"BUILDKITE_PULL_REQUEST_LABELS": "foo,CI:run,bar"}):
             self.assertTrue(bazelci.has_presubmit_auto_run_label())
 
+    def test_disable_modified_files_detection(self):
+        with mock.patch.dict(
+            os.environ, {"DISABLE_MODIFIED_FILES_DETECTION": "true"}
+        ), mock.patch.object(bazelci, "fetch_base_branch") as fetch_base_branch:
+            self.assertEqual(bazelci.get_modified_files("abc1234"), [])
+            fetch_base_branch.assert_not_called()
+
 class FetchCiScripts(unittest.TestCase):
     def test_curl_download_command(self):
         cmd = bazelci.curl_download_command("https://example.com/foo.py", "foo.py")
