@@ -50,6 +50,8 @@ steps:
 
       echo "+++ Preparing release notes and .zip files"
       cd scripts
+      python3 -m venv venv
+      source venv/bin/activate
       pip3 install wget
       python3 release.py --artifacts "\$artifacts"
 
