@@ -3206,6 +3206,7 @@ def create_step(
     concurrency=None,
     concurrency_group=None,
     priority=None,
+    skip_checkout=False,
 ):
     if commands is not None:
         flat_commands = []
@@ -3251,6 +3252,8 @@ def create_step(
     # Enforce a global 8 hour job timeout.
     step["timeout_in_minutes"] = 8 * 60
 
+    step["checkout"] = {"skip": skip_checkout}
+
     # Automatically retry when an agent got lost (usually due to an infra flake).
     step["retry"] = {
         "automatic": [
@@ -3281,7 +3284,15 @@ def create_step(
     return step
 
 
-def create_docker_step(label, image, commands=None, additional_env_vars=None, queue="default", enable_soft_fail=False):
+def create_docker_step(
+    label,
+    image,
+    commands=None,
+    additional_env_vars=None,
+    queue="default",
+    enable_soft_fail=False,
+    skip_checkout=False,
+):
     env = ["ANDROID_HOME", "ANDROID_NDK_HOME", "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "CHECKOUT_DURATION_S", "CHECKOUT_END_TIME"]
     if THIS_IS_TRUSTED:
         # For the trusted Linux arm64 machine to upload artifacts
@@ -3292,6 +3303,7 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None, qu
     step = {
         "label": label,
         "command": commands,
+        "checkout": {"skip": skip_checkout},
         "agents": {"queue": queue},
         "plugins": {
             "docker#v3.8.0": {
@@ -3506,6 +3518,7 @@ def print_project_pipeline(
                     PLATFORMS[DEFAULT_PLATFORM]["python"] + " bazelci.py print_shard_summary",
                 ],
                 platform=DEFAULT_PLATFORM,
+                skip_checkout=True,
             )
         )
 
