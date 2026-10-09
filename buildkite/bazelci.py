@@ -822,13 +822,13 @@ class BuildkiteClient(object):
 
     _NEXT_PAGE_PATTERN = re.compile(r'<(?P<url>\S+)>; rel="next"', re.MULTILINE)
 
-    def __init__(self, org, pipeline=None):
+    def __init__(self, org, pipeline=None, token=None):
         if org not in CLOUD_PROJECTS_PER_ORG:
             raise BuildkiteException(f"Unknown organization: {org}")
 
         self._org = org
         self._pipeline = pipeline
-        self._token = self._get_buildkite_token()
+        self._token = token or self._get_buildkite_token()
 
     def _get_buildkite_token(self):
         project = CLOUD_PROJECTS_PER_ORG[self._org]
@@ -978,7 +978,7 @@ class BuildkiteClient(object):
             eprint("Response:\n", response.text)
             response.raise_for_status()
 
-    def trigger_new_build(self, commit, message=None, env={}):
+    def trigger_new_build(self, commit, message=None, env={}, branch=None):
         """Trigger a new build at a given commit and return the build metadata.
         See https://buildkite.com/docs/apis/rest-api/builds#create-a-build
 
@@ -987,20 +987,23 @@ class BuildkiteClient(object):
         commit : the commit we want to build at
         message : the message we should as the build titile
         env : (optional) the environment variables to set
+        branch : (optional) the branch to build; defaults to the pipeline's default branch
 
         Returns
         -------
         dict
             the metadata for the build
         """
-        pipeline_info = self.get_pipeline_info()
-        if not pipeline_info:
-            raise BuildkiteException(f"Cannot find pipeline info for pipeline {self._pipeline}.")
+        if not branch:
+            pipeline_info = self.get_pipeline_info()
+            if not pipeline_info:
+                raise BuildkiteException(f"Cannot find pipeline info for pipeline {self._pipeline}.")
+            branch = pipeline_info.get("default_branch") or "master"
 
         url = self._NEW_BUILD_URL_TEMPLATE.format(self._org, self._pipeline)
         data = {
             "commit": commit,
-            "branch": pipeline_info.get("default_branch") or "master",
+            "branch": branch,
             "message": message if message else f"Trigger build at {commit}",
             "env": env,
             "ignore_pipeline_branch_filters": "true",
