@@ -13,10 +13,20 @@ if [[ "$(git config --get remote.origin.url)" == */bazel.git ]]; then
   echo "--- :bazel::books: Building reference docs"
   echo "Work dir: $(pwd)"
 
-  bazel --quiet build \
-    //src/main/java/com/google/devtools/build/lib:gen_mdx_reference_docs
+  # gen_mdx_reference_docs was renamed to gen_reference_docs
+  # (https://github.com/bazelbuild/bazel/issues/31211).
+  # Support both names so that older commits and release branches still work.
+  LIB_PKG=src/main/java/com/google/devtools/build/lib
+  TARGET="//${LIB_PKG}:gen_reference_docs"
+  if ! grep -q 'name = "gen_reference_docs"' "${LIB_PKG}/BUILD"; then
+    TARGET="//${LIB_PKG}:gen_mdx_reference_docs"
+  fi
 
-  ARCHIVE=bazel-bin/src/main/java/com/google/devtools/build/lib/mdx-reference-docs.zip
+  bazel --quiet build "$TARGET"
+
+  # Ask Bazel for the output name instead of hardcoding it, since the archive
+  # may be renamed too (mdx-reference-docs.zip -> reference-docs.zip).
+  ARCHIVE="bazel-bin/${LIB_PKG}/$(basename "$(bazel --quiet cquery --output=files "$TARGET")")"
 
   buildkite-agent artifact upload "$ARCHIVE" || echo "--- [nonblocker] FYI: Docs upload failed"
 
