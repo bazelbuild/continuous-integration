@@ -16,8 +16,10 @@
 
 from datetime import datetime
 import os
+import signal
 import sys
 import tempfile
+import time
 
 import gcloud
 import gcloud_utils
@@ -25,6 +27,8 @@ import gcloud_utils
 DEBUG = False
 DEFAULT_MACHINE_TYPE = "c2-standard-8"
 DEFAULT_BOOT_DISK_TYPE = "pd-ssd"
+DEFAULT_LINUX_TIMEOUT_MINUTES = 60
+DEFAULT_WINDOWS_TIMEOUT_MINUTES = 90
 
 IMAGE_CREATION_VMS = {
     "bk-testing-docker": {
@@ -123,19 +127,29 @@ def workflow(name, params):
     instance_name = "%s-image-%s" % (name, int(datetime.now().timestamp()))
     project = params["project"]
     zone = params["zone"]
+    is_windows = "windows" in instance_name
+    default_timeout = (
+        DEFAULT_WINDOWS_TIMEOUT_MINUTES if is_windows else DEFAULT_LINUX_TIMEOUT_MINUTES
+    )
+    timeout_minutes = params.get("timeout_minutes", default_timeout)
+    deadline = time.monotonic() + timeout_minutes * 60
     try:
         # Create the VM.
         create_instance(instance_name, params)
 
         # Wait for the VM to become ready.
-        gcloud_utils.wait_for_instance(instance_name, project=project, zone=zone, status="RUNNING")
+        gcloud_utils.wait_for_instance(
+            instance_name, project=project, zone=zone, status="RUNNING", deadline=deadline
+        )
 
         # Continuously print the serial console.
-        gcloud_utils.tail_serial_console(instance_name, project=project, zone=zone)
+        gcloud_utils.tail_serial_console(
+            instance_name, project=project, zone=zone, deadline=deadline
+        )
 
         # Wait for the VM to completely shutdown.
         gcloud_utils.wait_for_instance(
-            instance_name, project=project, zone=zone, status="TERMINATED"
+            instance_name, project=project, zone=zone, status="TERMINATED", deadline=deadline
         )
 
         # Create a new image from our VM.
@@ -148,8 +162,25 @@ def workflow(name, params):
             licenses=params.get("licenses", []),
             guest_os_features=params.get("guest_os_features", []),
         )
+    except TimeoutError as e:
+        hint = (
+            "check the serial console output and C:/setup-stdout.log on the VM"
+            if is_windows
+            else "check the serial console output"
+        )
+        print(
+            f"Timed out after {timeout_minutes} minutes for {instance_name}: {e}. "
+            f"Hint: {hint}.",
+            file=sys.stderr,
+        )
+        raise
     finally:
         gcloud.delete_instance(instance_name, project=project, zone=zone)
+
+
+def _handle_sigterm(signum, frame):
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    sys.exit(1)
 
 
 def main(argv=None):
@@ -171,6 +202,8 @@ def main(argv=None):
             )
         )
         return 1
+
+    signal.signal(signal.SIGTERM, _handle_sigterm)
 
     for n in names:
         workflow(n, IMAGE_CREATION_VMS[n])

@@ -21,7 +21,7 @@ import time
 import re
 
 
-def wait_for_instance(instance_name, project, zone, status):
+def wait_for_instance(instance_name, project, zone, status, deadline=None):
     while True:
         result = gcloud.describe_instance(instance_name, project=project, zone=zone, format="json")
         current_status = json.loads(result.stdout)["status"]
@@ -30,6 +30,12 @@ def wait_for_instance(instance_name, project, zone, status):
                 "wait_for_instance: {}/{} arrived at status {}".format(zone, instance_name, status)
             )
             break
+        elif deadline is not None and time.monotonic() >= deadline:
+            raise TimeoutError(
+                "Timed out waiting for {}/{} to reach status {} (last status: {})".format(
+                    zone, instance_name, status, current_status
+                )
+            )
         else:
             gcloud.debug(
                 "wait_for_instance: Waiting for {}/{} to go from status {} to status {}".format(
@@ -72,9 +78,15 @@ def print_pretty_logs(instance_name, log):
             print(lines)
 
 
-def tail_serial_console(instance_name, project, zone, start=None, until=None):
+def tail_serial_console(instance_name, project, zone, start=None, until=None, deadline=None):
     next_start = start if start else "0"
     while True:
+        if deadline is not None and time.monotonic() >= deadline:
+            raise TimeoutError(
+                "Timed out waiting for serial console output from {}/{}".format(
+                    zone, instance_name
+                )
+            )
         try:
             result = gcloud.get_serial_port_output(
                 instance_name, project=project, zone=zone, start=next_start
