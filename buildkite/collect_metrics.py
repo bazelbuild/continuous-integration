@@ -168,6 +168,8 @@ def parse_bep(filepath):
     bazel_metrics = BazelMetrics()
     target_map = collections.defaultdict(list)
     target_status = {}
+    target_total_durations = {}
+    target_shard_counts = {}
 
     with open(filepath, "r") as f:
         for line_num, line in enumerate(f, 1):
@@ -198,6 +200,15 @@ def parse_bep(filepath):
 
                     if current_status != "PASSED":
                         bazel_metrics.failed_test_count += 1
+
+            elif "testSummary" in event:
+                summary = event["testSummary"]
+                label = event_id.get("testSummary", {}).get("label")
+                if label:
+                    total_ms = int(summary.get("totalRunDurationMillis", 0))
+                    if total_ms > 0:
+                        target_total_durations[label] = total_ms / 1000.0
+                    target_shard_counts[label] = int(summary.get("shardCount", 1))
 
             # --- 2. Build Metrics ---
             elif "buildMetrics" in event:
@@ -243,8 +254,10 @@ def parse_bep(filepath):
             TestTarget(
                 label=label,
                 status=target_status.get(label, "UNKNOWN"),
-                duration_s=max(shards) if shards else 0.0,
-                shard_count=len(shards),
+                duration_s=target_total_durations.get(
+                    label, sum(shards) if shards else 0.0
+                ),
+                shard_count=target_shard_counts.get(label, len(shards)),
                 shard_durations=shards,
             )
         )
