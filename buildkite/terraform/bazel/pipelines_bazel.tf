@@ -891,7 +891,7 @@ resource "buildkite_pipeline" "bcr-bazel-compatibility-test" {
       # SKIP_WAIT_FOR_APPROVAL: 1
     },
     steps = {
-      image = "gcr.io/bazel-public/ubuntu2404@sha256:53dd4ae8e1a2b4c070bc15fb3b60e0d30b81ccc85c6c44e18b20de992be8e9a3",
+      image = "gcr.io/bazel-public/ubuntu2404@sha256:7dbc0e6f72427aa5c2817eee702c4e12e6db8286e6064e87620b12089ba4715b",
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py?$(date +%s)\" -o bcr_presubmit.py",
