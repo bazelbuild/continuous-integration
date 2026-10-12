@@ -1092,7 +1092,7 @@ resource "buildkite_pipeline" "apple-support-darwin" {
   pipeline_template_id                     = null
   provider_settings = {
     trigger_mode                                  = "code"
-    build_branches                                = false
+    build_branches                                = true
     build_pull_requests                           = true
     build_tags                                    = false
     build_pull_request_forks                      = true
