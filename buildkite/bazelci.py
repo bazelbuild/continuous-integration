@@ -773,6 +773,18 @@ _LOWERED_PRIORITY_PIPELINES = frozenset(
     ]
 )
 _SENSITIVE_ENV_VAR_SUBSTRINGS = ["SUDO", "PAT", "TOKEN", "CREDENTIAL", "PASSWORD", "SECRET", "KEY", "CONNECTION_STRING"]
+_SECRET_ENV_VARS = (
+    "BUILDKITE_ANALYTICS_TOKEN",
+    "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN",
+)
+
+
+def filtered_bazel_env():
+    """Returns a copy of os.environ with sensitive tokens stripped to prevent leakage to Bazel actions."""
+    env = os.environ.copy()
+    for var in _SECRET_ENV_VARS:
+        env.pop(var, None)
+    return env
 
 
 class BuildkiteException(Exception):
@@ -1119,6 +1131,44 @@ def decrypt_token(encrypted_token, kms_key, project="bazel-untrusted"):
     except subprocess.CalledProcessError as ex:
         cause = ex.stderr.decode("utf-8")
         raise BuildkiteException(f"Failed to decrypt token:\n{cause}")
+
+
+def decrypt_analytics_token(encrypted_token):
+    if not encrypted_token:
+        return None
+
+    if THIS_IS_TESTING:
+        kms_key = "buildkite-testing-api-token"
+        project = "bazel-untrusted"
+    elif THIS_IS_TRUSTED:
+        kms_key = "buildkite-trusted-api-token"
+        project = "bazel-public"
+    else:
+        kms_key = "buildkite-untrusted-api-token"
+        project = "bazel-untrusted"
+
+    try:
+        return decrypt_token(
+            encrypted_token=encrypted_token,
+            kms_key=kms_key,
+            project=project,
+        )
+    except Exception as ex:
+        print_collapsed_group(
+            ":rotating_light: Test analytics disabled due to an error :warning:"
+        )
+        eprint(ex)
+        return None
+
+
+def setup_task_environment(task_config):
+    """Sets up environment variables from task_config while protecting secret tokens."""
+    for key, value in task_config.get("environment", {}).items():
+        if key in _SECRET_ENV_VARS:
+            continue
+        # We have to explicitly convert the value to a string, because sometimes YAML tries to
+        # be smart and converts strings like "true" and "false" to booleans.
+        os.environ[key] = os.path.expandvars(str(value))
 
 
 def eprint(*args, **kwargs):
@@ -1543,6 +1593,11 @@ def execute_commands(
     monitor_flaky_tests,
     bazel_version=None,
 ):
+    # Pop tokens from os.environ immediately so that untrusted task_config["environment"]
+    # cannot expand them via os.path.expandvars, and child processes/hooks do not inherit them.
+    encrypted_analytics_token = os.environ.pop("ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN", None)
+    os.environ.pop("BUILDKITE_ANALYTICS_TOKEN", None)
+
     if use_bazelisk_migrate():
         # Override use_but in case we are in the downstream pipeline so that it doesn't try to
         # download Bazel built from previous jobs.
@@ -1618,10 +1673,7 @@ def execute_commands(
         for e in ("ANDROID_HOME", "ANDROID_NDK_HOME"):
             os.environ.pop(e, None)
 
-    for key, value in task_config.get("environment", {}).items():
-        # We have to explicitly convert the value to a string, because sometimes YAML tries to
-        # be smart and converts strings like "true" and "false" to booleans.
-        os.environ[key] = os.path.expandvars(str(value))
+    setup_task_environment(task_config)
 
     # Avoid "Network is unreachable" errors in IPv6-only environments
     for e in ("COURSIER_OPTS", "JAVA_TOOL_OPTIONS", "SSL_CERT_FILE"):
@@ -1749,29 +1801,9 @@ def execute_commands(
             os.makedirs(bazelisk_cache_dir, mode=0o755, exist_ok=True)
             test_flags.append("--sandbox_writable_path={}".format(bazelisk_cache_dir))
 
-        # Set BUILDKITE_ANALYTICS_TOKEN so that bazelci-agent can upload test results to Test Analytics
-        if "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN" in os.environ:
-            if THIS_IS_TESTING:
-                kms_key = "buildkite-testing-api-token"
-                project = "bazel-untrusted"
-            elif THIS_IS_TRUSTED:
-                kms_key = "buildkite-trusted-api-token"
-                project = "bazel-public"
-            else:
-                kms_key = "buildkite-untrusted-api-token"
-                project = "bazel-untrusted"
-
-            try:
-                os.environ["BUILDKITE_ANALYTICS_TOKEN"] = decrypt_token(
-                    encrypted_token=os.environ["ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN"],
-                    kms_key=kms_key,
-                    project=project,
-                )
-            except Exception as ex:
-                print_collapsed_group(
-                    ":rotating_light: Test analytics disabled due to an error :warning:"
-                )
-                eprint(ex)
+        # Decrypt BUILDKITE_ANALYTICS_TOKEN so that bazelci-agent can upload test results to Test Analytics.
+        # Do not write it into os.environ to avoid leaking it to child processes and tests (b/534354348).
+        buildkite_analytics_token = decrypt_analytics_token(encrypted_analytics_token)
 
         test_bep_file = os.path.join(tmpdir, _TEST_BEP_FILE)
         # Create an empty test_bep_file so that the bazelci-agent can start to follow the file right away. Otherwise,
@@ -1779,7 +1811,11 @@ def execute_commands(
         open(test_bep_file, "w").close()
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future = executor.submit(
-                upload_test_logs_from_bep, test_bep_file, tmpdir, monitor_flaky_tests
+                upload_test_logs_from_bep,
+                test_bep_file,
+                tmpdir,
+                monitor_flaky_tests,
+                buildkite_analytics_token,
             )
             try:
                 execute_bazel_test(
@@ -2229,7 +2265,8 @@ def execute_bazel_run(bazel_binary, platform, targets):
                 + common_startup_flags()
                 + ["run"]
                 + common_build_flags(None, platform)
-                + [target]
+                + [target],
+                env=filtered_bazel_env(),
             )
         except subprocess.CalledProcessError as e:
             handle_bazel_failure(e, "run")
@@ -2503,7 +2540,10 @@ def execute_bazel_clean(bazel_binary, platform):
     print_expanded_group(":bazel: Clean")
 
     try:
-        execute_command([bazel_binary] + common_startup_flags() + ["clean", "--expunge"])
+        execute_command(
+            [bazel_binary] + common_startup_flags() + ["clean", "--expunge"],
+            env=filtered_bazel_env(),
+        )
     except subprocess.CalledProcessError as e:
         raise BuildkiteException("bazel clean failed with exit code {}".format(e.returncode))
 
@@ -2548,7 +2588,8 @@ def execute_bazel_build(bazel_version, bazel_binary, platform, flags, targets, b
             + ["build"]
             + aggregated_flags
             + ["--"]
-            + targets
+            + targets,
+            env=filtered_bazel_env(),
         )
     except subprocess.CalledProcessError as e:
         handle_bazel_failure(e, "build")
@@ -2578,7 +2619,8 @@ def execute_bazel_build_with_kythe(bazel_version, bazel_binary, platform, flags,
         + kythe_build_flags()
         + aggregated_flags
         + ["--"]
-        + targets
+        + targets,
+        env=filtered_bazel_env(),
     )
 
 
@@ -2985,6 +3027,7 @@ def run_bazel_diff(bazel_diff_path, old_workspace_dir, new_workspace_dir, bazel_
                     json_path,
                 ],
                 capture_stderr=True,
+                env=filtered_bazel_env(),
             )
 
         execute_command(
@@ -3001,6 +3044,7 @@ def run_bazel_diff(bazel_diff_path, old_workspace_dir, new_workspace_dir, bazel_
                 targets_file,
             ],
             capture_stderr=True,
+            env=filtered_bazel_env(),
         )
     except subprocess.CalledProcessError as ex:
         raise BuildkiteInfraException("Failed to run bazel-diff: {}\n{}".format(ex, ex.stderr))
@@ -3065,7 +3109,8 @@ def execute_bazel_test(
             + ["test"]
             + aggregated_flags
             + ["--"]
-            + targets
+            + targets,
+            env=filtered_bazel_env(),
         )
     except subprocess.CalledProcessError as e:
         handle_bazel_failure(e, "test")
@@ -3097,17 +3142,23 @@ def execute_bazel_coverage(bazel_version, bazel_binary, platform, flags, targets
             + ["coverage"]
             + aggregated_flags
             + ["--"]
-            + targets
+            + targets,
+            env=filtered_bazel_env(),
         )
     except subprocess.CalledProcessError as e:
         handle_bazel_failure(e, "coverage")
 
 
-def upload_test_logs_from_bep(bep_file, tmpdir, monitor_flaky_tests):
+def upload_test_logs_from_bep(
+    bep_file, tmpdir, monitor_flaky_tests, buildkite_analytics_token=None
+):
     if local_run_only():
         return
 
     bazelci_agent_binary = download_bazelci_agent(tmpdir)
+    env = os.environ.copy()
+    if buildkite_analytics_token:
+        env["BUILDKITE_ANALYTICS_TOKEN"] = buildkite_analytics_token
     try:
         execute_command(
             [
@@ -3119,6 +3170,7 @@ def upload_test_logs_from_bep(bep_file, tmpdir, monitor_flaky_tests):
                 "--build_event_json_file={}".format(bep_file),
             ]
             + (["--monitor_flaky_tests"] if monitor_flaky_tests else []),
+            env=env,
             timeout=_BEP_UPLOAD_TIMEOUT_SECONDS,
         )
     except subprocess.TimeoutExpired as e:
@@ -3148,13 +3200,15 @@ def upload_corrupted_outputs(capture_corrupted_outputs_dir, tmpdir):
     )
 
 
-def execute_command_and_get_output(args, shell=False, fail_if_nonzero=True, print_output=True):
+def execute_command_and_get_output(
+    args, shell=False, fail_if_nonzero=True, print_output=True, env=None
+):
     eprint(" ".join(args))
     process = subprocess.run(
         args,
         shell=shell,
         check=fail_if_nonzero,
-        env=os.environ,
+        env=env if env is not None else filtered_bazel_env(),
         stdout=subprocess.PIPE,  # We cannot use capture_output since some workers run Python <3.7
         errors="replace",
         universal_newlines=True,

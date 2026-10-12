@@ -856,5 +856,170 @@ tasks:
         self.assertEqual(0, len(warning_steps))
 
 
+class TokenLeakagePreventionTest(unittest.TestCase):
+
+    def test_filtered_bazel_env_strips_secret_tokens(self):
+        with mock.patch.dict(
+            os.environ,
+            {
+                "SOME_SAFE_VAR": "hello",
+                "BUILDKITE_ANALYTICS_TOKEN": "secret_analytics_token",
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN": "secret_encrypted_token",
+            },
+            clear=True,
+        ):
+            env = bazelci.filtered_bazel_env()
+            self.assertEqual(env.get("SOME_SAFE_VAR"), "hello")
+            self.assertNotIn("BUILDKITE_ANALYTICS_TOKEN", env)
+            self.assertNotIn("ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN", env)
+
+    def test_upload_test_logs_from_bep_passes_token_in_env_without_mutating_os_environ(self):
+        with mock.patch.dict(os.environ, {}, clear=True), mock.patch.object(
+            bazelci, "download_bazelci_agent", return_value="bazelci-agent"
+        ), mock.patch.object(bazelci, "execute_command") as mock_execute:
+            bazelci.upload_test_logs_from_bep(
+                "bep.json",
+                "/tmp",
+                monitor_flaky_tests=False,
+                buildkite_analytics_token="my_token_123",
+            )
+            # os.environ must NOT be mutated
+            self.assertNotIn("BUILDKITE_ANALYTICS_TOKEN", os.environ)
+            # execute_command must have received env containing the token
+            mock_execute.assert_called_once()
+            called_env = mock_execute.call_args.kwargs.get("env")
+            self.assertIsNotNone(called_env)
+            self.assertEqual(called_env.get("BUILDKITE_ANALYTICS_TOKEN"), "my_token_123")
+
+    def test_execute_bazel_commands_pass_filtered_env(self):
+        with mock.patch.dict(
+            os.environ,
+            {
+                "BUILDKITE_ANALYTICS_TOKEN": "secret_token",
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN": "encrypted_token",
+            },
+        ), mock.patch.object(bazelci, "execute_command") as mock_execute, mock.patch.object(
+            bazelci, "compute_flags", return_value=[]
+        ):
+            # Test execute_bazel_clean
+            bazelci.execute_bazel_clean("bazel", "ubuntu2404")
+            self.assertNotIn(
+                "BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+            self.assertNotIn(
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+
+            # Test execute_bazel_build
+            mock_execute.reset_mock()
+            bazelci.execute_bazel_build(
+                "9.0.0", "bazel", "ubuntu2404", [], ["//..."], "bep.json"
+            )
+            self.assertNotIn(
+                "BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+            self.assertNotIn(
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+
+            # Test execute_bazel_build_with_kythe
+            mock_execute.reset_mock()
+            bazelci.execute_bazel_build_with_kythe(
+                "9.0.0", "bazel", "ubuntu2404", [], ["//..."], "bep.json"
+            )
+            self.assertNotIn(
+                "BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+            self.assertNotIn(
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+
+            # Test execute_bazel_test
+            mock_execute.reset_mock()
+            bazelci.execute_bazel_test(
+                "9.0.0", "bazel", "ubuntu2404", [], ["//..."], "bep.json", False
+            )
+            self.assertNotIn(
+                "BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+            self.assertNotIn(
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+
+            # Test execute_bazel_coverage
+            mock_execute.reset_mock()
+            bazelci.execute_bazel_coverage(
+                "9.0.0", "bazel", "ubuntu2404", [], ["//..."]
+            )
+            self.assertNotIn(
+                "BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+            self.assertNotIn(
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+
+            # Test execute_bazel_run
+            mock_execute.reset_mock()
+            bazelci.execute_bazel_run("bazel", "ubuntu2404", ["//:target"])
+            self.assertNotIn(
+                "BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+            self.assertNotIn(
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN",
+                mock_execute.call_args.kwargs["env"],
+            )
+
+    def test_execute_command_and_get_output_defaults_to_filtered_env(self):
+        with mock.patch.dict(
+            os.environ,
+            {
+                "BUILDKITE_ANALYTICS_TOKEN": "secret_token",
+                "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN": "encrypted_token",
+            },
+        ), mock.patch("subprocess.run") as mock_run:
+            mock_run.return_value.stdout = "output"
+            bazelci.execute_command_and_get_output(["echo", "hello"], print_output=False)
+            called_env = mock_run.call_args.kwargs["env"]
+            self.assertNotIn("BUILDKITE_ANALYTICS_TOKEN", called_env)
+            self.assertNotIn("ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN", called_env)
+
+    def test_decrypt_analytics_token_does_not_mutate_environ(self):
+        with mock.patch.dict(os.environ, {}, clear=True), mock.patch.object(
+            bazelci, "decrypt_token", return_value="decrypted_token"
+        ) as mock_decrypt:
+            token = bazelci.decrypt_analytics_token("enc_token_val")
+            self.assertEqual(token, "decrypted_token")
+            mock_decrypt.assert_called_once()
+            self.assertNotIn("BUILDKITE_ANALYTICS_TOKEN", os.environ)
+
+    def test_setup_task_environment_cannot_override_or_expand_secret_tokens(self):
+        with mock.patch.dict(os.environ, {}, clear=True):
+            bazelci.setup_task_environment(
+                {
+                    "environment": {
+                        "LEAK": "$ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN",
+                        "BUILDKITE_ANALYTICS_TOKEN": "attacker_attempt",
+                        "SAFE_VAR": "safe_val",
+                    }
+                }
+            )
+            # Secret env vars cannot be injected
+            self.assertNotIn("BUILDKITE_ANALYTICS_TOKEN", os.environ)
+            # Cannot expand secret tokens that were popped
+            self.assertEqual(os.environ.get("LEAK"), "$ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN")
+            self.assertEqual(os.environ.get("SAFE_VAR"), "safe_val")
+
+
 if __name__ == "__main__":
     unittest.main()
