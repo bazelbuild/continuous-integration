@@ -245,7 +245,7 @@ def _ci_step_for_platform_and_commits(
             project["bazel_command"],
         ]
     )
-    # TODO(leba): Use GCP Python client instead of gsutil.
+    # TODO(leba): Use GCP Python client instead of gcloud storage.
     # TODO(https://github.com/bazelbuild/bazel-bench/issues/46): Include task-specific shell commands and build flags.
 
     # Upload everything under DATA_DIRECTORY to Storage.
@@ -256,10 +256,10 @@ def _ci_step_for_platform_and_commits(
     )
     upload_output_files_storage_command = " ".join(
         [
-            "gsutil",
-            "-m",
+            "gcloud",
+            "storage",
             "cp",
-            "-r",
+            "--recursive",
             "{}/*".format(DATA_DIRECTORY),
             "gs://{}/{}".format(bucket, storage_subdir),
         ]
@@ -352,7 +352,7 @@ def _create_and_upload_metadata(
 
     destination = "gs://{}/{}/{}/METADATA".format(
         bucket, project_label, date.strftime("%Y/%m/%d"))
-    args = ["gsutil", "cp", metadata_file_path, destination]
+    args = ["gcloud", "storage", "cp", metadata_file_path, destination]
 
     try:
         subprocess.check_output(args)
@@ -390,7 +390,8 @@ def _report_generation_step(
         report_latest_path_gcs = "gs://{}/{}/report_latest.html".format(
             bucket, project_label)
         commands.append(" ".join([
-            "gsutil",
+            "gcloud",
+            "storage",
             "cp",
             report_dated_path_gcs,
             report_latest_path_gcs

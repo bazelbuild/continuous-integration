@@ -1144,10 +1144,6 @@ def is_64_bit():
     return platform_module.machine() in ("arm64", "aarch64")
 
 
-def gsutil_command():
-    return "gsutil.cmd" if is_windows() else "gsutil"
-
-
 def gcloud_command():
     return "gcloud.cmd" if is_windows() else "gcloud"
 

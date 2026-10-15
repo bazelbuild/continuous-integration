@@ -10,7 +10,7 @@ echo "+++ Starting Git Mirror Update $(date)"
 
 echo "--- Downloading existing mirrors from GCS"
 rm -rf bazelbuild
-gsutil cat "gs://bazel-git-mirror/bazelbuild-mirror.tar" | tar x
+gcloud storage cat "gs://bazel-git-mirror/bazelbuild-mirror.tar" | tar x
 cd bazelbuild
 
 function mirror() {
@@ -88,5 +88,5 @@ fi
 
 echo "+++ Uploading Git Mirror... $(date)"
 
-tar c bazelbuild | gsutil cp - "gs://bazel-git-mirror/bazelbuild-mirror.tar"
-zip -q0r - bazelbuild | gsutil cp - "gs://bazel-git-mirror/bazelbuild-mirror.zip"
+tar c bazelbuild | gcloud storage cp - "gs://bazel-git-mirror/bazelbuild-mirror.tar"
+zip -q0r - bazelbuild | gcloud storage cp - "gs://bazel-git-mirror/bazelbuild-mirror.zip"
