@@ -133,83 +133,28 @@ def format_image_hashes_dict(image_hashes):
     return "\n".join(lines)
 
 
-SENTINEL_START = "# DO_NOT_MODIFY_IMAGE_HASHES_SENTINEL_START"
-SENTINEL_END = "# DO_NOT_MODIFY_IMAGE_HASHES_SENTINEL_END"
+def find_replace_hashes(curr_hashes, next_hashes, files):
+    for ff in files:
+        for k in IMAGE_KEYS:
+            for arch in ["amd64", "arm64"]:
+                if arch not in curr_hashes[k] or arch not in next_hashes[k]:
+                    continue
+                with open(ff, "r") as f:
+                    content = f.read()
+                with open(ff, "w") as f:
+                    f.write(content.replace(curr_hashes[k][arch], next_hashes[k][arch]))
 
 
-def update_bazelci_file(bazelci_path, new_image_hashes_str):
-    output_lines = []
-    in_sentinel_block = False
-    found_start = False
-    found_end = False
-
-    with open(bazelci_path, "r", encoding="utf-8") as f:
-        for line in f:
-            if line.startswith(SENTINEL_START):
-                output_lines.append(line)
-                output_lines.append(f"{new_image_hashes_str}\n")
-                in_sentinel_block = True
-                found_start = True
-            elif line.startswith(SENTINEL_END):
-                in_sentinel_block = False
-                output_lines.append(line)
-                found_end = True
-            elif not in_sentinel_block:
-                output_lines.append(line)
-
-    if not found_start:
-        raise ValueError(f"Could not find start sentinel '{SENTINEL_START}' in {bazelci_path}")
-    if not found_end:
-        raise ValueError(f"Could not find end sentinel '{SENTINEL_END}' in {bazelci_path}")
-
-    with open(bazelci_path, "w", encoding="utf-8") as f:
-        f.writelines(output_lines)
-
-
-def update_pinned_hashes(files, image_hashes):
-    pattern = re.compile(r"gcr\.io/bazel-public/([a-zA-Z0-9_\-]+)(?:@sha256:[a-f0-9]+)?")
-
-    updated_files = []
-    for fpath in sorted(files):
-        with open(fpath, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        def replacer(match):
-            img_name = match.group(1)
-            if img_name in image_hashes and "amd64" in image_hashes[img_name]:
-                digest = image_hashes[img_name]["amd64"]
-                return f"gcr.io/bazel-public/{img_name}@{digest}"
-            return match.group(0)
-
-        updated_content = pattern.sub(replacer, content)
-        if updated_content != content:
-            with open(fpath, "w", encoding="utf-8") as f:
-                f.write(updated_content)
-            updated_files.append(fpath)
-
-    return updated_files
-
-
-def update_terraform_configs(terraform_dir, image_hashes):
-    tf_files = list(terraform_dir.glob("**/*.tf")) + list(terraform_dir.glob("**/*.tpl"))
-    return update_pinned_hashes(tf_files, image_hashes)
-
-
-def update_pipeline_ymls(pipelines_dir, image_hashes):
-    pipeline_yml_files = list(pipelines_dir.glob("**/*.yml"))
-    return update_pinned_hashes(pipeline_yml_files, image_hashes)
-
-
-def update_rbe_presets(rbe_file, image_hashes):
-    return update_pinned_hashes([rbe_file], image_hashes)
-
-
-def update_setup_docker(setup_docker_file, image_hashes):
-    return update_pinned_hashes([setup_docker_file], image_hashes)
+def get_git_root() -> str:
+    p = subprocess.run(["git", "rev-parse", "--show-toplevel"],
+                       capture_output=True, text=True)
+    if p.returncode != 0:
+        raise RuntimeError("Could not determine the git root: " + p.stderr)
+    return p.stdout.strip()
 
 
 def main():
-    repo_root = Path(__file__).resolve().parent.parent
+    repo_root = Path(get_git_root())
     bazelci_path = repo_root / "buildkite" / "bazelci.py"
     terraform_dir = repo_root / "buildkite" / "terraform"
     pipelines_dir = repo_root / "pipelines"
@@ -240,27 +185,21 @@ def main():
 
     digests = fetch_all_image_digests(IMAGE_KEYS)
 
-    new_dict_str = format_image_hashes_dict(digests)
-    update_bazelci_file(bazelci_path, new_dict_str)
-    print(f"Successfully updated IMAGE_HASHES in {bazelci_path}!")
+    # Load the current digests
+    digests_json_file = repo_root / "buildkite" / "digests.json"
+    with open(digests_json_file, "r") as f:
+        curr_digests = json.loads(f.read())
 
-    updated_tf = update_terraform_configs(terraform_dir, digests)
-    print(f"Successfully updated {len(updated_tf)} terraform configuration files:")
-    for tf_path in updated_tf:
-        print(f"  - {tf_path}")
+    files_to_update = [
+        Path(repo_root / "buildkite" / "bazelci.py"),
+        rbe_presets_file,
+        setup_docker_file,
+    ] + list(terraform_dir.glob("**/*.tf")) + \
+            list(pipelines_dir.glob("**/*.yml")) + \
+            list(pipelines_dir.glob("**/*.yml.tpl"))
 
-    updated_rbe = update_rbe_presets(rbe_presets_file, digests)
-    if updated_rbe:
-        print(f"Successfully updated RBE presets in {rbe_presets_file}!")
-
-    updated_pipelines = update_pipeline_ymls(pipelines_dir, digests)
-    print(f"Successfully updated {len(updated_pipelines)} pipeline ymls:")
-    for p in updated_pipelines:
-        print(f"  - {p}")
-
-    updated_setup_docker = update_setup_docker(setup_docker_file, digests)
-    if updated_setup_docker:
-        print(f"Successfully updated setup-docker.sh in {setup_docker_file}!")
+    print("Updating image digests...")
+    find_replace_hashes(curr_digests, digests, files_to_update)
 
 
 if __name__ == "__main__":
