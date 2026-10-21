@@ -2930,7 +2930,15 @@ def is_googlesource_repo(repo_url):
 
 
 def get_commit_archive_url(resolved_diffbase):
-    repo_url = os.getenv("BUILDKITE_REPO", "")
+    repo = os.getenv("BUILDKITE_REPO", "")
+    # Hack: Prefer GitHub since unauthenticated
+    # requests to googlesource.com are unreliable.
+    # There is a very small risk of race conditions
+    # since commits are pushed to googlesource.com first
+    # before being mirrored to GitHub.
+    # However, this is highly unlikely to cause problems in reality.
+    # Currently no other repos are using bazel diff.
+    repo_url = repo.replace("https://bazel.googlesource.com/bazel.git", "https://github.com/bazelbuild/bazel.git")
     prefix = "+" if is_googlesource_repo(repo_url) else ""
     return repo_url.replace(".git", "/{}archive/{}.tar.gz".format(prefix, resolved_diffbase))
 
