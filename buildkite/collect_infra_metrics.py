@@ -13,7 +13,7 @@ from bazelci import BuildkiteClient
 ORGs = ["bazel-testing", "bazel", "bazel-trusted"]
 PROJECT_ID = "bazel-untrusted"
 DATASET_ID = "bazel_ci_metrics"
-TABLE_ID = "infra_stats"
+INFRA_STATS_TABLE_ID = "infra_stats"
 AGENT_SNAPSHOTS_TABLE_ID = "agent_snapshots"
 
 
@@ -50,7 +50,7 @@ def get_expected_agents():
     # Mac pools live in MacService config (not GCP), so use the 7-day observed max.
     query = (
         f"SELECT org, platform, MAX(total_agents) AS expected_agents "
-        f"FROM `{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}` "
+        f"FROM `{PROJECT_ID}.{DATASET_ID}.{INFRA_STATS_TABLE_ID}` "
         f"WHERE timestamp > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY) "
         f"AND platform IN ('macos', 'macos_arm64') GROUP BY 1, 2"
     )
@@ -181,7 +181,7 @@ def get_org_metrics(org, expected_by_pool):
 
   return rows, build_agent_rows(agents, org, timestamp)
 
-def push_to_bigquery(rows, retries, table_id=TABLE_ID):
+def push_to_bigquery(rows, retries, table_id):
   if not rows:
     logging.info("No data found to push to DB")
     return
@@ -221,7 +221,7 @@ def main():
       all_agent_rows.extend(agent_rows)
 
     if all_metrics:
-      push_to_bigquery(all_metrics, 5, TABLE_ID)
+      push_to_bigquery(all_metrics, 5, INFRA_STATS_TABLE_ID)
     if all_agent_rows:
       push_to_bigquery(all_agent_rows, 5, AGENT_SNAPSHOTS_TABLE_ID)
 

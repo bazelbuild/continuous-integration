@@ -111,10 +111,15 @@ class TestCollectInfraMetrics(unittest.TestCase):
     mock_client.insert_rows_json.return_value = []
 
     rows = [{"timestamp": "2026-10-21T10:00:00", "org": "bazel"}]
+    collect_infra_metrics.push_to_bigquery(rows, 3, collect_infra_metrics.INFRA_STATS_TABLE_ID)
     collect_infra_metrics.push_to_bigquery(rows, 3, collect_infra_metrics.AGENT_SNAPSHOTS_TABLE_ID)
 
-    mock_client.insert_rows_json.assert_called_once_with(
-        "bazel-untrusted.bazel_ci_metrics.agent_snapshots", rows
+    self.assertEqual(
+        mock_client.insert_rows_json.call_args_list,
+        [
+            (("bazel-untrusted.bazel_ci_metrics.infra_stats", rows),),
+            (("bazel-untrusted.bazel_ci_metrics.agent_snapshots", rows),),
+        ],
     )
 
 
