@@ -3236,7 +3236,7 @@ def create_step(
         step["priority"] = priority
     elif project_slug in _ELEVATED_PRIORITY_PIPELINES:
         step["priority"] = 1
-    elif project_slug in _LOWERED_PRIORITY_PIPELINES:
+    elif project_slug in _LOWERED_PRIORITY_PIPELINES or is_renovate_pr():
         step["priority"] = -1
 
     if shards > 1:
@@ -3332,6 +3332,10 @@ def create_docker_step(
     if not step["command"]:
         del step["command"]
     return step
+
+
+def is_renovate_pr():
+    return "renovate" in os.getenv("BUILDKITE_BUILD_CREATOR", "")
 
 
 def print_project_pipeline(
