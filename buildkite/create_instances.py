@@ -35,6 +35,7 @@ def create_instance_group(config):
         project = config.pop("project")
         zone = config.pop("zone", None)
         region = config.pop("region", None)
+        zones = config.pop("zones", None)
         target_distribution_shape = config.pop("target_distribution_shape", None)
         health_check = config.pop("health_check", None)
         initial_delay = config.pop("initial_delay", None)
@@ -81,6 +82,8 @@ def create_instance_group(config):
             kwargs["zone"] = zone
         elif region:
             kwargs["region"] = region
+            if zones:
+                kwargs["zones"] = zones
             if target_distribution_shape:
                 kwargs["target_distribution_shape"] = target_distribution_shape
             if on_repair_allow_changing_zone:
