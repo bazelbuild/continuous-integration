@@ -17,6 +17,7 @@ default_vm:
   machine_type: c2-standard-30
   network: default
   region: us-central1
+  zones: us-central1-a,us-central1-b,us-central1-c,us-central1-f
   target_distribution_shape: ANY
   # Let the MIG recreate a VM in a different zone when its zone runs out of capacity.
   on_repair_allow_changing_zone: true
