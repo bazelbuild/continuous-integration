@@ -10,7 +10,7 @@ resource "buildkite_pipeline" "mirror-last-green-commit-for-bazel" {
         "gsutil cp gs://bazel-builds/last_green_commit/github.com/bazelbuild/bazel.git/publish-bazel-binaries gs://bazel-untrusted-builds/last_green_commit/github.com/bazelbuild/bazel.git/bazel-bazel"
       ],
       label = ":pipeline:",
-      image = "gcr.io/bazel-public/ubuntu2204@sha256:2a482c928ff7527594f2e528ac3724486f9cf0fd682394b8aa2f5fed4eb9676f"
+      image = "gcr.io/bazel-public/ubuntu2204@sha256:07887f6469bb5594b3b86bf6023398356e3791006570695a556086eff13ded74"
     }
   })
   allow_rebuilds             = true
