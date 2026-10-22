@@ -15,12 +15,14 @@
 # limitations under the License.
 
 import argparse
+import atexit
 import base64
 import codecs
 import collections
 import concurrent.futures
 import copy
 import datetime
+import functools
 from glob import glob
 import hashlib
 import itertools
@@ -42,8 +44,11 @@ import tempfile
 import time
 from typing import List
 import urllib.error
+import urllib.parse
 import urllib.request
 import yaml
+
+BAZELCI_SCRIPT_PATH = os.path.abspath(__file__)
 
 # Initialize the random number generator.
 random.seed()
@@ -673,14 +678,15 @@ PLATFORMS = {
     },
 }
 
-# Generate rbe_ubuntu* platforms based on ubuntu* platforms.
+# Generate Google and BuildBuddy RBE platforms based on ubuntu* platforms.
 for platform, platform_dict in PLATFORMS.copy().items():
     if platform.startswith("ubuntu"):
-        rbe_platform_dict = copy.deepcopy(platform_dict)
-        rbe_platform_dict["name"] = "RBE {}".format(platform_dict["name"])
-        rbe_platform_dict["emoji-name"] = "RBE {}".format(platform_dict["emoji-name"])
-        rbe_platform_dict["publish_binary"] = []
-        PLATFORMS["rbe_{}".format(platform)] = rbe_platform_dict
+        for prefix, name in [("rbe", "RBE"), ("buildbuddy_rbe", "BuildBuddy RBE")]:
+            rbe_platform_dict = copy.deepcopy(platform_dict)
+            rbe_platform_dict["name"] = "{} {}".format(name, platform_dict["name"])
+            rbe_platform_dict["emoji-name"] = "{} {}".format(name, platform_dict["emoji-name"])
+            rbe_platform_dict["publish_binary"] = []
+            PLATFORMS["{}_{}".format(prefix, platform)] = rbe_platform_dict
 
 BUILDIFIER_DOCKER_IMAGE = "gcr.io/bazel-public/buildifier"
 
@@ -2319,11 +2325,17 @@ def remote_enabled(flags):
 
 
 def concurrent_jobs(platform):
-    return "75" if platform.startswith("rbe_") else str(multiprocessing.cpu_count())
+    if platform.startswith("buildbuddy_rbe_"):
+        return "100"
+    if platform.startswith("rbe_"):
+        return "75"
+    return str(multiprocessing.cpu_count())
 
 
 def concurrent_test_jobs(platform):
-    if platform.startswith("rbe_"):
+    if platform.startswith("buildbuddy_rbe_"):
+        return "100"
+    elif platform.startswith("rbe_"):
         return "75"
     elif is_windows():
         return "8"
@@ -2379,25 +2391,92 @@ def common_build_flags(bep_file, platform):
     return flags
 
 
-def rbe_flags(original_flags, accept_cached):
+@functools.lru_cache(maxsize=None)
+def supported_bazel_flags(bazel_binary, bazel_version, workspace_dir):
+    # Include the Bazelisk selection and workspace in the cache key: "bazel"
+    # can refer to different binaries, including an unlabelled binary under test.
+    output = execute_command_and_get_output(
+        [bazel_binary]
+        + common_startup_flags()
+        + ["--nosystem_rc", "--nohome_rc", "--noworkspace_rc", "help", "build", "--short"],
+        print_output=False,
+    )
+    return frozenset(re.findall(r"^\s+--(?:\[no\])?([a-zA-Z0-9_]+)(?=\s|$)", output, re.MULTILINE))
+
+
+@functools.lru_cache(maxsize=1)
+def buildbuddy_credential_helper_path():
+    # This wrapper contains no credentials. Bazel reads the injected key through
+    # the credential-helper protocol rather than command-line flags.
+    fd, path = tempfile.mkstemp(prefix="bazelci-buildbuddy-auth-", suffix=".sh")
+    with os.fdopen(fd, "w") as helper:
+        helper.write(
+            "#!/bin/sh\nexec {} {} buildbuddy_credential_helper \"$@\"\n".format(
+                shlex.quote(sys.executable), shlex.quote(BAZELCI_SCRIPT_PATH)
+            )
+        )
+    os.chmod(path, 0o700)
+    atexit.register(os.remove, path)
+    return path
+
+
+def write_buildbuddy_credentials():
+    # Bazel supplies one URI; the response maps header names to values, not domains.
+    try:
+        request = json.load(sys.stdin)
+        if not isinstance(request["uri"], str):
+            raise ValueError()
+        uri = urllib.parse.urlparse(request["uri"])
+        if uri.scheme not in ("https", "grpcs") or uri.hostname != "bazelci.buildbuddy.io":
+            raise ValueError()
+    except (ValueError, TypeError, KeyError):
+        raise BuildkiteException("BuildBuddy credential helper requires a TLS bazelci.buildbuddy.io URI")
+
+    key = os.getenv("BUILDBUDDY_API_KEY", "").strip()
+    if not key or any(c.isspace() for c in key):
+        raise BuildkiteException("BuildBuddy credential helper requires BUILDBUDDY_API_KEY")
+    json.dump({"headers": {"x-buildbuddy-api-key": [key]}}, sys.stdout)
+
+
+def rbe_flags(platform, original_flags, accept_cached, bazel_binary):
     # Enable remote execution via RBE.
     flags = [
-        "--remote_executor=remotebuildexecution.googleapis.com",
-        "--remote_instance_name=projects/bazel-untrusted/instances/default_instance",
-        "--remote_timeout=3600",
         "--incompatible_strict_action_env",
-        "--google_default_credentials",
         "--toolchain_resolution_debug=.*",
-        "--remote_download_toplevel",
+        "--bes_timeout=360s",
     ]
 
-    # Enable BES / Build Results reporting.
-    flags += [
-        "--bes_backend=buildeventservice.googleapis.com",
-        "--bes_results_url=https://btx.cloud.google.com/invocations/",
-        "--bes_timeout=360s",
-        "--bes_instance_name=bazel-untrusted",
-    ]
+    if platform.startswith("buildbuddy_rbe_"):
+        supported_flags = supported_bazel_flags(
+            bazel_binary, os.getenv("USE_BAZEL_VERSION", ""), os.getcwd()
+        )
+        flags += [
+            "--remote_executor=grpcs://bazelci.buildbuddy.io",
+            "--remote_timeout=10m",
+            "--remote_download_minimal",
+            "--bes_backend=grpcs://bazelci.buildbuddy.io",
+            "--bes_results_url=https://bazelci.buildbuddy.io/invocation/",
+            "--build_metadata=VISIBILITY=PUBLIC",
+            f"--credential_helper=bazelci.buildbuddy.io={buildbuddy_credential_helper_path()}",
+        ]
+        if "remote_cache_compression" in supported_flags:
+            flags += ["--remote_cache_compression"]
+        elif "experimental_remote_cache_compression" in supported_flags:
+            flags += ["--experimental_remote_cache_compression"]
+        # Chunking is supported in 8.7 and 9.1+, but not 9.0.
+        if "experimental_remote_cache_chunking" in supported_flags:
+            flags += ["--experimental_remote_cache_chunking"]
+    else:
+        flags += [
+            "--remote_executor=remotebuildexecution.googleapis.com",
+            "--remote_timeout=3600",
+            "--remote_download_toplevel",
+            "--remote_instance_name=projects/bazel-untrusted/instances/default_instance",
+            "--google_default_credentials",
+            "--bes_backend=buildeventservice.googleapis.com",
+            "--bes_results_url=https://btx.cloud.google.com/invocations/",
+            "--bes_instance_name=bazel-untrusted",
+        ]
 
     if not accept_cached:
         flags += ["--noremote_accept_cached"]
@@ -2468,8 +2547,13 @@ def compute_flags(platform, flags, bep_file, bazel_binary, enable_remote_cache=F
 
     if not local_run_only():
         if not remote_enabled(flags):
-            if platform.startswith("rbe_"):
-                aggregated_flags += rbe_flags(flags, accept_cached=enable_remote_cache)
+            if platform.startswith(("rbe_", "buildbuddy_rbe_")):
+                aggregated_flags += rbe_flags(
+                    platform,
+                    flags,
+                    accept_cached=enable_remote_cache,
+                    bazel_binary=bazel_binary,
+                )
             else:
                 aggregated_flags += remote_caching_flags(
                     platform, accept_cached=enable_remote_cache
@@ -3230,6 +3314,24 @@ def create_step(
             commands=commands,
             queue=PLATFORMS[platform].get("queue", "default"),
         )
+        if platform.startswith("buildbuddy_rbe_"):
+            default_branch = os.getenv("BUILDKITE_PIPELINE_DEFAULT_BRANCH")
+            # Only default-branch postsubmits are trusted to write action-cache entries.
+            is_trusted = (
+                default_branch
+                and os.getenv("BUILDKITE_BRANCH") == default_branch
+                and os.getenv("BUILDKITE_PULL_REQUEST") == "false"
+                and not is_pull_request()
+                # Gerrit presubmits use the default branch for unsubmitted changes.
+                and not os.getenv("BUILDKITE_PIPELINE_SLUG", "").endswith("-presubmit")
+            )
+            # Confirm workers use agent 3.106+ to resolve step secrets on the host.
+            # Both keys permit CAS writes; only AC_RW permits action-cache writes.
+            # Buildkite secret policies must enforce this separation.
+            step["secrets"] = {
+                "BUILDBUDDY_API_KEY": "BUILDBUDDY_AC_RW" if is_trusted else "BUILDBUDDY_AC_RO"
+            }
+            step["plugins"]["docker#v3.8.0"]["environment"] += ["BUILDBUDDY_API_KEY"]
     else:
         step = {
             "label": label,
@@ -5091,6 +5193,9 @@ def main(argv=None):
 
     subparsers = parser.add_subparsers(dest="subparsers_name")
 
+    credential_helper = subparsers.add_parser("buildbuddy_credential_helper")
+    credential_helper.add_argument("operation", choices=["get"])
+
     bazel_publish_binaries_pipeline = subparsers.add_parser("bazel_publish_binaries_pipeline")
     bazel_publish_binaries_pipeline.add_argument("--file_config", type=str)
     bazel_publish_binaries_pipeline.add_argument("--http_config", type=str)
@@ -5158,7 +5263,9 @@ def main(argv=None):
         SCRIPT_URL = args.script
 
     try:
-        if args.subparsers_name == "bazel_publish_binaries_pipeline":
+        if args.subparsers_name == "buildbuddy_credential_helper":
+            write_buildbuddy_credentials()
+        elif args.subparsers_name == "bazel_publish_binaries_pipeline":
             configs = fetch_configs(args.http_config, args.file_config)
             print_bazel_publish_binaries_pipeline(
                 task_configs=configs.get("tasks", None),
