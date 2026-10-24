@@ -5,6 +5,7 @@ steps:
       cd buildkite
       ./create_images.py "${BAZEL_TEST_VM_NAMES}"
     label: ":pipeline:"
+    timeout_in_minutes: 120
     agents:
       - "queue=default"
     plugins:
@@ -36,6 +37,7 @@ steps:
       cd buildkite
       ./create_instances.py "${BAZEL_TEST_VM_NAMES}"
     label: ":pipeline:"
+    timeout_in_minutes: 30
     agents:
       - "queue=default"
     plugins:
@@ -71,6 +73,7 @@ steps:
       cd buildkite
       ./promote_images.py "${BAZEL_VM_NAMES}"
     label: ":pipeline:"
+    timeout_in_minutes: 30
     agents:
       - "queue=default"
     plugins:
@@ -102,6 +105,7 @@ steps:
       cd buildkite
       ./create_instances.py "${BAZEL_PROD_INSTANCE_GROUPS}"
     label: ":pipeline:"
+    timeout_in_minutes: 30
     agents:
       - "queue=default"
     plugins:
