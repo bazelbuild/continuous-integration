@@ -1,0 +1,217 @@
+# Maps repository file paths to CI images and GCE instance groups that need
+# rebuilding, digest re-pinning, or recreating when those paths change.
+#
+# Consumed by: .github/workflows/image-rebuild-reminder.yml
+# Runbook:     docs/images.md
+#
+# Glob syntax:
+#   - "**" matches any number of path segments (including zero).
+#   - "*"  matches any characters within a single path segment.
+
+targets:
+  - id: docker-all
+    name: All Linux CI Docker images
+    category: image-rebuild
+    doc: docs/images.md#linux-ci-docker-images
+    action: "Run the `Create Linux Docker Images` pipeline (or `buildkite/docker/build.sh && ./push.sh`), then pin new digests with `python3 buildkite/update_docker_image_hashes.py`."
+    paths:
+      - buildkite/docker/build.sh
+      - buildkite/docker/push.sh
+
+  - id: docker-ubuntu2404
+    name: ubuntu2404 Docker image (ubuntu2404, ubuntu2404-kythe)
+    category: image-rebuild
+    doc: docs/images.md#linux-ci-docker-images
+    action: "Build & push via `Create Linux Docker Images` (or `buildkite/docker/build.sh && ./push.sh`), then run `python3 buildkite/update_docker_image_hashes.py`. Note: `mintlify` and `docgen` also use `ubuntu2404` as their base image."
+    paths:
+      - buildkite/docker/ubuntu2404/**
+
+  - id: docker-ubuntu2204
+    name: ubuntu2204 Docker image (ubuntu2204, ubuntu2204-java17, ubuntu2204-kythe, ubuntu2204-bazel-java17)
+    category: image-rebuild
+    doc: docs/images.md#linux-ci-docker-images
+    action: "Build & push via `Create Linux Docker Images` (or `buildkite/docker/build.sh && ./push.sh`), then run `python3 buildkite/update_docker_image_hashes.py`."
+    paths:
+      - buildkite/docker/ubuntu2204/**
+
+  - id: docker-rockylinux8
+    name: rockylinux8 Docker image (rockylinux8, rockylinux8-java8, rockylinux8-java11, rockylinux8-java11-devtoolset10, rockylinux8-releaser)
+    category: image-rebuild
+    doc: docs/images.md#linux-ci-docker-images
+    action: "Build & push via `Create Linux Docker Images` (or `buildkite/docker/build.sh && ./push.sh`), then run `python3 buildkite/update_docker_image_hashes.py`."
+    paths:
+      - buildkite/docker/rockylinux8/**
+
+  - id: docker-debian10
+    name: debian10 Docker image (debian10-java11)
+    category: image-rebuild
+    doc: docs/images.md#linux-ci-docker-images
+    action: "Build & push via `Create Linux Docker Images` (or `buildkite/docker/build.sh && ./push.sh`), then run `python3 buildkite/update_docker_image_hashes.py`."
+    paths:
+      - buildkite/docker/debian10/**
+
+  - id: docker-debian12
+    name: debian12 Docker image
+    category: image-rebuild
+    doc: docs/images.md#linux-ci-docker-images
+    action: "Build & push via `Create Linux Docker Images` (or `buildkite/docker/build.sh && ./push.sh`), then run `python3 buildkite/update_docker_image_hashes.py`."
+    paths:
+      - buildkite/docker/debian12/**
+
+  - id: docker-debian13
+    name: debian13 Docker image
+    category: image-rebuild
+    doc: docs/images.md#linux-ci-docker-images
+    action: "Build & push via `Create Linux Docker Images` (or `buildkite/docker/build.sh && ./push.sh`), then run `python3 buildkite/update_docker_image_hashes.py`."
+    paths:
+      - buildkite/docker/debian13/**
+
+  - id: docker-fedora39
+    name: fedora39 Docker image (fedora39-java17, fedora39-bazel-java17)
+    category: image-rebuild
+    doc: docs/images.md#linux-ci-docker-images
+    action: "Build & push via `Create Linux Docker Images` (or `buildkite/docker/build.sh && ./push.sh`), then run `python3 buildkite/update_docker_image_hashes.py`."
+    paths:
+      - buildkite/docker/fedora39/**
+
+  - id: docker-fedora40
+    name: fedora40 Docker image (fedora40-java21, fedora40-bazel-java21)
+    category: image-rebuild
+    doc: docs/images.md#linux-ci-docker-images
+    action: "Build & push via `Create Linux Docker Images` (or `buildkite/docker/build.sh && ./push.sh`), then run `python3 buildkite/update_docker_image_hashes.py`."
+    paths:
+      - buildkite/docker/fedora40/**
+
+  - id: docker-fedora43
+    name: fedora43 Docker image (fedora43-java25, fedora43-bazel-java25)
+    category: image-rebuild
+    doc: docs/images.md#linux-ci-docker-images
+    action: "Build & push via `Create Linux Docker Images` (or `buildkite/docker/build.sh && ./push.sh`), then run `python3 buildkite/update_docker_image_hashes.py`."
+    paths:
+      - buildkite/docker/fedora43/**
+
+  - id: linux-vm-image
+    name: Linux GCE VM image (bk-docker, bk-docker-arm64)
+    category: image-rebuild
+    doc: docs/images.md#linux-gce-vm-images
+    action: "Build via `Create Linux VM image` pipeline (or `buildkite/create_images.py bk-testing-docker bk-testing-docker-arm64`), test in `bazel-testing`, then promote via `promote_images.py` and `create_instances.py`."
+    paths:
+      - buildkite/setup-docker.sh
+      - buildkite/create_images.py
+      - pipelines/publish-vm-image.yml
+      - buildkite/promote_images.py
+
+  - id: windows-vm-image
+    name: Windows GCE VM image (bk-windows)
+    category: image-rebuild
+    doc: docs/images.md#windows-gce-vm-images
+    action: "Build via `Create Windows VM image` pipeline (or `buildkite/create_images.py bk-testing-windows`), test in `bazel-testing`, then promote via `promote_images.py` and `create_instances.py`."
+    paths:
+      - buildkite/setup-windows.ps1
+      - buildkite/create_images.py
+      - pipelines/publish-vm-image.yml
+      - buildkite/promote_images.py
+
+  - id: gce-instance-groups-linux
+    name: Linux GCE instance groups (bk-docker, bk-docker-arm64, bk-trusted-docker)
+    category: instance-recreate
+    doc: docs/images.md#gce-instance-templates-and-startup-scripts
+    action: "No VM image rebuild needed. Recreate testing instances first (`buildkite/create_instances.py bk-testing-docker bk-testing-docker-arm64`), then production instances during a quiet window."
+    paths:
+      - buildkite/startup-docker-pdssd.sh
+
+  - id: gce-instance-groups-windows
+    name: Windows GCE instance groups (bk-windows, bk-trusted-windows)
+    category: instance-recreate
+    doc: docs/images.md#gce-instance-templates-and-startup-scripts
+    action: "No VM image rebuild needed. Recreate testing instances first (`buildkite/create_instances.py bk-testing-windows`), then production instances during a quiet window."
+    paths:
+      - buildkite/startup-windows-pdssd.ps1
+
+  - id: gce-instance-groups-common
+    name: GCE instance templates / Managed Instance Groups
+    category: instance-recreate
+    doc: docs/images.md#gce-instance-templates-and-startup-scripts
+    action: "No VM image rebuild needed. Recreate affected testing instance groups first via `buildkite/create_instances.py`, then production instance groups during a quiet window."
+    paths:
+      - buildkite/instances.yml
+      - buildkite/create_instances.py
+      - buildkite/create_instance_template.py
+      - buildkite/update_instances.py
+
+  - id: mintlify-image
+    name: mintlify Docker image (gcr.io/bazel-public/mintlify)
+    category: image-rebuild
+    doc: docs/images.md#mintlify
+    action: "Run `./mintlify/build.sh` on a branch to push `testing/mintlify:latest` for testing, then run `./mintlify/build.sh` on `master` to push `mintlify:latest`."
+    paths:
+      - mintlify/Dockerfile
+      - mintlify/build.sh
+      - mintlify/check_docs.sh
+      - mintlify/download_json.sh
+      - mintlify/annotation.html
+      - mintlify/package.json
+      - mintlify/package-lock.json
+
+  - id: docgen-image
+    name: docgen Docker image (gcr.io/bazel-public/docgen)
+    category: image-rebuild
+    doc: docs/images.md#docgen
+    action: "Run `./docgen/build.sh` to push `gcr.io/bazel-public/docgen:latest`, then pin the new digest with `python3 buildkite/update_docker_image_hashes.py`."
+    paths:
+      - docgen/Dockerfile
+      - docgen/build.sh
+      - docgen/Gemfile
+      - docgen/Gemfile.lock
+
+  - id: buildifier-image
+    name: buildifier Docker image (gcr.io/bazel-public/buildifier)
+    category: image-rebuild
+    doc: docs/images.md#buildifier
+    action: "Run `./buildifier/build.sh` to build and push `gcr.io/bazel-public/buildifier:latest`."
+    paths:
+      - buildifier/**
+
+  - id: bazel-oci-image
+    name: Bazel release container image (gcr.io/bazel-public/bazel)
+    category: image-rebuild
+    doc: docs/images.md#bazel-release-container
+    action: "Trigger the `Docker Update` pipeline in `bazel-trusted` or run `./bazel/oci/build.sh <bazel_version> push`."
+    paths:
+      - bazel/oci/**
+      - pipelines/docker-update.yml
+
+  - id: gitbundle-image
+    name: Git mirror bundle (gitbundle)
+    category: image-rebuild
+    doc: docs/images.md#git-mirror-bundle
+    action: "Trigger the `Update Git Mirror Tar Ball` pipeline in `bazel-trusted` (or wait for its daily schedule); rebuild Linux/Windows VM images if agents need the updated mirror baked on disk immediately."
+    paths:
+      - gitbundle/**
+
+  - id: dashboard-images
+    name: Dashboard Docker images (gcr.io/bazel-public/dashboard/{client,server})
+    category: image-rebuild
+    doc: docs/images.md#dashboard
+    action: "Run `./dashboard/client/build.sh` and/or `./dashboard/server/build.sh` to build and push the updated container image."
+    paths:
+      - dashboard/client/Dockerfile
+      - dashboard/client/build.sh
+      - dashboard/server/Dockerfile
+      - dashboard/server/build.sh
+
+  - id: slack-inviter-image
+    name: Slack inviter Docker image (slack-bazel-build)
+    category: image-rebuild
+    doc: docs/images.md#slack-inviter
+    action: "Automatically rebuilt and deployed by Cloud Run on merge to `master`; verify the Cloud Run revision after merge."
+    paths:
+      - slack-bazel-build/docker/**
+
+  - id: rbe-configs
+    name: RBE toolchain configs (gs://bazel-ci/rbe-configs)
+    category: image-rebuild
+    doc: docs/images.md#rbe-toolchain-configs
+    action: "Run `python3 rbe-configs/generate.py --upload` to regenerate and upload RBE toolchain tarballs, then update `rules/rbe_presets.json`."
+    paths:
+      - rbe-configs/**

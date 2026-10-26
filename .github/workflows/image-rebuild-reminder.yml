@@ -1,0 +1,207 @@
+name: Image Rebuild Reminder
+
+# SECURITY NOTE:
+# Uses `pull_request_target` so the workflow has `pull-requests: write` permission
+# to post/update a sticky reminder comment on PRs from forks.
+# NEVER check out or execute untrusted PR code in this workflow.
+# Only `.github/image-rebuild-map.yml` from the trusted base branch is checked out,
+# and PR file paths are fetched strictly via the GitHub REST API.
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  remind:
+    if: github.repository_owner == 'bazelbuild'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trusted mapping file from base branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          sparse-checkout: |
+            .github/image-rebuild-map.yml
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Check changed files and update sticky comment
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const fs = require('fs');
+
+            const MARKER = '<!-- image-rebuild-reminder -->';
+            const MAP_PATH = '.github/image-rebuild-map.yml';
+
+            function unquote(val) {
+              const s = val.trim();
+              if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+                return s.slice(1, -1);
+              }
+              return s;
+            }
+
+            function parseImageRebuildMap(text) {
+              const targets = [];
+              let current = null;
+              let inPaths = false;
+
+              for (const rawLine of text.split(/\r?\n/)) {
+                const trimmed = rawLine.trim();
+                if (!trimmed || trimmed.startsWith('#') || trimmed === 'targets:') {
+                  continue;
+                }
+                if (/^-\s+id:\s*(.+)$/.test(trimmed)) {
+                  const m = trimmed.match(/^-\s+id:\s*(.+)$/);
+                  current = { id: unquote(m[1]), paths: [] };
+                  targets.push(current);
+                  inPaths = false;
+                  continue;
+                }
+                if (!current) continue;
+
+                if (trimmed === 'paths:') {
+                  inPaths = true;
+                  continue;
+                }
+                if (inPaths && trimmed.startsWith('- ')) {
+                  current.paths.push(unquote(trimmed.slice(2)));
+                  continue;
+                }
+                const kv = trimmed.match(/^([a-zA-Z0-9_-]+):\s*(.*)$/);
+                if (kv) {
+                  inPaths = false;
+                  current[kv[1]] = unquote(kv[2]);
+                }
+              }
+              return targets;
+            }
+
+            function globToRegExp(glob) {
+              let regex = '^';
+              for (let i = 0; i < glob.length; i++) {
+                const c = glob[i];
+                if (c === '*') {
+                  if (glob[i + 1] === '*') {
+                    if (glob[i + 2] === '/') {
+                      regex += '(?:.+/)?';
+                      i += 2;
+                    } else {
+                      regex += '.*';
+                      i += 1;
+                    }
+                  } else {
+                    regex += '[^/]*';
+                  }
+                } else if (c === '?') {
+                  regex += '[^/]';
+                } else if ('.+^${}()|[]\\'.includes(c)) {
+                  regex += '\\' + c;
+                } else {
+                  regex += c;
+                }
+              }
+              regex += '$';
+              return new RegExp(regex);
+            }
+
+            const mapText = fs.readFileSync(MAP_PATH, 'utf8');
+            const targets = parseImageRebuildMap(mapText);
+
+            const { owner, repo } = context.repo;
+            const pull_number = context.payload.pull_request.number;
+            const baseRef = context.payload.pull_request.base.ref || 'master';
+
+            const prFiles = await github.paginate(github.rest.pulls.listFiles, {
+              owner,
+              repo,
+              pull_number,
+              per_page: 100,
+            });
+
+            const changedPaths = new Set();
+            for (const f of prFiles) {
+              if (f.filename) changedPaths.add(f.filename);
+              if (f.previous_filename) changedPaths.add(f.previous_filename);
+            }
+            const sortedChanged = Array.from(changedPaths).sort();
+
+            const matchedTargets = [];
+            for (const target of targets) {
+              const regexes = (target.paths || []).map(globToRegExp);
+              const matchedFiles = sortedChanged.filter((p) => regexes.some((re) => re.test(p)));
+              if (matchedFiles.length > 0) {
+                matchedTargets.push({ ...target, matchedFiles });
+              }
+            }
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number: pull_number,
+              per_page: 100,
+            });
+            const existingComment = comments.find(
+              (c) => c.user && c.user.type === 'Bot' && c.body && c.body.includes(MARKER)
+            );
+
+            if (matchedTargets.length === 0) {
+              if (existingComment) {
+                await github.rest.issues.deleteComment({
+                  owner,
+                  repo,
+                  comment_id: existingComment.id,
+                });
+                core.info(`Deleted stale reminder comment ${existingComment.id}.`);
+              } else {
+                core.info('No image or instance-group paths changed.');
+              }
+              return;
+            }
+
+            const docBaseUrl = `https://github.com/${owner}/${repo}/blob/${baseRef}/`;
+            const targetNames = matchedTargets.map((t) => `**${t.name}**`).join(', ');
+
+            const rows = matchedTargets.map((t) => {
+              const filesList = t.matchedFiles.map((f) => `\`${f}\``).join('<br>');
+              const docUrl = `${docBaseUrl}${t.doc}`;
+              return `| **${t.name}** | ${filesList} | ${t.action} See [\`${t.doc}\`](${docUrl}). |`;
+            });
+
+            const body = [
+              MARKER,
+              '### 🔧 CI Image / Instance Group Rebuild Reminder',
+              '',
+              `This PR changes files used by: ${targetNames}.`,
+              `Rebuild affected images (or recreate instance groups) before or after merge — see [\`docs/images.md\`](${docBaseUrl}docs/images.md).`,
+              '',
+              '| Affected Target | Changed Files | Required Action & Runbook |',
+              '| :--- | :--- | :--- |',
+              ...rows,
+            ].join('\n');
+
+            if (existingComment) {
+              if (existingComment.body.trim() !== body.trim()) {
+                await github.rest.issues.updateComment({
+                  owner,
+                  repo,
+                  comment_id: existingComment.id,
+                  body,
+                });
+                core.info(`Updated reminder comment ${existingComment.id}.`);
+              } else {
+                core.info(`Reminder comment ${existingComment.id} is already up to date.`);
+              }
+            } else {
+              const created = await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pull_number,
+                body,
+              });
+              core.info(`Created reminder comment ${created.data.id}.`);
+            }
