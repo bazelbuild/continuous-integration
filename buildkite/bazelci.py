@@ -1749,30 +1749,6 @@ def execute_commands(
             os.makedirs(bazelisk_cache_dir, mode=0o755, exist_ok=True)
             test_flags.append("--sandbox_writable_path={}".format(bazelisk_cache_dir))
 
-        # Set BUILDKITE_ANALYTICS_TOKEN so that bazelci-agent can upload test results to Test Analytics
-        if "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN" in os.environ:
-            if THIS_IS_TESTING:
-                kms_key = "buildkite-testing-api-token"
-                project = "bazel-untrusted"
-            elif THIS_IS_TRUSTED:
-                kms_key = "buildkite-trusted-api-token"
-                project = "bazel-public"
-            else:
-                kms_key = "buildkite-untrusted-api-token"
-                project = "bazel-untrusted"
-
-            try:
-                os.environ["BUILDKITE_ANALYTICS_TOKEN"] = decrypt_token(
-                    encrypted_token=os.environ["ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN"],
-                    kms_key=kms_key,
-                    project=project,
-                )
-            except Exception as ex:
-                print_collapsed_group(
-                    ":rotating_light: Test analytics disabled due to an error :warning:"
-                )
-                eprint(ex)
-
         test_bep_file = os.path.join(tmpdir, _TEST_BEP_FILE)
         # Create an empty test_bep_file so that the bazelci-agent can start to follow the file right away. Otherwise,
         # there is a race between when bazelci-agent starts to read the file and when Bazel creates the file.
