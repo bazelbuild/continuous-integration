@@ -21,54 +21,54 @@
 #   requires manually deleting the old reservation and creating a new one.
 ---
 reservations:
-  # C3D migration test: reserve ~half of the total capacity needed for each pool.
   - name: bk-c3d-us-central1-a
     project: bazel-untrusted
     zone: us-central1-a
     machine_type: c3d-standard-30
-    count: 50
+    count: 80
     description: "untrusted x86 c3d-standard-30 reservation (us-central1-a)"
   - name: bk-c3d-us-central1-b
     project: bazel-untrusted
     zone: us-central1-b
     machine_type: c3d-standard-30
-    count: 50
+    count: 80
     description: "untrusted x86 c3d-standard-30 reservation (us-central1-b)"
   - name: bk-c3d-us-central1-c
     project: bazel-untrusted
     zone: us-central1-c
     machine_type: c3d-standard-30
-    count: 50
+    count: 75
     description: "untrusted x86 c3d-standard-30 reservation (us-central1-c)"
   - name: bk-c3d-us-central1-f
     project: bazel-untrusted
     zone: us-central1-f
     machine_type: c3d-standard-30
-    count: 50
+    count: 75
     description: "untrusted x86 c3d-standard-30 reservation (us-central1-f)"
   - name: bk-trusted-c3d-us-central1-a
     project: bazel-public
     zone: us-central1-a
     machine_type: c3d-standard-30
-    count: 10
+    count: 15
     description: "trusted x86 c3d-standard-30 reservation (us-central1-a)"
   - name: bk-trusted-c3d-us-central1-b
     project: bazel-public
     zone: us-central1-b
     machine_type: c3d-standard-30
-    count: 10
+    count: 15
     description: "trusted x86 c3d-standard-30 reservation (us-central1-b)"
-  - name: bk-pilot-c4a-us-central1-b
+    #These are the only reservation divisions that are available for arm64 for now
+  - name: bk-c4a-us-central1-b
     project: bazel-untrusted
     zone: us-central1-b
     machine_type: c4a-standard-8
-    count: 7
+    count: 15
     description: "untrusted arm64 c4a-standard-8 reservation (us-central1-b)"
-  - name: bk-pilot-c4a-us-central1-f
+  - name: bk-c4a-us-central1-f
     project: bazel-untrusted
     zone: us-central1-f
     machine_type: c4a-standard-8
-    count: 58
+    count: 50
     description: "untrusted arm64 c4a-standard-8 reservation (us-central1-f)"
   - name: bk-trusted-c4a-us-central1-b
     project: bazel-public
