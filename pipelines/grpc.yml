@@ -1,0 +1,11 @@
+---
+tasks:
+  ubuntu2204:
+    build_targets:
+      - "//:all"
+      - "//examples/cpp/..."
+      - "//examples/protos/..."
+    test_targets:
+      - "//test/core/config:all"
+      - "//test/core/util:all"
+      - "//test/cpp/common:all"
