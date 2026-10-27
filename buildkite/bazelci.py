@@ -125,11 +125,10 @@ FLAKY_TESTS_BUCKET = {
     "bazel": "gs://bazel-buildkite-stats/flaky-tests-bep/",
 }[BUILDKITE_ORG]
 
-KZIPS_BUCKET = {
+KZIPS_BUCKET_MAPPING = {
     "bazel-testing": "gs://bazel-kzips-testing/",
-    "bazel-trusted": "gs://bazel-kzips/",
     "bazel": "gs://bazel-kzips/",
-}[BUILDKITE_ORG]
+}
 
 # We don't collect logs in the trusted org
 LOG_BUCKET = {
@@ -2017,6 +2016,9 @@ def upload_bazel_binary(platform):
 
 
 def merge_and_upload_kythe_kzip(platform, index_upload_gcs):
+    if BUILDKITE_ORG not in KZIPS_BUCKET_MAPPING:
+        raise BuildkiteException(f"Kythe indexing not supported for org '{BUILDKITE_ORG}'")
+
     if local_run_only():
         return
     print_collapsed_group(":gcloud: Uploading kythe kzip")
@@ -2033,7 +2035,9 @@ def merge_and_upload_kythe_kzip(platform, index_upload_gcs):
     if index_upload_gcs:
         pipeline = os.getenv("BUILDKITE_PIPELINE_SLUG")
         branch = os.getenv("BUILDKITE_BRANCH")
-        destination = KZIPS_BUCKET + pipeline + "/" + branch + "/" + final_kzip_name
+        destination = (
+            KZIPS_BUCKET_MAPPING[BUILDKITE_ORG] + pipeline + "/" + branch + "/" + final_kzip_name
+        )
         print("Uploading to GCS {}".format(destination))
         execute_command([gsutil_command(), "cp", final_kzip_name, destination])
 

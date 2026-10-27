@@ -863,5 +863,81 @@ tasks:
         self.assertEqual(0, len(warning_steps))
 
 
+class KytheKzipTest(unittest.TestCase):
+    def test_disallows_kzip_for_bazel_trusted(self):
+        with mock.patch.object(
+            bazelci, "BUILDKITE_ORG", "bazel-trusted"
+        ), mock.patch.object(bazelci, "execute_command") as mock_exec:
+            for index_upload_gcs in (False, True):
+                with self.subTest(index_upload_gcs=index_upload_gcs):
+                    with self.assertRaisesRegex(
+                        bazelci.BuildkiteException,
+                        "Kythe indexing not supported for org 'bazel-trusted'",
+                    ):
+                        bazelci.merge_and_upload_kythe_kzip(
+                            "ubuntu2404", index_upload_gcs=index_upload_gcs
+                        )
+            mock_exec.assert_not_called()
+
+    def test_uploads_kzip_for_supported_orgs(self):
+        expected_buckets = {
+            "bazel": "gs://bazel-kzips/",
+            "bazel-testing": "gs://bazel-kzips-testing/",
+        }
+        for org, bucket in expected_buckets.items():
+            with self.subTest(org=org):
+                with mock.patch.dict(
+                    os.environ,
+                    {
+                        "BUILDKITE_PIPELINE_SLUG": "bazel-bazel",
+                        "BUILDKITE_BRANCH": "master",
+                        "BUILDKITE_BUILD_NUMBER": "42",
+                        "BUILDKITE_COMMIT": "deadbeef",
+                    },
+                ), mock.patch.object(
+                    bazelci, "BUILDKITE_ORG", org
+                ), mock.patch.object(
+                    bazelci, "local_run_only", return_value=False
+                ), mock.patch.object(
+                    bazelci, "print_collapsed_group"
+                ), mock.patch.object(
+                    bazelci, "glob", return_value=["a.kzip"]
+                ), mock.patch.object(
+                    bazelci, "gsutil_command", return_value="gsutil"
+                ), mock.patch.object(
+                    bazelci, "execute_command"
+                ) as mock_exec:
+                    bazelci.merge_and_upload_kythe_kzip(
+                        "ubuntu2404", index_upload_gcs=True
+                    )
+
+                    expected_kzip = "42-ubuntu2404-deadbeef.kzip"
+                    self.assertEqual(
+                        mock_exec.call_args_list,
+                        [
+                            mock.call(
+                                [
+                                    f"{bazelci.KYTHE_DIR}/tools/kzip",
+                                    "merge",
+                                    "--output",
+                                    expected_kzip,
+                                    "a.kzip",
+                                ]
+                            ),
+                            mock.call(
+                                ["buildkite-agent", "artifact", "upload", expected_kzip]
+                            ),
+                            mock.call(
+                                [
+                                    "gsutil",
+                                    "cp",
+                                    expected_kzip,
+                                    f"{bucket}bazel-bazel/master/{expected_kzip}",
+                                ]
+                            ),
+                        ],
+                    )
+
+
 if __name__ == "__main__":
     unittest.main()
