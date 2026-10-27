@@ -25,7 +25,7 @@ reservations:
     project: bazel-untrusted
     zone: us-central1-a
     machine_type: c3d-standard-30
-    count: 80 #only 50 found
+    count: 80
     description: "untrusted x86 c3d-standard-30 reservation (us-central1-a)"
   - name: bk-c3d-us-central1-b
     project: bazel-untrusted
