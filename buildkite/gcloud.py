@@ -179,6 +179,31 @@ def describe_image_family(name, **kwargs):
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
+def create_reservation(name, **kwargs):
+    try:
+        return gcloud("compute", "reservations", "create", name, **kwargs)
+    except subprocess.CalledProcessError as e:
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
+
+
+def update_reservation(name, **kwargs):
+    try:
+        return gcloud("compute", "reservations", "update", name, **kwargs)
+    except subprocess.CalledProcessError as e:
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
+
+
+def describe_reservation(name, **kwargs):
+    try:
+        return json.loads(
+            gcloud("compute", "reservations", "describe", "--format=json", name, **kwargs).stdout
+        )
+    except subprocess.CalledProcessError as e:
+        if re.search(r"The resource .* was not found", e.stderr):
+            return None
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
+
+
 def reset_windows_password(name, **kwargs):
     try:
         return gcloud("compute", "reset-windows-password", name, "--quiet", **kwargs)
