@@ -1,25 +1,25 @@
 # GCE capacity reservations for Bazel CI worker pools.
 #
 # Usage:
-#   ./create_reservations.py --dry-run              # Preview changes for all reservations
+#   ./create_reservations.py --plan                 # Preview changes for all reservations
 #   ./create_reservations.py                        # Create or resize all reservations
 #   ./create_reservations.py <name> [<name> ...]    # Reconcile specific reservation(s)
 #
 # Notes:
-# - Reservations use automatic consumption (specificReservationRequired=false),
-#   so any matching VM (same project, zone, and machine_type) in the project
-#   consumes them automatically without instance template changes.
+# - Bazel CI worker VMs power off after each job and are recreated by their MIG.
+#   Without a reservation, stopping a VM releases its capacity back to the zone,
+#   and recreating it can fail with ZONE_RESOURCE_POOL_EXHAUSTED. A reservation
+#   holds the capacity when a VM stops or dies so the replacement VM can always
+#   start immediately.
+# - Reservations use automatic consumption, so any matching VM (same project,
+#   zone, and machine_type) in the project consumes them automatically without
+#   instance template changes.
 # - A reservation is billed 24/7 at the VM rate whether used or not. Keep total
 #   reserved counts equal to the running MIG pool sizes, and shrink or delete
 #   reservations whenever pools shrink or change machine types.
 # - GCE does not allow changing machine_type in place; switching machine types
 #   requires manually deleting the old reservation and creating a new one.
 ---
-default_reservation:
-  region: us-central1
-  zone: us-central1-b
-  description_prefix: "Bazel CI"
-
 reservations:
   - name: bk-pilot-c4a-us-central1-b
     project: bazel-untrusted

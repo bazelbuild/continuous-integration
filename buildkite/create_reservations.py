@@ -16,168 +16,90 @@
 
 import argparse
 import os
-import shlex
 import sys
 import yaml
 
 import gcloud
 
 
-def format_gcloud_command(*args, **kwargs):
-    cmd = ["gcloud"] + list(args)
-    for flag, value in kwargs.items():
-        flag = flag.replace("_", "-")
-        if isinstance(value, bool):
-            cmd += ["--" + ("no-" if not value else "") + flag]
-        elif gcloud.is_sequence(value):
-            for item in value:
-                cmd += ["--" + flag, str(item)]
-        else:
-            cmd += ["--" + flag, str(value)]
-    return " ".join(shlex.quote(part) for part in cmd)
-
-
-def reconcile_reservation(config, dry_run=False):
+def reconcile_reservation(config, plan=False):
     reservation_name = config.pop("name")
     project = config.pop("project", None)
     zone = config.pop("zone", None)
-    config.pop("region", None)
     machine_type = config.pop("machine_type", None)
     count = config.pop("count", None)
     description = config.pop("description", None)
-    description_prefix = config.pop("description_prefix", None)
 
     summary = {
-        "name": reservation_name,
+        "name": reservation_name or "-",
         "project": project or "-",
         "zone": zone or "-",
         "machine_type": machine_type or "-",
         "current_count": "-",
         "desired_count": str(count) if count is not None else "-",
         "action": "error",
-        "returncode": 1,
     }
 
     try:
-        if not project:
-            raise Exception("Invalid reservation config, no project name set")
-        if not zone:
-            raise Exception("Invalid reservation config, no zone set")
-        if not machine_type:
-            raise Exception("Invalid reservation config, no machine_type set")
+        if not project or not zone or not machine_type:
+            raise Exception("Invalid reservation config: project, zone, and machine_type are required")
         if count is None or int(count) <= 0:
-            raise Exception("Invalid reservation config, count must be a positive integer")
+            raise Exception("Invalid reservation config: count must be a positive integer")
 
         count = int(count)
-        summary["desired_count"] = str(count)
-
-        if description_prefix and description:
-            if description.startswith(description_prefix):
-                full_description = description
-            else:
-                full_description = f"{description_prefix}: {description}"
-        elif description:
-            full_description = description
-        elif description_prefix:
-            full_description = f"{description_prefix} ({reservation_name})"
-        else:
-            full_description = None
-
         existing = gcloud.describe_reservation(reservation_name, project=project, zone=zone)
 
         if existing is None:
-            create_kwargs = {
-                "project": project,
-                "zone": zone,
-                "machine_type": machine_type,
-                "vm_count": count,
-            }
-            if full_description:
-                create_kwargs["description"] = full_description
-            create_kwargs.update(config)
-
-            if dry_run:
-                cmd_str = format_gcloud_command(
-                    "compute", "reservations", "create", reservation_name, **create_kwargs
-                )
-                print(f"[DRY RUN] {cmd_str}")
-                summary["action"] = "create (dry-run)"
-            else:
+            if not plan:
+                create_kwargs = {
+                    "project": project,
+                    "zone": zone,
+                    "machine_type": machine_type,
+                    "vm_count": count,
+                }
+                if description:
+                    create_kwargs["description"] = description
+                create_kwargs.update(config)
                 gcloud.create_reservation(reservation_name, **create_kwargs)
-                print(
-                    f"Created reservation {reservation_name} "
-                    f"({count}x {machine_type} in {project}/{zone})"
-                )
-                summary["action"] = "created"
-            summary["returncode"] = 0
-            return summary
-
-        spec = existing.get("specificReservation", {})
-        props = spec.get("instanceProperties", {})
-        existing_machine_type = props.get("machineType", "").split("/")[-1]
-        existing_count = int(spec.get("count", 0))
-        summary["current_count"] = str(existing_count)
-
-        if existing_machine_type != machine_type:
-            raise Exception(
-                f"Reservation {reservation_name} in {project}/{zone} has machine_type "
-                f"'{existing_machine_type}', but config specifies '{machine_type}'. "
-                f"GCE cannot change a reservation's machine type in place; "
-                f"delete and recreate it manually."
+            summary["action"] = "create (plan)" if plan else "created"
+        else:
+            spec = existing.get("specificReservation", {})
+            existing_machine_type = (
+                spec.get("instanceProperties", {}).get("machineType", "").split("/")[-1]
             )
+            existing_count = int(spec.get("count", 0))
+            summary["current_count"] = str(existing_count)
 
-        if existing_count != count:
-            update_kwargs = {
-                "project": project,
-                "zone": zone,
-                "vm_count": count,
-            }
-            if dry_run:
-                cmd_str = format_gcloud_command(
-                    "compute", "reservations", "update", reservation_name, **update_kwargs
+            if existing_machine_type != machine_type:
+                raise Exception(
+                    f"Reservation {reservation_name} in {project}/{zone} has machine_type "
+                    f"'{existing_machine_type}', but config specifies '{machine_type}'. "
+                    f"GCE cannot change a reservation's machine type in place; "
+                    f"delete the existing reservation first so it can be recreated."
                 )
-                print(f"[DRY RUN] {cmd_str}")
-                summary["action"] = f"update {existing_count} -> {count} (dry-run)"
+
+            if existing_count != count:
+                if not plan:
+                    gcloud.update_reservation(
+                        reservation_name, project=project, zone=zone, vm_count=count
+                    )
+                summary["action"] = (
+                    f"update {existing_count} -> {count} (plan)"
+                    if plan
+                    else f"updated ({existing_count} -> {count})"
+                )
             else:
-                gcloud.update_reservation(reservation_name, **update_kwargs)
-                print(
-                    f"Updated reservation {reservation_name} in {project}/{zone}: "
-                    f"vm-count {existing_count} -> {count}"
-                )
-                summary["action"] = f"updated ({existing_count} -> {count})"
-            summary["returncode"] = 0
-            return summary
-
-        print(
-            f"Reservation {reservation_name} already matches config "
-            f"({count}x {machine_type} in {project}/{zone}): no-op"
-        )
-        summary["action"] = "no-op"
-        summary["returncode"] = 0
-        return summary
+                summary["action"] = "no-op"
     except Exception as ex:
         print(f"Failed to reconcile reservation {reservation_name}: {ex}", file=sys.stderr)
-        return summary
+
+    return summary
 
 
 def print_summary_table(results):
     headers = ("NAME", "PROJECT", "ZONE", "MACHINE_TYPE", "CURRENT", "DESIRED", "ACTION")
-    rows = [
-        (
-            r["name"],
-            r["project"],
-            r["zone"],
-            r["machine_type"],
-            r["current_count"],
-            r["desired_count"],
-            r["action"],
-        )
-        for r in results
-    ]
-    widths = [
-        max(len(headers[i]), *(len(row[i]) for row in rows)) if rows else len(headers[i])
-        for i in range(len(headers))
-    ]
+    rows = [tuple(r.values()) for r in results]
+    widths = [max(len(val) for val in col) for col in zip(headers, *rows)]
     fmt = "  ".join(f"{{:<{w}}}" for w in widths)
     print("\n" + fmt.format(*headers))
     print("  ".join("-" * w for w in widths))
@@ -187,8 +109,6 @@ def print_summary_table(results):
 
 def read_config_file():
     path = os.path.join(os.getcwd(), "reservations.yml")
-    if not os.path.exists(path):
-        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "reservations.yml")
     with open(path, "rb") as fd:
         content = fd.read().decode("utf-8")
     return yaml.safe_load(content)
@@ -209,21 +129,13 @@ def main(argv=None):
         "reservations.yml are reconciled.",
     )
     parser.add_argument(
-        "--all",
+        "--plan",
         action="store_true",
-        help="Reconcile all reservations in reservations.yml (default when no names are given).",
+        help="Check existing reservations and print planned changes in a summary table without mutating anything.",
     )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Check existing reservations and print planned gcloud create/update commands without mutating anything.",
-    )
-
     args = parser.parse_args(argv)
 
-    config = read_config_file()
-    reservations = config.get("reservations", [])
-    default_reservation = config.get("default_reservation", {})
+    reservations = read_config_file().get("reservations", [])
     valid_names = [item["name"] for item in reservations]
 
     if args.names:
@@ -236,14 +148,12 @@ def main(argv=None):
                 return 1
         selected_reservations = [r for r in reservations if r["name"] in names]
     else:
+        # If no reservation names are specified, handle all reservations.
         selected_reservations = reservations
 
-    results = [
-        reconcile_reservation({**default_reservation, **r}, dry_run=args.dry_run)
-        for r in selected_reservations
-    ]
+    results = [reconcile_reservation(r, plan=args.plan) for r in selected_reservations]
     print_summary_table(results)
-    return max((r["returncode"] for r in results), default=0)
+    return 1 if any(r["action"] == "error" for r in results) else 0
 
 
 if __name__ == "__main__":
