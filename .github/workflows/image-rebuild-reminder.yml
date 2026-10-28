@@ -1,0 +1,76 @@
+name: Image Rebuild Reminder
+
+# Uses pull_request_target so fork PRs can receive sticky reminder comments.
+# Never check out or execute untrusted PR code in this workflow.
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  remind:
+    if: github.repository_owner == 'bazelbuild'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post or update image rebuild reminder
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const MARKER = '<!-- image-rebuild-reminder -->';
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request;
+            const baseBlob = `https://github.com/${owner}/${repo}/blob/${pr.base.ref || 'master'}`;
+
+            const prFiles = await github.paginate(github.rest.pulls.listFiles, { owner, repo, pull_number: pr.number, per_page: 100 });
+            const headFiles = new Set(), allPaths = new Set();
+            for (const f of prFiles) {
+              if (f.filename) allPaths.add(f.filename);
+              if (f.filename && f.status !== 'removed') headFiles.add(f.filename);
+              if (f.previous_filename) allPaths.add(f.previous_filename);
+            }
+            const changed = [...allPaths].sort();
+            const fmt = (p) => headFiles.has(p) && /^[\w./-]+$/.test(p)
+              ? `[\`${p}\`](https://github.com/${owner}/${repo}/blob/${pr.head.sha}/${p})`
+              : `\`${p.replace(/[`\r\n]/g, '')}\``;
+
+            const GROUPS = [
+              {
+                rebuild: true,
+                match: (p) => ['buildkite/setup-docker.sh', 'buildkite/create_images.py', 'buildkite/promote_images.py'].includes(p),
+                note: 'These files are baked into the **Linux VM image**, so after merging, run [Create Linux VM image](https://buildkite.com/bazel-trusted/create-linux-vm-image).',
+              },
+              {
+                rebuild: true,
+                match: (p) => ['buildkite/setup-windows.ps1', 'buildkite/create_images.py', 'buildkite/promote_images.py'].includes(p),
+                note: 'These files are baked into the **Windows VM image**, so after merging, run [Create Windows VM image](https://buildkite.com/bazel-trusted/create-windows-vm-image).',
+              },
+              {
+                rebuild: false,
+                match: (p) => ['buildkite/instances.yml', 'buildkite/startup-docker-pdssd.sh', 'buildkite/startup-windows-pdssd.ps1', 'buildkite/create_instances.py', 'buildkite/create_instance_template.py', 'buildkite/update_instances.py'].includes(p),
+                note: `These files only affect **GCE instance groups** (no VM image rebuild needed), so after merging, recreate the affected testing and prod groups with [\`buildkite/create_instances.py\`](${baseBlob}/buildkite/create_instances.py).`,
+              },
+              {
+                rebuild: true,
+                match: (p) => p.startsWith('buildkite/docker/'),
+                note: `These files build **Linux Docker images** — after merging, run [Create Linux Docker Images](https://buildkite.com/bazel-trusted/create-linux-docker-images) (or wait for its nightly build), then run [\`buildkite/update_docker_image_hashes.py\`](${baseBlob}/buildkite/update_docker_image_hashes.py) in a follow-up PR to update the pinned hashes.`,
+              },
+            ];
+
+            const hits = GROUPS.map((g) => ({ ...g, files: changed.filter(g.match) })).filter((g) => g.files.length > 0);
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: pr.number, per_page: 100 });
+            const existing = comments.find((c) => c.user?.type === 'Bot' && c.body?.includes(MARKER));
+            if (hits.length === 0) {
+              if (existing) await github.rest.issues.deleteComment({ owner, repo, comment_id: existing.id });
+              return;
+            }
+
+            const heading = hits.some((g) => g.rebuild)
+              ? '### :warning: VM/Docker image rebuild needed after merge'
+              : '### :warning: GCE instance group recreation needed after merge';
+            const sections = hits.map((g, i) => `${i ? 'It also' : 'This PR'} changes:\n\n${g.files.map((f) => `- ${fmt(f)}`).join('\n')}\n\n${g.note}`);
+            const body = `${MARKER}\n${heading}\n\n${sections.join('\n\n')}`;
+            if (!existing) await github.rest.issues.createComment({ owner, repo, issue_number: pr.number, body });
+            else if (existing.body.trim() !== body.trim()) await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
