@@ -168,10 +168,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "file_config": ".bazelci/postsubmit.yml",
         "pipeline_slug": "bazel-bench",
     },
-    "Bazel Examples": {
-        "git_repository": "https://github.com/bazelbuild/examples.git",
-        "pipeline_slug": "bazel-bazel-examples",
-    },
     "Bazel Remote Cache": {
         "git_repository": "https://github.com/buchgr/bazel-remote.git",
         "pipeline_slug": "bazel-remote-cache",
@@ -274,6 +270,11 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "pipeline_slug": "tensorflow",
         "disabled_reason": "https://github.com/tensorflow/tensorflow/issues/60508",
     },
+    "gRPC": {
+        "git_repository": "https://github.com/grpc/grpc.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/grpc.yml",
+        "pipeline_slug": "grpc-grpc",
+    },
     "rules_android": {
         "git_repository": "https://github.com/bazelbuild/rules_android.git",
         "pipeline_slug": "rules-android",
@@ -290,6 +291,11 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "owned_by_bazel": True,
         "disabled_reason": "https://github.com/bazelbuild/rules_cc/issues/190",
     },
+    "rules_java": {
+        "git_repository": "https://github.com/bazelbuild/rules_java.git",
+        "pipeline_slug": "rules-java-java",
+        "owned_by_bazel": True,
+    },
     "rules_platform": {
         "git_repository": "https://github.com/bazelbuild/rules_platform.git",
         "pipeline_slug": "rules-platform",
@@ -299,6 +305,10 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazel-contrib/rules_python.git",
         "pipeline_slug": "rules-python-python",
         "disabled_reason": "https://github.com/bazel-contrib/rules_python/issues/3566, https://github.com/bazel-contrib/rules_python/issues/3581, https://github.com/bazel-contrib/rules_python/issues/3613"
+    },
+    "rules_shell": {
+        "git_repository": "https://github.com/bazel-contrib/rules_shell.git",
+        "pipeline_slug": "rules-shell",
     },
     "rules_testing": {
         "git_repository": "https://github.com/bazelbuild/rules_testing.git",
