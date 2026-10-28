@@ -65,7 +65,7 @@ steps:
       cd buildkite
       ./trigger_testing_presubmits.py google-bazel-presubmit bazel-bazel-github-presubmit
     label: ":test_tube: Run Bazel presubmits in bazel-testing"
-    timeout_in_minutes: 240
+    timeout_in_minutes: 60
     agents:
       - "queue=default"
     plugins:
@@ -74,6 +74,7 @@ steps:
           environment:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
+            - "BAZEL_TEST_VM_NAMES=${BAZEL_TEST_VM_NAMES}"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
           image: "gcr.io/bazel-public/ubuntu2204@sha256:07887f6469bb5594b3b86bf6023398356e3791006570695a556086eff13ded74"
           network: "host"
