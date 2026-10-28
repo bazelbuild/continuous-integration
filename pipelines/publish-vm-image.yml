@@ -30,8 +30,6 @@ steps:
 
   - wait
 
-  - block: ":arrows_counterclockwise: Re-create instance group in the bazel-testing org"
-
   - command: |-
       cd buildkite
       ./create_instances.py "${BAZEL_TEST_VM_NAMES}"
@@ -76,7 +74,7 @@ steps:
             - "ANDROID_NDK_HOME"
             - "BAZEL_TEST_VM_NAMES=${BAZEL_TEST_VM_NAMES}"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-          image: "gcr.io/bazel-public/ubuntu2204@sha256:07887f6469bb5594b3b86bf6023398356e3791006570695a556086eff13ded74"
+          image: "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
           network: "host"
           privileged: true
           propagate-environment: true
