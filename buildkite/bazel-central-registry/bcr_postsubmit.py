@@ -27,6 +27,8 @@ import base64
 import hashlib
 import json
 import os
+import pathlib
+import re
 import requests
 import subprocess
 import sys
@@ -68,7 +70,7 @@ def check_and_write_new_attestations():
 
 def get_new_attestations_json_paths():
     cwd = os.getcwd()
-    cmd = ["git", "diff-tree", "--no-commit-id", "--name-only", "-r"]
+    cmd = ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", "-z"]
 
     # last_green should be the parent commit. However, sometimes the
     # pipeline can fail due to infra issues. In this case we need
@@ -78,7 +80,12 @@ def get_new_attestations_json_paths():
         cmd.append(last_green)
 
     paths = get_output(cmd + [get_commit()])
-    return [os.path.join(cwd, p) for p in paths.split("\n") if p.endswith(f"/{ATTESTATION_METADATA_FILE}")]
+    result = []
+    attestation_re = re.compile(r"^modules/[^/]+/[^/]+/" + re.escape(ATTESTATION_METADATA_FILE) + r"$")
+    for p in paths.split("\0"):
+        if p and attestation_re.match(p):
+            result.append(os.path.join(cwd, p))
+    return result
 
 
 def get_last_green():
@@ -123,7 +130,17 @@ def check_and_write_single_attestation(url, integrity, dest_dir):
     print("\t\tIntegrity: OK")
 
     dest = os.path.join(dest_dir, get_canonical_basename(url))
+
+    dest_path = pathlib.Path(dest).resolve()
+    dest_dir_path = pathlib.Path(dest_dir).resolve()
+    if not dest_path.is_relative_to(dest_dir_path):
+        raise AttestationError(
+            f"Resolved path {dest_path} is outside of expected directory {dest_dir_path}"
+        )
+
     print(f"\t\tWriting attestation to {dest}...")
+    if os.path.islink(dest):
+        raise AttestationError(f"Symlink found for {dest}")
     with open(dest, "wb") as f:
         f.write(raw_content)
 
@@ -157,7 +174,7 @@ def sync_bcr_content():
     )
     subprocess.check_output(
         # -c Use checksum to compare files
-        ["gsutil", "-h", "Cache-Control:no-cache", "-m", "rsync", "-c", "-r", "./modules", BCR_BUCKET + "modules"]
+        ["gsutil", "-h", "Cache-Control:no-cache", "-m", "rsync", "-e", "-c", "-r", "./modules", BCR_BUCKET + "modules"]
     )
 
 

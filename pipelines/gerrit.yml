@@ -8,7 +8,7 @@ platforms:
       - "--test_tag_filters=-git,-git-protocol-v2,-git-upload-archive,-ssh"
     test_targets:
       - "//..."
-  ubuntu2204:
+  ubuntu2404:
     build_targets:
       - "//:release"
       - "//:api"
@@ -28,7 +28,7 @@ platforms:
       - "--remote_instance_name=projects/bazel-untrusted/instances/default_instance"
       - "--remote_executor=grpcs://remotebuildexecution.googleapis.com"
     build_targets:
-      - "//:release"
+      - "//:headless"
       - "//:api-skip-javadoc"
     test_flags:
       - "--config=remote"
@@ -37,4 +37,4 @@ platforms:
       - "--experimental_remote_cache_async"
       - "--remote_download_minimal"
     test_targets:
-      - "//..."
+      - "//javatests/..."

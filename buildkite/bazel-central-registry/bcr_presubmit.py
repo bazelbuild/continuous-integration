@@ -96,11 +96,15 @@ def get_target_modules():
     """
     # Get the list of changed files compared to the main branch
     output = subprocess.check_output(
-        ["git", "diff", "main...HEAD", "--name-only", "--pretty=format:"]
+        ["git", "diff", "main...HEAD", "--name-only", "-z", "--pretty=format:"]
     )
     modules = set()
     # Matching modules/<name>/<version>/
-    for line in output.decode("utf-8").split():
+    # `git diff -z --name-only` delimits affected files with \0 and outputs paths verbatim
+    # (without quoting unusual characters), so split on \0 instead of whitespace.
+    for line in output.decode("utf-8").split("\0"):
+        if not line:
+            continue
         s = re.match(r"modules\/([^\/]+)\/([^\/]+)\/", line)
         if s:
             module_name, module_version = s.groups()
@@ -127,11 +131,13 @@ def get_modules_with_metadata_change():
     """
     # Get the list of changed files compared to the main branch
     output = subprocess.check_output(
-        ["git", "diff", "main...HEAD", "--name-only", "--pretty=format:"]
+        ["git", "diff", "main...HEAD", "--name-only", "-z", "--pretty=format:"]
     )
     modules = set()
     # Matching modules/<name>/metadata.json
-    for line in output.decode("utf-8").split():
+    for line in output.decode("utf-8").split("\0"):
+        if not line:
+            continue
         s = re.match(r"modules\/([^\/]+)\/metadata\.json", line)
         if s:
             module_name = s.groups()[0]
@@ -365,7 +371,7 @@ def validate_existing_modules_are_not_modified():
     # Get all files that are Modified, Renamed, or Deleted.
     bazelci.print_expanded_group("Checking if existing modules are not modified")
     output = subprocess.check_output(
-        ["git", "diff", "main...HEAD", "--diff-filter=MRD", "--name-only", "--pretty=format:"]
+        ["git", "diff", "main...HEAD", "--diff-filter=MRD", "--name-only", "-z", "--pretty=format:"]
     )
 
     # Check if any of the source.json, MODULE.bazel, or patch files are changed for an existing module.
@@ -376,7 +382,9 @@ def validate_existing_modules_are_not_modified():
         re.compile(r"modules\/([^\/]+)\/([^\/]+)\/overlay"),
     ]
     changed_modules = []
-    for line in output.decode("utf-8").split():
+    for line in output.decode("utf-8").split("\0"):
+        if not line:
+            continue
         for p in NO_CHANGE_FILE_PATTERNS:
             s = p.match(line)
             if s:
@@ -394,10 +402,14 @@ def validate_files_outside_of_modules_dir_are_not_modified(modules):
         return
     bazelci.print_expanded_group("Checking if any file changes outside of modules/")
     output = subprocess.check_output(
-        ["git", "diff", "main...HEAD", "--name-only", "--pretty=format:", ":!modules"]
-    ).decode("utf-8").strip()
-    if output:
-        error("The following files should not be changed when adding a new module version:\n" + output)
+        ["git", "diff", "main...HEAD", "--name-only", "-z", "--pretty=format:", ":!modules"]
+    ).decode("utf-8")
+    changed_files = [f for f in output.split("\0") if f]
+    if changed_files:
+        error(
+            "The following files should not be changed when adding a new module version:\n"
+            + "\n".join(changed_files)
+        )
     else:
         bazelci.eprint("Nothing changed outside of modules/")
 

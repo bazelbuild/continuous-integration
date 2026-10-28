@@ -9,7 +9,7 @@ steps:
         always-pull: true
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/ubuntu2404@sha256:e0a4a1fe658b4fe75f0a6914e7a7891a4976f6fcf12ff143a478a0912ead801c
+        image: gcr.io/bazel-public/ubuntu2404@sha256:4df19f6dfb4fdb99576105689751d3680dd5103770b3739e6a1cda41e9e8a16d
         network: host
         privileged: true
         propagate-environment: true
@@ -51,7 +51,7 @@ steps:
         always-pull: true
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/rockylinux8-releaser
+        image: gcr.io/bazel-public/rockylinux8-releaser@sha256:c7cfce3e39fe8ed61e87cf715deeee7a1ca3821189f9cc4476f00f4f8c9534cb
         network: host
         privileged: true
         propagate-environment: true
@@ -72,7 +72,15 @@ steps:
       release_name=$(buildkite-agent meta-data get "release_name")
       echo "release_name = \"\$release_name\""
 
-      bazel build --sandbox_tmpfs_path=/tmp //src:bazel
+      bazel build \
+          --remote_cache=remotebuildexecution.googleapis.com \
+          --remote_instance_name=projects/bazel-public/instances/default_instance \
+          --google_default_credentials \
+          --remote_timeout=60 \
+          --remote_max_connections=200 \
+          --remote_default_exec_properties=cache-silo-key=bazel-release \
+          --sandbox_tmpfs_path=/tmp \
+          //src:bazel
       mkdir output
       cp bazel-bin/src/bazel output/bazel
 
@@ -80,6 +88,12 @@ steps:
       output/bazel mod deps --lockfile_mode=update
 
       output/bazel build \
+          --remote_cache=remotebuildexecution.googleapis.com \
+          --remote_instance_name=projects/bazel-public/instances/default_instance \
+          --google_default_credentials \
+          --remote_timeout=60 \
+          --remote_max_connections=200 \
+          --remote_default_exec_properties=cache-silo-key=bazel-release \
           -c opt \
           --stamp \
           --sandbox_tmpfs_path=/tmp \
@@ -113,7 +127,7 @@ steps:
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
           - GOOGLE_APPLICATION_CREDENTIALS
-        image: gcr.io/bazel-public/rockylinux8-releaser
+        image: gcr.io/bazel-public/rockylinux8-releaser@sha256:2ff048a2b370f8c1373700c8436446fa80ee4e53d01e8a3a52c66a3433dce71d
         network: host
         privileged: true
         propagate-environment: true
@@ -134,11 +148,25 @@ steps:
       release_name=$(buildkite-agent meta-data get "release_name")
       echo "release_name = \"\$release_name\""
 
-      bazel build --sandbox_tmpfs_path=/tmp //src:bazel
+      bazel build \
+          --remote_cache=remotebuildexecution.googleapis.com \
+          --remote_instance_name=projects/bazel-public/instances/default_instance \
+          --google_default_credentials \
+          --remote_timeout=60 \
+          --remote_max_connections=200 \
+          --remote_default_exec_properties=cache-silo-key=bazel-release \
+          --sandbox_tmpfs_path=/tmp \
+          //src:bazel
       mkdir output
       cp bazel-bin/src/bazel output/bazel
 
       output/bazel build \
+          --remote_cache=remotebuildexecution.googleapis.com \
+          --remote_instance_name=projects/bazel-public/instances/default_instance \
+          --google_default_credentials \
+          --remote_timeout=60 \
+          --remote_max_connections=200 \
+          --remote_default_exec_properties=cache-silo-key=bazel-release \
           -c opt \
           --stamp \
           --sandbox_tmpfs_path=/tmp \
@@ -166,11 +194,22 @@ steps:
       release_name=$(buildkite-agent meta-data get "release_name")
       echo "release_name = \"\$release_name\""
 
-      bazel build //src:bazel
+      bazel build \
+          --remote_cache=https://storage.googleapis.com/bazel-trusted-build-cache \
+          --google_default_credentials \
+          --remote_timeout=3600 \
+          --remote_max_connections=200 \
+          --remote_default_exec_properties=cache-silo-key=bazel-release \
+          //src:bazel
       mkdir output
       cp bazel-bin/src/bazel output/bazel
 
       output/bazel build \
+          --remote_cache=https://storage.googleapis.com/bazel-trusted-build-cache \
+          --google_default_credentials \
+          --remote_timeout=3600 \
+          --remote_max_connections=200 \
+          --remote_default_exec_properties=cache-silo-key=bazel-release \
           --define IPHONE_SDK=1 \
           -c opt \
           --stamp \
@@ -198,11 +237,22 @@ steps:
       release_name=$(buildkite-agent meta-data get "release_name")
       echo "release_name = \"\$release_name\""
 
-      bazel build //src:bazel
+      bazel build \
+          --remote_cache=https://storage.googleapis.com/bazel-trusted-build-cache \
+          --google_default_credentials \
+          --remote_timeout=3600 \
+          --remote_max_connections=200 \
+          --remote_default_exec_properties=cache-silo-key=bazel-release \
+          //src:bazel
       mkdir output
       cp bazel-bin/src/bazel output/bazel
 
       output/bazel build \
+          --remote_cache=https://storage.googleapis.com/bazel-trusted-build-cache \
+          --google_default_credentials \
+          --remote_timeout=3600 \
+          --remote_max_connections=200 \
+          --remote_default_exec_properties=cache-silo-key=bazel-release \
           --define IPHONE_SDK=1 \
           -c opt \
           --stamp \
@@ -236,11 +286,11 @@ steps:
 
       echo Release: %RELEASE_NAME%
 
-      bazel build //src:bazel.exe
+      bazel build --remote_cache=remotebuildexecution.googleapis.com --remote_instance_name=projects/bazel-public/instances/default_instance --google_default_credentials --remote_timeout=60 --remote_max_connections=200 --remote_default_exec_properties=cache-silo-key=bazel-release //src:bazel.exe
       mkdir output
       copy bazel-bin\src\bazel.exe output\bazel.exe
 
-      output\bazel build -c opt --copt=-w --host_copt=-w --stamp --embed_label %RELEASE_NAME% src/bazel src/bazel_nojdk scripts/packages/bazel.zip scripts/packages/bazel_nojdk.zip
+      output\bazel build --remote_cache=remotebuildexecution.googleapis.com --remote_instance_name=projects/bazel-public/instances/default_instance --google_default_credentials --remote_timeout=60 --remote_max_connections=200 --remote_default_exec_properties=cache-silo-key=bazel-release -c opt --copt=-w --host_copt=-w --stamp --embed_label %RELEASE_NAME% src/bazel src/bazel_nojdk scripts/packages/bazel.zip scripts/packages/bazel_nojdk.zip
 
       mkdir artifacts
       move bazel-bin\src\bazel artifacts\bazel-%RELEASE_NAME%-windows-x86_64.exe
@@ -268,11 +318,11 @@ steps:
 
       echo Release: %RELEASE_NAME%
 
-      bazel build //src:bazel.exe
+      bazel build --remote_cache=remotebuildexecution.googleapis.com --remote_instance_name=projects/bazel-public/instances/default_instance --google_default_credentials --remote_timeout=60 --remote_max_connections=200 --remote_default_exec_properties=cache-silo-key=bazel-release //src:bazel.exe
       mkdir output
       copy bazel-bin\src\bazel.exe output\bazel.exe
 
-      output\bazel build -c opt --config=windows_arm64 --copt=-w --host_copt=-w --stamp --embed_label %RELEASE_NAME% src/bazel src/bazel_nojdk scripts/packages/bazel.zip scripts/packages/bazel_nojdk.zip
+      output\bazel build --remote_cache=remotebuildexecution.googleapis.com --remote_instance_name=projects/bazel-public/instances/default_instance --google_default_credentials --remote_timeout=60 --remote_max_connections=200 --remote_default_exec_properties=cache-silo-key=bazel-release -c opt --config=windows_arm64 --copt=-w --host_copt=-w --stamp --embed_label %RELEASE_NAME% src/bazel src/bazel_nojdk scripts/packages/bazel.zip scripts/packages/bazel_nojdk.zip
 
       mkdir artifacts
       move bazel-bin\src\bazel artifacts\bazel-%RELEASE_NAME%-windows-arm64.exe
@@ -293,7 +343,7 @@ steps:
         always-pull: true
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/rockylinux8-java8
+        image: gcr.io/bazel-public/rockylinux8-java8@sha256:f985154811072371cdc26c7e7758be0f4d4ea2c7ed813097bf8ca5b6ac0a6597
         network: host
         privileged: true
         propagate-environment: true
@@ -328,7 +378,7 @@ steps:
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
           - GOOGLE_APPLICATION_CREDENTIALS
-        image: gcr.io/bazel-public/rockylinux8-java8
+        image: gcr.io/bazel-public/rockylinux8-java8@sha256:07679e6a512d3125ff041b8849b94c91884d8561c2168468369b680a5ad01805
         network: host
         privileged: true
         propagate-environment: true
@@ -439,7 +489,7 @@ steps:
         always-pull: true
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/ubuntu2404@sha256:e0a4a1fe658b4fe75f0a6914e7a7891a4976f6fcf12ff143a478a0912ead801c
+        image: gcr.io/bazel-public/ubuntu2404@sha256:4df19f6dfb4fdb99576105689751d3680dd5103770b3739e6a1cda41e9e8a16d
         network: host
         privileged: true
         propagate-environment: true
