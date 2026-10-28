@@ -66,7 +66,7 @@ def _compile_generator(repository_ctx, src_dir, exec_mode):
     return rbe_gen_path
 
 
-def _generate_toolchains(repository_ctx, rbe_gen_path, bazel_version, bazel_path, container_image, cpp_env, exec_mode):
+def _generate_toolchains(repository_ctx, rbe_gen_path, bazel_version, bazel_path, bazel_source, container_image, cpp_env, exec_mode):
     """Runs the generator in docker or host mode and extracts RBE files."""
     # Serialize C++ environment dict to JSON inside sandbox
     cpp_env_json = "cpp_env.json"
@@ -88,8 +88,10 @@ def _generate_toolchains(repository_ctx, rbe_gen_path, bazel_version, bazel_path
 
     if bazel_version:
         args.append("--bazel_version=" + bazel_version)
+        selected_bazel = "version '{}' (from {})".format(bazel_version, bazel_source)
     elif bazel_path:
         args.append("--host_bazel_path=" + str(bazel_path))
+        selected_bazel = "binary '{}' (from {})".format(bazel_path, bazel_source)
     else:
         fail("rbe_config: Neither bazel_version nor bazel_path is available.")
 
@@ -97,7 +99,11 @@ def _generate_toolchains(repository_ctx, rbe_gen_path, bazel_version, bazel_path
     exec_res = repository_ctx.execute(args, environment = cpp_env if cpp_env else {})
 
     if exec_res.return_code != 0:
-        fail("rbe_config: Dynamic generation failed (exec_mode={}):\nStdout: {}\nStderr: {}".format(exec_mode, exec_res.stdout, exec_res.stderr))
+        fail(
+            "rbe_config: Dynamic generation failed (exec_mode={}, selected Bazel: {}):\n".format(exec_mode, selected_bazel) +
+            "Hint: To override the selected Bazel binary (e.g. when using a custom or locally built Bazel binary such as /tmp/bazel, or when 'bazel' in PATH is a wrapper script), set RBE_CONFIG_BAZEL_PATH=/path/to/bazel.\n" +
+            "Stdout: {}\nStderr: {}".format(exec_res.stdout, exec_res.stderr),
+        )
 
     # Extract the generated configs directly into the repository's directory
     repository_ctx.extract(archive = output_tarball)
@@ -175,28 +181,33 @@ def _rbe_config_impl(repository_ctx):
 
     # 5. Resolve Bazel version or locate host Bazel
     bazel_version = None
+    bazel_source = None
     bazel_path = repository_ctx.os.environ.get("RBE_CONFIG_BAZEL_PATH")
 
     if bazel_path:
+        bazel_source = "RBE_CONFIG_BAZEL_PATH"
         print("rbe_config: RBE_CONFIG_BAZEL_PATH env var is set, using host bazel path: {}".format(bazel_path))
     else:
         bazel_path = repository_ctx.os.environ.get("BAZEL_REAL")
         if bazel_path:
+            bazel_source = "BAZEL_REAL"
             print("rbe_config: BAZEL_REAL env var is set, using host bazel path: {}".format(bazel_path))
         else:
             bazel_version = getattr(native, "bazel_version", None)
             if bazel_version:
+                bazel_source = "native.bazel_version"
                 print("rbe_config: Using detected bazel_version: {}".format(bazel_version))
             else:
                 print("rbe_config: native.bazel_version not available, falling back to host bazel from PATH")
                 bazel_path = repository_ctx.which("bazel")
                 if bazel_path:
-                    print("rbe_config: Using Bazel binary at {} for toolchain generation".format(bazel_path))
+                    bazel_source = "PATH fallback via repository_ctx.which('bazel')"
+                    print("rbe_config: Using Bazel binary at {} (from {}) for toolchain generation".format(bazel_path, bazel_source))
                 else:
-                    fail("rbe_config: Bazel executable not found in PATH. If you are using a custom-named binary or non-standard layout, please export RBE_CONFIG_BAZEL_PATH=/path/to/your/binary or use a tools/bazel wrapper script.")
+                    fail("rbe_config: Bazel executable not found (checked RBE_CONFIG_BAZEL_PATH, BAZEL_REAL, native.bazel_version, and 'bazel' in PATH). If you are using a custom or locally built Bazel binary (e.g. /tmp/bazel), set RBE_CONFIG_BAZEL_PATH=/path/to/bazel or use a tools/bazel wrapper script.")
 
     # 6. Run the generator and extract configurations
-    _generate_toolchains(repository_ctx, rbe_gen_path, bazel_version, bazel_path, container_image, cpp_env, exec_mode)
+    _generate_toolchains(repository_ctx, rbe_gen_path, bazel_version, bazel_path, bazel_source, container_image, cpp_env, exec_mode)
 
 
 # Private repository rule
