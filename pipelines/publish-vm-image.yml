@@ -125,8 +125,6 @@ steps:
 
   - wait
 
-  - block: ":arrows_counterclockwise: Re-create instance groups in bazel & bazel-trusted orgs"
-
   - command: |-
       cd buildkite
       ./create_instances.py "${BAZEL_PROD_INSTANCE_GROUPS}"
