@@ -1,4 +1,4 @@
-name: Image Rebuild Reminder
+name: Image Rebuild / Instance Creation Reminder
 
 # Uses pull_request_target so fork PRs can receive sticky reminder comments.
 # [WARNING] Never check out or execute untrusted PR code in this workflow.
