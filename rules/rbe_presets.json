@@ -1,6 +1,6 @@
 {
   "ubuntu2204": {
-    "container": "gcr.io/bazel-public/ubuntu2204@sha256:07887f6469bb5594b3b86bf6023398356e3791006570695a556086eff13ded74",
+    "container": "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398",
     "cpp_env": {
       "ABI_LIBC_VERSION": "glibc_2.19",
       "ABI_VERSION": "gcc",
@@ -14,7 +14,7 @@
     }
   },
   "ubuntu2404": {
-    "container": "gcr.io/bazel-public/ubuntu2404@sha256:4df19f6dfb4fdb99576105689751d3680dd5103770b3739e6a1cda41e9e8a16d",
+    "container": "gcr.io/bazel-public/ubuntu2404@sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8",
     "cpp_env": {
       "ABI_LIBC_VERSION": "glibc_2.39",
       "ABI_VERSION": "gcc",
@@ -28,7 +28,7 @@
     }
   },
   "ubuntu": {
-    "container": "gcr.io/bazel-public/ubuntu2404@sha256:4df19f6dfb4fdb99576105689751d3680dd5103770b3739e6a1cda41e9e8a16d",
+    "container": "gcr.io/bazel-public/ubuntu2404@sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8",
     "cpp_env": {
       "ABI_LIBC_VERSION": "glibc_2.39",
       "ABI_VERSION": "gcc",

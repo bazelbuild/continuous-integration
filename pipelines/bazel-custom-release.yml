@@ -10,7 +10,7 @@ steps:
           - ANDROID_HOME
           - ANDROID_NDK_HOME
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/ubuntu2404@sha256:4df19f6dfb4fdb99576105689751d3680dd5103770b3739e6a1cda41e9e8a16d
+        image: gcr.io/bazel-public/ubuntu2404@sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8
         network: host
         privileged: true
         propagate-environment: true
@@ -45,7 +45,7 @@ steps:
           - ANDROID_HOME
           - ANDROID_NDK_HOME
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/rockylinux8-releaser@sha256:c7cfce3e39fe8ed61e87cf715deeee7a1ca3821189f9cc4476f00f4f8c9534cb
+        image: gcr.io/bazel-public/rockylinux8-releaser@sha256:2a61b4a50ea72e02764b54ac119b6dd64f96ae513401f71e1bbdff4470335306
         network: host
         privileged: true
         propagate-environment: true
@@ -174,7 +174,7 @@ steps:
           - ANDROID_HOME
           - ANDROID_NDK_HOME
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/rockylinux8-java8@sha256:f985154811072371cdc26c7e7758be0f4d4ea2c7ed813097bf8ca5b6ac0a6597
+        image: gcr.io/bazel-public/rockylinux8-java8@sha256:6b7c65df5b96c891b7b7796e7a0d75eb4eaab3bda3acf4b40e02b9cc691d152b
         network: host
         privileged: true
         propagate-environment: true

@@ -14,7 +14,7 @@ steps:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-          image: "gcr.io/bazel-public/ubuntu2204@sha256:07887f6469bb5594b3b86bf6023398356e3791006570695a556086eff13ded74"
+          image: "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
           network: "host"
           privileged: true
           propagate-environment: true
@@ -45,7 +45,7 @@ steps:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-          image: "gcr.io/bazel-public/ubuntu2204@sha256:07887f6469bb5594b3b86bf6023398356e3791006570695a556086eff13ded74"
+          image: "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
           network: "host"
           privileged: true
           propagate-environment: true
@@ -80,7 +80,7 @@ steps:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-          image: "gcr.io/bazel-public/ubuntu2204@sha256:07887f6469bb5594b3b86bf6023398356e3791006570695a556086eff13ded74"
+          image: "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
           network: "host"
           privileged: true
           propagate-environment: true
@@ -111,7 +111,7 @@ steps:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-          image: "gcr.io/bazel-public/ubuntu2204@sha256:07887f6469bb5594b3b86bf6023398356e3791006570695a556086eff13ded74"
+          image: "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
           network: "host"
           privileged: true
           propagate-environment: true
