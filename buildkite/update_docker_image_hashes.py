@@ -196,10 +196,14 @@ def main():
         setup_docker_file,
     ] + list(terraform_dir.glob("**/*.tf")) + \
             list(pipelines_dir.glob("**/*.yml")) + \
-            list(pipelines_dir.glob("**/*.yml.tpl"))
+            list(terraform_dir.glob("**/*.yml.tpl"))
 
     print("Updating image digests...")
     find_replace_hashes(curr_digests, digests, files_to_update)
+
+    print("Updating digests.json...")
+    with open(digests_json_file, "w") as f:
+        f.write(json.dumps(digests, indent=4) + "\n")
 
 
 if __name__ == "__main__":

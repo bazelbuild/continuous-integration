@@ -13,7 +13,7 @@ resource "buildkite_pipeline" "update-git-mirror-tar-ball" {
         "./gitbundle.sh"
       ],
       label = "Creating git mirror tar ball",
-      image = "gcr.io/bazel-public/ubuntu2204@sha256:07887f6469bb5594b3b86bf6023398356e3791006570695a556086eff13ded74"
+      image = "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
     }
   })
   allow_rebuilds             = true
@@ -65,7 +65,7 @@ resource "buildkite_pipeline" "mirror-bazel-external-deps" {
         "./tools/mirror_external_deps.py --upload"
       ],
       label = ":mirror: Mirror missing artifacts",
-      image = "gcr.io/bazel-public/ubuntu2204@sha256:07887f6469bb5594b3b86bf6023398356e3791006570695a556086eff13ded74"
+      image = "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
     }
   })
   allow_rebuilds             = true
@@ -131,7 +131,7 @@ resource "buildkite_pipeline" "create-linux-vm-image" {
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-vm-image.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:",
-      image = "gcr.io/bazel-public/ubuntu2204@sha256:07887f6469bb5594b3b86bf6023398356e3791006570695a556086eff13ded74"
+      image = "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
     }
   })
   allow_rebuilds             = true
@@ -166,7 +166,7 @@ resource "buildkite_pipeline" "collect-infra-ci-metrics" {
         "python3 collect_infra_metrics.py"
       ],
       label = ":chart_with_upwards_trend: Collect Infra CI-Metrics",
-      image = "gcr.io/bazel-public/ubuntu2204@sha256:07887f6469bb5594b3b86bf6023398356e3791006570695a556086eff13ded74"
+      image = "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
     }
   })
   allow_rebuilds             = true
@@ -279,7 +279,7 @@ resource "buildkite_pipeline" "create-windows-vm-image" {
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-vm-image.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:",
-      image = "gcr.io/bazel-public/ubuntu2204@sha256:07887f6469bb5594b3b86bf6023398356e3791006570695a556086eff13ded74"
+      image = "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
     }
   })
   allow_rebuilds             = true
@@ -417,7 +417,7 @@ resource "buildkite_pipeline" "docker-update" {
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/docker-update.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:",
-      image = "gcr.io/bazel-public/ubuntu2404@sha256:4df19f6dfb4fdb99576105689751d3680dd5103770b3739e6a1cda41e9e8a16d"
+      image = "gcr.io/bazel-public/ubuntu2404@sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8"
     }
   })
   allow_rebuilds             = true
