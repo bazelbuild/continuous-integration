@@ -2,11 +2,19 @@
 matrix:
   platform:
     # Linux (x86_64) Docker platforms
+    - debian10
     - debian12
     - debian13
+    - fedora39
+    - fedora40
     - fedora43
+    - kythe_ubuntu2204
+    - kythe_ubuntu2404
     - rockylinux8
+    - rockylinux8_java11
+    - rockylinux8_java11_devtoolset10
     - ubuntu2204
+    - ubuntu2204_java17
     - ubuntu2404
     # Linux (arm64) Docker platforms
     - debian12_arm64

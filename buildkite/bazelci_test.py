@@ -939,5 +939,25 @@ class KytheKzipTest(unittest.TestCase):
                     )
 
 
+class SmokeTestConfigTest(unittest.TestCase):
+    """Verify that the smoke test stays in sync with all non-EOL platforms."""
+    def test_smoke_test_covers_all_supported_platforms(self):
+        smoke_test_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "..", "smoke_test", "smoke_test.yml"
+        )
+        with open(smoke_test_path, "r", encoding="utf-8") as f:
+            config = yaml.safe_load(f)
+
+        smoke_platforms = set(config["matrix"]["platform"])
+        expected_platforms = {
+            p
+            for p in bazelci.PLATFORMS
+            if p not in bazelci.EOL_PLATFORMS
+            and p != "metrics_test_platform"
+            and (not p.startswith("rbe_") or p == "rbe_ubuntu2404")
+        }
+        self.assertEqual(smoke_platforms, expected_platforms)
+
+
 if __name__ == "__main__":
     unittest.main()
