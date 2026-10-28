@@ -119,11 +119,6 @@ CURL_FLAGS_STR = " ".join(CURL_FLAGS)
 def curl_download_command(url, output_file):
     return f"curl {CURL_FLAGS_STR} {url} -o {output_file}"
 
-FLAKY_TESTS_BUCKET = {
-    "bazel-testing": "gs://bazel-testing-buildkite-stats/flaky-tests-bep/",
-    "bazel-trusted": "gs://bazel-buildkite-stats/flaky-tests-bep/",
-    "bazel": "gs://bazel-buildkite-stats/flaky-tests-bep/",
-}[BUILDKITE_ORG]
 
 KZIPS_BUCKET_MAPPING = {
     "bazel-testing": "gs://bazel-kzips-testing/",
