@@ -32,8 +32,42 @@ DEFAULT_ORG = "bazel-testing"
 DEFAULT_POLL_INTERVAL_SECONDS = 60
 DEFAULT_API_RETRIES = 5
 TERMINAL_BUILD_STATES = frozenset(["passed", "failed", "canceled", "skipped", "not_run"])
+LINUX_IMAGE_SKIP_TASKS = (
+    "macos",
+    "macos_arm64",
+    "windows",
+    "windows_arm64",
+)
+WINDOWS_IMAGE_SKIP_TASKS = (
+    "rockylinux8",
+    "rockylinux8_arm64",
+    "fedora39",
+    "ubuntu2404",
+    "ubuntu2404_clang",
+    "ubuntu2204",
+    "macos",
+    "macos_arm64",
+    "rbe_ubuntu2404",
+    "docs_ubuntu2404",
+)
 _TOKEN_QUERY_RE = re.compile(r"(access_token=)[^&\s\"']+")
 _CLIENT_ERROR_STATUS_RE = re.compile(r": (4\d\d) -")
+
+
+def select_skip_tasks(test_vm_names):
+    names = [n.strip() for n in (test_vm_names or "").split(",") if n.strip()]
+    has_linux = any("docker" in n for n in names)
+    has_windows = any("windows" in n for n in names)
+    has_unknown = any("docker" not in n and "windows" not in n for n in names)
+    if has_linux and not has_windows and not has_unknown:
+        return LINUX_IMAGE_SKIP_TASKS
+    if has_windows and not has_linux and not has_unknown:
+        return WINDOWS_IMAGE_SKIP_TASKS
+    bazelci.eprint(
+        f"Warning: cannot infer single target platform from BAZEL_TEST_VM_NAMES={test_vm_names!r}; "
+        "running all presubmit tasks without CI_SKIP_TASKS."
+    )
+    return ()
 
 
 def redact_tokens(value):
@@ -97,28 +131,29 @@ def annotate(context, style, message):
     )
 
 
-def annotate_build_state(org, pipeline, build_info):
+def annotate_build_state(org, pipeline, build_info, skip_tasks_csv=""):
     number = build_info.get("number")
     web_url = build_info.get("web_url")
     state = build_info.get("state", "unknown")
     context = annotation_context(pipeline)
+    skip_suffix = f" (skipping `{skip_tasks_csv}`)" if skip_tasks_csv else " (skipping none)"
     if not is_build_finished(build_info):
         annotate(
             context,
             "info",
-            f"Running `{org}/{pipeline}`: [build #{number}]({web_url})",
+            f"Running `{org}/{pipeline}`: [build #{number}]({web_url}){skip_suffix}",
         )
     elif state == "passed":
         annotate(
             context,
             "success",
-            f"Passed `{org}/{pipeline}`: [build #{number}]({web_url}) (`{state}`)",
+            f"Passed `{org}/{pipeline}`: [build #{number}]({web_url}) (`{state}`){skip_suffix}",
         )
     else:
         annotate(
             context,
             "error",
-            f"Failed `{org}/{pipeline}`: [build #{number}]({web_url}) (`{state}`)",
+            f"Failed `{org}/{pipeline}`: [build #{number}]({web_url}) (`{state}`){skip_suffix}",
         )
 
 
@@ -167,9 +202,25 @@ def main(argv=None):
     if not pipelines:
         parser.error("At least one pipeline slug must be provided.")
 
+    test_vm_names = os.environ.get("BAZEL_TEST_VM_NAMES", "")
+    skip_tasks = select_skip_tasks(test_vm_names)
+    skip_tasks_csv = ",".join(skip_tasks)
+    if skip_tasks_csv:
+        print(
+            f"Skipping tasks for BAZEL_TEST_VM_NAMES={test_vm_names!r}: {skip_tasks_csv}",
+            flush=True,
+        )
+    else:
+        print("Skipping tasks: none", flush=True)
+
     build_url = os.environ.get("BUILDKITE_BUILD_URL", "")
     message = f"VM image validation for {build_url}" if build_url else "VM image validation"
+    if skip_tasks_csv:
+        message = f"{message} (skip: {skip_tasks_csv})"
+
     trigger_env = {"DISABLE_BAZEL_DIFF": "1"}
+    if skip_tasks_csv:
+        trigger_env[bazelci.SKIP_TASKS_ENV_VAR] = skip_tasks_csv
 
     if args.dry_run:
         for pipeline in pipelines:
@@ -195,7 +246,7 @@ def main(argv=None):
                 f"Triggered {args.org}/{pipeline} build #{number}: {web_url} (state={state})",
                 flush=True,
             )
-            annotate_build_state(args.org, pipeline, build_info)
+            annotate_build_state(args.org, pipeline, build_info, skip_tasks_csv)
             tracked.append(
                 {
                     "pipeline": pipeline,
@@ -215,7 +266,9 @@ def main(argv=None):
                         lambda e=entry: e["client"].get_build_info(e["number"]),
                     )
                     if is_build_finished(entry["build_info"]) and not entry["final_annotated"]:
-                        annotate_build_state(args.org, entry["pipeline"], entry["build_info"])
+                        annotate_build_state(
+                            args.org, entry["pipeline"], entry["build_info"], skip_tasks_csv
+                        )
                         entry["final_annotated"] = True
 
             timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -227,7 +280,9 @@ def main(argv=None):
 
         for entry in tracked:
             if not entry["final_annotated"]:
-                annotate_build_state(args.org, entry["pipeline"], entry["build_info"])
+                annotate_build_state(
+                    args.org, entry["pipeline"], entry["build_info"], skip_tasks_csv
+                )
                 entry["final_annotated"] = True
     except (bazelci.BuildkiteException, subprocess.CalledProcessError) as ex:
         error_msg = redact_tokens(ex)
