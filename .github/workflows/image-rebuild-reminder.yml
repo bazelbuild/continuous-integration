@@ -44,7 +44,7 @@ jobs:
               {
                 rebuild: false,
                 match: (p) => ['buildkite/instances.yml', 'buildkite/startup-docker-pdssd.sh', 'buildkite/startup-windows-pdssd.ps1', 'buildkite/create_instances.py', 'buildkite/create_instance_template.py', 'buildkite/update_instances.py'].includes(p),
-                note: `These files only affect **GCE instance groups** (no VM image rebuild needed), so after merging, recreate the affected testing and prod groups with [\`buildkite/create_instances.py\`](${baseBlob}/buildkite/create_instances.py).`,
+                note: `These files affect **GCE instance groups**, so after merging, recreate the affected testing and prod groups with [\`buildkite/create_instances.py\`](${baseBlob}/buildkite/create_instances.py). (If no other file is changed, no image rebuild is needed.)`,
               },
               {
                 rebuild: true,
