@@ -1,0 +1,43 @@
+---
+steps:
+  - block: ":rewind: Presubmits failed on the new image — roll back or continue?"
+    fields:
+      - select: "Decision"
+        key: "vm-image-decision"
+        required: true
+        options:
+          - label: "Roll back to the previous image"
+            value: "rollback"
+          - label: "Ignore and continue"
+            value: "continue"
+
+  - command: |-
+      cd buildkite
+      decision="$$(buildkite-agent meta-data get vm-image-decision)"
+      if [ "$$decision" = rollback ]; then
+        ./rollback_image.py "${ROLLBACK_FAMILIES}" && ./create_instances.py "${ROLLBACK_GROUPS}"
+        exit 1
+      fi
+    label: ":rewind: Apply VM image decision"
+    agents:
+      - "queue=default"
+    plugins:
+      - docker#v3.8.0:
+          always-pull: true
+          environment:
+            - "ANDROID_HOME"
+            - "ANDROID_NDK_HOME"
+            - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
+          image: "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
+          network: "host"
+          privileged: true
+          propagate-environment: true
+          propagate-uid-gid: true
+          volumes:
+            - "/etc/group:/etc/group:ro"
+            - "/etc/passwd:/etc/passwd:ro"
+            - "/etc/shadow:/etc/shadow:ro"
+            - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+            - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
+            - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+            - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
