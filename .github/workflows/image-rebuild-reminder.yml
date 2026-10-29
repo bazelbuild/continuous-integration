@@ -34,12 +34,12 @@ jobs:
               {
                 rebuild: true,
                 match: (p) => p === 'buildkite/setup-docker.sh',
-                note: 'This file is baked into the **Linux VM image**, so after merging, run [Create Linux VM image](https://buildkite.com/bazel-trusted/create-linux-vm-image).',
+                note: 'This file is used to build the **Linux VM image**, so after merging, run [Create Linux VM image](https://buildkite.com/bazel-trusted/create-linux-vm-image).',
               },
               {
                 rebuild: true,
                 match: (p) => p === 'buildkite/setup-windows.ps1',
-                note: 'This file is baked into the **Windows VM image**, so after merging, run [Create Windows VM image](https://buildkite.com/bazel-trusted/create-windows-vm-image).',
+                note: 'This file is used to build the **Windows VM image**, so after merging, run [Create Windows VM image](https://buildkite.com/bazel-trusted/create-windows-vm-image).',
               },
               {
                 rebuild: false,
@@ -49,7 +49,7 @@ jobs:
               {
                 rebuild: true,
                 match: (p) => p.startsWith('buildkite/docker/'),
-                note: `These files build **Linux Docker images** — after merging, run [Create Linux Docker Images](https://buildkite.com/bazel-trusted/create-linux-docker-images) (or wait for its nightly build), then run [\`buildkite/update_docker_image_hashes.py\`](${baseBlob}/buildkite/update_docker_image_hashes.py) in a follow-up PR to update the pinned hashes.`,
+                note: `These files are used to build **Linux Docker images** — after merging, run [Create Linux Docker Images](https://buildkite.com/bazel-trusted/create-linux-docker-images) (or wait for its nightly build), then run [\`buildkite/update_docker_image_hashes.py\`](${baseBlob}/buildkite/update_docker_image_hashes.py) in a follow-up PR to update the pinned hashes.`,
               },
             ];
 
