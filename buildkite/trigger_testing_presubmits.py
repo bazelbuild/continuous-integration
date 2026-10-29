@@ -195,7 +195,20 @@ def main(argv=None):
             flush=True,
         )
 
-    return 0 if all(e["build_info"].get("state") == "passed" for e in tracked) else 1
+    if all(e["build_info"].get("state") == "passed" for e in tracked):
+        return 0
+
+    targets = ",".join(n.strip() for n in test_vm_names.split(",") if n.strip())
+    targets = targets or '"${BAZEL_TEST_VM_NAMES}"'
+    annotate(
+        "testing-presubmits-rollback",
+        "error",
+        "First check whether the failure is infra (e.g. the `:pipeline:` step failed) "
+        "vs. real test failures on the new VM image.\n\n"
+        "To roll back the testing VM image:\n"
+        f"```sh\ncd buildkite\n./rollback_image.py {targets}\n./create_instances.py {targets}\n```",
+    )
+    return 1
 
 
 if __name__ == "__main__":
