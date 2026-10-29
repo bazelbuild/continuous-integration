@@ -121,6 +121,24 @@ def delete_instance_group(name, **kwargs):
         return e
 
 
+def set_instance_template(name, **kwargs):
+    try:
+        return gcloud(
+            "compute", "instance-groups", "managed", "set-instance-template", name, **kwargs
+        )
+    except subprocess.CalledProcessError as e:
+        if not re.search(r"The resource .*/instanceGroupManagers/.* was not found", e.stderr):
+            raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
+        return e
+
+
+def resize_instance_group(name, **kwargs):
+    try:
+        return gcloud("compute", "instance-groups", "managed", "resize", name, **kwargs)
+    except subprocess.CalledProcessError as e:
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
+
+
 def rolling_update_instance_group(name, **kwargs):
     try:
         return gcloud(

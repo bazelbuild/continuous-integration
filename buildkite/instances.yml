@@ -46,6 +46,7 @@ instance_groups:
     service_account: buildkite-trusted@bazel-public.iam.gserviceaccount.com
     image_family: bk-docker
     metadata_from_file: startup-script=startup-docker-pdssd.sh
+    update_mode: in_place
   - name: bk-docker-arm64
     count: 55
     project: bazel-untrusted
