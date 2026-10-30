@@ -29,32 +29,14 @@ PLATFORM = "ubuntu2404"
 
 Settings = collections.namedtuple(
     "Settings",
-    ["target", "build_flags", "output_dir", "gcs_bucket", "gcs_subdir", "landing_page", "rewrite"],
+    ["target", "build_flags", "output_dir", "gcs_bucket", "gcs_subdir", "landing_page"],
 )
 
 BUILDKITE_BUILD_NUMBER = os.getenv("BUILDKITE_BUILD_NUMBER")
 
 
-def rewrite_staging_urls(content):
-    new_content = content.replace(
-        "docs.bazel.build", "docs-staging.bazel.build/{}".format(BUILDKITE_BUILD_NUMBER)
-    )
-    # Hack to get search working
-    new_content = new_content.replace("009927877080525621790:2pxlpaexqpc", "12ee759976b5ec02f", 1)
-    return new_content.replace('"/', '"/{}/'.format(BUILDKITE_BUILD_NUMBER))
-
-
 DOCGEN_SETTINGS = {
     "bazel-trusted": {
-        "https://github.com/bazelbuild/bazel.git": Settings(
-            target="//site",
-            build_flags=[],
-            output_dir="bazel-bin/site/site-build",
-            gcs_bucket="docs.bazel.build",
-            gcs_subdir="",
-            landing_page="versions/master/bazel-overview.html",
-            rewrite=None,
-        ),
         "https://github.com/bazelbuild/bazel-blog.git": Settings(
             target="//:site",
             build_flags=[],
@@ -62,49 +44,9 @@ DOCGEN_SETTINGS = {
             gcs_bucket="blog.bazel.build",
             gcs_subdir="",
             landing_page="index.html",
-            rewrite=None,
-        ),
-        "https://github.com/bazelbuild/bazel-website.git": Settings(
-            target="//:site",
-            build_flags=[],
-            output_dir="bazel-bin/site-build",
-            gcs_bucket="www.bazel.build",
-            gcs_subdir="",
-            landing_page="index.html",
-            rewrite=None,
-        ),
-    },
-    "bazel": {
-        "https://bazel.googlesource.com/bazel.git": Settings(
-            target="//site",
-            build_flags=bazelci.remote_caching_flags(PLATFORM),
-            output_dir="bazel-bin/site/site-build",
-            gcs_bucket="docs-staging.bazel.build",
-            gcs_subdir=BUILDKITE_BUILD_NUMBER,
-            landing_page="versions/master/bazel-overview.html",
-            rewrite=rewrite_staging_urls,
         ),
     },
 }
-
-
-def rewrite_and_copy(src_root, dest_root, rewrite):
-    for src_dir, dirs, files in os.walk(src_root):
-        dest_dir = src_dir.replace(src_root, dest_root, 1)
-        os.mkdir(dest_dir)
-
-        for filename in files:
-            src_file = os.path.join(src_dir, filename)
-            dest_file = os.path.join(dest_dir, filename)
-
-            if src_file.endswith(".html"):
-                with open(src_file, "r", encoding="utf-8") as src:
-                    content = src.read()
-
-                with open(dest_file, "w", encoding="utf-8") as dest:
-                    dest.write(rewrite(content))
-            else:
-                shutil.copyfile(src_file, dest_file)
 
 
 def get_destination(bucket, subdir):
@@ -138,12 +80,6 @@ def main(argv=None):
         return e.returncode
 
     src_root = os.path.join(os.getcwd(), settings.output_dir)
-    if settings.rewrite:
-        bazelci.print_expanded_group(":bazel: Rewriting links in documentation files")
-        dest_root = os.path.join(tempfile.mkdtemp(), "site")
-        rewrite_and_copy(src_root, dest_root, settings.rewrite)
-        src_root = dest_root
-
     bucket = "gs://{}".format(settings.gcs_bucket)
     dest = get_destination(bucket, settings.gcs_subdir)
     bazelci.print_expanded_group(":bazel: Uploading documentation to {}".format(dest))
