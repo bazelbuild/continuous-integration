@@ -9,7 +9,7 @@ steps:
         always-pull: true
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/ubuntu2404@sha256:53dd4ae8e1a2b4c070bc15fb3b60e0d30b81ccc85c6c44e18b20de992be8e9a3
+        image: gcr.io/bazel-public/ubuntu2404@sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8
         network: host
         privileged: true
         propagate-environment: true
@@ -51,7 +51,7 @@ steps:
         always-pull: true
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/rockylinux8-releaser@sha256:164d20f7df3c44789799a6cd956c535adf4a3f15b8b5a0348fd781578b4808e3
+        image: gcr.io/bazel-public/rockylinux8-releaser@sha256:2a61b4a50ea72e02764b54ac119b6dd64f96ae513401f71e1bbdff4470335306
         network: host
         privileged: true
         propagate-environment: true
@@ -127,7 +127,7 @@ steps:
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
           - GOOGLE_APPLICATION_CREDENTIALS
-        image: gcr.io/bazel-public/rockylinux8-releaser@sha256:4635e2b5f0a265c45b462c318e81928f3c2b5e02c580eddd8f5ae0dc44254005
+        image: gcr.io/bazel-public/rockylinux8-releaser@sha256:671ed89d34afaddb86770a7f0a54c7bb3decf91a8e31bbf1f8e33dd8164419b5
         network: host
         privileged: true
         propagate-environment: true
@@ -343,7 +343,7 @@ steps:
         always-pull: true
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/rockylinux8-java8@sha256:79b0528e2ce5d3212dbd4f6b8bc6e331038e92288d379043fd941c45dab5be44
+        image: gcr.io/bazel-public/rockylinux8-java8@sha256:6b7c65df5b96c891b7b7796e7a0d75eb4eaab3bda3acf4b40e02b9cc691d152b
         network: host
         privileged: true
         propagate-environment: true
@@ -378,7 +378,7 @@ steps:
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
           - GOOGLE_APPLICATION_CREDENTIALS
-        image: gcr.io/bazel-public/rockylinux8-java8@sha256:75d11e32035ba1b4a9709431bcb5140d14de4ff455f2d2aec9d659d075d7e75c
+        image: gcr.io/bazel-public/rockylinux8-java8@sha256:5dc9ad02c7e152fb8b7510e5f18723b21171e67a9d8e9a71b262bf72214ea0b1
         network: host
         privileged: true
         propagate-environment: true
@@ -489,7 +489,7 @@ steps:
         always-pull: true
         environment:
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/ubuntu2404@sha256:53dd4ae8e1a2b4c070bc15fb3b60e0d30b81ccc85c6c44e18b20de992be8e9a3
+        image: gcr.io/bazel-public/ubuntu2404@sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8
         network: host
         privileged: true
         propagate-environment: true

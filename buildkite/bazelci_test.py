@@ -570,6 +570,13 @@ class InitialSteps(unittest.TestCase):
         with mock.patch.dict(os.environ, {"BUILDKITE_PULL_REQUEST_LABELS": "foo,CI:run,bar"}):
             self.assertTrue(bazelci.has_presubmit_auto_run_label())
 
+    def test_disable_modified_files_detection(self):
+        with mock.patch.dict(
+            os.environ, {"DISABLE_MODIFIED_FILES_DETECTION": "true"}
+        ), mock.patch.object(bazelci, "fetch_base_branch") as fetch_base_branch:
+            self.assertEqual(bazelci.get_modified_files("abc1234"), [])
+            fetch_base_branch.assert_not_called()
+
 class FetchCiScripts(unittest.TestCase):
     def test_curl_download_command(self):
         cmd = bazelci.curl_download_command("https://example.com/foo.py", "foo.py")
@@ -854,6 +861,102 @@ tasks:
         warning_steps = self.get_eol_warning_steps(steps)
         # There should be no warning steps.
         self.assertEqual(0, len(warning_steps))
+
+
+class KytheKzipTest(unittest.TestCase):
+    def test_disallows_kzip_for_bazel_trusted(self):
+        with mock.patch.object(
+            bazelci, "BUILDKITE_ORG", "bazel-trusted"
+        ), mock.patch.object(bazelci, "execute_command") as mock_exec:
+            for index_upload_gcs in (False, True):
+                with self.subTest(index_upload_gcs=index_upload_gcs):
+                    with self.assertRaisesRegex(
+                        bazelci.BuildkiteException,
+                        "Kythe indexing not supported for org 'bazel-trusted'",
+                    ):
+                        bazelci.merge_and_upload_kythe_kzip(
+                            "ubuntu2404", index_upload_gcs=index_upload_gcs
+                        )
+            mock_exec.assert_not_called()
+
+    def test_uploads_kzip_for_supported_orgs(self):
+        expected_buckets = {
+            "bazel": "gs://bazel-kzips/",
+            "bazel-testing": "gs://bazel-kzips-testing/",
+        }
+        for org, bucket in expected_buckets.items():
+            with self.subTest(org=org):
+                with mock.patch.dict(
+                    os.environ,
+                    {
+                        "BUILDKITE_PIPELINE_SLUG": "bazel-bazel",
+                        "BUILDKITE_BRANCH": "master",
+                        "BUILDKITE_BUILD_NUMBER": "42",
+                        "BUILDKITE_COMMIT": "deadbeef",
+                    },
+                ), mock.patch.object(
+                    bazelci, "BUILDKITE_ORG", org
+                ), mock.patch.object(
+                    bazelci, "local_run_only", return_value=False
+                ), mock.patch.object(
+                    bazelci, "print_collapsed_group"
+                ), mock.patch.object(
+                    bazelci, "glob", return_value=["a.kzip"]
+                ), mock.patch.object(
+                    bazelci, "gsutil_command", return_value="gsutil"
+                ), mock.patch.object(
+                    bazelci, "execute_command"
+                ) as mock_exec:
+                    bazelci.merge_and_upload_kythe_kzip(
+                        "ubuntu2404", index_upload_gcs=True
+                    )
+
+                    expected_kzip = "42-ubuntu2404-deadbeef.kzip"
+                    self.assertEqual(
+                        mock_exec.call_args_list,
+                        [
+                            mock.call(
+                                [
+                                    f"{bazelci.KYTHE_DIR}/tools/kzip",
+                                    "merge",
+                                    "--output",
+                                    expected_kzip,
+                                    "a.kzip",
+                                ]
+                            ),
+                            mock.call(
+                                ["buildkite-agent", "artifact", "upload", expected_kzip]
+                            ),
+                            mock.call(
+                                [
+                                    "gsutil",
+                                    "cp",
+                                    expected_kzip,
+                                    f"{bucket}bazel-bazel/master/{expected_kzip}",
+                                ]
+                            ),
+                        ],
+                    )
+
+
+class SmokeTestConfigTest(unittest.TestCase):
+    """Verify that the smoke test stays in sync with all non-EOL platforms."""
+    def test_smoke_test_covers_all_supported_platforms(self):
+        smoke_test_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "..", "smoke_test", "smoke_test.yml"
+        )
+        with open(smoke_test_path, "r", encoding="utf-8") as f:
+            config = yaml.safe_load(f)
+
+        smoke_platforms = set(config["matrix"]["platform"])
+        expected_platforms = {
+            p
+            for p in bazelci.PLATFORMS
+            if p not in bazelci.EOL_PLATFORMS
+            and p != "metrics_test_platform"
+            and (not p.startswith("rbe_") or p == "rbe_ubuntu2404")
+        }
+        self.assertEqual(smoke_platforms, expected_platforms)
 
 
 if __name__ == "__main__":

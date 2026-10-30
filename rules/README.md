@@ -158,6 +158,8 @@ To generate toolchain configurations, `rbe_config` must determine which Bazel ve
 3. **`native.bazel_version` Detection**: Automatically detects the version string of the running Bazel (e.g., `"9.1.0"` or `"8.4.2"`). If found, it passes `--bazel_version` to `rbe_configs_gen`, which allows the generator to fetch the matching Bazel release inside the container cleanly without copying host binaries.
 4. **System `PATH` scan**: *(Fallback)* If no explicit path is set and version detection fails (e.g., on untagged development builds), it scans the host `PATH` for `bazel` and copies it into the container.
 
+> **Note**: When invoking a custom or locally built Bazel binary directly (e.g., `/tmp/bazel build ...`), `BAZEL_REAL` and `native.bazel_version` are unset, so `rbe_config` falls back to `bazel` in `PATH`. If that `PATH` entry is missing or is a wrapper script (such as `/usr/bin/bazel` from the apt package), toolchain generation fails and reports which Bazel binary and resolution source were selected. Set `RBE_CONFIG_BAZEL_PATH=/path/to/bazel` to point to a standalone Bazel binary.
+
 If you run custom development layouts or want to force a specific Bazel binary override, choose one of the following methods:
 
 ### Method 1: Shell Export (Explicit Override)

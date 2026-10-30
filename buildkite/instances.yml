@@ -14,9 +14,10 @@
 default_vm:
   boot_disk_size: 500GB
   boot_disk_type: pd-ssd
-  machine_type: c2-standard-30
+  machine_type: c3d-standard-30
   network: default
   region: us-central1
+  zones: us-central1-a,us-central1-b,us-central1-c,us-central1-f
   target_distribution_shape: ANY
   # Let the MIG recreate a VM in a different zone when its zone runs out of capacity.
   on_repair_allow_changing_zone: true
@@ -28,13 +29,13 @@ default_vm:
   initial_delay: 60
 instance_groups:
   - name: bk-docker
-    count: 120
+    count: 170
     project: bazel-untrusted
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-docker
     metadata_from_file: startup-script=startup-docker-pdssd.sh
   - name: bk-testing-docker
-    count: 10
+    count: 20
     project: bazel-untrusted
     service_account: buildkite-testing@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-testing-docker
@@ -70,7 +71,7 @@ instance_groups:
     machine_type: c4a-standard-8
     boot_disk_type: hyperdisk-balanced
   - name: bk-windows
-    count: 100
+    count: 110
     project: bazel-untrusted
     service_account: buildkite@bazel-untrusted.iam.gserviceaccount.com
     image_family: bk-windows

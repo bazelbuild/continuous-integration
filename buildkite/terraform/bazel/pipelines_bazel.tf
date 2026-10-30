@@ -56,11 +56,14 @@ resource "buildkite_pipeline" "google-bazel-presubmit" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {
-      ENABLE_METRICS_COLLECTION = "true"
+      DISABLE_MODIFIED_FILES_DETECTION = "true"
+      ENABLE_METRICS_COLLECTION        = "true"
     },
     steps = {
+      skip_checkout = true,
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
+        "mkdir .bazelci && curl -sS \"https://bazel.googlesource.com/bazel/+/$BUILDKITE_COMMIT/.bazelci/presubmit.yml?format=TEXT\" | base64 -d > .bazelci/presubmit.yml",
         "bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --print_shard_summary --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ],
       priority = 99
@@ -526,37 +529,6 @@ resource "buildkite_pipeline" "bazel-central-registry" {
   }
 }
 
-resource "buildkite_pipeline" "bazel-bazel-macos-ninja" {
-  name           = "Bazel :bazel: :macos: :ninja:"
-  repository     = "https://github.com/bazelbuild/bazel.git"
-  default_branch = "master"
-  steps = templatefile("pipeline.yml.tpl", {
-    envs = {
-      ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN = "CiQA4DEB9rzbux2bc8Cn1JvZIggsEeEq0GCnh1xykjNdwcgN/YESQgAqwcvXqhZ5FkGlrfoeE5/7JLEqQ0vYCfVIKPI9JR0cuo8s3oYZTyxBjbHEhsnh31+LnK2K3GiLyc+vDP7EyNx0ww=="
-    },
-    steps = {
-      commands = [
-        "curl -sS \"https://raw.githubusercontent.com/fweikert/continuous-integration/token/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "bash -c 'set -euo pipefail; python3 bazelci.py --script https://raw.githubusercontent.com/fweikert/continuous-integration/token/buildkite/bazelci.py project_pipeline --print_shard_summary --http_config=https://raw.githubusercontent.com/fweikert/bazel/macos_v2/.bazelci/postsubmit.yml | tee /dev/tty | buildkite-agent pipeline upload'"
-      ]
-    }
-  })
-  allow_rebuilds             = true
-  branch_configuration       = "master"
-  cancel_intermediate_builds = false
-  skip_intermediate_builds   = false
-  tags                       = []
-  cluster_id                 = null
-  color                      = null
-  default_team_id            = null
-  emoji                      = null
-  pipeline_template_id       = null
-  provider_settings = {
-    # GitHub activities are disabled for this pipeline
-    trigger_mode = "none"
-  }
-}
-
 resource "buildkite_pipeline" "bazel-platforms-bazel" {
   name           = "Bazel Platforms :bazel:"
   repository     = "https://github.com/bazelbuild/platforms.git"
@@ -891,7 +863,7 @@ resource "buildkite_pipeline" "bcr-bazel-compatibility-test" {
       # SKIP_WAIT_FOR_APPROVAL: 1
     },
     steps = {
-      image = "gcr.io/bazel-public/ubuntu2404@sha256:53dd4ae8e1a2b4c070bc15fb3b60e0d30b81ccc85c6c44e18b20de992be8e9a3",
+      image = "gcr.io/bazel-public/ubuntu2404@sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8",
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py?$(date +%s)\" -o bcr_presubmit.py",
@@ -933,7 +905,7 @@ resource "buildkite_pipeline" "bcr-downstream-test" {
       # USE_BAZEL_VERSION: "latest"
     },
     steps = {
-      image = "gcr.io/bazel-public/ubuntu2404@sha256:e0a4a1fe658b4fe75f0a6914e7a7891a4976f6fcf12ff143a478a0912ead801c",
+      image = "gcr.io/bazel-public/ubuntu2404@sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8",
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazel-central-registry/bcr_presubmit.py?$(date +%s)\" -o bcr_presubmit.py",

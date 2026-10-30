@@ -14,7 +14,7 @@ steps:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-          image: "gcr.io/bazel-public/ubuntu2204@sha256:2a482c928ff7527594f2e528ac3724486f9cf0fd682394b8aa2f5fed4eb9676f"
+          image: "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
           network: "host"
           privileged: true
           propagate-environment: true
@@ -30,8 +30,6 @@ steps:
 
   - wait
 
-  - block: ":arrows_counterclockwise: Re-create instance group in the bazel-testing org"
-
   - command: |-
       cd buildkite
       ./create_instances.py "${BAZEL_TEST_VM_NAMES}"
@@ -45,7 +43,38 @@ steps:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-          image: "gcr.io/bazel-public/ubuntu2204@sha256:2a482c928ff7527594f2e528ac3724486f9cf0fd682394b8aa2f5fed4eb9676f"
+          image: "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
+          network: "host"
+          privileged: true
+          propagate-environment: true
+          propagate-uid-gid: true
+          volumes:
+            - "/etc/group:/etc/group:ro"
+            - "/etc/passwd:/etc/passwd:ro"
+            - "/etc/shadow:/etc/shadow:ro"
+            - "/opt/android-ndk-r15c:/opt/android-ndk-r15c:ro"
+            - "/opt/android-sdk-linux:/opt/android-sdk-linux:ro"
+            - "/var/lib/buildkite-agent:/var/lib/buildkite-agent"
+            - "/var/lib/gitmirrors:/var/lib/gitmirrors:ro"
+
+  - wait
+
+  - command: |-
+      cd buildkite
+      ./trigger_testing_presubmits.py google-bazel-presubmit bazel-bazel-github-presubmit
+    label: ":test_tube: Run Bazel presubmits in bazel-testing"
+    timeout_in_minutes: 60
+    agents:
+      - "queue=default"
+    plugins:
+      - docker#v3.8.0:
+          always-pull: true
+          environment:
+            - "ANDROID_HOME"
+            - "ANDROID_NDK_HOME"
+            - "BAZEL_TEST_VM_NAMES=${BAZEL_TEST_VM_NAMES}"
+            - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
+          image: "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
           network: "host"
           privileged: true
           propagate-environment: true
@@ -80,7 +109,7 @@ steps:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-          image: "gcr.io/bazel-public/ubuntu2204@sha256:2a482c928ff7527594f2e528ac3724486f9cf0fd682394b8aa2f5fed4eb9676f"
+          image: "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
           network: "host"
           privileged: true
           propagate-environment: true
@@ -96,8 +125,6 @@ steps:
 
   - wait
 
-  - block: ":arrows_counterclockwise: Re-create instance groups in bazel & bazel-trusted orgs"
-
   - command: |-
       cd buildkite
       ./create_instances.py "${BAZEL_PROD_INSTANCE_GROUPS}"
@@ -111,7 +138,7 @@ steps:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-          image: "gcr.io/bazel-public/ubuntu2204@sha256:2a482c928ff7527594f2e528ac3724486f9cf0fd682394b8aa2f5fed4eb9676f"
+          image: "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
           network: "host"
           privileged: true
           propagate-environment: true
