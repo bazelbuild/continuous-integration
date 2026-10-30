@@ -903,7 +903,7 @@ class KytheKzipTest(unittest.TestCase):
                 ), mock.patch.object(
                     bazelci, "glob", return_value=["a.kzip"]
                 ), mock.patch.object(
-                    bazelci, "gsutil_command", return_value="gsutil"
+                    bazelci, "gcloud_command", return_value="gcloud"
                 ), mock.patch.object(
                     bazelci, "execute_command"
                 ) as mock_exec:
@@ -929,7 +929,8 @@ class KytheKzipTest(unittest.TestCase):
                             ),
                             mock.call(
                                 [
-                                    "gsutil",
+                                    "gcloud",
+                                    "storage",
                                     "cp",
                                     expected_kzip,
                                     f"{bucket}bazel-bazel/master/{expected_kzip}",

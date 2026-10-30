@@ -169,13 +169,27 @@ def get_canonical_basename(url):
 
 def sync_bcr_content():
     print_expanded_group(":gcloud: Sync BCR content")
-    subprocess.check_output(
-        ["gsutil", "-h", "Cache-Control:no-cache", "cp", "./bazel_registry.json", BCR_BUCKET]
-    )
-    subprocess.check_output(
-        # -c Use checksum to compare files
-        ["gsutil", "-h", "Cache-Control:no-cache", "-m", "rsync", "-e", "-c", "-r", "./modules", BCR_BUCKET + "modules"]
-    )
+
+    subprocess.check_output([
+        "gcloud",
+        "storage",
+        "cp",
+        "--cache-control=no-cache",
+        "./bazel_registry.json",
+        BCR_BUCKET,
+    ])
+    
+    subprocess.check_output([
+        "gcloud",
+        "storage",
+        "rsync",
+        "--cache-control=no-cache",
+        "--checksum",
+        "--ignore-symlinks",
+        "--recursive",
+        "./modules",
+        BCR_BUCKET + "modules",
+    ])
 
 
 def update_last_green():
@@ -184,7 +198,7 @@ def update_last_green():
         f.write(get_commit())
 
     dest = os.path.join(BCR_BUCKET, LAST_GREEN_FILE)
-    subprocess.check_output(["gsutil", "cp", path, dest])
+    subprocess.check_output(["gcloud", "storage", "cp", path, dest])
 
 
 def main():
