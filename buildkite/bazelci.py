@@ -1964,7 +1964,7 @@ def current_branch_is_main_branch():
 def get_release_name_from_branch_name():
     version = "unknown"
     if os.path.exists("MODULE.bazel"):
-        with open("MODULE.bazel", "r") as f:
+        with open("MODULE.bazel", "r", encoding="utf-8", errors="replace") as f:
             match = re.search(r'module\s*\([^)]*?version\s*=\s*"(\d+\.\d+\.\d+)', f.read())
             if match:
                 version = match.group(1)
