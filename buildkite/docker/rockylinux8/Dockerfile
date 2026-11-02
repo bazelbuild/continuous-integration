@@ -41,25 +41,14 @@ RUN dnf -y install 'dnf-command(config-manager)' && \
 # Allow using sudo inside the container.
 RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-RUN dnf -y install dnf-utils && \
-    dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo && \
-    dnf -y install docker-ce docker-ce-cli containerd.io && \
-    dnf clean all
-
 # Ensure that Bazel can use its beloved ISO-8859-1 locale.
 RUN localedef -i en_US -f ISO-8859-1 en_US.ISO-8859-1
 
 # Bazelisk
-RUN LATEST_BAZELISK=$(curl -sSI https://github.com/bazelbuild/bazelisk/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
-    curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/${LATEST_BAZELISK}/bazelisk-linux-${TARGETARCH} && \
-    chown root:root /usr/local/bin/bazel && \
-    chmod 0755 /usr/local/bin/bazel
+COPY --from=tools --chmod=0755 bazelisk-linux-${TARGETARCH} /usr/local/bin/bazel
 
 # Buildifier
-RUN LATEST_BUILDIFIER=$(curl -sSI https://github.com/bazel-contrib/buildtools/releases/latest | grep -i '^location: ' | sed 's|.*/||' | sed $'s/\r//') && \
-    curl -Lo /usr/local/bin/buildifier https://github.com/bazel-contrib/buildtools/releases/download/${LATEST_BUILDIFIER}/buildifier-linux-${TARGETARCH} && \
-    chown root:root /usr/local/bin/buildifier && \
-    chmod 0755 /usr/local/bin/buildifier
+COPY --from=tools --chmod=0755 buildifier-linux-${TARGETARCH} /usr/local/bin/buildifier
 
 FROM rockylinux8-nojdk AS rockylinux8-nojdk-devtoolset10
 

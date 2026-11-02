@@ -35,8 +35,12 @@ def create_instance_group(config):
         project = config.pop("project")
         zone = config.pop("zone", None)
         region = config.pop("region", None)
+        zones = config.pop("zones", None)
+        target_distribution_shape = config.pop("target_distribution_shape", None)
         health_check = config.pop("health_check", None)
         initial_delay = config.pop("initial_delay", None)
+        on_repair_allow_changing_zone = config.pop("on_repair_allow_changing_zone", False)
+        update_mode = config.pop("update_mode", None)
 
         if not project:
             raise Exception("Invalid instance config, no project name set")
@@ -47,7 +51,7 @@ def create_instance_group(config):
         timestamp = datetime.now().strftime("%Y%m%dt%H%M%S")
         template_name = "{}-{}".format(instance_group_name, timestamp)
 
-        if zone is not None:
+        if update_mode != "in_place" and zone is not None:
             if (
                 gcloud.delete_instance_group(
                     instance_group_name, project=project, zone=zone
@@ -55,7 +59,7 @@ def create_instance_group(config):
                 == 0
             ):
                 print(f"Deleted existing instance group: {instance_group_name}")
-        elif region is not None:
+        elif update_mode != "in_place" and region is not None:
             if (
                 gcloud.delete_instance_group(
                     instance_group_name, project=project, region=region
@@ -68,6 +72,19 @@ def create_instance_group(config):
         gcloud.create_instance_template(template_name, project=project, **config)
         print(f"Created instance template {template_name}")
 
+        # in_place only swaps the template; VMs pick it up per job; other changes need recreating.
+        if update_mode == "in_place":
+            loc = {"zone": zone} if zone is not None else {"region": region}
+            res = gcloud.set_instance_template(
+                instance_group_name, project=project, template=template_name, **loc
+            )
+            if res.returncode == 0:
+                gcloud.resize_instance_group(
+                    instance_group_name, project=project, size=count, **loc
+                )
+                print(f"Updated instance group {instance_group_name} to {template_name}")
+                return 0
+
         # Create instance groups with the new template.
         kwargs = {
             "project": project,
@@ -79,6 +96,16 @@ def create_instance_group(config):
             kwargs["zone"] = zone
         elif region:
             kwargs["region"] = region
+            if zones:
+                kwargs["zones"] = zones
+            if target_distribution_shape:
+                kwargs["target_distribution_shape"] = target_distribution_shape
+            if on_repair_allow_changing_zone:
+                # VMs power off after each job and the MIG repairs them by recreating them.
+                # Let the MIG recreate them in another zone if their zone ran out of capacity.
+                # GCE requires force_update_on_repair for this.
+                kwargs["force_update_on_repair"] = True
+                kwargs["on_repair_allow_changing_zone"] = "yes"
         if health_check:
             kwargs["health_check"] = health_check
         if initial_delay:

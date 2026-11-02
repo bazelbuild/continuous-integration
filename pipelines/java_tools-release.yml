@@ -23,7 +23,7 @@ steps:
           - ANDROID_HOME
           - ANDROID_NDK_HOME 
           - BUILDKITE_ARTIFACT_UPLOAD_DESTINATION
-        image: gcr.io/bazel-public/ubuntu2404
+        image: gcr.io/bazel-public/ubuntu2404@sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8
         network: host 
         privileged: true 
         propagate-environment: true
@@ -50,7 +50,6 @@ steps:
 
       echo "+++ Preparing release notes and .zip files"
       cd scripts
-      pip3 install wget
       python3 release.py --artifacts "\$artifacts"
 
       echo "+++ Downloading github-release"

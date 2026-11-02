@@ -62,6 +62,9 @@ def get_ci_script_ref():
     if not THIS_IS_TESTING:
         return "master"
 
+    if os.environ.get("BAZELCI_GITHUB_REF"):
+        return os.environ["BAZELCI_GITHUB_REF"]
+
     # If the pipeline itself is for the official bazelbuild/continuous-integration repo, use the build's commit or branch
     if os.environ.get("BUILDKITE_REPO") in (
         "https://github.com/bazelbuild/continuous-integration",
@@ -117,17 +120,11 @@ CURL_FLAGS_STR = " ".join(CURL_FLAGS)
 def curl_download_command(url, output_file):
     return f"curl {CURL_FLAGS_STR} {url} -o {output_file}"
 
-FLAKY_TESTS_BUCKET = {
-    "bazel-testing": "gs://bazel-testing-buildkite-stats/flaky-tests-bep/",
-    "bazel-trusted": "gs://bazel-buildkite-stats/flaky-tests-bep/",
-    "bazel": "gs://bazel-buildkite-stats/flaky-tests-bep/",
-}[BUILDKITE_ORG]
 
-KZIPS_BUCKET = {
+KZIPS_BUCKET_MAPPING = {
     "bazel-testing": "gs://bazel-kzips-testing/",
-    "bazel-trusted": "gs://bazel-kzips/",
     "bazel": "gs://bazel-kzips/",
-}[BUILDKITE_ORG]
+}
 
 # We don't collect logs in the trusted org
 LOG_BUCKET = {
@@ -166,10 +163,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/bazel-bench.git",
         "file_config": ".bazelci/postsubmit.yml",
         "pipeline_slug": "bazel-bench",
-    },
-    "Bazel Examples": {
-        "git_repository": "https://github.com/bazelbuild/examples.git",
-        "pipeline_slug": "bazel-bazel-examples",
     },
     "Bazel Remote Cache": {
         "git_repository": "https://github.com/buchgr/bazel-remote.git",
@@ -273,6 +266,11 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "pipeline_slug": "tensorflow",
         "disabled_reason": "https://github.com/tensorflow/tensorflow/issues/60508",
     },
+    "gRPC": {
+        "git_repository": "https://github.com/grpc/grpc.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/grpc.yml",
+        "pipeline_slug": "grpc-grpc",
+    },
     "rules_android": {
         "git_repository": "https://github.com/bazelbuild/rules_android.git",
         "pipeline_slug": "rules-android",
@@ -289,6 +287,11 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "owned_by_bazel": True,
         "disabled_reason": "https://github.com/bazelbuild/rules_cc/issues/190",
     },
+    "rules_java": {
+        "git_repository": "https://github.com/bazelbuild/rules_java.git",
+        "pipeline_slug": "rules-java-java",
+        "owned_by_bazel": True,
+    },
     "rules_platform": {
         "git_repository": "https://github.com/bazelbuild/rules_platform.git",
         "pipeline_slug": "rules-platform",
@@ -298,6 +301,10 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazel-contrib/rules_python.git",
         "pipeline_slug": "rules-python-python",
         "disabled_reason": "https://github.com/bazel-contrib/rules_python/issues/3566, https://github.com/bazel-contrib/rules_python/issues/3581, https://github.com/bazel-contrib/rules_python/issues/3613"
+    },
+    "rules_shell": {
+        "git_repository": "https://github.com/bazel-contrib/rules_shell.git",
+        "pipeline_slug": "rules-shell",
     },
     "rules_testing": {
         "git_repository": "https://github.com/bazelbuild/rules_testing.git",
@@ -325,12 +332,6 @@ DOWNSTREAM_PROJECTS = {
     "bazel": DOWNSTREAM_PROJECTS_PRODUCTION,
 }[BUILDKITE_ORG]
 
-DOCKER_REGISTRY_PREFIX = {
-    "bazel-testing": "bazel-public/testing",
-    "bazel-trusted": "bazel-public",
-    "bazel": "bazel-public",
-}[BUILDKITE_ORG]
-
 
 # Platforms we no longer support, but still exist in the artifact registry.
 # NOTE: These names are the ones use din the PLATFORMS dict, not the
@@ -349,83 +350,92 @@ EOL_PLATFORMS = frozenset(
 
 IMAGE_HASHES = {
     "rockylinux8": {
-        "amd64": "sha256:1302e131f7db6d98fffc75f08b900b261d3bc122abeb875b294d43117e2a2466",
-        "arm64": "sha256:609f5571e9c4e3725749e3ada5399f2b8d1c7d1b04cfa322192aaff4156fa917",
+        "amd64": "sha256:a3a3ab64e044487bb4f4de79c1d9c49fb0962c5df788ffb7214540af8e77ebc2",
+        "arm64": "sha256:2b9a02bf3936565f97a9a6f3f2c069277cc130dc9343bcea5d6a7ff2f6008b4f",
+    },
+    "rockylinux8-releaser": {
+        "amd64": "sha256:2a61b4a50ea72e02764b54ac119b6dd64f96ae513401f71e1bbdff4470335306",
+        "arm64": "sha256:671ed89d34afaddb86770a7f0a54c7bb3decf91a8e31bbf1f8e33dd8164419b5",
+    },
+    "rockylinux8-java8": {
+        "amd64": "sha256:6b7c65df5b96c891b7b7796e7a0d75eb4eaab3bda3acf4b40e02b9cc691d152b",
+        "arm64": "sha256:5dc9ad02c7e152fb8b7510e5f18723b21171e67a9d8e9a71b262bf72214ea0b1",
     },
     "rockylinux8-java11": {
-        "amd64": "sha256:5e9e9b296ca4f1cab1dd77c4dba86b4b550b023dfbd8918c025fd793806f1f24",
-        "arm64": "sha256:0c443710440b2e59b85a8efc8fc1327e2ec51a80dcb2e5b6d2b980c7abd9c31c",
+        "amd64": "sha256:05f605f1eb3b1aecb9713057a4436a901929fcb8217b464806bb7603d2d0be49",
+        "arm64": "sha256:64bdb00f8a652c248de3abb7df2cc012630dab1998c90cab21b50c2f61e50bd0",
     },
     "rockylinux8-java11-devtoolset10": {
-        "amd64": "sha256:9867cf880b3644d7a3a832ef7b8bd9642e9e87d19109aa2d3b5e90d7bb89fd08",
-        "arm64": "sha256:8ce4c393ea0ca9faf24770ad0bbd982b58bd76ecdfe6ea39b55010977173ccc8",
+        "amd64": "sha256:4a483fa96812c6d20c8d07a783cf59cd02d8364e1831f8fa64221019427c781a",
+        "arm64": "sha256:37ca2a50e2866dac7ac2bec786487702578eb8e89dc058249ced0cd721602f2d",
     },
     "debian10-java11": {
-        "amd64": "sha256:b30295ec71a5319451ed59222473a39fe6009b35fbd6d69f0c391a8910f50e4a",
+        "amd64": "sha256:2cafd5671879a2693dfbb2abb0f5b06e808ba2a22a17b990da6ae8a3e195ed25",
     },
     "debian11-java17": {
-        "amd64": "sha256:3d9c8947c72507d36fb736522b6ffc1feb05bf5edb9a9c6864a4fa9cda4b999b",
+        "amd64": "sha256:42da27bb2aa6101b3e03728c0f18e20772e70f708e84d708e4f3a28ea40560d8",
     },
     "debian12": {
-        "amd64": "sha256:b45a90dcd4acb2689557efa26daa972a8eaab4c28b05699d774a5af7f82c47f7",
-        "arm64": "sha256:633a4fd5f6ab6f356e20f3dc707eff64a8f364bd159ae555db0e34222e530148",
+        "amd64": "sha256:fd2576f95180a0fabdddc6154a2dd4af18e8bfd9b6e55f288cd0a72ab2d5019a",
+        "arm64": "sha256:c96553a0acd5728f59539b6690a1810ae29ddd617e10545cc74c5d8722e022d8",
     },
     "debian13": {
-        "amd64": "sha256:2502c7031e28bfb6e9beee13d7ab9cf1832e5bdc39c674e8e2bac8c44603c7a6",
-        "arm64": "sha256:cef9b03e2828b3e2872977e916fdf9c9f7064dde82bd04e3f3559109cd565872",
+        "amd64": "sha256:ae003c171d39bc7164a705c4d8229633f518aaa36fcacf55c8d863f64e16c9f6",
+        "arm64": "sha256:0c63a0d5c11bd40533ff785cb8c25887d740d3acf214d653b14abe7f42ec07ae",
     },
     "ubuntu1604-java8": {
         "amd64": "sha256:9e5e7c5383c4a8e919d02fd81d7197bd76e912b465511dab7b45336ca3b193d0",
     },
     "ubuntu1804-java11": {
-        "amd64": "sha256:e067a0e0e5a00736230c1ab647fdbc4b2addff7e9e6c3aa282e596e0c373b00b",
+        "amd64": "sha256:25cbb00de12a00485b215440d4ef58469ba305afa54283e40f5b7a8b8ca13c0f",
     },
     "ubuntu2004-java11": {
-        "amd64": "sha256:7942e971d05da2582699d6bfedfcb37c9c9525d44e09ba33946c807963adf208",
-        "arm64": "sha256:672420c9656ea7178b632c0d391cb86ff0cc97b31ace298266d0acecba24d82e",
+        "amd64": "sha256:da0038022a8173e05549fcd003d0af97f7e89a1ee29c6f2e19db10ae7d8dc328",
+        "arm64": "sha256:51962774622467357982690143105843a387e6c99d465778c212eecdd047f039",
     },
     "ubuntu2004": {
-        "amd64": "sha256:f50b8ab02d08be096c8568c2bf85de0299ba8f1aeaf1af1fc15389b7ff491eb1",
-        "arm64": "sha256:83d82726149df466a27c912223d88614145da93de8d87fcb9df419a0b8f3b80b",
+        "amd64": "sha256:ffa90e8bad9b3952a40a0f0a9a42e3438faf0002aaa3f20cba6dd2a258ec1a56",
+        "arm64": "sha256:91b7cac1ac7ccc22a7c814a37bb7e6c4c1cb8ccf6080d6a9136afd19f31d9a85",
     },
     "ubuntu2204": {
-        "amd64": "sha256:68494a4921c83f02bb230ce7c24889fb14978f6e492c548a0eaaf13e5fa4f538",
-        "arm64": "sha256:31691d9421d79f048080553755e2d47e9197b60b89e72000a8be0e6ca668c423",
+        "amd64": "sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398",
+        "arm64": "sha256:7efa0b902d648787c9c7995d1dd26672ce5bf53cefb1e6103d12e36672229997",
     },
     "ubuntu2404": {
-        "amd64": "sha256:e0a4a1fe658b4fe75f0a6914e7a7891a4976f6fcf12ff143a478a0912ead801c",
-        "arm64": "sha256:819c76308341b7276f83f898c8f738a995f75662d68fee59a7319e9d1462e2e8",
+        "amd64": "sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8",
+        "arm64": "sha256:5f75cef6a0dc845b1727f03ec4856fe17873e6ab3fd91648167df9cfcb612f6c",
     },
     "ubuntu2004-kythe": {
         "amd64": "sha256:3862183a7674064e7e36ab851166e5a20eaccb47c8dd7205354fc8de6a6be0e9",
     },
     "ubuntu2204-kythe": {
-        "amd64": "sha256:dcb200201a6b9a6a009779a1cf97416f6d59cece4f0a9329b939629515209c96",
-        "arm64": "sha256:bd7ca2d19a1a42c712eeb8663a01cdba8c1e1506fcbab8ce54ec4f6c6c515efe",
+        "amd64": "sha256:e7bee6f5437c7a3a6622a508be5000bf7cd92897d5fcb46d64afb0746673f876",
+        "arm64": "sha256:e07ee8ad9535c5fded161149a98a8792a94e9a01f4680765b86091e047d7d342",
     },
     "ubuntu2404-kythe": {
-        "amd64": "sha256:4d93f30d30363bbae3cb794ce526e2f5b0843817b5036ee642441a6c9a23df25",
-        "arm64": "sha256:68dca69646c22a7fa70336b0c72e9319ffd4fad9855520b8b558141a2485a1a2",
+        "amd64": "sha256:186b7bd1b9b65d59423550fa85c197bffbc207f2bdee05df81b4e38bbec07a9d",
+        "arm64": "sha256:7e8d1e235dc5da1ad9527e772dd54236a98c2a57157151913e250c303291941e",
     },
     "ubuntu2204-java17": {
-        "amd64": "sha256:90fcce566485c30566a5af848fd5d53371a12fc08af7e4b56fb53496a57aa724",
-        "arm64": "sha256:18ec60ac037acfa560838f7582675ec02f890469797f86b4851e99539028e9dc",
+        "amd64": "sha256:75a622ed24a18d1af44aa1e6ada0a55efaf6dbffd682ad83afa6432bcedfd3b2",
+        "arm64": "sha256:3d77f0f05da01ad35a1338c2d97675917d95d45fd4be8778918c776f984c4587",
     },
     "fedora39-java17": {
-        "amd64": "sha256:9d83d4796b575f6ba3a6ca24afcd45c8393b03905d912524be4933a336f84514",
+        "amd64": "sha256:373eeacc764bbb872871e09bdc7d1a148211f259d38a788c658c9acdb6c0ff9c",
     },
     "fedora40-java21": {
-        "amd64": "sha256:ab3f486b983156ea8fc3435867970f0c2a99a860e3bbad9ebc992ada28240d84",
+        "amd64": "sha256:efb171659e4e61c741099bee47758d3e8816ed28be8db09276e348925a0c2390",
     },
     "fedora43-java25": {
-        "amd64": "sha256:d5f9962cf3d21b316930d81b614dffa197c86a473262d3e5825dbde445710952",
+        "amd64": "sha256:95d95492c745de91ace11e4b166d55cd0706fe29b6b4006fffc5655d6051face",
+    },
+    "docgen": {
+        "amd64": "sha256:e6ac038ad949be3e18573735e8a46f5ac74f2e59af2196ed50da0187ea87c259",
     },
 }
 
 
 def get_docker_image(image_name, is_arm64=False):
-    if THIS_IS_TESTING:
-        return f"gcr.io/{DOCKER_REGISTRY_PREFIX}/{image_name}"
     digests = IMAGE_HASHES.get(image_name)
     if not digests:
         raise ValueError(f"No digest found for docker image: {image_name}")
@@ -433,7 +443,7 @@ def get_docker_image(image_name, is_arm64=False):
     digest = digests.get(arch)
     if not digest:
         raise ValueError(f"No {arch} digest found for docker image: {image_name}")
-    return f"gcr.io/{DOCKER_REGISTRY_PREFIX}/{image_name}@{digest}"
+    return f"gcr.io/bazel-public/{image_name}@{digest}"
 
 
 # A map containing all supported platform names as keys, with the values being
@@ -1612,6 +1622,13 @@ def execute_commands(
         # (https://github.com/bazelbuild/bazelisk).
         test_env_vars.append("USE_BAZEL_VERSION")
 
+    # The Intel Mac machines have an outdated Android SDK that doesn't work with the latest
+    # rules_android, so we unset the Android env vars there. Pipelines can still set them
+    # explicitly via the "environment" field below.
+    if platform == "macos":
+        for e in ("ANDROID_HOME", "ANDROID_NDK_HOME"):
+            os.environ.pop(e, None)
+
     for key, value in task_config.get("environment", {}).items():
         # We have to explicitly convert the value to a string, because sometimes YAML tries to
         # be smart and converts strings like "true" and "false" to booleans.
@@ -1743,30 +1760,6 @@ def execute_commands(
             bazelisk_cache_dir = get_bazelisk_cache_directory()
             os.makedirs(bazelisk_cache_dir, mode=0o755, exist_ok=True)
             test_flags.append("--sandbox_writable_path={}".format(bazelisk_cache_dir))
-
-        # Set BUILDKITE_ANALYTICS_TOKEN so that bazelci-agent can upload test results to Test Analytics
-        if "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN" in os.environ:
-            if THIS_IS_TESTING:
-                kms_key = "buildkite-testing-api-token"
-                project = "bazel-untrusted"
-            elif THIS_IS_TRUSTED:
-                kms_key = "buildkite-trusted-api-token"
-                project = "bazel-public"
-            else:
-                kms_key = "buildkite-untrusted-api-token"
-                project = "bazel-untrusted"
-
-            try:
-                os.environ["BUILDKITE_ANALYTICS_TOKEN"] = decrypt_token(
-                    encrypted_token=os.environ["ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN"],
-                    kms_key=kms_key,
-                    project=project,
-                )
-            except Exception as ex:
-                print_collapsed_group(
-                    ":rotating_light: Test analytics disabled due to an error :warning:"
-                )
-                eprint(ex)
 
         test_bep_file = os.path.join(tmpdir, _TEST_BEP_FILE)
         # Create an empty test_bep_file so that the bazelci-agent can start to follow the file right away. Otherwise,
@@ -1979,7 +1972,7 @@ def current_branch_is_main_branch():
 def get_release_name_from_branch_name():
     version = "unknown"
     if os.path.exists("MODULE.bazel"):
-        with open("MODULE.bazel", "r") as f:
+        with open("MODULE.bazel", "r", encoding="utf-8", errors="replace") as f:
             match = re.search(r'module\s*\([^)]*?version\s*=\s*"(\d+\.\d+\.\d+)', f.read())
             if match:
                 version = match.group(1)
@@ -2036,6 +2029,9 @@ def upload_bazel_binary(platform):
 
 
 def merge_and_upload_kythe_kzip(platform, index_upload_gcs):
+    if BUILDKITE_ORG not in KZIPS_BUCKET_MAPPING:
+        raise BuildkiteException(f"Kythe indexing not supported for org '{BUILDKITE_ORG}'")
+
     if local_run_only():
         return
     print_collapsed_group(":gcloud: Uploading kythe kzip")
@@ -2052,7 +2048,9 @@ def merge_and_upload_kythe_kzip(platform, index_upload_gcs):
     if index_upload_gcs:
         pipeline = os.getenv("BUILDKITE_PIPELINE_SLUG")
         branch = os.getenv("BUILDKITE_BRANCH")
-        destination = KZIPS_BUCKET + pipeline + "/" + branch + "/" + final_kzip_name
+        destination = (
+            KZIPS_BUCKET_MAPPING[BUILDKITE_ORG] + pipeline + "/" + branch + "/" + final_kzip_name
+        )
         print("Uploading to GCS {}".format(destination))
         execute_command([gsutil_command(), "cp", final_kzip_name, destination])
 
@@ -2948,7 +2946,15 @@ def is_googlesource_repo(repo_url):
 
 
 def get_commit_archive_url(resolved_diffbase):
-    repo_url = os.getenv("BUILDKITE_REPO", "")
+    repo = os.getenv("BUILDKITE_REPO", "")
+    # Hack: Prefer GitHub since unauthenticated
+    # requests to googlesource.com are unreliable.
+    # There is a very small risk of race conditions
+    # since commits are pushed to googlesource.com first
+    # before being mirrored to GitHub.
+    # However, this is highly unlikely to cause problems in reality.
+    # Currently no other repos are using bazel diff.
+    repo_url = repo.replace("https://bazel.googlesource.com/bazel.git", "https://github.com/bazelbuild/bazel.git")
     prefix = "+" if is_googlesource_repo(repo_url) else ""
     return repo_url.replace(".git", "/{}archive/{}.tar.gz".format(prefix, resolved_diffbase))
 
@@ -3337,6 +3343,7 @@ def create_step(
     concurrency=None,
     concurrency_group=None,
     priority=None,
+    skip_checkout=False,
 ):
     if commands is not None:
         flat_commands = []
@@ -3368,7 +3375,7 @@ def create_step(
         step["priority"] = priority
     elif project_slug in _ELEVATED_PRIORITY_PIPELINES:
         step["priority"] = 1
-    elif project_slug in _LOWERED_PRIORITY_PIPELINES:
+    elif project_slug in _LOWERED_PRIORITY_PIPELINES or is_renovate_pr():
         step["priority"] = -1
 
     if shards > 1:
@@ -3381,6 +3388,8 @@ def create_step(
 
     # Enforce a global 8 hour job timeout.
     step["timeout_in_minutes"] = 8 * 60
+
+    step["checkout"] = {"skip": skip_checkout}
 
     # Automatically retry when an agent got lost (usually due to an infra flake).
     step["retry"] = {
@@ -3412,7 +3421,15 @@ def create_step(
     return step
 
 
-def create_docker_step(label, image, commands=None, additional_env_vars=None, queue="default", enable_soft_fail=False):
+def create_docker_step(
+    label,
+    image,
+    commands=None,
+    additional_env_vars=None,
+    queue="default",
+    enable_soft_fail=False,
+    skip_checkout=False,
+):
     env = ["ANDROID_HOME", "ANDROID_NDK_HOME", "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION", "CHECKOUT_DURATION_S", "CHECKOUT_END_TIME"]
     if THIS_IS_TRUSTED:
         # For the trusted Linux arm64 machine to upload artifacts
@@ -3423,6 +3440,7 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None, qu
     step = {
         "label": label,
         "command": commands,
+        "checkout": {"skip": skip_checkout},
         "agents": {"queue": queue},
         "plugins": {
             "docker#v3.8.0": {
@@ -3453,6 +3471,10 @@ def create_docker_step(label, image, commands=None, additional_env_vars=None, qu
     if not step["command"]:
         del step["command"]
     return step
+
+
+def is_renovate_pr():
+    return "renovate" in os.getenv("BUILDKITE_BUILD_CREATOR", "")
 
 
 def print_project_pipeline(
@@ -3637,6 +3659,7 @@ def print_project_pipeline(
                     PLATFORMS[DEFAULT_PLATFORM]["python"] + " bazelci.py print_shard_summary",
                 ],
                 platform=DEFAULT_PLATFORM,
+                skip_checkout=True,
             )
         )
 
@@ -3682,7 +3705,7 @@ def create_initial_steps():
         return steps
 
     modified_files = get_modified_files(os.getenv("BUILDKITE_COMMIT"))
-    modified_config_files = [f for f in modified_files if is_config_file(f)]
+    modified_config_files = [f for f in modified_files if is_ci_config_file(f)]
 
     if os.getenv("BUILDKITE_PIPELINE_SLUG", "") == "bazel-central-registry":
         # BCR: Only block changes to BCR's own presubmit.yml file.
@@ -3709,7 +3732,9 @@ def has_presubmit_auto_run_label():
     )
 
 
-def is_config_file(path):
+def is_ci_config_file(path):
+    if path.startswith((".github")):
+        return False
     return ".bazelci" in path or path.endswith(".yml")
 
 
@@ -3834,6 +3859,8 @@ def create_config_validation_steps(git_commit):
 
 
 def get_modified_files(git_commit):
+    if is_trueish(os.environ.get("DISABLE_MODIFIED_FILES_DETECTION", "false")):
+        return []
     fetch_base_branch()
     merge_base_commit = execute_command_and_get_output(
         ["git", "merge-base", git_commit, "FETCH_HEAD"]

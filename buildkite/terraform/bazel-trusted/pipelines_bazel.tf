@@ -10,7 +10,7 @@ resource "buildkite_pipeline" "mirror-last-green-commit-for-bazel" {
         "gsutil cp gs://bazel-builds/last_green_commit/github.com/bazelbuild/bazel.git/publish-bazel-binaries gs://bazel-untrusted-builds/last_green_commit/github.com/bazelbuild/bazel.git/bazel-bazel"
       ],
       label = ":pipeline:",
-      image = "gcr.io/bazel-public/ubuntu2204"
+      image = "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
     }
   })
   allow_rebuilds             = true
@@ -262,7 +262,7 @@ resource "buildkite_pipeline" "java-tools-rc" {
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/java_tools-rc.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:",
-      image = "gcr.io/bazel-public/ubuntu2004-java11"
+      image = "gcr.io/bazel-public/ubuntu2004-java11@sha256:da0038022a8173e05549fcd003d0af97f7e89a1ee29c6f2e19db10ae7d8dc328"
     }
   })
   allow_rebuilds             = true

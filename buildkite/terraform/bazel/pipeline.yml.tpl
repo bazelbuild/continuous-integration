@@ -12,6 +12,8 @@ steps:
       ${command}
 %{ endfor ~}
     label: "${try(steps.label, ":pipeline:")}"
+    checkout:
+      skip: ${try(steps.skip_checkout, false)}
     %{~ if try(steps.priority, null) != null ~}
     priority: ${steps.priority}
     %{~ endif ~}
@@ -26,7 +28,7 @@ steps:
             - "ANDROID_HOME"
             - "ANDROID_NDK_HOME"
             - "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION"
-          image: "${try(steps.image, "gcr.io/bazel-public/ubuntu2404@sha256:e0a4a1fe658b4fe75f0a6914e7a7891a4976f6fcf12ff143a478a0912ead801c")}"
+          image: "${try(steps.image, "gcr.io/bazel-public/ubuntu2404@sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8")}"
           network: "host"
           privileged: true
           propagate-environment: true

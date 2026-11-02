@@ -41,6 +41,7 @@ def worker():
             project = item.pop("project")
             zone = item.pop("zone", None)
             region = item.pop("region", None)
+            item.pop("target_distribution_shape", None)
             del item["health_check"]
             del item["initial_delay"]
 
