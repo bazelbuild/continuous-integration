@@ -168,8 +168,6 @@ def parse_bep(filepath):
     bazel_metrics = BazelMetrics()
     target_map = collections.defaultdict(list)
     target_status = {}
-    target_total_durations = {}
-    target_shard_counts = {}
 
     with open(filepath, "r") as f:
         for line_num, line in enumerate(f, 1):
@@ -200,15 +198,6 @@ def parse_bep(filepath):
 
                     if current_status != "PASSED":
                         bazel_metrics.failed_test_count += 1
-
-            elif "testSummary" in event:
-                summary = event["testSummary"]
-                label = event_id.get("testSummary", {}).get("label")
-                if label:
-                    total_ms = int(summary.get("totalRunDurationMillis", 0))
-                    if total_ms > 0:
-                        target_total_durations[label] = total_ms / 1000.0
-                    target_shard_counts[label] = int(summary.get("shardCount", 1))
 
             # --- 2. Build Metrics ---
             elif "buildMetrics" in event:
@@ -254,10 +243,8 @@ def parse_bep(filepath):
             TestTarget(
                 label=label,
                 status=target_status.get(label, "UNKNOWN"),
-                duration_s=target_total_durations.get(
-                    label, sum(shards) if shards else 0.0
-                ),
-                shard_count=target_shard_counts.get(label, len(shards)),
+                duration_s=max(shards) if shards else 0.0,
+                shard_count=len(shards),
                 shard_durations=shards,
             )
         )
@@ -335,7 +322,7 @@ def collect_metrics_and_push_to_bigquery(build_bep_path=None, test_bep_path=None
     ORG = os.getenv("BUILDKITE_ORGANIZATION_SLUG")
     REPO = os.getenv("BUILDKITE_REPO")
     queue = os.getenv("BUILDKITE_AGENT_META_DATA_QUEUE", "default")
-    PLATFORM = {"default": "linux", "arm64": "linux_arm64"}.get(queue, queue)
+    PLATFORM = bazelci.get_metrics_platform(queue)
     TASK_LABEL = normalize_job_label(BUILDKITE_LABEL)
     BUILD_SHARD_ID = int(os.getenv("BUILDKITE_PARALLEL_JOB", "0"))
     BUILD_SHARD_COUNT = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "1"))

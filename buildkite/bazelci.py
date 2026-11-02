@@ -36,6 +36,7 @@ import requests
 import shlex
 import shutil
 import stat
+import statistics
 import subprocess
 import sys
 import tarfile
@@ -715,9 +716,8 @@ USE_BAZEL_DIFF_ENV_VAR = "USE_BAZEL_DIFF"
 DISABLE_BAZEL_DIFF_ENV_VAR = "DISABLE_BAZEL_DIFF"
 
 USE_SMART_SHARDING_ENV_VAR = "USE_SMART_SHARDING"
-TEST_DURATIONS_URL = (
-    "gs://bazel-ci-test-durations/test_durations_000000000000.json"
-)
+TEST_DURATIONS_GCS_GENERATION_ENV_VAR = "TEST_DURATIONS_GCS_GENERATION"
+TEST_DURATIONS_URL = "gs://bazel-ci-test-durations/test_durations_000000000000.json"
 DEFAULT_TEST_DURATION_SECONDS = 300.0
 
 BAZEL_DIFF_ANNOTATION_CTX = "'diff'"
@@ -2651,16 +2651,12 @@ def calculate_targets(
 
         test_durations = None
         if is_trueish(os.getenv(USE_SMART_SHARDING_ENV_VAR, "")):
-            resolved_platform = platform or task_config.get("platform")
+            generation = os.getenv(TEST_DURATIONS_GCS_GENERATION_ENV_VAR)
+            url = f"{TEST_DURATIONS_URL}#{generation}" if generation else TEST_DURATIONS_URL
             tmpdir = tempfile.mkdtemp()
             try:
-                downloaded_file = download_file(TEST_DURATIONS_URL, tmpdir, "test_durations.json")
-                test_durations = load_test_durations(downloaded_file, platform=resolved_platform)
-            except Exception as ex:
-                eprint(
-                    f"Warning: Failed to download test durations from {TEST_DURATIONS_URL} ({ex}); "
-                    "falling back to round-robin sharding instead of bin-packing."
-                )
+                downloaded_file = download_file(url, tmpdir, "test_durations.json")
+                test_durations = load_test_durations(downloaded_file, platform)
             finally:
                 shutil.rmtree(tmpdir, ignore_errors=True)
 
@@ -2887,10 +2883,13 @@ def filter_unchanged_targets(
 def upload_shard_distribution(sorted_test_targets, shard_count, test_durations=None):
     tmpdir = tempfile.mkdtemp()
     try:
+        partitions = (
+            partition_targets_bin_packing(sorted_test_targets, shard_count, test_durations)
+            if test_durations
+            else None
+        )
         data = {
-            s + 1: get_targets_for_shard(
-                sorted_test_targets, s, shard_count, test_durations=test_durations
-            )
+            s + 1: partitions[s] if partitions else sorted_test_targets[s::shard_count]
             for s in range(shard_count)
         }
         base = f"{os.getenv('BUILDKITE_PIPELINE_SLUG')}_{os.getenv('BUILDKITE_BUILD_NUMBER')}_shards.json"
@@ -3058,19 +3057,25 @@ def partition_list(items):
     return included, excluded, added_back
 
 
-def compute_median_duration(durations, default=DEFAULT_TEST_DURATION_SECONDS):
-    valid = [float(d) for d in durations if isinstance(d, (int, float)) and d > 0]
-    if not valid:
-        return default
-    valid.sort()
-    n = len(valid)
-    if n % 2 == 1:
-        return valid[n // 2]
-    return (valid[n // 2 - 1] + valid[n // 2]) / 2.0
+def resolve_gcs_generation(url):
+    for attempt in range(1, 4):
+        try:
+            output = execute_command_and_get_output(
+                [gsutil_command(), "stat", url], print_output=False
+            )
+            break
+        except subprocess.CalledProcessError as ex:
+            if attempt == 3:
+                raise BuildkiteInfraException(f"Failed to stat {url}: {ex}")
+            time.sleep(2 * attempt)
+    match = re.search(r"Generation:\s*([0-9]+)", output)
+    if not match:
+        raise BuildkiteInfraException(f"Could not parse generation for {url}")
+    return match.group(1)
 
 
 def get_metrics_platform(platform):
-    """Maps a bazelci platform name (e.g. 'ubuntu2004') to its BigQuery metrics platform (e.g. 'linux')."""
+    """Maps a bazelci platform or Buildkite queue name to its BigQuery metrics platform."""
     if not platform:
         return None
     queue = PLATFORMS[platform].get("queue", "default") if platform in PLATFORMS else platform
@@ -3079,59 +3084,34 @@ def get_metrics_platform(platform):
 
 def load_test_durations(source, platform):
     """Loads test durations from a BigQuery export file (newline-delimited JSON)."""
-    if not source or not platform or not os.path.exists(source):
+    if not platform:
         return {}
-
     allowed_platforms = {platform, get_metrics_platform(platform)}
     durations = {}
     try:
         with open(source, mode="r", encoding="utf-8") as f:
             for line in f:
-                try:
-                    row = json.loads(line)
-                    val = float(row["duration"])
-                    if row["target"] and val > 0 and row.get("platform") in allowed_platforms:
-                        durations[row["target"]] = val
-                except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+                line = line.strip()
+                if not line:
                     continue
-    except Exception as ex:
-        eprint(f"Warning: Failed to parse test durations file {source}: {ex}")
+                row = json.loads(line)
+                if not isinstance(row, dict):
+                    raise ValueError(f"Expected JSON object, got {type(row).__name__}")
+                val = float(row["duration"])
+                if row["target"] and val > 0 and row.get("platform") in allowed_platforms:
+                    durations[row["target"]] = val
+    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as ex:
+        raise BuildkiteInfraException(f"Failed to load test durations from {source}: {ex}")
     return durations
 
 
-def partition_targets_round_robin(sorted_test_targets, shard_count):
-    """Partitions targets using round-robin distribution."""
-    if shard_count <= 0:
-        return {}
-    return {
-        s: sorted_test_targets[s::shard_count]
-        for s in range(shard_count)
-    }
-
-
-def partition_targets_bin_packing(
-    sorted_test_targets,
-    shard_count,
-    test_durations,
-):
-    """Partitions targets across shards using LPT (Longest Processing Time first) bin packing.
-
-    Args:
-        sorted_test_targets: List of target strings.
-        shard_count: Number of shards to divide targets into.
-        test_durations: Dict mapping target name to duration in seconds.
-
-    Returns:
-        Dict mapping shard index (0 to shard_count - 1) to a sorted list of assigned target strings.
-    """
-    if shard_count <= 0:
-        return {}
-    if shard_count == 1:
-        return {0: list(sorted_test_targets)}
-    if not sorted_test_targets:
-        return {s: [] for s in range(shard_count)}
-
-    fallback_dur = compute_median_duration(test_durations.values())
+def partition_targets_bin_packing(sorted_test_targets, shard_count, test_durations):
+    """Partitions targets across shards using LPT (Longest Processing Time first) bin packing."""
+    fallback_dur = (
+        statistics.median(test_durations.values())
+        if test_durations
+        else DEFAULT_TEST_DURATION_SECONDS
+    )
     targets_by_duration = sorted(
         sorted_test_targets,
         key=lambda t: (-test_durations.get(t, fallback_dur), t),
@@ -3148,24 +3128,11 @@ def partition_targets_bin_packing(
 
 
 def get_targets_for_shard(sorted_test_targets, shard_id, shard_count, test_durations=None):
-    """Returns the list of test targets assigned to a specific shard.
-
-    If test_durations is provided, LPT bin-packing is used.
-    Otherwise, it falls back to round-robin partitioning.
-    """
     if shard_id < 0 or shard_id >= shard_count:
-        raise BuildkiteException(
-            f"Invalid shard_id {shard_id} for shard_count {shard_count}"
-        )
-
-    if test_durations:
-        partitions = partition_targets_bin_packing(
-            sorted_test_targets, shard_count, test_durations=test_durations
-        )
-    else:
-        partitions = partition_targets_round_robin(sorted_test_targets, shard_count)
-
-    return partitions.get(shard_id, [])
+        raise BuildkiteException(f"Invalid shard_id {shard_id} for shard_count {shard_count}")
+    if not test_durations:
+        return sorted_test_targets[shard_id::shard_count]
+    return partition_targets_bin_packing(sorted_test_targets, shard_count, test_durations)[shard_id]
 
 
 def execute_bazel_test(
@@ -3521,6 +3488,7 @@ def print_project_pipeline(
     config_hashes = set()
     skipped_downstream_tasks = []
     has_sharded_task = False
+    task_steps = []
     for task, task_config in task_configs.items():
         platform = get_platform_for_task(task, task_config)
         task_name = task_config.get("name")
@@ -3577,7 +3545,13 @@ def print_project_pipeline(
             shards=shards,
             soft_fail=soft_fail,
         )
+        task_steps.append(step)
         pipeline_steps.append(step)
+
+    if has_sharded_task and is_trueish(os.getenv(USE_SMART_SHARDING_ENV_VAR, "")):
+        generation = resolve_gcs_generation(TEST_DURATIONS_URL)
+        for step in task_steps:
+            step.setdefault("env", {})[TEST_DURATIONS_GCS_GENERATION_ENV_VAR] = generation
 
     if skipped_downstream_tasks:
         lines = ["\n- {}".format(s.replace("'", "'\\''")) for s in skipped_downstream_tasks]
