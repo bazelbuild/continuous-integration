@@ -184,7 +184,7 @@ def sync_bcr_content():
         "storage",
         "rsync",
         "--cache-control=no-cache",
-        "--checksum",
+        "--checksums-only",
         "--ignore-symlinks",
         "--recursive",
         "./modules",
