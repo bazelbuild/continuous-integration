@@ -25,7 +25,6 @@ import requests
 
 import bazelci
 
-ORG = "bazel-testing"
 POLL_INTERVAL_SECONDS = 60
 TERMINAL_BUILD_STATES = frozenset(["passed", "failed", "canceled", "skipped", "not_run"])
 LINUX_IMAGE_SKIP_TASKS = (
@@ -84,7 +83,7 @@ def annotate_build_state(org, pipeline, build_info, skip_tasks_csv=""):
     number = build_info.get("number")
     web_url = build_info.get("web_url")
     state = build_info.get("state", "unknown")
-    context = f"testing-presubmit-{pipeline}"
+    context = f"presubmit-{org}-{pipeline}"
     skip_suffix = f" (skipping `{skip_tasks_csv}`)" if skip_tasks_csv else " (skipping none)"
     if not is_build_finished(build_info):
         annotate(
@@ -111,12 +110,12 @@ def parse_pipelines(raw_args):
 
 
 def main(argv=None):
-    if argv is None:
-        argv = sys.argv[1:]
+    argv = list(sys.argv[1:] if argv is None else argv)
 
+    org = argv.pop(0).split("=", 1)[1] if argv and argv[0].startswith("--org=") else "bazel-testing"
     pipelines = parse_pipelines(argv)
     if not pipelines:
-        bazelci.eprint("Usage: trigger_testing_presubmits.py <pipeline> [<pipeline> ...]")
+        bazelci.eprint("Usage: trigger_testing_presubmits.py [--org=<org>] <pipeline> [<pipeline> ...]")
         return 1
 
     test_vm_names = os.environ.get("BAZEL_TEST_VM_NAMES", "")
@@ -142,16 +141,16 @@ def main(argv=None):
     tracked = []
     try:
         for pipeline in pipelines:
-            client = bazelci.BuildkiteClient(org=ORG, pipeline=pipeline)
+            client = bazelci.BuildkiteClient(org=org, pipeline=pipeline)
             build_info = client.trigger_new_build("HEAD", message=message, env=trigger_env)
             number = build_info["number"]
             web_url = build_info["web_url"]
             state = build_info.get("state", "unknown")
             print(
-                f"Triggered {ORG}/{pipeline} build #{number}: {web_url} (state={state})",
+                f"Triggered {org}/{pipeline} build #{number}: {web_url} (state={state})",
                 flush=True,
             )
-            annotate_build_state(ORG, pipeline, build_info, skip_tasks_csv)
+            annotate_build_state(org, pipeline, build_info, skip_tasks_csv)
             tracked.append(
                 {
                     "pipeline": pipeline,
@@ -168,7 +167,7 @@ def main(argv=None):
                     entry["build_info"] = entry["client"].get_build_info(entry["number"])
                     if is_build_finished(entry["build_info"]):
                         annotate_build_state(
-                            ORG, entry["pipeline"], entry["build_info"], skip_tasks_csv
+                            org, entry["pipeline"], entry["build_info"], skip_tasks_csv
                         )
 
             timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -180,9 +179,9 @@ def main(argv=None):
     except (bazelci.BuildkiteException, subprocess.CalledProcessError, requests.RequestException) as ex:
         bazelci.eprint(ex)
         annotate(
-            "testing-presubmits-error",
+            f"presubmits-error-{org}",
             "error",
-            f"Failed while running testing presubmits: `{ex}`",
+            f"Failed while running {org} presubmits: `{ex}`",
         )
         return 1
 
@@ -191,7 +190,7 @@ def main(argv=None):
         state = entry["build_info"].get("state", "unknown")
         web_url = entry["build_info"].get("web_url")
         print(
-            f"  {ORG}/{entry['pipeline']} build #{entry['number']}: {state} ({web_url})",
+            f"  {org}/{entry['pipeline']} build #{entry['number']}: {state} ({web_url})",
             flush=True,
         )
 
