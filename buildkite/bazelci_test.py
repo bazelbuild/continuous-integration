@@ -273,7 +273,7 @@ tasks:
             shard_targets.append(targets)
             if shard_id == 0:
                 # The shard distribution only contains the targets that bazel-diff kept.
-                mock_upload.assert_called_once_with(affected_targets, 2)
+                mock_upload.assert_called_once_with(affected_targets, 2, test_durations=None)
 
         # The targets that bazel-diff kept are split across shards, not all targets.
         self.assertEqual(shard_targets, [["//pkg:t2", "//pkg:t5"], ["//pkg:t3"]])
