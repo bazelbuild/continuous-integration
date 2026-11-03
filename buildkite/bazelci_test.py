@@ -221,6 +221,121 @@ tasks:
             "-//bad/three",
         ])
 
+    def _calculate_targets_with_bazel_diff(self, shard_id, shard_count, all_targets, **patches):
+        diffbase = "8191888673e840a217aef137d2a9670b94a87fcd"
+        with mock.patch.dict(
+            os.environ,
+            {
+                "USE_BAZEL_DIFF": diffbase,
+                "BUILDKITE_PARALLEL_JOB": str(shard_id),
+                "BUILDKITE_PARALLEL_JOB_COUNT": str(shard_count),
+            },
+        ), mock.patch.object(bazelci, "can_use_bazel_diff", return_value=True), mock.patch.object(
+            bazelci, "expand_test_target_patterns", return_value=all_targets
+        ), mock.patch.object(
+            bazelci, "upload_shard_distribution"
+        ) as mock_upload, mock.patch.object(
+            bazelci, "download_file", return_value="/tmp/bazel-diff.jar"
+        ), mock.patch.object(
+            bazelci, "execute_command"
+        ), mock.patch(
+            "os.chdir"
+        ), mock.patch.multiple(
+            bazelci, **patches
+        ):
+            _, test_targets, _, _ = bazelci.calculate_targets(
+                {"test_targets": ["//..."]},
+                "bazel",
+                build_only=False,
+                test_only=False,
+                workspace_dir="/tmp",
+                ws_setup_func=lambda _: None,
+                git_commit="abcd",
+                test_flags=[],
+            )
+            return test_targets, mock_upload
+
+    def test_sharding_after_bazel_diff(self):
+        all_targets = ["//pkg:t1", "//pkg:t2", "//pkg:t3", "//pkg:t4", "//pkg:t5"]
+        affected_targets = ["//pkg:t2", "//pkg:t3", "//pkg:t5"]
+
+        shard_targets = []
+        for shard_id in range(2):
+            targets, mock_upload = self._calculate_targets_with_bazel_diff(
+                shard_id,
+                2,
+                all_targets,
+                checkout_diffbase=mock.DEFAULT,
+                run_bazel_diff=mock.Mock(return_value=affected_targets),
+            )
+            shard_targets.append(targets)
+            if shard_id == 0:
+                # The shard distribution only contains the targets that bazel-diff kept.
+                mock_upload.assert_called_once_with(affected_targets, 2)
+
+        # The targets that bazel-diff kept are split across shards, not all targets.
+        self.assertEqual(shard_targets, [["//pkg:t2", "//pkg:t5"], ["//pkg:t3"]])
+
+    def test_bazel_diff_failure_fails_the_job(self):
+        all_targets = ["//pkg:t1", "//pkg:t2", "//pkg:t3", "//pkg:t4"]
+
+        with self.assertRaises(bazelci.BuildkiteException) as ctx:
+            self._calculate_targets_with_bazel_diff(
+                0,
+                2,
+                all_targets,
+                checkout_diffbase=mock.Mock(
+                    side_effect=bazelci.BuildkiteInfraException("simulated failure")
+                ),
+            )
+
+        # The job must fail with the exit code that Buildkite retries automatically,
+        # instead of falling back to all targets (which would drop targets on other shards).
+        self.assertEqual(ctx.exception.exit_code, bazelci.BAZEL_DIFF_FAILURE_EXIT_CODE)
+        self.assertIn("simulated failure", str(ctx.exception))
+
+    def test_checkout_diffbase_skips_fetch_when_commit_present(self):
+        diffbase = "8191888673e840a217aef137d2a9670b94a87fcd"
+        with mock.patch.object(
+            bazelci, "execute_command", return_value=0
+        ) as mock_exec, mock.patch.object(
+            bazelci, "execute_command_and_get_output", return_value="/repo/root\n"
+        ):
+            bazelci.checkout_diffbase(diffbase, "/tmp/dest")
+
+        self.assertEqual(
+            mock_exec.call_args_list,
+            [
+                mock.call(
+                    ["git", "cat-file", "-e", f"{diffbase}^{{commit}}"],
+                    fail_if_nonzero=False,
+                ),
+                mock.call(
+                    ["git", "clone", "--shared", "--no-checkout", "/repo/root", "/tmp/dest"],
+                    capture_stderr=True,
+                ),
+                mock.call(
+                    ["git", "-C", "/tmp/dest", "checkout", "--detach", "--quiet", diffbase],
+                    capture_stderr=True,
+                ),
+            ],
+        )
+
+    def test_checkout_diffbase_fetches_when_commit_missing(self):
+        diffbase = "8191888673e840a217aef137d2a9670b94a87fcd"
+        with mock.patch.object(
+            bazelci, "execute_command", side_effect=[1, 0, 0, 0]
+        ) as mock_exec, mock.patch.object(
+            bazelci, "execute_command_and_get_output", return_value="/repo/root\n"
+        ):
+            bazelci.checkout_diffbase(diffbase, "/tmp/dest")
+
+        self.assertEqual(
+            mock_exec.call_args_list[1],
+            mock.call(["git", "fetch", "origin", diffbase], capture_stderr=True),
+        )
+
+
 class MatrixExpansion(unittest.TestCase):
     _CONFIGS = yaml.safe_load(
         """

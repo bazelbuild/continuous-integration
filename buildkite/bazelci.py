@@ -37,7 +37,6 @@ import shutil
 import stat
 import subprocess
 import sys
-import tarfile
 import tempfile
 import time
 from typing import List
@@ -714,6 +713,10 @@ USE_BAZEL_DIFF_ENV_VAR = "USE_BAZEL_DIFF"
 DISABLE_BAZEL_DIFF_ENV_VAR = "DISABLE_BAZEL_DIFF"
 
 BAZEL_DIFF_ANNOTATION_CTX = "'diff'"
+
+# Exit code of a job whose bazel-diff run failed. Buildkite retries such jobs automatically.
+# 75 is EX_TEMPFAIL from sysexits.h and isn't used by Bazel itself.
+BAZEL_DIFF_FAILURE_EXIT_CODE = 75
 
 # TODO(fweikert): Install bazel-diff on the Docker images and on the Mac machines
 BAZEL_DIFF_URL = (
@@ -1964,7 +1967,7 @@ def current_branch_is_main_branch():
 def get_release_name_from_branch_name():
     version = "unknown"
     if os.path.exists("MODULE.bazel"):
-        with open("MODULE.bazel", "r") as f:
+        with open("MODULE.bazel", "r", encoding="utf-8", errors="replace") as f:
             match = re.search(r'module\s*\([^)]*?version\s*=\s*"(\d+\.\d+\.\d+)', f.read())
             if match:
                 version = match.group(1)
@@ -2619,6 +2622,9 @@ def calculate_targets(
 
     expanded_test_targets = expand_test_target_patterns(bazel_binary, test_targets, test_flags)
 
+    # Every shard runs bazel-diff on its own and splits the result afterwards.
+    # This is only safe because filter_unchanged_targets() fails the job instead of
+    # falling back to the unfiltered list: all shards that pass must split the same list.
     actual_test_targets = (
         filter_unchanged_targets(
             expanded_test_targets,
@@ -2628,7 +2634,7 @@ def calculate_targets(
             diffbase,
             git_commit,
         )
-        if use_bazel_diff
+        if use_bazel_diff and expanded_test_targets
         else expanded_test_targets
     )
 
@@ -2780,14 +2786,8 @@ def filter_unchanged_targets(
         eprint(f"Resolved diffbase to {resolved_diffbase}")
 
         eprint("Cloning comparison repository...")
-        diffbase_archive_url = get_commit_archive_url(resolved_diffbase)
-        local_archive_path = download_file(diffbase_archive_url, tmpdir, "repo.tar.gz")
         diffbase_repo_dir = os.path.join(tmpdir, resolved_diffbase)
-        extract_archive(
-            local_archive_path,
-            diffbase_repo_dir,
-            strip_top_level_dir=not is_googlesource_repo(diffbase_archive_url),
-        )
+        checkout_diffbase(resolved_diffbase, diffbase_repo_dir)
 
         eprint("Setting up comparison repository...")
         os.chdir(diffbase_repo_dir)
@@ -2801,35 +2801,38 @@ def filter_unchanged_targets(
             bazel_diff_path, diffbase_repo_dir, workspace_dir, bazel_binary, tmpdir
         )
     except (BuildkiteException, BuildkiteInfraException) as ex:
+        # Don't fall back to the unfiltered target list: each shard runs bazel-diff on its own,
+        # and a shard that falls back would split a different list than the other shards,
+        # which drops or duplicates targets. Fail the job instead so Buildkite retries it.
         try:
             execute_command(
                 [
                     "buildkite-agent",
                     "annotate",
-                    "--style=warning",
+                    "--style=error",
                     "--context",
                     "'diff_failed'",
-                    "This build runs all test targets even though `{}` is set "
-                    "since bazel-diff failed with an error:\n```\n{}\n```".format(
-                        USE_BAZEL_DIFF_ENV_VAR, ex
-                    ),
+                    "bazel-diff failed with an error, so this job fails and Buildkite "
+                    "retries it:\n```\n{}\n```".format(ex),
                 ]
             )
             execute_command(
                 ["buildkite-agent", "annotation", "remove", "--context", BAZEL_DIFF_ANNOTATION_CTX]
             )
-        finally:
-            return expanded_test_targets
+        except Exception:
+            pass
+        raise BuildkiteException(
+            "bazel-diff failed: {}".format(ex), exit_code=BAZEL_DIFF_FAILURE_EXIT_CODE
+        ) from ex
     finally:
+        os.chdir(workspace_dir)
         try:
             shutil.rmtree(tmpdir)
         except:
             pass
 
-        os.chdir(workspace_dir)
-
     config_target_set = set(expanded_test_targets)
-    remaining_targets = list(config_target_set.intersection(affected_targets))
+    remaining_targets = sorted(config_target_set.intersection(affected_targets))
     if len(remaining_targets) < len(expanded_test_targets):
         print_collapsed_group(
             ":scissors: Successfully reduced test targets from {} to {}".format(
@@ -2910,38 +2913,37 @@ def resolve_diffbase(diffbase):
     )
 
 
-def is_googlesource_repo(repo_url):
-    return "googlesource" in repo_url
-
-
-def get_commit_archive_url(resolved_diffbase):
-    repo = os.getenv("BUILDKITE_REPO", "")
-    # Hack: Prefer GitHub since unauthenticated
-    # requests to googlesource.com are unreliable.
-    # There is a very small risk of race conditions
-    # since commits are pushed to googlesource.com first
-    # before being mirrored to GitHub.
-    # However, this is highly unlikely to cause problems in reality.
-    # Currently no other repos are using bazel diff.
-    repo_url = repo.replace("https://bazel.googlesource.com/bazel.git", "https://github.com/bazelbuild/bazel.git")
-    prefix = "+" if is_googlesource_repo(repo_url) else ""
-    return repo_url.replace(".git", "/{}archive/{}.tar.gz".format(prefix, resolved_diffbase))
-
-
-def extract_archive(archive_path, dest_dir, strip_top_level_dir):
-    if not os.path.isdir(dest_dir):
-        os.mkdir(dest_dir)
-
+def checkout_diffbase(resolved_diffbase, dest_dir):
     try:
-        with tarfile.open(archive_path, mode="r:gz") as archive:
-            if strip_top_level_dir:
-                for member in archive.getmembers():
-                    member.name = "/".join(member.name.split("/")[1:])
-                    archive.extract(member, dest_dir)
-            else:
-                archive.extractall(dest_dir)
-    except tarfile.TarError as ex:
-        raise BuildkiteInfraException("Failed to extract repository archive: {}".format(ex)) from ex
+        if (
+            execute_command(
+                ["git", "cat-file", "-e", f"{resolved_diffbase}^{{commit}}"],
+                fail_if_nonzero=False,
+            )
+            != 0
+        ):
+            execute_command(
+                ["git", "fetch", "origin", resolved_diffbase],
+                capture_stderr=True,
+            )
+        git_root = execute_command_and_get_output(
+            ["git", "rev-parse", "--show-toplevel"],
+            print_output=False,
+        ).strip()
+        execute_command(
+            ["git", "clone", "--shared", "--no-checkout", git_root, dest_dir],
+            capture_stderr=True,
+        )
+        execute_command(
+            ["git", "-C", dest_dir, "checkout", "--detach", "--quiet", resolved_diffbase],
+            capture_stderr=True,
+        )
+    except subprocess.CalledProcessError as ex:
+        raise BuildkiteInfraException(
+            "Failed to check out {} to {}: {}\n{}".format(
+                resolved_diffbase, dest_dir, ex, ex.stderr
+            )
+        ) from ex
 
 
 def download_file(url, dest_dir, dest_filename):
@@ -3251,6 +3253,8 @@ def create_step(
             {"exit_status": -1, "limit": 3},  # Buildkite internal "agent lost" exit code
             {"exit_status": 137, "limit": 3},  # SIGKILL
             {"exit_status": 143, "limit": 3},  # SIGTERM
+            # bazel-diff failed (e.g. a network error), see filter_unchanged_targets().
+            {"exit_status": BAZEL_DIFF_FAILURE_EXIT_CODE, "limit": 2},
         ]
     }
 
