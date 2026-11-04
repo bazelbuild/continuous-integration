@@ -60,33 +60,3 @@ resource "buildkite_pipeline" "rules-platform-release" {
   }
 }
 
-resource "buildkite_pipeline" "rules-platform-release-testing" {
-  name           = "rules_platform release testing"
-  repository     = "https://github.com/keertk/rules_platform.git"
-  description    = "rules_platform release testing"
-  default_branch = "main"
-  steps = templatefile("pipeline.yml.tpl", {
-    envs = {},
-    priority = 0,
-    steps = {
-      commands = [
-        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/rules_platform-release-testing/pipelines/rules_platform-release-testing.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
-      ],
-      label = ":pipeline:"
-    }
-  })
-  allow_rebuilds             = true
-  cancel_intermediate_builds = false
-  skip_intermediate_builds   = false
-  tags                       = []
-  branch_configuration       = null
-  cluster_id                 = null
-  color                      = null
-  default_team_id            = null
-  emoji                      = null
-  pipeline_template_id       = null
-  provider_settings = {
-    # GitHub activities are disabled for this pipeline
-    trigger_mode = "none"
-  }
-}
