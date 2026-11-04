@@ -58,17 +58,21 @@ def list_images(family):
 
 
 def main(argv=None):
+    # Parse the command-line argument.
     parser = argparse.ArgumentParser(description="Roll back VM image families in bazel-public.")
     parser.add_argument(
         "families",
         help=f"Comma-separated image families: {', '.join(FAMILY_GROUPS)}",
     )
     args = parser.parse_args(argv)
+
+    # Split the comma-separated families into a de-duplicated list.
     families = list(dict.fromkeys(f.strip() for f in args.families.split(",") if f.strip()))
     if not families:
         parser.print_usage(sys.stderr)
         return 1
 
+    # Reject unknown families before deprecating any image or looking up instance groups.
     unknown = [f for f in families if f not in FAMILY_GROUPS]
     if unknown:
         print(
@@ -78,7 +82,14 @@ def main(argv=None):
         )
         return 1
 
-    plan = [(f, *select_rollback_images(f, list_images(f))) for f in families]
+    # Look up the newest and previous image of every family before changing anything,
+    # so we fail early if any family has nothing to roll back to.
+    plan = []
+    for family in families:
+        newest, previous = select_rollback_images(family, list_images(family))
+        plan.append((family, newest, previous))
+
+    # Deprecate the newest image in favor of the previous one and print the undo command.
     for family, newest, previous in plan:
         gcloud.gcloud(
             "compute", "images", "deprecate", newest,
@@ -89,6 +100,7 @@ def main(argv=None):
             f"  Undo: gcloud compute images deprecate {newest} --state=ACTIVE --project={PROJECT}"
         )
 
+    # Print create_instances.py for manual runs (the pipeline passes groups separately).
     groups = list(dict.fromkeys(g for f in families for g in FAMILY_GROUPS[f]))
     print(f"\nNext step:\n  ./create_instances.py {','.join(groups)}")
     return 0
