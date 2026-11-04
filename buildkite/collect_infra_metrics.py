@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 
 from google.cloud import bigquery
+import yaml
 
 from bazelci import BuildkiteClient
 
@@ -12,7 +13,8 @@ from bazelci import BuildkiteClient
 ORGs = ["bazel-testing", "bazel", "bazel-trusted"]
 PROJECT_ID = "bazel-untrusted"
 DATASET_ID = "bazel_ci_metrics"
-TABLE_ID = "infra_stats"
+INFRA_STATS_TABLE_ID = "infra_stats"
+AGENT_SNAPSHOTS_TABLE_ID = "agent_snapshots"
 
 
 def setup_logging(level=logging.INFO):
@@ -22,6 +24,42 @@ def setup_logging(level=logging.INFO):
       format="%(asctime)s - %(levelname)-8s - %(message)s",
       stream=sys.stdout,
   )
+
+
+def get_expected_agents():
+  """Fetches expected agent counts per (org, platform) for GCE and Mac pools."""
+  expected = {}
+  try:
+    instances_path = os.path.join(os.path.dirname(__file__), "instances.yml")
+    with open(instances_path, "r", encoding="utf-8") as f:
+      config = yaml.safe_load(f)
+    for g in config.get("instance_groups", []):
+      name = g.get("name", "")
+      if not name.startswith("bk-"):
+        continue
+      org = (
+          "bazel-testing" if "-testing-" in name
+          else "bazel-trusted" if "-trusted-" in name else "bazel"
+      )
+      platform = (
+          "linux_arm64" if name.endswith("-arm64")
+          else "windows" if name.endswith("windows") else "linux"
+      )
+      expected[(org, platform)] = expected.get((org, platform), 0) + int(g.get("count", 0))
+
+    # Mac pools live in MacService config (not GCP), so use the 7-day observed max.
+    query = (
+        f"SELECT org, platform, MAX(total_agents) AS expected_agents "
+        f"FROM `{PROJECT_ID}.{DATASET_ID}.{INFRA_STATS_TABLE_ID}` "
+        f"WHERE timestamp > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY) "
+        f"AND platform IN ('macos', 'macos_arm64') GROUP BY 1, 2"
+    )
+    for r in bigquery.Client(project="bazel-public").query(query).result():
+      if r["expected_agents"] is not None:
+        expected[(r["org"], r["platform"])] = int(r["expected_agents"])
+  except Exception as e:
+    logging.warning(f"Failed to fetch expected agent sizes: {e}")
+  return expected
 
 def extract_platform(tags):
   """Extracts the platform from agent meta_data tags."""
@@ -76,7 +114,30 @@ def count_scheduled_jobs(builds):
   return scheduled_by_platform
 
 
-def get_org_metrics(org):
+def build_agent_rows(agents, org, timestamp):
+  """Builds per-agent snapshot rows for BigQuery."""
+  rows = []
+  for a in agents:
+    job = a.get("job") or {}
+    rows.append({
+        "timestamp": timestamp,
+        "org": org,
+        "platform": extract_platform(a.get("meta_data", [])),
+        "id": a.get("id"),
+        "name": a.get("name"),
+        "hostname": a.get("hostname"),
+        "paused": a.get("paused"),
+        "paused_at": a.get("paused_at"),
+        "connected_at": a.get("connected_at"),
+        "last_job_finished_at": a.get("last_job_finished_at"),
+        "job_state": job.get("state"),
+        "job_started_at": job.get("started_at"),
+        "job_web_url": job.get("web_url"),
+    })
+  return rows
+
+
+def get_org_metrics(org, expected_by_pool):
   """Fetches metrics for a single org and calculates stats per platform."""
   logging.info(f"Pulling Data for Org: {org}")
   bk_client = BuildkiteClient(org=org)
@@ -96,9 +157,10 @@ def get_org_metrics(org):
 
   for platform, stats in agents_by_platform.items():
     scheduled_jobs = scheduled_by_platform.get(platform, 0)
+    expected_agents = expected_by_pool.get((org, platform))
 
-    #Skip platforms with no info (didn't run any jobs)
-    if stats["total"] == 0 and scheduled_jobs == 0:
+    # Skip platforms we don't run (no agents, no jobs, no expected pool).
+    if stats["total"] == 0 and scheduled_jobs == 0 and not expected_agents:
       continue
 
     avg_bootstrap_time = sum(stats["bootstrap_samples"]) / len(
@@ -113,20 +175,21 @@ def get_org_metrics(org):
         "busy_agents": stats["busy"],
         "idle_agents": stats["idle"],
         "disconnected_agents": stats["disconnected"],
-        "avg_bootstrap_time_s": avg_bootstrap_time
+        "avg_bootstrap_time_s": avg_bootstrap_time,
+        "expected_agents": expected_agents,
     })
 
-  return rows
+  return rows, build_agent_rows(agents, org, timestamp)
 
-def push_to_bigquery(rows, retries):
+def push_to_bigquery(rows, retries, table_id):
   if not rows:
     logging.info("No data found to push to DB")
     return
 
   client = bigquery.Client(project=PROJECT_ID)
-  table_ref = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
+  table_ref = f"{PROJECT_ID}.{DATASET_ID}.{table_id}"
 
-  logging.info(f"Pushing {len(rows)} rows to BigQuery...")
+  logging.info(f"Pushing {len(rows)} rows to {table_ref}...")
 
   for attempt in range(retries):
     errors = client.insert_rows_json(table_ref, rows)
@@ -149,14 +212,18 @@ def main():
   logging.info(f"Starting Buildkite Poller")
 
   try:
+    expected_by_pool = get_expected_agents()
     all_metrics = []
+    all_agent_rows = []
     for org in ORGs:
-      metrics = get_org_metrics(org)
-      if metrics:
-        all_metrics.extend(metrics)
+      metrics, agent_rows = get_org_metrics(org, expected_by_pool)
+      all_metrics.extend(metrics)
+      all_agent_rows.extend(agent_rows)
 
     if all_metrics:
-      push_to_bigquery(all_metrics, 5)
+      push_to_bigquery(all_metrics, 5, INFRA_STATS_TABLE_ID)
+    if all_agent_rows:
+      push_to_bigquery(all_agent_rows, 5, AGENT_SNAPSHOTS_TABLE_ID)
 
   except Exception as e:
     logging.critical(f"ERROR in Poller: {e}")

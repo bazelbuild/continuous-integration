@@ -23,5 +23,7 @@ docker push "gcr.io/$PREFIX/fedora39-bazel-java17" &
 docker push "gcr.io/$PREFIX/fedora40-java21" &
 docker push "gcr.io/$PREFIX/fedora40-bazel-java21" &
 docker push "gcr.io/$PREFIX/fedora43-java25" &
+docker push "gcr.io/$PREFIX/fedora45-java25" &
 docker push "gcr.io/$PREFIX/fedora43-bazel-java25" &
+docker push "gcr.io/$PREFIX/fedora45-bazel-java25" &
 wait

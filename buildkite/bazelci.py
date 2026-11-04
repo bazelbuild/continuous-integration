@@ -23,6 +23,7 @@ import copy
 import datetime
 from glob import glob
 import hashlib
+import heapq
 import itertools
 import json
 import multiprocessing
@@ -35,9 +36,9 @@ import requests
 import shlex
 import shutil
 import stat
+import statistics
 import subprocess
 import sys
-import tarfile
 import tempfile
 import time
 from typing import List
@@ -119,17 +120,11 @@ CURL_FLAGS_STR = " ".join(CURL_FLAGS)
 def curl_download_command(url, output_file):
     return f"curl {CURL_FLAGS_STR} {url} -o {output_file}"
 
-FLAKY_TESTS_BUCKET = {
-    "bazel-testing": "gs://bazel-testing-buildkite-stats/flaky-tests-bep/",
-    "bazel-trusted": "gs://bazel-buildkite-stats/flaky-tests-bep/",
-    "bazel": "gs://bazel-buildkite-stats/flaky-tests-bep/",
-}[BUILDKITE_ORG]
 
-KZIPS_BUCKET = {
+KZIPS_BUCKET_MAPPING = {
     "bazel-testing": "gs://bazel-kzips-testing/",
-    "bazel-trusted": "gs://bazel-kzips/",
     "bazel": "gs://bazel-kzips/",
-}[BUILDKITE_ORG]
+}
 
 # We don't collect logs in the trusted org
 LOG_BUCKET = {
@@ -168,10 +163,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/bazel-bench.git",
         "file_config": ".bazelci/postsubmit.yml",
         "pipeline_slug": "bazel-bench",
-    },
-    "Bazel Examples": {
-        "git_repository": "https://github.com/bazelbuild/examples.git",
-        "pipeline_slug": "bazel-bazel-examples",
     },
     "Bazel Remote Cache": {
         "git_repository": "https://github.com/buchgr/bazel-remote.git",
@@ -275,6 +266,11 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "pipeline_slug": "tensorflow",
         "disabled_reason": "https://github.com/tensorflow/tensorflow/issues/60508",
     },
+    "gRPC": {
+        "git_repository": "https://github.com/grpc/grpc.git",
+        "http_config": "https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/grpc.yml",
+        "pipeline_slug": "grpc-grpc",
+    },
     "rules_android": {
         "git_repository": "https://github.com/bazelbuild/rules_android.git",
         "pipeline_slug": "rules-android",
@@ -291,6 +287,11 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "owned_by_bazel": True,
         "disabled_reason": "https://github.com/bazelbuild/rules_cc/issues/190",
     },
+    "rules_java": {
+        "git_repository": "https://github.com/bazelbuild/rules_java.git",
+        "pipeline_slug": "rules-java-java",
+        "owned_by_bazel": True,
+    },
     "rules_platform": {
         "git_repository": "https://github.com/bazelbuild/rules_platform.git",
         "pipeline_slug": "rules-platform",
@@ -300,6 +301,10 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazel-contrib/rules_python.git",
         "pipeline_slug": "rules-python-python",
         "disabled_reason": "https://github.com/bazel-contrib/rules_python/issues/3566, https://github.com/bazel-contrib/rules_python/issues/3581, https://github.com/bazel-contrib/rules_python/issues/3613"
+    },
+    "rules_shell": {
+        "git_repository": "https://github.com/bazel-contrib/rules_shell.git",
+        "pipeline_slug": "rules-shell",
     },
     "rules_testing": {
         "git_repository": "https://github.com/bazelbuild/rules_testing.git",
@@ -343,41 +348,40 @@ EOL_PLATFORMS = frozenset(
     ]
 )
 
-# DO_NOT_MODIFY_IMAGE_HASHES_SENTINEL_START
 IMAGE_HASHES = {
     "rockylinux8": {
-        "amd64": "sha256:bf148717fe5349e498345dbf3efc1f7690b89e310a2ae970c3bec1ab4e9cd61e",
-        "arm64": "sha256:1b7ac73ca16e71e148bc4bb68858d0a0e44129e7f4949b8aa90be2d169ef01b9",
+        "amd64": "sha256:a3a3ab64e044487bb4f4de79c1d9c49fb0962c5df788ffb7214540af8e77ebc2",
+        "arm64": "sha256:2b9a02bf3936565f97a9a6f3f2c069277cc130dc9343bcea5d6a7ff2f6008b4f",
     },
     "rockylinux8-releaser": {
-        "amd64": "sha256:164d20f7df3c44789799a6cd956c535adf4a3f15b8b5a0348fd781578b4808e3",
-        "arm64": "sha256:4635e2b5f0a265c45b462c318e81928f3c2b5e02c580eddd8f5ae0dc44254005",
+        "amd64": "sha256:2a61b4a50ea72e02764b54ac119b6dd64f96ae513401f71e1bbdff4470335306",
+        "arm64": "sha256:671ed89d34afaddb86770a7f0a54c7bb3decf91a8e31bbf1f8e33dd8164419b5",
     },
     "rockylinux8-java8": {
-        "amd64": "sha256:79b0528e2ce5d3212dbd4f6b8bc6e331038e92288d379043fd941c45dab5be44",
-        "arm64": "sha256:75d11e32035ba1b4a9709431bcb5140d14de4ff455f2d2aec9d659d075d7e75c",
+        "amd64": "sha256:6b7c65df5b96c891b7b7796e7a0d75eb4eaab3bda3acf4b40e02b9cc691d152b",
+        "arm64": "sha256:5dc9ad02c7e152fb8b7510e5f18723b21171e67a9d8e9a71b262bf72214ea0b1",
     },
     "rockylinux8-java11": {
-        "amd64": "sha256:042605c8ea1ce7bc243cb5b363d3581876c849cc8d99104e3c20ab0b80d6dd87",
-        "arm64": "sha256:ba8450e5285baf2a148b6f5647b02d0781484aa44665b68ce18c3f39dca2830e",
+        "amd64": "sha256:05f605f1eb3b1aecb9713057a4436a901929fcb8217b464806bb7603d2d0be49",
+        "arm64": "sha256:64bdb00f8a652c248de3abb7df2cc012630dab1998c90cab21b50c2f61e50bd0",
     },
     "rockylinux8-java11-devtoolset10": {
-        "amd64": "sha256:9d271aed202917c7769844eb2e2737b109541457fe387ceffc72035483f1ba44",
-        "arm64": "sha256:52002e0cc6a66c96131b10898cd67d85bab3e320261d6e73637830bab0f51fdf",
+        "amd64": "sha256:4a483fa96812c6d20c8d07a783cf59cd02d8364e1831f8fa64221019427c781a",
+        "arm64": "sha256:37ca2a50e2866dac7ac2bec786487702578eb8e89dc058249ced0cd721602f2d",
     },
     "debian10-java11": {
-        "amd64": "sha256:4c54ce7c02f61b8cb24a7447eb14b00e4a62f34c8afd3bd27d0c1a760bdf2a10",
+        "amd64": "sha256:2cafd5671879a2693dfbb2abb0f5b06e808ba2a22a17b990da6ae8a3e195ed25",
     },
     "debian11-java17": {
         "amd64": "sha256:42da27bb2aa6101b3e03728c0f18e20772e70f708e84d708e4f3a28ea40560d8",
     },
     "debian12": {
-        "amd64": "sha256:22d6fb6518a579f2fd32f07c7641df663e3d9306d68417c6623aafd9f7813963",
-        "arm64": "sha256:46b1909a9e51f6784d07df101f182b62cb9281b1009ba67276307ab15be69bd7",
+        "amd64": "sha256:fd2576f95180a0fabdddc6154a2dd4af18e8bfd9b6e55f288cd0a72ab2d5019a",
+        "arm64": "sha256:c96553a0acd5728f59539b6690a1810ae29ddd617e10545cc74c5d8722e022d8",
     },
     "debian13": {
-        "amd64": "sha256:23ea24eb7c394883a7e069918896d36e9090373f27634d9cfdd30b0c6f58796d",
-        "arm64": "sha256:8143489bf8a6f7c890838ce209c0ec940f5b69cbf78aa9158d5a45ce3cf16f4c",
+        "amd64": "sha256:ae003c171d39bc7164a705c4d8229633f518aaa36fcacf55c8d863f64e16c9f6",
+        "arm64": "sha256:0c63a0d5c11bd40533ff785cb8c25887d740d3acf214d653b14abe7f42ec07ae",
     },
     "ubuntu1604-java8": {
         "amd64": "sha256:9e5e7c5383c4a8e919d02fd81d7197bd76e912b465511dab7b45336ca3b193d0",
@@ -394,42 +398,44 @@ IMAGE_HASHES = {
         "arm64": "sha256:91b7cac1ac7ccc22a7c814a37bb7e6c4c1cb8ccf6080d6a9136afd19f31d9a85",
     },
     "ubuntu2204": {
-        "amd64": "sha256:2a482c928ff7527594f2e528ac3724486f9cf0fd682394b8aa2f5fed4eb9676f",
-        "arm64": "sha256:5ca61bdbd4b0f3aea8947ed9816f29b9da41a8cef9b1b2217f63724edb8a256a",
+        "amd64": "sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398",
+        "arm64": "sha256:7efa0b902d648787c9c7995d1dd26672ce5bf53cefb1e6103d12e36672229997",
     },
     "ubuntu2404": {
-        "amd64": "sha256:53dd4ae8e1a2b4c070bc15fb3b60e0d30b81ccc85c6c44e18b20de992be8e9a3",
-        "arm64": "sha256:9d4c2fb2962bd49cccb2929e9bd84a9104952caadedbe80e1a7717fb139f9970",
+        "amd64": "sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8",
+        "arm64": "sha256:5f75cef6a0dc845b1727f03ec4856fe17873e6ab3fd91648167df9cfcb612f6c",
     },
     "ubuntu2004-kythe": {
         "amd64": "sha256:3862183a7674064e7e36ab851166e5a20eaccb47c8dd7205354fc8de6a6be0e9",
     },
     "ubuntu2204-kythe": {
-        "amd64": "sha256:3b0fe8e438faacec522eb3cfbfce116fbcddf1c4cd9a32f847217cac154e5782",
-        "arm64": "sha256:bbbf6342d9eaf7846ccf4ea9557c94dcb1c6428eafa46526370d476d907801ef",
+        "amd64": "sha256:e7bee6f5437c7a3a6622a508be5000bf7cd92897d5fcb46d64afb0746673f876",
+        "arm64": "sha256:e07ee8ad9535c5fded161149a98a8792a94e9a01f4680765b86091e047d7d342",
     },
     "ubuntu2404-kythe": {
-        "amd64": "sha256:e64cd16e729a251538c0776ef68cf2f88eb590a05b88ff4e66fe35e8495babdf",
-        "arm64": "sha256:a3b0bc5627c3480f2529fce16403c74a245a4e5ea60986317cf31abcc1a6b98d",
+        "amd64": "sha256:186b7bd1b9b65d59423550fa85c197bffbc207f2bdee05df81b4e38bbec07a9d",
+        "arm64": "sha256:7e8d1e235dc5da1ad9527e772dd54236a98c2a57157151913e250c303291941e",
     },
     "ubuntu2204-java17": {
-        "amd64": "sha256:793035b3e53a0fcf341c5ca541886178b04838008b8ed2e67a4c6aa17325fd8c",
-        "arm64": "sha256:ed4059cb3493cbae25cf4c82d50e0f96486e267a0b960a9c1a168e741e5c21ae",
+        "amd64": "sha256:75a622ed24a18d1af44aa1e6ada0a55efaf6dbffd682ad83afa6432bcedfd3b2",
+        "arm64": "sha256:3d77f0f05da01ad35a1338c2d97675917d95d45fd4be8778918c776f984c4587",
     },
     "fedora39-java17": {
-        "amd64": "sha256:ea39c59f30fe9892c58f12664aa12c6d67be7b01268416cb9e7a47167ab8631d",
+        "amd64": "sha256:373eeacc764bbb872871e09bdc7d1a148211f259d38a788c658c9acdb6c0ff9c",
     },
     "fedora40-java21": {
-        "amd64": "sha256:0ab39f88defa6427cbfc033a3480854fcb6ac3e9de78dc1dc6918b4547d46bd0",
+        "amd64": "sha256:efb171659e4e61c741099bee47758d3e8816ed28be8db09276e348925a0c2390",
     },
     "fedora43-java25": {
-        "amd64": "sha256:04ed68b97d884184fbcc89d09e48b5acc09d18b1e10c15021e0210223d1305ae",
+        "amd64": "sha256:36378b3c3c1f5b5f621bbf3160dc088ab7240fb0506d83253ae40d704b992323",
+    },
+    "fedora45-java25": {
+        "amd64": "sha256:014e13b0ece7446646a901afb6b69434b8a7e5945e74ff0a633aae00116d1a22",
     },
     "docgen": {
         "amd64": "sha256:e6ac038ad949be3e18573735e8a46f5ac74f2e59af2196ed50da0187ea87c259",
     },
 }
-# DO_NOT_MODIFY_IMAGE_HASHES_SENTINEL_END
 
 
 def get_docker_image(image_name, is_arm64=False):
@@ -643,6 +649,13 @@ PLATFORMS = {
         "docker-image": get_docker_image("fedora43-java25"),
         "python": "python3",
     },
+    "fedora45": {
+        "name": "Fedora 45 (OpenJDK 25)",
+        "emoji-name": ":fedora: Fedora 45 (OpenJDK 25)",
+        "publish_binary": [],
+        "docker-image": get_docker_image("fedora45-java25"),
+        "python": "python3",
+    },
     "macos": {
         "name": "macOS",
         "emoji-name": ":darwin: macOS",
@@ -710,8 +723,18 @@ RUNNER_CMD = "bazelci.py runner"
 USE_BAZEL_DIFF_ENV_VAR = "USE_BAZEL_DIFF"
 # DISABLE_BAZEL_DIFF wins, even if someone sets USE_BAZEL_DIFF (e.g. presubmit check).
 DISABLE_BAZEL_DIFF_ENV_VAR = "DISABLE_BAZEL_DIFF"
+DISABLE_TEST_CACHE_ENV_VAR = "DISABLE_TEST_CACHE"
+
+USE_SMART_SHARDING_ENV_VAR = "USE_SMART_SHARDING"
+TEST_DURATIONS_GCS_GENERATION_ENV_VAR = "TEST_DURATIONS_GCS_GENERATION"
+TEST_DURATIONS_URL = "gs://bazel-ci-test-durations/test_durations_000000000000.json"
+DEFAULT_TEST_DURATION_SECONDS = 300.0
 
 BAZEL_DIFF_ANNOTATION_CTX = "'diff'"
+
+# Exit code of a job whose bazel-diff run failed. Buildkite retries such jobs automatically.
+# 75 is EX_TEMPFAIL from sysexits.h and isn't used by Bazel itself.
+BAZEL_DIFF_FAILURE_EXIT_CODE = 75
 
 # TODO(fweikert): Install bazel-diff on the Docker images and on the Mac machines
 BAZEL_DIFF_URL = (
@@ -1701,6 +1724,7 @@ def execute_commands(
         PrepareRepoInCwd,
         git_commit,
         test_flags,
+        platform=platform,
     )
 
     if build_targets:
@@ -1750,30 +1774,6 @@ def execute_commands(
             bazelisk_cache_dir = get_bazelisk_cache_directory()
             os.makedirs(bazelisk_cache_dir, mode=0o755, exist_ok=True)
             test_flags.append("--sandbox_writable_path={}".format(bazelisk_cache_dir))
-
-        # Set BUILDKITE_ANALYTICS_TOKEN so that bazelci-agent can upload test results to Test Analytics
-        if "ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN" in os.environ:
-            if THIS_IS_TESTING:
-                kms_key = "buildkite-testing-api-token"
-                project = "bazel-untrusted"
-            elif THIS_IS_TRUSTED:
-                kms_key = "buildkite-trusted-api-token"
-                project = "bazel-public"
-            else:
-                kms_key = "buildkite-untrusted-api-token"
-                project = "bazel-untrusted"
-
-            try:
-                os.environ["BUILDKITE_ANALYTICS_TOKEN"] = decrypt_token(
-                    encrypted_token=os.environ["ENCRYPTED_BUILDKITE_ANALYTICS_TOKEN"],
-                    kms_key=kms_key,
-                    project=project,
-                )
-            except Exception as ex:
-                print_collapsed_group(
-                    ":rotating_light: Test analytics disabled due to an error :warning:"
-                )
-                eprint(ex)
 
         test_bep_file = os.path.join(tmpdir, _TEST_BEP_FILE)
         # Create an empty test_bep_file so that the bazelci-agent can start to follow the file right away. Otherwise,
@@ -1986,7 +1986,7 @@ def current_branch_is_main_branch():
 def get_release_name_from_branch_name():
     version = "unknown"
     if os.path.exists("MODULE.bazel"):
-        with open("MODULE.bazel", "r") as f:
+        with open("MODULE.bazel", "r", encoding="utf-8", errors="replace") as f:
             match = re.search(r'module\s*\([^)]*?version\s*=\s*"(\d+\.\d+\.\d+)', f.read())
             if match:
                 version = match.group(1)
@@ -2043,6 +2043,9 @@ def upload_bazel_binary(platform):
 
 
 def merge_and_upload_kythe_kzip(platform, index_upload_gcs):
+    if BUILDKITE_ORG not in KZIPS_BUCKET_MAPPING:
+        raise BuildkiteException(f"Kythe indexing not supported for org '{BUILDKITE_ORG}'")
+
     if local_run_only():
         return
     print_collapsed_group(":gcloud: Uploading kythe kzip")
@@ -2059,7 +2062,9 @@ def merge_and_upload_kythe_kzip(platform, index_upload_gcs):
     if index_upload_gcs:
         pipeline = os.getenv("BUILDKITE_PIPELINE_SLUG")
         branch = os.getenv("BUILDKITE_BRANCH")
-        destination = KZIPS_BUCKET + pipeline + "/" + branch + "/" + final_kzip_name
+        destination = (
+            KZIPS_BUCKET_MAPPING[BUILDKITE_ORG] + pipeline + "/" + branch + "/" + final_kzip_name
+        )
         print("Uploading to GCS {}".format(destination))
         execute_command([gsutil_command(), "cp", final_kzip_name, destination])
 
@@ -2593,6 +2598,7 @@ def calculate_targets(
     ws_setup_func,
     git_commit,
     test_flags,
+    platform=None,
 ):
     print_collapsed_group(":dart: Calculating targets")
 
@@ -2636,6 +2642,9 @@ def calculate_targets(
 
     expanded_test_targets = expand_test_target_patterns(bazel_binary, test_targets, test_flags)
 
+    # Every shard runs bazel-diff on its own and splits the result afterwards.
+    # This is only safe because filter_unchanged_targets() fails the job instead of
+    # falling back to the unfiltered list: all shards that pass must split the same list.
     actual_test_targets = (
         filter_unchanged_targets(
             expanded_test_targets,
@@ -2645,7 +2654,7 @@ def calculate_targets(
             diffbase,
             git_commit,
         )
-        if use_bazel_diff
+        if use_bazel_diff and expanded_test_targets
         else expanded_test_targets
     )
 
@@ -2656,10 +2665,26 @@ def calculate_targets(
             )
         )
         sorted_test_targets = sorted(actual_test_targets)
-        actual_test_targets = get_targets_for_shard(sorted_test_targets, shard_id, shard_count)
+
+        test_durations = None
+        if is_trueish(os.getenv(USE_SMART_SHARDING_ENV_VAR, "")):
+            generation = os.getenv(TEST_DURATIONS_GCS_GENERATION_ENV_VAR, "").strip()
+            url = f"{TEST_DURATIONS_URL}#{generation}" if generation else TEST_DURATIONS_URL
+            tmpdir = tempfile.mkdtemp()
+            try:
+                downloaded_file = download_file(url, tmpdir, "test_durations.json")
+                test_durations = load_test_durations(downloaded_file, platform)
+            finally:
+                shutil.rmtree(tmpdir, ignore_errors=True)
+
+        actual_test_targets = get_targets_for_shard(
+            sorted_test_targets, shard_id, shard_count, test_durations=test_durations
+        )
 
         if shard_id == 0:
-            upload_shard_distribution(sorted_test_targets, shard_count)
+            upload_shard_distribution(
+                sorted_test_targets, shard_count, test_durations=test_durations
+            )
 
     return build_targets, actual_test_targets, coverage_targets, index_targets
 
@@ -2797,14 +2822,8 @@ def filter_unchanged_targets(
         eprint(f"Resolved diffbase to {resolved_diffbase}")
 
         eprint("Cloning comparison repository...")
-        diffbase_archive_url = get_commit_archive_url(resolved_diffbase)
-        local_archive_path = download_file(diffbase_archive_url, tmpdir, "repo.tar.gz")
         diffbase_repo_dir = os.path.join(tmpdir, resolved_diffbase)
-        extract_archive(
-            local_archive_path,
-            diffbase_repo_dir,
-            strip_top_level_dir=not is_googlesource_repo(diffbase_archive_url),
-        )
+        checkout_diffbase(resolved_diffbase, diffbase_repo_dir)
 
         eprint("Setting up comparison repository...")
         os.chdir(diffbase_repo_dir)
@@ -2818,35 +2837,38 @@ def filter_unchanged_targets(
             bazel_diff_path, diffbase_repo_dir, workspace_dir, bazel_binary, tmpdir
         )
     except (BuildkiteException, BuildkiteInfraException) as ex:
+        # Don't fall back to the unfiltered target list: each shard runs bazel-diff on its own,
+        # and a shard that falls back would split a different list than the other shards,
+        # which drops or duplicates targets. Fail the job instead so Buildkite retries it.
         try:
             execute_command(
                 [
                     "buildkite-agent",
                     "annotate",
-                    "--style=warning",
+                    "--style=error",
                     "--context",
                     "'diff_failed'",
-                    "This build runs all test targets even though `{}` is set "
-                    "since bazel-diff failed with an error:\n```\n{}\n```".format(
-                        USE_BAZEL_DIFF_ENV_VAR, ex
-                    ),
+                    "bazel-diff failed with an error, so this job fails and Buildkite "
+                    "retries it:\n```\n{}\n```".format(ex),
                 ]
             )
             execute_command(
                 ["buildkite-agent", "annotation", "remove", "--context", BAZEL_DIFF_ANNOTATION_CTX]
             )
-        finally:
-            return expanded_test_targets
+        except Exception:
+            pass
+        raise BuildkiteException(
+            "bazel-diff failed: {}".format(ex), exit_code=BAZEL_DIFF_FAILURE_EXIT_CODE
+        ) from ex
     finally:
+        os.chdir(workspace_dir)
         try:
             shutil.rmtree(tmpdir)
         except:
             pass
 
-        os.chdir(workspace_dir)
-
     config_target_set = set(expanded_test_targets)
-    remaining_targets = list(config_target_set.intersection(affected_targets))
+    remaining_targets = sorted(config_target_set.intersection(affected_targets))
     if len(remaining_targets) < len(expanded_test_targets):
         print_collapsed_group(
             ":scissors: Successfully reduced test targets from {} to {}".format(
@@ -2872,11 +2894,16 @@ def filter_unchanged_targets(
     return remaining_targets
 
 
-def upload_shard_distribution(sorted_test_targets, shard_count):
+def upload_shard_distribution(sorted_test_targets, shard_count, test_durations=None):
     tmpdir = tempfile.mkdtemp()
     try:
+        partitions = (
+            partition_targets_bin_packing(sorted_test_targets, shard_count, test_durations)
+            if test_durations
+            else None
+        )
         data = {
-            s + 1: get_targets_for_shard(sorted_test_targets, s, shard_count)
+            s + 1: partitions[s] if partitions else sorted_test_targets[s::shard_count]
             for s in range(shard_count)
         }
         base = f"{os.getenv('BUILDKITE_PIPELINE_SLUG')}_{os.getenv('BUILDKITE_BUILD_NUMBER')}_shards.json"
@@ -2927,36 +2954,53 @@ def resolve_diffbase(diffbase):
     )
 
 
-def is_googlesource_repo(repo_url):
-    return "googlesource" in repo_url
-
-
-def get_commit_archive_url(resolved_diffbase):
-    repo_url = os.getenv("BUILDKITE_REPO", "")
-    prefix = "+" if is_googlesource_repo(repo_url) else ""
-    return repo_url.replace(".git", "/{}archive/{}.tar.gz".format(prefix, resolved_diffbase))
-
-
-def extract_archive(archive_path, dest_dir, strip_top_level_dir):
-    if not os.path.isdir(dest_dir):
-        os.mkdir(dest_dir)
-
+def checkout_diffbase(resolved_diffbase, dest_dir):
     try:
-        with tarfile.open(archive_path, mode="r:gz") as archive:
-            if strip_top_level_dir:
-                for member in archive.getmembers():
-                    member.name = "/".join(member.name.split("/")[1:])
-                    archive.extract(member, dest_dir)
-            else:
-                archive.extractall(dest_dir)
-    except tarfile.TarError as ex:
-        raise BuildkiteInfraException("Failed to extract repository archive: {}".format(ex)) from ex
+        if (
+            execute_command(
+                ["git", "cat-file", "-e", f"{resolved_diffbase}^{{commit}}"],
+                fail_if_nonzero=False,
+            )
+            != 0
+        ):
+            execute_command(
+                ["git", "fetch", "origin", resolved_diffbase],
+                capture_stderr=True,
+            )
+        git_root = execute_command_and_get_output(
+            ["git", "rev-parse", "--show-toplevel"],
+            print_output=False,
+        ).strip()
+        execute_command(
+            ["git", "clone", "--shared", "--no-checkout", git_root, dest_dir],
+            capture_stderr=True,
+        )
+        execute_command(
+            ["git", "-C", dest_dir, "checkout", "--detach", "--quiet", resolved_diffbase],
+            capture_stderr=True,
+        )
+    except subprocess.CalledProcessError as ex:
+        raise BuildkiteInfraException(
+            "Failed to check out {} to {}: {}\n{}".format(
+                resolved_diffbase, dest_dir, ex, ex.stderr
+            )
+        ) from ex
 
 
 def download_file(url, dest_dir, dest_filename):
     local_path = os.path.join(dest_dir, dest_filename)
     try:
-        execute_command(["curl", *CURL_FLAGS, url, "-o", local_path], capture_stderr=True)
+        if url.startswith("gs://"):
+            for attempt in range(1, 4):
+                try:
+                    execute_command([gsutil_command(), "cp", url, local_path], capture_stderr=True)
+                    break
+                except subprocess.CalledProcessError:
+                    if attempt == 3:
+                        raise
+                    time.sleep(2 * attempt)
+        else:
+            execute_command(["curl", *CURL_FLAGS, url, "-o", local_path], capture_stderr=True)
     except subprocess.CalledProcessError as ex:
         raise BuildkiteInfraException("Failed to download {}: {}\n{}".format(url, ex, ex.stderr))
     return local_path
@@ -3026,9 +3070,88 @@ def partition_list(items):
     return included, excluded, added_back
 
 
-def get_targets_for_shard(sorted_test_targets, shard_id, shard_count):
-    # TODO(fweikert): implement a more sophisticated algorithm
-    return sorted_test_targets[shard_id::shard_count]
+def resolve_gcs_generation(url):
+    for attempt in range(1, 4):
+        try:
+            output = execute_command_and_get_output(
+                [gsutil_command(), "stat", url], print_output=False
+            )
+            break
+        except subprocess.CalledProcessError as ex:
+            if attempt == 3:
+                eprint(f"Warning: Failed to stat {url}, falling back to unpinned object: {ex}")
+                return None
+            time.sleep(2 * attempt)
+    match = re.search(r"Generation:\s*([0-9]+)", output)
+    if not match:
+        eprint(f"Warning: Could not parse generation for {url}, falling back to unpinned object")
+        return None
+    return match.group(1)
+
+
+def get_metrics_platform(platform):
+    """Maps a bazelci platform or Buildkite queue name to its BigQuery metrics platform."""
+    if not platform:
+        return None
+    queue = PLATFORMS[platform].get("queue", "default") if platform in PLATFORMS else platform
+    return {"default": "linux", "arm64": "linux_arm64"}.get(queue, queue)
+
+
+def load_test_durations(source, platform):
+    """Loads test durations from a BigQuery export file (newline-delimited JSON)."""
+    if not platform:
+        return {}
+    allowed_platforms = {platform, get_metrics_platform(platform)}
+    durations = {}
+    try:
+        with open(source, mode="r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                row = json.loads(line)
+                if not isinstance(row, dict):
+                    raise ValueError(f"Expected JSON object, got {type(row).__name__}")
+                val = float(row["duration"])
+                if row["target"] and val > 0 and row.get("platform") in allowed_platforms:
+                    # Exported by daily-ci-test-durations-export as the 14-day median of
+                    # GREATEST(duration_s, SUM(shard_durations)) over PASSED runs — so for a
+                    # sharded test target this is already the sum across its test shards, which
+                    # reflects total load since all shards of a target run in the same CI job.
+                    durations[row["target"]] = val
+    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as ex:
+        raise BuildkiteInfraException(f"Failed to load test durations from {source}: {ex}")
+    return durations
+
+
+def partition_targets_bin_packing(sorted_test_targets, shard_count, test_durations):
+    """Partitions targets across shards using LPT (Longest Processing Time first) bin packing."""
+    fallback_dur = (
+        statistics.median(test_durations.values())
+        if test_durations
+        else DEFAULT_TEST_DURATION_SECONDS
+    )
+    targets_by_duration = sorted(
+        sorted_test_targets,
+        key=lambda t: (-test_durations.get(t, fallback_dur), t),
+    )
+
+    heap = [(0.0, i) for i in range(shard_count)]
+    shard_targets = {i: [] for i in range(shard_count)}
+    for target in targets_by_duration:
+        weight, shard_idx = heapq.heappop(heap)
+        shard_targets[shard_idx].append(target)
+        heapq.heappush(heap, (weight + test_durations.get(target, fallback_dur), shard_idx))
+
+    return {s: sorted(targets) for s, targets in shard_targets.items()}
+
+
+def get_targets_for_shard(sorted_test_targets, shard_id, shard_count, test_durations=None):
+    if shard_id < 0 or shard_id >= shard_count:
+        raise BuildkiteException(f"Invalid shard_id {shard_id} for shard_count {shard_count}")
+    if not test_durations:
+        return sorted_test_targets[shard_id::shard_count]
+    return partition_targets_bin_packing(sorted_test_targets, shard_count, test_durations)[shard_id]
 
 
 def execute_bazel_test(
@@ -3057,6 +3180,9 @@ def execute_bazel_test(
         bazel_binary,
         enable_remote_cache=not monitor_flaky_tests,
     )
+
+    if is_trueish(os.getenv(DISABLE_TEST_CACHE_ENV_VAR, "")):
+        aggregated_flags.append("--nocache_test_results")
 
     print_expanded_group(":bazel: Test ({})".format(bazel_version))
     try:
@@ -3238,7 +3364,7 @@ def create_step(
         step["priority"] = priority
     elif project_slug in _ELEVATED_PRIORITY_PIPELINES:
         step["priority"] = 1
-    elif project_slug in _LOWERED_PRIORITY_PIPELINES:
+    elif project_slug in _LOWERED_PRIORITY_PIPELINES or is_renovate_pr():
         step["priority"] = -1
 
     if shards > 1:
@@ -3260,6 +3386,8 @@ def create_step(
             {"exit_status": -1, "limit": 3},  # Buildkite internal "agent lost" exit code
             {"exit_status": 137, "limit": 3},  # SIGKILL
             {"exit_status": 143, "limit": 3},  # SIGTERM
+            # bazel-diff failed (e.g. a network error), see filter_unchanged_targets().
+            {"exit_status": BAZEL_DIFF_FAILURE_EXIT_CODE, "limit": 2},
         ]
     }
 
@@ -3336,6 +3464,10 @@ def create_docker_step(
     return step
 
 
+def is_renovate_pr():
+    return "renovate" in os.getenv("BUILDKITE_BUILD_CREATOR", "")
+
+
 def print_project_pipeline(
     configs,
     project_name,
@@ -3380,6 +3512,7 @@ def print_project_pipeline(
     config_hashes = set()
     skipped_downstream_tasks = []
     has_sharded_task = False
+    task_steps = []
     for task, task_config in task_configs.items():
         platform = get_platform_for_task(task, task_config)
         task_name = task_config.get("name")
@@ -3436,7 +3569,14 @@ def print_project_pipeline(
             shards=shards,
             soft_fail=soft_fail,
         )
+        task_steps.append(step)
         pipeline_steps.append(step)
+
+    if has_sharded_task and is_trueish(os.getenv(USE_SMART_SHARDING_ENV_VAR, "")):
+        generation = resolve_gcs_generation(TEST_DURATIONS_URL)
+        if generation:
+            for step in task_steps:
+                step.setdefault("env", {})[TEST_DURATIONS_GCS_GENERATION_ENV_VAR] = generation
 
     if skipped_downstream_tasks:
         lines = ["\n- {}".format(s.replace("'", "'\\''")) for s in skipped_downstream_tasks]

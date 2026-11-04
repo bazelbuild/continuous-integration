@@ -121,6 +121,24 @@ def delete_instance_group(name, **kwargs):
         return e
 
 
+def set_instance_template(name, **kwargs):
+    try:
+        return gcloud(
+            "compute", "instance-groups", "managed", "set-instance-template", name, **kwargs
+        )
+    except subprocess.CalledProcessError as e:
+        if not re.search(r"The resource .*/instanceGroupManagers/.* was not found", e.stderr):
+            raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
+        return e
+
+
+def resize_instance_group(name, **kwargs):
+    try:
+        return gcloud("compute", "instance-groups", "managed", "resize", name, **kwargs)
+    except subprocess.CalledProcessError as e:
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
+
+
 def rolling_update_instance_group(name, **kwargs):
     try:
         return gcloud(
@@ -176,6 +194,31 @@ def describe_image_family(name, **kwargs):
             ).stdout
         )
     except subprocess.CalledProcessError as e:
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
+
+
+def create_reservation(name, **kwargs):
+    try:
+        return gcloud("compute", "reservations", "create", name, **kwargs)
+    except subprocess.CalledProcessError as e:
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
+
+
+def update_reservation(name, **kwargs):
+    try:
+        return gcloud("compute", "reservations", "update", name, **kwargs)
+    except subprocess.CalledProcessError as e:
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
+
+
+def describe_reservation(name, **kwargs):
+    try:
+        return json.loads(
+            gcloud("compute", "reservations", "describe", "--format=json", name, **kwargs).stdout
+        )
+    except subprocess.CalledProcessError as e:
+        if re.search(r"The resource .* was not found", e.stderr):
+            return None
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 

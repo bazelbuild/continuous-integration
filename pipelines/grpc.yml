@@ -1,0 +1,33 @@
+---
+bazel: "8.x"
+
+matrix:
+  platform:
+    - ubuntu2204
+    - ubuntu2404
+    - macos_arm64
+
+tasks:
+  unix:
+    platform: ${{ platform }}
+    build_targets:
+      - "//:all"
+      - "//examples/cpp/..."
+      - "//examples/protos/..."
+    test_targets:
+      - "//test/core/config:all"
+      - "//test/core/util:all"
+      - "//test/cpp/common:all"
+  windows:
+    build_flags:
+      - "--define=protobuf_allow_msvc=true"
+    test_flags:
+      - "--define=protobuf_allow_msvc=true"
+    build_targets:
+      - "//:all"
+      - "//examples/cpp/..."
+      - "//examples/protos/..."
+    test_targets:
+      - "//test/core/config:all"
+      - "//test/core/util:all"
+      - "//test/cpp/common:all"
