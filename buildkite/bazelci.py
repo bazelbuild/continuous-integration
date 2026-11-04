@@ -723,6 +723,7 @@ RUNNER_CMD = "bazelci.py runner"
 USE_BAZEL_DIFF_ENV_VAR = "USE_BAZEL_DIFF"
 # DISABLE_BAZEL_DIFF wins, even if someone sets USE_BAZEL_DIFF (e.g. presubmit check).
 DISABLE_BAZEL_DIFF_ENV_VAR = "DISABLE_BAZEL_DIFF"
+DISABLE_TEST_CACHE_ENV_VAR = "DISABLE_TEST_CACHE"
 
 USE_SMART_SHARDING_ENV_VAR = "USE_SMART_SHARDING"
 TEST_DURATIONS_GCS_GENERATION_ENV_VAR = "TEST_DURATIONS_GCS_GENERATION"
@@ -3179,6 +3180,9 @@ def execute_bazel_test(
         bazel_binary,
         enable_remote_cache=not monitor_flaky_tests,
     )
+
+    if is_trueish(os.getenv(DISABLE_TEST_CACHE_ENV_VAR, "")):
+        aggregated_flags.append("--nocache_test_results")
 
     print_expanded_group(":bazel: Test ({})".format(bazel_version))
     try:

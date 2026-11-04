@@ -1190,5 +1190,19 @@ class TestBinPackingSharding(unittest.TestCase):
         self.assertEqual(3, mock_exec.call_count)
 
 
+class ExecuteBazelTest(unittest.TestCase):
+    @mock.patch.object(bazelci, "compute_flags", return_value=[])
+    @mock.patch.object(bazelci, "execute_command")
+    def test_disable_test_cache_env_var(self, mock_exec, _):
+        with mock.patch.dict(os.environ, {}, clear=False):
+            os.environ.pop(bazelci.DISABLE_TEST_CACHE_ENV_VAR, None)
+            bazelci.execute_bazel_test("8.0.0", "bazel", "ubuntu2404", [], ["//..."], None, False)
+            self.assertNotIn("--nocache_test_results", mock_exec.call_args[0][0])
+
+            os.environ[bazelci.DISABLE_TEST_CACHE_ENV_VAR] = "1"
+            bazelci.execute_bazel_test("8.0.0", "bazel", "ubuntu2404", [], ["//..."], None, False)
+            self.assertIn("--nocache_test_results", mock_exec.call_args[0][0])
+
+
 if __name__ == "__main__":
     unittest.main()
