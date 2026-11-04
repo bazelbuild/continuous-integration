@@ -245,7 +245,8 @@ docker pull "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a531
 docker pull "gcr.io/bazel-public/ubuntu2404@sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8" &
 docker pull "gcr.io/bazel-public/fedora39-java17@sha256:373eeacc764bbb872871e09bdc7d1a148211f259d38a788c658c9acdb6c0ff9c" &
 docker pull "gcr.io/bazel-public/fedora40-java21@sha256:efb171659e4e61c741099bee47758d3e8816ed28be8db09276e348925a0c2390" &
-docker pull "gcr.io/bazel-public/fedora43-java25@sha256:95d95492c745de91ace11e4b166d55cd0706fe29b6b4006fffc5655d6051face" &
+docker pull "gcr.io/bazel-public/fedora43-java25@sha256:36378b3c3c1f5b5f621bbf3160dc088ab7240fb0506d83253ae40d704b992323" &
+docker pull "gcr.io/bazel-public/fedora45-java25@sha256:014e13b0ece7446646a901afb6b69434b8a7e5945e74ff0a633aae00116d1a22" &
 wait
 
 poweroff
