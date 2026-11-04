@@ -33,6 +33,11 @@ FAMILY_GROUPS = {
 
 
 def select_rollback_images(family, images):
+    """Returns (newest, previous) image names to roll back in the given family.
+
+    Only images that are READY and not deprecated are considered, sorted by creation time.
+    Raises RuntimeError if there are fewer than 2, since there is nothing to roll back to.
+    """
     active = [
         img
         for img in images
@@ -50,6 +55,7 @@ def select_rollback_images(family, images):
 
 
 def list_images(family):
+    """Returns all images in the given family in bazel-public, including deprecated ones."""
     out = gcloud.gcloud(
         "compute", "images", "list", "--no-standard-images", "--show-deprecated", "--format=json",
         project=PROJECT, filter=f"family ~ ^{family}$",
