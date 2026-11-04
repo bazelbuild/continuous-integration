@@ -58,6 +58,7 @@ resource "buildkite_pipeline" "google-bazel-presubmit" {
     envs = {
       DISABLE_MODIFIED_FILES_DETECTION = "true"
       ENABLE_METRICS_COLLECTION        = "true"
+      USE_SMART_SHARDING               = "true"
     },
     steps = {
       skip_checkout = true,
@@ -1129,8 +1130,9 @@ resource "buildkite_pipeline" "bazel-bazel-github-presubmit" {
   default_branch = "master"
   steps = templatefile("pipeline.yml.tpl", {
     envs = {
-      USE_BAZEL_DIFF = "true"
+      USE_BAZEL_DIFF            = "true"
       ENABLE_METRICS_COLLECTION = "true"
+      USE_SMART_SHARDING        = "true"
     },
     steps = {
       commands = [
