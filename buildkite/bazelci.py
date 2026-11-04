@@ -338,7 +338,10 @@ DOWNSTREAM_PROJECTS = {
 # IMAGE_HASHES dict.
 EOL_PLATFORMS = frozenset(
     [
+        "debian10",
         "debian11",
+        "fedora39",
+        "fedora40",
         "ubuntu1604",
         "ubuntu1804",
         "ubuntu2004",

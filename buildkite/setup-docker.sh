@@ -243,8 +243,6 @@ docker pull "gcr.io/bazel-public/ubuntu2404-kythe@sha256:186b7bd1b9b65d59423550f
 docker pull "gcr.io/bazel-public/ubuntu2204-java17@sha256:75a622ed24a18d1af44aa1e6ada0a55efaf6dbffd682ad83afa6432bcedfd3b2" &
 docker pull "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398" &
 docker pull "gcr.io/bazel-public/ubuntu2404@sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8" &
-docker pull "gcr.io/bazel-public/fedora39-java17@sha256:373eeacc764bbb872871e09bdc7d1a148211f259d38a788c658c9acdb6c0ff9c" &
-docker pull "gcr.io/bazel-public/fedora40-java21@sha256:efb171659e4e61c741099bee47758d3e8816ed28be8db09276e348925a0c2390" &
 docker pull "gcr.io/bazel-public/fedora43-java25@sha256:36378b3c3c1f5b5f621bbf3160dc088ab7240fb0506d83253ae40d704b992323" &
 docker pull "gcr.io/bazel-public/fedora45-java25@sha256:014e13b0ece7446646a901afb6b69434b8a7e5945e74ff0a633aae00116d1a22" &
 wait
