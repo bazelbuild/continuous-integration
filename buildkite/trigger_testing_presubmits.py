@@ -105,6 +105,28 @@ def annotate_build_state(org, pipeline, build_info, skip_tasks_csv=""):
         )
 
 
+def upload_rollback_step(org):
+    annotate(
+        f"presubmits-rollback-{org}",
+        "error",
+        "First check whether the failure is infra (e.g. the `:pipeline:` step failed) "
+        "vs. real test failures on the new VM image, then choose whether to roll back or continue "
+        "in the unblock step.",
+    )
+    if not shutil.which("buildkite-agent"):
+        return 1
+    if org == "bazel":
+        families = os.environ.get("BAZEL_VM_NAMES", "")
+        groups = os.environ.get("BAZEL_PROD_INSTANCE_GROUPS", "")
+    else:
+        families = groups = os.environ.get("BAZEL_TEST_VM_NAMES", "")
+    bazelci.execute_command(
+        ["buildkite-agent", "pipeline", "upload", "../pipelines/vm-image-rollback.yml"],
+        env={**os.environ, "ROLLBACK_FAMILIES": families, "ROLLBACK_GROUPS": groups},
+    )
+    return 0
+
+
 def parse_pipelines(raw_args):
     return [slug.strip() for arg in raw_args for slug in arg.split(",") if slug.strip()]
 
@@ -194,7 +216,9 @@ def main(argv=None):
             flush=True,
         )
 
-    return 0 if all(e["build_info"].get("state") == "passed" for e in tracked) else 1
+    if all(e["build_info"].get("state") == "passed" for e in tracked):
+        return 0
+    return upload_rollback_step(org)
 
 
 if __name__ == "__main__":
