@@ -36,7 +36,7 @@ LINUX_IMAGE_SKIP_TASKS = (
 WINDOWS_IMAGE_SKIP_TASKS = (
     "rockylinux8",
     "rockylinux8_arm64",
-    "fedora39",
+    "fedora43",
     "ubuntu2404",
     "ubuntu2404_clang",
     "ubuntu2204",

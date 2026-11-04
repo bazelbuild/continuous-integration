@@ -9,7 +9,6 @@ docker push "gcr.io/$PREFIX/rockylinux8-java8" &
 docker push "gcr.io/$PREFIX/rockylinux8-java11" &
 docker push "gcr.io/$PREFIX/rockylinux8-java11-devtoolset10" &
 docker push "gcr.io/$PREFIX/rockylinux8-releaser" &
-docker push "gcr.io/$PREFIX/debian10-java11" &
 docker push "gcr.io/$PREFIX/debian12" &
 docker push "gcr.io/$PREFIX/debian13" &
 docker push "gcr.io/$PREFIX/ubuntu2204-java17" &
@@ -18,10 +17,6 @@ docker push "gcr.io/$PREFIX/ubuntu2204-bazel-java17" &
 docker push "gcr.io/$PREFIX/ubuntu2204" &
 docker push "gcr.io/$PREFIX/ubuntu2404" &
 docker push "gcr.io/$PREFIX/ubuntu2404-kythe" &
-docker push "gcr.io/$PREFIX/fedora39-java17" &
-docker push "gcr.io/$PREFIX/fedora39-bazel-java17" &
-docker push "gcr.io/$PREFIX/fedora40-java21" &
-docker push "gcr.io/$PREFIX/fedora40-bazel-java21" &
 docker push "gcr.io/$PREFIX/fedora43-java25" &
 docker push "gcr.io/$PREFIX/fedora45-java25" &
 docker push "gcr.io/$PREFIX/fedora43-bazel-java25" &
