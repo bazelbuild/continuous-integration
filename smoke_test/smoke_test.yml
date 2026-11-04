@@ -2,11 +2,8 @@
 matrix:
   platform:
     # Linux (x86_64) Docker platforms
-    - debian10
     - debian12
     - debian13
-    - fedora39
-    - fedora40
     - fedora43
     - fedora45
     - kythe_ubuntu2204
