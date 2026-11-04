@@ -20,7 +20,9 @@ os.environ["BUILDKITE_ORGANIZATION_SLUG"] = "bazel"
 os.environ["BUILDKITE_PIPELINE_SLUG"] = "test"
 
 import bazelci
+import json
 import shlex
+import subprocess
 import tempfile
 import unittest
 from unittest import mock
@@ -271,7 +273,7 @@ tasks:
             shard_targets.append(targets)
             if shard_id == 0:
                 # The shard distribution only contains the targets that bazel-diff kept.
-                mock_upload.assert_called_once_with(affected_targets, 2)
+                mock_upload.assert_called_once_with(affected_targets, 2, test_durations=None)
 
         # The targets that bazel-diff kept are split across shards, not all targets.
         self.assertEqual(shard_targets, [["//pkg:t2", "//pkg:t5"], ["//pkg:t3"]])
@@ -1072,6 +1074,120 @@ class SmokeTestConfigTest(unittest.TestCase):
             and (not p.startswith("rbe_") or p == "rbe_ubuntu2404")
         }
         self.assertEqual(smoke_platforms, expected_platforms)
+
+
+class TestBinPackingSharding(unittest.TestCase):
+    def _calculate_targets(self, platform="ubuntu2404"):
+        return bazelci.calculate_targets(
+            {}, "bazel", False, True, "/tmp", None, "abc", [], platform=platform
+        )[1]
+
+    def test_load_test_durations_and_metrics_platform(self):
+        self.assertEqual("linux", bazelci.get_metrics_platform("default"))
+        self.assertEqual("linux_arm64", bazelci.get_metrics_platform("arm64"))
+        self.assertIsNone(bazelci.get_metrics_platform(None))
+        ndjson = (
+            '{"target": "//pkg:t1", "platform": "macos_arm64", "duration": 120.0}\n'
+            '{"target": "//pkg:t2", "platform": "macos_arm64", "duration": 45.5}\n'
+            '{"target": "//pkg:t3", "platform": "linux", "duration": 80.0}\n'
+            '{"target": "//pkg:t3_arm", "platform": "linux_arm64", "duration": 95.0}\n'
+            '{"target": "//pkg:neg", "platform": "linux", "duration": -5}\n'
+            '{"target": "", "platform": "linux", "duration": 10.0}\n\n'
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, "durations.json")
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(ndjson)
+            self.assertEqual({"//pkg:t1": 120.0, "//pkg:t2": 45.5}, bazelci.load_test_durations(path, "macos_arm64"))
+            self.assertEqual({"//pkg:t3": 80.0}, bazelci.load_test_durations(path, "ubuntu2404"))
+            self.assertEqual({"//pkg:t3_arm": 95.0}, bazelci.load_test_durations(path, "ubuntu2404_arm64"))
+            self.assertEqual({}, bazelci.load_test_durations(path, "windows"))
+            for bad in ("not json\n", '"not a dict"\n', '{"target": "//t", "duration": "bad"}\n'):
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(bad)
+                with self.assertRaises(bazelci.BuildkiteInfraException):
+                    bazelci.load_test_durations(path, "linux")
+        with self.assertRaises(bazelci.BuildkiteInfraException):
+            bazelci.load_test_durations("/nonexistent/durations.json", "linux")
+
+    def test_partition_and_get_targets_for_shard(self):
+        targets = ["//heavy", "//s1", "//s2", "//s3", "//s4", "//s5"]
+        durations = {"//heavy": 1000.0, **{f"//s{i}": 200.0 for i in range(1, 6)}}
+        self.assertEqual(["//heavy"], bazelci.get_targets_for_shard(targets, 0, 2, durations))
+        self.assertEqual(["//s1", "//s2", "//s3", "//s4", "//s5"], bazelci.get_targets_for_shard(targets, 1, 2, durations))
+        self.assertEqual(["//heavy", "//s2", "//s4"], bazelci.get_targets_for_shard(targets, 0, 2, None))
+        with self.assertRaises(bazelci.BuildkiteException):
+            bazelci.get_targets_for_shard(targets, 2, 2)
+        ties = bazelci.partition_targets_bin_packing(["//z", "//y", "//x", "//w"], 2, {t: 10.0 for t in ["//z", "//y", "//x", "//w"]})
+        self.assertEqual({0: ["//w", "//y"], 1: ["//x", "//z"]}, ties)
+        median_pack = bazelci.partition_targets_bin_packing(["//k1", "//k2", "//k3", "//u"], 2, {"//k1": 100.0, "//k2": 300.0, "//k3": 500.0})
+        self.assertEqual({0: ["//k1", "//k3"], 1: ["//k2", "//u"]}, median_pack)
+
+    def test_upload_shard_distribution(self):
+        uploaded = {}
+
+        def capture(cmd, **_):
+            with open(cmd[3], encoding="utf-8") as f:
+                uploaded.update(json.load(f))
+
+        with mock.patch("bazelci.execute_command", side_effect=capture), mock.patch(
+            "bazelci.partition_targets_bin_packing", wraps=bazelci.partition_targets_bin_packing
+        ) as spy:
+            bazelci.upload_shard_distribution(["//a", "//b"], 2, test_durations={"//a": 10.0, "//b": 20.0})
+            spy.assert_called_once()
+        self.assertEqual({"1": ["//b"], "2": ["//a"]}, uploaded)
+
+    @mock.patch("bazelci.upload_shard_distribution")
+    @mock.patch("bazelci.expand_test_target_patterns", return_value=["//heavy", "//s1"])
+    def test_calculate_targets_smart_sharding_and_failure(self, mock_expand, mock_upload):
+        env = {"BUILDKITE_PARALLEL_JOB": "0", "BUILDKITE_PARALLEL_JOB_COUNT": "2", "USE_SMART_SHARDING": "true", "TEST_DURATIONS_GCS_GENERATION": "12345"}
+        with tempfile.TemporaryDirectory() as tmpdir, mock.patch.dict(os.environ, env):
+            path = os.path.join(tmpdir, "d.json")
+            with open(path, "w", encoding="utf-8") as f:
+                f.write('{"target": "//heavy", "platform": "linux", "duration": 500.0}\n')
+            with mock.patch("bazelci.download_file", return_value=path) as mock_dl:
+                self.assertEqual(["//heavy"], self._calculate_targets())
+                self.assertEqual(f"{bazelci.TEST_DURATIONS_URL}#12345", mock_dl.call_args[0][0])
+                mock_upload.assert_called_once()
+                os.environ.pop("TEST_DURATIONS_GCS_GENERATION", None)
+                self.assertEqual(["//heavy"], self._calculate_targets())
+                self.assertEqual(bazelci.TEST_DURATIONS_URL, mock_dl.call_args[0][0])
+            with mock.patch("bazelci.download_file", side_effect=bazelci.BuildkiteInfraException("boom")):
+                with self.assertRaises(bazelci.BuildkiteInfraException):
+                    self._calculate_targets()
+
+    @mock.patch("time.sleep")
+    @mock.patch("bazelci.eprint")
+    @mock.patch("bazelci.print_pipeline_steps")
+    @mock.patch("bazelci.execute_command_and_get_output", return_value="  Generation:  98765\n")
+    def test_pipeline_pins_durations_generation(self, mock_stat, _, mock_eprint, mock_sleep):
+        cfg = {"tasks": {"ubuntu2404": {"shards": 2}, "macos": {}}}
+        with mock.patch.dict(os.environ, {"DISABLE_MODIFIED_FILES_DETECTION": "true"}, clear=False):
+            os.environ.pop("USE_SMART_SHARDING", None)
+            bazelci.print_project_pipeline(configs=cfg, project_name="p", http_config=None, file_config=None, git_repository=None)
+            mock_stat.assert_not_called()
+            with mock.patch.dict(os.environ, {"USE_SMART_SHARDING": "true"}):
+                steps = bazelci.print_project_pipeline(configs=cfg, project_name="p", http_config=None, file_config=None, git_repository=None)
+                self.assertEqual(["98765", "98765"], [s["env"]["TEST_DURATIONS_GCS_GENERATION"] for s in steps if "env" in s])
+                mock_stat.reset_mock()
+                mock_stat.side_effect = subprocess.CalledProcessError(1, "gsutil")
+                fallback_steps = bazelci.print_project_pipeline(configs=cfg, project_name="p", http_config=None, file_config=None, git_repository=None)
+        self.assertEqual(3, mock_stat.call_count)
+        mock_eprint.assert_called()
+        self.assertEqual([], [s for s in fallback_steps if "TEST_DURATIONS_GCS_GENERATION" in s.get("env", {})])
+
+    @mock.patch("time.sleep")
+    @mock.patch("bazelci.execute_command")
+    def test_download_file(self, mock_exec, mock_sleep):
+        bazelci.download_file("gs://b/f.json#1", "/tmp", "f.json")
+        self.assertEqual([bazelci.gsutil_command(), "cp", "gs://b/f.json#1"], mock_exec.call_args[0][0][:3])
+        bazelci.download_file("https://example.com/f.json", "/tmp", "f.json")
+        self.assertEqual("curl", mock_exec.call_args[0][0][0])
+        mock_exec.reset_mock()
+        mock_exec.side_effect = subprocess.CalledProcessError(1, "cmd", stderr=b"err")
+        with self.assertRaises(bazelci.BuildkiteInfraException):
+            bazelci.download_file("gs://b/f.json", "/tmp", "f.json")
+        self.assertEqual(3, mock_exec.call_count)
 
 
 if __name__ == "__main__":
