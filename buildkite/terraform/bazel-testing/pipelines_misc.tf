@@ -2,7 +2,9 @@ resource "buildkite_pipeline" "google-bazel-presubmit" {
   name       = "Google Bazel Presubmit"
   repository = "https://bazel.googlesource.com/bazel.git"
   steps = templatefile("pipeline.yml.tpl", {
-    envs = {}
+    envs = {
+      USE_SMART_SHARDING = "true"
+    }
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/testing/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
