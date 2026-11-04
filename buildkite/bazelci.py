@@ -2657,7 +2657,7 @@ def calculate_targets(
 
         test_durations = None
         if is_trueish(os.getenv(USE_SMART_SHARDING_ENV_VAR, "")):
-            generation = os.getenv(TEST_DURATIONS_GCS_GENERATION_ENV_VAR)
+            generation = os.getenv(TEST_DURATIONS_GCS_GENERATION_ENV_VAR, "").strip()
             url = f"{TEST_DURATIONS_URL}#{generation}" if generation else TEST_DURATIONS_URL
             tmpdir = tempfile.mkdtemp()
             try:
@@ -3068,11 +3068,13 @@ def resolve_gcs_generation(url):
             break
         except subprocess.CalledProcessError as ex:
             if attempt == 3:
-                raise BuildkiteInfraException(f"Failed to stat {url}: {ex}")
+                eprint(f"Warning: Failed to stat {url}, falling back to unpinned object: {ex}")
+                return None
             time.sleep(2 * attempt)
     match = re.search(r"Generation:\s*([0-9]+)", output)
     if not match:
-        raise BuildkiteInfraException(f"Could not parse generation for {url}")
+        eprint(f"Warning: Could not parse generation for {url}, falling back to unpinned object")
+        return None
     return match.group(1)
 
 
@@ -3101,6 +3103,10 @@ def load_test_durations(source, platform):
                     raise ValueError(f"Expected JSON object, got {type(row).__name__}")
                 val = float(row["duration"])
                 if row["target"] and val > 0 and row.get("platform") in allowed_platforms:
+                    # Exported by daily-ci-test-durations-export as the 14-day median of
+                    # GREATEST(duration_s, SUM(shard_durations)) over PASSED runs — so for a
+                    # sharded test target this is already the sum across its test shards, which
+                    # reflects total load since all shards of a target run in the same CI job.
                     durations[row["target"]] = val
     except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as ex:
         raise BuildkiteInfraException(f"Failed to load test durations from {source}: {ex}")
@@ -3554,8 +3560,9 @@ def print_project_pipeline(
 
     if has_sharded_task and is_trueish(os.getenv(USE_SMART_SHARDING_ENV_VAR, "")):
         generation = resolve_gcs_generation(TEST_DURATIONS_URL)
-        for step in task_steps:
-            step.setdefault("env", {})[TEST_DURATIONS_GCS_GENERATION_ENV_VAR] = generation
+        if generation:
+            for step in task_steps:
+                step.setdefault("env", {})[TEST_DURATIONS_GCS_GENERATION_ENV_VAR] = generation
 
     if skipped_downstream_tasks:
         lines = ["\n- {}".format(s.replace("'", "'\\''")) for s in skipped_downstream_tasks]

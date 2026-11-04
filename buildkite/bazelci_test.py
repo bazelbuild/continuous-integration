@@ -1149,13 +1149,18 @@ class TestBinPackingSharding(unittest.TestCase):
                 self.assertEqual(["//heavy"], self._calculate_targets())
                 self.assertEqual(f"{bazelci.TEST_DURATIONS_URL}#12345", mock_dl.call_args[0][0])
                 mock_upload.assert_called_once()
+                os.environ.pop("TEST_DURATIONS_GCS_GENERATION", None)
+                self.assertEqual(["//heavy"], self._calculate_targets())
+                self.assertEqual(bazelci.TEST_DURATIONS_URL, mock_dl.call_args[0][0])
             with mock.patch("bazelci.download_file", side_effect=bazelci.BuildkiteInfraException("boom")):
                 with self.assertRaises(bazelci.BuildkiteInfraException):
                     self._calculate_targets()
 
+    @mock.patch("time.sleep")
+    @mock.patch("bazelci.eprint")
     @mock.patch("bazelci.print_pipeline_steps")
     @mock.patch("bazelci.execute_command_and_get_output", return_value="  Generation:  98765\n")
-    def test_pipeline_pins_durations_generation(self, mock_stat, _):
+    def test_pipeline_pins_durations_generation(self, mock_stat, _, mock_eprint, mock_sleep):
         cfg = {"tasks": {"ubuntu2404": {"shards": 2}, "macos": {}}}
         with mock.patch.dict(os.environ, {"DISABLE_MODIFIED_FILES_DETECTION": "true"}, clear=False):
             os.environ.pop("USE_SMART_SHARDING", None)
@@ -1163,8 +1168,13 @@ class TestBinPackingSharding(unittest.TestCase):
             mock_stat.assert_not_called()
             with mock.patch.dict(os.environ, {"USE_SMART_SHARDING": "true"}):
                 steps = bazelci.print_project_pipeline(configs=cfg, project_name="p", http_config=None, file_config=None, git_repository=None)
-        mock_stat.assert_called_once()
-        self.assertEqual(["98765", "98765"], [s["env"]["TEST_DURATIONS_GCS_GENERATION"] for s in steps if "env" in s])
+                self.assertEqual(["98765", "98765"], [s["env"]["TEST_DURATIONS_GCS_GENERATION"] for s in steps if "env" in s])
+                mock_stat.reset_mock()
+                mock_stat.side_effect = subprocess.CalledProcessError(1, "gsutil")
+                fallback_steps = bazelci.print_project_pipeline(configs=cfg, project_name="p", http_config=None, file_config=None, git_repository=None)
+        self.assertEqual(3, mock_stat.call_count)
+        mock_eprint.assert_called()
+        self.assertEqual([], [s for s in fallback_steps if "TEST_DURATIONS_GCS_GENERATION" in s.get("env", {})])
 
     @mock.patch("time.sleep")
     @mock.patch("bazelci.execute_command")
