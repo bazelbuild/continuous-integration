@@ -109,9 +109,9 @@ def upload_rollback_step(org):
     annotate(
         f"presubmits-rollback-{org}",
         "error",
-        "First check whether the failure is infra (e.g. the `:pipeline:` step failed) "
-        "vs. real test failures on the new VM image, then choose whether to roll back or continue "
-        "in the unblock step.",
+        "Presubmits FAILED on the new image. First check whether the failure is infra "
+        "(e.g. the `:pipeline:` step failed) vs. real test failures on the new VM image, "
+        "then choose whether to roll back or continue in the unblock step.",
     )
     if not shutil.which("buildkite-agent"):
         return 1
@@ -124,6 +124,7 @@ def upload_rollback_step(org):
         ["buildkite-agent", "pipeline", "upload", "../pipelines/vm-image-rollback.yml"],
         env={**os.environ, "ROLLBACK_FAMILIES": families, "ROLLBACK_GROUPS": groups},
     )
+    # Return 0 so the pipeline can continue to the uploaded decision step.
     return 0
 
 

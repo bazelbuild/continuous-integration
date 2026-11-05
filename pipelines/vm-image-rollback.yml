@@ -15,7 +15,13 @@ steps:
       cd buildkite
       decision="$$(buildkite-agent meta-data get vm-image-decision)"
       if [ "$$decision" = rollback ]; then
-        ./rollback_vm_image.py "${ROLLBACK_FAMILIES}" && ./create_instances.py "${ROLLBACK_GROUPS}"
+        ./rollback_vm_image.py "${ROLLBACK_FAMILIES}"
+        if ! ./create_instances.py "${ROLLBACK_GROUPS}"; then
+          echo "ERROR: Image was deprecated, but recreating instances failed (agents still run the new image)." >&2
+          echo "Re-run: ./create_instances.py ${ROLLBACK_GROUPS} (or run the Undo commands above)." >&2
+          exit 1
+        fi
+        # Exit 1 stops the pipeline on purpose after a rollback (so nothing gets promoted).
         exit 1
       fi
     label: ":rewind: Apply VM image decision"

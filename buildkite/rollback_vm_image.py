@@ -32,19 +32,26 @@ Running it again rolls back one more image.
 import argparse
 from datetime import datetime
 import json
+from pathlib import Path
 import sys
+
+import yaml
 
 import gcloud
 
 PROJECT = "bazel-public"
-FAMILY_GROUPS = {
-    "bk-testing-docker": ("bk-testing-docker",),
-    "bk-testing-docker-arm64": ("bk-testing-docker-arm64",),
-    "bk-testing-windows": ("bk-testing-windows",),
-    "bk-docker": ("bk-docker", "bk-trusted-docker"),
-    "bk-docker-arm64": ("bk-docker-arm64", "bk-trusted-docker-arm64"),
-    "bk-windows": ("bk-windows", "bk-trusted-windows"),
-}
+
+
+def load_family_groups():
+    """Returns {image_family: [group_name, ...]} from instances.yml."""
+    config = yaml.safe_load(Path(__file__).with_name("instances.yml").read_text(encoding="utf-8"))
+    groups = {}
+    for group in config["instance_groups"]:
+        groups.setdefault(group["image_family"], []).append(group["name"])
+    return groups
+
+
+FAMILY_GROUPS = load_family_groups()
 
 
 def select_rollback_images(family, images):
@@ -110,16 +117,18 @@ def main(argv=None):
         newest, previous = select_rollback_images(family, list_images(family))
         plan.append((family, newest, previous))
 
-    # Deprecate the newest image in favor of the previous one and print the undo command.
+    # Deprecate the newest image in favor of the previous one and print the undo commands.
     for family, newest, previous in plan:
         gcloud.gcloud(
             "compute", "images", "deprecate", newest,
             state="DEPRECATED", replacement=previous, project=PROJECT,
         )
+        family_groups = ",".join(FAMILY_GROUPS[family])
         print(f"{family}: deprecated {newest} (replacement: {previous})")
         print(
             f"  Undo: gcloud compute images deprecate {newest} --state=ACTIVE --project={PROJECT}"
         )
+        print(f"        ./create_instances.py {family_groups}")
 
     # Print create_instances.py for manual runs (the pipeline passes groups separately).
     groups = list(dict.fromkeys(g for f in families for g in FAMILY_GROUPS[f]))
