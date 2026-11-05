@@ -14,6 +14,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Rolls back GCE VM image families to their previous image.
+
+For each family, deprecates the newest active image with the previous one as
+its replacement, so new VMs boot the previous image. Nothing is deleted, and
+the undo command is printed.
+
+Used by pipelines/vm-image-rollback.yml when image presubmits fail, and can be
+run manually, e.g. if a problem shows up after promotion to prod:
+
+  ./rollback_vm_image.py bk-docker,bk-docker-arm64
+  ./create_instances.py bk-docker,bk-docker-arm64,bk-trusted-docker,bk-trusted-docker-arm64
+
+Running it again rolls back one more image.
+"""
+
 import argparse
 from datetime import datetime
 import json
