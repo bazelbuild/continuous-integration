@@ -70,6 +70,7 @@ git-mirrors-path="/var/lib/gitmirrors"
 git-clone-mirror-flags="-v --bare"
 hooks-path="/etc/buildkite-agent/hooks"
 plugins-path="/etc/buildkite-agent/plugins"
+no-local-hooks=true
 disconnect-after-job=true
 health-check-addr=0.0.0.0:8080
 EOF
