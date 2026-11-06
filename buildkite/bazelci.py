@@ -1877,7 +1877,7 @@ def execute_commands(
                 if index_upload_policy != INDEX_UPLOAD_POLICY_ALWAYS:
                     handle_bazel_failure(e, "build")
 
-            if should_upload_kzip and not is_pull_request():
+            if should_upload_kzip and current_branch_is_main_branch() and not is_pull_request():
                 try:
                     merge_and_upload_kythe_kzip(platform, index_upload_gcs)
                 except subprocess.CalledProcessError:
@@ -1999,7 +1999,8 @@ def get_release_name_from_branch_name():
 
 def is_pull_request():
     third_party_repo = os.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
-    return len(third_party_repo) > 0
+    pull_request = os.getenv("BUILDKITE_PULL_REQUEST", "false")
+    return len(third_party_repo) > 0 or pull_request not in ("", "false")
 
 
 def print_bazel_version_info(bazel_binary, platform):
