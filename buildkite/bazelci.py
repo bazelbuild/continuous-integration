@@ -1874,7 +1874,8 @@ def execute_commands(
 
         try:
             should_upload_kzip = (
-                True if index_upload_policy == INDEX_UPLOAD_POLICY_ALWAYS else False
+                current_branch_is_main_branch()
+                and index_upload_policy == INDEX_UPLOAD_POLICY_ALWAYS
             )
             try:
                 execute_bazel_build_with_kythe(
@@ -1886,7 +1887,10 @@ def execute_commands(
                     None,
                 )
 
-                if index_upload_policy == INDEX_UPLOAD_POLICY_IF_BUILD_SUCCESS:
+                if (
+                    current_branch_is_main_branch()
+                    and index_upload_policy == INDEX_UPLOAD_POLICY_IF_BUILD_SUCCESS
+                ):
                     should_upload_kzip = True
             except subprocess.CalledProcessError as e:
                 # If not running with Always policy, raise the build error.
@@ -2015,7 +2019,8 @@ def get_release_name_from_branch_name():
 
 def is_pull_request():
     third_party_repo = os.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
-    return len(third_party_repo) > 0
+    pull_request = os.getenv("BUILDKITE_PULL_REQUEST", "false")
+    return len(third_party_repo) > 0 or pull_request not in ("", "false")
 
 
 def print_bazel_version_info(bazel_binary, platform):

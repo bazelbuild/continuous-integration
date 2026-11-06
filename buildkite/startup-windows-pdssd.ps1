@@ -150,6 +150,11 @@ Import-PfxCertificate -Password $secure_pw  -CertStoreLocation Cert:\LocalMachin
 Write-Host "Retrieving Buildkite Agent token from Secret Manager..."
 $buildkite_agent_token = & gcloud secrets versions access latest --secret=$secret --project $project
 
+## Remove any Git hooks from the local Git mirror directory.
+if (Test-Path "c:\buildkite\bazelbuild") {
+  Get-ChildItem -Path "c:\buildkite\bazelbuild" -Filter "hooks" -Directory -Recurse -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 ## Configure the Buildkite agent.
 Write-Host "Configuring Buildkite Agent..."
 $buildkite_agent_root = "c:\buildkite"
@@ -163,6 +168,7 @@ plugins-path="c:\buildkite\plugins"
 no-local-hooks=true
 git-mirrors-path="c:\buildkite\bazelbuild"
 git-clone-mirror-flags="-v --bare"
+protect-dangerous-git-environment-variables=true
 disconnect-after-job=true
 health-check-addr=0.0.0.0:8080
 "@
