@@ -76,6 +76,9 @@ CI_MACHINE_NUM = {
 # The percentage of CI resource that can be used by bcr-presubmit and bcr-compatibility pipelines.
 CI_RESOURCE_PERCENTAGE = int(os.environ.get('CI_RESOURCE_PERCENTAGE', -1))
 
+# The label added by "@bazel-io skip_check toolchain_registrations", which skips check_toolchain_registrations.
+SKIP_TOOLCHAIN_REGISTRATIONS_LABEL = "skip-toolchain-registrations-check"
+
 
 def fetch_bcr_presubmit_py_command():
     return bazelci.curl_download_command(SCRIPT_URL, "bcr_presubmit.py")
@@ -189,7 +192,7 @@ def get_test_module_task_config(module_name, module_version, bazel_version=None)
     return {}
 
 
-def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False, overwrite_bazel_version=None, low_priority=False):
+def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps, is_test_module=False, overwrite_bazel_version=None, low_priority=False, toolchain_registrations_task=None):
     for task_id, task_config in task_configs.items():
         platform_name = get_platform(task_id, task_config)
         platform_label = bazelci.PLATFORMS[platform_name]["emoji-name"]
@@ -200,15 +203,19 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
         bazel_version = task_config.get("bazel", "")
         if bazel_version and not overwrite_bazel_version:
             label = f":bazel:{bazel_version} - {label}"
+        check_toolchain_registrations = task_id == toolchain_registrations_task
+        if check_toolchain_registrations:
+            label += " + toolchain registrations"
         command = (
-            '%s bcr_presubmit.py %s --module_name="%s" --module_version="%s" --task=%s %s'
+            '%s bcr_presubmit.py %s --module_name="%s" --module_version="%s" --task=%s %s %s'
             % (
                 bazelci.PLATFORMS[platform_name]["python"],
                 "test_module_runner" if is_test_module else "anonymous_module_runner",
                 module_name,
                 module_version,
                 task_id,
-                "--overwrite_bazel_version=%s" % overwrite_bazel_version if overwrite_bazel_version else ""
+                "--overwrite_bazel_version=%s" % overwrite_bazel_version if overwrite_bazel_version else "",
+                "--check_toolchain_registrations" if check_toolchain_registrations else "",
             )
         )
         commands = [bazelci.fetch_ci_scripts_command(), fetch_bcr_presubmit_py_command(), command]
@@ -222,6 +229,81 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
             concurrency = 5 if concurrency is None else min(5, concurrency)
             concurrency_group = f"bcr-presubmit-test-queue-{queue}-low-priority"
         pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=concurrency, concurrency_group=concurrency_group, priority=-100 if low_priority else None))
+
+
+def bazel_version_rank(bazel_version):
+    """Returns a key that sorts Bazel versions from presubmit.yml files from oldest to newest."""
+    symbolic_versions = ["latest", "last_rc", "rolling", "last_green"]
+    if bazel_version in symbolic_versions:
+        return (1, symbolic_versions.index(bazel_version))
+    return (0, tuple(int(number) for number in re.findall(r"\d+", bazel_version)))
+
+
+def select_toolchain_registrations_task(anonymous_module_tasks, test_module_tasks):
+    """Selects the task whose job also checks the module's toolchain registrations after its build and tests.
+
+    Prefers anonymous module tasks, which use the module like any dependent, then Linux, then the newest Bazel
+    version, since the check needs Bazel 8 or later to see registrations with non-literal arguments.
+
+    Returns:
+      A (task ID, whether it's a test module task) pair, or None if there are no tasks.
+    """
+    for tasks, is_test_module in ((anonymous_module_tasks, False), (test_module_tasks, True)):
+        if not tasks:
+            continue
+
+        def rank(task_id):
+            task_config = tasks[task_id]
+            is_linux = not get_platform(task_id, task_config).startswith(("macos", "windows"))
+            return (is_linux, bazel_version_rank(str(task_config.get("bazel", ""))))
+
+        # max() returns the first of several tasks with the same rank.
+        return max(tasks, key=rank), is_test_module
+    return None
+
+
+def check_toolchain_registrations(module_name, module_version, workspace):
+    """Checks that the module's non-dev toolchain registrations are for types it owns.
+
+    Runs after the build and tests of a presubmit job, in its workspace. The job's Bazel version and environment
+    variables are still set in this process, and the check uses the same startup options, so it reuses the job's Bazel
+    server. Returns the exit code of the check.
+    """
+    bazelci.print_expanded_group(":bazel: Check toolchain registrations")
+    tool = BCR_REPO_DIR.joinpath("tools", "toolchain_registrations.py")
+    if not tool.exists():
+        bazelci.eprint(f"Skipping the check since {tool} doesn't exist in this checkout.")
+        return 0
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(tool),
+            f"--registry={BCR_REPO_DIR}",
+            f"--check={module_name}@{module_version}",
+            f"--workspace={workspace}",
+        ]
+        + [f"--bazel_startup_option={option}" for option in bazelci.common_startup_flags()],
+        capture_output=True,
+        text=True,
+    )
+    print(result.stdout, flush=True)
+    bazelci.eprint(result.stderr)
+    if result.returncode != 0:
+        annotation = f"**Toolchain registrations of {module_name}@{module_version}:**\n```\n{result.stdout.strip()}\n```\n"
+        try:
+            subprocess.run(
+                [
+                    "buildkite-agent",
+                    "annotate",
+                    "--style=error",
+                    f"--context=toolchain-registrations-{module_name}-{module_version}",
+                ],
+                input=annotation,
+                text=True,
+            )
+        except OSError as e:
+            bazelci.eprint(f"Failed to annotate the build: {e}")
+    return result.returncode
 
 
 def get_platform(task_id, task_config):
@@ -583,12 +665,14 @@ def main(argv=None):
     anonymous_module_runner.add_argument("--module_version", type=str)
     anonymous_module_runner.add_argument("--overwrite_bazel_version", type=str)
     anonymous_module_runner.add_argument("--task", type=str)
+    anonymous_module_runner.add_argument("--check_toolchain_registrations", action="store_true")
 
     test_module_runner = subparsers.add_parser("test_module_runner")
     test_module_runner.add_argument("--module_name", type=str)
     test_module_runner.add_argument("--module_version", type=str)
     test_module_runner.add_argument("--overwrite_bazel_version", type=str)
     test_module_runner.add_argument("--task", type=str)
+    test_module_runner.add_argument("--check_toolchain_registrations", action="store_true")
 
     args = parser.parse_args(argv)
 
@@ -602,10 +686,30 @@ def main(argv=None):
         pipeline_steps = []
         for module_name, module_version in modules:
             previous_size = len(pipeline_steps)
-            configs = get_anonymous_module_task_config(module_name, module_version)
-            add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, low_priority=low_priority)
-            configs = get_test_module_task_config(module_name, module_version)
-            add_presubmit_jobs(module_name, module_version, configs.get("tasks", {}), pipeline_steps, is_test_module=True, low_priority=low_priority)
+            anonymous_module_tasks = get_anonymous_module_task_config(module_name, module_version).get("tasks", {})
+            test_module_tasks = get_test_module_task_config(module_name, module_version).get("tasks", {})
+            toolchain_registrations_task = None
+            if SKIP_TOOLCHAIN_REGISTRATIONS_LABEL in pr_labels:
+                bazelci.eprint(f"Skipping the toolchain registrations check because of the '{SKIP_TOOLCHAIN_REGISTRATIONS_LABEL}' label.")
+            else:
+                toolchain_registrations_task = select_toolchain_registrations_task(anonymous_module_tasks, test_module_tasks)
+            add_presubmit_jobs(
+                module_name,
+                module_version,
+                anonymous_module_tasks,
+                pipeline_steps,
+                low_priority=low_priority,
+                toolchain_registrations_task=toolchain_registrations_task[0] if toolchain_registrations_task and not toolchain_registrations_task[1] else None,
+            )
+            add_presubmit_jobs(
+                module_name,
+                module_version,
+                test_module_tasks,
+                pipeline_steps,
+                is_test_module=True,
+                low_priority=low_priority,
+                toolchain_registrations_task=toolchain_registrations_task[0] if toolchain_registrations_task and toolchain_registrations_task[1] else None,
+            )
 
             if len(pipeline_steps) == previous_size:
                 error("No pipeline steps generated for %s@%s. Please check the configuration." % (module_name, module_version))
@@ -618,11 +722,17 @@ def main(argv=None):
         repo_location = create_anonymous_repo(args.module_name, args.module_version)
         config_file = get_presubmit_yml(args.module_name, args.module_version)
         maybe_enable_bazelisk_migrate(args.module_name, args.module_version, args.overwrite_bazel_version, args.task, config_file)
-        return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
+        return_code = run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
+        if args.check_toolchain_registrations:
+            return_code = check_toolchain_registrations(args.module_name, args.module_version, repo_location) or return_code
+        return return_code
     elif args.subparsers_name == "test_module_runner":
         repo_location, config_file = prepare_test_module_repo(args.module_name, args.module_version, args.overwrite_bazel_version)
         maybe_enable_bazelisk_migrate(args.module_name, args.module_version, args.overwrite_bazel_version, args.task, config_file)
-        return run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
+        return_code = run_test(repo_location, config_file, args.task, args.overwrite_bazel_version)
+        if args.check_toolchain_registrations:
+            return_code = check_toolchain_registrations(args.module_name, args.module_version, repo_location) or return_code
+        return return_code
     else:
         parser.print_help()
         return 2
