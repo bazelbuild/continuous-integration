@@ -18,7 +18,7 @@ steps:
         ./rollback_vm_image.py "${ROLLBACK_FAMILIES}"
         if ! ./create_instances.py "${ROLLBACK_GROUPS}"; then
           echo "ERROR: Image was deprecated, but recreating instances failed (agents still run the new image)." >&2
-          echo "Re-run: ./create_instances.py ${ROLLBACK_GROUPS} (or run the Undo commands above)." >&2
+          echo "Re-run: ./create_instances.py ${ROLLBACK_GROUPS}" >&2
           exit 1
         fi
         # Exit 1 stops the pipeline on purpose after a rollback (so nothing gets promoted).
