@@ -113,16 +113,41 @@ def main(argv=None):
     # Look up the newest and previous image of every family before changing anything,
     # so we fail early if any family has nothing to roll back to.
     plan = []
-    for family in families:
-        newest, previous = select_rollback_images(family, list_images(family))
-        plan.append((family, newest, previous))
+    try:
+        for family in families:
+            newest, previous = select_rollback_images(family, list_images(family))
+            plan.append((family, newest, previous))
+    except Exception as ex:
+        err = (getattr(ex, "stderr", None) or "").strip() or str(ex)
+        print(f"Rollback FAILED before any change: {err}. Nothing was changed.", file=sys.stderr)
+        return 1
 
     # Deprecate the newest image in favor of the previous one and print the undo commands.
-    for family, newest, previous in plan:
-        gcloud.gcloud(
-            "compute", "images", "deprecate", newest,
-            state="DEPRECATED", replacement=previous, project=PROJECT,
-        )
+    rolled_back = []
+    for i, (family, newest, previous) in enumerate(plan):
+        try:
+            gcloud.gcloud(
+                "compute", "images", "deprecate", newest,
+                state="DEPRECATED", replacement=previous, project=PROJECT,
+            )
+        except Exception as ex:
+            err = (getattr(ex, "stderr", None) or "").strip() or str(ex)
+            done = ", ".join(f"{f} ({n} -> {p})" for f, n, p in rolled_back) or "(none)"
+            remaining = ", ".join(f for f, _, _ in plan[i + 1 :]) or "(none)"
+            print(f"Rollback FAILED for {family}:", file=sys.stderr)
+            print(f"  Rolled back:   {done}", file=sys.stderr)
+            print(f"  Failed:        {family}: {err}", file=sys.stderr)
+            print(f"  Not attempted: {remaining}", file=sys.stderr)
+            rb_groups = ",".join(
+                dict.fromkeys(g for f, _, _ in rolled_back for g in FAMILY_GROUPS[f])
+            )
+            finish = f" To finish: ./create_instances.py {rb_groups}" if rb_groups else ""
+            print(f"Instances were NOT recreated.{finish}", file=sys.stderr)
+            for f, n, _ in rolled_back:
+                cmd = f"gcloud compute images deprecate {n} --state=ACTIVE --project={PROJECT}"
+                print(f"To undo {f}: {cmd}", file=sys.stderr)
+            return 1
+        rolled_back.append((family, newest, previous))
         family_groups = ",".join(FAMILY_GROUPS[family])
         print(f"{family}: deprecated {newest} (replacement: {previous})")
         print(
