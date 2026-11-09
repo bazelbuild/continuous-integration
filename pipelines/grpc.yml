@@ -43,5 +43,17 @@ tasks:
     test_flags:
       - "--define=protobuf_allow_msvc=true"
       - "--test_tag_filters=-no_windows,-grpc-fuzztest"
-    build_targets: *build_targets
+      # directory_reader_test lists a runfiles directory.
+      - "--enable_runfiles"
+    build_targets:
+      - "//:all"
+      - "//examples/cpp/..."
+      - "//examples/protos/..."
+      # TODO: Remove these exclusions after the fixes land in gRPC.
+      # Uses POSIX sleep().
+      - "-//examples/cpp/flow_control/..."
+      # Uses the non-standard type uint.
+      - "-//examples/cpp/csm:csm_greeter_client"
+      # grpcio has //:grpc in data, which forces per-library DLL links.
+      - "-//examples/protos:helloworld_py_pb2_grpc"
     test_targets: *test_targets
