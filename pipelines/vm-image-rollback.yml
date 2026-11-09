@@ -20,8 +20,6 @@ steps:
           exit 1
         fi
         if ! ./create_instances.py "${ROLLBACK_GROUPS}"; then
-          echo "ERROR: Image was deprecated, but recreating instances failed (agents still run the new image)." >&2
-          echo "Re-run: ./create_instances.py ${ROLLBACK_GROUPS}" >&2
           buildkite-agent annotate --style error --context vm-image-rollback "Images were rolled back, but recreating instances failed: agents still run the new image. Re-run ./create_instances.py ${ROLLBACK_GROUPS}."
           exit 1
         fi
