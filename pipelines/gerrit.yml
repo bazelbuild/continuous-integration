@@ -28,7 +28,7 @@ platforms:
       - "--remote_instance_name=projects/bazel-untrusted/instances/default_instance"
       - "--remote_executor=grpcs://remotebuildexecution.googleapis.com"
     build_targets:
-      - "//:headless"
+      - "//:release"
       - "//:api-skip-javadoc"
     test_flags:
       - "--config=remote"
@@ -37,4 +37,4 @@ platforms:
       - "--experimental_remote_cache_async"
       - "--remote_download_minimal"
     test_targets:
-      - "//javatests/..."
+      - "//..."

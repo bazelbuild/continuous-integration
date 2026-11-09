@@ -1180,6 +1180,22 @@ def gcloud_command():
     return "gcloud.cmd" if is_windows() else "gcloud"
 
 
+def quote_arg(platform, s):
+    if "windows" in platform:
+        if any(c in s for c in ("\r", "\n", "\x00")):
+            raise BuildkiteException(
+                f"Unsupported control character in Windows command argument: {s!r}"
+            )
+        if not s:
+            return '""'
+        # Escape for MSVC UCRT / CommandLineToArgvW (using "" for embedded quotes so cmd.exe
+        # never leaves quote mode on unquoted characters) and double % for .bat execution.
+        escaped = re.sub(r'(\\*)"', r'\1\1""', s)
+        escaped = re.sub(r"(\\+)$", r"\1\1", escaped)
+        return '"' + escaped.replace("%", "%%") + '"'
+    return shlex.quote(s)
+
+
 def match_matrix_attr_pattern(s):
     return re.match(r"^\${{\s*(\w+)\s*}}$", s)
 
@@ -3956,15 +3972,15 @@ def runner_step(
     soft_fail=None,
 ):
     py = PLATFORMS[platform]["python"]
-    command = f"{py} {RUNNER_CMD} --task={shlex.quote(task)}"
+    command = f"{py} {RUNNER_CMD} --task={quote_arg(platform, task)}"
     if http_config:
-        command += " --http_config=" + shlex.quote(http_config)
+        command += " --http_config=" + quote_arg(platform, http_config)
     if file_config:
-        command += " --file_config=" + shlex.quote(file_config)
+        command += " --file_config=" + quote_arg(platform, file_config)
     if git_repository:
-        command += " --git_repository=" + shlex.quote(git_repository)
+        command += " --git_repository=" + quote_arg(platform, git_repository)
     if git_commit:
-        command += " --git_commit=" + shlex.quote(git_commit)
+        command += " --git_commit=" + quote_arg(platform, git_commit)
     if monitor_flaky_tests:
         command += " --monitor_flaky_tests"
     if use_but:
@@ -4065,10 +4081,10 @@ def bazel_build_step(
     if test_only:
         pipeline_command += " --test_only"
     if http_config:
-        pipeline_command += " --http_config=" + shlex.quote(http_config)
+        pipeline_command += " --http_config=" + quote_arg(platform, http_config)
     if file_config:
-        pipeline_command += " --file_config=" + shlex.quote(file_config)
-    pipeline_command += " --task=" + shlex.quote(task)
+        pipeline_command += " --file_config=" + quote_arg(platform, file_config)
+    pipeline_command += " --task=" + quote_arg(platform, task)
 
     step = create_step(
         label=create_label(platform, project_name, build_only, test_only),

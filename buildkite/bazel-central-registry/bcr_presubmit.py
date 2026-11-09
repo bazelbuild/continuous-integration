@@ -292,15 +292,17 @@ def prepare_test_module_repo(module_name, module_version, overwrite_bazel_versio
                     bazel_versions.add(v)
         if bazel_versions:
             # Pick the highest major version listed and request its latest minor
-            # via "<major>.x". Versions in the matrix may use any of "9.x",
+            # via "<major>.*". Versions in the matrix may use any of "9.x",
             # "9.0.0", or "9.0.0rc1"; comparing them as strings is not
             # semver-aware (e.g. "10.x" < "9.x" lexicographically). Comparing
-            # by leading-integer major fixes that, and the trailing ".x"
-            # bazelisk syntax avoids having to pick a specific minor.
+            # by leading-integer major fixes that, and the trailing ".*"
+            # bazelisk syntax avoids having to pick a specific minor. Unlike
+            # ".x", it also matches release candidates, so it still resolves
+            # for a major that has no release yet.
             def major(v):
                 m = v.split(".", 1)[0]
                 return int(m) if m.isdigit() else 0
-            vendor_bazel_version = "%d.x" % max(major(v) for v in bazel_versions)
+            vendor_bazel_version = "%d.*" % max(major(v) for v in bazel_versions)
         else:
             vendor_bazel_version = "latest"
     suppress_log or bazelci.eprint(f"* Preparing test module source with Bazel {vendor_bazel_version}")
