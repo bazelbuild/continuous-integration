@@ -60,6 +60,11 @@ if [[ "$(uname -m)" == "aarch64" ]]; then
   QUEUE="arm64"
 fi
 
+### Remove any Git hooks from the local Git mirror directory.
+if [[ -d /var/lib/gitmirrors ]]; then
+  find /var/lib/gitmirrors -type d -name hooks -exec rm -rf {} + || true
+fi
+
 ### Write the Buildkite agent configuration.
 cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
 token="${BUILDKITE_TOKEN}"
@@ -68,8 +73,10 @@ tags="queue=${QUEUE},kind=docker,os=linux"
 build-path="/var/lib/buildkite-agent/builds"
 git-mirrors-path="/var/lib/gitmirrors"
 git-clone-mirror-flags="-v --bare"
+protect-dangerous-git-environment-variables=true
 hooks-path="/etc/buildkite-agent/hooks"
 plugins-path="/etc/buildkite-agent/plugins"
+no-local-hooks=true
 disconnect-after-job=true
 health-check-addr=0.0.0.0:8080
 EOF

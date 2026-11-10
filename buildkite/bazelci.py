@@ -1180,6 +1180,22 @@ def gcloud_command():
     return "gcloud.cmd" if is_windows() else "gcloud"
 
 
+def quote_arg(platform, s):
+    if "windows" in platform:
+        if any(c in s for c in ("\r", "\n", "\x00")):
+            raise BuildkiteException(
+                f"Unsupported control character in Windows command argument: {s!r}"
+            )
+        if not s:
+            return '""'
+        # Escape for MSVC UCRT / CommandLineToArgvW (using "" for embedded quotes so cmd.exe
+        # never leaves quote mode on unquoted characters) and double % for .bat execution.
+        escaped = re.sub(r'(\\*)"', r'\1\1""', s)
+        escaped = re.sub(r"(\\+)$", r"\1\1", escaped)
+        return '"' + escaped.replace("%", "%%") + '"'
+    return shlex.quote(s)
+
+
 def match_matrix_attr_pattern(s):
     return re.match(r"^\${{\s*(\w+)\s*}}$", s)
 
@@ -1858,7 +1874,8 @@ def execute_commands(
 
         try:
             should_upload_kzip = (
-                True if index_upload_policy == INDEX_UPLOAD_POLICY_ALWAYS else False
+                current_branch_is_main_branch()
+                and index_upload_policy == INDEX_UPLOAD_POLICY_ALWAYS
             )
             try:
                 execute_bazel_build_with_kythe(
@@ -1870,7 +1887,10 @@ def execute_commands(
                     None,
                 )
 
-                if index_upload_policy == INDEX_UPLOAD_POLICY_IF_BUILD_SUCCESS:
+                if (
+                    current_branch_is_main_branch()
+                    and index_upload_policy == INDEX_UPLOAD_POLICY_IF_BUILD_SUCCESS
+                ):
                     should_upload_kzip = True
             except subprocess.CalledProcessError as e:
                 # If not running with Always policy, raise the build error.
@@ -1999,7 +2019,8 @@ def get_release_name_from_branch_name():
 
 def is_pull_request():
     third_party_repo = os.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
-    return len(third_party_repo) > 0
+    pull_request = os.getenv("BUILDKITE_PULL_REQUEST", "false")
+    return len(third_party_repo) > 0 or pull_request not in ("", "false")
 
 
 def print_bazel_version_info(bazel_binary, platform):
@@ -2267,23 +2288,11 @@ def remote_caching_flags(platform, accept_cached=True):
             subprocess.check_output(["/usr/bin/xcodebuild", "-version"]),
         ]
 
-    # Use GCS for caching builds running on MacService.
-    # Use RBE for caching builds running on GCE.
-    remote_cache_flags = []
-    if is_mac():
-        bucket_id = "trusted" if THIS_IS_TRUSTED else "untrusted"
-        remote_cache_flags = [
-            f"--remote_cache=https://storage.googleapis.com/bazel-{bucket_id}-build-cache"
-        ]
-    else:
-        remote_cache_flags = [
+    # Use RBE for caching builds running on GCE and MacService.
+    flags = (
+        [
             "--remote_cache=remotebuildexecution.googleapis.com",
             "--remote_instance_name=projects/{}/instances/default_instance".format(CLOUD_PROJECT),
-        ]
-
-    flags = (
-        remote_cache_flags
-        + [
             "--google_default_credentials",
         ]
         + (
@@ -3706,7 +3715,24 @@ def create_initial_steps():
     ):
         return steps
 
-    modified_files = get_modified_files(os.getenv("BUILDKITE_COMMIT"))
+    real_cwd = os.path.realpath(os.getcwd())
+    modified_files = sorted(
+        {
+            path.replace("\\", "/")
+            for f in get_modified_files(os.getenv("BUILDKITE_COMMIT"))
+            if f
+            for path in (f, os.path.relpath(os.path.realpath(f), real_cwd))
+        }
+    )
+    if any(
+        ".buildkite" in f.split("/") or "buildkite-agent" in f.split("/")
+        for f in modified_files
+    ):
+        raise BuildkiteException(
+            "Pull requests modifying .buildkite are not allowed. If CI configuration "
+            "changes are required, please file a PR in "
+            "https://github.com/bazelbuild/continuous-integration."
+        )
     modified_config_files = [f for f in modified_files if is_ci_config_file(f)]
 
     if os.getenv("BUILDKITE_PIPELINE_SLUG", "") == "bazel-central-registry":
@@ -3939,15 +3965,15 @@ def runner_step(
     soft_fail=None,
 ):
     py = PLATFORMS[platform]["python"]
-    command = f"{py} {RUNNER_CMD} --task={shlex.quote(task)}"
+    command = f"{py} {RUNNER_CMD} --task={quote_arg(platform, task)}"
     if http_config:
-        command += " --http_config=" + shlex.quote(http_config)
+        command += " --http_config=" + quote_arg(platform, http_config)
     if file_config:
-        command += " --file_config=" + shlex.quote(file_config)
+        command += " --file_config=" + quote_arg(platform, file_config)
     if git_repository:
-        command += " --git_repository=" + shlex.quote(git_repository)
+        command += " --git_repository=" + quote_arg(platform, git_repository)
     if git_commit:
-        command += " --git_commit=" + shlex.quote(git_commit)
+        command += " --git_commit=" + quote_arg(platform, git_commit)
     if monitor_flaky_tests:
         command += " --monitor_flaky_tests"
     if use_but:
@@ -4048,10 +4074,10 @@ def bazel_build_step(
     if test_only:
         pipeline_command += " --test_only"
     if http_config:
-        pipeline_command += " --http_config=" + shlex.quote(http_config)
+        pipeline_command += " --http_config=" + quote_arg(platform, http_config)
     if file_config:
-        pipeline_command += " --file_config=" + shlex.quote(file_config)
-    pipeline_command += " --task=" + shlex.quote(task)
+        pipeline_command += " --file_config=" + quote_arg(platform, file_config)
+    pipeline_command += " --task=" + quote_arg(platform, task)
 
     step = create_step(
         label=create_label(platform, project_name, build_only, test_only),

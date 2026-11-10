@@ -662,6 +662,71 @@ class InitialSteps(unittest.TestCase):
         self.assertEqual(len(steps), 1)
         self.assertIn("block", steps[0])
 
+    def test_disallows_buildkite_changes(self):
+        with mock.patch.dict(
+            os.environ,
+            {
+                "BUILDKITE_BRANCH": "feature",
+                "BUILDKITE_PIPELINE_DEFAULT_BRANCH": "main",
+                "BUILDKITE_PULL_REQUEST_LABELS": "",
+            },
+        ):
+            with mock.patch.object(
+                bazelci, "get_modified_files", return_value=[".buildkite/hooks/post-checkout"]
+            ):
+                with self.assertRaisesRegex(
+                    bazelci.BuildkiteException, "continuous-integration"
+                ):
+                    bazelci.create_initial_steps()
+
+            with mock.patch.object(
+                bazelci, "get_modified_files", return_value=["docs/setup.buildkite.md"]
+            ):
+                self.assertEqual(bazelci.create_initial_steps(), [])
+
+    def test_disallows_symlink_to_buildkite(self):
+        orig_cwd = os.getcwd()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            try:
+                os.chdir(tmpdir)
+                os.makedirs(os.path.join(".buildkite", "hooks"))
+                os.symlink("../../helper.sh", os.path.join(".buildkite", "hooks", "post-checkout"))
+                os.symlink(".buildkite/hooks/environment", "local_hook_link")
+                os.symlink("/etc/buildkite-agent/hooks/post-checkout", "agent_hook_link")
+                with mock.patch.dict(
+                    os.environ,
+                    {
+                        "BUILDKITE_BRANCH": "feature",
+                        "BUILDKITE_PIPELINE_DEFAULT_BRANCH": "main",
+                        "BUILDKITE_PULL_REQUEST_LABELS": "",
+                    },
+                ):
+                    for modified in (
+                        [".buildkite/hooks/post-checkout", "helper.sh"],
+                        ["local_hook_link"],
+                        ["agent_hook_link"],
+                    ):
+                        with self.subTest(modified=modified), mock.patch.object(
+                            bazelci, "get_modified_files", return_value=modified
+                        ):
+                            with self.assertRaisesRegex(
+                                bazelci.BuildkiteException, "continuous-integration"
+                            ):
+                                bazelci.create_initial_steps()
+                    for win_relpath in (
+                        r".buildkite\hooks\environment",
+                        r"..\..\etc\buildkite-agent\hooks\post-checkout",
+                    ):
+                        with self.subTest(win_relpath=win_relpath), mock.patch.object(
+                            bazelci, "get_modified_files", return_value=["hook_link"]
+                        ), mock.patch("os.path.relpath", return_value=win_relpath):
+                            with self.assertRaisesRegex(
+                                bazelci.BuildkiteException, "continuous-integration"
+                            ):
+                                bazelci.create_initial_steps()
+            finally:
+                os.chdir(orig_cwd)
+
     def test_presubmit_auto_run_label_skips_config_change_block(self):
         for label in ("presubmit-auto-run", "CI:run"):
             with self.subTest(label=label):
@@ -1202,6 +1267,160 @@ class ExecuteBazelTest(unittest.TestCase):
             os.environ[bazelci.DISABLE_TEST_CACHE_ENV_VAR] = "1"
             bazelci.execute_bazel_test("8.0.0", "bazel", "ubuntu2404", [], ["//..."], None, False)
             self.assertIn("--nocache_test_results", mock_exec.call_args[0][0])
+
+
+class CommandQuotingTest(unittest.TestCase):
+    @staticmethod
+    def _parse_windows_bat_command(line):
+        """Simulate Windows .bat expansion + cmd.exe quote scan + MSVC UCRT argv parsing."""
+        if any(c in line for c in ("\r", "\n", "\x00")):
+            raise AssertionError("unescaped newline or NUL in batch line")
+
+        # 1. Batch percent processing: %% -> literal %, single % expands env/positional vars.
+        expanded = []
+        i = 0
+        while i < len(line):
+            if line[i] == "%":
+                if i + 1 < len(line) and line[i + 1] == "%":
+                    expanded.append("%")
+                    i += 2
+                    continue
+                raise AssertionError(f"unescaped % in batch line: {line!r}")
+            expanded.append(line[i])
+            i += 1
+        cmd_line = "".join(expanded)
+
+        # 2. cmd.exe tokenizer check: metacharacters must never appear outside "..." quote mode.
+        in_cmd_quotes = False
+        for ch in cmd_line:
+            if ch == '"':
+                in_cmd_quotes = not in_cmd_quotes
+            elif not in_cmd_quotes and ch in "&|<>()^;":
+                raise AssertionError(f"unquoted cmd.exe metacharacter {ch!r} in {cmd_line!r}")
+        if in_cmd_quotes:
+            raise AssertionError(f"unclosed quote in {cmd_line!r}")
+
+        # 3. MSVC UCRT parse_cmdline (used by python.exe on Windows).
+        args = []
+        i = 0
+        n = len(cmd_line)
+        while i < n:
+            while i < n and cmd_line[i] in (" ", "\t"):
+                i += 1
+            if i >= n:
+                break
+            cur = []
+            in_quotes = False
+            while i < n:
+                num_slashes = 0
+                while i < n and cmd_line[i] == "\\":
+                    num_slashes += 1
+                    i += 1
+                if i < n and cmd_line[i] == '"':
+                    cur.append("\\" * (num_slashes // 2))
+                    if num_slashes % 2 == 0:
+                        if in_quotes and i + 1 < n and cmd_line[i + 1] == '"':
+                            cur.append('"')
+                            i += 2
+                            continue
+                        in_quotes = not in_quotes
+                    else:
+                        cur.append('"')
+                    i += 1
+                    continue
+                cur.append("\\" * num_slashes)
+                if i >= n or (not in_quotes and cmd_line[i] in (" ", "\t")):
+                    break
+                cur.append(cmd_line[i])
+                i += 1
+            args.append("".join(cur))
+        return args
+
+    def test_runner_step_quotes_http_config_with_double_quotes_on_windows(self):
+        step = bazelci.runner_step(
+            platform="windows",
+            task="windows",
+            http_config="https://example.com/pipelines/grpc.yml?1793578021",
+            git_repository="https://github.com/grpc/grpc.git",
+            git_commit="deadbeef",
+        )
+        runner_cmd = step["command"][-1]
+        self.assertIn(
+            '--http_config="https://example.com/pipelines/grpc.yml?1793578021"',
+            runner_cmd,
+        )
+        self.assertNotIn("'", runner_cmd)
+        self.assertEqual(
+            self._parse_windows_bat_command(runner_cmd),
+            [
+                "python.exe",
+                "bazelci.py",
+                "runner",
+                "--task=windows",
+                "--http_config=https://example.com/pipelines/grpc.yml?1793578021",
+                "--git_repository=https://github.com/grpc/grpc.git",
+                "--git_commit=deadbeef",
+            ],
+        )
+
+    def test_runner_step_uses_shlex_quote_on_unix(self):
+        step = bazelci.runner_step(
+            platform="ubuntu2404",
+            task="ubuntu2404",
+            http_config="https://example.com/pipelines/grpc.yml?1793578021",
+        )
+        runner_cmd = step["command"][-1]
+        self.assertIn(
+            "--http_config='https://example.com/pipelines/grpc.yml?1793578021'",
+            runner_cmd,
+        )
+
+    def test_bazel_build_step_quotes_with_double_quotes_on_windows(self):
+        step = bazelci.bazel_build_step(
+            task="windows",
+            platform="windows",
+            project_name="Bazel",
+            http_config="https://example.com/pipelines/bazel.yml?123",
+        )
+        runner_cmd = step["command"][-1]
+        self.assertIn(
+            '--http_config="https://example.com/pipelines/bazel.yml?123"',
+            runner_cmd,
+        )
+        self.assertNotIn("'", runner_cmd)
+
+    def test_windows_quote_arg_prevents_cmd_injection_and_roundtrips(self):
+        tricky_values = [
+            "",
+            "simple",
+            "space in task",
+            'foo" & calc.exe & "',
+            'a\\"b',
+            'a""b',
+            'trailing_quote"',
+            "trailing_slash\\",
+            "trailing_slashes\\\\",
+            "%PATH% and %1 and https://example.com/a%20b?x=1&y=2",
+            "x; echo hi | calc.exe > out < in ^ (sub)",
+        ]
+        for val in tricky_values:
+            with self.subTest(val=val):
+                step = bazelci.runner_step(
+                    platform="windows",
+                    task=val,
+                    file_config=val if val else None,
+                )
+                runner_cmd = step["command"][-1]
+                argv = self._parse_windows_bat_command(runner_cmd)
+                self.assertIn("--task=" + val, argv)
+                if val:
+                    self.assertIn("--file_config=" + val, argv)
+
+    def test_windows_quote_arg_rejects_control_characters(self):
+        for bad in ("line1\nwhoami", "line1\rwhoami", "nul\x00byte"):
+            with self.subTest(bad=bad):
+                with self.assertRaises(bazelci.BuildkiteException):
+                    bazelci.quote_arg("windows", bad)
 
 
 if __name__ == "__main__":
