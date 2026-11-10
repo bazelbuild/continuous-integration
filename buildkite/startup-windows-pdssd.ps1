@@ -166,6 +166,7 @@ build-path="c:\b"
 hooks-path="c:\buildkite\hooks"
 plugins-path="c:\buildkite\plugins"
 no-local-hooks=true
+no-plugins=false
 git-mirrors-path="c:\buildkite\bazelbuild"
 git-clone-mirror-flags="-v --bare"
 protect-dangerous-git-environment-variables=true
