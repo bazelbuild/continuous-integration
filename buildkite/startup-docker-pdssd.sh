@@ -77,6 +77,7 @@ protect-dangerous-git-environment-variables=true
 hooks-path="/etc/buildkite-agent/hooks"
 plugins-path="/etc/buildkite-agent/plugins"
 no-local-hooks=true
+no-plugins=false
 disconnect-after-job=true
 health-check-addr=0.0.0.0:8080
 EOF
