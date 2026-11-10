@@ -52,6 +52,13 @@ resource "buildkite_pipeline" "update-git-mirror-tar-ball" {
   }
 }
 
+resource "buildkite_pipeline_schedule" "update-git-mirror-tar-ball" {
+  pipeline_id = buildkite_pipeline.update-git-mirror-tar-ball.id
+  label       = "Update git mirror tar ball weekly"
+  branch      = "master"
+  cronline    = "0 3 * * 1" # Every Monday at 3 AM UTC
+}
+
 resource "buildkite_pipeline" "mirror-bazel-external-deps" {
   name           = "Mirror Bazel External Deps"
   repository     = "https://github.com/bazelbuild/bazel.git"
