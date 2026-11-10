@@ -3722,7 +3722,24 @@ def create_initial_steps():
     ):
         return steps
 
-    modified_files = get_modified_files(os.getenv("BUILDKITE_COMMIT"))
+    real_cwd = os.path.realpath(os.getcwd())
+    modified_files = sorted(
+        {
+            path.replace("\\", "/")
+            for f in get_modified_files(os.getenv("BUILDKITE_COMMIT"))
+            if f
+            for path in (f, os.path.relpath(os.path.realpath(f), real_cwd))
+        }
+    )
+    if any(
+        ".buildkite" in f.split("/") or "buildkite-agent" in f.split("/")
+        for f in modified_files
+    ):
+        raise BuildkiteException(
+            "Pull requests modifying .buildkite are not allowed. If CI configuration "
+            "changes are required, please file a PR in "
+            "https://github.com/bazelbuild/continuous-integration."
+        )
     modified_config_files = [f for f in modified_files if is_ci_config_file(f)]
 
     if os.getenv("BUILDKITE_PIPELINE_SLUG", "") == "bazel-central-registry":

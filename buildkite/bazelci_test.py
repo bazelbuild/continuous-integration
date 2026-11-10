@@ -662,6 +662,71 @@ class InitialSteps(unittest.TestCase):
         self.assertEqual(len(steps), 1)
         self.assertIn("block", steps[0])
 
+    def test_disallows_buildkite_changes(self):
+        with mock.patch.dict(
+            os.environ,
+            {
+                "BUILDKITE_BRANCH": "feature",
+                "BUILDKITE_PIPELINE_DEFAULT_BRANCH": "main",
+                "BUILDKITE_PULL_REQUEST_LABELS": "",
+            },
+        ):
+            with mock.patch.object(
+                bazelci, "get_modified_files", return_value=[".buildkite/hooks/post-checkout"]
+            ):
+                with self.assertRaisesRegex(
+                    bazelci.BuildkiteException, "continuous-integration"
+                ):
+                    bazelci.create_initial_steps()
+
+            with mock.patch.object(
+                bazelci, "get_modified_files", return_value=["docs/setup.buildkite.md"]
+            ):
+                self.assertEqual(bazelci.create_initial_steps(), [])
+
+    def test_disallows_symlink_to_buildkite(self):
+        orig_cwd = os.getcwd()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            try:
+                os.chdir(tmpdir)
+                os.makedirs(os.path.join(".buildkite", "hooks"))
+                os.symlink("../../helper.sh", os.path.join(".buildkite", "hooks", "post-checkout"))
+                os.symlink(".buildkite/hooks/environment", "local_hook_link")
+                os.symlink("/etc/buildkite-agent/hooks/post-checkout", "agent_hook_link")
+                with mock.patch.dict(
+                    os.environ,
+                    {
+                        "BUILDKITE_BRANCH": "feature",
+                        "BUILDKITE_PIPELINE_DEFAULT_BRANCH": "main",
+                        "BUILDKITE_PULL_REQUEST_LABELS": "",
+                    },
+                ):
+                    for modified in (
+                        [".buildkite/hooks/post-checkout", "helper.sh"],
+                        ["local_hook_link"],
+                        ["agent_hook_link"],
+                    ):
+                        with self.subTest(modified=modified), mock.patch.object(
+                            bazelci, "get_modified_files", return_value=modified
+                        ):
+                            with self.assertRaisesRegex(
+                                bazelci.BuildkiteException, "continuous-integration"
+                            ):
+                                bazelci.create_initial_steps()
+                    for win_relpath in (
+                        r".buildkite\hooks\environment",
+                        r"..\..\etc\buildkite-agent\hooks\post-checkout",
+                    ):
+                        with self.subTest(win_relpath=win_relpath), mock.patch.object(
+                            bazelci, "get_modified_files", return_value=["hook_link"]
+                        ), mock.patch("os.path.relpath", return_value=win_relpath):
+                            with self.assertRaisesRegex(
+                                bazelci.BuildkiteException, "continuous-integration"
+                            ):
+                                bazelci.create_initial_steps()
+            finally:
+                os.chdir(orig_cwd)
+
     def test_presubmit_auto_run_label_skips_config_change_block(self):
         for label in ("presubmit-auto-run", "CI:run"):
             with self.subTest(label=label):
