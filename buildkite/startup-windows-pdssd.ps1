@@ -155,6 +155,9 @@ if (Test-Path "c:\buildkite\bazelbuild") {
   Get-ChildItem -Path "c:\buildkite\bazelbuild" -Filter "hooks" -Directory -Recurse -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+## Disable native Git hooks.
+& git config --system core.hooksPath /dev/null
+
 ## Configure the Buildkite agent.
 Write-Host "Configuring Buildkite Agent..."
 $buildkite_agent_root = "c:\buildkite"

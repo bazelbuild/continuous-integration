@@ -65,6 +65,9 @@ if [[ -d /var/lib/gitmirrors ]]; then
   find /var/lib/gitmirrors -type d -name hooks -exec rm -rf {} + || true
 fi
 
+### Disable native Git hooks.
+git config --system core.hooksPath /dev/null
+
 ### Write the Buildkite agent configuration.
 cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
 token="${BUILDKITE_TOKEN}"

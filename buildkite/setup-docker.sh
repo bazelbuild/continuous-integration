@@ -29,7 +29,12 @@ export DEBIAN_FRONTEND="noninteractive"
 {
   apt-get -y update
   apt-get -y dist-upgrade
-  apt-get -y install python-is-python3 openjdk-11-jdk-headless unzip
+  apt-get -y install git python-is-python3 openjdk-11-jdk-headless unzip
+}
+
+### Disable native Git hooks.
+{
+  git config --system core.hooksPath /dev/null
 }
 
 ### Disable automatic upgrades, as they can interfere with our startup scripts.

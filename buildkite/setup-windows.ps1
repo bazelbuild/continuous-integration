@@ -119,6 +119,8 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
 & git config --system core.autocrlf false
 # Turn on long path support on Windows
 & git config --system core.longpaths true
+# Disable native Git hooks
+& git config --system core.hooksPath /dev/null
 
 # Function to install Azul Zulu JDK
 function InstallAzulZuluJDK($filename, $rootPath) {
