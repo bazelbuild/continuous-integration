@@ -2150,7 +2150,7 @@ def get_mirror_root():
     elif is_windows():
         return "c:\\buildkite\\bazelbuild\\"
 
-    return "/var/lib/bazelbuild/"
+    return "/var/lib/gitmirrors/"
 
 
 def get_repositories_root():
