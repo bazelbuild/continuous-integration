@@ -1617,6 +1617,7 @@ def execute_commands(
     tmpdir = tempfile.mkdtemp()
     build_bep_file = None
     test_bep_file = None
+    verify_and_enforce_agent_security(platform)
     if is_mac():
         activate_xcode(task_config)
 
@@ -2171,7 +2172,152 @@ def get_repositories_root():
     return repo_root
 
 
+def parse_buildkite_agent_config(config_path):
+    """Parses a Buildkite agent configuration file into a dict of key-value pairs."""
+    config = {}
+    with open(config_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or line.startswith(";"):
+                continue
+            if "=" in line:
+                key, val = line.split("=", 1)
+                key = key.strip().lower()
+                val = val.strip()
+                if len(val) >= 2 and (
+                    (val.startswith('"') and val.endswith('"'))
+                    or (val.startswith("'") and val.endswith("'"))
+                ):
+                    val = val[1:-1].strip()
+                config[key] = val
+            else:
+                config[line.strip().lower()] = "true"
+    return config
+
+
+def get_buildkite_agent_config_search_paths(platform=None):
+    """Returns candidate paths for the Buildkite agent config file based on platform."""
+    paths = []
+    env_config = os.getenv("BUILDKITE_AGENT_CONFIG")
+    if env_config:
+        paths.append(env_config)
+
+    is_macos = (platform and "macos" in platform) or is_mac()
+    is_win = (platform and "windows" in platform) or is_windows()
+
+    if is_macos:
+        paths.extend([
+            "/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg",
+            "/usr/local/etc/buildkite-agent/buildkite-agent.cfg",
+            os.path.expanduser("~/.buildkite-agent/buildkite-agent.cfg"),
+            "/etc/buildkite-agent/buildkite-agent.cfg",
+        ])
+    elif is_win:
+        paths.extend([
+            r"c:\buildkite\buildkite-agent.cfg",
+            os.path.expanduser(r"~\.buildkite-agent\buildkite-agent.cfg"),
+        ])
+    else:
+        paths.extend([
+            "/etc/buildkite-agent/buildkite-agent.cfg",
+            os.path.expanduser("~/.buildkite-agent/buildkite-agent.cfg"),
+        ])
+
+    unique_paths = []
+    for p in paths:
+        if p and p not in unique_paths:
+            unique_paths.append(p)
+    return unique_paths
+
+
+def find_buildkite_agent_config_file(platform=None):
+    """Finds the first existing Buildkite agent configuration file from search paths."""
+    for path in get_buildkite_agent_config_search_paths(platform=platform):
+        if os.path.isfile(path):
+            return path
+    return None
+
+
+def verify_buildkite_agent_config(config_path):
+    """Verifies that no-local-hooks=true is set in the given Buildkite agent config file.
+
+    Raises BuildkiteException if no-local-hooks is disabled or missing.
+    """
+    if not os.path.exists(config_path):
+        raise BuildkiteException(f"Buildkite agent configuration file not found at '{config_path}'")
+    try:
+        config = parse_buildkite_agent_config(config_path)
+    except PermissionError as e:
+        eprint(f"Warning: Cannot read Buildkite agent config '{config_path}' due to permission error: {e}")
+        return False
+    except OSError as e:
+        eprint(f"Warning: Failed to read Buildkite agent config '{config_path}': {e}")
+        return False
+
+    val = config.get("no-local-hooks", "").strip().lower()
+    if val not in ("true", "1", "yes"):
+        raise BuildkiteException(
+            f"Buildkite agent configuration at '{config_path}' must have 'no-local-hooks=true' enabled (found: '{config.get('no-local-hooks')}')."
+        )
+    return True
+
+
+def ensure_git_hooks_path():
+    """Ensures core.hooksPath is set to /dev/null in Git configuration."""
+    try:
+        result = subprocess.run(
+            ["git", "config", "--get", "core.hooksPath"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
+        )
+        if result.returncode == 0 and result.stdout.strip() in ("/dev/null", "NUL"):
+            return
+        # Try setting system-wide first; fall back to global if permission is denied.
+        sys_res = subprocess.run(
+            ["git", "config", "--system", "core.hooksPath", "/dev/null"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
+        )
+        if sys_res.returncode != 0:
+            subprocess.run(
+                ["git", "config", "--global", "core.hooksPath", "/dev/null"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                check=True,
+            )
+    except (subprocess.SubprocessError, FileNotFoundError, OSError) as e:
+        eprint(f"Warning: Failed to enforce core.hooksPath: {e}")
+
+
+def verify_and_enforce_agent_security(platform=None):
+    """Verifies agent daemon security configurations and enforces core.hooksPath."""
+    if not os.getenv("BUILDKITE"):
+        # Gracefully skip in non-Buildkite environments (e.g. local test runs)
+        return
+
+    # Always enforce core.hooksPath in CI worker environments
+    ensure_git_hooks_path()
+
+    # Search and verify Buildkite agent configuration file
+    config_file = find_buildkite_agent_config_file(platform=platform)
+    if config_file:
+        verify_buildkite_agent_config(config_file)
+    else:
+        # Gracefully handle environments where config files don't exist
+        eprint(
+            "Warning: No Buildkite agent configuration file found in standard search paths. "
+            "Ensure 'no-local-hooks=true' is configured on the worker daemon."
+        )
+
+
 def clone_git_repository(git_repository, git_commit=None, suppress_stdout=False):
+    if os.getenv("BUILDKITE"):
+        ensure_git_hooks_path()
     def execute_git_command(args):
         execute_command(args, print_output=not suppress_stdout, suppress_stdout=suppress_stdout)
 
@@ -5338,6 +5484,7 @@ def main(argv=None):
                 notify=args.notify,
             )
         elif args.subparsers_name == "project_pipeline":
+            verify_and_enforce_agent_security()
             # Fetch the repo in case we need to use file_config.
             if args.git_repository:
                 git_commit = (
@@ -5366,6 +5513,7 @@ def main(argv=None):
             )
         elif args.subparsers_name == "runner":
             log_retry()
+            verify_and_enforce_agent_security()
             # Fetch the repo in case we need to use file_config.
             if args.repo_location:
                 os.chdir(args.repo_location)

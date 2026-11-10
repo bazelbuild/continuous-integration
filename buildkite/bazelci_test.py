@@ -1423,5 +1423,207 @@ class CommandQuotingTest(unittest.TestCase):
                     bazelci.quote_arg("windows", bad)
 
 
+class AgentSecurityHardeningTest(unittest.TestCase):
+
+    def _create_temp_config(self, content):
+        temp_file = tempfile.NamedTemporaryFile("w", delete=False)
+        temp_file.write(content)
+        temp_file.close()
+        self.addCleanup(os.unlink, temp_file.name)
+        return temp_file.name
+
+    def test_parse_buildkite_agent_config_basic(self):
+        config_content = """
+token="test-token"
+name="worker-01"
+no-local-hooks=true
+tags="queue=macos,kind=worker"
+"""
+        config_path = self._create_temp_config(config_content)
+        parsed = bazelci.parse_buildkite_agent_config(config_path)
+        self.assertEqual(parsed.get("token"), "test-token")
+        self.assertEqual(parsed.get("name"), "worker-01")
+        self.assertEqual(parsed.get("no-local-hooks"), "true")
+        self.assertEqual(parsed.get("tags"), "queue=macos,kind=worker")
+
+    def test_parse_buildkite_agent_config_quotes_and_whitespace(self):
+        config_content = """
+   no-local-hooks   =   "true"   
+   plugins-path = '/etc/plugins'
+   build-path =   c:\\b   
+"""
+        config_path = self._create_temp_config(config_content)
+        parsed = bazelci.parse_buildkite_agent_config(config_path)
+        self.assertEqual(parsed.get("no-local-hooks"), "true")
+        self.assertEqual(parsed.get("plugins-path"), "/etc/plugins")
+        self.assertEqual(parsed.get("build-path"), "c:\\b")
+
+    def test_parse_buildkite_agent_config_comments_and_empty_lines(self):
+        config_content = """
+# This is a comment
+; Semicolon comment
+# no-local-hooks=false
+
+no-local-hooks=true
+
+# Another comment
+"""
+        config_path = self._create_temp_config(config_content)
+        parsed = bazelci.parse_buildkite_agent_config(config_path)
+        self.assertEqual(parsed.get("no-local-hooks"), "true")
+
+    def test_parse_buildkite_agent_config_standalone_flag(self):
+        config_content = """
+disconnect-after-job
+no-local-hooks
+"""
+        config_path = self._create_temp_config(config_content)
+        parsed = bazelci.parse_buildkite_agent_config(config_path)
+        self.assertEqual(parsed.get("disconnect-after-job"), "true")
+        self.assertEqual(parsed.get("no-local-hooks"), "true")
+
+    def test_verify_buildkite_agent_config_valid(self):
+        for val in ("true", '"true"', "'true'", "1", "yes"):
+            with self.subTest(val=val):
+                config_path = self._create_temp_config(f"no-local-hooks={val}\n")
+                self.assertTrue(bazelci.verify_buildkite_agent_config(config_path))
+
+    def test_verify_buildkite_agent_config_disabled(self):
+        config_path = self._create_temp_config("no-local-hooks=false\n")
+        with self.assertRaises(bazelci.BuildkiteException) as ctx:
+            bazelci.verify_buildkite_agent_config(config_path)
+        self.assertIn("must have 'no-local-hooks=true' enabled", str(ctx.exception))
+
+    def test_verify_buildkite_agent_config_missing_flag(self):
+        config_path = self._create_temp_config("name=worker\n")
+        with self.assertRaises(bazelci.BuildkiteException) as ctx:
+            bazelci.verify_buildkite_agent_config(config_path)
+        self.assertIn("must have 'no-local-hooks=true' enabled", str(ctx.exception))
+
+    def test_verify_buildkite_agent_config_file_not_found(self):
+        with self.assertRaises(bazelci.BuildkiteException) as ctx:
+            bazelci.verify_buildkite_agent_config("/path/to/nonexistent/buildkite-agent.cfg")
+        self.assertIn("not found", str(ctx.exception))
+
+    def test_verify_buildkite_agent_config_permission_error(self):
+        config_path = self._create_temp_config("no-local-hooks=true\n")
+        with mock.patch("builtins.open", side_effect=PermissionError("Permission denied")):
+            with mock.patch.object(bazelci, "eprint") as mock_eprint:
+                result = bazelci.verify_buildkite_agent_config(config_path)
+                self.assertFalse(result)
+                mock_eprint.assert_called_once()
+                self.assertIn("Permission denied", mock_eprint.call_args[0][0])
+
+    def test_get_buildkite_agent_config_search_paths_macos(self):
+        paths = bazelci.get_buildkite_agent_config_search_paths(platform="macos")
+        self.assertIn("/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg", paths)
+        self.assertIn("/usr/local/etc/buildkite-agent/buildkite-agent.cfg", paths)
+        self.assertIn("/etc/buildkite-agent/buildkite-agent.cfg", paths)
+
+    def test_get_buildkite_agent_config_search_paths_windows(self):
+        paths = bazelci.get_buildkite_agent_config_search_paths(platform="windows")
+        self.assertIn(r"c:\buildkite\buildkite-agent.cfg", paths)
+
+    def test_get_buildkite_agent_config_search_paths_linux(self):
+        paths = bazelci.get_buildkite_agent_config_search_paths(platform="ubuntu2004")
+        self.assertIn("/etc/buildkite-agent/buildkite-agent.cfg", paths)
+
+    def test_get_buildkite_agent_config_search_paths_env_override(self):
+        with mock.patch.dict(os.environ, {"BUILDKITE_AGENT_CONFIG": "/custom/path/agent.cfg"}):
+            paths = bazelci.get_buildkite_agent_config_search_paths(platform="macos")
+            self.assertEqual(paths[0], "/custom/path/agent.cfg")
+
+    def test_find_buildkite_agent_config_file(self):
+        valid_path = self._create_temp_config("no-local-hooks=true\n")
+        with mock.patch.object(
+            bazelci,
+            "get_buildkite_agent_config_search_paths",
+            return_value=["/nonexistent/1.cfg", valid_path, "/nonexistent/2.cfg"],
+        ):
+            found = bazelci.find_buildkite_agent_config_file()
+            self.assertEqual(found, valid_path)
+
+        with mock.patch.object(
+            bazelci,
+            "get_buildkite_agent_config_search_paths",
+            return_value=["/nonexistent/1.cfg", "/nonexistent/2.cfg"],
+        ):
+            self.assertIsNone(bazelci.find_buildkite_agent_config_file())
+
+    def test_ensure_git_hooks_path_already_set(self):
+        mock_result = mock.Mock(returncode=0, stdout="/dev/null\n")
+        with mock.patch("subprocess.run", return_value=mock_result) as mock_run:
+            bazelci.ensure_git_hooks_path()
+            mock_run.assert_called_once_with(
+                ["git", "config", "--get", "core.hooksPath"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                check=False,
+            )
+
+    def test_ensure_git_hooks_path_system_success(self):
+        mock_get = mock.Mock(returncode=1, stdout="")
+        mock_set_sys = mock.Mock(returncode=0, stdout="")
+        with mock.patch("subprocess.run", side_effect=[mock_get, mock_set_sys]) as mock_run:
+            bazelci.ensure_git_hooks_path()
+            self.assertEqual(mock_run.call_count, 2)
+            mock_run.assert_any_call(
+                ["git", "config", "--system", "core.hooksPath", "/dev/null"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                check=False,
+            )
+
+    def test_ensure_git_hooks_path_fallback_to_global(self):
+        mock_get = mock.Mock(returncode=1, stdout="")
+        mock_set_sys = mock.Mock(returncode=1, stdout="", stderr="Permission denied")
+        mock_set_global = mock.Mock(returncode=0, stdout="")
+        with mock.patch("subprocess.run", side_effect=[mock_get, mock_set_sys, mock_set_global]) as mock_run:
+            bazelci.ensure_git_hooks_path()
+            self.assertEqual(mock_run.call_count, 3)
+            mock_run.assert_any_call(
+                ["git", "config", "--global", "core.hooksPath", "/dev/null"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                check=True,
+            )
+
+    def test_verify_and_enforce_agent_security_non_buildkite(self):
+        with mock.patch.dict(os.environ, {}, clear=True):
+            with mock.patch.object(bazelci, "ensure_git_hooks_path") as mock_ensure:
+                bazelci.verify_and_enforce_agent_security()
+                mock_ensure.assert_not_called()
+
+    def test_verify_and_enforce_agent_security_buildkite_missing_config(self):
+        with mock.patch.dict(os.environ, {"BUILDKITE": "true"}):
+            with mock.patch.object(bazelci, "ensure_git_hooks_path") as mock_ensure:
+                with mock.patch.object(bazelci, "find_buildkite_agent_config_file", return_value=None):
+                    with mock.patch.object(bazelci, "eprint") as mock_eprint:
+                        bazelci.verify_and_enforce_agent_security()
+                        mock_ensure.assert_called_once()
+                        mock_eprint.assert_called_once()
+                        self.assertIn("No Buildkite agent configuration file found", mock_eprint.call_args[0][0])
+
+    def test_verify_and_enforce_agent_security_buildkite_valid_config(self):
+        config_path = self._create_temp_config("no-local-hooks=true\n")
+        with mock.patch.dict(os.environ, {"BUILDKITE": "true"}):
+            with mock.patch.object(bazelci, "ensure_git_hooks_path") as mock_ensure:
+                with mock.patch.object(bazelci, "find_buildkite_agent_config_file", return_value=config_path):
+                    bazelci.verify_and_enforce_agent_security()
+                    mock_ensure.assert_called_once()
+
+    def test_verify_and_enforce_agent_security_buildkite_invalid_config(self):
+        config_path = self._create_temp_config("no-local-hooks=false\n")
+        with mock.patch.dict(os.environ, {"BUILDKITE": "true"}):
+            with mock.patch.object(bazelci, "ensure_git_hooks_path") as mock_ensure:
+                with mock.patch.object(bazelci, "find_buildkite_agent_config_file", return_value=config_path):
+                    with self.assertRaises(bazelci.BuildkiteException):
+                        bazelci.verify_and_enforce_agent_security()
+                    mock_ensure.assert_called_once()
+
+
 if __name__ == "__main__":
     unittest.main()
