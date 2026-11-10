@@ -33,6 +33,7 @@ import argparse
 from datetime import datetime
 import json
 from pathlib import Path
+import subprocess
 import sys
 
 import yaml
@@ -49,9 +50,6 @@ def load_family_groups():
     for group in config["instance_groups"]:
         groups.setdefault(group["image_family"], []).append(group["name"])
     return groups
-
-
-FAMILY_GROUPS = load_family_groups()
 
 
 def select_rollback_images(family, images):
@@ -86,15 +84,19 @@ def list_images(family):
 
 
 def error_text(ex):
-    return (getattr(ex, "stderr", None) or "").strip() or str(ex)
+    if isinstance(ex, subprocess.CalledProcessError) and ex.stderr:
+        return ex.stderr.strip() or str(ex)
+    return str(ex)
 
 
 def main(argv=None):
+    family_groups = load_family_groups()
+
     # Parse the command-line argument.
     parser = argparse.ArgumentParser(description="Roll back VM image families in bazel-public.")
     parser.add_argument(
         "families",
-        help=f"Comma-separated image families: {', '.join(FAMILY_GROUPS)}",
+        help=f"Comma-separated image families: {', '.join(family_groups)}",
     )
     args = parser.parse_args(argv)
 
@@ -105,11 +107,11 @@ def main(argv=None):
         return 1
 
     # Reject unknown families before deprecating any image or looking up instance groups.
-    unknown = [f for f in families if f not in FAMILY_GROUPS]
+    unknown = [f for f in families if f not in family_groups]
     if unknown:
         print(
             f"Unknown families: {', '.join(unknown)}\n"
-            f"Available families: {', '.join(FAMILY_GROUPS)}",
+            f"Available families: {', '.join(family_groups)}",
             file=sys.stderr,
         )
         return 1
@@ -121,7 +123,7 @@ def main(argv=None):
         for family in families:
             newest, previous = select_rollback_images(family, list_images(family))
             plan.append((family, newest, previous))
-    except Exception as ex:
+    except (subprocess.CalledProcessError, RuntimeError) as ex:
         print(f"Rollback FAILED before any change: {error_text(ex)}. Nothing was changed.", file=sys.stderr)
         return 1
 
@@ -132,7 +134,7 @@ def main(argv=None):
                 "compute", "images", "deprecate", newest,
                 state="DEPRECATED", replacement=previous, project=PROJECT,
             )
-        except Exception as ex:
+        except subprocess.CalledProcessError as ex:
             print(
                 f"Rollback FAILED for {family}: {error_text(ex)}\n"
                 "Families listed above as 'deprecated' were rolled back, but instances were "
@@ -142,10 +144,10 @@ def main(argv=None):
             return 1
         print(f"{family}: deprecated {newest} (replacement: {previous})")
         print(f"  Undo: gcloud compute images deprecate {newest} --state=ACTIVE --project={PROJECT}")
-        print(f"        ./create_instances.py {','.join(FAMILY_GROUPS[family])}")
+        print(f"        ./create_instances.py {','.join(family_groups[family])}")
 
     # Print create_instances.py for manual runs (the pipeline passes groups separately).
-    groups = list(dict.fromkeys(g for f in families for g in FAMILY_GROUPS[f]))
+    groups = list(dict.fromkeys(g for f in families for g in family_groups[f]))
     print(f"\nNext step:\n  ./create_instances.py {','.join(groups)}")
     return 0
 
