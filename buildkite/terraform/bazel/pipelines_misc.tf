@@ -59,7 +59,7 @@ resource "buildkite_pipeline" "gerrit" {
     steps = {
       commands = [
         "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/gerrit.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload'"
+        "bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline | tee /dev/tty | buildkite-agent pipeline upload'"
       ]
     }
   })
