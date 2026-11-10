@@ -19,3 +19,7 @@ MODULE.bazel.lock
 
 # Vim files
 *.swp
+
+# Docker build image tag state
+/buildkite/docker/.image_tag
+
