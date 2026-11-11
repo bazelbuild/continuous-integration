@@ -30,7 +30,7 @@ echo "Building Buildkite Agent v${version} for Windows..."
 scripts/build-binary.sh windows amd64 "$version"
 
 echo "Uploading release artifacts to GCS..."
-gsutil cp pkg/* gs://bazel-buildkite-agent/v${version}-${commit}/
+gcloud storage cp pkg/* gs://bazel-buildkite-agent/v${version}-${commit}/
 
 echo "Done! This Buildkite Agent release can be download from:"
 for name in pkg/*; do

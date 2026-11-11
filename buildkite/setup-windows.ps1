@@ -11,20 +11,21 @@ Add-Type -AssemblyName "System.IO.Compression.FileSystem"
 ## Use TLS1.2 for HTTPS (fixes an issue where later steps can't connect to github.com)
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-## If choco is already installed, this is the second time the VM starts up, run GCESysprep and then shutdown
-if (Get-Command choco -ErrorAction SilentlyContinue) {
+function Write-SerialLog($msg) {
     $port = New-Object System.IO.Ports.SerialPort COM1,9600,None,8,one
     $port.Open()
-    $port.WriteLine("[setup-windows.ps1]: choco is already installed, this is the second time the VM starts up, running GCESysprep and then shutdown...")
+    $port.WriteLine("[setup-windows.ps1]: $msg")
     $port.Close()
+}
+
+## If choco is already installed, this is the second time the VM starts up, run GCESysprep and then shutdown
+if (Get-Command choco -ErrorAction SilentlyContinue) {
+    Write-SerialLog "choco is already installed, this is the second time the VM starts up, running GCESysprep and then shutdown..."
     GCESysprep
     exit 0
 }
 
-$port = New-Object System.IO.Ports.SerialPort COM1,9600,None,8,one
-$port.Open()
-$port.WriteLine("[setup-windows.ps1]: Starting to setup windows... This could take up to one hour, check C:/setup-stdout.log on the VM for progress.")
-$port.Close()
+Write-SerialLog "Starting to setup windows... This could take up to one hour, check C:/setup-stdout.log on the VM for progress."
 
 ## Create C:\temp
 Write-Host "Creating temporary folder C:\temp..."
@@ -73,6 +74,7 @@ Write-Host "Installing NTFSSecurity module..."
 Install-Module NTFSSecurity
 
 ## Install Chocolatey
+Write-SerialLog "Installing Chocolatey packages (curl, llvm, msys2)..."
 Write-Host "Installing Chocolatey..."
 # Chocolatey adds "C:\ProgramData\chocolatey\bin" to global PATH.
 Invoke-Expression ((New-Object Net.WebClient).DownloadString("https://chocolatey.org/install.ps1"))
@@ -102,11 +104,13 @@ $env:BAZEL_SH = [Environment]::GetEnvironmentVariable("BAZEL_SH", "Machine")
 Set-Alias bash "c:\tools\msys64\usr\bin\bash.exe"
 
 ## Install MSYS2 packages required by Bazel.
+Write-SerialLog "Updating MSYS2 packages with pacman..."
 Write-Host "Installing required MSYS2 packages..."
 & bash -lc "pacman --noconfirm -Syuu"
 & bash -lc "pacman --noconfirm --needed -S curl zip unzip gcc tar diffutils patch perl mingw-w64-x86_64-gcc ed"
 
 ## Install Git for Windows.
+Write-SerialLog "Installing Git for Windows..."
 Write-Host "Installing Git for Windows..."
 # FYI: choco adds "C:\Program Files\Git\cmd" to global PATH.
 & choco install git --params "'/GitOnlyOnPath'"
@@ -130,6 +134,7 @@ function InstallAzulZuluJDK($filename, $rootPath) {
 }
 
 ## Install Azul Zulu JDK 11
+Write-SerialLog "Installing Azul Zulu JDKs (11, 21)..."
 Write-Host "Installing Azul Zulu JDK 11..."
 InstallAzulZuluJDK "zulu11.52.13-ca-jdk11.0.13-win_x64.zip" "c:\openjdk11"
 
@@ -145,16 +150,19 @@ $env:JAVA_HOME = $jdk_root
 [Environment]::SetEnvironmentVariable("JAVA_HOME", $env:JAVA_HOME, "Machine")
 
 ## Install Visual C++ 2017 Build Tools.
+Write-SerialLog "Installing Visual C++ 2017 Build Tools..."
 Write-Host "Installing Visual C++ 2017 Build Tools..."
 & choco install visualstudio2017buildtools
 & choco install visualstudio2017-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.Tools.ARM --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
 
 ## Install Visual C++ 2019 Build Tools.
+Write-SerialLog "Installing Visual C++ 2019 Build Tools..."
 Write-Host "Installing Visual C++ 2019 Build Tools..."
 & choco install visualstudio2019buildtools
 & choco install visualstudio2019-workload-vctools --params "--add Microsoft.VisualStudio.Component.VC.Tools.ARM --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
 
 ## Install Visual C++ 2022 Build Tools.
+Write-SerialLog "Installing Visual C++ 2022 Build Tools..."
 Write-Host "Installing Visual C++ 2022 Build Tools..."
 $tool_version="14.39.17.9."
 & choco install visualstudio2022buildtools
@@ -176,6 +184,7 @@ foreach ($directory in $directories) {
 $env:BAZEL_VC = [Environment]::GetEnvironmentVariable("BAZEL_VC", "Machine")
 
 ## Install Python3
+Write-SerialLog "Installing Python 3 and packages..."
 Write-Host "Installing Python 3..."
 & choco install python312 --params "/InstallDir:C:\python3"
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine")
@@ -283,6 +292,7 @@ Expand-Archive -LiteralPath $bazelbuild_zip -DestinationPath $bazelbuild_root -F
 Remove-Item $bazelbuild_zip
 
 ## Download and install the Buildkite agent.
+Write-SerialLog "Installing Buildkite agent and NSSM service..."
 Write-Host "Grabbing latest Buildkite Agent version number from GitHub..."
 $url = "https://github.com/buildkite/agent/releases/latest"
 $req = [system.Net.HttpWebRequest]::Create($url)
@@ -353,6 +363,7 @@ $pagefile.MaximumSize = 64 * 1024;
 $pagefile.Put();
 
 ### Install security updates
+Write-SerialLog "Installing Windows security updates..."
 # 1. Install the module (if not already present in the base image)
 if (-not (Get-Module -ListAvailable -Name PSWindowsUpdate)) {
     Write-Output "Installing PSWindowsUpdate module..."
@@ -383,10 +394,7 @@ catch {
 
 Write-Host "All done, rebooting..."
 
-$port = New-Object System.IO.Ports.SerialPort COM1,9600,None,8,one
-$port.Open()
-$port.WriteLine("[setup-windows.ps1]: Setup windows done, rebooting...")
-$port.Close()
+Write-SerialLog "Setup windows done, rebooting..."
 
 Restart-Computer
 

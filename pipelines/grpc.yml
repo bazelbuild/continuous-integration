@@ -2,32 +2,58 @@
 bazel: "8.x"
 
 matrix:
-  platform:
+  linux_platform:
     - ubuntu2204
     - ubuntu2404
-    - macos_arm64
 
 tasks:
-  unix:
-    platform: ${{ platform }}
-    build_targets:
+  linux:
+    platform: ${{ linux_platform }}
+    environment: &env
+      BAZELISK_SKIP_WRAPPER: "true"
+    build_flags:
+      - "--build_tag_filters=-no_linux"
+      - "--cxxopt=-Wno-invalid-partial-specialization"
+      - "--host_cxxopt=-Wno-invalid-partial-specialization"
+    test_flags:
+      - "--test_tag_filters=-no_linux"
+      - "--cxxopt=-Wno-invalid-partial-specialization"
+      - "--host_cxxopt=-Wno-invalid-partial-specialization"
+    build_targets: &build_targets
       - "//:all"
       - "//examples/cpp/..."
       - "//examples/protos/..."
-    test_targets:
+    test_targets: &test_targets
       - "//test/core/config:all"
       - "//test/core/util:all"
       - "//test/cpp/common:all"
+  macos_arm64:
+    environment: *env
+    build_flags:
+      - "--build_tag_filters=-no_mac"
+    test_flags:
+      - "--test_tag_filters=-no_mac"
+    build_targets: *build_targets
+    test_targets: *test_targets
   windows:
+    environment: *env
     build_flags:
       - "--define=protobuf_allow_msvc=true"
+      - "--build_tag_filters=-no_windows,-grpc-fuzztest"
     test_flags:
       - "--define=protobuf_allow_msvc=true"
+      - "--test_tag_filters=-no_windows,-grpc-fuzztest"
+      # directory_reader_test lists a runfiles directory.
+      - "--enable_runfiles"
     build_targets:
       - "//:all"
       - "//examples/cpp/..."
       - "//examples/protos/..."
-    test_targets:
-      - "//test/core/config:all"
-      - "//test/core/util:all"
-      - "//test/cpp/common:all"
+      # TODO: Remove these exclusions after the fixes land in gRPC.
+      # Uses POSIX sleep().
+      - "-//examples/cpp/flow_control/..."
+      # Uses the non-standard type uint.
+      - "-//examples/cpp/csm:csm_greeter_client"
+      # grpcio has //:grpc in data, which forces per-library DLL links.
+      - "-//examples/protos:helloworld_py_pb2_grpc"
+    test_targets: *test_targets
