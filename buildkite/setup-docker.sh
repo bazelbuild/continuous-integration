@@ -226,25 +226,41 @@ gcloud auth configure-docker --quiet
 
 ### Pull the Docker images that we need in production.
 
-docker pull "gcr.io/bazel-public/rockylinux8@sha256:a3a3ab64e044487bb4f4de79c1d9c49fb0962c5df788ffb7214540af8e77ebc2" &
-docker pull "gcr.io/bazel-public/rockylinux8-java11@sha256:05f605f1eb3b1aecb9713057a4436a901929fcb8217b464806bb7603d2d0be49" &
-docker pull "gcr.io/bazel-public/rockylinux8-java11-devtoolset10@sha256:4a483fa96812c6d20c8d07a783cf59cd02d8364e1831f8fa64221019427c781a" &
-docker pull "gcr.io/bazel-public/rockylinux8-releaser@sha256:2a61b4a50ea72e02764b54ac119b6dd64f96ae513401f71e1bbdff4470335306" &
-docker pull "gcr.io/bazel-public/debian10-java11@sha256:2cafd5671879a2693dfbb2abb0f5b06e808ba2a22a17b990da6ae8a3e195ed25" &
-docker pull "gcr.io/bazel-public/debian11-java17@sha256:42da27bb2aa6101b3e03728c0f18e20772e70f708e84d708e4f3a28ea40560d8" &
-docker pull "gcr.io/bazel-public/debian12@sha256:fd2576f95180a0fabdddc6154a2dd4af18e8bfd9b6e55f288cd0a72ab2d5019a" &
-docker pull "gcr.io/bazel-public/debian13@sha256:ae003c171d39bc7164a705c4d8229633f518aaa36fcacf55c8d863f64e16c9f6" &
-docker pull "gcr.io/bazel-public/ubuntu1804-java11@sha256:25cbb00de12a00485b215440d4ef58469ba305afa54283e40f5b7a8b8ca13c0f" &
-docker pull "gcr.io/bazel-public/ubuntu2004-java11@sha256:da0038022a8173e05549fcd003d0af97f7e89a1ee29c6f2e19db10ae7d8dc328" &
-docker pull "gcr.io/bazel-public/ubuntu2004@sha256:ffa90e8bad9b3952a40a0f0a9a42e3438faf0002aaa3f20cba6dd2a258ec1a56" &
-docker pull "gcr.io/bazel-public/ubuntu2004-kythe@sha256:3862183a7674064e7e36ab851166e5a20eaccb47c8dd7205354fc8de6a6be0e9" &
-docker pull "gcr.io/bazel-public/ubuntu2204-kythe@sha256:e7bee6f5437c7a3a6622a508be5000bf7cd92897d5fcb46d64afb0746673f876" &
-docker pull "gcr.io/bazel-public/ubuntu2404-kythe@sha256:186b7bd1b9b65d59423550fa85c197bffbc207f2bdee05df81b4e38bbec07a9d" &
-docker pull "gcr.io/bazel-public/ubuntu2204-java17@sha256:75a622ed24a18d1af44aa1e6ada0a55efaf6dbffd682ad83afa6432bcedfd3b2" &
-docker pull "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398" &
-docker pull "gcr.io/bazel-public/ubuntu2404@sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8" &
-docker pull "gcr.io/bazel-public/fedora43-java25@sha256:36378b3c3c1f5b5f621bbf3160dc088ab7240fb0506d83253ae40d704b992323" &
-docker pull "gcr.io/bazel-public/fedora45-java25@sha256:014e13b0ece7446646a901afb6b69434b8a7e5945e74ff0a633aae00116d1a22" &
+if [[ "$(uname -m)" == "aarch64" ]]; then
+  docker pull "gcr.io/bazel-public/rockylinux8@sha256:2b9a02bf3936565f97a9a6f3f2c069277cc130dc9343bcea5d6a7ff2f6008b4f" &
+  docker pull "gcr.io/bazel-public/rockylinux8-java11@sha256:64bdb00f8a652c248de3abb7df2cc012630dab1998c90cab21b50c2f61e50bd0" &
+  docker pull "gcr.io/bazel-public/rockylinux8-java11-devtoolset10@sha256:37ca2a50e2866dac7ac2bec786487702578eb8e89dc058249ced0cd721602f2d" &
+  docker pull "gcr.io/bazel-public/rockylinux8-releaser@sha256:671ed89d34afaddb86770a7f0a54c7bb3decf91a8e31bbf1f8e33dd8164419b5" &
+  docker pull "gcr.io/bazel-public/debian12@sha256:c96553a0acd5728f59539b6690a1810ae29ddd617e10545cc74c5d8722e022d8" &
+  docker pull "gcr.io/bazel-public/debian13@sha256:0c63a0d5c11bd40533ff785cb8c25887d740d3acf214d653b14abe7f42ec07ae" &
+  docker pull "gcr.io/bazel-public/ubuntu2004-java11@sha256:51962774622467357982690143105843a387e6c99d465778c212eecdd047f039" &
+  docker pull "gcr.io/bazel-public/ubuntu2004@sha256:91b7cac1ac7ccc22a7c814a37bb7e6c4c1cb8ccf6080d6a9136afd19f31d9a85" &
+  docker pull "gcr.io/bazel-public/ubuntu2204-kythe@sha256:e07ee8ad9535c5fded161149a98a8792a94e9a01f4680765b86091e047d7d342" &
+  docker pull "gcr.io/bazel-public/ubuntu2404-kythe@sha256:7e8d1e235dc5da1ad9527e772dd54236a98c2a57157151913e250c303291941e" &
+  docker pull "gcr.io/bazel-public/ubuntu2204-java17@sha256:3d77f0f05da01ad35a1338c2d97675917d95d45fd4be8778918c776f984c4587" &
+  docker pull "gcr.io/bazel-public/ubuntu2204@sha256:7efa0b902d648787c9c7995d1dd26672ce5bf53cefb1e6103d12e36672229997" &
+  docker pull "gcr.io/bazel-public/ubuntu2404@sha256:5f75cef6a0dc845b1727f03ec4856fe17873e6ab3fd91648167df9cfcb612f6c" &
+else
+  docker pull "gcr.io/bazel-public/rockylinux8@sha256:a3a3ab64e044487bb4f4de79c1d9c49fb0962c5df788ffb7214540af8e77ebc2" &
+  docker pull "gcr.io/bazel-public/rockylinux8-java11@sha256:05f605f1eb3b1aecb9713057a4436a901929fcb8217b464806bb7603d2d0be49" &
+  docker pull "gcr.io/bazel-public/rockylinux8-java11-devtoolset10@sha256:4a483fa96812c6d20c8d07a783cf59cd02d8364e1831f8fa64221019427c781a" &
+  docker pull "gcr.io/bazel-public/rockylinux8-releaser@sha256:2a61b4a50ea72e02764b54ac119b6dd64f96ae513401f71e1bbdff4470335306" &
+  docker pull "gcr.io/bazel-public/debian10-java11@sha256:2cafd5671879a2693dfbb2abb0f5b06e808ba2a22a17b990da6ae8a3e195ed25" &
+  docker pull "gcr.io/bazel-public/debian11-java17@sha256:42da27bb2aa6101b3e03728c0f18e20772e70f708e84d708e4f3a28ea40560d8" &
+  docker pull "gcr.io/bazel-public/debian12@sha256:fd2576f95180a0fabdddc6154a2dd4af18e8bfd9b6e55f288cd0a72ab2d5019a" &
+  docker pull "gcr.io/bazel-public/debian13@sha256:ae003c171d39bc7164a705c4d8229633f518aaa36fcacf55c8d863f64e16c9f6" &
+  docker pull "gcr.io/bazel-public/ubuntu1804-java11@sha256:25cbb00de12a00485b215440d4ef58469ba305afa54283e40f5b7a8b8ca13c0f" &
+  docker pull "gcr.io/bazel-public/ubuntu2004-java11@sha256:da0038022a8173e05549fcd003d0af97f7e89a1ee29c6f2e19db10ae7d8dc328" &
+  docker pull "gcr.io/bazel-public/ubuntu2004@sha256:ffa90e8bad9b3952a40a0f0a9a42e3438faf0002aaa3f20cba6dd2a258ec1a56" &
+  docker pull "gcr.io/bazel-public/ubuntu2004-kythe@sha256:3862183a7674064e7e36ab851166e5a20eaccb47c8dd7205354fc8de6a6be0e9" &
+  docker pull "gcr.io/bazel-public/ubuntu2204-kythe@sha256:e7bee6f5437c7a3a6622a508be5000bf7cd92897d5fcb46d64afb0746673f876" &
+  docker pull "gcr.io/bazel-public/ubuntu2404-kythe@sha256:186b7bd1b9b65d59423550fa85c197bffbc207f2bdee05df81b4e38bbec07a9d" &
+  docker pull "gcr.io/bazel-public/ubuntu2204-java17@sha256:75a622ed24a18d1af44aa1e6ada0a55efaf6dbffd682ad83afa6432bcedfd3b2" &
+  docker pull "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398" &
+  docker pull "gcr.io/bazel-public/ubuntu2404@sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8" &
+  docker pull "gcr.io/bazel-public/fedora43-java25@sha256:36378b3c3c1f5b5f621bbf3160dc088ab7240fb0506d83253ae40d704b992323" &
+  docker pull "gcr.io/bazel-public/fedora45-java25@sha256:014e13b0ece7446646a901afb6b69434b8a7e5945e74ff0a633aae00116d1a22" &
+fi
 wait
 
 poweroff
