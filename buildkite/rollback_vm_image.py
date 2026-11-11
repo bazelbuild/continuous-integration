@@ -89,6 +89,15 @@ def error_text(ex):
     return str(ex)
 
 
+def print_deprecate_error(family, err):
+    print(
+        f"Rollback FAILED for {family}: {err}\n"
+        "Families listed above as 'deprecated' were rolled back, but instances were "
+        "NOT recreated. Use their Undo commands, or run create_instances.py for them.",
+        file=sys.stderr,
+    )
+
+
 def main(argv=None):
     family_groups = load_family_groups()
 
@@ -126,6 +135,9 @@ def main(argv=None):
     except (subprocess.CalledProcessError, RuntimeError) as ex:
         print(f"Rollback FAILED before any change: {error_text(ex)}. Nothing was changed.", file=sys.stderr)
         return 1
+    except Exception as ex:
+        print(f"Rollback FAILED before any change: {ex}. Nothing was changed.", file=sys.stderr)
+        return 1
 
     # Deprecate the newest image in favor of the previous one and print the undo commands.
     for family, newest, previous in plan:
@@ -135,12 +147,10 @@ def main(argv=None):
                 state="DEPRECATED", replacement=previous, project=PROJECT,
             )
         except subprocess.CalledProcessError as ex:
-            print(
-                f"Rollback FAILED for {family}: {error_text(ex)}\n"
-                "Families listed above as 'deprecated' were rolled back, but instances were "
-                "NOT recreated. Use their Undo commands, or run create_instances.py for them.",
-                file=sys.stderr,
-            )
+            print_deprecate_error(family, error_text(ex))
+            return 1
+        except Exception as ex:
+            print_deprecate_error(family, str(ex))
             return 1
         print(f"{family}: deprecated {newest} (replacement: {previous})")
         print(f"  Undo: gcloud compute images deprecate {newest} --state=ACTIVE --project={PROJECT}")
