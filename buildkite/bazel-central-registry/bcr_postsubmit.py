@@ -184,7 +184,12 @@ def pin_mtimes(root):
             )
 
 
-def rsync_modules(extra_args=()):
+def sync_bcr_content():
+    print_expanded_group(":gcloud: Sync BCR content")
+    subprocess.check_output(
+        ["gcloud", "storage", "cp", "--cache-control=no-cache", "./bazel_registry.json", BCR_BUCKET]
+    )
+    pin_mtimes("./modules")
     subprocess.check_output(
         [
             "gcloud",
@@ -195,23 +200,9 @@ def rsync_modules(extra_args=()):
             "--checksums-only",
             "--ignore-symlinks",
             "--cache-control=no-cache",
-            *extra_args,
             "./modules",
             BCR_BUCKET + "modules",
         ]
-    )
-
-
-def sync_bcr_content():
-    print_expanded_group(":gcloud: Sync BCR content")
-    pin_mtimes("./modules")
-    # Upload new module versions before the metadata.json files that refer to
-    # them. Otherwise a client can see a new version in metadata.json, get a
-    # 404 for its MODULE.bazel, and the 404 can stay in caches.
-    rsync_modules(["--exclude", r".*metadata\.json$"])
-    rsync_modules()
-    subprocess.check_output(
-        ["gcloud", "storage", "cp", "--cache-control=no-cache", "./bazel_registry.json", BCR_BUCKET]
     )
 
 
