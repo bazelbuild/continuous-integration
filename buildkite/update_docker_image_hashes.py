@@ -47,6 +47,7 @@ IMAGE_KEYS = [
     "fedora39-java17",
     "fedora40-java21",
     "fedora43-java25",
+    "fedora45-java25",
     "docgen",
 ]
 

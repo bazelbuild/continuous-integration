@@ -23,6 +23,7 @@ import copy
 import datetime
 from glob import glob
 import hashlib
+import heapq
 import itertools
 import json
 import multiprocessing
@@ -35,9 +36,9 @@ import requests
 import shlex
 import shutil
 import stat
+import statistics
 import subprocess
 import sys
-import tarfile
 import tempfile
 import time
 from typing import List
@@ -337,7 +338,10 @@ DOWNSTREAM_PROJECTS = {
 # IMAGE_HASHES dict.
 EOL_PLATFORMS = frozenset(
     [
+        "debian10",
         "debian11",
+        "fedora39",
+        "fedora40",
         "ubuntu1604",
         "ubuntu1804",
         "ubuntu2004",
@@ -426,10 +430,13 @@ IMAGE_HASHES = {
         "amd64": "sha256:efb171659e4e61c741099bee47758d3e8816ed28be8db09276e348925a0c2390",
     },
     "fedora43-java25": {
-        "amd64": "sha256:95d95492c745de91ace11e4b166d55cd0706fe29b6b4006fffc5655d6051face",
+        "amd64": "sha256:36378b3c3c1f5b5f621bbf3160dc088ab7240fb0506d83253ae40d704b992323",
+    },
+    "fedora45-java25": {
+        "amd64": "sha256:014e13b0ece7446646a901afb6b69434b8a7e5945e74ff0a633aae00116d1a22",
     },
     "docgen": {
-        "amd64": "sha256:e6ac038ad949be3e18573735e8a46f5ac74f2e59af2196ed50da0187ea87c259",
+        "amd64": "sha256:3b5b8038f921e7b8d319b07123d82b677097cc5de5fd8b9bd48099073348d589",
     },
 }
 
@@ -645,6 +652,13 @@ PLATFORMS = {
         "docker-image": get_docker_image("fedora43-java25"),
         "python": "python3",
     },
+    "fedora45": {
+        "name": "Fedora 45 (OpenJDK 25)",
+        "emoji-name": ":fedora: Fedora 45 (OpenJDK 25)",
+        "publish_binary": [],
+        "docker-image": get_docker_image("fedora45-java25"),
+        "python": "python3",
+    },
     "macos": {
         "name": "macOS",
         "emoji-name": ":darwin: macOS",
@@ -712,8 +726,18 @@ RUNNER_CMD = "bazelci.py runner"
 USE_BAZEL_DIFF_ENV_VAR = "USE_BAZEL_DIFF"
 # DISABLE_BAZEL_DIFF wins, even if someone sets USE_BAZEL_DIFF (e.g. presubmit check).
 DISABLE_BAZEL_DIFF_ENV_VAR = "DISABLE_BAZEL_DIFF"
+DISABLE_TEST_CACHE_ENV_VAR = "DISABLE_TEST_CACHE"
+
+USE_SMART_SHARDING_ENV_VAR = "USE_SMART_SHARDING"
+TEST_DURATIONS_GCS_GENERATION_ENV_VAR = "TEST_DURATIONS_GCS_GENERATION"
+TEST_DURATIONS_URL = "gs://bazel-ci-test-durations/test_durations_000000000000.json"
+DEFAULT_TEST_DURATION_SECONDS = 300.0
 
 BAZEL_DIFF_ANNOTATION_CTX = "'diff'"
+
+# Exit code of a job whose bazel-diff run failed. Buildkite retries such jobs automatically.
+# 75 is EX_TEMPFAIL from sysexits.h and isn't used by Bazel itself.
+BAZEL_DIFF_FAILURE_EXIT_CODE = 75
 
 # TODO(fweikert): Install bazel-diff on the Docker images and on the Mac machines
 BAZEL_DIFF_URL = (
@@ -1140,6 +1164,12 @@ def is_mac():
     return platform_module.system() == "Darwin"
 
 
+def is_intel_mac(platform=None):
+    if platform:
+        return platform == "macos"
+    return is_mac() and platform_module.machine() in ("x86_64", "amd64")
+
+
 def is_linux():
     return platform_module.system() == "Linux"
 
@@ -1154,6 +1184,22 @@ def gsutil_command():
 
 def gcloud_command():
     return "gcloud.cmd" if is_windows() else "gcloud"
+
+
+def quote_arg(platform, s):
+    if "windows" in platform:
+        if any(c in s for c in ("\r", "\n", "\x00")):
+            raise BuildkiteException(
+                f"Unsupported control character in Windows command argument: {s!r}"
+            )
+        if not s:
+            return '""'
+        # Escape for MSVC UCRT / CommandLineToArgvW (using "" for embedded quotes so cmd.exe
+        # never leaves quote mode on unquoted characters) and double % for .bat execution.
+        escaped = re.sub(r'(\\*)"', r'\1\1""', s)
+        escaped = re.sub(r"(\\+)$", r"\1\1", escaped)
+        return '"' + escaped.replace("%", "%%") + '"'
+    return shlex.quote(s)
 
 
 def match_matrix_attr_pattern(s):
@@ -1703,6 +1749,7 @@ def execute_commands(
         PrepareRepoInCwd,
         git_commit,
         test_flags,
+        platform=platform,
     )
 
     if build_targets:
@@ -1833,7 +1880,8 @@ def execute_commands(
 
         try:
             should_upload_kzip = (
-                True if index_upload_policy == INDEX_UPLOAD_POLICY_ALWAYS else False
+                current_branch_is_main_branch()
+                and index_upload_policy == INDEX_UPLOAD_POLICY_ALWAYS
             )
             try:
                 execute_bazel_build_with_kythe(
@@ -1845,7 +1893,10 @@ def execute_commands(
                     None,
                 )
 
-                if index_upload_policy == INDEX_UPLOAD_POLICY_IF_BUILD_SUCCESS:
+                if (
+                    current_branch_is_main_branch()
+                    and index_upload_policy == INDEX_UPLOAD_POLICY_IF_BUILD_SUCCESS
+                ):
                     should_upload_kzip = True
             except subprocess.CalledProcessError as e:
                 # If not running with Always policy, raise the build error.
@@ -1964,7 +2015,7 @@ def current_branch_is_main_branch():
 def get_release_name_from_branch_name():
     version = "unknown"
     if os.path.exists("MODULE.bazel"):
-        with open("MODULE.bazel", "r") as f:
+        with open("MODULE.bazel", "r", encoding="utf-8", errors="replace") as f:
             match = re.search(r'module\s*\([^)]*?version\s*=\s*"(\d+\.\d+\.\d+)', f.read())
             if match:
                 version = match.group(1)
@@ -1974,7 +2025,8 @@ def get_release_name_from_branch_name():
 
 def is_pull_request():
     third_party_repo = os.getenv("BUILDKITE_PULL_REQUEST_REPO", "")
-    return len(third_party_repo) > 0
+    pull_request = os.getenv("BUILDKITE_PULL_REQUEST", "false")
+    return len(third_party_repo) > 0 or pull_request not in ("", "false")
 
 
 def print_bazel_version_info(bazel_binary, platform):
@@ -2104,7 +2156,7 @@ def get_mirror_root():
     elif is_windows():
         return "c:\\buildkite\\bazelbuild\\"
 
-    return "/var/lib/bazelbuild/"
+    return "/var/lib/gitmirrors/"
 
 
 def get_repositories_root():
@@ -2242,10 +2294,10 @@ def remote_caching_flags(platform, accept_cached=True):
             subprocess.check_output(["/usr/bin/xcodebuild", "-version"]),
         ]
 
-    # Use GCS for caching builds running on MacService.
-    # Use RBE for caching builds running on GCE.
+    # Use GCS for caching builds running on Intel Mac machines (to avoid CAS download stalls in b/344853999).
+    # Use RBE for caching builds running on GCE and macOS arm64.
     remote_cache_flags = []
-    if is_mac():
+    if is_intel_mac(platform):
         bucket_id = "trusted" if THIS_IS_TRUSTED else "untrusted"
         remote_cache_flags = [
             f"--remote_cache=https://storage.googleapis.com/bazel-{bucket_id}-build-cache"
@@ -2576,6 +2628,7 @@ def calculate_targets(
     ws_setup_func,
     git_commit,
     test_flags,
+    platform=None,
 ):
     print_collapsed_group(":dart: Calculating targets")
 
@@ -2619,6 +2672,9 @@ def calculate_targets(
 
     expanded_test_targets = expand_test_target_patterns(bazel_binary, test_targets, test_flags)
 
+    # Every shard runs bazel-diff on its own and splits the result afterwards.
+    # This is only safe because filter_unchanged_targets() fails the job instead of
+    # falling back to the unfiltered list: all shards that pass must split the same list.
     actual_test_targets = (
         filter_unchanged_targets(
             expanded_test_targets,
@@ -2628,7 +2684,7 @@ def calculate_targets(
             diffbase,
             git_commit,
         )
-        if use_bazel_diff
+        if use_bazel_diff and expanded_test_targets
         else expanded_test_targets
     )
 
@@ -2639,10 +2695,26 @@ def calculate_targets(
             )
         )
         sorted_test_targets = sorted(actual_test_targets)
-        actual_test_targets = get_targets_for_shard(sorted_test_targets, shard_id, shard_count)
+
+        test_durations = None
+        if is_trueish(os.getenv(USE_SMART_SHARDING_ENV_VAR, "")):
+            generation = os.getenv(TEST_DURATIONS_GCS_GENERATION_ENV_VAR, "").strip()
+            url = f"{TEST_DURATIONS_URL}#{generation}" if generation else TEST_DURATIONS_URL
+            tmpdir = tempfile.mkdtemp()
+            try:
+                downloaded_file = download_file(url, tmpdir, "test_durations.json")
+                test_durations = load_test_durations(downloaded_file, platform)
+            finally:
+                shutil.rmtree(tmpdir, ignore_errors=True)
+
+        actual_test_targets = get_targets_for_shard(
+            sorted_test_targets, shard_id, shard_count, test_durations=test_durations
+        )
 
         if shard_id == 0:
-            upload_shard_distribution(sorted_test_targets, shard_count)
+            upload_shard_distribution(
+                sorted_test_targets, shard_count, test_durations=test_durations
+            )
 
     return build_targets, actual_test_targets, coverage_targets, index_targets
 
@@ -2780,14 +2852,8 @@ def filter_unchanged_targets(
         eprint(f"Resolved diffbase to {resolved_diffbase}")
 
         eprint("Cloning comparison repository...")
-        diffbase_archive_url = get_commit_archive_url(resolved_diffbase)
-        local_archive_path = download_file(diffbase_archive_url, tmpdir, "repo.tar.gz")
         diffbase_repo_dir = os.path.join(tmpdir, resolved_diffbase)
-        extract_archive(
-            local_archive_path,
-            diffbase_repo_dir,
-            strip_top_level_dir=not is_googlesource_repo(diffbase_archive_url),
-        )
+        checkout_diffbase(resolved_diffbase, diffbase_repo_dir)
 
         eprint("Setting up comparison repository...")
         os.chdir(diffbase_repo_dir)
@@ -2801,35 +2867,38 @@ def filter_unchanged_targets(
             bazel_diff_path, diffbase_repo_dir, workspace_dir, bazel_binary, tmpdir
         )
     except (BuildkiteException, BuildkiteInfraException) as ex:
+        # Don't fall back to the unfiltered target list: each shard runs bazel-diff on its own,
+        # and a shard that falls back would split a different list than the other shards,
+        # which drops or duplicates targets. Fail the job instead so Buildkite retries it.
         try:
             execute_command(
                 [
                     "buildkite-agent",
                     "annotate",
-                    "--style=warning",
+                    "--style=error",
                     "--context",
                     "'diff_failed'",
-                    "This build runs all test targets even though `{}` is set "
-                    "since bazel-diff failed with an error:\n```\n{}\n```".format(
-                        USE_BAZEL_DIFF_ENV_VAR, ex
-                    ),
+                    "bazel-diff failed with an error, so this job fails and Buildkite "
+                    "retries it:\n```\n{}\n```".format(ex),
                 ]
             )
             execute_command(
                 ["buildkite-agent", "annotation", "remove", "--context", BAZEL_DIFF_ANNOTATION_CTX]
             )
-        finally:
-            return expanded_test_targets
+        except Exception:
+            pass
+        raise BuildkiteException(
+            "bazel-diff failed: {}".format(ex), exit_code=BAZEL_DIFF_FAILURE_EXIT_CODE
+        ) from ex
     finally:
+        os.chdir(workspace_dir)
         try:
             shutil.rmtree(tmpdir)
         except:
             pass
 
-        os.chdir(workspace_dir)
-
     config_target_set = set(expanded_test_targets)
-    remaining_targets = list(config_target_set.intersection(affected_targets))
+    remaining_targets = sorted(config_target_set.intersection(affected_targets))
     if len(remaining_targets) < len(expanded_test_targets):
         print_collapsed_group(
             ":scissors: Successfully reduced test targets from {} to {}".format(
@@ -2855,11 +2924,16 @@ def filter_unchanged_targets(
     return remaining_targets
 
 
-def upload_shard_distribution(sorted_test_targets, shard_count):
+def upload_shard_distribution(sorted_test_targets, shard_count, test_durations=None):
     tmpdir = tempfile.mkdtemp()
     try:
+        partitions = (
+            partition_targets_bin_packing(sorted_test_targets, shard_count, test_durations)
+            if test_durations
+            else None
+        )
         data = {
-            s + 1: get_targets_for_shard(sorted_test_targets, s, shard_count)
+            s + 1: partitions[s] if partitions else sorted_test_targets[s::shard_count]
             for s in range(shard_count)
         }
         base = f"{os.getenv('BUILDKITE_PIPELINE_SLUG')}_{os.getenv('BUILDKITE_BUILD_NUMBER')}_shards.json"
@@ -2910,44 +2984,53 @@ def resolve_diffbase(diffbase):
     )
 
 
-def is_googlesource_repo(repo_url):
-    return "googlesource" in repo_url
-
-
-def get_commit_archive_url(resolved_diffbase):
-    repo = os.getenv("BUILDKITE_REPO", "")
-    # Hack: Prefer GitHub since unauthenticated
-    # requests to googlesource.com are unreliable.
-    # There is a very small risk of race conditions
-    # since commits are pushed to googlesource.com first
-    # before being mirrored to GitHub.
-    # However, this is highly unlikely to cause problems in reality.
-    # Currently no other repos are using bazel diff.
-    repo_url = repo.replace("https://bazel.googlesource.com/bazel.git", "https://github.com/bazelbuild/bazel.git")
-    prefix = "+" if is_googlesource_repo(repo_url) else ""
-    return repo_url.replace(".git", "/{}archive/{}.tar.gz".format(prefix, resolved_diffbase))
-
-
-def extract_archive(archive_path, dest_dir, strip_top_level_dir):
-    if not os.path.isdir(dest_dir):
-        os.mkdir(dest_dir)
-
+def checkout_diffbase(resolved_diffbase, dest_dir):
     try:
-        with tarfile.open(archive_path, mode="r:gz") as archive:
-            if strip_top_level_dir:
-                for member in archive.getmembers():
-                    member.name = "/".join(member.name.split("/")[1:])
-                    archive.extract(member, dest_dir)
-            else:
-                archive.extractall(dest_dir)
-    except tarfile.TarError as ex:
-        raise BuildkiteInfraException("Failed to extract repository archive: {}".format(ex)) from ex
+        if (
+            execute_command(
+                ["git", "cat-file", "-e", f"{resolved_diffbase}^{{commit}}"],
+                fail_if_nonzero=False,
+            )
+            != 0
+        ):
+            execute_command(
+                ["git", "fetch", "origin", resolved_diffbase],
+                capture_stderr=True,
+            )
+        git_root = execute_command_and_get_output(
+            ["git", "rev-parse", "--show-toplevel"],
+            print_output=False,
+        ).strip()
+        execute_command(
+            ["git", "clone", "--shared", "--no-checkout", git_root, dest_dir],
+            capture_stderr=True,
+        )
+        execute_command(
+            ["git", "-C", dest_dir, "checkout", "--detach", "--quiet", resolved_diffbase],
+            capture_stderr=True,
+        )
+    except subprocess.CalledProcessError as ex:
+        raise BuildkiteInfraException(
+            "Failed to check out {} to {}: {}\n{}".format(
+                resolved_diffbase, dest_dir, ex, ex.stderr
+            )
+        ) from ex
 
 
 def download_file(url, dest_dir, dest_filename):
     local_path = os.path.join(dest_dir, dest_filename)
     try:
-        execute_command(["curl", *CURL_FLAGS, url, "-o", local_path], capture_stderr=True)
+        if url.startswith("gs://"):
+            for attempt in range(1, 4):
+                try:
+                    execute_command([gsutil_command(), "cp", url, local_path], capture_stderr=True)
+                    break
+                except subprocess.CalledProcessError:
+                    if attempt == 3:
+                        raise
+                    time.sleep(2 * attempt)
+        else:
+            execute_command(["curl", *CURL_FLAGS, url, "-o", local_path], capture_stderr=True)
     except subprocess.CalledProcessError as ex:
         raise BuildkiteInfraException("Failed to download {}: {}\n{}".format(url, ex, ex.stderr))
     return local_path
@@ -3017,9 +3100,88 @@ def partition_list(items):
     return included, excluded, added_back
 
 
-def get_targets_for_shard(sorted_test_targets, shard_id, shard_count):
-    # TODO(fweikert): implement a more sophisticated algorithm
-    return sorted_test_targets[shard_id::shard_count]
+def resolve_gcs_generation(url):
+    for attempt in range(1, 4):
+        try:
+            output = execute_command_and_get_output(
+                [gsutil_command(), "stat", url], print_output=False
+            )
+            break
+        except subprocess.CalledProcessError as ex:
+            if attempt == 3:
+                eprint(f"Warning: Failed to stat {url}, falling back to unpinned object: {ex}")
+                return None
+            time.sleep(2 * attempt)
+    match = re.search(r"Generation:\s*([0-9]+)", output)
+    if not match:
+        eprint(f"Warning: Could not parse generation for {url}, falling back to unpinned object")
+        return None
+    return match.group(1)
+
+
+def get_metrics_platform(platform):
+    """Maps a bazelci platform or Buildkite queue name to its BigQuery metrics platform."""
+    if not platform:
+        return None
+    queue = PLATFORMS[platform].get("queue", "default") if platform in PLATFORMS else platform
+    return {"default": "linux", "arm64": "linux_arm64"}.get(queue, queue)
+
+
+def load_test_durations(source, platform):
+    """Loads test durations from a BigQuery export file (newline-delimited JSON)."""
+    if not platform:
+        return {}
+    allowed_platforms = {platform, get_metrics_platform(platform)}
+    durations = {}
+    try:
+        with open(source, mode="r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                row = json.loads(line)
+                if not isinstance(row, dict):
+                    raise ValueError(f"Expected JSON object, got {type(row).__name__}")
+                val = float(row["duration"])
+                if row["target"] and val > 0 and row.get("platform") in allowed_platforms:
+                    # Exported by daily-ci-test-durations-export as the 14-day median of
+                    # GREATEST(duration_s, SUM(shard_durations)) over PASSED runs — so for a
+                    # sharded test target this is already the sum across its test shards, which
+                    # reflects total load since all shards of a target run in the same CI job.
+                    durations[row["target"]] = val
+    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as ex:
+        raise BuildkiteInfraException(f"Failed to load test durations from {source}: {ex}")
+    return durations
+
+
+def partition_targets_bin_packing(sorted_test_targets, shard_count, test_durations):
+    """Partitions targets across shards using LPT (Longest Processing Time first) bin packing."""
+    fallback_dur = (
+        statistics.median(test_durations.values())
+        if test_durations
+        else DEFAULT_TEST_DURATION_SECONDS
+    )
+    targets_by_duration = sorted(
+        sorted_test_targets,
+        key=lambda t: (-test_durations.get(t, fallback_dur), t),
+    )
+
+    heap = [(0.0, i) for i in range(shard_count)]
+    shard_targets = {i: [] for i in range(shard_count)}
+    for target in targets_by_duration:
+        weight, shard_idx = heapq.heappop(heap)
+        shard_targets[shard_idx].append(target)
+        heapq.heappush(heap, (weight + test_durations.get(target, fallback_dur), shard_idx))
+
+    return {s: sorted(targets) for s, targets in shard_targets.items()}
+
+
+def get_targets_for_shard(sorted_test_targets, shard_id, shard_count, test_durations=None):
+    if shard_id < 0 or shard_id >= shard_count:
+        raise BuildkiteException(f"Invalid shard_id {shard_id} for shard_count {shard_count}")
+    if not test_durations:
+        return sorted_test_targets[shard_id::shard_count]
+    return partition_targets_bin_packing(sorted_test_targets, shard_count, test_durations)[shard_id]
 
 
 def execute_bazel_test(
@@ -3048,6 +3210,9 @@ def execute_bazel_test(
         bazel_binary,
         enable_remote_cache=not monitor_flaky_tests,
     )
+
+    if is_trueish(os.getenv(DISABLE_TEST_CACHE_ENV_VAR, "")):
+        aggregated_flags.append("--nocache_test_results")
 
     print_expanded_group(":bazel: Test ({})".format(bazel_version))
     try:
@@ -3251,6 +3416,8 @@ def create_step(
             {"exit_status": -1, "limit": 3},  # Buildkite internal "agent lost" exit code
             {"exit_status": 137, "limit": 3},  # SIGKILL
             {"exit_status": 143, "limit": 3},  # SIGTERM
+            # bazel-diff failed (e.g. a network error), see filter_unchanged_targets().
+            {"exit_status": BAZEL_DIFF_FAILURE_EXIT_CODE, "limit": 2},
         ]
     }
 
@@ -3375,6 +3542,7 @@ def print_project_pipeline(
     config_hashes = set()
     skipped_downstream_tasks = []
     has_sharded_task = False
+    task_steps = []
     for task, task_config in task_configs.items():
         platform = get_platform_for_task(task, task_config)
         task_name = task_config.get("name")
@@ -3431,7 +3599,14 @@ def print_project_pipeline(
             shards=shards,
             soft_fail=soft_fail,
         )
+        task_steps.append(step)
         pipeline_steps.append(step)
+
+    if has_sharded_task and is_trueish(os.getenv(USE_SMART_SHARDING_ENV_VAR, "")):
+        generation = resolve_gcs_generation(TEST_DURATIONS_URL)
+        if generation:
+            for step in task_steps:
+                step.setdefault("env", {})[TEST_DURATIONS_GCS_GENERATION_ENV_VAR] = generation
 
     if skipped_downstream_tasks:
         lines = ["\n- {}".format(s.replace("'", "'\\''")) for s in skipped_downstream_tasks]
@@ -3558,7 +3733,24 @@ def create_initial_steps():
     ):
         return steps
 
-    modified_files = get_modified_files(os.getenv("BUILDKITE_COMMIT"))
+    real_cwd = os.path.realpath(os.getcwd())
+    modified_files = sorted(
+        {
+            path.replace("\\", "/")
+            for f in get_modified_files(os.getenv("BUILDKITE_COMMIT"))
+            if f
+            for path in (f, os.path.relpath(os.path.realpath(f), real_cwd))
+        }
+    )
+    if any(
+        ".buildkite" in f.split("/") or "buildkite-agent" in f.split("/")
+        for f in modified_files
+    ):
+        raise BuildkiteException(
+            "Pull requests modifying .buildkite are not allowed. If CI configuration "
+            "changes are required, please file a PR in "
+            "https://github.com/bazelbuild/continuous-integration."
+        )
     modified_config_files = [f for f in modified_files if is_ci_config_file(f)]
 
     if os.getenv("BUILDKITE_PIPELINE_SLUG", "") == "bazel-central-registry":
@@ -3791,15 +3983,15 @@ def runner_step(
     soft_fail=None,
 ):
     py = PLATFORMS[platform]["python"]
-    command = f"{py} {RUNNER_CMD} --task={shlex.quote(task)}"
+    command = f"{py} {RUNNER_CMD} --task={quote_arg(platform, task)}"
     if http_config:
-        command += " --http_config=" + shlex.quote(http_config)
+        command += " --http_config=" + quote_arg(platform, http_config)
     if file_config:
-        command += " --file_config=" + shlex.quote(file_config)
+        command += " --file_config=" + quote_arg(platform, file_config)
     if git_repository:
-        command += " --git_repository=" + shlex.quote(git_repository)
+        command += " --git_repository=" + quote_arg(platform, git_repository)
     if git_commit:
-        command += " --git_commit=" + shlex.quote(git_commit)
+        command += " --git_commit=" + quote_arg(platform, git_commit)
     if monitor_flaky_tests:
         command += " --monitor_flaky_tests"
     if use_but:
@@ -3900,10 +4092,10 @@ def bazel_build_step(
     if test_only:
         pipeline_command += " --test_only"
     if http_config:
-        pipeline_command += " --http_config=" + shlex.quote(http_config)
+        pipeline_command += " --http_config=" + quote_arg(platform, http_config)
     if file_config:
-        pipeline_command += " --file_config=" + shlex.quote(file_config)
-    pipeline_command += " --task=" + shlex.quote(task)
+        pipeline_command += " --file_config=" + quote_arg(platform, file_config)
+    pipeline_command += " --task=" + quote_arg(platform, task)
 
     step = create_step(
         label=create_label(platform, project_name, build_only, test_only),

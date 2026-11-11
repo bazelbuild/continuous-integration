@@ -18,6 +18,7 @@ from datetime import datetime
 import os
 import sys
 import tempfile
+import time
 
 import gcloud
 import gcloud_utils
@@ -25,6 +26,7 @@ import gcloud_utils
 DEBUG = False
 DEFAULT_MACHINE_TYPE = "c3d-standard-8"
 DEFAULT_BOOT_DISK_TYPE = "pd-ssd"
+SETUP_TIMEOUT_SECONDS = 2 * 60 * 60
 
 IMAGE_CREATION_VMS = {
     "bk-testing-docker": {
@@ -123,6 +125,20 @@ def workflow(name, params):
     instance_name = "%s-image-%s" % (name, int(datetime.now().timestamp()))
     project = params["project"]
     zone = params["zone"]
+
+    leftover_vms = gcloud.gcloud(
+        "compute",
+        "instances",
+        "list",
+        project=project,
+        zones=zone,
+        filter=f"name ~ ^{name}-image-",
+        format="value(name)",
+    ).stdout.splitlines()
+    for vm in leftover_vms:
+        print(f"Deleting leftover image VM {vm} from a previous run")
+        gcloud.delete_instance(vm, project=project, zone=zone, **{"async": True})
+
     try:
         # Create the VM.
         create_instance(instance_name, params)
@@ -130,13 +146,22 @@ def workflow(name, params):
         # Wait for the VM to become ready.
         gcloud_utils.wait_for_instance(instance_name, project=project, zone=zone, status="RUNNING")
 
-        # Continuously print the serial console.
-        gcloud_utils.tail_serial_console(instance_name, project=project, zone=zone)
+        deadline = time.monotonic() + SETUP_TIMEOUT_SECONDS
+        try:
+            # Continuously print the serial console (blocks until the VM shuts down or errors).
+            gcloud_utils.tail_serial_console(
+                instance_name, project=project, zone=zone, deadline=deadline
+            )
 
-        # Wait for the VM to completely shutdown.
-        gcloud_utils.wait_for_instance(
-            instance_name, project=project, zone=zone, status="TERMINATED"
-        )
+            # Wait for the VM to completely shutdown.
+            gcloud_utils.wait_for_instance(
+                instance_name, project=project, zone=zone, status="TERMINATED", deadline=deadline
+            )
+        except TimeoutError as e:
+            raise TimeoutError(
+                "Setup did not finish within 2h (last progress line is in the log above); "
+                "the VM was deleted."
+            ) from e
 
         # Create a new image from our VM.
         gcloud.create_image(

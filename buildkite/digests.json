@@ -77,9 +77,12 @@
         "amd64": "sha256:efb171659e4e61c741099bee47758d3e8816ed28be8db09276e348925a0c2390"
     },
     "fedora43-java25": {
-        "amd64": "sha256:95d95492c745de91ace11e4b166d55cd0706fe29b6b4006fffc5655d6051face"
+        "amd64": "sha256:36378b3c3c1f5b5f621bbf3160dc088ab7240fb0506d83253ae40d704b992323"
+    },
+    "fedora45-java25": {
+        "amd64": "sha256:014e13b0ece7446646a901afb6b69434b8a7e5945e74ff0a633aae00116d1a22"
     },
     "docgen": {
-        "amd64": "sha256:e6ac038ad949be3e18573735e8a46f5ac74f2e59af2196ed50da0187ea87c259"
+        "amd64": "sha256:3b5b8038f921e7b8d319b07123d82b677097cc5de5fd8b9bd48099073348d589"
     }
 }
