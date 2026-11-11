@@ -3082,7 +3082,12 @@ def resolve_gcs_generation(url):
     for attempt in range(1, 4):
         try:
             output = execute_command_and_get_output(
-                [gsutil_command(), "stat", url], print_output=False
+                [
+                 gcloud_command(),
+                 "storage",
+                 "objects",
+                 "describe", url
+                ], print_output=False
             )
             break
         except subprocess.CalledProcessError as ex:
