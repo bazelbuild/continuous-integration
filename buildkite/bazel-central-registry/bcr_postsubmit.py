@@ -42,6 +42,9 @@ FILES_WITH_ATTESTATIONS = ("source.json", "MODULE.bazel")
 # that passed through the post-submit pipeline successfully.
 LAST_GREEN_FILE = "last_green.txt"
 
+# Fixed mtime (2020-01-01T00:00:00Z) for all files in modules/ before rsync.
+FIXED_MTIME = 1577836800
+
 
 class AttestationError(Exception):
     """Raised when there is a problem wrt attestations."""
@@ -167,29 +170,40 @@ def get_canonical_basename(url):
     raise AttestationError(f"Invalid basename of {url}.")
 
 
+def pin_mtimes(root):
+    # A fresh git checkout gives every file a new mtime. gcloud storage rsync
+    # stores the mtime in the object metadata and patches it on every object
+    # when it changes, even if the content is the same. Use a fixed mtime so
+    # that only objects with changed content are touched.
+    for dirpath, _, filenames in os.walk(root):
+        for name in filenames:
+            os.utime(
+                os.path.join(dirpath, name),
+                (FIXED_MTIME, FIXED_MTIME),
+                follow_symlinks=False,
+            )
+
+
 def sync_bcr_content():
     print_expanded_group(":gcloud: Sync BCR content")
-
-    subprocess.check_output([
-        "gcloud",
-        "storage",
-        "cp",
-        "--cache-control=no-cache",
-        "./bazel_registry.json",
-        BCR_BUCKET,
-    ])
-    
-    subprocess.check_output([
-        "gcloud",
-        "storage",
-        "rsync",
-        "--cache-control=no-cache",
-        "--checksums-only",
-        "--ignore-symlinks",
-        "--recursive",
-        "./modules",
-        BCR_BUCKET + "modules",
-    ])
+    subprocess.check_output(
+        ["gcloud", "storage", "cp", "--cache-control=no-cache", "./bazel_registry.json", BCR_BUCKET]
+    )
+    pin_mtimes("./modules")
+    subprocess.check_output(
+        [
+            "gcloud",
+            "storage",
+            "rsync",
+            "--recursive",
+            # Compare checksums only. The mtime is fixed, so it cannot show changes.
+            "--checksums-only",
+            "--ignore-symlinks",
+            "--cache-control=no-cache",
+            "./modules",
+            BCR_BUCKET + "modules",
+        ]
+    )
 
 
 def update_last_green():
@@ -198,7 +212,8 @@ def update_last_green():
         f.write(get_commit())
 
     dest = os.path.join(BCR_BUCKET, LAST_GREEN_FILE)
-    subprocess.check_output(["gcloud", "storage", "cp", path, dest])
+    # get_last_green() reads this file over HTTP, so do not let it be cached.
+    subprocess.check_output(["gcloud", "storage", "cp", "--cache-control=no-cache", path, dest])
 
 
 def main():

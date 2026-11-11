@@ -1,9 +1,10 @@
-FROM fedora:40 AS fedora40-bazel-java21
+FROM fedora:45 AS fedora45-bazel-java25
 ARG BUILDARCH
 
 RUN dnf update -y
 
 ### Install packages required by Bazel and its tests
+# Node.js binaries downloaded by Bazel require libatomic.so.1.
 RUN dnf install -y \
   bind-utils \
   dnsutils \
@@ -18,11 +19,11 @@ RUN dnf install -y \
   iproute \
   iputils \
   lcov \
-  java-21-openjdk \
-  java-21-openjdk-devel \
+  libatomic \
+  java-25-openjdk \
+  java-25-openjdk-devel \
   patch \
   perl \
-  python2 \
   python3 \
   python3-devel \
   python3-pip \
@@ -43,15 +44,17 @@ RUN localedef -i en_US -f ISO-8859-1 en_US.ISO-8859-1
 # Allow using sudo inside the container.
 RUN echo "ALL ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-ENV JAVA_HOME /usr/lib/jvm/java-21-openjdk
+ENV JAVA_HOME=/usr/lib/jvm/java-25-openjdk
 
-FROM fedora40-bazel-java21 AS fedora40-java21
+FROM fedora45-bazel-java25 AS fedora45-java25
 
 # Install Google Cloud SDK
 COPY google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
 
 RUN dnf install -y \
-  google-cloud-cli
+  google-cloud-cli \
+  && dnf clean all \
+  && rm -rf /var/cache/yum
 
 # Bazelisk
 COPY --from=tools --chmod=0755 bazelisk-linux-${BUILDARCH} /usr/local/bin/bazel
