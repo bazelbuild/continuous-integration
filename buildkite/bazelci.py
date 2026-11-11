@@ -436,7 +436,7 @@ IMAGE_HASHES = {
         "amd64": "sha256:014e13b0ece7446646a901afb6b69434b8a7e5945e74ff0a633aae00116d1a22",
     },
     "docgen": {
-        "amd64": "sha256:e6ac038ad949be3e18573735e8a46f5ac74f2e59af2196ed50da0187ea87c259",
+        "amd64": "sha256:3b5b8038f921e7b8d319b07123d82b677097cc5de5fd8b9bd48099073348d589",
     },
 }
 
