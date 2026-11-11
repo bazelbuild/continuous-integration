@@ -1164,6 +1164,12 @@ def is_mac():
     return platform_module.system() == "Darwin"
 
 
+def is_intel_mac(platform=None):
+    if platform:
+        return platform == "macos"
+    return is_mac() and platform_module.machine() in ("x86_64", "amd64")
+
+
 def is_linux():
     return platform_module.system() == "Linux"
 
@@ -2288,11 +2294,23 @@ def remote_caching_flags(platform, accept_cached=True):
             subprocess.check_output(["/usr/bin/xcodebuild", "-version"]),
         ]
 
-    # Use RBE for caching builds running on GCE and MacService.
-    flags = (
-        [
+    # Use GCS for caching builds running on Intel Mac machines (to avoid CAS download stalls in b/344853999).
+    # Use RBE for caching builds running on GCE and macOS arm64.
+    remote_cache_flags = []
+    if is_intel_mac(platform):
+        bucket_id = "trusted" if THIS_IS_TRUSTED else "untrusted"
+        remote_cache_flags = [
+            f"--remote_cache=https://storage.googleapis.com/bazel-{bucket_id}-build-cache"
+        ]
+    else:
+        remote_cache_flags = [
             "--remote_cache=remotebuildexecution.googleapis.com",
             "--remote_instance_name=projects/{}/instances/default_instance".format(CLOUD_PROJECT),
+        ]
+
+    flags = (
+        remote_cache_flags
+        + [
             "--google_default_credentials",
         ]
         + (
