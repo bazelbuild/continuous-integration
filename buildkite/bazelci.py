@@ -3001,7 +3001,7 @@ def download_file(url, dest_dir, dest_filename):
         if url.startswith("gs://"):
             for attempt in range(1, 4):
                 try:
-                    execute_command([gcloud_command(), "cp", url, local_path], capture_stderr=True)
+                    execute_command([gcloud_command(), "storage", "cp", url, local_path], capture_stderr=True)
                     break
                 except subprocess.CalledProcessError:
                     if attempt == 3:
