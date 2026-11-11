@@ -322,7 +322,7 @@ def collect_metrics_and_push_to_bigquery(build_bep_path=None, test_bep_path=None
     ORG = os.getenv("BUILDKITE_ORGANIZATION_SLUG")
     REPO = os.getenv("BUILDKITE_REPO")
     queue = os.getenv("BUILDKITE_AGENT_META_DATA_QUEUE", "default")
-    PLATFORM = {"default": "linux", "arm64": "linux_arm64"}.get(queue, queue)
+    PLATFORM = bazelci.get_metrics_platform(queue)
     TASK_LABEL = normalize_job_label(BUILDKITE_LABEL)
     BUILD_SHARD_ID = int(os.getenv("BUILDKITE_PARALLEL_JOB", "0"))
     BUILD_SHARD_COUNT = int(os.getenv("BUILDKITE_PARALLEL_JOB_COUNT", "1"))

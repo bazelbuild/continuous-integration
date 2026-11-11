@@ -4,6 +4,7 @@ ARG BUILDARCH
 RUN dnf update -y
 
 ### Install packages required by Bazel and its tests
+# Node.js binaries downloaded by Bazel require libatomic.so.1.
 RUN dnf install -y \
   bind-utils \
   dnsutils \
@@ -18,6 +19,7 @@ RUN dnf install -y \
   iproute \
   iputils \
   lcov \
+  libatomic \
   java-25-openjdk \
   java-25-openjdk-devel \
   patch \
