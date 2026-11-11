@@ -25,6 +25,8 @@ set -euxo pipefail
 ### Prevent dpkg / apt-get / debconf from trying to access stdin.
 export DEBIAN_FRONTEND="noninteractive"
 
+if [[ ! -d /var/lib/gitmirrors ]]; then
+
 ### Install base packages.
 {
   apt-get -y update
@@ -216,6 +218,28 @@ EOF
 }
 EOF
 }
+
+else
+
+### Refresh our Git mirrors when starting from an existing image.
+{
+  git config --global safe.bareRepository all
+
+  update_mirror() {
+    local repo_dir="$1"
+    git -C "${repo_dir}" config remote.origin.fetch "+refs/heads/*:refs/heads/*"
+    git -C "${repo_dir}" fetch --prune --tags origin || echo "Warning: failed to fetch ${repo_dir}"
+  }
+  export -f update_mirror
+
+  find /var/lib/gitmirrors -mindepth 1 -maxdepth 1 -type d -print0 \
+      | xargs -0 -n 1 -P 16 bash -c 'update_mirror "$@"' _
+
+  chown -R buildkite-agent:buildkite-agent /var/lib/gitmirrors
+  chmod -R 0755 /var/lib/gitmirrors
+}
+
+fi
 
 ### Configure and start Docker.
 systemctl start docker

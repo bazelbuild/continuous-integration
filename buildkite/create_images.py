@@ -22,6 +22,7 @@ import time
 
 import gcloud
 import gcloud_utils
+import bazelci
 
 DEBUG = False
 DEFAULT_MACHINE_TYPE = "c3d-standard-8"
@@ -89,7 +90,7 @@ def preprocess_setup_script(setup_script, is_windows):
     return output_file
 
 
-def create_instance(instance_name, params):
+def create_instance(instance_name, params, refresh=False):
     is_windows = "windows" in instance_name
     setup_script = preprocess_setup_script(params["setup_script"], is_windows)
     try:
@@ -98,7 +99,12 @@ def create_instance(instance_name, params):
         else:
             startup_script = "startup-script=" + setup_script
 
-        if "source_image" in params:
+        if refresh:
+            image = {
+                "image-project": params["project"],
+                "image-family": instance_name.split("-image-")[0].replace("-testing", ""),
+            }
+        elif "source_image" in params:
             image = {"image": params["source_image"]}
         else:
             image = {
@@ -121,7 +127,7 @@ def create_instance(instance_name, params):
         os.remove(setup_script)
 
 
-def workflow(name, params):
+def workflow(name, params, refresh=False):
     instance_name = "%s-image-%s" % (name, int(datetime.now().timestamp()))
     project = params["project"]
     zone = params["zone"]
@@ -141,7 +147,7 @@ def workflow(name, params):
 
     try:
         # Create the VM.
-        create_instance(instance_name, params)
+        create_instance(instance_name, params, refresh=refresh)
 
         # Wait for the VM to become ready.
         gcloud_utils.wait_for_instance(instance_name, project=project, zone=zone, status="RUNNING")
@@ -181,8 +187,13 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
+    refresh = bazelci.is_trueish(os.environ.get("BAZEL_REFRESH_VM_IMAGE"))
+    if "--refresh" in argv:
+        refresh = True
+        argv = [a for a in argv if a != "--refresh"]
+
     if not argv:
-        print("Usage: create_images.py {}".format(" ".join(IMAGE_CREATION_VMS.keys())))
+        print("Usage: create_images.py [--refresh] {}".format(" ".join(IMAGE_CREATION_VMS.keys())))
         return 1
 
     # Handle multiple args as well as a single-arg comma-delimited list.
@@ -198,7 +209,7 @@ def main(argv=None):
         return 1
 
     for n in names:
-        workflow(n, IMAGE_CREATION_VMS[n])
+        workflow(n, IMAGE_CREATION_VMS[n], refresh=refresh)
 
     return 0
 

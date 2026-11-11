@@ -166,6 +166,49 @@ resource "buildkite_pipeline_schedule" "create-linux-vm-image" {
   cronline    = "0 4 * * 1"
 }
 
+resource "buildkite_pipeline" "refresh-linux-vm-image" {
+  name           = "Refresh Linux VM image"
+  repository     = "https://github.com/bazelbuild/continuous-integration.git"
+  default_branch = "master"
+  steps = templatefile("pipeline.yml.tpl", {
+    envs = {
+      BAZEL_REFRESH_VM_IMAGE     = "1"
+      BAZEL_TEST_VM_NAMES        = "bk-testing-docker,bk-testing-docker-arm64"
+      BAZEL_VM_NAMES             = "bk-docker,bk-docker-arm64"
+      BAZEL_PROD_INSTANCE_GROUPS = "bk-docker,bk-docker-arm64,bk-trusted-docker,bk-trusted-docker-arm64"
+    },
+    priority = 100,
+    steps = {
+      commands = [
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-vm-image.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
+      ],
+      label = ":pipeline:",
+      image = "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
+    }
+  })
+  allow_rebuilds             = true
+  cancel_intermediate_builds = false
+  skip_intermediate_builds   = false
+  tags                       = []
+  branch_configuration       = null
+  cluster_id                 = null
+  color                      = null
+  default_team_id            = null
+  emoji                      = null
+  pipeline_template_id       = null
+  provider_settings = {
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
+}
+
+resource "buildkite_pipeline_schedule" "refresh-linux-vm-image" {
+  pipeline_id = buildkite_pipeline.refresh-linux-vm-image.id
+  label       = "Refresh Linux VM image daily (Tue-Fri)"
+  branch      = "master"
+  cronline    = "0 4 * * 2-5"
+}
+
 resource "buildkite_pipeline" "collect-infra-ci-metrics" {
   name           = "Collect Infra CI-Metrics"
   repository     = "https://github.com/bazelbuild/continuous-integration.git"
@@ -329,6 +372,49 @@ resource "buildkite_pipeline_schedule" "create-windows-vm-image" {
   label       = "Create Windows VM image weekly"
   branch      = "master"
   cronline    = "0 5 * * 1"
+}
+
+resource "buildkite_pipeline" "refresh-windows-vm-image" {
+  name           = "Refresh Windows VM image"
+  repository     = "https://github.com/bazelbuild/continuous-integration.git"
+  default_branch = "master"
+  steps = templatefile("pipeline.yml.tpl", {
+    envs = {
+      BAZEL_REFRESH_VM_IMAGE     = "1"
+      BAZEL_TEST_VM_NAMES        = "bk-testing-windows"
+      BAZEL_VM_NAMES             = "bk-windows"
+      BAZEL_PROD_INSTANCE_GROUPS = "bk-windows,bk-trusted-windows"
+    },
+    priority = 100,
+    steps = {
+      commands = [
+        "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-vm-image.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
+      ],
+      label = ":pipeline:",
+      image = "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
+    }
+  })
+  allow_rebuilds             = true
+  cancel_intermediate_builds = false
+  skip_intermediate_builds   = false
+  tags                       = []
+  branch_configuration       = null
+  cluster_id                 = null
+  color                      = null
+  default_team_id            = null
+  emoji                      = null
+  pipeline_template_id       = null
+  provider_settings = {
+    # GitHub activities are disabled for this pipeline
+    trigger_mode = "none"
+  }
+}
+
+resource "buildkite_pipeline_schedule" "refresh-windows-vm-image" {
+  pipeline_id = buildkite_pipeline.refresh-windows-vm-image.id
+  label       = "Refresh Windows VM image daily (Tue-Fri)"
+  branch      = "master"
+  cronline    = "0 5 * * 2-5"
 }
 
 resource "buildkite_pipeline" "docgen-bazel-blog" {

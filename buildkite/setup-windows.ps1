@@ -18,9 +18,30 @@ function Write-SerialLog($msg) {
     $port.Close()
 }
 
-## If choco is already installed, this is the second time the VM starts up, run GCESysprep and then shutdown
+## If choco is already installed, this is the second time the VM starts up (or an incremental image refresh),
+## refresh the Git mirrors, run GCESysprep, and then shutdown.
 if (Get-Command choco -ErrorAction SilentlyContinue) {
-    Write-SerialLog "choco is already installed, this is the second time the VM starts up, running GCESysprep and then shutdown..."
+    Write-SerialLog "choco is already installed, refreshing Git mirrors, running GCESysprep and then shutdown..."
+    & git config --system safe.bareRepository all
+    $mirror_root = "c:\buildkite\bazelbuild"
+    if (Test-Path $mirror_root) {
+        $repos = @(Get-ChildItem -Path $mirror_root -Directory)
+        $batchSize = 8
+        for ($i = 0; $i -lt $repos.Count; $i += $batchSize) {
+            $end = [Math]::Min($i + $batchSize - 1, $repos.Count - 1)
+            $procs = @()
+            foreach ($repo in $repos[$i..$end]) {
+                $dir = $repo.FullName
+                & git --git-dir="$dir" config remote.origin.fetch "+refs/heads/*:refs/heads/*"
+                $procs += Start-Process -FilePath "git.exe" -ArgumentList "--git-dir=`"$dir`" fetch --prune --tags origin" -NoNewWindow -PassThru
+            }
+            if ($procs.Count -gt 0) {
+                $procs | Wait-Process
+            }
+        }
+        Import-Module NTFSSecurity
+        Add-NTFSAccess -Path $mirror_root -Account "b" -AccessRights FullControl
+    }
     GCESysprep
     exit 0
 }
