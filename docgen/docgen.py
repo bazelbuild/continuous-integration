@@ -84,7 +84,43 @@ def main(argv=None):
     dest = get_destination(bucket, settings.gcs_subdir)
     bazelci.print_expanded_group(":bazel: Uploading documentation to {}".format(dest))
     try:
-        bazelci.execute_command(["gcloud", "storage", "rsync", "--recursive", "--checksums-only", "--delete-unmatched-destination-objects", "--no-ignore-symlinks", src_root, dest])
+        # Upload static assets first with a 1-hour cache TTL.
+        bazelci.execute_command([
+            "gcloud",
+            "storage",
+            "rsync",
+            "--recursive",
+            "--checksums-only",
+            "--no-ignore-symlinks",
+            "--exclude=.*\\.(html|xml)$|^css/main\\.css$",
+            "--cache-control=public, max-age=3600",
+            src_root,
+            dest,
+        ])
+        # Upload HTML, XML feeds, and main.css with no-cache so GCS and browsers
+        # revalidate via ETag, and remove any deleted objects across the bucket.
+        bazelci.execute_command([
+            "gcloud",
+            "storage",
+            "rsync",
+            "--recursive",
+            "--checksums-only",
+            "--delete-unmatched-destination-objects",
+            "--no-ignore-symlinks",
+            "--cache-control=no-cache",
+            src_root,
+            dest,
+        ])
+        bazelci.execute_command([
+            "gcloud",
+            "storage",
+            "objects",
+            "update",
+            "--cache-control=no-cache",
+            "{}/**/*.html".format(dest),
+            "{}/**/*.xml".format(dest),
+            "{}/css/main.css".format(dest),
+        ])
         bazelci.execute_command(
             ["gcloud", "storage", "buckets", "update", "--web-main-page-suffix=index.html", "--web-error-page=404.html", bucket]
         )
