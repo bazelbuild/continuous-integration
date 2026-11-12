@@ -95,6 +95,7 @@ docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2204/Dockerfile   --builder mp-build
 docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2404/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2404        -t "gcr.io/$PREFIX/ubuntu2404" ubuntu2404 & pids+=($!)
 docker_build "${TOOLS_CONTEXT[@]}" -f fedora43/Dockerfile   --target fedora43-java25   -t "gcr.io/$PREFIX/fedora43-java25" fedora43 & pids+=($!)
 docker_build "${TOOLS_CONTEXT[@]}" -f fedora45/Dockerfile   --target fedora45-java25   -t "gcr.io/$PREFIX/fedora45-java25" fedora45 & pids+=($!)
+docker_build "${TOOLS_CONTEXT[@]}" -f ../../docgen/Dockerfile                          -t "gcr.io/$PREFIX/docgen" ../../docgen & pids+=($!)
 
 for pid in "${pids[@]}"; do
     wait "$pid"

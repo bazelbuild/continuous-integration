@@ -84,7 +84,7 @@ def main(argv=None):
     dest = get_destination(bucket, settings.gcs_subdir)
     bazelci.print_expanded_group(":bazel: Uploading documentation to {}".format(dest))
     try:
-        bazelci.execute_command(["gcloud", "storage", "rsync", "--recursive", "--checksums-only", "--delete-unmatched-destination-objects", src_root, dest])
+        bazelci.execute_command(["gcloud", "storage", "rsync", "--recursive", "--checksums-only", "--delete-unmatched-destination-objects", "--no-ignore-symlinks", src_root, dest])
         bazelci.execute_command(
             ["gcloud", "storage", "buckets", "update", "--web-main-page-suffix=index.html", "--web-error-page=404.html", bucket]
         )
