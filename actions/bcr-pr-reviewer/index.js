@@ -923,6 +923,19 @@ async function runSkipCheck(octokit) {
       comment_id: payload.comment.id,
       content: '+1',
     });
+  } else if (check == "toolchain_registrations") {
+    await octokit.rest.issues.addLabels({
+      owner,
+      repo,
+      issue_number: payload.issue.number,
+      labels: ["skip-toolchain-registrations-check"],
+    });
+    await octokit.rest.reactions.createForIssueComment({
+      owner,
+      repo,
+      comment_id: payload.comment.id,
+      content: '+1',
+    });
   } else if (check == "incompatible_flags") {
     await octokit.rest.issues.addLabels({
       owner,
