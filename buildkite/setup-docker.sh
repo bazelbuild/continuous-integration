@@ -288,4 +288,17 @@ else
 fi
 wait
 
+### Pre-warm / refresh the Bazel repository cache.
+{
+  REPO_CACHE_DIR="/var/lib/buildkite-agent/bazeltest/repo_cache"
+  mkdir -p "${REPO_CACHE_DIR}"
+  UBUNTU_IMAGE=$(docker images --digests --format '{{.Repository}}@{{.Digest}}' gcr.io/bazel-public/ubuntu2404 | head -n 1)
+  docker run --rm \
+      -v /var/lib/gitmirrors:/var/lib/gitmirrors:ro \
+      -v "${REPO_CACHE_DIR}:/repo_cache" \
+      "${UBUNTU_IMAGE}" \
+      bash -c "git clone /var/lib/gitmirrors/https---github-com-bazelbuild-bazel-git /tmp/bazel && cd /tmp/bazel && bazel --batch fetch --repository_cache=/repo_cache //src:bazel //src:test_repos" || echo "Warning: failed to pre-warm repository cache"
+  chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent/bazeltest
+}
+
 poweroff

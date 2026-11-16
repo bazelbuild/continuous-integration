@@ -39,8 +39,18 @@ if (Get-Command choco -ErrorAction SilentlyContinue) {
                 $procs | Wait-Process
             }
         }
+        $bazel_mirror = "$mirror_root\https---github-com-bazelbuild-bazel-git"
+        if (Test-Path $bazel_mirror) {
+            Write-SerialLog "Pre-warming / refreshing Bazel repository cache..."
+            $ErrorActionPreference = "Continue"
+            Remove-Item "c:\temp\bazel" -Recurse -Force -ErrorAction Ignore
+            & git clone $bazel_mirror "c:\temp\bazel"
+            & c:\bazel\bazel.exe --batch fetch --repository_cache="c:\buildkite\bazeltest_repo_cache" //src:bazel.exe //src:test_repos
+            Remove-Item "c:\temp\bazel" -Recurse -Force -ErrorAction Ignore
+            $ErrorActionPreference = "Stop"
+        }
         Import-Module NTFSSecurity
-        Add-NTFSAccess -Path $mirror_root -Account "b" -AccessRights FullControl
+        Add-NTFSAccess -Path "C:\buildkite" -Account "b" -AccessRights FullControl
     }
     GCESysprep
     exit 0

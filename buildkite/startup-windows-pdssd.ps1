@@ -13,6 +13,9 @@ Add-Type -AssemblyName "System.IO.Compression.FileSystem"
 Write-Host "Creating build folder on PD-SSD..."
 Remove-Item "C:\b" -Recurse -Force -ErrorAction Ignore
 New-Item "C:\b" -ItemType "directory"
+if (Test-Path "c:\buildkite\bazeltest_repo_cache") {
+  New-Item -ItemType Junction -Path "C:\b\bazeltest_repo_cache" -Target "c:\buildkite\bazeltest_repo_cache"
+}
 
 ## Setup environment variables.
 Write-Host "Setting environment variables..."
