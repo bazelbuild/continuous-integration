@@ -25,6 +25,7 @@ set -euxo pipefail
 ### Prevent dpkg / apt-get / debconf from trying to access stdin.
 export DEBIAN_FRONTEND="noninteractive"
 
+# If /var/lib/gitmirrors already exists, this VM booted from a previous image (incremental refresh), so skip initial OS/SDK setup and only refresh the mirrors.
 if [[ ! -d /var/lib/gitmirrors ]]; then
 
 ### Install base packages.

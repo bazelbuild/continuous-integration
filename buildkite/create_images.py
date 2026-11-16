@@ -187,13 +187,8 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
-    refresh = bazelci.is_trueish(os.environ.get("BAZEL_REFRESH_VM_IMAGE"))
-    if "--refresh" in argv:
-        refresh = True
-        argv = [a for a in argv if a != "--refresh"]
-
     if not argv:
-        print("Usage: create_images.py [--refresh] {}".format(" ".join(IMAGE_CREATION_VMS.keys())))
+        print("Usage: create_images.py {}".format(" ".join(IMAGE_CREATION_VMS.keys())))
         return 1
 
     # Handle multiple args as well as a single-arg comma-delimited list.
@@ -208,6 +203,7 @@ def main(argv=None):
         )
         return 1
 
+    refresh = bazelci.is_trueish(os.environ.get("BAZEL_REFRESH_VM_IMAGE"))
     for n in names:
         workflow(n, IMAGE_CREATION_VMS[n], refresh=refresh)
 
