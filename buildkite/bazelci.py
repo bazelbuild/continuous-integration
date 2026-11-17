@@ -741,7 +741,7 @@ BAZEL_DIFF_FAILURE_EXIT_CODE = 75
 
 # TODO(fweikert): Install bazel-diff on the Docker images and on the Mac machines
 BAZEL_DIFF_URL = (
-    "https://github.com/Tinder/bazel-diff/releases/download/8.1.1/bazel-diff_deploy.jar"
+    "https://mirror.bazel.build/github.com/Tinder/bazel-diff/releases/download/8.1.1/bazel-diff_deploy.jar"
 )
 
 AUTO_DIFFBASE_VALUES = frozenset(["1", "true", "auto"])
