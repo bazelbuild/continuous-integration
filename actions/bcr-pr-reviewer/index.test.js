@@ -259,21 +259,33 @@ function reviewCommandOctokit({
   sensitiveMetadata = false,
   newModule = false,
   bcrMaintainerApproved = false,
+  // Set to 'versions' or 'sensitive' to make the PR also change that part of the metadata.json of
+  // `bar`, without touching any version directory of `bar`.
+  otherModuleMetadataChange = null,
+  otherMaintainerApproved = false,
 } = {}) {
   const calls = [];
   const metadata = {
     maintainers: [{ github: 'Maintainer', github_user_id: 7 }],
     versions: ['1.0.0', '1.1.0'],
   };
+  // `bar` is a second module with its own maintainer.
+  const otherMetadata = {
+    maintainers: [{ github: 'OtherMaintainer', github_user_id: 8 }],
+    versions: ['1.0.0', '2.0.0'],
+  };
   const files = [{ filename: 'modules/foo/1.1.0/source.json' }];
   if (sensitiveMetadata || newModule) {
     files.push({ filename: 'modules/foo/metadata.json' });
   }
+  if (otherModuleMetadataChange) {
+    files.push({ filename: 'modules/bar/metadata.json' });
+  }
   const octokit = {
     paginate: async (fn, params) => (await fn(params)).data,
-    request: async (route) => {
+    request: async (route, { account_id }) => {
       assert.equal(route, 'GET /user/{account_id}');
-      return { data: { login: 'Maintainer' } };
+      return { data: { login: account_id === 8 ? 'OtherMaintainer' : 'Maintainer' } };
     },
     rest: {
       pulls: {
@@ -300,6 +312,9 @@ function reviewCommandOctokit({
             ...(bcrMaintainerApproved
               ? [{ user: { login: 'BcrMaintainer' }, state: 'APPROVED', commit_id: HEAD_SHA, submitted_at: '2026-09-30T00:00:00Z' }]
               : []),
+            ...(otherMaintainerApproved
+              ? [{ user: { login: 'OtherMaintainer' }, state: 'APPROVED', commit_id: HEAD_SHA, submitted_at: '2026-09-30T00:00:00Z' }]
+              : []),
           ],
         }),
         createReview: async ({ event }) => calls.push(['createReview', event]),
@@ -312,10 +327,15 @@ function reviewCommandOctokit({
         requestReviewers: async () => calls.push(['requestReviewers']),
       },
       repos: {
-        getContent: async ({ ref }) => {
+        getContent: async ({ path, ref }) => {
           // A new module doesn't have a metadata.json on the main branch yet.
           if (newModule && ref === 'main') {
             throw Object.assign(new Error('Not Found'), { status: 404 });
+          }
+          if (path === 'modules/bar/metadata.json') {
+            const headChange = otherModuleMetadataChange === 'sensitive' ? { homepage: 'https://example.com' } : { versions: ['1.0.0'] };
+            const content = ref === 'main' ? otherMetadata : { ...otherMetadata, ...headChange };
+            return { data: { content: Buffer.from(JSON.stringify(content)).toString('base64') } };
           }
           // The PR head changes a non-versions field of metadata.json when `sensitiveMetadata` is set.
           const content = sensitiveMetadata && ref !== 'main' ? { ...metadata, homepage: 'https://example.com' } : metadata;
@@ -437,6 +457,39 @@ test('@bazel-io review: does not merge a PR with sensitive metadata.json changes
   assert.deepEqual(calls.at(-1), [
     'createComment',
     '@Commenter, this PR could not be merged yet. The following modules still need approval from one of their maintainers: foo.',
+  ]);
+});
+
+test('@bazel-io review: does not merge a PR that changes the metadata.json of a module whose maintainers have not approved', async (t) => {
+  // The PR adds foo@1.1.0, approved by foo's maintainer, and also changes bar's metadata.json.
+  // bar has a different maintainer, who has not approved.
+  const cases = [
+    ['only the versions list is changed', { otherModuleMetadataChange: 'versions' }],
+    ['a sensitive field is changed and a BCR maintainer has approved', { otherModuleMetadataChange: 'sensitive', bcrMaintainerApproved: true }],
+  ];
+  for (const [description, options] of cases) {
+    await t.test(description, async () => {
+      const calls = await runComment('@bazel-io review', options);
+
+      assert.equal(calls.some(([name, event]) => name === 'createReview' && event === 'APPROVE'), false);
+      assert.equal(calls.some(([name]) => name === 'merge'), false);
+      assert.deepEqual(calls.at(-1), [
+        'createComment',
+        '@Commenter, this PR could not be merged yet. The following modules still need approval from one of their maintainers: bar.',
+      ]);
+    });
+  }
+});
+
+test('@bazel-io review: merges a PR that changes the metadata.json of another module once its maintainers have approved too', async () => {
+  const calls = await runComment('@bazel-io review', { otherModuleMetadataChange: 'versions', otherMaintainerApproved: true });
+
+  assert.deepEqual(calls, [
+    ['reaction', 'eyes'],
+    ['createReview', 'APPROVE'],
+    ['merge', HEAD_SHA],
+    ['addLabels', ['auto-merged']],
+    ['reaction', 'rocket'],
   ]);
 });
 
