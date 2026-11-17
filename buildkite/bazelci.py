@@ -720,6 +720,35 @@ XCODE_VERSION_OVERRIDES = {"10.2.1": "10.3", "11.2": "11.2.1", "11.3": "11.3.1"}
 BUILD_LABEL_PATTERN = re.compile(r"^Build label: (\S+)$", re.MULTILINE)
 
 SKIP_TASKS_ENV_VAR = "CI_SKIP_TASKS"
+CONCURRENCY_GROUP_ENV_VAR = "CI_CONCURRENCY_GROUP"
+CI_RESOURCE_PERCENTAGE_ENV_VAR = "CI_RESOURCE_PERCENTAGE"
+DEFAULT_CI_RESOURCE_PERCENTAGE = 20
+
+CI_MACHINE_NUM_BY_ORG = {
+    "bazel": {
+        "default": 170,
+        "windows": 110,
+        "macos_arm64": 350,
+        "macos": 146,
+        "arm64": 55,
+    },
+    "bazel-testing": {
+        "default": 20,
+        "windows": 10,
+        "macos_arm64": 40,
+        "macos": 10,
+        "arm64": 10,
+    },
+    "bazel-trusted": {
+        "default": 20,
+        "windows": 10,
+        "macos_arm64": 10,
+        "macos": 4,
+        "arm64": 20,
+    },
+}
+
+CI_MACHINE_NUM = CI_MACHINE_NUM_BY_ORG.get(BUILDKITE_ORG, CI_MACHINE_NUM_BY_ORG["bazel"])
 
 RUNNER_CMD = "bazelci.py runner"
 
@@ -3963,6 +3992,45 @@ def create_emergency_announcement_step_if_necessary():
     )
 
 
+def calculate_concurrency(platform, base_group, percentage):
+    if not base_group or percentage <= 0:
+        return None, None
+
+    queue = PLATFORMS[platform].get("queue", "default")
+    machine_num = CI_MACHINE_NUM.get(queue)
+    if not machine_num:
+        raise BuildkiteException(
+            f"Queue '{queue}' for platform '{platform}' is not configured in CI_MACHINE_NUM."
+        )
+
+    concurrency = max(1, (percentage * machine_num) // 100)
+    concurrency_group = f"{base_group}-{queue}"
+    return concurrency, concurrency_group
+
+
+def get_concurrency_settings(platform):
+    base_group = os.getenv(CONCURRENCY_GROUP_ENV_VAR, "").strip()
+    percentage_str = os.getenv(CI_RESOURCE_PERCENTAGE_ENV_VAR, "").strip()
+    if not base_group:
+        if percentage_str:
+            raise BuildkiteException(
+                f"{CI_RESOURCE_PERCENTAGE_ENV_VAR} is set, but {CONCURRENCY_GROUP_ENV_VAR} is missing."
+            )
+        return None, None
+
+    if percentage_str:
+        try:
+            percentage = int(percentage_str)
+        except ValueError:
+            raise BuildkiteException(
+                f"Invalid {CI_RESOURCE_PERCENTAGE_ENV_VAR} value: '{percentage_str}'"
+            )
+    else:
+        percentage = DEFAULT_CI_RESOURCE_PERCENTAGE
+
+    return calculate_concurrency(platform, base_group, percentage)
+
+
 def runner_step(
     platform,
     task,
@@ -3995,12 +4063,15 @@ def runner_step(
     commands = [fetch_ci_scripts_command(), command]
     if "macos" in platform:
         commands = [f"which {py}", f"{py} -V"] + commands
+    concurrency, concurrency_group = get_concurrency_settings(platform)
     return create_step(
         label=label,
         commands=commands,
         platform=platform,
         shards=shards,
         soft_fail=soft_fail,
+        concurrency=concurrency,
+        concurrency_group=concurrency_group,
     )
 
 

@@ -321,15 +321,11 @@ def create_downstream_steps(
             fetch_bcr_downstream_py_command(),
             " ".join(command),
         ]
-        queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
-        if CI_RESOURCE_PERCENTAGE == -1:
-            concurrency = concurrency_group = None
-        else:
-            concurrency = max(
-                1, (CI_RESOURCE_PERCENTAGE * bcr_presubmit.CI_MACHINE_NUM[queue]) // 100
-            )
-            concurrency_group = f"bcr-downstream-test-queue-{queue}"
+        concurrency, concurrency_group = bazelci.calculate_concurrency(
+            platform_name, "bcr-downstream-test-queue", CI_RESOURCE_PERCENTAGE
+        )
         if low_priority:
+            queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
             concurrency = 5 if concurrency is None else min(5, concurrency)
             concurrency_group = f"bcr-downstream-test-queue-{queue}-low-priority"
 
