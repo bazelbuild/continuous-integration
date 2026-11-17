@@ -50,28 +50,9 @@ def is_valid_module_identifier(module_name, module_version):
         MODULE_VERSION_RE.match(module_version)
     )
 
-BUILDKITE_ORG = os.environ.get("BUILDKITE_ORGANIZATION_SLUG", "bazel")
-
 SCRIPT_URL = "https://raw.githubusercontent.com/bazelbuild/continuous-integration/{}/buildkite/bazel-central-registry/bcr_presubmit.py?{}".format(
     bazelci.GITHUB_REF, int(time.time())
 )
-
-CI_MACHINE_NUM = {
-    "bazel": {
-        "default": 140,
-        "windows": 30,
-        "macos_arm64": 95,
-        "macos": 138,
-        "arm64": 55,
-    },
-    "bazel-testing": {
-        "default": 10,
-        "windows": 10,
-        "macos_arm64": 2,
-        "macos": 10,
-        "arm64": 5,
-    },
-}[BUILDKITE_ORG]
 
 # The percentage of CI resource that can be used by bcr-presubmit and bcr-compatibility pipelines.
 CI_RESOURCE_PERCENTAGE = int(os.environ.get('CI_RESOURCE_PERCENTAGE', -1))
@@ -212,13 +193,11 @@ def add_presubmit_jobs(module_name, module_version, task_configs, pipeline_steps
             )
         )
         commands = [bazelci.fetch_ci_scripts_command(), fetch_bcr_presubmit_py_command(), command]
-        queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
-        if CI_RESOURCE_PERCENTAGE == -1:
-            concurrency = concurrency_group = None
-        else:
-            concurrency = max(1, (CI_RESOURCE_PERCENTAGE * CI_MACHINE_NUM[queue]) // 100)
-            concurrency_group = f"bcr-presubmit-test-queue-{queue}"
+        concurrency, concurrency_group = bazelci.calculate_concurrency(
+            platform_name, "bcr-presubmit-test-queue", CI_RESOURCE_PERCENTAGE
+        )
         if low_priority:
+            queue = bazelci.PLATFORMS[platform_name].get("queue", "default")
             concurrency = 5 if concurrency is None else min(5, concurrency)
             concurrency_group = f"bcr-presubmit-test-queue-{queue}-low-priority"
         pipeline_steps.append(bazelci.create_step(label, commands, platform_name, concurrency=concurrency, concurrency_group=concurrency_group, priority=-100 if low_priority else None))
