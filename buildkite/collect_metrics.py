@@ -167,6 +167,7 @@ def parse_bep(filepath):
 
     bazel_metrics = BazelMetrics()
     target_map = collections.defaultdict(list)
+    target_shards = collections.defaultdict(set)
     target_status = {}
 
     with open(filepath, "r") as f:
@@ -184,9 +185,11 @@ def parse_bep(filepath):
             # --- 1. Test Results ---
             if "testResult" in event:
                 data = event["testResult"]
-                label = event_id.get("testResult", {}).get("label")
+                test_id = event_id.get("testResult", {})
+                label = test_id.get("label")
 
                 if label:
+                    target_shards[label].add(int(test_id.get("shard", 0)))
                     duration_ms = int(data.get("testAttemptDurationMillis", 0))
                     duration_s = duration_ms / 1000.0
                     target_map[label].append(duration_s)
@@ -244,7 +247,7 @@ def parse_bep(filepath):
                 label=label,
                 status=target_status.get(label, "UNKNOWN"),
                 duration_s=max(shards) if shards else 0.0,
-                shard_count=len(shards),
+                shard_count=len(target_shards[label]),
                 shard_durations=shards,
             )
         )
