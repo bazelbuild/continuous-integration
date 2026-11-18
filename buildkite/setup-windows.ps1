@@ -48,7 +48,7 @@ if (Get-Command choco -ErrorAction SilentlyContinue) {
             if (Test-Path "c:\temp\bazel") {
                 Push-Location "c:\temp\bazel"
                 try {
-                    & c:\bazel\bazel.exe --batch --output_user_root="c:\temp\bazel_root" fetch --repository_cache="c:\buildkite\bazeltest_repo_cache" //src:bazel.exe //src:test_repos
+                    & c:\bazel\bazel.exe --batch --output_user_root="c:\temp\bazel_root" fetch --repository_cache="c:\buildkite\bazeltest_repo_cache" '--repo_contents_cache=' //src:bazel.exe //src:test_repos
                 } finally {
                     Pop-Location
                 }
