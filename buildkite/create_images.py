@@ -145,7 +145,7 @@ def workflow(name, params, refresh=False):
     ).stdout.splitlines()
     for vm in leftover_vms:
         print(f"Deleting leftover image VM {vm} from a previous run")
-        gcloud.delete_instance(vm, project=project, zone=zone, **{"async": True})
+        gcloud.delete_instance(vm, project=project, zone=zone)
 
     try:
         # Create the VM.
