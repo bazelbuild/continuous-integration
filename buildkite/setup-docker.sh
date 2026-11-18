@@ -222,12 +222,12 @@ else
 
 ### Refresh our Git mirrors when starting from an existing image.
 {
-  git config --global safe.bareRepository all
+  git config --system safe.bareRepository all
 
   update_mirror() {
     local repo_dir="$1"
-    git -C "${repo_dir}" config remote.origin.fetch "+refs/heads/*:refs/heads/*"
-    git -C "${repo_dir}" fetch --prune --tags origin || echo "Warning: failed to fetch ${repo_dir}"
+    git -c safe.directory='*' -C "${repo_dir}" config remote.origin.fetch "+refs/heads/*:refs/heads/*"
+    git -c safe.directory='*' -C "${repo_dir}" fetch --prune --tags origin || echo "Warning: failed to fetch ${repo_dir}"
   }
   export -f update_mirror
 
