@@ -31,7 +31,7 @@ SETUP_TIMEOUT_SECONDS = 2 * 60 * 60
 IMAGE_CREATION_VMS = {
     "bk-testing-docker": {
         "project": "bazel-public",
-        "zone": "us-central1-f",
+        "region": "us-central1",
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-2204-lts",
         "setup_script": "setup-docker.sh",
@@ -42,7 +42,7 @@ IMAGE_CREATION_VMS = {
     },
     "bk-testing-docker-arm64": {
         "project": "bazel-public",
-        "zone": "us-central1-f",
+        "region": "us-central1",
         "source_image_project": "ubuntu-os-cloud",
         "source_image_family": "ubuntu-2204-lts-arm64",
         "setup_script": "setup-docker.sh",
@@ -55,7 +55,7 @@ IMAGE_CREATION_VMS = {
     },
     "bk-testing-windows": {
         "project": "bazel-public",
-        "zone": "us-central1-f",
+        "region": "us-central1",
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-2022", # vs build tools failed to install on windows-2022-core
         "setup_script": "setup-windows.ps1",
@@ -63,7 +63,7 @@ IMAGE_CREATION_VMS = {
     },
     "windows-playground": {
         "project": "di-cloud-exp",
-        "zone": "us-central1-f",
+        "region": "us-central1",
         "network": "default",
         "source_image_project": "windows-cloud",
         "source_image_family": "windows-2022",
@@ -106,17 +106,19 @@ def create_instance(instance_name, params):
                 "image-family": params["source_image_family"],
             }
 
-        gcloud.create_instance(
-            instance_name,
+        return gcloud.bulk_create_instances(
             project=params["project"],
-            zone=params["zone"],
+            region=params["region"],
+            target_distribution_shape="ANY",
+            predefined_names=instance_name,
             machine_type=params.get("machine_type", DEFAULT_MACHINE_TYPE),
             network=params.get("network", "default"),
             metadata_from_file=startup_script,
             boot_disk_type=params.get("boot_disk_type", DEFAULT_BOOT_DISK_TYPE),
             boot_disk_size=params.get("boot_disk_size", "500GB"),
+            format="value(instances[0].zone.basename())",
             **image,
-        )
+        ).stdout.strip()
     finally:
         os.remove(setup_script)
 
@@ -124,25 +126,27 @@ def create_instance(instance_name, params):
 def workflow(name, params):
     instance_name = "%s-image-%s" % (name, int(datetime.now().timestamp()))
     project = params["project"]
-    zone = params["zone"]
 
     leftover_vms = gcloud.gcloud(
         "compute",
         "instances",
         "list",
         project=project,
-        zones=zone,
         filter=f"name ~ ^{name}-image-",
-        format="value(name)",
+        format="value(name,zone.basename())",
     ).stdout.splitlines()
-    for vm in leftover_vms:
+    for line in leftover_vms:
+        vm, vm_zone = line.split()
         print(f"Deleting leftover image VM {vm} from a previous run")
-        gcloud.delete_instance(vm, project=project, zone=zone)
+        gcloud.delete_instance(vm, project=project, zone=vm_zone)
+
+    # Create the VM and record the zone GCE placed it in.
+    zone = create_instance(instance_name, params)
+    if not zone:
+        raise Exception(f"Could not determine zone for created image VM {instance_name}")
+    print(f"Created image VM {instance_name} in zone {zone}")
 
     try:
-        # Create the VM.
-        create_instance(instance_name, params)
-
         # Wait for the VM to become ready.
         gcloud_utils.wait_for_instance(instance_name, project=project, zone=zone, status="RUNNING")
 

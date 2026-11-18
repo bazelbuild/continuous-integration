@@ -85,6 +85,13 @@ def create_instance(name, **kwargs):
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
+def bulk_create_instances(**kwargs):
+    try:
+        return gcloud("compute", "instances", "bulk", "create", **kwargs)
+    except subprocess.CalledProcessError as e:
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
+
+
 def delete_instance(name, **kwargs):
     try:
         return gcloud("compute", "instances", "delete", name, "--quiet", **kwargs)
