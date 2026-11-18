@@ -33,17 +33,20 @@ chmod 0755 "${AGENT_HOME}"
 case $(hostname -f) in
   *.bazel-public.*)
     ARTIFACT_BUCKET="bazel-trusted-buildkite-artifacts"
-    BUILDKITE_TOKEN=$(gcloud secrets versions access latest --secret="bazel-trusted-buildkite-agent-token" --project bazel-public)
+    TOKEN_SECRET_NAME="bazel-trusted-buildkite-agent-token"
+    TOKEN_PROJECT="bazel-public"
     ;;
   *.bazel-untrusted.*)
     case $(hostname -f) in
       *-testing-*)
         ARTIFACT_BUCKET="bazel-testing-buildkite-artifacts"
-        BUILDKITE_TOKEN=$(gcloud secrets versions access latest --secret="bazel-testing-buildkite-agent-token" --project bazel-untrusted)
+        TOKEN_SECRET_NAME="bazel-testing-buildkite-agent-token"
+        TOKEN_PROJECT="bazel-untrusted"
         ;;
       *)
         ARTIFACT_BUCKET="bazel-untrusted-buildkite-artifacts"
-        BUILDKITE_TOKEN=$(gcloud secrets versions access latest --secret="bazel-buildkite-agent-token" --project bazel-untrusted)
+        TOKEN_SECRET_NAME="bazel-buildkite-agent-token"
+        TOKEN_PROJECT="bazel-untrusted"
         ;;
     esac
 esac
@@ -66,7 +69,12 @@ if [[ -d /var/lib/gitmirrors ]]; then
 fi
 
 ### Write the Buildkite agent configuration.
-cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
+# Run in a subshell with command tracing disabled so the agent token is neither
+# printed to the startup log nor retained in shell state.
+(
+  set +x
+  BUILDKITE_TOKEN=$(gcloud secrets versions access latest --secret="${TOKEN_SECRET_NAME}" --project "${TOKEN_PROJECT}")
+  cat > /etc/buildkite-agent/buildkite-agent.cfg <<EOF
 token="${BUILDKITE_TOKEN}"
 name="%hostname"
 tags="queue=${QUEUE},kind=docker,os=linux"
@@ -81,6 +89,7 @@ no-plugins=false
 disconnect-after-job=true
 health-check-addr=0.0.0.0:8080
 EOF
+)
 
 ### Add the Buildkite agent hooks.
 cat > /etc/buildkite-agent/hooks/environment <<EOF
