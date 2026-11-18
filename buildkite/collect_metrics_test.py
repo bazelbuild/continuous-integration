@@ -14,8 +14,13 @@ def create_mock_bep_content(test_results=None, exit_code=0):
     # 1. Optional Test Results
     if test_results:
         for tr in test_results:
+            test_id = {"label": tr["label"]}
+            if "shard" in tr:
+                test_id["shard"] = tr["shard"]
+            if "attempt" in tr:
+                test_id["attempt"] = tr["attempt"]
             content.append(json.dumps({
-                "id": {"testResult": {"label": tr["label"]}},
+                "id": {"testResult": test_id},
                 "testResult": {"status": tr["status"], "testAttemptDurationMillis": str(tr["duration_ms"])},
             }))
             
@@ -149,6 +154,41 @@ class TestPublishMetrics(unittest.TestCase):
         finally:
             if os.path.exists(temp_path_2):
                 os.remove(temp_path_2)
+
+    def test_parse_bep_sharded_retries(self):
+        test_results = [
+            # 2 shards; shard 0 times out on attempt 1 and passes on attempt 2
+            {"label": "//pkg:retried_test", "shard": 0, "attempt": 1, "status": "TIMEOUT", "duration_ms": 900000},
+            {"label": "//pkg:retried_test", "shard": 0, "attempt": 2, "status": "PASSED", "duration_ms": 180000},
+            {"label": "//pkg:retried_test", "shard": 1, "attempt": 1, "status": "PASSED", "duration_ms": 150000},
+            # Unsharded (shard omitted, defaults to 0) with a retry
+            {"label": "//pkg:unsharded_retried", "attempt": 1, "status": "FAILED", "duration_ms": 3000},
+            {"label": "//pkg:unsharded_retried", "attempt": 2, "status": "PASSED", "duration_ms": 2000},
+        ]
+        mock_bep_content = create_mock_bep_content(test_results=test_results)
+
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as tf:
+            tf.write("\n".join(mock_bep_content))
+            temp_path = tf.name
+
+        try:
+            bep_metrics = collect_metrics.parse_bep(temp_path)
+            targets_by_label = {t.label: t for t in bep_metrics.targets}
+
+            retried = targets_by_label["//pkg:retried_test"]
+            self.assertEqual(retried.status, "TIMEOUT")
+            self.assertEqual(retried.shard_count, 2)
+            self.assertEqual(retried.duration_s, 900.0)
+            self.assertEqual(retried.shard_durations, [900.0, 180.0, 150.0])
+
+            unsharded = targets_by_label["//pkg:unsharded_retried"]
+            self.assertEqual(unsharded.status, "FAILED")
+            self.assertEqual(unsharded.shard_count, 1)
+            self.assertEqual(unsharded.duration_s, 3.0)
+            self.assertEqual(unsharded.shard_durations, [3.0, 2.0])
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
 
     def test_parse_bep_build_only(self):
         # Create a mock BEP file content with only build metrics

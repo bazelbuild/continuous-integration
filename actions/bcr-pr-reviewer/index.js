@@ -388,6 +388,30 @@ async function isModuleMaintainer(octokit, owner, repo, prAuthorId) {
   }
 }
 
+/**
+ * Returns the approvers who are members of the bcr-maintainers team.
+ */
+async function getBcrMaintainerApprovers(octokit, owner, approvers) {
+  const bcrMaintainerApprovers = [];
+  for (const approver of approvers) {
+    try {
+      const { data } = await octokit.rest.teams.getMembershipForUserInOrg({
+        org: owner,
+        team_slug: 'bcr-maintainers',
+        username: approver,
+      });
+      if (data.state === 'active') {
+        bcrMaintainerApprovers.push(approver);
+      }
+    } catch (error) {
+      if (error.status !== 404) {
+        console.error(`Failed to check if ${approver} is a BCR maintainer: ${error.message}`);
+      }
+    }
+  }
+  return bcrMaintainerApprovers;
+}
+
 async function hasSensitiveMetadataChanges(octokit, owner, repo, prNumber, allModulesWithMetadataChange) {
   for (const moduleName of allModulesWithMetadataChange) {
     try {
@@ -522,10 +546,19 @@ async function reviewPR(octokit, owner, repo, prNumber) {
     return { merged: false, message: 'This PR was updated during the review, please try again.' };
   }
 
+  // Sensitive metadata.json changes (e.g. maintainer changes) need a BCR maintainer's approval in
+  // addition to the module maintainers' approval.
+  let bcrMaintainerApproved = false;
   if (hasSensitiveMetadataChange && !isNewModule) {
-    await postComment(octokit, owner, repo, prNumber,
-      `Hello BCR maintainers, modules with sensitive metadata modifications (outside versions array) have been updated in this PR. Manual reviews are necessary.`);
-    await requestBcrMaintainers(octokit, owner, repo, prNumber);
+    const bcrMaintainerApprovers = await getBcrMaintainerApprovers(octokit, owner, approvers);
+    bcrMaintainerApproved = bcrMaintainerApprovers.length > 0;
+    if (bcrMaintainerApproved) {
+      console.log(`Sensitive metadata changes have been approved by BCR maintainers: ${bcrMaintainerApprovers.join(', ')}`);
+    } else {
+      await postComment(octokit, owner, repo, prNumber,
+        `Hello BCR maintainers, modules with sensitive metadata modifications (outside versions array) have been updated in this PR. Manual reviews are necessary.`);
+      await requestBcrMaintainers(octokit, owner, repo, prNumber);
+    }
   }
 
   const { data } = await octokit.rest.users.getAuthenticated();
@@ -536,7 +569,7 @@ async function reviewPR(octokit, owner, repo, prNumber) {
 
   let result;
   // Approve the PR if not previously approved and all modules are approved
-  if (allModulesApproved && !hasSensitiveMetadataChange) {
+  if (allModulesApproved && (!hasSensitiveMetadataChange || bcrMaintainerApproved)) {
     if (isSelfAuthored) {
       console.log(`Skipping approval: PR #${prNumber} was opened by ${myLogin}, which cannot approve its own PR.`);
       await postComment(octokit, owner, repo, prNumber,

@@ -105,6 +105,8 @@ steps:
           scripts/packages/debian/bazel-debian.deb \
           scripts/packages/debian/bazel.dsc \
           scripts/packages/debian/bazel.tar.gz \
+          scripts/bazel-complete.bash \
+          scripts/bazel.fish \
           bazel-distfile.zip
 
       mkdir artifacts
@@ -115,6 +117,9 @@ steps:
       cp "bazel-bin/scripts/packages/debian/bazel.dsc" "artifacts/bazel_\${release_name}.dsc"
       cp "bazel-bin/scripts/packages/debian/bazel.tar.gz" "artifacts/bazel_\${release_name}.tar.gz"
       cp "bazel-bin/bazel-distfile.zip" "artifacts/bazel-\${release_name}-dist.zip"
+      cp "bazel-bin/scripts/bazel-complete.bash" "artifacts/bazel-\${release_name}-completion.bash"
+      cp "bazel-bin/scripts/bazel.fish" "artifacts/bazel-\${release_name}-completion.fish"
+      cp "scripts/zsh_completion/_bazel" "artifacts/bazel-\${release_name}-completion.zsh"
 
       cd artifacts
       buildkite-agent artifact upload "*"

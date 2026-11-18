@@ -1423,5 +1423,86 @@ class CommandQuotingTest(unittest.TestCase):
                     bazelci.quote_arg("windows", bad)
 
 
+class RemoteCachingFlagsTest(unittest.TestCase):
+    def test_is_intel_mac(self):
+        self.assertTrue(bazelci.is_intel_mac("macos"))
+        self.assertFalse(bazelci.is_intel_mac("macos_arm64"))
+        self.assertFalse(bazelci.is_intel_mac("ubuntu2404"))
+        self.assertFalse(bazelci.is_intel_mac("windows"))
+
+        with mock.patch.object(bazelci.platform_module, "system", return_value="Darwin"):
+            with mock.patch.object(bazelci.platform_module, "machine", return_value="x86_64"):
+                self.assertTrue(bazelci.is_intel_mac())
+            with mock.patch.object(bazelci.platform_module, "machine", return_value="arm64"):
+                self.assertFalse(bazelci.is_intel_mac())
+
+        with mock.patch.object(bazelci.platform_module, "system", return_value="Linux"):
+            with mock.patch.object(bazelci.platform_module, "machine", return_value="x86_64"):
+                self.assertFalse(bazelci.is_intel_mac())
+
+    @mock.patch("subprocess.check_output", return_value=b"fake\n")
+    def test_macos_intel_uses_gcs_cache(self, _):
+        with mock.patch.object(bazelci, "is_mac", return_value=True):
+            flags = bazelci.remote_caching_flags("macos")
+            self.assertIn(
+                "--remote_cache=https://storage.googleapis.com/bazel-untrusted-build-cache",
+                flags,
+            )
+            self.assertNotIn(
+                "--remote_cache=remotebuildexecution.googleapis.com",
+                flags,
+            )
+            self.assertIn("--remote_timeout=3600", flags)
+            self.assertIn("--google_default_credentials", flags)
+
+    @mock.patch("subprocess.check_output", return_value=b"fake\n")
+    def test_macos_arm64_uses_rbe_cache(self, _):
+        with mock.patch.object(bazelci, "is_mac", return_value=True):
+            flags = bazelci.remote_caching_flags("macos_arm64")
+            self.assertIn(
+                "--remote_cache=remotebuildexecution.googleapis.com",
+                flags,
+            )
+            self.assertIn(
+                f"--remote_instance_name=projects/{bazelci.CLOUD_PROJECT}/instances/default_instance",
+                flags,
+            )
+            self.assertNotIn(
+                "--remote_cache=https://storage.googleapis.com/bazel-untrusted-build-cache",
+                flags,
+            )
+            self.assertIn("--remote_timeout=3600", flags)
+            self.assertIn("--google_default_credentials", flags)
+
+    def test_linux_uses_rbe_cache(self):
+        with mock.patch.object(bazelci, "is_mac", return_value=False):
+            flags = bazelci.remote_caching_flags("ubuntu2404")
+            self.assertIn(
+                "--remote_cache=remotebuildexecution.googleapis.com",
+                flags,
+            )
+            self.assertIn(
+                f"--remote_instance_name=projects/{bazelci.CLOUD_PROJECT}/instances/default_instance",
+                flags,
+            )
+            self.assertNotIn(
+                "--remote_cache=https://storage.googleapis.com/bazel-untrusted-build-cache",
+                flags,
+            )
+            self.assertIn("--remote_timeout=60", flags)
+            self.assertIn("--google_default_credentials", flags)
+            self.assertIn("--bes_backend=buildeventservice.googleapis.com", flags)
+
+    @mock.patch("subprocess.check_output", return_value=b"fake\n")
+    def test_macos_intel_trusted_uses_gcs_trusted_cache(self, _):
+        with mock.patch.object(bazelci, "is_mac", return_value=True), \
+             mock.patch.object(bazelci, "THIS_IS_TRUSTED", True):
+            flags = bazelci.remote_caching_flags("macos")
+            self.assertIn(
+                "--remote_cache=https://storage.googleapis.com/bazel-trusted-build-cache",
+                flags,
+            )
+
+
 if __name__ == "__main__":
     unittest.main()

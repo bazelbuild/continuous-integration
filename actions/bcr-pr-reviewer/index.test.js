@@ -258,6 +258,7 @@ function reviewCommandOctokit({
   mergeError = null,
   sensitiveMetadata = false,
   newModule = false,
+  bcrMaintainerApproved = false,
 } = {}) {
   const calls = [];
   const metadata = {
@@ -292,9 +293,14 @@ function reviewCommandOctokit({
         listFiles: async () => ({ data: files }),
         listCommits: async () => ({ data: [{ sha: HEAD_SHA, parents: [{ sha: 'base' }] }] }),
         listReviews: async () => ({
-          data: approved
-            ? [{ user: { login: 'Maintainer' }, state: 'APPROVED', commit_id: HEAD_SHA, submitted_at: '2026-09-30T00:00:00Z' }]
-            : [],
+          data: [
+            ...(approved
+              ? [{ user: { login: 'Maintainer' }, state: 'APPROVED', commit_id: HEAD_SHA, submitted_at: '2026-09-30T00:00:00Z' }]
+              : []),
+            ...(bcrMaintainerApproved
+              ? [{ user: { login: 'BcrMaintainer' }, state: 'APPROVED', commit_id: HEAD_SHA, submitted_at: '2026-09-30T00:00:00Z' }]
+              : []),
+          ],
         }),
         createReview: async ({ event }) => calls.push(['createReview', event]),
         merge: async ({ sha }) => {
@@ -324,6 +330,16 @@ function reviewCommandOctokit({
         addLabels: async ({ labels }) => calls.push(['addLabels', labels]),
         createComment: async ({ body }) => calls.push(['createComment', body]),
         listComments: async () => ({ data: [] }),
+      },
+      teams: {
+        getMembershipForUserInOrg: async ({ org, team_slug, username }) => {
+          assert.equal(org, 'bazelbuild');
+          assert.equal(team_slug, 'bcr-maintainers');
+          if (username === 'bcrmaintainer') {
+            return { data: { state: 'active' } };
+          }
+          throw Object.assign(new Error('Not Found'), { status: 404 });
+        },
       },
       reactions: {
         createForIssueComment: async ({ content }) => calls.push(['reaction', content]),
@@ -399,6 +415,28 @@ test('@bazel-io review: does not merge a PR with sensitive metadata.json changes
   assert.deepEqual(calls.at(-1), [
     'createComment',
     '@Commenter, this PR could not be merged yet. This PR has sensitive metadata.json changes, it needs to be reviewed by a BCR maintainer.',
+  ]);
+});
+
+test('@bazel-io review: merges a PR with sensitive metadata.json changes approved by a BCR maintainer', async () => {
+  const calls = await runComment('@bazel-io review', { sensitiveMetadata: true, bcrMaintainerApproved: true });
+
+  assert.deepEqual(calls, [
+    ['reaction', 'eyes'],
+    ['createReview', 'APPROVE'],
+    ['merge', HEAD_SHA],
+    ['addLabels', ['auto-merged']],
+    ['reaction', 'rocket'],
+  ]);
+});
+
+test('@bazel-io review: does not merge a PR with sensitive metadata.json changes approved only by a BCR maintainer', async () => {
+  const calls = await runComment('@bazel-io review', { sensitiveMetadata: true, approved: false, bcrMaintainerApproved: true });
+
+  assert.equal(calls.some(([name]) => name === 'merge'), false);
+  assert.deepEqual(calls.at(-1), [
+    'createComment',
+    '@Commenter, this PR could not be merged yet. The following modules still need approval from one of their maintainers: foo.',
   ]);
 });
 

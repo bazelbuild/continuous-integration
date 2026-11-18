@@ -21,4 +21,5 @@ docker push "gcr.io/$PREFIX/fedora43-java25" &
 docker push "gcr.io/$PREFIX/fedora45-java25" &
 docker push "gcr.io/$PREFIX/fedora43-bazel-java25" &
 docker push "gcr.io/$PREFIX/fedora45-bazel-java25" &
+docker push "gcr.io/$PREFIX/docgen" &
 wait

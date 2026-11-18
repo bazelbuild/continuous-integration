@@ -889,6 +889,50 @@ resource "buildkite_pipeline" "bcr-bazel-compatibility-test" {
   }
 }
 
+resource "buildkite_pipeline_schedule" "bcr-bazel-compatibility-test-google-maintained-modules" {
+  pipeline_id = buildkite_pipeline.bcr-bazel-compatibility-test.id
+  label       = "Test Bazel@last_rc with latest versions of Google maintained modules every night"
+  branch      = "main"
+  commit      = "HEAD"
+  cronline    = "0 4 * * *" # 4 AM UTC
+  enabled     = true
+  message     = "(Scheduled) Test Bazel@last_rc with Google maintained modules"
+  env = {
+    MODULE_SELECTIONS = join(",", [
+      "abseil-cpp@latest",
+      "boringssl@latest",
+      "brotli@latest",
+      "cel-cpp@latest",
+      "crc32c@latest",
+      "flatbuffers@latest",
+      "fuzztest@latest",
+      "gflags@latest",
+      "glog@latest",
+      "google_benchmark@latest",
+      "google_cloud_cpp@latest",
+      "googleapis@latest",
+      "googleapis-cc@latest",
+      "googleapis-go@latest",
+      "googleapis-grpc-cc@latest",
+      "googleapis-grpc-java@latest",
+      "googleapis-java@latest",
+      "googleapis-python@latest",
+      "googleapis-upb@latest",
+      "googletest@latest",
+      "grpc@latest",
+      "highway@latest",
+      "protobuf@latest",
+      "re2@latest",
+      "riegeli@latest",
+      "s2geometry@latest",
+      "snappy@latest",
+      "tink_cc@latest",
+    ])
+    USE_BAZEL_VERSION      = "last_rc"
+    SKIP_WAIT_FOR_APPROVAL = "1"
+  }
+}
+
 resource "buildkite_pipeline" "bcr-downstream-test" {
   name           = "BCR Downstream Test"
   repository     = "https://github.com/bazelbuild/bazel-central-registry.git"
