@@ -14,7 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import queue
+import shutil
+import subprocess
 import sys
 import threading
 
@@ -63,21 +66,39 @@ def worker():
             WORK_QUEUE.task_done()
 
 
-def workflow(name, params):
-    # Get the name from the current image in the source family.
-    source_image = gcloud.describe_image_family(
-        params["source_image_family"], project=params["source_image_project"]
+def get_recorded_image(source_family):
+    if not os.environ.get("BUILDKITE") or not shutil.which("buildkite-agent"):
+        return None
+    result = subprocess.run(
+        ["buildkite-agent", "meta-data", "get", f"vm-image-{source_family}", "--default", ""],
+        capture_output=True,
+        text=True,
     )
+    if result.returncode != 0:
+        return None
+    return result.stdout.strip() or None
+
+
+def workflow(name, params):
+    source_image_name = get_recorded_image(params["source_image_family"])
+    if source_image_name:
+        source_kwargs = {"source_image": source_image_name}
+    else:
+        # Fall back to the current image in the source family (e.g. local runs).
+        source_image_name = gcloud.describe_image_family(
+            params["source_image_family"], project=params["source_image_project"]
+        )["name"]
+        source_kwargs = {"source_image_family": params["source_image_family"]}
 
     # Promote the testing image to the production image.
     gcloud.create_image(
-        source_image["name"].replace("-testing", ""),
+        source_image_name.replace("-testing", ""),
         project=params["project"],
         family=name,
         guest_os_features=params.get("guest_os_features", []),
         licenses=params.get("licenses", []),
-        source_image_family=params["source_image_family"],
         source_image_project=params["source_image_project"],
+        **source_kwargs,
     )
 
 

@@ -157,21 +157,21 @@ resource "buildkite_pipeline" "create-linux-vm-image" {
   }
 }
 
-# Mondays 04:00 UTC = Munich 05:00 CET / 06:00 CEST, New York Sun 23:00 EST / Mon 00:00 EDT
+# 1st of every month at 04:00 UTC = Munich 05:00 CET / 06:00 CEST, New York 23:00 EST / 00:00 EDT
 # (outside Munich and New York working hours).
 resource "buildkite_pipeline_schedule" "create-linux-vm-image" {
   pipeline_id = buildkite_pipeline.create-linux-vm-image.id
-  label       = "Create Linux VM image weekly"
+  label       = "Create Linux VM image monthly"
   branch      = "master"
-  cronline    = "0 4 * * 1"
-  message     = "Scheduled weekly full image build"
+  cronline    = "0 4 1 * *"
+  message     = "Scheduled monthly full image build"
 }
 
 resource "buildkite_pipeline_schedule" "refresh-linux-vm-image" {
   pipeline_id = buildkite_pipeline.create-linux-vm-image.id
-  label       = "Refresh Linux VM image daily (Tue-Fri)"
+  label       = "Refresh Linux VM image daily (Mon-Thu)"
   branch      = "master"
-  cronline    = "0 4 * * 2-5"
+  cronline    = "0 4 * * 1-4"
   message     = "Scheduled daily image refresh"
   env         = { BAZEL_REFRESH_VM_IMAGE = "1" }
 }
@@ -332,21 +332,21 @@ resource "buildkite_pipeline" "create-windows-vm-image" {
   }
 }
 
-# Mondays 05:00 UTC = Munich 06:00 CET / 07:00 CEST, New York Mon 00:00 EST / 01:00 EDT
+# 1st of every month at 05:00 UTC = Munich 06:00 CET / 07:00 CEST, New York 00:00 EST / 01:00 EDT
 # (outside working hours; 1h after Linux so testing presubmits don't overlap bk-testing-docker recreate).
 resource "buildkite_pipeline_schedule" "create-windows-vm-image" {
   pipeline_id = buildkite_pipeline.create-windows-vm-image.id
-  label       = "Create Windows VM image weekly"
+  label       = "Create Windows VM image monthly"
   branch      = "master"
-  cronline    = "0 5 * * 1"
-  message     = "Scheduled weekly full image build"
+  cronline    = "0 5 1 * *"
+  message     = "Scheduled monthly full image build"
 }
 
 resource "buildkite_pipeline_schedule" "refresh-windows-vm-image" {
   pipeline_id = buildkite_pipeline.create-windows-vm-image.id
-  label       = "Refresh Windows VM image daily (Tue-Fri)"
+  label       = "Refresh Windows VM image daily (Mon-Thu)"
   branch      = "master"
-  cronline    = "0 5 * * 2-5"
+  cronline    = "0 5 * * 1-4"
   message     = "Scheduled daily image refresh"
   env         = { BAZEL_REFRESH_VM_IMAGE = "1" }
 }

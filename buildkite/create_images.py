@@ -16,6 +16,8 @@
 
 from datetime import datetime
 import os
+import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -179,6 +181,11 @@ def workflow(name, params, refresh=False):
             licenses=params.get("licenses", []),
             guest_os_features=params.get("guest_os_features", []),
         )
+        if os.environ.get("BUILDKITE") and shutil.which("buildkite-agent"):
+            subprocess.run(
+                ["buildkite-agent", "meta-data", "set", f"vm-image-{name}", instance_name],
+                check=True,
+            )
     finally:
         gcloud.delete_instance(instance_name, project=project, zone=zone)
 

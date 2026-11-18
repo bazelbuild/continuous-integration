@@ -43,10 +43,17 @@ if (Get-Command choco -ErrorAction SilentlyContinue) {
         if (Test-Path $bazel_mirror) {
             Write-SerialLog "Pre-warming / refreshing Bazel repository cache..."
             $ErrorActionPreference = "Continue"
-            Remove-Item "c:\temp\bazel" -Recurse -Force -ErrorAction Ignore
+            Remove-Item "c:\temp\bazel", "c:\temp\bazel_root" -Recurse -Force -ErrorAction Ignore
             & git clone $bazel_mirror "c:\temp\bazel"
-            & c:\bazel\bazel.exe --batch fetch --repository_cache="c:\buildkite\bazeltest_repo_cache" //src:bazel.exe //src:test_repos
-            Remove-Item "c:\temp\bazel" -Recurse -Force -ErrorAction Ignore
+            if (Test-Path "c:\temp\bazel") {
+                Push-Location "c:\temp\bazel"
+                try {
+                    & c:\bazel\bazel.exe --batch --output_user_root="c:\temp\bazel_root" fetch --repository_cache="c:\buildkite\bazeltest_repo_cache" //src:bazel.exe //src:test_repos
+                } finally {
+                    Pop-Location
+                }
+            }
+            Remove-Item "c:\temp\bazel", "c:\temp\bazel_root" -Recurse -Force -ErrorAction Ignore
             $ErrorActionPreference = "Stop"
         }
         Import-Module NTFSSecurity
