@@ -90,11 +90,8 @@ steps:
 
   - wait
 
-  - block: ":white_check_mark: Confirm you have tested the new VM image in the bazel-testing org"
-
-  - wait
-
   - block: ":rocket: Promote the VM image to Prod"
+    if: build.env("BAZEL_REFRESH_VM_IMAGE") != "1"
 
   - command: |-
       cd buildkite
