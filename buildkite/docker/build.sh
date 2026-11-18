@@ -93,6 +93,7 @@ docker_build "${TOOLS_CONTEXT[@]}" -f debian13/Dockerfile   --builder mp-builder
 docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2204/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2204-java17 -t "gcr.io/$PREFIX/ubuntu2204-java17" ubuntu2204 & pids+=($!)
 docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2204/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2204        -t "gcr.io/$PREFIX/ubuntu2204" ubuntu2204 & pids+=($!)
 docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2404/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2404        -t "gcr.io/$PREFIX/ubuntu2404" ubuntu2404 & pids+=($!)
+docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2604/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2604        -t "gcr.io/$PREFIX/ubuntu2604" ubuntu2604 & pids+=($!)
 docker_build "${TOOLS_CONTEXT[@]}" -f fedora43/Dockerfile   --target fedora43-java25   -t "gcr.io/$PREFIX/fedora43-java25" fedora43 & pids+=($!)
 docker_build "${TOOLS_CONTEXT[@]}" -f fedora45/Dockerfile   --target fedora45-java25   -t "gcr.io/$PREFIX/fedora45-java25" fedora45 & pids+=($!)
 docker_build "${TOOLS_CONTEXT[@]}" -f ../../docgen/Dockerfile                          -t "gcr.io/$PREFIX/docgen" ../../docgen & pids+=($!)
@@ -108,5 +109,8 @@ docker_build "${TOOLS_CONTEXT[@]}" -f rockylinux8/Dockerfile  --builder mp-build
 docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2204/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2204-kythe            -t "gcr.io/$PREFIX/ubuntu2204-kythe" ubuntu2204
 docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2204/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2204-bazel-java17     -t "gcr.io/$PREFIX/ubuntu2204-bazel-java17" ubuntu2204
 docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2404/Dockerfile   --builder mp-builder --load --platform=linux/amd64,linux/arm64 --target ubuntu2404-kythe            -t "gcr.io/$PREFIX/ubuntu2404-kythe" ubuntu2404
+# amd64-only: the pinned Kythe v0.0.75 release ships a single x86-64 tarball, so
+# there is no arm64 variant to build (the base ubuntu2604 image above stays multi-arch).
+docker_build "${TOOLS_CONTEXT[@]}" -f ubuntu2604/Dockerfile   --builder mp-builder --load --platform=linux/amd64 --target ubuntu2604-kythe            -t "gcr.io/$PREFIX/ubuntu2604-kythe" ubuntu2604
 docker_build "${TOOLS_CONTEXT[@]}" -f fedora43/Dockerfile   --target fedora43-bazel-java25       -t "gcr.io/$PREFIX/fedora43-bazel-java25" fedora43
 docker_build "${TOOLS_CONTEXT[@]}" -f fedora45/Dockerfile   --target fedora45-bazel-java25       -t "gcr.io/$PREFIX/fedora45-bazel-java25" fedora45

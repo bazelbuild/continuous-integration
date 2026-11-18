@@ -17,6 +17,8 @@ docker push "gcr.io/$PREFIX/ubuntu2204-bazel-java17" &
 docker push "gcr.io/$PREFIX/ubuntu2204" &
 docker push "gcr.io/$PREFIX/ubuntu2404" &
 docker push "gcr.io/$PREFIX/ubuntu2404-kythe" &
+docker push "gcr.io/$PREFIX/ubuntu2604" &
+docker push "gcr.io/$PREFIX/ubuntu2604-kythe" &
 docker push "gcr.io/$PREFIX/fedora43-java25" &
 docker push "gcr.io/$PREFIX/fedora45-java25" &
 docker push "gcr.io/$PREFIX/fedora43-bazel-java25" &
