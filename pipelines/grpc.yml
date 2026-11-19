@@ -15,10 +15,18 @@ tasks:
       - "--build_tag_filters=-no_linux"
       - "--cxxopt=-Wno-invalid-partial-specialization"
       - "--host_cxxopt=-Wno-invalid-partial-specialization"
+      # clang < 19 does not enable sized deallocation by default. riegeli (a
+      # fuzztest dependency) needs it.
+      - "--cxxopt=-fsized-deallocation"
+      - "--host_cxxopt=-fsized-deallocation"
     test_flags:
       - "--test_tag_filters=-no_linux"
       - "--cxxopt=-Wno-invalid-partial-specialization"
       - "--host_cxxopt=-Wno-invalid-partial-specialization"
+      # clang < 19 does not enable sized deallocation by default. riegeli (a
+      # fuzztest dependency) needs it.
+      - "--cxxopt=-fsized-deallocation"
+      - "--host_cxxopt=-fsized-deallocation"
     build_targets: &build_targets
       - "//:all"
       - "//examples/cpp/..."
