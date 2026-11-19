@@ -1178,10 +1178,6 @@ def is_64_bit():
     return platform_module.machine() in ("arm64", "aarch64")
 
 
-def gsutil_command():
-    return "gsutil.cmd" if is_windows() else "gsutil"
-
-
 def gcloud_command():
     return "gcloud.cmd" if is_windows() else "gcloud"
 
@@ -2096,7 +2092,7 @@ def merge_and_upload_kythe_kzip(platform, index_upload_gcs):
             KZIPS_BUCKET_MAPPING[BUILDKITE_ORG] + pipeline + "/" + branch + "/" + final_kzip_name
         )
         print("Uploading to GCS {}".format(destination))
-        execute_command([gsutil_command(), "cp", final_kzip_name, destination])
+        execute_command([gcloud_command(), "storage", "cp", final_kzip_name, destination])
 
 
 def download_binary(dest_dir, platform, binary_name):
@@ -3023,7 +3019,7 @@ def download_file(url, dest_dir, dest_filename):
         if url.startswith("gs://"):
             for attempt in range(1, 4):
                 try:
-                    execute_command([gsutil_command(), "cp", url, local_path], capture_stderr=True)
+                    execute_command([gcloud_command(), "storage", "cp", url, local_path], capture_stderr=True)
                     break
                 except subprocess.CalledProcessError:
                     if attempt == 3:
@@ -3104,7 +3100,12 @@ def resolve_gcs_generation(url):
     for attempt in range(1, 4):
         try:
             output = execute_command_and_get_output(
-                [gsutil_command(), "stat", url], print_output=False
+                [
+                 gcloud_command(),
+                 "storage",
+                 "objects",
+                 "describe", url
+                ], print_output=False
             )
             break
         except subprocess.CalledProcessError as ex:
@@ -4491,7 +4492,7 @@ def get_last_green_commit_by_url(last_green_commit_url):
     try:
         return (
             subprocess.check_output(
-                [gsutil_command(), "cat", last_green_commit_url], env=os.environ
+                [gcloud_command(), "storage", "cat", last_green_commit_url], env=os.environ
             )
             .decode("utf-8")
             .strip()
@@ -4576,8 +4577,8 @@ def update_last_green_commit_if_newer(last_green_commit_url):
     if not last_green_commit or result:
         execute_command(
             [
-                "echo %s | %s -h 'Cache-Control: no-store' cp - %s"
-                % (current_commit, gsutil_command(), last_green_commit_url)
+                "echo %s | %s storage cp --cache-control=no-store - %s"
+                % (current_commit, gcloud_command(), last_green_commit_url)
             ],
             shell=True,
         )
@@ -4602,20 +4603,29 @@ def latest_generation_and_build_number():
     output = None
     for attempt in range(5):
         output = subprocess.check_output(
-            [gsutil_command(), "stat", bazelci_latest_build_metadata_url()], env=os.environ
+            [
+                gcloud_command(),
+                "storage",
+                "objects",
+                "list",
+                "--stat",
+                "--fetch-encrypted-object-hashes",
+                bazelci_latest_build_metadata_url(),
+            ],
+            env=os.environ,
         )
         match = re.search("Generation:[ ]*([0-9]+)", output.decode("utf-8"))
         if not match:
-            raise BuildkiteException("Couldn't parse generation. gsutil output format changed?")
+            raise BuildkiteException("Couldn't parse generation. gcloud storage output format changed?")
         generation = match.group(1)
 
         match = re.search(r"Hash \(md5\):[ ]*([^\s]+)", output.decode("utf-8"))
         if not match:
-            raise BuildkiteException("Couldn't parse md5 hash. gsutil output format changed?")
+            raise BuildkiteException("Couldn't parse md5 hash. gcloud storage output format changed?")
         expected_md5hash = base64.b64decode(match.group(1))
 
         output = subprocess.check_output(
-            [gsutil_command(), "cat", bazelci_latest_build_metadata_url()], env=os.environ
+            [gcloud_command(), "storage", "cat", bazelci_latest_build_metadata_url()], env=os.environ
         )
         hasher = hashlib.md5()
         hasher.update(output)
@@ -5064,7 +5074,8 @@ def upload_bazel_binaries():
             for target_platform_name in platform["publish_binary"]:
                 execute_command(
                     [
-                        gsutil_command(),
+                        gcloud_command(),
+                        "storage",
                         "cp",
                         bazel_binary_path,
                         bazelci_builds_gs_url(target_platform_name, os.environ["BUILDKITE_COMMIT"]),
@@ -5077,7 +5088,8 @@ def upload_bazel_binaries():
             for target_platform_name in platform["publish_binary"]:
                 execute_command(
                     [
-                        gsutil_command(),
+                        gcloud_command(),
+                        "storage",
                         "cp",
                         bazel_nojdk_binary_path,
                         bazelci_builds_nojdk_gs_url(
@@ -5132,12 +5144,11 @@ def try_publish_binaries(bazel_hashes, bazel_nojdk_hashes, build_number, expecte
         try:
             execute_command(
                 [
-                    gsutil_command(),
-                    "-h",
-                    "x-goog-if-generation-match:" + expected_generation,
-                    "-h",
-                    "Content-Type:application/json",
+                    gcloud_command(),
+                    "storage",
                     "cp",
+                    "--if-generation-match=" + expected_generation,
+                    "--content-type=application/json",
                     info_file,
                     bazelci_latest_build_metadata_url(),
                 ]
@@ -5147,7 +5158,8 @@ def try_publish_binaries(bazel_hashes, bazel_nojdk_hashes, build_number, expecte
 
         execute_command(
             [
-                gsutil_command(),
+                gcloud_command(),
+                "storage",
                 "cp",
                 bazelci_latest_build_metadata_url(),
                 bazelci_builds_metadata_url(git_commit),
@@ -5231,11 +5243,12 @@ def log_retry():
         with open(path, "wt") as f:
             f.write(f"{os.getenv('BUILDKITE_BUILD_URL')}#{os.getenv('BUILDKITE_JOB_ID')}")
 
-        # Use -n and avoid basename in dest so that we don't need
+        # Use --no-clobber and avoid basename in dest so that we don't need
         # storage.objects.list and storage.objects.delete permissions
         # (https://cloud.google.com/storage/docs/access-control/iam-gsutil).
         execute_command(
-            [gsutil_command(), "cp", "-n", path, RETRY_LOGS_BUCKET], capture_stderr=True
+            [gcloud_command(), "storage", "cp", "--no-clobber", path, RETRY_LOGS_BUCKET],
+            capture_stderr=True,
         )
     except subprocess.CalledProcessError as ex:
         eprint(f"Failed to log retry attempt: {ex.stderr}")

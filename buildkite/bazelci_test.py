@@ -1085,7 +1085,7 @@ class KytheKzipTest(unittest.TestCase):
                 ), mock.patch.object(
                     bazelci, "glob", return_value=["a.kzip"]
                 ), mock.patch.object(
-                    bazelci, "gsutil_command", return_value="gsutil"
+                    bazelci, "gcloud_command", return_value="gcloud"
                 ), mock.patch.object(
                     bazelci, "execute_command"
                 ) as mock_exec:
@@ -1111,7 +1111,8 @@ class KytheKzipTest(unittest.TestCase):
                             ),
                             mock.call(
                                 [
-                                    "gsutil",
+                                    "gcloud",
+                                    "storage",
                                     "cp",
                                     expected_kzip,
                                     f"{bucket}bazel-bazel/master/{expected_kzip}",
@@ -1245,7 +1246,7 @@ class TestBinPackingSharding(unittest.TestCase):
     @mock.patch("bazelci.execute_command")
     def test_download_file(self, mock_exec, mock_sleep):
         bazelci.download_file("gs://b/f.json#1", "/tmp", "f.json")
-        self.assertEqual([bazelci.gsutil_command(), "cp", "gs://b/f.json#1"], mock_exec.call_args[0][0][:3])
+        self.assertEqual([bazelci.gcloud_command(), "storage", "cp", "gs://b/f.json#1"], mock_exec.call_args[0][0][:4])
         bazelci.download_file("https://example.com/f.json", "/tmp", "f.json")
         self.assertEqual("curl", mock_exec.call_args[0][0][0])
         mock_exec.reset_mock()
