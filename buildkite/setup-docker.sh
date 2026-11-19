@@ -319,9 +319,9 @@ wait
   UBUNTU_IMAGE=$(docker images --digests --format '{{.Repository}}@{{.Digest}}' gcr.io/bazel-public/ubuntu2404 | head -n 1)
   docker run --rm \
       -v /var/lib/gitmirrors:/var/lib/gitmirrors:ro \
-      -v "${REPO_CACHE_DIR}:/repo_cache" \
+      -v "${REPO_CACHE_DIR}:${REPO_CACHE_DIR}" \
       "${UBUNTU_IMAGE}" \
-      bash -c "git config --global --add safe.directory '*' && git clone /var/lib/gitmirrors/https---github-com-bazelbuild-bazel-git /tmp/bazel && cd /tmp/bazel && bazel --batch fetch --repository_cache=/repo_cache --repo_contents_cache= //src:bazel //src:test_repos" \
+      bash -c "git config --global --add safe.directory '*' && git clone /var/lib/gitmirrors/https---github-com-bazelbuild-bazel-git /tmp/bazel && cd /tmp/bazel && bazel --batch fetch --config=ci-linux --repo_contents_cache= //src:bazel //src:test_repos" \
       || { echo "ERROR: failed to pre-warm repository cache"; exit 1; }
   chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent/bazeltest
 }
