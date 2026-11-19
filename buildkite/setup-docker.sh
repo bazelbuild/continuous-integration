@@ -323,6 +323,7 @@ wait
       "${UBUNTU_IMAGE}" \
       bash -c "git config --global --add safe.directory '*' && git clone /var/lib/gitmirrors/https---github-com-bazelbuild-bazel-git /tmp/bazel && cd /tmp/bazel && bazel --batch fetch --config=ci-linux --repo_contents_cache= //src:bazel //src:test_repos" \
       || { echo "ERROR: failed to pre-warm repository cache"; exit 1; }
+  echo "Pre-warmed repository cache: $(du -sh "${REPO_CACHE_DIR}")"
   chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent/bazeltest
 }
 

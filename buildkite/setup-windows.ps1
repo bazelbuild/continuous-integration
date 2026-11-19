@@ -42,19 +42,32 @@ if (Get-Command choco -ErrorAction SilentlyContinue) {
         $bazel_mirror = "$mirror_root\https---github-com-bazelbuild-bazel-git"
         if (Test-Path $bazel_mirror) {
             Write-SerialLog "Pre-warming / refreshing Bazel repository cache..."
+            $repo_cache = "c:\buildkite\bazeltest_repo_cache"
+            $fetch_exit = -1
             $ErrorActionPreference = "Continue"
             Remove-Item "c:\temp\bazel", "c:\temp\bazel_root" -Recurse -Force -ErrorAction Ignore
             & git clone $bazel_mirror "c:\temp\bazel"
             if (Test-Path "c:\temp\bazel") {
                 Push-Location "c:\temp\bazel"
                 try {
-                    & c:\bazel\bazel.exe --batch --output_user_root="c:\temp\bazel_root" fetch --repository_cache="c:\buildkite\bazeltest_repo_cache" '--repo_contents_cache=' //src:bazel.exe //src:test_repos
+                    $global:LASTEXITCODE = -1
+                    & c:\bazel\bazel.exe --batch --output_user_root="c:\temp\bazel_root" fetch --repository_cache="$repo_cache" '--repo_contents_cache=' //src:bazel.exe //src:test_repos
+                    $fetch_exit = $global:LASTEXITCODE
                 } finally {
                     Pop-Location
                 }
             }
+            $cache_mb = 0
+            if (Test-Path $repo_cache) {
+                $bytes = (Get-ChildItem -Path $repo_cache -Recurse -File -ErrorAction Ignore | Measure-Object -Property Length -Sum).Sum
+                if ($bytes) {
+                    $cache_mb = [Math]::Round($bytes / 1MB, 1)
+                }
+            }
             Remove-Item "c:\temp\bazel", "c:\temp\bazel_root" -Recurse -Force -ErrorAction Ignore
             $ErrorActionPreference = "Stop"
+            $status = if ($fetch_exit -eq 0) { "succeeded" } else { "failed" }
+            Write-SerialLog "Bazel repository cache warm-up $status (exit $fetch_exit), cache size: $cache_mb MB"
         }
         Import-Module NTFSSecurity
         Add-NTFSAccess -Path "C:\buildkite" -Account "b" -AccessRights FullControl
