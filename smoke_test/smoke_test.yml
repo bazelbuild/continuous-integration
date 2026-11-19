@@ -8,18 +8,21 @@ matrix:
     - fedora45
     - kythe_ubuntu2204
     - kythe_ubuntu2404
+    - kythe_ubuntu2604
     - rockylinux8
     - rockylinux8_java11
     - rockylinux8_java11_devtoolset10
     - ubuntu2204
     - ubuntu2204_java17
     - ubuntu2404
+    - ubuntu2604
     # Linux (arm64) Docker platforms
     - debian12_arm64
     - debian13_arm64
     - rockylinux8_arm64
     - ubuntu2204_arm64
     - ubuntu2404_arm64
+    - ubuntu2604_arm64
     # macOS (Intel & Apple Silicon)
     - macos
     - macos_arm64
