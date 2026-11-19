@@ -16,12 +16,15 @@
 
 from datetime import datetime
 import os
+import shutil
+import subprocess
 import sys
 import tempfile
 import time
 
 import gcloud
 import gcloud_utils
+import bazelci
 
 DEBUG = False
 DEFAULT_MACHINE_TYPE = "c3d-standard-8"
@@ -89,7 +92,7 @@ def preprocess_setup_script(setup_script, is_windows):
     return output_file
 
 
-def create_instance(instance_name, params):
+def create_instance(instance_name, params, refresh=False):
     is_windows = "windows" in instance_name
     setup_script = preprocess_setup_script(params["setup_script"], is_windows)
     try:
@@ -98,7 +101,12 @@ def create_instance(instance_name, params):
         else:
             startup_script = "startup-script=" + setup_script
 
-        if "source_image" in params:
+        if refresh:
+            image = {
+                "image-project": params["project"],
+                "image-family": instance_name.split("-image-")[0].replace("-testing", ""),
+            }
+        elif "source_image" in params:
             image = {"image": params["source_image"]}
         else:
             image = {
@@ -123,7 +131,7 @@ def create_instance(instance_name, params):
         os.remove(setup_script)
 
 
-def workflow(name, params):
+def workflow(name, params, refresh=False):
     instance_name = "%s-image-%s" % (name, int(datetime.now().timestamp()))
     project = params["project"]
 
@@ -141,7 +149,7 @@ def workflow(name, params):
         gcloud.delete_instance(vm, project=project, zone=vm_zone)
 
     # Create the VM and record the zone GCE placed it in.
-    zone = create_instance(instance_name, params)
+    zone = create_instance(instance_name, params, refresh=refresh)
     if not zone:
         raise Exception(f"Could not determine zone for created image VM {instance_name}")
     print(f"Created image VM {instance_name} in zone {zone}")
@@ -177,6 +185,11 @@ def workflow(name, params):
             licenses=params.get("licenses", []),
             guest_os_features=params.get("guest_os_features", []),
         )
+        if os.environ.get("BUILDKITE") and shutil.which("buildkite-agent"):
+            subprocess.run(
+                ["buildkite-agent", "meta-data", "set", f"vm-image-{name}", instance_name],
+                check=True,
+            )
     finally:
         gcloud.delete_instance(instance_name, project=project, zone=zone)
 
@@ -201,8 +214,9 @@ def main(argv=None):
         )
         return 1
 
+    refresh = bazelci.is_trueish(os.environ.get("BAZEL_REFRESH_VM_IMAGE"))
     for n in names:
-        workflow(n, IMAGE_CREATION_VMS[n])
+        workflow(n, IMAGE_CREATION_VMS[n], refresh=refresh)
 
     return 0
 
