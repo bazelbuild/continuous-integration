@@ -499,6 +499,20 @@ async function reviewPR(octokit, owner, repo, prNumber) {
     return { merged: false, message: 'No module versions are modified in this PR, it needs to be merged by a BCR maintainer.' };
   }
 
+  // Fetch modules with metadata changes
+  const allModulesWithMetadataChange = await fetchAllModulesWithMetadataChange(octokit, owner, repo, prNumber);
+  if (allModulesWithMetadataChange === null) {
+    console.log(`Aborting review for PR #${prNumber} because it was updated during file fetching.`);
+    return { merged: false, message: 'This PR was updated during the review, please try again.' };
+  }
+
+  // A change to modules/<name>/metadata.json needs the approval of <name>'s maintainers too, even
+  // when the PR doesn't touch any version directory of that module.
+  for (const moduleName of allModulesWithMetadataChange) {
+    modifiedModules.add(moduleName);
+  }
+  console.log(`Modules that need maintainers' approval: ${Array.from(modifiedModules).join(', ')}`);
+
   // Figure out maintainers for each modified module
   const [maintainersMap, _] = await generateMaintainersMap(octokit, owner, repo, modifiedModules, /* toNotifyOnly= */ false, prNumber);
   console.log('Maintainers Map:');
@@ -512,13 +526,6 @@ async function reviewPR(octokit, owner, repo, prNumber) {
   // Verify if all modified modules have at least one maintainer's approval
   const prAuthor = prInfo.data.user.login.toLowerCase();
   const { allModulesApproved, anyModuleApproved, modulesNotApproved } = await checkIfAllModifiedModulesApproved(modifiedModules, maintainersMap, approvers, prAuthor);
-
-  // Fetch modules with metadata changes
-  const allModulesWithMetadataChange = await fetchAllModulesWithMetadataChange(octokit, owner, repo, prNumber);
-  if (allModulesWithMetadataChange === null) {
-    console.log(`Aborting review for PR #${prNumber} because it was updated during file fetching.`);
-    return { merged: false, message: 'This PR was updated during the review, please try again.' };
-  }
 
   let hasSensitiveMetadataChange = false;
   let isNewModule = false;
