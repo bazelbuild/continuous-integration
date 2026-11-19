@@ -2,6 +2,8 @@
 
 readonly OCI_REPOSITORY=$1
 readonly BAZEL_VERSION=$2
+JAVA_VERSION=$3
+TAG=$BAZEL_VERSION-$JAVA_VERSION
 
 set -o errexit -o nounset -o pipefail
 
@@ -21,6 +23,10 @@ if [ -z "${BAZEL_VERSION}" ]; then
     exit 1
 fi
 
+if [ -z "$JAVA_VERSION" ]; then
+  JAVA_VERSION="openjdk-8-jdk"
+fi
+
 GIT_ROOT=$(git rev-parse --show-toplevel)
 readonly GIT_ROOT
 
@@ -30,6 +36,6 @@ fi
 
 docker ${buildx:+"${buildx}"} build \
     --file "${GIT_ROOT}/bazel/oci/Dockerfile" \
-    --tag "${OCI_REPOSITORY}:${BAZEL_VERSION}" \
-    --build-arg BAZEL_VERSION="${BAZEL_VERSION}" \
+    --tag "${OCI_REPOSITORY}:${TAG}" \
+    --build-arg BAZEL_VERSION="${BAZEL_VERSION}" --build-arg JAVA_VERSION="${JAVA_VERSION}"\
     "${GIT_ROOT}"
