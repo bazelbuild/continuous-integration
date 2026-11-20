@@ -408,6 +408,10 @@ IMAGE_HASHES = {
         "amd64": "sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8",
         "arm64": "sha256:5f75cef6a0dc845b1727f03ec4856fe17873e6ab3fd91648167df9cfcb612f6c",
     },
+    "ubuntu2604": {
+        "amd64": "sha256:ead39b38a2f196ab7e972204ecc5edd5bcfef2940d41b20a56527aad2479396d",
+        "arm64": "sha256:869615166fe7e1fb4386e670b349fa5de70831dd11605638972ade51b3b37338",
+    },
     "ubuntu2004-kythe": {
         "amd64": "sha256:3862183a7674064e7e36ab851166e5a20eaccb47c8dd7205354fc8de6a6be0e9",
     },
@@ -418,6 +422,9 @@ IMAGE_HASHES = {
     "ubuntu2404-kythe": {
         "amd64": "sha256:186b7bd1b9b65d59423550fa85c197bffbc207f2bdee05df81b4e38bbec07a9d",
         "arm64": "sha256:7e8d1e235dc5da1ad9527e772dd54236a98c2a57157151913e250c303291941e",
+    },
+    "ubuntu2604-kythe": {
+        "amd64": "sha256:70a168789ba5c3f400e5b63fbaafdd4fd083c392bd7f5aefc658b8cdd844125e",
     },
     "ubuntu2204-java17": {
         "amd64": "sha256:75a622ed24a18d1af44aa1e6ada0a55efaf6dbffd682ad83afa6432bcedfd3b2",
@@ -589,6 +596,14 @@ PLATFORMS = {
         "python": "python3",
         "queue": "arm64",
     },
+    "ubuntu2604_arm64": {
+        "name": "Ubuntu 26.04 LTS ARM64",
+        "emoji-name": ":ubuntu: Ubuntu 26.04 LTS ARM64",
+        "publish_binary": [],
+        "docker-image": get_docker_image("ubuntu2604", is_arm64=True),
+        "python": "python3",
+        "queue": "arm64",
+    },
     "kythe_ubuntu2004": {
         "name": "Kythe (Ubuntu 20.04 LTS)",
         "emoji-name": "Kythe (:ubuntu: Ubuntu 20.04 LTS)",
@@ -610,6 +625,13 @@ PLATFORMS = {
         "docker-image": get_docker_image("ubuntu2404-kythe"),
         "python": "python3",
     },
+    "kythe_ubuntu2604": {
+        "name": "Kythe (Ubuntu 26.04 LTS)",
+        "emoji-name": "Kythe (:ubuntu: Ubuntu 26.04 LTS)",
+        "publish_binary": [],
+        "docker-image": get_docker_image("ubuntu2604-kythe"),
+        "python": "python3",
+    },
     "ubuntu2204_java17": {
         "name": "Ubuntu 22.04 (OpenJDK 17, gcc 11.2.0)",
         "emoji-name": ":ubuntu: Ubuntu 22.04 (OpenJDK 17, gcc 11.2.0)",
@@ -629,6 +651,13 @@ PLATFORMS = {
         "emoji-name": ":ubuntu: Ubuntu 24.04 LTS",
         "publish_binary": [],
         "docker-image": get_docker_image("ubuntu2404"),
+        "python": "python3",
+    },
+    "ubuntu2604": {
+        "name": "Ubuntu 26.04",
+        "emoji-name": ":ubuntu: Ubuntu 26.04 LTS",
+        "publish_binary": [],
+        "docker-image": get_docker_image("ubuntu2604"),
         "python": "python3",
     },
     "fedora39": {
