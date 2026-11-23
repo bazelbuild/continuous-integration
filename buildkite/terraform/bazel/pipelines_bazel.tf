@@ -63,8 +63,8 @@ resource "buildkite_pipeline" "google-bazel-presubmit" {
     steps = {
       skip_checkout = true,
       commands = [
-        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "mkdir .bazelci && curl -sS \"https://bazel.googlesource.com/bazel/+/$BUILDKITE_COMMIT/.bazelci/presubmit.yml?format=TEXT\" | base64 -d > .bazelci/presubmit.yml",
+        "curl -fsS --retry 5 --retry-all-errors \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
+        "mkdir -p .bazelci && curl -fsS --retry 5 --retry-all-errors \"https://bazel.googlesource.com/bazel/+/$BUILDKITE_COMMIT/.bazelci/presubmit.yml?format=TEXT\" -o .bazelci/presubmit.yml.b64 && base64 -d .bazelci/presubmit.yml.b64 > .bazelci/presubmit.yml && rm .bazelci/presubmit.yml.b64",
         "bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --print_shard_summary --file_config=.bazelci/presubmit.yml | tee /dev/tty | buildkite-agent pipeline upload'"
       ],
       priority = 99
