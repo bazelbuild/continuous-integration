@@ -135,6 +135,11 @@ resource "buildkite_pipeline" "create-linux-vm-image" {
     priority = 100,
     steps = {
       commands = [
+        "if [ \"$${BAZEL_REFRESH_VM_IMAGE:-}\" = \"1\" ] && [ \"$(date -u +%d)\" = \"01\" ]; then",
+        "  echo \"Skipping the daily refresh on the 1st of the month; the monthly full build runs today.\"",
+        "  buildkite-agent annotate --style info --context skip-refresh \"Skipping the daily refresh on the 1st of the month; the monthly full build runs today.\"",
+        "  exit 0",
+        "fi",
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-vm-image.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:",
@@ -310,6 +315,11 @@ resource "buildkite_pipeline" "create-windows-vm-image" {
     priority = 100,
     steps = {
       commands = [
+        "if [ \"$${BAZEL_REFRESH_VM_IMAGE:-}\" = \"1\" ] && [ \"$(date -u +%d)\" = \"01\" ]; then",
+        "  echo \"Skipping the daily refresh on the 1st of the month; the monthly full build runs today.\"",
+        "  buildkite-agent annotate --style info --context skip-refresh \"Skipping the daily refresh on the 1st of the month; the monthly full build runs today.\"",
+        "  exit 0",
+        "fi",
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-vm-image.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:",
