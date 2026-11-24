@@ -54,9 +54,9 @@ resource "buildkite_pipeline" "update-git-mirror-tar-ball" {
 
 resource "buildkite_pipeline_schedule" "update-git-mirror-tar-ball" {
   pipeline_id = buildkite_pipeline.update-git-mirror-tar-ball.id
-  label       = "Update git mirror tar ball weekly"
+  label       = "Update git mirror tar ball monthly"
   branch      = "master"
-  cronline    = "0 3 * * 1" # Every Monday at 3 AM UTC
+  cronline    = "0 3 1 * *" # 1st of the month at 3 AM UTC, before the monthly full VM image builds
 }
 
 resource "buildkite_pipeline" "mirror-bazel-external-deps" {
