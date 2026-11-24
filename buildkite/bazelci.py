@@ -285,7 +285,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
         "git_repository": "https://github.com/bazelbuild/rules_cc.git",
         "pipeline_slug": "rules-cc",
         "owned_by_bazel": True,
-        "disabled_reason": "https://github.com/bazelbuild/rules_cc/issues/190",
     },
     "rules_java": {
         "git_repository": "https://github.com/bazelbuild/rules_java.git",
@@ -300,7 +299,6 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     "rules_python": {
         "git_repository": "https://github.com/bazel-contrib/rules_python.git",
         "pipeline_slug": "rules-python-python",
-        "disabled_reason": "https://github.com/bazel-contrib/rules_python/issues/3566, https://github.com/bazel-contrib/rules_python/issues/3581, https://github.com/bazel-contrib/rules_python/issues/3613"
     },
     "rules_shell": {
         "git_repository": "https://github.com/bazel-contrib/rules_shell.git",
