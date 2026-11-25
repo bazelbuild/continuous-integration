@@ -1144,38 +1144,6 @@ class BuildkiteClient(object):
         return build_info
 
 
-def decrypt_token(encrypted_token, kms_key, project="bazel-untrusted"):
-    try:
-        result = subprocess.run(
-            [
-                gcloud_command(),
-                "kms",
-                "decrypt",
-                "--project",
-                project,
-                "--location",
-                "global",
-                "--keyring",
-                "buildkite",
-                "--key",
-                kms_key,
-                "--ciphertext-file",
-                "-",
-                "--plaintext-file",
-                "-",
-            ],
-            input=base64.b64decode(encrypted_token),
-            env=os.environ,
-            check=True,
-            stdout=subprocess.PIPE,  # We cannot use capture_output since some workers run Python <3.7
-            stderr=subprocess.PIPE,  # We cannot use capture_output since some workers run Python <3.7
-        )
-        return result.stdout.decode("utf-8").strip()
-    except subprocess.CalledProcessError as ex:
-        cause = ex.stderr.decode("utf-8")
-        raise BuildkiteException(f"Failed to decrypt token:\n{cause}")
-
-
 def eprint(*args, **kwargs):
     """
     Print to stderr and flush (just in case).

@@ -193,7 +193,7 @@ resource "buildkite_pipeline" "collect-infra-ci-metrics" {
       commands = [
         "cd buildkite",
         "python3 -m pip install --upgrade pip setuptools wheel",
-        "python3 -m pip install pyyaml requests google-cloud-kms google-cloud-bigquery",
+        "python3 -m pip install pyyaml requests google-cloud-bigquery",
         "python3 collect_infra_metrics.py"
       ],
       label = ":chart_with_upwards_trend: Collect Infra CI-Metrics",
