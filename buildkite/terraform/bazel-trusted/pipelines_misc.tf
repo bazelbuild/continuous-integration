@@ -54,9 +54,9 @@ resource "buildkite_pipeline" "update-git-mirror-tar-ball" {
 
 resource "buildkite_pipeline_schedule" "update-git-mirror-tar-ball" {
   pipeline_id = buildkite_pipeline.update-git-mirror-tar-ball.id
-  label       = "Update git mirror tar ball weekly"
+  label       = "Update git mirror tar ball monthly"
   branch      = "master"
-  cronline    = "0 3 * * 1" # Every Monday at 3 AM UTC
+  cronline    = "0 3 1 * *" # 1st of the month at 3 AM UTC, before the monthly full VM image builds
 }
 
 resource "buildkite_pipeline" "mirror-bazel-external-deps" {
@@ -135,6 +135,11 @@ resource "buildkite_pipeline" "create-linux-vm-image" {
     priority = 100,
     steps = {
       commands = [
+        "if [ \"$${BAZEL_REFRESH_VM_IMAGE:-}\" = \"1\" ] && [ \"$(date -u +%d)\" = \"01\" ]; then",
+        "  echo \"Skipping the daily refresh on the 1st of the month; the monthly full build runs today.\"",
+        "  buildkite-agent annotate --style info --context skip-refresh \"Skipping the daily refresh on the 1st of the month; the monthly full build runs today.\"",
+        "  exit 0",
+        "fi",
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-vm-image.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:",
@@ -157,13 +162,23 @@ resource "buildkite_pipeline" "create-linux-vm-image" {
   }
 }
 
-# Mondays 04:00 UTC = Munich 05:00 CET / 06:00 CEST, New York Sun 23:00 EST / Mon 00:00 EDT
+# 1st of every month at 04:00 UTC = Munich 05:00 CET / 06:00 CEST, New York 23:00 EST / 00:00 EDT
 # (outside Munich and New York working hours).
 resource "buildkite_pipeline_schedule" "create-linux-vm-image" {
   pipeline_id = buildkite_pipeline.create-linux-vm-image.id
-  label       = "Create Linux VM image weekly"
+  label       = "Create Linux VM image monthly"
   branch      = "master"
-  cronline    = "0 4 * * 1"
+  cronline    = "0 4 1 * *"
+  message     = "Scheduled monthly full image build"
+}
+
+resource "buildkite_pipeline_schedule" "refresh-linux-vm-image" {
+  pipeline_id = buildkite_pipeline.create-linux-vm-image.id
+  label       = "Refresh Linux VM image daily (Mon-Thu)"
+  branch      = "master"
+  cronline    = "0 4 * * 1-4"
+  message     = "Scheduled daily image refresh"
+  env         = { BAZEL_REFRESH_VM_IMAGE = "1" }
 }
 
 resource "buildkite_pipeline" "collect-infra-ci-metrics" {
@@ -300,6 +315,11 @@ resource "buildkite_pipeline" "create-windows-vm-image" {
     priority = 100,
     steps = {
       commands = [
+        "if [ \"$${BAZEL_REFRESH_VM_IMAGE:-}\" = \"1\" ] && [ \"$(date -u +%d)\" = \"01\" ]; then",
+        "  echo \"Skipping the daily refresh on the 1st of the month; the monthly full build runs today.\"",
+        "  buildkite-agent annotate --style info --context skip-refresh \"Skipping the daily refresh on the 1st of the month; the monthly full build runs today.\"",
+        "  exit 0",
+        "fi",
         "bash -c 'set -euo pipefail; curl -s \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/publish-vm-image.yml?$(date +%s)\" | tee /dev/tty | buildkite-agent pipeline upload --replace'"
       ],
       label = ":pipeline:",
@@ -322,13 +342,23 @@ resource "buildkite_pipeline" "create-windows-vm-image" {
   }
 }
 
-# Mondays 05:00 UTC = Munich 06:00 CET / 07:00 CEST, New York Mon 00:00 EST / 01:00 EDT
+# 1st of every month at 05:00 UTC = Munich 06:00 CET / 07:00 CEST, New York 00:00 EST / 01:00 EDT
 # (outside working hours; 1h after Linux so testing presubmits don't overlap bk-testing-docker recreate).
 resource "buildkite_pipeline_schedule" "create-windows-vm-image" {
   pipeline_id = buildkite_pipeline.create-windows-vm-image.id
-  label       = "Create Windows VM image weekly"
+  label       = "Create Windows VM image monthly"
   branch      = "master"
-  cronline    = "0 5 * * 1"
+  cronline    = "0 5 1 * *"
+  message     = "Scheduled monthly full image build"
+}
+
+resource "buildkite_pipeline_schedule" "refresh-windows-vm-image" {
+  pipeline_id = buildkite_pipeline.create-windows-vm-image.id
+  label       = "Refresh Windows VM image daily (Mon-Thu)"
+  branch      = "master"
+  cronline    = "0 5 * * 1-4"
+  message     = "Scheduled daily image refresh"
+  env         = { BAZEL_REFRESH_VM_IMAGE = "1" }
 }
 
 resource "buildkite_pipeline" "docgen-bazel-blog" {

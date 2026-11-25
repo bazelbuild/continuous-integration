@@ -18,9 +18,60 @@ function Write-SerialLog($msg) {
     $port.Close()
 }
 
-## If choco is already installed, this is the second time the VM starts up, run GCESysprep and then shutdown
+## If choco is already installed, this is the second time the VM starts up (or an incremental image refresh),
+## refresh the Git mirrors, run GCESysprep, and then shutdown.
 if (Get-Command choco -ErrorAction SilentlyContinue) {
-    Write-SerialLog "choco is already installed, this is the second time the VM starts up, running GCESysprep and then shutdown..."
+    Write-SerialLog "choco is already installed, refreshing Git mirrors, running GCESysprep and then shutdown..."
+    & git config --system safe.bareRepository all
+    $mirror_root = "c:\buildkite\bazelbuild"
+    if (Test-Path $mirror_root) {
+        $repos = @(Get-ChildItem -Path $mirror_root -Directory)
+        $batchSize = 8
+        for ($i = 0; $i -lt $repos.Count; $i += $batchSize) {
+            $end = [Math]::Min($i + $batchSize - 1, $repos.Count - 1)
+            $procs = @()
+            foreach ($repo in $repos[$i..$end]) {
+                $dir = $repo.FullName
+                & git --git-dir="$dir" config remote.origin.fetch "+refs/heads/*:refs/heads/*"
+                $procs += Start-Process -FilePath "git.exe" -ArgumentList "--git-dir=`"$dir`" fetch --prune --tags origin" -NoNewWindow -PassThru
+            }
+            if ($procs.Count -gt 0) {
+                $procs | Wait-Process
+            }
+        }
+        $bazel_mirror = "$mirror_root\https---github-com-bazelbuild-bazel-git"
+        if (Test-Path $bazel_mirror) {
+            Write-SerialLog "Pre-warming / refreshing Bazel repository cache..."
+            $repo_cache = "c:\buildkite\bazeltest_repo_cache"
+            $fetch_exit = -1
+            $ErrorActionPreference = "Continue"
+            Remove-Item "c:\temp\bazel", "c:\temp\bazel_root" -Recurse -Force -ErrorAction Ignore
+            & git clone $bazel_mirror "c:\temp\bazel"
+            if (Test-Path "c:\temp\bazel") {
+                Push-Location "c:\temp\bazel"
+                try {
+                    $global:LASTEXITCODE = -1
+                    & c:\bazel\bazel.exe --batch --output_user_root="c:\temp\bazel_root" fetch --repository_cache="$repo_cache" '--repo_contents_cache=' //src:bazel.exe //src:test_repos
+                    $fetch_exit = $global:LASTEXITCODE
+                } finally {
+                    Pop-Location
+                }
+            }
+            $cache_mb = 0
+            if (Test-Path $repo_cache) {
+                $bytes = (Get-ChildItem -Path $repo_cache -Recurse -File -ErrorAction Ignore | Measure-Object -Property Length -Sum).Sum
+                if ($bytes) {
+                    $cache_mb = [Math]::Round($bytes / 1MB, 1)
+                }
+            }
+            Remove-Item "c:\temp\bazel", "c:\temp\bazel_root" -Recurse -Force -ErrorAction Ignore
+            $ErrorActionPreference = "Stop"
+            $status = if ($fetch_exit -eq 0) { "succeeded" } else { "failed" }
+            Write-SerialLog "Bazel repository cache warm-up $status (exit $fetch_exit), cache size: $cache_mb MB"
+        }
+        Import-Module NTFSSecurity
+        Add-NTFSAccess -Path "C:\buildkite" -Account "b" -AccessRights FullControl
+    }
     GCESysprep
     exit 0
 }

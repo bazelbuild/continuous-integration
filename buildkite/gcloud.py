@@ -193,6 +193,24 @@ def create_image(name, **kwargs):
         raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
 
 
+def delete_image(name, **kwargs):
+    try:
+        return gcloud("compute", "images", "delete", name, "--quiet", **kwargs)
+    except subprocess.CalledProcessError as e:
+        # It's not an error if 'delete' failed, because the object didn't exist in the first place.
+        # But we do want to error out on other unexpected errors.
+        if not re.search(r"The resource .* was not found", e.stderr):
+            raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
+        return e
+
+
+def list_images(**kwargs):
+    try:
+        return json.loads(gcloud("compute", "images", "list", "--format=json", **kwargs).stdout)
+    except subprocess.CalledProcessError as e:
+        raise Exception('"{}" returned unexpected error:\n{}'.format(e.cmd, e.stderr))
+
+
 def describe_image_family(name, **kwargs):
     try:
         return json.loads(
