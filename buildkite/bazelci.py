@@ -299,6 +299,7 @@ DOWNSTREAM_PROJECTS_PRODUCTION = {
     "rules_python": {
         "git_repository": "https://github.com/bazel-contrib/rules_python.git",
         "pipeline_slug": "rules-python-python",
+        "disabled_reason": "https://github.com/bazel-contrib/rules_python/issues/3566, https://github.com/bazel-contrib/rules_python/issues/3581"
     },
     "rules_shell": {
         "git_repository": "https://github.com/bazel-contrib/rules_shell.git",
