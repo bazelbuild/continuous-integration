@@ -238,49 +238,6 @@ resource "buildkite_pipeline" "bcr-compatibility-test" {
   }
 }
 
-resource "buildkite_pipeline" "bazel-bazel-arm64" {
-  name       = ":bazel: Bazel (arm64)"
-  repository = "https://github.com/bazelbuild/bazel.git"
-  steps = templatefile("pipeline.yml.tpl", {
-    envs = {}
-    steps = {
-      commands = [
-        "curl -sS \"https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/buildkite/bazelci.py?$(date +%s)\" -o bazelci.py",
-        "/bin/bash -c 'set -euo pipefail; python3 bazelci.py project_pipeline --http_config=https://raw.githubusercontent.com/bazelbuild/continuous-integration/master/pipelines/bazel-linux-arm64.yml?$(date +%s) | tee /dev/tty | buildkite-agent pipeline upload'"
-      ]
-    }
-  })
-  default_branch             = "master"
-  allow_rebuilds             = true
-  cancel_intermediate_builds = false
-  skip_intermediate_builds   = false
-  tags                       = []
-  provider_settings = {
-    trigger_mode                                  = "code"
-    build_branches                                = true
-    build_pull_requests                           = true
-    build_tags                                    = false
-    build_pull_request_forks                      = false
-    build_pull_request_ready_for_review           = false
-    build_pull_request_labels_changed             = false
-    build_pull_request_base_branch_changed        = false
-    prefix_pull_request_fork_branch_names         = true
-    filter_enabled                                = false
-    pull_request_branch_filter_enabled            = false
-    publish_commit_status                         = true
-    publish_commit_status_per_step                = false
-    separate_pull_request_statuses                = false
-    publish_blocked_as_pending                    = true
-    cancel_deleted_branch_builds                  = false
-    skip_builds_for_existing_commits              = false
-    skip_pull_request_builds_for_existing_commits = true
-    ignore_default_branch_pull_requests           = false
-    build_merge_group_checks_requested            = false
-    cancel_when_merge_group_destroyed             = false
-    use_merge_group_base_commit_for_git_diff_base = false
-  }
-}
-
 resource "buildkite_pipeline" "test-bazel-for-ci-metrics" {
   name        = "Test Bazel For CI-Metrics"
   repository  = "https://github.com/bazelbuild/bazel.git"
