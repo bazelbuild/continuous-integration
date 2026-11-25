@@ -1504,5 +1504,133 @@ class RemoteCachingFlagsTest(unittest.TestCase):
             )
 
 
+class ConcurrencySettingsTest(unittest.TestCase):
+    def test_no_concurrency_group_env_var(self):
+        with mock.patch.dict(os.environ, {}, clear=True):
+            step = bazelci.runner_step(platform="ubuntu2404", task="ubuntu2404")
+            self.assertNotIn("concurrency", step)
+            self.assertNotIn("concurrency_group", step)
+            self.assertNotIn("concurrency_method", step)
+
+    def test_default_resource_percentage(self):
+        with mock.patch.dict(os.environ, {"CI_CONCURRENCY_GROUP": "heavy-user"}, clear=True):
+            step = bazelci.runner_step(platform="ubuntu2404", task="ubuntu2404")
+            self.assertEqual(step["concurrency_group"], "heavy-user-default")
+            self.assertEqual(
+                step["concurrency"],
+                (bazelci.DEFAULT_CI_RESOURCE_PERCENTAGE * bazelci.CI_MACHINE_NUM["default"]) // 100,
+            )
+            self.assertEqual(step["concurrency_method"], "eager")
+
+    def test_custom_resource_percentage_and_queue(self):
+        with mock.patch.dict(
+            os.environ,
+            {"CI_CONCURRENCY_GROUP": "heavy-user", "CI_RESOURCE_PERCENTAGE": "50"},
+            clear=True,
+        ):
+            step = bazelci.runner_step(platform="windows", task="windows")
+            self.assertEqual(step["concurrency_group"], "heavy-user-windows")
+            self.assertEqual(
+                step["concurrency"],
+                (50 * bazelci.CI_MACHINE_NUM["windows"]) // 100,
+            )
+            self.assertEqual(step["concurrency_method"], "eager")
+
+    def test_minimum_concurrency_is_one(self):
+        with mock.patch.dict(
+            os.environ,
+            {"CI_CONCURRENCY_GROUP": "heavy-user", "CI_RESOURCE_PERCENTAGE": "1"},
+            clear=True,
+        ):
+            step = bazelci.runner_step(platform="ubuntu2404_arm64", task="ubuntu2404_arm64")
+            self.assertEqual(step["concurrency"], 1)
+            self.assertEqual(step["concurrency_group"], "heavy-user-arm64")
+
+    def test_unmapped_queue_raises(self):
+        with mock.patch.dict(
+            os.environ,
+            {"CI_CONCURRENCY_GROUP": "heavy-user", "CI_RESOURCE_PERCENTAGE": "20"},
+            clear=True,
+        ):
+            with self.assertRaises(bazelci.BuildkiteException):
+                bazelci.runner_step(
+                    platform="metrics_test_platform", task="metrics_test_platform"
+                )
+
+    def test_non_positive_percentage_disables_concurrency(self):
+        with mock.patch.dict(
+            os.environ,
+            {"CI_CONCURRENCY_GROUP": "heavy-user", "CI_RESOURCE_PERCENTAGE": "-1"},
+            clear=True,
+        ):
+            step = bazelci.runner_step(platform="ubuntu2404", task="ubuntu2404")
+            self.assertNotIn("concurrency", step)
+            self.assertNotIn("concurrency_group", step)
+
+    def test_percentage_without_group_raises(self):
+        with mock.patch.dict(
+            os.environ,
+            {"CI_RESOURCE_PERCENTAGE": "50"},
+            clear=True,
+        ):
+            with self.assertRaises(bazelci.BuildkiteException):
+                bazelci.runner_step(platform="ubuntu2404", task="ubuntu2404")
+
+    def test_invalid_percentage_raises(self):
+        with mock.patch.dict(
+            os.environ,
+            {"CI_CONCURRENCY_GROUP": "heavy-user", "CI_RESOURCE_PERCENTAGE": "abc"},
+            clear=True,
+        ):
+            with self.assertRaises(bazelci.BuildkiteException):
+                bazelci.runner_step(platform="ubuntu2404", task="ubuntu2404")
+
+    def test_ci_machine_num_matches_instances_yml(self):
+        instances_path = os.path.join(os.path.dirname(__file__), "instances.yml")
+        with open(instances_path, "r") as f:
+            instances = yaml.safe_load(f)
+
+        suffix_to_queue = {
+            "docker": "default",
+            "docker-arm64": "arm64",
+            "windows": "windows",
+        }
+        for group in instances["instance_groups"]:
+            name = group["name"]
+            if name.startswith("bk-testing-"):
+                org = "bazel-testing"
+                suffix = name[len("bk-testing-"):]
+            elif name.startswith("bk-trusted-"):
+                org = "bazel-trusted"
+                suffix = name[len("bk-trusted-"):]
+            elif name.startswith("bk-"):
+                org = "bazel"
+                suffix = name[len("bk-"):]
+            else:
+                continue
+
+            queue = suffix_to_queue[suffix]
+            self.assertEqual(
+                bazelci.CI_MACHINE_NUM_BY_ORG[org][queue],
+                group["count"],
+                f"CI_MACHINE_NUM_BY_ORG[{org!r}][{queue!r}] is out of sync with instances.yml ({name})",
+            )
+
+    def test_all_platform_queues_in_ci_machine_num_by_org(self):
+        ignored_platforms = {"metrics_test_platform"}
+        queues = {
+            config.get("queue", "default")
+            for platform, config in bazelci.PLATFORMS.items()
+            if platform not in ignored_platforms
+        }
+        for org, machine_nums in bazelci.CI_MACHINE_NUM_BY_ORG.items():
+            for queue in queues:
+                self.assertIn(
+                    queue,
+                    machine_nums,
+                    f"Queue {queue!r} is missing from CI_MACHINE_NUM_BY_ORG[{org!r}]",
+                )
+
+
 if __name__ == "__main__":
     unittest.main()
