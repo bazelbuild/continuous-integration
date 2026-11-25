@@ -25,7 +25,7 @@ import threading
 import gcloud
 
 DEBUG = False
-KEEP_IMAGES_PER_FAMILY = 2
+KEEP_IMAGES_PER_FAMILY = 30
 
 IMAGE_PROMOTIONS = {
     "bk-docker": {
@@ -158,7 +158,7 @@ def workflow(name, params):
         **source_kwargs,
     )
 
-    # Delete older images beyond the newest 2 in both the source and target families.
+    # Delete older images beyond KEEP_IMAGES_PER_FAMILY in both the source and target families.
     cleanup_old_images(source_project, source_family, keep_image=source_image_name)
     cleanup_old_images(params["project"], name, keep_image=target_image_name)
 
