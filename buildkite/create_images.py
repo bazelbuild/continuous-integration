@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from concurrent import futures
 from datetime import datetime
 import os
 import shutil
@@ -21,6 +22,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import traceback
 
 import gcloud
 import gcloud_utils
@@ -145,14 +147,16 @@ def workflow(name, params, refresh=False):
     ).stdout.splitlines()
     for line in leftover_vms:
         vm, vm_zone = line.split()
-        print(f"Deleting leftover image VM {vm} from a previous run")
+        with gcloud.PRINT_LOCK:
+            print(f"Deleting leftover image VM {vm} from a previous run")
         gcloud.delete_instance(vm, project=project, zone=vm_zone)
 
     # Create the VM and record the zone GCE placed it in.
     zone = create_instance(instance_name, params, refresh=refresh)
     if not zone:
         raise Exception(f"Could not determine zone for created image VM {instance_name}")
-    print(f"Created image VM {instance_name} in zone {zone}")
+    with gcloud.PRINT_LOCK:
+        print(f"Created image VM {instance_name} in zone {zone}")
 
     try:
         # Wait for the VM to become ready.
@@ -214,9 +218,29 @@ def main(argv=None):
         )
         return 1
 
+    names = list(dict.fromkeys(names))
     refresh = bazelci.is_trueish(os.environ.get("BAZEL_REFRESH_VM_IMAGE"))
-    for n in names:
-        workflow(n, IMAGE_CREATION_VMS[n], refresh=refresh)
+    failed = []
+    with futures.ThreadPoolExecutor(max_workers=len(names)) as pool:
+        tasks = {
+            n: pool.submit(workflow, n, IMAGE_CREATION_VMS[n], refresh=refresh)
+            for n in names
+        }
+        for n, task in tasks.items():
+            try:
+                task.result()
+            except Exception as e:
+                failed.append((n, e))
+
+    if failed:
+        for n, e in failed:
+            print(f"Failed to create image {n}:", file=sys.stderr)
+            traceback.print_exception(type(e), e, e.__traceback__, file=sys.stderr)
+        print(
+            "Image creation failed for: {}".format(", ".join(n for n, _ in failed)),
+            file=sys.stderr,
+        )
+        return 1
 
     return 0
 
