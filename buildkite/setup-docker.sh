@@ -264,6 +264,7 @@ if [[ "$(uname -m)" == "aarch64" ]]; then
     "gcr.io/bazel-public/ubuntu2204-java17@sha256:3d77f0f05da01ad35a1338c2d97675917d95d45fd4be8778918c776f984c4587"
     "gcr.io/bazel-public/ubuntu2204@sha256:7efa0b902d648787c9c7995d1dd26672ce5bf53cefb1e6103d12e36672229997"
     "gcr.io/bazel-public/ubuntu2404@sha256:5f75cef6a0dc845b1727f03ec4856fe17873e6ab3fd91648167df9cfcb612f6c"
+    "gcr.io/bazel-public/ubuntu2604@sha256:869615166fe7e1fb4386e670b349fa5de70831dd11605638972ade51b3b37338"
   )
 else
   DOCKER_IMAGES=(
@@ -281,9 +282,11 @@ else
     "gcr.io/bazel-public/ubuntu2004-kythe@sha256:3862183a7674064e7e36ab851166e5a20eaccb47c8dd7205354fc8de6a6be0e9"
     "gcr.io/bazel-public/ubuntu2204-kythe@sha256:e7bee6f5437c7a3a6622a508be5000bf7cd92897d5fcb46d64afb0746673f876"
     "gcr.io/bazel-public/ubuntu2404-kythe@sha256:186b7bd1b9b65d59423550fa85c197bffbc207f2bdee05df81b4e38bbec07a9d"
+    "gcr.io/bazel-public/ubuntu2604-kythe@sha256:70a168789ba5c3f400e5b63fbaafdd4fd083c392bd7f5aefc658b8cdd844125e"
     "gcr.io/bazel-public/ubuntu2204-java17@sha256:75a622ed24a18d1af44aa1e6ada0a55efaf6dbffd682ad83afa6432bcedfd3b2"
     "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
     "gcr.io/bazel-public/ubuntu2404@sha256:4bc65868dcac6d63d5ecca1685c7a41e8549a5f38e041ff1f2edc8101cf213b8"
+    "gcr.io/bazel-public/ubuntu2604@sha256:ead39b38a2f196ab7e972204ecc5edd5bcfef2940d41b20a56527aad2479396d"
     "gcr.io/bazel-public/fedora43-java25@sha256:36378b3c3c1f5b5f621bbf3160dc088ab7240fb0506d83253ae40d704b992323"
     "gcr.io/bazel-public/fedora45-java25@sha256:014e13b0ece7446646a901afb6b69434b8a7e5945e74ff0a633aae00116d1a22"
   )
