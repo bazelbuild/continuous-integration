@@ -7,7 +7,7 @@ resource "buildkite_pipeline" "mirror-last-green-commit-for-bazel" {
     priority = 0,
     steps = {
       commands = [
-        "gsutil cp gs://bazel-builds/last_green_commit/github.com/bazelbuild/bazel.git/publish-bazel-binaries gs://bazel-untrusted-builds/last_green_commit/github.com/bazelbuild/bazel.git/bazel-bazel"
+        "gcloud storage cp gs://bazel-builds/last_green_commit/github.com/bazelbuild/bazel.git/publish-bazel-binaries gs://bazel-untrusted-builds/last_green_commit/github.com/bazelbuild/bazel.git/bazel-bazel"
       ],
       label = ":pipeline:",
       image = "gcr.io/bazel-public/ubuntu2204@sha256:a8fc286aaca55230a3c2dddd3a5311770e6f609fa31f53447866c3b3bfb74398"
