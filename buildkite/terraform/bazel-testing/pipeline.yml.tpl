@@ -16,7 +16,7 @@ steps:
     artifact_paths:%{ for artifact_path in steps.artifact_paths }
       - "${artifact_path}"%{ endfor }%{ endif }
     plugins:
-      - docker#v3.8.0:
+      - docker#v5.14.0:
           always-pull: true
           environment:
             - "ANDROID_HOME"
