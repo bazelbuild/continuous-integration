@@ -200,7 +200,8 @@ steps:
       echo "release_name = \"\$release_name\""
 
       bazel build \
-          --remote_cache=https://storage.googleapis.com/bazel-trusted-build-cache \
+          --remote_cache=remotebuildexecution.googleapis.com \
+          --remote_instance_name=projects/bazel-public/instances/default_instance \
           --google_default_credentials \
           --remote_timeout=3600 \
           --remote_max_connections=200 \
@@ -210,7 +211,8 @@ steps:
       cp bazel-bin/src/bazel output/bazel
 
       output/bazel build \
-          --remote_cache=https://storage.googleapis.com/bazel-trusted-build-cache \
+          --remote_cache=remotebuildexecution.googleapis.com \
+          --remote_instance_name=projects/bazel-public/instances/default_instance \
           --google_default_credentials \
           --remote_timeout=3600 \
           --remote_max_connections=200 \
@@ -243,7 +245,8 @@ steps:
       echo "release_name = \"\$release_name\""
 
       bazel build \
-          --remote_cache=https://storage.googleapis.com/bazel-trusted-build-cache \
+          --remote_cache=remotebuildexecution.googleapis.com \
+          --remote_instance_name=projects/bazel-public/instances/default_instance \
           --google_default_credentials \
           --remote_timeout=3600 \
           --remote_max_connections=200 \
@@ -253,7 +256,8 @@ steps:
       cp bazel-bin/src/bazel output/bazel
 
       output/bazel build \
-          --remote_cache=https://storage.googleapis.com/bazel-trusted-build-cache \
+          --remote_cache=remotebuildexecution.googleapis.com \
+          --remote_instance_name=projects/bazel-public/instances/default_instance \
           --google_default_credentials \
           --remote_timeout=3600 \
           --remote_max_connections=200 \
